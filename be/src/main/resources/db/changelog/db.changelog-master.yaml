@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - include:
+      file: db/changelog/20260724_v1_hr_platform_baseline.yaml
+  - include:
+      file: db/changelog/20260724_v2_mutable_audit_timestamps.yaml
+  - include:
+      file: db/changelog/20260724_v3_i18n_translations.yaml
+  - include:
+      file: db/changelog/20260724_v4_user_locale_and_demo_categories.yaml
+  - include:
+      file: db/changelog/20260724_v5_session_expiry_translation.yaml
+  - include:
+      file: db/changelog/20260724_v6_app_session_timeout.yaml
+  - include:
+      file: db/changelog/20260724_v7_login_error_translation.yaml

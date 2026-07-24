@@ -1,0 +1,158 @@
+<section class="page">
+  @if (store.loading()) {
+    <div class="loading"></div>
+  }
+  @if (store.error()) {
+    <div class="alert error">{{ store.error() }}</div>
+  }
+  @if (store.details(); as data) {
+    <header class="page-header">
+      <div>
+        <a class="back" routerLink="/reports">← كل التقارير</a>
+        <p class="eyebrow">تقرير حضور ثابت الأدلة</p>
+        <h1>{{ date(data.report.periodStart) }} — {{ date(data.report.periodEnd) }}</h1>
+        <p>الحقائق من البصمة منفصلة عن قرارات الموارد البشرية.</p>
+      </div>
+      <div class="toolbar">
+        <button class="button secondary" (click)="store.export(id)">⇩ Excel</button>
+        @if (data.report.status === 'IN_REVIEW' && canApprove()) {
+          <button
+            class="button gold"
+            (click)="store.approve(id)"
+            [disabled]="data.report.unresolvedCount > 0"
+          >
+            اعتماد التقرير
+          </button>
+        }
+        @if (
+          (data.report.status === 'APPROVED' || data.report.status === 'EXPORTED') && canApprove()
+        ) {
+          <button class="button secondary" (click)="store.reopen(id)">إعادة فتح</button>
+        }
+      </div>
+    </header>
+    <div class="review-summary">
+      <article class="card">
+        <span>الحالة</span><strong>{{ reportStatus(data.report.status) }}</strong>
+      </article>
+      <article class="card exception">
+        <span>غير محلول</span><strong>{{ data.report.unresolvedCount }}</strong>
+      </article>
+      <article class="card">
+        <span>صفوف يومية</span><strong>{{ data.dailyResults.length }}</strong>
+      </article>
+      <article class="card">
+        <span>اقتراحات إجازة</span><strong>{{ data.holidayProposals.length }}</strong>
+      </article>
+    </div>
+    @if (data.holidayProposals.length) {
+      <section class="holiday-section">
+        <div class="section-head">
+          <h2>اقتراحات الإجازة الجماعية</h2>
+          <p>كل أفراد الفئة بلا بصمة؛ القرار لا يتم تلقائيًا.</p>
+        </div>
+        <div class="holiday-grid">
+          @for (item of data.holidayProposals; track item.id) {
+            <article class="card">
+              <div>
+                <span
+                  class="status"
+                  [class.warning]="item.status === 'PENDING'"
+                  [class.success]="item.status === 'CONFIRMED'"
+                  >{{ item.status }}</span
+                >
+                <h3>{{ item.categoryName }}</h3>
+                <p>{{ date(item.workDate) }} · {{ item.activeEmployeeCount }} موظف</p>
+              </div>
+              @if (item.status === 'PENDING' && canReview()) {
+                <div class="toolbar">
+                  <button class="button gold" (click)="holiday(item, true)">تأكيد إجازة</button
+                  ><button class="button secondary" (click)="holiday(item, false)">رفض</button>
+                </div>
+              }
+            </article>
+          }
+        </div>
+      </section>
+    }
+    <div class="section-head rows-head">
+      <div>
+        <h2>المراجعة اليومية</h2>
+        <p>المعروض {{ rows().length }} من {{ data.dailyResults.length }}</p>
+      </div>
+      <div class="segmented">
+        <button [class.active]="filter() === 'UNRESOLVED'" (click)="filter.set('UNRESOLVED')">
+          غير المحلول</button
+        ><button [class.active]="filter() === 'ALL'" (click)="filter.set('ALL')">كل الصفوف</button>
+      </div>
+    </div>
+    <div class="table-card review-table">
+      <table>
+        <thead>
+          <tr>
+            <th>الموظف / اليوم</th>
+            <th>الفئة</th>
+            <th>أول / آخر بصمة</th>
+            <th>متوقع / محتسب</th>
+            <th>التأخير / الإضافي</th>
+            <th>الحالة والدليل</th>
+            <th>قرار HR</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.id) {
+            <tr [class.unresolved]="blocking(row)">
+              <td>
+                <strong>{{ row.employeeName }}</strong
+                ><small>{{ row.employeeCode }} · {{ date(row.workDate) }}</small>
+              </td>
+              <td>{{ row.categoryName }}</td>
+              <td>
+                <span>{{ time(row.firstPunch) }}</span
+                ><small>{{ time(row.lastPunch) }} · {{ row.punchCount }} بصمة</small>
+              </td>
+              <td>
+                <span>{{ row.expectedMinutes }} د</span
+                ><small>{{ row.effectiveWorkedMinutes }} د</small>
+              </td>
+              <td>
+                <span>{{ row.lateMinutes }} د</span><small>{{ row.overtimeMinutes }} د إضافي</small>
+              </td>
+              <td>
+                <span
+                  class="status"
+                  [class.success]="row.status === 'PRESENT' || row.status === 'HOLIDAY'"
+                  [class.warning]="blocking(row)"
+                  [class.neutral]="row.status === 'NON_WORKDAY'"
+                  >{{ status(row.status) }}</span
+                ><small class="warning-copy">{{ row.warning }}</small>
+              </td>
+              <td>
+                @if (row.decision) {
+                  <strong>{{ row.decision }}</strong
+                  ><small>{{ row.decidedBy }} · {{ row.decisionNote }}</small>
+                } @else if (blocking(row) && canReview()) {
+                  <div class="decision-actions">
+                    <button (click)="decide(row, 'NORMAL_DAY')">يوم عادي</button
+                    ><button (click)="decide(row, 'DEDUCT')">خصم</button
+                    ><button (click)="decide(row, 'APPROVED_LEAVE')">إجازة</button>
+                  </div>
+                } @else {
+                  —
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <strong>لا توجد بنود في هذا العرض</strong>تم حل كل الاستثناءات أو غيّر الفلتر.
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

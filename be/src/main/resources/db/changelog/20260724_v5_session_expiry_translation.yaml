@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: seed_session_expiry_translations
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM translations WHERE translation_key = 'login.sessionExpired'
+      changes:
+        - insert:
+            tableName: translations
+            columns:
+              - column: { name: id, value: ar-085 }
+              - column: { name: translation_key, value: login.sessionExpired }
+              - column: { name: locale, value: ar-EG }
+              - column: { name: text_value, value: "انتهت الجلسة. برجاء تسجيل الدخول مرة أخرى." }
+        - insert:
+            tableName: translations
+            columns:
+              - column: { name: id, value: en-085 }
+              - column: { name: translation_key, value: login.sessionExpired }
+              - column: { name: locale, value: en-US }
+              - column: { name: text_value, value: "Your session has expired. Please sign in again." }
+      rollback:
+        - delete:
+            tableName: translations
+            where: id IN ('ar-085', 'en-085')

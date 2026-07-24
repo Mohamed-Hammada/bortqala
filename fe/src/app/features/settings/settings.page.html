@@ -1,0 +1,121 @@
+<section class="page settings-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('settings.eyebrow') }}</p>
+      <h1>{{ i18n.t('settings.title') }}</h1>
+      <p>{{ i18n.t('settings.description') }} {{ authService.app()?.name }}</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+  @if (saved()) {
+    <div class="alert success">{{ i18n.t('settings.saved') }}</div>
+  }
+
+  <form class="card settings-card" [formGroup]="form" (ngSubmit)="save()">
+    <fieldset>
+      <legend>{{ i18n.t('settings.theme') }}</legend>
+      <p>{{ i18n.t('settings.themeHint') }}</p>
+      <div class="choice-grid">
+        <label
+          ><input type="radio" formControlName="theme" value="LIGHT" (change)="preview()" />{{
+            i18n.t('settings.light')
+          }}</label
+        >
+        <label
+          ><input type="radio" formControlName="theme" value="DARK" (change)="preview()" />{{
+            i18n.t('settings.dark')
+          }}</label
+        >
+        <label
+          ><input type="radio" formControlName="theme" value="SYSTEM" (change)="preview()" />{{
+            i18n.t('settings.system')
+          }}</label
+        >
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>{{ i18n.t('settings.density') }}</legend>
+      <p>{{ i18n.t('settings.densityHint') }}</p>
+      <div class="choice-grid two">
+        <label
+          ><input
+            type="radio"
+            formControlName="tableDensity"
+            value="COMFORTABLE"
+            (change)="preview()"
+          />{{ i18n.t('settings.comfortable') }}</label
+        >
+        <label
+          ><input
+            type="radio"
+            formControlName="tableDensity"
+            value="COMPACT"
+            (change)="preview()"
+          />{{ i18n.t('settings.compact') }}</label
+        >
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>{{ i18n.t('settings.language') }}</legend>
+      <div class="choice-grid two">
+        <label
+          ><input type="radio" formControlName="locale" value="ar-EG" (change)="preview()" />{{
+            i18n.t('settings.arabic')
+          }}</label
+        >
+        <label
+          ><input type="radio" formControlName="locale" value="en-US" (change)="preview()" />{{
+            i18n.t('settings.english')
+          }}</label
+        >
+      </div>
+    </fieldset>
+    <div class="actions">
+      <button class="button primary" type="submit" [disabled]="saving() || form.invalid">
+        {{ i18n.t(saving() ? 'settings.saving' : 'settings.save') }}
+      </button>
+    </div>
+  </form>
+
+  @if (authService.hasAnyRole(['ADMIN'])) {
+    <form
+      class="card settings-card admin-settings"
+      [formGroup]="appSettingsForm"
+      (ngSubmit)="saveAppSettings()"
+    >
+      <fieldset>
+        <legend>{{ i18n.t('settings.sessionTitle') }}</legend>
+        <p>{{ i18n.t('settings.sessionHint') }}</p>
+        @if (appSettingsError()) {
+          <div class="alert error">{{ appSettingsError() }}</div>
+        }
+        @if (appSettingsSaved()) {
+          <div class="alert success">{{ i18n.t('settings.sessionSaved') }}</div>
+        }
+        <div class="field session-timeout-field">
+          <label for="session-timeout">{{ i18n.t('settings.sessionMinutes') }}</label>
+          <input
+            id="session-timeout"
+            class="ltr"
+            type="number"
+            min="5"
+            max="10080"
+            formControlName="sessionTimeoutMinutes"
+          />
+        </div>
+      </fieldset>
+      <div class="actions">
+        <button
+          class="button primary"
+          type="submit"
+          [disabled]="appSettingsLoading() || appSettingsSaving() || appSettingsForm.invalid"
+        >
+          {{ i18n.t('settings.sessionSave') }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

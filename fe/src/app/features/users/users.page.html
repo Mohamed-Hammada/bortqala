@@ -1,0 +1,122 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">الأمان والصلاحيات</p>
+      <h1>المستخدمون والأدوار</h1>
+      <p>يمكن للمستخدم حمل أكثر من دور؛ الـ backend يطبق الصلاحية على كل عملية.</p>
+    </div>
+    <button class="button primary" (click)="openNew()">＋ مستخدم جديد</button>
+  </header>
+  @if (store.loading()) {
+    <div class="loading"></div>
+  }
+  @if (store.error()) {
+    <div class="alert error">{{ store.error() }}</div>
+  }
+  <div class="role-cards">
+    @for (role of roles; track role.code) {
+      <article class="card">
+        <span>{{ role.code }}</span
+        ><strong>{{ role.label }}</strong
+        ><small>{{ role.description }}</small>
+      </article>
+    }
+  </div>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>المستخدم</th>
+          <th>الأدوار</th>
+          <th>الحالة</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of store.items(); track item.id) {
+          <tr>
+            <td>
+              <strong>{{ item.displayName }}</strong
+              ><small class="ltr">{{ item.username }}</small>
+            </td>
+            <td>
+              <div class="role-list">
+                @for (role of item.roles; track role) {
+                  <span>{{ roleLabel(role) }}</span>
+                }
+              </div>
+            </td>
+            <td>
+              <span class="status" [class.success]="item.active" [class.neutral]="!item.active">{{
+                item.active ? 'نشط' : 'متوقف'
+              }}</span>
+            </td>
+            <td><button class="edit-button" (click)="openEdit(item)">✎ تعديل</button></td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4">
+              <div class="empty-state"><strong>لا يوجد مستخدمون</strong>أنشئ أول حساب.</div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (drawerOpen()) {
+    <button class="drawer-backdrop" (click)="drawerOpen.set(false)" aria-label="إغلاق"></button>
+    <aside class="drawer">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">حساب وصلاحيات</p>
+          <h2>{{ editingId() ? 'تعديل المستخدم' : 'مستخدم جديد' }}</h2>
+        </div>
+        <button class="button secondary icon-only" (click)="drawerOpen.set(false)">×</button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-grid">
+          <div class="field">
+            <label>اسم المستخدم</label
+            ><input class="ltr" formControlName="username" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label>الاسم الظاهر</label><input formControlName="displayName" />
+          </div>
+          <div class="field span-2">
+            <label>كلمة المرور {{ editingId() ? '(اتركها فارغة بدون تغيير)' : '' }}</label
+            ><input type="password" formControlName="password" autocomplete="new-password" /><small
+              >10 أحرف على الأقل.</small
+            >
+          </div>
+          <div class="field span-2">
+            <label>الأدوار — يمكن اختيار أكثر من دور</label>
+            <div class="role-options">
+              @for (role of roles; track role.code) {
+                <label
+                  ><input
+                    type="checkbox"
+                    [checked]="hasRole(role.code)"
+                    (change)="toggleRole(role.code, $event)"
+                  /><span
+                    ><strong>{{ role.label }}</strong
+                    ><small>{{ role.description }}</small></span
+                  ></label
+                >
+              }
+            </div>
+          </div>
+        </div>
+        <label class="active-check"
+          ><input type="checkbox" formControlName="active" /> الحساب نشط</label
+        >
+        <div class="drawer-actions">
+          <button class="button primary" type="submit" [disabled]="store.loading()">
+            حفظ المستخدم</button
+          ><button class="button secondary" type="button" (click)="drawerOpen.set(false)">
+            إلغاء
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

@@ -1,0 +1,80 @@
+package com.bemo.hr.reporting.domain;
+
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.employee.domain.PayCycle;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import org.hibernate.annotations.TenantId;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Entity
+@Table(name = "reports")
+public class AttendanceReport {
+    @Id private String id;
+    @TenantId @Column(name = "app_id", nullable = false) private String appId;
+    @Column(name = "period_start", nullable = false) private LocalDate periodStart;
+    @Column(name = "period_end", nullable = false) private LocalDate periodEnd;
+    @Enumerated(EnumType.STRING) @Column(name = "pay_cycle", nullable = false, length = 20) private PayCycle payCycle;
+    @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private ReportStatus status;
+    @Column(name = "configuration_version", nullable = false, length = 64) private String configurationVersion;
+    @Column(name = "unresolved_count", nullable = false) private int unresolvedCount;
+    @Column(name = "created_by", nullable = false, length = 100) private String createdBy;
+    @Column(name = "created_at", nullable = false) private Instant createdAt;
+    @Column(name = "updated_at", nullable = false) private Instant updatedAt;
+    @Column(name = "approved_by", length = 100) private String approvedBy;
+    @Column(name = "approved_at") private Instant approvedAt;
+    @Column(name = "exported_at") private Instant exportedAt;
+    @Version private long version;
+
+    protected AttendanceReport() { }
+
+    public AttendanceReport(LocalDate periodStart, LocalDate periodEnd, PayCycle payCycle,
+                            String configurationVersion, String createdBy) {
+        this.id = UUID.randomUUID().toString();
+        this.periodStart = periodStart;
+        this.periodEnd = periodEnd;
+        this.payCycle = payCycle;
+        this.configurationVersion = configurationVersion;
+        this.createdBy = createdBy;
+        this.status = ReportStatus.DRAFT;
+    }
+
+    @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
+    @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
+
+    public void startReview(int unresolvedCount) { this.unresolvedCount = unresolvedCount; this.status = ReportStatus.IN_REVIEW; }
+    public void updateUnresolvedCount(int value) { this.unresolvedCount = value; }
+    public void approve(String actor) {
+        if (status != ReportStatus.IN_REVIEW || unresolvedCount != 0) throw new BusinessRuleException("Resolve every blocking item before approval.");
+        status = ReportStatus.APPROVED; approvedBy = actor; approvedAt = Instant.now();
+    }
+    public void markExported() { if (status == ReportStatus.APPROVED || status == ReportStatus.EXPORTED) { status = ReportStatus.EXPORTED; exportedAt = Instant.now(); } }
+    public void reopen() {
+        if (status != ReportStatus.APPROVED && status != ReportStatus.EXPORTED) throw new BusinessRuleException("Only approved or exported reports can be reopened.");
+        status = ReportStatus.IN_REVIEW; approvedBy = null; approvedAt = null; exportedAt = null;
+    }
+
+    public String getId() { return id; }
+    public LocalDate getPeriodStart() { return periodStart; }
+    public LocalDate getPeriodEnd() { return periodEnd; }
+    public PayCycle getPayCycle() { return payCycle; }
+    public ReportStatus getStatus() { return status; }
+    public String getConfigurationVersion() { return configurationVersion; }
+    public int getUnresolvedCount() { return unresolvedCount; }
+    public String getCreatedBy() { return createdBy; }
+    public Instant getCreatedAt() { return createdAt; }
+    public String getApprovedBy() { return approvedBy; }
+    public Instant getApprovedAt() { return approvedAt; }
+    public Instant getExportedAt() { return exportedAt; }
+    public long getVersion() { return version; }
+}

@@ -1,0 +1,588 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_apps_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.apps
+      changes:
+        - createTable:
+            tableName: apps
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(150), constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: apps
+            columnNames: code
+            constraintName: uq_apps_code
+      rollback:
+        - dropTable: { tableName: apps }
+
+  - changeSet:
+      id: create_app_users_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.app_users
+      changes:
+        - createTable:
+            tableName: app_users
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: username, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: display_name, type: VARCHAR(150), constraints: { nullable: false } }
+              - column: { name: password_hash, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: app_users
+            columnNames: app_id, username
+            constraintName: uq_app_users_app_username
+      rollback:
+        - dropTable: { tableName: app_users }
+
+  - changeSet:
+      id: create_roles_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.roles
+      changes:
+        - createTable:
+            tableName: roles
+            columns:
+              - column: { name: code, type: VARCHAR(30), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name_ar, type: VARCHAR(100), constraints: { nullable: false } }
+      rollback:
+        - dropTable: { tableName: roles }
+
+  - changeSet:
+      id: seed_platform_roles
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM roles WHERE code = 'ADMIN'
+      changes:
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: code, value: ADMIN }
+              - column: { name: name_ar, value: مدير النظام }
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: code, value: HR_MANAGER }
+              - column: { name: name_ar, value: مدير الموارد البشرية }
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: code, value: HR_REVIEWER }
+              - column: { name: name_ar, value: مراجع الحضور }
+        - insert:
+            tableName: roles
+            columns:
+              - column: { name: code, value: VIEWER }
+              - column: { name: name_ar, value: مشاهد }
+      rollback:
+        - delete:
+            tableName: roles
+            where: code IN ('ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'VIEWER')
+
+  - changeSet:
+      id: create_user_roles_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.user_roles
+      changes:
+        - createTable:
+            tableName: user_roles
+            columns:
+              - column: { name: user_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: role_code, type: VARCHAR(30), constraints: { nullable: false } }
+        - addPrimaryKey:
+            tableName: user_roles
+            columnNames: user_id, role_code
+            constraintName: pk_user_roles
+        - addForeignKeyConstraint:
+            baseTableName: user_roles
+            baseColumnNames: user_id
+            constraintName: fk_user_roles_user_id
+            referencedTableName: app_users
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: user_roles
+            baseColumnNames: role_code
+            constraintName: fk_user_roles_role_code
+            referencedTableName: roles
+            referencedColumnNames: code
+      rollback:
+        - dropTable: { tableName: user_roles }
+
+  - changeSet:
+      id: create_attendance_categories_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.attendance_categories
+      changes:
+        - createTable:
+            tableName: attendance_categories
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(150), constraints: { nullable: false } }
+              - column: { name: expected_daily_minutes, type: INT, constraints: { nullable: false } }
+              - column: { name: pay_cycle, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: attendance_mode, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: single_punch_counts, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: work_days_mask, type: INT, constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: attendance_categories
+            columnNames: app_id, code
+            constraintName: uq_attendance_categories_app_code
+      rollback:
+        - dropTable: { tableName: attendance_categories }
+
+  - changeSet:
+      id: create_schedule_rules_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.schedule_rules
+      changes:
+        - createTable:
+            tableName: schedule_rules
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: category_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: effective_from, type: date, constraints: { nullable: false } }
+              - column: { name: effective_to, type: date }
+              - column: { name: start_time, type: time, constraints: { nullable: false } }
+              - column: { name: expected_minutes_override, type: INT }
+              - column: { name: grace_minutes, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addForeignKeyConstraint:
+            baseTableName: schedule_rules
+            baseColumnNames: category_id
+            constraintName: fk_schedule_rules_category_id
+            referencedTableName: attendance_categories
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: schedule_rules
+            columnNames: app_id, category_id, effective_from
+            constraintName: uq_schedule_rules_app_category_from
+        - createIndex:
+            tableName: schedule_rules
+            indexName: idx_schedule_rules_category_dates
+            columns:
+              - column: { name: category_id }
+              - column: { name: effective_from }
+              - column: { name: effective_to }
+      rollback:
+        - dropTable: { tableName: schedule_rules }
+
+  - changeSet:
+      id: create_employees_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.employees
+      changes:
+        - createTable:
+            tableName: employees
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: employee_code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: full_name, type: VARCHAR(200), constraints: { nullable: false } }
+              - column: { name: device_user_id, type: VARCHAR(100) }
+              - column: { name: category_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: employment_type, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: active_from, type: date, constraints: { nullable: false } }
+              - column: { name: active_to, type: date }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addForeignKeyConstraint:
+            baseTableName: employees
+            baseColumnNames: category_id
+            constraintName: fk_employees_category_id
+            referencedTableName: attendance_categories
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: employees
+            columnNames: app_id, employee_code
+            constraintName: uq_employees_app_employee_code
+        - addUniqueConstraint:
+            tableName: employees
+            columnNames: app_id, device_user_id
+            constraintName: uq_employees_app_device_user_id
+        - createIndex:
+            tableName: employees
+            indexName: idx_employees_category_active
+            columns:
+              - column: { name: category_id }
+              - column: { name: active }
+      rollback:
+        - dropTable: { tableName: employees }
+
+  - changeSet:
+      id: create_confirmed_holidays_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.confirmed_holidays
+      changes:
+        - createTable:
+            tableName: confirmed_holidays
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: category_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: work_date, type: date, constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(150), constraints: { nullable: false } }
+              - column: { name: confirmed_by, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: confirmed_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addForeignKeyConstraint:
+            baseTableName: confirmed_holidays
+            baseColumnNames: category_id
+            constraintName: fk_confirmed_holidays_category_id
+            referencedTableName: attendance_categories
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: confirmed_holidays
+            columnNames: app_id, category_id, work_date
+            constraintName: uq_confirmed_holidays_app_category_date
+      rollback:
+        - dropTable: { tableName: confirmed_holidays }
+
+  - changeSet:
+      id: create_import_batches_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.import_batches
+      changes:
+        - createTable:
+            tableName: import_batches
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: checksum, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: file_name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: device_name, type: VARCHAR(150), constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: total_rows, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: imported_rows, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: error_rows, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: imported_by, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: imported_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: import_batches
+            columnNames: app_id, checksum
+            constraintName: uq_import_batches_app_checksum
+      rollback:
+        - dropTable: { tableName: import_batches }
+
+  - changeSet:
+      id: create_punch_records_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.punch_records
+      changes:
+        - createTable:
+            tableName: punch_records
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: batch_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: employee_id, type: VARCHAR(36) }
+              - column: { name: device_user_id, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: raw_name, type: VARCHAR(200) }
+              - column: { name: punched_at, type: "TIMESTAMP WITH TIME ZONE", constraints: { nullable: false } }
+              - column: { name: raw_line, type: TEXT, constraints: { nullable: false } }
+              - column: { name: row_number, type: INT, constraints: { nullable: false } }
+        - addForeignKeyConstraint:
+            baseTableName: punch_records
+            baseColumnNames: batch_id
+            constraintName: fk_punch_records_batch_id
+            referencedTableName: import_batches
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: punch_records
+            baseColumnNames: employee_id
+            constraintName: fk_punch_records_employee_id
+            referencedTableName: employees
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: punch_records
+            columnNames: app_id, batch_id, row_number
+            constraintName: uq_punch_records_app_batch_row
+        - createIndex:
+            tableName: punch_records
+            indexName: idx_punch_records_employee_time
+            columns:
+              - column: { name: employee_id }
+              - column: { name: punched_at }
+      rollback:
+        - dropTable: { tableName: punch_records }
+
+  - changeSet:
+      id: create_reports_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.reports
+      changes:
+        - createTable:
+            tableName: reports
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: period_start, type: date, constraints: { nullable: false } }
+              - column: { name: period_end, type: date, constraints: { nullable: false } }
+              - column: { name: pay_cycle, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: configuration_version, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: unresolved_count, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_by, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: approved_by, type: VARCHAR(100) }
+              - column: { name: approved_at, type: timestamp }
+              - column: { name: exported_at, type: timestamp }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: reports
+            columnNames: app_id, pay_cycle, period_start, period_end
+            constraintName: uq_reports_app_period
+      rollback:
+        - dropTable: { tableName: reports }
+
+  - changeSet:
+      id: create_import_row_errors_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.import_row_errors
+      changes:
+        - createTable:
+            tableName: import_row_errors
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: batch_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: row_number, type: INT, constraints: { nullable: false } }
+              - column: { name: message, type: VARCHAR(500), constraints: { nullable: false } }
+              - column: { name: raw_line, type: TEXT }
+        - addForeignKeyConstraint:
+            baseTableName: import_row_errors
+            baseColumnNames: batch_id
+            constraintName: fk_import_row_errors_batch_id
+            referencedTableName: import_batches
+            referencedColumnNames: id
+            onDelete: CASCADE
+      rollback:
+        - dropTable: { tableName: import_row_errors }
+
+  - changeSet:
+      id: create_daily_results_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.daily_results
+      changes:
+        - createTable:
+            tableName: daily_results
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: report_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: employee_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: category_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: work_date, type: date, constraints: { nullable: false } }
+              - column: { name: employee_code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: employee_name, type: VARCHAR(200), constraints: { nullable: false } }
+              - column: { name: category_name, type: VARCHAR(150), constraints: { nullable: false } }
+              - column: { name: first_punch, type: "TIMESTAMP WITH TIME ZONE" }
+              - column: { name: last_punch, type: "TIMESTAMP WITH TIME ZONE" }
+              - column: { name: punch_count, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: expected_minutes, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: worked_minutes, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: manual_worked_minutes, type: INT }
+              - column: { name: late_minutes, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: early_leave_minutes, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: overtime_minutes, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(30), constraints: { nullable: false } }
+              - column: { name: warning, type: VARCHAR(255) }
+              - column: { name: decision, type: VARCHAR(30) }
+              - column: { name: decision_note, type: VARCHAR(500) }
+              - column: { name: decided_by, type: VARCHAR(100) }
+              - column: { name: decided_at, type: timestamp }
+              - column: { name: rule_version, type: VARCHAR(100), constraints: { nullable: false } }
+        - addForeignKeyConstraint:
+            baseTableName: daily_results
+            baseColumnNames: report_id
+            constraintName: fk_daily_results_report_id
+            referencedTableName: reports
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: daily_results
+            baseColumnNames: employee_id
+            constraintName: fk_daily_results_employee_id
+            referencedTableName: employees
+            referencedColumnNames: id
+        - addUniqueConstraint:
+            tableName: daily_results
+            columnNames: app_id, report_id, employee_id, work_date
+            constraintName: uq_daily_results_app_report_employee_date
+        - createIndex:
+            tableName: daily_results
+            indexName: idx_daily_results_report_status
+            columns:
+              - column: { name: report_id }
+              - column: { name: status }
+      rollback:
+        - dropTable: { tableName: daily_results }
+
+  - changeSet:
+      id: create_holiday_proposals_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.holiday_proposals
+      changes:
+        - createTable:
+            tableName: holiday_proposals
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: report_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: category_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: category_name, type: VARCHAR(150), constraints: { nullable: false } }
+              - column: { name: work_date, type: date, constraints: { nullable: false } }
+              - column: { name: active_employee_count, type: INT, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: note, type: VARCHAR(500) }
+              - column: { name: decided_by, type: VARCHAR(100) }
+              - column: { name: decided_at, type: timestamp }
+        - addForeignKeyConstraint:
+            baseTableName: holiday_proposals
+            baseColumnNames: report_id
+            constraintName: fk_holiday_proposals_report_id
+            referencedTableName: reports
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: holiday_proposals
+            columnNames: app_id, report_id, category_id, work_date
+            constraintName: uq_holiday_proposals_app_report_category_date
+      rollback:
+        - dropTable: { tableName: holiday_proposals }
+
+  - changeSet:
+      id: add_saas_app_scope_foreign_keys
+      author: Mohamed-Hammada
+      changes:
+        - addForeignKeyConstraint: { baseTableName: app_users, baseColumnNames: app_id, constraintName: fk_app_users_app_id, referencedTableName: apps, referencedColumnNames: id }
+        - addForeignKeyConstraint: { baseTableName: attendance_categories, baseColumnNames: app_id, constraintName: fk_attendance_categories_app_id, referencedTableName: apps, referencedColumnNames: id }
+        - addForeignKeyConstraint: { baseTableName: schedule_rules, baseColumnNames: app_id, constraintName: fk_schedule_rules_app_id, referencedTableName: apps, referencedColumnNames: id }
+        - addForeignKeyConstraint: { baseTableName: employees, baseColumnNames: app_id, constraintName: fk_employees_app_id, referencedTableName: apps, referencedColumnNames: id }
+        - addForeignKeyConstraint: { baseTableName: confirmed_holidays, baseColumnNames: app_id, constraintName: fk_confirmed_holidays_app_id, referencedTableName: apps, referencedColumnNames: id }
+        - addForeignKeyConstraint: { baseTableName: import_batches, baseColumnNames: app_id, constraintName: fk_import_batches_app_id, referencedTableName: apps, referencedColumnNames: id }
+        - addForeignKeyConstraint: { baseTableName: punch_records, baseColumnNames: app_id, constraintName: fk_punch_records_app_id, referencedTableName: apps, referencedColumnNames: id }
+        - addForeignKeyConstraint: { baseTableName: import_row_errors, baseColumnNames: app_id, constraintName: fk_import_row_errors_app_id, referencedTableName: apps, referencedColumnNames: id }
+        - addForeignKeyConstraint: { baseTableName: reports, baseColumnNames: app_id, constraintName: fk_reports_app_id, referencedTableName: apps, referencedColumnNames: id }
+        - addForeignKeyConstraint: { baseTableName: daily_results, baseColumnNames: app_id, constraintName: fk_daily_results_app_id, referencedTableName: apps, referencedColumnNames: id }
+        - addForeignKeyConstraint: { baseTableName: holiday_proposals, baseColumnNames: app_id, constraintName: fk_holiday_proposals_app_id, referencedTableName: apps, referencedColumnNames: id }
+      rollback:
+        - dropForeignKeyConstraint: { baseTableName: holiday_proposals, constraintName: fk_holiday_proposals_app_id }
+        - dropForeignKeyConstraint: { baseTableName: daily_results, constraintName: fk_daily_results_app_id }
+        - dropForeignKeyConstraint: { baseTableName: reports, constraintName: fk_reports_app_id }
+        - dropForeignKeyConstraint: { baseTableName: import_row_errors, constraintName: fk_import_row_errors_app_id }
+        - dropForeignKeyConstraint: { baseTableName: punch_records, constraintName: fk_punch_records_app_id }
+        - dropForeignKeyConstraint: { baseTableName: import_batches, constraintName: fk_import_batches_app_id }
+        - dropForeignKeyConstraint: { baseTableName: confirmed_holidays, constraintName: fk_confirmed_holidays_app_id }
+        - dropForeignKeyConstraint: { baseTableName: employees, constraintName: fk_employees_app_id }
+        - dropForeignKeyConstraint: { baseTableName: schedule_rules, constraintName: fk_schedule_rules_app_id }
+        - dropForeignKeyConstraint: { baseTableName: attendance_categories, constraintName: fk_attendance_categories_app_id }
+        - dropForeignKeyConstraint: { baseTableName: app_users, constraintName: fk_app_users_app_id }
+
+  - changeSet:
+      id: create_user_preferences_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.user_preferences
+      changes:
+        - createTable:
+            tableName: user_preferences
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: user_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: theme, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: table_density, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: locale, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: user_preferences
+            columnNames: app_id, user_id
+            constraintName: uq_user_preferences_app_user
+        - addForeignKeyConstraint: { baseTableName: user_preferences, baseColumnNames: app_id, constraintName: fk_user_preferences_app_id, referencedTableName: apps, referencedColumnNames: id }
+        - addForeignKeyConstraint: { baseTableName: user_preferences, baseColumnNames: user_id, constraintName: fk_user_preferences_user_id, referencedTableName: app_users, referencedColumnNames: id, onDelete: CASCADE }
+      rollback:
+        - dropTable: { tableName: user_preferences }

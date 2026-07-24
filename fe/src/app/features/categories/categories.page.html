@@ -1,0 +1,201 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">الإعدادات الأساسية</p>
+      <h1>الفئات وقواعد الدوام</h1>
+      <p>البصمة أو الحضور اليدوي، الساعات، وأوقات الصيف والشتاء في مكان واحد.</p>
+    </div>
+    <div class="toolbar">
+      <button class="button secondary" (click)="store.export()">⇩ Excel</button
+      ><button class="button primary" (click)="openNew()">＋ فئة جديدة</button>
+    </div>
+  </header>
+  @if (store.loading()) {
+    <div class="loading"></div>
+  }
+  @if (store.error()) {
+    <div class="alert error">{{ store.error() }}</div>
+  }
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>الكود والفئة</th>
+          <th>طريقة الحضور</th>
+          <th>الساعات الافتراضية</th>
+          <th>الاستحقاق</th>
+          <th>الجداول</th>
+          <th>الحالة</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of store.items(); track item.id) {
+          <tr>
+            <td>
+              <strong>{{ item.name }}</strong
+              ><small class="ltr">{{ item.code }}</small>
+            </td>
+            <td>
+              <span class="status neutral">{{ modeLabel(item.attendanceMode) }}</span>
+            </td>
+            <td>{{ (item.expectedDailyMinutes / 60).toFixed(1) }} ساعة</td>
+            <td>{{ cycleLabel(item.payCycle) }}</td>
+            <td>
+              <strong>{{ item.schedules.length }}</strong>
+              @if (item.schedules[0]) {
+                <small>من {{ item.schedules[0].startTime.slice(0, 5) }}</small>
+              } @else {
+                <small>—</small>
+              }
+            </td>
+            <td>
+              <span class="status" [class.success]="item.active" [class.neutral]="!item.active">{{
+                item.active ? 'نشطة' : 'متوقفة'
+              }}</span>
+            </td>
+            <td>
+              <div class="row-actions">
+                <button (click)="openEdit(item)" aria-label="تعديل">✎</button
+                ><button
+                  class="danger-link"
+                  (click)="deactivate(item)"
+                  [disabled]="!item.active"
+                  aria-label="تعطيل"
+                >
+                  ×
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <strong>لا توجد فئات بعد</strong>ابدأ بفئة الإدارة أو الأمن أو العمالة اليومية.
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (drawerOpen()) {
+    <button class="drawer-backdrop" (click)="drawerOpen.set(false)" aria-label="إغلاق"></button>
+    <aside class="drawer">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">{{ editingId() ? 'تعديل الإعداد' : 'إعداد جديد' }}</p>
+          <h2>{{ editingId() ? 'تعديل الفئة' : 'إنشاء فئة عمل' }}</h2>
+        </div>
+        <button class="button secondary icon-only" (click)="drawerOpen.set(false)">×</button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-grid">
+          <div class="field">
+            <label>كود الفئة</label
+            ><input formControlName="code" class="ltr" placeholder="SECURITY" />
+          </div>
+          <div class="field">
+            <label>اسم الفئة</label><input formControlName="name" placeholder="الأمن" />
+          </div>
+          <div class="field">
+            <label>طريقة إثبات الحضور</label
+            ><select formControlName="attendanceMode">
+              <option value="BIOMETRIC">بصمة</option>
+              <option value="MANUAL">يدوي — بدون بصمة</option>
+              <option value="HYBRID">مختلط</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>دورة الاستحقاق</label
+            ><select formControlName="payCycle">
+              <option value="MONTHLY">شهري</option>
+              <option value="HALF_MONTHLY">كل 15 يوم</option>
+              <option value="THIRTY_DAYS">كل 30 يوم</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>الدقائق اليومية الافتراضية</label
+            ><input type="number" formControlName="expectedDailyMinutes" />
+          </div>
+          <label class="check-field"
+            ><input type="checkbox" formControlName="singlePunchCounts" /> بصمة واحدة تثبت الحضور
+            وتظهر كملاحظة</label
+          >
+          <div class="field span-2">
+            <label>أيام العمل</label>
+            <div class="days">
+              @for (day of days; track day.code) {
+                <label
+                  ><input
+                    type="checkbox"
+                    [checked]="hasDay(day.code)"
+                    (change)="toggleDayFromEvent(day.code, $event)"
+                  />{{ day.label }}</label
+                >
+              }
+            </div>
+          </div>
+        </div>
+        <div class="rules-title">
+          <div>
+            <h3>قواعد المواعيد الفعّالة</h3>
+            <p>أضف الصيف والشتاء أو أي تغيير مستقبلي بدون تعديل الكود.</p>
+          </div>
+          <button type="button" class="button secondary" (click)="addSchedule()">＋ قاعدة</button>
+        </div>
+        <div formArrayName="schedules" class="rules">
+          @for (group of form.controls.schedules.controls; track $index) {
+            <div class="rule-card" [formGroupName]="$index">
+              <div class="rule-head">
+                <strong>قاعدة {{ $index + 1 }}</strong
+                ><button
+                  type="button"
+                  (click)="removeSchedule($index)"
+                  [disabled]="form.controls.schedules.length === 1"
+                >
+                  حذف
+                </button>
+              </div>
+              <div class="form-grid">
+                <div class="field span-2"><label>الاسم</label><input formControlName="name" /></div>
+                <div class="field">
+                  <label>من</label><input type="date" formControlName="effectiveFrom" />
+                </div>
+                <div class="field">
+                  <label>إلى (اختياري)</label><input type="date" formControlName="effectiveTo" />
+                </div>
+                <div class="field">
+                  <label>بداية الدوام</label><input type="time" formControlName="startTime" />
+                </div>
+                <div class="field">
+                  <label>ساعات مختلفة؟ (دقائق)</label
+                  ><input
+                    type="number"
+                    formControlName="expectedMinutesOverride"
+                    placeholder="استخدم الافتراضي"
+                  />
+                </div>
+                <div class="field">
+                  <label>مهلة التأخير بالدقائق</label
+                  ><input type="number" formControlName="graceMinutes" />
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <label class="check-field active-check"
+          ><input type="checkbox" formControlName="active" /> الفئة نشطة</label
+        >
+        <div class="drawer-actions">
+          <button class="button primary" type="submit" [disabled]="store.loading()">
+            حفظ الإعداد</button
+          ><button class="button secondary" type="button" (click)="drawerOpen.set(false)">
+            إلغاء
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_app_session_timeout
+      author: Mohamed-Hammada
+      changes:
+        - addColumn:
+            tableName: apps
+            columns:
+              - column:
+                  name: session_timeout_minutes
+                  type: INT
+                  defaultValueNumeric: 480
+                  constraints: { nullable: false }
+      rollback:
+        - dropColumn: { tableName: apps, columnName: session_timeout_minutes }
+
+  - changeSet:
+      id: seed_app_session_timeout_translations
+      author: Mohamed-Hammada
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              VALUES ('ar-086', 'settings.sessionTitle', 'ar-EG', 'مدة الجلسة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              VALUES ('en-086', 'settings.sessionTitle', 'en-US', 'Session timeout', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              VALUES ('ar-087', 'settings.sessionHint', 'ar-EG', 'يحددها مدير النظام وتطبق على جلسات الدخول الجديدة. الحد من 5 دقائق إلى 7 أيام.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              VALUES ('en-087', 'settings.sessionHint', 'en-US', 'Administrators control this for new sign-ins. Allowed range: 5 minutes to 7 days.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              VALUES ('ar-088', 'settings.sessionMinutes', 'ar-EG', 'المدة بالدقائق', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              VALUES ('en-088', 'settings.sessionMinutes', 'en-US', 'Duration in minutes', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              VALUES ('ar-089', 'settings.sessionSave', 'ar-EG', 'حفظ مدة الجلسة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              VALUES ('en-089', 'settings.sessionSave', 'en-US', 'Save session timeout', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              VALUES ('ar-090', 'settings.sessionSaved', 'ar-EG', 'تم حفظ مدة الجلسة. ستطبق عند تسجيل الدخول التالي.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+              INSERT INTO translations (id, translation_key, locale, text_value, created_at, updated_at)
+              VALUES ('en-090', 'settings.sessionSaved', 'en-US', 'Session timeout saved. It will apply at the next sign-in.', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+      rollback:
+        - delete:
+            tableName: translations
+            where: id IN ('ar-086','en-086','ar-087','en-087','ar-088','en-088','ar-089','en-089','ar-090','en-090')

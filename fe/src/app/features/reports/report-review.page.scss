@@ -1,0 +1,135 @@
+.back {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.review-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 25px;
+}
+.review-summary article {
+  padding: 17px;
+}
+.review-summary span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.review-summary strong {
+  display: block;
+  margin-top: 4px;
+  font: 700 25px var(--heading-font);
+}
+.review-summary .exception strong {
+  color: var(--danger);
+}
+.holiday-section {
+  margin-bottom: 28px;
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 11px;
+}
+.section-head h2 {
+  margin: 0;
+}
+.section-head p {
+  margin: 3px 0 0;
+  color: var(--muted);
+}
+.holiday-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 10px;
+}
+.holiday-grid article {
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.holiday-grid h3 {
+  margin: 9px 0 2px;
+}
+.holiday-grid p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.segmented {
+  display: flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.segmented button {
+  height: 34px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  cursor: pointer;
+}
+.segmented button.active {
+  background: var(--ink);
+  color: #fff;
+}
+.review-table {
+  max-height: 67vh;
+}
+.review-table th {
+  top: 0;
+}
+.review-table tr.unresolved td {
+  background: var(--warning-soft);
+}
+.review-table td strong,
+.review-table td small {
+  display: block;
+}
+.review-table td small {
+  color: var(--muted);
+  margin-top: 3px;
+}
+.warning-copy {
+  max-width: 210px;
+  color: var(--warning) !important;
+}
+.decision-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.decision-actions button {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  padding: 5px 7px;
+  cursor: pointer;
+  font-size: 11px;
+}
+.decision-actions button:nth-child(2) {
+  color: var(--danger);
+}
+@media (max-width: 900px) {
+  .review-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .rows-head {
+    align-items: flex-start;
+    display: grid;
+  }
+  .review-table {
+    max-height: none;
+  }
+  .holiday-grid article {
+    display: grid;
+  }
+}

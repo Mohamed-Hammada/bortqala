@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_platform_translations
+      author: Mohamed-Hammada
+      changes:
+        - createTable:
+            tableName: translations
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: translation_key, type: VARCHAR(150), constraints: { nullable: false } }
+              - column: { name: locale, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: text_value, type: TEXT, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: translations
+            columnNames: translation_key, locale
+            constraintName: uq_translations_key_locale
+        - loadData:
+            tableName: translations
+            file: data/translations.csv
+            relativeToChangelogFile: true
+            encoding: UTF-8
+            separator: ;
+      rollback:
+        - dropTable: { tableName: translations }

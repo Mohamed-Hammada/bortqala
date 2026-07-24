@@ -1,0 +1,136 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">مصدر الحضور</p>
+      <h1>استيراد تقارير البصمة</h1>
+      <p>يدعم CSV وXLS وXLSX؛ كل صف خام محفوظ ولا يُعاد كتابته.</p>
+    </div>
+    <button class="button secondary" (click)="store.export('imports')">
+      ⇩ سجل الاستيراد Excel
+    </button>
+  </header>
+  @if (store.loading()) {
+    <div class="loading"></div>
+  }
+  @if (store.error()) {
+    <div class="alert error">{{ store.error() }}</div>
+  }
+  @if (store.success()) {
+    <div class="alert success">{{ store.success() }}</div>
+  }
+  <div class="upload-card card">
+    <div class="upload-copy">
+      <span class="upload-icon">⇩</span>
+      <div>
+        <h2>ارفع ملف جهاز الحضور</h2>
+        <p>
+          الأعمدة المطلوبة: <code>device_user_id</code> و<code>punched_at</code>، والاسم اختياري.
+        </p>
+      </div>
+    </div>
+    <div class="upload-controls">
+      <div class="field">
+        <label>اسم الجهاز</label
+        ><input #deviceInput [value]="deviceName()" (input)="deviceName.set(deviceInput.value)" />
+      </div>
+      <label class="file-picker"
+        ><input type="file" accept=".csv,.txt,.xlsx,.xls" (change)="choose($event)" /><span>{{
+          file()?.name ?? 'اختر ملفًا'
+        }}</span></label
+      ><button class="button primary" (click)="upload()" [disabled]="!file() || store.loading()">
+        بدء الاستيراد
+      </button>
+    </div>
+  </div>
+  <div class="section-grid">
+    <section>
+      <div class="section-head">
+        <div>
+          <h2>هويات تحتاج ربطًا</h2>
+          <p>البصمة موجودة لكن رقم الجهاز غير مربوط بموظف.</p>
+        </div>
+        <div class="toolbar">
+          <button class="button secondary" (click)="store.export('unmatched')">⇩ Excel</button
+          ><a class="button gold" routerLink="/employees">إدارة الموظفين</a>
+        </div>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>رقم الجهاز</th>
+              <th>الاسم المرصود</th>
+              <th>عدد البصمات</th>
+              <th>أول / آخر ظهور</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of store.unmatched(); track item.deviceUserId) {
+              <tr>
+                <td>
+                  <code>{{ item.deviceUserId }}</code>
+                </td>
+                <td>{{ item.observedName ?? '—' }}</td>
+                <td>{{ item.punchCount }}</td>
+                <td>
+                  <span class="ltr">{{ dateTime(item.firstPunch) }}</span
+                  ><small class="ltr">{{ dateTime(item.lastPunch) }}</small>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4">
+                  <div class="empty-state">
+                    <strong>كل الهويات مربوطة</strong>لا توجد بصمات مجهولة حاليًا.
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section>
+      <div class="section-head">
+        <div>
+          <h2>دفعات الاستيراد</h2>
+          <p>Checksum يمنع تكرار نفس الملف.</p>
+        </div>
+      </div>
+      <div class="batches">
+        @for (item of store.batches(); track item.id) {
+          <article class="card">
+            <button
+              class="batch-main"
+              (click)="expanded.set(expanded() === item.id ? null : item.id)"
+            >
+              <span class="file-icon">▤</span
+              ><span
+                ><strong>{{ item.fileName }}</strong
+                ><small>{{ item.deviceName }} · {{ dateTime(item.importedAt) }}</small></span
+              ><span class="counts">{{ item.importedRows }}<small>بصمة</small></span
+              ><span
+                class="status"
+                [class.success]="!item.errorRows"
+                [class.warning]="item.errorRows"
+                >{{ item.errorRows ? item.errorRows + ' خطأ' : 'مكتمل' }}</span
+              >
+            </button>
+            @if (expanded() === item.id && item.errors.length) {
+              <div class="error-list">
+                @for (error of item.errors; track error.rowNumber) {
+                  <p>
+                    <strong>صف {{ error.rowNumber }}</strong> {{ error.message
+                    }}<small>{{ error.rawLine }}</small>
+                  </p>
+                }
+              </div>
+            }
+          </article>
+        } @empty {
+          <div class="empty-state card"><strong>لا توجد دفعات</strong>ارفع أول ملف بصمة.</div>
+        }
+      </div>
+    </section>
+  </div>
+</section>

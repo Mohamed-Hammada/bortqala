@@ -1,0 +1,162 @@
+<section class="page" [class.drawer-active]="drawerOpen()">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">دليل العاملين</p>
+      <h1>الموظفون وربط البصمة</h1>
+      <p>العامل اليدوي لا يحتاج رقم جهاز؛ الفئة تحدد طريقة إثبات الحضور.</p>
+    </div>
+    <div class="toolbar">
+      <button class="button secondary" (click)="store.export()">⇩ Excel</button
+      ><button class="button primary" (click)="openNew()" [disabled]="!store.categories().length">
+        ＋ موظف جديد
+      </button>
+    </div>
+  </header>
+  <div class="filters">
+    <div class="search">
+      <span>⌕</span
+      ><input
+        #searchInput
+        (input)="search.set(searchInput.value)"
+        placeholder="بحث بالاسم أو الكود أو رقم الجهاز"
+        aria-label="بحث"
+      />
+    </div>
+    <span>{{ filtered().length }} موظف</span>
+  </div>
+  @if (store.loading()) {
+    <div class="loading"></div>
+  }
+  @if (store.error()) {
+    <div class="alert error">{{ store.error() }}</div>
+  }
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>الموظف</th>
+          <th>الفئة</th>
+          <th>نوع التعيين</th>
+          <th>رقم جهاز البصمة</th>
+          <th>فترة النشاط</th>
+          <th>الحالة</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of filtered(); track item.id) {
+          <tr>
+            <td>
+              <strong>{{ item.fullName }}</strong
+              ><small class="ltr">{{ item.employeeCode }}</small>
+            </td>
+            <td>{{ item.categoryName }}</td>
+            <td>
+              <span class="status neutral">{{ typeLabel(item.employmentType) }}</span>
+            </td>
+            <td>
+              @if (item.deviceUserId) {
+                <code>{{ item.deviceUserId }}</code>
+              } @else {
+                <span class="manual">يدوي / بدون بصمة</span>
+              }
+            </td>
+            <td>
+              <span class="ltr">{{ date(item.activeFrom) }}</span
+              ><small>
+                @if (item.activeTo) {
+                  حتى {{ date(item.activeTo) }}
+                } @else {
+                  مستمر
+                }
+              </small>
+            </td>
+            <td>
+              <span class="status" [class.success]="item.active" [class.neutral]="!item.active">{{
+                item.active ? 'نشط' : 'متوقف'
+              }}</span>
+            </td>
+            <td>
+              <div class="row-actions">
+                <button (click)="openEdit(item)">✎</button
+                ><button class="danger-link" (click)="deactivate(item)" [disabled]="!item.active">
+                  ×
+                </button>
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <strong>لا يوجد موظفون مطابقون</strong>أضف فئة أولًا ثم سجل الموظفين.
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  @if (drawerOpen()) {
+    <button class="drawer-backdrop" (click)="drawerOpen.set(false)" aria-label="إغلاق"></button>
+    <aside class="drawer">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">{{ editingId() ? 'تعديل بيانات' : 'سجل جديد' }}</p>
+          <h2>{{ editingId() ? 'تعديل الموظف' : 'إضافة موظف' }}</h2>
+        </div>
+        <button class="button secondary icon-only" (click)="drawerOpen.set(false)">×</button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-grid">
+          <div class="field">
+            <label>كود الموظف</label
+            ><input class="ltr" formControlName="employeeCode" placeholder="EMP-001" />
+          </div>
+          <div class="field"><label>الاسم بالكامل</label><input formControlName="fullName" /></div>
+          <div class="field">
+            <label>الفئة</label
+            ><select formControlName="categoryId">
+              @for (category of store.categories(); track category.id) {
+                <option [value]="category.id">
+                  {{ category.name }} — {{ category.attendanceMode === 'MANUAL' ? 'يدوي' : 'بصمة' }}
+                </option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>نوع التعيين</label
+            ><select formControlName="employmentType">
+              <option value="FIXED">ثابت</option>
+              <option value="DAILY">يومية</option>
+            </select>
+          </div>
+          <div class="field span-2">
+            <label>رقم المستخدم على جهاز البصمة (اختياري)</label
+            ><input
+              class="ltr"
+              formControlName="deviceUserId"
+              placeholder="اتركه فارغًا للعمالة اليدوية"
+            /><small>اسم الموظف في الملف للمساعدة فقط؛ المطابقة الآمنة بهذا الرقم.</small>
+          </div>
+          <div class="field">
+            <label>نشط من</label><input type="date" formControlName="activeFrom" />
+          </div>
+          <div class="field">
+            <label>نشط إلى (اختياري)</label><input type="date" formControlName="activeTo" />
+          </div>
+        </div>
+        <label class="active-check"
+          ><input type="checkbox" formControlName="active" /> الموظف نشط</label
+        >
+        <div class="drawer-actions">
+          <button class="button primary" type="submit" [disabled]="store.loading()">
+            حفظ الموظف</button
+          ><button class="button secondary" type="button" (click)="drawerOpen.set(false)">
+            إلغاء
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

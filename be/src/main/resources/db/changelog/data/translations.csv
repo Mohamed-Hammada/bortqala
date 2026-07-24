@@ -1,0 +1,167 @@
+id;translation_key;locale;text_value
+ar-001;app.attendanceReports;ar-EG;الحضور والتقارير
+en-001;app.attendanceReports;en-US;Attendance & reports
+ar-002;nav.dashboard;ar-EG;لوحة المتابعة
+en-002;nav.dashboard;en-US;Dashboard
+ar-003;nav.dashboardHint;ar-EG;ملخص الشهر
+en-003;nav.dashboardHint;en-US;Monthly overview
+ar-004;nav.categories;ar-EG;الفئات والقواعد
+en-004;nav.categories;en-US;Categories & rules
+ar-005;nav.categoriesHint;ar-EG;الساعات والجداول
+en-005;nav.categoriesHint;en-US;Hours & schedules
+ar-006;nav.employees;ar-EG;الموظفون
+en-006;nav.employees;en-US;Employees
+ar-007;nav.employeesHint;ar-EG;الربط والتعيين
+en-007;nav.employeesHint;en-US;Mapping & assignment
+ar-008;nav.imports;ar-EG;استيراد البصمة
+en-008;nav.imports;en-US;Biometric imports
+ar-009;nav.importsHint;ar-EG;ملفات وهوية الجهاز
+en-009;nav.importsHint;en-US;Files & device identities
+ar-010;nav.reports;ar-EG;التقارير
+en-010;nav.reports;en-US;Reports
+ar-011;nav.reportsHint;ar-EG;المراجعة والاعتماد
+en-011;nav.reportsHint;en-US;Review & approval
+ar-012;nav.users;ar-EG;المستخدمون
+en-012;nav.users;en-US;Users
+ar-013;nav.usersHint;ar-EG;الأدوار والصلاحيات
+en-013;nav.usersHint;en-US;Roles & permissions
+ar-014;nav.settings;ar-EG;إعداداتي
+en-014;nav.settings;en-US;My settings
+ar-015;action.logout;ar-EG;تسجيل الخروج
+en-015;action.logout;en-US;Sign out
+ar-016;action.closeMenu;ar-EG;إغلاق القائمة
+en-016;action.closeMenu;en-US;Close menu
+ar-017;action.openMenu;ar-EG;فتح القائمة
+en-017;action.openMenu;en-US;Open menu
+ar-018;login.story;ar-EG;حضور واضح. قرار موثّق. تقرير تثق فيه.
+en-018;login.story;en-US;Clear attendance. Audited decisions. Reports you can trust.
+ar-019;login.storyHint;ar-EG;من البصمة أو الإدخال اليدوي إلى Excel — بدون غموض.
+en-019;login.storyHint;en-US;From biometric or manual attendance to Excel — with clear evidence.
+ar-020;login.product;ar-EG;بيمو لإدارة الموارد البشرية
+en-020;login.product;en-US;Bemo HR management
+ar-021;login.title;ar-EG;مرحبًا بعودتك
+en-021;login.title;en-US;Welcome back
+ar-022;login.intro;ar-EG;سجّل الدخول لمتابعة حضور الموظفين وتقارير الشهر.
+en-022;login.intro;en-US;Sign in to manage attendance and reporting.
+ar-023;login.appCode;ar-EG;كود الشركة
+en-023;login.appCode;en-US;Company code
+ar-024;login.username;ar-EG;اسم المستخدم
+en-024;login.username;en-US;Username
+ar-025;login.password;ar-EG;كلمة المرور
+en-025;login.password;en-US;Password
+ar-026;login.show;ar-EG;إظهار
+en-026;login.show;en-US;Show
+ar-027;login.hide;ar-EG;إخفاء
+en-027;login.hide;en-US;Hide
+ar-028;login.submit;ar-EG;دخول آمن
+en-028;login.submit;en-US;Secure sign in
+ar-029;login.loading;ar-EG;جارٍ الدخول…
+en-029;login.loading;en-US;Signing in…
+ar-030;login.localHint;ar-EG;للتطوير المحلي
+en-030;login.localHint;en-US;Local development
+ar-031;settings.eyebrow;ar-EG;تفضيلات المستخدم
+en-031;settings.eyebrow;en-US;User preferences
+ar-032;settings.title;ar-EG;إعداداتي
+en-032;settings.title;en-US;My settings
+ar-033;settings.description;ar-EG;هذه الاختيارات محفوظة لحسابك وتعمل على أي جهاز.
+en-033;settings.description;en-US;These preferences are saved to your account and work on every device.
+ar-034;settings.theme;ar-EG;المظهر
+en-034;settings.theme;en-US;Theme
+ar-035;settings.themeHint;ar-EG;اختر المظهر المناسب أو اتبع إعداد نظام التشغيل.
+en-035;settings.themeHint;en-US;Choose a theme or follow your operating system.
+ar-036;settings.light;ar-EG;فاتح
+en-036;settings.light;en-US;Light
+ar-037;settings.dark;ar-EG;داكن
+en-037;settings.dark;en-US;Dark
+ar-038;settings.system;ar-EG;حسب النظام
+en-038;settings.system;en-US;System
+ar-039;settings.density;ar-EG;كثافة الجداول
+en-039;settings.density;en-US;Table density
+ar-040;settings.densityHint;ar-EG;المدمج يعرض صفوفًا أكثر، والمريح أسهل للقراءة واللمس.
+en-040;settings.densityHint;en-US;Compact shows more rows — comfortable is easier to read and touch.
+ar-041;settings.comfortable;ar-EG;مريحة
+en-041;settings.comfortable;en-US;Comfortable
+ar-042;settings.compact;ar-EG;مدمجة
+en-042;settings.compact;en-US;Compact
+ar-043;settings.language;ar-EG;اللغة
+en-043;settings.language;en-US;Language
+ar-044;settings.arabic;ar-EG;العربية
+en-044;settings.arabic;en-US;Arabic
+ar-045;settings.english;ar-EG;الإنجليزية
+en-045;settings.english;en-US;English
+ar-046;settings.save;ar-EG;حفظ الإعدادات
+en-046;settings.save;en-US;Save settings
+ar-047;settings.saving;ar-EG;جارٍ الحفظ…
+en-047;settings.saving;en-US;Saving…
+ar-048;settings.saved;ar-EG;تم حفظ إعداداتك.
+en-048;settings.saved;en-US;Your settings were saved.
+ar-049;reports.eyebrow;ar-EG;دورة المراجعة
+en-049;reports.eyebrow;en-US;Review cycle
+ar-050;reports.title;ar-EG;التقارير والفترات
+en-050;reports.title;en-US;Reports & periods
+ar-051;reports.description;ar-EG;حدد أي نطاق زمني، اختر دورة الاستحقاق، راجع الاستثناءات، ثم اعتمد لقطة ثابتة.
+en-051;reports.description;en-US;Select a date range and pay cycle, review exceptions, then approve an immutable snapshot.
+ar-052;reports.create;ar-EG;إنشاء تقرير جديد
+en-052;reports.create;en-US;Create a new report
+ar-053;reports.createHint;ar-EG;اختر البداية والنهاية ونوع الفئات. يمنع النظام تداخل تقريرين لنفس دورة الاستحقاق.
+en-053;reports.createHint;en-US;Choose dates and category cycle. Overlapping reports for one pay cycle are blocked.
+ar-054;reports.from;ar-EG;من تاريخ
+en-054;reports.from;en-US;From date
+ar-055;reports.to;ar-EG;إلى تاريخ
+en-055;reports.to;en-US;To date
+ar-056;reports.payCycle;ar-EG;فئات دورة الاستحقاق
+en-056;reports.payCycle;en-US;Pay-cycle categories
+ar-057;reports.monthly;ar-EG;الفئات الشهرية
+en-057;reports.monthly;en-US;Monthly categories
+ar-058;reports.halfMonthly;ar-EG;فئات كل 15 يوم
+en-058;reports.halfMonthly;en-US;Half-month categories
+ar-059;reports.createAction;ar-EG;إنشاء التقرير
+en-059;reports.createAction;en-US;Create report
+ar-060;reports.presets;ar-EG;اختصارات جاهزة
+en-060;reports.presets;en-US;Quick presets
+ar-061;reports.year;ar-EG;السنة
+en-061;reports.year;en-US;Year
+ar-062;reports.presetHint;ar-EG;الشهر الكامل أو النصف الأول/الثاني
+en-062;reports.presetHint;en-US;Full month or first/second half
+ar-063;reports.previous;ar-EG;التقارير السابقة
+en-063;reports.previous;en-US;Previous reports
+ar-064;reports.period;ar-EG;الفترة
+en-064;reports.period;en-US;Period
+ar-065;reports.status;ar-EG;الحالة
+en-065;reports.status;en-US;Status
+ar-066;reports.unresolved;ar-EG;استثناءات معلّقة
+en-066;reports.unresolved;en-US;Unresolved exceptions
+ar-067;reports.createdBy;ar-EG;أنشأه
+en-067;reports.createdBy;en-US;Created by
+ar-068;reports.approval;ar-EG;الاعتماد
+en-068;reports.approval;en-US;Approval
+ar-069;reports.open;ar-EG;فتح التقرير
+en-069;reports.open;en-US;Open report
+ar-070;reports.noReports;ar-EG;لا توجد تقارير
+en-070;reports.noReports;en-US;No reports yet
+ar-071;reports.noReportsHint;ar-EG;اختر فترة متاحة للبدء.
+en-071;reports.noReportsHint;en-US;Choose an available period to begin.
+ar-072;reports.noPeriods;ar-EG;لا توجد فترات جاهزة
+en-072;reports.noPeriods;en-US;No presets available
+ar-073;reports.noPeriodsHint;ar-EG;استخدم النطاق المخصص أو أضف فئات نشطة.
+en-073;reports.noPeriodsHint;en-US;Use a custom range or add active categories.
+ar-074;reports.monthlyShort;ar-EG;شهري
+en-074;reports.monthlyShort;en-US;Monthly
+ar-075;reports.firstHalf;ar-EG;من 1 إلى 15
+en-075;reports.firstHalf;en-US;Days 1–15
+ar-076;reports.secondHalf;ar-EG;من 16 إلى نهاية الشهر
+en-076;reports.secondHalf;en-US;Day 16 to month end
+ar-077;reports.cycleMonthly;ar-EG;فئات الاستحقاق الشهري
+en-077;reports.cycleMonthly;en-US;Monthly pay-cycle categories
+ar-078;reports.cycleHalf;ar-EG;فئات الاستحقاق كل 15 يوم
+en-078;reports.cycleHalf;en-US;Half-month pay-cycle categories
+ar-079;reports.invalidRange;ar-EG;تاريخ النهاية يجب أن يساوي أو يلي تاريخ البداية.
+en-079;reports.invalidRange;en-US;End date must be on or after start date.
+ar-080;status.draft;ar-EG;مسودة
+en-080;status.draft;en-US;Draft
+ar-081;status.inReview;ar-EG;تحت المراجعة
+en-081;status.inReview;en-US;In review
+ar-082;status.approved;ar-EG;معتمد
+en-082;status.approved;en-US;Approved
+ar-083;status.exported;ar-EG;تم التصدير
+en-083;status.exported;en-US;Exported

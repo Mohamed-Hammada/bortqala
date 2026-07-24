@@ -1,0 +1,75 @@
+<main class="login-page">
+  <section class="story-panel" aria-hidden="true">
+    <div class="orb orb-one"></div>
+    <div class="orb orb-two"></div>
+    <div class="story-copy">
+      <span class="monogram">ب</span>
+      <p>{{ i18n.t('login.story') }}</p>
+      <small>{{ i18n.t('login.storyHint') }}</small>
+    </div>
+  </section>
+  <section class="login-panel">
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="language-switch" aria-label="Language / اللغة">
+        <button
+          type="button"
+          (click)="changeLanguage('ar-EG')"
+          [class.active]="i18n.locale() === 'ar-EG'"
+        >
+          ع
+        </button>
+        <button
+          type="button"
+          (click)="changeLanguage('en-US')"
+          [class.active]="i18n.locale() === 'en-US'"
+        >
+          EN
+        </button>
+      </div>
+      <p class="eyebrow">{{ i18n.t('login.product') }}</p>
+      <h1>{{ i18n.t('login.title') }}</h1>
+      <p class="intro">{{ i18n.t('login.intro') }}</p>
+      @if (sessionExpired) {
+        <div class="alert warning" role="status">{{ i18n.t('login.sessionExpired') }}</div>
+      }
+      @if (error()) {
+        <div class="alert error" role="alert">{{ error() }}</div>
+      }
+      <div class="field">
+        <label for="appCode">{{ i18n.t('login.appCode') }}</label
+        ><input
+          id="appCode"
+          formControlName="appCode"
+          autocomplete="organization"
+          placeholder="مثال: DEMO"
+        />
+      </div>
+      <div class="field">
+        <label for="username">{{ i18n.t('login.username') }}</label
+        ><input
+          id="username"
+          formControlName="username"
+          autocomplete="username"
+          placeholder="مثال: admin"
+        />
+      </div>
+      <div class="field password-field">
+        <label for="password">{{ i18n.t('login.password') }}</label
+        ><input
+          id="password"
+          formControlName="password"
+          [type]="showPassword() ? 'text' : 'password'"
+          autocomplete="current-password"
+        /><button type="button" (click)="showPassword.set(!showPassword())">
+          {{ i18n.t(showPassword() ? 'login.hide' : 'login.show') }}
+        </button>
+      </div>
+      <button class="button primary submit" type="submit" [disabled]="loading()">
+        {{ i18n.t(loading() ? 'login.loading' : 'login.submit') }}
+      </button>
+      <p class="local-hint">
+        {{ i18n.t('login.localHint') }}: <span class="ltr">DEMO / admin / Admin&#64;12345</span>
+      </p>
+    </form>
+  </section>
+</main>

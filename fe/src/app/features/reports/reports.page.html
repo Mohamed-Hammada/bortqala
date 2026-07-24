@@ -1,0 +1,144 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('reports.eyebrow') }}</p>
+      <h1>{{ i18n.t('reports.title') }}</h1>
+      <p>{{ i18n.t('reports.description') }}</p>
+    </div>
+    <div class="field year-field">
+      <label>{{ i18n.t('reports.year') }}</label
+      ><input
+        class="ltr"
+        #yearInput
+        type="number"
+        [value]="year()"
+        (change)="changeYear(yearInput.value)"
+      />
+    </div>
+  </header>
+  @if (store.loading()) {
+    <div class="loading"></div>
+  }
+  @if (store.error()) {
+    <div class="alert error">{{ store.error() }}</div>
+  }
+  <section class="card create-card">
+    <div>
+      <h2>{{ i18n.t('reports.create') }}</h2>
+      <p>{{ i18n.t('reports.createHint') }}</p>
+    </div>
+    <form class="period-form" [formGroup]="periodForm" (ngSubmit)="createCustom()">
+      <div class="field">
+        <label for="report-period-start">{{ i18n.t('reports.from') }}</label>
+        <input id="report-period-start" class="ltr" type="date" formControlName="periodStart" />
+      </div>
+      <div class="field">
+        <label for="report-period-end">{{ i18n.t('reports.to') }}</label>
+        <input id="report-period-end" class="ltr" type="date" formControlName="periodEnd" />
+      </div>
+      <div class="field">
+        <label for="report-pay-cycle">{{ i18n.t('reports.payCycle') }}</label>
+        <select id="report-pay-cycle" formControlName="payCycle">
+          <option value="MONTHLY">{{ i18n.t('reports.monthly') }}</option>
+          <option value="HALF_MONTHLY">{{ i18n.t('reports.halfMonthly') }}</option>
+          <option value="THIRTY_DAYS">{{ i18n.t('reports.thirtyDays') }}</option>
+        </select>
+      </div>
+      <button
+        class="button primary"
+        type="submit"
+        [disabled]="store.loading() || periodForm.invalid"
+      >
+        {{ i18n.t('reports.createAction') }}
+      </button>
+    </form>
+    @if (customError()) {
+      <div class="alert error period-error">{{ customError() }}</div>
+    }
+    <div class="preset-head">
+      <strong>{{ i18n.t('reports.presets') }}</strong>
+      <span>{{ i18n.t('reports.presetHint') }}</span>
+    </div>
+    <div class="periods">
+      @for (period of store.periods(); track period.start + period.end) {
+        <button [disabled]="store.loading()" (click)="create(period)">
+          <strong>{{ periodName(period) }}</strong>
+          <small>{{ cycleLabel(period) }}</small>
+          <span class="ltr">{{ date(period.start) }} → {{ date(period.end) }}</span>
+        </button>
+      } @empty {
+        <div class="empty-state compact">
+          <strong>{{ i18n.t('reports.noPeriods') }}</strong>
+          {{ i18n.t('reports.noPeriodsHint') }}
+        </div>
+      }
+    </div>
+  </section>
+  <div class="section-head">
+    <div>
+      <h2>{{ i18n.t('reports.previous') }}</h2>
+      <p>{{ store.reports().length }} تقرير</p>
+    </div>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('reports.period') }}</th>
+          <th>{{ i18n.t('reports.status') }}</th>
+          <th>{{ i18n.t('reports.unresolved') }}</th>
+          <th>{{ i18n.t('reports.createdBy') }}</th>
+          <th>{{ i18n.t('reports.approval') }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of store.reports(); track item.id) {
+          <tr>
+            <td>
+              <strong class="ltr">{{ date(item.periodStart) }}</strong
+              ><small class="ltr">{{ date(item.periodEnd) }}</small
+              ><small>{{ payCycleLabel(item.payCycle) }}</small>
+            </td>
+            <td>
+              <span
+                class="status"
+                [class.warning]="item.status === 'IN_REVIEW'"
+                [class.success]="item.status === 'APPROVED' || item.status === 'EXPORTED'"
+                >{{ label(item.status) }}</span
+              >
+            </td>
+            <td>
+              <strong [class.danger-text]="item.unresolvedCount">{{ item.unresolvedCount }}</strong>
+            </td>
+            <td>
+              {{ item.createdBy }}<small>{{ dateTime(item.createdAt) }}</small>
+            </td>
+            <td>
+              {{ item.approvedBy ?? '—'
+              }}<small>
+                @if (item.approvedAt) {
+                  {{ dateTime(item.approvedAt) }}
+                }
+              </small>
+            </td>
+            <td>
+              <a class="button secondary" [routerLink]="['/reports', item.id]">{{
+                i18n.t('reports.open')
+              }}</a>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <strong>{{ i18n.t('reports.noReports') }}</strong
+                >{{ i18n.t('reports.noReportsHint') }}
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

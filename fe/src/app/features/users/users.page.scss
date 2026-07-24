@@ -1,0 +1,86 @@
+.role-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.role-cards article {
+  padding: 16px;
+}
+.role-cards span {
+  color: var(--gold-dark);
+  font-size: 10px;
+  font-weight: 700;
+}
+.role-cards strong,
+.role-cards small {
+  display: block;
+}
+.role-cards strong {
+  margin: 5px 0;
+}
+.role-cards small,
+td small {
+  color: var(--muted);
+}
+td strong,
+td small {
+  display: block;
+}
+.role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.role-list span {
+  padding: 4px 8px;
+  border-radius: 7px;
+  background: var(--surface-muted);
+  font-size: 11px;
+}
+.edit-button {
+  height: 35px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.role-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.role-options label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 11px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+.role-options strong,
+.role-options small {
+  display: block;
+}
+.role-options small {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 2px;
+}
+.active-check {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+  font-weight: 700;
+}
+@media (max-width: 800px) {
+  .role-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 500px) {
+  .role-options {
+    grid-template-columns: 1fr;
+  }
+}

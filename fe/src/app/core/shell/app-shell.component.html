@@ -1,0 +1,83 @@
+<div class="app-frame">
+  <aside class="sidebar" [class.open]="menuOpen()">
+    <div class="brand">
+      <span class="brand-mark">ب</span>
+      <div>
+        <strong>{{ authService.app()?.name ?? 'بيمو HR' }}</strong
+        ><small>{{ authService.app()?.code }} · {{ i18n.t('app.attendanceReports') }}</small>
+      </div>
+      <a
+        class="icon-button settings-link"
+        routerLink="/settings"
+        routerLinkActive="active"
+        [attr.aria-label]="i18n.t('nav.settings')"
+        [attr.title]="i18n.t('nav.settings')"
+        (click)="closeMenu()"
+        ><app-icon name="settings"
+      /></a>
+      <button
+        class="icon-button close-menu"
+        type="button"
+        (click)="closeMenu()"
+        [attr.aria-label]="i18n.t('action.closeMenu')"
+      >
+        <app-icon name="close" />
+      </button>
+    </div>
+    <nav aria-label="التنقل الرئيسي">
+      @for (item of items; track item.path) {
+        @if (visible(item)) {
+          <a [routerLink]="item.path" routerLinkActive="active" (click)="closeMenu()">
+            <app-icon class="nav-icon" [name]="item.icon" />
+            <span
+              ><strong>{{ i18n.t(item.labelKey) }}</strong
+              ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+            >
+          </a>
+        }
+      }
+    </nav>
+    <div class="sidebar-foot">
+      <span class="avatar">{{ authService.user()?.displayName?.charAt(0) }}</span>
+      <div>
+        <strong>{{ authService.user()?.displayName }}</strong
+        ><small>{{ authService.user()?.roles?.join(' · ') }}</small>
+      </div>
+      <button
+        class="icon-button"
+        type="button"
+        (click)="logout()"
+        [attr.aria-label]="i18n.t('action.logout')"
+      >
+        <app-icon name="logout" />
+      </button>
+    </div>
+  </aside>
+  <button
+    class="backdrop"
+    [class.visible]="menuOpen()"
+    type="button"
+    (click)="closeMenu()"
+    [attr.aria-label]="i18n.t('action.closeMenu')"
+  ></button>
+  <main class="main-area">
+    <header class="mobile-header">
+      <button
+        class="icon-button"
+        type="button"
+        (click)="menuOpen.set(true)"
+        [attr.aria-label]="i18n.t('action.openMenu')"
+      >
+        <app-icon name="menu" /></button
+      ><strong>بيمو HR</strong
+      ><a
+        class="icon-button mobile-settings"
+        routerLink="/settings"
+        [attr.aria-label]="i18n.t('nav.settings')"
+        [attr.title]="i18n.t('nav.settings')"
+        ><app-icon name="settings"
+      /></a>
+    </header>
+    <router-outlet />
+  </main>
+</div>

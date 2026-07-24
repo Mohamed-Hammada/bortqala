@@ -1,0 +1,4 @@
+interface:
+  display_name: "HR Backend"
+  short_description: "Continue the Spring Boot HR backend safely"
+  default_prompt: "Use $hr-backend to implement the next backend feature consistently."

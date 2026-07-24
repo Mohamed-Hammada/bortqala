@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_mutable_aggregate_audit_timestamps
+      author: Mohamed-Hammada
+      changes:
+        - addColumn:
+            tableName: apps
+            columns:
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addColumn:
+            tableName: reports
+            columns:
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addColumn:
+            tableName: daily_results
+            columns:
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addColumn:
+            tableName: holiday_proposals
+            columns:
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+      rollback:
+        - dropColumn: { tableName: holiday_proposals, columnName: updated_at }
+        - dropColumn: { tableName: holiday_proposals, columnName: created_at }
+        - dropColumn: { tableName: daily_results, columnName: updated_at }
+        - dropColumn: { tableName: daily_results, columnName: created_at }
+        - dropColumn: { tableName: reports, columnName: updated_at }
+        - dropColumn: { tableName: apps, columnName: updated_at }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "HR Frontend"
+  short_description: "Continue the Angular HR frontend safely"
+  default_prompt: "Use $hr-frontend to implement the next frontend feature consistently."

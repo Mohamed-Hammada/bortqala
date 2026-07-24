@@ -1,0 +1,230 @@
+databaseChangeLog:
+  - changeSet:
+      id: canonicalize_user_preference_locales
+      author: Mohamed-Hammada
+      changes:
+        - sql:
+            sql: |
+              UPDATE user_preferences SET locale = 'en-US' WHERE LOWER(locale) = 'en-us';
+              UPDATE user_preferences SET locale = 'ar-EG' WHERE LOWER(locale) = 'ar-eg';
+
+  - changeSet:
+      id: seed_thirty_day_translations
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM translations WHERE translation_key = 'reports.thirtyDays'
+      changes:
+        - insert:
+            tableName: translations
+            columns:
+              - column: { name: id, value: ar-084 }
+              - column: { name: translation_key, value: reports.thirtyDays }
+              - column: { name: locale, value: ar-EG }
+              - column: { name: text_value, value: "كل 30 يوم" }
+        - insert:
+            tableName: translations
+            columns:
+              - column: { name: id, value: en-084 }
+              - column: { name: translation_key, value: reports.thirtyDays }
+              - column: { name: locale, value: en-US }
+              - column: { name: text_value, value: "Every 30 days" }
+      rollback:
+        - delete:
+            tableName: translations
+            where: id IN ('ar-084', 'en-084')
+
+  - changeSet:
+      id: seed_demo_reference_categories
+      author: Mohamed-Hammada
+      comment: Editable reference configuration derived from the customer's paper notes.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO attendance_categories
+                (id, app_id, code, name, expected_daily_minutes, pay_cycle, attendance_mode,
+                 single_punch_counts, work_days_mask, active, version, created_at, updated_at)
+              SELECT '10000000-0000-0000-0000-000000000001', a.id, 'ADMINISTRATION', 'الإداريون',
+                     480, 'THIRTY_DAYS', 'BIOMETRIC', FALSE, 111, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM apps a
+              WHERE UPPER(a.code) = 'DEMO'
+                AND NOT EXISTS (SELECT 1 FROM attendance_categories c WHERE c.app_id = a.id AND c.code = 'ADMINISTRATION');
+
+              INSERT INTO attendance_categories
+                (id, app_id, code, name, expected_daily_minutes, pay_cycle, attendance_mode,
+                 single_punch_counts, work_days_mask, active, version, created_at, updated_at)
+              SELECT '10000000-0000-0000-0000-000000000002', a.id, 'ACCOUNTING', 'الحسابات',
+                     600, 'THIRTY_DAYS', 'BIOMETRIC', FALSE, 111, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM apps a
+              WHERE UPPER(a.code) = 'DEMO'
+                AND NOT EXISTS (SELECT 1 FROM attendance_categories c WHERE c.app_id = a.id AND c.code = 'ACCOUNTING');
+
+              INSERT INTO attendance_categories
+                (id, app_id, code, name, expected_daily_minutes, pay_cycle, attendance_mode,
+                 single_punch_counts, work_days_mask, active, version, created_at, updated_at)
+              SELECT '10000000-0000-0000-0000-000000000003', a.id, 'SECRETARIAL', 'السكرتارية',
+                     480, 'THIRTY_DAYS', 'BIOMETRIC', FALSE, 111, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM apps a
+              WHERE UPPER(a.code) = 'DEMO'
+                AND NOT EXISTS (SELECT 1 FROM attendance_categories c WHERE c.app_id = a.id AND c.code = 'SECRETARIAL');
+
+              INSERT INTO attendance_categories
+                (id, app_id, code, name, expected_daily_minutes, pay_cycle, attendance_mode,
+                 single_punch_counts, work_days_mask, active, version, created_at, updated_at)
+              SELECT '10000000-0000-0000-0000-000000000004', a.id, 'DAILY_WORKERS', 'العمالة اليومية',
+                     480, 'HALF_MONTHLY', 'MANUAL', TRUE, 111, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM apps a
+              WHERE UPPER(a.code) = 'DEMO'
+                AND NOT EXISTS (SELECT 1 FROM attendance_categories c WHERE c.app_id = a.id AND c.code = 'DAILY_WORKERS');
+
+              INSERT INTO attendance_categories
+                (id, app_id, code, name, expected_daily_minutes, pay_cycle, attendance_mode,
+                 single_punch_counts, work_days_mask, active, version, created_at, updated_at)
+              SELECT '10000000-0000-0000-0000-000000000005', a.id, 'CLEANING_WORKERS', 'عمال النظافة',
+                     480, 'HALF_MONTHLY', 'MANUAL', TRUE, 111, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM apps a
+              WHERE UPPER(a.code) = 'DEMO'
+                AND NOT EXISTS (SELECT 1 FROM attendance_categories c WHERE c.app_id = a.id AND c.code = 'CLEANING_WORKERS');
+
+              INSERT INTO attendance_categories
+                (id, app_id, code, name, expected_daily_minutes, pay_cycle, attendance_mode,
+                 single_punch_counts, work_days_mask, active, version, created_at, updated_at)
+              SELECT '10000000-0000-0000-0000-000000000006', a.id, 'OPERATION_WORKERS', 'عمال التشغيل',
+                     480, 'HALF_MONTHLY', 'MANUAL', TRUE, 111, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM apps a
+              WHERE UPPER(a.code) = 'DEMO'
+                AND NOT EXISTS (SELECT 1 FROM attendance_categories c WHERE c.app_id = a.id AND c.code = 'OPERATION_WORKERS');
+
+              INSERT INTO attendance_categories
+                (id, app_id, code, name, expected_daily_minutes, pay_cycle, attendance_mode,
+                 single_punch_counts, work_days_mask, active, version, created_at, updated_at)
+              SELECT '10000000-0000-0000-0000-000000000007', a.id, 'EXPORT_WORKERS', 'عمال التصدير',
+                     480, 'HALF_MONTHLY', 'MANUAL', TRUE, 111, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM apps a
+              WHERE UPPER(a.code) = 'DEMO'
+                AND NOT EXISTS (SELECT 1 FROM attendance_categories c WHERE c.app_id = a.id AND c.code = 'EXPORT_WORKERS');
+
+              INSERT INTO attendance_categories
+                (id, app_id, code, name, expected_daily_minutes, pay_cycle, attendance_mode,
+                 single_punch_counts, work_days_mask, active, version, created_at, updated_at)
+              SELECT '10000000-0000-0000-0000-000000000008', a.id, 'SORTING_WORKERS', 'عمال الفرزة',
+                     480, 'HALF_MONTHLY', 'MANUAL', TRUE, 111, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM apps a
+              WHERE UPPER(a.code) = 'DEMO'
+                AND NOT EXISTS (SELECT 1 FROM attendance_categories c WHERE c.app_id = a.id AND c.code = 'SORTING_WORKERS');
+
+              INSERT INTO attendance_categories
+                (id, app_id, code, name, expected_daily_minutes, pay_cycle, attendance_mode,
+                 single_punch_counts, work_days_mask, active, version, created_at, updated_at)
+              SELECT '10000000-0000-0000-0000-000000000009', a.id, 'SECURITY', 'الأمن',
+                     720, 'THIRTY_DAYS', 'BIOMETRIC', FALSE, 111, TRUE, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM apps a
+              WHERE UPPER(a.code) = 'DEMO'
+                AND NOT EXISTS (SELECT 1 FROM attendance_categories c WHERE c.app_id = a.id AND c.code = 'SECURITY');
+
+              INSERT INTO schedule_rules
+                (id, app_id, category_id, name, effective_from, effective_to, start_time,
+                 expected_minutes_override, grace_minutes, created_at, updated_at)
+              SELECT '20000000-0000-0000-0000-000000000001', c.app_id, c.id, 'الجدول الأساسي',
+                     DATE '2026-01-01', NULL, TIME '08:00:00', NULL, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM attendance_categories c JOIN apps a ON a.id = c.app_id
+              WHERE UPPER(a.code) = 'DEMO' AND c.code = 'ADMINISTRATION'
+                AND NOT EXISTS (SELECT 1 FROM schedule_rules s WHERE s.category_id = c.id);
+
+              INSERT INTO schedule_rules
+                (id, app_id, category_id, name, effective_from, effective_to, start_time,
+                 expected_minutes_override, grace_minutes, created_at, updated_at)
+              SELECT '20000000-0000-0000-0000-000000000002', c.app_id, c.id, 'الجدول الأساسي',
+                     DATE '2026-01-01', NULL, TIME '08:00:00', NULL, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM attendance_categories c JOIN apps a ON a.id = c.app_id
+              WHERE UPPER(a.code) = 'DEMO' AND c.code = 'ACCOUNTING'
+                AND NOT EXISTS (SELECT 1 FROM schedule_rules s WHERE s.category_id = c.id);
+
+              INSERT INTO schedule_rules
+                (id, app_id, category_id, name, effective_from, effective_to, start_time,
+                 expected_minutes_override, grace_minutes, created_at, updated_at)
+              SELECT '20000000-0000-0000-0000-000000000003', c.app_id, c.id, 'الجدول الأساسي',
+                     DATE '2026-01-01', NULL, TIME '08:00:00', NULL, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM attendance_categories c JOIN apps a ON a.id = c.app_id
+              WHERE UPPER(a.code) = 'DEMO' AND c.code = 'SECRETARIAL'
+                AND NOT EXISTS (SELECT 1 FROM schedule_rules s WHERE s.category_id = c.id);
+
+              INSERT INTO schedule_rules
+                (id, app_id, category_id, name, effective_from, effective_to, start_time,
+                 expected_minutes_override, grace_minutes, created_at, updated_at)
+              SELECT '20000000-0000-0000-0000-000000000004', c.app_id, c.id, 'الجدول الأساسي',
+                     DATE '2026-01-01', NULL, TIME '08:00:00', NULL, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM attendance_categories c JOIN apps a ON a.id = c.app_id
+              WHERE UPPER(a.code) = 'DEMO' AND c.code = 'DAILY_WORKERS'
+                AND NOT EXISTS (SELECT 1 FROM schedule_rules s WHERE s.category_id = c.id);
+
+              INSERT INTO schedule_rules
+                (id, app_id, category_id, name, effective_from, effective_to, start_time,
+                 expected_minutes_override, grace_minutes, created_at, updated_at)
+              SELECT '20000000-0000-0000-0000-000000000005', c.app_id, c.id, 'الجدول الأساسي',
+                     DATE '2026-01-01', NULL, TIME '08:00:00', NULL, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM attendance_categories c JOIN apps a ON a.id = c.app_id
+              WHERE UPPER(a.code) = 'DEMO' AND c.code = 'CLEANING_WORKERS'
+                AND NOT EXISTS (SELECT 1 FROM schedule_rules s WHERE s.category_id = c.id);
+
+              INSERT INTO schedule_rules
+                (id, app_id, category_id, name, effective_from, effective_to, start_time,
+                 expected_minutes_override, grace_minutes, created_at, updated_at)
+              SELECT '20000000-0000-0000-0000-000000000006', c.app_id, c.id, 'الجدول الأساسي',
+                     DATE '2026-01-01', NULL, TIME '08:00:00', NULL, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM attendance_categories c JOIN apps a ON a.id = c.app_id
+              WHERE UPPER(a.code) = 'DEMO' AND c.code = 'OPERATION_WORKERS'
+                AND NOT EXISTS (SELECT 1 FROM schedule_rules s WHERE s.category_id = c.id);
+
+              INSERT INTO schedule_rules
+                (id, app_id, category_id, name, effective_from, effective_to, start_time,
+                 expected_minutes_override, grace_minutes, created_at, updated_at)
+              SELECT '20000000-0000-0000-0000-000000000007', c.app_id, c.id, 'الجدول الأساسي',
+                     DATE '2026-01-01', NULL, TIME '08:00:00', NULL, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM attendance_categories c JOIN apps a ON a.id = c.app_id
+              WHERE UPPER(a.code) = 'DEMO' AND c.code = 'EXPORT_WORKERS'
+                AND NOT EXISTS (SELECT 1 FROM schedule_rules s WHERE s.category_id = c.id);
+
+              INSERT INTO schedule_rules
+                (id, app_id, category_id, name, effective_from, effective_to, start_time,
+                 expected_minutes_override, grace_minutes, created_at, updated_at)
+              SELECT '20000000-0000-0000-0000-000000000008', c.app_id, c.id, 'الجدول الأساسي',
+                     DATE '2026-01-01', NULL, TIME '08:00:00', NULL, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM attendance_categories c JOIN apps a ON a.id = c.app_id
+              WHERE UPPER(a.code) = 'DEMO' AND c.code = 'SORTING_WORKERS'
+                AND NOT EXISTS (SELECT 1 FROM schedule_rules s WHERE s.category_id = c.id);
+
+              INSERT INTO schedule_rules
+                (id, app_id, category_id, name, effective_from, effective_to, start_time,
+                 expected_minutes_override, grace_minutes, created_at, updated_at)
+              SELECT '20000000-0000-0000-0000-000000000009', c.app_id, c.id, 'الجدول الأساسي',
+                     DATE '2026-01-01', NULL, TIME '08:00:00', NULL, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+              FROM attendance_categories c JOIN apps a ON a.id = c.app_id
+              WHERE UPPER(a.code) = 'DEMO' AND c.code = 'SECURITY'
+                AND NOT EXISTS (SELECT 1 FROM schedule_rules s WHERE s.category_id = c.id);
+      rollback:
+        - sql:
+            sql: |
+              DELETE FROM schedule_rules
+              WHERE id IN ('20000000-0000-0000-0000-000000000001',
+                           '20000000-0000-0000-0000-000000000002',
+                           '20000000-0000-0000-0000-000000000003',
+                           '20000000-0000-0000-0000-000000000004',
+                           '20000000-0000-0000-0000-000000000005',
+                           '20000000-0000-0000-0000-000000000006',
+                           '20000000-0000-0000-0000-000000000007',
+                           '20000000-0000-0000-0000-000000000008',
+                           '20000000-0000-0000-0000-000000000009');
+              DELETE FROM attendance_categories
+              WHERE id IN ('10000000-0000-0000-0000-000000000001',
+                           '10000000-0000-0000-0000-000000000002',
+                           '10000000-0000-0000-0000-000000000003',
+                           '10000000-0000-0000-0000-000000000004',
+                           '10000000-0000-0000-0000-000000000005',
+                           '10000000-0000-0000-0000-000000000006',
+                           '10000000-0000-0000-0000-000000000007',
+                           '10000000-0000-0000-0000-000000000008',
+                           '10000000-0000-0000-0000-000000000009');

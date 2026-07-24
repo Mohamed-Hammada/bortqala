@@ -1,0 +1,216 @@
+package com.bemo.hr.employee.application;
+
+import com.bemo.hr.employee.api.CategoryApi;
+import com.bemo.hr.employee.api.EmployeeApi;
+import com.bemo.hr.employee.domain.AttendanceCategory;
+import com.bemo.hr.employee.domain.Employee;
+import com.bemo.hr.employee.domain.ScheduleRule;
+import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
+import com.bemo.hr.employee.infrastructure.EmployeeRepository;
+import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.domain.NotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional(readOnly = true)
+public class HrConfigurationService {
+    private final AttendanceCategoryRepository attendanceCategoryRepository;
+    private final ScheduleRuleRepository scheduleRuleRepository;
+    private final EmployeeRepository employeeRepository;
+
+    public HrConfigurationService(AttendanceCategoryRepository attendanceCategoryRepository,
+                                  ScheduleRuleRepository scheduleRuleRepository,
+                                  EmployeeRepository employeeRepository) {
+        this.attendanceCategoryRepository = attendanceCategoryRepository;
+        this.scheduleRuleRepository = scheduleRuleRepository;
+        this.employeeRepository = employeeRepository;
+    }
+
+    public List<CategoryApi.Response> listCategories() {
+        return attendanceCategoryRepository.findAllByOrderByNameAsc().stream().map(this::toCategoryResponse).toList();
+    }
+
+    public CategoryApi.Response getCategory(String id) {
+        return toCategoryResponse(requireCategory(id));
+    }
+
+    @Transactional
+    public CategoryApi.Response createCategory(CategoryApi.UpsertRequest request) {
+        validateCategoryRequest(request);
+        if (attendanceCategoryRepository.existsByCodeIgnoreCase(request.code())) {
+            throw new BusinessRuleException("Category code already exists.");
+        }
+        var category = new AttendanceCategory(request.code(), request.name(), request.expectedDailyMinutes(),
+                request.payCycle(), request.attendanceMode(), request.singlePunchCounts(), toMask(request.workDays()), request.active());
+        attendanceCategoryRepository.save(category);
+        replaceSchedules(category.getId(), request.schedules());
+        return toCategoryResponse(category);
+    }
+
+    @Transactional
+    public CategoryApi.Response updateCategory(String id, CategoryApi.UpsertRequest request) {
+        validateCategoryRequest(request);
+        var category = requireCategory(id);
+        requireVersion(category.getVersion(), request.version());
+        if (attendanceCategoryRepository.existsByCodeIgnoreCaseAndIdNot(request.code(), id)) {
+            throw new BusinessRuleException("Category code already exists.");
+        }
+        category.update(request.code(), request.name(), request.expectedDailyMinutes(), request.payCycle(), request.attendanceMode(),
+                request.singlePunchCounts(), toMask(request.workDays()), request.active());
+        replaceSchedules(id, request.schedules());
+        return toCategoryResponse(category);
+    }
+
+    @Transactional
+    public void deactivateCategory(String id) {
+        var category = requireCategory(id);
+        if (employeeRepository.existsByCategoryIdAndActiveTrue(id)) {
+            throw new BusinessRuleException("Deactivate or move active employees before deactivating this category.");
+        }
+        category.update(category.getCode(), category.getName(), category.getExpectedDailyMinutes(),
+                category.getPayCycle(), category.getAttendanceMode(), category.isSinglePunchCounts(), category.getWorkDaysMask(), false);
+    }
+
+    public List<EmployeeApi.Response> listEmployees() {
+        var categories = attendanceCategoryRepository.findAll().stream()
+                .collect(Collectors.toMap(AttendanceCategory::getId, Function.identity()));
+        return employeeRepository.findAllByOrderByFullNameAsc().stream()
+                .map(employee -> toEmployeeResponse(employee, categories.get(employee.getCategoryId())))
+                .toList();
+    }
+
+    @Transactional
+    public EmployeeApi.Response createEmployee(EmployeeApi.UpsertRequest request) {
+        validateEmployeeRequest(request, null);
+        var category = requireCategory(request.categoryId());
+        var employee = new Employee(request.employeeCode(), request.fullName(), request.deviceUserId(),
+                request.categoryId(), request.employmentType(), request.activeFrom(), request.activeTo(), request.active());
+        employeeRepository.save(employee);
+        return toEmployeeResponse(employee, category);
+    }
+
+    @Transactional
+    public EmployeeApi.Response updateEmployee(String id, EmployeeApi.UpsertRequest request) {
+        var employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Employee not found."));
+        requireVersion(employee.getVersion(), request.version());
+        validateEmployeeRequest(request, id);
+        var category = requireCategory(request.categoryId());
+        employee.update(request.employeeCode(), request.fullName(), request.deviceUserId(), request.categoryId(),
+                request.employmentType(), request.activeFrom(), request.activeTo(), request.active());
+        return toEmployeeResponse(employee, category);
+    }
+
+    @Transactional
+    public void deactivateEmployee(String id) {
+        var employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Employee not found."));
+        employee.update(employee.getEmployeeCode(), employee.getFullName(), employee.getDeviceUserId(),
+                employee.getCategoryId(), employee.getEmploymentType(), employee.getActiveFrom(),
+                employee.getActiveTo(), false);
+    }
+
+    private AttendanceCategory requireCategory(String id) {
+        return attendanceCategoryRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Attendance category not found."));
+    }
+
+    private void validateCategoryRequest(CategoryApi.UpsertRequest request) {
+        if (request.workDays().stream().anyMatch(java.util.Objects::isNull)) {
+            throw new BusinessRuleException("Work days cannot contain an empty value.");
+        }
+        var schedules = request.schedules().stream()
+                .sorted(Comparator.comparing(CategoryApi.ScheduleRequest::effectiveFrom)).toList();
+        for (int index = 0; index < schedules.size(); index++) {
+            var current = schedules.get(index);
+            if (current.effectiveTo() != null && current.effectiveTo().isBefore(current.effectiveFrom())) {
+                throw new BusinessRuleException("Schedule end date cannot be before its start date.");
+            }
+            if (index > 0) {
+                var previous = schedules.get(index - 1);
+                if (previous.effectiveTo() == null || !previous.effectiveTo().isBefore(current.effectiveFrom())) {
+                    throw new BusinessRuleException("Schedule effective date ranges cannot overlap.");
+                }
+            }
+        }
+    }
+
+    private void validateEmployeeRequest(EmployeeApi.UpsertRequest request, String currentId) {
+        if (request.activeTo() != null && request.activeTo().isBefore(request.activeFrom())) {
+            throw new BusinessRuleException("Employee active-to date cannot be before active-from date.");
+        }
+        boolean duplicateCode = currentId == null
+                ? employeeRepository.existsByEmployeeCodeIgnoreCase(request.employeeCode())
+                : employeeRepository.existsByEmployeeCodeIgnoreCaseAndIdNot(request.employeeCode(), currentId);
+        if (duplicateCode) {
+            throw new BusinessRuleException("Employee code already exists.");
+        }
+        if (request.deviceUserId() != null && !request.deviceUserId().isBlank()) {
+            boolean duplicateDeviceId = currentId == null
+                    ? employeeRepository.existsByDeviceUserId(request.deviceUserId().strip())
+                    : employeeRepository.existsByDeviceUserIdAndIdNot(request.deviceUserId().strip(), currentId);
+            if (duplicateDeviceId) {
+                throw new BusinessRuleException("Device user id is already mapped to another employee.");
+            }
+        }
+    }
+
+    private void replaceSchedules(String categoryId, List<CategoryApi.ScheduleRequest> requests) {
+        scheduleRuleRepository.deleteByCategoryId(categoryId);
+        scheduleRuleRepository.flush();
+        var schedules = requests.stream()
+                .map(request -> new ScheduleRule(categoryId, request.name(), request.effectiveFrom(),
+                        request.effectiveTo(), request.startTime(), request.expectedMinutesOverride(), request.graceMinutes()))
+                .toList();
+        scheduleRuleRepository.saveAll(schedules);
+    }
+
+    private CategoryApi.Response toCategoryResponse(AttendanceCategory category) {
+        var schedules = scheduleRuleRepository.findByCategoryIdOrderByEffectiveFromAsc(category.getId()).stream()
+                .map(rule -> new CategoryApi.ScheduleResponse(rule.getId(), rule.getName(), rule.getEffectiveFrom(),
+                        rule.getEffectiveTo(), rule.getStartTime(), rule.getExpectedMinutesOverride(), rule.getGraceMinutes()))
+                .toList();
+        return new CategoryApi.Response(category.getId(), category.getCode(), category.getName(),
+                category.getExpectedDailyMinutes(), category.getPayCycle(), category.getAttendanceMode(),
+                category.isSinglePunchCounts(),
+                fromMask(category.getWorkDaysMask()), category.isActive(), category.getVersion(),
+                category.getCreatedAt(), category.getUpdatedAt(), schedules);
+    }
+
+    private EmployeeApi.Response toEmployeeResponse(Employee employee, AttendanceCategory category) {
+        return new EmployeeApi.Response(employee.getId(), employee.getEmployeeCode(), employee.getFullName(),
+                employee.getDeviceUserId(), employee.getCategoryId(), category == null ? "—" : category.getName(),
+                employee.getEmploymentType(), employee.getActiveFrom(), employee.getActiveTo(),
+                employee.isActive(), employee.getVersion());
+    }
+
+    private int toMask(Set<DayOfWeek> days) {
+        return days.stream().mapToInt(day -> 1 << (day.getValue() - 1)).reduce(0, (left, right) -> left | right);
+    }
+
+    private Set<DayOfWeek> fromMask(int mask) {
+        var days = EnumSet.noneOf(DayOfWeek.class);
+        for (var day : DayOfWeek.values()) {
+            if ((mask & (1 << (day.getValue() - 1))) != 0) days.add(day);
+        }
+        return days;
+    }
+
+    private void requireVersion(long actual, Long requested) {
+        if (requested == null || requested != actual) {
+            throw new BusinessRuleException("This record changed since it was loaded. Refresh and try again.");
+        }
+    }
+}

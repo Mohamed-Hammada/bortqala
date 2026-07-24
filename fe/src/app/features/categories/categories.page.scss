@@ -1,0 +1,85 @@
+td strong,
+td small {
+  display: block;
+}
+td small {
+  color: var(--muted);
+  margin-top: 3px;
+}
+.row-actions {
+  display: flex;
+  gap: 4px;
+}
+.row-actions button,
+.rule-head button {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--surface-muted);
+  cursor: pointer;
+}
+.row-actions .danger-link,
+.rule-head button {
+  color: var(--danger);
+}
+.check-field {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  align-self: end;
+  min-height: 43px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.days label {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 12px;
+}
+.days input {
+  margin-left: 5px;
+}
+.rules-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin: 27px 0 12px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+.rules-title h3 {
+  margin: 0 0 3px;
+}
+.rules-title p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.rules {
+  display: grid;
+  gap: 12px;
+}
+.rule-card {
+  padding: 15px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #faf7ef;
+}
+.rule-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 13px;
+}
+.active-check {
+  margin: 20px 0 5px;
+}

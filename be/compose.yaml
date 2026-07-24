@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: hr_platform
+      POSTGRES_USER: hr_platform
+      POSTGRES_PASSWORD: hr_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - hr-platform-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hr_platform -d hr_platform"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  hr-platform-postgres:
