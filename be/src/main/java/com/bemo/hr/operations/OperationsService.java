@@ -1,0 +1,129 @@
+package com.bemo.hr.operations;
+
+import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
+import com.bemo.hr.employee.infrastructure.EmployeeRepository;
+import com.bemo.hr.party.BusinessParty;
+import com.bemo.hr.party.BusinessPartyRepository;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.domain.NotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class OperationsService {
+    private final InventoryItemRepository inventoryItemRepository;
+    private final StockMovementRepository stockMovementRepository;
+    private final PartnerLedgerEntryRepository partnerLedgerEntryRepository;
+    private final EmployeeAdvanceEntryRepository employeeAdvanceEntryRepository;
+    private final BusinessPartyRepository businessPartyRepository;
+    private final EmployeeRepository employeeRepository;
+    private final AttendanceCategoryRepository attendanceCategoryRepository;
+
+    public OperationsApi.Snapshot snapshot() {
+        var items = inventoryItemRepository.findAllByOrderByNameAsc();
+        var itemMap = items.stream().collect(Collectors.toMap(InventoryItem::getId, Function.identity()));
+        var parties = businessPartyRepository.findAllByOrderByNameAsc();
+        var partyMap = parties.stream().collect(Collectors.toMap(BusinessParty::getId, Function.identity()));
+        var employees = employeeRepository.findAllByOrderByFullNameAsc();
+        var employeeMap = employees.stream().collect(Collectors.toMap(com.bemo.hr.employee.domain.Employee::getId, Function.identity()));
+
+        var itemViews = items.stream().map(item -> itemView(item, stockMovementRepository.balance(item.getId()))).toList();
+        var movements = stockMovementRepository.findAllByOrderByOccurredAtDesc().stream().map(movement -> {
+            var item = itemMap.get(movement.getItemId());
+            var party = partyMap.get(movement.getPartyId());
+            return new OperationsApi.StockMovementView(movement.getId(), movement.getItemId(),
+                    item == null ? "—" : item.getCode(), item == null ? "—" : item.getName(), movement.getPartyId(),
+                    party == null ? null : party.getName(), movement.getOperationType(), movement.getQuantityDelta(),
+                    movement.getLossPercentage(), movement.getReferenceCode(), movement.getNote(), movement.getOccurredAt(),
+                    movement.getCreatedBy(), movement.getCreatedAt());
+        }).toList();
+        var balances = parties.stream().map(party -> new OperationsApi.PartyBalance(party.getId(), party.getCode(),
+                party.getName(), party.getPartyType(), partnerLedgerEntryRepository.balance(party.getId()))).toList();
+        var ledger = partnerLedgerEntryRepository.findAllByOrderByOccurredAtDesc().stream().map(entry -> {
+            var party = partyMap.get(entry.getPartyId());
+            return new OperationsApi.LedgerView(entry.getId(), entry.getPartyId(), party == null ? "—" : party.getName(),
+                    entry.getEntryType(), entry.getAmountDelta(), entry.getReferenceCode(), entry.getNote(),
+                    entry.getOccurredAt(), entry.getCreatedBy(), entry.getCreatedAt());
+        }).toList();
+        var advances = employeeAdvanceEntryRepository.findAllByOrderByOccurredAtDesc().stream().map(entry -> {
+            var employee = employeeMap.get(entry.getEmployeeId());
+            return new OperationsApi.AdvanceView(entry.getId(), entry.getEmployeeId(),
+                    employee == null ? "—" : employee.getEmployeeCode(), employee == null ? "—" : employee.getFullName(),
+                    entry.getAmountDelta(), employeeAdvanceEntryRepository.balance(entry.getEmployeeId()), entry.getEntryType(),
+                    entry.getNote(), entry.getOccurredAt(), entry.getCreatedBy(), entry.getCreatedAt());
+        }).toList();
+        return new OperationsApi.Snapshot(itemViews, movements, balances, ledger, advances);
+    }
+
+    @Transactional
+    public OperationsApi.ItemView createItem(OperationsApi.ItemRequest request) {
+        if (inventoryItemRepository.existsByCodeIgnoreCase(request.code())) throw new BusinessRuleException("Item code already exists.");
+        var item = inventoryItemRepository.save(new InventoryItem(request.code(), request.name(), request.itemType(), request.unitCode()));
+        return itemView(item, BigDecimal.ZERO);
+    }
+
+    @Transactional
+    public OperationsApi.ItemView updateItem(String id, OperationsApi.ItemRequest request) {
+        var item = requireItem(id);
+        if (request.version() == null || request.version() != item.getVersion()) throw new BusinessRuleException("This item changed. Refresh and retry.");
+        if (inventoryItemRepository.existsByCodeIgnoreCaseAndIdNot(request.code(), id)) throw new BusinessRuleException("Item code already exists.");
+        item.update(request.code(), request.name(), request.itemType(), request.unitCode(), request.active());
+        return itemView(item, stockMovementRepository.balance(id));
+    }
+
+    @Transactional
+    public OperationsApi.Snapshot recordTransaction(OperationsApi.TransactionRequest request, String actor) {
+        if (request.quantityDelta().signum() == 0 && request.amountDelta().signum() == 0) {
+            throw new BusinessRuleException("Quantity and amount cannot both be zero.");
+        }
+        if (request.lossPercentage() != null && (request.lossPercentage().signum() < 0
+                || request.lossPercentage().compareTo(BigDecimal.valueOf(100)) > 0)) {
+            throw new BusinessRuleException("Loss percentage must be between 0 and 100.");
+        }
+        if (request.quantityDelta().signum() != 0) {
+            if (request.itemId() == null || request.itemId().isBlank()) throw new BusinessRuleException("An inventory item is required for quantity movement.");
+            requireItem(request.itemId());
+            stockMovementRepository.save(new StockMovement(request.itemId(), normalizeId(request.partyId()), request.operationType(),
+                    request.quantityDelta(), request.lossPercentage(), request.referenceCode(), request.note(), request.occurredAt(), actor));
+        }
+        if (request.amountDelta().signum() != 0) {
+            var partyId = normalizeId(request.partyId());
+            if (partyId == null) throw new BusinessRuleException("A business party is required for a financial movement.");
+            requireParty(partyId);
+            partnerLedgerEntryRepository.save(new PartnerLedgerEntry(partyId, request.operationType(), request.amountDelta(),
+                    request.referenceCode(), request.note(), request.occurredAt(), actor));
+        }
+        return snapshot();
+    }
+
+    @Transactional
+    public OperationsApi.Snapshot recordAdvance(OperationsApi.AdvanceRequest request, String actor) {
+        if (request.amountDelta().signum() == 0) throw new BusinessRuleException("Advance amount cannot be zero.");
+        var employee = employeeRepository.findById(request.employeeId()).orElseThrow(() -> new NotFoundException("Employee not found."));
+        var category = attendanceCategoryRepository.findById(employee.getCategoryId())
+                .orElseThrow(() -> new NotFoundException("Employee category not found."));
+        if (!category.isAllowsEmployeeAdvances()) throw new BusinessRuleException("This employee category does not allow advances.");
+        employeeAdvanceEntryRepository.save(new EmployeeAdvanceEntry(employee.getId(), request.amountDelta(),
+                request.entryType(), request.note(), request.occurredAt(), actor));
+        return snapshot();
+    }
+
+    private InventoryItem requireItem(String id) {
+        return inventoryItemRepository.findById(id).orElseThrow(() -> new NotFoundException("Inventory item not found."));
+    }
+    private BusinessParty requireParty(String id) {
+        return businessPartyRepository.findById(id).orElseThrow(() -> new NotFoundException("Business party not found."));
+    }
+    private String normalizeId(String id) { return id == null || id.isBlank() ? null : id; }
+    private OperationsApi.ItemView itemView(InventoryItem item, BigDecimal balance) {
+        return new OperationsApi.ItemView(item.getId(), item.getCode(), item.getName(), item.getItemType(), item.getUnitCode(),
+                item.isActive(), balance, item.getVersion(), item.getCreatedAt(), item.getUpdatedAt());
+    }
+}
