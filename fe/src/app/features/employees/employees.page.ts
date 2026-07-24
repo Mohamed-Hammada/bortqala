@@ -1,11 +1,14 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { dateInputToEpoch, epochToDateInput, formatDate } from '../../core/date';
 import { Employee, EmployeePayload, EmploymentType } from './employees.models';
 import { EmployeesStore } from './employees.store';
+import { I18nService } from '../../core/i18n.service';
+import { TablePagination } from '../../shared/ui/table-pagination/pagination';
+import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 @Component({
   selector: 'app-employees-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TablePaginationComponent],
   providers: [EmployeesStore],
   templateUrl: './employees.page.html',
   styleUrl: './employees.page.scss',
@@ -13,7 +16,10 @@ import { EmployeesStore } from './employees.store';
 })
 export class EmployeesPage {
   readonly store = inject(EmployeesStore);
+  readonly i18n = inject(I18nService);
   readonly drawerOpen = signal(false);
+  readonly submitAttempted = signal(false);
+  readonly pagination = new TablePagination();
   readonly editingId = signal<string | null>(null);
   readonly search = signal('');
   readonly filtered = computed(() => {
@@ -28,6 +34,7 @@ export class EmployeesPage {
           (item.deviceUserId ?? '').toLowerCase().includes(q),
       );
   });
+  readonly paged = computed(() => this.pagination.slice(this.filtered()));
   readonly form = new FormGroup({
     employeeCode: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     fullName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -46,6 +53,7 @@ export class EmployeesPage {
     void this.store.load();
   }
   openNew() {
+    this.submitAttempted.set(false);
     this.editingId.set(null);
     this.form.reset({
       employeeCode: '',
@@ -61,6 +69,7 @@ export class EmployeesPage {
     this.drawerOpen.set(true);
   }
   openEdit(item: Employee) {
+    this.submitAttempted.set(false);
     this.editingId.set(item.id);
     this.form.reset({
       employeeCode: item.employeeCode,
@@ -76,6 +85,7 @@ export class EmployeesPage {
     this.drawerOpen.set(true);
   }
   async submit() {
+    this.submitAttempted.set(true);
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -87,11 +97,16 @@ export class EmployeesPage {
       activeFrom: dateInputToEpoch(raw.activeFrom),
       activeTo: raw.activeTo ? dateInputToEpoch(raw.activeTo) : null,
     };
-    if (await this.store.save(this.editingId(), payload)) this.drawerOpen.set(false);
+    if (await this.store.save(this.editingId(), payload)) {
+      this.submitAttempted.set(false);
+      this.drawerOpen.set(false);
+    }
   }
   async deactivate(item: Employee) {
     if (confirm(`تعطيل ${item.fullName}؟`)) await this.store.deactivate(item.id);
   }
+  closeDrawer(): void { this.drawerOpen.set(false); this.submitAttempted.set(false); }
+  @HostListener('document:keydown.escape') onEscape(): void { if (this.drawerOpen()) this.closeDrawer(); }
   typeLabel(value: EmploymentType) {
     return value === 'FIXED' ? 'ثابت' : 'يومية';
   }

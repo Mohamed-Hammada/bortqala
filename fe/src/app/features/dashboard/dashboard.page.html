@@ -101,7 +101,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (item of data.categories; track item.categoryId) {
+                @for (item of pagedCategories(); track item.categoryId) {
                   <tr>
                     <td>
                       <strong>{{ item.categoryName }}</strong
@@ -122,6 +122,7 @@
                 }
               </tbody>
             </table>
+            <app-table-pagination [total]="data.categories.length" [page]="pagination.currentPage(data.categories.length)" [pageSize]="pagination.pageSize()" (pageChange)="pagination.changePage($event, data.categories.length)" (pageSizeChange)="pagination.changePageSize($event)" />
           </div>
         } @else {
           <div class="empty-state">

@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_user_excel_table_style
+      author: Mohamed-Hammada
+      changes:
+        - addColumn:
+            tableName: user_preferences
+            columns:
+              - column:
+                  name: excel_table_style
+                  type: VARCHAR(20)
+                  defaultValue: GOLD
+                  constraints: { nullable: false }
+      rollback:
+        - dropColumn: { tableName: user_preferences, columnName: excel_table_style }
+
+  - changeSet:
+      id: seed_excel_export_translations
+      author: Mohamed-Hammada
+      changes:
+        - loadData:
+            tableName: translations
+            file: data/excel_export_translations_v8.csv
+            relativeToChangelogFile: true
+            encoding: UTF-8
+            separator: ;
+      rollback:
+        - delete:
+            tableName: translations
+            where: id LIKE 'x8-%'

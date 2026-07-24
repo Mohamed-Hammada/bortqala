@@ -17,8 +17,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -31,18 +31,12 @@ import java.util.Set;
 
 @Component
 public class SpreadsheetBiometricFileReader implements BiometricFileReader {
-    private static final Set<String> DEVICE_HEADERS = Set.of("deviceuserid", "userid", "userno", "employeeid", "الرقم", "رقمالموظف");
-    private static final Set<String> NAME_HEADERS = Set.of("employeename", "name", "username", "الاسم", "اسمالموظف");
-    private static final Set<String> TIME_HEADERS = Set.of("punchedat", "punchtime", "datetime", "timestamp", "time", "التاريخوالوقت", "وقتالبصمة");
-    private static final List<DateTimeFormatter> LOCAL_DATE_TIME_FORMATS = List.of(
-            DateTimeFormatter.ISO_LOCAL_DATE_TIME,
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"),
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"),
-            DateTimeFormatter.ofPattern("M/d/yyyy H:mm:ss"),
-            DateTimeFormatter.ofPattern("M/d/yyyy H:mm"));
-
+    private static final Set<String> EMPLOYEE_CODE_HEADERS = Set.of("employeecode", "كودالموظف");
+    private static final Set<String> DAY_HEADERS = Set.of("day", "date", "workdate", "اليوم", "التاريخ");
+    private static final Set<String> OFFICIAL_IN_HEADERS = Set.of("officialcheckin", "officialin", "الحضورالرسمي");
+    private static final Set<String> OFFICIAL_OUT_HEADERS = Set.of("officialcheckout", "officialout", "الانصرافالرسمي");
+    private static final Set<String> ACTUAL_IN_HEADERS = Set.of("actualcheckin", "actualin", "الحضورالفعلي");
+    private static final Set<String> ACTUAL_OUT_HEADERS = Set.of("actualcheckout", "actualout", "الانصرافالفعلي");
     private final ZoneId companyZone;
 
     public SpreadsheetBiometricFileReader(@Value("${hr.company-zone:Africa/Cairo}") String companyZone) {
@@ -72,14 +66,17 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
             var headers = indexHeaders(parseCsvLine(headerLine, delimiter));
             var rows = new ArrayList<PunchRow>();
             var errors = new ArrayList<RowError>();
+            int totalRows = 0;
+            int importedRows = 0;
             String line;
             int rowNumber = 1;
             while ((line = reader.readLine()) != null) {
                 rowNumber++;
                 if (line.isBlank()) continue;
-                parseValues(rowNumber, parseCsvLine(line, delimiter), headers, line, rows, errors);
+                totalRows++;
+                if (parseValues(rowNumber, parseCsvLine(line, delimiter), headers, line, rows, errors)) importedRows++;
             }
-            return new ParsedFile(List.copyOf(rows), List.copyOf(errors), rows.size() + errors.size());
+            return new ParsedFile(List.copyOf(rows), List.copyOf(errors), totalRows, importedRows);
         }
     }
 
@@ -96,9 +93,12 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
             var headers = indexHeaders(headerValues);
             var rows = new ArrayList<PunchRow>();
             var errors = new ArrayList<RowError>();
+            int totalRows = 0;
+            int importedRows = 0;
             for (int rowIndex = headerRow.getRowNum() + 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
                 var row = sheet.getRow(rowIndex);
                 if (row == null || isEmpty(row, formatter)) continue;
+                totalRows++;
                 int rowNumber = rowIndex + 1;
                 var values = new ArrayList<String>();
                 for (int index = 0; index < headerRow.getLastCellNum(); index++) {
@@ -106,30 +106,24 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
                 }
                 String rawLine = String.join(" | ", values);
                 try {
-                    String deviceId = value(values, headers.get("device"));
-                    String name = nullableValue(values, headers.get("name"));
-                    var timeCell = row.getCell(headers.get("time"));
-                    Instant punchedAt = excelInstant(timeCell, formatter);
-                    requireDeviceId(deviceId);
-                    rows.add(new PunchRow(rowNumber, deviceId.strip(), name, punchedAt, rawLine));
+                    parseStructuredWorkbookRow(rowNumber, row, values, headers, formatter, rawLine, rows);
+                    importedRows++;
                 } catch (RuntimeException exception) {
                     errors.add(new RowError(rowNumber, readableMessage(exception), rawLine));
                 }
             }
-            return new ParsedFile(List.copyOf(rows), List.copyOf(errors), rows.size() + errors.size());
+            return new ParsedFile(List.copyOf(rows), List.copyOf(errors), totalRows, importedRows);
         }
     }
 
-    private void parseValues(int rowNumber, List<String> values, Map<String, Integer> headers, String rawLine,
-                             List<PunchRow> rows, List<RowError> errors) {
+    private boolean parseValues(int rowNumber, List<String> values, Map<String, Integer> headers, String rawLine,
+                                List<PunchRow> rows, List<RowError> errors) {
         try {
-            String deviceId = value(values, headers.get("device"));
-            requireDeviceId(deviceId);
-            String name = nullableValue(values, headers.get("name"));
-            Instant punchedAt = parseInstant(value(values, headers.get("time")));
-            rows.add(new PunchRow(rowNumber, deviceId.strip(), name, punchedAt, rawLine));
+            parseStructuredValues(rowNumber, values, headers, rawLine, rows);
+            return true;
         } catch (RuntimeException exception) {
             errors.add(new RowError(rowNumber, readableMessage(exception), rawLine));
+            return false;
         }
     }
 
@@ -137,32 +131,94 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
         var result = new HashMap<String, Integer>();
         for (int index = 0; index < headers.size(); index++) {
             var normalized = normalize(headers.get(index));
-            if (DEVICE_HEADERS.contains(normalized)) result.putIfAbsent("device", index);
-            if (NAME_HEADERS.contains(normalized)) result.putIfAbsent("name", index);
-            if (TIME_HEADERS.contains(normalized)) result.putIfAbsent("time", index);
+            if (EMPLOYEE_CODE_HEADERS.contains(normalized)) result.putIfAbsent("employeeCode", index);
+            if (DAY_HEADERS.contains(normalized)) result.putIfAbsent("day", index);
+            if (OFFICIAL_IN_HEADERS.contains(normalized)) result.putIfAbsent("officialIn", index);
+            if (OFFICIAL_OUT_HEADERS.contains(normalized)) result.putIfAbsent("officialOut", index);
+            if (ACTUAL_IN_HEADERS.contains(normalized)) result.putIfAbsent("actualIn", index);
+            if (ACTUAL_OUT_HEADERS.contains(normalized)) result.putIfAbsent("actualOut", index);
         }
-        if (!result.containsKey("device") || !result.containsKey("time")) {
-            throw new BusinessRuleException("Required columns: device_user_id and punched_at. employee_name is optional.");
+        var structuredKeys = Set.of("employeeCode", "day", "officialIn", "officialOut", "actualIn", "actualOut");
+        if (!result.keySet().containsAll(structuredKeys)) {
+            throw new BusinessRuleException(
+                    "Required columns: Employee code, Day, Official check-in, Official check-out, Actual check-in, Actual check-out. "
+                            + "/ الأعمدة المطلوبة: كود الموظف، اليوم، الحضور الرسمي، الانصراف الرسمي، الحضور الفعلي، الانصراف الفعلي.");
         }
         return result;
     }
 
-    private Instant excelInstant(Cell cell, DataFormatter formatter) {
-        if (cell != null && cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
-            return cell.getLocalDateTimeCellValue().atZone(companyZone).toInstant();
-        }
-        return parseInstant(formatter.formatCellValue(cell));
+    private void parseStructuredWorkbookRow(int rowNumber, Row row, List<String> values,
+                                            Map<String, Integer> headers, DataFormatter formatter,
+                                            String rawLine, List<PunchRow> rows) {
+        String employeeCode = value(values, headers.get("employeeCode"));
+        requireDeviceId(employeeCode);
+        LocalDate day = excelDate(row.getCell(headers.get("day")), formatter);
+        excelTime(row.getCell(headers.get("officialIn")), formatter, true);
+        excelTime(row.getCell(headers.get("officialOut")), formatter, true);
+        LocalTime actualIn = excelTime(row.getCell(headers.get("actualIn")), formatter, false);
+        LocalTime actualOut = excelTime(row.getCell(headers.get("actualOut")), formatter, false);
+        addActualPunches(rowNumber, employeeCode, day, actualIn, actualOut, rawLine, rows);
     }
 
-    private Instant parseInstant(String value) {
+    private void parseStructuredValues(int rowNumber, List<String> values, Map<String, Integer> headers,
+                                       String rawLine, List<PunchRow> rows) {
+        String employeeCode = value(values, headers.get("employeeCode"));
+        requireDeviceId(employeeCode);
+        LocalDate day = parseDate(value(values, headers.get("day")));
+        parseTime(value(values, headers.get("officialIn")), true);
+        parseTime(value(values, headers.get("officialOut")), true);
+        LocalTime actualIn = parseTime(value(values, headers.get("actualIn")), false);
+        LocalTime actualOut = parseTime(value(values, headers.get("actualOut")), false);
+        addActualPunches(rowNumber, employeeCode, day, actualIn, actualOut, rawLine, rows);
+    }
+
+    private void addActualPunches(int rowNumber, String employeeCode, LocalDate day, LocalTime actualIn,
+                                  LocalTime actualOut, String rawLine, List<PunchRow> rows) {
+        if (actualIn != null) rows.add(new PunchRow(rowNumber, employeeCode.strip(), null,
+                day.atTime(actualIn).atZone(companyZone).toInstant(), rawLine));
+        if (actualOut != null && !actualOut.equals(actualIn)) {
+            LocalDate outDay = actualIn != null && actualOut.isBefore(actualIn) ? day.plusDays(1) : day;
+            rows.add(new PunchRow(rowNumber, employeeCode.strip(), null,
+                    outDay.atTime(actualOut).atZone(companyZone).toInstant(), rawLine));
+        }
+    }
+
+    private LocalDate excelDate(Cell cell, DataFormatter formatter) {
+        if (cell != null && cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+            return cell.getLocalDateTimeCellValue().toLocalDate();
+        }
+        return parseDate(formatter.formatCellValue(cell));
+    }
+
+    private LocalTime excelTime(Cell cell, DataFormatter formatter, boolean required) {
+        if (cell != null && cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
+            return cell.getLocalDateTimeCellValue().toLocalTime().withNano(0);
+        }
+        return parseTime(formatter.formatCellValue(cell), required);
+    }
+
+    private LocalDate parseDate(String value) {
         String normalized = value.strip();
-        try { return Instant.parse(normalized); } catch (DateTimeParseException ignored) { }
-        try { return OffsetDateTime.parse(normalized).toInstant(); } catch (DateTimeParseException ignored) { }
-        for (var formatter : LOCAL_DATE_TIME_FORMATS) {
-            try { return LocalDateTime.parse(normalized, formatter).atZone(companyZone).toInstant(); }
+        for (var formatter : List.of(DateTimeFormatter.ISO_LOCAL_DATE,
+                DateTimeFormatter.ofPattern("d/M/yyyy"), DateTimeFormatter.ofPattern("M/d/yyyy"))) {
+            try { return LocalDate.parse(normalized, formatter); }
             catch (DateTimeParseException ignored) { }
         }
-        throw new IllegalArgumentException("Invalid punch date/time.");
+        throw new IllegalArgumentException("Invalid day value.");
+    }
+
+    private LocalTime parseTime(String value, boolean required) {
+        String normalized = value == null ? "" : value.strip();
+        if (normalized.isBlank()) {
+            if (required) throw new IllegalArgumentException("Official attendance time is required.");
+            return null;
+        }
+        for (var formatter : List.of(DateTimeFormatter.ISO_LOCAL_TIME, DateTimeFormatter.ofPattern("H:mm"),
+                DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH))) {
+            try { return LocalTime.parse(normalized, formatter).withNano(0); }
+            catch (DateTimeParseException ignored) { }
+        }
+        throw new IllegalArgumentException("Invalid attendance time.");
     }
 
     private List<String> parseCsvLine(String line, char delimiter) {
@@ -203,11 +259,6 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
     private String value(List<String> values, Integer index) {
         if (index == null || index >= values.size()) return "";
         return values.get(index);
-    }
-
-    private String nullableValue(List<String> values, Integer index) {
-        String value = value(values, index).strip();
-        return value.isBlank() ? null : value;
     }
 
     private void requireDeviceId(String value) {

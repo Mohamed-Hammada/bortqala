@@ -28,9 +28,10 @@ public final class AuthApi {
             boolean active,
             Long version) { }
     public record PreferenceResponse(ThemePreference theme, TableDensity tableDensity,
-                                     String locale, Instant updatedAt) { }
+                                     String locale, ExcelTableStyle excelTableStyle, Instant updatedAt) { }
     public record PreferenceRequest(@NotNull ThemePreference theme, @NotNull TableDensity tableDensity,
-                                    @NotBlank @Pattern(regexp = "[a-zA-Z]{2}(-[a-zA-Z]{2})?") String locale) { }
+                                    @NotBlank @Pattern(regexp = "[a-zA-Z]{2}(-[a-zA-Z]{2})?") String locale,
+                                    @NotNull ExcelTableStyle excelTableStyle) { }
     public record AppSettingsResponse(int sessionTimeoutMinutes, Instant updatedAt) { }
     public record AppSettingsRequest(@Min(5) @Max(10_080) int sessionTimeoutMinutes) { }
 }

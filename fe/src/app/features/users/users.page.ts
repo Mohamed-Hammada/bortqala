@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthUser, RoleCode } from '../../core/auth/auth.models';
 import { UserPayload, UsersStore } from './users.store';
+import { TablePagination } from '../../shared/ui/table-pagination/pagination';
+import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 @Component({
   selector: 'app-users-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TablePaginationComponent],
   providers: [UsersStore],
   templateUrl: './users.page.html',
   styleUrl: './users.page.scss',
@@ -14,6 +16,8 @@ export class UsersPage {
   readonly store = inject(UsersStore);
   readonly drawerOpen = signal(false);
   readonly editingId = signal<string | null>(null);
+  readonly pagination = new TablePagination();
+  readonly paged = computed(() => this.pagination.slice(this.store.items()));
   readonly roles: Array<{ code: RoleCode; label: string; description: string }> = [
     { code: 'ADMIN', label: 'مدير النظام', description: 'المستخدمون وكل الوظائف' },
     { code: 'HR_MANAGER', label: 'مدير HR', description: 'الإعدادات والاعتماد' },
@@ -84,4 +88,6 @@ export class UsersPage {
   roleLabel(code: RoleCode) {
     return this.roles.find((role) => role.code === code)?.label ?? code;
   }
+  closeDrawer(): void { this.drawerOpen.set(false); }
+  @HostListener('document:keydown.escape') onEscape(): void { if (this.drawerOpen()) this.closeDrawer(); }
 }

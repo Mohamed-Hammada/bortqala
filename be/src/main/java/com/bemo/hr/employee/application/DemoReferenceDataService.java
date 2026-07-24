@@ -18,7 +18,6 @@ import java.util.List;
 public class DemoReferenceDataService {
     private static final int SATURDAY_TO_THURSDAY_MASK = 111;
     private static final LocalDate DEFAULT_EFFECTIVE_FROM = LocalDate.of(2026, 1, 1);
-    private static final LocalTime DEFAULT_START_TIME = LocalTime.of(8, 0);
 
     private static final List<ReferenceCategory> REFERENCE_CATEGORIES = List.of(
             new ReferenceCategory("SECURITY", "الأمن", 720, PayCycle.THIRTY_DAYS, AttendanceMode.BIOMETRIC, false),
@@ -52,8 +51,14 @@ public class DemoReferenceDataService {
         var category = attendanceCategoryRepository.save(new AttendanceCategory(
                 reference.code(), reference.name(), reference.expectedMinutes(), reference.payCycle(),
                 reference.attendanceMode(), reference.singlePunchCounts(), SATURDAY_TO_THURSDAY_MASK, true));
-        scheduleRuleRepository.save(new ScheduleRule(category.getId(), "الجدول الأساسي", DEFAULT_EFFECTIVE_FROM,
-                null, DEFAULT_START_TIME, null, 0));
+        scheduleRuleRepository.saveAll(List.of(
+                new ScheduleRule(category.getId(), "الدوام الشتوي", DEFAULT_EFFECTIVE_FROM,
+                        LocalDate.of(2026, 4, 30), LocalTime.of(9, 0), null, 0),
+                new ScheduleRule(category.getId(), "الدوام الصيفي", LocalDate.of(2026, 5, 1),
+                        LocalDate.of(2026, 9, 30), LocalTime.of(8, 0), null, 0),
+                new ScheduleRule(category.getId(), "الدوام الشتوي", LocalDate.of(2026, 10, 1),
+                        null, LocalTime.of(9, 0), null, 0)
+        ));
     }
 
     private record ReferenceCategory(String code, String name, int expectedMinutes, PayCycle payCycle,

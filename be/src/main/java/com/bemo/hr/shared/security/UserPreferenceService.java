@@ -19,7 +19,7 @@ public class UserPreferenceService {
 
     public UserPreference update(String userId, AuthApi.PreferenceRequest request) {
         var preference = currentOrCreate(userId);
-        preference.update(request.theme(), request.tableDensity(), request.locale());
+        preference.update(request.theme(), request.tableDensity(), request.locale(), request.excelTableStyle());
         return preference;
     }
 }

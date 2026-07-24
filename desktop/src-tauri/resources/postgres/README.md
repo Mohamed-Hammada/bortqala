@@ -1,0 +1,1 @@
+Stage the official PostgreSQL Windows binary distribution here through `BEMO_POSTGRES_DISTRIBUTION_DIR`. The desktop launcher initializes an app-local UTF-8 cluster and starts it on an available localhost port without user interaction.

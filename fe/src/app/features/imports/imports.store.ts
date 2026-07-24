@@ -2,11 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
-import { downloadBlob } from '../../core/download';
+import { downloadBlob, timestampedExcelFileName } from '../../core/download';
+import { I18nService } from '../../core/i18n.service';
 import { ImportBatch, UnmatchedIdentity } from './imports.models';
 @Injectable()
 export class ImportsStore {
   private readonly http = inject(HttpClient);
+  private readonly i18n = inject(I18nService);
   readonly batches = signal<ImportBatch[]>([]);
   readonly unmatched = signal<UnmatchedIdentity[]>([]);
   readonly loading = signal(false);
@@ -57,7 +59,11 @@ export class ImportsStore {
         await firstValueFrom(
           this.http.get(`/api/v1/exports/${scope}.xlsx`, { responseType: 'blob' }),
         ),
-        `${scope}.xlsx`,
+        timestampedExcelFileName(
+          scope === 'imports' ? 'سجل-الاستيراد' : 'هويات-غير-مربوطة',
+          scope,
+          this.i18n.locale(),
+        ),
       );
     } catch (e) {
       this.error.set(apiErrorMessage(e));

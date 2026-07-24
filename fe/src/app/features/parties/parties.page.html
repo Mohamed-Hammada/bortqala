@@ -1,0 +1,25 @@
+<section class="page" [class.drawer-active]="drawerOpen()">
+  <header class="page-header">
+    <div><p class="eyebrow">{{ i18n.t('parties.eyebrow') }}</p><h1>{{ i18n.t('parties.title') }}</h1><p>{{ i18n.t('parties.description') }}</p></div>
+    <div class="toolbar"><button class="button secondary" (click)="store.export()">⇩ Excel</button><button class="button primary" (click)="openNew()">＋ {{ i18n.t('parties.add') }}</button></div>
+  </header>
+  <div class="filters"><input #query (input)="search.set(query.value); pagination.page.set(1)" [placeholder]="i18n.t('parties.search')" /><span>{{ filtered().length }} {{ i18n.t('parties.count') }}</span></div>
+  @if (store.loading()) { <div class="loading"></div> }
+  @if (store.error()) { <div class="alert error">{{ store.error() }}</div> }
+  <div class="table-card">
+    <table><thead><tr><th>{{ i18n.t('parties.name') }}</th><th>{{ i18n.t('parties.type') }}</th><th>{{ i18n.t('parties.contact') }}</th><th>{{ i18n.t('parties.phone') }}</th><th>{{ i18n.t('parties.status') }}</th><th></th></tr></thead>
+      <tbody>@for (item of paged(); track item.id) { <tr><td><strong>{{ item.name }}</strong><small class="ltr">{{ item.code }}</small></td><td>{{ typeLabel(item.partyType) }}</td><td>{{ item.contactPerson ?? '—' }}</td><td class="ltr">{{ item.phone ?? '—' }}</td><td><span class="status" [class.success]="item.active" [class.neutral]="!item.active">{{ i18n.t(item.active ? 'parties.active' : 'parties.inactive') }}</span></td><td><button class="row-action" (click)="openEdit(item)">✎</button></td></tr> } @empty { <tr><td colspan="6"><div class="empty-state">{{ i18n.t('parties.noResults') }}</div></td></tr> }</tbody>
+    </table>
+    <app-table-pagination [total]="filtered().length" [page]="pagination.currentPage(filtered().length)" [pageSize]="pagination.pageSize()" (pageChange)="pagination.changePage($event, filtered().length)" (pageSizeChange)="pagination.changePageSize($event)" />
+  </div>
+  @if (drawerOpen()) {
+    <button class="drawer-backdrop" (click)="closeDrawer()" aria-label="Close"></button>
+    <aside class="drawer" role="dialog" aria-modal="true"><div class="drawer-header"><div><p class="eyebrow">{{ i18n.t(editingId() ? 'parties.editEyebrow' : 'parties.newEyebrow') }}</p><h2>{{ i18n.t(editingId() ? 'parties.editTitle' : 'parties.newTitle') }}</h2></div><button class="button secondary icon-only" (click)="closeDrawer()">×</button></div>
+      <form [formGroup]="form" (ngSubmit)="submit()">@if (submitted() && form.invalid) { <div class="alert error" role="alert">{{ i18n.t('parties.validation') }}</div> }
+        <div class="form-grid"><div class="field"><label>{{ i18n.t('parties.code') }}</label><input class="ltr" formControlName="code" /></div><div class="field"><label>{{ i18n.t('parties.partyName') }}</label><input formControlName="name" /></div>
+          <div class="field span-2"><label>{{ i18n.t('parties.type') }}</label><input list="party-types" formControlName="partyType" /><datalist id="party-types">@for (type of knownTypes; track type) { <option [value]="type">{{ typeLabel(type) }}</option> }</datalist><small>{{ i18n.t('parties.typeHint') }}</small></div>
+          <div class="field"><label>{{ i18n.t('parties.contact') }}</label><input formControlName="contactPerson" /></div><div class="field"><label>{{ i18n.t('parties.phone') }}</label><input class="ltr" formControlName="phone" /></div><div class="field span-2"><label>{{ i18n.t('parties.notes') }}</label><textarea rows="4" formControlName="notes"></textarea></div></div>
+        <label class="active-check"><input type="checkbox" formControlName="active" /> {{ i18n.t('parties.active') }}</label><div class="drawer-actions"><button class="button primary" type="submit" [disabled]="store.loading()">{{ i18n.t('parties.save') }}</button><button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('parties.cancel') }}</button></div>
+      </form></aside>
+  }
+</section>

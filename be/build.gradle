@@ -27,11 +27,15 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
+    compileOnly 'org.projectlombok:lombok:1.18.46'
+    annotationProcessor 'org.projectlombok:lombok:1.18.46'
 
     runtimeOnly 'org.postgresql:postgresql'
     runtimeOnly 'com.h2database:h2'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testCompileOnly 'org.projectlombok:lombok:1.18.46'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.46'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
@@ -43,4 +47,25 @@ tasks.named('test') {
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.compilerArgs += ['-parameters']
+}
+
+def frontendDirectory = file('../fe')
+def frontendOutput = layout.buildDirectory.dir('generated/frontend')
+
+tasks.register('buildFrontend', Exec) {
+    workingDir frontendDirectory
+    commandLine System.getProperty('os.name').toLowerCase().contains('windows') ? 'npm.cmd' : 'npm',
+            'run', 'build', '--', '--output-path', frontendOutput.get().asFile.absolutePath
+    inputs.files(fileTree(frontendDirectory) {
+        include 'src/**', 'public/**', 'angular.json', 'package.json', 'package-lock.json', 'tsconfig*.json'
+        exclude 'node_modules/**', 'dist/**'
+    })
+    outputs.dir(frontendOutput)
+}
+
+tasks.named('processResources') {
+    dependsOn tasks.named('buildFrontend')
+    from(frontendOutput.map { it.dir('browser') }) {
+        into 'static'
+    }
 }

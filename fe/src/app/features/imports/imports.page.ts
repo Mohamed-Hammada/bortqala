@@ -1,10 +1,13 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { formatDateTime } from '../../core/date';
 import { ImportsStore } from './imports.store';
+import { I18nService } from '../../core/i18n.service';
+import { TablePagination } from '../../shared/ui/table-pagination/pagination';
+import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 @Component({
   selector: 'app-imports-page',
-  imports: [RouterLink],
+  imports: [RouterLink, TablePaginationComponent],
   providers: [ImportsStore],
   templateUrl: './imports.page.html',
   styleUrl: './imports.page.scss',
@@ -12,9 +15,12 @@ import { ImportsStore } from './imports.store';
 })
 export class ImportsPage {
   readonly store = inject(ImportsStore);
+  readonly i18n = inject(I18nService);
   readonly file = signal<File | null>(null);
   readonly deviceName = signal('جهاز الحضور الرئيسي');
   readonly expanded = signal<string | null>(null);
+  readonly pagination = new TablePagination();
+  readonly pagedUnmatched = computed(() => this.pagination.slice(this.store.unmatched()));
   constructor() {
     void this.store.load();
   }

@@ -48,6 +48,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/auth/login", "/api/v1/i18n/**", "/actuator/health").permitAll()
+                        .requestMatchers("/", "/index.html", "/favicon.ico", "/*.js", "/*.css", "/assets/**",
+                                "/login", "/dashboard", "/categories", "/employees", "/imports", "/parties",
+                                "/reports", "/reports/*", "/settings", "/users").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .addFilterAfter(requestAuditFilter, BearerTokenAuthenticationFilter.class)

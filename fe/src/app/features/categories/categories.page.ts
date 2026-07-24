@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { dateInputToEpoch, epochToDateInput } from '../../core/date';
 import {
@@ -10,6 +10,8 @@ import {
   ScheduleRule,
 } from './categories.models';
 import { CategoriesStore } from './categories.store';
+import { TablePagination } from '../../shared/ui/table-pagination/pagination';
+import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 type ScheduleForm = FormGroup<{
   name: FormControl<string>;
   effectiveFrom: FormControl<string>;
@@ -20,7 +22,7 @@ type ScheduleForm = FormGroup<{
 }>;
 @Component({
   selector: 'app-categories-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TablePaginationComponent],
   providers: [CategoriesStore],
   templateUrl: './categories.page.html',
   styleUrl: './categories.page.scss',
@@ -30,6 +32,8 @@ export class CategoriesPage {
   readonly store = inject(CategoriesStore);
   readonly drawerOpen = signal(false);
   readonly editingId = signal<string | null>(null);
+  readonly pagination = new TablePagination();
+  readonly paged = computed(() => this.pagination.slice(this.store.items()));
   readonly days: Array<{ code: DayOfWeek; label: string }> = [
     { code: 'SATURDAY', label: 'السبت' },
     { code: 'SUNDAY', label: 'الأحد' },
@@ -49,6 +53,7 @@ export class CategoriesPage {
     payCycle: new FormControl<PayCycle>('MONTHLY', { nonNullable: true }),
     attendanceMode: new FormControl<AttendanceMode>('BIOMETRIC', { nonNullable: true }),
     singlePunchCounts: new FormControl(false, { nonNullable: true }),
+    allowsEmployeeAdvances: new FormControl(false, { nonNullable: true }),
     workDays: new FormControl<DayOfWeek[]>(
       ['SATURDAY', 'SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY'],
       { nonNullable: true, validators: [Validators.required] },
@@ -69,6 +74,7 @@ export class CategoriesPage {
       payCycle: 'MONTHLY',
       attendanceMode: 'BIOMETRIC',
       singlePunchCounts: false,
+      allowsEmployeeAdvances: false,
       workDays: ['SATURDAY', 'SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY'],
       active: true,
       version: null,
@@ -86,6 +92,7 @@ export class CategoriesPage {
       payCycle: item.payCycle,
       attendanceMode: item.attendanceMode,
       singlePunchCounts: item.singlePunchCounts,
+      allowsEmployeeAdvances: item.allowsEmployeeAdvances,
       workDays: item.workDays,
       active: item.active,
       version: item.version,
@@ -159,6 +166,8 @@ export class CategoriesPage {
   async deactivate(item: AttendanceCategory) {
     if (confirm(`تعطيل فئة ${item.name}؟`)) await this.store.deactivate(item.id);
   }
+  closeDrawer(): void { this.drawerOpen.set(false); }
+  @HostListener('document:keydown.escape') onEscape(): void { if (this.drawerOpen()) this.closeDrawer(); }
   modeLabel(value: AttendanceMode) {
     return { BIOMETRIC: 'بصمة', MANUAL: 'يدوي', HYBRID: 'مختلط' }[value];
   }

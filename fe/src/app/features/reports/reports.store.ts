@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
-import { downloadBlob } from '../../core/download';
+import { downloadBlob, timestampedExcelFileName } from '../../core/download';
+import { I18nService } from '../../core/i18n.service';
 import {
   AttendanceDecision,
   HolidayProposalStatus,
@@ -15,6 +16,7 @@ import {
 @Injectable()
 export class ReportsStore {
   private readonly http = inject(HttpClient);
+  private readonly i18n = inject(I18nService);
   readonly reports = signal<ReportSummary[]>([]);
   readonly periods = signal<PeriodOption[]>([]);
   readonly details = signal<ReportDetails | null>(null);
@@ -118,7 +120,7 @@ export class ReportsStore {
         await firstValueFrom(
           this.http.get(`/api/v1/reports/${id}/export`, { responseType: 'blob' }),
         ),
-        `attendance-report-${id}.xlsx`,
+        timestampedExcelFileName('تقرير-الحضور', 'attendance-report', this.i18n.locale()),
       );
       await this.load(id);
     } catch (error) {

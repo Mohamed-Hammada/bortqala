@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: allow_two_punches_per_source_row
+      author: Mohamed-Hammada
+      changes:
+        - dropUniqueConstraint:
+            tableName: punch_records
+            constraintName: uq_punch_records_app_batch_row
+        - addUniqueConstraint:
+            tableName: punch_records
+            columnNames: app_id, batch_id, row_number, punched_at
+            constraintName: uq_punch_records_app_batch_row_time
+      rollback:
+        - dropUniqueConstraint:
+            tableName: punch_records
+            constraintName: uq_punch_records_app_batch_row_time
+        - addUniqueConstraint:
+            tableName: punch_records
+            columnNames: app_id, batch_id, row_number
+            constraintName: uq_punch_records_app_batch_row

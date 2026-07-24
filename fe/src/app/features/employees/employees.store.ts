@@ -2,11 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
-import { downloadBlob } from '../../core/download';
+import { downloadBlob, timestampedExcelFileName } from '../../core/download';
+import { I18nService } from '../../core/i18n.service';
 import { AttendanceCategory, Employee, EmployeePayload } from './employees.models';
 @Injectable()
 export class EmployeesStore {
   private readonly http = inject(HttpClient);
+  private readonly i18n = inject(I18nService);
   readonly items = signal<Employee[]>([]);
   readonly categories = signal<AttendanceCategory[]>([]);
   readonly loading = signal(false);
@@ -59,7 +61,7 @@ export class EmployeesStore {
         await firstValueFrom(
           this.http.get('/api/v1/exports/employees.xlsx', { responseType: 'blob' }),
         ),
-        'employees.xlsx',
+        timestampedExcelFileName('الموظفون', 'employees', this.i18n.locale()),
       );
     } catch (e) {
       this.error.set(apiErrorMessage(e));

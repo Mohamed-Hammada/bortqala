@@ -19,6 +19,7 @@ export interface AttendanceCategory {
   payCycle: PayCycle;
   attendanceMode: AttendanceMode;
   singlePunchCounts: boolean;
+  allowsEmployeeAdvances: boolean;
   workDays: DayOfWeek[];
   active: boolean;
   version: number;
@@ -33,6 +34,7 @@ export interface CategoryPayload {
   payCycle: PayCycle;
   attendanceMode: AttendanceMode;
   singlePunchCounts: boolean;
+  allowsEmployeeAdvances: boolean;
   workDays: DayOfWeek[];
   active: boolean;
   version: number | null;

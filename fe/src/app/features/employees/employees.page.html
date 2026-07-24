@@ -44,7 +44,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (item of filtered(); track item.id) {
+        @for (item of paged(); track item.id) {
           <tr>
             <td>
               <strong>{{ item.fullName }}</strong
@@ -96,6 +96,7 @@
         }
       </tbody>
     </table>
+    <app-table-pagination [total]="filtered().length" [page]="pagination.currentPage(filtered().length)" [pageSize]="pagination.pageSize()" (pageChange)="pagination.changePage($event, filtered().length)" (pageSizeChange)="pagination.changePageSize($event)" />
   </div>
   @if (drawerOpen()) {
     <button class="drawer-backdrop" (click)="drawerOpen.set(false)" aria-label="إغلاق"></button>
@@ -108,12 +109,33 @@
         <button class="button secondary icon-only" (click)="drawerOpen.set(false)">×</button>
       </div>
       <form [formGroup]="form" (ngSubmit)="submit()">
+        @if (submitAttempted() && form.invalid) {
+          <div class="alert error validation-summary" role="alert">
+            {{ i18n.t('employees.validationSummary') }}
+          </div>
+        }
         <div class="form-grid">
           <div class="field">
             <label>كود الموظف</label
-            ><input class="ltr" formControlName="employeeCode" placeholder="EMP-001" />
+            ><input
+              class="ltr"
+              formControlName="employeeCode"
+              placeholder="EMP-001"
+              [attr.aria-invalid]="form.controls.employeeCode.touched && form.controls.employeeCode.invalid"
+              aria-describedby="employee-code-error"
+            />
+            @if (form.controls.employeeCode.touched && form.controls.employeeCode.hasError('required')) {
+              <small id="employee-code-error" class="field-error">{{
+                i18n.t('employees.employeeCodeRequired')
+              }}</small>
+            }
           </div>
-          <div class="field"><label>الاسم بالكامل</label><input formControlName="fullName" /></div>
+          <div class="field">
+            <label>الاسم بالكامل</label><input formControlName="fullName" />
+            @if (form.controls.fullName.touched && form.controls.fullName.hasError('required')) {
+              <small class="field-error">{{ i18n.t('employees.fullNameRequired') }}</small>
+            }
+          </div>
           <div class="field">
             <label>الفئة</label
             ><select formControlName="categoryId">
@@ -123,6 +145,9 @@
                 </option>
               }
             </select>
+            @if (form.controls.categoryId.touched && form.controls.categoryId.hasError('required')) {
+              <small class="field-error">{{ i18n.t('employees.categoryRequired') }}</small>
+            }
           </div>
           <div class="field">
             <label>نوع التعيين</label
@@ -141,6 +166,9 @@
           </div>
           <div class="field">
             <label>نشط من</label><input type="date" formControlName="activeFrom" />
+            @if (form.controls.activeFrom.touched && form.controls.activeFrom.hasError('required')) {
+              <small class="field-error">{{ i18n.t('employees.activeFromRequired') }}</small>
+            }
           </div>
           <div class="field">
             <label>نشط إلى (اختياري)</label><input type="date" formControlName="activeTo" />

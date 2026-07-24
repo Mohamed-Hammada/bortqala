@@ -33,7 +33,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (item of store.items(); track item.id) {
+        @for (item of paged(); track item.id) {
           <tr>
             <td>
               <strong>{{ item.displayName }}</strong
@@ -62,6 +62,7 @@
         }
       </tbody>
     </table>
+    <app-table-pagination [total]="store.items().length" [page]="pagination.currentPage(store.items().length)" [pageSize]="pagination.pageSize()" (pageChange)="pagination.changePage($event, store.items().length)" (pageSizeChange)="pagination.changePageSize($event)" />
   </div>
   @if (drawerOpen()) {
     <button class="drawer-backdrop" (click)="drawerOpen.set(false)" aria-label="إغلاق"></button>

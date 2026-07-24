@@ -23,9 +23,7 @@
       <span class="upload-icon">⇩</span>
       <div>
         <h2>ارفع ملف جهاز الحضور</h2>
-        <p>
-          الأعمدة المطلوبة: <code>device_user_id</code> و<code>punched_at</code>، والاسم اختياري.
-        </p>
+        <p>{{ i18n.t('imports.requiredColumns') }}</p>
       </div>
     </div>
     <div class="upload-controls">
@@ -65,7 +63,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (item of store.unmatched(); track item.deviceUserId) {
+            @for (item of pagedUnmatched(); track item.deviceUserId) {
               <tr>
                 <td>
                   <code>{{ item.deviceUserId }}</code>
@@ -88,6 +86,7 @@
             }
           </tbody>
         </table>
+        <app-table-pagination [total]="store.unmatched().length" [page]="pagination.currentPage(store.unmatched().length)" [pageSize]="pagination.pageSize()" (pageChange)="pagination.changePage($event, store.unmatched().length)" (pageSizeChange)="pagination.changePageSize($event)" />
       </div>
     </section>
     <section>

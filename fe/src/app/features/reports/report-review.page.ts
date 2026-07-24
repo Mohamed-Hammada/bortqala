@@ -11,9 +11,11 @@ import {
   ReportStatus,
 } from './reports.models';
 import { ReportsStore } from './reports.store';
+import { TablePagination } from '../../shared/ui/table-pagination/pagination';
+import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 @Component({
   selector: 'app-report-review-page',
-  imports: [RouterLink],
+  imports: [RouterLink, TablePaginationComponent],
   providers: [ReportsStore],
   templateUrl: './report-review.page.html',
   styleUrl: './report-review.page.scss',
@@ -25,10 +27,12 @@ export class ReportReviewPage {
   readonly i18n = inject(I18nService);
   readonly filter = signal<'ALL' | 'UNRESOLVED'>('UNRESOLVED');
   readonly id = inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
+  readonly pagination = new TablePagination();
   readonly rows = computed(() => {
     const rows = this.store.details()?.dailyResults ?? [];
     return this.filter() === 'UNRESOLVED' ? rows.filter((row) => this.blocking(row)) : rows;
   });
+  readonly pagedRows = computed(() => this.pagination.slice(this.rows()));
   constructor() {
     void this.store.load(this.id);
   }

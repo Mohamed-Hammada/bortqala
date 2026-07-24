@@ -1,0 +1,81 @@
+id;translation_key;locale;text_value
+x10-ar-001;nav.parties;ar-EG;جهات التعامل
+x10-en-001;nav.parties;en-US;Business parties
+x10-ar-002;nav.partiesHint;ar-EG;الموردون والعملاء والمزارع
+x10-en-002;nav.partiesHint;en-US;Suppliers, customers & farms
+x10-ar-003;parties.eyebrow;ar-EG;دليل جهات التعامل
+x10-en-003;parties.eyebrow;en-US;Business directory
+x10-ar-004;parties.title;ar-EG;الموردون والعملاء والمزارع
+x10-en-004;parties.title;en-US;Suppliers, customers and farms
+x10-ar-005;parties.description;ar-EG;إدارة الجهات التي تتعامل معها الشركة بعيدًا عن ملفات الموظفين والحضور.
+x10-en-005;parties.description;en-US;Manage company business contacts separately from employees and attendance.
+x10-ar-006;parties.add;ar-EG;جهة جديدة
+x10-en-006;parties.add;en-US;New party
+x10-ar-007;parties.search;ar-EG;بحث بالاسم أو الكود أو الهاتف
+x10-en-007;parties.search;en-US;Search by name, code or phone
+x10-ar-008;parties.count;ar-EG;جهة
+x10-en-008;parties.count;en-US;parties
+x10-ar-009;parties.name;ar-EG;الجهة
+x10-en-009;parties.name;en-US;Party
+x10-ar-010;parties.type;ar-EG;النوع
+x10-en-010;parties.type;en-US;Type
+x10-ar-011;parties.contact;ar-EG;مسؤول التواصل
+x10-en-011;parties.contact;en-US;Contact person
+x10-ar-012;parties.phone;ar-EG;الهاتف
+x10-en-012;parties.phone;en-US;Phone
+x10-ar-013;parties.status;ar-EG;الحالة
+x10-en-013;parties.status;en-US;Status
+x10-ar-014;parties.active;ar-EG;نشط
+x10-en-014;parties.active;en-US;Active
+x10-ar-015;parties.inactive;ar-EG;متوقف
+x10-en-015;parties.inactive;en-US;Inactive
+x10-ar-016;parties.noResults;ar-EG;لا توجد جهات مطابقة.
+x10-en-016;parties.noResults;en-US;No matching parties.
+x10-ar-017;parties.newEyebrow;ar-EG;سجل جديد
+x10-en-017;parties.newEyebrow;en-US;New record
+x10-ar-018;parties.editEyebrow;ar-EG;تعديل البيانات
+x10-en-018;parties.editEyebrow;en-US;Edit record
+x10-ar-019;parties.newTitle;ar-EG;إضافة جهة تعامل
+x10-en-019;parties.newTitle;en-US;Add business party
+x10-ar-020;parties.editTitle;ar-EG;تعديل جهة التعامل
+x10-en-020;parties.editTitle;en-US;Edit business party
+x10-ar-021;parties.code;ar-EG;الكود
+x10-en-021;parties.code;en-US;Code
+x10-ar-022;parties.partyName;ar-EG;اسم الجهة
+x10-en-022;parties.partyName;en-US;Party name
+x10-ar-023;parties.typeHint;ar-EG;اختر نوعًا معروفًا أو اكتب نوعًا جديدًا.
+x10-en-023;parties.typeHint;en-US;Choose a known type or enter a new one.
+x10-ar-024;parties.notes;ar-EG;ملاحظات
+x10-en-024;parties.notes;en-US;Notes
+x10-ar-025;parties.save;ar-EG;حفظ الجهة
+x10-en-025;parties.save;en-US;Save party
+x10-ar-026;parties.cancel;ar-EG;إلغاء
+x10-en-026;parties.cancel;en-US;Cancel
+x10-ar-027;parties.validation;ar-EG;برجاء استكمال الكود والاسم والنوع.
+x10-en-027;parties.validation;en-US;Complete the code, name and type.
+x10-ar-028;partyType.supplier;ar-EG;مورد مواد خام أو مستلزمات
+x10-en-028;partyType.supplier;en-US;Raw-material or supply vendor
+x10-ar-029;partyType.processingCustomer;ar-EG;عميل تشغيل وغسيل
+x10-en-029;partyType.processingCustomer;en-US;Processing and washing customer
+x10-ar-030;partyType.exportCustomer;ar-EG;عميل تصدير
+x10-en-030;partyType.exportCustomer;en-US;Export customer
+x10-ar-031;partyType.farm;ar-EG;مزرعة أو مشتري فرزة
+x10-en-031;partyType.farm;en-US;Farm or sorted-produce buyer
+x10-ar-032;partyType.other;ar-EG;أخرى
+x10-en-032;partyType.other;en-US;Other
+x10-ar-033;pagination.rowsPerPage;ar-EG;صفوف الصفحة
+x10-en-033;pagination.rowsPerPage;en-US;Rows per page
+x10-ar-034;pagination.previous;ar-EG;السابق
+x10-en-034;pagination.previous;en-US;Previous
+x10-ar-035;pagination.next;ar-EG;التالي
+x10-en-035;pagination.next;en-US;Next
+x10-ar-036;export.sheet.parties;ar-EG;جهات التعامل
+x10-en-036;export.sheet.parties;en-US;Business parties
+x10-ar-037;export.column.type;ar-EG;النوع
+x10-en-037;export.column.type;en-US;Type
+x10-ar-038;export.column.contactPerson;ar-EG;مسؤول التواصل
+x10-en-038;export.column.contactPerson;en-US;Contact person
+x10-ar-039;export.column.phone;ar-EG;الهاتف
+x10-en-039;export.column.phone;en-US;Phone
+x10-ar-040;export.column.notes;ar-EG;ملاحظات
+x10-en-040;export.column.notes;en-US;Notes

@@ -3,7 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { AuthService } from '../../core/auth/auth.service';
-import { TableDensity, ThemePreference } from '../../core/auth/auth.models';
+import { ExcelTableStyle, TableDensity, ThemePreference } from '../../core/auth/auth.models';
 import { I18nService } from '../../core/i18n.service';
 
 @Component({
@@ -31,6 +31,10 @@ export class SettingsPage {
       Validators.required,
     ],
     locale: [this.authService.preferences().locale, Validators.required],
+    excelTableStyle: [
+      this.authService.preferences().excelTableStyle as ExcelTableStyle,
+      Validators.required,
+    ],
   });
   readonly appSettingsForm = this.formBuilder.nonNullable.group({
     sessionTimeoutMinutes: [480, [Validators.required, Validators.min(5), Validators.max(10_080)]],

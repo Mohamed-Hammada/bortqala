@@ -222,8 +222,8 @@ public class ReportingService {
     public ReportingApi.Details reopen(String id) { var report = requireReport(id); report.reopen(); refreshUnresolved(report); return details(report); }
 
     @Transactional
-    public byte[] export(String id) {
-        var report = requireReport(id); byte[] bytes = reportExporter.export(details(report)); report.markExported(); return bytes;
+    public byte[] export(String id, ExcelExportOptions options) {
+        var report = requireReport(id); byte[] bytes = reportExporter.export(details(report), options); report.markExported(); return bytes;
     }
 
     private List<HolidayProposal> createHolidayProposals(AttendanceReport report, List<DailyAttendanceResult> results,

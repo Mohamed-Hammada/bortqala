@@ -1,6 +1,8 @@
 package com.bemo.hr.reporting.api;
 
 import com.bemo.hr.reporting.application.ReportingService;
+import com.bemo.hr.reporting.application.ExcelExportOptions;
+import com.bemo.hr.shared.security.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -20,14 +22,17 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/reports")
+@RequiredArgsConstructor
 public class ReportController {
     private final ReportingService reportingService;
-    public ReportController(ReportingService reportingService) { this.reportingService = reportingService; }
-
+    private final AuthService authService;
     @GetMapping List<ReportingApi.Summary> list() { return reportingService.list(); }
     @GetMapping("/{id}") ReportingApi.Details get(@PathVariable String id) { return reportingService.get(id); }
     @GetMapping("/available-periods") List<ReportingApi.PeriodOption> available(@RequestParam int year) { return reportingService.availablePeriods(year); }
@@ -62,10 +67,15 @@ public class ReportController {
     ReportingApi.Details reopen(@PathVariable String id) { return reportingService.reopen(id); }
 
     @GetMapping("/{id}/export")
-    ResponseEntity<byte[]> export(@PathVariable String id) {
+    ResponseEntity<byte[]> export(@PathVariable String id, Authentication authentication) {
+        var preference = authService.currentPreferences(authentication.getName());
+        var options = new ExcelExportOptions(preference.locale(), preference.excelTableStyle());
         var headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        headers.setContentDisposition(ContentDisposition.attachment().filename("attendance-report-" + id + ".xlsx", StandardCharsets.UTF_8).build());
-        return new ResponseEntity<>(reportingService.export(id), headers, HttpStatus.OK);
+        String baseName = preference.locale().startsWith("ar") ? "تقرير-الحضور" : "attendance-report";
+        headers.setContentDisposition(ContentDisposition.attachment().filename(baseName + "-"
+                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmm")) + ".xlsx",
+                StandardCharsets.UTF_8).build());
+        return new ResponseEntity<>(reportingService.export(id, options), headers, HttpStatus.OK);
     }
 }

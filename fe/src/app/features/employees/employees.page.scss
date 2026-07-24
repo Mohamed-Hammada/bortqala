@@ -82,3 +82,16 @@ code {
   bottom: 0;
   margin: 25px -2px 0;
 }
+.validation-summary {
+  margin-bottom: 16px;
+}
+.field-error {
+  display: block;
+  margin-top: 6px;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+}
+.field input[aria-invalid='true'] {
+  border-color: var(--danger);
+}

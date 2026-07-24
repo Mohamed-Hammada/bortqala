@@ -45,6 +45,9 @@ public class AttendanceCategory {
     @Column(name = "single_punch_counts", nullable = false)
     private boolean singlePunchCounts;
 
+    @Column(name = "allows_employee_advances", nullable = false)
+    private boolean allowsEmployeeAdvances;
+
     @Column(name = "work_days_mask", nullable = false)
     private int workDaysMask;
 
@@ -67,6 +70,10 @@ public class AttendanceCategory {
                               boolean singlePunchCounts, int workDaysMask, boolean active) {
         this.id = UUID.randomUUID().toString();
         update(code, name, expectedDailyMinutes, payCycle, attendanceMode, singlePunchCounts, workDaysMask, active);
+    }
+
+    public void configureAdvanceEligibility(boolean allowed) {
+        this.allowsEmployeeAdvances = allowed;
     }
 
     public void update(String code, String name, int expectedDailyMinutes, PayCycle payCycle, AttendanceMode attendanceMode,
@@ -99,6 +106,7 @@ public class AttendanceCategory {
     public PayCycle getPayCycle() { return payCycle; }
     public AttendanceMode getAttendanceMode() { return attendanceMode; }
     public boolean isSinglePunchCounts() { return singlePunchCounts; }
+    public boolean isAllowsEmployeeAdvances() { return allowsEmployeeAdvances; }
     public int getWorkDaysMask() { return workDaysMask; }
     public boolean isActive() { return active; }
     public long getVersion() { return version; }

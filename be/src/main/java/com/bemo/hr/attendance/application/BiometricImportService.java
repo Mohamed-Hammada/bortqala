@@ -20,27 +20,17 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class BiometricImportService {
     private final BiometricFileReader biometricFileReader;
     private final ImportBatchRepository importBatchRepository;
     private final PunchRecordRepository punchRecordRepository;
     private final ImportRowErrorRepository importRowErrorRepository;
     private final EmployeeRepository employeeRepository;
-
-    public BiometricImportService(BiometricFileReader biometricFileReader,
-                                  ImportBatchRepository importBatchRepository,
-                                  PunchRecordRepository punchRecordRepository,
-                                  ImportRowErrorRepository importRowErrorRepository,
-                                  EmployeeRepository employeeRepository) {
-        this.biometricFileReader = biometricFileReader;
-        this.importBatchRepository = importBatchRepository;
-        this.punchRecordRepository = punchRecordRepository;
-        this.importRowErrorRepository = importRowErrorRepository;
-        this.employeeRepository = employeeRepository;
-    }
 
     @Transactional
     public ImportApi.BatchResponse importFile(MultipartFile file, String deviceName, String actor) {
@@ -56,10 +46,11 @@ public class BiometricImportService {
             var parsed = biometricFileReader.read(file.getOriginalFilename(), new ByteArrayInputStream(content));
             var batch = importBatchRepository.save(new ImportBatch(checksum,
                     file.getOriginalFilename() == null ? "biometric-file" : file.getOriginalFilename(),
-                    deviceName, actor, parsed.totalRows(), parsed.rows().size(), parsed.errors().size()));
+                    deviceName, actor, parsed.totalRows(), parsed.importedRows(), parsed.errors().size()));
 
             var punches = parsed.rows().stream().map(row -> {
-                String employeeId = employeeRepository.findByDeviceUserId(row.deviceUserId())
+                String employeeId = employeeRepository.findByEmployeeCodeIgnoreCase(row.deviceUserId())
+                        .or(() -> employeeRepository.findByDeviceUserId(row.deviceUserId()))
                         .map(employee -> employee.getId()).orElse(null);
                 return new PunchRecord(batch.getId(), employeeId, row.deviceUserId(), row.employeeName(),
                         row.punchedAt(), row.rawLine(), row.rowNumber());

@@ -1,14 +1,16 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { dateInputToEpoch, epochToDateInput, formatDate, formatDateTime } from '../../core/date';
 import { PeriodOption, ReportPayCycle, ReportStatus } from './reports.models';
 import { ReportsStore } from './reports.store';
 import { I18nService } from '../../core/i18n.service';
+import { TablePagination } from '../../shared/ui/table-pagination/pagination';
+import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 
 @Component({
   selector: 'app-reports-page',
-  imports: [RouterLink, ReactiveFormsModule],
+  imports: [RouterLink, ReactiveFormsModule, TablePaginationComponent],
   providers: [ReportsStore],
   templateUrl: './reports.page.html',
   styleUrl: './reports.page.scss',
@@ -19,6 +21,8 @@ export class ReportsPage {
   readonly i18n = inject(I18nService);
   readonly year = signal(new Date().getFullYear());
   readonly customError = signal<string | null>(null);
+  readonly pagination = new TablePagination();
+  readonly pagedReports = computed(() => this.pagination.slice(this.store.reports()));
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly initialRange = this.currentMonthRange();

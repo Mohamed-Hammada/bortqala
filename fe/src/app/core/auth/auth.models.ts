@@ -1,11 +1,13 @@
 export type RoleCode = 'ADMIN' | 'HR_MANAGER' | 'HR_REVIEWER' | 'VIEWER';
 export type ThemePreference = 'LIGHT' | 'DARK' | 'SYSTEM';
 export type TableDensity = 'COMFORTABLE' | 'COMPACT';
+export type ExcelTableStyle = 'GOLD' | 'BLUE' | 'GREEN' | 'GRAY';
 
 export interface UserPreferences {
   theme: ThemePreference;
   tableDensity: TableDensity;
   locale: string;
+  excelTableStyle: ExcelTableStyle;
   updatedAt: number | null;
 }
 

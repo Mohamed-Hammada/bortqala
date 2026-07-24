@@ -1,0 +1,32 @@
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+}
+label,
+.pager-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+select,
+button {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+select { padding-inline: 8px; }
+button { padding-inline: 12px; cursor: pointer; }
+button:disabled { opacity: 0.45; cursor: default; }
+@media (max-width: 620px) {
+  .table-pagination { flex-wrap: wrap; }
+  .range { order: 3; width: 100%; text-align: center; }
+}

@@ -13,3 +13,11 @@ databaseChangeLog:
       file: db/changelog/20260724_v6_app_session_timeout.yaml
   - include:
       file: db/changelog/20260724_v7_login_error_translation.yaml
+  - include:
+      file: db/changelog/20260724_v8_excel_export_preferences.yaml
+  - include:
+      file: db/changelog/20260724_v9_structured_attendance_import.yaml
+  - include:
+      file: db/changelog/20260724_v10_business_parties.yaml
+  - include:
+      file: db/changelog/20260724_v11_employee_advance_eligibility.yaml

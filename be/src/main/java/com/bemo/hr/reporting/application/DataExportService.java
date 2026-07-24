@@ -4,11 +4,13 @@ import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
 import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.IndexedColors;
+import com.bemo.hr.reporting.infrastructure.ExcelExportSupport;
+import com.bemo.hr.party.BusinessPartyRepository;
+import com.bemo.hr.shared.i18n.TranslationService;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -16,51 +18,95 @@ import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class DataExportService {
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final EmployeeRepository employeeRepository;
     private final ImportBatchRepository importBatchRepository;
     private final PunchRecordRepository punchRecordRepository;
+    private final TranslationService translationService;
+    private final BusinessPartyRepository businessPartyRepository;
 
-    public DataExportService(AttendanceCategoryRepository attendanceCategoryRepository, EmployeeRepository employeeRepository,
-                             ImportBatchRepository importBatchRepository, PunchRecordRepository punchRecordRepository) {
-        this.attendanceCategoryRepository = attendanceCategoryRepository; this.employeeRepository = employeeRepository;
-        this.importBatchRepository = importBatchRepository; this.punchRecordRepository = punchRecordRepository;
-    }
-
-    public byte[] categories() {
-        var rows = attendanceCategoryRepository.findAllByOrderByNameAsc().stream().map(item -> List.of(item.getCode(), item.getName(),
-                String.valueOf(item.getExpectedDailyMinutes()), item.getAttendanceMode().name(), item.getPayCycle().name(), item.isActive() ? "Yes" : "No")).toList();
-        return workbook("Categories", List.of("Code", "Name", "Default minutes", "Attendance mode", "Pay cycle", "Active"), rows);
-    }
-    public byte[] employees() {
-        var categories = attendanceCategoryRepository.findAll().stream().collect(java.util.stream.Collectors.toMap(item -> item.getId(), item -> item.getName()));
-        var rows = employeeRepository.findAllByOrderByFullNameAsc().stream().map(item -> List.of(item.getEmployeeCode(), item.getFullName(),
-                item.getDeviceUserId() == null ? "" : item.getDeviceUserId(), categories.getOrDefault(item.getCategoryId(), ""), item.getEmploymentType().name(),
-                item.getActiveFrom().toString(), item.getActiveTo() == null ? "" : item.getActiveTo().toString(), item.isActive() ? "Yes" : "No")).toList();
-        return workbook("Employees", List.of("Code", "Name", "Device user id", "Category", "Employment type", "From", "To", "Active"), rows);
-    }
-    public byte[] imports() {
-        var rows = importBatchRepository.findAllByOrderByImportedAtDesc().stream().map(item -> List.of(item.getFileName(), item.getDeviceName(), item.getStatus().name(),
-                String.valueOf(item.getTotalRows()), String.valueOf(item.getImportedRows()), String.valueOf(item.getErrorRows()), item.getImportedBy(), item.getImportedAt().toString())).toList();
-        return workbook("Imports", List.of("File", "Device", "Status", "Rows", "Imported", "Errors", "By", "At"), rows);
-    }
-    public byte[] unmatched() {
-        var rows = punchRecordRepository.summarizeUnmatched().stream().filter(item -> employeeRepository.findByDeviceUserId((String) item[0]).isEmpty())
-                .map(item -> List.of(String.valueOf(item[0]), item[1] == null ? "" : String.valueOf(item[1]), String.valueOf(item[2]), String.valueOf(item[3]), String.valueOf(item[4]))).toList();
-        return workbook("Unmatched", List.of("Device user id", "Observed name", "Punch count", "First punch", "Last punch"), rows);
+    public byte[] categories(ExcelExportOptions options) {
+        var messages = ExcelExportSupport.messages(translationService, options);
+        var rows = attendanceCategoryRepository.findAllByOrderByNameAsc().stream().<List<?>>map(item -> List.of(
+                item.getCode(), item.getName(), item.getExpectedDailyMinutes(),
+                ExcelExportSupport.enumText(messages, item.getAttendanceMode()),
+                ExcelExportSupport.enumText(messages, item.getPayCycle()),
+                ExcelExportSupport.text(messages, item.isActive() ? "export.value.yes" : "export.value.no"))).toList();
+        return workbook("export.sheet.categories", "CategoriesTable", List.of("code", "name", "defaultMinutes",
+                "attendanceMode", "payCycle", "active"), rows, options);
     }
 
-    private byte[] workbook(String sheetName, List<String> headers, List<? extends List<String>> rows) {
+    public byte[] employees(ExcelExportOptions options) {
+        var messages = ExcelExportSupport.messages(translationService, options);
+        var categories = attendanceCategoryRepository.findAll().stream()
+                .collect(java.util.stream.Collectors.toMap(item -> item.getId(), item -> item.getName()));
+        var rows = employeeRepository.findAllByOrderByFullNameAsc().stream().<List<?>>map(item -> List.of(
+                item.getEmployeeCode(), item.getFullName(), item.getDeviceUserId() == null ? "" : item.getDeviceUserId(),
+                categories.getOrDefault(item.getCategoryId(), ""),
+                ExcelExportSupport.enumText(messages, item.getEmploymentType()), item.getActiveFrom(),
+                item.getActiveTo() == null ? "" : item.getActiveTo(),
+                ExcelExportSupport.text(messages, item.isActive() ? "export.value.yes" : "export.value.no"))).toList();
+        return workbook("export.sheet.employees", "EmployeesTable", List.of("code", "name", "deviceUserId",
+                "category", "employmentType", "from", "to", "active"), rows, options);
+    }
+
+    public byte[] imports(ExcelExportOptions options) {
+        var messages = ExcelExportSupport.messages(translationService, options);
+        var rows = importBatchRepository.findAllByOrderByImportedAtDesc().stream().<List<?>>map(item -> List.of(
+                item.getFileName(), item.getDeviceName(), ExcelExportSupport.enumText(messages, item.getStatus()),
+                item.getTotalRows(), item.getImportedRows(), item.getErrorRows(), item.getImportedBy(), item.getImportedAt())).toList();
+        return workbook("export.sheet.imports", "ImportsTable", List.of("file", "device", "status", "rows",
+                "imported", "errors", "by", "at"), rows, options);
+    }
+
+    public byte[] unmatched(ExcelExportOptions options) {
+        var rows = punchRecordRepository.summarizeUnmatched().stream()
+                .filter(item -> employeeRepository.findByDeviceUserId((String) item[0]).isEmpty())
+                .<List<?>>map(item -> List.of(String.valueOf(item[0]), item[1] == null ? "" : String.valueOf(item[1]),
+                        ((Number) item[2]).longValue(), item[3], item[4])).toList();
+        return workbook("export.sheet.unmatched", "UnmatchedTable", List.of("deviceUserId", "observedName",
+                "punchCount", "firstPunch", "lastPunch"), rows, options);
+    }
+
+    public byte[] parties(ExcelExportOptions options) {
+        var messages = ExcelExportSupport.messages(translationService, options);
+        var rows = businessPartyRepository.findAllByOrderByNameAsc().stream().<List<?>>map(item -> List.of(
+                item.getCode(), item.getName(), partyType(messages, item.getPartyType()),
+                item.getContactPerson() == null ? "" : item.getContactPerson(),
+                item.getPhone() == null ? "" : item.getPhone(), item.getNotes() == null ? "" : item.getNotes(),
+                ExcelExportSupport.text(messages, item.isActive() ? "export.value.yes" : "export.value.no"))).toList();
+        return workbook("export.sheet.parties", "BusinessPartiesTable", List.of("code", "name", "type",
+                "contactPerson", "phone", "notes", "active"), rows, options);
+    }
+
+    private byte[] workbook(String sheetKey, String tableName, List<String> headerKeys,
+                            List<? extends List<?>> rows, ExcelExportOptions options) {
+        var messages = ExcelExportSupport.messages(translationService, options);
         try (var workbook = new XSSFWorkbook(); var output = new ByteArrayOutputStream()) {
-            var sheet = workbook.createSheet(sheetName); sheet.setRightToLeft(true); sheet.createFreezePane(0, 1);
-            var style = workbook.createCellStyle(); style.setFillForegroundColor(IndexedColors.GOLD.getIndex()); style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-            var font = workbook.createFont(); font.setBold(true); style.setFont(font);
-            var header = sheet.createRow(0); for (int col = 0; col < headers.size(); col++) { var cell = header.createCell(col); cell.setCellValue(headers.get(col)); cell.setCellStyle(style); }
-            int rowIndex = 1; for (var values : rows) { var row = sheet.createRow(rowIndex++); for (int col = 0; col < values.size(); col++) row.createCell(col).setCellValue(values.get(col)); }
-            sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(0, Math.max(0, rowIndex - 1), 0, headers.size() - 1));
-            for (int col = 0; col < headers.size(); col++) { sheet.autoSizeColumn(col); sheet.setColumnWidth(col, Math.min(sheet.getColumnWidth(col) + 512, 12_000)); }
-            workbook.write(output); return output.toByteArray();
-        } catch (IOException exception) { throw new IllegalStateException("Could not create Excel workbook.", exception); }
+            var sheet = ExcelExportSupport.sheet(workbook, ExcelExportSupport.text(messages, sheetKey), options.rightToLeft());
+            var headers = headerKeys.stream().map(key -> ExcelExportSupport.text(messages, "export.column." + key)).toList();
+            ExcelExportSupport.writeHeader(sheet, headers);
+            var styles = ExcelExportSupport.styles(workbook);
+            int rowIndex = 1;
+            for (var values : rows) ExcelExportSupport.writeRow(sheet, rowIndex++, values, styles);
+            ExcelExportSupport.finishTable(sheet, rowIndex - 1, headers.size(), tableName, options);
+            workbook.write(output);
+            return output.toByteArray();
+        } catch (IOException exception) {
+            throw new IllegalStateException("Could not create Excel workbook.", exception);
+        }
+    }
+
+    private String partyType(java.util.Map<String, String> messages, String type) {
+        String key = switch (type) {
+            case "SUPPLIER" -> "partyType.supplier";
+            case "PROCESSING_CUSTOMER" -> "partyType.processingCustomer";
+            case "EXPORT_CUSTOMER" -> "partyType.exportCustomer";
+            case "FARM" -> "partyType.farm";
+            default -> null;
+        };
+        return key == null ? type.replace('_', ' ') : ExcelExportSupport.text(messages, key);
     }
 }

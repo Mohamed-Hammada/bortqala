@@ -93,7 +93,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (item of store.reports(); track item.id) {
+        @for (item of pagedReports(); track item.id) {
           <tr>
             <td>
               <strong class="ltr">{{ date(item.periodStart) }}</strong
@@ -140,5 +140,6 @@
         }
       </tbody>
     </table>
+    <app-table-pagination [total]="store.reports().length" [page]="pagination.currentPage(store.reports().length)" [pageSize]="pagination.pageSize()" (pageChange)="pagination.changePage($event, store.reports().length)" (pageSizeChange)="pagination.changePageSize($event)" />
   </div>
 </section>

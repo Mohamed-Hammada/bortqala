@@ -9,10 +9,11 @@ class UserPreferenceTests {
     void keepsSupportedLocaleInCanonicalForm() {
         var preference = new UserPreference("user-1");
 
-        preference.update(ThemePreference.DARK, TableDensity.COMPACT, "en-us");
+        preference.update(ThemePreference.DARK, TableDensity.COMPACT, "en-us", ExcelTableStyle.BLUE);
         assertThat(preference.getLocale()).isEqualTo("en-US");
+        assertThat(preference.getExcelTableStyle()).isEqualTo(ExcelTableStyle.BLUE);
 
-        preference.update(ThemePreference.LIGHT, TableDensity.COMFORTABLE, "ar-eg");
+        preference.update(ThemePreference.LIGHT, TableDensity.COMFORTABLE, "ar-eg", ExcelTableStyle.GOLD);
         assertThat(preference.getLocale()).isEqualTo("ar-EG");
     }
 }

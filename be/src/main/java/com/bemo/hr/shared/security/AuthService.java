@@ -182,7 +182,7 @@ public class AuthService {
 
     private AuthApi.PreferenceResponse toResponse(UserPreference preference) {
         return new AuthApi.PreferenceResponse(preference.getTheme(), preference.getTableDensity(),
-                preference.getLocale(), preference.getUpdatedAt());
+                preference.getLocale(), preference.getExcelTableStyle(), preference.getUpdatedAt());
     }
 
     private TenantApplication requireCurrentApp() {

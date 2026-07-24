@@ -10,6 +10,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'SYSTEM',
   tableDensity: 'COMFORTABLE',
   locale: 'ar-EG',
+  excelTableStyle: 'GOLD',
   updatedAt: null,
 };
 
@@ -57,7 +58,9 @@ export class AuthService {
     this.logout();
   }
 
-  updatePreferences(preferences: Pick<UserPreferences, 'theme' | 'tableDensity' | 'locale'>) {
+  updatePreferences(
+    preferences: Pick<UserPreferences, 'theme' | 'tableDensity' | 'locale' | 'excelTableStyle'>,
+  ) {
     return this.httpClient.put<UserPreferences>('/api/v1/auth/preferences', preferences).pipe(
       tap((updated) => {
         const session = this.session();
@@ -93,7 +96,10 @@ export class AuthService {
         localStorage.removeItem(STORAGE_KEY);
         return null;
       }
-      return { ...session, preferences: session.preferences ?? DEFAULT_PREFERENCES };
+      return {
+        ...session,
+        preferences: { ...DEFAULT_PREFERENCES, ...(session.preferences ?? {}) },
+      };
     } catch {
       localStorage.removeItem(STORAGE_KEY);
       return null;

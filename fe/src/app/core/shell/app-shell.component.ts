@@ -54,6 +54,13 @@ export class AppShellComponent {
       roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
     },
     {
+      labelKey: 'nav.parties',
+      descriptionKey: 'nav.partiesHint',
+      path: '/parties',
+      icon: 'users',
+      roles: ['ADMIN', 'HR_MANAGER'],
+    },
+    {
       labelKey: 'nav.reports',
       descriptionKey: 'nav.reportsHint',
       path: '/reports',

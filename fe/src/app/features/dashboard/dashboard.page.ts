@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DashboardStore } from './dashboard.store';
+import { TablePagination } from '../../shared/ui/table-pagination/pagination';
+import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [RouterLink],
+  imports: [RouterLink, TablePaginationComponent],
   providers: [DashboardStore],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss',
@@ -14,6 +16,8 @@ export class DashboardPage {
   readonly store = inject(DashboardStore);
   readonly year = signal(new Date().getFullYear());
   readonly month = signal(new Date().getMonth() + 1);
+  readonly pagination = new TablePagination();
+  readonly pagedCategories = computed(() => this.pagination.slice(this.store.data()?.categories ?? []));
   readonly months = [
     'يناير',
     'فبراير',

@@ -54,6 +54,7 @@ public class HrConfigurationService {
         }
         var category = new AttendanceCategory(request.code(), request.name(), request.expectedDailyMinutes(),
                 request.payCycle(), request.attendanceMode(), request.singlePunchCounts(), toMask(request.workDays()), request.active());
+        category.configureAdvanceEligibility(request.allowsEmployeeAdvances());
         attendanceCategoryRepository.save(category);
         replaceSchedules(category.getId(), request.schedules());
         return toCategoryResponse(category);
@@ -69,6 +70,7 @@ public class HrConfigurationService {
         }
         category.update(request.code(), request.name(), request.expectedDailyMinutes(), request.payCycle(), request.attendanceMode(),
                 request.singlePunchCounts(), toMask(request.workDays()), request.active());
+        category.configureAdvanceEligibility(request.allowsEmployeeAdvances());
         replaceSchedules(id, request.schedules());
         return toCategoryResponse(category);
     }
@@ -184,7 +186,7 @@ public class HrConfigurationService {
                 .toList();
         return new CategoryApi.Response(category.getId(), category.getCode(), category.getName(),
                 category.getExpectedDailyMinutes(), category.getPayCycle(), category.getAttendanceMode(),
-                category.isSinglePunchCounts(),
+                category.isSinglePunchCounts(), category.isAllowsEmployeeAdvances(),
                 fromMask(category.getWorkDaysMask()), category.isActive(), category.getVersion(),
                 category.getCreatedAt(), category.getUpdatedAt(), schedules);
     }

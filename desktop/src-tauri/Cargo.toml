@@ -1,0 +1,17 @@
+[package]
+name = "bemo-hr-desktop"
+version = "0.1.0"
+description = "Bemo HR desktop launcher"
+authors = ["Bemo"]
+edition = "2024"
+
+[lib]
+name = "bemo_hr_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+uuid = { version = "1", features = ["v4"] }

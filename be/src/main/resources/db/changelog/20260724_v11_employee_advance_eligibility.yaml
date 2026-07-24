@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260724-v11-employee-advance-eligibility
+      author: codex
+      changes:
+        - addColumn:
+            tableName: attendance_categories
+            columns:
+              - column:
+                  name: allows_employee_advances
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
