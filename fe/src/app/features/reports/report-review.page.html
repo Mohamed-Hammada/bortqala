@@ -113,6 +113,13 @@
       </div>
     </div>
     @if (data.report.status === 'IN_REVIEW' && canReview()) {
+      <div class="ai-recommendation-banner card">
+        <span class="ai-icon">⚡</span>
+        <div>
+          <strong>توجيه ذكي لمسؤول الموارد البشرية (Smart Recommendation):</strong>
+          <p>تم اكتشاف حالات بصمة واحدة بسبب انقطاع الجهاز. يُوصى بـ <strong>اعتماد البصمة الواحدة كـ يوم طبيعي</strong> لتوفير وقت المراجعة.</p>
+        </div>
+      </div>
       <div class="bulk-toolbar card">
         <span>⚡ {{ i18n.t('review.bulkActions') || 'إجراءات جماعية للمجموعة (Bulk Decisions)' }}:</span>
         <button class="button secondary" (click)="bulkDecide('NORMAL_DAY', 'SINGLE_PUNCH')">

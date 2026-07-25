@@ -82,6 +82,41 @@
   color: #fff;
 }
 
+.ai-recommendation-banner {
+  margin-bottom: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(135deg, rgba(212, 160, 23, 0.12) 0%, var(--surface) 100%);
+  border: 1.5px solid var(--gold);
+  border-radius: 10px;
+
+  .ai-icon {
+    font-size: 22px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--gold-glow);
+    display: grid;
+    place-items: center;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  strong {
+    display: block;
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+
+  p {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+}
+
 .bulk-toolbar {
   margin-bottom: 14px;
   padding: 12px 16px;

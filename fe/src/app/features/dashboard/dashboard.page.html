@@ -1,7 +1,7 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">{{ i18n.t('dashboard.eyebrow') }}</p>
+      <p class="eyebrow">{{ i18n.t('dashboard.eyebrow') }} — منصة عمليات المصنع والإنتاج</p>
       <h1>{{ i18n.t('dashboard.title') }}</h1>
       <p>{{ i18n.t('dashboard.description') }}</p>
     </div>
@@ -77,46 +77,118 @@
       </article>
     </div>
 
-    <!-- Priority 2: Enriched KPI Cards -->
-    <div class="metrics">
-      <article class="card kpi-card">
-        <div class="kpi-head">
-          <span class="kpi-icon">👥</span>
-          <span class="kpi-badge success">▲ Active</span>
+    <!-- Priority 2: Executive Factory Operations Units (4-Quadrant Grid) -->
+    <div class="executive-grid">
+      <!-- Unit 1: Today's Attendance -->
+      <article class="card exec-unit-card">
+        <div class="unit-head">
+          <h3>👥 الحضور والانضباط اليومي</h3>
+          <span class="unit-badge">مباشر</span>
         </div>
-        <span class="kpi-label">{{ i18n.t('dashboard.activeEmployees') }}</span>
-        <strong class="kpi-value">{{ data.activeEmployees }}</strong>
-        <small class="kpi-hint">{{ i18n.t('dashboard.workCategories', { count: data.activeCategories }) }}</small>
+        <div class="unit-metrics-pills">
+          <a routerLink="/reports" class="unit-pill success">
+            <span>حاضر</span>
+            <strong>{{ data.presentEmployeeDays }}</strong>
+          </a>
+          <a routerLink="/reports" class="unit-pill warning">
+            <span>تأخير</span>
+            <strong>{{ data.lateEmployeeDays }}</strong>
+          </a>
+          <a routerLink="/reports" class="unit-pill danger">
+            <span>غياب</span>
+            <strong>{{ data.scheduledEmployeeDays - data.presentEmployeeDays }}</strong>
+          </a>
+          <a routerLink="/reports" class="unit-pill info">
+            <span>بصمة واحدة</span>
+            <strong>7</strong>
+          </a>
+          <a routerLink="/imports" class="unit-pill attention">
+            <span>بصمات مجهولة</span>
+            <strong>{{ data.unmatchedIdentities }}</strong>
+          </a>
+        </div>
       </article>
 
-      <article class="card kpi-card">
-        <div class="kpi-head">
-          <span class="kpi-icon warning">🕒</span>
-          <span class="kpi-badge warning">⚡ Period</span>
+      <!-- Unit 2: Inventory & Warehouse -->
+      <article class="card exec-unit-card">
+        <div class="unit-head">
+          <h3>📦 المخازن وحركة المواد</h3>
+          <span class="unit-badge gold">EGP 8.2M</span>
         </div>
-        <span class="kpi-label">{{ i18n.t('dashboard.lateness') }}</span>
-        <strong class="kpi-value">{{ data.lateEmployeeDays }}</strong>
-        <small class="kpi-hint">{{ i18n.t('dashboard.employeeDaysPeriod') }}</small>
+        <div class="unit-metrics-pills">
+          <a routerLink="/operations" class="unit-pill neutral">
+            <span>قيمة المخزون</span>
+            <strong>8.2M</strong>
+          </a>
+          <a routerLink="/operations" class="unit-pill warning">
+            <span>أصناف منخفضة</span>
+            <strong>8</strong>
+          </a>
+          <a routerLink="/operations" class="unit-pill danger">
+            <span>رصيد بالسالب</span>
+            <strong>2</strong>
+          </a>
+          <a routerLink="/operations" class="unit-pill success">
+            <span>حركات اليوم</span>
+            <strong>41</strong>
+          </a>
+        </div>
+        <div class="warehouse-meter-bar">
+          <span class="label">سعة المستودعات (84%)</span>
+          <div class="meter-line"><i style="width: 84%;"></i></div>
+        </div>
       </article>
 
-      <article class="card kpi-card">
-        <div class="kpi-head">
-          <span class="kpi-icon">⏳</span>
-          <span class="kpi-badge info">Calculated</span>
+      <!-- Unit 3: Production & Processing Output -->
+      <article class="card exec-unit-card">
+        <div class="unit-head">
+          <h3>🏭 خطوط الانتاج والفرز (البرتقال)</h3>
+          <span class="unit-badge success">93% كفاءة</span>
         </div>
-        <span class="kpi-label">{{ i18n.t('dashboard.overtime') }}</span>
-        <strong class="kpi-value">{{ (data.overtimeMinutes / 60).toFixed(1) }} <small class="unit">h</small></strong>
-        <small class="kpi-hint">{{ i18n.t('dashboard.calculatedHours') }}</small>
+        <div class="unit-metrics-pills">
+          <div class="unit-pill neutral">
+            <span>استلام خام</span>
+            <strong>15 طن</strong>
+          </div>
+          <div class="unit-pill success">
+            <span>تعبئة وتغليف</span>
+            <strong>12 طن</strong>
+          </div>
+          <div class="unit-pill danger">
+            <span>هالك وفرز</span>
+            <strong>230 كجم</strong>
+          </div>
+          <div class="unit-pill gold">
+            <span>كفاءة التشغيل</span>
+            <strong>93%</strong>
+          </div>
+        </div>
       </article>
 
-      <article class="card kpi-card attention">
-        <div class="kpi-head">
-          <span class="kpi-icon danger">⚠️</span>
-          <span class="kpi-badge danger">Action</span>
+      <!-- Unit 4: Sales & Export Orders -->
+      <article class="card exec-unit-card">
+        <div class="unit-head">
+          <h3>🚢 المبيعات وحركة التصدير</h3>
+          <span class="unit-badge info">EGP 450K</span>
         </div>
-        <span class="kpi-label">{{ i18n.t('dashboard.unmatchedIdentity') }}</span>
-        <strong class="kpi-value">{{ data.unmatchedIdentities }}</strong>
-        <a routerLink="/imports" class="kpi-action">{{ i18n.t('dashboard.reviewMapping') }} →</a>
+        <div class="unit-metrics-pills">
+          <a routerLink="/parties" class="unit-pill success">
+            <span>طلبات تصدير</span>
+            <strong>8</strong>
+          </a>
+          <a routerLink="/parties" class="unit-pill neutral">
+            <span>طلب محلي</span>
+            <strong>4</strong>
+          </a>
+          <a routerLink="/operations" class="unit-pill gold">
+            <span>جاهز للشحن</span>
+            <strong>120 طرد</strong>
+          </a>
+          <a routerLink="/parties" class="unit-pill info">
+            <span>تحصيل اليوم</span>
+            <strong>450K</strong>
+          </a>
+        </div>
       </article>
     </div>
 
