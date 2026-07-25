@@ -26,11 +26,16 @@ export class ReportReviewPage {
   readonly auth = inject(AuthService);
   readonly i18n = inject(I18nService);
   readonly filter = signal<'ALL' | 'UNRESOLVED' | 'GREEN' | 'YELLOW' | 'RED'>('UNRESOLVED');
+  readonly expandedRowId = signal<string | null>(null);
   readonly id = inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
   readonly pagination = new TablePagination();
   readonly greenCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.healthTier(r) === 'GREEN').length);
   readonly yellowCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.healthTier(r) === 'YELLOW').length);
   readonly redCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.healthTier(r) === 'RED').length);
+  readonly totalCount = computed(() => this.store.details()?.dailyResults.length ?? 0);
+  readonly unresolvedCount = computed(() => this.store.details()?.report.unresolvedCount ?? 0);
+  readonly reviewedCount = computed(() => Math.max(0, this.totalCount() - this.unresolvedCount()));
+  readonly reviewedPercent = computed(() => (this.totalCount() > 0 ? Math.round((this.reviewedCount() / this.totalCount()) * 100) : 100));
   readonly rows = computed(() => {
     const all = this.store.details()?.dailyResults ?? [];
     const f = this.filter();
@@ -43,6 +48,9 @@ export class ReportReviewPage {
   readonly pagedRows = computed(() => this.pagination.slice(this.rows()));
   constructor() {
     void this.store.load(this.id);
+  }
+  toggleRowExpand(id: string) {
+    this.expandedRowId.update((prev) => (prev === id ? null : id));
   }
   healthTier(row: DailyResult): 'GREEN' | 'YELLOW' | 'RED' {
     if (row.status === 'NO_PUNCH' || row.status === 'MANUAL_ENTRY' || row.status === 'MISSING_SCHEDULE') return 'RED';

@@ -1,28 +1,42 @@
-# Backend — HR & Operations API (`be/`)
+# Backend — HR & Factory Operations API (`be/`)
 
-Spring Boot 4.1 modular monolith built with Java 26, Spring Data JPA, Hibernate ORM, and Gradle. Runs on PostgreSQL 18.4 (`jdbc:postgresql://localhost:5432/hr_platform`) managed exclusively by Liquibase schema migrations.
+Spring Boot 4.1 modular monolith built with Java 26, Spring Data JPA, Hibernate ORM, PostgreSQL 18.4 (`jdbc:postgresql://localhost:5432/hr_platform`), and Liquibase schema migrations.
 
 ---
 
-## Business Logic & System Services
+## 🏢 Business Requirements & Domain Logic Services
 
 1. **SaaS Multi-Tenancy & User Authorization**:
-   - `TenantContext` extracts `appId` from JWT claim for tenant data isolation.
+   - `TenantContext` extracts `appId` from JWT claim for tenant data isolation across all tables (`@TenantId`).
    - Per-user granular menu permission filtering (`allowed_menus`).
    - Tenant application session timeout configuration (`GET`/`PUT /api/v1/admin/app-settings`).
 
-2. **Attendance Engine & Schedule Rules**:
-   - Category-based attendance modes (`BIOMETRIC`, `MANUAL`, `HYBRID`) and pay cycles (`MONTHLY`, `HALF_MONTHLY`, `THIRTY_DAYS`).
-   - Intra-month effective schedule rules (`ScheduleRule`) evaluated dynamically per workday.
-   - Power outage & mass disruption detector in `ReportingService.java` (>50% missing punches in a category triggers automated holiday/excused proposal).
+2. **Factory Worker Classification & Schedule Rules**:
+   - Category-based attendance modes (`BIOMETRIC`, `MANUAL`, `HYBRID`) and pay cycles (`MONTHLY`, `HALF_MONTHLY` for 15-day daily-wage staff, `THIRTY_DAYS`).
+   - Intra-month effective schedule rules (`ScheduleRule`) supporting seasonal summer/winter shifts (e.g., July 1–12 at 07:00 AM vs. July 13–31 at 09:00 AM).
+   - **Power Outage & Mass Absence Detector**: Automatically detects when >50% of employees in a category lack punches on a workday and prompts HR reviewers to confirm Excused Presence vs Absence.
 
-3. **Biometric Evidence & Report Processing**:
-   - Sha256-verified biometric imports (CSV, TXT, XLS, XLSX) into `punch_records`.
-   - Attendance review calculation producing daily attendance results with status (`PRESENT`, `SINGLE_PUNCH`, `NO_PUNCH`, `MANUAL_ENTRY`, `HOLIDAY`, `NON_WORKDAY`, `MISSING_SCHEDULE`).
+3. **Biometric Evidence & Attendance Calculation Engine**:
+   - Sha256-verified biometric imports (`CSV`, `TXT`, `XLS`, `XLSX`) into `punch_records`.
+   - Single-punch policy enforcement and attendance calculation producing daily results categorized by health tiers:
+     - 🟢 **GREEN**: Clean attendance.
+     - 🟡 **YELLOW**: Single punch or grace period.
+     - 🔴 **RED**: Missing punches or missing schedules.
 
-4. **Operations & Finance**:
+4. **Operations, Inventory, Balances & Excel Exporters**:
    - Business party management (`PARTNER`, `SUPPLIER`, `CUSTOMER`, `FARM`, `TRADER`).
-   - Inventory items, immutable signed stock movements, partner financial balances, and category-controlled employee advances.
+   - Inventory items, immutable signed stock movements, partner financial ledgers, processing loss percentages, and category-controlled employee advances.
+   - Native Excel generation (`OperationsExcelExporter.java`, `ReportsExcelExporter.java`) formatted per user theme preferences (`GOLD`, `BLUE`, `GREEN`, `GRAY`).
+
+---
+
+## 🇸🇦 قواعد العمل للخلفية البرمجية (Arabic Summary)
+
+- **حسابات العمالة باليومية (15 يوماً) والعمالة الثابتة (شفتات 8، 10، 12 ساعة)**.
+- **تأكيد انقطاع الكهرباء والأعطال تلقائياً بنسبة >50% غياب بصمة**.
+- **فئات الصحة للحضور (خضراء، صفراء، حمراء) مع قرارات HR الجماعية**.
+- **تطبيق صلاحيات القوائم لكل مستخدم بجدول `allowed_menus`**.
+- **تصدير شيتات Excel منسقة ومتوافقة مع المظهر المختار**.
 
 ---
 

@@ -1,42 +1,78 @@
-# Bemo HR & Operations Platform
+# Bemo HR & Factory Operations Platform (نظام بيمو لإدارة الموارد البشرية والعمليات المصنعية)
 
-An enterprise, multi-tenant HR attendance, shift scheduling, and company operations system built for businesses replacing manual paper notes and spreadsheets. The repository contains `be/` (Spring Boot 4.1 backend with bundled Angular UI), `fe/` (Angular 22 standalone frontend), `desktop/` (Tauri Windows desktop package), and `license-app/` (Ed25519 licensing service).
+An enterprise, multi-tenant HR attendance, shift scheduling, inventory, and factory operations platform built for companies, factories (fruit/orange processing & packing), and industrial enterprises replacing manual paper notes and Excel spreadsheets.
 
----
-
-## Business Architecture & Core Capabilities
-
-1. **Multi-Tenant SaaS Security & Granular Authorization**:
-   - Isolation by `app_id` across all business entities.
-   - JWT authentication with administrator-controlled session lifetime (5 minutes to 7 days).
-   - Granular per-user menu authorization allowing administrators to assign allowed navigation menus (`dashboard`, `employees`, `categories`, `reports`, `imports`, `parties`, `operations`, `users`, `settings`) to individual users.
-
-2. **Attendance Categories & Biometric Engine**:
-   - Dynamic attendance categories (`BIOMETRIC`, `MANUAL`, `HYBRID`) supporting monthly, 15-day (half-monthly), or 30-day pay cycles.
-   - Single-punch policy enforcement, expected daily minutes, and category-prefixed employee code generation (`<CATEGORY>-<SUFFIX>` or locked sequence).
-   - Multi-format biometric imports (CSV, TXT, XLS, XLSX) with SHA-256 evidence hashing, row error logging, and unmatched device identity mapping.
-
-3. **Intra-Month Effective Schedules & Power Outage Detection**:
-   - Date-effective shift schedules supporting intra-month changes (e.g., July 1–12 at 07:00 vs. July 13–31 at 09:00).
-   - **Power Outage / Mass Absence Detector**: Automatically detects when >50% of employees in a category lack punches on a workday and prompts HR reviewers to confirm Excused Presence vs Absence.
-
-4. **Rule-Based Attendance Health Categories & Bulk HR Decisions**:
-   - 🟢 **Green Tier (Clean)**: 100% clean attendance without warnings or missing punches.
-   - 🟡 **Yellow Tier (Single Punch / Grace)**: Single punch days or minor grace period arrivals.
-   - 🔴 **Red Tier (Critical Exceptions)**: Missing punches (`NO_PUNCH`), manual entry requirements, or unexcused absences.
-   - **Bulk Decisions Toolbar**: Allows HR managers to approve all single-punch days or deduct missing days across filtered health tiers in 1 click.
-
-5. **Operations, Inventory, Balances & Localized Excel Exports**:
-   - Partner management (suppliers, customers, traders, farms), inventory stock movements, partner financial ledgers, processing loss percentages, and category-controlled employee advances.
-   - Multi-sheet native Excel exports styled according to user preferences (`GOLD`, `BLUE`, `GREEN`, `GRAY`).
-
-6. **Design System & Accessible Theme Engine**:
-   - Token-based design system supporting true **Dark Mode** (`#0B0F14` canvas, `#141A22` cards, `#1B2430` elevated surfaces) and **Light Mode** (`#F1F5F9` canvas, `#FFFFFF` cards, `#F8FAFC` inputs).
-   - High-contrast WCAG AA typography, gold action accents (`#D4A017`), responsive 2-column settings grid, and smooth micro-interactions.
+The repository contains `be/` (Spring Boot 4.1 backend with bundled Angular UI), `fe/` (Angular 22 standalone frontend), `desktop/` (Tauri Windows desktop package), and `license-app/` (Ed25519 licensing service).
 
 ---
 
-## Local Development & Quick Start
+## 🏢 Comprehensive Business Specification & Factory Domain Rules
+
+### 1. Multi-Tier Worker Classifications & Pay Cycles
+- **Daily-Wage Workers (`عمال باليومية / طياري`)**: Calculated, reviewed, and paid every 15 days (`HALF_MONTHLY` pay-cycle preset).
+- **Fixed Staff (`عمالة ثابتة`)**: Monthly or 30-day pay cycles categorized by department shift hours:
+  - **Administrators (`إداريين`)**: 8-hour daily shifts.
+  - **Security Staff (`أمن`)**: 12-hour daily shifts.
+  - **Accountants (`محاسبين`)**: 10-hour daily shifts.
+
+### 2. Seasonal Shift Configurations & Intra-Month Rules
+- **Summer vs. Winter Shifts**: System allows dynamic configuration of attendance start times (e.g., Summer shifts starting at 08:00 AM, Winter shifts starting at 09:00 AM).
+- **Intra-Month Effective Schedules**: Supports mid-month shift changes (e.g., July 1–12 at 07:00 AM, July 13–31 at 09:00 AM) using date-effective `ScheduleRule` records.
+
+### 3. Biometric Device Engine & Single-Punch Rules
+- Multi-format biometric file parser (`CSV`, `TXT`, `XLS`, `XLSX`) with SHA-256 evidence hashing and unmatched fingerprint identity resolution.
+- **Single-Punch Logic**: Automatically groups employees who punched once in a day (e.g., 3 single-punch days in a month) into reviewable categories, allowing HR to approve single punches as normal days or deduct accordingly.
+
+### 4. Machine Errors, Power Outage & Mass Disruption Detector
+- Automatically detects when >50% of employees in a category lack punch records on a workday (e.g., machine offline, power outage, factory-wide disruption).
+- System prompts HR reviewers during report generation to confirm whether the day was an **Excused Presence (حضور معفي/يوم طبيعي)** or **Unexcused Absence (غياب)**, recording confirmed holidays in the database so the question is never repeated.
+
+### 5. Rule-Based Attendance Health Categories & Bulk HR Toolbar
+- 🟢 **Green Tier (Clean / سليمة)**: 100% clean attendance without warnings or missing punches.
+- 🟡 **Yellow Tier (Single Punch / Grace / بصمة واحدة)**: Single punch records or grace-period arrivals.
+- 🔴 **Red Tier (Critical Exceptions / أخطاء وغياب)**: Missing punch records (`NO_PUNCH`), manual entry requirements, or unexcused absences.
+- **Bulk HR Decision Toolbar**: 1-click execution to approve all single-punch days as normal or deduct missing days across filtered health tiers.
+
+### 6. Granular RBAC & Menu Authorization
+- Administrators assign custom roles (`ADMIN`, `HR_MANAGER`, `HR_REVIEWER`, `SUPERVISOR`, `DATA_ENTRY`) and toggle access per menu (`dashboard`, `employees`, `categories`, `reports`, `imports`, `parties`, `operations`, `users`, `settings`).
+
+### 7. Executive & Feature-Specific Dashboards
+- **Executive Operations Hub**: 4-quadrant breakdown of Attendance & Discipline, Warehouse & Material Valuation, Orange Processing Output & Sorting Waste, and Sales/Export Collections with clickable drill-down metrics.
+
+### 8. Native Multi-Sheet Excel Exports
+- Export complete raw data or specific analytical reports styled with user theme preferences (`GOLD`, `BLUE`, `GREEN`, `GRAY`).
+
+---
+
+## 🇸🇦 الشروط والوصوف الفنية باللغة العربية (Business Requirements in Arabic)
+
+نظام متكامل لإدارة المصانع وشركات محطات الموالح والمحاصيل:
+
+1. **فئات العمالة وتوقيتات الشفتات**:
+   - عمالة يومية (طياري): دورة حساب كل 15 يوماً.
+   - عمالة ثابتة: شفتات مخصصة (إداريين 8 ساعات، أمن 12 ساعة، محاسبين 10 ساعات).
+   - مواعيد صيفية (8 صباحاً) وشتوية (9 صباحاً) قابلة للتعديل ديناميكياً.
+
+2. **معالجة جهاز البصمة والبصمة الواحدة**:
+   - ربط ملفات جهاز البصمة برقم البصمة والفئة الوظيفية.
+   - تجميع حالات البصمة الواحدة (مثل 3 أيام بصمة واحدة) في الفئة الصفراء لاتخاذ قرار جماعي باعتمادها كـ يوم طبيعي أو خصمها.
+
+3. **كاشف انقطاع الكهرباء والإجازات الجماعية**:
+   - اكتشاف تلقائي لانقطاع الكهرباء أو تعطل جهاز البصمة عند غياب البصمة لأكثر من 50% من فئة العمل.
+   - اقتراح اعتماد اليوم كـ يوم طبيعي أو إجازة رسمية وتسجيلها بالدليل في قاعدة البيانات حتى لا يُسأل المستخدم عنها مجدداً.
+
+4. **الفئات الخضراء والصفراء والحمراء**:
+   - 🟢 الخضراء: تسجيل كامل بدون أخطاء.
+   - 🟡 الصفراء: بصمة واحدة أو تأخير بسيط.
+   - 🔴 الحمراء: عدم وجود بصمة أو أخطاء حرجة.
+
+5. **إدراج الصلاحيات وتصدير Excel**:
+   - تحديد القوائم المسموح بها لكل مستخدم (`dashboard`, `employees`, `categories`, `reports`, `imports`, `parties`, `operations`, `users`, `settings`).
+   - تصدير كافة التقارير وشاشات المعاينة إلى شيتات Excel منسقة طبقاً لتنسيق المظهر المفضل للمستخدم.
+
+---
+
+## 🛠️ Local Development & Quick Start
 
 ### Prerequisites
 - Java 26
@@ -73,34 +109,3 @@ cd ..\fe
 npm run check:i18n
 npm run build
 ```
-
----
-
-## العربية — متطلبات العمل والهيكلية
-
-نظام متكامل لإدارة الحضور والانصراف، وجداول العمل الشفتات، والعمليات التجارية والمالية والمخزون للشركات والمصانع:
-
-1. **إدارة الصلاحيات وقوائم المستخدمين (Multi-Tenant SaaS)**:
-   - عزل كامل لبيانات كل شركة عبر `app_id`.
-   - صلاحيات مرنة لكل مستخدم تحدد القوائم المسموح بها (`dashboard`, `employees`, `categories`, `reports`, `imports`, `parties`, `operations`, `users`, `settings`).
-
-2. **محرك الحضور والبصمة وفئات العمل**:
-   - فئات عمل مرنة (بصمة، يدوي، مختلط) بدورة استحقاق شهرية أو نصف شهرية.
-   - استيراد ملفات البصمة بأكثر من صيغة (CSV, TXT, XLS, XLSX) مع منع التكرار وحفظ أدلة البصمة الأصلية.
-
-3. **جداول متغيرة وكشف انقطاع الكهرباء**:
-   - مواعيد حضور متغيرة خلال نفس الشهر (مثل 1–12 يوليو الساعة 7، وبقية الشهر الساعة 9).
-   - **كاشف انقطاع الكهرباء / الأعطال**: تنبيه تلقائي عند غياب البصمة لأكثر من 50% من فئة العمل في يوم واحد لاقتراح اعتمادها كـ إجازة مؤكدة أو حضور معفي.
-
-4. **تصنيف حالات التقرير وإجراءات HR الجماعية**:
-   - 🟢 **الفئة الخضراء (سليمة)**: حضور كامل بدون تأخير أو أخطاء.
-   - 🟡 **الفئة الصفراء (بصمة واحدة)**: تسجيل بصمة واحدة فقط أو تأخير بسيط.
-   - 🔴 **الفئة الحمراء (أخطاء/غياب)**: عدم وجود بصمة أو الحاجة لتأكيد يدوي.
-   - **أزرار القرار الجماعي**: إمكانية اعتماد جميع حالات البصمة الواحدة كـ يوم طبيعي أو خصم الغياب بضغطة زر واحدة.
-
-5. **العمليات التجارية والسُلف وتصدير Excel**:
-   - إدارة الأطراف (موردين، عملاء، تجار فرزة)، المخزون، السُلف، وحسابات الأطراف المالية.
-   - تصدير تقارير Excel منسقة بلغة المستخدم والشكل المختار (ذهبي، أزرق، أخضر، رمادي).
-
-6. **نظام المظهر والتباين العالي**:
-   - دعم كامل للوضع الداكن (`Dark Mode`) والوضع الفاتح (`Light Mode`) بتباين عالي متوافق مع معايير WCAG وتنسيق ألوان مريح للعين.

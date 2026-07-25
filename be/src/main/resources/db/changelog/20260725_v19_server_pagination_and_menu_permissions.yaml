@@ -107,3 +107,7 @@ databaseChangeLog:
               VALUES ('tr-imp-success-ar', 'imports.uploadSuccess', 'ar-EG', 'تم استيراد ملف البصمة بنجاح', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
               MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-imp-success-en', 'imports.uploadSuccess', 'en-US', 'Biometric log imported successfully', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
+              VALUES ('tr-com-export-ar', 'common.export', 'ar-EG', 'تصدير Excel', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
+              VALUES ('tr-com-export-en', 'common.export', 'en-US', 'Export Excel', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);

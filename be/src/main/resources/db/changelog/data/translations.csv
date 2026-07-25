@@ -99,6 +99,8 @@ ar-048;settings.saved;ar-EG;تم حفظ إعداداتك.
 en-048;settings.saved;en-US;Your settings were saved.
 ar-048-b;imports.uploadSuccess;ar-EG;تم استيراد ملف البصمة بنجاح
 en-048-b;imports.uploadSuccess;en-US;Biometric log imported successfully
+ar-048-c;common.export;ar-EG;تصدير Excel
+en-048-c;common.export;en-US;Export Excel
 ar-049;reports.eyebrow;ar-EG;دورة المراجعة
 en-049;reports.eyebrow;en-US;Review cycle
 ar-050;reports.title;ar-EG;التقارير والفترات

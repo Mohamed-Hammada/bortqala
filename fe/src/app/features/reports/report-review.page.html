@@ -6,51 +6,129 @@
     <div class="alert error">{{ store.error() }}</div>
   }
   @if (store.details(); as data) {
-    <header class="page-header">
-      <div>
+    <!-- Executive Report Workspace Header -->
+    <header class="page-header workspace-header">
+      <div class="header-main">
         <a class="back" routerLink="/reports">← {{ i18n.t('review.allReports') }}</a>
-        <p class="eyebrow">{{ i18n.t('review.eyebrow') }}</p>
-        <h1>{{ date(data.report.periodStart) }} — {{ date(data.report.periodEnd) }}</h1>
-        <p>{{ i18n.t('review.description') }}</p>
+        <div class="title-row">
+          <h1>{{ date(data.report.periodStart) }} — {{ date(data.report.periodEnd) }}</h1>
+          <span
+            class="status-badge"
+            [class.draft]="data.report.status === 'DRAFT'"
+            [class.in-review]="data.report.status === 'IN_REVIEW'"
+            [class.approved]="data.report.status === 'APPROVED' || data.report.status === 'EXPORTED'"
+          >
+            {{ reportStatus(data.report.status) }}
+          </span>
+        </div>
+        <p class="description">{{ i18n.t('review.description') }}</p>
+
+        <!-- Visual Review Progress Bar -->
+        <div class="progress-container">
+          <div class="progress-header">
+            <span>
+              نسبة مراجعة السجلات (Review Progress): <strong>{{ reviewedPercent() }}%</strong> ({{ reviewedCount() }} / {{ totalCount() }})
+            </span>
+            @if (unresolvedCount() > 0) {
+              <span class="unresolved-tag">⚡ {{ unresolvedCount() }} بانتظار القرار</span>
+            } @else {
+              <span class="unresolved-tag success">✓ تمت المراجعة بالكامل</span>
+            }
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" [style.width.%]="reviewedPercent()"></div>
+          </div>
+        </div>
       </div>
-      <div class="toolbar">
-        <button class="button secondary" (click)="store.export(id)">⇩ Excel</button>
+
+      <div class="header-actions">
+        <button class="button secondary" (click)="store.export(id)">
+          ⇩ {{ i18n.t('common.export') || 'تصدير Excel' }}
+        </button>
         @if (data.report.status === 'IN_REVIEW' && canApprove()) {
           <button
             class="button gold"
             (click)="store.approve(id)"
             [disabled]="data.report.unresolvedCount > 0"
           >
-            {{ i18n.t('review.approve') }}
+            ✓ {{ i18n.t('review.approve') }}
           </button>
         }
-        @if (
-          (data.report.status === 'APPROVED' || data.report.status === 'EXPORTED') && canApprove()
-        ) {
+        @if ((data.report.status === 'APPROVED' || data.report.status === 'EXPORTED') && canApprove()) {
           <button class="button secondary" (click)="store.reopen(id)">
-            {{ i18n.t('review.reopen') }}
+            ↺ {{ i18n.t('review.reopen') }}
           </button>
         }
       </div>
     </header>
-    <div class="review-summary">
-      <article class="card">
-        <span>{{ i18n.t('review.status') }}</span
-        ><strong>{{ reportStatus(data.report.status) }}</strong>
+
+    <!-- Compact KPI Summary Cards -->
+    <div class="kpi-grid">
+      <article class="kpi-card unresolved" [class.attention]="data.report.unresolvedCount > 0">
+        <div class="kpi-icon">⚠️</div>
+        <div class="kpi-body">
+          <span class="kpi-label">{{ i18n.t('review.unresolved') }}</span>
+          <strong class="kpi-value">{{ data.report.unresolvedCount }}</strong>
+        </div>
+        @if (data.report.unresolvedCount > 0) {
+          <span class="kpi-badge warning">▲ يتطلب قرار</span>
+        } @else {
+          <span class="kpi-badge success">✓ مراجع بالكامل</span>
+        }
       </article>
-      <article class="card exception">
-        <span>{{ i18n.t('review.unresolved') }}</span
-        ><strong>{{ data.report.unresolvedCount }}</strong>
+
+      <article class="kpi-card green">
+        <div class="kpi-icon">🟢</div>
+        <div class="kpi-body">
+          <span class="kpi-label">الفئة الخضراء (سليمة)</span>
+          <strong class="kpi-value">{{ greenCount() }}</strong>
+        </div>
+        <span class="kpi-badge success">حضور طبيعي</span>
       </article>
-      <article class="card">
-        <span>{{ i18n.t('review.dailyRows') }}</span
-        ><strong>{{ data.dailyResults.length }}</strong>
+
+      <article class="kpi-card yellow">
+        <div class="kpi-icon">🟡</div>
+        <div class="kpi-body">
+          <span class="kpi-label">الفئة الصفراء (بصمة واحدة/تأخير)</span>
+          <strong class="kpi-value">{{ yellowCount() }}</strong>
+        </div>
+        <span class="kpi-badge info">مراجعة بصرية</span>
       </article>
-      <article class="card">
-        <span>{{ i18n.t('review.holidayProposals') }}</span
-        ><strong>{{ data.holidayProposals.length }}</strong>
+
+      <article class="kpi-card red">
+        <div class="kpi-icon">🔴</div>
+        <div class="kpi-body">
+          <span class="kpi-label">الفئة الحمراء (أخطاء/غياب)</span>
+          <strong class="kpi-value">{{ redCount() }}</strong>
+        </div>
+        <span class="kpi-badge danger">إجراء عاجل</span>
       </article>
     </div>
+
+    <!-- Smart AI Recommendation Section -->
+    @if (data.report.status === 'IN_REVIEW' && canReview()) {
+      <div class="smart-ai-box">
+        <div class="ai-header">
+          <span class="ai-badge-icon">⚡</span>
+          <div>
+            <h3>توجيه ذكي لمسؤول الموارد البشرية (Smart AI Recommendation)</h3>
+            <p>
+              تم اكتشاف حالات بصمة واحدة بسبب انقطاع الجهاز. يُوصى بـ <strong>اعتماد البصمة الواحدة كـ يوم طبيعي</strong> لتوفير وقت المراجعة وتلافي خصم يوم بدون سبب.
+            </p>
+          </div>
+        </div>
+        <div class="ai-actions">
+          <button class="button gold btn-sm" (click)="bulkDecide('NORMAL_DAY', 'SINGLE_PUNCH')">
+            ✓ قبول التوجيه (اعتماد البصمة الواحدة كـ يوم طبيعي)
+          </button>
+          <button class="button secondary btn-sm" (click)="bulkDecide('DEDUCT', 'NO_PUNCH')">
+            ✗ خصم الأيام غير المسجلة (غياب)
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Holiday Group Proposals -->
     @if (data.holidayProposals.length) {
       <section class="holiday-section">
         <div class="section-head">
@@ -65,8 +143,9 @@
                   class="status"
                   [class.warning]="item.status === 'PENDING'"
                   [class.success]="item.status === 'CONFIRMED'"
-                  >{{ item.status }}</span
                 >
+                  {{ item.status }}
+                </span>
                 <h3>{{ item.categoryName }}</h3>
                 <p>
                   {{ date(item.workDate) }} ·
@@ -76,8 +155,9 @@
               @if (item.status === 'PENDING' && canReview()) {
                 <div class="toolbar">
                   <button class="button gold" (click)="holiday(item, true)">
-                    {{ i18n.t('review.confirmHoliday') }}</button
-                  ><button class="button secondary" (click)="holiday(item, false)">
+                    {{ i18n.t('review.confirmHoliday') }}
+                  </button>
+                  <button class="button secondary" (click)="holiday(item, false)">
                     {{ i18n.t('review.reject') }}
                   </button>
                 </div>
@@ -87,53 +167,68 @@
         </div>
       </section>
     }
-    <div class="section-head rows-head">
-      <div>
-        <h2>{{ i18n.t('review.dailyReview') }}</h2>
-        <p>
-          {{ i18n.t('review.shownOf', { shown: rows().length, total: data.dailyResults.length }) }}
-        </p>
-      </div>
-      <div class="segmented">
-        <button [class.active]="filter() === 'UNRESOLVED'" (click)="filter.set('UNRESOLVED')">
-          {{ i18n.t('review.unresolvedOnly') }} ({{ data.report.unresolvedCount }})</button
+
+    <!-- Analytics Filter Pills (Category Tabs) -->
+    <div class="filter-pills-bar">
+      <div class="pills-group">
+        <button
+          class="pill-tab"
+          [class.active]="filter() === 'UNRESOLVED'"
+          (click)="filter.set('UNRESOLVED')"
         >
-        <button [class.active]="filter() === 'GREEN'" (click)="filter.set('GREEN')">
-          🟢 {{ i18n.t('review.greenTier') || 'الفئة الخضراء (سليمة)' }} ({{ greenCount() }})
+          <span class="dot red"></span>
+          <span>غير المحلول (Unresolved)</span>
+          <span class="count-badge">{{ data.report.unresolvedCount }}</span>
         </button>
-        <button [class.active]="filter() === 'YELLOW'" (click)="filter.set('YELLOW')">
-          🟡 {{ i18n.t('review.yellowTier') || 'الفئة الصفراء (بصمة واحدة)' }} ({{ yellowCount() }})
+
+        <button
+          class="pill-tab"
+          [class.active]="filter() === 'GREEN'"
+          (click)="filter.set('GREEN')"
+        >
+          <span class="dot green"></span>
+          <span>الفئة الخضراء (سليمة)</span>
+          <span class="count-badge">{{ greenCount() }}</span>
         </button>
-        <button [class.active]="filter() === 'RED'" (click)="filter.set('RED')">
-          🔴 {{ i18n.t('review.redTier') || 'الفئة الحمراء (أخطاء/غياب)' }} ({{ redCount() }})
+
+        <button
+          class="pill-tab"
+          [class.active]="filter() === 'YELLOW'"
+          (click)="filter.set('YELLOW')"
+        >
+          <span class="dot yellow"></span>
+          <span>الفئة الصفراء (بصمة واحدة)</span>
+          <span class="count-badge">{{ yellowCount() }}</span>
         </button>
-        <button [class.active]="filter() === 'ALL'" (click)="filter.set('ALL')">
-          {{ i18n.t('review.allRows') }}
+
+        <button
+          class="pill-tab"
+          [class.active]="filter() === 'RED'"
+          (click)="filter.set('RED')"
+        >
+          <span class="dot red"></span>
+          <span>الفئة الحمراء (أخطاء/غياب)</span>
+          <span class="count-badge">{{ redCount() }}</span>
+        </button>
+
+        <button
+          class="pill-tab"
+          [class.active]="filter() === 'ALL'"
+          (click)="filter.set('ALL')"
+        >
+          <span class="dot gray"></span>
+          <span>جميع الصفوف (All Rows)</span>
+          <span class="count-badge">{{ data.dailyResults.length }}</span>
         </button>
       </div>
     </div>
-    @if (data.report.status === 'IN_REVIEW' && canReview()) {
-      <div class="ai-recommendation-banner card">
-        <span class="ai-icon">⚡</span>
-        <div>
-          <strong>توجيه ذكي لمسؤول الموارد البشرية (Smart Recommendation):</strong>
-          <p>تم اكتشاف حالات بصمة واحدة بسبب انقطاع الجهاز. يُوصى بـ <strong>اعتماد البصمة الواحدة كـ يوم طبيعي</strong> لتوفير وقت المراجعة.</p>
-        </div>
-      </div>
-      <div class="bulk-toolbar card">
-        <span>⚡ {{ i18n.t('review.bulkActions') || 'إجراءات جماعية للمجموعة (Bulk Decisions)' }}:</span>
-        <button class="button secondary" (click)="bulkDecide('NORMAL_DAY', 'SINGLE_PUNCH')">
-          ✓ {{ i18n.t('review.approveSinglePunches') || 'اعتماد البصمة الواحدة كـ يوم طبيعي' }}
-        </button>
-        <button class="button secondary" (click)="bulkDecide('DEDUCT', 'NO_PUNCH')">
-          ✗ {{ i18n.t('review.deductNoPunches') || 'خصم الأيام غير المسجلة (غياب)' }}
-        </button>
-      </div>
-    }
-    <div class="table-card review-table">
-      <table>
+
+    <!-- Employee Review Table with Side Accent Stripes & Expandable Sub-Rows -->
+    <div class="table-card review-table-container">
+      <table class="review-table">
         <thead>
           <tr>
+            <th style="width: 36px;"></th>
             <th>{{ i18n.t('review.employeeDay') }}</th>
             <th>{{ i18n.t('review.category') }}</th>
             <th>{{ i18n.t('review.firstLastPunch') }}</th>
@@ -145,68 +240,137 @@
         </thead>
         <tbody>
           @for (row of pagedRows(); track row.id) {
-            <tr [class.unresolved]="blocking(row)">
-              <td>
-                <strong>{{ row.employeeName }}</strong
-                ><small>{{ row.employeeCode }} · {{ date(row.workDate) }}</small>
-              </td>
-              <td>{{ row.categoryName }}</td>
-              <td>
-                <span>{{ time(row.firstPunch) }}</span
-                ><small
-                  >{{ time(row.lastPunch) }} ·
-                  {{ i18n.t('review.punchCount', { count: row.punchCount }) }}</small
-                >
-              </td>
-              <td>
-                <span>{{ row.expectedMinutes }} {{ i18n.t('review.minuteShort') }}</span
-                ><small>{{ row.effectiveWorkedMinutes }} {{ i18n.t('review.minuteShort') }}</small>
+            <tr
+              class="row-item"
+              [class.tier-green]="healthTier(row) === 'GREEN'"
+              [class.tier-yellow]="healthTier(row) === 'YELLOW'"
+              [class.tier-red]="healthTier(row) === 'RED'"
+              [class.unresolved]="blocking(row)"
+              [class.is-expanded]="expandedRowId() === row.id"
+              (click)="toggleRowExpand(row.id)"
+            >
+              <td class="expand-cell">
+                <button class="expand-btn" type="button" aria-label="Toggle details">
+                  {{ expandedRowId() === row.id ? '▼' : '►' }}
+                </button>
               </td>
               <td>
-                <span>{{ row.lateMinutes }} {{ i18n.t('review.minuteShort') }}</span
-                ><small>{{
-                  i18n.t('review.overtimeMinutes', { count: row.overtimeMinutes })
-                }}</small>
+                <strong class="emp-name">{{ row.employeeName }}</strong>
+                <small class="emp-meta">{{ row.employeeCode }} · {{ date(row.workDate) }}</small>
+              </td>
+              <td>
+                <span class="cat-pill">{{ row.categoryName }}</span>
+              </td>
+              <td>
+                <div class="punch-times">
+                  <span>{{ time(row.firstPunch) }} — {{ time(row.lastPunch) }}</span>
+                  <small>{{ i18n.t('review.punchCount', { count: row.punchCount }) }}</small>
+                </div>
+              </td>
+              <td>
+                <div class="minutes-cell">
+                  <span>{{ row.expectedMinutes }} {{ i18n.t('review.minuteShort') }} (متوقع)</span>
+                  <small>{{ row.effectiveWorkedMinutes }} {{ i18n.t('review.minuteShort') }} (محتسب)</small>
+                </div>
+              </td>
+              <td>
+                <div class="late-overtime-cell">
+                  <span [class.text-danger]="row.lateMinutes > 0">{{ row.lateMinutes }} د تأخير</span>
+                  <small [class.text-success]="row.overtimeMinutes > 0">
+                    {{ i18n.t('review.overtimeMinutes', { count: row.overtimeMinutes }) }}
+                  </small>
+                </div>
               </td>
               <td>
                 <span
-                  class="status"
+                  class="status-pill"
                   [class.success]="row.status === 'PRESENT' || row.status === 'HOLIDAY'"
-                  [class.warning]="blocking(row)"
+                  [class.warning]="blocking(row) || row.status === 'SINGLE_PUNCH'"
+                  [class.danger]="row.status === 'NO_PUNCH' || row.status === 'MISSING_SCHEDULE'"
                   [class.neutral]="row.status === 'NON_WORKDAY'"
-                  >{{ status(row.status) }}</span
-                ><small class="warning-copy">{{ row.warning }}</small>
+                >
+                  {{ status(row.status) }}
+                </span>
+                @if (row.warning) {
+                  <small class="warning-copy">{{ row.warning }}</small>
+                }
               </td>
-              <td>
+              <td (click)="$event.stopPropagation()">
                 @if (row.decision) {
-                  <strong>{{ row.decision }}</strong
-                  ><small>{{ row.decidedBy }} · {{ row.decisionNote }}</small>
+                  <div class="decision-badge">
+                    <strong>✓ {{ row.decision }}</strong>
+                    <small>{{ row.decidedBy }} · {{ row.decisionNote }}</small>
+                  </div>
                 } @else if (blocking(row) && canReview()) {
                   <div class="decision-actions">
-                    <button (click)="decide(row, 'NORMAL_DAY')">
-                      {{ i18n.t('decision.normalDay') }}</button
-                    ><button (click)="decide(row, 'DEDUCT')">{{ i18n.t('decision.deduct') }}</button
-                    ><button (click)="decide(row, 'APPROVED_LEAVE')">
+                    <button class="btn-decide normal" (click)="decide(row, 'NORMAL_DAY')">
+                      {{ i18n.t('decision.normalDay') }}
+                    </button>
+                    <button class="btn-decide deduct" (click)="decide(row, 'DEDUCT')">
+                      {{ i18n.t('decision.deduct') }}
+                    </button>
+                    <button class="btn-decide leave" (click)="decide(row, 'APPROVED_LEAVE')">
                       {{ i18n.t('decision.approvedLeave') }}
                     </button>
                   </div>
                 } @else {
-                  —
+                  <span class="text-muted">—</span>
                 }
               </td>
             </tr>
+
+            @if (expandedRowId() === row.id) {
+              <tr class="expanded-detail-row">
+                <td colspan="8">
+                  <div class="expanded-panel">
+                    <div class="detail-grid">
+                      <div class="detail-box">
+                        <span>وقت الدخول المتوقع</span>
+                        <strong>08:00 AM</strong>
+                      </div>
+                      <div class="detail-box">
+                        <span>البصمة الأولى (دخول)</span>
+                        <strong>{{ time(row.firstPunch) }}</strong>
+                      </div>
+                      <div class="detail-box">
+                        <span>البصمة الأخيرة (خروج)</span>
+                        <strong>{{ time(row.lastPunch) }}</strong>
+                      </div>
+                      <div class="detail-box">
+                        <span>إجمالي البصمات</span>
+                        <strong>{{ row.punchCount }} بصمة</strong>
+                      </div>
+                      <div class="detail-box">
+                        <span>دقائق التأخير</span>
+                        <strong [class.text-danger]="row.lateMinutes > 0">{{ row.lateMinutes }} دقيقة</strong>
+                      </div>
+                      <div class="detail-box">
+                        <span>دقائق الإضافي</span>
+                        <strong [class.text-success]="row.overtimeMinutes > 0">{{ row.overtimeMinutes }} دقيقة</strong>
+                      </div>
+                    </div>
+                    @if (row.warning) {
+                      <div class="evidence-note">
+                        📌 <strong>الدليل والتشخيص التلقائي:</strong> {{ row.warning }}
+                      </div>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
           } @empty {
             <tr>
-              <td colspan="7">
+              <td colspan="8">
                 <div class="empty-state">
-                  <strong>{{ i18n.t('review.noRows') }}</strong
-                  >{{ i18n.t('review.noRowsHint') }}
+                  <strong>{{ i18n.t('review.noRows') }}</strong>
+                  <p>{{ i18n.t('review.noRowsHint') }}</p>
                 </div>
               </td>
             </tr>
           }
         </tbody>
       </table>
+
       <app-table-pagination
         [total]="rows().length"
         [page]="pagination.currentPage(rows().length)"

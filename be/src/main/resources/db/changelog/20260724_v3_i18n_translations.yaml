@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: create_platform_translations
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - createTable:
             tableName: translations
