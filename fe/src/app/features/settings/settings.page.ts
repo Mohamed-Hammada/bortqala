@@ -24,6 +24,8 @@ export class SettingsPage {
   readonly appSettingsSaving = signal(false);
   readonly appSettingsSaved = signal(false);
   readonly appSettingsError = signal<string | null>(null);
+  readonly desktop = typeof window !== 'undefined' && '__TAURI__' in window;
+  readonly licenseMessage = signal<string | null>(null);
   readonly form = this.formBuilder.nonNullable.group({
     theme: [this.authService.preferences().theme as ThemePreference, Validators.required],
     tableDensity: [
@@ -42,6 +44,19 @@ export class SettingsPage {
 
   constructor() {
     if (this.authService.hasAnyRole(['ADMIN'])) void this.loadAppSettings();
+  }
+
+  async releaseLicense(): Promise<void> {
+    if (!this.desktop || !confirm(this.i18n.t('settings.licenseReleaseConfirm'))) return;
+    try {
+      const tauri = (
+        window as unknown as { __TAURI__: { core: { invoke: (name: string) => Promise<void> } } }
+      ).__TAURI__;
+      await tauri.core.invoke('deactivate_license');
+      this.licenseMessage.set(this.i18n.t('settings.licenseReleased'));
+    } catch (error) {
+      this.licenseMessage.set(String(error));
+    }
   }
 
   preview(): void {
@@ -64,7 +79,7 @@ export class SettingsPage {
       await firstValueFrom(this.authService.updatePreferences(this.form.getRawValue()));
       this.saved.set(true);
     } catch (error) {
-      this.error.set(apiErrorMessage(error));
+      this.error.set(apiErrorMessage(error, this.i18n));
     } finally {
       this.saving.set(false);
     }
@@ -87,7 +102,7 @@ export class SettingsPage {
       this.appSettingsForm.controls.sessionTimeoutMinutes.setValue(saved.sessionTimeoutMinutes);
       this.appSettingsSaved.set(true);
     } catch (error) {
-      this.appSettingsError.set(apiErrorMessage(error));
+      this.appSettingsError.set(apiErrorMessage(error, this.i18n));
     } finally {
       this.appSettingsSaving.set(false);
     }
@@ -99,7 +114,7 @@ export class SettingsPage {
       const settings = await firstValueFrom(this.authService.appSettings());
       this.appSettingsForm.controls.sessionTimeoutMinutes.setValue(settings.sessionTimeoutMinutes);
     } catch (error) {
-      this.appSettingsError.set(apiErrorMessage(error));
+      this.appSettingsError.set(apiErrorMessage(error, this.i18n));
     } finally {
       this.appSettingsLoading.set(false);
     }

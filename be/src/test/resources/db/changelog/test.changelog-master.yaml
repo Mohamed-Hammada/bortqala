@@ -1,0 +1,56 @@
+databaseChangeLog:
+  # H2 has a Liquibase 5 snapshot limitation for uniqueConstraintExists. Keep all
+  # production migrations through V15, then apply the V16 correction as H2 SQL.
+  - include:
+      file: db/changelog/20260724_v1_hr_platform_baseline.yaml
+  - include:
+      file: db/changelog/20260724_v2_mutable_audit_timestamps.yaml
+  - include:
+      file: db/changelog/20260724_v3_i18n_translations.yaml
+  - include:
+      file: db/changelog/20260724_v4_user_locale_and_demo_categories.yaml
+  - include:
+      file: db/changelog/20260724_v5_session_expiry_translation.yaml
+  - include:
+      file: db/changelog/20260724_v6_app_session_timeout.yaml
+  - include:
+      file: db/changelog/20260724_v7_login_error_translation.yaml
+  - include:
+      file: db/changelog/20260724_v8_excel_export_preferences.yaml
+  - include:
+      file: db/changelog/20260724_v9_structured_attendance_import.yaml
+  - include:
+      file: db/changelog/20260724_v10_business_parties.yaml
+  - include:
+      file: db/changelog/20260724_v11_employee_advance_eligibility.yaml
+  - include:
+      file: db/changelog/20260724_v12_inventory_and_ledgers.yaml
+  - include:
+      file: db/changelog/20260724_v13_employee_code_sequences.yaml
+  - include:
+      file: db/changelog/20260724_v14_operations_translations.yaml
+  - include:
+      file: db/changelog/20260724_v15_license_translations.yaml
+  - changeSet:
+      id: test-v16-fix-inventory-item-unique-constraint
+      author: codex
+      dbms: h2
+      preConditions:
+        onFail: HALT
+        sqlCheck:
+          expectedResult: 1
+          sql: SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'inventory_items'
+      changes:
+        - sql:
+            sql: ALTER TABLE inventory_items DROP CONSTRAINT uk_inventory_items_app_code
+        - sql:
+            sql: ALTER TABLE inventory_items ADD CONSTRAINT uk_inventory_items_app_code UNIQUE (app_id, code)
+      rollback:
+        - sql:
+            sql: ALTER TABLE inventory_items DROP CONSTRAINT uk_inventory_items_app_code
+        - sql:
+            sql: ALTER TABLE inventory_items ADD CONSTRAINT uk_inventory_items_app_code UNIQUE (app_id)
+  - include:
+      file: db/changelog/20260725_v17_operations_enum_translations.yaml
+  - include:
+      file: db/changelog/20260725_v18_full_ui_translations.yaml

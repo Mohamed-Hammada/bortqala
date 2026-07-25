@@ -6,6 +6,7 @@ import com.bemo.hr.employee.domain.AttendanceMode;
 import com.bemo.hr.employee.domain.PayCycle;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
+import com.bemo.hr.employee.infrastructure.EmployeeCodeSequenceRepository;
 import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
 import org.junit.jupiter.api.Test;
 
@@ -30,11 +31,12 @@ class HrConfigurationServiceScheduleTests {
                 AttendanceMode.BIOMETRIC, false, 111, true);
         when(categoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
         when(scheduleRepository.findByCategoryIdOrderByEffectiveFromAsc(category.getId())).thenReturn(List.of());
-        var service = new HrConfigurationService(categoryRepository, scheduleRepository, employeeRepository);
+        var service = new HrConfigurationService(categoryRepository, scheduleRepository, employeeRepository,
+                mock(EmployeeCodeSequenceRepository.class));
         var schedule = new CategoryApi.ScheduleRequest("الجدول الأساسي", LocalDate.of(2026, 1, 1),
                 null, LocalTime.of(8, 0), null, 0);
         var request = new CategoryApi.UpsertRequest("SECURITY", "الأمن", 720, PayCycle.THIRTY_DAYS,
-                AttendanceMode.BIOMETRIC, false, Set.of(DayOfWeek.SATURDAY), true, List.of(schedule), 0L);
+                AttendanceMode.BIOMETRIC, false, false, Set.of(DayOfWeek.SATURDAY), true, List.of(schedule), 0L);
 
         service.updateCategory(category.getId(), request);
 

@@ -1,0 +1,73 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260724-v12-inventory-and-ledgers
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: inventory_items
+      changes:
+        - createTable:
+            tableName: inventory_items
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_inventory_item_app, references: apps(id) } }
+              - column: { name: code, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(160), constraints: { nullable: false } }
+              - column: { name: item_type, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: unit_code, type: varchar(30), constraints: { nullable: false } }
+              - column: { name: active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: inventory_items, columnNames: app_id,code, constraintName: uk_inventory_items_app_code }
+        - createTable:
+            tableName: stock_movements
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_stock_movement_app, references: apps(id) } }
+              - column: { name: item_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_stock_movement_item, references: inventory_items(id) } }
+              - column: { name: party_id, type: varchar(36) }
+              - column: { name: operation_type, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: quantity_delta, type: "decimal(19,4)", constraints: { nullable: false } }
+              - column: { name: loss_percentage, type: "decimal(7,4)" }
+              - column: { name: reference_code, type: varchar(100) }
+              - column: { name: note, type: varchar(1000) }
+              - column: { name: occurred_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: created_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addForeignKeyConstraint: { baseTableName: stock_movements, baseColumnNames: party_id, referencedTableName: business_parties, referencedColumnNames: id, constraintName: fk_stock_movement_party }
+        - createIndex: { tableName: stock_movements, indexName: ix_stock_movements_item_date, columns: [{ column: { name: item_id } }, { column: { name: occurred_at } }] }
+        - createTable:
+            tableName: partner_ledger_entries
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_partner_ledger_app, references: apps(id) } }
+              - column: { name: party_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_partner_ledger_party, references: business_parties(id) } }
+              - column: { name: entry_type, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: amount_delta, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: reference_code, type: varchar(100) }
+              - column: { name: note, type: varchar(1000) }
+              - column: { name: occurred_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: created_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - createIndex: { tableName: partner_ledger_entries, indexName: ix_partner_ledger_party_date, columns: [{ column: { name: party_id } }, { column: { name: occurred_at } }] }
+        - createTable:
+            tableName: employee_advance_entries
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_employee_advance_app, references: apps(id) } }
+              - column: { name: employee_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_employee_advance_employee, references: employees(id) } }
+              - column: { name: amount_delta, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: entry_type, type: varchar(30), constraints: { nullable: false } }
+              - column: { name: note, type: varchar(1000) }
+              - column: { name: occurred_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: created_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - createIndex: { tableName: employee_advance_entries, indexName: ix_employee_advances_employee_date, columns: [{ column: { name: employee_id } }, { column: { name: occurred_at } }] }
+      rollback:
+        - dropTable: { tableName: employee_advance_entries }
+        - dropTable: { tableName: partner_ledger_entries }
+        - dropTable: { tableName: stock_movements }
+        - dropTable: { tableName: inventory_items }

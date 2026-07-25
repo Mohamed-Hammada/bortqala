@@ -85,6 +85,9 @@ public final class ExcelExportSupport {
             } else if (value instanceof Instant instant) {
                 cell.setCellValue(Date.from(instant));
                 cell.setCellStyle(styles.dateTime());
+            } else if (value instanceof CharSequence text && text.toString().isBlank()) {
+                cell.setBlank();
+                cell.setCellStyle(styles.text());
             } else {
                 cell.setCellValue(String.valueOf(value));
                 cell.setCellStyle(styles.text());

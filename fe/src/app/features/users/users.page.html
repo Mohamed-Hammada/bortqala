@@ -1,11 +1,11 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">الأمان والصلاحيات</p>
-      <h1>المستخدمون والأدوار</h1>
-      <p>يمكن للمستخدم حمل أكثر من دور؛ الـ backend يطبق الصلاحية على كل عملية.</p>
+      <p class="eyebrow">{{ i18n.t('users.eyebrow') }}</p>
+      <h1>{{ i18n.t('users.title') }}</h1>
+      <p>{{ i18n.t('users.description') }}</p>
     </div>
-    <button class="button primary" (click)="openNew()">＋ مستخدم جديد</button>
+    <button class="button primary" (click)="openNew()">＋ {{ i18n.t('users.add') }}</button>
   </header>
   @if (store.loading()) {
     <div class="loading"></div>
@@ -17,8 +17,8 @@
     @for (role of roles; track role.code) {
       <article class="card">
         <span>{{ role.code }}</span
-        ><strong>{{ role.label }}</strong
-        ><small>{{ role.description }}</small>
+        ><strong>{{ i18n.t(role.labelKey) }}</strong
+        ><small>{{ i18n.t(role.descriptionKey) }}</small>
       </article>
     }
   </div>
@@ -26,9 +26,9 @@
     <table>
       <thead>
         <tr>
-          <th>المستخدم</th>
-          <th>الأدوار</th>
-          <th>الحالة</th>
+          <th>{{ i18n.t('users.user') }}</th>
+          <th>{{ i18n.t('users.roles') }}</th>
+          <th>{{ i18n.t('users.status') }}</th>
           <th></th>
         </tr>
       </thead>
@@ -48,49 +48,74 @@
             </td>
             <td>
               <span class="status" [class.success]="item.active" [class.neutral]="!item.active">{{
-                item.active ? 'نشط' : 'متوقف'
+                i18n.t(item.active ? 'common.active' : 'common.inactive')
               }}</span>
             </td>
-            <td><button class="edit-button" (click)="openEdit(item)">✎ تعديل</button></td>
+            <td>
+              <button class="edit-button" (click)="openEdit(item)">
+                ✎ {{ i18n.t('common.edit') }}
+              </button>
+            </td>
           </tr>
         } @empty {
           <tr>
             <td colspan="4">
-              <div class="empty-state"><strong>لا يوجد مستخدمون</strong>أنشئ أول حساب.</div>
+              <div class="empty-state">
+                <strong>{{ i18n.t('users.noResults') }}</strong
+                >{{ i18n.t('users.noResultsHint') }}
+              </div>
             </td>
           </tr>
         }
       </tbody>
     </table>
-    <app-table-pagination [total]="store.items().length" [page]="pagination.currentPage(store.items().length)" [pageSize]="pagination.pageSize()" (pageChange)="pagination.changePage($event, store.items().length)" (pageSizeChange)="pagination.changePageSize($event)" />
+    <app-table-pagination
+      [total]="store.items().length"
+      [page]="pagination.currentPage(store.items().length)"
+      [pageSize]="pagination.pageSize()"
+      (pageChange)="pagination.changePage($event, store.items().length)"
+      (pageSizeChange)="pagination.changePageSize($event)"
+    />
   </div>
   @if (drawerOpen()) {
-    <button class="drawer-backdrop" (click)="drawerOpen.set(false)" aria-label="إغلاق"></button>
+    <button
+      class="drawer-backdrop"
+      (click)="closeDrawer()"
+      [attr.aria-label]="i18n.t('common.close')"
+    ></button>
     <aside class="drawer">
       <div class="drawer-header">
         <div>
-          <p class="eyebrow">حساب وصلاحيات</p>
-          <h2>{{ editingId() ? 'تعديل المستخدم' : 'مستخدم جديد' }}</h2>
+          <p class="eyebrow">{{ i18n.t('users.drawerEyebrow') }}</p>
+          <h2>{{ i18n.t(editingId() ? 'users.editTitle' : 'users.newTitle') }}</h2>
         </div>
-        <button class="button secondary icon-only" (click)="drawerOpen.set(false)">×</button>
+        <button class="button secondary icon-only" (click)="closeDrawer()">×</button>
       </div>
       <form [formGroup]="form" (ngSubmit)="submit()">
+        @if (submitted() && form.invalid) {
+          <div class="alert error" role="alert">{{ i18n.t('users.validation') }}</div>
+        }
         <div class="form-grid">
           <div class="field">
-            <label>اسم المستخدم</label
+            <label>{{ i18n.t('users.username') }}</label
             ><input class="ltr" formControlName="username" autocomplete="off" />
           </div>
           <div class="field">
-            <label>الاسم الظاهر</label><input formControlName="displayName" />
+            <label>{{ i18n.t('users.displayName') }}</label
+            ><input formControlName="displayName" />
           </div>
           <div class="field span-2">
-            <label>كلمة المرور {{ editingId() ? '(اتركها فارغة بدون تغيير)' : '' }}</label
-            ><input type="password" formControlName="password" autocomplete="new-password" /><small
-              >10 أحرف على الأقل.</small
-            >
+            <label
+              >{{ i18n.t('users.password') }}
+              {{ editingId() ? i18n.t('users.passwordEditHint') : '' }}</label
+            ><input
+              type="password"
+              formControlName="password"
+              autocomplete="new-password"
+            /><small>{{ i18n.t('users.passwordHint') }}</small>
           </div>
           <div class="field span-2">
-            <label>الأدوار — يمكن اختيار أكثر من دور</label>
+            <label>{{ i18n.t('users.rolesHint') }}</label>
             <div class="role-options">
               @for (role of roles; track role.code) {
                 <label
@@ -99,8 +124,8 @@
                     [checked]="hasRole(role.code)"
                     (change)="toggleRole(role.code, $event)"
                   /><span
-                    ><strong>{{ role.label }}</strong
-                    ><small>{{ role.description }}</small></span
+                    ><strong>{{ i18n.t(role.labelKey) }}</strong
+                    ><small>{{ i18n.t(role.descriptionKey) }}</small></span
                   ></label
                 >
               }
@@ -108,13 +133,14 @@
           </div>
         </div>
         <label class="active-check"
-          ><input type="checkbox" formControlName="active" /> الحساب نشط</label
+          ><input type="checkbox" formControlName="active" />
+          {{ i18n.t('users.activeCheck') }}</label
         >
         <div class="drawer-actions">
           <button class="button primary" type="submit" [disabled]="store.loading()">
-            حفظ المستخدم</button
-          ><button class="button secondary" type="button" (click)="drawerOpen.set(false)">
-            إلغاء
+            {{ i18n.t('users.save') }}</button
+          ><button class="button secondary" type="button" (click)="closeDrawer()">
+            {{ i18n.t('common.cancel') }}
           </button>
         </div>
       </form>

@@ -7,6 +7,7 @@ import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.domain.ScheduleRule;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
+import com.bemo.hr.employee.infrastructure.EmployeeCodeSequenceRepository;
 import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
@@ -29,13 +30,16 @@ public class HrConfigurationService {
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final ScheduleRuleRepository scheduleRuleRepository;
     private final EmployeeRepository employeeRepository;
+    private final EmployeeCodeSequenceRepository employeeCodeSequenceRepository;
 
     public HrConfigurationService(AttendanceCategoryRepository attendanceCategoryRepository,
                                   ScheduleRuleRepository scheduleRuleRepository,
-                                  EmployeeRepository employeeRepository) {
+                                  EmployeeRepository employeeRepository,
+                                  EmployeeCodeSequenceRepository employeeCodeSequenceRepository) {
         this.attendanceCategoryRepository = attendanceCategoryRepository;
         this.scheduleRuleRepository = scheduleRuleRepository;
         this.employeeRepository = employeeRepository;
+        this.employeeCodeSequenceRepository = employeeCodeSequenceRepository;
     }
 
     public List<CategoryApi.Response> listCategories() {
@@ -56,6 +60,7 @@ public class HrConfigurationService {
                 request.payCycle(), request.attendanceMode(), request.singlePunchCounts(), toMask(request.workDays()), request.active());
         category.configureAdvanceEligibility(request.allowsEmployeeAdvances());
         attendanceCategoryRepository.save(category);
+        employeeCodeSequenceRepository.save(new com.bemo.hr.employee.domain.EmployeeCodeSequence(category.getId()));
         replaceSchedules(category.getId(), request.schedules());
         return toCategoryResponse(category);
     }
@@ -97,7 +102,8 @@ public class HrConfigurationService {
     public EmployeeApi.Response createEmployee(EmployeeApi.UpsertRequest request) {
         validateEmployeeRequest(request, null);
         var category = requireCategory(request.categoryId());
-        var employee = new Employee(request.employeeCode(), request.fullName(), request.deviceUserId(),
+        var employeeCode = standardizeEmployeeCode(request.employeeCode(), category, true, null);
+        var employee = new Employee(employeeCode, request.fullName(), request.deviceUserId(),
                 request.categoryId(), request.employmentType(), request.activeFrom(), request.activeTo(), request.active());
         employeeRepository.save(employee);
         return toEmployeeResponse(employee, category);
@@ -110,7 +116,8 @@ public class HrConfigurationService {
         requireVersion(employee.getVersion(), request.version());
         validateEmployeeRequest(request, id);
         var category = requireCategory(request.categoryId());
-        employee.update(request.employeeCode(), request.fullName(), request.deviceUserId(), request.categoryId(),
+        var employeeCode = standardizeEmployeeCode(request.employeeCode(), category, false, employee.getEmployeeCode());
+        employee.update(employeeCode, request.fullName(), request.deviceUserId(), request.categoryId(),
                 request.employmentType(), request.activeFrom(), request.activeTo(), request.active());
         return toEmployeeResponse(employee, category);
     }
@@ -153,12 +160,6 @@ public class HrConfigurationService {
         if (request.activeTo() != null && request.activeTo().isBefore(request.activeFrom())) {
             throw new BusinessRuleException("Employee active-to date cannot be before active-from date.");
         }
-        boolean duplicateCode = currentId == null
-                ? employeeRepository.existsByEmployeeCodeIgnoreCase(request.employeeCode())
-                : employeeRepository.existsByEmployeeCodeIgnoreCaseAndIdNot(request.employeeCode(), currentId);
-        if (duplicateCode) {
-            throw new BusinessRuleException("Employee code already exists.");
-        }
         if (request.deviceUserId() != null && !request.deviceUserId().isBlank()) {
             boolean duplicateDeviceId = currentId == null
                     ? employeeRepository.existsByDeviceUserId(request.deviceUserId().strip())
@@ -167,6 +168,25 @@ public class HrConfigurationService {
                 throw new BusinessRuleException("Device user id is already mapped to another employee.");
             }
         }
+    }
+
+    private String standardizeEmployeeCode(String requested, AttendanceCategory category, boolean creating, String currentCode) {
+        if (!creating && (requested == null || requested.isBlank())) return currentCode;
+        String prefix = category.getCode() + "-";
+        if (requested != null && !requested.isBlank()) {
+            String normalized = requested.strip().toUpperCase(java.util.Locale.ROOT);
+            String code = normalized.startsWith(prefix) ? normalized : prefix + normalized;
+            boolean duplicate = creating ? employeeRepository.existsByEmployeeCodeIgnoreCase(code)
+                    : employeeRepository.existsByEmployeeCodeIgnoreCaseAndIdNot(code, employeeRepository.findByEmployeeCodeIgnoreCase(currentCode).map(Employee::getId).orElse(""));
+            if (duplicate) throw new BusinessRuleException("Employee code already exists.");
+            return code;
+        }
+        var sequence = employeeCodeSequenceRepository.findForUpdate(category.getId())
+                .orElseGet(() -> employeeCodeSequenceRepository.save(new com.bemo.hr.employee.domain.EmployeeCodeSequence(category.getId())));
+        String generated;
+        do { generated = prefix + "%04d".formatted(sequence.takeNext()); }
+        while (employeeRepository.existsByEmployeeCodeIgnoreCase(generated));
+        return generated;
     }
 
     private void replaceSchedules(String categoryId, List<CategoryApi.ScheduleRequest> requests) {

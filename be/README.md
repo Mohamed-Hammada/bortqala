@@ -12,6 +12,10 @@ Mutable aggregates use `created_at` and `updated_at`; immutable attendance evide
 
 The optional development bootstrap creates editable DEMO reference categories from the supplied paper notes. It never overwrites an existing category code. Supported pay cycles are calendar-month, 15-day, and 30-day.
 
+The same idempotent demo mode covers two-punch, single-punch, late and full-category no-punch days; suppliers, processing/export customers and sorting traders; raw/packaging/sorted inventory; signed stock and financial movements; and an eligible employee advance. Categories decide whether advances are allowed. Employee codes are category-prefixed and can be automatically sequenced.
+
+The operations endpoints under `/api/v1/operations` expose items, immutable signed transactions, employee advances, derived balances and a localized multi-sheet Excel export. Positive/negative quantity and amount semantics are recorded explicitly rather than mutating balances.
+
 Run and test:
 
 ```powershell
@@ -43,6 +47,8 @@ Read [skills/hr-backend/SKILL.md](skills/hr-backend/SKILL.md) before making chan
 كل مستخدم وبيانات تشغيلية مرتبطة بتطبيق SaaS. الدخول يبدأ بكود التطبيق، وتحمل JWT معرف التطبيق وكوده، ويطبّق Hibernate عزل المستأجر. قيم `Instant` و`LocalDate` في JSON أرقام epoch milliseconds، بينما `LocalTime` بصيغة `HH:mm`.
 
 الجداول القابلة للتعديل تحمل `created_at` و`updated_at`، بينما دليل البصمة الثابت يستخدم توقيتًا دلاليًا للاستيراد أو البصمة. إعدادات المستخدم والترجمات العربية/الإنجليزية محفوظة في قاعدة البيانات، وتم التحقق على PostgreSQL 18.4.
+
+بيانات DEMO تغطي حالات البصمة العادية والواحدة والتأخير والغياب الكامل، وجهات التعامل والمخزون والحركات المالية والسُلف. تحدد الفئة السماح بالسلفة، ويبدأ كود الموظف بكود الفئة مع sequence تلقائي عند تركه فارغًا. توفر `/api/v1/operations` الحركات والأرصدة وتصدير Excel مترجم متعدد الأوراق.
 
 أوامر التشغيل والاختبار موجودة أعلاه. في الإنتاج يجب توفير سر JWT قوي وبيانات PostgreSQL وتحديد origins الموثوقة. كل طلب يرجع رقم تتبع العميل ورقمًا مستقلًا من الخادم، والسجلات بصيغة JSON ولا تحتوي token أو كلمة مرور أو body أو query.
 

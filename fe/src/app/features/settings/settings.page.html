@@ -78,20 +78,20 @@
       <p>{{ i18n.t('settings.excelHint') }}</p>
       <div class="choice-grid excel-styles">
         <label class="excel-style gold"
-          ><input type="radio" formControlName="excelTableStyle" value="GOLD" />
-          <span></span>{{ i18n.t('settings.excelGold') }}</label
+          ><input type="radio" formControlName="excelTableStyle" value="GOLD" /> <span></span
+          >{{ i18n.t('settings.excelGold') }}</label
         >
         <label class="excel-style blue"
-          ><input type="radio" formControlName="excelTableStyle" value="BLUE" />
-          <span></span>{{ i18n.t('settings.excelBlue') }}</label
+          ><input type="radio" formControlName="excelTableStyle" value="BLUE" /> <span></span
+          >{{ i18n.t('settings.excelBlue') }}</label
         >
         <label class="excel-style green"
-          ><input type="radio" formControlName="excelTableStyle" value="GREEN" />
-          <span></span>{{ i18n.t('settings.excelGreen') }}</label
+          ><input type="radio" formControlName="excelTableStyle" value="GREEN" /> <span></span
+          >{{ i18n.t('settings.excelGreen') }}</label
         >
         <label class="excel-style gray"
-          ><input type="radio" formControlName="excelTableStyle" value="GRAY" />
-          <span></span>{{ i18n.t('settings.excelGray') }}</label
+          ><input type="radio" formControlName="excelTableStyle" value="GRAY" /> <span></span
+          >{{ i18n.t('settings.excelGray') }}</label
         >
       </div>
     </fieldset>
@@ -139,5 +139,21 @@
         </button>
       </div>
     </form>
+  }
+  @if (desktop) {
+    <section class="card settings-card admin-settings">
+      <fieldset>
+        <legend>{{ i18n.t('settings.licenseTitle') }}</legend>
+        <p>{{ i18n.t('settings.licenseHint') }}</p>
+        @if (licenseMessage()) {
+          <div class="alert">{{ licenseMessage() }}</div>
+        }
+      </fieldset>
+      <div class="actions">
+        <button class="button secondary" type="button" (click)="releaseLicense()">
+          {{ i18n.t('settings.licenseRelease') }}
+        </button>
+      </div>
+    </section>
   }
 </section>

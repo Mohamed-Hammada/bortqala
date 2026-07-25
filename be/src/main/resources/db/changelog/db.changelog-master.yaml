@@ -21,3 +21,17 @@ databaseChangeLog:
       file: db/changelog/20260724_v10_business_parties.yaml
   - include:
       file: db/changelog/20260724_v11_employee_advance_eligibility.yaml
+  - include:
+      file: db/changelog/20260724_v12_inventory_and_ledgers.yaml
+  - include:
+      file: db/changelog/20260724_v13_employee_code_sequences.yaml
+  - include:
+      file: db/changelog/20260724_v14_operations_translations.yaml
+  - include:
+      file: db/changelog/20260724_v15_license_translations.yaml
+  - include:
+      file: db/changelog/20260724_v16_fix_inventory_item_unique_constraint.yaml
+  - include:
+      file: db/changelog/20260725_v17_operations_enum_translations.yaml
+  - include:
+      file: db/changelog/20260725_v18_full_ui_translations.yaml

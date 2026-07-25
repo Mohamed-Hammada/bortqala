@@ -1,19 +1,19 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">نظرة تشغيلية</p>
-      <h1>لوحة متابعة الحضور</h1>
-      <p>المهم أولًا: تغطية الشهر، الاستثناءات، والخطوة التالية.</p>
+      <p class="eyebrow">{{ i18n.t('dashboard.eyebrow') }}</p>
+      <h1>{{ i18n.t('dashboard.title') }}</h1>
+      <p>{{ i18n.t('dashboard.description') }}</p>
     </div>
     <div class="period-picker">
       <select
         #monthSelect
         [value]="month()"
         (change)="changePeriod(yearSelect.value, monthSelect.value)"
-        aria-label="الشهر"
+        [attr.aria-label]="i18n.t('dashboard.month')"
       >
-        @for (name of months; track $index) {
-          <option [value]="$index + 1">{{ name }}</option>
+        @for (key of monthKeys; track $index) {
+          <option [value]="$index + 1">{{ i18n.t(key) }}</option>
         }</select
       ><input
         #yearSelect
@@ -21,7 +21,7 @@
         type="number"
         [value]="year()"
         (change)="changePeriod(yearSelect.value, monthSelect.value)"
-        aria-label="السنة"
+        [attr.aria-label]="i18n.t('dashboard.year')"
       />
     </div>
   </header>
@@ -41,51 +41,63 @@
             [class.success]="data.reportStatus === 'APPROVED' || data.reportStatus === 'EXPORTED'"
             >{{ statusLabel(data.reportStatus) }}</span
           >
-          <h2>{{ months[data.month - 1] }} {{ data.year }}</h2>
+          <h2>{{ i18n.t(monthKeys[data.month - 1]) }} {{ data.year }}</h2>
           <p>
             {{
               data.unresolvedCount
-                ? data.unresolvedCount + ' بند يحتاج قرارًا قبل الاعتماد'
-                : 'لا توجد استثناءات معلّقة'
+                ? i18n.t('dashboard.pendingDecisions', { count: data.unresolvedCount })
+                : i18n.t('dashboard.noPending')
             }}
           </p>
         </div>
         @if (data.reportId) {
-          <a class="button gold" [routerLink]="['/reports', data.reportId]">فتح المراجعة ←</a>
+          <a class="button gold" [routerLink]="['/reports', data.reportId]"
+            >{{ i18n.t('dashboard.openReview') }} ←</a
+          >
         } @else {
-          <a class="button gold" routerLink="/reports">إنشاء التقرير ←</a>
+          <a class="button gold" routerLink="/reports">{{ i18n.t('dashboard.createReport') }} ←</a>
         }
       </article>
       <article class="score card">
-        <span>نسبة الحضور</span><strong>{{ data.attendanceRate }}%</strong>
+        <span>{{ i18n.t('dashboard.attendanceRate') }}</span
+        ><strong>{{ data.attendanceRate }}%</strong>
         <div class="meter"><i [style.width.%]="data.attendanceRate"></i></div>
-        <small>{{ data.presentEmployeeDays }} من {{ data.scheduledEmployeeDays }} يوم موظف</small>
+        <small>{{
+          i18n.t('dashboard.employeeDaysOf', {
+            present: data.presentEmployeeDays,
+            scheduled: data.scheduledEmployeeDays,
+          })
+        }}</small>
       </article>
     </div>
     <div class="metrics">
       <article class="card">
-        <span>الموظفون النشطون</span><strong>{{ data.activeEmployees }}</strong
-        ><small>{{ data.activeCategories }} فئات عمل</small>
+        <span>{{ i18n.t('dashboard.activeEmployees') }}</span
+        ><strong>{{ data.activeEmployees }}</strong
+        ><small>{{ i18n.t('dashboard.workCategories', { count: data.activeCategories }) }}</small>
       </article>
       <article class="card">
-        <span>التأخير</span><strong>{{ data.lateEmployeeDays }}</strong
-        ><small>يوم موظف خلال الفترة</small>
+        <span>{{ i18n.t('dashboard.lateness') }}</span
+        ><strong>{{ data.lateEmployeeDays }}</strong
+        ><small>{{ i18n.t('dashboard.employeeDaysPeriod') }}</small>
       </article>
       <article class="card">
-        <span>الوقت الإضافي</span><strong>{{ (data.overtimeMinutes / 60).toFixed(1) }}</strong
-        ><small>ساعة محسوبة</small>
+        <span>{{ i18n.t('dashboard.overtime') }}</span
+        ><strong>{{ (data.overtimeMinutes / 60).toFixed(1) }}</strong
+        ><small>{{ i18n.t('dashboard.calculatedHours') }}</small>
       </article>
       <article class="card attention">
-        <span>هوية جهاز غير مربوطة</span><strong>{{ data.unmatchedIdentities }}</strong
-        ><a routerLink="/imports">مراجعة الربط</a>
+        <span>{{ i18n.t('dashboard.unmatchedIdentity') }}</span
+        ><strong>{{ data.unmatchedIdentities }}</strong
+        ><a routerLink="/imports">{{ i18n.t('dashboard.reviewMapping') }}</a>
       </article>
     </div>
     <div class="content-grid">
       <article class="card section-card">
         <div class="section-title">
           <div>
-            <h2>ملخص الفئات</h2>
-            <p>الوصول المعتاد والتغطية لكل فئة</p>
+            <h2>{{ i18n.t('dashboard.categorySummary') }}</h2>
+            <p>{{ i18n.t('dashboard.categorySummaryHint') }}</p>
           </div>
         </div>
         @if (data.categories.length) {
@@ -93,11 +105,11 @@
             <table>
               <thead>
                 <tr>
-                  <th>الفئة</th>
-                  <th>حضور</th>
-                  <th>استثناءات</th>
-                  <th>الوصول المعتاد</th>
-                  <th>إضافي</th>
+                  <th>{{ i18n.t('dashboard.category') }}</th>
+                  <th>{{ i18n.t('dashboard.present') }}</th>
+                  <th>{{ i18n.t('dashboard.exceptions') }}</th>
+                  <th>{{ i18n.t('dashboard.typicalArrival') }}</th>
+                  <th>{{ i18n.t('dashboard.overtimeShort') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -105,7 +117,9 @@
                   <tr>
                     <td>
                       <strong>{{ item.categoryName }}</strong
-                      ><small>{{ item.employeeDays }} يوم موظف</small>
+                      ><small>{{
+                        i18n.t('dashboard.employeeDays', { count: item.employeeDays })
+                      }}</small>
                     </td>
                     <td>{{ item.presentDays }}</td>
                     <td>
@@ -117,26 +131,36 @@
                       >
                     </td>
                     <td class="ltr">{{ formatTime(item.typicalArrival) }}</td>
-                    <td>{{ (item.overtimeMinutes / 60).toFixed(1) }} س</td>
+                    <td>
+                      {{ (item.overtimeMinutes / 60).toFixed(1) }}
+                      {{ i18n.t('dashboard.hourShort') }}
+                    </td>
                   </tr>
                 }
               </tbody>
             </table>
-            <app-table-pagination [total]="data.categories.length" [page]="pagination.currentPage(data.categories.length)" [pageSize]="pagination.pageSize()" (pageChange)="pagination.changePage($event, data.categories.length)" (pageSizeChange)="pagination.changePageSize($event)" />
+            <app-table-pagination
+              [total]="data.categories.length"
+              [page]="pagination.currentPage(data.categories.length)"
+              [pageSize]="pagination.pageSize()"
+              (pageChange)="pagination.changePage($event, data.categories.length)"
+              (pageSizeChange)="pagination.changePageSize($event)"
+            />
           </div>
         } @else {
           <div class="empty-state">
-            <strong>لا توجد نتائج بعد</strong>أنشئ تقرير الشهر لعرض مؤشرات الفئات.
+            <strong>{{ i18n.t('dashboard.noResults') }}</strong
+            >{{ i18n.t('dashboard.noResultsHint') }}
           </div>
         }
       </article>
       <article class="card section-card">
         <div class="section-title">
           <div>
-            <h2>آخر الاستيرادات</h2>
-            <p>{{ data.importedPunches }} بصمة محفوظة</p>
+            <h2>{{ i18n.t('dashboard.recentImports') }}</h2>
+            <p>{{ i18n.t('dashboard.savedPunches', { count: data.importedPunches }) }}</p>
           </div>
-          <a routerLink="/imports">عرض الكل</a>
+          <a routerLink="/imports">{{ i18n.t('dashboard.viewAll') }}</a>
         </div>
         @if (data.recentImports.length) {
           <div class="imports-list">
@@ -145,20 +169,28 @@
                 <span class="file-icon">⇩</span>
                 <p>
                   <strong>{{ item.fileName }}</strong
-                  ><small>{{ item.deviceName }} · {{ item.importedRows }} صف</small>
+                  ><small
+                    >{{ item.deviceName }} ·
+                    {{ i18n.t('dashboard.rows', { count: item.importedRows }) }}</small
+                  >
                 </p>
                 <span
                   class="status"
                   [class.warning]="item.errorRows"
                   [class.success]="!item.errorRows"
-                  >{{ item.errorRows ? 'أخطاء ' + item.errorRows : 'مكتمل' }}</span
+                  >{{
+                    item.errorRows
+                      ? i18n.t('dashboard.errors', { count: item.errorRows })
+                      : i18n.t('dashboard.completed')
+                  }}</span
                 >
               </div>
             }
           </div>
         } @else {
           <div class="empty-state">
-            <strong>لم يتم استيراد بصمة</strong>ارفع أول ملف من جهاز الحضور.
+            <strong>{{ i18n.t('dashboard.noImports') }}</strong
+            >{{ i18n.t('dashboard.noImportsHint') }}
           </div>
         }
       </article>

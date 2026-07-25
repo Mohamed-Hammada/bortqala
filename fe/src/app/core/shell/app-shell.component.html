@@ -1,9 +1,9 @@
 <div class="app-frame">
   <aside class="sidebar" [class.open]="menuOpen()">
     <div class="brand">
-      <span class="brand-mark">ب</span>
+      <span class="brand-mark">B</span>
       <div>
-        <strong>{{ authService.app()?.name ?? 'بيمو HR' }}</strong
+        <strong>{{ authService.app()?.name ?? i18n.t('app.defaultName') }}</strong
         ><small>{{ authService.app()?.code }} · {{ i18n.t('app.attendanceReports') }}</small>
       </div>
       <a
@@ -24,7 +24,7 @@
         <app-icon name="close" />
       </button>
     </div>
-    <nav aria-label="التنقل الرئيسي">
+    <nav [attr.aria-label]="i18n.t('nav.main')">
       @for (item of items; track item.path) {
         @if (visible(item)) {
           <a [routerLink]="item.path" routerLinkActive="active" (click)="closeMenu()">
@@ -69,7 +69,7 @@
         [attr.aria-label]="i18n.t('action.openMenu')"
       >
         <app-icon name="menu" /></button
-      ><strong>بيمو HR</strong
+      ><strong>{{ i18n.t('app.defaultName') }}</strong
       ><a
         class="icon-button mobile-settings"
         routerLink="/settings"

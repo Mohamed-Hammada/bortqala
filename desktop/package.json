@@ -2,10 +2,13 @@
   "name": "bemo-hr-desktop",
   "private": true,
   "version": "0.1.0",
+  "engines": {
+    "node": ">=24.15.0"
+  },
   "scripts": {
-    "prepare": "powershell -ExecutionPolicy Bypass -File scripts/prepare-resources.ps1",
+    "prepare:resources": "powershell -ExecutionPolicy Bypass -File scripts/prepare-resources.ps1",
     "tauri": "tauri",
-    "build": "npm run prepare && tauri build"
+    "build": "npm run prepare:resources && tauri build"
   },
   "devDependencies": {
     "@tauri-apps/cli": "2.11.4"

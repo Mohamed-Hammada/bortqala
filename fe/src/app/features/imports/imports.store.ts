@@ -25,7 +25,7 @@ export class ImportsStore {
       this.batches.set(batches);
       this.unmatched.set(unmatched);
     } catch (e) {
-      this.error.set(apiErrorMessage(e));
+      this.error.set(apiErrorMessage(e, this.i18n));
     } finally {
       this.loading.set(false);
     }
@@ -41,13 +41,16 @@ export class ImportsStore {
       const result = await firstValueFrom(this.http.post<ImportBatch>('/api/v1/imports', data));
       this.success.set(
         result.duplicate
-          ? 'هذا الملف مستورد من قبل؛ لم تتكرر البصمات.'
-          : `تم حفظ ${result.importedRows} بصمة${result.errorRows ? ' مع ' + result.errorRows + ' أخطاء.' : '.'}`,
+          ? this.i18n.t('imports.duplicateSuccess')
+          : this.i18n.t(result.errorRows ? 'imports.savedWithErrors' : 'imports.saved', {
+              imported: result.importedRows,
+              errors: result.errorRows,
+            }),
       );
       await this.load();
       return true;
     } catch (e) {
-      this.error.set(apiErrorMessage(e));
+      this.error.set(apiErrorMessage(e, this.i18n));
       return false;
     } finally {
       this.loading.set(false);
@@ -60,13 +63,19 @@ export class ImportsStore {
           this.http.get(`/api/v1/exports/${scope}.xlsx`, { responseType: 'blob' }),
         ),
         timestampedExcelFileName(
-          scope === 'imports' ? 'سجل-الاستيراد' : 'هويات-غير-مربوطة',
+          this.i18n.locale() === 'ar-EG'
+            ? scope === 'imports'
+              ? 'سجل-الاستيراد'
+              : 'هويات-غير-مربوطة'
+            : scope === 'imports'
+              ? 'import-history'
+              : 'unmatched-identities',
           scope,
           this.i18n.locale(),
         ),
       );
     } catch (e) {
-      this.error.set(apiErrorMessage(e));
+      this.error.set(apiErrorMessage(e, this.i18n));
     }
   }
 }

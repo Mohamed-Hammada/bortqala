@@ -26,7 +26,7 @@ class DemoReferenceDataServiceTests {
 
         var categories = ArgumentCaptor.forClass(AttendanceCategory.class);
         verify(categoryRepository, times(9)).save(categories.capture());
-        verify(scheduleRepository, times(9)).save(any());
+        verify(scheduleRepository, times(9)).saveAll(any());
         assertThat(categories.getAllValues())
                 .anyMatch(category -> category.getCode().equals("ACCOUNTING")
                         && category.getExpectedDailyMinutes() == 600)

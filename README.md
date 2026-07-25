@@ -1,6 +1,6 @@
 # Bemo HR attendance platform
 
-An executable, configurable HR attendance system for teams moving from Excel. The repository contains two applications only: `be/` for the API and `fe/` for the browser UI.
+An executable, configurable company-operations system for teams moving from Excel. The repository contains `be/` (the Spring API plus bundled Angular UI), `fe/` (Angular source), `desktop/` (the Tauri/NSIS desktop package), and `license-app/` (the independent online license service).
 
 ## English
 
@@ -20,6 +20,12 @@ An executable, configurable HR attendance system for teams moving from Excel. Th
 - Database-backed translation bundles, SVG navigation icons, and user-selected report ranges with explicit pay-cycle scope and overlap protection.
 - On login, the authenticated user's saved locale is loaded before navigation. DEMO also receives editable reference categories from the paper notes: security, accounting, administration, secretarial, daily, cleaning, operation, export, and sorting workers.
 - Structured JSON request logs with independent client/server correlation IDs, browser device ID, authenticated user, IP, roles, status, and duration.
+- Business-party management for suppliers, processing customers, export customers, sorting traders, farms, and configurable additional party types.
+- Inventory items, signed stock movements, signed partner balances, processing loss percentage, and category-controlled employee advances. Positive and negative movements remain immutable and balances are derived.
+- Category-prefixed employee codes. A supplied suffix is normalized to `<CATEGORY>-<SUFFIX>`; when omitted, a locked per-category sequence generates the next unused code.
+- Native formatted Excel tables in the user's Arabic/English locale and chosen table style, with feature/date/time filenames.
+- A self-contained Tauri Windows launcher that uses a free Spring port, an app-local PostgreSQL 18.4 distribution, per-install random database/JWT secrets, and generated first-login credentials.
+- A separate Ed25519-signed online licensing service with perpetual, term-years, or fixed-date licenses, device-bound activations, activation limits, validation, Settings release, and uninstall release attempt.
 
 ### Run locally
 
@@ -54,6 +60,8 @@ npm run build
 
 Start with [docs/business-requirements.md](docs/business-requirements.md), [be/skills/hr-backend/SKILL.md](be/skills/hr-backend/SKILL.md), and [fe/skills/hr-frontend/SKILL.md](fe/skills/hr-frontend/SKILL.md) before extending the system.
 
+Build the Windows installer from `desktop/` with `npm run build`. Its preparation script downloads the official PostgreSQL 18.4 Windows binary archive when a local distribution is not supplied. Configure and deploy `license-app/` separately; inject only its public signing key and final HTTPS URL into the desktop build.
+
 ## العربية
 
 ### ما تم تنفيذه
@@ -70,9 +78,16 @@ Start with [docs/business-requirements.md](docs/business-requirements.md), [be/s
 - إعدادات مظهر وكثافة جداول ولغة محفوظة لكل مستخدم، وترجمات عربية/إنجليزية من قاعدة البيانات.
 - نطاق تقرير يحدده المستخدم مع اختيار دورة الاستحقاق ومنع التداخل، مع بقاء اختصارات الشهر ونصف الشهر.
 - سجلات JSON قابلة للتتبع تحتوي أرقام تتبع مستقلة للواجهة والخادم، ومعرف الجهاز، والمستخدم، وIP، والأدوار، والحالة، والمدة.
+- إدارة الموردين وعملاء التشغيل والتصدير وتجار الفرزة والمزارع، مع أصناف مخزن وحركات كمية وحسابات مالية موجبة أو سالبة وسُلف حسب أهلية الفئة.
+- كود موظف مكوّن من كود الفئة والرقم المدخل، أو sequence آمن لكل فئة عند ترك الكود فارغًا.
+- تصدير Excel منسق باللغة والشكل اللذين اختارهما المستخدم، واسم ملف مرتبط بالوظيفة وتاريخ ووقت التصدير.
+- تطبيق Windows ذاتي التشغيل عبر Tauri، بقاعدة PostgreSQL محلية وبيانات اتصال وJWT عشوائية لكل تثبيت ومنفذ Spring متاح تلقائيًا.
+- خدمة تراخيص مستقلة بتوقيع Ed25519 تدعم الترخيص الدائم أو بعدد سنوات أو حتى تاريخ، وربط الجهاز وحدود التفعيل والتحرير عند الإزالة.
 
 ### التشغيل المحلي
 
 المطلوب Java 26 وNode 24.18 أو أحدث وnpm 11 أو أحدث، وDocker اختياري لتشغيل PostgreSQL. استخدم أوامر التشغيل الإنجليزية أعلاه، ثم افتح `http://localhost:4200`. بيانات التطوير فقط هي التطبيق `DEMO` والمستخدم `admin` وكلمة المرور `Admin@12345`، ويجب عدم استخدامها في الإنتاج.
 
 قبل استكمال أي تطوير اقرأ مستند متطلبات العمل وملفي مهارة الـbackend والـfrontend المشار إليهما أعلاه؛ فهما نقطة التسليم لأي مطور أو agent جديد.
+
+لبناء مثبت Windows شغّل `npm run build` داخل `desktop/`. تُنزّل أداة التحضير توزيعة PostgreSQL الرسمية عند عدم توفير مسار محلي. تُنشر `license-app/` منفصلة، ولا يوضع داخل تطبيق العميل إلا المفتاح العام ورابط HTTPS النهائي.

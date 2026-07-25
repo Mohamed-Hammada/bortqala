@@ -3,10 +3,12 @@ import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { Dashboard } from './dashboard.models';
+import { I18nService } from '../../core/i18n.service';
 
 @Injectable()
 export class DashboardStore {
   private readonly httpClient = inject(HttpClient);
+  private readonly i18n = inject(I18nService);
   readonly data = signal<Dashboard | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -20,7 +22,7 @@ export class DashboardStore {
         ),
       );
     } catch (error) {
-      this.error.set(apiErrorMessage(error));
+      this.error.set(apiErrorMessage(error, this.i18n));
     } finally {
       this.loading.set(false);
     }

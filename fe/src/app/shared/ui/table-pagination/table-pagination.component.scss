@@ -23,10 +23,24 @@ button {
   background: var(--surface);
   color: var(--ink);
 }
-select { padding-inline: 8px; }
-button { padding-inline: 12px; cursor: pointer; }
-button:disabled { opacity: 0.45; cursor: default; }
+select {
+  padding-inline: 8px;
+}
+button {
+  padding-inline: 12px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
 @media (max-width: 620px) {
-  .table-pagination { flex-wrap: wrap; }
-  .range { order: 3; width: 100%; text-align: center; }
+  .table-pagination {
+    flex-wrap: wrap;
+  }
+  .range {
+    order: 3;
+    width: 100%;
+    text-align: center;
+  }
 }

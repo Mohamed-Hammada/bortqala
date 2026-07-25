@@ -2,6 +2,12 @@ databaseChangeLog:
   - changeSet:
       id: 20260724-v11-employee-advance-eligibility
       author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: attendance_categories
+              columnName: allows_employee_advances
       changes:
         - addColumn:
             tableName: attendance_categories
@@ -12,3 +18,7 @@ databaseChangeLog:
                   defaultValueBoolean: false
                   constraints:
                     nullable: false
+      rollback:
+        - dropColumn:
+            tableName: attendance_categories
+            columnName: allows_employee_advances

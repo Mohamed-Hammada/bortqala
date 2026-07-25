@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_license_keys_table
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - not: { tableExists: { tableName: license_keys } }
+      changes:
+        - createTable:
+            tableName: license_keys
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: key_hash, type: varchar(64), constraints: { nullable: false, unique: true, uniqueConstraintName: uq_license_keys_hash } }
+              - column: { name: customer_reference, type: varchar(160), constraints: { nullable: false } }
+              - column: { name: license_type, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: duration_years, type: int }
+              - column: { name: valid_until, type: timestamp with time zone }
+              - column: { name: max_activations, type: int, constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+      rollback:
+        - dropTable: { tableName: license_keys }
+  - changeSet:
+      id: create_license_activations_table
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - not: { tableExists: { tableName: license_activations } }
+      changes:
+        - createTable:
+            tableName: license_activations
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: license_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_license_activation_license, references: license_keys(id) } }
+              - column: { name: installation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: device_fingerprint_hash, type: varchar(64), constraints: { nullable: false } }
+              - column: { name: device_public_key, type: varchar(500), constraints: { nullable: false } }
+              - column: { name: expires_at, type: timestamp with time zone }
+              - column: { name: active, type: boolean, constraints: { nullable: false } }
+              - column: { name: activated_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: last_validated_at, type: timestamp with time zone }
+              - column: { name: deactivated_at, type: timestamp with time zone }
+        - addUniqueConstraint: { tableName: license_activations, columnNames: "license_id, installation_id", constraintName: uq_license_activations_installation }
+        - createIndex: { tableName: license_activations, indexName: idx_license_activations_license_active, columns: [{ column: { name: license_id } }, { column: { name: active } }] }
+      rollback:
+        - dropTable: { tableName: license_activations }

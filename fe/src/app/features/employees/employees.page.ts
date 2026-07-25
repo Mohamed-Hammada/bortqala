@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { dateInputToEpoch, epochToDateInput, formatDate } from '../../core/date';
 import { Employee, EmployeePayload, EmploymentType } from './employees.models';
@@ -36,7 +43,7 @@ export class EmployeesPage {
   });
   readonly paged = computed(() => this.pagination.slice(this.filtered()));
   readonly form = new FormGroup({
-    employeeCode: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    employeeCode: new FormControl('', { nonNullable: true }),
     fullName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     deviceUserId: new FormControl('', { nonNullable: true }),
     categoryId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -103,12 +110,19 @@ export class EmployeesPage {
     }
   }
   async deactivate(item: Employee) {
-    if (confirm(`تعطيل ${item.fullName}؟`)) await this.store.deactivate(item.id);
+    if (confirm(this.i18n.t('employees.deactivateConfirm', { name: item.fullName }))) {
+      await this.store.deactivate(item.id);
+    }
   }
-  closeDrawer(): void { this.drawerOpen.set(false); this.submitAttempted.set(false); }
-  @HostListener('document:keydown.escape') onEscape(): void { if (this.drawerOpen()) this.closeDrawer(); }
+  closeDrawer(): void {
+    this.drawerOpen.set(false);
+    this.submitAttempted.set(false);
+  }
+  @HostListener('document:keydown.escape') onEscape(): void {
+    if (this.drawerOpen()) this.closeDrawer();
+  }
   typeLabel(value: EmploymentType) {
-    return value === 'FIXED' ? 'ثابت' : 'يومية';
+    return this.i18n.t(value === 'FIXED' ? 'employment.fixed' : 'employment.daily');
   }
   date(value: number) {
     return formatDate(value);

@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260725-v18-full-ui-translations
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM translations WHERE id = 'x18-ar-001'
+      changes:
+        - loadData:
+            tableName: translations
+            file: data/full_ui_translations_v18.csv
+            relativeToChangelogFile: true
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete:
+            tableName: translations
+            where: id LIKE 'x18-%'

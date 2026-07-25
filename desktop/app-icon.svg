@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title">
+  <title id="title">Bemo HR</title>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#173f3b"/>
+      <stop offset="1" stop-color="#0b2422"/>
+    </linearGradient>
+    <linearGradient id="fruit" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffbf4b"/>
+      <stop offset="1" stop-color="#f07a2a"/>
+    </linearGradient>
+  </defs>
+  <rect x="36" y="36" width="952" height="952" rx="224" fill="url(#background)"/>
+  <circle cx="512" cy="530" r="286" fill="url(#fruit)"/>
+  <path d="M514 240c37-84 119-130 210-114-23 91-101 142-210 114Z" fill="#77a95c"/>
+  <path d="M348 413h187c104 0 168 52 168 132 0 48-24 85-66 107 55 20 83 61 83 122 0 94-72 150-194 150H348V413Zm170 190c50 0 77-20 77-58 0-37-27-56-77-56h-60v114h60Zm9 244c55 0 84-23 84-65 0-43-29-64-84-64h-69v129h69Z" fill="#fff"/>
+</svg>

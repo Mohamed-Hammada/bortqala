@@ -1,12 +1,12 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">مصدر الحضور</p>
-      <h1>استيراد تقارير البصمة</h1>
-      <p>يدعم CSV وXLS وXLSX؛ كل صف خام محفوظ ولا يُعاد كتابته.</p>
+      <p class="eyebrow">{{ i18n.t('imports.eyebrow') }}</p>
+      <h1>{{ i18n.t('imports.title') }}</h1>
+      <p>{{ i18n.t('imports.description') }}</p>
     </div>
     <button class="button secondary" (click)="store.export('imports')">
-      ⇩ سجل الاستيراد Excel
+      ⇩ {{ i18n.t('imports.exportHistory') }} Excel
     </button>
   </header>
   @if (store.loading()) {
@@ -22,21 +22,21 @@
     <div class="upload-copy">
       <span class="upload-icon">⇩</span>
       <div>
-        <h2>ارفع ملف جهاز الحضور</h2>
+        <h2>{{ i18n.t('imports.uploadTitle') }}</h2>
         <p>{{ i18n.t('imports.requiredColumns') }}</p>
       </div>
     </div>
     <div class="upload-controls">
       <div class="field">
-        <label>اسم الجهاز</label
+        <label>{{ i18n.t('imports.deviceName') }}</label
         ><input #deviceInput [value]="deviceName()" (input)="deviceName.set(deviceInput.value)" />
       </div>
       <label class="file-picker"
         ><input type="file" accept=".csv,.txt,.xlsx,.xls" (change)="choose($event)" /><span>{{
-          file()?.name ?? 'اختر ملفًا'
+          file()?.name ?? i18n.t('imports.chooseFile')
         }}</span></label
       ><button class="button primary" (click)="upload()" [disabled]="!file() || store.loading()">
-        بدء الاستيراد
+        {{ i18n.t('imports.start') }}
       </button>
     </div>
   </div>
@@ -44,22 +44,24 @@
     <section>
       <div class="section-head">
         <div>
-          <h2>هويات تحتاج ربطًا</h2>
-          <p>البصمة موجودة لكن رقم الجهاز غير مربوط بموظف.</p>
+          <h2>{{ i18n.t('imports.unmatchedTitle') }}</h2>
+          <p>{{ i18n.t('imports.unmatchedHint') }}</p>
         </div>
         <div class="toolbar">
           <button class="button secondary" (click)="store.export('unmatched')">⇩ Excel</button
-          ><a class="button gold" routerLink="/employees">إدارة الموظفين</a>
+          ><a class="button gold" routerLink="/employees">{{
+            i18n.t('imports.manageEmployees')
+          }}</a>
         </div>
       </div>
       <div class="table-card">
         <table>
           <thead>
             <tr>
-              <th>رقم الجهاز</th>
-              <th>الاسم المرصود</th>
-              <th>عدد البصمات</th>
-              <th>أول / آخر ظهور</th>
+              <th>{{ i18n.t('imports.deviceId') }}</th>
+              <th>{{ i18n.t('imports.observedName') }}</th>
+              <th>{{ i18n.t('imports.punchCount') }}</th>
+              <th>{{ i18n.t('imports.firstLastSeen') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -79,21 +81,28 @@
               <tr>
                 <td colspan="4">
                   <div class="empty-state">
-                    <strong>كل الهويات مربوطة</strong>لا توجد بصمات مجهولة حاليًا.
+                    <strong>{{ i18n.t('imports.allMapped') }}</strong
+                    >{{ i18n.t('imports.allMappedHint') }}
                   </div>
                 </td>
               </tr>
             }
           </tbody>
         </table>
-        <app-table-pagination [total]="store.unmatched().length" [page]="pagination.currentPage(store.unmatched().length)" [pageSize]="pagination.pageSize()" (pageChange)="pagination.changePage($event, store.unmatched().length)" (pageSizeChange)="pagination.changePageSize($event)" />
+        <app-table-pagination
+          [total]="store.unmatched().length"
+          [page]="pagination.currentPage(store.unmatched().length)"
+          [pageSize]="pagination.pageSize()"
+          (pageChange)="pagination.changePage($event, store.unmatched().length)"
+          (pageSizeChange)="pagination.changePageSize($event)"
+        />
       </div>
     </section>
     <section>
       <div class="section-head">
         <div>
-          <h2>دفعات الاستيراد</h2>
-          <p>Checksum يمنع تكرار نفس الملف.</p>
+          <h2>{{ i18n.t('imports.batches') }}</h2>
+          <p>{{ i18n.t('imports.checksumHint') }}</p>
         </div>
       </div>
       <div class="batches">
@@ -107,27 +116,35 @@
               ><span
                 ><strong>{{ item.fileName }}</strong
                 ><small>{{ item.deviceName }} · {{ dateTime(item.importedAt) }}</small></span
-              ><span class="counts">{{ item.importedRows }}<small>بصمة</small></span
+              ><span class="counts"
+                >{{ item.importedRows }}<small>{{ i18n.t('imports.punch') }}</small></span
               ><span
                 class="status"
                 [class.success]="!item.errorRows"
                 [class.warning]="item.errorRows"
-                >{{ item.errorRows ? item.errorRows + ' خطأ' : 'مكتمل' }}</span
+                >{{
+                  item.errorRows
+                    ? i18n.t('imports.errorCount', { count: item.errorRows })
+                    : i18n.t('imports.completed')
+                }}</span
               >
             </button>
             @if (expanded() === item.id && item.errors.length) {
               <div class="error-list">
                 @for (error of item.errors; track error.rowNumber) {
                   <p>
-                    <strong>صف {{ error.rowNumber }}</strong> {{ error.message
-                    }}<small>{{ error.rawLine }}</small>
+                    <strong>{{ i18n.t('imports.row', { number: error.rowNumber }) }}</strong>
+                    {{ error.message }}<small>{{ error.rawLine }}</small>
                   </p>
                 }
               </div>
             }
           </article>
         } @empty {
-          <div class="empty-state card"><strong>لا توجد دفعات</strong>ارفع أول ملف بصمة.</div>
+          <div class="empty-state card">
+            <strong>{{ i18n.t('imports.noBatches') }}</strong
+            >{{ i18n.t('imports.noBatchesHint') }}
+          </div>
         }
       </div>
     </section>

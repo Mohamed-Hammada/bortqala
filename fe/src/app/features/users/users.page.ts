@@ -1,9 +1,17 @@
-import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthUser, RoleCode } from '../../core/auth/auth.models';
 import { UserPayload, UsersStore } from './users.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
+import { I18nService } from '../../core/i18n.service';
 @Component({
   selector: 'app-users-page',
   imports: [ReactiveFormsModule, TablePaginationComponent],
@@ -14,15 +22,17 @@ import { TablePaginationComponent } from '../../shared/ui/table-pagination/table
 })
 export class UsersPage {
   readonly store = inject(UsersStore);
+  readonly i18n = inject(I18nService);
   readonly drawerOpen = signal(false);
+  readonly submitted = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly pagination = new TablePagination();
   readonly paged = computed(() => this.pagination.slice(this.store.items()));
-  readonly roles: Array<{ code: RoleCode; label: string; description: string }> = [
-    { code: 'ADMIN', label: 'مدير النظام', description: 'المستخدمون وكل الوظائف' },
-    { code: 'HR_MANAGER', label: 'مدير HR', description: 'الإعدادات والاعتماد' },
-    { code: 'HR_REVIEWER', label: 'مراجع', description: 'البصمة والاستثناءات' },
-    { code: 'VIEWER', label: 'مشاهد', description: 'قراءة وتقارير فقط' },
+  readonly roles: Array<{ code: RoleCode; labelKey: string; descriptionKey: string }> = [
+    { code: 'ADMIN', labelKey: 'role.admin', descriptionKey: 'role.adminHint' },
+    { code: 'HR_MANAGER', labelKey: 'role.hrManager', descriptionKey: 'role.hrManagerHint' },
+    { code: 'HR_REVIEWER', labelKey: 'role.hrReviewer', descriptionKey: 'role.hrReviewerHint' },
+    { code: 'VIEWER', labelKey: 'role.viewer', descriptionKey: 'role.viewerHint' },
   ];
   readonly form = new FormGroup({
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -39,6 +49,7 @@ export class UsersPage {
     void this.store.load();
   }
   openNew() {
+    this.submitted.set(false);
     this.editingId.set(null);
     this.form.reset({
       username: '',
@@ -51,6 +62,7 @@ export class UsersPage {
     this.drawerOpen.set(true);
   }
   openEdit(item: AuthUser) {
+    this.submitted.set(false);
     this.editingId.set(item.id);
     this.form.reset({
       username: item.username,
@@ -73,6 +85,7 @@ export class UsersPage {
     return this.form.controls.roles.value.includes(code);
   }
   async submit() {
+    this.submitted.set(true);
     if (
       this.form.invalid ||
       !this.form.controls.roles.value.length ||
@@ -83,11 +96,17 @@ export class UsersPage {
     }
     const raw = this.form.getRawValue();
     const payload: UserPayload = { ...raw, password: raw.password || null };
-    if (await this.store.save(this.editingId(), payload)) this.drawerOpen.set(false);
+    if (await this.store.save(this.editingId(), payload)) this.closeDrawer();
   }
   roleLabel(code: RoleCode) {
-    return this.roles.find((role) => role.code === code)?.label ?? code;
+    const role = this.roles.find((item) => item.code === code);
+    return role ? this.i18n.t(role.labelKey) : code;
   }
-  closeDrawer(): void { this.drawerOpen.set(false); }
-  @HostListener('document:keydown.escape') onEscape(): void { if (this.drawerOpen()) this.closeDrawer(); }
+  closeDrawer(): void {
+    this.drawerOpen.set(false);
+    this.submitted.set(false);
+  }
+  @HostListener('document:keydown.escape') onEscape(): void {
+    if (this.drawerOpen()) this.closeDrawer();
+  }
 }

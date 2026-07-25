@@ -1,6 +1,6 @@
 ---
 name: hr-backend
-description: Continue and review the HR platform Spring Boot backend in be/. Use when implementing employee categories, biometric imports, attendance calculations, holidays, monthly report review, payroll-ready results, Excel export APIs, persistence, migrations, tests, or any Java backend change in this repository.
+description: Continue and review the Bemo Spring Boot backend in be/. Use for employees, attendance, reports, business parties, inventory, signed ledgers, advances, Excel APIs, persistence, migrations, security, tests, or any Java backend change in this repository.
 ---
 
 # Continue the HR backend
@@ -25,6 +25,8 @@ Use one top-level package per capability under `com.bemo.hr`:
 - `calendar`: seasonal schedules, workdays, weekends, and confirmed holidays.
 - `reporting`: review periods, exceptions, decisions, approval, and export.
 - `payroll`: daily/monthly or half-month pay-cycle output; do not execute payments.
+- `parties`: suppliers, processing/export customers, sorting traders, farms, and other configurable business contacts.
+- `operations`: inventory items, immutable signed stock/money movements, derived balances, processing loss metadata, and category-controlled employee advances.
 - `shared`: error envelope, clock, identifiers, and audit primitives only.
 
 Inside a feature, add only the layers the slice needs: `api`, `application`, `domain`, `infrastructure`. Do not create empty layers. Keep domain calculations free of Spring and persistence. Use interfaces for repository/device/export boundaries and variable policies; do not create an interface for every class.
@@ -48,6 +50,7 @@ Inside a feature, add only the layers the slice needs: `api`, `application`, `do
 
 - Employment is configurable, not hard-coded as roles. Initial examples: daily workers paid every 15 days, and 30-day cycles for 8-hour administrators/secretarial staff, 12-hour security, and 10-hour accountants.
 - A category owns expected daily minutes, seasonal start-time rules, workweek, grace/rounding/overtime rules, pay cycle, and one-punch/no-punch policies.
+- A category also owns employee-advance eligibility. Employee identifiers use the category code as a prefix and a locked per-category sequence when no suffix is supplied.
 - Summer and winter schedules are effective-dated configuration; never infer seasons inside code.
 - Match device users by stable device id when possible. Name matching is a review aid, never an irreversible automatic merge.
 - Daily results retain first/last punch, worked and expected minutes, lateness, early leave, overtime, status, rule version, and warnings.
@@ -62,18 +65,19 @@ Inside a feature, add only the layers the slice needs: `api`, `application`, `do
 - Prefix REST endpoints with `/api/v1`; use plural resources, pagination, filtering, and stable sorting.
 - Return calculated facts and decision metadata together so the UI can explain statuses.
 - Generate Excel on the backend from an approved or selected report snapshot. Include filters, generation time, report version, and configuration version.
+- Localize every exported title/header/status to the authenticated user's locale, apply their chosen native Excel table style, preserve typed cells, and use a feature plus timestamp filename.
 - Model biometric uploads as import batches with checksum, device, actor, status, row counts, and row errors. Re-importing a checksum must be safe.
 
 ## Current state
 
 - Runtime: Spring Boot `4.1.0`, Java `26`, Gradle `9.3.1`, PostgreSQL for production and H2 only for dev/tests.
-- Persistence: Liquibase creates SaaS apps/users/preferences, global translation rows, categories/schedules, employees, holidays, immutable imports/punches/errors, reports, daily snapshots, and proposals. PostgreSQL 18.4 startup and Hibernate schema validation were exercised locally.
+- Persistence: Liquibase creates SaaS apps/users/preferences, global translation rows, categories/schedules, employees/code sequences, holidays, immutable imports/punches/errors, reports, business parties, inventory, signed ledgers, advances, daily snapshots, and proposals. PostgreSQL 18.4 startup and Hibernate schema validation were exercised locally.
 - Security: login requires app code, username, and password. HS256 JWTs carry `appId`/`appCode`; tenant discrimination is automatic for JPA entities. Users hold one or more of `ADMIN`, `HR_MANAGER`, `HR_REVIEWER`, `VIEWER`. Each app has an ADMIN-controlled 5–10,080 minute timeout used for newly issued tokens.
 - Observability: every response contains client and server correlation headers. Logstash JSON records correlation ids, IP, browser device id, JWT user id/name/roles, method/path/status/duration, and bounded user-agent without tokens, bodies, passwords, or queries.
-- APIs: category/schedule and employee CRUD, biometric imports/unmatched identities, dashboard, preset discovery, custom-range report creation/review/approval/reopen, user preferences, public translation bundles, multi-user management, and Excel exports.
+- APIs: category/schedule and employee CRUD, biometric imports/unmatched identities, dashboard, preset discovery, custom-range reports, business parties, inventory/ledger/advance operations, user preferences, public translation bundles, multi-user management, and localized Excel exports.
 - Calculation: effective schedule minutes, configurable workdays/grace/one-punch policy, manual versus biometric modes, first/last punch, worked/late/early/overtime, persisted decisions, confirmed holidays, and frozen approval snapshots.
-- DEMO bootstrap: missing reference category codes from the supplied notes are created idempotently and remain editable; existing category codes are never overwritten.
-- Verification: `./gradlew.bat clean test` passes with Liquibase plus focused calculation-policy tests. PostgreSQL startup performs Hibernate schema validation; H2 tests disable validation only because H2 exposes PostgreSQL `TEXT` as `CLOB`. The application was also exercised through the Angular proxy with a real JWT.
+- DEMO bootstrap: reference categories, seasonal rules, employees, attendance edge cases, business parties, inventory movements, partner balances, and an eligible advance are created idempotently; existing codes are never overwritten.
+- Verification: 17 backend tests pass with Liquibase plus focused policy tests. PostgreSQL 18.4 startup performs Hibernate schema validation; H2 uses a test-only V16 equivalent because Liquibase 5 cannot snapshot that H2 unique constraint reliably. The API is smoke-tested with a real JWT.
 - Next safe extensions: pagination for large installations, audited device-identity mapping UI, bulk exception decisions, configurable rounding/overtime policies, refresh-token/session revocation, and vendor device adapters through the existing file-reader boundary.
 
-Do not add payment execution or a vendor-specific device SDK until the user selects those integrations. Do not invent payroll formulas from the partially legible photo notes. Design adapters so later integrations do not change calculation rules.
+Do not add payment execution or a vendor-specific device SDK until the user selects those integrations. Do not invent packing/carton or payroll formulas from partially legible notes; signed ledgers preserve the known facts while later policies remain configurable. Design adapters so integrations do not change calculation rules.

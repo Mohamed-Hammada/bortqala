@@ -1,13 +1,13 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">الإعدادات الأساسية</p>
-      <h1>الفئات وقواعد الدوام</h1>
-      <p>البصمة أو الحضور اليدوي، الساعات، وأوقات الصيف والشتاء في مكان واحد.</p>
+      <p class="eyebrow">{{ i18n.t('categories.eyebrow') }}</p>
+      <h1>{{ i18n.t('categories.title') }}</h1>
+      <p>{{ i18n.t('categories.description') }}</p>
     </div>
     <div class="toolbar">
       <button class="button secondary" (click)="store.export()">⇩ Excel</button
-      ><button class="button primary" (click)="openNew()">＋ فئة جديدة</button>
+      ><button class="button primary" (click)="openNew()">＋ {{ i18n.t('categories.add') }}</button>
     </div>
   </header>
   @if (store.loading()) {
@@ -20,12 +20,12 @@
     <table>
       <thead>
         <tr>
-          <th>الكود والفئة</th>
-          <th>طريقة الحضور</th>
-          <th>الساعات الافتراضية</th>
-          <th>الاستحقاق</th>
-          <th>الجداول</th>
-          <th>الحالة</th>
+          <th>{{ i18n.t('categories.codeAndCategory') }}</th>
+          <th>{{ i18n.t('categories.attendanceMode') }}</th>
+          <th>{{ i18n.t('categories.defaultHours') }}</th>
+          <th>{{ i18n.t('categories.payCycle') }}</th>
+          <th>{{ i18n.t('categories.schedules') }}</th>
+          <th>{{ i18n.t('categories.status') }}</th>
           <th></th>
         </tr>
       </thead>
@@ -39,29 +39,34 @@
             <td>
               <span class="status neutral">{{ modeLabel(item.attendanceMode) }}</span>
             </td>
-            <td>{{ (item.expectedDailyMinutes / 60).toFixed(1) }} ساعة</td>
+            <td>
+              {{ (item.expectedDailyMinutes / 60).toFixed(1) }} {{ i18n.t('categories.hour') }}
+            </td>
             <td>{{ cycleLabel(item.payCycle) }}</td>
             <td>
               <strong>{{ item.schedules.length }}</strong>
               @if (item.schedules[0]) {
-                <small>من {{ item.schedules[0].startTime.slice(0, 5) }}</small>
+                <small
+                  >{{ i18n.t('categories.from') }}
+                  {{ item.schedules[0].startTime.slice(0, 5) }}</small
+                >
               } @else {
                 <small>—</small>
               }
             </td>
             <td>
               <span class="status" [class.success]="item.active" [class.neutral]="!item.active">{{
-                item.active ? 'نشطة' : 'متوقفة'
+                i18n.t(item.active ? 'common.active' : 'common.inactive')
               }}</span>
             </td>
             <td>
               <div class="row-actions">
-                <button (click)="openEdit(item)" aria-label="تعديل">✎</button
+                <button (click)="openEdit(item)" [attr.aria-label]="i18n.t('common.edit')">✎</button
                 ><button
                   class="danger-link"
                   (click)="deactivate(item)"
                   [disabled]="!item.active"
-                  aria-label="تعطيل"
+                  [attr.aria-label]="i18n.t('common.deactivate')"
                 >
                   ×
                 </button>
@@ -72,63 +77,78 @@
           <tr>
             <td colspan="7">
               <div class="empty-state">
-                <strong>لا توجد فئات بعد</strong>ابدأ بفئة الإدارة أو الأمن أو العمالة اليومية.
+                <strong>{{ i18n.t('categories.noResults') }}</strong
+                >{{ i18n.t('categories.noResultsHint') }}
               </div>
             </td>
           </tr>
         }
       </tbody>
     </table>
-    <app-table-pagination [total]="store.items().length" [page]="pagination.currentPage(store.items().length)" [pageSize]="pagination.pageSize()" (pageChange)="pagination.changePage($event, store.items().length)" (pageSizeChange)="pagination.changePageSize($event)" />
+    <app-table-pagination
+      [total]="store.items().length"
+      [page]="pagination.currentPage(store.items().length)"
+      [pageSize]="pagination.pageSize()"
+      (pageChange)="pagination.changePage($event, store.items().length)"
+      (pageSizeChange)="pagination.changePageSize($event)"
+    />
   </div>
   @if (drawerOpen()) {
-    <button class="drawer-backdrop" (click)="drawerOpen.set(false)" aria-label="إغلاق"></button>
+    <button
+      class="drawer-backdrop"
+      (click)="closeDrawer()"
+      [attr.aria-label]="i18n.t('common.close')"
+    ></button>
     <aside class="drawer">
       <div class="drawer-header">
         <div>
-          <p class="eyebrow">{{ editingId() ? 'تعديل الإعداد' : 'إعداد جديد' }}</p>
-          <h2>{{ editingId() ? 'تعديل الفئة' : 'إنشاء فئة عمل' }}</h2>
+          <p class="eyebrow">
+            {{ i18n.t(editingId() ? 'categories.editEyebrow' : 'categories.newEyebrow') }}
+          </p>
+          <h2>{{ i18n.t(editingId() ? 'categories.editTitle' : 'categories.newTitle') }}</h2>
         </div>
-        <button class="button secondary icon-only" (click)="drawerOpen.set(false)">×</button>
+        <button class="button secondary icon-only" (click)="closeDrawer()">×</button>
       </div>
       <form [formGroup]="form" (ngSubmit)="submit()">
         <div class="form-grid">
           <div class="field">
-            <label>كود الفئة</label
+            <label>{{ i18n.t('categories.code') }}</label
             ><input formControlName="code" class="ltr" placeholder="SECURITY" />
           </div>
           <div class="field">
-            <label>اسم الفئة</label><input formControlName="name" placeholder="الأمن" />
+            <label>{{ i18n.t('categories.name') }}</label
+            ><input formControlName="name" [placeholder]="i18n.t('categories.namePlaceholder')" />
           </div>
           <div class="field">
-            <label>طريقة إثبات الحضور</label
+            <label>{{ i18n.t('categories.attendanceProof') }}</label
             ><select formControlName="attendanceMode">
-              <option value="BIOMETRIC">بصمة</option>
-              <option value="MANUAL">يدوي — بدون بصمة</option>
-              <option value="HYBRID">مختلط</option>
+              <option value="BIOMETRIC">{{ i18n.t('attendance.biometric') }}</option>
+              <option value="MANUAL">{{ i18n.t('attendance.manualNoPunch') }}</option>
+              <option value="HYBRID">{{ i18n.t('attendance.hybrid') }}</option>
             </select>
           </div>
           <div class="field">
-            <label>دورة الاستحقاق</label
+            <label>{{ i18n.t('categories.payCycle') }}</label
             ><select formControlName="payCycle">
-              <option value="MONTHLY">شهري</option>
-              <option value="HALF_MONTHLY">كل 15 يوم</option>
-              <option value="THIRTY_DAYS">كل 30 يوم</option>
+              <option value="MONTHLY">{{ i18n.t('payCycle.monthly') }}</option>
+              <option value="HALF_MONTHLY">{{ i18n.t('payCycle.halfMonthly') }}</option>
+              <option value="THIRTY_DAYS">{{ i18n.t('payCycle.thirtyDays') }}</option>
             </select>
           </div>
           <div class="field">
-            <label>الدقائق اليومية الافتراضية</label
+            <label>{{ i18n.t('categories.defaultMinutes') }}</label
             ><input type="number" formControlName="expectedDailyMinutes" />
           </div>
           <label class="check-field"
-            ><input type="checkbox" formControlName="singlePunchCounts" /> بصمة واحدة تثبت الحضور
-            وتظهر كملاحظة</label
+            ><input type="checkbox" formControlName="singlePunchCounts" />
+            {{ i18n.t('categories.singlePunchCounts') }}</label
           >
           <label class="check-field"
-            ><input type="checkbox" formControlName="allowsEmployeeAdvances" /> موظفو هذه الفئة مسموح لهم بطلب سُلفة</label
+            ><input type="checkbox" formControlName="allowsEmployeeAdvances" />
+            {{ i18n.t('categories.allowsAdvances') }}</label
           >
           <div class="field span-2">
-            <label>أيام العمل</label>
+            <label>{{ i18n.t('categories.workDays') }}</label>
             <div class="days">
               @for (day of days; track day.code) {
                 <label
@@ -136,7 +156,7 @@
                     type="checkbox"
                     [checked]="hasDay(day.code)"
                     (change)="toggleDayFromEvent(day.code, $event)"
-                  />{{ day.label }}</label
+                  />{{ i18n.t(day.labelKey) }}</label
                 >
               }
             </div>
@@ -144,45 +164,53 @@
         </div>
         <div class="rules-title">
           <div>
-            <h3>قواعد المواعيد الفعّالة</h3>
-            <p>أضف الصيف والشتاء أو أي تغيير مستقبلي بدون تعديل الكود.</p>
+            <h3>{{ i18n.t('categories.scheduleRules') }}</h3>
+            <p>{{ i18n.t('categories.scheduleRulesHint') }}</p>
           </div>
-          <button type="button" class="button secondary" (click)="addSchedule()">＋ قاعدة</button>
+          <button type="button" class="button secondary" (click)="addSchedule()">
+            ＋ {{ i18n.t('categories.rule') }}
+          </button>
         </div>
         <div formArrayName="schedules" class="rules">
           @for (group of form.controls.schedules.controls; track $index) {
             <div class="rule-card" [formGroupName]="$index">
               <div class="rule-head">
-                <strong>قاعدة {{ $index + 1 }}</strong
+                <strong>{{ i18n.t('categories.ruleNumber', { number: $index + 1 }) }}</strong
                 ><button
                   type="button"
                   (click)="removeSchedule($index)"
                   [disabled]="form.controls.schedules.length === 1"
                 >
-                  حذف
+                  {{ i18n.t('common.delete') }}
                 </button>
               </div>
               <div class="form-grid">
-                <div class="field span-2"><label>الاسم</label><input formControlName="name" /></div>
-                <div class="field">
-                  <label>من</label><input type="date" formControlName="effectiveFrom" />
+                <div class="field span-2">
+                  <label>{{ i18n.t('common.name') }}</label
+                  ><input formControlName="name" />
                 </div>
                 <div class="field">
-                  <label>إلى (اختياري)</label><input type="date" formControlName="effectiveTo" />
+                  <label>{{ i18n.t('common.from') }}</label
+                  ><input type="date" formControlName="effectiveFrom" />
                 </div>
                 <div class="field">
-                  <label>بداية الدوام</label><input type="time" formControlName="startTime" />
+                  <label>{{ i18n.t('common.toOptional') }}</label
+                  ><input type="date" formControlName="effectiveTo" />
                 </div>
                 <div class="field">
-                  <label>ساعات مختلفة؟ (دقائق)</label
+                  <label>{{ i18n.t('categories.startTime') }}</label
+                  ><input type="time" formControlName="startTime" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('categories.overrideMinutes') }}</label
                   ><input
                     type="number"
                     formControlName="expectedMinutesOverride"
-                    placeholder="استخدم الافتراضي"
+                    [placeholder]="i18n.t('categories.useDefault')"
                   />
                 </div>
                 <div class="field">
-                  <label>مهلة التأخير بالدقائق</label
+                  <label>{{ i18n.t('categories.graceMinutes') }}</label
                   ><input type="number" formControlName="graceMinutes" />
                 </div>
               </div>
@@ -190,13 +218,14 @@
           }
         </div>
         <label class="check-field active-check"
-          ><input type="checkbox" formControlName="active" /> الفئة نشطة</label
+          ><input type="checkbox" formControlName="active" />
+          {{ i18n.t('categories.activeCheck') }}</label
         >
         <div class="drawer-actions">
           <button class="button primary" type="submit" [disabled]="store.loading()">
-            حفظ الإعداد</button
-          ><button class="button secondary" type="button" (click)="drawerOpen.set(false)">
-            إلغاء
+            {{ i18n.t('categories.save') }}</button
+          ><button class="button secondary" type="button" (click)="closeDrawer()">
+            {{ i18n.t('common.cancel') }}
           </button>
         </div>
       </form>

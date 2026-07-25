@@ -17,12 +17,13 @@ export class I18nService {
   readonly locale = signal<SupportedLocale>(this.storedLocale());
   readonly messages = signal<Record<string, string>>({});
 
-  constructor() {
-    void this.use(this.locale());
-  }
-
-  t(key: string): string {
-    return this.messages()[key] ?? key;
+  t(key: string, params?: Record<string, string | number>): string {
+    const message = this.messages()[key] ?? key;
+    if (!params) return message;
+    return Object.entries(params).reduce(
+      (resolved, [name, value]) => resolved.replaceAll(`{${name}}`, String(value)),
+      message,
+    );
   }
 
   async use(locale: string): Promise<void> {

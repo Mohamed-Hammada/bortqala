@@ -24,7 +24,7 @@ export class EmployeesStore {
       this.items.set(items);
       this.categories.set(categories.filter((item) => item.active));
     } catch (e) {
-      this.error.set(apiErrorMessage(e));
+      this.error.set(apiErrorMessage(e, this.i18n));
     } finally {
       this.loading.set(false);
     }
@@ -41,7 +41,7 @@ export class EmployeesStore {
       await this.load();
       return true;
     } catch (e) {
-      this.error.set(apiErrorMessage(e));
+      this.error.set(apiErrorMessage(e, this.i18n));
       return false;
     } finally {
       this.loading.set(false);
@@ -52,7 +52,7 @@ export class EmployeesStore {
       await firstValueFrom(this.http.delete<void>(`/api/v1/employees/${id}`));
       await this.load();
     } catch (e) {
-      this.error.set(apiErrorMessage(e));
+      this.error.set(apiErrorMessage(e, this.i18n));
     }
   }
   async export() {
@@ -64,7 +64,7 @@ export class EmployeesStore {
         timestampedExcelFileName('الموظفون', 'employees', this.i18n.locale()),
       );
     } catch (e) {
-      this.error.set(apiErrorMessage(e));
+      this.error.set(apiErrorMessage(e, this.i18n));
     }
   }
 }

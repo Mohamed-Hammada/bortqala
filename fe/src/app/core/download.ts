@@ -7,7 +7,11 @@ export function downloadBlob(blob: Blob, fileName: string): void {
   URL.revokeObjectURL(url);
 }
 
-export function timestampedExcelFileName(arabicName: string, englishName: string, locale: string): string {
+export function timestampedExcelFileName(
+  arabicName: string,
+  englishName: string,
+  locale: string,
+): string {
   const now = new Date();
   const two = (value: number) => String(value).padStart(2, '0');
   const timestamp = `${now.getFullYear()}${two(now.getMonth() + 1)}${two(now.getDate())}-${two(now.getHours())}${two(now.getMinutes())}`;

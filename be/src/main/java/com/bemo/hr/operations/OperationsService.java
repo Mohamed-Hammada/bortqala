@@ -25,6 +25,11 @@ public class OperationsService {
     private final BusinessPartyRepository businessPartyRepository;
     private final EmployeeRepository employeeRepository;
     private final AttendanceCategoryRepository attendanceCategoryRepository;
+    private final OperationsExcelExporter operationsExcelExporter;
+
+    public byte[] export(com.bemo.hr.reporting.application.ExcelExportOptions options) {
+        return operationsExcelExporter.export(snapshot(), options);
+    }
 
     public OperationsApi.Snapshot snapshot() {
         var items = inventoryItemRepository.findAllByOrderByNameAsc();

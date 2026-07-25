@@ -1,0 +1,42 @@
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+}
+.metric-card {
+  padding: 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  display: grid;
+  gap: 0.45rem;
+}
+.metric-card strong {
+  font-size: 1.8rem;
+}
+.two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+.negative {
+  color: var(--danger);
+}
+.form-note {
+  padding: 0.8rem;
+  border-radius: 0.7rem;
+  background: var(--surface-subtle);
+  margin-bottom: 1rem;
+}
+@media (max-width: 1000px) {
+  .metric-grid,
+  .two-columns {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .metric-grid,
+  .two-columns {
+    grid-template-columns: 1fr;
+  }
+}

@@ -8,10 +8,10 @@
   @if (store.details(); as data) {
     <header class="page-header">
       <div>
-        <a class="back" routerLink="/reports">← كل التقارير</a>
-        <p class="eyebrow">تقرير حضور ثابت الأدلة</p>
+        <a class="back" routerLink="/reports">← {{ i18n.t('review.allReports') }}</a>
+        <p class="eyebrow">{{ i18n.t('review.eyebrow') }}</p>
         <h1>{{ date(data.report.periodStart) }} — {{ date(data.report.periodEnd) }}</h1>
-        <p>الحقائق من البصمة منفصلة عن قرارات الموارد البشرية.</p>
+        <p>{{ i18n.t('review.description') }}</p>
       </div>
       <div class="toolbar">
         <button class="button secondary" (click)="store.export(id)">⇩ Excel</button>
@@ -21,35 +21,41 @@
             (click)="store.approve(id)"
             [disabled]="data.report.unresolvedCount > 0"
           >
-            اعتماد التقرير
+            {{ i18n.t('review.approve') }}
           </button>
         }
         @if (
           (data.report.status === 'APPROVED' || data.report.status === 'EXPORTED') && canApprove()
         ) {
-          <button class="button secondary" (click)="store.reopen(id)">إعادة فتح</button>
+          <button class="button secondary" (click)="store.reopen(id)">
+            {{ i18n.t('review.reopen') }}
+          </button>
         }
       </div>
     </header>
     <div class="review-summary">
       <article class="card">
-        <span>الحالة</span><strong>{{ reportStatus(data.report.status) }}</strong>
+        <span>{{ i18n.t('review.status') }}</span
+        ><strong>{{ reportStatus(data.report.status) }}</strong>
       </article>
       <article class="card exception">
-        <span>غير محلول</span><strong>{{ data.report.unresolvedCount }}</strong>
+        <span>{{ i18n.t('review.unresolved') }}</span
+        ><strong>{{ data.report.unresolvedCount }}</strong>
       </article>
       <article class="card">
-        <span>صفوف يومية</span><strong>{{ data.dailyResults.length }}</strong>
+        <span>{{ i18n.t('review.dailyRows') }}</span
+        ><strong>{{ data.dailyResults.length }}</strong>
       </article>
       <article class="card">
-        <span>اقتراحات إجازة</span><strong>{{ data.holidayProposals.length }}</strong>
+        <span>{{ i18n.t('review.holidayProposals') }}</span
+        ><strong>{{ data.holidayProposals.length }}</strong>
       </article>
     </div>
     @if (data.holidayProposals.length) {
       <section class="holiday-section">
         <div class="section-head">
-          <h2>اقتراحات الإجازة الجماعية</h2>
-          <p>كل أفراد الفئة بلا بصمة؛ القرار لا يتم تلقائيًا.</p>
+          <h2>{{ i18n.t('review.groupHolidayProposals') }}</h2>
+          <p>{{ i18n.t('review.groupHolidayHint') }}</p>
         </div>
         <div class="holiday-grid">
           @for (item of data.holidayProposals; track item.id) {
@@ -62,12 +68,18 @@
                   >{{ item.status }}</span
                 >
                 <h3>{{ item.categoryName }}</h3>
-                <p>{{ date(item.workDate) }} · {{ item.activeEmployeeCount }} موظف</p>
+                <p>
+                  {{ date(item.workDate) }} ·
+                  {{ i18n.t('review.employeeCount', { count: item.activeEmployeeCount }) }}
+                </p>
               </div>
               @if (item.status === 'PENDING' && canReview()) {
                 <div class="toolbar">
-                  <button class="button gold" (click)="holiday(item, true)">تأكيد إجازة</button
-                  ><button class="button secondary" (click)="holiday(item, false)">رفض</button>
+                  <button class="button gold" (click)="holiday(item, true)">
+                    {{ i18n.t('review.confirmHoliday') }}</button
+                  ><button class="button secondary" (click)="holiday(item, false)">
+                    {{ i18n.t('review.reject') }}
+                  </button>
                 </div>
               }
             </article>
@@ -77,26 +89,30 @@
     }
     <div class="section-head rows-head">
       <div>
-        <h2>المراجعة اليومية</h2>
-        <p>المعروض {{ rows().length }} من {{ data.dailyResults.length }}</p>
+        <h2>{{ i18n.t('review.dailyReview') }}</h2>
+        <p>
+          {{ i18n.t('review.shownOf', { shown: rows().length, total: data.dailyResults.length }) }}
+        </p>
       </div>
       <div class="segmented">
         <button [class.active]="filter() === 'UNRESOLVED'" (click)="filter.set('UNRESOLVED')">
-          غير المحلول</button
-        ><button [class.active]="filter() === 'ALL'" (click)="filter.set('ALL')">كل الصفوف</button>
+          {{ i18n.t('review.unresolvedOnly') }}</button
+        ><button [class.active]="filter() === 'ALL'" (click)="filter.set('ALL')">
+          {{ i18n.t('review.allRows') }}
+        </button>
       </div>
     </div>
     <div class="table-card review-table">
       <table>
         <thead>
           <tr>
-            <th>الموظف / اليوم</th>
-            <th>الفئة</th>
-            <th>أول / آخر بصمة</th>
-            <th>متوقع / محتسب</th>
-            <th>التأخير / الإضافي</th>
-            <th>الحالة والدليل</th>
-            <th>قرار HR</th>
+            <th>{{ i18n.t('review.employeeDay') }}</th>
+            <th>{{ i18n.t('review.category') }}</th>
+            <th>{{ i18n.t('review.firstLastPunch') }}</th>
+            <th>{{ i18n.t('review.expectedEffective') }}</th>
+            <th>{{ i18n.t('review.lateOvertime') }}</th>
+            <th>{{ i18n.t('review.statusEvidence') }}</th>
+            <th>{{ i18n.t('review.hrDecision') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -109,14 +125,20 @@
               <td>{{ row.categoryName }}</td>
               <td>
                 <span>{{ time(row.firstPunch) }}</span
-                ><small>{{ time(row.lastPunch) }} · {{ row.punchCount }} بصمة</small>
+                ><small
+                  >{{ time(row.lastPunch) }} ·
+                  {{ i18n.t('review.punchCount', { count: row.punchCount }) }}</small
+                >
               </td>
               <td>
-                <span>{{ row.expectedMinutes }} د</span
-                ><small>{{ row.effectiveWorkedMinutes }} د</small>
+                <span>{{ row.expectedMinutes }} {{ i18n.t('review.minuteShort') }}</span
+                ><small>{{ row.effectiveWorkedMinutes }} {{ i18n.t('review.minuteShort') }}</small>
               </td>
               <td>
-                <span>{{ row.lateMinutes }} د</span><small>{{ row.overtimeMinutes }} د إضافي</small>
+                <span>{{ row.lateMinutes }} {{ i18n.t('review.minuteShort') }}</span
+                ><small>{{
+                  i18n.t('review.overtimeMinutes', { count: row.overtimeMinutes })
+                }}</small>
               </td>
               <td>
                 <span
@@ -133,9 +155,12 @@
                   ><small>{{ row.decidedBy }} · {{ row.decisionNote }}</small>
                 } @else if (blocking(row) && canReview()) {
                   <div class="decision-actions">
-                    <button (click)="decide(row, 'NORMAL_DAY')">يوم عادي</button
-                    ><button (click)="decide(row, 'DEDUCT')">خصم</button
-                    ><button (click)="decide(row, 'APPROVED_LEAVE')">إجازة</button>
+                    <button (click)="decide(row, 'NORMAL_DAY')">
+                      {{ i18n.t('decision.normalDay') }}</button
+                    ><button (click)="decide(row, 'DEDUCT')">{{ i18n.t('decision.deduct') }}</button
+                    ><button (click)="decide(row, 'APPROVED_LEAVE')">
+                      {{ i18n.t('decision.approvedLeave') }}
+                    </button>
                   </div>
                 } @else {
                   —
@@ -146,14 +171,21 @@
             <tr>
               <td colspan="7">
                 <div class="empty-state">
-                  <strong>لا توجد بنود في هذا العرض</strong>تم حل كل الاستثناءات أو غيّر الفلتر.
+                  <strong>{{ i18n.t('review.noRows') }}</strong
+                  >{{ i18n.t('review.noRowsHint') }}
                 </div>
               </td>
             </tr>
           }
         </tbody>
       </table>
-      <app-table-pagination [total]="rows().length" [page]="pagination.currentPage(rows().length)" [pageSize]="pagination.pageSize()" (pageChange)="pagination.changePage($event, rows().length)" (pageSizeChange)="pagination.changePageSize($event)" />
+      <app-table-pagination
+        [total]="rows().length"
+        [page]="pagination.currentPage(rows().length)"
+        [pageSize]="pagination.pageSize()"
+        (pageChange)="pagination.changePage($event, rows().length)"
+        (pageSizeChange)="pagination.changePageSize($event)"
+      />
     </div>
   }
 </section>

@@ -1,5 +1,6 @@
 param(
-    [string]$PostgresDistributionDir = $env:BEMO_POSTGRES_DISTRIBUTION_DIR
+    [string]$PostgresDistributionDir = $env:BEMO_POSTGRES_DISTRIBUTION_DIR,
+    [string]$PostgresArchiveUrl = 'https://get.enterprisedb.com/postgresql/postgresql-18.4-2-windows-x64-binaries.zip'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,8 +33,32 @@ if (-not $PostgresDistributionDir) {
     $installed = Get-ChildItem 'C:\Program Files\PostgreSQL' -Directory -ErrorAction SilentlyContinue | Sort-Object Name -Descending | Select-Object -First 1
     if ($installed) { $PostgresDistributionDir = $installed.FullName }
 }
+if (-not $PostgresDistributionDir) {
+    $packagingCache = Join-Path $env:LOCALAPPDATA 'BemoHr\packaging'
+    $archive = Join-Path $packagingCache 'postgresql-18.4-2-windows-x64-binaries.zip'
+    $expanded = Join-Path $packagingCache 'postgresql-18.4-2-windows-x64-binaries'
+    New-Item -ItemType Directory -Force -Path $packagingCache | Out-Null
+    if (-not (Test-Path -LiteralPath $archive)) {
+        Write-Host 'Downloading the official PostgreSQL 18.4 Windows binary archive...'
+        & curl.exe --fail --location --output $archive $PostgresArchiveUrl
+        if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL archive download failed.' }
+    }
+    if (-not (Test-Path -LiteralPath (Join-Path $expanded 'pgsql\bin\postgres.exe'))) {
+        if (Test-Path -LiteralPath $expanded) {
+            $resolvedExpanded = (Resolve-Path -LiteralPath $expanded).Path
+            if (-not $resolvedExpanded.StartsWith($packagingCache, [System.StringComparison]::OrdinalIgnoreCase)) {
+                throw 'Refusing to replace a PostgreSQL cache directory outside the packaging cache.'
+            }
+            Remove-Item -LiteralPath $resolvedExpanded -Recurse -Force
+        }
+        New-Item -ItemType Directory -Force -Path $expanded | Out-Null
+        & tar.exe -xf $archive -C $expanded
+        if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL archive extraction failed.' }
+    }
+    $PostgresDistributionDir = Join-Path $expanded 'pgsql'
+}
 if (-not $PostgresDistributionDir -or -not (Test-Path (Join-Path $PostgresDistributionDir 'bin\postgres.exe'))) {
-    throw 'Set BEMO_POSTGRES_DISTRIBUTION_DIR to an official PostgreSQL Windows binary distribution before packaging.'
+    throw 'An official PostgreSQL Windows binary distribution could not be prepared.'
 }
 if (Test-Path -LiteralPath $postgresResources) { Remove-Item -LiteralPath $postgresResources -Recurse -Force }
 Copy-Item -LiteralPath $PostgresDistributionDir -Destination $postgresResources -Recurse

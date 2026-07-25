@@ -17,7 +17,7 @@ export class ImportsPage {
   readonly store = inject(ImportsStore);
   readonly i18n = inject(I18nService);
   readonly file = signal<File | null>(null);
-  readonly deviceName = signal('جهاز الحضور الرئيسي');
+  readonly deviceName = signal(this.i18n.t('imports.defaultDevice'));
   readonly expanded = signal<string | null>(null);
   readonly pagination = new TablePagination();
   readonly pagedUnmatched = computed(() => this.pagination.slice(this.store.unmatched()));

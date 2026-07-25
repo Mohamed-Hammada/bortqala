@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, HostListener, computed, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { dateInputToEpoch, epochToDateInput } from '../../core/date';
 import {
@@ -12,6 +19,7 @@ import {
 import { CategoriesStore } from './categories.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
+import { I18nService } from '../../core/i18n.service';
 type ScheduleForm = FormGroup<{
   name: FormControl<string>;
   effectiveFrom: FormControl<string>;
@@ -30,18 +38,19 @@ type ScheduleForm = FormGroup<{
 })
 export class CategoriesPage {
   readonly store = inject(CategoriesStore);
+  readonly i18n = inject(I18nService);
   readonly drawerOpen = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly pagination = new TablePagination();
   readonly paged = computed(() => this.pagination.slice(this.store.items()));
-  readonly days: Array<{ code: DayOfWeek; label: string }> = [
-    { code: 'SATURDAY', label: 'السبت' },
-    { code: 'SUNDAY', label: 'الأحد' },
-    { code: 'MONDAY', label: 'الإثنين' },
-    { code: 'TUESDAY', label: 'الثلاثاء' },
-    { code: 'WEDNESDAY', label: 'الأربعاء' },
-    { code: 'THURSDAY', label: 'الخميس' },
-    { code: 'FRIDAY', label: 'الجمعة' },
+  readonly days: Array<{ code: DayOfWeek; labelKey: string }> = [
+    { code: 'SATURDAY', labelKey: 'day.saturday' },
+    { code: 'SUNDAY', labelKey: 'day.sunday' },
+    { code: 'MONDAY', labelKey: 'day.monday' },
+    { code: 'TUESDAY', labelKey: 'day.tuesday' },
+    { code: 'WEDNESDAY', labelKey: 'day.wednesday' },
+    { code: 'THURSDAY', labelKey: 'day.thursday' },
+    { code: 'FRIDAY', labelKey: 'day.friday' },
   ];
   readonly form = new FormGroup({
     code: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -105,7 +114,7 @@ export class CategoriesPage {
   addSchedule(value?: ScheduleRule) {
     this.form.controls.schedules.push(
       new FormGroup({
-        name: new FormControl(value?.name ?? 'الجدول الأساسي', {
+        name: new FormControl(value?.name ?? this.i18n.t('categories.defaultSchedule'), {
           nonNullable: true,
           validators: [Validators.required],
         }),
@@ -164,14 +173,32 @@ export class CategoriesPage {
     if (await this.store.save(this.editingId(), payload)) this.drawerOpen.set(false);
   }
   async deactivate(item: AttendanceCategory) {
-    if (confirm(`تعطيل فئة ${item.name}؟`)) await this.store.deactivate(item.id);
+    if (confirm(this.i18n.t('categories.deactivateConfirm', { name: item.name }))) {
+      await this.store.deactivate(item.id);
+    }
   }
-  closeDrawer(): void { this.drawerOpen.set(false); }
-  @HostListener('document:keydown.escape') onEscape(): void { if (this.drawerOpen()) this.closeDrawer(); }
+  closeDrawer(): void {
+    this.drawerOpen.set(false);
+  }
+  @HostListener('document:keydown.escape') onEscape(): void {
+    if (this.drawerOpen()) this.closeDrawer();
+  }
   modeLabel(value: AttendanceMode) {
-    return { BIOMETRIC: 'بصمة', MANUAL: 'يدوي', HYBRID: 'مختلط' }[value];
+    return this.i18n.t(
+      {
+        BIOMETRIC: 'attendance.biometric',
+        MANUAL: 'attendance.manual',
+        HYBRID: 'attendance.hybrid',
+      }[value],
+    );
   }
   cycleLabel(value: PayCycle) {
-    return { MONTHLY: 'شهري', HALF_MONTHLY: 'كل 15 يوم', THIRTY_DAYS: 'كل 30 يوم' }[value];
+    return this.i18n.t(
+      {
+        MONTHLY: 'payCycle.monthly',
+        HALF_MONTHLY: 'payCycle.halfMonthly',
+        THIRTY_DAYS: 'payCycle.thirtyDays',
+      }[value],
+    );
   }
 }

@@ -1,0 +1,17 @@
+id;translation_key;locale;text_value
+x17-ar-001;partyType.sortingTrader;ar-EG;تاجر فرزة
+x17-en-001;partyType.sortingTrader;en-US;Sorting trader
+x17-ar-002;operations.operationType.supplyReceipt;ar-EG;استلام توريد
+x17-en-002;operations.operationType.supplyReceipt;en-US;Supply receipt
+x17-ar-003;operations.operationType.payment;ar-EG;دفعة مالية
+x17-en-003;operations.operationType.payment;en-US;Payment
+x17-ar-004;operations.operationType.processingIntake;ar-EG;استلام للتشغيل والفرز
+x17-en-004;operations.operationType.processingIntake;en-US;Processing intake
+x17-ar-005;operations.operationType.processingDelivery;ar-EG;تسليم ناتج التشغيل
+x17-en-005;operations.operationType.processingDelivery;en-US;Processing delivery
+x17-ar-006;operations.operationType.exportSale;ar-EG;بيع تصدير
+x17-en-006;operations.operationType.exportSale;en-US;Export sale
+x17-ar-007;operations.operationType.sortingSale;ar-EG;بيع فرزة
+x17-en-007;operations.operationType.sortingSale;en-US;Sorting sale
+x17-ar-008;operations.operationType.adjustment;ar-EG;تسوية مخزون أو حساب
+x17-en-008;operations.operationType.adjustment;en-US;Stock or ledger adjustment

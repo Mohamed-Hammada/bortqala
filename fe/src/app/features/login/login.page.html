@@ -3,7 +3,7 @@
     <div class="orb orb-one"></div>
     <div class="orb orb-two"></div>
     <div class="story-copy">
-      <span class="monogram">ب</span>
+      <span class="monogram">{{ i18n.locale() === 'ar-EG' ? 'ب' : 'B' }}</span>
       <p>{{ i18n.t('login.story') }}</p>
       <small>{{ i18n.t('login.storyHint') }}</small>
     </div>
@@ -41,7 +41,7 @@
           id="appCode"
           formControlName="appCode"
           autocomplete="organization"
-          placeholder="مثال: DEMO"
+          [placeholder]="i18n.t('login.appCodePlaceholder')"
         />
       </div>
       <div class="field">
@@ -50,7 +50,7 @@
           id="username"
           formControlName="username"
           autocomplete="username"
-          placeholder="مثال: admin"
+          [placeholder]="i18n.t('login.usernamePlaceholder')"
         />
       </div>
       <div class="field password-field">
@@ -68,7 +68,7 @@
         {{ i18n.t(loading() ? 'login.loading' : 'login.submit') }}
       </button>
       <p class="local-hint">
-        {{ i18n.t('login.localHint') }}: <span class="ltr">DEMO / admin / Admin&#64;12345</span>
+        {{ i18n.t('login.localHint') }}: <span class="ltr">{{ credentialHint() }}</span>
       </p>
     </form>
   </section>

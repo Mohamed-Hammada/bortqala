@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260724-v13-employee-code-sequences
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: employee_code_sequences
+      changes:
+        - createTable:
+            tableName: employee_code_sequences
+            columns:
+              - column: { name: category_id, type: varchar(36), constraints: { primaryKey: true, nullable: false, foreignKeyName: fk_employee_code_sequence_category, references: attendance_categories(id) } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_employee_code_sequence_app, references: apps(id) } }
+              - column: { name: next_value, type: bigint, defaultValueNumeric: 1, constraints: { nullable: false } }
+        - sql:
+            sql: INSERT INTO employee_code_sequences (category_id, app_id, next_value) SELECT id, app_id, 1 FROM attendance_categories
+      rollback:
+        - dropTable: { tableName: employee_code_sequences }

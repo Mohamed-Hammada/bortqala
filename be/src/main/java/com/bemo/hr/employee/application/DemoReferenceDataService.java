@@ -20,15 +20,15 @@ public class DemoReferenceDataService {
     private static final LocalDate DEFAULT_EFFECTIVE_FROM = LocalDate.of(2026, 1, 1);
 
     private static final List<ReferenceCategory> REFERENCE_CATEGORIES = List.of(
-            new ReferenceCategory("SECURITY", "الأمن", 720, PayCycle.THIRTY_DAYS, AttendanceMode.BIOMETRIC, false),
-            new ReferenceCategory("ACCOUNTING", "الحسابات", 600, PayCycle.THIRTY_DAYS, AttendanceMode.BIOMETRIC, false),
-            new ReferenceCategory("ADMINISTRATION", "الإداريون", 480, PayCycle.THIRTY_DAYS, AttendanceMode.BIOMETRIC, false),
-            new ReferenceCategory("SECRETARIAL", "السكرتارية", 480, PayCycle.THIRTY_DAYS, AttendanceMode.BIOMETRIC, false),
-            new ReferenceCategory("DAILY_WORKERS", "العمالة اليومية", 480, PayCycle.HALF_MONTHLY, AttendanceMode.MANUAL, true),
-            new ReferenceCategory("CLEANING_WORKERS", "عمال النظافة", 480, PayCycle.HALF_MONTHLY, AttendanceMode.MANUAL, true),
-            new ReferenceCategory("OPERATION_WORKERS", "عمال التشغيل", 480, PayCycle.HALF_MONTHLY, AttendanceMode.MANUAL, true),
-            new ReferenceCategory("EXPORT_WORKERS", "عمال التصدير", 480, PayCycle.HALF_MONTHLY, AttendanceMode.MANUAL, true),
-            new ReferenceCategory("SORTING_WORKERS", "عمال الفرزة", 480, PayCycle.HALF_MONTHLY, AttendanceMode.MANUAL, true)
+            new ReferenceCategory("SECURITY", "الأمن", 720, PayCycle.THIRTY_DAYS, AttendanceMode.BIOMETRIC, true, false),
+            new ReferenceCategory("ACCOUNTING", "الحسابات", 600, PayCycle.THIRTY_DAYS, AttendanceMode.BIOMETRIC, false, true),
+            new ReferenceCategory("ADMINISTRATION", "الإداريون", 480, PayCycle.THIRTY_DAYS, AttendanceMode.BIOMETRIC, false, true),
+            new ReferenceCategory("SECRETARIAL", "السكرتارية", 480, PayCycle.THIRTY_DAYS, AttendanceMode.BIOMETRIC, false, false),
+            new ReferenceCategory("DAILY_WORKERS", "العمالة اليومية", 480, PayCycle.HALF_MONTHLY, AttendanceMode.MANUAL, true, false),
+            new ReferenceCategory("CLEANING_WORKERS", "عمال النظافة", 480, PayCycle.HALF_MONTHLY, AttendanceMode.MANUAL, true, false),
+            new ReferenceCategory("OPERATION_WORKERS", "عمال التشغيل", 480, PayCycle.HALF_MONTHLY, AttendanceMode.MANUAL, true, false),
+            new ReferenceCategory("EXPORT_WORKERS", "عمال التصدير", 480, PayCycle.HALF_MONTHLY, AttendanceMode.MANUAL, true, false),
+            new ReferenceCategory("SORTING_WORKERS", "عمال الفرزة", 480, PayCycle.HALF_MONTHLY, AttendanceMode.MANUAL, true, false)
     );
 
     private final AttendanceCategoryRepository attendanceCategoryRepository;
@@ -51,6 +51,7 @@ public class DemoReferenceDataService {
         var category = attendanceCategoryRepository.save(new AttendanceCategory(
                 reference.code(), reference.name(), reference.expectedMinutes(), reference.payCycle(),
                 reference.attendanceMode(), reference.singlePunchCounts(), SATURDAY_TO_THURSDAY_MASK, true));
+        category.configureAdvanceEligibility(reference.allowsAdvances());
         scheduleRuleRepository.saveAll(List.of(
                 new ScheduleRule(category.getId(), "الدوام الشتوي", DEFAULT_EFFECTIVE_FROM,
                         LocalDate.of(2026, 4, 30), LocalTime.of(9, 0), null, 0),
@@ -62,5 +63,5 @@ public class DemoReferenceDataService {
     }
 
     private record ReferenceCategory(String code, String name, int expectedMinutes, PayCycle payCycle,
-                                     AttendanceMode attendanceMode, boolean singlePunchCounts) { }
+                                     AttendanceMode attendanceMode, boolean singlePunchCounts, boolean allowsAdvances) { }
 }

@@ -1,0 +1,408 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('operations.eyebrow') }}</p>
+      <h1>{{ i18n.t('operations.title') }}</h1>
+      <p>{{ i18n.t('operations.description') }}</p>
+    </div>
+    <div class="toolbar">
+      <button class="button secondary" (click)="store.export()">⇩ Excel</button
+      ><button class="button secondary" (click)="open('advance')">
+        {{ i18n.t('operations.newAdvance') }}</button
+      ><button class="button secondary" (click)="open('item')">
+        {{ i18n.t('operations.newItem') }}</button
+      ><button class="button primary" (click)="open('transaction')">
+        {{ i18n.t('operations.newTransaction') }}
+      </button>
+    </div>
+  </header>
+  @if (store.loading()) {
+    <div class="loading"></div>
+  }
+  @if (store.error()) {
+    <div class="alert error">{{ store.error() }}</div>
+  }
+  <div class="metric-grid">
+    <article class="metric-card">
+      <span>{{ i18n.t('operations.items') }}</span
+      ><strong>{{ store.snapshot().items.length }}</strong>
+    </article>
+    <article class="metric-card">
+      <span>{{ i18n.t('operations.movements') }}</span
+      ><strong>{{ store.snapshot().movements.length }}</strong>
+    </article>
+    <article class="metric-card">
+      <span>{{ i18n.t('operations.partners') }}</span
+      ><strong>{{ store.snapshot().partyBalances.length }}</strong>
+    </article>
+    <article class="metric-card">
+      <span>{{ i18n.t('operations.advances') }}</span
+      ><strong>{{ store.snapshot().employeeAdvances.length }}</strong>
+    </article>
+  </div>
+
+  <div class="section-head">
+    <div>
+      <h2>{{ i18n.t('operations.stockBalances') }}</h2>
+      <p>{{ i18n.t('operations.signedHint') }}</p>
+    </div>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('common.code') }}</th>
+          <th>{{ i18n.t('common.name') }}</th>
+          <th>{{ i18n.t('operations.itemType') }}</th>
+          <th>{{ i18n.t('operations.unit') }}</th>
+          <th>{{ i18n.t('operations.balance') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.id) {
+          <tr>
+            <td class="ltr">{{ item.code }}</td>
+            <td>
+              <strong>{{ item.name }}</strong>
+            </td>
+            <td>{{ itemTypeLabel(item.itemType) }}</td>
+            <td>{{ item.unitCode }}</td>
+            <td>
+              <strong [class.negative]="item.currentBalance < 0">{{ item.currentBalance }}</strong>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">{{ i18n.t('operations.noItems') }}</div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-table-pagination
+      [total]="store.snapshot().items.length"
+      [page]="itemPagination.currentPage(store.snapshot().items.length)"
+      [pageSize]="itemPagination.pageSize()"
+      (pageChange)="itemPagination.changePage($event, store.snapshot().items.length)"
+      (pageSizeChange)="itemPagination.changePageSize($event)"
+    />
+  </div>
+
+  <div class="section-head">
+    <div>
+      <h2>{{ i18n.t('operations.stockMovements') }}</h2>
+      <p>{{ i18n.t('operations.lossHint') }}</p>
+    </div>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('operations.date') }}</th>
+          <th>{{ i18n.t('operations.operation') }}</th>
+          <th>{{ i18n.t('operations.item') }}</th>
+          <th>{{ i18n.t('operations.party') }}</th>
+          <th>{{ i18n.t('operations.quantity') }}</th>
+          <th>{{ i18n.t('operations.loss') }}</th>
+          <th>{{ i18n.t('operations.reference') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of movements(); track row.id) {
+          <tr>
+            <td class="ltr">{{ date(row.occurredAt) }}</td>
+            <td>{{ operationLabel(row.operationType) }}</td>
+            <td>{{ row.itemName }}</td>
+            <td>{{ row.partyName ?? '—' }}</td>
+            <td>
+              <strong [class.negative]="row.quantityDelta < 0">{{ row.quantityDelta }}</strong>
+            </td>
+            <td>{{ row.lossPercentage ?? '—' }}</td>
+            <td>{{ row.referenceCode ?? '—' }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">{{ i18n.t('operations.noMovements') }}</div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <app-table-pagination
+      [total]="store.snapshot().movements.length"
+      [page]="movementPagination.currentPage(store.snapshot().movements.length)"
+      [pageSize]="movementPagination.pageSize()"
+      (pageChange)="movementPagination.changePage($event, store.snapshot().movements.length)"
+      (pageSizeChange)="movementPagination.changePageSize($event)"
+    />
+  </div>
+
+  <div class="two-columns">
+    <section>
+      <div class="section-head">
+        <h2>{{ i18n.t('operations.partnerBalances') }}</h2>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('operations.party') }}</th>
+              <th>{{ i18n.t('operations.partyType') }}</th>
+              <th>{{ i18n.t('operations.financialBalance') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of balances(); track row.partyId) {
+              <tr>
+                <td>
+                  <strong>{{ row.partyName }}</strong
+                  ><small class="ltr">{{ row.partyCode }}</small>
+                </td>
+                <td>{{ partyTypeLabel(row.partyType) }}</td>
+                <td>
+                  <strong [class.negative]="row.balance < 0">{{ row.balance }}</strong>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3">
+                  <div class="empty-state">{{ i18n.t('operations.noBalances') }}</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <app-table-pagination
+          [total]="store.snapshot().partyBalances.length"
+          [page]="balancePagination.currentPage(store.snapshot().partyBalances.length)"
+          [pageSize]="balancePagination.pageSize()"
+          (pageChange)="balancePagination.changePage($event, store.snapshot().partyBalances.length)"
+          (pageSizeChange)="balancePagination.changePageSize($event)"
+        />
+      </div>
+    </section>
+    <section>
+      <div class="section-head">
+        <h2>{{ i18n.t('operations.employeeAdvances') }}</h2>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('operations.employee') }}</th>
+              <th>{{ i18n.t('operations.entry') }}</th>
+              <th>{{ i18n.t('operations.amount') }}</th>
+              <th>{{ i18n.t('operations.balance') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of advances(); track row.id) {
+              <tr>
+                <td>
+                  <strong>{{ row.employeeName }}</strong
+                  ><small class="ltr">{{ row.employeeCode }}</small>
+                </td>
+                <td>{{ advanceEntryLabel(row.entryType) }}</td>
+                <td>{{ row.amountDelta }}</td>
+                <td>
+                  <strong>{{ row.currentBalance }}</strong>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4">
+                  <div class="empty-state">{{ i18n.t('operations.noAdvances') }}</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <app-table-pagination
+          [total]="store.snapshot().employeeAdvances.length"
+          [page]="advancePagination.currentPage(store.snapshot().employeeAdvances.length)"
+          [pageSize]="advancePagination.pageSize()"
+          (pageChange)="
+            advancePagination.changePage($event, store.snapshot().employeeAdvances.length)
+          "
+          (pageSizeChange)="advancePagination.changePageSize($event)"
+        />
+      </div>
+    </section>
+  </div>
+
+  @if (drawer()) {
+    <button class="drawer-backdrop" (click)="close()" aria-label="close"></button>
+    <aside class="drawer">
+      <div class="drawer-header">
+        <h2>
+          {{
+            i18n.t(
+              drawer() === 'item'
+                ? 'operations.newItem'
+                : drawer() === 'advance'
+                  ? 'operations.newAdvance'
+                  : 'operations.newTransaction'
+            )
+          }}
+        </h2>
+        <button class="button secondary icon-only" (click)="close()">×</button>
+      </div>
+      @if (drawer() === 'item') {
+        <form [formGroup]="itemForm" (ngSubmit)="saveItem()">
+          <div class="form-grid">
+            <div class="field">
+              <label>{{ i18n.t('common.code') }}</label
+              ><input class="ltr" formControlName="code" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('common.name') }}</label
+              ><input formControlName="name" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.itemType') }}</label
+              ><select formControlName="itemType">
+                <option value="RAW_MATERIAL">{{ i18n.t('operations.rawMaterial') }}</option>
+                <option value="PACKAGING">{{ i18n.t('operations.packaging') }}</option>
+                <option value="PRODUCTION_SUPPLY">
+                  {{ i18n.t('operations.productionSupply') }}
+                </option>
+                <option value="SORTING_OUTPUT">{{ i18n.t('operations.sortingOutput') }}</option>
+                <option value="FINISHED_GOOD">{{ i18n.t('operations.finishedGood') }}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.unit') }}</label
+              ><input formControlName="unitCode" placeholder="KG / BOX" />
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button primary" type="submit">{{ i18n.t('common.save') }}</button
+            ><button class="button secondary" type="button" (click)="close()">
+              {{ i18n.t('common.cancel') }}
+            </button>
+          </div>
+        </form>
+      }
+      @if (drawer() === 'transaction') {
+        <form [formGroup]="transactionForm" (ngSubmit)="saveTransaction()">
+          <p class="form-note">{{ i18n.t('operations.transactionSignHelp') }}</p>
+          <div class="form-grid">
+            <div class="field">
+              <label>{{ i18n.t('operations.operation') }}</label
+              ><select formControlName="operationType">
+                <option value="SUPPLY_RECEIPT">{{ operationLabel('SUPPLY_RECEIPT') }}</option>
+                <option value="PAYMENT">{{ operationLabel('PAYMENT') }}</option>
+                <option value="PROCESSING_INTAKE">{{ operationLabel('PROCESSING_INTAKE') }}</option>
+                <option value="PROCESSING_DELIVERY">
+                  {{ operationLabel('PROCESSING_DELIVERY') }}
+                </option>
+                <option value="EXPORT_SALE">{{ operationLabel('EXPORT_SALE') }}</option>
+                <option value="SORTING_SALE">{{ operationLabel('SORTING_SALE') }}</option>
+                <option value="ADJUSTMENT">{{ operationLabel('ADJUSTMENT') }}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.date') }}</label
+              ><input class="ltr" type="datetime-local" formControlName="occurredAt" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.item') }}</label
+              ><select formControlName="itemId">
+                <option value="">—</option>
+                @for (item of store.snapshot().items; track item.id) {
+                  <option [value]="item.id">{{ item.name }} ({{ item.unitCode }})</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.party') }}</label
+              ><select formControlName="partyId">
+                <option value="">—</option>
+                @for (party of store.parties(); track party.id) {
+                  <option [value]="party.id">{{ party.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.quantityDelta') }}</label
+              ><input class="ltr" type="number" step="0.0001" formControlName="quantityDelta" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.amountDelta') }}</label
+              ><input class="ltr" type="number" step="0.01" formControlName="amountDelta" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.lossPercentage') }}</label
+              ><input
+                class="ltr"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                formControlName="lossPercentage"
+              />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.reference') }}</label
+              ><input formControlName="referenceCode" />
+            </div>
+            <div class="field span-2">
+              <label>{{ i18n.t('common.notes') }}</label
+              ><textarea formControlName="note"></textarea>
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button primary" type="submit">{{ i18n.t('common.save') }}</button
+            ><button class="button secondary" type="button" (click)="close()">
+              {{ i18n.t('common.cancel') }}
+            </button>
+          </div>
+        </form>
+      }
+      @if (drawer() === 'advance') {
+        <form [formGroup]="advanceForm" (ngSubmit)="saveAdvance()">
+          <div class="form-grid">
+            <div class="field span-2">
+              <label>{{ i18n.t('operations.employee') }}</label
+              ><select formControlName="employeeId">
+                <option value="">{{ i18n.t('operations.chooseEmployee') }}</option>
+                @for (employee of store.employees(); track employee.id) {
+                  <option [value]="employee.id">
+                    {{ employee.fullName }} — {{ employee.employeeCode }}
+                  </option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.entry') }}</label
+              ><select formControlName="entryType">
+                <option value="ADVANCE">{{ i18n.t('operations.advancePaid') }}</option>
+                <option value="REPAYMENT">{{ i18n.t('operations.advanceRepaid') }}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.amountDelta') }}</label
+              ><input class="ltr" type="number" step="0.01" formControlName="amountDelta" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.date') }}</label
+              ><input class="ltr" type="datetime-local" formControlName="occurredAt" />
+            </div>
+            <div class="field span-2">
+              <label>{{ i18n.t('common.notes') }}</label
+              ><textarea formControlName="note"></textarea>
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button primary" type="submit">{{ i18n.t('common.save') }}</button
+            ><button class="button secondary" type="button" (click)="close()">
+              {{ i18n.t('common.cancel') }}
+            </button>
+          </div>
+        </form>
+      }
+    </aside>
+  }
+</section>

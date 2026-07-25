@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: fix_inventory_item_unique_constraint
+      author: codex
+      preConditions:
+        onFail: HALT
+        and:
+          - tableExists: { tableName: inventory_items }
+          - uniqueConstraintExists: { tableName: inventory_items, constraintName: uk_inventory_items_app_code }
+      changes:
+        - dropUniqueConstraint:
+            tableName: inventory_items
+            constraintName: uk_inventory_items_app_code
+        - addUniqueConstraint:
+            tableName: inventory_items
+            columnNames: "app_id, code"
+            constraintName: uk_inventory_items_app_code
+      rollback:
+        - dropUniqueConstraint:
+            tableName: inventory_items
+            constraintName: uk_inventory_items_app_code
+        - addUniqueConstraint:
+            tableName: inventory_items
+            columnNames: app_id
+            constraintName: uk_inventory_items_app_code

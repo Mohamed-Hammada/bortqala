@@ -67,6 +67,13 @@ export class AppShellComponent {
       icon: 'reports',
     },
     {
+      labelKey: 'nav.operations',
+      descriptionKey: 'nav.operationsHint',
+      path: '/operations',
+      icon: 'categories',
+      roles: ['ADMIN', 'HR_MANAGER'],
+    },
+    {
       labelKey: 'nav.users',
       descriptionKey: 'nav.usersHint',
       path: '/users',

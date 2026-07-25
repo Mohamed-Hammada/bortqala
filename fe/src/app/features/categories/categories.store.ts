@@ -20,7 +20,7 @@ export class CategoriesStore {
         await firstValueFrom(this.http.get<AttendanceCategory[]>('/api/v1/categories')),
       );
     } catch (e) {
-      this.error.set(apiErrorMessage(e));
+      this.error.set(apiErrorMessage(e, this.i18n));
     } finally {
       this.loading.set(false);
     }
@@ -37,7 +37,7 @@ export class CategoriesStore {
       await this.load();
       return true;
     } catch (e) {
-      this.error.set(apiErrorMessage(e));
+      this.error.set(apiErrorMessage(e, this.i18n));
       return false;
     } finally {
       this.loading.set(false);
@@ -49,7 +49,7 @@ export class CategoriesStore {
       await firstValueFrom(this.http.delete<void>(`/api/v1/categories/${id}`));
       await this.load();
     } catch (e) {
-      this.error.set(apiErrorMessage(e));
+      this.error.set(apiErrorMessage(e, this.i18n));
     } finally {
       this.loading.set(false);
     }
@@ -63,7 +63,7 @@ export class CategoriesStore {
         timestampedExcelFileName('الفئات', 'categories', this.i18n.locale()),
       );
     } catch (e) {
-      this.error.set(apiErrorMessage(e));
+      this.error.set(apiErrorMessage(e, this.i18n));
     }
   }
 }

@@ -24,6 +24,7 @@ export class LoginPage {
   readonly sessionExpired =
     this.activatedRoute.snapshot.queryParamMap.get('reason') === 'session-expired';
   readonly showPassword = signal(false);
+  readonly credentialHint = signal('DEMO / admin / Admin@12345');
   readonly form = new FormGroup({
     appCode: new FormControl('DEMO', { nonNullable: true, validators: [Validators.required] }),
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -32,6 +33,37 @@ export class LoginPage {
 
   constructor() {
     if (this.authService.authenticated()) void this.router.navigate(['/dashboard']);
+    void this.loadDesktopCredentials();
+  }
+
+  private async loadDesktopCredentials(): Promise<void> {
+    const tauri = (
+      window as typeof window & {
+        __TAURI__?: {
+          core?: {
+            invoke<T>(command: string): Promise<T>;
+          };
+        };
+      }
+    ).__TAURI__;
+    if (!tauri?.core) return;
+    try {
+      const credentials = await tauri.core.invoke<{
+        appCode: string;
+        username: string;
+        password: string;
+      }>('initial_credentials');
+      this.form.patchValue({
+        appCode: credentials.appCode,
+        username: credentials.username,
+        password: credentials.password,
+      });
+      this.credentialHint.set(
+        `${credentials.appCode} / ${credentials.username} / ${credentials.password}`,
+      );
+    } catch {
+      // A normal browser build has no desktop bridge and keeps the development credentials.
+    }
   }
 
   changeLanguage(locale: SupportedLocale): void {
@@ -63,7 +95,7 @@ export class LoginPage {
       this.error.set(
         error instanceof HttpErrorResponse && error.status === 401
           ? this.i18n.t('login.invalidCredentials')
-          : apiErrorMessage(error),
+          : apiErrorMessage(error, this.i18n),
       );
     } finally {
       this.loading.set(false);

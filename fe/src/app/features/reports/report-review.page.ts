@@ -49,15 +49,17 @@ export class ReportReviewPage {
     return formatDate(value);
   }
   status(value: DailyStatus) {
-    return {
-      PRESENT: 'حاضر',
-      SINGLE_PUNCH: 'بصمة واحدة',
-      NO_PUNCH: 'بدون بصمة',
-      MANUAL_ENTRY: 'إدخال يدوي',
-      NON_WORKDAY: 'راحة',
-      HOLIDAY: 'إجازة',
-      MISSING_SCHEDULE: 'جدول ناقص',
-    }[value];
+    return this.i18n.t(
+      {
+        PRESENT: 'dailyStatus.present',
+        SINGLE_PUNCH: 'dailyStatus.singlePunch',
+        NO_PUNCH: 'dailyStatus.noPunch',
+        MANUAL_ENTRY: 'dailyStatus.manualEntry',
+        NON_WORKDAY: 'dailyStatus.nonWorkday',
+        HOLIDAY: 'dailyStatus.holiday',
+        MISSING_SCHEDULE: 'dailyStatus.missingSchedule',
+      }[value],
+    );
   }
   reportStatus(value: ReportStatus): string {
     return this.i18n.t(
@@ -75,18 +77,21 @@ export class ReportReviewPage {
       decision === 'NORMAL_DAY' &&
       (row.status === 'MANUAL_ENTRY' || row.status === 'SINGLE_PUNCH')
     ) {
-      const input = prompt('الدقائق المحتسبة لليوم', String(row.expectedMinutes));
+      const input = prompt(this.i18n.t('review.workedMinutesPrompt'), String(row.expectedMinutes));
       if (input === null) return;
       worked = Number(input);
       if (!Number.isFinite(worked) || worked < 0) return;
     }
-    const note = prompt('ملاحظة القرار (اختياري)') ?? null;
+    const note = prompt(this.i18n.t('review.decisionNotePrompt')) ?? null;
     await this.store.decide(this.id, row.id, decision, worked, note);
   }
   async holiday(item: HolidayProposal, confirming: boolean) {
-    const name = confirming ? (prompt('اسم الإجازة', 'إجازة مؤكدة') ?? null) : null;
+    const name = confirming
+      ? (prompt(this.i18n.t('review.holidayNamePrompt'), this.i18n.t('review.confirmedHoliday')) ??
+        null)
+      : null;
     if (confirming && name === null) return;
-    const note = prompt('ملاحظة (اختياري)') ?? null;
+    const note = prompt(this.i18n.t('review.notePrompt')) ?? null;
     await this.store.decideHoliday(
       this.id,
       item.id,

@@ -12,7 +12,7 @@ public final class EmployeeApi {
     }
 
     public record UpsertRequest(
-            @NotBlank @Size(max = 50) String employeeCode,
+            @Size(max = 50) String employeeCode,
             @NotBlank @Size(max = 200) String fullName,
             @Size(max = 100) String deviceUserId,
             @NotBlank String categoryId,

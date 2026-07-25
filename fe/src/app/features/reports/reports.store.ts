@@ -36,7 +36,7 @@ export class ReportsStore {
       this.reports.set(reports);
       this.periods.set(periods);
     } catch (error) {
-      this.error.set(apiErrorMessage(error));
+      this.error.set(apiErrorMessage(error, this.i18n));
     } finally {
       this.loading.set(false);
     }
@@ -56,7 +56,7 @@ export class ReportsStore {
       this.details.set(result);
       return result.report.id;
     } catch (error) {
-      this.error.set(apiErrorMessage(error));
+      this.error.set(apiErrorMessage(error, this.i18n));
       return null;
     } finally {
       this.loading.set(false);
@@ -69,7 +69,7 @@ export class ReportsStore {
     try {
       this.details.set(await firstValueFrom(this.http.get<ReportDetails>(`/api/v1/reports/${id}`)));
     } catch (error) {
-      this.error.set(apiErrorMessage(error));
+      this.error.set(apiErrorMessage(error, this.i18n));
     } finally {
       this.loading.set(false);
     }
@@ -124,7 +124,7 @@ export class ReportsStore {
       );
       await this.load(id);
     } catch (error) {
-      this.error.set(apiErrorMessage(error));
+      this.error.set(apiErrorMessage(error, this.i18n));
     }
   }
 
@@ -135,7 +135,7 @@ export class ReportsStore {
       this.details.set(await firstValueFrom(request));
       return true;
     } catch (error) {
-      this.error.set(apiErrorMessage(error));
+      this.error.set(apiErrorMessage(error, this.i18n));
       return false;
     } finally {
       this.loading.set(false);

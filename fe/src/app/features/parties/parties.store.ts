@@ -20,7 +20,7 @@ export class PartiesStore {
     try {
       this.items.set(await firstValueFrom(this.httpClient.get<BusinessParty[]>('/api/v1/parties')));
     } catch (error) {
-      this.error.set(apiErrorMessage(error));
+      this.error.set(apiErrorMessage(error, this.i18n));
     } finally {
       this.loading.set(false);
     }
@@ -38,7 +38,7 @@ export class PartiesStore {
       await this.load();
       return true;
     } catch (error) {
-      this.error.set(apiErrorMessage(error));
+      this.error.set(apiErrorMessage(error, this.i18n));
       return false;
     } finally {
       this.loading.set(false);
@@ -50,7 +50,7 @@ export class PartiesStore {
       await firstValueFrom(this.httpClient.delete<void>(`/api/v1/parties/${id}`));
       await this.load();
     } catch (error) {
-      this.error.set(apiErrorMessage(error));
+      this.error.set(apiErrorMessage(error, this.i18n));
     }
   }
 
@@ -63,7 +63,7 @@ export class PartiesStore {
         timestampedExcelFileName('جهات-التعامل', 'business-parties', this.i18n.locale()),
       );
     } catch (error) {
-      this.error.set(apiErrorMessage(error));
+      this.error.set(apiErrorMessage(error, this.i18n));
     }
   }
 }

@@ -1,6 +1,6 @@
 ---
 name: hr-frontend
-description: Continue and review the HR platform Angular frontend in fe/. Use when building Arabic RTL HR screens, monthly attendance review tables, exception decisions, employee/category settings, biometric import flows, Excel export actions, typed API integration, frontend tests, or any Angular UI change in this repository.
+description: Continue and review the Bemo Angular frontend in fe/. Use for Arabic/English HR screens, attendance review, parties, inventory/ledgers/advances, category settings, imports, localized Excel actions, typed API integration, tests, or any Angular UI change in this repository.
 ---
 
 # Continue the HR frontend
@@ -74,6 +74,7 @@ Show unresolved counts per section and prevent approval while blocking exception
 - Treat backend statuses as closed unions and fail visibly on unknown values.
 - Send and receive `Instant` and work-date values only as epoch-millisecond `number`s through `core/date.ts`; schedule clock times remain `HH:mm`.
 - Load UI copy from `/api/v1/i18n/{locale}` through `I18nService`. New static copy needs `ar-EG` and `en-US` database rows and must react to locale/RTL changes.
+- Register the initial translation load with `provideAppInitializer`; never allow the first rendered frame to expose raw keys such as `parties.eyebrow`. Run `npm run check:i18n` for every copy change.
 - Apply the authenticated user's theme, density, and locale preferences through the core services. Do not store a second feature-local preference source.
 
 ## Current state
@@ -81,9 +82,9 @@ Show unresolved counts per section and prevent approval while blocking exception
 - Runtime: Angular `22.0.8`, strict standalone TypeScript, SCSS, Vitest, and Node `24.18.0` LTS.
 - Shell: complete Arabic RTL role-aware navigation with an ivory/ink/gold operations design, accessible labels, responsive layout, loading/error/empty states, and no component framework.
 - Authentication: SaaS app code plus username/password, persisted JWT session, route/action role checks, Bearer interceptor, protected-401 expiry redirect and translated login notice, per-request correlation id, stable browser device id, and ADMIN-controlled session timeout.
-- Features: dashboard, dynamic categories/rules with calendar-month/15-day/30-day cycles, employee/device mapping, biometric imports, custom report ranges plus monthly/half-month presets, translated review statuses, approval/reopen, multi-role users, top-corner settings, light/dark/system theme, density/locale preferences applied before post-login navigation, Arabic/English core workflows, SVG icons, and Excel exports.
+- Features: dashboard, dynamic categories/rules and advance eligibility, generated category-prefixed employee codes, employee/device mapping, biometric imports, custom report ranges, translated review, business parties, inventory/signed ledgers/advances, multi-role users, top-corner settings, light/dark/system theme, database i18n initialized before rendering, SVG icons, pagination, ESC drawers, and localized Excel exports.
 - Contract: typed feature models call relative `/api/v1` URLs through `proxy.conf.json`; attendance calculations remain exclusively in the backend.
-- Verification: `npm test -- --watch=false` passes 4 tests and `npm run build` passes at about 280 kB initial. Browser QA verified SaaS login, database i18n, RTL/LTR, dark theme, corner settings, Unicode category persistence, and a custom report against PostgreSQL.
+- Verification: `npm run check:i18n` validates 156 literal keys in both locales, 6 Vitest tests pass, and the production build is about 282 kB initial. API and workbook QA verified PostgreSQL data, JWT flows, Arabic/English exports and typed/formatted Excel tables.
 - Next safe extensions: replace prompt-based decisions with an accessible review drawer, add bulk decisions and table filters/column preferences, add server-backed pagination for large data sets, and add end-to-end regression tests.
 
 Do not add a component framework, global state library, chart library, or icon package until a concrete feature justifies it. Prefer Angular/platform capabilities and product-specific SCSS first.

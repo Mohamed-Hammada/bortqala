@@ -1,0 +1,29 @@
+# Build output and dependency caches
+**/.gradle/
+**/build/
+**/node_modules/
+fe/dist/
+desktop/src-tauri/target/
+desktop/src-tauri/gen/
+
+# Desktop resources are reproducibly prepared by desktop/scripts/prepare-resources.ps1
+desktop/src-tauri/resources/backend/*.jar
+desktop/src-tauri/resources/runtime/bin/
+desktop/src-tauri/resources/runtime/conf/
+desktop/src-tauri/resources/runtime/legal/
+desktop/src-tauri/resources/runtime/lib/
+desktop/src-tauri/resources/runtime/release
+desktop/src-tauri/resources/postgres/bin/
+desktop/src-tauri/resources/postgres/doc/
+desktop/src-tauri/resources/postgres/include/
+desktop/src-tauri/resources/postgres/lib/
+desktop/src-tauri/resources/postgres/pgAdmin 4/
+desktop/src-tauri/resources/postgres/share/
+desktop/src-tauri/resources/postgres/StackBuilder/
+desktop/src-tauri/resources/postgres/symbols/
+
+# Local QA output and secrets
+artifacts/
+*.log
+install-secrets.json
+license-installation.json

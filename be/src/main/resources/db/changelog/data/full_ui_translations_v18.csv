@@ -1,0 +1,513 @@
+id;translation_key;locale;text_value
+x18-ar-001;app.defaultName;ar-EG;بيمو HR
+x18-en-001;app.defaultName;en-US;Bemo HR
+x18-ar-002;nav.main;ar-EG;التنقل الرئيسي
+x18-en-002;nav.main;en-US;Main navigation
+x18-ar-003;common.active;ar-EG;نشط
+x18-en-003;common.active;en-US;Active
+x18-ar-004;common.inactive;ar-EG;متوقف
+x18-en-004;common.inactive;en-US;Inactive
+x18-ar-005;common.close;ar-EG;إغلاق
+x18-en-005;common.close;en-US;Close
+x18-ar-006;common.edit;ar-EG;تعديل
+x18-en-006;common.edit;en-US;Edit
+x18-ar-007;common.deactivate;ar-EG;تعطيل
+x18-en-007;common.deactivate;en-US;Deactivate
+x18-ar-008;common.delete;ar-EG;حذف
+x18-en-008;common.delete;en-US;Delete
+x18-ar-009;common.from;ar-EG;من
+x18-en-009;common.from;en-US;From
+x18-ar-010;common.toOptional;ar-EG;إلى (اختياري)
+x18-en-010;common.toOptional;en-US;To (optional)
+x18-ar-011;attendance.biometric;ar-EG;بصمة
+x18-en-011;attendance.biometric;en-US;Biometric
+x18-ar-012;attendance.manual;ar-EG;يدوي
+x18-en-012;attendance.manual;en-US;Manual
+x18-ar-013;attendance.manualNoPunch;ar-EG;يدوي — بدون بصمة
+x18-en-013;attendance.manualNoPunch;en-US;Manual — no biometric punch
+x18-ar-014;attendance.hybrid;ar-EG;مختلط
+x18-en-014;attendance.hybrid;en-US;Hybrid
+x18-ar-015;employment.fixed;ar-EG;ثابت
+x18-en-015;employment.fixed;en-US;Fixed
+x18-ar-016;employment.daily;ar-EG;يومية
+x18-en-016;employment.daily;en-US;Daily
+x18-ar-017;payCycle.monthly;ar-EG;شهري
+x18-en-017;payCycle.monthly;en-US;Monthly
+x18-ar-018;payCycle.halfMonthly;ar-EG;كل 15 يوم
+x18-en-018;payCycle.halfMonthly;en-US;Every 15 days
+x18-ar-019;payCycle.thirtyDays;ar-EG;كل 30 يوم
+x18-en-019;payCycle.thirtyDays;en-US;Every 30 days
+x18-ar-020;day.saturday;ar-EG;السبت
+x18-en-020;day.saturday;en-US;Saturday
+x18-ar-021;day.sunday;ar-EG;الأحد
+x18-en-021;day.sunday;en-US;Sunday
+x18-ar-022;day.monday;ar-EG;الإثنين
+x18-en-022;day.monday;en-US;Monday
+x18-ar-023;day.tuesday;ar-EG;الثلاثاء
+x18-en-023;day.tuesday;en-US;Tuesday
+x18-ar-024;day.wednesday;ar-EG;الأربعاء
+x18-en-024;day.wednesday;en-US;Wednesday
+x18-ar-025;day.thursday;ar-EG;الخميس
+x18-en-025;day.thursday;en-US;Thursday
+x18-ar-026;day.friday;ar-EG;الجمعة
+x18-en-026;day.friday;en-US;Friday
+x18-ar-027;month.1;ar-EG;يناير
+x18-en-027;month.1;en-US;January
+x18-ar-028;month.2;ar-EG;فبراير
+x18-en-028;month.2;en-US;February
+x18-ar-029;month.3;ar-EG;مارس
+x18-en-029;month.3;en-US;March
+x18-ar-030;month.4;ar-EG;أبريل
+x18-en-030;month.4;en-US;April
+x18-ar-031;month.5;ar-EG;مايو
+x18-en-031;month.5;en-US;May
+x18-ar-032;month.6;ar-EG;يونيو
+x18-en-032;month.6;en-US;June
+x18-ar-033;month.7;ar-EG;يوليو
+x18-en-033;month.7;en-US;July
+x18-ar-034;month.8;ar-EG;أغسطس
+x18-en-034;month.8;en-US;August
+x18-ar-035;month.9;ar-EG;سبتمبر
+x18-en-035;month.9;en-US;September
+x18-ar-036;month.10;ar-EG;أكتوبر
+x18-en-036;month.10;en-US;October
+x18-ar-037;month.11;ar-EG;نوفمبر
+x18-en-037;month.11;en-US;November
+x18-ar-038;month.12;ar-EG;ديسمبر
+x18-en-038;month.12;en-US;December
+x18-ar-039;dashboard.eyebrow;ar-EG;نظرة تشغيلية
+x18-en-039;dashboard.eyebrow;en-US;Operations overview
+x18-ar-040;dashboard.title;ar-EG;لوحة متابعة الحضور
+x18-en-040;dashboard.title;en-US;Attendance dashboard
+x18-ar-041;dashboard.description;ar-EG;المهم أولًا: تغطية الفترة والاستثناءات والخطوة التالية.
+x18-en-041;dashboard.description;en-US;Focus first on period coverage, exceptions, and the next action.
+x18-ar-042;dashboard.month;ar-EG;الشهر
+x18-en-042;dashboard.month;en-US;Month
+x18-ar-043;dashboard.year;ar-EG;السنة
+x18-en-043;dashboard.year;en-US;Year
+x18-ar-044;dashboard.noReport;ar-EG;لا يوجد تقرير
+x18-en-044;dashboard.noReport;en-US;No report
+x18-ar-045;dashboard.pendingDecisions;ar-EG;{count} بند يحتاج قرارًا قبل الاعتماد
+x18-en-045;dashboard.pendingDecisions;en-US;{count} items require a decision before approval
+x18-ar-046;dashboard.noPending;ar-EG;لا توجد استثناءات معلّقة
+x18-en-046;dashboard.noPending;en-US;No pending exceptions
+x18-ar-047;dashboard.openReview;ar-EG;فتح المراجعة
+x18-en-047;dashboard.openReview;en-US;Open review
+x18-ar-048;dashboard.createReport;ar-EG;إنشاء التقرير
+x18-en-048;dashboard.createReport;en-US;Create report
+x18-ar-049;dashboard.attendanceRate;ar-EG;نسبة الحضور
+x18-en-049;dashboard.attendanceRate;en-US;Attendance rate
+x18-ar-050;dashboard.employeeDaysOf;ar-EG;{present} من {scheduled} يوم موظف
+x18-en-050;dashboard.employeeDaysOf;en-US;{present} of {scheduled} employee days
+x18-ar-051;dashboard.activeEmployees;ar-EG;الموظفون النشطون
+x18-en-051;dashboard.activeEmployees;en-US;Active employees
+x18-ar-052;dashboard.workCategories;ar-EG;{count} فئات عمل
+x18-en-052;dashboard.workCategories;en-US;{count} work categories
+x18-ar-053;dashboard.lateness;ar-EG;التأخير
+x18-en-053;dashboard.lateness;en-US;Lateness
+x18-ar-054;dashboard.employeeDaysPeriod;ar-EG;يوم موظف خلال الفترة
+x18-en-054;dashboard.employeeDaysPeriod;en-US;Employee days during the period
+x18-ar-055;dashboard.overtime;ar-EG;الوقت الإضافي
+x18-en-055;dashboard.overtime;en-US;Overtime
+x18-ar-056;dashboard.calculatedHours;ar-EG;ساعة محسوبة
+x18-en-056;dashboard.calculatedHours;en-US;Calculated hours
+x18-ar-057;dashboard.unmatchedIdentity;ar-EG;هوية جهاز غير مربوطة
+x18-en-057;dashboard.unmatchedIdentity;en-US;Unmatched device identity
+x18-ar-058;dashboard.reviewMapping;ar-EG;مراجعة الربط
+x18-en-058;dashboard.reviewMapping;en-US;Review mapping
+x18-ar-059;dashboard.categorySummary;ar-EG;ملخص الفئات
+x18-en-059;dashboard.categorySummary;en-US;Category summary
+x18-ar-060;dashboard.categorySummaryHint;ar-EG;الوصول المعتاد والتغطية لكل فئة
+x18-en-060;dashboard.categorySummaryHint;en-US;Typical arrival and coverage for each category
+x18-ar-061;dashboard.category;ar-EG;الفئة
+x18-en-061;dashboard.category;en-US;Category
+x18-ar-062;dashboard.present;ar-EG;حضور
+x18-en-062;dashboard.present;en-US;Present
+x18-ar-063;dashboard.exceptions;ar-EG;استثناءات
+x18-en-063;dashboard.exceptions;en-US;Exceptions
+x18-ar-064;dashboard.typicalArrival;ar-EG;الوصول المعتاد
+x18-en-064;dashboard.typicalArrival;en-US;Typical arrival
+x18-ar-065;dashboard.overtimeShort;ar-EG;إضافي
+x18-en-065;dashboard.overtimeShort;en-US;Overtime
+x18-ar-066;dashboard.employeeDays;ar-EG;{count} يوم موظف
+x18-en-066;dashboard.employeeDays;en-US;{count} employee days
+x18-ar-067;dashboard.hourShort;ar-EG;س
+x18-en-067;dashboard.hourShort;en-US;h
+x18-ar-068;dashboard.noResults;ar-EG;لا توجد نتائج بعد
+x18-en-068;dashboard.noResults;en-US;No results yet
+x18-ar-069;dashboard.noResultsHint;ar-EG;أنشئ تقرير الفترة لعرض مؤشرات الفئات.
+x18-en-069;dashboard.noResultsHint;en-US;Create a period report to view category indicators.
+x18-ar-070;dashboard.recentImports;ar-EG;آخر الاستيرادات
+x18-en-070;dashboard.recentImports;en-US;Recent imports
+x18-ar-071;dashboard.savedPunches;ar-EG;{count} بصمة محفوظة
+x18-en-071;dashboard.savedPunches;en-US;{count} saved punches
+x18-ar-072;dashboard.viewAll;ar-EG;عرض الكل
+x18-en-072;dashboard.viewAll;en-US;View all
+x18-ar-073;dashboard.rows;ar-EG;{count} صف
+x18-en-073;dashboard.rows;en-US;{count} rows
+x18-ar-074;dashboard.errors;ar-EG;{count} أخطاء
+x18-en-074;dashboard.errors;en-US;{count} errors
+x18-ar-075;dashboard.completed;ar-EG;مكتمل
+x18-en-075;dashboard.completed;en-US;Completed
+x18-ar-076;dashboard.noImports;ar-EG;لم يتم استيراد بصمة
+x18-en-076;dashboard.noImports;en-US;No attendance file imported
+x18-ar-077;dashboard.noImportsHint;ar-EG;ارفع أول ملف من جهاز الحضور.
+x18-en-077;dashboard.noImportsHint;en-US;Upload the first file from the attendance device.
+x18-ar-078;employees.eyebrow;ar-EG;دليل العاملين
+x18-en-078;employees.eyebrow;en-US;Employee directory
+x18-ar-079;employees.title;ar-EG;الموظفون وربط البصمة
+x18-en-079;employees.title;en-US;Employees and biometric mapping
+x18-ar-080;employees.description;ar-EG;العامل اليدوي لا يحتاج رقم جهاز والفئة تحدد طريقة إثبات الحضور.
+x18-en-080;employees.description;en-US;Manual workers do not need a device ID — their category defines attendance proof.
+x18-ar-081;employees.add;ar-EG;موظف جديد
+x18-en-081;employees.add;en-US;New employee
+x18-ar-082;employees.search;ar-EG;بحث بالاسم أو الكود أو رقم الجهاز
+x18-en-082;employees.search;en-US;Search by name, code, or device ID
+x18-ar-083;employees.searchLabel;ar-EG;بحث
+x18-en-083;employees.searchLabel;en-US;Search
+x18-ar-084;employees.count;ar-EG;{count} موظف
+x18-en-084;employees.count;en-US;{count} employees
+x18-ar-085;employees.employee;ar-EG;الموظف
+x18-en-085;employees.employee;en-US;Employee
+x18-ar-086;employees.category;ar-EG;الفئة
+x18-en-086;employees.category;en-US;Category
+x18-ar-087;employees.employmentType;ar-EG;نوع التعيين
+x18-en-087;employees.employmentType;en-US;Employment type
+x18-ar-088;employees.deviceUserId;ar-EG;رقم جهاز البصمة
+x18-en-088;employees.deviceUserId;en-US;Biometric device ID
+x18-ar-089;employees.activePeriod;ar-EG;فترة النشاط
+x18-en-089;employees.activePeriod;en-US;Active period
+x18-ar-090;employees.status;ar-EG;الحالة
+x18-en-090;employees.status;en-US;Status
+x18-ar-091;employees.manualNoPunch;ar-EG;يدوي / بدون بصمة
+x18-en-091;employees.manualNoPunch;en-US;Manual / no biometric
+x18-ar-092;employees.until;ar-EG;حتى
+x18-en-092;employees.until;en-US;Until
+x18-ar-093;employees.ongoing;ar-EG;مستمر
+x18-en-093;employees.ongoing;en-US;Ongoing
+x18-ar-094;employees.noResults;ar-EG;لا يوجد موظفون مطابقون
+x18-en-094;employees.noResults;en-US;No matching employees
+x18-ar-095;employees.noResultsHint;ar-EG;أضف فئة أولًا ثم سجل الموظفين.
+x18-en-095;employees.noResultsHint;en-US;Add a category first, then register employees.
+x18-ar-096;employees.editEyebrow;ar-EG;تعديل بيانات
+x18-en-096;employees.editEyebrow;en-US;Edit record
+x18-ar-097;employees.newEyebrow;ar-EG;سجل جديد
+x18-en-097;employees.newEyebrow;en-US;New record
+x18-ar-098;employees.editTitle;ar-EG;تعديل الموظف
+x18-en-098;employees.editTitle;en-US;Edit employee
+x18-ar-099;employees.newTitle;ar-EG;إضافة موظف
+x18-en-099;employees.newTitle;en-US;Add employee
+x18-ar-100;employees.employeeCode;ar-EG;كود الموظف
+x18-en-100;employees.employeeCode;en-US;Employee code
+x18-ar-101;employees.fullName;ar-EG;الاسم بالكامل
+x18-en-101;employees.fullName;en-US;Full name
+x18-ar-102;employees.deviceUserIdOptional;ar-EG;رقم المستخدم على جهاز البصمة (اختياري)
+x18-en-102;employees.deviceUserIdOptional;en-US;Biometric device user ID (optional)
+x18-ar-103;employees.deviceUserIdPlaceholder;ar-EG;اتركه فارغًا للعمالة اليدوية
+x18-en-103;employees.deviceUserIdPlaceholder;en-US;Leave empty for manual workers
+x18-ar-104;employees.deviceUserIdHint;ar-EG;الاسم في الملف للمساعدة فقط والمطابقة الآمنة تتم بهذا الرقم.
+x18-en-104;employees.deviceUserIdHint;en-US;The file name is only a hint — safe matching uses this ID.
+x18-ar-105;employees.activeFrom;ar-EG;نشط من
+x18-en-105;employees.activeFrom;en-US;Active from
+x18-ar-106;employees.activeToOptional;ar-EG;نشط إلى (اختياري)
+x18-en-106;employees.activeToOptional;en-US;Active to (optional)
+x18-ar-107;employees.activeCheck;ar-EG;الموظف نشط
+x18-en-107;employees.activeCheck;en-US;Employee is active
+x18-ar-108;employees.save;ar-EG;حفظ الموظف
+x18-en-108;employees.save;en-US;Save employee
+x18-ar-109;employees.deactivateConfirm;ar-EG;تعطيل {name}؟
+x18-en-109;employees.deactivateConfirm;en-US;Deactivate {name}?
+x18-ar-110;categories.eyebrow;ar-EG;الإعدادات الأساسية
+x18-en-110;categories.eyebrow;en-US;Core settings
+x18-ar-111;categories.title;ar-EG;الفئات وقواعد الدوام
+x18-en-111;categories.title;en-US;Categories and work rules
+x18-ar-112;categories.description;ar-EG;البصمة أو الحضور اليدوي والساعات وأوقات الصيف والشتاء في مكان واحد.
+x18-en-112;categories.description;en-US;Manage biometric or manual attendance, hours, and seasonal schedules in one place.
+x18-ar-113;categories.add;ar-EG;فئة جديدة
+x18-en-113;categories.add;en-US;New category
+x18-ar-114;categories.codeAndCategory;ar-EG;الكود والفئة
+x18-en-114;categories.codeAndCategory;en-US;Code and category
+x18-ar-115;categories.attendanceMode;ar-EG;طريقة الحضور
+x18-en-115;categories.attendanceMode;en-US;Attendance method
+x18-ar-116;categories.defaultHours;ar-EG;الساعات الافتراضية
+x18-en-116;categories.defaultHours;en-US;Default hours
+x18-ar-117;categories.payCycle;ar-EG;دورة الاستحقاق
+x18-en-117;categories.payCycle;en-US;Pay cycle
+x18-ar-118;categories.schedules;ar-EG;الجداول
+x18-en-118;categories.schedules;en-US;Schedules
+x18-ar-119;categories.status;ar-EG;الحالة
+x18-en-119;categories.status;en-US;Status
+x18-ar-120;categories.hour;ar-EG;ساعة
+x18-en-120;categories.hour;en-US;hours
+x18-ar-121;categories.from;ar-EG;من
+x18-en-121;categories.from;en-US;From
+x18-ar-122;categories.noResults;ar-EG;لا توجد فئات بعد
+x18-en-122;categories.noResults;en-US;No categories yet
+x18-ar-123;categories.noResultsHint;ar-EG;ابدأ بفئة الإدارة أو الأمن أو العمالة اليومية.
+x18-en-123;categories.noResultsHint;en-US;Start with administration, security, or daily workers.
+x18-ar-124;categories.editEyebrow;ar-EG;تعديل الإعداد
+x18-en-124;categories.editEyebrow;en-US;Edit settings
+x18-ar-125;categories.newEyebrow;ar-EG;إعداد جديد
+x18-en-125;categories.newEyebrow;en-US;New settings
+x18-ar-126;categories.editTitle;ar-EG;تعديل الفئة
+x18-en-126;categories.editTitle;en-US;Edit category
+x18-ar-127;categories.newTitle;ar-EG;إنشاء فئة عمل
+x18-en-127;categories.newTitle;en-US;Create work category
+x18-ar-128;categories.code;ar-EG;كود الفئة
+x18-en-128;categories.code;en-US;Category code
+x18-ar-129;categories.name;ar-EG;اسم الفئة
+x18-en-129;categories.name;en-US;Category name
+x18-ar-130;categories.namePlaceholder;ar-EG;الأمن
+x18-en-130;categories.namePlaceholder;en-US;Security
+x18-ar-131;categories.attendanceProof;ar-EG;طريقة إثبات الحضور
+x18-en-131;categories.attendanceProof;en-US;Attendance proof method
+x18-ar-132;categories.defaultMinutes;ar-EG;الدقائق اليومية الافتراضية
+x18-en-132;categories.defaultMinutes;en-US;Default daily minutes
+x18-ar-133;categories.singlePunchCounts;ar-EG;بصمة واحدة تثبت الحضور وتظهر كملاحظة
+x18-en-133;categories.singlePunchCounts;en-US;One punch proves attendance and appears as a note
+x18-ar-134;categories.allowsAdvances;ar-EG;موظفو هذه الفئة مسموح لهم بطلب سُلفة
+x18-en-134;categories.allowsAdvances;en-US;Employees in this category may request advances
+x18-ar-135;categories.workDays;ar-EG;أيام العمل
+x18-en-135;categories.workDays;en-US;Work days
+x18-ar-136;categories.scheduleRules;ar-EG;قواعد المواعيد الفعّالة
+x18-en-136;categories.scheduleRules;en-US;Effective schedule rules
+x18-ar-137;categories.scheduleRulesHint;ar-EG;أضف الصيف والشتاء أو أي تغيير مستقبلي بدون تعديل الكود.
+x18-en-137;categories.scheduleRulesHint;en-US;Add summer, winter, or future changes without code changes.
+x18-ar-138;categories.rule;ar-EG;قاعدة
+x18-en-138;categories.rule;en-US;Rule
+x18-ar-139;categories.ruleNumber;ar-EG;قاعدة {number}
+x18-en-139;categories.ruleNumber;en-US;Rule {number}
+x18-ar-140;categories.startTime;ar-EG;بداية الدوام
+x18-en-140;categories.startTime;en-US;Shift start
+x18-ar-141;categories.overrideMinutes;ar-EG;ساعات مختلفة؟ (دقائق)
+x18-en-141;categories.overrideMinutes;en-US;Different hours? (minutes)
+x18-ar-142;categories.useDefault;ar-EG;استخدم الافتراضي
+x18-en-142;categories.useDefault;en-US;Use default
+x18-ar-143;categories.graceMinutes;ar-EG;مهلة التأخير بالدقائق
+x18-en-143;categories.graceMinutes;en-US;Late grace in minutes
+x18-ar-144;categories.activeCheck;ar-EG;الفئة نشطة
+x18-en-144;categories.activeCheck;en-US;Category is active
+x18-ar-145;categories.save;ar-EG;حفظ الإعداد
+x18-en-145;categories.save;en-US;Save settings
+x18-ar-146;categories.defaultSchedule;ar-EG;الجدول الأساسي
+x18-en-146;categories.defaultSchedule;en-US;Default schedule
+x18-ar-147;categories.deactivateConfirm;ar-EG;تعطيل فئة {name}؟
+x18-en-147;categories.deactivateConfirm;en-US;Deactivate category {name}?
+x18-ar-148;users.eyebrow;ar-EG;الأمان والصلاحيات
+x18-en-148;users.eyebrow;en-US;Security and permissions
+x18-ar-149;users.title;ar-EG;المستخدمون والأدوار
+x18-en-149;users.title;en-US;Users and roles
+x18-ar-150;users.description;ar-EG;يمكن للمستخدم حمل أكثر من دور والـ backend يطبق الصلاحية على كل عملية.
+x18-en-150;users.description;en-US;A user may have multiple roles — the backend enforces authorization on every operation.
+x18-ar-151;users.add;ar-EG;مستخدم جديد
+x18-en-151;users.add;en-US;New user
+x18-ar-152;users.user;ar-EG;المستخدم
+x18-en-152;users.user;en-US;User
+x18-ar-153;users.roles;ar-EG;الأدوار
+x18-en-153;users.roles;en-US;Roles
+x18-ar-154;users.status;ar-EG;الحالة
+x18-en-154;users.status;en-US;Status
+x18-ar-155;users.noResults;ar-EG;لا يوجد مستخدمون
+x18-en-155;users.noResults;en-US;No users
+x18-ar-156;users.noResultsHint;ar-EG;أنشئ أول حساب.
+x18-en-156;users.noResultsHint;en-US;Create the first account.
+x18-ar-157;users.drawerEyebrow;ar-EG;حساب وصلاحيات
+x18-en-157;users.drawerEyebrow;en-US;Account and permissions
+x18-ar-158;users.editTitle;ar-EG;تعديل المستخدم
+x18-en-158;users.editTitle;en-US;Edit user
+x18-ar-159;users.newTitle;ar-EG;مستخدم جديد
+x18-en-159;users.newTitle;en-US;New user
+x18-ar-160;users.validation;ar-EG;أكمل الحقول المطلوبة واختر دورًا واحدًا على الأقل.
+x18-en-160;users.validation;en-US;Complete required fields and select at least one role.
+x18-ar-161;users.username;ar-EG;اسم المستخدم
+x18-en-161;users.username;en-US;Username
+x18-ar-162;users.displayName;ar-EG;الاسم الظاهر
+x18-en-162;users.displayName;en-US;Display name
+x18-ar-163;users.password;ar-EG;كلمة المرور
+x18-en-163;users.password;en-US;Password
+x18-ar-164;users.passwordEditHint;ar-EG;(اتركها فارغة بدون تغيير)
+x18-en-164;users.passwordEditHint;en-US;(leave empty to keep unchanged)
+x18-ar-165;users.passwordHint;ar-EG;10 أحرف على الأقل.
+x18-en-165;users.passwordHint;en-US;At least 10 characters.
+x18-ar-166;users.rolesHint;ar-EG;الأدوار — يمكن اختيار أكثر من دور
+x18-en-166;users.rolesHint;en-US;Roles — multiple roles may be selected
+x18-ar-167;users.activeCheck;ar-EG;الحساب نشط
+x18-en-167;users.activeCheck;en-US;Account is active
+x18-ar-168;users.save;ar-EG;حفظ المستخدم
+x18-en-168;users.save;en-US;Save user
+x18-ar-169;role.admin;ar-EG;مدير النظام
+x18-en-169;role.admin;en-US;System administrator
+x18-ar-170;role.adminHint;ar-EG;المستخدمون وكل الوظائف
+x18-en-170;role.adminHint;en-US;Users and all functions
+x18-ar-171;role.hrManager;ar-EG;مدير HR
+x18-en-171;role.hrManager;en-US;HR manager
+x18-ar-172;role.hrManagerHint;ar-EG;الإعدادات والاعتماد
+x18-en-172;role.hrManagerHint;en-US;Settings and approval
+x18-ar-173;role.hrReviewer;ar-EG;مراجع
+x18-en-173;role.hrReviewer;en-US;Reviewer
+x18-ar-174;role.hrReviewerHint;ar-EG;البصمة والاستثناءات
+x18-en-174;role.hrReviewerHint;en-US;Attendance imports and exceptions
+x18-ar-175;role.viewer;ar-EG;مشاهد
+x18-en-175;role.viewer;en-US;Viewer
+x18-ar-176;role.viewerHint;ar-EG;قراءة وتقارير فقط
+x18-en-176;role.viewerHint;en-US;Read-only access and reports
+x18-ar-177;imports.eyebrow;ar-EG;مصدر الحضور
+x18-en-177;imports.eyebrow;en-US;Attendance source
+x18-ar-178;imports.title;ar-EG;استيراد تقارير البصمة
+x18-en-178;imports.title;en-US;Import attendance reports
+x18-ar-179;imports.description;ar-EG;يدعم CSV وXLS وXLSX وكل صف خام محفوظ ولا يُعاد كتابته.
+x18-en-179;imports.description;en-US;Supports CSV, XLS, and XLSX — every raw row is preserved and never overwritten.
+x18-ar-180;imports.exportHistory;ar-EG;سجل الاستيراد
+x18-en-180;imports.exportHistory;en-US;Import history
+x18-ar-181;imports.uploadTitle;ar-EG;ارفع ملف جهاز الحضور
+x18-en-181;imports.uploadTitle;en-US;Upload attendance device file
+x18-ar-182;imports.deviceName;ar-EG;اسم الجهاز
+x18-en-182;imports.deviceName;en-US;Device name
+x18-ar-183;imports.defaultDevice;ar-EG;جهاز الحضور الرئيسي
+x18-en-183;imports.defaultDevice;en-US;Main attendance device
+x18-ar-184;imports.chooseFile;ar-EG;اختر ملفًا
+x18-en-184;imports.chooseFile;en-US;Choose a file
+x18-ar-185;imports.start;ar-EG;بدء الاستيراد
+x18-en-185;imports.start;en-US;Start import
+x18-ar-186;imports.unmatchedTitle;ar-EG;هويات تحتاج ربطًا
+x18-en-186;imports.unmatchedTitle;en-US;Identities requiring mapping
+x18-ar-187;imports.unmatchedHint;ar-EG;البصمة موجودة لكن رقم الجهاز غير مربوط بموظف.
+x18-en-187;imports.unmatchedHint;en-US;Punches exist, but the device ID is not mapped to an employee.
+x18-ar-188;imports.manageEmployees;ar-EG;إدارة الموظفين
+x18-en-188;imports.manageEmployees;en-US;Manage employees
+x18-ar-189;imports.deviceId;ar-EG;رقم الجهاز
+x18-en-189;imports.deviceId;en-US;Device ID
+x18-ar-190;imports.observedName;ar-EG;الاسم المرصود
+x18-en-190;imports.observedName;en-US;Observed name
+x18-ar-191;imports.punchCount;ar-EG;عدد البصمات
+x18-en-191;imports.punchCount;en-US;Punch count
+x18-ar-192;imports.firstLastSeen;ar-EG;أول / آخر ظهور
+x18-en-192;imports.firstLastSeen;en-US;First / last seen
+x18-ar-193;imports.allMapped;ar-EG;كل الهويات مربوطة
+x18-en-193;imports.allMapped;en-US;All identities are mapped
+x18-ar-194;imports.allMappedHint;ar-EG;لا توجد بصمات مجهولة حاليًا.
+x18-en-194;imports.allMappedHint;en-US;There are no unknown punches currently.
+x18-ar-195;imports.batches;ar-EG;دفعات الاستيراد
+x18-en-195;imports.batches;en-US;Import batches
+x18-ar-196;imports.checksumHint;ar-EG;البصمة الرقمية للملف تمنع استيراده مرتين.
+x18-en-196;imports.checksumHint;en-US;The file checksum prevents duplicate imports.
+x18-ar-197;imports.punch;ar-EG;بصمة
+x18-en-197;imports.punch;en-US;punches
+x18-ar-198;imports.errorCount;ar-EG;{count} خطأ
+x18-en-198;imports.errorCount;en-US;{count} errors
+x18-ar-199;imports.completed;ar-EG;مكتمل
+x18-en-199;imports.completed;en-US;Completed
+x18-ar-200;imports.row;ar-EG;صف {number}
+x18-en-200;imports.row;en-US;Row {number}
+x18-ar-201;imports.noBatches;ar-EG;لا توجد دفعات
+x18-en-201;imports.noBatches;en-US;No batches
+x18-ar-202;imports.noBatchesHint;ar-EG;ارفع أول ملف بصمة.
+x18-en-202;imports.noBatchesHint;en-US;Upload the first attendance file.
+x18-ar-203;imports.duplicateSuccess;ar-EG;هذا الملف مستورد من قبل ولم تتكرر البصمات.
+x18-en-203;imports.duplicateSuccess;en-US;This file was imported before — no punches were duplicated.
+x18-ar-204;imports.saved;ar-EG;تم حفظ {imported} بصمة.
+x18-en-204;imports.saved;en-US;Saved {imported} punches.
+x18-ar-205;imports.savedWithErrors;ar-EG;تم حفظ {imported} بصمة مع {errors} أخطاء.
+x18-en-205;imports.savedWithErrors;en-US;Saved {imported} punches with {errors} errors.
+x18-ar-206;reports.count;ar-EG;{count} تقرير
+x18-en-206;reports.count;en-US;{count} reports
+x18-ar-207;dailyStatus.present;ar-EG;حاضر
+x18-en-207;dailyStatus.present;en-US;Present
+x18-ar-208;dailyStatus.singlePunch;ar-EG;بصمة واحدة
+x18-en-208;dailyStatus.singlePunch;en-US;Single punch
+x18-ar-209;dailyStatus.noPunch;ar-EG;بدون بصمة
+x18-en-209;dailyStatus.noPunch;en-US;No punch
+x18-ar-210;dailyStatus.manualEntry;ar-EG;إدخال يدوي
+x18-en-210;dailyStatus.manualEntry;en-US;Manual entry
+x18-ar-211;dailyStatus.nonWorkday;ar-EG;راحة
+x18-en-211;dailyStatus.nonWorkday;en-US;Non-workday
+x18-ar-212;dailyStatus.holiday;ar-EG;إجازة
+x18-en-212;dailyStatus.holiday;en-US;Holiday
+x18-ar-213;dailyStatus.missingSchedule;ar-EG;جدول ناقص
+x18-en-213;dailyStatus.missingSchedule;en-US;Missing schedule
+x18-ar-214;decision.normalDay;ar-EG;يوم عادي
+x18-en-214;decision.normalDay;en-US;Normal day
+x18-ar-215;decision.deduct;ar-EG;خصم
+x18-en-215;decision.deduct;en-US;Deduct
+x18-ar-216;decision.approvedLeave;ar-EG;إجازة
+x18-en-216;decision.approvedLeave;en-US;Approved leave
+x18-ar-217;review.allReports;ar-EG;كل التقارير
+x18-en-217;review.allReports;en-US;All reports
+x18-ar-218;review.eyebrow;ar-EG;تقرير حضور ثابت الأدلة
+x18-en-218;review.eyebrow;en-US;Evidence-backed attendance report
+x18-ar-219;review.description;ar-EG;الحقائق من البصمة منفصلة عن قرارات الموارد البشرية.
+x18-en-219;review.description;en-US;Biometric facts remain separate from HR decisions.
+x18-ar-220;review.approve;ar-EG;اعتماد التقرير
+x18-en-220;review.approve;en-US;Approve report
+x18-ar-221;review.reopen;ar-EG;إعادة فتح
+x18-en-221;review.reopen;en-US;Reopen
+x18-ar-222;review.status;ar-EG;الحالة
+x18-en-222;review.status;en-US;Status
+x18-ar-223;review.unresolved;ar-EG;غير محلول
+x18-en-223;review.unresolved;en-US;Unresolved
+x18-ar-224;review.dailyRows;ar-EG;صفوف يومية
+x18-en-224;review.dailyRows;en-US;Daily rows
+x18-ar-225;review.holidayProposals;ar-EG;اقتراحات إجازة
+x18-en-225;review.holidayProposals;en-US;Holiday proposals
+x18-ar-226;review.groupHolidayProposals;ar-EG;اقتراحات الإجازة الجماعية
+x18-en-226;review.groupHolidayProposals;en-US;Group holiday proposals
+x18-ar-227;review.groupHolidayHint;ar-EG;كل أفراد الفئة بلا بصمة والقرار لا يتم تلقائيًا.
+x18-en-227;review.groupHolidayHint;en-US;Every category member has no punch — no decision is made automatically.
+x18-ar-228;review.employeeCount;ar-EG;{count} موظف
+x18-en-228;review.employeeCount;en-US;{count} employees
+x18-ar-229;review.confirmHoliday;ar-EG;تأكيد إجازة
+x18-en-229;review.confirmHoliday;en-US;Confirm holiday
+x18-ar-230;review.reject;ar-EG;رفض
+x18-en-230;review.reject;en-US;Reject
+x18-ar-231;review.dailyReview;ar-EG;المراجعة اليومية
+x18-en-231;review.dailyReview;en-US;Daily review
+x18-ar-232;review.shownOf;ar-EG;المعروض {shown} من {total}
+x18-en-232;review.shownOf;en-US;Showing {shown} of {total}
+x18-ar-233;review.unresolvedOnly;ar-EG;غير المحلول
+x18-en-233;review.unresolvedOnly;en-US;Unresolved only
+x18-ar-234;review.allRows;ar-EG;كل الصفوف
+x18-en-234;review.allRows;en-US;All rows
+x18-ar-235;review.employeeDay;ar-EG;الموظف / اليوم
+x18-en-235;review.employeeDay;en-US;Employee / day
+x18-ar-236;review.category;ar-EG;الفئة
+x18-en-236;review.category;en-US;Category
+x18-ar-237;review.firstLastPunch;ar-EG;أول / آخر بصمة
+x18-en-237;review.firstLastPunch;en-US;First / last punch
+x18-ar-238;review.expectedEffective;ar-EG;متوقع / محتسب
+x18-en-238;review.expectedEffective;en-US;Expected / effective
+x18-ar-239;review.lateOvertime;ar-EG;التأخير / الإضافي
+x18-en-239;review.lateOvertime;en-US;Late / overtime
+x18-ar-240;review.statusEvidence;ar-EG;الحالة والدليل
+x18-en-240;review.statusEvidence;en-US;Status and evidence
+x18-ar-241;review.hrDecision;ar-EG;قرار HR
+x18-en-241;review.hrDecision;en-US;HR decision
+x18-ar-242;review.punchCount;ar-EG;{count} بصمة
+x18-en-242;review.punchCount;en-US;{count} punches
+x18-ar-243;review.minuteShort;ar-EG;د
+x18-en-243;review.minuteShort;en-US;min
+x18-ar-244;review.overtimeMinutes;ar-EG;{count} د إضافي
+x18-en-244;review.overtimeMinutes;en-US;{count} overtime min
+x18-ar-245;review.noRows;ar-EG;لا توجد بنود في هذا العرض
+x18-en-245;review.noRows;en-US;No items in this view
+x18-ar-246;review.noRowsHint;ar-EG;تم حل كل الاستثناءات أو غيّر الفلتر.
+x18-en-246;review.noRowsHint;en-US;All exceptions are resolved, or change the filter.
+x18-ar-247;review.workedMinutesPrompt;ar-EG;الدقائق المحتسبة لليوم
+x18-en-247;review.workedMinutesPrompt;en-US;Effective worked minutes for the day
+x18-ar-248;review.decisionNotePrompt;ar-EG;ملاحظة القرار (اختياري)
+x18-en-248;review.decisionNotePrompt;en-US;Decision note (optional)
+x18-ar-249;review.holidayNamePrompt;ar-EG;اسم الإجازة
+x18-en-249;review.holidayNamePrompt;en-US;Holiday name
+x18-ar-250;review.confirmedHoliday;ar-EG;إجازة مؤكدة
+x18-en-250;review.confirmedHoliday;en-US;Confirmed holiday
+x18-ar-251;review.notePrompt;ar-EG;ملاحظة (اختياري)
+x18-en-251;review.notePrompt;en-US;Note (optional)
+x18-ar-252;login.appCodePlaceholder;ar-EG;مثال: DEMO
+x18-en-252;login.appCodePlaceholder;en-US;Example: DEMO
+x18-ar-253;login.usernamePlaceholder;ar-EG;مثال: admin
+x18-en-253;login.usernamePlaceholder;en-US;Example: admin
+x18-ar-254;api.connectionError;ar-EG;تعذر الاتصال بالخادم. تأكد أن الـ backend يعمل.
+x18-en-254;api.connectionError;en-US;Unable to reach the server. Make sure the backend is running.
+x18-ar-255;api.unauthorized;ar-EG;انتهت الجلسة أو بيانات الدخول غير صحيحة.
+x18-en-255;api.unauthorized;en-US;The session expired or the credentials are invalid.
+x18-ar-256;api.unexpected;ar-EG;حدث خطأ غير متوقع. حاول مرة أخرى.
+x18-en-256;api.unexpected;en-US;An unexpected error occurred. Please try again.

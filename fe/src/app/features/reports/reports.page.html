@@ -77,7 +77,7 @@
   <div class="section-head">
     <div>
       <h2>{{ i18n.t('reports.previous') }}</h2>
-      <p>{{ store.reports().length }} تقرير</p>
+      <p>{{ i18n.t('reports.count', { count: store.reports().length }) }}</p>
     </div>
   </div>
   <div class="table-card">
@@ -140,6 +140,12 @@
         }
       </tbody>
     </table>
-    <app-table-pagination [total]="store.reports().length" [page]="pagination.currentPage(store.reports().length)" [pageSize]="pagination.pageSize()" (pageChange)="pagination.changePage($event, store.reports().length)" (pageSizeChange)="pagination.changePageSize($event)" />
+    <app-table-pagination
+      [total]="store.reports().length"
+      [page]="pagination.currentPage(store.reports().length)"
+      [pageSize]="pagination.pageSize()"
+      (pageChange)="pagination.changePage($event, store.reports().length)"
+      (pageSizeChange)="pagination.changePageSize($event)"
+    />
   </div>
 </section>
