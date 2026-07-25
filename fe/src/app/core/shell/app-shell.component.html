@@ -6,23 +6,26 @@
         <strong>{{ authService.app()?.name ?? i18n.t('app.defaultName') }}</strong
         ><small>{{ authService.app()?.code }} · {{ i18n.t('app.attendanceReports') }}</small>
       </div>
-      <button
-        class="icon-button collapse-toggle"
-        type="button"
-        (click)="collapsed.set(!collapsed())"
-        [attr.title]="collapsed() ? i18n.t('action.openMenu') : i18n.t('action.closeMenu')"
-      >
-        <app-icon name="menu" />
-      </button>
-      <a
-        class="icon-button settings-link"
-        routerLink="/settings"
-        routerLinkActive="active"
-        [attr.aria-label]="i18n.t('nav.settings')"
-        [attr.title]="i18n.t('nav.settings')"
-        (click)="closeMenu()"
-        ><app-icon name="settings"
-      /></a>
+      <div class="brand-actions">
+        <a
+          class="icon-button settings-link"
+          routerLink="/settings"
+          routerLinkActive="active"
+          [attr.aria-label]="i18n.t('nav.settings')"
+          [attr.title]="i18n.t('nav.settings')"
+          (click)="closeMenu()"
+        >
+          <app-icon name="settings" />
+        </a>
+        <button
+          class="icon-button collapse-toggle"
+          type="button"
+          (click)="collapsed.set(!collapsed())"
+          [attr.title]="collapsed() ? i18n.t('action.openMenu') : i18n.t('action.closeMenu')"
+        >
+          <app-icon name="menu" />
+        </button>
+      </div>
       <button
         class="icon-button close-menu"
         type="button"

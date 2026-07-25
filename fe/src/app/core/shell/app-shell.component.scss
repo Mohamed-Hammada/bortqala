@@ -13,53 +13,56 @@
   inset: 0 0 0 auto;
   z-index: 30;
   width: 280px;
-  padding: 14px 12px;
+  padding: 16px 12px;
   color: var(--sidebar-ink);
   background: var(--sidebar-bg);
   border-left: 1px solid var(--sidebar-line);
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow);
-  transition: width 240ms cubic-bezier(0.4, 0, 0.2, 1), background-color 200ms ease, border-color 200ms ease;
+  transition: width 220ms cubic-bezier(0.4, 0, 0.2, 1), background-color 200ms ease, border-color 200ms ease;
   overflow: visible;
 }
 
 .sidebar.collapsed {
   width: 76px;
-  padding: 14px 8px;
+  padding: 16px 8px;
 }
 
-/* Header Branding */
+/* Single-Row Header Branding */
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 0 4px 14px;
+  padding: 0 4px 16px;
   border-bottom: 1px solid var(--sidebar-line);
 }
 
 .sidebar.collapsed .brand {
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
+  gap: 8px;
   padding: 0 0 14px;
 }
 
 .brand-mark {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
   border-radius: 10px;
   background: var(--gold);
   color: #0F172A;
-  font: 700 18px var(--heading-font);
+  font: 700 19px var(--heading-font);
   box-shadow: 0 4px 12px rgba(212, 160, 23, 0.30);
 }
 
 .brand-info {
   min-width: 0;
   flex: 1;
-  transition: opacity 200ms ease;
+  transition: opacity 180ms ease;
 }
 
 .sidebar.collapsed .brand-info,
@@ -85,6 +88,12 @@ nav a small {
   text-overflow: ellipsis;
 }
 
+.brand-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .settings-link,
 .collapse-toggle {
   display: grid;
@@ -106,11 +115,11 @@ nav a small {
   margin-top: 1px;
 }
 
-/* Navigation Items */
+/* Navigation Items with Fixed 44px Icon Containers & 52px Vertical Rhythm */
 nav {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   padding-top: 14px;
 }
 
@@ -120,7 +129,7 @@ nav {
   gap: 10px;
   align-items: center;
   padding: 4px 8px;
-  min-height: 42px;
+  min-height: 52px;
   border-radius: 10px;
   color: var(--sidebar-muted);
   text-decoration: none;
@@ -133,21 +142,22 @@ nav {
 }
 
 .icon-container {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
+  border-radius: 8px;
 }
 
 .nav-icon {
   color: var(--gold);
   font-size: 20px;
-  transition: font-size 200ms ease, transform 180ms ease;
+  transition: font-size 180ms ease, transform 180ms ease;
 }
 
 .sidebar.collapsed .nav-icon {
-  font-size: 23px;
+  font-size: 22px;
 }
 
 .nav-item:hover {
@@ -198,14 +208,16 @@ nav {
   display: block;
 }
 
-/* Sidebar Footer Profile Area */
+/* Sidebar Footer Profile Area with 48px Avatar */
 .sidebar-foot {
   margin-top: auto;
-  padding: 12px 4px 0;
+  padding: 14px 8px;
   border-top: 1px solid var(--sidebar-line);
+  background: var(--surface-muted);
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -214,7 +226,7 @@ nav {
   justify-content: center;
   align-items: center;
   gap: 10px;
-  padding: 12px 0 0;
+  padding: 12px 4px;
 }
 
 .user-info {
@@ -224,7 +236,7 @@ nav {
 
 .sidebar-foot strong {
   color: var(--sidebar-ink);
-  font-size: 13.5px;
+  font-size: 14px;
 }
 
 .sidebar-foot small {
@@ -235,26 +247,26 @@ nav {
 }
 
 .avatar {
-  width: 34px;
-  height: 34px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: var(--sidebar-hover);
-  border: 1.5px solid var(--sidebar-line);
+  background: var(--surface-hover);
+  border: 2px solid var(--gold);
   color: var(--gold);
   font-weight: 700;
-  font-size: 13.5px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .icon-button {
   border: 0;
   background: transparent;
   color: inherit;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   flex-shrink: 0;
   border-radius: 8px;
   cursor: pointer;
@@ -280,17 +292,17 @@ nav {
   display: none;
 }
 
-/* Main Area Layout with Smooth 240ms Margins */
+/* Main Area Layout with Smooth 220ms Margins */
 .main-area {
   min-height: 100dvh;
   margin-right: 280px;
-  transition: margin-right 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: margin-right 220ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 :host-context([dir='ltr']) .main-area {
   margin-right: 0;
   margin-left: 280px;
-  transition: margin-left 240ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: margin-left 220ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .main-area.collapsed {
@@ -323,7 +335,7 @@ nav {
 @media (max-width: 900px) {
   .sidebar {
     transform: translateX(105%);
-    transition: transform 240ms ease;
+    transition: transform 220ms ease;
   }
   .sidebar.open {
     transform: none;
