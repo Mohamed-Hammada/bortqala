@@ -60,14 +60,31 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "proxyConfig": "proxy.conf.json"
+            "proxyConfig": "proxy.conf.json",
+            "host": "0.0.0.0",
+            "allowedHosts": [
+              "sending-huntington-actions-gen.trycloudflare.com",
+              ".trycloudflare.com",
+              "localhost",
+              "127.0.0.1",
+              "0.0.0.0",
+              "all"
+            ]
           },
           "configurations": {
             "production": {
               "buildTarget": "fe:build:production"
             },
             "development": {
-              "buildTarget": "fe:build:development"
+              "buildTarget": "fe:build:development",
+              "allowedHosts": [
+                "sending-huntington-actions-gen.trycloudflare.com",
+                ".trycloudflare.com",
+                "localhost",
+                "127.0.0.1",
+                "0.0.0.0",
+                "all"
+              ]
             }
           },
           "defaultConfiguration": "development"
