@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { formatDateTime } from '../../core/date';
 import { ImportsStore } from './imports.store';
 import { I18nService } from '../../core/i18n.service';
+import { NotificationService } from '../../core/notification.service';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 
@@ -17,6 +18,7 @@ import { TablePaginationComponent } from '../../shared/ui/table-pagination/table
 export class ImportsPage {
   readonly store = inject(ImportsStore);
   readonly i18n = inject(I18nService);
+  readonly notification = inject(NotificationService);
   readonly file = signal<File | null>(null);
   readonly isDragging = signal(false);
   readonly deviceName = signal(this.i18n.t('imports.defaultDevice'));
@@ -73,6 +75,7 @@ export class ImportsPage {
     const file = this.file();
     if (file && this.deviceName().trim()) {
       if (await this.store.upload(file, this.deviceName())) {
+        this.notification.success(this.i18n.t('imports.uploadSuccess') || 'تم استيراد ملف البصمة بنجاح ✓');
         this.file.set(null);
       }
     }

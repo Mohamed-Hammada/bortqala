@@ -5,6 +5,7 @@ import { apiErrorMessage } from '../../core/api-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { ExcelTableStyle, TableDensity, ThemePreference } from '../../core/auth/auth.models';
 import { I18nService } from '../../core/i18n.service';
+import { NotificationService } from '../../core/notification.service';
 
 @Component({
   selector: 'app-settings-page',
@@ -16,6 +17,7 @@ import { I18nService } from '../../core/i18n.service';
 export class SettingsPage {
   readonly authService = inject(AuthService);
   readonly i18n = inject(I18nService);
+  readonly notification = inject(NotificationService);
   private readonly formBuilder = inject(FormBuilder);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
@@ -73,13 +75,12 @@ export class SettingsPage {
   async save(): Promise<void> {
     if (this.form.invalid) return;
     this.saving.set(true);
-    this.error.set(null);
-    this.saved.set(false);
     try {
       await firstValueFrom(this.authService.updatePreferences(this.form.getRawValue()));
-      this.saved.set(true);
+      this.notification.success(this.i18n.t('settings.saved'));
     } catch (error) {
-      this.error.set(apiErrorMessage(error, this.i18n));
+      const msg = apiErrorMessage(error, this.i18n);
+      this.notification.error(msg);
     } finally {
       this.saving.set(false);
     }
@@ -91,8 +92,6 @@ export class SettingsPage {
       return;
     }
     this.appSettingsSaving.set(true);
-    this.appSettingsSaved.set(false);
-    this.appSettingsError.set(null);
     try {
       const saved = await firstValueFrom(
         this.authService.updateAppSettings(
@@ -100,9 +99,10 @@ export class SettingsPage {
         ),
       );
       this.appSettingsForm.controls.sessionTimeoutMinutes.setValue(saved.sessionTimeoutMinutes);
-      this.appSettingsSaved.set(true);
+      this.notification.success(this.i18n.t('settings.sessionSaved'));
     } catch (error) {
-      this.appSettingsError.set(apiErrorMessage(error, this.i18n));
+      const msg = apiErrorMessage(error, this.i18n);
+      this.notification.error(msg);
     } finally {
       this.appSettingsSaving.set(false);
     }

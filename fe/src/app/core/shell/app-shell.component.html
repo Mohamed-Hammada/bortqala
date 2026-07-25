@@ -1,4 +1,5 @@
 <div class="app-frame">
+  <app-toast-container />
   <aside class="sidebar" [class.open]="menuOpen()" [class.collapsed]="collapsed()">
     <div class="brand">
       <span class="brand-mark" [attr.title]="authService.app()?.name ?? 'Bemo HR'">B</span>

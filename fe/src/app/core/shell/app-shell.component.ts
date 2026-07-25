@@ -4,6 +4,7 @@ import { AuthService } from '../auth/auth.service';
 import { RoleCode } from '../auth/auth.models';
 import { I18nService } from '../i18n.service';
 import { IconComponent, IconName } from '../../shared/ui/icon/icon.component';
+import { ToastContainerComponent } from '../../shared/ui/toast/toast-container.component';
 
 interface NavItem {
   menuId: string;
@@ -16,7 +17,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ToastContainerComponent],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -7,13 +7,6 @@
     </div>
   </header>
 
-  @if (error()) {
-    <div class="alert error">{{ error() }}</div>
-  }
-  @if (saved()) {
-    <div class="alert success">{{ i18n.t('settings.saved') }}</div>
-  }
-
   <form class="card settings-card" [formGroup]="form" (ngSubmit)="save()">
     <div class="settings-sections">
       <!-- Section 1: Appearance & Theme -->
@@ -145,12 +138,6 @@
       <fieldset class="settings-group">
         <legend class="group-title">{{ i18n.t('settings.sessionTitle') }}</legend>
         <p class="group-hint">{{ i18n.t('settings.sessionHint') }}</p>
-        @if (appSettingsError()) {
-          <div class="alert error">{{ appSettingsError() }}</div>
-        }
-        @if (appSettingsSaved()) {
-          <div class="alert success">{{ i18n.t('settings.sessionSaved') }}</div>
-        }
         <div class="field session-timeout-field">
           <label for="session-timeout">{{ i18n.t('settings.sessionMinutes') }}</label>
           <input

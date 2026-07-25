@@ -11,6 +11,7 @@ import { dateInputToEpoch, epochToDateInput, formatDate } from '../../core/date'
 import { Employee, EmployeePayload, EmploymentType } from './employees.models';
 import { EmployeesStore } from './employees.store';
 import { I18nService } from '../../core/i18n.service';
+import { NotificationService } from '../../core/notification.service';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 @Component({
@@ -24,6 +25,7 @@ import { TablePaginationComponent } from '../../shared/ui/table-pagination/table
 export class EmployeesPage {
   readonly store = inject(EmployeesStore);
   readonly i18n = inject(I18nService);
+  readonly notification = inject(NotificationService);
   readonly drawerOpen = signal(false);
   readonly submitAttempted = signal(false);
   readonly pagination = new TablePagination();
@@ -105,6 +107,7 @@ export class EmployeesPage {
       activeTo: raw.activeTo ? dateInputToEpoch(raw.activeTo) : null,
     };
     if (await this.store.save(this.editingId(), payload)) {
+      this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.submitAttempted.set(false);
       this.drawerOpen.set(false);
     }
@@ -112,6 +115,7 @@ export class EmployeesPage {
   async deactivate(item: Employee) {
     if (confirm(this.i18n.t('employees.deactivateConfirm', { name: item.fullName }))) {
       await this.store.deactivate(item.id);
+      this.notification.info(this.i18n.t('common.save') + ' ✓');
     }
   }
   closeDrawer(): void {

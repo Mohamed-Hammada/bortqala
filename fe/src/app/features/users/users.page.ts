@@ -12,6 +12,7 @@ import { UserPayload, UsersStore } from './users.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { I18nService } from '../../core/i18n.service';
+import { NotificationService } from '../../core/notification.service';
 
 @Component({
   selector: 'app-users-page',
@@ -24,6 +25,7 @@ import { I18nService } from '../../core/i18n.service';
 export class UsersPage {
   readonly store = inject(UsersStore);
   readonly i18n = inject(I18nService);
+  readonly notification = inject(NotificationService);
   readonly drawerOpen = signal(false);
   readonly submitted = signal(false);
   readonly showPassword = signal(false);
@@ -136,7 +138,10 @@ export class UsersPage {
     }
     const raw = this.form.getRawValue();
     const payload: UserPayload = { ...raw, password: raw.password || null };
-    if (await this.store.save(this.editingId(), payload)) this.closeDrawer();
+    if (await this.store.save(this.editingId(), payload)) {
+      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.closeDrawer();
+    }
   }
 
   roleLabel(code: RoleCode) {

@@ -97,6 +97,8 @@ ar-047;settings.saving;ar-EG;جارٍ الحفظ…
 en-047;settings.saving;en-US;Saving…
 ar-048;settings.saved;ar-EG;تم حفظ إعداداتك.
 en-048;settings.saved;en-US;Your settings were saved.
+ar-048-b;imports.uploadSuccess;ar-EG;تم استيراد ملف البصمة بنجاح
+en-048-b;imports.uploadSuccess;en-US;Biometric log imported successfully
 ar-049;reports.eyebrow;ar-EG;دورة المراجعة
 en-049;reports.eyebrow;en-US;Review cycle
 ar-050;reports.title;ar-EG;التقارير والفترات

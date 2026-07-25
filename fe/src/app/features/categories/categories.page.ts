@@ -20,6 +20,8 @@ import { CategoriesStore } from './categories.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { I18nService } from '../../core/i18n.service';
+import { NotificationService } from '../../core/notification.service';
+
 type ScheduleForm = FormGroup<{
   name: FormControl<string>;
   effectiveFrom: FormControl<string>;
@@ -39,6 +41,7 @@ type ScheduleForm = FormGroup<{
 export class CategoriesPage {
   readonly store = inject(CategoriesStore);
   readonly i18n = inject(I18nService);
+  readonly notification = inject(NotificationService);
   readonly drawerOpen = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly pagination = new TablePagination();
@@ -170,11 +173,15 @@ export class CategoriesPage {
         startTime: item.startTime.length === 5 ? `${item.startTime}:00` : item.startTime,
       })),
     };
-    if (await this.store.save(this.editingId(), payload)) this.drawerOpen.set(false);
+    if (await this.store.save(this.editingId(), payload)) {
+      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.drawerOpen.set(false);
+    }
   }
   async deactivate(item: AttendanceCategory) {
     if (confirm(this.i18n.t('categories.deactivateConfirm', { name: item.name }))) {
       await this.store.deactivate(item.id);
+      this.notification.info(this.i18n.t('common.save') + ' ✓');
     }
   }
   closeDrawer(): void {

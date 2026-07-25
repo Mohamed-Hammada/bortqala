@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { I18nService } from '../../core/i18n.service';
+import { NotificationService } from '../../core/notification.service';
 import { formatDateTime } from '../../core/date';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
@@ -24,6 +25,7 @@ import { OperationsStore } from './operations.store';
 export class OperationsPage {
   readonly store = inject(OperationsStore);
   readonly i18n = inject(I18nService);
+  readonly notification = inject(NotificationService);
   readonly drawer = signal<'item' | 'transaction' | 'advance' | null>(null);
   readonly itemPagination = new TablePagination();
   readonly movementPagination = new TablePagination();
@@ -91,8 +93,10 @@ export class OperationsPage {
   }
   async saveItem(): Promise<void> {
     if (this.itemForm.invalid) return this.itemForm.markAllAsTouched();
-    if (await this.store.createItem({ ...this.itemForm.getRawValue(), version: null }))
+    if (await this.store.createItem({ ...this.itemForm.getRawValue(), version: null })) {
+      this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.close();
+    }
   }
   async saveTransaction(): Promise<void> {
     if (this.transactionForm.invalid) return this.transactionForm.markAllAsTouched();
@@ -104,14 +108,18 @@ export class OperationsPage {
         partyId: value.partyId || null,
         occurredAt: new Date(value.occurredAt).getTime(),
       })
-    )
+    ) {
+      this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.close();
+    }
   }
   async saveAdvance(): Promise<void> {
     if (this.advanceForm.invalid) return this.advanceForm.markAllAsTouched();
     const value = this.advanceForm.getRawValue();
-    if (await this.store.advance({ ...value, occurredAt: new Date(value.occurredAt).getTime() }))
+    if (await this.store.advance({ ...value, occurredAt: new Date(value.occurredAt).getTime() })) {
+      this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.close();
+    }
   }
   date(value: number): string {
     return formatDateTime(value);
