@@ -48,6 +48,7 @@ export class OperationsPage {
       nonNullable: true,
       validators: Validators.required,
     }),
+    customItemType: new FormControl('', { nonNullable: true }),
     unitCode: new FormControl('KG', { nonNullable: true, validators: Validators.required }),
     active: new FormControl(true, { nonNullable: true }),
   });
@@ -93,7 +94,10 @@ export class OperationsPage {
   }
   async saveItem(): Promise<void> {
     if (this.itemForm.invalid) return this.itemForm.markAllAsTouched();
-    if (await this.store.createItem({ ...this.itemForm.getRawValue(), version: null })) {
+    const raw = this.itemForm.getRawValue();
+    const finalItemType = raw.itemType === 'CUSTOM' ? raw.customItemType : raw.itemType;
+    if (!finalItemType || !finalItemType.trim()) return;
+    if (await this.store.createItem({ ...raw, itemType: finalItemType.trim(), version: null })) {
       this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.close();
     }

@@ -261,8 +261,8 @@
               ><input formControlName="name" />
             </div>
             <div class="field">
-              <label>{{ i18n.t('operations.itemType') }}</label
-              ><select formControlName="itemType">
+              <label>{{ i18n.t('operations.itemType') }}</label>
+              <select formControlName="itemType">
                 <option value="RAW_MATERIAL">{{ i18n.t('operations.rawMaterial') }}</option>
                 <option value="PACKAGING">{{ i18n.t('operations.packaging') }}</option>
                 <option value="PRODUCTION_SUPPLY">
@@ -270,8 +270,18 @@
                 </option>
                 <option value="SORTING_OUTPUT">{{ i18n.t('operations.sortingOutput') }}</option>
                 <option value="FINISHED_GOOD">{{ i18n.t('operations.finishedGood') }}</option>
+                <option value="SPARE_PARTS">قطع غيار ومعدات</option>
+                <option value="CHEMICALS">كيماويات واضافات</option>
+                <option value="FUEL_OIL">وقود وزيوت تشغيل</option>
+                <option value="CUSTOM">+ نوع صنف جديد / مخصص...</option>
               </select>
             </div>
+            @if (itemForm.controls.itemType.value === 'CUSTOM') {
+              <div class="field">
+                <label>اسم نوع الصنف الجديد *</label>
+                <input formControlName="customItemType" placeholder="مثال: مستلزمات معمل، كيماويات، إلخ" />
+              </div>
+            }
             <div class="field">
               <label>{{ i18n.t('operations.unit') }}</label
               ><input formControlName="unitCode" placeholder="KG / BOX" />
