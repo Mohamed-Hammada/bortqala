@@ -67,39 +67,39 @@ databaseChangeLog:
             dbms: h2
             splitStatements: true
             sql: |
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-nav-menuAccess-ar', 'nav.menuAccess', 'ar-EG', 'القوائم المسموح بها للمستخدم', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-nav-menuAccess-en', 'nav.menuAccess', 'en-US', 'Allowed User Menus', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-greenTier-ar', 'review.greenTier', 'ar-EG', 'الفئة الخضراء (سليمة)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-greenTier-en', 'review.greenTier', 'en-US', 'Green Tier (Clean)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-yellowTier-ar', 'review.yellowTier', 'ar-EG', 'الفئة الصفراء (بصمة واحدة)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-yellowTier-en', 'review.yellowTier', 'en-US', 'Yellow Tier (Single Punch)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-redTier-ar', 'review.redTier', 'ar-EG', 'الفئة الحمراء (أخطاء/غياب)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-redTier-en', 'review.redTier', 'en-US', 'Red Tier (Exceptions)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-bulkActions-ar', 'review.bulkActions', 'ar-EG', 'إجراءات جماعية للمجموعة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-bulkActions-en', 'review.bulkActions', 'en-US', 'Bulk Tier Decisions', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-approveSinglePunches-ar', 'review.approveSinglePunches', 'ar-EG', 'اعتماد البصمة الواحدة كـ يوم طبيعي', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-approveSinglePunches-en', 'review.approveSinglePunches', 'en-US', 'Approve Single Punches as Normal Day', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-deductNoPunches-ar', 'review.deductNoPunches', 'ar-EG', 'خصم الأيام غير المسجلة (غياب)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-deductNoPunches-en', 'review.deductNoPunches', 'en-US', 'Deduct Missing Days (Absence)', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-bulkConfirmPrompt-ar', 'review.bulkConfirmPrompt', 'ar-EG', 'هل أنت تأكد من تطبيق القرار الجماعي؟', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-rev-bulkConfirmPrompt-en', 'review.bulkConfirmPrompt', 'en-US', 'Are you sure you want to apply this bulk decision?', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-set-dense-ar', 'settings.dense', 'ar-EG', 'عالية الكثافة', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
-              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (id)
+              MERGE INTO translations (id, translation_key, locale, text_value, created_at, updated_at) KEY (translation_key, locale)
               VALUES ('tr-set-dense-en', 'settings.dense', 'en-US', 'High Density', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);

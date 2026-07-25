@@ -517,25 +517,82 @@ tbody tr:hover td {
   grid-column: span 2;
 }
 
+/* Form Section Headings & Required Indicators */
+.form-section-head {
+  grid-column: span 2;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--gold);
+  border-bottom: 1px solid var(--line);
+  margin: 14px 0 6px;
+  padding-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.required {
+  color: var(--danger);
+  font-weight: 700;
+  margin-right: 3px;
+}
+
+/* Interactive Selectable Selection Cards */
+.selectable-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.selectable-card:hover {
+  background: var(--surface-hover);
+  border-color: var(--gold);
+}
+
+.selectable-card:has(input:checked) {
+  background: var(--gold-glow);
+  border-color: var(--gold);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--gold);
+}
+
+.selectable-card input[type='checkbox'],
+.selectable-card input[type='radio'] {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--gold);
+  margin-top: 2px;
+  cursor: pointer;
+}
+
 /* Compact Drawer & Modal Hierarchy */
 .drawer {
   position: fixed;
   inset: 0 0 0 auto;
   z-index: 60;
-  width: min(520px, 100%);
-  padding: 16px 20px;
+  width: min(640px, 100%);
+  padding: 18px 24px;
   overflow: auto;
   background: var(--surface);
   border-right: 1px solid var(--line);
-  box-shadow: -10px 0 35px rgba(0, 0, 0, 0.45);
-  animation: drawer-in 0.15s ease-out;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.55);
+  animation: drawer-in 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .drawer-backdrop {
   position: fixed;
   inset: 0;
   z-index: 55;
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
   border: 0;
   width: 100%;
 }
@@ -545,18 +602,36 @@ tbody tr:hover td {
   justify-content: space-between;
   gap: 10px;
   align-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.drawer-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-family: var(--heading-font);
+}
+
+.drawer-header .eyebrow {
+  margin: 0 0 2px;
+  font-size: 11px;
+  color: var(--gold);
+  font-weight: 700;
 }
 
 .drawer-actions {
   position: sticky;
-  bottom: -16px;
-  margin: 16px -20px -16px;
-  padding: 10px 20px;
+  bottom: -18px;
+  margin: 20px -24px -18px;
+  padding: 12px 24px;
   display: flex;
-  gap: 8px;
+  justify-content: flex-end;
+  gap: 10px;
   background: var(--surface);
   border-top: 1px solid var(--line);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
 }
 
 .loading {

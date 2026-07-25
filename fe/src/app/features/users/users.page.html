@@ -7,21 +7,28 @@
     </div>
     <button class="button primary" (click)="openNew()">＋ {{ i18n.t('users.add') }}</button>
   </header>
+
   @if (store.loading()) {
     <div class="loading"></div>
   }
   @if (store.error()) {
     <div class="alert error">{{ store.error() }}</div>
   }
+
+  <!-- Enriched Top Role Summary Metrics Cards -->
   <div class="role-cards">
     @for (role of roles; track role.code) {
-      <article class="card">
-        <span>{{ role.code }}</span
-        ><strong>{{ i18n.t(role.labelKey) }}</strong
-        ><small>{{ i18n.t(role.descriptionKey) }}</small>
+      <article class="card role-summary-card">
+        <div class="role-card-head">
+          <span class="role-code-badge">{{ role.code }}</span>
+          <span class="user-count-pill">{{ roleUserCount(role.code) }} Users</span>
+        </div>
+        <strong>{{ i18n.t(role.labelKey) }}</strong>
+        <small>{{ i18n.t(role.descriptionKey) }}</small>
       </article>
     }
   </div>
+
   <div class="table-card">
     <table>
       <thead>
@@ -36,8 +43,8 @@
         @for (item of paged(); track item.id) {
           <tr>
             <td>
-              <strong>{{ item.displayName }}</strong
-              ><small class="ltr">{{ item.username }}</small>
+              <strong>{{ item.displayName }}</strong>
+              <small class="ltr">{{ item.username }}</small>
             </td>
             <td>
               <div class="role-list">
@@ -52,17 +59,19 @@
               }}</span>
             </td>
             <td>
-              <button class="edit-button" (click)="openEdit(item)">
-                ✎ {{ i18n.t('common.edit') }}
-              </button>
+              <div class="table-row-actions">
+                <button class="button secondary icon-button" (click)="openEdit(item)" [attr.title]="i18n.t('common.edit')">
+                  ✎
+                </button>
+              </div>
             </td>
           </tr>
         } @empty {
           <tr>
             <td colspan="4">
               <div class="empty-state">
-                <strong>{{ i18n.t('users.noResults') }}</strong
-                >{{ i18n.t('users.noResultsHint') }}
+                <strong>{{ i18n.t('users.noResults') }}</strong>
+                {{ i18n.t('users.noResultsHint') }}
               </div>
             </td>
           </tr>
@@ -77,6 +86,8 @@
       (pageSizeChange)="pagination.changePageSize($event)"
     />
   </div>
+
+  <!-- User Form Dialog / Drawer -->
   @if (drawerOpen()) {
     <button
       class="drawer-backdrop"
@@ -91,70 +102,117 @@
         </div>
         <button class="button secondary icon-only" (click)="closeDrawer()">×</button>
       </div>
+
       <form [formGroup]="form" (ngSubmit)="submit()">
         @if (submitted() && form.invalid) {
           <div class="alert error" role="alert">{{ i18n.t('users.validation') }}</div>
         }
+
         <div class="form-grid">
+          <!-- Section 1: Basic Information -->
+          <div class="form-section-head">
+            <span>👤</span> البيانات الأساسية (Basic Information)
+          </div>
+
           <div class="field">
-            <label>{{ i18n.t('users.username') }}</label
-            ><input class="ltr" formControlName="username" autocomplete="off" />
+            <label><span class="required">*</span> {{ i18n.t('users.username') }}</label>
+            <input class="ltr" formControlName="username" autocomplete="off" placeholder="admin" />
           </div>
+
           <div class="field">
-            <label>{{ i18n.t('users.displayName') }}</label
-            ><input formControlName="displayName" />
+            <label><span class="required">*</span> {{ i18n.t('users.displayName') }}</label>
+            <input formControlName="displayName" placeholder="محمد أحمد" />
           </div>
-          <div class="field span-2">
-            <label
-              >{{ i18n.t('users.password') }}
-              {{ editingId() ? i18n.t('users.passwordEditHint') : '' }}</label
-            ><input
-              type="password"
-              formControlName="password"
-              autocomplete="new-password"
-            /><small>{{ i18n.t('users.passwordHint') }}</small>
+
+          <div class="field span-2 password-field">
+            <label>
+              @if (!editingId()) { <span class="required">*</span> }
+              {{ i18n.t('users.password') }}
+              {{ editingId() ? i18n.t('users.passwordEditHint') : '' }}
+            </label>
+            <div class="input-with-toggle">
+              <input
+                [type]="showPassword() ? 'text' : 'password'"
+                formControlName="password"
+                autocomplete="new-password"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                class="toggle-pass-btn"
+                (click)="showPassword.set(!showPassword())"
+              >
+                {{ i18n.t(showPassword() ? 'login.hide' : 'login.show') }}
+              </button>
+            </div>
+            <small class="password-hint">✓ {{ i18n.t('users.passwordHint') }} (Min 8 chars)</small>
           </div>
+
+          <!-- Section 2: System Roles -->
+          <div class="form-section-head">
+            <span>🔑</span> الأدوار والصلاحيات (System Roles)
+          </div>
+
           <div class="field span-2">
-            <label>{{ i18n.t('users.rolesHint') }}</label>
             <div class="role-options">
               @for (role of roles; track role.code) {
-                <label
-                  ><input
+                <label class="selectable-card">
+                  <input
                     type="checkbox"
                     [checked]="hasRole(role.code)"
                     (change)="toggleRole(role.code, $event)"
-                  /><span
-                    ><strong>{{ i18n.t(role.labelKey) }}</strong
-                    ><small>{{ i18n.t(role.descriptionKey) }}</small></span
-                  ></label
-                >
+                  />
+                  <span>
+                    <strong>{{ i18n.t(role.labelKey) }}</strong>
+                    <small>{{ i18n.t(role.descriptionKey) }}</small>
+                  </span>
+                </label>
               }
             </div>
           </div>
+
+          <!-- Section 3: Allowed Menus -->
+          <div class="form-section-head">
+            <span>🖥️</span> القوائم المسموح بها (Allowed User Menus)
+          </div>
+
           <div class="field span-2">
-            <label>{{ i18n.t('nav.menuAccess') || 'القوائم المسموح بها (Menu Permissions)' }}</label>
-            <div class="role-options menu-grid">
+            <div class="menu-options-grid">
               @for (m of menuOptions; track m.id) {
-                <label class="menu-checkbox-label"
-                  ><input
+                <label class="selectable-card menu-card">
+                  <input
                     type="checkbox"
                     [checked]="hasMenu(m.id)"
                     (change)="toggleMenu(m.id, $event)"
-                  /><span>{{ i18n.t(m.labelKey) }}</span></label
-                >
+                  />
+                  <span>{{ i18n.t(m.labelKey) }}</span>
+                </label>
               }
             </div>
           </div>
+
+          <!-- Section 4: Account Security -->
+          <div class="form-section-head">
+            <span>🛡️</span> حالة الحساب (Account Status)
+          </div>
+
+          <div class="field span-2">
+            <label class="selectable-card active-card">
+              <input type="checkbox" formControlName="active" />
+              <span>
+                <strong>{{ i18n.t('users.activeCheck') }}</strong>
+                <small>Permit this account to authenticate and execute authorized actions.</small>
+              </span>
+            </label>
+          </div>
         </div>
-        <label class="active-check"
-          ><input type="checkbox" formControlName="active" />
-          {{ i18n.t('users.activeCheck') }}</label
-        >
+
         <div class="drawer-actions">
-          <button class="button primary" type="submit" [disabled]="store.loading()">
-            {{ i18n.t('users.save') }}</button
-          ><button class="button secondary" type="button" (click)="closeDrawer()">
+          <button class="button secondary" type="button" (click)="closeDrawer()">
             {{ i18n.t('common.cancel') }}
+          </button>
+          <button class="button primary" type="submit" [disabled]="store.loading()">
+            {{ i18n.t('users.save') }}
           </button>
         </div>
       </form>

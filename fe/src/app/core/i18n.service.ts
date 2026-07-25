@@ -17,6 +17,7 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'api.unexpected': 'حدث خطأ غير متوقع. حاول مرة أخرى.',
     'login.invalidCredentials': 'اسم المستخدم أو كلمة المرور غير صحيحة.',
     'login.sessionExpired': 'انتهت الجلسة. برجاء تسجيل الدخول مرة أخرى.',
+    'settings.dense': 'عالية الكثافة',
   },
   'en-US': {
     'api.connectionError': 'Unable to reach the server. Make sure the backend is running.',
@@ -24,6 +25,7 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'api.unexpected': 'An unexpected error occurred. Please try again.',
     'login.invalidCredentials': 'The username or password is incorrect.',
     'login.sessionExpired': 'Session expired. Please log in again.',
+    'settings.dense': 'High Density',
   },
 };
 

@@ -25,22 +25,24 @@
       />
     </div>
   </header>
+
   @if (store.loading()) {
     <div class="loading"></div>
   }
   @if (store.error()) {
     <div class="alert error" role="alert">{{ store.error() }}</div>
   }
+
   @if (store.data(); as data) {
+    <!-- Priority 1: Monthly Summary Hero -->
     <div class="hero-grid">
       <article class="report-state card">
-        <div>
+        <div class="state-info">
           <span
             class="status"
             [class.warning]="data.unresolvedCount > 0"
             [class.success]="data.reportStatus === 'APPROVED' || data.reportStatus === 'EXPORTED'"
-            >{{ statusLabel(data.reportStatus) }}</span
-          >
+          >{{ statusLabel(data.reportStatus) }}</span>
           <h2>{{ i18n.t(monthKeys[data.month - 1]) }} {{ data.year }}</h2>
           <p>
             {{
@@ -58,9 +60,13 @@
           <a class="button gold" routerLink="/reports">{{ i18n.t('dashboard.createReport') }} ←</a>
         }
       </article>
+
       <article class="score card">
-        <span>{{ i18n.t('dashboard.attendanceRate') }}</span
-        ><strong>{{ data.attendanceRate }}%</strong>
+        <div class="score-head">
+          <span>{{ i18n.t('dashboard.attendanceRate') }}</span>
+          <span class="score-badge">▲ {{ data.attendanceRate >= 80 ? 'Good' : 'Review' }}</span>
+        </div>
+        <strong>{{ data.attendanceRate }}%</strong>
         <div class="meter"><i [style.width.%]="data.attendanceRate"></i></div>
         <small>{{
           i18n.t('dashboard.employeeDaysOf', {
@@ -70,28 +76,51 @@
         }}</small>
       </article>
     </div>
+
+    <!-- Priority 2: Enriched KPI Cards -->
     <div class="metrics">
-      <article class="card">
-        <span>{{ i18n.t('dashboard.activeEmployees') }}</span
-        ><strong>{{ data.activeEmployees }}</strong
-        ><small>{{ i18n.t('dashboard.workCategories', { count: data.activeCategories }) }}</small>
+      <article class="card kpi-card">
+        <div class="kpi-head">
+          <span class="kpi-icon">👥</span>
+          <span class="kpi-badge success">▲ Active</span>
+        </div>
+        <span class="kpi-label">{{ i18n.t('dashboard.activeEmployees') }}</span>
+        <strong class="kpi-value">{{ data.activeEmployees }}</strong>
+        <small class="kpi-hint">{{ i18n.t('dashboard.workCategories', { count: data.activeCategories }) }}</small>
       </article>
-      <article class="card">
-        <span>{{ i18n.t('dashboard.lateness') }}</span
-        ><strong>{{ data.lateEmployeeDays }}</strong
-        ><small>{{ i18n.t('dashboard.employeeDaysPeriod') }}</small>
+
+      <article class="card kpi-card">
+        <div class="kpi-head">
+          <span class="kpi-icon warning">🕒</span>
+          <span class="kpi-badge warning">⚡ Period</span>
+        </div>
+        <span class="kpi-label">{{ i18n.t('dashboard.lateness') }}</span>
+        <strong class="kpi-value">{{ data.lateEmployeeDays }}</strong>
+        <small class="kpi-hint">{{ i18n.t('dashboard.employeeDaysPeriod') }}</small>
       </article>
-      <article class="card">
-        <span>{{ i18n.t('dashboard.overtime') }}</span
-        ><strong>{{ (data.overtimeMinutes / 60).toFixed(1) }}</strong
-        ><small>{{ i18n.t('dashboard.calculatedHours') }}</small>
+
+      <article class="card kpi-card">
+        <div class="kpi-head">
+          <span class="kpi-icon">⏳</span>
+          <span class="kpi-badge info">Calculated</span>
+        </div>
+        <span class="kpi-label">{{ i18n.t('dashboard.overtime') }}</span>
+        <strong class="kpi-value">{{ (data.overtimeMinutes / 60).toFixed(1) }} <small class="unit">h</small></strong>
+        <small class="kpi-hint">{{ i18n.t('dashboard.calculatedHours') }}</small>
       </article>
-      <article class="card attention">
-        <span>{{ i18n.t('dashboard.unmatchedIdentity') }}</span
-        ><strong>{{ data.unmatchedIdentities }}</strong
-        ><a routerLink="/imports">{{ i18n.t('dashboard.reviewMapping') }}</a>
+
+      <article class="card kpi-card attention">
+        <div class="kpi-head">
+          <span class="kpi-icon danger">⚠️</span>
+          <span class="kpi-badge danger">Action</span>
+        </div>
+        <span class="kpi-label">{{ i18n.t('dashboard.unmatchedIdentity') }}</span>
+        <strong class="kpi-value">{{ data.unmatchedIdentities }}</strong>
+        <a routerLink="/imports" class="kpi-action">{{ i18n.t('dashboard.reviewMapping') }} →</a>
       </article>
     </div>
+
+    <!-- Priority 3: Details Content Grid -->
     <div class="content-grid">
       <article class="card section-card">
         <div class="section-title">
@@ -154,13 +183,14 @@
           </div>
         }
       </article>
+
       <article class="card section-card">
         <div class="section-title">
           <div>
             <h2>{{ i18n.t('dashboard.recentImports') }}</h2>
             <p>{{ i18n.t('dashboard.savedPunches', { count: data.importedPunches }) }}</p>
           </div>
-          <a routerLink="/imports">{{ i18n.t('dashboard.viewAll') }}</a>
+          <a routerLink="/imports" class="view-all-link">{{ i18n.t('dashboard.viewAll') }} →</a>
         </div>
         @if (data.recentImports.length) {
           <div class="imports-list">

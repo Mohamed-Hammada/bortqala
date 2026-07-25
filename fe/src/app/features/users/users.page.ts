@@ -12,6 +12,7 @@ import { UserPayload, UsersStore } from './users.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { I18nService } from '../../core/i18n.service';
+
 @Component({
   selector: 'app-users-page',
   imports: [ReactiveFormsModule, TablePaginationComponent],
@@ -25,6 +26,7 @@ export class UsersPage {
   readonly i18n = inject(I18nService);
   readonly drawerOpen = signal(false);
   readonly submitted = signal(false);
+  readonly showPassword = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly pagination = new TablePagination();
   readonly paged = computed(() => this.pagination.slice(this.store.items()));
@@ -48,7 +50,7 @@ export class UsersPage {
   readonly form = new FormGroup({
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     displayName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    password: new FormControl('', { nonNullable: true, validators: [Validators.minLength(10)] }),
+    password: new FormControl('', { nonNullable: true, validators: [Validators.minLength(8)] }),
     roles: new FormControl<RoleCode[]>([], {
       nonNullable: true,
       validators: [Validators.required],
@@ -57,11 +59,18 @@ export class UsersPage {
     active: new FormControl(true, { nonNullable: true }),
     version: new FormControl<number | null>(null),
   });
+
   constructor() {
     void this.store.load();
   }
+
+  roleUserCount(code: RoleCode): number {
+    return this.store.items().filter((user) => user.roles.includes(code)).length;
+  }
+
   openNew() {
     this.submitted.set(false);
+    this.showPassword.set(false);
     this.editingId.set(null);
     this.form.reset({
       username: '',
@@ -74,8 +83,10 @@ export class UsersPage {
     });
     this.drawerOpen.set(true);
   }
+
   openEdit(item: AuthUser) {
     this.submitted.set(false);
+    this.showPassword.set(false);
     this.editingId.set(item.id);
     this.form.reset({
       username: item.username,
@@ -88,6 +99,7 @@ export class UsersPage {
     });
     this.drawerOpen.set(true);
   }
+
   toggleRole(code: RoleCode, event: Event) {
     const checked = (event.target as HTMLInputElement).checked;
     const current = this.form.controls.roles.value;
@@ -95,9 +107,11 @@ export class UsersPage {
       checked ? [...current, code] : current.filter((item) => item !== code),
     );
   }
+
   hasRole(code: RoleCode) {
     return this.form.controls.roles.value.includes(code);
   }
+
   toggleMenu(id: string, event: Event) {
     const checked = (event.target as HTMLInputElement).checked;
     const current = this.form.controls.allowedMenus.value;
@@ -105,9 +119,11 @@ export class UsersPage {
       checked ? [...current, id] : current.filter((item) => item !== id),
     );
   }
+
   hasMenu(id: string) {
     return this.form.controls.allowedMenus.value.includes(id);
   }
+
   async submit() {
     this.submitted.set(true);
     if (
@@ -122,15 +138,25 @@ export class UsersPage {
     const payload: UserPayload = { ...raw, password: raw.password || null };
     if (await this.store.save(this.editingId(), payload)) this.closeDrawer();
   }
+
   roleLabel(code: RoleCode) {
     const role = this.roles.find((item) => item.code === code);
     return role ? this.i18n.t(role.labelKey) : code;
   }
+
   closeDrawer(): void {
     this.drawerOpen.set(false);
     this.submitted.set(false);
   }
-  @HostListener('document:keydown.escape') onEscape(): void {
-    if (this.drawerOpen()) this.closeDrawer();
+
+  @HostListener('document:keydown', ['$event']) onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.drawerOpen()) {
+      this.closeDrawer();
+    } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+      if (this.drawerOpen()) {
+        event.preventDefault();
+        void this.submit();
+      }
+    }
   }
 }

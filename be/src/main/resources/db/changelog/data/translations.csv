@@ -83,6 +83,8 @@ ar-041;settings.comfortable;ar-EG;مريحة
 en-041;settings.comfortable;en-US;Comfortable
 ar-042;settings.compact;ar-EG;مدمجة
 en-042;settings.compact;en-US;Compact
+ar-042-b;settings.dense;ar-EG;عالية الكثافة
+en-042-b;settings.dense;en-US;High Density
 ar-043;settings.language;ar-EG;اللغة
 en-043;settings.language;en-US;Language
 ar-044;settings.arabic;ar-EG;العربية

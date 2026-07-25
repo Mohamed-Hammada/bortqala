@@ -15,96 +15,113 @@
   }
 
   <form class="card settings-card" [formGroup]="form" (ngSubmit)="save()">
-    <div class="settings-grid">
-      <fieldset>
-        <legend>{{ i18n.t('settings.theme') }}</legend>
-        <p>{{ i18n.t('settings.themeHint') }}</p>
-        <div class="choice-grid">
-          <label
-            ><input type="radio" formControlName="theme" value="LIGHT" (change)="preview()" />{{
-              i18n.t('settings.light')
-            }}</label
-          >
-          <label
-            ><input type="radio" formControlName="theme" value="DARK" (change)="preview()" />{{
-              i18n.t('settings.dark')
-            }}</label
-          >
-          <label
-            ><input type="radio" formControlName="theme" value="SYSTEM" (change)="preview()" />{{
-              i18n.t('settings.system')
-            }}</label
-          >
+    <div class="settings-sections">
+      <!-- Section 1: Appearance & Theme -->
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.theme') }}</legend>
+        <p class="group-hint">{{ i18n.t('settings.themeHint') }}</p>
+        <div class="theme-cards-grid">
+          <label class="theme-preview-card" [class.selected]="form.controls.theme.value === 'LIGHT'">
+            <input type="radio" formControlName="theme" value="LIGHT" (change)="preview()" />
+            <div class="card-icon">☀</div>
+            <div class="card-info">
+              <strong>{{ i18n.t('settings.light') }}</strong>
+              <small>Clean white workspace</small>
+            </div>
+          </label>
+
+          <label class="theme-preview-card" [class.selected]="form.controls.theme.value === 'DARK'">
+            <input type="radio" formControlName="theme" value="DARK" (change)="preview()" />
+            <div class="card-icon">🌙</div>
+            <div class="card-info">
+              <strong>{{ i18n.t('settings.dark') }}</strong>
+              <small>Sleek high-contrast dark</small>
+            </div>
+          </label>
+
+          <label class="theme-preview-card" [class.selected]="form.controls.theme.value === 'SYSTEM'">
+            <input type="radio" formControlName="theme" value="SYSTEM" (change)="preview()" />
+            <div class="card-icon">💻</div>
+            <div class="card-info">
+              <strong>{{ i18n.t('settings.system') }}</strong>
+              <small>Match OS preferences</small>
+            </div>
+          </label>
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend>{{ i18n.t('settings.density') }}</legend>
-        <p>{{ i18n.t('settings.densityHint') }}</p>
-        <div class="choice-grid">
-          <label
-            ><input
-              type="radio"
-              formControlName="tableDensity"
-              value="COMFORTABLE"
-              (change)="preview()"
-            />{{ i18n.t('settings.comfortable') }}</label
-          >
-          <label
-            ><input
-              type="radio"
-              formControlName="tableDensity"
-              value="COMPACT"
-              (change)="preview()"
-            />{{ i18n.t('settings.compact') }}</label
-          >
-          <label
-            ><input
-              type="radio"
-              formControlName="tableDensity"
-              value="DENSE"
-              (change)="preview()"
-            />{{ i18n.t('settings.dense') }}</label
-          >
+      <!-- Section 2: Table Density -->
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.density') }}</legend>
+        <p class="group-hint">{{ i18n.t('settings.densityHint') }}</p>
+        <div class="segmented-pills-grid">
+          <label class="segmented-pill-option" [class.selected]="form.controls.tableDensity.value === 'COMFORTABLE'">
+            <input type="radio" formControlName="tableDensity" value="COMFORTABLE" (change)="preview()" />
+            <span>{{ i18n.t('settings.comfortable') }} (40px)</span>
+          </label>
+          <label class="segmented-pill-option" [class.selected]="form.controls.tableDensity.value === 'COMPACT'">
+            <input type="radio" formControlName="tableDensity" value="COMPACT" (change)="preview()" />
+            <span>{{ i18n.t('settings.compact') }} (34px)</span>
+          </label>
+          <label class="segmented-pill-option" [class.selected]="form.controls.tableDensity.value === 'DENSE'">
+            <input type="radio" formControlName="tableDensity" value="DENSE" (change)="preview()" />
+            <span>{{ i18n.t('settings.dense') }} (28px)</span>
+          </label>
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend>{{ i18n.t('settings.language') }}</legend>
-        <div class="choice-grid two">
-          <label
-            ><input type="radio" formControlName="locale" value="ar-EG" (change)="preview()" />{{
-              i18n.t('settings.arabic')
-            }}</label
-          >
-          <label
-            ><input type="radio" formControlName="locale" value="en-US" (change)="preview()" />{{
-              i18n.t('settings.english')
-            }}</label
-          >
+      <!-- Section 3: Language -->
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.language') }}</legend>
+        <p class="group-hint">اختر لغة واجهة النظام (Interface Locale)</p>
+        <div class="segmented-pills-grid two-col">
+          <label class="segmented-pill-option" [class.selected]="form.controls.locale.value === 'ar-EG'">
+            <input type="radio" formControlName="locale" value="ar-EG" (change)="preview()" />
+            <span>{{ i18n.t('settings.arabic') }} (RTL)</span>
+          </label>
+          <label class="segmented-pill-option" [class.selected]="form.controls.locale.value === 'en-US'">
+            <input type="radio" formControlName="locale" value="en-US" (change)="preview()" />
+            <span>{{ i18n.t('settings.english') }} (LTR)</span>
+          </label>
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend>{{ i18n.t('settings.excelTitle') }}</legend>
-        <p>{{ i18n.t('settings.excelHint') }}</p>
-        <div class="choice-grid excel-styles">
-          <label class="excel-style gold"
-            ><input type="radio" formControlName="excelTableStyle" value="GOLD" /> <span></span
-            >{{ i18n.t('settings.excelGold') }}</label
-          >
-          <label class="excel-style blue"
-            ><input type="radio" formControlName="excelTableStyle" value="BLUE" /> <span></span
-            >{{ i18n.t('settings.excelBlue') }}</label
-          >
-          <label class="excel-style green"
-            ><input type="radio" formControlName="excelTableStyle" value="GREEN" /> <span></span
-            >{{ i18n.t('settings.excelGreen') }}</label
-          >
-          <label class="excel-style gray"
-            ><input type="radio" formControlName="excelTableStyle" value="GRAY" /> <span></span
-            >{{ i18n.t('settings.excelGray') }}</label
-          >
+      <!-- Section 4: Excel Export Styling -->
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.excelTitle') }}</legend>
+        <p class="group-hint">{{ i18n.t('settings.excelHint') }}</p>
+        <div class="excel-theme-grid">
+          <label class="excel-preview-card gold" [class.selected]="form.controls.excelTableStyle.value === 'GOLD'">
+            <input type="radio" formControlName="excelTableStyle" value="GOLD" />
+            <div class="mini-excel-table gold-tbl">
+              <div class="tbl-head">🟨 {{ i18n.t('settings.excelGold') }}</div>
+              <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+            </div>
+          </label>
+
+          <label class="excel-preview-card blue" [class.selected]="form.controls.excelTableStyle.value === 'BLUE'">
+            <input type="radio" formControlName="excelTableStyle" value="BLUE" />
+            <div class="mini-excel-table blue-tbl">
+              <div class="tbl-head">🟦 {{ i18n.t('settings.excelBlue') }}</div>
+              <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+            </div>
+          </label>
+
+          <label class="excel-preview-card green" [class.selected]="form.controls.excelTableStyle.value === 'GREEN'">
+            <input type="radio" formControlName="excelTableStyle" value="GREEN" />
+            <div class="mini-excel-table green-tbl">
+              <div class="tbl-head">🟩 {{ i18n.t('settings.excelGreen') }}</div>
+              <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+            </div>
+          </label>
+
+          <label class="excel-preview-card gray" [class.selected]="form.controls.excelTableStyle.value === 'GRAY'">
+            <input type="radio" formControlName="excelTableStyle" value="GRAY" />
+            <div class="mini-excel-table gray-tbl">
+              <div class="tbl-head">⬜ {{ i18n.t('settings.excelGray') }}</div>
+              <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+            </div>
+          </label>
         </div>
       </fieldset>
     </div>
@@ -125,9 +142,9 @@
       [formGroup]="appSettingsForm"
       (ngSubmit)="saveAppSettings()"
     >
-      <fieldset>
-        <legend>{{ i18n.t('settings.sessionTitle') }}</legend>
-        <p>{{ i18n.t('settings.sessionHint') }}</p>
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.sessionTitle') }}</legend>
+        <p class="group-hint">{{ i18n.t('settings.sessionHint') }}</p>
         @if (appSettingsError()) {
           <div class="alert error">{{ appSettingsError() }}</div>
         }
@@ -159,9 +176,9 @@
   }
   @if (desktop) {
     <section class="card settings-card admin-settings">
-      <fieldset>
-        <legend>{{ i18n.t('settings.licenseTitle') }}</legend>
-        <p>{{ i18n.t('settings.licenseHint') }}</p>
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.licenseTitle') }}</legend>
+        <p class="group-hint">{{ i18n.t('settings.licenseHint') }}</p>
         @if (licenseMessage()) {
           <div class="alert">{{ licenseMessage() }}</div>
         }
