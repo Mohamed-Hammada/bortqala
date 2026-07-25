@@ -44,6 +44,9 @@ public class AppUser {
             inverseJoinColumns = @JoinColumn(name = "role_code"))
     private Set<Role> roles = new LinkedHashSet<>();
 
+    @Column(name = "allowed_menus", length = 1000)
+    private String allowedMenus;
+
     @Version
     private long version;
 
@@ -56,19 +59,24 @@ public class AppUser {
     protected AppUser() {
     }
 
-    public AppUser(String appId, String username, String displayName, String passwordHash, Set<Role> roles) {
+    public AppUser(String appId, String username, String displayName, String passwordHash, Set<Role> roles, Set<String> allowedMenus) {
         this.id = UUID.randomUUID().toString();
         this.appId = appId;
-        update(username, displayName, passwordHash, true, roles);
+        update(username, displayName, passwordHash, true, roles, allowedMenus);
     }
 
-    public void update(String username, String displayName, String passwordHash, boolean active, Set<Role> roles) {
+    public void update(String username, String displayName, String passwordHash, boolean active, Set<Role> roles, Set<String> allowedMenus) {
         this.username = username.strip().toLowerCase();
         this.displayName = displayName.strip();
         if (passwordHash != null) this.passwordHash = passwordHash;
         this.active = active;
         this.roles.clear();
         this.roles.addAll(roles);
+        if (allowedMenus != null && !allowedMenus.isEmpty()) {
+            this.allowedMenus = String.join(",", allowedMenus);
+        } else {
+            this.allowedMenus = "dashboard,employees,categories,reports,imports,parties,operations,users,settings";
+        }
     }
 
     @PrePersist
@@ -84,5 +92,11 @@ public class AppUser {
     public String getPasswordHash() { return passwordHash; }
     public boolean isActive() { return active; }
     public Set<Role> getRoles() { return Set.copyOf(roles); }
+    public Set<String> getAllowedMenus() {
+        if (allowedMenus == null || allowedMenus.isBlank()) {
+            return Set.of("dashboard","employees","categories","reports","imports","parties","operations","users","settings");
+        }
+        return Set.of(allowedMenus.split(","));
+    }
     public long getVersion() { return version; }
 }

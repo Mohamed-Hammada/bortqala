@@ -1,6 +1,6 @@
 export type RoleCode = 'ADMIN' | 'HR_MANAGER' | 'HR_REVIEWER' | 'VIEWER';
 export type ThemePreference = 'LIGHT' | 'DARK' | 'SYSTEM';
-export type TableDensity = 'COMFORTABLE' | 'COMPACT';
+export type TableDensity = 'COMFORTABLE' | 'COMPACT' | 'DENSE';
 export type ExcelTableStyle = 'GOLD' | 'BLUE' | 'GREEN' | 'GRAY';
 
 export interface UserPreferences {
@@ -8,6 +8,7 @@ export interface UserPreferences {
   tableDensity: TableDensity;
   locale: string;
   excelTableStyle: ExcelTableStyle;
+  defaultPageSize?: number;
   updatedAt: number | null;
 }
 
@@ -16,6 +17,7 @@ export interface AuthUser {
   username: string;
   displayName: string;
   roles: RoleCode[];
+  allowedMenus?: string[];
   active: boolean;
   version: number;
 }

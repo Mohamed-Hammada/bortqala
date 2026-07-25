@@ -233,7 +233,8 @@ public class ReportingService {
         for (var entry : grouped.entrySet()) {
             var group = entry.getValue(); var first = group.getFirst(); var category = categories.get(first.getCategoryId());
             if (category == null || category.getAttendanceMode() != AttendanceMode.BIOMETRIC) continue;
-            if (!group.isEmpty() && group.stream().allMatch(item -> item.getStatus() == DailyStatus.NO_PUNCH)) {
+            long noPunchCount = group.stream().filter(item -> item.getStatus() == DailyStatus.NO_PUNCH).count();
+            if (!group.isEmpty() && noPunchCount * 2 >= group.size()) {
                 proposals.add(new HolidayProposal(report.getId(), first.getCategoryId(), first.getCategoryName(),
                         first.getWorkDate(), group.size()));
             }

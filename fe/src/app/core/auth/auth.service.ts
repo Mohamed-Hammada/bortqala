@@ -87,6 +87,14 @@ export class AuthService {
     return roles.some((role) => assigned.includes(role));
   }
 
+  hasMenuAccess(menuId: string): boolean {
+    const user = this.user();
+    if (!user) return false;
+    if (user.roles.includes('ADMIN')) return true;
+    if (!user.allowedMenus || user.allowedMenus.length === 0) return true;
+    return user.allowedMenus.includes(menuId);
+  }
+
   private readSession(): LoginResponse | null {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);

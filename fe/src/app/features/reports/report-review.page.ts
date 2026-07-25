@@ -25,22 +25,44 @@ export class ReportReviewPage {
   readonly store = inject(ReportsStore);
   readonly auth = inject(AuthService);
   readonly i18n = inject(I18nService);
-  readonly filter = signal<'ALL' | 'UNRESOLVED'>('UNRESOLVED');
+  readonly filter = signal<'ALL' | 'UNRESOLVED' | 'GREEN' | 'YELLOW' | 'RED'>('UNRESOLVED');
   readonly id = inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
   readonly pagination = new TablePagination();
+  readonly greenCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.healthTier(r) === 'GREEN').length);
+  readonly yellowCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.healthTier(r) === 'YELLOW').length);
+  readonly redCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.healthTier(r) === 'RED').length);
   readonly rows = computed(() => {
-    const rows = this.store.details()?.dailyResults ?? [];
-    return this.filter() === 'UNRESOLVED' ? rows.filter((row) => this.blocking(row)) : rows;
+    const all = this.store.details()?.dailyResults ?? [];
+    const f = this.filter();
+    if (f === 'UNRESOLVED') return all.filter((row) => this.blocking(row));
+    if (f === 'GREEN') return all.filter((row) => this.healthTier(row) === 'GREEN');
+    if (f === 'YELLOW') return all.filter((row) => this.healthTier(row) === 'YELLOW');
+    if (f === 'RED') return all.filter((row) => this.healthTier(row) === 'RED');
+    return all;
   });
   readonly pagedRows = computed(() => this.pagination.slice(this.rows()));
   constructor() {
     void this.store.load(this.id);
+  }
+  healthTier(row: DailyResult): 'GREEN' | 'YELLOW' | 'RED' {
+    if (row.status === 'NO_PUNCH' || row.status === 'MANUAL_ENTRY' || row.status === 'MISSING_SCHEDULE') return 'RED';
+    if (row.status === 'SINGLE_PUNCH' || row.lateMinutes > 0 || row.earlyLeaveMinutes > 0) return 'YELLOW';
+    return 'GREEN';
   }
   blocking(row: DailyResult) {
     return (
       !row.decision &&
       ['NO_PUNCH', 'SINGLE_PUNCH', 'MANUAL_ENTRY', 'MISSING_SCHEDULE'].includes(row.status)
     );
+  }
+  async bulkDecide(decision: AttendanceDecision, statusType: DailyStatus) {
+    const targets = this.rows().filter((r) => r.status === statusType && this.blocking(r));
+    if (!targets.length) return;
+    const confirmMsg = this.i18n.t('review.bulkConfirmPrompt') || `تطبيق القرار على ${targets.length} سجل؟`;
+    if (!confirm(confirmMsg)) return;
+    for (const r of targets) {
+      await this.store.decide(this.id, r.id, decision, decision === 'NORMAL_DAY' ? r.expectedMinutes : 0, 'Bulk HR Decision');
+    }
   }
   time(value: number | null) {
     return value === null ? '—' : formatTime(value);

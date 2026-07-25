@@ -15,7 +15,7 @@ import { I18nService, SupportedLocale } from '../../core/i18n.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LoginPage {
-  private readonly authService = inject(AuthService);
+  readonly authService = inject(AuthService);
   readonly i18n = inject(I18nService);
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);

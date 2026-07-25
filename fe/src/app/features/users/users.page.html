@@ -131,6 +131,20 @@
               }
             </div>
           </div>
+          <div class="field span-2">
+            <label>{{ i18n.t('nav.menuAccess') || 'القوائم المسموح بها (Menu Permissions)' }}</label>
+            <div class="role-options menu-grid">
+              @for (m of menuOptions; track m.id) {
+                <label class="menu-checkbox-label"
+                  ><input
+                    type="checkbox"
+                    [checked]="hasMenu(m.id)"
+                    (change)="toggleMenu(m.id, $event)"
+                  /><span>{{ i18n.t(m.labelKey) }}</span></label
+                >
+              }
+            </div>
+          </div>
         </div>
         <label class="active-check"
           ><input type="checkbox" formControlName="active" />

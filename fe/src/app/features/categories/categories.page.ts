@@ -180,8 +180,15 @@ export class CategoriesPage {
   closeDrawer(): void {
     this.drawerOpen.set(false);
   }
-  @HostListener('document:keydown.escape') onEscape(): void {
-    if (this.drawerOpen()) this.closeDrawer();
+  @HostListener('document:keydown', ['$event']) onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.drawerOpen()) {
+      this.closeDrawer();
+    } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+      if (this.drawerOpen()) {
+        event.preventDefault();
+        this.submit();
+      }
+    }
   }
   modeLabel(value: AttendanceMode) {
     return this.i18n.t(

@@ -10,6 +10,23 @@ interface TranslationBundle {
 
 const LOCALE_STORAGE_KEY = 'hr-platform-locale';
 
+const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
+  'ar-EG': {
+    'api.connectionError': 'تعذر الاتصال بالخادم. تأكد أن الـ backend يعمل.',
+    'api.unauthorized': 'انتهت الجلسة أو بيانات الدخول غير صحيحة.',
+    'api.unexpected': 'حدث خطأ غير متوقع. حاول مرة أخرى.',
+    'login.invalidCredentials': 'اسم المستخدم أو كلمة المرور غير صحيحة.',
+    'login.sessionExpired': 'انتهت الجلسة. برجاء تسجيل الدخول مرة أخرى.',
+  },
+  'en-US': {
+    'api.connectionError': 'Unable to reach the server. Make sure the backend is running.',
+    'api.unauthorized': 'The session expired or the credentials are invalid.',
+    'api.unexpected': 'An unexpected error occurred. Please try again.',
+    'login.invalidCredentials': 'The username or password is incorrect.',
+    'login.sessionExpired': 'Session expired. Please log in again.',
+  },
+};
+
 @Injectable({ providedIn: 'root' })
 export class I18nService {
   private readonly httpClient = inject(HttpClient);
@@ -17,8 +34,10 @@ export class I18nService {
   readonly locale = signal<SupportedLocale>(this.storedLocale());
   readonly messages = signal<Record<string, string>>({});
 
-  t(key: string, params?: Record<string, string | number>): string {
-    const message = this.messages()[key] ?? key;
+  t(key: string, params?: Record<string, string | number>, fallback?: string): string {
+    const locale = this.locale();
+    const message =
+      this.messages()[key] ?? DEFAULT_FALLBACKS[locale]?.[key] ?? fallback ?? key;
     if (!params) return message;
     return Object.entries(params).reduce(
       (resolved, [name, value]) => resolved.replaceAll(`{${name}}`, String(value)),

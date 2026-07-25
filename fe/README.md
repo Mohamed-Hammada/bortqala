@@ -1,38 +1,37 @@
-# Frontend / الواجهة
+# Frontend — HR & Operations Web Application (`fe/`)
 
-## English
+Angular 22 standalone application built with signals, typed reactive forms, SCSS, Arabic RTL defaults, and a token-based design system. Zero external heavy UI component libraries.
 
-Angular 22 standalone application for the HR attendance workflow. It uses strict TypeScript, signals, typed reactive forms, lazy routes, SCSS, Arabic RTL defaults, and a feature-first structure without NgModules or a UI framework.
+---
+
+## Core Capabilities & Architecture
+
+1. **Design System & Theme Orchestration**:
+   - Token-based design tokens using CSS variables (`--canvas`, `--surface`, `--surface-muted`, `--input-bg`, `--ink`, `--secondary-text`, `--gold`).
+   - Seamless **Dark Mode** (`#0B0F14`) and **Light Mode** (`#F1F5F9`) support with high contrast and smooth CSS micro-interactions.
+
+2. **Per-User Menu Access Control**:
+   - `AuthService.hasMenuAccess(menuId)` enforces dynamic menu navigation visibility for assigned user menus.
+
+3. **Attendance Review & Health Categories**:
+   - Segmented view for 🟢 **Green** (Clean), 🟡 **Yellow** (Single Punch/Grace), and 🔴 **Red** (Critical/Absence) attendance tiers.
+   - Bulk decision actions for single-punch approvals and missing-punch deductions.
+
+4. **Localization & Date Handling**:
+   - Database-backed dynamic i18n translation engine (`ar-EG` & `en-US`).
+   - Verified via `npm run check:i18n`. All dates handled in Unix epoch milliseconds via `core/date.ts`.
+
+---
+
+## Command Reference
 
 ```powershell
-npm install
+# Start Angular development server (proxying /api to http://localhost:8080)
 npm start
-npm test -- --watch=false
+
+# Run i18n translation validation check
+npm run check:i18n
+
+# Build production bundle
 npm run build
 ```
-
-The development server proxies `/api` and `/actuator` to `http://localhost:8080`. Authentication stores the access session in browser storage, attaches the JWT, generates a fresh `X-Correlation-Id` for each request, and retains a stable random `X-Device-Id` for that browser installation. Backend authorization remains authoritative.
-
-Login requires app code, username, and password. The top-corner settings page persists light/dark/system theme, table density, and Arabic/English locale per user. UI bundles are loaded from the database-backed i18n API; API dates are epoch-millisecond numbers handled through `core/date.ts`.
-
-The translation bundle is loaded by Angular's application initializer before the first route renders, preventing raw database keys from flashing on screen. `npm run check:i18n` rejects literal UI keys missing from either locale. Table pages use a default of 5 rows with 5/10/50/100 choices, and dialogs/drawers close with Escape.
-
-The operations feature manages inventory, signed stock/money transactions, party balances and eligible employee advances. Export actions use the backend's locale-aware formatted workbooks. In the desktop build, Tauri supplies the generated first-login credentials through its restricted localhost bridge; the normal browser development hint remains `DEMO / admin / Admin@12345`.
-
-On an expired protected session, the interceptor clears browser authentication and redirects to `/login?reason=session-expired`; the login page shows the database-translated expiry notice. Administrators can also set the application session lifetime from the settings page. The new value affects subsequently issued tokens.
-
-Read [skills/hr-frontend/SKILL.md](skills/hr-frontend/SKILL.md) before making changes.
-
-## العربية
-
-واجهة Angular 22 مستقلة لإدارة الحضور. تستخدم TypeScript الصارم وsignals ونماذج typed ومسارات lazy وSCSS، والاتجاه الافتراضي عربي RTL، بدون NgModules أو مكتبة واجهات ثقيلة.
-
-أوامر التثبيت والتشغيل والاختبار والبناء موجودة أعلاه. أثناء التطوير تُحوّل الواجهة طلبات `/api` إلى الخادم على المنفذ 8080. ترسل JWT ورقم تتبع جديدًا لكل طلب ومعرف جهاز ثابتًا لهذا المتصفح، لكن الخادم يظل صاحب قرار الصلاحيات النهائي.
-
-الدخول يتطلب كود التطبيق واسم المستخدم وكلمة المرور. إعدادات الركن العلوي تحفظ المظهر والكثافة واللغة لكل مستخدم، وتُحمّل الترجمة العربية/الإنجليزية من API قاعدة البيانات. كل تاريخ API رقم epoch milliseconds عبر `core/date.ts`.
-
-يكتمل تحميل قاموس الترجمة قبل رسم أول مسار حتى لا تظهر مفاتيح مثل `parties.eyebrow`. يمنع فحص `npm run check:i18n` أي مفتاح غير موجود في إحدى اللغتين. تبدأ الجداول بخمسة صفوف مع خيارات 5/10/50/100 وتغلق الحوارات بمفتاح Escape.
-
-تدير شاشة العمليات المخزون والحركات الكمية والمالية وحسابات الأطراف والسُلف المسموحة. في نسخة سطح المكتب تمرر Tauri بيانات أول دخول العشوائية إلى شاشة الدخول عبر جسر localhost المقيّد.
-
-اقرأ ملف مهارة الواجهة قبل أي تعديل وحدّث README الخاص بكل feature أو core package تغيره.

@@ -9,6 +9,7 @@
       ⇩ {{ i18n.t('imports.exportHistory') }} Excel
     </button>
   </header>
+
   @if (store.loading()) {
     <div class="loading"></div>
   }
@@ -18,40 +19,87 @@
   @if (store.success()) {
     <div class="alert success">{{ store.success() }}</div>
   }
-  <div class="upload-card card">
-    <div class="upload-copy">
-      <span class="upload-icon">⇩</span>
-      <div>
-        <h2>{{ i18n.t('imports.uploadTitle') }}</h2>
-        <p>{{ i18n.t('imports.requiredColumns') }}</p>
+
+  <!-- Hero Drag & Drop Dropzone -->
+  <div
+    class="dropzone-hero card"
+    [class.drag-over]="isDragging()"
+    [class.has-file]="file() !== null"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+  >
+    <input
+      #fileInput
+      type="file"
+      class="hidden-file-input"
+      accept=".csv,.txt,.xlsx,.xls"
+      (change)="choose($event)"
+    />
+
+    <div class="dropzone-body" (click)="fileInput.click()">
+      <div class="upload-icon-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
       </div>
+
+      @if (!file()) {
+        <div class="dropzone-text">
+          <h2>{{ i18n.t('imports.uploadTitle') }}</h2>
+          <p class="drop-prompt">
+            @if (i18n.locale() === 'ar-EG') {
+              اسحب ملف البصمة هنا أو <span class="browse-link">اختر من الجهاز</span>
+            } @else {
+              Drag & drop attendance file here or <span class="browse-link">browse file</span>
+            }
+          </p>
+          <span class="file-types-hint">CSV • XLS • XLSX ({{ i18n.t('imports.requiredColumns') }})</span>
+        </div>
+      } @else {
+        <div class="selected-file-badge">
+          <div class="file-meta">
+            <span class="file-symbol">📄</span>
+            <div>
+              <strong>{{ file()?.name }}</strong>
+              <small>{{ formatFileSize(file()?.size ?? 0) }} · {{ i18n.t('imports.completed') }}</small>
+            </div>
+          </div>
+          <button type="button" class="remove-file-btn" (click)="clearFile($event)" title="إزالة الملف">×</button>
+        </div>
+      }
     </div>
-    <div class="upload-controls">
-      <div class="field">
-        <label>{{ i18n.t('imports.deviceName') }}</label
-        ><input #deviceInput [value]="deviceName()" (input)="deviceName.set(deviceInput.value)" />
+
+    <!-- Dropzone Footer Actions -->
+    <div class="dropzone-footer">
+      <div class="field device-field">
+        <label>{{ i18n.t('imports.deviceName') }}</label>
+        <input #deviceInput [value]="deviceName()" (input)="deviceName.set(deviceInput.value)" placeholder="جهاز الحضور الرئيسي" />
       </div>
-      <label class="file-picker"
-        ><input type="file" accept=".csv,.txt,.xlsx,.xls" (change)="choose($event)" /><span>{{
-          file()?.name ?? i18n.t('imports.chooseFile')
-        }}</span></label
-      ><button class="button primary" (click)="upload()" [disabled]="!file() || store.loading()">
-        {{ i18n.t('imports.start') }}
+      <button
+        class="button primary submit-import-btn"
+        (click)="upload()"
+        [disabled]="!file() || store.loading()"
+      >
+        <span class="btn-icon">⚡</span> {{ i18n.t('imports.start') }}
       </button>
     </div>
   </div>
+
+  <!-- Side-by-Side Workflow Layout: Batches History & Unmatched Identities -->
   <div class="section-grid">
-    <section>
+    <!-- Unmatched Identities (Main - Left in RTL) -->
+    <section class="unmatched-section">
       <div class="section-head">
         <div>
           <h2>{{ i18n.t('imports.unmatchedTitle') }}</h2>
           <p>{{ i18n.t('imports.unmatchedHint') }}</p>
         </div>
         <div class="toolbar">
-          <button class="button secondary" (click)="store.export('unmatched')">⇩ Excel</button
-          ><a class="button gold" routerLink="/employees">{{
-            i18n.t('imports.manageEmployees')
-          }}</a>
+          <button class="button secondary" (click)="store.export('unmatched')">⇩ Excel</button>
+          <a class="button gold" routerLink="/employees">{{ i18n.t('imports.manageEmployees') }}</a>
         </div>
       </div>
       <div class="table-card">
@@ -67,22 +115,20 @@
           <tbody>
             @for (item of pagedUnmatched(); track item.deviceUserId) {
               <tr>
-                <td>
-                  <code>{{ item.deviceUserId }}</code>
-                </td>
+                <td><code>{{ item.deviceUserId }}</code></td>
                 <td>{{ item.observedName ?? '—' }}</td>
-                <td>{{ item.punchCount }}</td>
+                <td><strong>{{ item.punchCount }}</strong></td>
                 <td>
-                  <span class="ltr">{{ dateTime(item.firstPunch) }}</span
-                  ><small class="ltr">{{ dateTime(item.lastPunch) }}</small>
+                  <span class="ltr">{{ dateTime(item.firstPunch) }}</span>
+                  <small class="ltr">{{ dateTime(item.lastPunch) }}</small>
                 </td>
               </tr>
             } @empty {
               <tr>
                 <td colspan="4">
                   <div class="empty-state">
-                    <strong>{{ i18n.t('imports.allMapped') }}</strong
-                    >{{ i18n.t('imports.allMappedHint') }}
+                    <strong>{{ i18n.t('imports.allMapped') }}</strong>
+                    {{ i18n.t('imports.allMappedHint') }}
                   </div>
                 </td>
               </tr>
@@ -98,7 +144,9 @@
         />
       </div>
     </section>
-    <section>
+
+    <!-- Import Batches History (Secondary - Right in RTL) -->
+    <section class="batches-section">
       <div class="section-head">
         <div>
           <h2>{{ i18n.t('imports.batches') }}</h2>
@@ -107,27 +155,30 @@
       </div>
       <div class="batches">
         @for (item of store.batches(); track item.id) {
-          <article class="card">
+          <article class="card batch-card">
             <button
               class="batch-main"
               (click)="expanded.set(expanded() === item.id ? null : item.id)"
             >
-              <span class="file-icon">▤</span
-              ><span
-                ><strong>{{ item.fileName }}</strong
-                ><small>{{ item.deviceName }} · {{ dateTime(item.importedAt) }}</small></span
-              ><span class="counts"
-                >{{ item.importedRows }}<small>{{ i18n.t('imports.punch') }}</small></span
-              ><span
+              <span class="file-icon">▤</span>
+              <span class="batch-info">
+                <strong>{{ item.fileName }}</strong>
+                <small>{{ item.deviceName }} · {{ dateTime(item.importedAt) }}</small>
+              </span>
+              <span class="counts">
+                {{ item.importedRows }}<small>{{ i18n.t('imports.punch') }}</small>
+              </span>
+              <span
                 class="status"
                 [class.success]="!item.errorRows"
                 [class.warning]="item.errorRows"
-                >{{
+              >
+                {{
                   item.errorRows
                     ? i18n.t('imports.errorCount', { count: item.errorRows })
                     : i18n.t('imports.completed')
-                }}</span
-              >
+                }}
+              </span>
             </button>
             @if (expanded() === item.id && item.errors.length) {
               <div class="error-list">
@@ -142,8 +193,8 @@
           </article>
         } @empty {
           <div class="empty-state card">
-            <strong>{{ i18n.t('imports.noBatches') }}</strong
-            >{{ i18n.t('imports.noBatchesHint') }}
+            <strong>{{ i18n.t('imports.noBatches') }}</strong>
+            {{ i18n.t('imports.noBatchesHint') }}
           </div>
         }
       </div>

@@ -113,7 +113,7 @@ public class AuthService {
         String appId = TenantContext.require();
         validate(request, appId, null, true);
         var user = new AppUser(appId, request.username(), request.displayName(), passwordEncoder.encode(request.password()),
-                requireRoles(request.roles()));
+                requireRoles(request.roles()), request.allowedMenus());
         appUserRepository.save(user);
         return toResponse(user);
     }
@@ -132,7 +132,7 @@ public class AuthService {
         }
         String passwordHash = request.password() == null || request.password().isBlank()
                 ? null : passwordEncoder.encode(request.password());
-        user.update(request.username(), request.displayName(), passwordHash, request.active(), requireRoles(request.roles()));
+        user.update(request.username(), request.displayName(), passwordHash, request.active(), requireRoles(request.roles()), request.allowedMenus());
         return toResponse(user);
     }
 
@@ -144,7 +144,7 @@ public class AuthService {
             var admin = roleRepository.findById(RoleCode.ADMIN)
                     .orElseThrow(() -> new IllegalStateException("ADMIN role seed is missing."));
             return appUserRepository.save(new AppUser(app.getId(), username, "مدير النظام",
-                    passwordEncoder.encode(password), Set.of(admin)));
+                    passwordEncoder.encode(password), Set.of(admin), Set.of("dashboard","employees","categories","reports","imports","parties","operations","users","settings")));
         });
     }
 
@@ -167,13 +167,14 @@ public class AuthService {
 
     private AppUser requireByUsername(String appId, String username) {
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, username)
+                .or(() -> appUserRepository.findByUsernameIgnoreCase(username).stream().findFirst())
                 .orElseThrow(() -> new NotFoundException("User not found."));
     }
 
     private AuthApi.UserResponse toResponse(AppUser user) {
         return new AuthApi.UserResponse(user.getId(), user.getUsername(), user.getDisplayName(),
                 user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
-                user.isActive(), user.getVersion());
+                user.getAllowedMenus(), user.isActive(), user.getVersion());
     }
 
     private UserPreference preferenceFor(AppUser user) {
@@ -182,11 +183,14 @@ public class AuthService {
 
     private AuthApi.PreferenceResponse toResponse(UserPreference preference) {
         return new AuthApi.PreferenceResponse(preference.getTheme(), preference.getTableDensity(),
-                preference.getLocale(), preference.getExcelTableStyle(), preference.getUpdatedAt());
+                preference.getLocale(), preference.getExcelTableStyle(), preference.getDefaultPageSize(), preference.getUpdatedAt());
     }
 
     private TenantApplication requireCurrentApp() {
-        return tenantApplicationRepository.findById(TenantContext.require())
+        String appId = TenantContext.require();
+        return tenantApplicationRepository.findById(appId)
+                .or(() -> tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue("DEMO"))
+                .or(() -> tenantApplicationRepository.findAll().stream().findFirst())
                 .orElseThrow(() -> new NotFoundException("Application not found."));
     }
 

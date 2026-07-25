@@ -2,7 +2,13 @@ import { signal } from '@angular/core';
 
 export class TablePagination {
   readonly page = signal(1);
-  readonly pageSize = signal(5);
+  readonly pageSize = signal(25);
+
+  constructor(initialSize = 25) {
+    if ([10, 25, 50, 100].includes(initialSize)) {
+      this.pageSize.set(initialSize);
+    }
+  }
 
   slice<T>(items: readonly T[]): T[] {
     const page = this.currentPage(items.length);
@@ -23,7 +29,7 @@ export class TablePagination {
   }
 
   changePageSize(pageSize: number): void {
-    if ([5, 10, 50, 100].includes(pageSize)) {
+    if ([10, 25, 50, 100].includes(pageSize)) {
       this.pageSize.set(pageSize);
       this.page.set(1);
     }

@@ -28,6 +28,15 @@ public class RequestAuditFilter extends OncePerRequestFilter {
     private static final Pattern SAFE_IDENTIFIER = Pattern.compile("[A-Za-z0-9._-]{1,100}");
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestAuditFilter.class);
 
+    private final org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder;
+    private final com.bemo.hr.shared.security.TenantApplicationRepository tenantApplicationRepository;
+
+    public RequestAuditFilter(org.springframework.security.oauth2.jwt.JwtDecoder jwtDecoder,
+                              com.bemo.hr.shared.security.TenantApplicationRepository tenantApplicationRepository) {
+        this.jwtDecoder = jwtDecoder;
+        this.tenantApplicationRepository = tenantApplicationRepository;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
@@ -40,9 +49,27 @@ public class RequestAuditFilter extends OncePerRequestFilter {
         MDC.put("clientCorrelationId", clientCorrelationId);
         MDC.put("serverCorrelationId", serverCorrelationId);
         MDC.put("deviceId", deviceId);
+
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            try {
+                String token = authHeader.substring(7);
+                org.springframework.security.oauth2.jwt.Jwt jwt = jwtDecoder.decode(token);
+                String appId = resolveValidAppId(jwt.getClaimAsString("appId"), jwt.getClaimAsString("appCode"));
+                if (appId != null) {
+                    TenantContext.set(appId);
+                    MDC.put("appId", appId);
+                    MDC.put("appCode", valueOrUnknown(jwt.getClaimAsString("appCode")));
+                }
+            } catch (Exception ignored) {
+                // Ignore expired or unparseable tokens; Spring Security will handle auth errors
+            }
+        }
+
         Authentication requestAuthentication = SecurityContextHolder.getContext().getAuthentication();
         if (requestAuthentication instanceof JwtAuthenticationToken jwtAuthenticationToken) {
-            String appId = jwtAuthenticationToken.getToken().getClaimAsString("appId");
+            String appId = resolveValidAppId(jwtAuthenticationToken.getToken().getClaimAsString("appId"),
+                    jwtAuthenticationToken.getToken().getClaimAsString("appCode"));
             if (appId != null) TenantContext.set(appId);
             MDC.put("appId", appId == null ? "unknown" : appId);
             MDC.put("appCode", valueOrUnknown(jwtAuthenticationToken.getToken().getClaimAsString("appCode")));
@@ -89,6 +116,19 @@ public class RequestAuditFilter extends OncePerRequestFilter {
     private String truncate(String value, int maxLength) {
         if (value == null) return "unknown";
         return value.length() <= maxLength ? value : value.substring(0, maxLength);
+    }
+
+    private String resolveValidAppId(String rawAppId, String appCode) {
+        if (rawAppId != null && tenantApplicationRepository.existsById(rawAppId)) {
+            return rawAppId;
+        }
+        if (appCode != null) {
+            var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue(appCode);
+            if (app.isPresent()) return app.get().getId();
+        }
+        return tenantApplicationRepository.findAll().stream().findFirst()
+                .map(com.bemo.hr.shared.security.TenantApplication::getId)
+                .orElse(rawAppId);
     }
 
     private String valueOrUnknown(String value) { return value == null ? "unknown" : value; }

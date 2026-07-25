@@ -1,72 +1,108 @@
 <main class="login-page">
   <section class="story-panel" aria-hidden="true">
-    <div class="orb orb-one"></div>
-    <div class="orb orb-two"></div>
+    <div class="glow-backdrop"></div>
+    <!-- Abstract Attendance & Fingerprint SVG Pattern -->
+    <svg class="hero-pattern" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none" stroke="currentColor">
+      <path d="M 50 100 H 550 M 50 200 H 550 M 50 300 H 550 M 50 400 H 550 M 50 500 H 550" stroke-width="1" stroke-dasharray="4 8" opacity="0.12"/>
+      <path d="M 100 50 V 550 M 200 50 V 550 M 300 50 V 550 M 400 50 V 550 M 500 50 V 550" stroke-width="1" stroke-dasharray="4 8" opacity="0.12"/>
+      <circle cx="300" cy="300" r="180" stroke="#D4A017" stroke-width="1.5" opacity="0.18"/>
+      <circle cx="300" cy="300" r="130" stroke="#D4A017" stroke-width="1.5" opacity="0.22"/>
+      <circle cx="300" cy="300" r="80" stroke="#D4A017" stroke-width="1.5" opacity="0.28"/>
+      <path d="M 180 300 Q 300 180 420 300 T 660 300" stroke="#D4A017" stroke-width="2" opacity="0.25"/>
+    </svg>
+
     <div class="story-copy">
-      <span class="monogram">{{ i18n.locale() === 'ar-EG' ? 'ب' : 'B' }}</span>
-      <p>{{ i18n.t('login.story') }}</p>
+      <div class="brand-badge">
+        <span class="monogram">{{ i18n.locale() === 'ar-EG' ? 'ب' : 'B' }}</span>
+        <div class="brand-titles">
+          <strong>Bemo HR</strong>
+          <small>Enterprise Platform</small>
+        </div>
+      </div>
+      @if (i18n.locale() === 'ar-EG') {
+        <p>حضور واضح. <span class="gold-accent">تقارير موثوقة.</span> ثقة تامة.</p>
+      } @else {
+        <p>Clear Attendance. <span class="gold-accent">Audited Decisions.</span> Reports You Trust.</p>
+      }
       <small>{{ i18n.t('login.storyHint') }}</small>
     </div>
   </section>
+
   <section class="login-panel">
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="language-switch" aria-label="Language / اللغة">
-        <button
-          type="button"
-          (click)="changeLanguage('ar-EG')"
-          [class.active]="i18n.locale() === 'ar-EG'"
-        >
-          ع
-        </button>
-        <button
-          type="button"
-          (click)="changeLanguage('en-US')"
-          [class.active]="i18n.locale() === 'en-US'"
-        >
-          EN
-        </button>
+    <form [formGroup]="form" (ngSubmit)="submit()" class="login-card">
+      <div class="card-header">
+        <div class="segmented-control" aria-label="Language / اللغة">
+          <button
+            type="button"
+            (click)="changeLanguage('ar-EG')"
+            [class.active]="i18n.locale() === 'ar-EG'"
+          >
+            العربية
+          </button>
+          <button
+            type="button"
+            (click)="changeLanguage('en-US')"
+            [class.active]="i18n.locale() === 'en-US'"
+          >
+            English
+          </button>
+        </div>
+        <div class="logo-watermark">
+          <span class="mini-logo">B</span>
+          <span class="company-tag">{{ authService.app()?.name ?? 'Bemo HR' }}</span>
+        </div>
       </div>
-      <p class="eyebrow">{{ i18n.t('login.product') }}</p>
-      <h1>{{ i18n.t('login.title') }}</h1>
-      <p class="intro">{{ i18n.t('login.intro') }}</p>
+
+      <div class="card-title-group">
+        <p class="eyebrow">{{ i18n.t('login.product') }}</p>
+        <h1>{{ i18n.t('login.title') }}</h1>
+        <p class="intro">{{ i18n.t('login.intro') }}</p>
+      </div>
+
       @if (sessionExpired) {
         <div class="alert warning" role="status">{{ i18n.t('login.sessionExpired') }}</div>
       }
       @if (error()) {
         <div class="alert error" role="alert">{{ error() }}</div>
       }
+
       <div class="field">
-        <label for="appCode">{{ i18n.t('login.appCode') }}</label
-        ><input
+        <label for="appCode">{{ i18n.t('login.appCode') }}</label>
+        <input
           id="appCode"
           formControlName="appCode"
           autocomplete="organization"
           [placeholder]="i18n.t('login.appCodePlaceholder')"
         />
       </div>
+
       <div class="field">
-        <label for="username">{{ i18n.t('login.username') }}</label
-        ><input
+        <label for="username">{{ i18n.t('login.username') }}</label>
+        <input
           id="username"
           formControlName="username"
           autocomplete="username"
           [placeholder]="i18n.t('login.usernamePlaceholder')"
         />
       </div>
+
       <div class="field password-field">
-        <label for="password">{{ i18n.t('login.password') }}</label
-        ><input
+        <label for="password">{{ i18n.t('login.password') }}</label>
+        <input
           id="password"
           formControlName="password"
           [type]="showPassword() ? 'text' : 'password'"
           autocomplete="current-password"
-        /><button type="button" (click)="showPassword.set(!showPassword())">
+        />
+        <button type="button" class="toggle-password" (click)="showPassword.set(!showPassword())">
           {{ i18n.t(showPassword() ? 'login.hide' : 'login.show') }}
         </button>
       </div>
-      <button class="button primary submit" type="submit" [disabled]="loading()">
+
+      <button class="button primary submit-btn" type="submit" [disabled]="loading()">
         {{ i18n.t(loading() ? 'login.loading' : 'login.submit') }}
       </button>
+
       <p class="local-hint">
         {{ i18n.t('login.localHint') }}: <span class="ltr">{{ credentialHint() }}</span>
       </p>

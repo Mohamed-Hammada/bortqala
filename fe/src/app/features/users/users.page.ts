@@ -34,6 +34,17 @@ export class UsersPage {
     { code: 'HR_REVIEWER', labelKey: 'role.hrReviewer', descriptionKey: 'role.hrReviewerHint' },
     { code: 'VIEWER', labelKey: 'role.viewer', descriptionKey: 'role.viewerHint' },
   ];
+  readonly menuOptions: Array<{ id: string; labelKey: string }> = [
+    { id: 'dashboard', labelKey: 'nav.dashboard' },
+    { id: 'categories', labelKey: 'nav.categories' },
+    { id: 'employees', labelKey: 'nav.employees' },
+    { id: 'imports', labelKey: 'nav.imports' },
+    { id: 'parties', labelKey: 'nav.parties' },
+    { id: 'reports', labelKey: 'nav.reports' },
+    { id: 'operations', labelKey: 'nav.operations' },
+    { id: 'users', labelKey: 'nav.users' },
+    { id: 'settings', labelKey: 'settings.title' },
+  ];
   readonly form = new FormGroup({
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     displayName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -42,6 +53,7 @@ export class UsersPage {
       nonNullable: true,
       validators: [Validators.required],
     }),
+    allowedMenus: new FormControl<string[]>([], { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
     version: new FormControl<number | null>(null),
   });
@@ -56,6 +68,7 @@ export class UsersPage {
       displayName: '',
       password: '',
       roles: ['VIEWER'],
+      allowedMenus: ['dashboard', 'reports'],
       active: true,
       version: null,
     });
@@ -69,6 +82,7 @@ export class UsersPage {
       displayName: item.displayName,
       password: '',
       roles: item.roles,
+      allowedMenus: item.allowedMenus ?? ['dashboard', 'categories', 'employees', 'imports', 'parties', 'reports', 'operations', 'users', 'settings'],
       active: item.active,
       version: item.version,
     });
@@ -83,6 +97,16 @@ export class UsersPage {
   }
   hasRole(code: RoleCode) {
     return this.form.controls.roles.value.includes(code);
+  }
+  toggleMenu(id: string, event: Event) {
+    const checked = (event.target as HTMLInputElement).checked;
+    const current = this.form.controls.allowedMenus.value;
+    this.form.controls.allowedMenus.setValue(
+      checked ? [...current, id] : current.filter((item) => item !== id),
+    );
+  }
+  hasMenu(id: string) {
+    return this.form.controls.allowedMenus.value.includes(id);
   }
   async submit() {
     this.submitted.set(true);

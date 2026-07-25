@@ -9,6 +9,7 @@ export interface UserPayload {
   displayName: string;
   password: string | null;
   roles: RoleCode[];
+  allowedMenus?: string[];
   active: boolean;
   version: number | null;
 }

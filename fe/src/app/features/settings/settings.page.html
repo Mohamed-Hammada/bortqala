@@ -15,87 +15,104 @@
   }
 
   <form class="card settings-card" [formGroup]="form" (ngSubmit)="save()">
-    <fieldset>
-      <legend>{{ i18n.t('settings.theme') }}</legend>
-      <p>{{ i18n.t('settings.themeHint') }}</p>
-      <div class="choice-grid">
-        <label
-          ><input type="radio" formControlName="theme" value="LIGHT" (change)="preview()" />{{
-            i18n.t('settings.light')
-          }}</label
-        >
-        <label
-          ><input type="radio" formControlName="theme" value="DARK" (change)="preview()" />{{
-            i18n.t('settings.dark')
-          }}</label
-        >
-        <label
-          ><input type="radio" formControlName="theme" value="SYSTEM" (change)="preview()" />{{
-            i18n.t('settings.system')
-          }}</label
-        >
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>{{ i18n.t('settings.density') }}</legend>
-      <p>{{ i18n.t('settings.densityHint') }}</p>
-      <div class="choice-grid two">
-        <label
-          ><input
-            type="radio"
-            formControlName="tableDensity"
-            value="COMFORTABLE"
-            (change)="preview()"
-          />{{ i18n.t('settings.comfortable') }}</label
-        >
-        <label
-          ><input
-            type="radio"
-            formControlName="tableDensity"
-            value="COMPACT"
-            (change)="preview()"
-          />{{ i18n.t('settings.compact') }}</label
-        >
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>{{ i18n.t('settings.language') }}</legend>
-      <div class="choice-grid two">
-        <label
-          ><input type="radio" formControlName="locale" value="ar-EG" (change)="preview()" />{{
-            i18n.t('settings.arabic')
-          }}</label
-        >
-        <label
-          ><input type="radio" formControlName="locale" value="en-US" (change)="preview()" />{{
-            i18n.t('settings.english')
-          }}</label
-        >
-      </div>
-    </fieldset>
-    <fieldset>
-      <legend>{{ i18n.t('settings.excelTitle') }}</legend>
-      <p>{{ i18n.t('settings.excelHint') }}</p>
-      <div class="choice-grid excel-styles">
-        <label class="excel-style gold"
-          ><input type="radio" formControlName="excelTableStyle" value="GOLD" /> <span></span
-          >{{ i18n.t('settings.excelGold') }}</label
-        >
-        <label class="excel-style blue"
-          ><input type="radio" formControlName="excelTableStyle" value="BLUE" /> <span></span
-          >{{ i18n.t('settings.excelBlue') }}</label
-        >
-        <label class="excel-style green"
-          ><input type="radio" formControlName="excelTableStyle" value="GREEN" /> <span></span
-          >{{ i18n.t('settings.excelGreen') }}</label
-        >
-        <label class="excel-style gray"
-          ><input type="radio" formControlName="excelTableStyle" value="GRAY" /> <span></span
-          >{{ i18n.t('settings.excelGray') }}</label
-        >
-      </div>
-    </fieldset>
-    <div class="actions">
+    <div class="settings-grid">
+      <fieldset>
+        <legend>{{ i18n.t('settings.theme') }}</legend>
+        <p>{{ i18n.t('settings.themeHint') }}</p>
+        <div class="choice-grid">
+          <label
+            ><input type="radio" formControlName="theme" value="LIGHT" (change)="preview()" />{{
+              i18n.t('settings.light')
+            }}</label
+          >
+          <label
+            ><input type="radio" formControlName="theme" value="DARK" (change)="preview()" />{{
+              i18n.t('settings.dark')
+            }}</label
+          >
+          <label
+            ><input type="radio" formControlName="theme" value="SYSTEM" (change)="preview()" />{{
+              i18n.t('settings.system')
+            }}</label
+          >
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>{{ i18n.t('settings.density') }}</legend>
+        <p>{{ i18n.t('settings.densityHint') }}</p>
+        <div class="choice-grid">
+          <label
+            ><input
+              type="radio"
+              formControlName="tableDensity"
+              value="COMFORTABLE"
+              (change)="preview()"
+            />{{ i18n.t('settings.comfortable') }}</label
+          >
+          <label
+            ><input
+              type="radio"
+              formControlName="tableDensity"
+              value="COMPACT"
+              (change)="preview()"
+            />{{ i18n.t('settings.compact') }}</label
+          >
+          <label
+            ><input
+              type="radio"
+              formControlName="tableDensity"
+              value="DENSE"
+              (change)="preview()"
+            />{{ i18n.t('settings.dense') }}</label
+          >
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>{{ i18n.t('settings.language') }}</legend>
+        <div class="choice-grid two">
+          <label
+            ><input type="radio" formControlName="locale" value="ar-EG" (change)="preview()" />{{
+              i18n.t('settings.arabic')
+            }}</label
+          >
+          <label
+            ><input type="radio" formControlName="locale" value="en-US" (change)="preview()" />{{
+              i18n.t('settings.english')
+            }}</label
+          >
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>{{ i18n.t('settings.excelTitle') }}</legend>
+        <p>{{ i18n.t('settings.excelHint') }}</p>
+        <div class="choice-grid excel-styles">
+          <label class="excel-style gold"
+            ><input type="radio" formControlName="excelTableStyle" value="GOLD" /> <span></span
+            >{{ i18n.t('settings.excelGold') }}</label
+          >
+          <label class="excel-style blue"
+            ><input type="radio" formControlName="excelTableStyle" value="BLUE" /> <span></span
+            >{{ i18n.t('settings.excelBlue') }}</label
+          >
+          <label class="excel-style green"
+            ><input type="radio" formControlName="excelTableStyle" value="GREEN" /> <span></span
+            >{{ i18n.t('settings.excelGreen') }}</label
+          >
+          <label class="excel-style gray"
+            ><input type="radio" formControlName="excelTableStyle" value="GRAY" /> <span></span
+            >{{ i18n.t('settings.excelGray') }}</label
+          >
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="actions settings-toolbar">
+      <button class="button secondary" type="button" (click)="preview()">
+        {{ i18n.t('common.cancel') }}
+      </button>
       <button class="button primary" type="submit" [disabled]="saving() || form.invalid">
         {{ i18n.t(saving() ? 'settings.saving' : 'settings.save') }}
       </button>

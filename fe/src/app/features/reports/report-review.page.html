@@ -96,12 +96,33 @@
       </div>
       <div class="segmented">
         <button [class.active]="filter() === 'UNRESOLVED'" (click)="filter.set('UNRESOLVED')">
-          {{ i18n.t('review.unresolvedOnly') }}</button
-        ><button [class.active]="filter() === 'ALL'" (click)="filter.set('ALL')">
+          {{ i18n.t('review.unresolvedOnly') }} ({{ data.report.unresolvedCount }})</button
+        >
+        <button [class.active]="filter() === 'GREEN'" (click)="filter.set('GREEN')">
+          🟢 {{ i18n.t('review.greenTier') || 'الفئة الخضراء (سليمة)' }} ({{ greenCount() }})
+        </button>
+        <button [class.active]="filter() === 'YELLOW'" (click)="filter.set('YELLOW')">
+          🟡 {{ i18n.t('review.yellowTier') || 'الفئة الصفراء (بصمة واحدة)' }} ({{ yellowCount() }})
+        </button>
+        <button [class.active]="filter() === 'RED'" (click)="filter.set('RED')">
+          🔴 {{ i18n.t('review.redTier') || 'الفئة الحمراء (أخطاء/غياب)' }} ({{ redCount() }})
+        </button>
+        <button [class.active]="filter() === 'ALL'" (click)="filter.set('ALL')">
           {{ i18n.t('review.allRows') }}
         </button>
       </div>
     </div>
+    @if (data.report.status === 'IN_REVIEW' && canReview()) {
+      <div class="bulk-toolbar card">
+        <span>⚡ {{ i18n.t('review.bulkActions') || 'إجراءات جماعية للمجموعة (Bulk Decisions)' }}:</span>
+        <button class="button secondary" (click)="bulkDecide('NORMAL_DAY', 'SINGLE_PUNCH')">
+          ✓ {{ i18n.t('review.approveSinglePunches') || 'اعتماد البصمة الواحدة كـ يوم طبيعي' }}
+        </button>
+        <button class="button secondary" (click)="bulkDecide('DEDUCT', 'NO_PUNCH')">
+          ✗ {{ i18n.t('review.deductNoPunches') || 'خصم الأيام غير المسجلة (غياب)' }}
+        </button>
+      </div>
+    }
     <div class="table-card review-table">
       <table>
         <thead>

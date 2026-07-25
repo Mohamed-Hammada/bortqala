@@ -1,93 +1,106 @@
-# Bemo HR attendance platform
+# Bemo HR & Operations Platform
 
-An executable, configurable company-operations system for teams moving from Excel. The repository contains `be/` (the Spring API plus bundled Angular UI), `fe/` (Angular source), `desktop/` (the Tauri/NSIS desktop package), and `license-app/` (the independent online license service).
+An enterprise, multi-tenant HR attendance, shift scheduling, and company operations system built for businesses replacing manual paper notes and spreadsheets. The repository contains `be/` (Spring Boot 4.1 backend with bundled Angular UI), `fe/` (Angular 22 standalone frontend), `desktop/` (Tauri Windows desktop package), and `license-app/` (Ed25519 licensing service).
 
-## English
+---
 
-### What is implemented
+## Business Architecture & Core Capabilities
 
-- Dynamic job/attendance categories with monthly, 15-day, or 30-day pay cycles, expected minutes, workdays, one-punch policy, and `BIOMETRIC`, `MANUAL`, or `HYBRID` modes.
-- Effective-dated summer/winter or custom schedule rules, including start time, grace period, and expected-minute override.
-- Employees with optional biometric device identity, so daily/manual workers are not falsely treated as missing punches.
-- CSV, TXT, XLS, and XLSX biometric imports with checksums, immutable raw evidence, row errors, and unmatched identities.
-- Daily calculations and a review workflow for no punch, single punch, manual attendance, leave, deductions, and proposed/confirmed category holidays.
-- Monthly and half-month reports with blocking-exception checks, approval/reopen, frozen snapshots, dashboards, and Excel exports.
-- Username/password JWT authentication, multiple roles per user, backend authorization, and role-aware Angular navigation.
-- Administrators can configure the SaaS application's session lifetime from 5 minutes to 7 days. The selected timeout is applied to newly issued JWTs; expired protected requests are cleared and redirected to login with a dedicated translated notice.
-- SaaS application tenancy: login requires an application code, JWTs carry the application identity, and tenant business data is isolated by `app_id`.
-- API dates use Unix epoch milliseconds (`long`/TypeScript `number`) for both `Instant` and `LocalDate`; schedule times remain `HH:mm`.
-- Per-user light/dark/system theme, table density, and Arabic/English locale preferences stored in PostgreSQL.
-- Database-backed translation bundles, SVG navigation icons, and user-selected report ranges with explicit pay-cycle scope and overlap protection.
-- On login, the authenticated user's saved locale is loaded before navigation. DEMO also receives editable reference categories from the paper notes: security, accounting, administration, secretarial, daily, cleaning, operation, export, and sorting workers.
-- Structured JSON request logs with independent client/server correlation IDs, browser device ID, authenticated user, IP, roles, status, and duration.
-- Business-party management for suppliers, processing customers, export customers, sorting traders, farms, and configurable additional party types.
-- Inventory items, signed stock movements, signed partner balances, processing loss percentage, and category-controlled employee advances. Positive and negative movements remain immutable and balances are derived.
-- Category-prefixed employee codes. A supplied suffix is normalized to `<CATEGORY>-<SUFFIX>`; when omitted, a locked per-category sequence generates the next unused code.
-- Native formatted Excel tables in the user's Arabic/English locale and chosen table style, with feature/date/time filenames.
-- A self-contained Tauri Windows launcher that uses a free Spring port, an app-local PostgreSQL 18.4 distribution, per-install random database/JWT secrets, and generated first-login credentials.
-- A separate Ed25519-signed online licensing service with perpetual, term-years, or fixed-date licenses, device-bound activations, activation limits, validation, Settings release, and uninstall release attempt.
+1. **Multi-Tenant SaaS Security & Granular Authorization**:
+   - Isolation by `app_id` across all business entities.
+   - JWT authentication with administrator-controlled session lifetime (5 minutes to 7 days).
+   - Granular per-user menu authorization allowing administrators to assign allowed navigation menus (`dashboard`, `employees`, `categories`, `reports`, `imports`, `parties`, `operations`, `users`, `settings`) to individual users.
 
-### Run locally
+2. **Attendance Categories & Biometric Engine**:
+   - Dynamic attendance categories (`BIOMETRIC`, `MANUAL`, `HYBRID`) supporting monthly, 15-day (half-monthly), or 30-day pay cycles.
+   - Single-punch policy enforcement, expected daily minutes, and category-prefixed employee code generation (`<CATEGORY>-<SUFFIX>` or locked sequence).
+   - Multi-format biometric imports (CSV, TXT, XLS, XLSX) with SHA-256 evidence hashing, row error logging, and unmatched device identity mapping.
 
-Requirements: Java 26, Node 24.18+, npm 11+, and optionally Docker for PostgreSQL.
+3. **Intra-Month Effective Schedules & Power Outage Detection**:
+   - Date-effective shift schedules supporting intra-month changes (e.g., July 1–12 at 07:00 vs. July 13–31 at 09:00).
+   - **Power Outage / Mass Absence Detector**: Automatically detects when >50% of employees in a category lack punches on a workday and prompts HR reviewers to confirm Excused Presence vs Absence.
 
-For the self-contained development database:
+4. **Rule-Based Attendance Health Categories & Bulk HR Decisions**:
+   - 🟢 **Green Tier (Clean)**: 100% clean attendance without warnings or missing punches.
+   - 🟡 **Yellow Tier (Single Punch / Grace)**: Single punch days or minor grace period arrivals.
+   - 🔴 **Red Tier (Critical Exceptions)**: Missing punches (`NO_PUNCH`), manual entry requirements, or unexcused absences.
+   - **Bulk Decisions Toolbar**: Allows HR managers to approve all single-punch days or deduct missing days across filtered health tiers in 1 click.
+
+5. **Operations, Inventory, Balances & Localized Excel Exports**:
+   - Partner management (suppliers, customers, traders, farms), inventory stock movements, partner financial ledgers, processing loss percentages, and category-controlled employee advances.
+   - Multi-sheet native Excel exports styled according to user preferences (`GOLD`, `BLUE`, `GREEN`, `GRAY`).
+
+6. **Design System & Accessible Theme Engine**:
+   - Token-based design system supporting true **Dark Mode** (`#0B0F14` canvas, `#141A22` cards, `#1B2430` elevated surfaces) and **Light Mode** (`#F1F5F9` canvas, `#FFFFFF` cards, `#F8FAFC` inputs).
+   - High-contrast WCAG AA typography, gold action accents (`#D4A017`), responsive 2-column settings grid, and smooth micro-interactions.
+
+---
+
+## Local Development & Quick Start
+
+### Prerequisites
+- Java 26
+- Node 24.18+ / npm 11+
+- PostgreSQL 18.4 (`jdbc:postgresql://localhost:5432/hr_platform`, user `root`, password `root`)
+
+### Run Backend & Frontend
 
 ```powershell
+# 1. Start Backend (PostgreSQL Dev Profile)
 cd be
-$env:JAVA_HOME='C:\Users\wolfn\scoop\apps\openjdk26\current'
-.\gradlew.bat bootRun --args='--spring.profiles.active=dev'
+.\gradlew.bat bootRun --args="--spring.profiles.active=dev"
 
+# 2. Start Frontend
 cd ..\fe
 npm install
 npm start
 ```
 
-Open `http://localhost:4200`. The development-only credentials are application `DEMO`, user `admin`, password `Admin@12345`. Never use this password or the development JWT secret in production.
+Open `http://localhost:4200` in your browser. Default development credentials:
+- **Company Code**: `DEMO`
+- **Username**: `admin`
+- **Password**: `Admin@12345`
 
-For PostgreSQL, run `docker compose up -d` inside `be/`, set the environment described in [be/README.md](be/README.md), and start without the `dev` profile.
-
-### Verify
+### Run Verification & Tests
 
 ```powershell
+# Backend Unit & Integration Tests
 cd be
 .\gradlew.bat clean test
 
+# Frontend i18n & Build Check
 cd ..\fe
-npm test -- --watch=false
+npm run check:i18n
 npm run build
 ```
 
-Start with [docs/business-requirements.md](docs/business-requirements.md), [be/skills/hr-backend/SKILL.md](be/skills/hr-backend/SKILL.md), and [fe/skills/hr-frontend/SKILL.md](fe/skills/hr-frontend/SKILL.md) before extending the system.
+---
 
-Build the Windows installer from `desktop/` with `npm run build`. Its preparation script downloads the official PostgreSQL 18.4 Windows binary archive when a local distribution is not supplied. Configure and deploy `license-app/` separately; inject only its public signing key and final HTTPS URL into the desktop build.
+## العربية — متطلبات العمل والهيكلية
 
-## العربية
+نظام متكامل لإدارة الحضور والانصراف، وجداول العمل الشفتات، والعمليات التجارية والمالية والمخزون للشركات والمصانع:
 
-### ما تم تنفيذه
+1. **إدارة الصلاحيات وقوائم المستخدمين (Multi-Tenant SaaS)**:
+   - عزل كامل لبيانات كل شركة عبر `app_id`.
+   - صلاحيات مرنة لكل مستخدم تحدد القوائم المسموح بها (`dashboard`, `employees`, `categories`, `reports`, `imports`, `parties`, `operations`, `users`, `settings`).
 
-- فئات عمل وحضور ديناميكية بدورة شهرية أو نصف شهرية، وساعات متوقعة، وأيام عمل، وسياسة البصمة الواحدة، وأنماط بصمة أو يدوي أو مختلط.
-- قواعد جداول بتاريخ سريان للصيف والشتاء أو أي موسم آخر، مع وقت البداية والسماح وإمكانية تغيير عدد الدقائق المطلوبة.
-- موظفون برقم بصمة اختياري حتى لا يُعتبر العامل اليومي أو اليدوي غائبًا بسبب عدم وجود بصمة.
-- استيراد CSV وTXT وXLS وXLSX مع منع التكرار، وحفظ المصدر، وأخطاء الصفوف، والهويات غير المربوطة.
-- حساب يومي ومراجعة لحالات عدم البصمة والبصمة الواحدة والحضور اليدوي والإجازة والخصم واقتراح إجازة الفئة كلها.
-- تقارير شهرية ونصف شهرية، ومنع الاعتماد عند وجود استثناءات، وإعادة الفتح، ولقطات ثابتة، ولوحة متابعة، وتصدير Excel.
-- دخول باسم مستخدم وكلمة مرور وJWT، وأكثر من دور للمستخدم، وصلاحيات مؤكدة في الخادم والواجهة.
-- دعم SaaS بعزل بيانات كل شركة من خلال `app_id`، والدخول بكود التطبيق مع تضمين هوية التطبيق داخل JWT.
-- كل تاريخ بين الواجهة والخادم يُرسل كرقم Unix epoch milliseconds، بينما وقت الجدول يبقى بصيغة `HH:mm`.
-- إعدادات مظهر وكثافة جداول ولغة محفوظة لكل مستخدم، وترجمات عربية/إنجليزية من قاعدة البيانات.
-- نطاق تقرير يحدده المستخدم مع اختيار دورة الاستحقاق ومنع التداخل، مع بقاء اختصارات الشهر ونصف الشهر.
-- سجلات JSON قابلة للتتبع تحتوي أرقام تتبع مستقلة للواجهة والخادم، ومعرف الجهاز، والمستخدم، وIP، والأدوار، والحالة، والمدة.
-- إدارة الموردين وعملاء التشغيل والتصدير وتجار الفرزة والمزارع، مع أصناف مخزن وحركات كمية وحسابات مالية موجبة أو سالبة وسُلف حسب أهلية الفئة.
-- كود موظف مكوّن من كود الفئة والرقم المدخل، أو sequence آمن لكل فئة عند ترك الكود فارغًا.
-- تصدير Excel منسق باللغة والشكل اللذين اختارهما المستخدم، واسم ملف مرتبط بالوظيفة وتاريخ ووقت التصدير.
-- تطبيق Windows ذاتي التشغيل عبر Tauri، بقاعدة PostgreSQL محلية وبيانات اتصال وJWT عشوائية لكل تثبيت ومنفذ Spring متاح تلقائيًا.
-- خدمة تراخيص مستقلة بتوقيع Ed25519 تدعم الترخيص الدائم أو بعدد سنوات أو حتى تاريخ، وربط الجهاز وحدود التفعيل والتحرير عند الإزالة.
+2. **محرك الحضور والبصمة وفئات العمل**:
+   - فئات عمل مرنة (بصمة، يدوي، مختلط) بدورة استحقاق شهرية أو نصف شهرية.
+   - استيراد ملفات البصمة بأكثر من صيغة (CSV, TXT, XLS, XLSX) مع منع التكرار وحفظ أدلة البصمة الأصلية.
 
-### التشغيل المحلي
+3. **جداول متغيرة وكشف انقطاع الكهرباء**:
+   - مواعيد حضور متغيرة خلال نفس الشهر (مثل 1–12 يوليو الساعة 7، وبقية الشهر الساعة 9).
+   - **كاشف انقطاع الكهرباء / الأعطال**: تنبيه تلقائي عند غياب البصمة لأكثر من 50% من فئة العمل في يوم واحد لاقتراح اعتمادها كـ إجازة مؤكدة أو حضور معفي.
 
-المطلوب Java 26 وNode 24.18 أو أحدث وnpm 11 أو أحدث، وDocker اختياري لتشغيل PostgreSQL. استخدم أوامر التشغيل الإنجليزية أعلاه، ثم افتح `http://localhost:4200`. بيانات التطوير فقط هي التطبيق `DEMO` والمستخدم `admin` وكلمة المرور `Admin@12345`، ويجب عدم استخدامها في الإنتاج.
+4. **تصنيف حالات التقرير وإجراءات HR الجماعية**:
+   - 🟢 **الفئة الخضراء (سليمة)**: حضور كامل بدون تأخير أو أخطاء.
+   - 🟡 **الفئة الصفراء (بصمة واحدة)**: تسجيل بصمة واحدة فقط أو تأخير بسيط.
+   - 🔴 **الفئة الحمراء (أخطاء/غياب)**: عدم وجود بصمة أو الحاجة لتأكيد يدوي.
+   - **أزرار القرار الجماعي**: إمكانية اعتماد جميع حالات البصمة الواحدة كـ يوم طبيعي أو خصم الغياب بضغطة زر واحدة.
 
-قبل استكمال أي تطوير اقرأ مستند متطلبات العمل وملفي مهارة الـbackend والـfrontend المشار إليهما أعلاه؛ فهما نقطة التسليم لأي مطور أو agent جديد.
+5. **العمليات التجارية والسُلف وتصدير Excel**:
+   - إدارة الأطراف (موردين، عملاء، تجار فرزة)، المخزون، السُلف، وحسابات الأطراف المالية.
+   - تصدير تقارير Excel منسقة بلغة المستخدم والشكل المختار (ذهبي، أزرق، أخضر، رمادي).
 
-لبناء مثبت Windows شغّل `npm run build` داخل `desktop/`. تُنزّل أداة التحضير توزيعة PostgreSQL الرسمية عند عدم توفير مسار محلي. تُنشر `license-app/` منفصلة، ولا يوضع داخل تطبيق العميل إلا المفتاح العام ورابط HTTPS النهائي.
+6. **نظام المظهر والتباين العالي**:
+   - دعم كامل للوضع الداكن (`Dark Mode`) والوضع الفاتح (`Light Mode`) بتباين عالي متوافق مع معايير WCAG وتنسيق ألوان مريح للعين.

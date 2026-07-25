@@ -6,6 +6,7 @@ import { I18nService } from '../i18n.service';
 import { IconComponent, IconName } from '../../shared/ui/icon/icon.component';
 
 interface NavItem {
+  menuId: string;
   labelKey: string;
   descriptionKey: string;
   path: string;
@@ -24,15 +25,18 @@ export class AppShellComponent {
   readonly authService = inject(AuthService);
   readonly i18n = inject(I18nService);
   readonly menuOpen = signal(false);
+  readonly collapsed = signal(false);
   private readonly router = inject(Router);
   readonly items: NavItem[] = [
     {
+      menuId: 'dashboard',
       labelKey: 'nav.dashboard',
       descriptionKey: 'nav.dashboardHint',
       path: '/dashboard',
       icon: 'dashboard',
     },
     {
+      menuId: 'categories',
       labelKey: 'nav.categories',
       descriptionKey: 'nav.categoriesHint',
       path: '/categories',
@@ -40,6 +44,7 @@ export class AppShellComponent {
       roles: ['ADMIN', 'HR_MANAGER'],
     },
     {
+      menuId: 'employees',
       labelKey: 'nav.employees',
       descriptionKey: 'nav.employeesHint',
       path: '/employees',
@@ -47,6 +52,7 @@ export class AppShellComponent {
       roles: ['ADMIN', 'HR_MANAGER'],
     },
     {
+      menuId: 'imports',
       labelKey: 'nav.imports',
       descriptionKey: 'nav.importsHint',
       path: '/imports',
@@ -54,6 +60,7 @@ export class AppShellComponent {
       roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
     },
     {
+      menuId: 'parties',
       labelKey: 'nav.parties',
       descriptionKey: 'nav.partiesHint',
       path: '/parties',
@@ -61,12 +68,14 @@ export class AppShellComponent {
       roles: ['ADMIN', 'HR_MANAGER'],
     },
     {
+      menuId: 'reports',
       labelKey: 'nav.reports',
       descriptionKey: 'nav.reportsHint',
       path: '/reports',
       icon: 'reports',
     },
     {
+      menuId: 'operations',
       labelKey: 'nav.operations',
       descriptionKey: 'nav.operationsHint',
       path: '/operations',
@@ -74,6 +83,7 @@ export class AppShellComponent {
       roles: ['ADMIN', 'HR_MANAGER'],
     },
     {
+      menuId: 'users',
       labelKey: 'nav.users',
       descriptionKey: 'nav.usersHint',
       path: '/users',
@@ -83,7 +93,9 @@ export class AppShellComponent {
   ];
 
   visible(item: NavItem): boolean {
-    return !item.roles || this.authService.hasAnyRole(item.roles);
+    const roleOk = !item.roles || this.authService.hasAnyRole(item.roles);
+    const menuOk = this.authService.hasMenuAccess(item.menuId);
+    return roleOk && menuOk;
   }
   closeMenu(): void {
     this.menuOpen.set(false);

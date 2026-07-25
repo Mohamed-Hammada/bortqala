@@ -27,6 +27,7 @@ public class UserPreference {
     @Column(nullable = false, length = 10) private String locale;
     @Enumerated(EnumType.STRING) @Column(name = "excel_table_style", nullable = false, length = 20)
     private ExcelTableStyle excelTableStyle;
+    @Column(name = "default_page_size", nullable = false) private int defaultPageSize = 25;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
 
@@ -39,13 +40,21 @@ public class UserPreference {
         this.tableDensity = TableDensity.COMFORTABLE;
         this.locale = "ar-EG";
         this.excelTableStyle = ExcelTableStyle.GOLD;
+        this.defaultPageSize = 25;
     }
 
     public void update(ThemePreference theme, TableDensity tableDensity, String locale, ExcelTableStyle excelTableStyle) {
+        update(theme, tableDensity, locale, excelTableStyle, null);
+    }
+
+    public void update(ThemePreference theme, TableDensity tableDensity, String locale, ExcelTableStyle excelTableStyle, Integer defaultPageSize) {
         this.theme = theme;
         this.tableDensity = tableDensity;
         this.locale = locale.equalsIgnoreCase("en-US") ? "en-US" : "ar-EG";
         this.excelTableStyle = excelTableStyle;
+        if (defaultPageSize != null && defaultPageSize > 0) {
+            this.defaultPageSize = defaultPageSize;
+        }
     }
 
     @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }

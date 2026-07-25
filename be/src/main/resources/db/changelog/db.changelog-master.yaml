@@ -35,3 +35,5 @@ databaseChangeLog:
       file: db/changelog/20260725_v17_operations_enum_translations.yaml
   - include:
       file: db/changelog/20260725_v18_full_ui_translations.yaml
+  - include:
+      file: db/changelog/20260725_v19_server_pagination_and_menu_permissions.yaml
