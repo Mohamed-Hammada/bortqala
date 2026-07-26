@@ -477,10 +477,28 @@ tbody tr:hover td {
   max-width: 320px;
 }
 
-.field input[type='number'],
+.field input[type='number'] {
+  max-width: 180px;
+}
+
 .field input[type='date'],
 .field input[type='time'] {
-  max-width: 200px;
+  max-width: 175px;
+  cursor: pointer;
+}
+
+.field input[type='date']::-webkit-calendar-picker-indicator,
+.field input[type='time']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.85;
+  padding: 2px;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.field input[type='date']::-webkit-calendar-picker-indicator:hover,
+.field input[type='time']::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  transform: scale(1.15);
 }
 
 .field textarea {

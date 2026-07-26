@@ -30,11 +30,23 @@
     <form class="period-form" [formGroup]="periodForm" (ngSubmit)="createCustom()">
       <div class="field">
         <label for="report-period-start">{{ i18n.t('reports.from') }}</label>
-        <input id="report-period-start" class="ltr" type="date" formControlName="periodStart" />
+        <input
+          id="report-period-start"
+          class="ltr"
+          type="date"
+          formControlName="periodStart"
+          onclick="this.showPicker && this.showPicker()"
+        />
       </div>
       <div class="field">
         <label for="report-period-end">{{ i18n.t('reports.to') }}</label>
-        <input id="report-period-end" class="ltr" type="date" formControlName="periodEnd" />
+        <input
+          id="report-period-end"
+          class="ltr"
+          type="date"
+          formControlName="periodEnd"
+          onclick="this.showPicker && this.showPicker()"
+        />
       </div>
       <div class="field">
         <label for="report-pay-cycle">{{ i18n.t('reports.payCycle') }}</label>

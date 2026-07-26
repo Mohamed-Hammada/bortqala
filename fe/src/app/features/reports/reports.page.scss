@@ -14,12 +14,12 @@
   color: var(--muted);
 }
 .period-form {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
-  gap: 12px;
-  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
   margin-top: 18px;
-  padding: 16px;
+  padding: 16px 20px;
   border-radius: 12px;
   background: var(--surface-muted);
 }
