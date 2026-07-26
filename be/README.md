@@ -48,6 +48,9 @@ Spring Boot 4.1 modular monolith built with Java 26, Spring Data JPA, Hibernate 
 
 # Clean and run all unit/integration tests
 .\gradlew.bat clean test
+
+# Build backend Docker image standalone
+docker build -t bemo-hr-backend .
 ```
 
 | Configuration Variable | Purpose / Default Value |
@@ -57,3 +60,4 @@ Spring Boot 4.1 modular monolith built with Java 26, Spring Data JPA, Hibernate 
 | `DB_PASSWORD` | PostgreSQL password (`root`) |
 | `HR_JWT_SECRET` | HS256 secret (minimum 32 bytes) |
 | `HR_COMPANY_ZONE` | Time zone (`Africa/Cairo`) |
+

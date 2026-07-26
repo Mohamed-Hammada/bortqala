@@ -109,3 +109,48 @@ cd ..\fe
 npm run check:i18n
 npm run build
 ```
+
+---
+
+## 🐳 Production Docker Deployment
+
+The application includes full multi-container Docker support with **PostgreSQL 17**, **Spring Boot Backend**, and **Angular Nginx Web Server**.
+
+### 1. One-Click Deployment Scripts
+
+- **Windows**: Double-click `docker-deploy.bat` or run:
+  ```cmd
+  docker-deploy.bat
+  ```
+- **Linux / macOS**: Run:
+  ```bash
+  chmod +x docker-deploy.sh
+  ./docker-deploy.sh
+  ```
+
+### 2. Manual Docker Compose Execution
+
+```bash
+# 1. Copy environment template
+cp .env.example .env
+
+# 2. Build and start containers in background
+docker compose up --build -d
+
+# 3. View container logs
+docker compose logs -f
+```
+
+### 3. Service Access & Endpoints
+
+| Service | Port | Description |
+| :--- | :--- | :--- |
+| **Angular Web App** | `http://localhost:80` | Nginx web server with HTML5 routing & API reverse proxy |
+| **Spring Boot API** | `http://localhost:8080` | REST API, OAuth2 Security, Actuator `/actuator/health` |
+| **PostgreSQL DB** | `localhost:5432` | Enterprise database with volume persistence (`postgres_data`) |
+
+### Default Credentials
+- **Company Code**: `DEMO`
+- **Username**: `admin`
+- **Password**: `Admin@12345`
+

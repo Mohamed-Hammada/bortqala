@@ -171,6 +171,23 @@ export class OperationsPage {
     date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
     return date.toISOString().slice(0, 16);
   }
+
+  @HostListener('document:keydown', ['$event']) onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.drawer() !== null) {
+      this.close();
+    } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+      if (this.drawer() === 'item') {
+        event.preventDefault();
+        void this.saveItem();
+      } else if (this.drawer() === 'transaction') {
+        event.preventDefault();
+        void this.saveTransaction();
+      } else if (this.drawer() === 'advance') {
+        event.preventDefault();
+        void this.saveAdvance();
+      }
+    }
+  }
 }
 
 function switchOperationLabel(i18n: I18nService, value: string): string {

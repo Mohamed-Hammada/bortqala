@@ -118,9 +118,15 @@ export class PartiesPage {
     this.submitted.set(false);
   }
 
-  @HostListener('document:keydown.escape')
-  onEscape(): void {
-    if (this.drawerOpen()) this.closeDrawer();
+  @HostListener('document:keydown', ['$event']) onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.drawerOpen()) {
+      this.closeDrawer();
+    } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+      if (this.drawerOpen()) {
+        event.preventDefault();
+        void this.submit();
+      }
+    }
   }
 
   typeLabel(type: string): string {

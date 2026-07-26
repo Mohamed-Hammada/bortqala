@@ -52,4 +52,7 @@ npm run check:i18n
 
 # Build production bundle
 npm run build
+
+# Build Nginx frontend Docker image standalone
+docker build -t bemo-hr-frontend .
 ```
