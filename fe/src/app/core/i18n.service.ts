@@ -18,6 +18,12 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'login.invalidCredentials': 'اسم المستخدم أو كلمة المرور غير صحيحة.',
     'login.sessionExpired': 'انتهت الجلسة. برجاء تسجيل الدخول مرة أخرى.',
     'settings.dense': 'عالية الكثافة',
+    'settings.sessionMinutesHint': '💡 ملاحظة: تنطبق المدة الجديدة بالدقائق للمستخدمين بعد تسجيل الخروج وإعادة تسجيل الدخول مرة أخرى.',
+    'warning.manualConfirmationRequired': 'مطلوب تأكيد الحضور يدويًا.',
+    'warning.noBiometricPunch': 'لم يتم تسجيل أي بصمات.',
+    'warning.singlePunchPolicy': 'تم احتساب الحضور من بصمة واحدة حسب سياسة الفئة.',
+    'warning.singlePunchIncomplete': 'تم تسجيل بصمة واحدة فقط وتتطلب المراجعة.',
+    'warning.missingScheduleRule': 'لا توجد مواعيد عمل سارية لهذا اليوم.',
   },
   'en-US': {
     'api.connectionError': 'Unable to reach the server. Make sure the backend is running.',
@@ -26,6 +32,12 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'login.invalidCredentials': 'The username or password is incorrect.',
     'login.sessionExpired': 'Session expired. Please log in again.',
     'settings.dense': 'High Density',
+    'settings.sessionMinutesHint': '💡 Note: The updated session duration in minutes will take effect after logging out and logging in again.',
+    'warning.manualConfirmationRequired': 'Manual attendance confirmation is required.',
+    'warning.noBiometricPunch': 'No biometric punch found.',
+    'warning.singlePunchPolicy': 'Presence counted from one punch by category policy.',
+    'warning.singlePunchIncomplete': 'One punch is incomplete and requires review.',
+    'warning.missingScheduleRule': 'No effective schedule rule for this workday.',
   },
 };
 

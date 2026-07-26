@@ -292,13 +292,13 @@
                   {{ status(row.status) }}
                 </span>
                 @if (row.warning) {
-                  <small class="warning-copy">{{ row.warning }}</small>
+                  <small class="warning-copy">{{ warningLabel(row.warning) }}</small>
                 }
               </td>
               <td (click)="$event.stopPropagation()">
                 @if (row.decision) {
                   <div class="decision-badge">
-                    <strong>✓ {{ row.decision }}</strong>
+                    <strong>✓ {{ decisionLabel(row.decision) }}</strong>
                     <small>{{ row.decidedBy }} · {{ row.decisionNote }}</small>
                   </div>
                 } @else if (blocking(row) && canReview()) {
@@ -351,7 +351,7 @@
                     </div>
                     @if (row.warning) {
                       <div class="evidence-note">
-                        📌 <strong>الدليل والتشخيص التلقائي:</strong> {{ row.warning }}
+                        📌 <strong>{{ i18n.t('review.evidenceTitle', undefined, 'الدليل والتشخيص التلقائي:') }}</strong> {{ warningLabel(row.warning) }}
                       </div>
                     }
                   </div>

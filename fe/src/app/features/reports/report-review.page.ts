@@ -103,6 +103,36 @@ export class ReportReviewPage {
       }[value],
     );
   }
+  decisionLabel(value: AttendanceDecision | string | null): string {
+    if (!value) return '';
+    switch (value) {
+      case 'NORMAL_DAY':
+        return this.i18n.t('decision.normalDay');
+      case 'DEDUCT':
+        return this.i18n.t('decision.deduct');
+      case 'APPROVED_LEAVE':
+        return this.i18n.t('decision.approvedLeave');
+      default:
+        return value;
+    }
+  }
+  warningLabel(value: string | null): string {
+    if (!value) return '';
+    switch (value) {
+      case 'Manual attendance confirmation is required.':
+        return this.i18n.t('warning.manualConfirmationRequired');
+      case 'No biometric punch found.':
+        return this.i18n.t('warning.noBiometricPunch');
+      case 'Presence counted from one punch by category policy.':
+        return this.i18n.t('warning.singlePunchPolicy');
+      case 'One punch is incomplete and requires review.':
+        return this.i18n.t('warning.singlePunchIncomplete');
+      case 'No effective schedule rule for this workday.':
+        return this.i18n.t('warning.missingScheduleRule');
+      default:
+        return value;
+    }
+  }
   async decide(row: DailyResult, decision: AttendanceDecision) {
     let worked: number | null = null;
     if (

@@ -15,7 +15,7 @@
         <p class="group-hint">{{ i18n.t('settings.themeHint') }}</p>
         <div class="theme-cards-grid">
           <label class="theme-preview-card" [class.selected]="form.controls.theme.value === 'LIGHT'">
-            <input type="radio" formControlName="theme" value="LIGHT" (change)="preview()" />
+            <input type="radio" formControlName="theme" value="LIGHT" />
             <div class="card-icon">☀</div>
             <div class="card-info">
               <strong>{{ i18n.t('settings.light') }}</strong>
@@ -24,7 +24,7 @@
           </label>
 
           <label class="theme-preview-card" [class.selected]="form.controls.theme.value === 'DARK'">
-            <input type="radio" formControlName="theme" value="DARK" (change)="preview()" />
+            <input type="radio" formControlName="theme" value="DARK" />
             <div class="card-icon">🌙</div>
             <div class="card-info">
               <strong>{{ i18n.t('settings.dark') }}</strong>
@@ -33,7 +33,7 @@
           </label>
 
           <label class="theme-preview-card" [class.selected]="form.controls.theme.value === 'SYSTEM'">
-            <input type="radio" formControlName="theme" value="SYSTEM" (change)="preview()" />
+            <input type="radio" formControlName="theme" value="SYSTEM" />
             <div class="card-icon">💻</div>
             <div class="card-info">
               <strong>{{ i18n.t('settings.system') }}</strong>
@@ -49,15 +49,15 @@
         <p class="group-hint">{{ i18n.t('settings.densityHint') }}</p>
         <div class="segmented-pills-grid">
           <label class="segmented-pill-option" [class.selected]="form.controls.tableDensity.value === 'COMFORTABLE'">
-            <input type="radio" formControlName="tableDensity" value="COMFORTABLE" (change)="preview()" />
+            <input type="radio" formControlName="tableDensity" value="COMFORTABLE" />
             <span>{{ i18n.t('settings.comfortable') }} (40px)</span>
           </label>
           <label class="segmented-pill-option" [class.selected]="form.controls.tableDensity.value === 'COMPACT'">
-            <input type="radio" formControlName="tableDensity" value="COMPACT" (change)="preview()" />
+            <input type="radio" formControlName="tableDensity" value="COMPACT" />
             <span>{{ i18n.t('settings.compact') }} (34px)</span>
           </label>
           <label class="segmented-pill-option" [class.selected]="form.controls.tableDensity.value === 'DENSE'">
-            <input type="radio" formControlName="tableDensity" value="DENSE" (change)="preview()" />
+            <input type="radio" formControlName="tableDensity" value="DENSE" />
             <span>{{ i18n.t('settings.dense') }} (28px)</span>
           </label>
         </div>
@@ -69,11 +69,11 @@
         <p class="group-hint">اختر لغة واجهة النظام (Interface Locale)</p>
         <div class="segmented-pills-grid two-col">
           <label class="segmented-pill-option" [class.selected]="form.controls.locale.value === 'ar-EG'">
-            <input type="radio" formControlName="locale" value="ar-EG" (change)="preview()" />
+            <input type="radio" formControlName="locale" value="ar-EG" />
             <span>{{ i18n.t('settings.arabic') }} (RTL)</span>
           </label>
           <label class="segmented-pill-option" [class.selected]="form.controls.locale.value === 'en-US'">
-            <input type="radio" formControlName="locale" value="en-US" (change)="preview()" />
+            <input type="radio" formControlName="locale" value="en-US" />
             <span>{{ i18n.t('settings.english') }} (LTR)</span>
           </label>
         </div>
@@ -120,7 +120,7 @@
     </div>
 
     <div class="actions settings-toolbar">
-      <button class="button secondary" type="button" (click)="preview()">
+      <button class="button secondary" type="button" (click)="cancel()">
         {{ i18n.t('common.cancel') }}
       </button>
       <button class="button primary" type="submit" [disabled]="saving() || form.invalid">
@@ -160,6 +160,9 @@
                 max="10080"
                 formControlName="sessionTimeoutMinutes"
               />
+              <small class="field-hint" style="color: var(--gold); font-weight: 600; margin-top: 4px; display: block;">
+                {{ i18n.t('settings.sessionMinutesHint') }}
+              </small>
             </div>
           }
 

@@ -63,15 +63,14 @@ export class SettingsPage {
     }
   }
 
-  preview(): void {
-    if (this.form.valid) {
-      const value = this.form.getRawValue();
-      document.documentElement.dataset['theme'] = value.theme.toLowerCase();
-      document.documentElement.dataset['density'] = value.tableDensity.toLowerCase();
-      document.documentElement.lang = value.locale.startsWith('ar') ? 'ar' : 'en';
-      document.documentElement.dir = value.locale.startsWith('ar') ? 'rtl' : 'ltr';
-      void this.i18n.use(value.locale);
-    }
+  cancel(): void {
+    const prefs = this.authService.preferences();
+    this.form.reset({
+      theme: prefs.theme as ThemePreference,
+      tableDensity: prefs.tableDensity as TableDensity,
+      locale: prefs.locale,
+      excelTableStyle: prefs.excelTableStyle as ExcelTableStyle,
+    });
   }
 
   async save(): Promise<void> {

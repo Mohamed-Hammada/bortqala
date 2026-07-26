@@ -511,3 +511,19 @@ x18-ar-255;api.unauthorized;ar-EG;انتهت الجلسة أو بيانات ال
 x18-en-255;api.unauthorized;en-US;The session expired or the credentials are invalid.
 x18-ar-256;api.unexpected;ar-EG;حدث خطأ غير متوقع. حاول مرة أخرى.
 x18-en-256;api.unexpected;en-US;An unexpected error occurred. Please try again.
+x18-ar-257;review.evidenceTitle;ar-EG;الدليل والتشخيص التلقائي:
+x18-en-257;review.evidenceTitle;en-US;Evidence and Diagnostic:
+x18-ar-258;warning.manualConfirmationRequired;ar-EG;مطلوب تأكيد الحضور يدويًا.
+x18-en-258;warning.manualConfirmationRequired;en-US;Manual attendance confirmation is required.
+x18-ar-259;warning.noBiometricPunch;ar-EG;لم يتم تسجيل أي بصمات.
+x18-en-259;warning.noBiometricPunch;en-US;No biometric punch found.
+x18-ar-260;warning.singlePunchPolicy;ar-EG;تم احتساب الحضور من بصمة واحدة حسب سياسة الفئة.
+x18-en-260;warning.singlePunchPolicy;en-US;Presence counted from one punch by category policy.
+x18-ar-261;warning.singlePunchIncomplete;ar-EG;تم تسجيل بصمة واحدة فقط وتتطلب المراجعة.
+x18-en-261;warning.singlePunchIncomplete;en-US;One punch is incomplete and requires review.
+x18-ar-262;warning.missingScheduleRule;ar-EG;لا توجد مواعيد عمل سارية لهذا اليوم.
+x18-en-262;warning.missingScheduleRule;en-US;No effective schedule rule for this workday.
+x18-ar-263;settings.sessionMinutesHint;ar-EG;💡 ملاحظة: تنطبق المدة الجديدة بالدقائق للمستخدمين بعد تسجيل الخروج وإعادة تسجيل الدخول مرة أخرى.
+x18-en-263;settings.sessionMinutesHint;en-US;💡 Note: The updated session duration in minutes will take effect after logging out and logging in again.
+
+
