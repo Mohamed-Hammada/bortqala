@@ -13,7 +13,7 @@
         [attr.aria-label]="i18n.t('dashboard.month')"
       >
         @for (key of monthKeys; track $index) {
-          <option [value]="$index + 1">{{ i18n.t(key) }}</option>
+          <option [value]="$index + 1" [selected]="$index + 1 === month()">{{ i18n.t(key) }}</option>
         }</select
       ><input
         #yearSelect

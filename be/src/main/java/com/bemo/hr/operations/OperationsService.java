@@ -88,6 +88,9 @@ public class OperationsService {
         if (request.quantityDelta().signum() == 0 && request.amountDelta().signum() == 0) {
             throw new BusinessRuleException("Quantity and amount cannot both be zero.");
         }
+        if (request.quantityDelta().signum() < 0) {
+            throw new BusinessRuleException("Quantity must be a positive number.");
+        }
         if (request.lossPercentage() != null && (request.lossPercentage().signum() < 0
                 || request.lossPercentage().compareTo(BigDecimal.valueOf(100)) > 0)) {
             throw new BusinessRuleException("Loss percentage must be between 0 and 100.");
@@ -95,8 +98,14 @@ public class OperationsService {
         if (request.quantityDelta().signum() != 0) {
             if (request.itemId() == null || request.itemId().isBlank()) throw new BusinessRuleException("An inventory item is required for quantity movement.");
             requireItem(request.itemId());
+            BigDecimal qty = request.quantityDelta().abs();
+            String op = request.operationType() == null ? "" : request.operationType().toUpperCase();
+            if (op.equals("PROCESSING_INTAKE") || op.equals("PROCESSING_DELIVERY")
+                || op.equals("EXPORT_SALE") || op.equals("SORTING_SALE") || op.equals("DISPOSAL")) {
+                qty = qty.negate();
+            }
             stockMovementRepository.save(new StockMovement(request.itemId(), normalizeId(request.partyId()), request.operationType(),
-                    request.quantityDelta(), request.lossPercentage(), request.referenceCode(), request.note(), request.occurredAt(), actor));
+                    qty, request.lossPercentage(), request.referenceCode(), request.note(), request.occurredAt(), actor));
         }
         if (request.amountDelta().signum() != 0) {
             var partyId = normalizeId(request.partyId());

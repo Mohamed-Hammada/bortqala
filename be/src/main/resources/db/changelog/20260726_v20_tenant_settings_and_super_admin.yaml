@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: seed_super_admin_role
+      author: Mohamed-Hammada
+      changes:
+        - insert:
+            tableName: roles
+            columns:
+              - column:
+                  name: code
+                  value: SUPER_ADMIN
+              - column:
+                  name: name_ar
+                  value: مدير النظام الأعلى

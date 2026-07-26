@@ -11,7 +11,9 @@ class TenantApplicationTests {
 
         assertThat(application.getSessionTimeoutMinutes()).isEqualTo(480);
 
-        application.updateSessionTimeoutMinutes(60);
+        application.updateSettings(60, true, false);
         assertThat(application.getSessionTimeoutMinutes()).isEqualTo(60);
+        assertThat(application.isSessionTimeoutEnabled()).isTrue();
+        assertThat(application.isShowReportPresets()).isFalse();
     }
 }

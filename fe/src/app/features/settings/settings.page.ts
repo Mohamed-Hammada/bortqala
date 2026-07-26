@@ -42,10 +42,12 @@ export class SettingsPage {
   });
   readonly appSettingsForm = this.formBuilder.nonNullable.group({
     sessionTimeoutMinutes: [480, [Validators.required, Validators.min(5), Validators.max(10_080)]],
+    sessionTimeoutEnabled: [true, Validators.required],
+    showReportPresets: [true, Validators.required],
   });
 
   constructor() {
-    if (this.authService.hasAnyRole(['ADMIN'])) void this.loadAppSettings();
+    if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) void this.loadAppSettings();
   }
 
   async releaseLicense(): Promise<void> {
@@ -93,12 +95,13 @@ export class SettingsPage {
     }
     this.appSettingsSaving.set(true);
     try {
-      const saved = await firstValueFrom(
-        this.authService.updateAppSettings(
-          this.appSettingsForm.controls.sessionTimeoutMinutes.value,
-        ),
-      );
-      this.appSettingsForm.controls.sessionTimeoutMinutes.setValue(saved.sessionTimeoutMinutes);
+      const raw = this.appSettingsForm.getRawValue();
+      const saved = await firstValueFrom(this.authService.updateAppSettings(raw));
+      this.appSettingsForm.patchValue({
+        sessionTimeoutMinutes: saved.sessionTimeoutMinutes,
+        sessionTimeoutEnabled: saved.sessionTimeoutEnabled,
+        showReportPresets: saved.showReportPresets,
+      });
       this.notification.success(this.i18n.t('settings.sessionSaved'));
     } catch (error) {
       const msg = apiErrorMessage(error, this.i18n);
@@ -112,7 +115,11 @@ export class SettingsPage {
     this.appSettingsLoading.set(true);
     try {
       const settings = await firstValueFrom(this.authService.appSettings());
-      this.appSettingsForm.controls.sessionTimeoutMinutes.setValue(settings.sessionTimeoutMinutes);
+      this.appSettingsForm.patchValue({
+        sessionTimeoutMinutes: settings.sessionTimeoutMinutes,
+        sessionTimeoutEnabled: settings.sessionTimeoutEnabled ?? true,
+        showReportPresets: settings.showReportPresets ?? true,
+      });
     } catch (error) {
       this.appSettingsError.set(apiErrorMessage(error, this.i18n));
     } finally {

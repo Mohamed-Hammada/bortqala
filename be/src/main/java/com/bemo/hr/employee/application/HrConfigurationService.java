@@ -160,6 +160,12 @@ public class HrConfigurationService {
         if (request.activeTo() != null && request.activeTo().isBefore(request.activeFrom())) {
             throw new BusinessRuleException("Employee active-to date cannot be before active-from date.");
         }
+        var category = attendanceCategoryRepository.findById(request.categoryId()).orElse(null);
+        if (category != null && category.getAttendanceMode() == com.bemo.hr.employee.domain.AttendanceMode.BIOMETRIC) {
+            if (request.active() && (request.deviceUserId() == null || request.deviceUserId().isBlank())) {
+                throw new BusinessRuleException("A unique biometric device ID is required for active employees in biometric categories.");
+            }
+        }
         if (request.deviceUserId() != null && !request.deviceUserId().isBlank()) {
             boolean duplicateDeviceId = currentId == null
                     ? employeeRepository.existsByDeviceUserId(request.deviceUserId().strip())

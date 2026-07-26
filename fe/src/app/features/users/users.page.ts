@@ -33,6 +33,7 @@ export class UsersPage {
   readonly pagination = new TablePagination();
   readonly paged = computed(() => this.pagination.slice(this.store.items()));
   readonly roles: Array<{ code: RoleCode; labelKey: string; descriptionKey: string }> = [
+    { code: 'SUPER_ADMIN', labelKey: 'role.superAdmin', descriptionKey: 'role.superAdminHint' },
     { code: 'ADMIN', labelKey: 'role.admin', descriptionKey: 'role.adminHint' },
     { code: 'HR_MANAGER', labelKey: 'role.hrManager', descriptionKey: 'role.hrManagerHint' },
     { code: 'HR_REVIEWER', labelKey: 'role.hrReviewer', descriptionKey: 'role.hrReviewerHint' },

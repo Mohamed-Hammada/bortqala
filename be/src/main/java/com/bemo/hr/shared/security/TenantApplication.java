@@ -29,6 +29,12 @@ public class TenantApplication {
     @Column(name = "session_timeout_minutes", nullable = false)
     private int sessionTimeoutMinutes;
 
+    @Column(name = "session_timeout_enabled", nullable = false)
+    private boolean sessionTimeoutEnabled = true;
+
+    @Column(name = "show_report_presets", nullable = false)
+    private boolean showReportPresets = true;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -43,10 +49,14 @@ public class TenantApplication {
         this.name = name.strip();
         this.active = true;
         this.sessionTimeoutMinutes = 480;
+        this.sessionTimeoutEnabled = true;
+        this.showReportPresets = true;
     }
 
-    public void updateSessionTimeoutMinutes(int sessionTimeoutMinutes) {
+    public void updateSettings(int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets) {
         this.sessionTimeoutMinutes = sessionTimeoutMinutes;
+        this.sessionTimeoutEnabled = sessionTimeoutEnabled;
+        this.showReportPresets = showReportPresets;
     }
 
     @PrePersist
@@ -60,5 +70,7 @@ public class TenantApplication {
     public String getName() { return name; }
     public boolean isActive() { return active; }
     public int getSessionTimeoutMinutes() { return sessionTimeoutMinutes; }
+    public boolean isSessionTimeoutEnabled() { return sessionTimeoutEnabled; }
+    public boolean isShowReportPresets() { return showReportPresets; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

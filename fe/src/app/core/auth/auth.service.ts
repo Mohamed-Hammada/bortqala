@@ -76,21 +76,20 @@ export class AuthService {
     return this.httpClient.get<AppSettings>('/api/v1/admin/app-settings');
   }
 
-  updateAppSettings(sessionTimeoutMinutes: number) {
-    return this.httpClient.put<AppSettings>('/api/v1/admin/app-settings', {
-      sessionTimeoutMinutes,
-    });
+  updateAppSettings(payload: { sessionTimeoutMinutes: number; sessionTimeoutEnabled: boolean; showReportPresets: boolean }) {
+    return this.httpClient.put<AppSettings>('/api/v1/admin/app-settings', payload);
   }
 
   hasAnyRole(roles: readonly RoleCode[]): boolean {
     const assigned = this.user()?.roles ?? [];
+    if (assigned.includes('SUPER_ADMIN')) return true;
     return roles.some((role) => assigned.includes(role));
   }
 
   hasMenuAccess(menuId: string): boolean {
     const user = this.user();
     if (!user) return false;
-    if (user.roles.includes('ADMIN')) return true;
+    if (user.roles.includes('SUPER_ADMIN')) return true;
     if (!user.allowedMenus || user.allowedMenus.length === 0) return true;
     return user.allowedMenus.includes(menuId);
   }

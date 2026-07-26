@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { dateInputToEpoch, epochToDateInput, formatDate, formatDateTime } from '../../core/date';
+import { AuthService } from '../../core/auth/auth.service';
+import { AppSettings } from '../../core/auth/auth.models';
 import { PeriodOption, ReportPayCycle, ReportStatus } from './reports.models';
 import { ReportsStore } from './reports.store';
 import { I18nService } from '../../core/i18n.service';
@@ -19,8 +21,11 @@ import { TablePaginationComponent } from '../../shared/ui/table-pagination/table
 export class ReportsPage {
   readonly store = inject(ReportsStore);
   readonly i18n = inject(I18nService);
+  readonly authService = inject(AuthService);
   readonly year = signal(new Date().getFullYear());
   readonly customError = signal<string | null>(null);
+  readonly appSettings = signal<AppSettings | null>(null);
+  readonly showReportPresets = computed(() => this.appSettings()?.showReportPresets ?? true);
   readonly pagination = new TablePagination();
   readonly pagedReports = computed(() => this.pagination.slice(this.store.reports()));
   private readonly formBuilder = inject(FormBuilder);
@@ -34,6 +39,10 @@ export class ReportsPage {
 
   constructor() {
     void this.store.list(this.year());
+    this.authService.appSettings().subscribe({
+      next: (settings) => this.appSettings.set(settings),
+      error: () => {},
+    });
   }
   changeYear(value: string): void {
     this.year.set(Number(value));
@@ -109,11 +118,14 @@ export class ReportsPage {
   }
 
   private currentMonthRange(): { start: string; end: string } {
-    const today = epochToDateInput(Date.now());
-    const [year, month] = today.split('-').map(Number);
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const lastDay = new Date(year, month, 0).getDate();
+    const mm = String(month).padStart(2, '0');
     return {
-      start: `${year}-${String(month).padStart(2, '0')}-01`,
-      end: epochToDateInput(Date.UTC(year, month, 0)),
+      start: `${year}-${mm}-01`,
+      end: `${year}-${mm}-${String(lastDay).padStart(2, '0')}`,
     };
   }
 }

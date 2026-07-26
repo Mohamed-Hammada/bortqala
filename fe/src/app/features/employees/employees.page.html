@@ -58,7 +58,7 @@
               @if (item.deviceUserId) {
                 <code>{{ item.deviceUserId }}</code>
               } @else {
-                <span class="manual">{{ i18n.t('employees.manualNoPunch') }}</span>
+                <span class="status warning">⚠️ لم يتم ربط رقم البصمة (Unlinked)</span>
               }
             </td>
             <td>

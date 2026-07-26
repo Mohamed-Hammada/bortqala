@@ -35,7 +35,9 @@ export class ReportReviewPage {
   readonly totalCount = computed(() => this.store.details()?.dailyResults.length ?? 0);
   readonly unresolvedCount = computed(() => this.store.details()?.report.unresolvedCount ?? 0);
   readonly reviewedCount = computed(() => Math.max(0, this.totalCount() - this.unresolvedCount()));
-  readonly reviewedPercent = computed(() => (this.totalCount() > 0 ? Math.round((this.reviewedCount() / this.totalCount()) * 100) : 100));
+  readonly reviewedPercent = computed(() => (this.totalCount() > 0 ? Math.round((this.reviewedCount() / this.totalCount()) * 100) : 0));
+  readonly canReview = computed(() => this.auth.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER']));
+  readonly canApprove = computed(() => this.totalCount() > 0 && this.unresolvedCount() === 0 && this.auth.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER']));
   readonly rows = computed(() => {
     const all = this.store.details()?.dailyResults ?? [];
     const f = this.filter();
@@ -129,11 +131,5 @@ export class ReportReviewPage {
       name,
       note,
     );
-  }
-  canReview() {
-    return this.auth.hasAnyRole(['ADMIN', 'HR_MANAGER', 'HR_REVIEWER']);
-  }
-  canApprove() {
-    return this.auth.hasAnyRole(['ADMIN', 'HR_MANAGER']);
   }
 }

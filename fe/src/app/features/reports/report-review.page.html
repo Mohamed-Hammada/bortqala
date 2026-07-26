@@ -106,7 +106,7 @@
     </div>
 
     <!-- Smart AI Recommendation Section -->
-    @if (data.report.status === 'IN_REVIEW' && canReview()) {
+    @if (data.report.status === 'IN_REVIEW' && canReview() && totalCount() > 0) {
       <div class="smart-ai-box">
         <div class="ai-header">
           <span class="ai-badge-icon">⚡</span>

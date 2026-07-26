@@ -104,7 +104,7 @@ public class AuthService {
     @Transactional
     public AuthApi.AppSettingsResponse updateAppSettings(AuthApi.AppSettingsRequest request) {
         var app = requireCurrentApp();
-        app.updateSessionTimeoutMinutes(request.sessionTimeoutMinutes());
+        app.updateSettings(request.sessionTimeoutMinutes(), request.sessionTimeoutEnabled(), request.showReportPresets());
         return toSettingsResponse(app);
     }
 
@@ -141,10 +141,12 @@ public class AuthService {
         var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue(appCode)
                 .orElseGet(() -> tenantApplicationRepository.save(new TenantApplication(appCode, appName)));
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(app.getId(), username).orElseGet(() -> {
-            var admin = roleRepository.findById(RoleCode.ADMIN)
-                    .orElseThrow(() -> new IllegalStateException("ADMIN role seed is missing."));
-            return appUserRepository.save(new AppUser(app.getId(), username, "مدير النظام",
-                    passwordEncoder.encode(password), Set.of(admin), Set.of("dashboard","employees","categories","reports","imports","parties","operations","users","settings")));
+            var superAdminRole = roleRepository.findById(RoleCode.SUPER_ADMIN)
+                    .orElseGet(() -> roleRepository.save(new Role(RoleCode.SUPER_ADMIN, "Super Admin")));
+            var adminRole = roleRepository.findById(RoleCode.ADMIN)
+                    .orElseGet(() -> roleRepository.save(new Role(RoleCode.ADMIN, "Admin")));
+            return appUserRepository.save(new AppUser(app.getId(), username, "مدير النظام الرئيسي",
+                    passwordEncoder.encode(password), Set.of(superAdminRole, adminRole), Set.of("dashboard","employees","categories","reports","imports","parties","operations","users","settings")));
         });
     }
 
@@ -161,7 +163,15 @@ public class AuthService {
 
     private Set<Role> requireRoles(Set<RoleCode> codes) {
         var roles = roleRepository.findAllById(codes);
-        if (roles.size() != codes.size()) throw new BusinessRuleException("One or more roles are invalid.");
+        if (roles.size() != codes.size()) {
+            // Auto-create missing roles dynamically if needed
+            for (RoleCode code : codes) {
+                if (!roleRepository.existsById(code)) {
+                    roleRepository.save(new Role(code, code.name().replace('_', ' ')));
+                }
+            }
+            roles = roleRepository.findAllById(codes);
+        }
         return Set.copyOf(roles);
     }
 
@@ -195,6 +205,11 @@ public class AuthService {
     }
 
     private AuthApi.AppSettingsResponse toSettingsResponse(TenantApplication app) {
-        return new AuthApi.AppSettingsResponse(app.getSessionTimeoutMinutes(), app.getUpdatedAt());
+        return new AuthApi.AppSettingsResponse(
+                app.getSessionTimeoutMinutes(),
+                app.isSessionTimeoutEnabled(),
+                app.isShowReportPresets(),
+                app.getUpdatedAt()
+        );
     }
 }

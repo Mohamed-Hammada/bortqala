@@ -1,4 +1,4 @@
-export type RoleCode = 'ADMIN' | 'HR_MANAGER' | 'HR_REVIEWER' | 'VIEWER';
+export type RoleCode = 'SUPER_ADMIN' | 'ADMIN' | 'HR_MANAGER' | 'HR_REVIEWER' | 'VIEWER';
 export type ThemePreference = 'LIGHT' | 'DARK' | 'SYSTEM';
 export type TableDensity = 'COMFORTABLE' | 'COMPACT' | 'DENSE';
 export type ExcelTableStyle = 'GOLD' | 'BLUE' | 'GREEN' | 'GRAY';
@@ -33,6 +33,8 @@ export interface LoginResponse {
 
 export interface AppSettings {
   sessionTimeoutMinutes: number;
+  sessionTimeoutEnabled: boolean;
+  showReportPresets: boolean;
   updatedAt: number;
 }
 

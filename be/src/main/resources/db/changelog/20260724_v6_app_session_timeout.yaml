@@ -11,8 +11,20 @@ databaseChangeLog:
                   type: INT
                   defaultValueNumeric: 480
                   constraints: { nullable: false }
+              - column:
+                  name: session_timeout_enabled
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints: { nullable: false }
+              - column:
+                  name: show_report_presets
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints: { nullable: false }
       rollback:
         - dropColumn: { tableName: apps, columnName: session_timeout_minutes }
+        - dropColumn: { tableName: apps, columnName: session_timeout_enabled }
+        - dropColumn: { tableName: apps, columnName: show_report_presets }
 
   - changeSet:
       id: seed_app_session_timeout_translations

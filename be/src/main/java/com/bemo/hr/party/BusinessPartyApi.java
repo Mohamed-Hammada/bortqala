@@ -17,7 +17,7 @@ final class BusinessPartyApi {
                    @NotBlank @Size(max = 160) String name,
                    @NotBlank @Size(max = 80) String partyType,
                    @Size(max = 160) String contactPerson,
-                   @Size(max = 50) String phone,
+                   @Size(max = 50) @jakarta.validation.constraints.Pattern(regexp = "^$|^[+0-9\\s\\-().]{7,30}$", message = "Invalid phone number format.") String phone,
                    @Size(max = 1000) String notes,
                    @NotNull Boolean active,
                    Long version) { }

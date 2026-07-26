@@ -129,28 +129,51 @@
     </div>
   </form>
 
-  @if (authService.hasAnyRole(['ADMIN'])) {
+  @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
     <form
       class="card settings-card admin-settings"
       [formGroup]="appSettingsForm"
       (ngSubmit)="saveAppSettings()"
     >
       <fieldset class="settings-group">
-        <legend class="group-title">{{ i18n.t('settings.sessionTitle') }}</legend>
-        <p class="group-hint">{{ i18n.t('settings.sessionHint') }}</p>
-        <div class="field session-timeout-field">
-          <label for="session-timeout">{{ i18n.t('settings.sessionMinutes') }}</label>
-          <input
-            id="session-timeout"
-            class="ltr"
-            type="number"
-            min="5"
-            max="10080"
-            formControlName="sessionTimeoutMinutes"
-          />
+        <legend class="group-title">⚙️ إعدادات النظام المتقدمة (Enterprise App Settings)</legend>
+        <p class="group-hint">التحكم في تفعيل مدة الجلسة وإظهار شريط التقارير الجاهزة للمستخدمين</p>
+
+        <div class="field-stack" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+          <!-- Session Timeout Enable / Disable -->
+          <label class="selectable-card">
+            <input type="checkbox" formControlName="sessionTimeoutEnabled" />
+            <span>
+              <strong>تفعيل مدة انتهاء الجلسة (Enable Session Timeout)</strong>
+              <small>عند تعطيل الخيار يتم إيقاف انتهاء مدة الجلسة تلقائياً للمستخدمين.</small>
+            </span>
+          </label>
+
+          @if (appSettingsForm.controls.sessionTimeoutEnabled.value) {
+            <div class="field session-timeout-field">
+              <label for="session-timeout">{{ i18n.t('settings.sessionMinutes') }}</label>
+              <input
+                id="session-timeout"
+                class="ltr"
+                type="number"
+                min="5"
+                max="10080"
+                formControlName="sessionTimeoutMinutes"
+              />
+            </div>
+          }
+
+          <!-- Show / Hide Report Presets Toolbar -->
+          <label class="selectable-card">
+            <input type="checkbox" formControlName="showReportPresets" />
+            <span>
+              <strong>إظهار شريط الاختصارات الجاهزة في شاشة التقارير (Show Quick Report Presets)</strong>
+              <small>إظهار أو إخفاء قسم "اختصارات جاهزة: الشهر الكامل أو النصف الأول/الثاني" في صفحة التقارير.</small>
+            </span>
+          </label>
         </div>
       </fieldset>
-      <div class="actions">
+      <div class="actions" style="margin-top: 16px;">
         <button
           class="button primary"
           type="submit"

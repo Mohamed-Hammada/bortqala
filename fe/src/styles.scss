@@ -310,6 +310,10 @@ table {
   font-size: 13.5px;
 }
 
+[dir='ltr'] table {
+  text-align: left;
+}
+
 th {
   position: sticky;
   top: 0;

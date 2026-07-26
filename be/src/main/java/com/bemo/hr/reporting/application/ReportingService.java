@@ -215,7 +215,13 @@ public class ReportingService {
     public ReportingApi.Details approve(String id, String actor) {
         var report = requireReport(id);
         if (report.getStatus() == ReportStatus.APPROVED || report.getStatus() == ReportStatus.EXPORTED) return details(report);
-        refreshUnresolved(report); report.approve(actor); return details(report);
+        long totalRecords = dailyAttendanceResultRepository.countByReportId(report.getId());
+        if (totalRecords == 0) {
+            throw new BusinessRuleException("Cannot approve an empty report with 0 employee records.");
+        }
+        refreshUnresolved(report);
+        report.approve(actor);
+        return details(report);
     }
 
     @Transactional

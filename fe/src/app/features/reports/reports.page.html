@@ -55,24 +55,26 @@
     @if (customError()) {
       <div class="alert error period-error">{{ customError() }}</div>
     }
-    <div class="preset-head">
-      <strong>{{ i18n.t('reports.presets') }}</strong>
-      <span>{{ i18n.t('reports.presetHint') }}</span>
-    </div>
-    <div class="periods">
-      @for (period of store.periods(); track period.start + period.end) {
-        <button [disabled]="store.loading()" (click)="create(period)">
-          <strong>{{ periodName(period) }}</strong>
-          <small>{{ cycleLabel(period) }}</small>
-          <span class="ltr">{{ date(period.start) }} → {{ date(period.end) }}</span>
-        </button>
-      } @empty {
-        <div class="empty-state compact">
-          <strong>{{ i18n.t('reports.noPeriods') }}</strong>
-          {{ i18n.t('reports.noPeriodsHint') }}
-        </div>
-      }
-    </div>
+    @if (showReportPresets()) {
+      <div class="preset-head">
+        <strong>{{ i18n.t('reports.presets') }}</strong>
+        <span>{{ i18n.t('reports.presetHint') }}</span>
+      </div>
+      <div class="periods">
+        @for (period of store.periods(); track period.start + period.end) {
+          <button [disabled]="store.loading()" (click)="create(period)">
+            <strong>{{ periodName(period) }}</strong>
+            <small>{{ cycleLabel(period) }}</small>
+            <span class="ltr">{{ date(period.start) }} → {{ date(period.end) }}</span>
+          </button>
+        } @empty {
+          <div class="empty-state compact">
+            <strong>{{ i18n.t('reports.noPeriods') }}</strong>
+            {{ i18n.t('reports.noPeriodsHint') }}
+          </div>
+        }
+      </div>
+    }
   </section>
   <div class="section-head">
     <div>
