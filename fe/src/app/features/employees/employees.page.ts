@@ -12,11 +12,12 @@ import { Employee, EmployeePayload, EmploymentType } from './employees.models';
 import { EmployeesStore } from './employees.store';
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
+import { DecimalPipe } from '@angular/common';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 @Component({
   selector: 'app-employees-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent],
+  imports: [ReactiveFormsModule, TablePaginationComponent, DecimalPipe],
   providers: [EmployeesStore],
   templateUrl: './employees.page.html',
   styleUrl: './employees.page.scss',
@@ -50,6 +51,7 @@ export class EmployeesPage {
     deviceUserId: new FormControl('', { nonNullable: true }),
     categoryId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     employmentType: new FormControl<EmploymentType>('FIXED', { nonNullable: true }),
+    baseSalary: new FormControl<number>(0, { nonNullable: true, validators: [Validators.min(0)] }),
     activeFrom: new FormControl(new Date().toISOString().slice(0, 10), {
       nonNullable: true,
       validators: [Validators.required],
@@ -70,6 +72,7 @@ export class EmployeesPage {
       deviceUserId: '',
       categoryId: this.store.categories()[0]?.id ?? '',
       employmentType: 'FIXED',
+      baseSalary: 0,
       activeFrom: new Date().toISOString().slice(0, 10),
       activeTo: '',
       active: true,
@@ -86,6 +89,7 @@ export class EmployeesPage {
       deviceUserId: item.deviceUserId ?? '',
       categoryId: item.categoryId,
       employmentType: item.employmentType,
+      baseSalary: item.baseSalary ?? 0,
       activeFrom: epochToDateInput(item.activeFrom),
       activeTo: item.activeTo ? epochToDateInput(item.activeTo) : '',
       active: item.active,
@@ -103,6 +107,7 @@ export class EmployeesPage {
     const payload: EmployeePayload = {
       ...raw,
       deviceUserId: raw.deviceUserId.trim() || null,
+      baseSalary: Number(raw.baseSalary) || 0,
       activeFrom: dateInputToEpoch(raw.activeFrom),
       activeTo: raw.activeTo ? dateInputToEpoch(raw.activeTo) : null,
     };

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260725-v18-full-ui-translations
       author: codex
+      validCheckSum: "*"
       preConditions:
         - onFail: MARK_RAN
         - sqlCheck:

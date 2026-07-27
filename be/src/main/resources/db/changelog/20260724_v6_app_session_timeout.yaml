@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: add_app_session_timeout
       author: Mohamed-Hammada
+      validCheckSum: "*"
       changes:
         - addColumn:
             tableName: apps

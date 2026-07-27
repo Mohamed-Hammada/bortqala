@@ -35,6 +35,7 @@ export interface AppSettings {
   sessionTimeoutMinutes: number;
   sessionTimeoutEnabled: boolean;
   showReportPresets: boolean;
+  minPasswordLength?: number;
   updatedAt: number;
 }
 

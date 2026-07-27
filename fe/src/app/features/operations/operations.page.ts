@@ -59,9 +59,14 @@ export class OperationsPage {
       nonNullable: true,
       validators: Validators.required,
     }),
-    quantityDelta: new FormControl(0, { nonNullable: true }),
-    amountDelta: new FormControl(0, { nonNullable: true }),
-    lossPercentage: new FormControl<number | null>(null),
+    quantityDelta: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required, Validators.min(0)],
+    }),
+    amountDelta: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    lossPercentage: new FormControl<number | null>(null, {
+      validators: [Validators.min(0), Validators.max(100)],
+    }),
     referenceCode: new FormControl('', { nonNullable: true }),
     note: new FormControl('', { nonNullable: true }),
     occurredAt: new FormControl(this.nowInput(), {
@@ -103,8 +108,32 @@ export class OperationsPage {
     }
   }
   async saveTransaction(): Promise<void> {
-    if (this.transactionForm.invalid) return this.transactionForm.markAllAsTouched();
+    if (this.transactionForm.invalid) {
+      this.transactionForm.markAllAsTouched();
+      if (this.transactionForm.controls.quantityDelta.invalid) {
+        this.notification.error(
+          this.i18n.t(
+            'operations.invalidNegativeQuantity',
+            undefined,
+            'كمية الحركة يجب أن تكون رقماً موجباً أكبر من الصفر.',
+          ),
+        );
+      }
+      return;
+    }
     const value = this.transactionForm.getRawValue();
+    if (value.quantityDelta < 0) {
+      this.transactionForm.controls.quantityDelta.setErrors({ min: true });
+      this.transactionForm.controls.quantityDelta.markAsTouched();
+      this.notification.error(
+        this.i18n.t(
+          'operations.invalidNegativeQuantity',
+          undefined,
+          'كمية الحركة يجب أن تكون رقماً موجباً أكبر من الصفر.',
+        ),
+      );
+      return;
+    }
     if (
       await this.store.transaction({
         ...value,

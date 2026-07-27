@@ -174,6 +174,21 @@
               <small>إظهار أو إخفاء قسم "اختصارات جاهزة: الشهر الكامل أو النصف الأول/الثاني" في صفحة التقارير.</small>
             </span>
           </label>
+
+          <!-- Password Policy Minimum Length -->
+          <div class="field" style="margin-top: 8px;">
+            <label for="min-password-length">{{ i18n.t('settings.minPasswordLength', undefined, 'الحد الأدنى لطول كلمة المرور (Password Policy)') }}</label>
+            <select id="min-password-length" formControlName="minPasswordLength" class="ltr">
+              <option [value]="6">6 أحرف (6 Characters)</option>
+              <option [value]="8">8 أحرف (8 Characters - Default)</option>
+              <option [value]="10">10 أحرف (10 Characters)</option>
+              <option [value]="12">12 حرفاً (12 Characters)</option>
+              <option [value]="16">16 حرفاً (16 Characters)</option>
+            </select>
+            <small class="field-hint" style="color: var(--secondary-text); margin-top: 4px; display: block;">
+              تطبق هذه السياسة تلقائياً على جميع المستخدمين عند إنشاء أو تغيير كلمة المرور.
+            </small>
+          </div>
         </div>
       </fieldset>
       <div class="actions" style="margin-top: 16px;">

@@ -35,6 +35,9 @@ public class TenantApplication {
     @Column(name = "show_report_presets", nullable = false)
     private boolean showReportPresets = true;
 
+    @Column(name = "min_password_length", nullable = false)
+    private int minPasswordLength = 8;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -51,12 +54,18 @@ public class TenantApplication {
         this.sessionTimeoutMinutes = 480;
         this.sessionTimeoutEnabled = true;
         this.showReportPresets = true;
+        this.minPasswordLength = 8;
     }
 
     public void updateSettings(int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets) {
+        updateSettings(sessionTimeoutMinutes, sessionTimeoutEnabled, showReportPresets, this.minPasswordLength);
+    }
+
+    public void updateSettings(int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets, int minPasswordLength) {
         this.sessionTimeoutMinutes = sessionTimeoutMinutes;
         this.sessionTimeoutEnabled = sessionTimeoutEnabled;
         this.showReportPresets = showReportPresets;
+        this.minPasswordLength = minPasswordLength <= 0 ? 8 : minPasswordLength;
     }
 
     @PrePersist
@@ -72,5 +81,6 @@ public class TenantApplication {
     public int getSessionTimeoutMinutes() { return sessionTimeoutMinutes; }
     public boolean isSessionTimeoutEnabled() { return sessionTimeoutEnabled; }
     public boolean isShowReportPresets() { return showReportPresets; }
+    public int getMinPasswordLength() { return minPasswordLength; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

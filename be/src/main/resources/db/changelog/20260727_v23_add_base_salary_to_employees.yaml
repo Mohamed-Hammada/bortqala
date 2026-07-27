@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260727-23-add-base-salary-to-employees
+      author: system
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: employees
+              columnName: base_salary
+      changes:
+        - addColumn:
+            tableName: employees
+            columns:
+              - column:
+                  name: base_salary
+                  type: NUMERIC(12,2)
+                  defaultValueNumeric: 0.00
+                  constraints: { nullable: false }

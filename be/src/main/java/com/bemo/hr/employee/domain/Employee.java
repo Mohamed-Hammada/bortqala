@@ -42,6 +42,9 @@ public class Employee {
     @Column(name = "employment_type", nullable = false, length = 20)
     private EmploymentType employmentType;
 
+    @Column(name = "base_salary", nullable = false)
+    private java.math.BigDecimal baseSalary;
+
     @Column(name = "active_from", nullable = false)
     private LocalDate activeFrom;
 
@@ -65,17 +68,23 @@ public class Employee {
 
     public Employee(String employeeCode, String fullName, String deviceUserId, String categoryId,
                     EmploymentType employmentType, LocalDate activeFrom, LocalDate activeTo, boolean active) {
+        this(employeeCode, fullName, deviceUserId, categoryId, employmentType, java.math.BigDecimal.ZERO, activeFrom, activeTo, active);
+    }
+
+    public Employee(String employeeCode, String fullName, String deviceUserId, String categoryId,
+                    EmploymentType employmentType, java.math.BigDecimal baseSalary, LocalDate activeFrom, LocalDate activeTo, boolean active) {
         this.id = UUID.randomUUID().toString();
-        update(employeeCode, fullName, deviceUserId, categoryId, employmentType, activeFrom, activeTo, active);
+        update(employeeCode, fullName, deviceUserId, categoryId, employmentType, baseSalary, activeFrom, activeTo, active);
     }
 
     public void update(String employeeCode, String fullName, String deviceUserId, String categoryId,
-                       EmploymentType employmentType, LocalDate activeFrom, LocalDate activeTo, boolean active) {
+                       EmploymentType employmentType, java.math.BigDecimal baseSalary, LocalDate activeFrom, LocalDate activeTo, boolean active) {
         this.employeeCode = employeeCode.strip().toUpperCase(Locale.ROOT);
         this.fullName = fullName.strip();
         this.deviceUserId = deviceUserId == null || deviceUserId.isBlank() ? null : deviceUserId.strip();
         this.categoryId = categoryId;
         this.employmentType = employmentType;
+        this.baseSalary = baseSalary == null ? java.math.BigDecimal.ZERO : baseSalary;
         this.activeFrom = activeFrom;
         this.activeTo = activeTo;
         this.active = active;
@@ -97,6 +106,7 @@ public class Employee {
     public String getDeviceUserId() { return deviceUserId; }
     public String getCategoryId() { return categoryId; }
     public EmploymentType getEmploymentType() { return employmentType; }
+    public java.math.BigDecimal getBaseSalary() { return baseSalary == null ? java.math.BigDecimal.ZERO : baseSalary; }
     public LocalDate getActiveFrom() { return activeFrom; }
     public LocalDate getActiveTo() { return activeTo; }
     public boolean isActive() { return active; }

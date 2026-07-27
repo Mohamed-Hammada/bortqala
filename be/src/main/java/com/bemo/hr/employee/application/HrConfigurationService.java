@@ -104,7 +104,7 @@ public class HrConfigurationService {
         var category = requireCategory(request.categoryId());
         var employeeCode = standardizeEmployeeCode(request.employeeCode(), category, true, null);
         var employee = new Employee(employeeCode, request.fullName(), request.deviceUserId(),
-                request.categoryId(), request.employmentType(), request.activeFrom(), request.activeTo(), request.active());
+                request.categoryId(), request.employmentType(), request.baseSalary(), request.activeFrom(), request.activeTo(), request.active());
         employeeRepository.save(employee);
         return toEmployeeResponse(employee, category);
     }
@@ -118,7 +118,7 @@ public class HrConfigurationService {
         var category = requireCategory(request.categoryId());
         var employeeCode = standardizeEmployeeCode(request.employeeCode(), category, false, employee.getEmployeeCode());
         employee.update(employeeCode, request.fullName(), request.deviceUserId(), request.categoryId(),
-                request.employmentType(), request.activeFrom(), request.activeTo(), request.active());
+                request.employmentType(), request.baseSalary(), request.activeFrom(), request.activeTo(), request.active());
         return toEmployeeResponse(employee, category);
     }
 
@@ -127,7 +127,7 @@ public class HrConfigurationService {
         var employee = employeeRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Employee not found."));
         employee.update(employee.getEmployeeCode(), employee.getFullName(), employee.getDeviceUserId(),
-                employee.getCategoryId(), employee.getEmploymentType(), employee.getActiveFrom(),
+                employee.getCategoryId(), employee.getEmploymentType(), employee.getBaseSalary(), employee.getActiveFrom(),
                 employee.getActiveTo(), false);
     }
 
@@ -220,7 +220,7 @@ public class HrConfigurationService {
     private EmployeeApi.Response toEmployeeResponse(Employee employee, AttendanceCategory category) {
         return new EmployeeApi.Response(employee.getId(), employee.getEmployeeCode(), employee.getFullName(),
                 employee.getDeviceUserId(), employee.getCategoryId(), category == null ? "—" : category.getName(),
-                employee.getEmploymentType(), employee.getActiveFrom(), employee.getActiveTo(),
+                employee.getEmploymentType(), employee.getBaseSalary(), employee.getActiveFrom(), employee.getActiveTo(),
                 employee.isActive(), employee.getVersion());
     }
 

@@ -1,0 +1,338 @@
+<section class="page payroll-page">
+  <!-- Page Header -->
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('payroll.eyebrow', undefined, 'المالية والاستحقاقات') }}</p>
+      <h1>{{ i18n.t('payroll.title', undefined, 'كشوف وسجل صرف المرتبات والقبض (ERP Payroll)') }}</h1>
+      <p>{{ i18n.t('payroll.description', undefined, 'إدارة ودورة حياة صرف أجور الموظفين والعمال مع القيود المحاسبية وتتبع المصادر.') }}</p>
+    </div>
+    <div class="toolbar">
+      <button class="button secondary" type="button" (click)="exportExcel()" [disabled]="store.loading() || rows().length === 0">
+        📊 {{ i18n.t('payroll.exportExcel', undefined, 'تصدير كشف الصرف (Excel)') }}
+      </button>
+      @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'])) {
+        <button class="button secondary" type="button" (click)="transitionPeriod('APPROVED')" [disabled]="store.loading() || store.data()?.periodStatus === 'APPROVED'">
+          🔒 اعتماد الكشف وقفل الفترة
+        </button>
+        <button class="button secondary" type="button" (click)="transitionPeriod('POSTED')" [disabled]="store.loading() || store.data()?.periodStatus === 'POSTED'">
+          📖 ترحيل القيود (GL Posting)
+        </button>
+        <button class="button primary" type="button" (click)="payBulk()" [disabled]="store.loading() || (store.data()?.summary?.pendingCount ?? 0) === 0">
+          ⚡ {{ i18n.t('payroll.disburseAll', undefined, 'صرف الكشف بالكامل') }}
+        </button>
+      }
+    </div>
+  </header>
+
+  <!-- Period & Year Selector & Status Filter -->
+  <div class="card filter-card">
+    <div class="period-selectors">
+      <div class="field">
+        <label for="payroll-month">{{ i18n.t('dashboard.month', undefined, 'الشهر') }}</label>
+        <select
+          id="payroll-month"
+          #monthSelect
+          (change)="changePeriod(yearSelect.value, monthSelect.value)"
+        >
+          @for (key of monthKeys; track $index) {
+            <option [value]="$index + 1" [selected]="$index + 1 === month()">{{ i18n.t(key) }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="payroll-year">{{ i18n.t('dashboard.year', undefined, 'السنة') }}</label>
+        <input
+          id="payroll-year"
+          #yearSelect
+          class="ltr"
+          type="number"
+          [value]="year()"
+          (change)="changePeriod(yearSelect.value, monthSelect.value)"
+        />
+      </div>
+
+      @if (store.data(); as data) {
+        <div class="field period-status-field">
+          <label>حالة دورة الرواتب (Lifecycle State)</label>
+          <span class="period-status-badge">{{ statusLabel(data.periodStatus || 'DRAFT') }}</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- KPI Metrics Bar -->
+  @if (store.data(); as data) {
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <span class="metric-icon">👥</span>
+        <div class="metric-info">
+          <small>{{ i18n.t('payroll.totalEmp', undefined, 'إجمالي الموظفين المكتملين') }}</small>
+          <strong>{{ data.summary.totalEmployees }} موظف</strong>
+        </div>
+      </div>
+
+      <div class="metric-card success">
+        <span class="metric-icon">✅</span>
+        <div class="metric-info">
+          <small>{{ i18n.t('payroll.paidAmount', undefined, 'إجمالي الصافي المدفوع') }}</small>
+          <strong>{{ data.summary.totalPaidAmount | number:'1.2-2' }} ج.م</strong>
+          <span class="sub-pill">{{ data.summary.paidCount }} تم القبض</span>
+        </div>
+      </div>
+
+      <div class="metric-card warning">
+        <span class="metric-icon">⏳</span>
+        <div class="metric-info">
+          <small>{{ i18n.t('payroll.pendingAmount', undefined, 'المتبقي قيد الصرف') }}</small>
+          <strong>{{ data.summary.totalPendingAmount | number:'1.2-2' }} ج.م</strong>
+          <span class="sub-pill">{{ data.summary.pendingCount }} لم يصرف</span>
+        </div>
+      </div>
+
+      <div class="metric-card gold">
+        <span class="metric-icon">📉</span>
+        <div class="metric-info">
+          <small>{{ i18n.t('payroll.advancesDeducted', undefined, 'تسوية السلف المستقطعة') }}</small>
+          <strong>{{ data.summary.totalAdvancesDeducted | number:'1.2-2' }} ج.م</strong>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (store.error(); as err) {
+    <div class="alert error">{{ err }}</div>
+  }
+
+  @if (store.loading()) {
+    <div class="loading"></div>
+  }
+
+  <!-- Main Payroll Table -->
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ i18n.t('payroll.employee', undefined, 'الموظف / العامل') }}</th>
+          <th>تتبع المصدر (Breakdown)</th>
+          <th>{{ i18n.t('payroll.activeAdvance', undefined, 'رصيد السلف') }}</th>
+          <th>{{ i18n.t('payroll.gross', undefined, 'الإجمالي (Gross)') }}</th>
+          <th>{{ i18n.t('payroll.advancesDeductedCol', undefined, 'خصم السلفة') }}</th>
+          <th>{{ i18n.t('payroll.net', undefined, 'الصافي (Net Payout)') }}</th>
+          <th>تاريخ وقيد الصرف</th>
+          <th>{{ i18n.t('payroll.status', undefined, 'حالة القيد') }}</th>
+          <th>{{ i18n.t('payroll.action', undefined, 'الإجراءات') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of pagedRows(); track row.employeeId) {
+          <tr [class.reversed-row]="row.paymentStatus === 'REVERSED'">
+            <td>
+              <strong>{{ row.employeeName }}</strong>
+              <small class="emp-meta">{{ row.employeeCode }} · {{ row.categoryName }}</small>
+            </td>
+            <td>
+              <div class="breakdown-stack">
+                <small>أساسي: {{ row.baseSalary | number:'1.0-0' }} ج.م</small>
+                <small class="text-success">+ إضافي: {{ row.attendanceBonus | number:'1.0-0' }} ج.م</small>
+                <small class="text-danger">- غياب/تأخير: {{ row.attendanceDeduction | number:'1.0-0' }} ج.م</small>
+              </div>
+            </td>
+            <td>
+              <span [class.text-warning]="row.activeAdvancesBalance > 0">
+                {{ row.activeAdvancesBalance | number:'1.2-2' }} ج.م
+              </span>
+            </td>
+            <td>{{ row.grossAmount | number:'1.2-2' }} ج.م</td>
+            <td>
+              <span [class.text-danger]="row.advancesDeducted > 0">
+                - {{ row.advancesDeducted | number:'1.2-2' }} ج.م
+              </span>
+            </td>
+            <td>
+              <strong class="net-text">{{ row.netAmount | number:'1.2-2' }} ج.م</strong>
+            </td>
+            <td>
+              <small class="ltr-text">{{ formatDate(row.paidAt) }}</small>
+              @if (row.referenceCode) {
+                <small class="ref-code">مرجع: {{ row.referenceCode }}</small>
+              }
+            </td>
+            <td>
+              <span
+                class="status"
+                [class.success]="row.paymentStatus === 'PAID' || row.paymentStatus === 'POSTED'"
+                [class.warning]="row.paymentStatus === 'DRAFT' || row.paymentStatus === 'CALCULATED' || row.paymentStatus === 'PENDING'"
+                [class.neutral]="row.paymentStatus === 'APPROVED' || row.paymentStatus === 'REVIEWED'"
+                [class.danger]="row.paymentStatus === 'REVERSED' || row.paymentStatus === 'CANCELLED'"
+              >
+                {{ statusLabel(row.paymentStatus) }}
+              </span>
+            </td>
+            <td>
+              <div class="table-row-actions">
+                @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'])) {
+                  @if (row.paymentStatus !== 'PAID' && row.paymentStatus !== 'POSTED' && row.paymentStatus !== 'REVERSED') {
+                    <button
+                      class="button primary icon-button"
+                      type="button"
+                      title="تسجيل وتأكيد صرف المرتب"
+                      (click)="openPaymentDrawer(row)"
+                    >
+                      💵
+                    </button>
+                  }
+                  @if (row.paymentStatus === 'PAID' || row.paymentStatus === 'POSTED') {
+                    <button
+                      class="button secondary icon-button danger-btn"
+                      type="button"
+                      title="التراجع عن صرف الراتب (Reverse)"
+                      (click)="reversePayment(row)"
+                    >
+                      ↩️
+                    </button>
+                  }
+                }
+              </div>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="9">
+              <div class="empty-state">
+                <strong>{{ i18n.t('payroll.noRows', undefined, 'لا توجد بيانات صرف لهذا الشهر') }}</strong>
+                <p>{{ i18n.t('payroll.noRowsHint', undefined, 'تأكد من اختيار الشهر والسنة المناسبين وتوافر موظفين مكتملي البيانات.') }}</p>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <app-table-pagination
+      [total]="rows().length"
+      [page]="pagination.currentPage(rows().length)"
+      [pageSize]="pagination.pageSize()"
+      (pageChange)="pagination.changePage($event, rows().length)"
+      (pageSizeChange)="pagination.changePageSize($event)"
+    />
+  </div>
+</section>
+
+<!-- Payment Drawer Modal -->
+@if (drawerOpen() && selectedRow(); as row) {
+  <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+  <aside class="drawer">
+    <div class="drawer-header">
+      <div>
+        <p class="eyebrow">تسجيل وقيد صرف المستحقات المالية</p>
+        <h2>{{ row.employeeName }} ({{ row.employeeCode }})</h2>
+      </div>
+      <button class="icon-button" type="button" (click)="closeDrawer()">✕</button>
+    </div>
+
+    <!-- Traceability Breakdown Card -->
+    <div class="traceability-card">
+      <h4>🔍 تتبع المصدر الحسابي (Calculation Source)</h4>
+      <div class="trace-grid">
+        <div><span>الراتب الأساسي:</span> <strong>{{ row.baseSalary | number:'1.2-2' }} ج.م</strong></div>
+        <div><span>إضافي الحضور:</span> <strong class="text-success">+ {{ row.attendanceBonus | number:'1.2-2' }} ج.م</strong></div>
+        <div><span>خصم التأخير والغياب:</span> <strong class="text-danger">- {{ row.attendanceDeduction | number:'1.2-2' }} ج.م</strong></div>
+        <div><span>رصيد السلف المتاح:</span> <strong>{{ row.activeAdvancesBalance | number:'1.2-2' }} ج.م</strong></div>
+      </div>
+    </div>
+
+    <form [formGroup]="payForm" (ngSubmit)="submitPayment()">
+      <div class="form-grid">
+        <div class="field span-2">
+          <label>فترة الاستحقاق</label>
+          <input type="text" class="ltr" [value]="row.periodStart + '  إلى  ' + row.periodEnd" readonly disabled />
+        </div>
+
+        <div class="field">
+          <label for="pay-gross">إجمالي المستحق (Gross) - محسوب</label>
+          <input
+            id="pay-gross"
+            class="ltr"
+            type="number"
+            formControlName="grossAmount"
+            readonly
+            [disabled]="true"
+          />
+        </div>
+
+        <div class="field">
+          <label for="pay-advances">خصم السلفة (الحد الأقصى: {{ row.activeAdvancesBalance }} ج.م)</label>
+          <input
+            id="pay-advances"
+            class="ltr"
+            type="number"
+            formControlName="advancesDeducted"
+            (input)="recalculateNet()"
+          />
+        </div>
+
+        <div class="field">
+          <label for="pay-deductions">خصومات أخرى (تأخير/جزاءات)</label>
+          <input
+            id="pay-deductions"
+            class="ltr"
+            type="number"
+            formControlName="otherDeductions"
+            (input)="recalculateNet()"
+          />
+        </div>
+
+        <div class="field">
+          <label for="pay-bonuses">مكافآت وإضافي</label>
+          <input
+            id="pay-bonuses"
+            class="ltr"
+            type="number"
+            formControlName="bonuses"
+            (input)="recalculateNet()"
+          />
+        </div>
+
+        <div class="field span-2">
+          <label for="pay-net" style="color: var(--gold); font-weight: 700;">الصافي المستحق للصرف (Net Payout) - محسوب</label>
+          <input
+            id="pay-net"
+            class="ltr"
+            type="number"
+            style="font-size: 18px; font-weight: 700; color: var(--gold);"
+            formControlName="netAmount"
+            readonly
+            [disabled]="true"
+          />
+        </div>
+
+        <div class="field">
+          <label for="pay-method">طريقة الصرف</label>
+          <select id="pay-method" formControlName="paymentMethod">
+            <option value="CASH">نقداً (Cash)</option>
+            <option value="BANK_TRANSFER">تحويل بنكي (Bank Transfer)</option>
+            <option value="CHEQUE">شيك (Cheque)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="pay-ref">رقم المرجع / العملية</label>
+          <input id="pay-ref" class="ltr" type="text" formControlName="referenceCode" placeholder="مثال: REF-9908" />
+        </div>
+
+        <div class="field span-2">
+          <label for="pay-note">ملاحظات الصرف والقيد المحاسبي</label>
+          <textarea id="pay-note" formControlName="note" placeholder="أي ملاحظات إضافية على الصرف..."></textarea>
+        </div>
+      </div>
+
+      <div class="drawer-actions">
+        <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+        <button class="button primary" type="submit" [disabled]="store.saving() || payForm.invalid">
+          {{ store.saving() ? 'جاري التسجيل والقيد...' : 'تأكيد وصرف المرتب وقيد المستند' }}
+        </button>
+      </div>
+    </form>
+  </aside>
+}

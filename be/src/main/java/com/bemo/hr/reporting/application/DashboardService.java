@@ -18,6 +18,8 @@ import java.time.ZoneId;
 import java.time.YearMonth;
 import java.util.List;
 
+import com.bemo.hr.operations.OperationsService;
+
 @Service
 @Transactional(readOnly = true)
 public class DashboardService {
@@ -27,16 +29,19 @@ public class DashboardService {
     private final DailyAttendanceResultRepository dailyAttendanceResultRepository;
     private final ImportBatchRepository importBatchRepository;
     private final PunchRecordRepository punchRecordRepository;
+    private final OperationsService operationsService;
     private final ZoneId companyZone;
 
     public DashboardService(AttendanceCategoryRepository attendanceCategoryRepository, EmployeeRepository employeeRepository,
                             AttendanceReportRepository attendanceReportRepository,
                             DailyAttendanceResultRepository dailyAttendanceResultRepository,
                             ImportBatchRepository importBatchRepository, PunchRecordRepository punchRecordRepository,
+                            OperationsService operationsService,
                             @Value("${hr.company-zone:Africa/Cairo}") String companyZone) {
         this.attendanceCategoryRepository = attendanceCategoryRepository; this.employeeRepository = employeeRepository;
         this.attendanceReportRepository = attendanceReportRepository; this.dailyAttendanceResultRepository = dailyAttendanceResultRepository;
         this.importBatchRepository = importBatchRepository; this.punchRecordRepository = punchRecordRepository;
+        this.operationsService = operationsService;
         this.companyZone = ZoneId.of(companyZone);
     }
 
@@ -65,10 +70,30 @@ public class DashboardService {
                         batch.getImportedRows(), batch.getErrorRows(), batch.getImportedAt())).toList();
         long unmatched = punchRecordRepository.summarizeUnmatched().stream()
                 .filter(identity -> employeeRepository.findByDeviceUserId((String) identity[0]).isEmpty()).count();
-        return new DashboardApi.Response(year, month, employeeRepository.findAll().stream().filter(e -> e.isActive()).count(),
-                attendanceCategoryRepository.findAll().stream().filter(c -> c.isActive()).count(), report == null ? null : report.getStatus(),
-                report == null ? null : report.getId(), report == null ? 0 : report.getUnresolvedCount(), scheduled, present, rate,
-                rows.stream().filter(row -> row.getLateMinutes() > 0).count(), rows.stream().mapToLong(row -> row.getOvertimeMinutes()).sum(),
-                unmatched, importBatchRepository.findAll().stream().mapToLong(batch -> batch.getImportedRows()).sum(), categoryMetrics, recent);
+
+        long singlePunchDays = rows.stream().filter(row -> row.getFirstPunch() != null && row.getLastPunch() != null && row.getFirstPunch().equals(row.getLastPunch())).count();
+
+        return new DashboardApi.Response(
+                year, month, java.time.Instant.now(),
+                employeeRepository.findAll().stream().filter(com.bemo.hr.employee.domain.Employee::isActive).count(),
+                attendanceCategoryRepository.findAll().stream().filter(com.bemo.hr.employee.domain.AttendanceCategory::isActive).count(),
+                report == null ? null : report.getStatus(),
+                report == null ? null : report.getId(),
+                report == null ? 0 : report.getUnresolvedCount(),
+                scheduled, present, rate,
+                rows.stream().filter(row -> row.getLateMinutes() > 0).count(),
+                singlePunchDays,
+                rows.stream().mapToLong(com.bemo.hr.reporting.domain.DailyAttendanceResult::getOvertimeMinutes).sum(),
+                unmatched,
+                importBatchRepository.findAll().stream().mapToLong(com.bemo.hr.attendance.domain.ImportBatch::getImportedRows).sum(),
+                operationsService.countStockMovements(),
+                operationsService.countInventoryItems(),
+                operationsService.countLowStockItems(),
+                operationsService.countNegativeStockItems(),
+                operationsService.countPartnerLedgerEntries(),
+                operationsService.countActiveParties(),
+                categoryMetrics,
+                recent
+        );
     }
 }

@@ -1,0 +1,102 @@
+export type PaymentStatus =
+  | 'DRAFT'
+  | 'CALCULATED'
+  | 'REVIEWED'
+  | 'APPROVED'
+  | 'POSTED'
+  | 'PAID'
+  | 'REVERSED'
+  | 'PENDING'
+  | 'CANCELLED';
+
+export type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CHEQUE';
+
+export interface PayrollRow {
+  id: string | null;
+  employeeId: string;
+  employeeCode: string;
+  employeeName: string;
+  categoryId: string;
+  categoryName: string;
+  employmentType: string;
+  reportId: string | null;
+  periodYear: number;
+  periodMonth: number;
+  periodKind: string;
+  periodStart: string;
+  periodEnd: string;
+  baseSalary: number;
+  attendanceBonus: number;
+  attendanceDeduction: number;
+  activeAdvancesBalance: number;
+  grossAmount: number;
+  advancesDeducted: number;
+  otherDeductions: number;
+  bonuses: number;
+  netAmount: number;
+  paymentStatus: PaymentStatus;
+  paidAt: string | null;
+  paymentMethod: PaymentMethod | null;
+  referenceCode: string | null;
+  note: string | null;
+  incompleteProfile: boolean;
+  createdBy: string;
+  createdAt: string;
+}
+
+export interface PayrollSummary {
+  totalEmployees: number;
+  paidCount: number;
+  pendingCount: number;
+  totalGrossAmount: number;
+  totalPaidAmount: number;
+  totalPendingAmount: number;
+  totalAdvancesDeducted: number;
+}
+
+export interface SheetResponse {
+  periodYear: number;
+  periodMonth: number;
+  periodStatus: PaymentStatus;
+  summary: PayrollSummary;
+  rows: PayrollRow[];
+}
+
+export interface PaymentRequest {
+  employeeId: string;
+  periodYear: number;
+  periodMonth: number;
+  periodKind?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  grossAmount?: number;
+  advancesDeducted?: number;
+  otherDeductions?: number;
+  bonuses?: number;
+  netAmount?: number;
+  paymentMethod?: PaymentMethod;
+  referenceCode?: string;
+  note?: string;
+  paidAtEpochMs?: number;
+}
+
+export interface BulkPaymentRequest {
+  periodYear: number;
+  periodMonth: number;
+  categoryId?: string;
+  paymentMethod?: PaymentMethod;
+  referenceCode?: string;
+  note?: string;
+}
+
+export interface StatusTransitionRequest {
+  periodYear: number;
+  periodMonth: number;
+  targetStatus: PaymentStatus;
+  categoryId?: string;
+}
+
+export interface ReversePaymentRequest {
+  paymentId: string;
+  reason: string;
+}

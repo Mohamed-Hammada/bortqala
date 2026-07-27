@@ -19,6 +19,7 @@ export interface RecentImport {
 export interface Dashboard {
   year: number;
   month: number;
+  updatedAt: string | null;
   activeEmployees: number;
   activeCategories: number;
   reportStatus: ReportStatus | null;
@@ -28,9 +29,16 @@ export interface Dashboard {
   presentEmployeeDays: number;
   attendanceRate: number;
   lateEmployeeDays: number;
+  singlePunchDays: number;
   overtimeMinutes: number;
   unmatchedIdentities: number;
   importedPunches: number;
+  totalStockMovements: number;
+  totalInventoryItems: number;
+  lowStockCount: number;
+  negativeStockCount: number;
+  totalPartnerEntries: number;
+  activePartiesCount: number;
   categories: CategoryMetric[];
   recentImports: RecentImport[];
 }

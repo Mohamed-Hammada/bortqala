@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260727-22-ensure-session-timeout-enabled
+      author: system
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: apps
+              columnName: session_timeout_enabled
+      changes:
+        - addColumn:
+            tableName: apps
+            columns:
+              - column:
+                  name: session_timeout_enabled
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints: { nullable: false }
+
+  - changeSet:
+      id: 20260727-22-ensure-show-report-presets
+      author: system
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: apps
+              columnName: show_report_presets
+      changes:
+        - addColumn:
+            tableName: apps
+            columns:
+              - column:
+                  name: show_report_presets
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints: { nullable: false }

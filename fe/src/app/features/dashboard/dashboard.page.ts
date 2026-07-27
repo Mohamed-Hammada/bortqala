@@ -26,11 +26,29 @@ export class DashboardPage {
   constructor() {
     void this.store.load(this.year(), this.month());
   }
-  changePeriod(year: string, month: string): void {
-    this.year.set(Number(year));
-    this.month.set(Number(month));
+  changePeriod(yearStr: string, monthStr: string): void {
+    const y = Number(yearStr);
+    const m = Number(monthStr);
+    if (!isNaN(y) && y >= 2000 && y <= 2100 && !isNaN(m) && m >= 1 && m <= 12) {
+      this.year.set(y);
+      this.month.set(m);
+      void this.store.load(y, m);
+    }
+  }
+  reload(): void {
     void this.store.load(this.year(), this.month());
   }
+
+  formatLastUpdated(value: string | null): string {
+    if (!value) return new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+    try {
+      const d = new Date(value);
+      return d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    } catch {
+      return value;
+    }
+  }
+
   formatTime(value: string | null): string {
     return value?.slice(0, 5) ?? '—';
   }

@@ -14,6 +14,9 @@ import { TablePaginationComponent } from '../../shared/ui/table-pagination/table
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
 
+import { firstValueFrom } from 'rxjs';
+import { AuthService } from '../../core/auth/auth.service';
+
 @Component({
   selector: 'app-users-page',
   imports: [ReactiveFormsModule, TablePaginationComponent],
@@ -23,6 +26,7 @@ import { NotificationService } from '../../core/notification.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UsersPage {
+  readonly auth = inject(AuthService);
   readonly store = inject(UsersStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
@@ -47,13 +51,15 @@ export class UsersPage {
     { id: 'parties', labelKey: 'nav.parties' },
     { id: 'reports', labelKey: 'nav.reports' },
     { id: 'operations', labelKey: 'nav.operations' },
+    { id: 'payroll', labelKey: 'nav.payroll' },
     { id: 'users', labelKey: 'nav.users' },
     { id: 'settings', labelKey: 'settings.title' },
   ];
+  readonly minPasswordLength = signal(8);
   readonly form = new FormGroup({
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     displayName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    password: new FormControl('', { nonNullable: true, validators: [Validators.minLength(8)] }),
+    password: new FormControl('', { nonNullable: true }),
     roles: new FormControl<RoleCode[]>([], {
       nonNullable: true,
       validators: [Validators.required],
@@ -65,6 +71,16 @@ export class UsersPage {
 
   constructor() {
     void this.store.load();
+    void this.loadPolicy();
+  }
+
+  private async loadPolicy(): Promise<void> {
+    try {
+      const settings = await firstValueFrom(this.auth.appSettings());
+      if (settings?.minPasswordLength) {
+        this.minPasswordLength.set(settings.minPasswordLength);
+      }
+    } catch {}
   }
 
   roleUserCount(code: RoleCode): number {
@@ -96,7 +112,7 @@ export class UsersPage {
       displayName: item.displayName,
       password: '',
       roles: item.roles,
-      allowedMenus: item.allowedMenus ?? ['dashboard', 'categories', 'employees', 'imports', 'parties', 'reports', 'operations', 'users', 'settings'],
+      allowedMenus: item.allowedMenus ?? ['dashboard', 'categories', 'employees', 'imports', 'parties', 'reports', 'operations', 'payroll', 'users', 'settings'],
       active: item.active,
       version: item.version,
     });
@@ -129,11 +145,19 @@ export class UsersPage {
 
   async submit() {
     this.submitted.set(true);
-    if (
-      this.form.invalid ||
-      !this.form.controls.roles.value.length ||
-      (!this.editingId() && !this.form.controls.password.value)
-    ) {
+    const pwd = this.form.controls.password.value;
+    const minLen = this.minPasswordLength();
+    if (!this.editingId() && !pwd) {
+      this.notification.error(this.i18n.t('users.passwordHint', { min: minLen }));
+      this.form.markAllAsTouched();
+      return;
+    }
+    if (pwd && pwd.length < minLen) {
+      this.notification.error(this.i18n.t('users.passwordHint', { min: minLen }));
+      this.form.markAllAsTouched();
+      return;
+    }
+    if (this.form.invalid || !this.form.controls.roles.value.length) {
       this.form.markAllAsTouched();
       return;
     }

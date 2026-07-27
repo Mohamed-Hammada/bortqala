@@ -16,6 +16,7 @@ databaseChangeLog:
               - column: { name: name, type: VARCHAR(150), constraints: { nullable: false } }
               - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
               - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: min_password_length, type: INT, defaultValueNumeric: 8, constraints: { nullable: false } }
         - addUniqueConstraint:
             tableName: apps
             columnNames: code

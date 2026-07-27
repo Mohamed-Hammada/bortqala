@@ -18,6 +18,8 @@ public class DashboardController {
     DashboardApi.Response dashboard(@RequestParam(required = false) Integer year,
                                     @RequestParam(required = false) Integer month) {
         var current = YearMonth.now();
-        return dashboardService.dashboard(year == null ? current.getYear() : year, month == null ? current.getMonthValue() : month);
+        int targetYear = (year != null && year >= 2000 && year <= 2100) ? year : current.getYear();
+        int targetMonth = (month != null && month >= 1 && month <= 12) ? month : current.getMonthValue();
+        return dashboardService.dashboard(targetYear, targetMonth);
     }
 }

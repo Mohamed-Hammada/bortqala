@@ -37,6 +37,7 @@
           <th>{{ i18n.t('employees.employee') }}</th>
           <th>{{ i18n.t('employees.category') }}</th>
           <th>{{ i18n.t('employees.employmentType') }}</th>
+          <th>{{ i18n.t('employees.baseSalary') }}</th>
           <th>{{ i18n.t('employees.deviceUserId') }}</th>
           <th>{{ i18n.t('employees.activePeriod') }}</th>
           <th>{{ i18n.t('employees.status') }}</th>
@@ -53,6 +54,9 @@
             <td>{{ item.categoryName }}</td>
             <td>
               <span class="status neutral">{{ typeLabel(item.employmentType) }}</span>
+            </td>
+            <td>
+              <strong>{{ item.baseSalary | number:'1.2-2' }}</strong> <small>ج.م</small>
             </td>
             <td>
               @if (item.deviceUserId) {
@@ -176,13 +180,22 @@
               <option value="DAILY">{{ i18n.t('employment.daily') }}</option>
             </select>
           </div>
+          <div class="field">
+            <label>{{ i18n.t('employees.baseSalary') }}</label
+            ><input type="number" formControlName="baseSalary" min="0" step="100" placeholder="0.00" />
+          </div>
           <div class="field span-2">
             <label>{{ i18n.t('employees.deviceUserIdOptional') }}</label
             ><input
               class="ltr"
               formControlName="deviceUserId"
               [placeholder]="i18n.t('employees.deviceUserIdPlaceholder')"
-            /><small>{{ i18n.t('employees.deviceUserIdHint') }}</small>
+            />
+            @if (form.controls.deviceUserId.hasError('required')) {
+              <small class="field-error">مطلوب معرف البصمة (Device User ID) لفئات البصمة</small>
+            } @else {
+              <small>{{ i18n.t('employees.deviceUserIdHint') }}</small>
+            }
           </div>
           <div class="field">
             <label>{{ i18n.t('employees.activeFrom') }}</label

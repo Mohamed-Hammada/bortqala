@@ -44,6 +44,7 @@ export class SettingsPage {
     sessionTimeoutMinutes: [480, [Validators.required, Validators.min(5), Validators.max(10_080)]],
     sessionTimeoutEnabled: [true, Validators.required],
     showReportPresets: [true, Validators.required],
+    minPasswordLength: [8, [Validators.required, Validators.min(6), Validators.max(32)]],
   });
 
   constructor() {
@@ -100,6 +101,7 @@ export class SettingsPage {
         sessionTimeoutMinutes: saved.sessionTimeoutMinutes,
         sessionTimeoutEnabled: saved.sessionTimeoutEnabled,
         showReportPresets: saved.showReportPresets,
+        minPasswordLength: saved.minPasswordLength ?? 8,
       });
       this.notification.success(this.i18n.t('settings.sessionSaved'));
     } catch (error) {
@@ -118,6 +120,7 @@ export class SettingsPage {
         sessionTimeoutMinutes: settings.sessionTimeoutMinutes,
         sessionTimeoutEnabled: settings.sessionTimeoutEnabled ?? true,
         showReportPresets: settings.showReportPresets ?? true,
+        minPasswordLength: settings.minPasswordLength ?? 8,
       });
     } catch (error) {
       this.appSettingsError.set(apiErrorMessage(error, this.i18n));

@@ -1,0 +1,117 @@
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { apiErrorMessage } from '../../core/api-error';
+import { downloadBlob } from '../../core/download';
+import { I18nService } from '../../core/i18n.service';
+import { BulkPaymentRequest, PaymentRequest, SheetResponse } from './payroll.models';
+
+@Injectable()
+export class PayrollStore {
+  private readonly httpClient = inject(HttpClient);
+  private readonly i18n = inject(I18nService);
+
+  readonly data = signal<SheetResponse | null>(null);
+  readonly loading = signal(false);
+  readonly saving = signal(false);
+  readonly error = signal<string | null>(null);
+
+  async load(year: number, month: number, categoryId?: string): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      const params: Record<string, string | number> = { year, month };
+      if (categoryId) params['categoryId'] = categoryId;
+      this.data.set(
+        await firstValueFrom(
+          this.httpClient.get<SheetResponse>('/api/v1/payroll', { params }),
+        ),
+      );
+    } catch (err) {
+      this.error.set(apiErrorMessage(err, this.i18n));
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  async recordPayment(payload: PaymentRequest): Promise<boolean> {
+    this.saving.set(true);
+    this.error.set(null);
+    try {
+      this.data.set(
+        await firstValueFrom(
+          this.httpClient.post<SheetResponse>('/api/v1/payroll/pay', payload),
+        ),
+      );
+      return true;
+    } catch (err) {
+      this.error.set(apiErrorMessage(err, this.i18n));
+      return false;
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  async payBulk(payload: BulkPaymentRequest): Promise<boolean> {
+    this.saving.set(true);
+    this.error.set(null);
+    try {
+      this.data.set(
+        await firstValueFrom(
+          this.httpClient.post<SheetResponse>('/api/v1/payroll/pay-bulk', payload),
+        ),
+      );
+      return true;
+    } catch (err) {
+      this.error.set(apiErrorMessage(err, this.i18n));
+      return false;
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  async transitionStatus(payload: { periodYear: number; periodMonth: number; targetStatus: any; categoryId?: string }): Promise<boolean> {
+    this.saving.set(true);
+    this.error.set(null);
+    try {
+      this.data.set(
+        await firstValueFrom(
+          this.httpClient.post<SheetResponse>('/api/v1/payroll/transition', payload),
+        ),
+      );
+      return true;
+    } catch (err) {
+      this.error.set(apiErrorMessage(err, this.i18n));
+      return false;
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  async reversePayment(payload: { paymentId: string; reason: string }): Promise<boolean> {
+    this.saving.set(true);
+    this.error.set(null);
+    try {
+      this.data.set(
+        await firstValueFrom(
+          this.httpClient.post<SheetResponse>('/api/v1/payroll/reverse', payload),
+        ),
+      );
+      return true;
+    } catch (err) {
+      this.error.set(apiErrorMessage(err, this.i18n));
+      return false;
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  async exportExcel(year: number, month: number, categoryId?: string): Promise<void> {
+    const params: Record<string, string | number> = { year, month };
+    if (categoryId) params['categoryId'] = categoryId;
+    const blob = await firstValueFrom(
+      this.httpClient.get('/api/v1/payroll/export', { params, responseType: 'blob' }),
+    );
+    downloadBlob(blob, `payroll-${year}-${String(month).padStart(2, '0')}.xlsx`);
+  }
+}

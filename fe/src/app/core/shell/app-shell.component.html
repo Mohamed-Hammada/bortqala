@@ -8,16 +8,6 @@
         ><small>{{ authService.app()?.code }} · {{ i18n.t('app.attendanceReports') }}</small>
       </div>
       <div class="brand-actions">
-        <a
-          class="icon-button settings-link"
-          routerLink="/settings"
-          routerLinkActive="active"
-          [attr.aria-label]="i18n.t('nav.settings')"
-          [attr.title]="i18n.t('nav.settings')"
-          (click)="closeMenu()"
-        >
-          <app-icon name="settings" />
-        </a>
         <button
           class="icon-button collapse-toggle"
           type="button"
@@ -38,26 +28,29 @@
     </div>
 
     <nav [attr.aria-label]="i18n.t('nav.main')">
-      @for (item of items; track item.path) {
-        @if (visible(item)) {
-          <a
-            [routerLink]="item.path"
-            routerLinkActive="active"
-            [attr.title]="i18n.t(item.labelKey)"
-            (click)="closeMenu()"
-            class="nav-item"
-          >
-            <div class="icon-container">
-              <app-icon class="nav-icon" [name]="item.icon" />
-            </div>
-            <span class="nav-text"
-              ><strong>{{ i18n.t(item.labelKey) }}</strong
-              ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+      @for (section of workspaceSections(); track section.titleKey) {
+        <div class="workspace-section">
+          <p class="workspace-header">{{ i18n.t(section.titleKey) }}</p>
+          @for (item of section.items; track item.path) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [attr.title]="i18n.t(item.labelKey)"
+              (click)="closeMenu()"
+              class="nav-item"
             >
-            <!-- Floating tooltip for collapsed mode -->
-            <span class="collapsed-tooltip">{{ i18n.t(item.labelKey) }}</span>
-          </a>
-        }
+              <div class="icon-container">
+                <app-icon class="nav-icon" [name]="item.icon" />
+              </div>
+              <span class="nav-text"
+                ><strong>{{ i18n.t(item.labelKey) }}</strong
+                ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+              >
+              <!-- Floating tooltip for collapsed mode -->
+              <span class="collapsed-tooltip">{{ i18n.t(item.labelKey) }}</span>
+            </a>
+          }
+        </div>
       }
     </nav>
 

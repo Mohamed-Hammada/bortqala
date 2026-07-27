@@ -8,6 +8,7 @@ export interface Employee {
   categoryId: string;
   categoryName: string;
   employmentType: EmploymentType;
+  baseSalary: number;
   activeFrom: number;
   activeTo: number | null;
   active: boolean;
@@ -19,6 +20,7 @@ export interface EmployeePayload {
   deviceUserId: string | null;
   categoryId: string;
   employmentType: EmploymentType;
+  baseSalary: number;
   activeFrom: number;
   activeTo: number | null;
   active: boolean;

@@ -18,7 +18,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     ProblemDetail authentication(AuthenticationException exception) {
         return problem(HttpStatus.UNAUTHORIZED, "Authentication failed",
-                "The username or password is incorrect.", "authentication-failed");
+                "اسم المستخدم أو كلمة المرور غير صحيحة. (The username or password is incorrect.)", "authentication-failed");
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -29,7 +29,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler({BusinessRuleException.class, DataIntegrityViolationException.class})
     ProblemDetail conflict(RuntimeException exception) {
         String detail = exception instanceof BusinessRuleException
-                ? exception.getMessage() : "The operation conflicts with existing data.";
+                ? exception.getMessage() : "العملية تتعارض مع البيانات الحالية في النظام. (The operation conflicts with existing data.)";
         return problem(HttpStatus.CONFLICT, "Business rule conflict", detail, "business-conflict");
     }
 
@@ -38,7 +38,7 @@ public class ApiExceptionHandler {
         var errors = new LinkedHashMap<String, String>();
         exception.getBindingResult().getFieldErrors()
                 .forEach(error -> errors.putIfAbsent(error.getField(), error.getDefaultMessage()));
-        var problem = problem(HttpStatus.BAD_REQUEST, "Validation failed", "One or more fields are invalid.", "validation-failed");
+        var problem = problem(HttpStatus.BAD_REQUEST, "Validation failed", "واحد أو أكثر من الحقول غير صالحة. (One or more fields are invalid.)", "validation-failed");
         problem.setProperty("errors", errors);
         return problem;
     }

@@ -39,4 +39,12 @@ databaseChangeLog:
       file: db/changelog/20260725_v19_server_pagination_and_menu_permissions.yaml
   - include:
       file: db/changelog/20260726_v20_tenant_settings_and_super_admin.yaml
+  - include:
+      file: db/changelog/20260727_v21_salary_payments.yaml
+  - include:
+      file: db/changelog/20260727_v22_ensure_app_session_columns.yaml
+  - include:
+      file: db/changelog/20260727_v23_add_base_salary_to_employees.yaml
+  - include:
+      file: db/changelog/20260727_v24_configurable_min_password_length.yaml
 

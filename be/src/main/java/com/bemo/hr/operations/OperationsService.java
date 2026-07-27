@@ -31,6 +31,36 @@ public class OperationsService {
         return operationsExcelExporter.export(snapshot(), options);
     }
 
+    public long countStockMovements() {
+        return stockMovementRepository.count();
+    }
+
+    public long countInventoryItems() {
+        return inventoryItemRepository.count();
+    }
+
+    public long countLowStockItems() {
+        return inventoryItemRepository.findAll().stream()
+                .filter(item -> stockMovementRepository.balance(item.getId()).compareTo(BigDecimal.ZERO) == 0)
+                .count();
+    }
+
+    public long countNegativeStockItems() {
+        return inventoryItemRepository.findAll().stream()
+                .filter(item -> stockMovementRepository.balance(item.getId()).compareTo(BigDecimal.ZERO) < 0)
+                .count();
+    }
+
+    public long countPartnerLedgerEntries() {
+        return partnerLedgerEntryRepository.count();
+    }
+
+    public long countActiveParties() {
+        return businessPartyRepository.findAllByOrderByNameAsc().stream()
+                .filter(BusinessParty::isActive)
+                .count();
+    }
+
     public OperationsApi.Snapshot snapshot() {
         var items = inventoryItemRepository.findAllByOrderByNameAsc();
         var itemMap = items.stream().collect(Collectors.toMap(InventoryItem::getId, Function.identity()));
@@ -127,6 +157,15 @@ public class OperationsService {
         employeeAdvanceEntryRepository.save(new EmployeeAdvanceEntry(employee.getId(), request.amountDelta(),
                 request.entryType(), request.note(), request.occurredAt(), actor));
         return snapshot();
+    }
+
+    public BigDecimal getAdvanceBalance(String employeeId) {
+        return employeeAdvanceEntryRepository.balance(employeeId);
+    }
+
+    @Transactional
+    public void recordAdvanceSettlement(String employeeId, BigDecimal amount, String note, java.time.Instant occurredAt, String actor) {
+        employeeAdvanceEntryRepository.save(new EmployeeAdvanceEntry(employeeId, amount, "SETTLEMENT", note, occurredAt, actor));
     }
 
     private InventoryItem requireItem(String id) {

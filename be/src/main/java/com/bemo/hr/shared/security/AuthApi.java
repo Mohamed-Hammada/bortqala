@@ -23,7 +23,7 @@ public final class AuthApi {
     public record UserUpsertRequest(
             @NotBlank @Size(max = 100) String username,
             @NotBlank @Size(max = 150) String displayName,
-            @Size(min = 8, max = 72) String password,
+            @Size(max = 72) String password,
             Set<RoleCode> roles,
             Set<String> allowedMenus,
             boolean active,
@@ -34,6 +34,6 @@ public final class AuthApi {
                                     @NotBlank @Pattern(regexp = "[a-zA-Z]{2}(-[a-zA-Z]{2})?") String locale,
                                     @NotNull ExcelTableStyle excelTableStyle,
                                     @Min(5) @Max(500) Integer defaultPageSize) { }
-    public record AppSettingsResponse(int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets, Instant updatedAt) { }
-    public record AppSettingsRequest(@Min(5) @Max(10_080) int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets) { }
+    public record AppSettingsResponse(int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets, int minPasswordLength, Instant updatedAt) { }
+    public record AppSettingsRequest(@Min(5) @Max(10_080) int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets, @Min(6) @Max(32) Integer minPasswordLength) { }
 }

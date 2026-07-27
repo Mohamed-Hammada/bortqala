@@ -104,7 +104,8 @@ public class AuthService {
     @Transactional
     public AuthApi.AppSettingsResponse updateAppSettings(AuthApi.AppSettingsRequest request) {
         var app = requireCurrentApp();
-        app.updateSettings(request.sessionTimeoutMinutes(), request.sessionTimeoutEnabled(), request.showReportPresets());
+        int minPass = request.minPasswordLength() == null || request.minPasswordLength() <= 0 ? 8 : request.minPasswordLength();
+        app.updateSettings(request.sessionTimeoutMinutes(), request.sessionTimeoutEnabled(), request.showReportPresets(), minPass);
         return toSettingsResponse(app);
     }
 
@@ -126,6 +127,20 @@ public class AuthService {
         if (request.version() == null || request.version() != user.getVersion()) {
             throw new BusinessRuleException("This user changed since it was loaded. Refresh and try again.");
         }
+        
+        var actorOpt = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, currentUsername);
+        boolean actorIsSuperAdmin = actorOpt.map(u -> u.getRoles().stream().anyMatch(r -> r.getCode() == RoleCode.SUPER_ADMIN)).orElse(true);
+        boolean targetIsSuperAdmin = user.getRoles().stream().anyMatch(r -> r.getCode() == RoleCode.SUPER_ADMIN);
+
+        if (!actorIsSuperAdmin) {
+            if (targetIsSuperAdmin) {
+                throw new BusinessRuleException("Only a Super Admin can modify or deactivate Super Admin accounts.");
+            }
+            if (request.roles().contains(RoleCode.SUPER_ADMIN)) {
+                throw new BusinessRuleException("Only a Super Admin can assign the Super Admin role.");
+            }
+        }
+
         validate(request, appId, id, false);
         if (user.getUsername().equalsIgnoreCase(currentUsername) && !request.active()) {
             throw new BusinessRuleException("You cannot deactivate your own account.");
@@ -138,22 +153,29 @@ public class AuthService {
 
     @Transactional
     public AppUser ensureBootstrapAppAdmin(String appCode, String appName, String username, String password) {
+        return ensureBootstrapAppAdmin(appCode, appName, username, password, "مدير التشغيل والنظام (Admin)", Set.of(RoleCode.ADMIN));
+    }
+
+    @Transactional
+    public AppUser ensureBootstrapAppAdmin(String appCode, String appName, String username, String password, String displayName, Set<RoleCode> roleCodes) {
         var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue(appCode)
                 .orElseGet(() -> tenantApplicationRepository.save(new TenantApplication(appCode, appName)));
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(app.getId(), username).orElseGet(() -> {
-            var superAdminRole = roleRepository.findById(RoleCode.SUPER_ADMIN)
-                    .orElseGet(() -> roleRepository.save(new Role(RoleCode.SUPER_ADMIN, "Super Admin")));
-            var adminRole = roleRepository.findById(RoleCode.ADMIN)
-                    .orElseGet(() -> roleRepository.save(new Role(RoleCode.ADMIN, "Admin")));
-            return appUserRepository.save(new AppUser(app.getId(), username, "مدير النظام الرئيسي",
-                    passwordEncoder.encode(password), Set.of(superAdminRole, adminRole), Set.of("dashboard","employees","categories","reports","imports","parties","operations","users","settings")));
+            var roles = requireRoles(roleCodes);
+            return appUserRepository.save(new AppUser(app.getId(), username, displayName,
+                    passwordEncoder.encode(password), roles, Set.of("dashboard","categories","employees","imports","parties","reports","operations","payroll","users","settings")));
         });
     }
 
     private void validate(AuthApi.UserUpsertRequest request, String appId, String currentId, boolean passwordRequired) {
         if (request.roles() == null || request.roles().isEmpty()) throw new BusinessRuleException("Select at least one role.");
+        var app = requireCurrentApp();
+        int minLength = app.getMinPasswordLength() > 0 ? app.getMinPasswordLength() : 8;
         if (passwordRequired && (request.password() == null || request.password().isBlank())) {
             throw new BusinessRuleException("Password is required for a new user.");
+        }
+        if (request.password() != null && !request.password().isBlank() && request.password().length() < minLength) {
+            throw new BusinessRuleException("كلمة المرور يجب أن لا تقل عن " + minLength + " أحرف حسب سياسة أمان النظام الحالية.");
         }
         boolean duplicate = currentId == null
                 ? appUserRepository.existsByAppIdAndUsernameIgnoreCase(appId, request.username())
@@ -209,6 +231,7 @@ public class AuthService {
                 app.getSessionTimeoutMinutes(),
                 app.isSessionTimeoutEnabled(),
                 app.isShowReportPresets(),
+                app.getMinPasswordLength(),
                 app.getUpdatedAt()
         );
     }

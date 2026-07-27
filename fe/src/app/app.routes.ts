@@ -58,6 +58,13 @@ export const routes: Routes = [
           import('./features/operations/operations.page').then((module) => module.OperationsPage),
       },
       {
+        path: 'payroll',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        loadComponent: () =>
+          import('./features/payroll/payroll.page').then((module) => module.PayrollPage),
+      },
+      {
         path: 'reports/:id',
         loadComponent: () =>
           import('./features/reports/report-review.page').then((module) => module.ReportReviewPage),

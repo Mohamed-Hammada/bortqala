@@ -35,6 +35,7 @@
         <tr>
           <th>{{ i18n.t('users.user') }}</th>
           <th>{{ i18n.t('users.roles') }}</th>
+          <th>القوائم المسموحة</th>
           <th>{{ i18n.t('users.status') }}</th>
           <th></th>
         </tr>
@@ -49,9 +50,12 @@
             <td>
               <div class="role-list">
                 @for (role of item.roles; track role) {
-                  <span>{{ roleLabel(role) }}</span>
+                  <span [class.super-admin-badge]="role === 'SUPER_ADMIN'">{{ roleLabel(role) }}</span>
                 }
               </div>
+            </td>
+            <td>
+              <span class="status neutral">🖥️ {{ (item.allowedMenus?.length ?? 10) }} / 10</span>
             </td>
             <td>
               <span class="status" [class.success]="item.active" [class.neutral]="!item.active">{{
@@ -60,7 +64,12 @@
             </td>
             <td>
               <div class="table-row-actions">
-                <button class="button secondary icon-button" (click)="openEdit(item)" [attr.title]="i18n.t('common.edit')">
+                <button
+                  class="button secondary icon-button"
+                  (click)="openEdit(item)"
+                  [disabled]="item.roles.includes('SUPER_ADMIN') && !auth.isSuperAdmin()"
+                  [attr.title]="(item.roles.includes('SUPER_ADMIN') && !auth.isSuperAdmin()) ? 'فقط Super Admin يمكنه تعديل هذا الحساب' : i18n.t('common.edit')"
+                >
                   ✎
                 </button>
               </div>
@@ -145,7 +154,7 @@
                 {{ i18n.t(showPassword() ? 'login.hide' : 'login.show') }}
               </button>
             </div>
-            <small class="password-hint">✓ {{ i18n.t('users.passwordHint') }} (Min 8 chars)</small>
+            <small class="password-hint">✓ {{ i18n.t('users.passwordHint', { min: minPasswordLength() }) }}</small>
           </div>
 
           <!-- Section 2: System Roles -->
@@ -156,10 +165,11 @@
           <div class="field span-2">
             <div class="role-options">
               @for (role of roles; track role.code) {
-                <label class="selectable-card">
+                <label class="selectable-card" [class.disabled-card]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()">
                   <input
                     type="checkbox"
                     [checked]="hasRole(role.code)"
+                    [disabled]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
                     (change)="toggleRole(role.code, $event)"
                   />
                   <span>

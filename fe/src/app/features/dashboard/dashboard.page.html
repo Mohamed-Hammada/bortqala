@@ -1,28 +1,39 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">{{ i18n.t('dashboard.eyebrow') }} — منصة عمليات المصنع والإنتاج</p>
+      <p class="eyebrow">{{ i18n.t('dashboard.eyebrow') }} — مؤشرات الأداء الفعلية بالنظام</p>
       <h1>{{ i18n.t('dashboard.title') }}</h1>
       <p>{{ i18n.t('dashboard.description') }}</p>
     </div>
-    <div class="period-picker">
-      <select
-        #monthSelect
-        [value]="month()"
-        (change)="changePeriod(yearSelect.value, monthSelect.value)"
-        [attr.aria-label]="i18n.t('dashboard.month')"
-      >
-        @for (key of monthKeys; track $index) {
-          <option [value]="$index + 1" [selected]="$index + 1 === month()">{{ i18n.t(key) }}</option>
-        }</select
-      ><input
-        #yearSelect
-        class="ltr"
-        type="number"
-        [value]="year()"
-        (change)="changePeriod(yearSelect.value, monthSelect.value)"
-        [attr.aria-label]="i18n.t('dashboard.year')"
-      />
+    <div class="period-picker-container">
+      @if (store.data(); as data) {
+        <button type="button" class="last-updated-badge" (click)="reload()" title="انقر لإعادة التحديث">
+          🕒 آخر تحديث: {{ formatLastUpdated(data.updatedAt) }} ↻
+        </button>
+      }
+      <div class="period-picker">
+        <select
+          #monthSelect
+          [value]="month()"
+          (change)="changePeriod(yearSelect.value, monthSelect.value)"
+          [attr.aria-label]="i18n.t('dashboard.month')"
+        >
+          @for (key of monthKeys; track $index) {
+            <option [value]="$index + 1" [selected]="$index + 1 === month()">{{ i18n.t(key) }}</option>
+          }</select
+        ><input
+          #yearSelect
+          class="ltr"
+          type="number"
+          min="2000"
+          max="2100"
+          [value]="year()"
+          (change)="changePeriod(yearSelect.value, monthSelect.value)"
+          (input)="changePeriod(yearSelect.value, monthSelect.value)"
+          (keyup.enter)="changePeriod(yearSelect.value, monthSelect.value)"
+          [attr.aria-label]="i18n.t('dashboard.year')"
+        />
+      </div>
     </div>
   </header>
 
@@ -42,13 +53,16 @@
             class="status"
             [class.warning]="data.unresolvedCount > 0"
             [class.success]="data.reportStatus === 'APPROVED' || data.reportStatus === 'EXPORTED'"
+            [class.neutral]="!data.reportStatus"
           >{{ statusLabel(data.reportStatus) }}</span>
           <h2>{{ i18n.t(monthKeys[data.month - 1]) }} {{ data.year }}</h2>
           <p>
             {{
-              data.unresolvedCount
-                ? i18n.t('dashboard.pendingDecisions', { count: data.unresolvedCount })
-                : i18n.t('dashboard.noPending')
+              !data.reportStatus
+                ? i18n.t('dashboard.noReportHint', undefined, 'لم يتم استخراج تقرير الحضور لهذا الشهر بعد.')
+                : (data.unresolvedCount
+                    ? i18n.t('dashboard.pendingDecisions', { count: data.unresolvedCount })
+                    : i18n.t('dashboard.noPending'))
             }}
           </p>
         </div>
@@ -77,32 +91,36 @@
       </article>
     </div>
 
-    <!-- Priority 2: Executive Factory Operations Units (4-Quadrant Grid) -->
+    <!-- Priority 2: Executive Factory Operations Units (100% Real Database Data) -->
     <div class="executive-grid">
-      <!-- Unit 1: Today's Attendance -->
+      <!-- Unit 1: Attendance & Discipline -->
       <article class="card exec-unit-card">
         <div class="unit-head">
-          <h3>👥 الحضور والانضباط اليومي</h3>
-          <span class="unit-badge">مباشر</span>
+          <h3>👥 الحضور والانضباط اليومي والشهري</h3>
+          <span class="unit-badge success">مستندات فعلية</span>
         </div>
         <div class="unit-metrics-pills">
-          <a routerLink="/reports" class="unit-pill success">
+          <a routerLink="/employees" class="unit-pill neutral" title="اضغط للانتقال إلى جدول الموظفين">
+            <span>الموظفين الفاعلين</span>
+            <strong>{{ data.activeEmployees }}</strong>
+          </a>
+          <a [routerLink]="data.reportId ? ['/reports', data.reportId] : '/reports'" class="unit-pill success" title="اضغط للاطلاع على سجل الحضور بالمستند">
             <span>حاضر</span>
             <strong>{{ data.presentEmployeeDays }}</strong>
           </a>
-          <a routerLink="/reports" class="unit-pill warning">
+          <a [routerLink]="data.reportId ? ['/reports', data.reportId] : '/reports'" class="unit-pill warning" title="اضغط للاطلاع على التأخيرات بالمستند">
             <span>تأخير</span>
             <strong>{{ data.lateEmployeeDays }}</strong>
           </a>
-          <a routerLink="/reports" class="unit-pill danger">
+          <a [routerLink]="data.reportId ? ['/reports', data.reportId] : '/reports'" class="unit-pill danger" title="اضغط للاطلاع على أيام الغياب">
             <span>غياب</span>
             <strong>{{ data.scheduledEmployeeDays - data.presentEmployeeDays }}</strong>
           </a>
-          <a routerLink="/reports" class="unit-pill info">
+          <a [routerLink]="data.reportId ? ['/reports', data.reportId] : '/reports'" class="unit-pill info" title="اضغط للاطلاع على بصمة واحدة">
             <span>بصمة واحدة</span>
-            <strong>7</strong>
+            <strong>{{ data.singlePunchDays }}</strong>
           </a>
-          <a routerLink="/imports" class="unit-pill attention">
+          <a routerLink="/imports" class="unit-pill attention" title="اضغط للانتقال إلى البصمات المجهولة">
             <span>بصمات مجهولة</span>
             <strong>{{ data.unmatchedIdentities }}</strong>
           </a>
@@ -113,80 +131,60 @@
       <article class="card exec-unit-card">
         <div class="unit-head">
           <h3>📦 المخازن وحركة المواد</h3>
-          <span class="unit-badge gold">EGP 8.2M</span>
+          <span class="unit-badge gold">قيود المخزون</span>
         </div>
         <div class="unit-metrics-pills">
-          <a routerLink="/operations" class="unit-pill neutral">
-            <span>قيمة المخزون</span>
-            <strong>8.2M</strong>
+          <a routerLink="/operations" class="unit-pill neutral" title="اضغط للانتقال إلى جدول أصناف المخزون">
+            <span>أصناف المخزون</span>
+            <strong>{{ data.totalInventoryItems }}</strong>
           </a>
-          <a routerLink="/operations" class="unit-pill warning">
+          <a routerLink="/operations" class="unit-pill success" title="اضغط للانتقال إلى حركات المخزون المسجلة">
+            <span>حركات المخزون</span>
+            <strong>{{ data.totalStockMovements }}</strong>
+          </a>
+          <a routerLink="/operations" class="unit-pill warning" title="اضغط للانتقال إلى أصناف منخفضة الرصيد">
             <span>أصناف منخفضة</span>
-            <strong>8</strong>
+            <strong>{{ data.lowStockCount }}</strong>
           </a>
-          <a routerLink="/operations" class="unit-pill danger">
+          <a routerLink="/operations" class="unit-pill danger" title="اضغط للانتقال إلى الأرخص ذات الرصيد بالسالب">
             <span>رصيد بالسالب</span>
-            <strong>2</strong>
+            <strong>{{ data.negativeStockCount }}</strong>
           </a>
-          <a routerLink="/operations" class="unit-pill success">
-            <span>حركات اليوم</span>
-            <strong>41</strong>
-          </a>
-        </div>
-        <div class="warehouse-meter-bar">
-          <span class="label">سعة المستودعات (84%)</span>
-          <div class="meter-line"><i style="width: 84%;"></i></div>
         </div>
       </article>
 
-      <!-- Unit 3: Production & Processing Output -->
+      <!-- Unit 3: Commercial Partners & Ledger -->
       <article class="card exec-unit-card">
         <div class="unit-head">
-          <h3>🏭 خطوط الانتاج والفرز (البرتقال)</h3>
-          <span class="unit-badge success">93% كفاءة</span>
+          <h3>🤝 جهات التعامل والحسابات</h3>
+          <span class="unit-badge info">دفتر الشركاء</span>
         </div>
         <div class="unit-metrics-pills">
-          <div class="unit-pill neutral">
-            <span>استلام خام</span>
-            <strong>15 طن</strong>
-          </div>
-          <div class="unit-pill success">
-            <span>تعبئة وتغليف</span>
-            <strong>12 طن</strong>
-          </div>
-          <div class="unit-pill danger">
-            <span>هالك وفرز</span>
-            <strong>230 كجم</strong>
-          </div>
-          <div class="unit-pill gold">
-            <span>كفاءة التشغيل</span>
-            <strong>93%</strong>
-          </div>
+          <a routerLink="/parties" class="unit-pill neutral" title="اضغط للانتقال إلى قائمة جهات التعامل">
+            <span>جهات التعامل النشطة</span>
+            <strong>{{ data.activePartiesCount }}</strong>
+          </a>
+          <a routerLink="/parties" class="unit-pill success" title="اضغط للانتقال إلى قيود دفتر الحسابات">
+            <span>معاملات الحسابات</span>
+            <strong>{{ data.totalPartnerEntries }}</strong>
+          </a>
         </div>
       </article>
 
-      <!-- Unit 4: Sales & Export Orders -->
+      <!-- Unit 4: Biometric Imports & Categories -->
       <article class="card exec-unit-card">
         <div class="unit-head">
-          <h3>🚢 المبيعات وحركة التصدير</h3>
-          <span class="unit-badge info">EGP 450K</span>
+          <h3>⚙️ البصمات وفئات العمل</h3>
+          <span class="unit-badge neutral">سجل الأجهزة</span>
         </div>
         <div class="unit-metrics-pills">
-          <a routerLink="/parties" class="unit-pill success">
-            <span>طلبات تصدير</span>
-            <strong>8</strong>
+          <a routerLink="/imports" class="unit-pill info" title="اضغط للانتقال إلى سجل استيراد البصمات">
+            <span>إجمالي البصمات</span>
+            <strong>{{ data.importedPunches }}</strong>
           </a>
-          <a routerLink="/parties" class="unit-pill neutral">
-            <span>طلب محلي</span>
-            <strong>4</strong>
-          </a>
-          <a routerLink="/operations" class="unit-pill gold">
-            <span>جاهز للشحن</span>
-            <strong>120 طرد</strong>
-          </a>
-          <a routerLink="/parties" class="unit-pill info">
-            <span>تحصيل اليوم</span>
-            <strong>450K</strong>
+          <a routerLink="/categories" class="unit-pill neutral" title="اضغط للانتقال إلى فئات العمل">
+            <span>فئات العمل النشطة</span>
+            <strong>{{ data.activeCategories }}</strong>
           </a>
         </div>
       </article>

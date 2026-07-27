@@ -37,15 +37,22 @@ public class BootstrapAdminInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        if (!username.isBlank() && !password.isBlank()) {
-            var admin = authService.ensureBootstrapAppAdmin(appCode, appName, username, password);
-            TenantContext.set(admin.getAppId());
-            try {
-                demoReferenceDataService.ensureReferenceConfiguration();
-                if (seedDemoData) demoScenarioDataService.ensureDemoScenarios();
-            } finally {
-                TenantContext.clear();
-            }
+        // Ensure dedicated Super Admin account
+        var superAdmin = authService.ensureBootstrapAppAdmin(
+                appCode, appName, "superadmin", "SuperAdmin@12345",
+                "مدير النظام الشامل (Super Admin)", java.util.Set.of(RoleCode.SUPER_ADMIN, RoleCode.ADMIN));
+
+        // Ensure standard Operational Admin account
+        var admin = authService.ensureBootstrapAppAdmin(
+                appCode, appName, username.isBlank() ? "admin" : username, password.isBlank() ? "Admin@12345" : password,
+                "مدير التشغيل والنظام (Admin)", java.util.Set.of(RoleCode.ADMIN));
+
+        TenantContext.set(superAdmin.getAppId());
+        try {
+            demoReferenceDataService.ensureReferenceConfiguration();
+            if (seedDemoData) demoScenarioDataService.ensureDemoScenarios();
+        } finally {
+            TenantContext.clear();
         }
     }
 }

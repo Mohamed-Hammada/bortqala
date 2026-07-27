@@ -87,6 +87,8 @@ x18-ar-043;dashboard.year;ar-EG;السنة
 x18-en-043;dashboard.year;en-US;Year
 x18-ar-044;dashboard.noReport;ar-EG;لا يوجد تقرير
 x18-en-044;dashboard.noReport;en-US;No report
+x18-ar-044h;dashboard.noReportHint;ar-EG;لم يتم استخراج تقرير الحضور لهذا الشهر بعد.
+x18-en-044h;dashboard.noReportHint;en-US;No attendance report generated for this month yet.
 x18-ar-045;dashboard.pendingDecisions;ar-EG;{count} بند يحتاج قرارًا قبل الاعتماد
 x18-en-045;dashboard.pendingDecisions;en-US;{count} items require a decision before approval
 x18-ar-046;dashboard.noPending;ar-EG;لا توجد استثناءات معلّقة
@@ -327,8 +329,10 @@ x18-ar-163;users.password;ar-EG;كلمة المرور
 x18-en-163;users.password;en-US;Password
 x18-ar-164;users.passwordEditHint;ar-EG;(اتركها فارغة بدون تغيير)
 x18-en-164;users.passwordEditHint;en-US;(leave empty to keep unchanged)
-x18-ar-165;users.passwordHint;ar-EG;10 أحرف على الأقل.
-x18-en-165;users.passwordHint;en-US;At least 10 characters.
+x18-ar-165;users.passwordHint;ar-EG;كلمة المرور يجب أن لا تقل عن {min} أحرف.
+x18-en-165;users.passwordHint;en-US;Password must be at least {min} characters.
+x18-ar-165b;settings.minPasswordLength;ar-EG;الحد الأدنى لطول كلمة المرور
+x18-en-165b;settings.minPasswordLength;en-US;Minimum Password Length Policy
 x18-ar-166;users.rolesHint;ar-EG;الأدوار — يمكن اختيار أكثر من دور
 x18-en-166;users.rolesHint;en-US;Roles — multiple roles may be selected
 x18-ar-167;users.activeCheck;ar-EG;الحساب نشط
@@ -525,5 +529,72 @@ x18-ar-262;warning.missingScheduleRule;ar-EG;لا توجد مواعيد عمل �
 x18-en-262;warning.missingScheduleRule;en-US;No effective schedule rule for this workday.
 x18-ar-263;settings.sessionMinutesHint;ar-EG;💡 ملاحظة: تنطبق المدة الجديدة بالدقائق للمستخدمين بعد تسجيل الخروج وإعادة تسجيل الدخول مرة أخرى.
 x18-en-263;settings.sessionMinutesHint;en-US;💡 Note: The updated session duration in minutes will take effect after logging out and logging in again.
+x18-ar-264;nav.payroll;ar-EG;كشوف المرتبات والقبض
+x18-en-264;nav.payroll;en-US;Payroll & Salary Payments
+x18-ar-265;nav.payrollHint;ar-EG;متابعة وصرف أجور الموظفين والعمال
+x18-en-265;nav.payrollHint;en-US;Track and disburse employee & worker salaries
+x18-ar-266;payroll.eyebrow;ar-EG;المالية والاستحقاقات
+x18-en-266;payroll.eyebrow;en-US;Finance & Payroll
+x18-ar-267;payroll.title;ar-EG;كشوف وسجل صرف المرتبات والقبض
+x18-en-267;payroll.title;en-US;Payroll Disbursal Register
+x18-ar-268;payroll.description;ar-EG;إدارة ومتابعة صرف أجور ومرتبات الموظفين والعمال وتسوية السلف المستقطعة.
+x18-en-268;payroll.description;en-US;Manage employee & worker salary disbursals and advance settlements.
+x18-ar-269;payroll.exportExcel;ar-EG;تصدير كشف الصرف (Excel)
+x18-en-269;payroll.exportExcel;en-US;Export Payroll Register (Excel)
+x18-ar-270;payroll.disburseAll;ar-EG;صرف للجميع
+x18-en-270;payroll.disburseAll;en-US;Disburse All Pending
+x18-ar-271;payroll.totalEmp;ar-EG;إجمالي الموظفين
+x18-en-271;payroll.totalEmp;en-US;Total Employees
+x18-ar-272;payroll.paidAmount;ar-EG;إجمالي الصافي المدفوع
+x18-en-272;payroll.paidAmount;en-US;Total Disbursed Net
+x18-ar-273;payroll.pendingAmount;ar-EG;المتبقي قيد الصرف
+x18-en-273;payroll.pendingAmount;en-US;Pending Disbursal
+x18-ar-274;payroll.advancesDeducted;ar-EG;السلف المستقطعة
+x18-en-274;payroll.advancesDeducted;en-US;Total Advances Deducted
+x18-ar-275;payroll.employee;ar-EG;الموظف / العامل
+x18-en-275;payroll.employee;en-US;Employee / Worker
+x18-ar-276;payroll.category;ar-EG;الفئة والتوظيف
+x18-en-276;payroll.category;en-US;Category & Employment
+x18-ar-277;payroll.activeAdvance;ar-EG;رصيد السلف
+x18-en-277;payroll.activeAdvance;en-US;Active Advances
+x18-ar-278;payroll.gross;ar-EG;المستحق
+x18-en-278;payroll.gross;en-US;Gross Due
+x18-ar-279;payroll.advancesDeductedCol;ar-EG;خصم السلفة
+x18-en-279;payroll.advancesDeductedCol;en-US;Advance Deduction
+x18-ar-280;payroll.net;ar-EG;الصافي المستحق
+x18-en-280;payroll.net;en-US;Net Payable
+x18-ar-281;payroll.status;ar-EG;حالة القبض
+x18-en-281;payroll.status;en-US;Payment Status
+x18-ar-282;payroll.action;ar-EG;الإجراءات
+x18-en-282;payroll.action;en-US;Actions
+x18-ar-283;payroll.noRows;ar-EG;لا توجد بيانات صرف لهذا الشهر
+x18-en-283;payroll.noRows;en-US;No payroll records for this month
+x18-ar-284;payroll.noRowsHint;ar-EG;تأكد من اختيار الشهر والسنة المناسبين.
+x18-en-284;payroll.noRowsHint;en-US;Make sure you selected the right month and year.
+x18-ar-285;payroll.paymentSaved;ar-EG;تم تسجيل صرف المرتب بنجاح.
+x18-en-285;payroll.paymentSaved;en-US;Salary payment recorded successfully.
+x18-ar-286;payroll.confirmBulkPay;ar-EG;هل أنت تأكد من صرف المرتبات لجميع الموظفين المتبقيين؟
+x18-en-286;payroll.confirmBulkPay;en-US;Are you sure you want to disburse salaries to all pending employees?
+x18-ar-287;payroll.bulkSaved;ar-EG;تم الصرف الجماعي بنجاح.
+x18-en-287;payroll.bulkSaved;en-US;Bulk disbursal completed successfully.
+x18-ar-289;role.superAdmin;ar-EG;مدير النظام الشامل (Super Admin)
+x18-en-289;role.superAdmin;en-US;Super Admin
+x18-ar-291;workspace.people;ar-EG;الأفراد والموظفين (People)
+x18-en-291;workspace.people;en-US;People
+x18-ar-295;workspace.attendance;ar-EG;متابعة والدوام (Attendance)
+x18-en-295;workspace.attendance;en-US;Attendance
+x18-ar-292;workspace.operations;ar-EG;العمليات والمخزون (Operations)
+x18-en-292;workspace.operations;en-US;Operations
+x18-ar-293;workspace.finance;ar-EG;المالية والمرتبات (Finance)
+x18-en-293;workspace.finance;en-US;Finance
+x18-ar-294;workspace.admin;ar-EG;الإدارة والنظام (Administration)
+x18-en-294;workspace.admin;en-US;Administration
+x18-ar-296;operations.invalidNegativeQuantity;ar-EG;كمية الحركة يجب أن تكون رقماً موجباً أكبر من الصفر.
+x18-en-296;operations.invalidNegativeQuantity;en-US;Movement quantity must be a positive number greater than zero.
+x18-ar-297;employees.baseSalary;ar-EG;الراتب الأساسي (ج.م)
+x18-en-297;employees.baseSalary;en-US;Base Salary (EGP)
+
+
+
 
 
