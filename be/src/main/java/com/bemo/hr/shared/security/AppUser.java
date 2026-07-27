@@ -47,6 +47,9 @@ public class AppUser {
     @Column(name = "allowed_menus", length = 1000)
     private String allowedMenus;
 
+    @Column(name = "can_view_salary", nullable = false)
+    private boolean canViewSalary = true;
+
     @Version
     private long version;
 
@@ -59,19 +62,20 @@ public class AppUser {
     protected AppUser() {
     }
 
-    public AppUser(String appId, String username, String displayName, String passwordHash, Set<Role> roles, Set<String> allowedMenus) {
+    public AppUser(String appId, String username, String displayName, String passwordHash, Set<Role> roles, Set<String> allowedMenus, Boolean canViewSalary) {
         this.id = UUID.randomUUID().toString();
         this.appId = appId;
-        update(username, displayName, passwordHash, true, roles, allowedMenus);
+        update(username, displayName, passwordHash, true, roles, allowedMenus, canViewSalary);
     }
 
-    public void update(String username, String displayName, String passwordHash, boolean active, Set<Role> roles, Set<String> allowedMenus) {
+    public void update(String username, String displayName, String passwordHash, boolean active, Set<Role> roles, Set<String> allowedMenus, Boolean canViewSalary) {
         this.username = username.strip().toLowerCase();
         this.displayName = displayName.strip();
         if (passwordHash != null) this.passwordHash = passwordHash;
         this.active = active;
         this.roles.clear();
         this.roles.addAll(roles);
+        this.canViewSalary = canViewSalary == null ? true : canViewSalary;
         if (allowedMenus != null && !allowedMenus.isEmpty()) {
             this.allowedMenus = String.join(",", allowedMenus);
         } else {
@@ -91,6 +95,7 @@ public class AppUser {
     public String getDisplayName() { return displayName; }
     public String getPasswordHash() { return passwordHash; }
     public boolean isActive() { return active; }
+    public boolean isCanViewSalary() { return canViewSalary; }
     public Set<Role> getRoles() { return Set.copyOf(roles); }
     public Set<String> getAllowedMenus() {
         if (allowedMenus == null || allowedMenus.isBlank()) {

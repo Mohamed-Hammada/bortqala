@@ -15,6 +15,7 @@ import { NotificationService } from '../../core/notification.service';
 import { DecimalPipe } from '@angular/common';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
+import { AuthService } from '../../core/auth/auth.service';
 @Component({
   selector: 'app-employees-page',
   imports: [ReactiveFormsModule, TablePaginationComponent, DecimalPipe],
@@ -24,6 +25,7 @@ import { TablePaginationComponent } from '../../shared/ui/table-pagination/table
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EmployeesPage {
+  readonly auth = inject(AuthService);
   readonly store = inject(EmployeesStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);

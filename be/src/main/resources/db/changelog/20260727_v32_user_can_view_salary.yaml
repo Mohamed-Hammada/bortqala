@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260727-32-add-can-view-salary-to-users
+      author: hr-platform
+      changes:
+        - addColumn:
+            tableName: app_users
+            columns:
+              - column:
+                  name: can_view_salary
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false

@@ -18,6 +18,7 @@ export interface AuthUser {
   displayName: string;
   roles: RoleCode[];
   allowedMenus?: string[];
+  canViewSalary?: boolean;
   active: boolean;
   version: number;
 }

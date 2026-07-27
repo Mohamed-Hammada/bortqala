@@ -61,4 +61,6 @@ databaseChangeLog:
       file: db/changelog/20260727_v30_advanced_inventory.yaml
   - include:
       file: db/changelog/20260727_v31_manufacturing_and_qc.yaml
+  - include:
+      file: db/changelog/20260727_v32_user_can_view_salary.yaml
 

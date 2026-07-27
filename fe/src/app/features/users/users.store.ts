@@ -10,6 +10,7 @@ export interface UserPayload {
   password: string | null;
   roles: RoleCode[];
   allowedMenus?: string[];
+  canViewSalary?: boolean;
   active: boolean;
   version: number | null;
 }

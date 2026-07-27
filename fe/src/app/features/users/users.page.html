@@ -203,7 +203,22 @@
             </div>
           </div>
 
-          <!-- Section 4: Account Security -->
+          <!-- Section 4: Special Financial Permissions -->
+          <div class="form-section-head">
+            <span>🔒</span> {{ i18n.t('users.sectionSpecialPermissions') }}
+          </div>
+
+          <div class="field span-2">
+            <label class="selectable-card menu-card">
+              <input
+                type="checkbox"
+                formControlName="canViewSalary"
+              />
+              <span>💵 {{ i18n.t('users.canViewSalary') }}</span>
+            </label>
+          </div>
+
+          <!-- Section 5: Account Security -->
           <div class="form-section-head">
             <span>🛡️</span> {{ i18n.t('users.sectionStatus') }}
           </div>

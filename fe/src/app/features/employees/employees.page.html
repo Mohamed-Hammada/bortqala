@@ -57,7 +57,11 @@
               <span class="status neutral">{{ typeLabel(item.employmentType) }}</span>
             </td>
             <td>
-              <strong>{{ item.baseSalary | number:'1.2-2' }}</strong> <small>ج.م</small>
+              @if (auth.canViewSalary()) {
+                <strong>{{ item.baseSalary | number:'1.2-2' }}</strong> <small>ج.م</small>
+              } @else {
+                <span class="status neutral" [attr.title]="i18n.t('employees.salaryHiddenHint')">🔒 {{ i18n.t('employees.salaryHidden') }}</span>
+              }
             </td>
             <td>
               @if (item.deviceUserId) {
@@ -182,10 +186,12 @@
               <option value="DAILY">{{ i18n.t('employment.daily') }}</option>
             </select>
           </div>
-          <div class="field">
-            <label>{{ i18n.t('employees.baseSalary') }}</label
-            ><input type="number" formControlName="baseSalary" min="0" step="100" placeholder="0.00" />
-          </div>
+          @if (auth.canViewSalary()) {
+            <div class="field">
+              <label>{{ i18n.t('employees.baseSalary') }}</label
+              ><input type="number" formControlName="baseSalary" min="0" step="100" placeholder="0.00" />
+            </div>
+          }
           <div class="field span-2">
             <label>{{ i18n.t('employees.deviceUserIdOptional') }}</label
             ><input

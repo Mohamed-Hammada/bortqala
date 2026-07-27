@@ -76,6 +76,7 @@ export class UsersPage {
       validators: [Validators.required],
     }),
     allowedMenus: new FormControl<string[]>([], { nonNullable: true }),
+    canViewSalary: new FormControl(true, { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
     version: new FormControl<number | null>(null),
   });
@@ -108,6 +109,7 @@ export class UsersPage {
       password: '',
       roles: ['VIEWER'],
       allowedMenus: ['dashboard', 'reports'],
+      canViewSalary: true,
       active: true,
       version: null,
     });
@@ -124,6 +126,7 @@ export class UsersPage {
       password: '',
       roles: item.roles,
       allowedMenus: item.allowedMenus ?? this.menuOptions.map((m) => m.id),
+      canViewSalary: item.canViewSalary ?? true,
       active: item.active,
       version: item.version,
     });

@@ -114,7 +114,7 @@ public class AuthService {
         String appId = TenantContext.require();
         validate(request, appId, null, true);
         var user = new AppUser(appId, request.username(), request.displayName(), passwordEncoder.encode(request.password()),
-                requireRoles(request.roles()), request.allowedMenus());
+                requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary());
         appUserRepository.save(user);
         return toResponse(user);
     }
@@ -147,7 +147,7 @@ public class AuthService {
         }
         String passwordHash = request.password() == null || request.password().isBlank()
                 ? null : passwordEncoder.encode(request.password());
-        user.update(request.username(), request.displayName(), passwordHash, request.active(), requireRoles(request.roles()), request.allowedMenus());
+        user.update(request.username(), request.displayName(), passwordHash, request.active(), requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary());
         return toResponse(user);
     }
 
@@ -163,7 +163,7 @@ public class AuthService {
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(app.getId(), username).orElseGet(() -> {
             var roles = requireRoles(roleCodes);
             return appUserRepository.save(new AppUser(app.getId(), username, displayName,
-                    passwordEncoder.encode(password), roles, Set.of("dashboard","categories","employees","imports","parties","reports","operations","payroll","users","settings")));
+                    passwordEncoder.encode(password), roles, Set.of("dashboard","categories","employees","imports","parties","reports","operations","payroll","users","settings"), true));
         });
     }
 
@@ -206,7 +206,7 @@ public class AuthService {
     private AuthApi.UserResponse toResponse(AppUser user) {
         return new AuthApi.UserResponse(user.getId(), user.getUsername(), user.getDisplayName(),
                 user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
-                user.getAllowedMenus(), user.isActive(), user.getVersion());
+                user.getAllowedMenus(), user.isCanViewSalary(), user.isActive(), user.getVersion());
     }
 
     private UserPreference preferenceFor(AppUser user) {

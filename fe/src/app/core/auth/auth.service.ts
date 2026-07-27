@@ -80,6 +80,13 @@ export class AuthService {
     return this.httpClient.put<AppSettings>('/api/v1/admin/app-settings', payload);
   }
 
+  readonly canViewSalary = computed(() => {
+    const u = this.user();
+    if (!u) return false;
+    if (u.roles.includes('SUPER_ADMIN')) return true;
+    return u.canViewSalary ?? true;
+  });
+
   isSuperAdmin(): boolean {
     return this.user()?.roles.includes('SUPER_ADMIN') ?? false;
   }

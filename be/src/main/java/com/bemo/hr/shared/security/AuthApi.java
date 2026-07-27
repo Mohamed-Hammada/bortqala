@@ -19,13 +19,14 @@ public final class AuthApi {
     public record AppResponse(String id, String code, String name) { }
     public record LoginResponse(String accessToken, String tokenType, Instant expiresAt,
                                 AppResponse app, UserResponse user, PreferenceResponse preferences) { }
-    public record UserResponse(String id, String username, String displayName, Set<RoleCode> roles, Set<String> allowedMenus, boolean active, long version) { }
+    public record UserResponse(String id, String username, String displayName, Set<RoleCode> roles, Set<String> allowedMenus, boolean canViewSalary, boolean active, long version) { }
     public record UserUpsertRequest(
             @NotBlank @Size(max = 100) String username,
             @NotBlank @Size(max = 150) String displayName,
             @Size(max = 72) String password,
             Set<RoleCode> roles,
             Set<String> allowedMenus,
+            Boolean canViewSalary,
             boolean active,
             Long version) { }
     public record PreferenceResponse(ThemePreference theme, TableDensity tableDensity,
