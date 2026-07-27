@@ -30,7 +30,7 @@
               نسبة مراجعة السجلات (Review Progress): <strong>{{ reviewedPercent() }}%</strong> ({{ reviewedCount() }} / {{ totalCount() }})
             </span>
             @if (totalCount() === 0) {
-              <span class="unresolved-tag warning">⚠️ لا توجد سجلات حضور للمراجعة</span>
+              <span class="unresolved-tag neutral">ℹ️ {{ i18n.t('reports.emptyNoRecords') }}</span>
             } @else if (unresolvedCount() > 0) {
               <span class="unresolved-tag">⚡ {{ unresolvedCount() }} بانتظار القرار</span>
             } @else {

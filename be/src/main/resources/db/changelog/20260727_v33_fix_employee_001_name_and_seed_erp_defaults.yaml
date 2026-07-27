@@ -1,0 +1,63 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260727-33-fix-employee-001-name-and-seed-erp-defaults
+      author: hr-platform
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              -- 1. Fix Employee 001 name
+              UPDATE employees
+              SET full_name = 'محمد أحمد علي'
+              WHERE employee_code IN ('001', 'EMP-001', '1') OR UPPER(full_name) = 'MMMM';
+
+              -- 2. Seed Default Organization for DEMO Tenant
+              INSERT INTO companies (id, app_id, code, name, tax_number, commercial_registry, active, created_at, updated_at)
+              SELECT '30000000-0000-0000-0000-000000000001', a.id, 'DEMO-CO', 'شركة البرتقالة للتصدير والتصنيع', 'EG-123456789', 'CR-987654', TRUE, 1753574400000, 1753574400000
+              FROM apps a
+              WHERE UPPER(a.code) = 'DEMO'
+                AND NOT EXISTS (SELECT 1 FROM companies c WHERE c.app_id = a.id);
+
+              INSERT INTO branches (id, app_id, company_id, code, name, location, active, created_at, updated_at)
+              SELECT '30000000-0000-0000-0000-000000000002', c.app_id, c.id, 'BR-MAIN', 'الفرع الرئيسي - القاهرة', 'القاهرة - مصر', TRUE, 1753574400000, 1753574400000
+              FROM companies c
+              WHERE c.code = 'DEMO-CO'
+                AND NOT EXISTS (SELECT 1 FROM branches b WHERE b.company_id = c.id);
+
+              INSERT INTO warehouses (id, app_id, branch_id, code, name, location, active, created_at, updated_at)
+              SELECT '30000000-0000-0000-0000-000000000003', b.app_id, b.id, 'WH-MAIN', 'المستودع الرئيسي للمنتجات والخدمات', 'مستودع 1', TRUE, 1753574400000, 1753574400000
+              FROM branches b
+              WHERE b.code = 'BR-MAIN'
+                AND NOT EXISTS (SELECT 1 FROM warehouses w WHERE w.branch_id = b.id);
+
+              INSERT INTO departments (id, app_id, company_id, code, name, active, created_at, updated_at)
+              SELECT '30000000-0000-0000-0000-000000000004', c.app_id, c.id, 'DEP-GEN', 'الإدارة العامة والإدارية', TRUE, 1753574400000, 1753574400000
+              FROM companies c
+              WHERE c.code = 'DEMO-CO'
+                AND NOT EXISTS (SELECT 1 FROM departments d WHERE d.company_id = c.id);
+
+              -- 3. Seed Default Fiscal Periods for 2025 & 2026
+              INSERT INTO fiscal_periods (id, app_id, fiscal_year, period_number, period_name, start_date, end_date, status, created_at, updated_at)
+              SELECT '40000000-0000-0000-0000-000000202501', a.id, 2025, 1, 'يناير 2025', DATE '2025-01-01', DATE '2025-01-31', 'CLOSED', 1753574400000, 1753574400000
+              FROM apps a WHERE UPPER(a.code) = 'DEMO' AND NOT EXISTS (SELECT 1 FROM fiscal_periods f WHERE f.app_id = a.id AND f.fiscal_year = 2025 AND f.period_number = 1);
+
+              INSERT INTO fiscal_periods (id, app_id, fiscal_year, period_number, period_name, start_date, end_date, status, created_at, updated_at)
+              SELECT '40000000-0000-0000-0000-000000202502', a.id, 2025, 2, 'فبراير 2025', DATE '2025-02-01', DATE '2025-02-28', 'CLOSED', 1753574400000, 1753574400000
+              FROM apps a WHERE UPPER(a.code) = 'DEMO' AND NOT EXISTS (SELECT 1 FROM fiscal_periods f WHERE f.app_id = a.id AND f.fiscal_year = 2025 AND f.period_number = 2);
+
+              INSERT INTO fiscal_periods (id, app_id, fiscal_year, period_number, period_name, start_date, end_date, status, created_at, updated_at)
+              SELECT '40000000-0000-0000-0000-000000202607', a.id, 2026, 7, 'يوليو 2026', DATE '2026-07-01', DATE '2026-07-31', 'OPEN', 1753574400000, 1753574400000
+              FROM apps a WHERE UPPER(a.code) = 'DEMO' AND NOT EXISTS (SELECT 1 FROM fiscal_periods f WHERE f.app_id = a.id AND f.fiscal_year = 2026 AND f.period_number = 7);
+
+              -- 4. Seed Currencies & Tax Rates
+              INSERT INTO currencies (id, app_id, code, name, symbol, exchange_rate, is_base, active, created_at, updated_at)
+              SELECT '50000000-0000-0000-0000-000000000001', a.id, 'EGP', 'الجنيه المصري', 'ج.م', 1.000000, TRUE, TRUE, 1753574400000, 1753574400000
+              FROM apps a WHERE UPPER(a.code) = 'DEMO' AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'EGP');
+
+              INSERT INTO currencies (id, app_id, code, name, symbol, exchange_rate, is_base, active, created_at, updated_at)
+              SELECT '50000000-0000-0000-0000-000000000002', a.id, 'USD', 'الدولار الأمريكي', '$', 50.000000, FALSE, TRUE, 1753574400000, 1753574400000
+              FROM apps a WHERE UPPER(a.code) = 'DEMO' AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'USD');
+
+              INSERT INTO tax_rates (id, app_id, code, name, rate_percentage, tax_type, active, created_at, updated_at)
+              SELECT '60000000-0000-0000-0000-000000000001', a.id, 'VAT-14', 'ضريبة القيمة المضافة 14%', 14.00, 'VAT', TRUE, 1753574400000, 1753574400000
+              FROM apps a WHERE UPPER(a.code) = 'DEMO' AND NOT EXISTS (SELECT 1 FROM tax_rates t WHERE t.app_id = a.id AND t.code = 'VAT-14');

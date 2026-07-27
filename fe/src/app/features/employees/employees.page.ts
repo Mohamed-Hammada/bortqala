@@ -34,6 +34,12 @@ export class EmployeesPage {
   readonly pagination = new TablePagination();
   readonly editingId = signal<string | null>(null);
   readonly search = signal('');
+
+  isBiometricCategorySelected(): boolean {
+    const selectedId = this.form.controls.categoryId.value;
+    const cat = this.store.categories().find((c) => c.id === selectedId);
+    return cat?.attendanceMode === 'BIOMETRIC';
+  }
   readonly filtered = computed(() => {
     const q = this.search().trim().toLowerCase();
     return this.store
@@ -64,6 +70,15 @@ export class EmployeesPage {
   });
   constructor() {
     void this.store.load();
+    this.form.controls.categoryId.valueChanges.subscribe((catId) => {
+      const cat = this.store.categories().find((c) => c.id === catId);
+      if (cat?.attendanceMode === 'BIOMETRIC') {
+        this.form.controls.deviceUserId.setValidators([Validators.required]);
+      } else {
+        this.form.controls.deviceUserId.clearValidators();
+      }
+      this.form.controls.deviceUserId.updateValueAndValidity();
+    });
   }
   openNew() {
     this.submitAttempted.set(false);

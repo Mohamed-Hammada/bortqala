@@ -339,7 +339,7 @@
             </div>
             <div class="field" [class.has-error]="transactionForm.controls.quantityDelta.touched && transactionForm.controls.quantityDelta.invalid">
               <label>{{ i18n.t('operations.quantityDelta') }} *</label>
-              <input class="ltr" type="number" min="0" step="0.0001" formControlName="quantityDelta" />
+              <input class="ltr" type="number" min="0.01" step="0.0001" formControlName="quantityDelta" />
               @if (transactionForm.controls.quantityDelta.touched && transactionForm.controls.quantityDelta.invalid) {
                 <span class="field-error">
                   ⚠️ {{ i18n.t('operations.invalidNegativeQuantity', undefined, 'كمية الحركة يجب أن تكون رقماً موجباً أكبر من الصفر.') }}

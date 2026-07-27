@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DashboardStore } from './dashboard.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
@@ -14,6 +14,8 @@ import { I18nService } from '../../core/i18n.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardPage {
+  readonly route = inject(ActivatedRoute);
+  readonly router = inject(Router);
   readonly store = inject(DashboardStore);
   readonly i18n = inject(I18nService);
   readonly year = signal(new Date().getFullYear());
@@ -26,7 +28,15 @@ export class DashboardPage {
   readonly activeKpiModal = signal<{ title: string; value: string | number; details: string[] } | null>(null);
 
   constructor() {
-    void this.store.load(this.year(), this.month());
+    this.route.queryParams.subscribe((params: Record<string, string>) => {
+      const y = Number(params['year']) || new Date().getFullYear();
+      const m = Number(params['month']) || new Date().getMonth() + 1;
+      if (y !== this.year() || m !== this.month()) {
+        this.year.set(y);
+        this.month.set(m);
+      }
+      void this.store.load(y, m);
+    });
   }
 
   openKpiDetails(title: string, value: string | number, details: string[]) {
@@ -36,12 +46,18 @@ export class DashboardPage {
   closeKpiModal() {
     this.activeKpiModal.set(null);
   }
+
   changePeriod(yearStr: string, monthStr: string): void {
     const y = Number(yearStr);
     const m = Number(monthStr);
-    if (!isNaN(y) && y >= 2000 && y <= 2100 && !isNaN(m) && m >= 1 && m <= 12) {
+    if (!isNaN(y) && y >= 2020 && y <= 2035 && !isNaN(m) && m >= 1 && m <= 12) {
       this.year.set(y);
       this.month.set(m);
+      void this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { year: y, month: m },
+        queryParamsHandling: 'merge',
+      });
       void this.store.load(y, m);
     }
   }

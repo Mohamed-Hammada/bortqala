@@ -87,8 +87,8 @@
             </td>
             <td>
               <div class="row-actions">
-                <button (click)="openEdit(item)">✎</button
-                ><button class="danger-link" (click)="deactivate(item)" [disabled]="!item.active">
+                <button (click)="openEdit(item)" [attr.aria-label]="i18n.t('common.edit')" [attr.title]="i18n.t('common.edit')">✎</button
+                ><button class="danger-link" (click)="deactivate(item)" [disabled]="!item.active" [attr.aria-label]="i18n.t('common.delete')" [attr.title]="i18n.t('common.delete')">
                   ×
                 </button>
               </div>
@@ -115,6 +115,8 @@
     />
   </div>
   } <!-- end @if (!store.loading()) -->
+
+  <!-- Dialog / Drawer -->
   @if (drawerOpen()) {
     <button
       class="drawer-backdrop"
@@ -124,31 +126,25 @@
     <aside class="drawer">
       <div class="drawer-header">
         <div>
-          <p class="eyebrow">
-            {{ i18n.t(editingId() ? 'employees.editEyebrow' : 'employees.newEyebrow') }}
-          </p>
+          <p class="eyebrow">{{ i18n.t('employees.drawerEyebrow') }}</p>
           <h2>{{ i18n.t(editingId() ? 'employees.editTitle' : 'employees.newTitle') }}</h2>
         </div>
-        <button class="button secondary" (click)="drawerOpen.set(false)">× {{ i18n.t('common.close') }}</button>
+        <button class="button secondary" (click)="closeDrawer()">× {{ i18n.t('common.close') }}</button>
       </div>
       <form [formGroup]="form" (ngSubmit)="submit()">
         @if (submitAttempted() && form.invalid) {
-          <div class="alert error validation-summary" role="alert">
-            {{ i18n.t('employees.validationSummary') }}
-          </div>
+          <div class="alert error" role="alert">{{ i18n.t('employees.validationError') }}</div>
         }
         <div class="form-grid">
           <div class="field">
-            <label>{{ i18n.t('employees.employeeCode') }}</label
-            ><input
-              class="ltr"
-              formControlName="employeeCode"
-              placeholder="EMP-001"
-              aria-describedby="employee-code-hint"
-            />
-            <small id="employee-code-hint">{{
-              i18n.t('employees.employeeCodeOptionalHint')
-            }}</small>
+            <label><span class="required">*</span> {{ i18n.t('employees.employeeCode') }}</label
+            ><input class="ltr" formControlName="employeeCode" placeholder="EMP-001" />
+            @if (
+              form.controls.employeeCode.touched &&
+              form.controls.employeeCode.hasError('required')
+            ) {
+              <small class="field-error">{{ i18n.t('employees.employeeCodeRequired') }}</small>
+            }
           </div>
           <div class="field">
             <label>{{ i18n.t('employees.fullName') }}</label
@@ -193,14 +189,20 @@
             </div>
           }
           <div class="field span-2">
-            <label>{{ i18n.t('employees.deviceUserIdOptional') }}</label
-            ><input
+            <label>
+              @if (isBiometricCategorySelected()) {
+                <span class="required">*</span> {{ i18n.t('employees.deviceUserId') }}
+              } @else {
+                {{ i18n.t('employees.deviceUserIdOptional') }}
+              }
+            </label>
+            <input
               class="ltr"
               formControlName="deviceUserId"
               [placeholder]="i18n.t('employees.deviceUserIdPlaceholder')"
             />
-            @if (form.controls.deviceUserId.hasError('required')) {
-              <small class="field-error">مطلوب معرف البصمة (Device User ID) لفئات البصمة</small>
+            @if (form.controls.deviceUserId.invalid && (form.controls.deviceUserId.touched || submitAttempted())) {
+              <small class="field-error">{{ i18n.t('employees.deviceUserIdRequired') }}</small>
             } @else {
               <small>{{ i18n.t('employees.deviceUserIdHint') }}</small>
             }

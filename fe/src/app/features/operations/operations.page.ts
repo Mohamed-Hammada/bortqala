@@ -61,7 +61,7 @@ export class OperationsPage {
     }),
     quantityDelta: new FormControl(0, {
       nonNullable: true,
-      validators: [Validators.required, Validators.min(0)],
+      validators: [Validators.required, Validators.min(0.01)],
     }),
     amountDelta: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     lossPercentage: new FormControl<number | null>(null, {
@@ -122,7 +122,7 @@ export class OperationsPage {
       return;
     }
     const value = this.transactionForm.getRawValue();
-    if (value.quantityDelta < 0) {
+    if (value.quantityDelta < 0.01) {
       this.transactionForm.controls.quantityDelta.setErrors({ min: true });
       this.transactionForm.controls.quantityDelta.markAsTouched();
       this.notification.error(
