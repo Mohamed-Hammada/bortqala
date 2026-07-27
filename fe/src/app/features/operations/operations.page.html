@@ -22,6 +22,7 @@
   @if (store.error()) {
     <div class="alert error">{{ store.error() }}</div>
   }
+  @if (!store.loading()) {
   <div class="metric-grid">
     <article class="metric-card">
       <span>{{ i18n.t('operations.items') }}</span
@@ -231,6 +232,7 @@
       </div>
     </section>
   </div>
+  } <!-- end @if (!store.loading()) -->
 
   @if (drawer()) {
     <button class="drawer-backdrop" (click)="close()" aria-label="close"></button>
@@ -247,7 +249,7 @@
             )
           }}
         </h2>
-        <button class="button secondary icon-only" (click)="close()">×</button>
+        <button class="button secondary icon-only" (click)="close()">× {{ i18n.t('common.close') }}</button>
       </div>
       @if (drawer() === 'item') {
         <form [formGroup]="itemForm" (ngSubmit)="saveItem()">

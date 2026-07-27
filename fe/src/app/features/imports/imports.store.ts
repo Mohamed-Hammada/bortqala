@@ -11,7 +11,7 @@ export class ImportsStore {
   private readonly i18n = inject(I18nService);
   readonly batches = signal<ImportBatch[]>([]);
   readonly unmatched = signal<UnmatchedIdentity[]>([]);
-  readonly loading = signal(false);
+  readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
   async load() {

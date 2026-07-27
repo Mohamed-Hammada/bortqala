@@ -1,0 +1,144 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">سلسلة الإمداد ودورة الشراء (Procurement & Purchasing Workflow)</p>
+      <h1>دورة المشتريات (Purchase Requests to Payments)</h1>
+      <p>طلبات الشراء ← طلبات العروض RFQ ← أوامر الشراء PO ← استلام البضائع GRN ← فواتير وسداد الموردين.</p>
+    </div>
+    <button class="button primary" (click)="openNew()">＋ أمر شراء جديد (PO)</button>
+  </header>
+
+  @if (loading()) {
+    <div class="loading"></div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  <!-- Workflow Pipeline Cards -->
+  <div class="workflow-steps">
+    <div class="step-card active">
+      <span class="step-num">1</span>
+      <strong>طلب شراء (PR)</strong>
+      <small>احتياج القسم</small>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-card active">
+      <span class="step-num">2</span>
+      <strong>عرض سعر (RFQ)</strong>
+      <small>أسعار الموردين</small>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-card active">
+      <span class="step-num">3</span>
+      <strong>أمر شراء (PO)</strong>
+      <small>التعاقد مع المورد</small>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-card">
+      <span class="step-num">4</span>
+      <strong>إذن استلام (GRN)</strong>
+      <small>إضافة للمخزن</small>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-card">
+      <span class="step-num">5</span>
+      <strong>فاتورة وسداد</strong>
+      <small>الاستحقاق المالي</small>
+    </div>
+  </div>
+
+  @if (!loading()) {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>رقم أمر الشراء</th>
+            <th>تاريخ الأمر</th>
+            <th>كود / اسم المورد</th>
+            <th>شروط الدفع</th>
+            <th>إجمالي المشتريات</th>
+            <th>حالة الأمر</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (po of orders(); track po.id) {
+            <tr>
+              <td><strong class="ltr">{{ po.poNumber }}</strong></td>
+              <td class="ltr">{{ date(po.poDate) }}</td>
+              <td><strong>{{ po.supplierId }}</strong></td>
+              <td>{{ po.paymentTerms || '—' }}</td>
+              <td class="ltr"><strong>{{ po.totalAmount | number:'1.2-2' }}</strong> <small>ج.م</small></td>
+              <td>
+                <span
+                  class="status"
+                  [class.warning]="po.status === 'DRAFT'"
+                  [class.success]="po.status === 'ISSUED'"
+                  [class.info]="po.status === 'RECEIVED'"
+                >
+                  {{ po.status === 'DRAFT' ? 'مسودة (Draft)' : po.status === 'ISSUED' ? 'مُصْدَر للمورد (Issued)' : 'تم الاستلام بالمخزن (Received)' }}
+                </span>
+              </td>
+              <td>
+                <div class="table-row-actions">
+                  @if (po.status === 'DRAFT') {
+                    <button class="button primary btn-sm" (click)="issuePo(po)">📨 إصدار للمورد</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">لا توجد أوامر شراء مسجلة بعد. اضغط <strong>"أمر شراء جديد"</strong> للبدء.</div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (drawerOpen()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">إدارة المشتريات</p>
+          <h2>أمر شراء جديد (Purchase Order)</h2>
+        </div>
+        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
+      </div>
+
+      <form [formGroup]="poForm" (ngSubmit)="submitPo()">
+        <div class="form-grid">
+          <div class="field">
+            <label>رقم أمر الشراء *</label>
+            <input class="ltr" formControlName="poNumber" />
+          </div>
+          <div class="field">
+            <label>تاريخ الأمر *</label>
+            <input type="date" class="ltr" formControlName="poDate" />
+          </div>
+          <div class="field">
+            <label>المورد *</label>
+            <input formControlName="supplierId" placeholder="كود / اسم المورد..." />
+          </div>
+          <div class="field">
+            <label>شروط السداد</label>
+            <input formControlName="paymentTerms" placeholder="Net 30 Days..." />
+          </div>
+          <div class="field span-2">
+            <label>إجمالي قيمة الشراء (ج.م) *</label>
+            <input type="number" class="ltr" formControlName="totalAmount" placeholder="10000" />
+          </div>
+        </div>
+        <div class="drawer-actions">
+          <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+          <button class="button primary" type="submit" [disabled]="poForm.invalid">حفظ أمر الشراء</button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

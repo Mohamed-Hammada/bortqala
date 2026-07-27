@@ -18,7 +18,7 @@ export class UsersStore {
   private readonly i18n = inject(I18nService);
   private readonly http = inject(HttpClient);
   readonly items = signal<AuthUser[]>([]);
-  readonly loading = signal(false);
+  readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   async load() {
     this.loading.set(true);

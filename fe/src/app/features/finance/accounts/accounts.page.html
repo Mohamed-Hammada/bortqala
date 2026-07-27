@@ -1,0 +1,121 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">النظام المالي المحاسبي (General Ledger COA)</p>
+      <h1>دليل الحسابات الشامل (Chart of Accounts)</h1>
+      <p>شجرة واستعراض الأصول والخصوم وحقوق الملكية والإيرادات والمصروفات.</p>
+    </div>
+    <button class="button primary" (click)="openNew()">＋ إضافة حساب جديد</button>
+  </header>
+
+  @if (loading()) {
+    <div class="loading"></div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (!loading()) {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>كود الحساب</th>
+            <th>اسم الحساب</th>
+            <th>نوع الحساب</th>
+            <th>تصنيف الحساب</th>
+            <th>العملة</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (acc of accounts(); track acc.id) {
+            <tr [class.header-row]="acc.isHeader">
+              <td><strong class="ltr">{{ acc.code }}</strong></td>
+              <td>
+                <strong [style.padding-right.px]="acc.code.length * 8">{{ acc.name }}</strong>
+              </td>
+              <td>
+                <span class="status neutral">
+                  {{ acc.type === 'ASSET' ? 'أصول' : acc.type === 'LIABILITY' ? 'خصوم' : acc.type === 'EQUITY' ? 'حقوق ملكية' : acc.type === 'REVENUE' ? 'إيرادات' : 'مصروفات' }}
+                </span>
+              </td>
+              <td>
+                <span class="status" [class.info]="acc.isHeader">{{ acc.isHeader ? 'حساب رئيسي (Header)' : 'حساب فرعي (Posting)' }}</span>
+              </td>
+              <td class="ltr"><code>{{ acc.currency }}</code></td>
+              <td><span class="status" [class.success]="acc.active">{{ acc.active ? 'نشط' : 'معطل' }}</span></td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">لا توجد حسابات مسجلة في دليل الحسابات بعد</div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (drawerOpen()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">دليل الحسابات</p>
+          <h2>حساب جديد</h2>
+        </div>
+        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-grid">
+          <div class="field">
+            <label>كود الحساب *</label>
+            <input class="ltr" formControlName="code" placeholder="مثال: 10103" />
+          </div>
+          <div class="field">
+            <label>اسم الحساب *</label>
+            <input formControlName="name" placeholder="مثال: بنك مصر - حساب الجاري" />
+          </div>
+          <div class="field">
+            <label>نوع الحساب *</label>
+            <select formControlName="type">
+              <option value="ASSET">أصول (Assets)</option>
+              <option value="LIABILITY">خصوم والتزامات (Liabilities)</option>
+              <option value="EQUITY">حقوق ملكية (Equity)</option>
+              <option value="REVENUE">إيرادات (Revenue)</option>
+              <option value="EXPENSE">مصروفات (Expenses)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>الحساب الأب (Parent)</label>
+            <select formControlName="parentId">
+              <option value="">(بدون حساب أب - رئيسي)</option>
+              @for (a of accounts(); track a.id) {
+                @if (a.isHeader) {
+                  <option [value]="a.id">{{ a.code }} - {{ a.name }}</option>
+                }
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>العملة</label>
+            <input class="ltr" formControlName="currency" placeholder="EGP" />
+          </div>
+          <div class="field">
+            <label class="checkbox-label">
+              <input type="checkbox" formControlName="isHeader" />
+              <span>حساب رئيسي (Header Account - لا يقبل قيود مباشرة)</span>
+            </label>
+          </div>
+        </div>
+        <div class="drawer-actions">
+          <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+          <button class="button primary" type="submit" [disabled]="form.invalid">حفظ الحساب</button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

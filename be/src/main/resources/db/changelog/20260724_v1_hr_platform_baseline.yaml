@@ -2,6 +2,9 @@ databaseChangeLog:
   - changeSet:
       id: create_apps_table
       author: Mohamed-Hammada
+      validCheckSum:
+        - "9:ed0543ba2e583de78c1e400d6c5485d2"
+        - "9:04755f1ee8ee49d3d550b258d6b64a97"
       preConditions:
         - onFail: MARK_RAN
         - not:

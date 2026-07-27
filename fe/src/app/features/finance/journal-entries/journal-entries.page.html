@@ -1,0 +1,179 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">دفتر اليومية العامة والقيود (General Ledger Journal)</p>
+      <h1>القيود اليومية (Journal Entries)</h1>
+      <p>تسجيل وترحيل قيود اليومية المزدوجة ومتابعة توازن الحسابات.</p>
+    </div>
+    <button class="button primary" (click)="openNew()">＋ قيد يومية جديد</button>
+  </header>
+
+  @if (loading()) {
+    <div class="loading"></div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (!loading()) {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>رقم القيد</th>
+            <th>تاريخ القيد</th>
+            <th>البيان / الشرح</th>
+            <th>المرجع</th>
+            <th>إجمالي المدين</th>
+            <th>إجمالي الدائن</th>
+            <th>حالة القيد</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (e of entries(); track e.id) {
+            <tr>
+              <td><strong class="ltr">{{ e.entryNumber }}</strong></td>
+              <td class="ltr">{{ date(e.entryDate) }}</td>
+              <td><strong>{{ e.description }}</strong></td>
+              <td>{{ e.reference || '—' }}</td>
+              <td class="ltr"><strong>{{ e.totalDebit | number:'1.2-2' }}</strong> <small>ج.م</small></td>
+              <td class="ltr"><strong>{{ e.totalCredit | number:'1.2-2' }}</strong> <small>ج.م</small></td>
+              <td>
+                <span
+                  class="status"
+                  [class.warning]="e.status === 'DRAFT'"
+                  [class.success]="e.status === 'POSTED'"
+                  [class.danger]="e.status === 'REVERSED'"
+                >
+                  {{ e.status === 'DRAFT' ? 'مسودة (Draft)' : e.status === 'POSTED' ? 'مُرحَّل (Posted)' : 'متراجع عنه (Reversed)' }}
+                </span>
+              </td>
+              <td>
+                <div class="table-row-actions">
+                  @if (e.status === 'DRAFT') {
+                    <button class="button primary btn-sm" (click)="postEntry(e)">📖 ترحيل القيد</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8">
+                <div class="empty-state">لا توجد قيود يومية مسجلة بعد. اضغط <strong>"قيد يومية جديد"</strong> لإضافة قيد.</div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <app-table-pagination
+        [total]="totalElements()"
+        [page]="pagination.currentPage(totalElements())"
+        [pageSize]="pagination.pageSize()"
+        (pageChange)="load($event)"
+        (pageSizeChange)="pagination.changePageSize($event); load(0)"
+      />
+    </div>
+  }
+
+  <!-- Drawer for Creating Double-Entry Journal -->
+  @if (drawerOpen()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer drawer-large">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">قيود اليومية العامة</p>
+          <h2>إضافة قيد يومية جديد (Double-Entry Voucher)</h2>
+        </div>
+        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
+      </div>
+
+      <form [formGroup]="entryForm" (ngSubmit)="submitEntry()">
+        <div class="form-grid">
+          <div class="field">
+            <label>رقم القيد *</label>
+            <input class="ltr" formControlName="entryNumber" />
+          </div>
+          <div class="field">
+            <label>تاريخ القيد *</label>
+            <input type="date" class="ltr" formControlName="entryDate" />
+          </div>
+          <div class="field span-2">
+            <label>البيان والشرح *</label>
+            <input formControlName="description" placeholder="شرح القيد المحاسبي بالتفصيل..." />
+          </div>
+          <div class="field span-2">
+            <label>رقم المرجع / الفاتورة</label>
+            <input class="ltr" formControlName="reference" placeholder="REF-001" />
+          </div>
+        </div>
+
+        <!-- Journal Lines Table -->
+        <div class="lines-section">
+          <h3>طرفي القيد (المدين والدائن)</h3>
+          <table class="lines-table">
+            <thead>
+              <tr>
+                <th>الحساب المحاسبي *</th>
+                <th>مدين (Debit)</th>
+                <th>دائن (Credit)</th>
+                <th>ملاحظات السطر</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (line of lines(); track $index) {
+                <tr>
+                  <td>
+                    <select [value]="line.accountId" (change)="updateLine($index, 'accountId', $any($event.target).value)">
+                      @for (acc of accounts(); track acc.id) {
+                        <option [value]="acc.id">{{ acc.code }} - {{ acc.name }}</option>
+                      }
+                    </select>
+                  </td>
+                  <td>
+                    <input type="number" class="ltr" [value]="line.debit" (input)="updateLine($index, 'debit', +$any($event.target).value)" />
+                  </td>
+                  <td>
+                    <input type="number" class="ltr" [value]="line.credit" (input)="updateLine($index, 'credit', +$any($event.target).value)" />
+                  </td>
+                  <td>
+                    <input type="text" [value]="line.memo" (input)="updateLine($index, 'memo', $any($event.target).value)" placeholder="ملاحظات السطر..." />
+                  </td>
+                  <td>
+                    <button class="button secondary btn-sm danger-btn" type="button" (click)="removeLine($index)">×</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td><strong>إجمالي القيد:</strong></td>
+                <td class="ltr"><strong>{{ calculateSumDebit() | number:'1.2-2' }}</strong></td>
+                <td class="ltr"><strong>{{ calculateSumCredit() | number:'1.2-2' }}</strong></td>
+                <td colspan="2">
+                  <span
+                    class="status"
+                    [class.success]="calculateSumDebit() === calculateSumCredit() && calculateSumDebit() > 0"
+                    [class.danger]="calculateSumDebit() !== calculateSumCredit()"
+                  >
+                    {{ calculateSumDebit() === calculateSumCredit() && calculateSumDebit() > 0 ? '✓ القيد متوازن' : '❌ القيد غير متوازن' }}
+                  </span>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+          <button class="button secondary btn-sm" type="button" (click)="addLine()">＋ إضافة سطر جديد</button>
+        </div>
+
+        <div class="drawer-actions">
+          <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+          <button class="button primary" type="submit" [disabled]="entryForm.invalid || calculateSumDebit() !== calculateSumCredit() || calculateSumDebit() === 0">
+            حفظ القيد كـ مسودة
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

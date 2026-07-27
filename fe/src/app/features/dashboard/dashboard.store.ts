@@ -10,7 +10,7 @@ export class DashboardStore {
   private readonly httpClient = inject(HttpClient);
   private readonly i18n = inject(I18nService);
   readonly data = signal<Dashboard | null>(null);
-  readonly loading = signal(false);
+  readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   async load(year: number, month: number): Promise<void> {
     this.loading.set(true);

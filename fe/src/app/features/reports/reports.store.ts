@@ -20,7 +20,7 @@ export class ReportsStore {
   readonly reports = signal<ReportSummary[]>([]);
   readonly periods = signal<PeriodOption[]>([]);
   readonly details = signal<ReportDetails | null>(null);
-  readonly loading = signal(false);
+  readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
   async list(year: number): Promise<void> {

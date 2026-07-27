@@ -10,7 +10,7 @@ export class CategoriesStore {
   private readonly http = inject(HttpClient);
   private readonly i18n = inject(I18nService);
   readonly items = signal<AttendanceCategory[]>([]);
-  readonly loading = signal(false);
+  readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   async load() {
     this.loading.set(true);

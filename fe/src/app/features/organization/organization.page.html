@@ -1,0 +1,281 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">البنية الإدارية والهيكل المؤسسي (ERP Hierarchy)</p>
+      <h1>إدارة الشركات والفروع والمستودعات والإدارات</h1>
+      <p>توصيف الهيكل التنظيمي للشركة والفروع التابعة والمخازن والأقسام الإدارية.</p>
+    </div>
+    <button class="button primary" (click)="openNew()">＋ إضافة عنصر جديد</button>
+  </header>
+
+  @if (loading()) {
+    <div class="loading"></div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  <!-- Tab selector pills -->
+  <div class="filter-pills-bar">
+    <div class="pills-group">
+      <button class="pill-tab" [class.active]="activeTab() === 'companies'" (click)="activeTab.set('companies')">
+        🏢 الشركات ({{ companies().length }})
+      </button>
+      <button class="pill-tab" [class.active]="activeTab() === 'branches'" (click)="activeTab.set('branches')">
+        🌿 الفروع ({{ branches().length }})
+      </button>
+      <button class="pill-tab" [class.active]="activeTab() === 'warehouses'" (click)="activeTab.set('warehouses')">
+        📦 المستودعات والمخازن ({{ warehouses().length }})
+      </button>
+      <button class="pill-tab" [class.active]="activeTab() === 'departments'" (click)="activeTab.set('departments')">
+        🏛️ الإدارات والأقسام ({{ departments().length }})
+      </button>
+    </div>
+  </div>
+
+  @if (!loading()) {
+    <!-- Companies Tab -->
+    @if (activeTab() === 'companies') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>كود الشركة</th>
+              <th>اسم الشركة</th>
+              <th>الرقم الضريبي</th>
+              <th>السجل التجاري</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of companies(); track c.id) {
+              <tr>
+                <td><strong class="ltr">{{ c.code }}</strong></td>
+                <td><strong>{{ c.name }}</strong></td>
+                <td>{{ c.taxNumber || '—' }}</td>
+                <td>{{ c.commercialRegistry || '—' }}</td>
+                <td><span class="status" [class.success]="c.active">{{ c.active ? 'نشط' : 'معطل' }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5"><div class="empty-state">لا توجد شركات مسجلة بعد</div></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Branches Tab -->
+    @if (activeTab() === 'branches') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>كود الفرع</th>
+              <th>اسم الفرع</th>
+              <th>الموقع / العنوان</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (b of branches(); track b.id) {
+              <tr>
+                <td><strong class="ltr">{{ b.code }}</strong></td>
+                <td><strong>{{ b.name }}</strong></td>
+                <td>{{ b.location || '—' }}</td>
+                <td><span class="status" [class.success]="b.active">{{ b.active ? 'نشط' : 'معطل' }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4"><div class="empty-state">لا توجد فروع مسجلة بعد</div></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Warehouses Tab -->
+    @if (activeTab() === 'warehouses') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>كود المستودع</th>
+              <th>اسم المستودع / المخزن</th>
+              <th>الموقع</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (w of warehouses(); track w.id) {
+              <tr>
+                <td><strong class="ltr">{{ w.code }}</strong></td>
+                <td><strong>{{ w.name }}</strong></td>
+                <td>{{ w.location || '—' }}</td>
+                <td><span class="status" [class.success]="w.active">{{ w.active ? 'نشط' : 'معطل' }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4"><div class="empty-state">لا توجد مستودعات مسجلة بعد</div></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Departments Tab -->
+    @if (activeTab() === 'departments') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>كود الإدارة</th>
+              <th>اسم الإدارة / القسم</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (d of departments(); track d.id) {
+              <tr>
+                <td><strong class="ltr">{{ d.code }}</strong></td>
+                <td><strong>{{ d.name }}</strong></td>
+                <td><span class="status" [class.success]="d.active">{{ d.active ? 'نشط' : 'معطل' }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="3"><div class="empty-state">لا توجد إدارات مسجلة بعد</div></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <!-- Drawer Modal for Creating Elements -->
+  @if (drawerOpen()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">إضافة عنصر للهيكل المؤسسي</p>
+          <h2>
+            {{ activeTab() === 'companies' ? 'شركة جديدة' : activeTab() === 'branches' ? 'فرع جديد' : activeTab() === 'warehouses' ? 'مستودع جديد' : 'إدارة جديدة' }}
+          </h2>
+        </div>
+        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
+      </div>
+
+      @if (activeTab() === 'companies') {
+        <form [formGroup]="companyForm" (ngSubmit)="submitCompany()">
+          <div class="form-grid">
+            <div class="field">
+              <label>كود الشركة *</label>
+              <input class="ltr" formControlName="code" placeholder="COMP-01" />
+            </div>
+            <div class="field">
+              <label>اسم الشركة *</label>
+              <input formControlName="name" placeholder="شركة المجموعة الرئيسية" />
+            </div>
+            <div class="field">
+              <label>الرقم الضريبي</label>
+              <input class="ltr" formControlName="taxNumber" placeholder="300-123456" />
+            </div>
+            <div class="field">
+              <label>السجل التجاري</label>
+              <input class="ltr" formControlName="commercialRegistry" placeholder="CR-998811" />
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+            <button class="button primary" type="submit" [disabled]="companyForm.invalid">حفظ الشركة</button>
+          </div>
+        </form>
+      }
+
+      @if (activeTab() === 'branches') {
+        <form [formGroup]="branchForm" (ngSubmit)="submitBranch()">
+          <div class="form-grid">
+            <div class="field span-2">
+              <label>الشركة التابع لها *</label>
+              <select formControlName="companyId">
+                @for (c of companies(); track c.id) {
+                  <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>كود الفرع *</label>
+              <input class="ltr" formControlName="code" placeholder="BR-01" />
+            </div>
+            <div class="field">
+              <label>اسم الفرع *</label>
+              <input formControlName="name" placeholder="فرع القاهرة الرئيسي" />
+            </div>
+            <div class="field span-2">
+              <label>الموقع / العنوان</label>
+              <input formControlName="location" placeholder="العنوان بالتفصيل..." />
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+            <button class="button primary" type="submit" [disabled]="branchForm.invalid">حفظ الفرع</button>
+          </div>
+        </form>
+      }
+
+      @if (activeTab() === 'warehouses') {
+        <form [formGroup]="warehouseForm" (ngSubmit)="submitWarehouse()">
+          <div class="form-grid">
+            <div class="field span-2">
+              <label>الفرع التابع له *</label>
+              <select formControlName="branchId">
+                @for (b of branches(); track b.id) {
+                  <option [value]="b.id">{{ b.name }} ({{ b.code }})</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>كود المستودع *</label>
+              <input class="ltr" formControlName="code" placeholder="WH-01" />
+            </div>
+            <div class="field">
+              <label>اسم المستودع / المخزن *</label>
+              <input formControlName="name" placeholder="مخزن المواد الخام" />
+            </div>
+            <div class="field span-2">
+              <label>الموقع</label>
+              <input formControlName="location" placeholder="منطقة المخازن..." />
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+            <button class="button primary" type="submit" [disabled]="warehouseForm.invalid">حفظ المستودع</button>
+          </div>
+        </form>
+      }
+
+      @if (activeTab() === 'departments') {
+        <form [formGroup]="departmentForm" (ngSubmit)="submitDepartment()">
+          <div class="form-grid">
+            <div class="field span-2">
+              <label>الشركة التابع لها *</label>
+              <select formControlName="companyId">
+                @for (c of companies(); track c.id) {
+                  <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>كود الإدارة *</label>
+              <input class="ltr" formControlName="code" placeholder="DEP-HR" />
+            </div>
+            <div class="field">
+              <label>اسم الإدارة / القسم *</label>
+              <input formControlName="name" placeholder="إدارة الموارد البشرية" />
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+            <button class="button primary" type="submit" [disabled]="departmentForm.invalid">حفظ الإدارة</button>
+          </div>
+        </form>
+      }
+    </aside>
+  }
+</section>

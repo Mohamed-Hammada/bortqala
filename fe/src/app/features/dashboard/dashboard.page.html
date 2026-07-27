@@ -296,4 +296,31 @@
       </article>
     </div>
   }
+  <!-- KPI Drill-Down Modal -->
+  @if (activeKpiModal(); as modal) {
+    <div class="drawer-backdrop" (click)="closeKpiModal()"></div>
+    <div class="kpi-modal">
+      <div class="kpi-modal-header">
+        <div>
+          <p class="eyebrow">تفاصيل مؤشر الأداء (KPI Drill-Down)</p>
+          <h3>{{ modal.title }}</h3>
+        </div>
+        <button class="button secondary" type="button" (click)="closeKpiModal()">× إغلاق</button>
+      </div>
+      <div class="kpi-modal-body">
+        <div class="kpi-big-stat">
+          <span class="stat-num">{{ modal.value }}</span>
+          <small>القيمة الإجمالية للمؤشر</small>
+        </div>
+        <div class="kpi-breakdown-list">
+          <h4>تفاصيل التوزيع والملاحظات:</h4>
+          <ul>
+            @for (detail of modal.details; track $index) {
+              <li>📌 {{ detail }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  }
 </section>

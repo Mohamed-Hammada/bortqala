@@ -56,3 +56,27 @@ databaseChangeLog:
       file: db/changelog/20260725_v18_full_ui_translations.yaml
   - include:
       file: db/changelog/20260725_v19_server_pagination_and_menu_permissions.yaml
+  - include:
+      file: db/changelog/20260726_v20_tenant_settings_and_super_admin.yaml
+  - include:
+      file: db/changelog/20260727_v21_salary_payments.yaml
+  - include:
+      file: db/changelog/20260727_v22_ensure_app_session_columns.yaml
+  - include:
+      file: db/changelog/20260727_v23_add_base_salary_to_employees.yaml
+  - include:
+      file: db/changelog/20260727_v24_configurable_min_password_length.yaml
+  - include:
+      file: db/changelog/20260727_v25_erp_core_components.yaml
+  - include:
+      file: db/changelog/20260727_v26_finance_system_core.yaml
+  - include:
+      file: db/changelog/20260727_v27_default_chart_of_accounts.yaml
+  - include:
+      file: db/changelog/20260727_v28_procurement_cycle.yaml
+  - include:
+      file: db/changelog/20260727_v29_sales_cycle.yaml
+  - include:
+      file: db/changelog/20260727_v30_advanced_inventory.yaml
+  - include:
+      file: db/changelog/20260727_v31_manufacturing_and_qc.yaml

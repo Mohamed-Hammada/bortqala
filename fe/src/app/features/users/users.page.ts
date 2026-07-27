@@ -51,7 +51,18 @@ export class UsersPage {
     { id: 'parties', labelKey: 'nav.parties' },
     { id: 'reports', labelKey: 'nav.reports' },
     { id: 'operations', labelKey: 'nav.operations' },
+    { id: 'procurement', labelKey: 'nav.procurement' },
+    { id: 'sales', labelKey: 'nav.sales' },
+    { id: 'production', labelKey: 'nav.production' },
+    { id: 'quality', labelKey: 'nav.quality' },
     { id: 'payroll', labelKey: 'nav.payroll' },
+    { id: 'accounts', labelKey: 'nav.accounts' },
+    { id: 'journal-entries', labelKey: 'nav.journalEntries' },
+    { id: 'banks', labelKey: 'nav.banks' },
+    { id: 'tax-currency', labelKey: 'nav.taxCurrency' },
+    { id: 'fiscal-periods', labelKey: 'nav.fiscalPeriods' },
+    { id: 'organization', labelKey: 'nav.organization' },
+    { id: 'audit-logs', labelKey: 'nav.auditLogs' },
     { id: 'users', labelKey: 'nav.users' },
     { id: 'settings', labelKey: 'settings.title' },
   ];
@@ -112,11 +123,18 @@ export class UsersPage {
       displayName: item.displayName,
       password: '',
       roles: item.roles,
-      allowedMenus: item.allowedMenus ?? ['dashboard', 'categories', 'employees', 'imports', 'parties', 'reports', 'operations', 'payroll', 'users', 'settings'],
+      allowedMenus: item.allowedMenus ?? this.menuOptions.map((m) => m.id),
       active: item.active,
       version: item.version,
     });
     this.drawerOpen.set(true);
+  }
+
+  allowedMenuCount(item: AuthUser): number {
+    if (item.roles.includes('SUPER_ADMIN')) {
+      return this.menuOptions.length;
+    }
+    return item.allowedMenus ? item.allowedMenus.length : this.menuOptions.length;
   }
 
   toggleRole(code: RoleCode, event: Event) {

@@ -1,0 +1,138 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">سلسلة الإمداد ودورة البيع والتحصيل (Sales & Collection Workflow)</p>
+      <h1>دورة المبيعات (Sales Quotations to Collections)</h1>
+      <p>عروض الأسعار ← أوامر البيع SO ← إذن التسليم والصرف من المخزن ← فواتير وتحصيل العملاء.</p>
+    </div>
+    <button class="button primary" (click)="openNew()">＋ أمر بيع جديد (SO)</button>
+  </header>
+
+  @if (loading()) {
+    <div class="loading"></div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  <!-- Workflow Pipeline Cards -->
+  <div class="workflow-steps">
+    <div class="step-card active">
+      <span class="step-num">1</span>
+      <strong>عرض سعر (Quotation)</strong>
+      <small>تسعير للعميل</small>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-card active">
+      <span class="step-num">2</span>
+      <strong>أمر بيع (Sales Order)</strong>
+      <small>تأكيد طلب العميل</small>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-card">
+      <span class="step-num">3</span>
+      <strong>إذن تسليم (Delivery)</strong>
+      <small>خصم وصرف من المخزن</small>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-card">
+      <span class="step-num">4</span>
+      <strong>فاتورة عميل</strong>
+      <small>الاستحقاق المالي</small>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step-card">
+      <span class="step-num">5</span>
+      <strong>تحصيل النقدية</strong>
+      <small>إيداع بالبنك / الخزينة</small>
+    </div>
+  </div>
+
+  @if (!loading()) {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>رقم أمر البيع</th>
+            <th>تاريخ الأمر</th>
+            <th>كود / اسم العميل</th>
+            <th>إجمالي قيمة المبيعات</th>
+            <th>حالة الأمر</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (so of orders(); track so.id) {
+            <tr>
+              <td><strong class="ltr">{{ so.soNumber }}</strong></td>
+              <td class="ltr">{{ date(so.soDate) }}</td>
+              <td><strong>{{ so.customerId }}</strong></td>
+              <td class="ltr"><strong>{{ so.totalAmount | number:'1.2-2' }}</strong> <small>ج.م</small></td>
+              <td>
+                <span
+                  class="status"
+                  [class.warning]="so.status === 'DRAFT'"
+                  [class.success]="so.status === 'CONFIRMED'"
+                  [class.info]="so.status === 'DELIVERED'"
+                >
+                  {{ so.status === 'DRAFT' ? 'مسودة (Draft)' : so.status === 'CONFIRMED' ? 'مؤكد من العميل (Confirmed)' : 'تم التسليم من المخزن (Delivered)' }}
+                </span>
+              </td>
+              <td>
+                <div class="table-row-actions">
+                  @if (so.status === 'DRAFT') {
+                    <button class="button primary btn-sm" (click)="confirmSo(so)">✔ تأكيد أمر البيع</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">لا توجد أوامر بيع مسجلة بعد. اضغط <strong>"أمر بيع جديد"</strong> للبدء.</div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (drawerOpen()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">إدارة المبيعات</p>
+          <h2>أمر بيع جديد (Sales Order)</h2>
+        </div>
+        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
+      </div>
+
+      <form [formGroup]="soForm" (ngSubmit)="submitSo()">
+        <div class="form-grid">
+          <div class="field">
+            <label>رقم أمر البيع *</label>
+            <input class="ltr" formControlName="soNumber" />
+          </div>
+          <div class="field">
+            <label>تاريخ الأمر *</label>
+            <input type="date" class="ltr" formControlName="soDate" />
+          </div>
+          <div class="field span-2">
+            <label>العميل *</label>
+            <input formControlName="customerId" placeholder="كود / اسم العميل..." />
+          </div>
+          <div class="field span-2">
+            <label>إجمالي قيمة البيع (ج.م) *</label>
+            <input type="number" class="ltr" formControlName="totalAmount" placeholder="15000" />
+          </div>
+        </div>
+        <div class="drawer-actions">
+          <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+          <button class="button primary" type="submit" [disabled]="soForm.invalid">حفظ أمر البيع</button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

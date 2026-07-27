@@ -1,0 +1,185 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">إعدادات الضرائب والعملات (Tax & Currency Settings)</p>
+      <h1>إدارة الضرائب وأسعار الصرف والعملات</h1>
+      <p>توصيف قواعد القيمة المضافة وضرائب الخصم وأسعار صرف العملات المختلفة.</p>
+    </div>
+    <button class="button primary" (click)="openNew()">
+      ＋ {{ activeTab() === 'taxes' ? 'إضافة ضريبة جديدة' : 'إضافة عملة جديدة' }}
+    </button>
+  </header>
+
+  @if (loading()) {
+    <div class="loading"></div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  <!-- Tab selector pills -->
+  <div class="filter-pills-bar">
+    <div class="pills-group">
+      <button class="pill-tab" [class.active]="activeTab() === 'taxes'" (click)="activeTab.set('taxes')">
+        🏷️ الضرائب والقواعد الضريبية ({{ taxes().length }})
+      </button>
+      <button class="pill-tab" [class.active]="activeTab() === 'currencies'" (click)="activeTab.set('currencies')">
+        💱 العملات وأسعار الصرف ({{ currencies().length }})
+      </button>
+    </div>
+  </div>
+
+  @if (!loading()) {
+    <!-- Taxes Tab -->
+    @if (activeTab() === 'taxes') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>كود الضريبة</th>
+              <th>اسم الضريبة</th>
+              <th>النسبة المئوية (%)</th>
+              <th>نوع الضريبة</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of taxes(); track t.id) {
+              <tr>
+                <td><strong class="ltr">{{ t.code }}</strong></td>
+                <td><strong>{{ t.name }}</strong></td>
+                <td class="ltr"><strong>{{ t.ratePercentage }}%</strong></td>
+                <td>
+                  <span class="status info">
+                    {{ t.taxType === 'OUTPUT_VAT' ? 'ضريبة مبيعات (Output VAT)' : t.taxType === 'INPUT_VAT' ? 'ضريبة مدخلات (Input VAT)' : 'خصم وإضافة (Withholding)' }}
+                  </span>
+                </td>
+                <td><span class="status" [class.success]="t.active">{{ t.active ? 'نشط' : 'معطل' }}</span></td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5">
+                  <div class="empty-state">لا توجد ضرائب مسجلة بعد</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Currencies Tab -->
+    @if (activeTab() === 'currencies') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>كود العملة</th>
+              <th>اسم العملة</th>
+              <th>الرمز</th>
+              <th>العملة الأساسية</th>
+              <th>سعر الصرف (مقابل الأساسية)</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of currencies(); track c.id) {
+              <tr>
+                <td><strong class="ltr">{{ c.code }}</strong></td>
+                <td><strong>{{ c.name }}</strong></td>
+                <td><strong>{{ c.symbol }}</strong></td>
+                <td><span class="status" [class.success]="c.isBase">{{ c.isBase ? 'العملة الأساسية ✓' : 'عملة أجنبية' }}</span></td>
+                <td class="ltr"><code>1 {{ c.code }} = {{ c.exchangeRate }} EGP</code></td>
+                <td><span class="status" [class.success]="c.active">{{ c.active ? 'نشط' : 'معطل' }}</span></td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6">
+                  <div class="empty-state">لا توجد عملات مسجلة بعد</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <!-- Drawer Modal -->
+  @if (drawerOpen()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">إعدادات المالية</p>
+          <h2>{{ activeTab() === 'taxes' ? 'ضريبة جديدة' : 'عملة جديدة' }}</h2>
+        </div>
+        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
+      </div>
+
+      @if (activeTab() === 'taxes') {
+        <form [formGroup]="taxForm" (ngSubmit)="submitTax()">
+          <div class="form-grid">
+            <div class="field">
+              <label>كود الضريبة *</label>
+              <input class="ltr" formControlName="code" placeholder="VAT-14" />
+            </div>
+            <div class="field">
+              <label>اسم الضريبة *</label>
+              <input formControlName="name" placeholder="ضريبة القيمة المضافة 14%" />
+            </div>
+            <div class="field">
+              <label>النسبة المئوية (%) *</label>
+              <input type="number" class="ltr" formControlName="ratePercentage" placeholder="14" />
+            </div>
+            <div class="field">
+              <label>نوع الضريبة *</label>
+              <select formControlName="taxType">
+                <option value="OUTPUT_VAT">ضريبة مخرجات/مبيعات (Output VAT)</option>
+                <option value="INPUT_VAT">ضريبة مدخلات/مشتريات (Input VAT)</option>
+                <option value="WITHHOLDING">خصم وأرباح تجارية (Withholding Tax)</option>
+              </select>
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+            <button class="button primary" type="submit" [disabled]="taxForm.invalid">حفظ الضريبة</button>
+          </div>
+        </form>
+      }
+
+      @if (activeTab() === 'currencies') {
+        <form [formGroup]="currencyForm" (ngSubmit)="submitCurrency()">
+          <div class="form-grid">
+            <div class="field">
+              <label>كود العملة (ISO) *</label>
+              <input class="ltr" formControlName="code" placeholder="USD" />
+            </div>
+            <div class="field">
+              <label>اسم العملة *</label>
+              <input formControlName="name" placeholder="دولار أمريكي" />
+            </div>
+            <div class="field">
+              <label>الرمز (Symbol) *</label>
+              <input class="ltr" formControlName="symbol" placeholder="$" />
+            </div>
+            <div class="field">
+              <label>سعر الصرف *</label>
+              <input type="number" class="ltr" formControlName="exchangeRate" placeholder="48.50" />
+            </div>
+            <div class="field span-2">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="isBase" />
+                <span>تعيين كـ عملة أساسية للنظام (Base Currency)</span>
+              </label>
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+            <button class="button primary" type="submit" [disabled]="currencyForm.invalid">حفظ العملة</button>
+          </div>
+        </form>
+      }
+    </aside>
+  }
+</section>

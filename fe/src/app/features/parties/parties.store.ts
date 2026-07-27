@@ -11,7 +11,7 @@ export class PartiesStore {
   private readonly httpClient = inject(HttpClient);
   private readonly i18n = inject(I18nService);
   readonly items = signal<BusinessParty[]>([]);
-  readonly loading = signal(false);
+  readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
   async load(): Promise<void> {

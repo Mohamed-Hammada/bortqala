@@ -1,0 +1,8 @@
+.page { display: flex; flex-direction: column; gap: 20px; }
+.empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
+.workflow-steps { display: flex; align-items: center; gap: 10px; overflow-x: auto; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border-color); }
+.step-card { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px; border-radius: 6px; background: rgba(255,255,255,0.04); border: 1px solid var(--border-color); opacity: 0.6; }
+.step-card.active { opacity: 1; border-color: var(--gold); background: rgba(212, 175, 55, 0.08); }
+.step-num { font-size: 14px; font-weight: bold; background: var(--gold); color: #000; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+.step-arrow { color: var(--text-muted); font-weight: bold; }
+.btn-sm { font-size: 13px; padding: 4px 8px; }

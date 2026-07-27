@@ -8,6 +8,42 @@
   background: var(--canvas);
 }
 
+.offline-banner {
+  background: #f59e0b;
+  color: #000;
+  font-weight: bold;
+  font-size: 13px;
+  text-align: center;
+  padding: 8px 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.global-search-container {
+  flex: 1;
+  max-width: 400px;
+  margin: 0 16px;
+
+  .global-search-input {
+    width: 100%;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-color);
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: var(--gold);
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
 .sidebar {
   position: fixed;
   inset: 0 0 0 auto;

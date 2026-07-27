@@ -21,7 +21,7 @@ export class OperationsStore {
   readonly snapshot = signal<OperationsSnapshot>(empty);
   readonly parties = signal<PartyOption[]>([]);
   readonly employees = signal<EmployeeOption[]>([]);
-  readonly loading = signal(false);
+  readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
   async load(): Promise<void> {

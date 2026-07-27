@@ -12,7 +12,7 @@ export class PayrollStore {
   private readonly i18n = inject(I18nService);
 
   readonly data = signal<SheetResponse | null>(null);
-  readonly loading = signal(false);
+  readonly loading = signal(true);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
 

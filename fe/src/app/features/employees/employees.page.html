@@ -30,6 +30,7 @@
   @if (store.error()) {
     <div class="alert error">{{ store.error() }}</div>
   }
+  @if (!store.loading()) {
   <div class="table-card">
     <table>
       <thead>
@@ -109,6 +110,7 @@
       (pageSizeChange)="pagination.changePageSize($event)"
     />
   </div>
+  } <!-- end @if (!store.loading()) -->
   @if (drawerOpen()) {
     <button
       class="drawer-backdrop"
@@ -123,7 +125,7 @@
           </p>
           <h2>{{ i18n.t(editingId() ? 'employees.editTitle' : 'employees.newTitle') }}</h2>
         </div>
-        <button class="button secondary icon-only" (click)="drawerOpen.set(false)">×</button>
+        <button class="button secondary" (click)="drawerOpen.set(false)">× {{ i18n.t('common.close') }}</button>
       </div>
       <form [formGroup]="form" (ngSubmit)="submit()">
         @if (submitAttempted() && form.invalid) {

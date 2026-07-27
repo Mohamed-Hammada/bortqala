@@ -23,8 +23,18 @@ export class DashboardPage {
     this.pagination.slice(this.store.data()?.categories ?? []),
   );
   readonly monthKeys = Array.from({ length: 12 }, (_, index) => `month.${index + 1}`);
+  readonly activeKpiModal = signal<{ title: string; value: string | number; details: string[] } | null>(null);
+
   constructor() {
     void this.store.load(this.year(), this.month());
+  }
+
+  openKpiDetails(title: string, value: string | number, details: string[]) {
+    this.activeKpiModal.set({ title, value, details });
+  }
+
+  closeKpiModal() {
+    this.activeKpiModal.set(null);
   }
   changePeriod(yearStr: string, monthStr: string): void {
     const y = Number(yearStr);

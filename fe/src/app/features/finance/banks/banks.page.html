@@ -1,0 +1,88 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">إدارة الخزينة والسيولة (Treasury & Cash Management)</p>
+      <h1>الحسابات البنكية والخزائن (Bank Accounts)</h1>
+      <p>تسجيل وتتبع الحسابات المصرفية بالبنوك وأرقام الـ IBAN وسويفت كود.</p>
+    </div>
+    <button class="button primary" (click)="openNew()">＋ إضافة حساب بنكي جديد</button>
+  </header>
+
+  @if (loading()) {
+    <div class="loading"></div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (!loading()) {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>اسم البنك</th>
+            <th>رقم الحساب المصرفي</th>
+            <th>رقم الـ IBAN</th>
+            <th>رمز السويفت (SWIFT)</th>
+            <th>الحالة</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (b of banks(); track b.id) {
+            <tr>
+              <td><strong>🏦 {{ b.bankName }}</strong></td>
+              <td class="ltr"><strong>{{ b.accountNumber }}</strong></td>
+              <td class="ltr"><code>{{ b.iban || '—' }}</code></td>
+              <td class="ltr"><code>{{ b.swiftCode || '—' }}</code></td>
+              <td><span class="status" [class.success]="b.active">{{ b.active ? 'نشط' : 'معطل' }}</span></td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">لا توجد حسابات بنكية مسجلة بعد</div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (drawerOpen()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">الحسابات البنكية</p>
+          <h2>حساب بنكي جديد</h2>
+        </div>
+        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-grid">
+          <div class="field span-2">
+            <label>اسم البنك *</label>
+            <input formControlName="bankName" placeholder="مثال: البنك الأهلي المصري - فرع التجمع" />
+          </div>
+          <div class="field span-2">
+            <label>رقم الحساب المصرفي *</label>
+            <input class="ltr" formControlName="accountNumber" placeholder="100234567890" />
+          </div>
+          <div class="field span-2">
+            <label>رقم الـ IBAN</label>
+            <input class="ltr" formControlName="iban" placeholder="EG123456789012345678901234" />
+          </div>
+          <div class="field span-2">
+            <label>رمز السويفت كود (SWIFT Code)</label>
+            <input class="ltr" formControlName="swiftCode" placeholder="NBEGEGCX" />
+          </div>
+        </div>
+        <div class="drawer-actions">
+          <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+          <button class="button primary" type="submit" [disabled]="form.invalid">حفظ الحساب البنكي</button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

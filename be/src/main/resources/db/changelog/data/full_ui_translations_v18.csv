@@ -593,6 +593,192 @@ x18-ar-296;operations.invalidNegativeQuantity;ar-EG;كمية الحركة يجب
 x18-en-296;operations.invalidNegativeQuantity;en-US;Movement quantity must be a positive number greater than zero.
 x18-ar-297;employees.baseSalary;ar-EG;الراتب الأساسي (ج.م)
 x18-en-297;employees.baseSalary;en-US;Base Salary (EGP)
+x18-ar-298;review.reviewProgress;ar-EG;نسبة مراجعة السجلات
+x18-en-298;review.reviewProgress;en-US;Review Progress
+x18-ar-299;review.noPunchesFound;ar-EG;لا توجد سجلات حضور للمراجعة
+x18-en-299;review.noPunchesFound;en-US;No attendance records to review
+x18-ar-300;review.pendingDecision;ar-EG;بانتظار القرار
+x18-en-300;review.pendingDecision;en-US;Pending Decision
+x18-ar-301;review.fullyReviewedTag;ar-EG;تمت المراجعة بالكامل
+x18-en-301;review.fullyReviewedTag;en-US;Fully Reviewed
+x18-ar-302;review.requiresDecision;ar-EG;يتطلب قرار
+x18-en-302;review.requiresDecision;en-US;Decision Required
+x18-ar-303;review.greenTierLabel;ar-EG;الفئة الخضراء (سليمة)
+x18-en-303;review.greenTierLabel;en-US;Green Tier (Normal)
+x18-ar-304;review.greenTierBadge;ar-EG;حضور طبيعي
+x18-en-304;review.greenTierBadge;en-US;Normal Attendance
+x18-ar-305;review.yellowTierLabel;ar-EG;الفئة الصفراء (بصمة واحدة/تأخير)
+x18-en-305;review.yellowTierLabel;en-US;Yellow Tier (Single Punch/Late)
+x18-ar-306;review.yellowTierBadge;ar-EG;مراجعة بصرية
+x18-en-306;review.yellowTierBadge;en-US;Visual Review
+x18-ar-307;review.redTierLabel;ar-EG;الفئة الحمراء (أخطاء/غياب)
+x18-en-307;review.redTierLabel;en-US;Red Tier (Errors/Absent)
+x18-ar-308;review.redTierBadge;ar-EG;إجراء عاجل
+x18-en-308;review.redTierBadge;en-US;Urgent Action
+x18-ar-309;review.aiRecommendationTitle;ar-EG;توجيه ذكي لمسؤول الموارد البشرية
+x18-en-309;review.aiRecommendationTitle;en-US;Smart AI Recommendation for HR
+x18-ar-310;review.aiRecommendationHint;ar-EG;تم اكتشاف حالات بصمة واحدة بسبب انقطاع الجهاز. يُوصى بـ اعتماد البصمة الواحدة كـ يوم طبيعي لتوفير وقت المراجعة وتلافي خصم يوم بدون سبب.
+x18-en-310;review.aiRecommendationHint;en-US;Single-punch instances detected. Recommended to accept single punch as normal day to streamline review.
+x18-ar-311;review.aiAcceptSinglePunch;ar-EG;قبول التوجيه (اعتماد البصمة الواحدة كـ يوم طبيعي)
+x18-en-311;review.aiAcceptSinglePunch;en-US;Accept Recommendation (Single Punch as Normal Day)
+x18-ar-312;review.aiDeductUnrecorded;ar-EG;خصم الأيام غير المسجلة (غياب)
+x18-en-312;review.aiDeductUnrecorded;en-US;Deduct Unrecorded Days (Absent)
+x18-ar-313;review.unresolvedFilter;ar-EG;غير المحلول
+x18-en-313;review.unresolvedFilter;en-US;Unresolved
+x18-ar-314;review.allRowsFilter;ar-EG;جميع الصفوف
+x18-en-314;review.allRowsFilter;en-US;All Rows
+x18-ar-315;review.expectedTag;ar-EG;متوقع
+x18-en-315;review.expectedTag;en-US;Expected
+x18-ar-316;review.effectiveTag;ar-EG;محتسب
+x18-en-316;review.effectiveTag;en-US;Calculated
+x18-ar-317;review.expectedInTime;ar-EG;وقت الدخول المتوقع
+x18-en-317;review.expectedInTime;en-US;Expected Punch In Time
+x18-ar-318;review.firstPunchIn;ar-EG;البصمة الأولى (دخول)
+x18-en-318;review.firstPunchIn;en-US;First Punch (In)
+x18-ar-319;review.lastPunchOut;ar-EG;البصمة الأخيرة (خروج)
+x18-en-319;review.lastPunchOut;en-US;Last Punch (Out)
+x18-ar-320;review.totalPunches;ar-EG;إجمالي البصمات
+x18-en-320;review.totalPunches;en-US;Total Punches
+x18-ar-321;review.lateMinutesDetail;ar-EG;دقائق التأخير
+x18-en-321;review.lateMinutesDetail;en-US;Late Minutes
+x18-ar-322;review.overtimeMinutesDetail;ar-EG;دقائق الإضافي
+x18-en-322;review.overtimeMinutesDetail;en-US;Overtime Minutes
+x18-ar-323;operations.spareParts;ar-EG;قطع غيار ومعدات
+x18-en-323;operations.spareParts;en-US;Spare Parts & Equipment
+x18-ar-324;operations.chemicals;ar-EG;كيماويات وإضافات
+x18-en-324;operations.chemicals;en-US;Chemicals & Additives
+x18-ar-325;operations.fuelOil;ar-EG;وقود وزيوت تشغيل
+x18-en-325;operations.fuelOil;en-US;Fuel & Lubricants
+x18-ar-326;operations.custom;ar-EG;+ نوع صنف جديد / مخصص...
+x18-en-326;operations.custom;en-US;+ New Custom Item Type...
+x18-ar-327;operations.customItemTypeLabel;ar-EG;اسم نوع الصنف الجديد
+x18-en-327;operations.customItemTypeLabel;en-US;New Custom Item Type Name
+x18-ar-328;operations.customItemTypePlaceholder;ar-EG;مثال: مستلزمات معمل، كيماويات، إلخ
+x18-en-328;operations.customItemTypePlaceholder;en-US;e.g., Lab supplies, Chemicals, etc.
+x18-ar-329;users.userCount;ar-EG;{count} مستخدمين
+x18-en-329;users.userCount;en-US;{count} Users
+x18-ar-330;users.allowedMenus;ar-EG;القوائم المسموحة
+x18-en-330;users.allowedMenus;en-US;Allowed Menus
+x18-ar-331;users.superAdminOnlyEdit;ar-EG;فقط Super Admin يمكنه تعديل هذا الحساب
+x18-en-331;users.superAdminOnlyEdit;en-US;Only Super Admin can modify this account
+x18-ar-332;users.sectionBasic;ar-EG;البيانات الأساسية للحساب
+x18-en-332;users.sectionBasic;en-US;Basic User Identity
+x18-ar-333;users.sectionRoles;ar-EG;الأدوار والصلاحيات
+x18-en-333;users.sectionRoles;en-US;System Roles & Privileges
+x18-ar-334;users.sectionMenus;ar-EG;القوائم المسموح بها
+x18-en-334;users.sectionMenus;en-US;Allowed User Menus
+x18-ar-335;users.sectionStatus;ar-EG;حالة الحساب
+x18-en-335;users.sectionStatus;en-US;Account Status
+x18-ar-336;users.activeCheckHint;ar-EG;السماح لهذا الحساب بتسجيل الدخول وتنفيذ العمليات المصرح بها.
+x18-en-336;users.activeCheckHint;en-US;Permit this account to authenticate and execute authorized actions.
+x18-ar-337;payroll.approvePeriod;ar-EG;اعتماد الكشف وقفل الفترة
+x18-en-337;payroll.approvePeriod;en-US;Approve & Lock Period
+x18-ar-338;payroll.postGl;ar-EG;ترحيل القيود (GL Posting)
+x18-en-338;payroll.postGl;en-US;Post GL Journal Entries
+x18-ar-339;payroll.periodLifecycle;ar-EG;حالة دورة الرواتب
+x18-en-339;payroll.periodLifecycle;en-US;Payroll Lifecycle State
+x18-ar-340;payroll.breakdown;ar-EG;تتبع المصدر
+x18-en-340;payroll.breakdown;en-US;Calculation Breakdown
+x18-ar-341;payroll.paidAtAndRef;ar-EG;تاريخ وقيد الصرف
+x18-en-341;payroll.paidAtAndRef;en-US;Payment Date & Ref
+x18-ar-342;payroll.baseSalaryLabel;ar-EG;أساسي
+x18-en-342;payroll.baseSalaryLabel;en-US;Base
+x18-ar-343;payroll.bonusLabel;ar-EG;إضافي
+x18-en-343;payroll.bonusLabel;en-US;Bonus
+x18-ar-344;payroll.deductionLabel;ar-EG;خصم
+x18-en-344;payroll.deductionLabel;en-US;Deduction
+x18-ar-345;payroll.drawerEyebrow;ar-EG;تسجيل وقيد صرف المستحقات المالية
+x18-en-345;payroll.drawerEyebrow;en-US;Record & Post Salary Disbursement
+x18-ar-346;payroll.traceabilityTitle;ar-EG;تتبع المصدر الحسابي
+x18-en-346;payroll.traceabilityTitle;en-US;Calculation Source Traceability
+x18-ar-347;payroll.payPeriodLabel;ar-EG;فترة الاستحقاق
+x18-en-347;payroll.payPeriodLabel;en-US;Pay Period
+x18-ar-348;payroll.calculatedGross;ar-EG;إجمالي المستحق (Gross) - محسوب
+x18-en-348;payroll.calculatedGross;en-US;Calculated Gross Amount
+x18-ar-349;payroll.maxAdvanceDeduction;ar-EG;خصم السلفة (الحد الأقصى: {balance} ج.م)
+x18-en-349;payroll.maxAdvanceDeduction;en-US;Advance Deduction (Max: {balance} EGP)
+x18-ar-350;payroll.otherDeductions;ar-EG;خصومات أخرى (تأخير/جزاءات)
+x18-en-350;payroll.otherDeductions;en-US;Other Deductions (Late/Penalties)
+x18-ar-351;payroll.bonusesLabel;ar-EG;مكافآت وإضافي
+x18-en-351;payroll.bonusesLabel;en-US;Bonuses & Overtime
+x18-ar-352;payroll.calculatedNet;ar-EG;الصافي المستحق للصرف (Net Payout) - محسوب
+x18-en-352;payroll.calculatedNet;en-US;Calculated Net Payout
+x18-ar-353;payroll.paymentMethodLabel;ar-EG;طريقة الصرف
+x18-en-353;payroll.paymentMethodLabel;en-US;Payment Method
+x18-ar-354;payroll.methodCash;ar-EG;نقداً (Cash)
+x18-en-354;payroll.methodCash;en-US;Cash
+x18-ar-355;payroll.methodBank;ar-EG;تحويل بنكي (Bank Transfer)
+x18-en-355;payroll.methodBank;en-US;Bank Transfer
+x18-ar-356;payroll.methodCheque;ar-EG;شيك (Cheque)
+x18-en-356;payroll.methodCheque;en-US;Cheque
+x18-ar-357;payroll.referenceCodeLabel;ar-EG;رقم المرجع / العملية
+x18-en-357;payroll.referenceCodeLabel;en-US;Reference Code / Transaction #
+x18-ar-358;payroll.disbursementNote;ar-EG;ملاحظات الصرف والقيد المحاسبي
+x18-en-358;payroll.disbursementNote;en-US;Disbursement & GL Posting Notes
+x18-ar-359;payroll.confirmDisbursement;ar-EG;تأكيد وصرف المرتب وقيد المستند
+x18-en-359;payroll.confirmDisbursement;en-US;Confirm Payout & Post Document
+x18-ar-360;payroll.savingDisbursement;ar-EG;جاري التسجيل والقيد...
+x18-en-360;payroll.savingDisbursement;en-US;Posting & Saving...
+x18-ar-361;payroll.statusDraft;ar-EG;مسودة (Draft)
+x18-en-361;payroll.statusDraft;en-US;Draft
+x18-ar-362;payroll.statusCalculated;ar-EG;محسوب (Calculated)
+x18-en-362;payroll.statusCalculated;en-US;Calculated
+x18-ar-363;payroll.statusReviewed;ar-EG;مراجَع (Reviewed)
+x18-en-363;payroll.statusReviewed;en-US;Reviewed
+x18-ar-364;payroll.statusApproved;ar-EG;معتمد ومقفل (Approved & Locked)
+x18-en-364;payroll.statusApproved;en-US;Approved & Locked
+x18-ar-365;payroll.statusPosted;ar-EG;مُرحَّل للمحاسبة (Posted to GL)
+x18-en-365;payroll.statusPosted;en-US;Posted to GL
+x18-ar-366;payroll.statusPaid;ar-EG;مدفوع (Paid)
+x18-en-366;payroll.statusPaid;en-US;Paid
+x18-ar-367;payroll.statusReversed;ar-EG;متراجع عنه (Reversed)
+x18-en-367;payroll.statusReversed;en-US;Reversed
+x18-ar-368;payroll.reverse;ar-EG;تراجع
+x18-en-368;payroll.reverse;en-US;Reverse
+x18-ar-370;nav.organization;ar-EG;الهيكل التنظيمي
+x18-en-370;nav.organization;en-US;Organization Structure
+x18-ar-371;nav.organizationHint;ar-EG;الشركات والفروع والمستودعات والإدارات
+x18-en-371;nav.organizationHint;en-US;Companies, branches, warehouses, departments
+x18-ar-372;nav.fiscalPeriods;ar-EG;الفترات المالية وقفل الأشهر
+x18-en-372;nav.fiscalPeriods;en-US;Fiscal Periods & Locks
+x18-ar-373;nav.fiscalPeriodsHint;ar-EG;الرقابة المالية وقفل الفترات والميزانيات
+x18-en-373;nav.fiscalPeriodsHint;en-US;Fiscal year control and period locking
+x18-ar-374;nav.auditLogs;ar-EG;سجل التدقيق والتتبع
+x18-en-374;nav.auditLogs;en-US;Audit Trail Logs
+x18-ar-375;nav.auditLogsHint;ar-EG;تتبع العمليات والمستندات الحساسة
+x18-en-375;nav.auditLogsHint;en-US;Track system audit logs and sensitive operations
+x18-ar-376;nav.accounts;ar-EG;دليل الحسابات
+x18-en-376;nav.accounts;en-US;Chart of Accounts
+x18-ar-377;nav.accountsHint;ar-EG;شجرة ودليل الحسابات المحاسبي
+x18-en-377;nav.accountsHint;en-US;Hierarchical chart of accounts
+x18-ar-378;nav.journalEntries;ar-EG;القيود اليومية
+x18-en-378;nav.journalEntries;en-US;Journal Entries
+x18-ar-379;nav.journalEntriesHint;ar-EG;تسجيل وترحيل قيود اليومية
+x18-en-379;nav.journalEntriesHint;en-US;General ledger journal vouchers
+x18-ar-380;nav.banks;ar-EG;الحسابات البنكية
+x18-en-380;nav.banks;en-US;Bank Accounts
+x18-ar-381;nav.banksHint;ar-EG;الحسابات المصرفية والخزينة
+x18-en-381;nav.banksHint;en-US;Bank & treasury accounts
+x18-ar-382;nav.taxCurrency;ar-EG;الضرائب والعملات
+x18-en-382;nav.taxCurrency;en-US;Taxes & Currencies
+x18-ar-383;nav.taxCurrencyHint;ar-EG;قواعد الضرائب وأسعار الصرف
+x18-en-383;nav.taxCurrencyHint;en-US;Tax rules & exchange rates
+x18-ar-384;nav.procurement;ar-EG;دورة المشتريات
+x18-en-384;nav.procurement;en-US;Procurement Cycle
+x18-ar-385;nav.procurementHint;ar-EG;طلبات الشراء وأوامر الشراء وإذن الاستلام الفعلي
+x18-en-385;nav.procurementHint;en-US;PR, RFQ, PO, GRN, supplier invoices & payments
+x18-ar-386;nav.sales;ar-EG;دورة المبيعات
+x18-en-386;nav.sales;en-US;Sales Cycle
+x18-ar-387;nav.salesHint;ar-EG;عروض الأسعار وأوامر البيع وإذن التسليم والتحصيل
+x18-en-387;nav.salesHint;en-US;Quotations, SO, delivery notes, invoices & collections
+x18-ar-388;nav.production;ar-EG;التصنيع وأوامر الإنتاج
+x18-en-388;nav.production;en-US;Manufacturing & BOM
+x18-ar-389;nav.productionHint;ar-EG;قوائم المكونات وأوامر شغل التصنيع ومعدل الهالك
+x18-en-389;nav.productionHint;en-US;BOM, work orders, yield & scrap rates
+x18-ar-390;nav.quality;ar-EG;فحص ومراقبة الجودة
+x18-en-390;nav.quality;en-US;Quality Control
+x18-ar-391;nav.qualityHint;ar-EG;محاضر فحص الشحنات واختبار الجودة والرفض
+x18-en-391;nav.qualityHint;en-US;Incoming & production quality inspection logs
 
 
 

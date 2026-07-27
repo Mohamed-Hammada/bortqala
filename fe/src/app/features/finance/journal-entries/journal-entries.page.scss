@@ -1,0 +1,7 @@
+.page { display: flex; flex-direction: column; gap: 20px; }
+.empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
+.drawer-large { width: 850px; max-width: 95vw; }
+.lines-section { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+.lines-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+.lines-table th, .lines-table td { padding: 8px; border-bottom: 1px solid var(--border-color); }
+.btn-sm { font-size: 13px; padding: 4px 8px; }

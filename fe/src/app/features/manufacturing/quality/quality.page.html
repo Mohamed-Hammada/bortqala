@@ -1,0 +1,128 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">الجودة والرقابة (Quality Assurance & Control)</p>
+      <h1>فحص ومراقبة الجودة (Quality Control Inspections)</h1>
+      <p>محاضر فحص الشحنات الواردة ومنتجات خطوط الإنتاج والقبول/الرفض مع أسباب العيوب.</p>
+    </div>
+    <button class="button primary" (click)="openNew()">＋ محضر فحص جديد (QC)</button>
+  </header>
+
+  @if (loading()) {
+    <div class="loading"></div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (!loading()) {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>رقم محضر الفحص</th>
+            <th>تاريخ الفحص</th>
+            <th>مصدر الفحص</th>
+            <th>الكمية المقبولة</th>
+            <th>الكمية المرفوضة</th>
+            <th>نتيجة الفحص</th>
+            <th>اسم الفاحص</th>
+            <th>ملاحظات</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (q of inspections(); track q.id) {
+            <tr>
+              <td><strong class="ltr">{{ q.inspectionNumber }}</strong></td>
+              <td class="ltr">{{ date(q.inspectionDate) }}</td>
+              <td>
+                <span class="status info">
+                  {{ q.sourceType === 'INCOMING_GRN' ? 'استلام شحنة موارد' : 'إنتاج تجميعي تصنيع' }}
+                </span>
+              </td>
+              <td class="ltr"><strong class="success-text">{{ q.passedQuantity | number:'1.0-2' }}</strong></td>
+              <td class="ltr"><strong class="danger-text">{{ q.failedQuantity | number:'1.0-2' }}</strong></td>
+              <td>
+                <span
+                  class="status"
+                  [class.success]="q.status === 'PASSED'"
+                  [class.error]="q.status === 'FAILED' || q.status === 'REJECTED'"
+                >
+                  {{ q.status === 'PASSED' ? 'مقبول (Passed ✓)' : 'مرفوض (Failed ✗)' }}
+                </span>
+              </td>
+              <td><strong>{{ q.inspectorName }}</strong></td>
+              <td>{{ q.notes || '—' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8">
+                <div class="empty-state">لا توجد محاضر فحص جودة مسجلة بعد. اضغط <strong>"محضر فحص جديد"</strong> للبدء.</div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (drawerOpen()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer">
+      <div class="drawer-header">
+        <div>
+          <p class="eyebrow">إدارة الجودة</p>
+          <h2>محضر فحص جودة جديد</h2>
+        </div>
+        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
+      </div>
+
+      <form [formGroup]="qiForm" (ngSubmit)="submitQi()">
+        <div class="form-grid">
+          <div class="field">
+            <label>رقم المحضر *</label>
+            <input class="ltr" formControlName="inspectionNumber" />
+          </div>
+          <div class="field">
+            <label>تاريخ الفحص *</label>
+            <input type="date" class="ltr" formControlName="inspectionDate" />
+          </div>
+          <div class="field">
+            <label>مصدر الفحص *</label>
+            <select formControlName="sourceType">
+              <option value="INCOMING_GRN">استلام بضائع من مورد (GRN)</option>
+              <option value="PRODUCTION_OUTPUT">منتجات من خطوط الإنتاج</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>نتيجة الفحص *</label>
+            <select formControlName="status">
+              <option value="PASSED">مقبول (Passed)</option>
+              <option value="FAILED">مرفوض (Failed)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>الكمية المقبولة *</label>
+            <input type="number" class="ltr" formControlName="passedQuantity" />
+          </div>
+          <div class="field">
+            <label>الكمية المرفوضة *</label>
+            <input type="number" class="ltr" formControlName="failedQuantity" />
+          </div>
+          <div class="field span-2">
+            <label>اسم المهندس الفاحص *</label>
+            <input formControlName="inspectorName" />
+          </div>
+          <div class="field span-2">
+            <label>ملاحظات وتقرير عيوب الجودة</label>
+            <input formControlName="notes" />
+          </div>
+        </div>
+        <div class="drawer-actions">
+          <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+          <button class="button primary" type="submit" [disabled]="qiForm.invalid">حفظ محضر الفحص</button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

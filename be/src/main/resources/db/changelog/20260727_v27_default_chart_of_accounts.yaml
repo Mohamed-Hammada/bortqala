@@ -1,0 +1,117 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260727-27-seed-default-chart-of-accounts
+      author: system
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM accounts WHERE code = '1'
+      changes:
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, value: "acc-1-assets" }
+              - column: { name: app_id, value: "42a3a589-ee47-43c4-b747-96226557d3a2" }
+              - column: { name: code, value: "1" }
+              - column: { name: name, value: "الأصول (Assets)" }
+              - column: { name: type, value: "ASSET" }
+              - column: { name: is_header, valueBoolean: true }
+              - column: { name: currency, value: "EGP" }
+              - column: { name: active, valueBoolean: true }
+              - column: { name: created_at, valueNumeric: 1785144000000 }
+              - column: { name: updated_at, valueNumeric: 1785144000000 }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, value: "acc-101-cash" }
+              - column: { name: app_id, value: "42a3a589-ee47-43c4-b747-96226557d3a2" }
+              - column: { name: code, value: "101" }
+              - column: { name: name, value: "النقدية وما في حكمها" }
+              - column: { name: type, value: "ASSET" }
+              - column: { name: parent_id, value: "acc-1-assets" }
+              - column: { name: is_header, valueBoolean: true }
+              - column: { name: currency, value: "EGP" }
+              - column: { name: active, valueBoolean: true }
+              - column: { name: created_at, valueNumeric: 1785144000000 }
+              - column: { name: updated_at, valueNumeric: 1785144000000 }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, value: "acc-10101-treasury" }
+              - column: { name: app_id, value: "42a3a589-ee47-43c4-b747-96226557d3a2" }
+              - column: { name: code, value: "10101" }
+              - column: { name: name, value: "الخزينة الرئيسية" }
+              - column: { name: type, value: "ASSET" }
+              - column: { name: parent_id, value: "acc-101-cash" }
+              - column: { name: is_header, valueBoolean: false }
+              - column: { name: currency, value: "EGP" }
+              - column: { name: active, valueBoolean: true }
+              - column: { name: created_at, valueNumeric: 1785144000000 }
+              - column: { name: updated_at, valueNumeric: 1785144000000 }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, value: "acc-2-liabilities" }
+              - column: { name: app_id, value: "42a3a589-ee47-43c4-b747-96226557d3a2" }
+              - column: { name: code, value: "2" }
+              - column: { name: name, value: "الخصوم والالتزامات (Liabilities)" }
+              - column: { name: type, value: "LIABILITY" }
+              - column: { name: is_header, valueBoolean: true }
+              - column: { name: currency, value: "EGP" }
+              - column: { name: active, valueBoolean: true }
+              - column: { name: created_at, valueNumeric: 1785144000000 }
+              - column: { name: updated_at, valueNumeric: 1785144000000 }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, value: "acc-3-equity" }
+              - column: { name: app_id, value: "42a3a589-ee47-43c4-b747-96226557d3a2" }
+              - column: { name: code, value: "3" }
+              - column: { name: name, value: "حقوق الملكية (Equity)" }
+              - column: { name: type, value: "EQUITY" }
+              - column: { name: is_header, valueBoolean: true }
+              - column: { name: currency, value: "EGP" }
+              - column: { name: active, valueBoolean: true }
+              - column: { name: created_at, valueNumeric: 1785144000000 }
+              - column: { name: updated_at, valueNumeric: 1785144000000 }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, value: "acc-4-revenue" }
+              - column: { name: app_id, value: "42a3a589-ee47-43c4-b747-96226557d3a2" }
+              - column: { name: code, value: "4" }
+              - column: { name: name, value: "الإيرادات (Revenues)" }
+              - column: { name: type, value: "REVENUE" }
+              - column: { name: is_header, valueBoolean: true }
+              - column: { name: currency, value: "EGP" }
+              - column: { name: active, valueBoolean: true }
+              - column: { name: created_at, valueNumeric: 1785144000000 }
+              - column: { name: updated_at, valueNumeric: 1785144000000 }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, value: "acc-5-expenses" }
+              - column: { name: app_id, value: "42a3a589-ee47-43c4-b747-96226557d3a2" }
+              - column: { name: code, value: "5" }
+              - column: { name: name, value: "المصروفات (Expenses)" }
+              - column: { name: type, value: "EXPENSE" }
+              - column: { name: is_header, valueBoolean: true }
+              - column: { name: currency, value: "EGP" }
+              - column: { name: active, valueBoolean: true }
+              - column: { name: created_at, valueNumeric: 1785144000000 }
+              - column: { name: updated_at, valueNumeric: 1785144000000 }
+        - insert:
+            tableName: accounts
+            columns:
+              - column: { name: id, value: "acc-501-salaries" }
+              - column: { name: app_id, value: "42a3a589-ee47-43c4-b747-96226557d3a2" }
+              - column: { name: code, value: "501" }
+              - column: { name: name, value: "الأجور والمرتبات" }
+              - column: { name: type, value: "EXPENSE" }
+              - column: { name: parent_id, value: "acc-5-expenses" }
+              - column: { name: is_header, valueBoolean: false }
+              - column: { name: currency, value: "EGP" }
+              - column: { name: active, valueBoolean: true }
+              - column: { name: created_at, valueNumeric: 1785144000000 }
+              - column: { name: updated_at, valueNumeric: 1785144000000 }

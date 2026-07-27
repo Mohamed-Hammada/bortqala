@@ -1,0 +1,61 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">سجل التتبع والرقابة (System Audit Trail)</p>
+      <h1>سجل التتبع والتدقيق للعمليات (Audit Logs)</h1>
+      <p>تسجيل غير قابل للتعديل لجميع العمليات الحساسة والمستندات والتغييرات بالمنظومة.</p>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="loading"></div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (!loading()) {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>تاريخ ووقت الحركة</th>
+            <th>المستخدم (User)</th>
+            <th>نوع الكيان (Entity Type)</th>
+            <th>العملية (Action)</th>
+            <th>معرف الكيان</th>
+            <th>تفاصيل التغيير (JSON)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (log of logs(); track log.id) {
+            <tr>
+              <td class="ltr"><strong>{{ dateTime(log.occurredAt) }}</strong></td>
+              <td><strong>{{ log.username }}</strong></td>
+              <td><span class="status neutral">{{ log.entityType }}</span></td>
+              <td><span class="status info">{{ log.action }}</span></td>
+              <td class="ltr"><small>{{ log.entityId || '—' }}</small></td>
+              <td><code>{{ log.detailsJson || '—' }}</code></td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  لا توجد سجلات تدقيق مسجلة بعد.
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <app-table-pagination
+        [total]="totalElements()"
+        [page]="pagination.currentPage(totalElements())"
+        [pageSize]="pagination.pageSize()"
+        (pageChange)="load($event)"
+        (pageSizeChange)="pagination.changePageSize($event); load(0)"
+      />
+    </div>
+  }
+</section>

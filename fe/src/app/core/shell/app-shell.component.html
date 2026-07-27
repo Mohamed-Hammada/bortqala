@@ -58,7 +58,7 @@
       <span class="avatar" [attr.title]="authService.user()?.displayName">{{ authService.user()?.displayName?.charAt(0) }}</span>
       <div class="user-info">
         <strong>{{ authService.user()?.displayName }}</strong
-        ><small>{{ authService.user()?.roles?.join(' · ') }}</small>
+        ><small>{{ userRolesLabel() }}</small>
       </div>
       <button
         class="icon-button logout-btn"
@@ -81,6 +81,12 @@
   ></button>
 
   <main class="main-area" [class.collapsed]="collapsed()">
+    @if (!network.isOnline()) {
+      <div class="offline-banner">
+        ⚡ <strong>تنبيه انقطاع الاتصال (Offline Mode):</strong> أنت تعمل حالياً دون اتصال بالشبكة، سيعاد التزامن فور عودة الاتصال.
+      </div>
+    }
+
     <header class="mobile-header">
       <button
         class="icon-button"
@@ -88,16 +94,30 @@
         (click)="menuOpen.set(true)"
         [attr.aria-label]="i18n.t('action.openMenu')"
       >
-        <app-icon name="menu" /></button
-      ><strong>{{ i18n.t('app.defaultName') }}</strong
-      ><a
-        class="icon-button mobile-settings"
-        routerLink="/settings"
-        [attr.aria-label]="i18n.t('nav.settings')"
-        [attr.title]="i18n.t('nav.settings')"
-        ><app-icon name="settings"
-      /></a>
+        <app-icon name="menu" />
+      </button>
+      <strong>{{ authService.app()?.name ?? i18n.t('app.defaultName') }}</strong>
+      <div class="global-search-container">
+        <input
+          type="search"
+          class="global-search-input"
+          placeholder="🔍 بحث سريع بالمناطق والوظائف (Ctrl+K)..."
+          [value]="searchQuery()"
+          (input)="searchQuery.set($any($event.target).value)"
+        />
+      </div>
+      <button
+        class="icon-button"
+        type="button"
+        (click)="logout()"
+        [attr.aria-label]="i18n.t('action.logout')"
+      >
+        <app-icon name="logout" />
+      </button>
     </header>
-    <router-outlet />
+
+    <div class="content-wrapper">
+      <router-outlet />
+    </div>
   </main>
 </div>
