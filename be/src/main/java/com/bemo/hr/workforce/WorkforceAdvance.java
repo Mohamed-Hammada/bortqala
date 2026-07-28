@@ -72,6 +72,10 @@ public class WorkforceAdvance {
         }
     }
 
+    public void pause() { this.status = "PAUSED"; }
+    public void resume() { this.status = "ACTIVE"; }
+    public void repay(BigDecimal value) { deduct(value); }
+
     @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
     @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
 }

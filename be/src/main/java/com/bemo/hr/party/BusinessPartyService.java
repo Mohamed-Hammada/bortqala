@@ -13,6 +13,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 class BusinessPartyService {
     private final BusinessPartyRepository businessPartyRepository;
+    private final com.bemo.hr.audit.application.AuditService auditService;
 
     List<BusinessPartyApi.Response> list() {
         return businessPartyRepository.findAllByOrderByNameAsc().stream().map(this::response).toList();
@@ -23,6 +24,9 @@ class BusinessPartyService {
         validateUniqueCode(request.code(), null);
         var party = businessPartyRepository.save(new BusinessParty(request.code(), request.name(), request.partyType(),
                 request.contactPerson(), request.phone(), request.notes(), request.active()));
+        
+        auditService.record("CREATE", "BUSINESS_PARTY", party.getId(), getCurrentUser(),
+                "{\"code\":\"" + party.getCode() + "\",\"name\":\"" + party.getName() + "\"}", null);
         return response(party);
     }
 
@@ -35,11 +39,23 @@ class BusinessPartyService {
         validateUniqueCode(request.code(), id);
         party.update(request.code(), request.name(), request.partyType(), request.contactPerson(), request.phone(),
                 request.notes(), request.active());
+
+        auditService.record("UPDATE", "BUSINESS_PARTY", party.getId(), getCurrentUser(),
+                "{\"code\":\"" + party.getCode() + "\",\"name\":\"" + party.getName() + "\"}", null);
         return response(party);
     }
 
     @Transactional
-    void deactivate(String id) { require(id).deactivate(); }
+    void deactivate(String id) {
+        BusinessParty p = require(id);
+        p.deactivate();
+        auditService.record("DEACTIVATE", "BUSINESS_PARTY", p.getId(), getCurrentUser(), "Deactivated", null);
+    }
+
+    private String getCurrentUser() {
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        return (auth != null && auth.getName() != null && !auth.getName().isBlank()) ? auth.getName() : "system";
+    }
 
     private BusinessParty require(String id) {
         return businessPartyRepository.findById(id).orElseThrow(() -> new NotFoundException("Business party not found."));

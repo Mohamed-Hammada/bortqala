@@ -72,23 +72,56 @@ export class ReportReviewPage {
     );
   }
   async bulkDecide(decision: AttendanceDecision, statusType: DailyStatus) {
-    const targets = (this.store.details()?.dailyResults ?? []).filter((r) => r.status === statusType && this.blocking(r));
-    if (!targets.length) {
-      this.notification.warning('لا توجد سجلات مطابقة لتطبيق القرار عليها');
+    const allResults = this.store.details()?.dailyResults ?? [];
+    const reportStatus = this.store.details()?.report.status;
+
+    if (reportStatus === 'APPROVED' || reportStatus === 'EXPORTED') {
+      this.notification.warning('التقرير معتمد ومغلق. لا يمكن تطبيق قرارات جماعية عليه.');
       return;
     }
-    const statusText = statusType === 'SINGLE_PUNCH' ? 'البصمة الواحدة' : 'الغياب';
-    const decText = decision === 'NORMAL_DAY' ? 'يوم طبيعي' : 'خصم';
-    const confirmMsg = `هل أنت متأكد من تطبيق قرار (${decText}) على ${targets.length} سجل من حالات (${statusText})؟`;
+
+    const allMatching = allResults.filter((r) => r.status === statusType);
+    const editable = allMatching.filter((r) => this.blocking(r));
+    const excludedCount = allMatching.length - editable.length;
+
+    if (!editable.length) {
+      if (excludedCount > 0) {
+        this.notification.warning(`جميع السجلات المطابقة (${excludedCount}) معتمدة أو تمت معالجتها سابقاً ولا يمكن تعديلها.`);
+      } else {
+        this.notification.warning('لا توجد سجلات غير محلولة مطابقة لتطبيق القرار عليها.');
+      }
+      return;
+    }
+
+    const statusText = statusType === 'SINGLE_PUNCH' ? 'البصمة الواحدة' : statusType === 'NO_PUNCH' ? 'الغياب' : 'التمرير اليدوي';
+    const decText = decision === 'NORMAL_DAY' ? 'اعتماد يوم طبيعي' : 'خصم غياب';
+
+    const confirmMsg =
+      `📋 معاينة المعالجة الجماعية (Bulk Processing Preview):\n` +
+      `• السجلات المطابقة بالفترة: ${allMatching.length}\n` +
+      `• السجلات القابلة للتطبيق: ${editable.length}\n` +
+      `• السجلات المعتمدة/المغلقة المستثناة: ${excludedCount}\n\n` +
+      `هل تؤكد تطبيق قرار (${decText}) على ${editable.length} سجل من حالات (${statusText})؟`;
+
     if (!confirm(confirmMsg)) return;
 
     try {
-      let count = 0;
-      for (const r of targets) {
-        await this.store.decide(this.id, r.id, decision, decision === 'NORMAL_DAY' ? r.expectedMinutes : 0, 'Bulk HR Decision');
-        count++;
+      let successCount = 0;
+      const opId = 'BULK-' + Date.now();
+      for (const r of editable) {
+        await this.store.decide(
+          this.id,
+          r.id,
+          decision,
+          decision === 'NORMAL_DAY' ? r.expectedMinutes : 0,
+          `معالجة جماعية [${opId}] - ${decText}`
+        );
+        successCount++;
       }
-      this.notification.success(`تم بنجاح تطبيق القرار على ${count} سجل ✓`);
+      this.notification.success(
+        `✓ تم بنجاح معالجة ${successCount} سجل!` +
+        (excludedCount > 0 ? ` (وتم استثناء ${excludedCount} سجل مغلق/معتمد)` : '')
+      );
     } catch (e: any) {
       this.notification.error('حدث خطأ أثناء المعالجة الجماعية: ' + (e?.message ?? 'خطأ غير متوقع'));
     }

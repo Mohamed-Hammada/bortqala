@@ -35,6 +35,26 @@ export class SettingsPage {
   readonly desktop = typeof window !== 'undefined' && '__TAURI__' in window;
   readonly licenseMessage = signal<string | null>(null);
 
+  readonly showFavorites = signal(localStorage.getItem('bemo_show_favorites') !== 'false');
+  readonly showRecentlyUsed = signal(localStorage.getItem('bemo_show_recently_used') !== 'false');
+
+  toggleShowFavorites(val: boolean) {
+    this.showFavorites.set(val);
+    localStorage.setItem('bemo_show_favorites', String(val));
+    this.notification.success('تم تحديث إعدادات عرض القوائم المفضلة بنجاح ✓');
+  }
+
+  toggleShowRecentlyUsed(val: boolean) {
+    this.showRecentlyUsed.set(val);
+    localStorage.setItem('bemo_show_recently_used', String(val));
+    this.notification.success('تم تحديث إعدادات عرض الصفحات المستخدمة مؤخراً بنجاح ✓');
+  }
+
+  clearRecentHistory() {
+    localStorage.removeItem('bemo_recent_menus');
+    this.notification.success('تم محو سجل الصفحات المستخدمة مؤخراً بنجاح ✓');
+  }
+
   readonly form = this.formBuilder.nonNullable.group({
     theme: [this.authService.preferences().theme as ThemePreference, Validators.required],
     tableDensity: [

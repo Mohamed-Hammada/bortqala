@@ -18,9 +18,11 @@ import java.util.List;
 public class ProcurementController {
 
     private final PurchaseOrderRepository purchaseOrderRepository;
+    private final com.bemo.hr.audit.application.AuditService auditService;
 
-    public ProcurementController(PurchaseOrderRepository purchaseOrderRepository) {
+    public ProcurementController(PurchaseOrderRepository purchaseOrderRepository, com.bemo.hr.audit.application.AuditService auditService) {
         this.purchaseOrderRepository = purchaseOrderRepository;
+        this.auditService = auditService;
     }
 
     @GetMapping("/orders")
@@ -34,7 +36,10 @@ public class ProcurementController {
     public ProcurementApi.PurchaseOrderResponse createPurchaseOrder(@Valid @RequestBody ProcurementApi.PurchaseOrderPayload payload) {
         LocalDate poDate = Instant.ofEpochMilli(payload.poDate()).atZone(ZoneOffset.UTC).toLocalDate();
         PurchaseOrder po = new PurchaseOrder(payload.poNumber(), poDate, payload.supplierId(), payload.purchaseRequestId(), payload.paymentTerms(), payload.totalAmount());
-        return toResponse(purchaseOrderRepository.save(po));
+        PurchaseOrder saved = purchaseOrderRepository.save(po);
+        auditService.record("CREATE", "PURCHASE_ORDER", saved.getId(), getCurrentUser(),
+                "{\"poNumber\":\"" + saved.getPoNumber() + "\",\"totalAmount\":" + saved.getTotalAmount() + "}", null);
+        return toResponse(saved);
     }
 
     @PostMapping("/orders/{id}/issue")
@@ -44,7 +49,15 @@ public class ProcurementController {
         PurchaseOrder po = purchaseOrderRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("أمر الشراء غير موجود"));
         po.updateStatus(PurchaseOrder.Status.ISSUED);
-        return toResponse(purchaseOrderRepository.save(po));
+        PurchaseOrder saved = purchaseOrderRepository.save(po);
+        auditService.record("ISSUE", "PURCHASE_ORDER", saved.getId(), getCurrentUser(),
+                "{\"poNumber\":\"" + saved.getPoNumber() + "\"}", null);
+        return toResponse(saved);
+    }
+
+    private String getCurrentUser() {
+        var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        return (auth != null && auth.getName() != null && !auth.getName().isBlank()) ? auth.getName() : "system";
     }
 
     private ProcurementApi.PurchaseOrderResponse toResponse(PurchaseOrder po) {

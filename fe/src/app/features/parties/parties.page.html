@@ -104,6 +104,17 @@
               <option value="MANAGED">عن طريق مسؤول / وساطة (Managed Supplier)</option>
             </select>
           </div>
+          @if (form.controls.managedType.value === 'MANAGED') {
+            <div class="field">
+              <label>المسؤول / الشريك الإداري *</label>
+              <select formControlName="responsiblePartyId">
+                <option value="">-- اختر المسئول الإداري --</option>
+                @for (p of store.items(); track p.id) {
+                  <option [value]="p.id">{{ p.name }} ({{ p.code }})</option>
+                }
+              </select>
+            </div>
+          }
           <div class="field">
             <label>العملة الأساسية</label>
             <select formControlName="currencyCode">
@@ -130,12 +141,23 @@
             </select>
           </div>
           <div class="field">
+            <label>رقم التسجيل الضريبي</label>
+            <input class="ltr" formControlName="taxId" placeholder="123-456-789" />
+          </div>
+          <div class="field">
+            <label>تفاصيل الحساب البنكي / IBAN</label>
+            <input class="ltr" formControlName="bankAccount" placeholder="EG123456789012345678901234" />
+          </div>
+          <div class="field">
             <label>{{ i18n.t('parties.contact') }}</label>
             <input formControlName="contactPerson" />
           </div>
           <div class="field">
             <label>{{ i18n.t('parties.phone') }}</label>
             <input class="ltr" formControlName="phone" placeholder="01012345678" />
+            @if (phoneError()) {
+              <small class="error-text" style="color: #dc2626; font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ phoneError() }}</small>
+            }
           </div>
           <div class="field span-2">
             <label>{{ i18n.t('parties.notes') }}</label>

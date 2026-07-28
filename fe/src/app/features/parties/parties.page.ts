@@ -57,9 +57,12 @@ export class PartiesPage {
       validators: [Validators.required],
     }),
     managedType: new FormControl('DIRECT', { nonNullable: true }),
+    responsiblePartyId: new FormControl('', { nonNullable: true }),
     currencyCode: new FormControl('EGP', { nonNullable: true }),
     invoicePolicy: new FormControl('E_INVOICE', { nonNullable: true }),
     paymentTerms: new FormControl('CASH', { nonNullable: true }),
+    taxId: new FormControl('', { nonNullable: true }),
+    bankAccount: new FormControl('', { nonNullable: true }),
     contactPerson: new FormControl('', { nonNullable: true }),
     phone: new FormControl('', {
       nonNullable: true,
@@ -68,6 +71,14 @@ export class PartiesPage {
     notes: new FormControl('', { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
     version: new FormControl<number | null>(null),
+  });
+
+  readonly phoneError = computed(() => {
+    const ctrl = this.form.controls.phone;
+    if ((this.submitted() || ctrl.touched) && ctrl.hasError('pattern')) {
+      return 'رقم الهاتف غير صحيح. يرجى إدخال رقم هاتف صحيح (مثال: 01012345678)';
+    }
+    return null;
   });
 
   constructor() {

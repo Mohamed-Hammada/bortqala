@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.shared.domain.BusinessRuleException;
 
 @Service
 @RequiredArgsConstructor
@@ -77,6 +78,33 @@ public class WorkforceAdvanceService {
             "{\"amount\":" + saved.getAmount() + ",\"termType\":\"" + saved.getTermType() + "\"}", null);
 
         return mapToResponse(saved);
+    }
+
+    @Transactional
+    public WorkforceApi.AdvanceResponse pause(String id, String user) {
+        WorkforceAdvance adv = advanceRepository.findById(id)
+                .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة"));
+        adv.pause();
+        auditService.record("PAUSE", "ADVANCE", adv.getId(), user, "Paused advance deductions", null);
+        return mapToResponse(advanceRepository.save(adv));
+    }
+
+    @Transactional
+    public WorkforceApi.AdvanceResponse resume(String id, String user) {
+        WorkforceAdvance adv = advanceRepository.findById(id)
+                .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة"));
+        adv.resume();
+        auditService.record("RESUME", "ADVANCE", adv.getId(), user, "Resumed advance deductions", null);
+        return mapToResponse(advanceRepository.save(adv));
+    }
+
+    @Transactional
+    public WorkforceApi.AdvanceResponse repay(String id, BigDecimal amount, String user) {
+        WorkforceAdvance adv = advanceRepository.findById(id)
+                .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة"));
+        adv.repay(amount);
+        auditService.record("EARLY_REPAYMENT", "ADVANCE", adv.getId(), user, "Repaid " + amount, null);
+        return mapToResponse(advanceRepository.save(adv));
     }
 
     private WorkforceApi.AdvanceResponse mapToResponse(WorkforceAdvance a) {

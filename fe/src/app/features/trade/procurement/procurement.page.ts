@@ -1,19 +1,31 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { I18nService } from '../../../core/i18n.service';
 import { NotificationService } from '../../../core/notification.service';
 import { apiErrorMessage } from '../../../core/api-error';
 import { DecimalPipe } from '@angular/common';
 import { formatDate } from '../../../core/date';
+import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
+
+export interface PurchaseOrderItem {
+  itemName: string;
+  itemCategory: string;
+  quantity: number;
+  unitOfMeasure: string;
+  unitPrice: number;
+  currency: string;
+  warehouse: string;
+  deliveryDate: string;
+}
 
 export interface PurchaseOrder {
   id: string;
   poNumber: string;
   poDate: number;
   supplierId: string;
-  purchaseRequestId?: string;
+  supplierName?: string;
   paymentTerms?: string;
   status: 'DRAFT' | 'ISSUED' | 'RECEIVED' | 'CANCELLED';
   totalAmount: number;
@@ -23,7 +35,7 @@ export interface PurchaseOrder {
 
 @Component({
   selector: 'app-procurement-page',
-  imports: [ReactiveFormsModule, DecimalPipe],
+  imports: [ReactiveFormsModule, FormsModule, DecimalPipe, ModalDialogComponent],
   templateUrl: './procurement.page.html',
   styleUrl: './procurement.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,19 +48,36 @@ export class ProcurementPage {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly orders = signal<PurchaseOrder[]>([]);
+  readonly suppliers = signal<Array<{ id: string; code: string; name: string }>>([]);
 
-  readonly drawerOpen = signal(false);
+  readonly modalOpen = signal(false);
+  readonly poItems = signal<PurchaseOrderItem[]>([
+    { itemName: 'مادة خام أ', itemCategory: 'مواد أولية', quantity: 100, unitOfMeasure: 'طن', unitPrice: 50, currency: 'EGP', warehouse: 'المستودع الرئيسي', deliveryDate: new Date().toISOString().substring(0, 10) }
+  ]);
 
   readonly poForm = new FormGroup({
     poNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     poDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
     supplierId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     paymentTerms: new FormControl('Net 30 Days', { nonNullable: true }),
-    totalAmount: new FormControl(0, { nonNullable: true, validators: [Validators.required] }),
+  });
+
+  totalCalculated = computed(() => {
+    return this.poItems().reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
   });
 
   constructor() {
     void this.load();
+    void this.loadSuppliers();
+  }
+
+  async loadSuppliers() {
+    try {
+      const res = await firstValueFrom(this.http.get<Array<{ id: string; code: string; name: string }>>('/api/v1/parties'));
+      this.suppliers.set(res ?? []);
+    } catch (e) {
+      console.error('Failed to load suppliers:', e);
+    }
   }
 
   async load() {
@@ -67,22 +96,48 @@ export class ProcurementPage {
   }
 
   openNew() {
+    const supps = this.suppliers();
     this.poForm.reset({
       poNumber: 'PO-' + Math.floor(1000 + Math.random() * 9000),
       poDate: new Date().toISOString().substring(0, 10),
-      supplierId: 'SUPP-01',
+      supplierId: supps.length > 0 ? supps[0].id : '',
       paymentTerms: 'Net 30 Days',
-      totalAmount: 5000,
     });
-    this.drawerOpen.set(true);
+    this.poItems.set([
+      { itemName: 'مادة خام تجميعية', itemCategory: 'مواد خام', quantity: 50, unitOfMeasure: 'كيلو', unitPrice: 100, currency: 'EGP', warehouse: 'مستودع 1', deliveryDate: new Date().toISOString().substring(0, 10) }
+    ]);
+    this.modalOpen.set(true);
   }
 
-  closeDrawer() {
-    this.drawerOpen.set(false);
+  closeModal() {
+    this.modalOpen.set(false);
+  }
+
+  addItemLine() {
+    this.poItems.update(items => [
+      ...items,
+      { itemName: '', itemCategory: 'عام', quantity: 1, unitOfMeasure: 'عدد', unitPrice: 0, currency: 'EGP', warehouse: 'المستودع الرئيسي', deliveryDate: new Date().toISOString().substring(0, 10) }
+    ]);
+  }
+
+  removeItemLine(index: number) {
+    if (this.poItems().length <= 1) {
+      this.notification.warning('يجب وجود بند شراء واحد على الأقل في أمر الشراء');
+      return;
+    }
+    this.poItems.update(items => items.filter((_, i) => i !== index));
   }
 
   async submitPo() {
-    if (this.poForm.invalid) return;
+    if (this.poForm.invalid) {
+      this.poForm.markAllAsTouched();
+      return;
+    }
+    if (this.poItems().length === 0 || this.totalCalculated() <= 0) {
+      this.notification.warning('يجب إضافة بند واحد على الأقل بقيمة أكبر من صفر');
+      return;
+    }
+
     try {
       const val = this.poForm.getRawValue();
       const dateMs = new Date(val.poDate).getTime();
@@ -91,14 +146,15 @@ export class ProcurementPage {
         poDate: dateMs,
         supplierId: val.supplierId,
         paymentTerms: val.paymentTerms,
-        totalAmount: val.totalAmount,
+        totalAmount: this.totalCalculated(),
+        items: this.poItems()
       };
       await firstValueFrom(this.http.post('/api/v1/trade/procurement/orders', payload));
-      this.notification.success('تم إنشاء أمر الشراء بنجاح ✓');
-      this.drawerOpen.set(false);
+      this.notification.success('تم إنشاء أمر الشراء وإضافة البنود بنجاح ✓');
+      this.modalOpen.set(false);
       await this.load();
     } catch (e) {
-      this.error.set(apiErrorMessage(e, this.i18n));
+      this.notification.error('فشل إنشاء أمر الشراء: ' + apiErrorMessage(e, this.i18n));
     }
   }
 

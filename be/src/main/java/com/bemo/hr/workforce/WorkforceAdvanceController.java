@@ -32,4 +32,26 @@ public class WorkforceAdvanceController {
         String username = auth != null ? auth.getName() : "system";
         return advanceService.create(request, username);
     }
+
+    @PostMapping("/{id}/pause")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    public WorkforceApi.AdvanceResponse pause(@org.springframework.web.bind.annotation.PathVariable String id, Authentication auth) {
+        String username = auth != null ? auth.getName() : "system";
+        return advanceService.pause(id, username);
+    }
+
+    @PostMapping("/{id}/resume")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    public WorkforceApi.AdvanceResponse resume(@org.springframework.web.bind.annotation.PathVariable String id, Authentication auth) {
+        String username = auth != null ? auth.getName() : "system";
+        return advanceService.resume(id, username);
+    }
+
+    @PostMapping("/{id}/repay")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    public WorkforceApi.AdvanceResponse repay(@org.springframework.web.bind.annotation.PathVariable String id, @RequestBody java.util.Map<String, java.math.BigDecimal> body, Authentication auth) {
+        String username = auth != null ? auth.getName() : "system";
+        java.math.BigDecimal amount = body.getOrDefault("amount", java.math.BigDecimal.ZERO);
+        return advanceService.repay(id, amount, username);
+    }
 }

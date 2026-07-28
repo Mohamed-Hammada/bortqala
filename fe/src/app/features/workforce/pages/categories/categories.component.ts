@@ -50,12 +50,20 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
 
       <app-modal-dialog
         [isOpen]="isModalOpen"
-        [title]="'إضافة فئة عمالة جديدة'"
+        [title]="'إضافة فئة موحدّة وقواعد دوام جديدة'"
         size="normal"
         [preventOutsideClose]="true"
         (close)="closeModal()">
         
         <form (ngSubmit)="saveCategory()" class="modal-form">
+          <div class="form-group">
+            <label>نطاق الفئة (Category Scope) *</label>
+            <select [(ngModel)]="form.scope" name="scope" class="form-input">
+              <option value="BOTH">كلاهما (موظفون وعمال - Both)</option>
+              <option value="EMPLOYEE">موظفون فقط (Employees Only)</option>
+              <option value="WORKER">عمال فقط (Workers Only)</option>
+            </select>
+          </div>
           <div class="form-group">
             <label>كود الفئة *</label>
             <input type="text" [(ngModel)]="form.code" name="code" required class="form-input" />
@@ -65,7 +73,19 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
             <input type="text" [(ngModel)]="form.name" name="name" required class="form-input" />
           </div>
           <div class="form-group">
-            <label>اليومية الافتراضية (ج.م) *</label>
+            <label>وقت بداية الحضور المخطط (Start Time) *</label>
+            <input type="time" [(ngModel)]="form.startTime" name="startTime" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>وقت نهاية الانصراف المخطط (End Time) *</label>
+            <input type="time" [(ngModel)]="form.endTime" name="endTime" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>فترة السماح بالدقائق (Grace Period Mins)</label>
+            <input type="number" min="0" [(ngModel)]="form.gracePeriodMinutes" name="gracePeriodMinutes" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>اليومية / الراتب الافتراضي (ج.م) *</label>
             <input type="number" [(ngModel)]="form.defaultDailyRate" name="defaultDailyRate" required class="form-input" />
           </div>
           <div class="form-group">
@@ -75,7 +95,7 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
         </form>
 
         <div modal-actions class="modal-actions-bar">
-          <button type="button" class="btn btn-primary" (click)="saveCategory()">حفظ الفئة</button>
+          <button type="button" class="btn btn-primary" (click)="saveCategory()">حفظ الفئة وقواعد الدوام</button>
           <button type="button" class="btn btn-secondary" (click)="closeModal()">إلغاء</button>
         </div>
       </app-modal-dialog>
@@ -104,8 +124,9 @@ export class CategoriesComponent implements OnInit {
   workforceService = inject(WorkforceService);
 
   isModalOpen = false;
-  form: Partial<WorkerCategory> = {
-    code: '', name: '', description: '', defaultDailyRate: 200, standardDailyHours: 8, status: 'ACTIVE'
+  form: Partial<WorkerCategory> & { scope?: string; startTime?: string; endTime?: string; gracePeriodMinutes?: number } = {
+    code: '', name: '', description: '', defaultDailyRate: 200, standardDailyHours: 8, status: 'ACTIVE',
+    scope: 'BOTH', startTime: '08:00', endTime: '16:00', gracePeriodMinutes: 15
   };
 
   ngOnInit() {
@@ -131,7 +152,8 @@ export class CategoriesComponent implements OnInit {
   openCreateModal() {
     this.form = {
       code: 'CAT-' + Math.floor(10 + Math.random() * 90),
-      name: '', description: '', defaultDailyRate: 200, standardDailyHours: 8, status: 'ACTIVE'
+      name: '', description: '', defaultDailyRate: 200, standardDailyHours: 8, status: 'ACTIVE',
+      scope: 'BOTH', startTime: '08:00', endTime: '16:00', gracePeriodMinutes: 15
     };
     this.isModalOpen = true;
   }

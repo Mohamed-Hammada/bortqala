@@ -100,17 +100,11 @@
     </div>
   }
 
-  @if (drawerOpen()) {
-    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
-    <aside class="drawer">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">إدارة المشتريات</p>
-          <h2>أمر شراء جديد (Purchase Order)</h2>
-        </div>
-        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
-      </div>
-
+  @if (modalOpen()) {
+    <app-modal-dialog
+      title="أمر شراء جديد (Purchase Order)"
+      (closeModal)="closeModal()"
+    >
       <form [formGroup]="poForm" (ngSubmit)="submitPo()">
         <div class="form-grid">
           <div class="field">
@@ -122,23 +116,66 @@
             <input type="date" class="ltr" formControlName="poDate" />
           </div>
           <div class="field">
-            <label>المورد *</label>
-            <input formControlName="supplierId" placeholder="كود / اسم المورد..." />
+            <label>اختر المورد من سجل الجهات *</label>
+            <select formControlName="supplierId">
+              <option value="">-- اختر المورد --</option>
+              @for (s of suppliers(); track s.id) {
+                <option [value]="s.id">{{ s.name }} ({{ s.code }})</option>
+              }
+            </select>
           </div>
           <div class="field">
-            <label>شروط السداد</label>
+            <label>شروط السداد والتسليم</label>
             <input formControlName="paymentTerms" placeholder="Net 30 Days..." />
           </div>
-          <div class="field span-2">
-            <label>إجمالي قيمة الشراء (ج.م) *</label>
-            <input type="number" class="ltr" formControlName="totalAmount" placeholder="10000" />
+        </div>
+
+        <!-- Purchase Order Line Items Section -->
+        <div class="po-items-section" style="margin-top: 1.25rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h4 style="margin: 0; font-weight: 700; color: #0f172a;">بنود أمر الشراء (Item Lines)</h4>
+            <button type="button" class="button secondary btn-sm" (click)="addItemLine()">＋ إضافة بند جديد</button>
+          </div>
+
+          <div style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;">
+            @for (item of poItems(); track $index) {
+              <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 0.5rem; align-items: center;">
+                <div>
+                  <label style="font-size: 0.75rem; color: #64748b;">اسم الصنف *</label>
+                  <input type="text" [(ngModel)]="item.itemName" [name]="'item_name_' + $index" [ngModelOptions]="{standalone: true}" style="width: 100%; padding: 0.375rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8125rem;" placeholder="اسم الصنف / كود..." />
+                </div>
+                <div>
+                  <label style="font-size: 0.75rem; color: #64748b;">الوحدة</label>
+                  <input type="text" [(ngModel)]="item.unitOfMeasure" [name]="'item_unit_' + $index" [ngModelOptions]="{standalone: true}" style="width: 100%; padding: 0.375rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8125rem;" placeholder="طن/كيلو/عدد" />
+                </div>
+                <div>
+                  <label style="font-size: 0.75rem; color: #64748b;">الكمية *</label>
+                  <input type="number" min="1" [(ngModel)]="item.quantity" [name]="'item_qty_' + $index" [ngModelOptions]="{standalone: true}" style="width: 100%; padding: 0.375rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8125rem;" />
+                </div>
+                <div>
+                  <label style="font-size: 0.75rem; color: #64748b;">سعر الوحدة *</label>
+                  <input type="number" min="0" [(ngModel)]="item.unitPrice" [name]="'item_price_' + $index" [ngModelOptions]="{standalone: true}" style="width: 100%; padding: 0.375rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8125rem;" />
+                </div>
+                <div>
+                  <label style="font-size: 0.75rem; color: #64748b;">الإجمالي</label>
+                  <strong style="font-size: 0.875rem; color: #1e40af; display: block; padding-top: 0.375rem;">{{ (item.quantity * item.unitPrice) | number:'1.2-2' }}</strong>
+                </div>
+                <button type="button" style="background: none; border: none; color: #dc2626; font-size: 1.25rem; cursor: pointer; padding: 0.25rem;" (click)="removeItemLine($index)">×</button>
+              </div>
+            }
+          </div>
+
+          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 600; color: #1e40af;">إجمالي قيمة أمر الشراء المحسوبة تلقائياً:</span>
+            <strong style="font-size: 1.125rem; color: #1d4ed8;">{{ totalCalculated() | number:'1.2-2' }} ج.م</strong>
           </div>
         </div>
-        <div class="drawer-actions">
-          <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-          <button class="button primary" type="submit" [disabled]="poForm.invalid">حفظ أمر الشراء</button>
+
+        <div modal-actions class="modal-actions-bar">
+          <button class="button primary" type="submit" [disabled]="poForm.invalid || totalCalculated() <= 0">حفظ وأصدار أمر الشراء</button>
+          <button class="button secondary" type="button" (click)="closeModal()">إلغاء</button>
         </div>
       </form>
-    </aside>
+    </app-modal-dialog>
   }
 </section>

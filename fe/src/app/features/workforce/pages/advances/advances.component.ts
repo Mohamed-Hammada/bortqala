@@ -81,11 +81,21 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
                   <td>
                     <span class="badge" [class.status-active]="adv.status === 'ACTIVE'"
                           [class.status-paid]="adv.status === 'PAID_OFF'"
-                          [class.status-suspended]="adv.status === 'SUSPENDED'">
+                          [class.status-suspended]="adv.status === 'PAUSED' || adv.status === 'SUSPENDED'">
                       {{ getStatusLabel(adv.status) }}
                     </span>
                   </td>
-                  <td>{{ adv.createdAt | date:'yyyy/MM/dd' }}</td>
+                  <td>
+                    <div style="display: flex; gap: 0.25rem;">
+                      @if (adv.status === 'ACTIVE') {
+                        <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" (click)="pauseAdvance(adv)">⏸️ إيقاف</button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" (click)="repayAdvance(adv)">💵 سداد</button>
+                      }
+                      @if (adv.status === 'PAUSED' || adv.status === 'SUSPENDED') {
+                        <button type="button" class="btn btn-primary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" (click)="resumeAdvance(adv)">▶️ استئناف</button>
+                      }
+                    </div>
+                  </td>
                 </tr>
               }
               @if (workforceService.advances().length === 0) {
@@ -345,6 +355,45 @@ export class AdvancesComponent implements OnInit {
         const msg = e?.error?.detail ?? e?.error?.message ?? e?.message ?? 'خطأ غير متوقع';
         this.notificationService.error('فشل حفظ السلفة: ' + msg);
       }
+    });
+  }
+
+  pauseAdvance(adv: WorkforceAdvance) {
+    if (!confirm(`هل أنت متأكد من إيقاف اقتطاع السلفة الخاصة بـ (${adv.recipientType === 'WORKER' ? adv.workerName : adv.contractorName})؟`)) return;
+    this.workforceService.pauseAdvance(adv.id).subscribe({
+      next: () => {
+        this.notificationService.success('تم إيقاف خصم السلفة مؤقتاً ✓');
+        this.workforceService.loadAdvances().subscribe();
+      },
+      error: (e) => this.notificationService.error('فشل إيقاف السلفة: ' + (e?.error?.message ?? e?.message))
+    });
+  }
+
+  resumeAdvance(adv: WorkforceAdvance) {
+    if (!confirm(`هل أنت متأكد من استئناف اقتطاع السلفة؟`)) return;
+    this.workforceService.resumeAdvance(adv.id).subscribe({
+      next: () => {
+        this.notificationService.success('تم استئناف خصم السلفة بنجاح ✓');
+        this.workforceService.loadAdvances().subscribe();
+      },
+      error: (e) => this.notificationService.error('فشل استئناف السلفة: ' + (e?.error?.message ?? e?.message))
+    });
+  }
+
+  repayAdvance(adv: WorkforceAdvance) {
+    const valStr = prompt(`أدخل مبلغ السداد المبكر (الرصيد المتبقي الحالي: ${adv.remainingBalance} ج.م):`, String(adv.installmentAmount));
+    if (!valStr) return;
+    const val = parseFloat(valStr);
+    if (isNaN(val) || val <= 0) {
+      this.notificationService.warning('يرجى إدخال مبلغ سداد صحيح');
+      return;
+    }
+    this.workforceService.repayAdvance(adv.id, val).subscribe({
+      next: () => {
+        this.notificationService.success(`تم إدخال السداد المبكر بمبلغ ${val} ج.م بنجاح ✓`);
+        this.workforceService.loadAdvances().subscribe();
+      },
+      error: (e) => this.notificationService.error('فشل السداد: ' + (e?.error?.message ?? e?.message))
     });
   }
 

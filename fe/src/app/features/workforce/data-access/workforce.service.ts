@@ -139,6 +139,18 @@ export class WorkforceService {
     );
   }
 
+  pauseAdvance(id: string): Observable<WorkforceAdvance> {
+    return this.http.post<WorkforceAdvance>(`/api/v1/workforce/advances/${id}/pause`, {});
+  }
+
+  resumeAdvance(id: string): Observable<WorkforceAdvance> {
+    return this.http.post<WorkforceAdvance>(`/api/v1/workforce/advances/${id}/resume`, {});
+  }
+
+  repayAdvance(id: string, amount: number): Observable<WorkforceAdvance> {
+    return this.http.post<WorkforceAdvance>(`/api/v1/workforce/advances/${id}/repay`, { amount });
+  }
+
   // Import Analysis
   analyzeImport(summaryDays?: number, settlementDays?: number): Observable<any> {
     return this.http.post('/api/v1/workforce/import/analyze', null, {
