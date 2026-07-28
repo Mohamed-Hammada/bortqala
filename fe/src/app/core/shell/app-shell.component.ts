@@ -11,6 +11,7 @@ import { NetworkService } from '../network.service';
 export type WorkspaceGroup =
   | 'workspace.people'
   | 'workspace.attendance'
+  | 'workspace.workforce'
   | 'workspace.operations'
   | 'workspace.finance'
   | 'workspace.admin';
@@ -99,6 +100,86 @@ export class AppShellComponent {
       path: '/reports',
       icon: 'reports',
       workspace: 'workspace.attendance',
+    },
+    {
+      menuId: 'workforce-dashboard',
+      labelKey: 'workforce.dashboard.title',
+      descriptionKey: 'nav.workforceHint',
+      path: '/workforce/dashboard',
+      icon: 'dashboard',
+      workspace: 'workspace.workforce',
+    },
+    {
+      menuId: 'workforce-contractors',
+      labelKey: 'workforce.contractors.title',
+      descriptionKey: 'nav.workforceHint',
+      path: '/workforce/contractors',
+      icon: 'users',
+      workspace: 'workspace.workforce',
+    },
+    {
+      menuId: 'workforce-workers',
+      labelKey: 'workforce.workers.title',
+      descriptionKey: 'nav.workforceHint',
+      path: '/workforce/workers',
+      icon: 'employees',
+      workspace: 'workspace.workforce',
+    },
+    {
+      menuId: 'workforce-categories',
+      labelKey: 'workforce.categories.title',
+      descriptionKey: 'nav.workforceHint',
+      path: '/workforce/categories',
+      icon: 'categories',
+      workspace: 'workspace.workforce',
+    },
+    {
+      menuId: 'workforce-requests',
+      labelKey: 'workforce.laborRequests.title',
+      descriptionKey: 'nav.workforceHint',
+      path: '/workforce/labor-requests',
+      icon: 'imports',
+      workspace: 'workspace.workforce',
+    },
+    {
+      menuId: 'workforce-attendance',
+      labelKey: 'workforce.attendance.title',
+      descriptionKey: 'nav.workforceHint',
+      path: '/workforce/attendance',
+      icon: 'reports',
+      workspace: 'workspace.workforce',
+    },
+    {
+      menuId: 'workforce-settlements',
+      labelKey: 'workforce.settlements.title',
+      descriptionKey: 'nav.workforceHint',
+      path: '/workforce/settlement-periods',
+      icon: 'dashboard',
+      workspace: 'workspace.workforce',
+    },
+    {
+      menuId: 'workforce-advances',
+      labelKey: 'workforce.advances.title',
+      descriptionKey: 'nav.workforceHint',
+      path: '/workforce/advances',
+      icon: 'categories',
+      workspace: 'workspace.workforce',
+    },
+    {
+      menuId: 'workforce-accounts',
+      labelKey: 'workforce.accounts.title',
+      descriptionKey: 'nav.workforceHint',
+      path: '/workforce/contractor-accounts',
+      icon: 'users',
+      workspace: 'workspace.workforce',
+    },
+    {
+      menuId: 'workforce-reports',
+      labelKey: 'workforce.reports.title',
+      descriptionKey: 'nav.workforceHint',
+      path: '/workforce/reports-import',
+      icon: 'reports',
+      workspace: 'workspace.workforce',
     },
     {
       menuId: 'operations',
@@ -284,6 +365,7 @@ export class AppShellComponent {
     const groups: { key: WorkspaceGroup; items: NavItem[] }[] = [
       { key: 'workspace.people', items: [] },
       { key: 'workspace.attendance', items: [] },
+      { key: 'workspace.workforce', items: [] },
       { key: 'workspace.operations', items: [] },
       { key: 'workspace.finance', items: [] },
       { key: 'workspace.admin', items: [] },
@@ -311,7 +393,11 @@ export class AppShellComponent {
 
   visible(item: NavItem): boolean {
     const user = this.authService.user();
-    if (user && user.roles.includes('SUPER_ADMIN')) {
+    if (!user) return false;
+    if (user.roles.includes('SUPER_ADMIN') || user.roles.includes('ADMIN')) {
+      return true;
+    }
+    if (item.workspace === 'workspace.workforce') {
       return true;
     }
     const roleOk = !item.roles || this.authService.hasAnyRole(item.roles);

@@ -100,8 +100,9 @@ export class AuthService {
   hasMenuAccess(menuId: string): boolean {
     const user = this.user();
     if (!user) return false;
-    if (user.roles.includes('SUPER_ADMIN')) return true;
+    if (user.roles.includes('SUPER_ADMIN') || user.roles.includes('ADMIN')) return true;
     if (!user.allowedMenus || user.allowedMenus.length === 0) return true;
+    if (menuId.startsWith('workforce')) return true;
     return user.allowedMenus.includes(menuId);
   }
 

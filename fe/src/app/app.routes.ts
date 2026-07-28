@@ -161,6 +161,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/users/users.page').then((module) => module.UsersPage),
       },
+      {
+        path: 'workforce',
+        loadChildren: () =>
+          import('./features/workforce/workforce.routes').then((module) => module.WORKFORCE_ROUTES),
+      },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],
   },

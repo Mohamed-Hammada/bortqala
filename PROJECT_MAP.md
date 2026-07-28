@@ -22,7 +22,11 @@
 - **Settings Page Reorganization** (4 Tabbed Sections: Appearance & Language | Session | Security | Reports & Export, unified "Save All Settings" action)
 - **Sidebar Enhancements** (Collapsible workspace groups, pinned Favorites section with star toggle, Recently Used dynamic navigation history)
 - **Visual Feedback & Touch Safety** (Toast notifications, `UnsavedChangesGuard` form protection, confirmation modals for financial/audit actions, minimum 40-44px touch targets)
-- **Rich Contextual Empty States** (`EmptyStateComponent` with custom icons, clear guidance, and primary action buttons)
+- **Workforce & Contractors Management Module** (`be/` & `fe/`)
+  - Database schema (`v35`) and bilingual translation data (`v36`) for contractors, rate versions, categories, workers, labor requests, schedules, manual attendance, 15-day settlement periods, worker settlements, contractor settlements, workforce advances, and installment ledgers.
+  - Spring Boot vertical slice `com.bemo.hr.workforce` supporting 4 contractor calculation models (`worker_net_total`, `contractor_daily_rate`, `worker_cost_plus_fee`, `fixed_period_amount`), advance deduction controls, matrix attendance processing, and Excel import reconciliation diagnostics.
+  - Reusable centered `ModalDialogComponent` conforming to Section 2 of spec (backdrop blur, keyboard accessible `role="dialog"`, sticky header/footer, non-dismissable backdrop on financial actions).
+  - 10 interactive Angular views under `/workforce` (Dashboard, Contractors, Workers, Categories, Labor Requests, Attendance Matrix, Settlement Periods, Advances, Contractor Accounts, Reports & Import).
 
 ---
 

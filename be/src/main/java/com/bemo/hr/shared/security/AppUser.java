@@ -79,7 +79,7 @@ public class AppUser {
         if (allowedMenus != null && !allowedMenus.isEmpty()) {
             this.allowedMenus = String.join(",", allowedMenus);
         } else {
-            this.allowedMenus = "dashboard,employees,categories,reports,imports,parties,operations,users,settings";
+            this.allowedMenus = "dashboard,employees,categories,reports,imports,parties,operations,payroll,users,settings,workforce-dashboard,workforce-contractors,workforce-workers,workforce-categories,workforce-requests,workforce-attendance,workforce-settlements,workforce-advances,workforce-accounts,workforce-reports";
         }
     }
 
@@ -99,7 +99,7 @@ public class AppUser {
     public Set<Role> getRoles() { return Set.copyOf(roles); }
     public Set<String> getAllowedMenus() {
         if (allowedMenus == null || allowedMenus.isBlank()) {
-            return Set.of("dashboard","employees","categories","reports","imports","parties","operations","users","settings");
+            return Set.of("dashboard","employees","categories","reports","imports","parties","operations","payroll","users","settings","workforce-dashboard","workforce-contractors","workforce-workers","workforce-categories","workforce-requests","workforce-attendance","workforce-settlements","workforce-advances","workforce-accounts","workforce-reports");
         }
         return Set.of(allowedMenus.split(","));
     }

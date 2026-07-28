@@ -1,0 +1,289 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_workforce_contractors_schema
+      author: Mohamed-Hammada
+      changes:
+        - createTable:
+            tableName: contractors
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(160), constraints: { nullable: false } }
+              - column: { name: trade_name, type: VARCHAR(160) }
+              - column: { name: phone, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: secondary_phone, type: VARCHAR(50) }
+              - column: { name: tax_id, type: VARCHAR(50) }
+              - column: { name: address, type: VARCHAR(255) }
+              - column: { name: accounting_model, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: payment_routing, type: VARCHAR(50), defaultValue: "contractor_full", constraints: { nullable: false } }
+              - column: { name: settlement_cycle_days, type: INT, defaultValueNumeric: 15, constraints: { nullable: false } }
+              - column: { name: default_daily_rate, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: fee_type, type: VARCHAR(30) }
+              - column: { name: fee_value, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: fee_base, type: VARCHAR(30) }
+              - column: { name: fixed_period_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "ACTIVE", constraints: { nullable: false } }
+              - column: { name: notes, type: VARCHAR(1000) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: contractors
+            columnNames: app_id, code
+            constraintName: uq_contractors_app_code
+
+        - createTable:
+            tableName: contractor_rate_versions
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: contractor_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: category_id, type: VARCHAR(36) }
+              - column: { name: rate_unit, type: VARCHAR(30), defaultValue: "DAILY", constraints: { nullable: false } }
+              - column: { name: rate_amount, type: "NUMERIC(12, 2)", constraints: { nullable: false } }
+              - column: { name: effective_from, type: timestamp, constraints: { nullable: false } }
+              - column: { name: effective_to, type: timestamp }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createTable:
+            tableName: worker_categories
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(160), constraints: { nullable: false } }
+              - column: { name: description, type: VARCHAR(500) }
+              - column: { name: default_daily_rate, type: "NUMERIC(12, 2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: standard_daily_hours, type: "NUMERIC(4, 2)", defaultValueNumeric: 8.0, constraints: { nullable: false } }
+              - column: { name: default_settlement_cycle, type: VARCHAR(50), defaultValue: "HALF_MONTH", constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "ACTIVE", constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: worker_categories
+            columnNames: app_id, code
+            constraintName: uq_worker_categories_app_code
+
+        - createTable:
+            tableName: workers
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: full_name, type: VARCHAR(160), constraints: { nullable: false } }
+              - column: { name: contractor_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: category_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: default_daily_rate, type: "NUMERIC(12, 2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: standard_daily_hours, type: "NUMERIC(4, 2)", defaultValueNumeric: 8.0, constraints: { nullable: false } }
+              - column: { name: branch_id, type: VARCHAR(36) }
+              - column: { name: attendance_mode, type: VARCHAR(30), defaultValue: "MANUAL", constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "ACTIVE", constraints: { nullable: false } }
+              - column: { name: phone, type: VARCHAR(50) }
+              - column: { name: national_id, type: VARCHAR(50) }
+              - column: { name: notes, type: VARCHAR(1000) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: workers
+            columnNames: app_id, code
+            constraintName: uq_workers_app_code
+
+        - createTable:
+            tableName: worker_contractor_assignments
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: worker_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: contractor_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: effective_from, type: timestamp, constraints: { nullable: false } }
+              - column: { name: effective_to, type: timestamp }
+              - column: { name: change_reason, type: VARCHAR(255) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createTable:
+            tableName: worker_rate_versions
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: worker_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: daily_rate, type: "NUMERIC(12, 2)", constraints: { nullable: false } }
+              - column: { name: standard_daily_hours, type: "NUMERIC(4, 2)", defaultValueNumeric: 8.0, constraints: { nullable: false } }
+              - column: { name: effective_from, type: timestamp, constraints: { nullable: false } }
+              - column: { name: effective_to, type: timestamp }
+              - column: { name: change_reason, type: VARCHAR(255) }
+              - column: { name: updated_by, type: VARCHAR(160) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createTable:
+            tableName: labor_requests
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: request_number, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: request_date, type: timestamp, constraints: { nullable: false } }
+              - column: { name: branch_id, type: VARCHAR(36) }
+              - column: { name: shift_name, type: VARCHAR(50) }
+              - column: { name: contractor_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "DRAFT", constraints: { nullable: false } }
+              - column: { name: notes, type: VARCHAR(1000) }
+              - column: { name: created_by, type: VARCHAR(160) }
+              - column: { name: approved_by, type: VARCHAR(160) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createTable:
+            tableName: labor_request_items
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: request_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: category_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: requested_count, type: INT, constraints: { nullable: false } }
+              - column: { name: sent_count, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: accepted_count, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: variance_count, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+        - createTable:
+            tableName: workforce_schedules
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(160), constraints: { nullable: false } }
+              - column: { name: check_in_time, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: check_out_time, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: standard_hours, type: "NUMERIC(4, 2)", defaultValueNumeric: 8.0, constraints: { nullable: false } }
+              - column: { name: grace_minutes, type: INT, defaultValueNumeric: 15 }
+              - column: { name: month_year, type: VARCHAR(7) }
+              - column: { name: effective_from, type: timestamp, constraints: { nullable: false } }
+              - column: { name: effective_to, type: timestamp }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createTable:
+            tableName: manual_attendance_entries
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: worker_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: work_date, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: attendance_value, type: "NUMERIC(4, 2)", defaultValueNumeric: 1.0, constraints: { nullable: false } }
+              - column: { name: check_in, type: VARCHAR(10) }
+              - column: { name: check_out, type: VARCHAR(10) }
+              - column: { name: actual_hours, type: "NUMERIC(4, 2)" }
+              - column: { name: overtime_hours, type: "NUMERIC(4, 2)", defaultValueNumeric: 0 }
+              - column: { name: deduction_hours, type: "NUMERIC(4, 2)", defaultValueNumeric: 0 }
+              - column: { name: effective_daily_rate, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: source, type: VARCHAR(30), defaultValue: "MANUAL", constraints: { nullable: false } }
+              - column: { name: notes, type: VARCHAR(500) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: manual_attendance_entries
+            columnNames: app_id, worker_id, work_date
+            constraintName: uq_manual_attendance_worker_date
+
+        - createTable:
+            tableName: workforce_settlement_periods
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: period_code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: start_date, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: end_date, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: cycle_type, type: VARCHAR(30), defaultValue: "HALF_MONTH", constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "DRAFT", constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - addUniqueConstraint:
+            tableName: workforce_settlement_periods
+            columnNames: app_id, period_code
+            constraintName: uq_workforce_settlement_periods_code
+
+        - createTable:
+            tableName: worker_settlements
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: period_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: worker_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: contractor_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: total_attendance_units, type: "NUMERIC(8, 2)", defaultValueNumeric: 0 }
+              - column: { name: daily_rate, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: gross_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: overtime_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: deductions_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: advance_deductions, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: net_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createTable:
+            tableName: contractor_settlements
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: period_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: contractor_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: accounting_model, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: workers_net_total, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: contractor_rates_total, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: commission_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: fixed_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: additions_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: deductions_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: gross_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: net_payable, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: paid_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "DRAFT", constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createTable:
+            tableName: workforce_advances
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: recipient_type, type: VARCHAR(30), defaultValue: "WORKER", constraints: { nullable: false } }
+              - column: { name: worker_id, type: VARCHAR(36) }
+              - column: { name: contractor_id, type: VARCHAR(36) }
+              - column: { name: amount, type: "NUMERIC(12, 2)", constraints: { nullable: false } }
+              - column: { name: term_type, type: VARCHAR(30), defaultValue: "SHORT_TERM", constraints: { nullable: false } }
+              - column: { name: total_installments, type: INT, defaultValueNumeric: 1 }
+              - column: { name: installment_amount, type: "NUMERIC(12, 2)", constraints: { nullable: false } }
+              - column: { name: remaining_balance, type: "NUMERIC(12, 2)", constraints: { nullable: false } }
+              - column: { name: deduction_frequency, type: VARCHAR(30), defaultValue: "HALF_MONTH", constraints: { nullable: false } }
+              - column: { name: max_deduction_percent, type: "NUMERIC(5, 2)", defaultValueNumeric: 50.0 }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "ACTIVE", constraints: { nullable: false } }
+              - column: { name: reason, type: VARCHAR(500) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createTable:
+            tableName: workforce_advance_installments
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: advance_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: installment_number, type: INT, constraints: { nullable: false } }
+              - column: { name: due_date, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: amount, type: "NUMERIC(12, 2)", constraints: { nullable: false } }
+              - column: { name: deducted_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: status, type: VARCHAR(30), defaultValue: "PENDING", constraints: { nullable: false } }
+              - column: { name: period_id, type: VARCHAR(36) }
+
+        - createTable:
+            tableName: workforce_advance_ledger_entries
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: advance_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: entry_type, type: VARCHAR(30), constraints: { nullable: false } }
+              - column: { name: amount, type: "NUMERIC(12, 2)", constraints: { nullable: false } }
+              - column: { name: balance_after, type: "NUMERIC(12, 2)", constraints: { nullable: false } }
+              - column: { name: notes, type: VARCHAR(500) }
+              - column: { name: created_by, type: VARCHAR(160) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }

@@ -67,4 +67,11 @@ databaseChangeLog:
       file: db/changelog/20260727_v33_fix_employee_001_name_and_seed_erp_defaults.yaml
   - include:
       file: db/changelog/20260727_v34_password_policy_fields.yaml
+  - include:
+      file: db/changelog/20260728_v35_workforce_contractors_schema.yaml
+  - include:
+      file: db/changelog/20260728_v36_workforce_translations.yaml
+  - include:
+      file: db/changelog/20260728_v37_update_allowed_menus.yaml
+
 
