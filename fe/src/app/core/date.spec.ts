@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { dateInputToEpoch, epochToDateInput, formatDate } from './date';
 
 describe('epoch-millisecond date contract', () => {

@@ -25,9 +25,14 @@ public class FiscalPeriodController {
     }
 
     @GetMapping
+    @Transactional
     public List<FiscalPeriodApi.FiscalPeriodResponse> listPeriods(@RequestParam(required = false) Integer year) {
-        List<FiscalPeriod> list = year != null ? repository.findByFiscalYearOrderByPeriodNumberAsc(year)
-                : repository.findAllByOrderByFiscalYearDescPeriodNumberAsc();
+        int targetYear = year != null ? year : LocalDate.now().getYear();
+        List<FiscalPeriod> list = repository.findByFiscalYearOrderByPeriodNumberAsc(targetYear);
+        if (list.isEmpty()) {
+            generateYear(targetYear);
+            list = repository.findByFiscalYearOrderByPeriodNumberAsc(targetYear);
+        }
         return list.stream().map(this::toResponse).toList();
     }
 

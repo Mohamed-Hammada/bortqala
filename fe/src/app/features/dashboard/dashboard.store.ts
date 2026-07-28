@@ -12,19 +12,26 @@ export class DashboardStore {
   readonly data = signal<Dashboard | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  private currentRequestId = 0;
   async load(year: number, month: number): Promise<void> {
+    const reqId = ++this.currentRequestId;
     this.loading.set(true);
     this.error.set(null);
     try {
-      this.data.set(
-        await firstValueFrom(
-          this.httpClient.get<Dashboard>('/api/v1/dashboard', { params: { year, month } }),
-        ),
+      const res = await firstValueFrom(
+        this.httpClient.get<Dashboard>('/api/v1/dashboard', { params: { year, month } }),
       );
+      if (reqId === this.currentRequestId) {
+        this.data.set(res);
+      }
     } catch (error) {
-      this.error.set(apiErrorMessage(error, this.i18n));
+      if (reqId === this.currentRequestId) {
+        this.error.set(apiErrorMessage(error, this.i18n));
+      }
     } finally {
-      this.loading.set(false);
+      if (reqId === this.currentRequestId) {
+        this.loading.set(false);
+      }
     }
   }
 }

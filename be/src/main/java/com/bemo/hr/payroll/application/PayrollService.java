@@ -43,6 +43,7 @@ public class PayrollService {
     private final DailyAttendanceResultRepository dailyAttendanceResultRepository;
     private final OperationsService operationsService;
     private final PayrollExcelExporter payrollExcelExporter;
+    private final com.bemo.hr.audit.application.AuditService auditService;
 
     public PayrollApi.SheetResponse getSheet(int year, int month, String categoryIdFilter) {
         var employees = employeeRepository.findAllByOrderByFullNameAsc();
@@ -262,6 +263,9 @@ public class PayrollService {
             );
         }
 
+        auditService.record("PAYROLL_DISBURSEMENT", "SALARY_PAYMENT", entity.getId(), actor,
+                "{\"employeeId\":\"" + emp.getId() + "\",\"employeeName\":\"" + emp.getFullName() + "\",\"net\":" + net + "}", null);
+
         return getSheet(request.periodYear(), request.periodMonth(), null);
     }
 
@@ -287,6 +291,10 @@ public class PayrollService {
                 salaryPaymentRepository.save(entity);
             }
         }
+
+        auditService.record("PAYROLL_STATUS_TRANSITION", "PAYROLL_REGISTER", request.periodYear() + "-" + request.periodMonth(), actor,
+                "{\"periodYear\":" + request.periodYear() + ",\"periodMonth\":" + request.periodMonth() + ",\"targetStatus\":\"" + request.targetStatus().name() + "\"}", null);
+
         return getSheet(request.periodYear(), request.periodMonth(), request.categoryId());
     }
 
@@ -312,6 +320,9 @@ public class PayrollService {
 
         payment.markAsReversed(request.reason(), actor);
         salaryPaymentRepository.save(payment);
+
+        auditService.record("PAYROLL_REVERSE", "SALARY_PAYMENT", payment.getId(), actor,
+                "{\"paymentId\":\"" + payment.getId() + "\",\"reason\":\"" + request.reason().replace("\"", "\\\"") + "\"}", null);
 
         return getSheet(payment.getPeriodYear(), payment.getPeriodMonth(), null);
     }
@@ -340,6 +351,10 @@ public class PayrollService {
                 ), actor);
             }
         }
+
+        auditService.record("PAYROLL_BULK_DISBURSEMENT", "PAYROLL_REGISTER", request.periodYear() + "-" + request.periodMonth(), actor,
+                "{\"periodYear\":" + request.periodYear() + ",\"periodMonth\":" + request.periodMonth() + "}", null);
+
         return getSheet(request.periodYear(), request.periodMonth(), request.categoryId());
     }
 

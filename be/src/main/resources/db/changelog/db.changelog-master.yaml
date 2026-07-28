@@ -73,5 +73,7 @@ databaseChangeLog:
       file: db/changelog/20260728_v36_workforce_translations.yaml
   - include:
       file: db/changelog/20260728_v37_update_allowed_menus.yaml
+  - include:
+      file: db/changelog/20260728_v38_audit_payroll_erp_fixes.yaml
 
 

@@ -58,7 +58,6 @@ export class DashboardPage {
         queryParams: { year: y, month: m },
         queryParamsHandling: 'merge',
       });
-      void this.store.load(y, m);
     }
   }
   reload(): void {

@@ -26,6 +26,7 @@ public class OperationsService {
     private final EmployeeRepository employeeRepository;
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final OperationsExcelExporter operationsExcelExporter;
+    private final com.bemo.hr.audit.application.AuditService auditService;
 
     public byte[] export(com.bemo.hr.reporting.application.ExcelExportOptions options) {
         return operationsExcelExporter.export(snapshot(), options);
@@ -134,8 +135,9 @@ public class OperationsService {
                 || op.equals("EXPORT_SALE") || op.equals("SORTING_SALE") || op.equals("DISPOSAL")) {
                 qty = qty.negate();
             }
-            stockMovementRepository.save(new StockMovement(request.itemId(), normalizeId(request.partyId()), request.operationType(),
+            var sm = stockMovementRepository.save(new StockMovement(request.itemId(), normalizeId(request.partyId()), request.operationType(),
                     qty, request.lossPercentage(), request.referenceCode(), request.note(), request.occurredAt(), actor));
+            auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", request.itemId(), actor, "Recorded stock movement " + op + " qty: " + qty, null);
         }
         if (request.amountDelta().signum() != 0) {
             var partyId = normalizeId(request.partyId());
@@ -143,6 +145,7 @@ public class OperationsService {
             requireParty(partyId);
             partnerLedgerEntryRepository.save(new PartnerLedgerEntry(partyId, request.operationType(), request.amountDelta(),
                     request.referenceCode(), request.note(), request.occurredAt(), actor));
+            auditService.record("PARTNER_LEDGER_ENTRY", "BUSINESS_PARTY", partyId, actor, "Recorded partner financial entry amount: " + request.amountDelta(), null);
         }
         return snapshot();
     }
@@ -154,8 +157,9 @@ public class OperationsService {
         var category = attendanceCategoryRepository.findById(employee.getCategoryId())
                 .orElseThrow(() -> new NotFoundException("Employee category not found."));
         if (!category.isAllowsEmployeeAdvances()) throw new BusinessRuleException("This employee category does not allow advances.");
-        employeeAdvanceEntryRepository.save(new EmployeeAdvanceEntry(employee.getId(), request.amountDelta(),
+        var adv = employeeAdvanceEntryRepository.save(new EmployeeAdvanceEntry(employee.getId(), request.amountDelta(),
                 request.entryType(), request.note(), request.occurredAt(), actor));
+        auditService.record("EMPLOYEE_ADVANCE", "EMPLOYEE", employee.getId(), actor, "Recorded advance for " + employee.getFullName() + " amount: " + request.amountDelta(), null);
         return snapshot();
     }
 

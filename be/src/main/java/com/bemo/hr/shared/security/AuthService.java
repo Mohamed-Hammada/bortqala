@@ -30,11 +30,13 @@ public class AuthService {
     private final TenantApplicationRepository tenantApplicationRepository;
     private final UserPreferenceService userPreferenceService;
     private final PasswordEncoder passwordEncoder;
+    private final com.bemo.hr.audit.application.AuditService auditService;
 
     public AuthService(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, JwtProperties jwtProperties,
                        AppUserRepository appUserRepository, RoleRepository roleRepository,
                        TenantApplicationRepository tenantApplicationRepository,
-                       UserPreferenceService userPreferenceService, PasswordEncoder passwordEncoder) {
+                       UserPreferenceService userPreferenceService, PasswordEncoder passwordEncoder,
+                       com.bemo.hr.audit.application.AuditService auditService) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
         this.jwtProperties = jwtProperties;
@@ -43,6 +45,7 @@ public class AuthService {
         this.tenantApplicationRepository = tenantApplicationRepository;
         this.userPreferenceService = userPreferenceService;
         this.passwordEncoder = passwordEncoder;
+        this.auditService = auditService;
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -69,6 +72,7 @@ public class AuthService {
                     .build();
             String token = jwtEncoder.encode(JwtEncoderParameters.from(
                     JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
+            auditService.record("USER_LOGIN", "USER", user.getId(), user.getUsername(), "Successful login", null);
             return new AuthApi.LoginResponse(token, "Bearer", expiresAt,
                     new AuthApi.AppResponse(app.getId(), app.getCode(), app.getName()), toResponse(user),
                     toResponse(preferenceFor(user)));
@@ -120,6 +124,7 @@ public class AuthService {
                 expiry,
                 history
         );
+        auditService.record("SETTINGS_UPDATE", "TENANT_APPLICATION", app.getId(), "ADMIN", "Updated tenant settings and security policy", null);
         return toSettingsResponse(app);
     }
 
@@ -130,6 +135,7 @@ public class AuthService {
         var user = new AppUser(appId, request.username(), request.displayName(), passwordEncoder.encode(request.password()),
                 requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary());
         appUserRepository.save(user);
+        auditService.record("USER_CREATE", "USER", user.getId(), request.username(), "Created user " + user.getDisplayName(), null);
         return toResponse(user);
     }
 
@@ -162,6 +168,7 @@ public class AuthService {
         String passwordHash = request.password() == null || request.password().isBlank()
                 ? null : passwordEncoder.encode(request.password());
         user.update(request.username(), request.displayName(), passwordHash, request.active(), requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary());
+        auditService.record("USER_UPDATE", "USER", user.getId(), currentUsername, "Updated user " + user.getUsername() + " active=" + user.isActive(), null);
         return toResponse(user);
     }
 

@@ -37,6 +37,7 @@ class ReportingServicePeriodTests {
     @Mock private EmployeeRepository employeeRepository;
     @Mock private PunchRecordRepository punchRecordRepository;
     @Mock private ReportExporter reportExporter;
+    @Mock private com.bemo.hr.audit.application.AuditService auditService;
 
     private ReportingService reportingService;
 
@@ -44,7 +45,7 @@ class ReportingServicePeriodTests {
     void setUp() {
         reportingService = new ReportingService(attendanceReportRepository, dailyAttendanceResultRepository,
                 holidayProposalRepository, confirmedHolidayRepository, attendanceCategoryRepository,
-                scheduleRuleRepository, employeeRepository, punchRecordRepository, reportExporter, "Africa/Cairo");
+                scheduleRuleRepository, employeeRepository, punchRecordRepository, reportExporter, "Africa/Cairo", auditService);
     }
 
     @Test

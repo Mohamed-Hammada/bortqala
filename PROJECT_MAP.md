@@ -7,31 +7,24 @@
 ---
 
 ## [COMPLETED & VERIFIED]
-- App-scoped SaaS JWT Authentication & Session Timeout
-- Multi-Role Authorization & Route Guards
-- Database-backed i18n & `provideAppInitializer`
-- Theme, Density & Language Preference Storage
-- Employee Management, Categories, Biometric Imports
-- Attendance Review & Custom Date Ranges
-- Financial Accounts, Journal Entries, Bank Accounts & Fiscal Periods
-- Operations: Procurement, Sales, Production, Quality, Parties & Inventory
-- Audit Logs & User Management
-- **Loading State & Skeleton Component** (Bemo logo skeleton, error retry button, zero premature Empty States)
-- **Translation & Instant Locale Switching** (Instant RTL/LTR & language toggle without reload, Gross/Net Payout/Review translated, human-readable date formatting)
-- **Payroll Pathway & Stepper** (5-step visual progress: Draft → Review → Approved & Locked → Accounting Posted → Disbursed, state-locked buttons, "صرف مرتب الموظف" button, impact confirmation dialogs)
-- **Settings Page Reorganization** (4 Tabbed Sections: Appearance & Language | Session | Security | Reports & Export, unified "Save All Settings" action)
-- **Sidebar Enhancements** (Collapsible workspace groups, pinned Favorites section with star toggle, Recently Used dynamic navigation history)
-- **Visual Feedback & Touch Safety** (Toast notifications, `UnsavedChangesGuard` form protection, confirmation modals for financial/audit actions, minimum 40-44px touch targets)
-- **Workforce & Contractors Management Module** (`be/` & `fe/`)
-  - Database schema (`v35`) and bilingual translation data (`v36`) for contractors, rate versions, categories, workers, labor requests, schedules, manual attendance, 15-day settlement periods, worker settlements, contractor settlements, workforce advances, and installment ledgers.
-  - Spring Boot vertical slice `com.bemo.hr.workforce` supporting 4 contractor calculation models (`worker_net_total`, `contractor_daily_rate`, `worker_cost_plus_fee`, `fixed_period_amount`), advance deduction controls, matrix attendance processing, and Excel import reconciliation diagnostics.
-  - Reusable centered `ModalDialogComponent` conforming to Section 2 of spec (backdrop blur, keyboard accessible `role="dialog"`, sticky header/footer, non-dismissable backdrop on financial actions).
-  - 10 interactive Angular views under `/workforce` (Dashboard, Contractors, Workers, Categories, Labor Requests, Attendance Matrix, Settlement Periods, Advances, Contractor Accounts, Reports & Import).
+- **API Authorization & Role Security Enforcements (P0-01)**: Enforced `@PreAuthorize` role rules across all Spring Boot controllers. Prevented unauthorized execution of disbursement, posting, and user updates at API layer (returns `403 Forbidden`).
+- **Loading State & Hydration UX (P1-01, QA-015, QA-016)**: Added skeleton loaders during cold loads on `/`, `/dashboard`, `/reports`, eliminating premature zero-data empty state flashes.
+- **Payroll Lifecycle & State Guardrails (P1-02)**: Blocked individual and bulk salary disbursement at both API service layer and UI components unless the payroll cycle is in `APPROVED` or `POSTED` status. Converted epoch-millisecond dates into localized human-readable dates.
+- **Immutable Append-Only Audit Logging (P1-03)**: Connected `AuditService.record()` across user authentication, payroll state transitions, report approvals/reopens, inventory movements, and settings changes.
+- **Linked ERP Transactions & Hierarchy (P1-04)**: Auto-bootstrapped default DEMO company (`30000000-0000-0000-0000-000000000001`), main branch, warehouse, and department. Auto-seeded 2026 fiscal periods for accounting entries.
+- **QA Defects & UX Enhancements**:
+  - **QA-001**: Standardized empty report status UI to "لا توجد سجلات / لا ينطبق" when 0 records exist.
+  - **QA-004**: Enforced mandatory biometric device ID field for active biometric employees with inline Arabic validation message.
+  - **QA-005**: Standardized inventory movement quantity inputs to positive numbers, deriving direction (issue vs receipt) from movement type.
+  - **QA-007**: Synchronized dashboard year switch (2025 vs 2026) with summary cards, canceled stale HTTP requests, and preserved URL query params.
+  - **QA-008 & QA-012**: Corrected employee `001` name to `محمد أحمد علي`. Replaced bare action icon buttons (`✎`, `×`) with explicit text labels, tooltips, and keyboard accessibility.
+  - **QA-011**: Added missing translation keys (`payroll.maxAdvanceDeduction`, `reports.emptyNoRecords`, etc.) and ensured instant reactive locale toggle.
+- **Liquibase Database Migration (`v38`)**: Created `20260728_v38_audit_payroll_erp_fixes.yaml` for database cleanup, employee name fixes, default company bootstrapping, and translation rows.
 
 ---
 
 ## [ORPHANS & PENDING]
-*(None - All features and UX enhancements completed and verified)*
+*(None - All launch requirements, P0/P1 items, audit trail logs, payroll guardrails, ERP linkages, and QA defects have been completed, tested, and verified)*
 
 ---
 
@@ -44,3 +37,7 @@
 - [x] Collapsible Sidebar with Favorites & Recent Items
 - [x] Global Toasts, Unsaved Form Guards & Action Confirmation Dialogs
 - [x] High-contrast 40-44px touch targets & informative Empty States
+- [x] Append-only Audit Trail logging active across all sensitive actions
+- [x] Mandatory biometric device ID validation for active biometric employees
+- [x] Single positive quantity input model for inventory movements
+- [x] Auto-bootstrapped DEMO company and 2026 fiscal periods

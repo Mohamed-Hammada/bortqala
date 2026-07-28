@@ -59,6 +59,7 @@ public class ReportingService {
     private final PunchRecordRepository punchRecordRepository;
     private final ReportExporter reportExporter;
     private final ZoneId companyZone;
+    private final com.bemo.hr.audit.application.AuditService auditService;
 
     public ReportingService(AttendanceReportRepository attendanceReportRepository,
                             DailyAttendanceResultRepository dailyAttendanceResultRepository,
@@ -69,7 +70,8 @@ public class ReportingService {
                             EmployeeRepository employeeRepository,
                             PunchRecordRepository punchRecordRepository,
                             ReportExporter reportExporter,
-                            @Value("${hr.company-zone:Africa/Cairo}") String companyZone) {
+                            @Value("${hr.company-zone:Africa/Cairo}") String companyZone,
+                            com.bemo.hr.audit.application.AuditService auditService) {
         this.attendanceReportRepository = attendanceReportRepository;
         this.dailyAttendanceResultRepository = dailyAttendanceResultRepository;
         this.holidayProposalRepository = holidayProposalRepository;
@@ -80,6 +82,7 @@ public class ReportingService {
         this.punchRecordRepository = punchRecordRepository;
         this.reportExporter = reportExporter;
         this.companyZone = ZoneId.of(companyZone);
+        this.auditService = auditService;
     }
 
     public List<ReportingApi.Summary> list() {
@@ -221,11 +224,18 @@ public class ReportingService {
         }
         refreshUnresolved(report);
         report.approve(actor);
+        auditService.record("REPORT_APPROVE", "ATTENDANCE_REPORT", report.getId(), actor, "Approved attendance report for range " + report.getPeriodStart() + " to " + report.getPeriodEnd(), null);
         return details(report);
     }
 
     @Transactional
-    public ReportingApi.Details reopen(String id) { var report = requireReport(id); report.reopen(); refreshUnresolved(report); return details(report); }
+    public ReportingApi.Details reopen(String id) {
+        var report = requireReport(id);
+        report.reopen();
+        refreshUnresolved(report);
+        auditService.record("REPORT_REOPEN", "ATTENDANCE_REPORT", report.getId(), "ADMIN", "Reopened approved attendance report", null);
+        return details(report);
+    }
 
     @Transactional
     public byte[] export(String id, ExcelExportOptions options) {

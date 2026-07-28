@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260728-38-audit-payroll-erp-fixes
+      author: hr-platform
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              -- 1. Fix Employee 001 name & invalid test names
+              UPDATE employees
+              SET full_name = 'محمد أحمد علي'
+              WHERE employee_code IN ('001', 'EMP-001', '1') OR UPPER(full_name) = 'MMMM';
+
+              -- 2. Cleanup test data
+              DELETE FROM attendance_categories WHERE code = 'QA_CAT_20260726';
+              DELETE FROM employees WHERE employee_code IN ('SECURITY-QA-20260726-EMP-INVALID', 'SECURITY-QA-20260726-RETEST-NODEVICE');
+
+              -- 3. Ensure Default Organization for DEMO App
+              INSERT INTO companies (id, app_id, code, name, tax_number, commercial_registry, active, created_at, updated_at)
+              SELECT '30000000-0000-0000-0000-000000000001', a.id, 'DEMO-CO', 'شركة البرتقالة للتصدير والتصنيع (Bemo Demo)', 'EG-123456789', 'CR-987654', TRUE, 1753574400000, 1753574400000
+              FROM apps a
+              WHERE UPPER(a.code) = 'DEMO'
+                AND NOT EXISTS (SELECT 1 FROM companies c WHERE c.app_id = a.id);
+
+              INSERT INTO branches (id, app_id, company_id, code, name, location, active, created_at, updated_at)
+              SELECT '30000000-0000-0000-0000-000000000002', c.app_id, c.id, 'BR-MAIN', 'الفرع الرئيسي - الجيزة / النوبارية', 'الجيزة - مصر', TRUE, 1753574400000, 1753574400000
+              FROM companies c
+              WHERE c.code = 'DEMO-CO'
+                AND NOT EXISTS (SELECT 1 FROM branches b WHERE b.company_id = c.id);
+
+              INSERT INTO warehouses (id, app_id, branch_id, code, name, location, active, created_at, updated_at)
+              SELECT '30000000-0000-0000-0000-000000000003', b.app_id, b.id, 'WH-MAIN', 'المستودع الرئيسي للمحاصيل والمنتجات', 'النوبارية - البحيرة', TRUE, 1753574400000, 1753574400000
+              FROM branches b
+              WHERE b.code = 'BR-MAIN'
+                AND NOT EXISTS (SELECT 1 FROM warehouses w WHERE w.branch_id = b.id);
+
+              INSERT INTO departments (id, app_id, company_id, code, name, active, created_at, updated_at)
+              SELECT '30000000-0000-0000-0000-000000000004', c.app_id, c.id, 'DEP-GEN', 'إدارة الموارد البشرية والعمليات', TRUE, 1753574400000, 1753574400000
+              FROM companies c
+              WHERE c.code = 'DEMO-CO'
+                AND NOT EXISTS (SELECT 1 FROM departments d WHERE d.company_id = c.id);
+
+              -- 4. Insert Missing Key Translations
+              INSERT INTO i18n_translations (id, locale, translation_key, translation_value)
+              VALUES ('i18n-v38-ar-01', 'ar-EG', 'payroll.maxAdvanceDeduction', 'أقصى خصم سلفة متاح ({balance} ج.م)')
+              ON CONFLICT (locale, translation_key) DO UPDATE SET translation_value = EXCLUDED.translation_value;
+
+              INSERT INTO i18n_translations (id, locale, translation_key, translation_value)
+              VALUES ('i18n-v38-en-01', 'en-US', 'payroll.maxAdvanceDeduction', 'Max advance deduction available ({balance} EGP)')
+              ON CONFLICT (locale, translation_key) DO UPDATE SET translation_value = EXCLUDED.translation_value;
+
+              INSERT INTO i18n_translations (id, locale, translation_key, translation_value)
+              VALUES ('i18n-v38-ar-02', 'ar-EG', 'reports.emptyNoRecords', 'لا توجد سجلات حضور / لا ينطبق')
+              ON CONFLICT (locale, translation_key) DO UPDATE SET translation_value = EXCLUDED.translation_value;
+
+              INSERT INTO i18n_translations (id, locale, translation_key, translation_value)
+              VALUES ('i18n-v38-en-02', 'en-US', 'reports.emptyNoRecords', 'No attendance records / N/A')
+              ON CONFLICT (locale, translation_key) DO UPDATE SET translation_value = EXCLUDED.translation_value;
