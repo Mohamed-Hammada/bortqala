@@ -109,8 +109,8 @@
       </article>
     </div>
 
-    <!-- Smart AI Recommendation Section -->
-    @if (data.report.status === 'IN_REVIEW' && canReview() && totalCount() > 0 && (singlePunchCount() > 0 || noPunchCount() > 0)) {
+    <!-- Smart AI Recommendation & Bulk Decision Section -->
+    @if (canReview() && totalCount() > 0 && unresolvedRowsCount() > 0) {
       <div class="smart-ai-box">
         <div class="ai-header">
           <span class="ai-badge-icon">⚡</span>

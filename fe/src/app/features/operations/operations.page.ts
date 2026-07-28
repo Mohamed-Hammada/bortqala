@@ -17,7 +17,7 @@ import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.
 
 @Component({
   selector: 'app-operations-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent],
+  imports: [ReactiveFormsModule, TablePaginationComponent],
   providers: [OperationsStore],
   templateUrl: './operations.page.html',
   styleUrl: './operations.page.scss',

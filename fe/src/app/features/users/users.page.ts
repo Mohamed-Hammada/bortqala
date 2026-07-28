@@ -133,6 +133,40 @@ export class UsersPage {
   }
 
   getMenuLabel(id: string): string {
+    const map: Record<string, string> = {
+      'organization': 'الهيكل التنظيمي والشركات',
+      'audit-logs': 'سجل التدقيق والمراقبة',
+      'dashboard': 'لوحة التحكم والمؤشرات',
+      'categories': 'قواعد وفئات الدوام',
+      'employees': 'الموظفون وسجلات الخدمة',
+      'imports': 'استيراد ملخصات الحضور',
+      'parties': 'الموردون والعملاء الجهات',
+      'reports': 'تقارير الحضور والمعالجة',
+      'operations': 'المخزون وحركات المستودعات',
+      'procurement': 'أوامر المشتريات والاستلام',
+      'sales': 'المبيعات والعملاء',
+      'production': 'التصنيع وأوامر الشغل',
+      'quality': 'فحص الجودة والمطابقة',
+      'payroll': 'المرتبات والأجور والتسويات',
+      'accounts': 'دليل الحسابات',
+      'journal-entries': 'قيود اليومية',
+      'banks': 'الحسابات الخزينة والبنك',
+      'tax-currency': 'الضرائب والعملات',
+      'fiscal-periods': 'الفترات المالية والسنوات',
+      'users': 'المستخدمون وإدارة الصلاحيات',
+      'settings': 'إعدادات النظام والتفضيلات',
+      'workforce-dashboard': 'لوحة متابعة العمالة',
+      'workforce-contractors': 'سجل مقاولي العمالة',
+      'workforce-workers': 'سجل العمالة اليومية',
+      'workforce-categories': 'فئات وتصنيفات العمالة',
+      'workforce-requests': 'طلبات توريد العمالة',
+      'workforce-attendance': 'تسجيل الحضور اليدوي للعمال',
+      'workforce-settlements': 'كشوف تسوية أجور العمالة',
+      'workforce-advances': 'سُلف وأقساط العمالة',
+      'workforce-accounts': 'حسابات المقاولين والشركاء',
+      'workforce-reports': 'تقارير ميزانية العمالة'
+    };
+    if (map[id]) return map[id];
     const opt = this.menuOptions.find((m) => m.id === id);
     return opt ? this.i18n.t(opt.labelKey) : id;
   }

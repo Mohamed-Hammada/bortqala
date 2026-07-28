@@ -13,9 +13,11 @@ import { TablePaginationComponent } from '../../shared/ui/table-pagination/table
 import { BusinessParty, BusinessPartyPayload } from './parties.models';
 import { PartiesStore } from './parties.store';
 
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+
 @Component({
   selector: 'app-parties-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent],
+  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent],
   providers: [PartiesStore],
   templateUrl: './parties.page.html',
   styleUrl: './parties.page.scss',
@@ -54,8 +56,15 @@ export class PartiesPage {
       nonNullable: true,
       validators: [Validators.required],
     }),
+    managedType: new FormControl('DIRECT', { nonNullable: true }),
+    currencyCode: new FormControl('EGP', { nonNullable: true }),
+    invoicePolicy: new FormControl('E_INVOICE', { nonNullable: true }),
+    paymentTerms: new FormControl('CASH', { nonNullable: true }),
     contactPerson: new FormControl('', { nonNullable: true }),
-    phone: new FormControl('', { nonNullable: true }),
+    phone: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.pattern(/^(01[0125][0-9]{8}|\+?[0-9]{8,15})?$/)]
+    }),
     notes: new FormControl('', { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
     version: new FormControl<number | null>(null),

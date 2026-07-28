@@ -273,28 +273,33 @@ export class ManualAttendanceComponent implements OnInit {
     const today = new Date();
     const year = today.getFullYear();
     const month = today.getMonth();
+    const mStr = String(month + 1).padStart(2, '0');
     if (today.getDate() <= 15) {
-      this.startDate = this.toIso(new Date(year, month, 1));
-      this.endDate = this.toIso(new Date(year, month, 15));
+      this.startDate = `${year}-${mStr}-01`;
+      this.endDate = `${year}-${mStr}-15`;
     } else {
       const lastDay = new Date(year, month + 1, 0).getDate();
-      this.startDate = this.toIso(new Date(year, month, 16));
-      this.endDate = this.toIso(new Date(year, month, lastDay));
+      this.startDate = `${year}-${mStr}-16`;
+      this.endDate = `${year}-${mStr}-${String(lastDay).padStart(2, '0')}`;
     }
     this.onPeriodChange();
   }
 
   setLastHalfMonth() {
     const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
+    let year = today.getFullYear();
+    let month = today.getMonth(); // 0-indexed
     if (today.getDate() <= 15) {
-      const lastDay = new Date(year, month, 0).getDate();
-      this.startDate = this.toIso(new Date(year, month - 1, 16));
-      this.endDate = this.toIso(new Date(year, month - 1, lastDay));
+      month -= 1;
+      if (month < 0) { month = 11; year -= 1; }
+      const lastDay = new Date(year, month + 1, 0).getDate();
+      const mStr = String(month + 1).padStart(2, '0');
+      this.startDate = `${year}-${mStr}-16`;
+      this.endDate = `${year}-${mStr}-${String(lastDay).padStart(2, '0')}`;
     } else {
-      this.startDate = this.toIso(new Date(year, month, 1));
-      this.endDate = this.toIso(new Date(year, month, 15));
+      const mStr = String(month + 1).padStart(2, '0');
+      this.startDate = `${year}-${mStr}-01`;
+      this.endDate = `${year}-${mStr}-15`;
     }
     this.onPeriodChange();
   }
@@ -304,8 +309,9 @@ export class ManualAttendanceComponent implements OnInit {
     const year = today.getFullYear();
     const month = today.getMonth();
     const lastDay = new Date(year, month + 1, 0).getDate();
-    this.startDate = this.toIso(new Date(year, month, 1));
-    this.endDate = this.toIso(new Date(year, month, lastDay));
+    const mStr = String(month + 1).padStart(2, '0');
+    this.startDate = `${year}-${mStr}-01`;
+    this.endDate = `${year}-${mStr}-${String(lastDay).padStart(2, '0')}`;
     this.onPeriodChange();
   }
 
@@ -417,8 +423,10 @@ export class ManualAttendanceComponent implements OnInit {
   private generateDateRange(start: string, end: string): string[] {
     if (!start || !end) return [];
     const dates: string[] = [];
-    const cur = new Date(start + 'T00:00:00');
-    const endDate = new Date(end + 'T00:00:00');
+    const [sY, sM, sD] = start.split('-').map(Number);
+    const [eY, eM, eD] = end.split('-').map(Number);
+    const cur = new Date(sY, sM - 1, sD, 12, 0, 0);
+    const endDate = new Date(eY, eM - 1, eD, 12, 0, 0);
     while (cur <= endDate && dates.length <= 31) {
       dates.push(this.toIso(cur));
       cur.setDate(cur.getDate() + 1);
@@ -426,17 +434,22 @@ export class ManualAttendanceComponent implements OnInit {
     return dates;
   }
 
-  isWeekend(date: string): boolean {
-    const d = new Date(date + 'T00:00:00').getDay();
-    return d === 5 || d === 6; // Fri/Sat
+  isWeekend(dateStr: string): boolean {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const day = new Date(y, m - 1, d, 12, 0, 0).getDay();
+    return day === 5 || day === 6; // Fri/Sat
   }
 
-  getDayName(date: string): string {
+  getDayName(dateStr: string): string {
     const names = ['أحد', 'إثن', 'ثلا', 'أرب', 'خمس', 'جمع', 'سبت'];
-    return names[new Date(date + 'T00:00:00').getDay()];
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return names[new Date(y, m - 1, d, 12, 0, 0).getDay()];
   }
 
   private toIso(d: Date): string {
-    return d.toISOString().split('T')[0];
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 }

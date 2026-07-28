@@ -49,9 +49,13 @@ public class WorkforceAttendanceService {
             }
         }).toList();
         
+        String currentUser = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null
+            ? org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName()
+            : "system";
+
         auditService.record("BATCH_ATTENDANCE", "MANUAL_ATTENDANCE", 
             String.valueOf(request.entries().size()) + "_entries", 
-            "system", "{\"date\":\"" + (request.entries().isEmpty() ? "" : request.entries().get(0).workDate()) + "\"}", null);
+            currentUser, "{\"date\":\"" + (request.entries().isEmpty() ? "" : request.entries().get(0).workDate()) + "\"}", null);
             
         return result;
     }

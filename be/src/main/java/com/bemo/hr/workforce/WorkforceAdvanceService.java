@@ -40,10 +40,28 @@ public class WorkforceAdvanceService {
         );
         WorkforceAdvance saved = advanceRepository.save(adv);
 
-        // Generate Installments
+        // Generate Installments with valid YYYY-MM-DD due dates
+        String startDateStr = (request.firstInstallmentDate() != null && !request.firstInstallmentDate().isBlank())
+            ? request.firstInstallmentDate()
+            : java.time.LocalDate.now().toString();
+
+        java.time.LocalDate baseDate;
+        try {
+            baseDate = java.time.LocalDate.parse(startDateStr);
+        } catch (Exception e) {
+            baseDate = java.time.LocalDate.now();
+        }
+
+        boolean isMonthly = "MONTHLY".equalsIgnoreCase(request.deductionFrequency());
+        int deferral = request.deferralPeriods() != null ? request.deferralPeriods() : 0;
+
         for (int i = 1; i <= count; i++) {
+            java.time.LocalDate instDate = isMonthly
+                ? baseDate.plusMonths((long) (i - 1) + deferral)
+                : baseDate.plusDays((long) (i - 1) * 15 + ((long) deferral * 15));
+
             WorkforceAdvanceInstallment inst = new WorkforceAdvanceInstallment(
-                saved.getId(), i, "INSTALLMENT-" + i, instAmount
+                saved.getId(), i, instDate.toString(), instAmount
             );
             installmentRepository.save(inst);
         }

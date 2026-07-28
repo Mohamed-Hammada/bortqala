@@ -70,12 +70,16 @@ export class TaxCurrencyPage {
   async load() {
     this.loading.set(true);
     this.error.set(null);
+    
     try {
-      const [tData, cData] = await Promise.all([
-        firstValueFrom(this.http.get<TaxRate[]>('/api/v1/finance/taxes')),
-        firstValueFrom(this.http.get<Currency[]>('/api/v1/finance/currencies')),
-      ]);
+      const tData = await firstValueFrom(this.http.get<TaxRate[]>('/api/v1/finance/taxes'));
       this.taxes.set(tData);
+    } catch (e) {
+      console.error('Failed to load taxes:', e);
+    }
+
+    try {
+      const cData = await firstValueFrom(this.http.get<Currency[]>('/api/v1/finance/currencies'));
       this.currencies.set(cData);
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));

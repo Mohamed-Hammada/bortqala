@@ -21,7 +21,8 @@ public class TaxRate {
     public enum Type {
         OUTPUT_VAT,
         INPUT_VAT,
-        WITHHOLDING
+        WITHHOLDING,
+        VAT
     }
 
     @Id

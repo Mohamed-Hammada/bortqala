@@ -72,62 +72,88 @@
   </div>
   } <!-- end @if (!store.loading()) -->
   @if (drawerOpen()) {
-    <button class="drawer-backdrop" (click)="closeDrawer()" aria-label="Close"></button>
-    <aside class="drawer" role="dialog" aria-modal="true">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">
-            {{ i18n.t(editingId() ? 'parties.editEyebrow' : 'parties.newEyebrow') }}
-          </p>
-          <h2>{{ i18n.t(editingId() ? 'parties.editTitle' : 'parties.newTitle') }}</h2>
-        </div>
-        <button class="button secondary" (click)="closeDrawer()">× {{ i18n.t('common.close') }}</button>
-      </div>
+    <app-modal-dialog
+      [title]="i18n.t(editingId() ? 'parties.editTitle' : 'parties.newTitle')"
+      (closeModal)="closeDrawer()"
+    >
       <form [formGroup]="form" (ngSubmit)="submit()">
         @if (submitted() && form.invalid) {
           <div class="alert error" role="alert">{{ i18n.t('parties.validation') }}</div>
         }
         <div class="form-grid">
           <div class="field">
-            <label>{{ i18n.t('parties.code') }}</label
-            ><input class="ltr" formControlName="code" />
+            <label>{{ i18n.t('parties.code') }} *</label>
+            <input class="ltr" formControlName="code" />
           </div>
           <div class="field">
-            <label>{{ i18n.t('parties.partyName') }}</label
-            ><input formControlName="name" />
+            <label>{{ i18n.t('parties.partyName') }} *</label>
+            <input formControlName="name" />
           </div>
-          <div class="field span-2">
-            <label>{{ i18n.t('parties.type') }}</label
-            ><input list="party-types" formControlName="partyType" /><datalist id="party-types">
+          <div class="field">
+            <label>{{ i18n.t('parties.type') }} *</label>
+            <select formControlName="partyType">
               @for (type of knownTypes; track type) {
                 <option [value]="type">{{ typeLabel(type) }}</option>
-              }</datalist
-            ><small>{{ i18n.t('parties.typeHint') }}</small>
+              }
+            </select>
           </div>
           <div class="field">
-            <label>{{ i18n.t('parties.contact') }}</label
-            ><input formControlName="contactPerson" />
+            <label>نوع الإدارة / التعامل</label>
+            <select formControlName="managedType">
+              <option value="DIRECT">تعامل مباشر (Direct Supplier)</option>
+              <option value="MANAGED">عن طريق مسؤول / وساطة (Managed Supplier)</option>
+            </select>
           </div>
           <div class="field">
-            <label>{{ i18n.t('parties.phone') }}</label
-            ><input class="ltr" formControlName="phone" />
+            <label>العملة الأساسية</label>
+            <select formControlName="currencyCode">
+              <option value="EGP">الجنيه المصري (ج.م)</option>
+              <option value="USD">الدولار الأمريكي ($)</option>
+              <option value="EUR">اليورو (€)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>شروط الدفع والتسوية</label>
+            <select formControlName="paymentTerms">
+              <option value="CASH">نقدي (Cash on Delivery)</option>
+              <option value="NET_15">آجل 15 يوماً</option>
+              <option value="NET_30">آجل 30 يوماً</option>
+              <option value="NET_60">آجل 60 يوماً</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>سياسة الفاتورة والضرائب</label>
+            <select formControlName="invoicePolicy">
+              <option value="E_INVOICE">فاتورة إلكترونية ضريبية</option>
+              <option value="RECEIPT">إيصال استلام رسمي</option>
+              <option value="EXEMPT">معفى ضريبياً</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('parties.contact') }}</label>
+            <input formControlName="contactPerson" />
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('parties.phone') }}</label>
+            <input class="ltr" formControlName="phone" placeholder="01012345678" />
           </div>
           <div class="field span-2">
-            <label>{{ i18n.t('parties.notes') }}</label
-            ><textarea rows="4" formControlName="notes"></textarea>
+            <label>{{ i18n.t('parties.notes') }}</label>
+            <textarea rows="3" formControlName="notes"></textarea>
           </div>
         </div>
-        <label class="active-check"
-          ><input type="checkbox" formControlName="active" /> {{ i18n.t('parties.active') }}</label
-        >
-        <div class="drawer-actions">
+        <label class="active-check">
+          <input type="checkbox" formControlName="active" /> {{ i18n.t('parties.active') }}
+        </label>
+        <div modal-actions class="modal-actions-bar">
           <button class="button primary" type="submit" [disabled]="store.loading()">
-            {{ i18n.t('parties.save') }}</button
-          ><button class="button secondary" type="button" (click)="closeDrawer()">
+            {{ i18n.t('parties.save') }}
+          </button>
+          <button class="button secondary" type="button" (click)="closeDrawer()">
             {{ i18n.t('parties.cancel') }}
           </button>
         </div>
       </form>
-    </aside>
+    </app-modal-dialog>
   }
 </section>

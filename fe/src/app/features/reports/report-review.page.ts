@@ -37,6 +37,7 @@ export class ReportReviewPage {
   readonly redCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.healthTier(r) === 'RED').length);
   readonly totalCount = computed(() => this.store.details()?.dailyResults.length ?? 0);
   readonly unresolvedCount = computed(() => this.store.details()?.report.unresolvedCount ?? 0);
+  readonly unresolvedRowsCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.blocking(r)).length);
   readonly singlePunchCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => r.status === 'SINGLE_PUNCH' && this.blocking(r)).length);
   readonly noPunchCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => r.status === 'NO_PUNCH' && this.blocking(r)).length);
   readonly reviewedCount = computed(() => Math.max(0, this.totalCount() - this.unresolvedCount()));
