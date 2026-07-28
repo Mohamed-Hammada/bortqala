@@ -99,7 +99,7 @@ export class PayrollPage {
 
   openPaymentDrawer(row: PayrollRow): void {
     if (row.incompleteProfile) {
-      this.notification.error('ملف الموظف غير مكتمل (الراتب الأساسي أو الفئة غائبة). يرجى التوجه لصفحة /employees لاستكمال البيانات.');
+      this.notification.error(this.i18n.t('payroll.incompleteProfile'));
       return;
     }
     this.selectedRow.set(row);
@@ -189,13 +189,13 @@ export class PayrollPage {
     });
 
     if (ok) {
-      this.notification.success(`تم تحديث حالة كشف المرتبات للفترة بنجاح إلى: ${targetStatus}`);
+      this.notification.success(this.i18n.t('payroll.statusUpdated', { status: targetStatus }));
     }
   }
 
   async reversePayment(row: PayrollRow): Promise<void> {
     if (!row.id) return;
-    const reason = prompt('يرجى إدخال سبب التراجع عن صرف الراتب:');
+    const reason = prompt(this.i18n.t('payroll.reversePrompt'));
     if (!reason || !reason.trim()) return;
 
     const ok = await this.store.reversePayment({
@@ -203,7 +203,7 @@ export class PayrollPage {
       reason: reason.trim(),
     });
     if (ok) {
-      this.notification.success('تم التراجع عن قيد صرف الراتب واسترداد خصم السلفة بنجاح.');
+      this.notification.success(this.i18n.t('payroll.reverseSuccess'));
     }
   }
 
@@ -234,7 +234,7 @@ export class PayrollPage {
       case 'POSTED': return this.i18n.t('payroll.statusPosted');
       case 'PAID':
       case 'DISBURSED': return this.i18n.t('payroll.statusDisbursed');
-      case 'REVERSED': return 'متراجع عنه';
+      case 'REVERSED': return this.i18n.t('payroll.statusReversed');
       default: return status;
     }
   }

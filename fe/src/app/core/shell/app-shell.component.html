@@ -51,7 +51,7 @@
                 type="button"
                 class="fav-star-btn active"
                 (click)="toggleFavorite(item.menuId, $event)"
-                title="إزالة من المفضلة"
+                [title]="i18n.t('appShell.favoriteTooltip')"
               >
                 ★
               </button>
@@ -64,7 +64,7 @@
       <!-- Section: Recently Used -->
       @if (recentItems().length > 0) {
         <div class="workspace-section recents-section">
-          <p class="workspace-header section-title-static">🕒 {{ i18n.t('nav.recentlyUsed', undefined, 'المستخدمة مؤخرًا') }}</p>
+          <p class="workspace-header section-title-static">🕒 {{ i18n.t('nav.recentlyUsed') }}</p>
           @for (item of recentItems(); track item.path) {
             <a
               [routerLink]="item.path"
@@ -85,7 +85,7 @@
                 class="fav-star-btn"
                 [class.active]="isFavorite(item.menuId)"
                 (click)="toggleFavorite(item.menuId, $event)"
-                title="إضافة للمفضلة"
+                [title]="i18n.t('appShell.addFavoriteTooltip')"
               >
                 ★
               </button>
@@ -98,7 +98,7 @@
       <!-- Workspace Controls -->
       <div class="workspace-section-tools">
         <button type="button" class="expand-all-btn" (click)="expandAllGroups()">
-          📂 {{ i18n.t('action.expandAll', undefined, 'فتح كل القوائم') }}
+          📂 {{ i18n.t('action.expandAll') }}
         </button>
       </div>
 
@@ -136,7 +136,7 @@
                     class="fav-star-btn"
                     [class.active]="isFavorite(item.menuId)"
                     (click)="toggleFavorite(item.menuId, $event)"
-                    title="تثبيت بالمفضلة"
+                    [title]="i18n.t('appShell.pinFavoriteTooltip')"
                   >
                     ★
                   </button>
@@ -177,9 +177,7 @@
 
   <main class="main-area" [class.collapsed]="collapsed()">
     @if (!network.isOnline()) {
-      <div class="offline-banner">
-        ⚡ <strong>تنبيه انقطاع الاتصال (Offline Mode):</strong> أنت تعمل حالياً دون اتصال بالشبكة، سيعاد التزامن فور عودة الاتصال.
-      </div>
+      <div class="offline-banner" [innerHTML]="i18n.t('appShell.offlineBanner')"></div>
     }
 
     <header class="mobile-header">
@@ -196,7 +194,7 @@
         <input
           type="search"
           class="global-search-input"
-          placeholder="🔍 بحث سريع بالمناطق والوظائف (Ctrl+K)..."
+          [placeholder]="i18n.t('appShell.searchPlaceholder')"
           [value]="searchQuery()"
           (input)="searchQuery.set($any($event.target).value)"
         />

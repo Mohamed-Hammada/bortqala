@@ -41,18 +41,18 @@ export class SettingsPage {
   toggleShowFavorites(val: boolean) {
     this.showFavorites.set(val);
     localStorage.setItem('bemo_show_favorites', String(val));
-    this.notification.success('تم تحديث إعدادات عرض القوائم المفضلة بنجاح ✓');
+    this.notification.success(this.i18n.t('settings.menuSavedFavorites'));
   }
 
   toggleShowRecentlyUsed(val: boolean) {
     this.showRecentlyUsed.set(val);
     localStorage.setItem('bemo_show_recently_used', String(val));
-    this.notification.success('تم تحديث إعدادات عرض الصفحات المستخدمة مؤخراً بنجاح ✓');
+    this.notification.success(this.i18n.t('settings.menuSavedRecent'));
   }
 
   clearRecentHistory() {
     localStorage.removeItem('bemo_recent_menus');
-    this.notification.success('تم محو سجل الصفحات المستخدمة مؤخراً بنجاح ✓');
+    this.notification.success(this.i18n.t('settings.menuCleared'));
   }
 
   readonly form = this.formBuilder.nonNullable.group({

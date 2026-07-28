@@ -1,9 +1,9 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">سجل التتبع والرقابة (System Audit Trail)</p>
-      <h1>سجل التتبع والتدقيق للعمليات (Audit Logs)</h1>
-      <p>تسجيل غير قابل للتعديل لجميع العمليات الحساسة والمستندات والتغييرات بالمنظومة.</p>
+      <p class="eyebrow">{{ i18n.t('audit.eyebrow') }}</p>
+      <h1>{{ i18n.t('audit.title') }}</h1>
+      <p>{{ i18n.t('audit.description') }}</p>
     </div>
   </header>
 
@@ -19,12 +19,12 @@
       <table>
         <thead>
           <tr>
-            <th>تاريخ ووقت الحركة</th>
-            <th>المستخدم (User)</th>
-            <th>نوع الكيان (Entity Type)</th>
-            <th>العملية (Action)</th>
-            <th>معرف الكيان</th>
-            <th>تفاصيل التغيير (JSON)</th>
+            <th>{{ i18n.t('audit.colTimestamp') }}</th>
+            <th>{{ i18n.t('audit.colUser') }}</th>
+            <th>{{ i18n.t('audit.colEntityType') }}</th>
+            <th>{{ i18n.t('audit.colAction') }}</th>
+            <th>{{ i18n.t('audit.colEntityId') }}</th>
+            <th>{{ i18n.t('audit.colDetails') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -41,7 +41,7 @@
             <tr>
               <td colspan="6">
                 <div class="empty-state">
-                  لا توجد سجلات تدقيق مسجلة بعد.
+                  {{ i18n.t('audit.empty') }}
                 </div>
               </td>
             </tr>

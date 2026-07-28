@@ -1,14 +1,14 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">{{ i18n.t('dashboard.eyebrow') }} — مؤشرات الأداء الفعلية بالنظام</p>
+      <p class="eyebrow">{{ i18n.t('dashboard.eyebrow') }} — {{ i18n.t('dashboard.eyebrowSuffix') }}</p>
       <h1>{{ i18n.t('dashboard.title') }}</h1>
       <p>{{ i18n.t('dashboard.description') }}</p>
     </div>
     <div class="period-picker-container">
       @if (store.data(); as data) {
-        <button type="button" class="last-updated-badge" (click)="reload()" title="انقر لإعادة التحديث">
-          🕒 آخر تحديث: {{ formatLastUpdated(data.updatedAt) }} ↻
+        <button type="button" class="last-updated-badge" (click)="reload()" [title]="i18n.t('dashboard.lastUpdateTooltip')">
+          🕒 {{ i18n.t('dashboard.lastUpdateLabel') }}: {{ formatLastUpdated(data.updatedAt) }} ↻
         </button>
       }
       <div class="period-picker">
@@ -96,32 +96,32 @@
       <!-- Unit 1: Attendance & Discipline -->
       <article class="card exec-unit-card">
         <div class="unit-head">
-          <h3>👥 الحضور والانضباط اليومي والشهري</h3>
-          <span class="unit-badge success">مستندات فعلية</span>
+          <h3>{{ i18n.t('dashboard.unitAttendance') }}</h3>
+          <span class="unit-badge success">{{ i18n.t('dashboard.unitAttendanceBadge') }}</span>
         </div>
         <div class="unit-metrics-pills">
-          <a routerLink="/employees" class="unit-pill neutral" title="اضغط للانتقال إلى جدول الموظفين">
-            <span>الموظفين الفاعلين</span>
+          <a routerLink="/employees" class="unit-pill neutral" [title]="i18n.t('dashboard.employeesLinkTooltip')">
+            <span>{{ i18n.t('dashboard.employeesLinkLabel') }}</span>
             <strong>{{ data.activeEmployees }}</strong>
           </a>
-          <a [routerLink]="data.reportId ? ['/reports', data.reportId] : '/reports'" class="unit-pill success" title="اضغط للاطلاع على سجل الحضور بالمستند">
-            <span>حاضر</span>
+          <a [routerLink]="data.reportId ? ['/reports', data.reportId] : '/reports'" class="unit-pill success" [title]="i18n.t('dashboard.presentLinkTooltip')">
+            <span>{{ i18n.t('dashboard.presentLinkLabel') }}</span>
             <strong>{{ data.presentEmployeeDays }}</strong>
           </a>
-          <a [routerLink]="data.reportId ? ['/reports', data.reportId] : '/reports'" class="unit-pill warning" title="اضغط للاطلاع على التأخيرات بالمستند">
-            <span>تأخير</span>
+          <a [routerLink]="data.reportId ? ['/reports', data.reportId] : '/reports'" class="unit-pill warning" [title]="i18n.t('dashboard.lateLinkTooltip')">
+            <span>{{ i18n.t('dashboard.lateLinkLabel') }}</span>
             <strong>{{ data.lateEmployeeDays }}</strong>
           </a>
-          <a [routerLink]="data.reportId ? ['/reports', data.reportId] : '/reports'" class="unit-pill danger" title="اضغط للاطلاع على أيام الغياب">
-            <span>غياب</span>
+          <a [routerLink]="data.reportId ? ['/reports', data.reportId] : '/reports'" class="unit-pill danger" [title]="i18n.t('dashboard.absentLinkTooltip')">
+            <span>{{ i18n.t('dashboard.absentLinkLabel') }}</span>
             <strong>{{ data.scheduledEmployeeDays - data.presentEmployeeDays }}</strong>
           </a>
-          <a [routerLink]="data.reportId ? ['/reports', data.reportId] : '/reports'" class="unit-pill info" title="اضغط للاطلاع على بصمة واحدة">
-            <span>بصمة واحدة</span>
+          <a [routerLink]="data.reportId ? ['/reports', data.reportId] : '/reports'" class="unit-pill info" [title]="i18n.t('dashboard.singlePunchLinkTooltip')">
+            <span>{{ i18n.t('dashboard.singlePunchLinkLabel') }}</span>
             <strong>{{ data.singlePunchDays }}</strong>
           </a>
-          <a routerLink="/imports" class="unit-pill attention" title="اضغط للانتقال إلى البصمات المجهولة">
-            <span>بصمات مجهولة</span>
+          <a routerLink="/imports" class="unit-pill attention" [title]="i18n.t('dashboard.unmatchedLinkTooltip')">
+            <span>{{ i18n.t('dashboard.unmatchedLinkLabel') }}</span>
             <strong>{{ data.unmatchedIdentities }}</strong>
           </a>
         </div>
@@ -130,24 +130,24 @@
       <!-- Unit 2: Inventory & Warehouse -->
       <article class="card exec-unit-card">
         <div class="unit-head">
-          <h3>📦 المخازن وحركة المواد</h3>
-          <span class="unit-badge gold">قيود المخزون</span>
+          <h3>{{ i18n.t('dashboard.unitInventory') }}</h3>
+          <span class="unit-badge gold">{{ i18n.t('dashboard.unitInventoryBadge') }}</span>
         </div>
         <div class="unit-metrics-pills">
-          <a routerLink="/operations" class="unit-pill neutral" title="اضغط للانتقال إلى جدول أصناف المخزون">
-            <span>أصناف المخزون</span>
+          <a routerLink="/operations" class="unit-pill neutral" [title]="i18n.t('dashboard.itemsLinkTooltip')">
+            <span>{{ i18n.t('dashboard.itemsLinkLabel') }}</span>
             <strong>{{ data.totalInventoryItems }}</strong>
           </a>
-          <a routerLink="/operations" class="unit-pill success" title="اضغط للانتقال إلى حركات المخزون المسجلة">
-            <span>حركات المخزون</span>
+          <a routerLink="/operations" class="unit-pill success" [title]="i18n.t('dashboard.movementsLinkTooltip')">
+            <span>{{ i18n.t('dashboard.movementsLinkLabel') }}</span>
             <strong>{{ data.totalStockMovements }}</strong>
           </a>
-          <a routerLink="/operations" class="unit-pill warning" title="اضغط للانتقال إلى أصناف منخفضة الرصيد">
-            <span>أصناف منخفضة</span>
+          <a routerLink="/operations" class="unit-pill warning" [title]="i18n.t('dashboard.lowStockLinkTooltip')">
+            <span>{{ i18n.t('dashboard.lowStockLinkLabel') }}</span>
             <strong>{{ data.lowStockCount }}</strong>
           </a>
-          <a routerLink="/operations" class="unit-pill danger" title="اضغط للانتقال إلى الأرخص ذات الرصيد بالسالب">
-            <span>رصيد بالسالب</span>
+          <a routerLink="/operations" class="unit-pill danger" [title]="i18n.t('dashboard.negativeStockLinkTooltip')">
+            <span>{{ i18n.t('dashboard.negativeStockLinkLabel') }}</span>
             <strong>{{ data.negativeStockCount }}</strong>
           </a>
         </div>
@@ -156,16 +156,16 @@
       <!-- Unit 3: Commercial Partners & Ledger -->
       <article class="card exec-unit-card">
         <div class="unit-head">
-          <h3>🤝 جهات التعامل والحسابات</h3>
-          <span class="unit-badge info">دفتر الشركاء</span>
+          <h3>{{ i18n.t('dashboard.unitPartners') }}</h3>
+          <span class="unit-badge info">{{ i18n.t('dashboard.unitPartnersBadge') }}</span>
         </div>
         <div class="unit-metrics-pills">
-          <a routerLink="/parties" class="unit-pill neutral" title="اضغط للانتقال إلى قائمة جهات التعامل">
-            <span>جهات التعامل النشطة</span>
+          <a routerLink="/parties" class="unit-pill neutral" [title]="i18n.t('dashboard.partiesLinkTooltip')">
+            <span>{{ i18n.t('dashboard.partiesLinkLabel') }}</span>
             <strong>{{ data.activePartiesCount }}</strong>
           </a>
-          <a routerLink="/parties" class="unit-pill success" title="اضغط للانتقال إلى قيود دفتر الحسابات">
-            <span>معاملات الحسابات</span>
+          <a routerLink="/parties" class="unit-pill success" [title]="i18n.t('dashboard.ledgerLinkTooltip')">
+            <span>{{ i18n.t('dashboard.ledgerLinkLabel') }}</span>
             <strong>{{ data.totalPartnerEntries }}</strong>
           </a>
         </div>
@@ -174,16 +174,16 @@
       <!-- Unit 4: Biometric Imports & Categories -->
       <article class="card exec-unit-card">
         <div class="unit-head">
-          <h3>⚙️ البصمات وفئات العمل</h3>
-          <span class="unit-badge neutral">سجل الأجهزة</span>
+          <h3>{{ i18n.t('dashboard.unitBiometrics') }}</h3>
+          <span class="unit-badge neutral">{{ i18n.t('dashboard.unitBiometricsBadge') }}</span>
         </div>
         <div class="unit-metrics-pills">
-          <a routerLink="/imports" class="unit-pill info" title="اضغط للانتقال إلى سجل استيراد البصمات">
-            <span>إجمالي البصمات</span>
+          <a routerLink="/imports" class="unit-pill info" [title]="i18n.t('dashboard.importsLinkTooltip')">
+            <span>{{ i18n.t('dashboard.importsLinkLabel') }}</span>
             <strong>{{ data.importedPunches }}</strong>
           </a>
-          <a routerLink="/categories" class="unit-pill neutral" title="اضغط للانتقال إلى فئات العمل">
-            <span>فئات العمل النشطة</span>
+          <a routerLink="/categories" class="unit-pill neutral" [title]="i18n.t('dashboard.categoriesLinkTooltip')">
+            <span>{{ i18n.t('dashboard.categoriesLinkLabel') }}</span>
             <strong>{{ data.activeCategories }}</strong>
           </a>
         </div>
@@ -302,18 +302,18 @@
     <div class="kpi-modal">
       <div class="kpi-modal-header">
         <div>
-          <p class="eyebrow">تفاصيل مؤشر الأداء (KPI Drill-Down)</p>
+          <p class="eyebrow">{{ i18n.t('dashboard.kpiModalEyebrow') }}</p>
           <h3>{{ modal.title }}</h3>
         </div>
-        <button class="button secondary" type="button" (click)="closeKpiModal()">× إغلاق</button>
+        <button class="button secondary" type="button" (click)="closeKpiModal()">{{ i18n.t('dashboard.kpiClose') }}</button>
       </div>
       <div class="kpi-modal-body">
         <div class="kpi-big-stat">
           <span class="stat-num">{{ modal.value }}</span>
-          <small>القيمة الإجمالية للمؤشر</small>
+          <small>{{ i18n.t('dashboard.kpiTotalLabel') }}</small>
         </div>
         <div class="kpi-breakdown-list">
-          <h4>تفاصيل التوزيع والملاحظات:</h4>
+          <h4>{{ i18n.t('dashboard.kpiBreakdownHeading') }}</h4>
           <ul>
             @for (detail of modal.details; track $index) {
               <li>📌 {{ detail }}</li>

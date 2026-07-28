@@ -8,7 +8,7 @@
   </header>
 
   <!-- Settings Tabs Header -->
-  <nav class="settings-nav-tabs" aria-label="تبويبات الإعدادات">
+  <nav class="settings-nav-tabs" [attr.aria-label]="i18n.t('settings.tabsAriaLabel', undefined, 'تبويبات الإعدادات')">
     <button
       type="button"
       class="tab-btn"
@@ -109,7 +109,7 @@
         <!-- Section 3: Language -->
         <fieldset class="settings-group">
           <legend class="group-title">{{ i18n.t('settings.language') }}</legend>
-          <p class="group-hint">اختر لغة واجهة النظام (Interface Locale)</p>
+          <p class="group-hint">{{ i18n.t('settings.localeHint') }}</p>
           <div class="segmented-pills-grid two-col">
             <label class="segmented-pill-option" [class.selected]="form.controls.locale.value === 'ar-EG'">
               <input type="radio" formControlName="locale" value="ar-EG" />
@@ -125,28 +125,28 @@
 
         <!-- Section 4: Menu Navigation Visibility Settings -->
         <fieldset class="settings-group" style="margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
-          <legend class="group-title">📌 إعدادات وتفضيلات إظهار القوائم الجانبية</legend>
-          <p class="group-hint">التحكم في إظهار أو إخفاء أقسام المفضلة والصفحات الأخيرة في القائمة الجانبية</p>
+          <legend class="group-title">{{ i18n.t('settings.sidebarTitle') }}</legend>
+          <p class="group-hint">{{ i18n.t('settings.sidebarHint') }}</p>
 
           <div class="field-stack" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem;">
             <label class="selectable-card" style="display: flex; align-items: center; gap: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer;">
               <input type="checkbox" [checked]="showFavorites()" (change)="toggleShowFavorites($any($event.target).checked)" />
               <span>
-                <strong>إظهار قسم القوائم المفضلة (Show Favorites Links)</strong>
-                <small style="display: block; color: #64748b;">إظهار روابط الوصول السريع للروابط المفضلة بأعلى القائمة.</small>
+                <strong>{{ i18n.t('settings.showFavoritesLabel') }}</strong>
+                <small style="display: block; color: #64748b;">{{ i18n.t('settings.showFavoritesHint') }}</small>
               </span>
             </label>
 
             <label class="selectable-card" style="display: flex; align-items: center; gap: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer;">
               <input type="checkbox" [checked]="showRecentlyUsed()" (change)="toggleShowRecentlyUsed($any($event.target).checked)" />
               <span>
-                <strong>إظهار قسم الصفحات المستخدمة مؤخراً (Show Recently Used)</strong>
-                <small style="display: block; color: #64748b;">تتبع وإظهار آخر الشاشات التي قمت بزيارتها تلقائياً.</small>
+                <strong>{{ i18n.t('settings.showRecentLabel') }}</strong>
+                <small style="display: block; color: #64748b;">{{ i18n.t('settings.showRecentHint') }}</small>
               </span>
             </label>
 
             <div style="margin-top: 0.5rem;">
-              <button type="button" class="button secondary btn-sm" (click)="clearRecentHistory()">🗑️ محو سجل الصفحات المستخدمة مؤخراً</button>
+              <button type="button" class="button secondary btn-sm" (click)="clearRecentHistory()">{{ i18n.t('settings.clearRecentButton') }}</button>
             </div>
           </div>
         </fieldset>
@@ -170,15 +170,15 @@
       (ngSubmit)="saveAppSettings()"
     >
       <fieldset class="settings-group">
-        <legend class="group-title">⚙️ إعدادات مدة انتهاء الجلسة (Session Timeout Configuration)</legend>
-        <p class="group-hint">التحكم في التوقيت التلقائي لإغلاق الجلسات غير النشطة لحماية بيانات الشركة</p>
+        <legend class="group-title">{{ i18n.t('settings.sessionTitle') }}</legend>
+        <p class="group-hint">{{ i18n.t('settings.sessionHint') }}</p>
 
         <div class="field-stack">
           <label class="selectable-card">
             <input type="checkbox" formControlName="sessionTimeoutEnabled" />
             <span>
-              <strong>تفعيل مدة انتهاء الجلسة (Enable Session Timeout)</strong>
-              <small>عند تعطيل الخيار يتم إيقاف انتهاء مدة الجلسة تلقائياً للمستخدمين.</small>
+              <strong>{{ i18n.t('settings.sessionEnabledLabel') }}</strong>
+              <small>{{ i18n.t('settings.sessionEnabledHint') }}</small>
             </span>
           </label>
 
@@ -221,8 +221,8 @@
       (ngSubmit)="saveAppSettings()"
     >
       <fieldset class="settings-group">
-        <legend class="group-title">🔒 سياسة الأمان وكلمات المرور (Security & Password Policy)</legend>
-        <p class="group-hint">تحديد الاشتراطات الخاصة بكلمات المرور للمستخدمين ومدد صلاحيتها</p>
+        <legend class="group-title">{{ i18n.t('settings.securityTitle') }}</legend>
+        <p class="group-hint">{{ i18n.t('settings.securityHint') }}</p>
 
         <div class="password-policy-section">
           <div class="policy-rules-grid">
@@ -371,12 +371,12 @@
         @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
           <div [formGroup]="appSettingsForm">
             <fieldset class="settings-group">
-              <legend class="group-title">📊 تفضيلات التقارير الجاهزة</legend>
+              <legend class="group-title">{{ i18n.t('settings.reportsPresetsLabel') }}</legend>
               <label class="selectable-card">
                 <input type="checkbox" formControlName="showReportPresets" />
                 <span>
-                  <strong>إظهار شريط الاختصارات الجاهزة في شاشة التقارير (Show Quick Report Presets)</strong>
-                  <small>إظهار أو إخفاء قسم "اختصارات جاهزة: الشهر الكامل أو النصف الأول/الثاني" في صفحة التقارير.</small>
+                  <strong>{{ i18n.t('settings.reportsPresetsHint') }}</strong>
+                  <small>{{ i18n.t('settings.reportsPresetsHintDetail') }}</small>
                 </span>
               </label>
             </fieldset>

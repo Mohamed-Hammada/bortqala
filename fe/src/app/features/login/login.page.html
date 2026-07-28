@@ -19,11 +19,7 @@
           <small>Enterprise Platform</small>
         </div>
       </div>
-      @if (i18n.locale() === 'ar-EG') {
-        <p>حضور واضح. <span class="gold-accent">تقارير موثوقة.</span> ثقة تامة.</p>
-      } @else {
-        <p>Clear Attendance. <span class="gold-accent">Audited Decisions.</span> Reports You Trust.</p>
-      }
+      <p [innerHTML]="i18n.t('login.tagline')"></p>
       <small>{{ i18n.t('login.storyHint') }}</small>
     </div>
   </section>
@@ -31,20 +27,20 @@
   <section class="login-panel">
     <form [formGroup]="form" (ngSubmit)="submit()" class="login-card">
       <div class="card-header">
-        <div class="segmented-control" aria-label="Language / اللغة">
+        <div class="segmented-control" [attr.aria-label]="i18n.t('login.langToggleLabel')">
           <button
             type="button"
             (click)="changeLanguage('ar-EG')"
             [class.active]="i18n.locale() === 'ar-EG'"
           >
-            العربية
+            {{ i18n.t('login.langAr') }}
           </button>
           <button
             type="button"
             (click)="changeLanguage('en-US')"
             [class.active]="i18n.locale() === 'en-US'"
           >
-            English
+            {{ i18n.t('login.langEn') }}
           </button>
         </div>
         <div class="logo-watermark">

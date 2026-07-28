@@ -27,5 +27,27 @@ public class TranslationService {
         return new TranslationBundle(normalized, Map.copyOf(messages));
     }
 
+    public String translate(String key, String locale) {
+        return translateOrDefault(key, locale, key);
+    }
+
+    public String translateOrDefault(String key, String locale, String defaultMsg) {
+        return translationRepository.findAllByLocaleIgnoreCaseOrderByTranslationKeyAsc(normalize(locale))
+                .stream()
+                .filter(e -> e.getTranslationKey().equals(key))
+                .map(TranslationEntry::getTextValue)
+                .findFirst()
+                .orElse(defaultMsg);
+    }
+
+    public boolean isSupported(String locale) {
+        return SUPPORTED_LOCALES.stream().anyMatch(item -> item.equalsIgnoreCase(locale));
+    }
+
+    private String normalize(String locale) {
+        return SUPPORTED_LOCALES.stream().filter(item -> item.equalsIgnoreCase(locale))
+                .findFirst().orElse("ar-EG");
+    }
+
     public record TranslationBundle(String locale, Map<String, String> messages) { }
 }

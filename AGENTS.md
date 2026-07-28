@@ -1,3 +1,12 @@
+# AGENT SESSION SUMMARY — Complete
+- Replaced all hardcoded user-facing messages in FE (dashboard, settings, report-review, audit-logs, fiscal-periods, login, app-shell, payroll) with `i18n.t()` translation keys
+- Added all new keys to `DEFAULT_FALLBACKS` in `i18n.service.ts` (ar-EG + en-US), removed duplicates
+- Backend: added `translate()`, `translateOrDefault()`, `isSupported()` to `TranslationService.java`
+- Backend: `ApiExceptionHandler.java` now locale-aware using `Accept-Language` header
+- Backend: created Liquibase v39 migration (`error.*` translation keys) + CSV seed
+- Remaining FE files to update (lower priority): minor feature templates, `api-error.ts` KNOWN_MESSAGES
+- Fixed pre-existing duplicate `review.fullyReviewedTag` keys; FE production build passes clean
+
 # HR platform handoff
 
 This repository intentionally contains two applications:

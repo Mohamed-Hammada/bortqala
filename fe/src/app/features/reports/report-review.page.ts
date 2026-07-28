@@ -76,7 +76,7 @@ export class ReportReviewPage {
     const reportStatus = this.store.details()?.report.status;
 
     if (reportStatus === 'APPROVED' || reportStatus === 'EXPORTED') {
-      this.notification.warning('التقرير معتمد ومغلق. لا يمكن تطبيق قرارات جماعية عليه.');
+      this.notification.warning(this.i18n.t('review.confirmApproved'));
       return;
     }
 
@@ -86,22 +86,26 @@ export class ReportReviewPage {
 
     if (!editable.length) {
       if (excludedCount > 0) {
-        this.notification.warning(`جميع السجلات المطابقة (${excludedCount}) معتمدة أو تمت معالجتها سابقاً ولا يمكن تعديلها.`);
+        this.notification.warning(this.i18n.t('review.confirmAllProcessed', { count: excludedCount }));
       } else {
-        this.notification.warning('لا توجد سجلات غير محلولة مطابقة لتطبيق القرار عليها.');
+        this.notification.warning(this.i18n.t('review.confirmNoUnresolved'));
       }
       return;
     }
 
-    const statusText = statusType === 'SINGLE_PUNCH' ? 'البصمة الواحدة' : statusType === 'NO_PUNCH' ? 'الغياب' : 'التمرير اليدوي';
-    const decText = decision === 'NORMAL_DAY' ? 'اعتماد يوم طبيعي' : 'خصم غياب';
+    const statusText = statusType === 'SINGLE_PUNCH'
+      ? this.i18n.t('review.statusSinglePunch')
+      : statusType === 'NO_PUNCH'
+        ? this.i18n.t('review.statusNoPunch')
+        : this.i18n.t('review.statusManualEntry');
+    const decText = decision === 'NORMAL_DAY' ? this.i18n.t('review.decisionNormalDay') : this.i18n.t('review.decisionDeduct');
 
     const confirmMsg =
-      `📋 معاينة المعالجة الجماعية (Bulk Processing Preview):\n` +
-      `• السجلات المطابقة بالفترة: ${allMatching.length}\n` +
-      `• السجلات القابلة للتطبيق: ${editable.length}\n` +
-      `• السجلات المعتمدة/المغلقة المستثناة: ${excludedCount}\n\n` +
-      `هل تؤكد تطبيق قرار (${decText}) على ${editable.length} سجل من حالات (${statusText})؟`;
+      `${this.i18n.t('review.confirmBulkPreview')}\n` +
+      `${this.i18n.t('review.confirmBulkMatching', { count: allMatching.length })}\n` +
+      `${this.i18n.t('review.confirmBulkEditable', { count: editable.length })}\n` +
+      `${this.i18n.t('review.confirmBulkExcluded', { count: excludedCount })}\n\n` +
+      `${this.i18n.t('review.confirmBulkApply', { decision: decText, count: editable.length, status: statusText })}`;
 
     if (!confirm(confirmMsg)) return;
 
@@ -114,16 +118,16 @@ export class ReportReviewPage {
           r.id,
           decision,
           decision === 'NORMAL_DAY' ? r.expectedMinutes : 0,
-          `معالجة جماعية [${opId}] - ${decText}`
+          `${this.i18n.t('review.bulkProcessId')} [${opId}] - ${decText}`
         );
         successCount++;
       }
       this.notification.success(
-        `✓ تم بنجاح معالجة ${successCount} سجل!` +
-        (excludedCount > 0 ? ` (وتم استثناء ${excludedCount} سجل مغلق/معتمد)` : '')
+        this.i18n.t('review.bulkSuccess', { count: successCount }) +
+        (excludedCount > 0 ? this.i18n.t('review.bulkExcludedNote', { count: excludedCount }) : '')
       );
     } catch (e: any) {
-      this.notification.error('حدث خطأ أثناء المعالجة الجماعية: ' + (e?.message ?? 'خطأ غير متوقع'));
+      this.notification.error(this.i18n.t('review.bulkError', { error: e?.message ?? this.i18n.t('api.unexpected') }));
     }
   }
   time(value: number | null) {

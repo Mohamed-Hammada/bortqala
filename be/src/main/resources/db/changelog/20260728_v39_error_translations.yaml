@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260728-39-seed-error-translations
+      author: hr-platform
+      comment: Seed localized error response messages for ApiExceptionHandler
+      changes:
+        - loadData:
+            file: db/changelog/data/error_translations_v39.csv
+            relativeToChangelogFile: false
+            separator: ";"
+            encoding: UTF-8
+            quotchar: '"'
+            tableName: translations

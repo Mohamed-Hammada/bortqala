@@ -2,6 +2,7 @@ package com.bemo.hr.shared.security;
 
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
+import com.bemo.hr.shared.i18n.TranslationService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,12 +32,14 @@ public class AuthService {
     private final UserPreferenceService userPreferenceService;
     private final PasswordEncoder passwordEncoder;
     private final com.bemo.hr.audit.application.AuditService auditService;
+    private final TranslationService translationService;
 
     public AuthService(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, JwtProperties jwtProperties,
                        AppUserRepository appUserRepository, RoleRepository roleRepository,
                        TenantApplicationRepository tenantApplicationRepository,
                        UserPreferenceService userPreferenceService, PasswordEncoder passwordEncoder,
-                       com.bemo.hr.audit.application.AuditService auditService) {
+                       com.bemo.hr.audit.application.AuditService auditService,
+                       TranslationService translationService) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
         this.jwtProperties = jwtProperties;
@@ -46,6 +49,7 @@ public class AuthService {
         this.userPreferenceService = userPreferenceService;
         this.passwordEncoder = passwordEncoder;
         this.auditService = auditService;
+        this.translationService = translationService;
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -208,10 +212,10 @@ public class AuthService {
         int maxLen = app.getMaxPasswordLength() > 0 ? app.getMaxPasswordLength() : 128;
 
         if (password.length() < minLen) {
-            throw new BusinessRuleException("كلمة المرور يجب أن لا تقل عن " + minLen + " أحرف حسب سياسة أمان النظام الحالية.");
+            throw new BusinessRuleException("يجب أن لا تقل كلمة المرور عن " + minLen + " أحرف.");
         }
         if (password.length() > maxLen) {
-            throw new BusinessRuleException("كلمة المرور يجب أن لا تتجاوز " + maxLen + " حرفاً حسب سياسة أمان النظام الحالية.");
+            throw new BusinessRuleException("يجب أن لا تتجاوز كلمة المرور " + maxLen + " حرفاً.");
         }
         if (app.isDisallowSpaces() && password.contains(" ")) {
             throw new BusinessRuleException("كلمة المرور يجب أن لا تحتوي على مسافات.");

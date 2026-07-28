@@ -1,16 +1,16 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">الرقابة المالية وقفل الفترات (Fiscal Control)</p>
-      <h1>إدارة الفترات المالية وقفل الأشهر</h1>
-      <p>التحكم في فتح وقفل وإغلاق الفترات المالية للحد من التعديل في الفترات المغلقة.</p>
+      <p class="eyebrow">{{ i18n.t('fiscal.eyebrow') }}</p>
+      <h1>{{ i18n.t('fiscal.title') }}</h1>
+      <p>{{ i18n.t('fiscal.description') }}</p>
     </div>
     <div class="toolbar">
       <div class="field">
-        <label>السنة المالية</label>
+        <label>{{ i18n.t('fiscal.yearLabel') }}</label>
         <input #yInput type="number" class="ltr" [value]="year()" (change)="year.set(+yInput.value); load()" />
       </div>
-      <button class="button primary" (click)="generateYear()">⚡ إنشاء فترات السنة (12 شهر)</button>
+      <button class="button primary" (click)="generateYear()">⚡ {{ i18n.t('fiscal.createButton') }}</button>
     </div>
   </header>
 
@@ -26,12 +26,12 @@
       <table>
         <thead>
           <tr>
-            <th>الفترة المالية</th>
-            <th>تاريخ البداية</th>
-            <th>تاريخ النهاية</th>
-            <th>حالة الفترة</th>
-            <th>المسؤول عن القفل</th>
-            <th>الإجراءات والتحكم</th>
+            <th>{{ i18n.t('fiscal.colPeriod') }}</th>
+            <th>{{ i18n.t('fiscal.colStart') }}</th>
+            <th>{{ i18n.t('fiscal.colEnd') }}</th>
+            <th>{{ i18n.t('fiscal.colStatus') }}</th>
+            <th>{{ i18n.t('fiscal.colLockedBy') }}</th>
+            <th>{{ i18n.t('fiscal.colActions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -47,20 +47,20 @@
                   [class.warning]="p.status === 'CLOSED'"
                   [class.danger]="p.status === 'LOCKED'"
                 >
-                  {{ p.status === 'OPEN' ? 'مفتوحة (Open)' : p.status === 'CLOSED' ? 'مغلقة (Closed)' : 'مققفلة بالكامل (Locked)' }}
+                  {{ p.status === 'OPEN' ? i18n.t('fiscal.openLabel') : p.status === 'CLOSED' ? i18n.t('fiscal.closedLabel') : i18n.t('fiscal.lockedLabel') }}
                 </span>
               </td>
               <td>{{ p.closedBy || '—' }}</td>
               <td>
                 <div class="table-row-actions">
                   @if (p.status !== 'OPEN') {
-                    <button class="button secondary btn-sm" (click)="toggleStatus(p, 'OPEN')">🔓 فتح الفترة</button>
+                    <button class="button secondary btn-sm" (click)="toggleStatus(p, 'OPEN')">🔓 {{ i18n.t('fiscal.openBtn') }}</button>
                   }
                   @if (p.status !== 'CLOSED') {
-                    <button class="button secondary btn-sm" (click)="toggleStatus(p, 'CLOSED')">🔒 إغلاق الفترة</button>
+                    <button class="button secondary btn-sm" (click)="toggleStatus(p, 'CLOSED')">🔒 {{ i18n.t('fiscal.closeBtn') }}</button>
                   }
                   @if (p.status !== 'LOCKED') {
-                    <button class="button secondary danger-btn btn-sm" (click)="toggleStatus(p, 'LOCKED')">⛔ قفل تام</button>
+                    <button class="button secondary danger-btn btn-sm" (click)="toggleStatus(p, 'LOCKED')">⛔ {{ i18n.t('fiscal.lockBtn') }}</button>
                   }
                 </div>
               </td>
@@ -69,7 +69,7 @@
             <tr>
               <td colspan="6">
                 <div class="empty-state">
-                  لا توجد فترات مالية لهذه السنة. اضغط <strong>"إنشاء فترات السنة"</strong> للبدء.
+                  {{ i18n.t('fiscal.empty') }}
                 </div>
               </td>
             </tr>
