@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import com.bemo.hr.audit.application.AuditService;
 
 @Service
 @RequiredArgsConstructor
@@ -14,6 +15,7 @@ public class LaborRequestService {
     private final LaborRequestItemRepository itemRepository;
     private final ContractorRepository contractorRepository;
     private final WorkerCategoryRepository categoryRepository;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<WorkforceApi.LaborRequestResponse> list() {
@@ -36,6 +38,10 @@ public class LaborRequestService {
                 itemRepository.save(item);
             }
         }
+        
+        auditService.record("CREATE", "LABOR_REQUEST", saved.getId(), createdBy, 
+            "{\"requestNumber\":\"" + dto.requestNumber() + "\"}", null);
+            
         return mapToResponse(saved);
     }
 

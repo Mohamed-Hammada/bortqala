@@ -17,9 +17,11 @@ import { NotificationService } from '../../core/notification.service';
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+
 @Component({
   selector: 'app-users-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent],
+  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent],
   providers: [UsersStore],
   templateUrl: './users.page.html',
   styleUrl: './users.page.scss',
@@ -71,11 +73,78 @@ export class UsersPage {
     { id: 'banks', labelKey: 'nav.banks' },
     { id: 'tax-currency', labelKey: 'nav.taxCurrency' },
     { id: 'fiscal-periods', labelKey: 'nav.fiscalPeriods' },
-    { id: 'organization', labelKey: 'nav.organization' },
-    { id: 'audit-logs', labelKey: 'nav.auditLogs' },
     { id: 'users', labelKey: 'nav.users' },
     { id: 'settings', labelKey: 'settings.title' },
   ];
+  readonly menuGroups = [
+    {
+      title: 'الموارد البشرية والموظفون',
+      ids: ['employees', 'categories', 'imports', 'organization']
+    },
+    {
+      title: 'العمالة والمقاولون',
+      ids: [
+        'workforce-dashboard', 'workforce-contractors', 'workforce-workers',
+        'workforce-categories', 'workforce-requests', 'workforce-attendance',
+        'workforce-settlements', 'workforce-advances', 'workforce-accounts', 'workforce-reports'
+      ]
+    },
+    {
+      title: 'المخزون والعمليات',
+      ids: ['operations', 'production', 'quality']
+    },
+    {
+      title: 'المشتريات والمبيعات',
+      ids: ['procurement', 'sales', 'parties']
+    },
+    {
+      title: 'المرتبات والأجور',
+      ids: ['payroll']
+    },
+    {
+      title: 'المالية والحسابات',
+      ids: ['accounts', 'journal-entries', 'banks', 'tax-currency', 'fiscal-periods']
+    },
+    {
+      title: 'التقارير والإدارة',
+      ids: ['dashboard', 'reports', 'audit-logs', 'users', 'settings']
+    }
+  ];
+
+  isModuleAllSelected(ids: string[]): boolean {
+    const current = this.form.controls.allowedMenus.value;
+    return ids.every((id) => current.includes(id));
+  }
+
+  isModulePartiallySelected(ids: string[]): boolean {
+    const current = this.form.controls.allowedMenus.value;
+    const count = ids.filter((id) => current.includes(id)).length;
+    return count > 0 && count < ids.length;
+  }
+
+  toggleModule(ids: string[]): void {
+    const current = new Set(this.form.controls.allowedMenus.value);
+    if (this.isModuleAllSelected(ids)) {
+      ids.forEach((id) => current.delete(id));
+    } else {
+      ids.forEach((id) => current.add(id));
+    }
+    this.form.controls.allowedMenus.setValue(Array.from(current));
+  }
+
+  getMenuLabel(id: string): string {
+    const opt = this.menuOptions.find((m) => m.id === id);
+    return opt ? this.i18n.t(opt.labelKey) : id;
+  }
+
+  selectAllMenus(): void {
+    const allIds = this.menuOptions.map((o) => o.id);
+    this.form.controls.allowedMenus.setValue(allIds);
+  }
+
+  clearAllMenus(): void {
+    this.form.controls.allowedMenus.setValue([]);
+  }
   readonly passwordPolicy = signal<Partial<AppSettings>>({ minPasswordLength: 8 });
   readonly form = new FormGroup({
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),

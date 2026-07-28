@@ -66,3 +66,43 @@ databaseChangeLog:
               INSERT INTO translations (id, translation_key, locale, text_value)
               VALUES ('i18n-v38-en-03', 'action.expandAll', 'en-US', 'Expand All')
               ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
+
+  - changeSet:
+      id: 20260728-38-seed-demo-currencies
+      author: Mohamed-Hammada
+      comment: Seed default currencies for DEMO app
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO currencies (id, app_id, code, name, symbol, is_base, exchange_rate, active, created_at, updated_at)
+              SELECT gen_random_uuid()::text, a.id, 'EGP', 'الجنيه المصري', 'ج.م', TRUE, 1.0, TRUE, extract(epoch from now())*1000, extract(epoch from now())*1000
+              FROM apps a WHERE UPPER(a.code) = 'DEMO'
+              AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'EGP');
+
+              INSERT INTO currencies (id, app_id, code, name, symbol, is_base, exchange_rate, active, created_at, updated_at)
+              SELECT gen_random_uuid()::text, a.id, 'USD', 'الدولار الأمريكي', '$', FALSE, 50.0, TRUE, extract(epoch from now())*1000, extract(epoch from now())*1000
+              FROM apps a WHERE UPPER(a.code) = 'DEMO'
+              AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'USD');
+
+            INSERT INTO app_translations (id, translation_key, locale, text_value, created_at, updated_at)
+            VALUES ('en-38-001', 'users.passwordMinLength', 'ar-EG', 'كلمة المرور يجب أن لا تقل عن {min} أحرف.', 1753574400000, 1753574400000);
+
+            INSERT INTO app_translations (id, translation_key, locale, text_value, created_at, updated_at)
+            VALUES ('en-38-002', 'users.passwordMinLength', 'en-US', 'Password must be at least {min} characters.', 1753574400000, 1753574400000);
+
+              INSERT INTO currencies (id, app_id, code, name, symbol, is_base, exchange_rate, active, created_at, updated_at)
+              SELECT gen_random_uuid()::text, a.id, 'EUR', 'اليورو', '€', FALSE, 55.0, TRUE, extract(epoch from now())*1000, extract(epoch from now())*1000
+              FROM apps a WHERE UPPER(a.code) = 'DEMO'
+              AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'EUR');
+
+  - changeSet:
+      id: 20260728-38-advance-long-term-fields
+      author: Mohamed-Hammada  
+      changes:
+        - addColumn:
+            tableName: workforce_advances
+            columns:
+              - column: { name: first_installment_date, type: VARCHAR(10) }
+              - column: { name: deduction_mode, type: VARCHAR(20), defaultValue: AUTO }
+              - column: { name: deferral_periods, type: INT, defaultValueNumeric: 0 }

@@ -95,142 +95,135 @@
     />
   </div>
   } <!-- end @if (!store.loading()) -->
-  @if (drawerOpen()) {
-    <button
-      class="drawer-backdrop"
-      (click)="closeDrawer()"
-      [attr.aria-label]="i18n.t('common.close')"
-    ></button>
-    <aside class="drawer">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">
-            {{ i18n.t(editingId() ? 'categories.editEyebrow' : 'categories.newEyebrow') }}
-          </p>
-          <h2>{{ i18n.t(editingId() ? 'categories.editTitle' : 'categories.newTitle') }}</h2>
+  <!-- Central Modal Dialog -->
+  <app-modal-dialog
+    [isOpen]="drawerOpen()"
+    [title]="i18n.t(editingId() ? 'categories.editTitle' : 'categories.newTitle')"
+    size="wide"
+    [preventOutsideClose]="true"
+    (close)="closeDrawer()">
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="modal-form">
+      <div class="form-grid">
+        <div class="field">
+          <label>{{ i18n.t('categories.code') }}</label>
+          <input formControlName="code" class="ltr" placeholder="SECURITY" />
         </div>
-        <button class="button secondary" (click)="closeDrawer()">× {{ i18n.t('common.close') }}</button>
+        <div class="field">
+          <label>{{ i18n.t('categories.name') }}</label>
+          <input formControlName="name" [placeholder]="i18n.t('categories.namePlaceholder')" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('categories.attendanceProof') }}</label>
+          <select formControlName="attendanceMode">
+            <option value="BIOMETRIC">{{ i18n.t('attendance.biometric') }}</option>
+            <option value="MANUAL">{{ i18n.t('attendance.manualNoPunch') }}</option>
+            <option value="HYBRID">{{ i18n.t('attendance.hybrid') }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('categories.payCycle') }}</label>
+          <select formControlName="payCycle">
+            <option value="MONTHLY">{{ i18n.t('payCycle.monthly') }}</option>
+            <option value="HALF_MONTHLY">{{ i18n.t('payCycle.halfMonthly') }}</option>
+            <option value="THIRTY_DAYS">{{ i18n.t('payCycle.thirtyDays') }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('categories.defaultMinutes') }}</label>
+          <input type="number" formControlName="expectedDailyMinutes" />
+        </div>
+        <label class="check-field">
+          <input type="checkbox" formControlName="singlePunchCounts" />
+          {{ i18n.t('categories.singlePunchCounts') }}
+        </label>
+        <label class="check-field">
+          <input type="checkbox" formControlName="allowsEmployeeAdvances" />
+          {{ i18n.t('categories.allowsAdvances') }}
+        </label>
+        <div class="field span-2">
+          <label>{{ i18n.t('categories.workDays') }}</label>
+          <div class="days">
+            @for (day of days; track day.code) {
+              <label>
+                <input
+                  type="checkbox"
+                  [checked]="hasDay(day.code)"
+                  (change)="toggleDayFromEvent(day.code, $event)"
+                />{{ i18n.t(day.labelKey) }}
+              </label>
+            }
+          </div>
+        </div>
       </div>
-      <form [formGroup]="form" (ngSubmit)="submit()">
-        <div class="form-grid">
-          <div class="field">
-            <label>{{ i18n.t('categories.code') }}</label
-            ><input formControlName="code" class="ltr" placeholder="SECURITY" />
-          </div>
-          <div class="field">
-            <label>{{ i18n.t('categories.name') }}</label
-            ><input formControlName="name" [placeholder]="i18n.t('categories.namePlaceholder')" />
-          </div>
-          <div class="field">
-            <label>{{ i18n.t('categories.attendanceProof') }}</label
-            ><select formControlName="attendanceMode">
-              <option value="BIOMETRIC">{{ i18n.t('attendance.biometric') }}</option>
-              <option value="MANUAL">{{ i18n.t('attendance.manualNoPunch') }}</option>
-              <option value="HYBRID">{{ i18n.t('attendance.hybrid') }}</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>{{ i18n.t('categories.payCycle') }}</label
-            ><select formControlName="payCycle">
-              <option value="MONTHLY">{{ i18n.t('payCycle.monthly') }}</option>
-              <option value="HALF_MONTHLY">{{ i18n.t('payCycle.halfMonthly') }}</option>
-              <option value="THIRTY_DAYS">{{ i18n.t('payCycle.thirtyDays') }}</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>{{ i18n.t('categories.defaultMinutes') }}</label
-            ><input type="number" formControlName="expectedDailyMinutes" />
-          </div>
-          <label class="check-field"
-            ><input type="checkbox" formControlName="singlePunchCounts" />
-            {{ i18n.t('categories.singlePunchCounts') }}</label
-          >
-          <label class="check-field"
-            ><input type="checkbox" formControlName="allowsEmployeeAdvances" />
-            {{ i18n.t('categories.allowsAdvances') }}</label
-          >
-          <div class="field span-2">
-            <label>{{ i18n.t('categories.workDays') }}</label>
-            <div class="days">
-              @for (day of days; track day.code) {
-                <label
-                  ><input
-                    type="checkbox"
-                    [checked]="hasDay(day.code)"
-                    (change)="toggleDayFromEvent(day.code, $event)"
-                  />{{ i18n.t(day.labelKey) }}</label
-                >
-              }
+      <div class="rules-title">
+        <div>
+          <h3>{{ i18n.t('categories.scheduleRules') }}</h3>
+          <p>{{ i18n.t('categories.scheduleRulesHint') }}</p>
+        </div>
+        <button type="button" class="button secondary" (click)="addSchedule()">
+          ＋ {{ i18n.t('categories.rule') }}
+        </button>
+      </div>
+      <div formArrayName="schedules" class="rules">
+        @for (group of form.controls.schedules.controls; track $index) {
+          <div class="rule-card" [formGroupName]="$index">
+            <div class="rule-head">
+              <strong>{{ i18n.t('categories.ruleNumber', { number: $index + 1 }) }}</strong>
+              <button
+                type="button"
+                (click)="removeSchedule($index)"
+                [disabled]="form.controls.schedules.length === 1"
+              >
+                {{ i18n.t('common.delete') }}
+              </button>
             </div>
-          </div>
-        </div>
-        <div class="rules-title">
-          <div>
-            <h3>{{ i18n.t('categories.scheduleRules') }}</h3>
-            <p>{{ i18n.t('categories.scheduleRulesHint') }}</p>
-          </div>
-          <button type="button" class="button secondary" (click)="addSchedule()">
-            ＋ {{ i18n.t('categories.rule') }}
-          </button>
-        </div>
-        <div formArrayName="schedules" class="rules">
-          @for (group of form.controls.schedules.controls; track $index) {
-            <div class="rule-card" [formGroupName]="$index">
-              <div class="rule-head">
-                <strong>{{ i18n.t('categories.ruleNumber', { number: $index + 1 }) }}</strong
-                ><button
-                  type="button"
-                  (click)="removeSchedule($index)"
-                  [disabled]="form.controls.schedules.length === 1"
-                >
-                  {{ i18n.t('common.delete') }}
-                </button>
+            <div class="form-grid">
+              <div class="field span-2">
+                <label>{{ i18n.t('common.name') }}</label>
+                <input formControlName="name" />
               </div>
-              <div class="form-grid">
-                <div class="field span-2">
-                  <label>{{ i18n.t('common.name') }}</label
-                  ><input formControlName="name" />
-                </div>
-                <div class="field">
-                  <label>{{ i18n.t('common.from') }}</label
-                  ><input type="date" formControlName="effectiveFrom" />
-                </div>
-                <div class="field">
-                  <label>{{ i18n.t('common.toOptional') }}</label
-                  ><input type="date" formControlName="effectiveTo" />
-                </div>
-                <div class="field">
-                  <label>{{ i18n.t('categories.startTime') }}</label
-                  ><input type="time" formControlName="startTime" />
-                </div>
-                <div class="field">
-                  <label>{{ i18n.t('categories.overrideMinutes') }}</label
-                  ><input
-                    type="number"
-                    formControlName="expectedMinutesOverride"
-                    [placeholder]="i18n.t('categories.useDefault')"
-                  />
-                </div>
-                <div class="field">
-                  <label>{{ i18n.t('categories.graceMinutes') }}</label
-                  ><input type="number" formControlName="graceMinutes" />
-                </div>
+              <div class="field">
+                <label>{{ i18n.t('common.from') }}</label>
+                <input type="date" formControlName="effectiveFrom" />
+              </div>
+              <div class="field">
+                <label>{{ i18n.t('common.toOptional') }}</label>
+                <input type="date" formControlName="effectiveTo" />
+              </div>
+              <div class="field">
+                <label>{{ i18n.t('categories.startTime') }}</label>
+                <input type="time" formControlName="startTime" />
+              </div>
+              <div class="field">
+                <label>{{ i18n.t('categories.overrideMinutes') }}</label>
+                <input
+                  type="number"
+                  formControlName="expectedMinutesOverride"
+                  [placeholder]="i18n.t('categories.useDefault')"
+                />
+              </div>
+              <div class="field">
+                <label>{{ i18n.t('categories.graceMinutes') }}</label>
+                <input type="number" formControlName="graceMinutes" />
               </div>
             </div>
-          }
-        </div>
-        <label class="check-field active-check"
-          ><input type="checkbox" formControlName="active" />
-          {{ i18n.t('categories.activeCheck') }}</label
-        >
-        <div class="drawer-actions">
-          <button class="button primary" type="submit" [disabled]="store.loading()">
-            {{ i18n.t('categories.save') }}</button
-          ><button class="button secondary" type="button" (click)="closeDrawer()">
-            {{ i18n.t('common.cancel') }}
-          </button>
-        </div>
-      </form>
-    </aside>
-  }
+          </div>
+        }
+      </div>
+      <label class="check-field active-check">
+        <input type="checkbox" formControlName="active" />
+        {{ i18n.t('categories.activeCheck') }}
+      </label>
+    </form>
+
+    <div modal-actions class="drawer-actions">
+      <button class="button primary" type="button" (click)="submit()" [disabled]="store.loading()">
+        {{ i18n.t('categories.save') }}
+      </button>
+      <button class="button secondary" type="button" (click)="closeDrawer()">
+        {{ i18n.t('common.cancel') }}
+      </button>
+    </div>
+  </app-modal-dialog>
 </section>

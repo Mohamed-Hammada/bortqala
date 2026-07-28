@@ -13,10 +13,11 @@ import { formatDateTime } from '../../core/date';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { OperationsStore } from './operations.store';
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 
 @Component({
   selector: 'app-operations-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent],
+  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent],
   providers: [OperationsStore],
   templateUrl: './operations.page.html',
   styleUrl: './operations.page.scss',

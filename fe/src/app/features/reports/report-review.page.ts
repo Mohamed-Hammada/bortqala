@@ -13,6 +13,8 @@ import {
 import { ReportsStore } from './reports.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
+import { NotificationService } from '../../core/notification.service';
+
 @Component({
   selector: 'app-report-review-page',
   imports: [RouterLink, TablePaginationComponent],
@@ -25,6 +27,7 @@ export class ReportReviewPage {
   readonly store = inject(ReportsStore);
   readonly auth = inject(AuthService);
   readonly i18n = inject(I18nService);
+  readonly notification = inject(NotificationService);
   readonly filter = signal<'ALL' | 'UNRESOLVED' | 'GREEN' | 'YELLOW' | 'RED'>('UNRESOLVED');
   readonly expandedRowId = signal<string | null>(null);
   readonly id = inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
@@ -34,6 +37,8 @@ export class ReportReviewPage {
   readonly redCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.healthTier(r) === 'RED').length);
   readonly totalCount = computed(() => this.store.details()?.dailyResults.length ?? 0);
   readonly unresolvedCount = computed(() => this.store.details()?.report.unresolvedCount ?? 0);
+  readonly singlePunchCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => r.status === 'SINGLE_PUNCH' && this.blocking(r)).length);
+  readonly noPunchCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => r.status === 'NO_PUNCH' && this.blocking(r)).length);
   readonly reviewedCount = computed(() => Math.max(0, this.totalCount() - this.unresolvedCount()));
   readonly reviewedPercent = computed(() => (this.totalCount() > 0 ? Math.round((this.reviewedCount() / this.totalCount()) * 100) : 0));
   readonly canReview = computed(() => this.auth.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER']));
@@ -66,12 +71,25 @@ export class ReportReviewPage {
     );
   }
   async bulkDecide(decision: AttendanceDecision, statusType: DailyStatus) {
-    const targets = this.rows().filter((r) => r.status === statusType && this.blocking(r));
-    if (!targets.length) return;
-    const confirmMsg = this.i18n.t('review.bulkConfirmPrompt') || `تطبيق القرار على ${targets.length} سجل؟`;
+    const targets = (this.store.details()?.dailyResults ?? []).filter((r) => r.status === statusType && this.blocking(r));
+    if (!targets.length) {
+      this.notification.warning('لا توجد سجلات مطابقة لتطبيق القرار عليها');
+      return;
+    }
+    const statusText = statusType === 'SINGLE_PUNCH' ? 'البصمة الواحدة' : 'الغياب';
+    const decText = decision === 'NORMAL_DAY' ? 'يوم طبيعي' : 'خصم';
+    const confirmMsg = `هل أنت متأكد من تطبيق قرار (${decText}) على ${targets.length} سجل من حالات (${statusText})؟`;
     if (!confirm(confirmMsg)) return;
-    for (const r of targets) {
-      await this.store.decide(this.id, r.id, decision, decision === 'NORMAL_DAY' ? r.expectedMinutes : 0, 'Bulk HR Decision');
+
+    try {
+      let count = 0;
+      for (const r of targets) {
+        await this.store.decide(this.id, r.id, decision, decision === 'NORMAL_DAY' ? r.expectedMinutes : 0, 'Bulk HR Decision');
+        count++;
+      }
+      this.notification.success(`تم بنجاح تطبيق القرار على ${count} سجل ✓`);
+    } catch (e: any) {
+      this.notification.error('حدث خطأ أثناء المعالجة الجماعية: ' + (e?.message ?? 'خطأ غير متوقع'));
     }
   }
   time(value: number | null) {

@@ -22,6 +22,8 @@ import { TablePaginationComponent } from '../../shared/ui/table-pagination/table
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
 
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+
 type ScheduleForm = FormGroup<{
   name: FormControl<string>;
   effectiveFrom: FormControl<string>;
@@ -32,7 +34,7 @@ type ScheduleForm = FormGroup<{
 }>;
 @Component({
   selector: 'app-categories-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent],
+  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent],
   providers: [CategoriesStore],
   templateUrl: './categories.page.html',
   styleUrl: './categories.page.scss',

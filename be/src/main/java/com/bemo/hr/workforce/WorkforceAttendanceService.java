@@ -7,12 +7,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import com.bemo.hr.audit.application.AuditService;
 
 @Service
 @RequiredArgsConstructor
 public class WorkforceAttendanceService {
     private final ManualAttendanceEntryRepository attendanceRepository;
     private final WorkerRepository workerRepository;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<ManualAttendanceEntry> getByDateRange(String startDate, String endDate) {
@@ -22,7 +24,7 @@ public class WorkforceAttendanceService {
     @Transactional
     public List<ManualAttendanceEntry> saveBatch(WorkforceApi.BatchAttendanceRequest request) {
         if (request.entries() == null) return List.of();
-        return request.entries().stream().map(cell -> {
+        List<ManualAttendanceEntry> result = request.entries().stream().map(cell -> {
             Optional<ManualAttendanceEntry> existing = attendanceRepository.findByWorkerIdAndWorkDate(cell.workerId(), cell.workDate());
             BigDecimal rate = cell.effectiveDailyRate();
             if (rate == null || rate.compareTo(BigDecimal.ZERO) == 0) {
@@ -46,5 +48,11 @@ public class WorkforceAttendanceService {
                 return attendanceRepository.save(entry);
             }
         }).toList();
+        
+        auditService.record("BATCH_ATTENDANCE", "MANUAL_ATTENDANCE", 
+            String.valueOf(request.entries().size()) + "_entries", 
+            "system", "{\"date\":\"" + (request.entries().isEmpty() ? "" : request.entries().get(0).workDate()) + "\"}", null);
+            
+        return result;
     }
 }

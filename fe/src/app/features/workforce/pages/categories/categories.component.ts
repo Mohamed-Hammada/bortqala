@@ -41,8 +41,8 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
               <td>{{ cat.description || '—' }}</td>
               <td>{{ cat.defaultDailyRate | number:'1.2-2' }} ج.م</td>
               <td>{{ cat.standardDailyHours }} س</td>
-              <td>{{ cat.defaultSettlementCycle }}</td>
-              <td><span class="badge active">{{ cat.status }}</span></td>
+              <td>{{ getCycleLabel(cat.defaultSettlementCycle) }}</td>
+              <td><span class="badge active">{{ getStatusLabel(cat.status) }}</span></td>
             </tr>
           </tbody>
         </table>
@@ -110,6 +110,22 @@ export class CategoriesComponent implements OnInit {
 
   ngOnInit() {
     this.workforceService.loadCategories().subscribe();
+  }
+
+  getCycleLabel(cycle: string): string {
+    const map: Record<string, string> = {
+      HALF_MONTH: 'نصف شهري (15 يومًا)',
+      MONTHLY: 'شهري (30 يومًا)',
+      WEEKLY: 'أسبوعي',
+      THIRTY_DAYS: 'شهري (30 يومًا)',
+      HALF_MONTHLY: 'نصف شهري (15 يومًا)',
+    };
+    return map[cycle] ?? cycle;
+  }
+
+  getStatusLabel(status: string): string {
+    const map: Record<string, string> = { ACTIVE: 'نشط', INACTIVE: 'موقوف', SUSPENDED: 'معلق' };
+    return map[status] ?? status;
   }
 
   openCreateModal() {

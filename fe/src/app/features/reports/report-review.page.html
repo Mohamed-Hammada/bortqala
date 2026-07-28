@@ -72,7 +72,9 @@
           <span class="kpi-label">{{ i18n.t('review.unresolved') }}</span>
           <strong class="kpi-value">{{ data.report.unresolvedCount }}</strong>
         </div>
-        @if (data.report.unresolvedCount > 0) {
+        @if (totalCount() === 0) {
+          <span class="kpi-badge neutral">لا توجد بيانات</span>
+        } @else if (data.report.unresolvedCount > 0) {
           <span class="kpi-badge warning">▲ يتطلب قرار</span>
         } @else {
           <span class="kpi-badge success">✓ مراجع بالكامل</span>
@@ -108,23 +110,23 @@
     </div>
 
     <!-- Smart AI Recommendation Section -->
-    @if (data.report.status === 'IN_REVIEW' && canReview() && totalCount() > 0) {
+    @if (data.report.status === 'IN_REVIEW' && canReview() && totalCount() > 0 && (singlePunchCount() > 0 || noPunchCount() > 0)) {
       <div class="smart-ai-box">
         <div class="ai-header">
           <span class="ai-badge-icon">⚡</span>
           <div>
             <h3>توجيه ذكي لمسؤول الموارد البشرية (Smart AI Recommendation)</h3>
             <p>
-              تم اكتشاف حالات بصمة واحدة بسبب انقطاع الجهاز. يُوصى بـ <strong>اعتماد البصمة الواحدة كـ يوم طبيعي</strong> لتوفير وقت المراجعة وتلافي خصم يوم بدون سبب.
+              تم اكتشاف <strong>{{ singlePunchCount() }}</strong> حالة بصمة واحدة و <strong>{{ noPunchCount() }}</strong> حالة بدون بصمة تتطلب معالجة.
             </p>
           </div>
         </div>
         <div class="ai-actions">
-          <button class="button gold btn-sm" (click)="bulkDecide('NORMAL_DAY', 'SINGLE_PUNCH')">
-            ✓ قبول التوجيه (اعتماد البصمة الواحدة كـ يوم طبيعي)
+          <button class="button gold btn-sm" [disabled]="singlePunchCount() === 0" (click)="bulkDecide('NORMAL_DAY', 'SINGLE_PUNCH')">
+            ✓ قبول التوجيه (اعتماد {{ singlePunchCount() }} بصمة واحدة كـ يوم طبيعي)
           </button>
-          <button class="button secondary btn-sm" (click)="bulkDecide('DEDUCT', 'NO_PUNCH')">
-            ✗ خصم الأيام غير المسجلة (غياب)
+          <button class="button secondary btn-sm" [disabled]="noPunchCount() === 0" (click)="bulkDecide('DEDUCT', 'NO_PUNCH')">
+            ✗ خصم {{ noPunchCount() }} يوم غير مسجل (غياب)
           </button>
         </div>
       </div>

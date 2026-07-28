@@ -122,123 +122,117 @@
     </div>
   }
 
-  <!-- Dialog / Drawer -->
-  @if (drawerOpen()) {
-    <button
-      class="drawer-backdrop"
-      (click)="closeDrawer()"
-      [attr.aria-label]="i18n.t('common.close')"
-    ></button>
-    <aside class="drawer">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">{{ i18n.t('employees.drawerEyebrow') }}</p>
-          <h2>{{ i18n.t(editingId() ? 'employees.editTitle' : 'employees.newTitle') }}</h2>
-        </div>
-        <button class="button secondary" (click)="closeDrawer()">× {{ i18n.t('common.close') }}</button>
-      </div>
-      <form [formGroup]="form" (ngSubmit)="submit()">
-        @if (submitAttempted() && form.invalid) {
-          <div class="alert error" role="alert">{{ i18n.t('employees.validationError') }}</div>
-        }
-        <div class="form-grid">
-          <div class="field">
-            <label><span class="required">*</span> {{ i18n.t('employees.employeeCode') }}</label
-            ><input class="ltr" formControlName="employeeCode" placeholder="EMP-001" />
-            @if (
-              form.controls.employeeCode.touched &&
-              form.controls.employeeCode.hasError('required')
-            ) {
-              <small class="field-error">{{ i18n.t('employees.employeeCodeRequired') }}</small>
-            }
-          </div>
-          <div class="field">
-            <label>{{ i18n.t('employees.fullName') }}</label
-            ><input formControlName="fullName" />
-            @if (form.controls.fullName.touched && form.controls.fullName.hasError('required')) {
-              <small class="field-error">{{ i18n.t('employees.fullNameRequired') }}</small>
-            }
-          </div>
-          <div class="field">
-            <label>{{ i18n.t('employees.category') }}</label
-            ><select formControlName="categoryId">
-              @for (category of store.categories(); track category.id) {
-                <option [value]="category.id">
-                  {{ category.name }} —
-                  {{
-                    i18n.t(
-                      category.attendanceMode === 'MANUAL'
-                        ? 'attendance.manual'
-                        : 'attendance.biometric'
-                    )
-                  }}
-                </option>
-              }
-            </select>
-            @if (
-              form.controls.categoryId.touched && form.controls.categoryId.hasError('required')
-            ) {
-              <small class="field-error">{{ i18n.t('employees.categoryRequired') }}</small>
-            }
-          </div>
-          <div class="field">
-            <label>{{ i18n.t('employees.employmentType') }}</label
-            ><select formControlName="employmentType">
-              <option value="FIXED">{{ i18n.t('employment.fixed') }}</option>
-              <option value="DAILY">{{ i18n.t('employment.daily') }}</option>
-            </select>
-          </div>
-          @if (auth.canViewSalary()) {
-            <div class="field">
-              <label>{{ i18n.t('employees.baseSalary') }}</label
-              ><input type="number" formControlName="baseSalary" min="0" step="100" placeholder="0.00" />
-            </div>
+  <!-- Central Modal Dialog -->
+  <app-modal-dialog
+    [isOpen]="drawerOpen()"
+    [title]="i18n.t(editingId() ? 'employees.editTitle' : 'employees.newTitle')"
+    size="wide"
+    [preventOutsideClose]="true"
+    (close)="closeDrawer()">
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="modal-form">
+      @if (submitAttempted() && form.invalid) {
+        <div class="alert error" role="alert">{{ i18n.t('employees.validationError') }}</div>
+      }
+      <div class="form-grid">
+        <div class="field">
+          <label><span class="required">*</span> {{ i18n.t('employees.employeeCode') }}</label>
+          <input class="ltr" formControlName="employeeCode" placeholder="EMP-001" />
+          @if (
+            form.controls.employeeCode.touched &&
+            form.controls.employeeCode.hasError('required')
+          ) {
+            <small class="field-error">{{ i18n.t('employees.employeeCodeRequired') }}</small>
           }
-          <div class="field span-2">
-            <label>
-              @if (isBiometricCategorySelected()) {
-                <span class="required">*</span> {{ i18n.t('employees.deviceUserId') }}
-              } @else {
-                {{ i18n.t('employees.deviceUserIdOptional') }}
-              }
-            </label>
-            <input
-              class="ltr"
-              formControlName="deviceUserId"
-              [placeholder]="i18n.t('employees.deviceUserIdPlaceholder')"
-            />
-            @if (form.controls.deviceUserId.invalid && (form.controls.deviceUserId.touched || submitAttempted())) {
-              <small class="field-error">{{ i18n.t('employees.deviceUserIdRequired') }}</small>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('employees.fullName') }}</label>
+          <input formControlName="fullName" />
+          @if (form.controls.fullName.touched && form.controls.fullName.hasError('required')) {
+            <small class="field-error">{{ i18n.t('employees.fullNameRequired') }}</small>
+          }
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('employees.category') }}</label>
+          <select formControlName="categoryId">
+            @for (category of store.categories(); track category.id) {
+              <option [value]="category.id">
+                {{ category.name }} —
+                {{
+                  i18n.t(
+                    category.attendanceMode === 'MANUAL'
+                      ? 'attendance.manual'
+                      : 'attendance.biometric'
+                  )
+                }}
+              </option>
+            }
+          </select>
+          @if (
+            form.controls.categoryId.touched && form.controls.categoryId.hasError('required')
+          ) {
+            <small class="field-error">{{ i18n.t('employees.categoryRequired') }}</small>
+          }
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('employees.employmentType') }}</label>
+          <select formControlName="employmentType">
+            <option value="FIXED">{{ i18n.t('employment.fixed') }}</option>
+            <option value="DAILY">{{ i18n.t('employment.daily') }}</option>
+          </select>
+        </div>
+        @if (auth.canViewSalary()) {
+          <div class="field">
+            <label>{{ i18n.t('employees.baseSalary') }}</label>
+            <input type="number" formControlName="baseSalary" min="0" step="100" placeholder="0.00" />
+          </div>
+        }
+        <div class="field span-2">
+          <label>
+            @if (isBiometricCategorySelected()) {
+              <span class="required">*</span> {{ i18n.t('employees.deviceUserId') }}
             } @else {
-              <small>{{ i18n.t('employees.deviceUserIdHint') }}</small>
+              {{ i18n.t('employees.deviceUserIdOptional') }}
             }
-          </div>
-          <div class="field">
-            <label>{{ i18n.t('employees.activeFrom') }}</label
-            ><input type="date" formControlName="activeFrom" />
-            @if (
-              form.controls.activeFrom.touched && form.controls.activeFrom.hasError('required')
-            ) {
-              <small class="field-error">{{ i18n.t('employees.activeFromRequired') }}</small>
-            }
-          </div>
-          <div class="field">
-            <label>{{ i18n.t('employees.activeToOptional') }}</label
-            ><input type="date" formControlName="activeTo" />
-          </div>
+          </label>
+          <input
+            class="ltr"
+            formControlName="deviceUserId"
+            [placeholder]="i18n.t('employees.deviceUserIdPlaceholder')"
+          />
+          @if (form.controls.deviceUserId.invalid && (form.controls.deviceUserId.touched || submitAttempted())) {
+            <small class="field-error">{{ i18n.t('employees.deviceUserIdRequired') }}</small>
+          } @else {
+            <small>{{ i18n.t('employees.deviceUserIdHint') }}</small>
+          }
         </div>
-        <label class="active-check"
-          ><input type="checkbox" formControlName="active" />
-          {{ i18n.t('employees.activeCheck') }}</label
-        >
-        <div class="drawer-actions">
-          <button class="button primary" type="submit" [disabled]="store.loading()">
-            {{ i18n.t('employees.save') }}</button
-          ><button class="button secondary" type="button" (click)="closeDrawer()">
-            {{ i18n.t('common.cancel') }}
-          </button>
+        <div class="field">
+          <label>{{ i18n.t('employees.activeFrom') }}</label>
+          <input type="date" formControlName="activeFrom" />
+          @if (
+            form.controls.activeFrom.touched && form.controls.activeFrom.hasError('required')
+          ) {
+            <small class="field-error">{{ i18n.t('employees.activeFromRequired') }}</small>
+          }
         </div>
-      </form>
-    </aside>
-  }
+        <div class="field">
+          <label>{{ i18n.t('employees.activeToOptional') }}</label>
+          <input type="date" formControlName="activeTo" />
+        </div>
+      </div>
+      <label class="active-check">
+        <input type="checkbox" formControlName="active" />
+        {{ i18n.t('employees.activeCheck') }}
+      </label>
+    </form>
+
+    <div modal-actions class="drawer-actions">
+      <button class="button primary" type="button" (click)="submit()" [disabled]="store.loading()">
+        {{ i18n.t('employees.save') }}
+      </button>
+      <button class="button secondary" type="button" (click)="closeDrawer()">
+        {{ i18n.t('common.cancel') }}
+      </button>
+    </div>
+  </app-modal-dialog>
 </section>

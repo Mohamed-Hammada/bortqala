@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import com.bemo.hr.audit.application.AuditService;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +17,7 @@ public class WorkforceAdvanceService {
     private final WorkforceAdvanceLedgerEntryRepository ledgerRepository;
     private final WorkerRepository workerRepository;
     private final ContractorRepository contractorRepository;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<WorkforceApi.AdvanceResponse> list() {
@@ -33,7 +35,8 @@ public class WorkforceAdvanceService {
         WorkforceAdvance adv = new WorkforceAdvance(
             request.recipientType(), request.workerId(), request.contractorId(),
             request.amount(), request.termType(), count, instAmount,
-            request.deductionFrequency(), request.maxDeductionPercent(), request.reason()
+            request.deductionFrequency(), request.maxDeductionPercent(), request.reason(),
+            request.firstInstallmentDate(), request.deductionMode(), request.deferralPeriods()
         );
         WorkforceAdvance saved = advanceRepository.save(adv);
 
@@ -52,6 +55,9 @@ public class WorkforceAdvanceService {
         );
         ledgerRepository.save(entry);
 
+        auditService.record("CREATE", "ADVANCE", saved.getId(), createdBy,
+            "{\"amount\":" + saved.getAmount() + ",\"termType\":\"" + saved.getTermType() + "\"}", null);
+
         return mapToResponse(saved);
     }
 
@@ -66,7 +72,8 @@ public class WorkforceAdvanceService {
             a.getContractorId(), contractorName, a.getAmount(), a.getTermType(),
             a.getTotalInstallments(), a.getInstallmentAmount(), a.getRemainingBalance(),
             a.getDeductionFrequency(), a.getMaxDeductionPercent(), a.getStatus(),
-            a.getReason(), a.getCreatedAt().toEpochMilli()
+            a.getReason(), a.getFirstInstallmentDate(), a.getDeductionMode(), a.getDeferralPeriods(),
+            a.getCreatedAt().toEpochMilli()
         );
     }
 }

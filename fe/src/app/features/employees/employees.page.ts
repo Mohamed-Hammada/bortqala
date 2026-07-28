@@ -17,6 +17,7 @@ import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
@@ -28,6 +29,7 @@ import { AuthService } from '../../core/auth/auth.service';
     DecimalPipe,
     SkeletonComponent,
     EmptyStateComponent,
+    ModalDialogComponent,
   ],
   providers: [EmployeesStore],
   templateUrl: './employees.page.html',

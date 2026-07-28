@@ -1,5 +1,6 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { forkJoin } from 'rxjs';
 import { WorkforceService } from '../../data-access/workforce.service';
 
 @Component({
@@ -15,6 +16,9 @@ import { WorkforceService } from '../../data-access/workforce.service';
         </div>
       </header>
 
+      @if (loading()) { <div class="loading-state">جاري تحميل البيانات...</div> }
+      @else if (loadError()) { <div class="error-state">{{ loadError() }} <button (click)="ngOnInit()">إعادة المحاولة</button></div> }
+      @else {
       <div class="kpi-grid">
         <div class="kpi-card">
           <span class="kpi-title">المقاولون النشطون</span>
@@ -62,6 +66,7 @@ import { WorkforceService } from '../../data-access/workforce.service';
           </table>
         </section>
       </div>
+      }
     </div>
   `,
   styles: [`
@@ -79,16 +84,29 @@ import { WorkforceService } from '../../data-access/workforce.service';
     .badge.active { background: #dcfce7; color: #166534; }
     .badge.model-badge { background: #fef3c7; color: #92400e; }
     .empty-cell { text-align: center; color: #94a3b8; padding: 2rem; }
+    .loading-state, .error-state { padding: 2rem; text-align: center; color: #64748b; } .error-state { color: #dc2626; }
   `]
 })
 export class WorkforceDashboardComponent implements OnInit {
   workforceService = inject(WorkforceService);
+  loading = signal(true);
+  loadError = signal<string | null>(null);
 
   ngOnInit() {
-    this.workforceService.loadContractors().subscribe();
-    this.workforceService.loadWorkers().subscribe();
-    this.workforceService.loadLaborRequests().subscribe();
-    this.workforceService.loadAdvances().subscribe();
+    this.loading.set(true);
+    this.loadError.set(null);
+    forkJoin({
+      contractors: this.workforceService.loadContractors(),
+      workers: this.workforceService.loadWorkers(),
+      requests: this.workforceService.loadLaborRequests(),
+      advances: this.workforceService.loadAdvances()
+    }).subscribe({
+      next: () => this.loading.set(false),
+      error: (e) => {
+        this.loadError.set('تعذّر تحميل البيانات: ' + (e?.error?.detail ?? e?.message ?? 'خطأ غير متوقع'));
+        this.loading.set(false);
+      }
+    });
   }
 
   getModelLabel(model: string): string {

@@ -98,151 +98,169 @@
   </div>
   } <!-- end @if (!store.loading()) -->
 
-  <!-- User Form Dialog / Drawer -->
-  @if (drawerOpen()) {
-    <button
-      class="drawer-backdrop"
-      (click)="closeDrawer()"
-      [attr.aria-label]="i18n.t('common.close')"
-    ></button>
-    <aside class="drawer">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">{{ i18n.t('users.drawerEyebrow') }}</p>
-          <h2>{{ i18n.t(editingId() ? 'users.editTitle' : 'users.newTitle') }}</h2>
+  <!-- User Form Central Modal Dialog -->
+  <app-modal-dialog
+    [isOpen]="drawerOpen()"
+    [title]="i18n.t(editingId() ? 'users.editTitle' : 'users.newTitle')"
+    size="wide"
+    [preventOutsideClose]="true"
+    (close)="closeDrawer()">
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="modal-form">
+      @if (submitted() && form.invalid) {
+        <div class="alert error" role="alert">{{ i18n.t('users.validation') }}</div>
+      }
+
+      <div class="form-grid">
+        <!-- Section 1: Basic Information -->
+        <div class="form-section-head">
+          <span>👤</span> {{ i18n.t('users.sectionBasic') }}
         </div>
-        <button class="button secondary" (click)="closeDrawer()">× {{ i18n.t('common.close') }}</button>
+
+        <div class="field">
+          <label><span class="required">*</span> {{ i18n.t('users.username') }}</label>
+          <input class="ltr" formControlName="username" autocomplete="off" placeholder="admin" />
+        </div>
+
+        <div class="field">
+          <label><span class="required">*</span> {{ i18n.t('users.displayName') }}</label>
+          <input formControlName="displayName" placeholder="محمد أحمد" />
+        </div>
+
+        <div class="field span-2 password-field">
+          <label>
+            @if (!editingId()) { <span class="required">*</span> }
+            {{ i18n.t('users.password') }}
+          </label>
+          <div class="password-input-wrap">
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              class="ltr"
+              formControlName="password"
+              autocomplete="new-password"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              class="toggle-pass-btn"
+              (click)="showPassword.set(!showPassword())"
+            >
+              {{ showPassword() ? '👁️' : '🙈' }}
+            </button>
+          </div>
+          @if (editingId()) {
+            <small class="hint">{{ i18n.t('users.passwordEditHint') }}</small>
+          } @else {
+            <small class="hint">
+              {{ i18n.t('users.passwordMinLength', { min: passwordPolicy().minPasswordLength ?? 8 }) }}
+            </small>
+          }
+        </div>
+
+        <!-- Section 2: User Roles -->
+        <div class="form-section-head">
+          <span>🔑</span> {{ i18n.t('users.sectionRoles') }}
+        </div>
+
+        <div class="field span-2">
+          <div class="roles-grid">
+            @for (role of roles; track role.code) {
+              <label class="selectable-card" [class.disabled-card]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()">
+                <input
+                  type="checkbox"
+                  [checked]="hasRole(role.code)"
+                  [disabled]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
+                  (change)="toggleRole(role.code, $event)"
+                />
+                <span>
+                  <strong>{{ i18n.t(role.labelKey) }}</strong>
+                  <small>{{ i18n.t(role.descriptionKey) }}</small>
+                </span>
+              </label>
+            }
+          </div>
+        </div>
+
+        <!-- Section 3: Grouped Module Permissions -->
+        <div class="form-section-head">
+          <span>🖥️</span> {{ i18n.t('users.sectionMenus') }} (مقسمة حسب الوحدات)
+          <div class="quick-actions">
+            <button type="button" class="btn btn-sm btn-link" (click)="selectAllMenus()">تحديد الكل</button>
+            <button type="button" class="btn btn-sm btn-link" (click)="clearAllMenus()">إلغاء تحديد الكل</button>
+          </div>
+        </div>
+
+        <div class="field span-2">
+          <div class="module-groups-grid">
+            @for (group of menuGroups; track group.title) {
+              <div class="module-group-card">
+                <div class="module-group-header" (click)="toggleModule(group.ids)">
+                  <input
+                    type="checkbox"
+                    [checked]="isModuleAllSelected(group.ids)"
+                    [indeterminate]="isModulePartiallySelected(group.ids)"
+                    (click)="$event.stopPropagation(); toggleModule(group.ids)"
+                  />
+                  <strong>{{ group.title }}</strong>
+                  <span class="count-badge">{{ group.ids.length }} صلاحيات</span>
+                </div>
+                <div class="module-group-items">
+                  @for (id of group.ids; track id) {
+                    <label class="menu-item-check">
+                      <input
+                        type="checkbox"
+                        [checked]="hasMenu(id)"
+                        (change)="toggleMenu(id, $event)"
+                      />
+                      <span>{{ getMenuLabel(id) }}</span>
+                    </label>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Section 4: Special Financial Permissions -->
+        <div class="form-section-head">
+          <span>🔒</span> {{ i18n.t('users.sectionSpecialPermissions') }}
+        </div>
+
+        <div class="field span-2">
+          <label class="selectable-card menu-card">
+            <input
+              type="checkbox"
+              formControlName="canViewSalary"
+            />
+            <span>💵 {{ i18n.t('users.canViewSalary') }}</span>
+          </label>
+        </div>
+
+        <!-- Section 5: Account Status -->
+        <div class="form-section-head">
+          <span>🛡️</span> {{ i18n.t('users.sectionStatus') }}
+        </div>
+
+        <div class="field span-2">
+          <label class="selectable-card active-card">
+            <input type="checkbox" formControlName="active" />
+            <span>
+              <strong>{{ i18n.t('users.activeCheck') }}</strong>
+              <small>{{ i18n.t('users.activeCheckHint') }}</small>
+            </span>
+          </label>
+        </div>
       </div>
+    </form>
 
-      <form [formGroup]="form" (ngSubmit)="submit()">
-        @if (submitted() && form.invalid) {
-          <div class="alert error" role="alert">{{ i18n.t('users.validation') }}</div>
-        }
+    <div modal-actions class="drawer-actions">
+      <button class="button primary" type="button" (click)="submit()" [disabled]="store.loading()">
+        {{ i18n.t('users.save') }}
+      </button>
+      <button class="button secondary" type="button" (click)="closeDrawer()">
+        {{ i18n.t('common.cancel') }}
+      </button>
+    </div>
+  </app-modal-dialog>
 
-        <div class="form-grid">
-          <!-- Section 1: Basic Information -->
-          <div class="form-section-head">
-            <span>👤</span> {{ i18n.t('users.sectionBasic') }}
-          </div>
-
-          <div class="field">
-            <label><span class="required">*</span> {{ i18n.t('users.username') }}</label>
-            <input class="ltr" formControlName="username" autocomplete="off" placeholder="admin" />
-          </div>
-
-          <div class="field">
-            <label><span class="required">*</span> {{ i18n.t('users.displayName') }}</label>
-            <input formControlName="displayName" placeholder="محمد أحمد" />
-          </div>
-
-          <div class="field span-2 password-field">
-            <label>
-              @if (!editingId()) { <span class="required">*</span> }
-              {{ i18n.t('users.password') }}
-              {{ editingId() ? i18n.t('users.passwordEditHint') : '' }}
-            </label>
-            <div class="input-with-toggle">
-              <input
-                [type]="showPassword() ? 'text' : 'password'"
-                formControlName="password"
-                autocomplete="new-password"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                class="toggle-pass-btn"
-                (click)="showPassword.set(!showPassword())"
-              >
-                {{ i18n.t(showPassword() ? 'login.hide' : 'login.show') }}
-              </button>
-            </div>
-            <small class="password-hint">✓ {{ i18n.t('users.passwordHint', { min: passwordPolicy().minPasswordLength ?? 8 }) }}</small>
-          </div>
-
-          <!-- Section 2: System Roles -->
-          <div class="form-section-head">
-            <span>🔑</span> {{ i18n.t('users.sectionRoles') }}
-          </div>
-
-          <div class="field span-2">
-            <div class="role-options">
-              @for (role of roles; track role.code) {
-                <label class="selectable-card" [class.disabled-card]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()">
-                  <input
-                    type="checkbox"
-                    [checked]="hasRole(role.code)"
-                    [disabled]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
-                    (change)="toggleRole(role.code, $event)"
-                  />
-                  <span>
-                    <strong>{{ i18n.t(role.labelKey) }}</strong>
-                    <small>{{ i18n.t(role.descriptionKey) }}</small>
-                  </span>
-                </label>
-              }
-            </div>
-          </div>
-
-          <!-- Section 3: Allowed Menus -->
-          <div class="form-section-head">
-            <span>🖥️</span> {{ i18n.t('users.sectionMenus') }}
-          </div>
-
-          <div class="field span-2">
-            <div class="menu-options-grid">
-              @for (m of menuOptions; track m.id) {
-                <label class="selectable-card menu-card">
-                  <input
-                    type="checkbox"
-                    [checked]="hasMenu(m.id)"
-                    (change)="toggleMenu(m.id, $event)"
-                  />
-                  <span>{{ i18n.t(m.labelKey) }}</span>
-                </label>
-              }
-            </div>
-          </div>
-
-          <!-- Section 4: Special Financial Permissions -->
-          <div class="form-section-head">
-            <span>🔒</span> {{ i18n.t('users.sectionSpecialPermissions') }}
-          </div>
-
-          <div class="field span-2">
-            <label class="selectable-card menu-card">
-              <input
-                type="checkbox"
-                formControlName="canViewSalary"
-              />
-              <span>💵 {{ i18n.t('users.canViewSalary') }}</span>
-            </label>
-          </div>
-
-          <!-- Section 5: Account Security -->
-          <div class="form-section-head">
-            <span>🛡️</span> {{ i18n.t('users.sectionStatus') }}
-          </div>
-
-          <div class="field span-2">
-            <label class="selectable-card active-card">
-              <input type="checkbox" formControlName="active" />
-              <span>
-                <strong>{{ i18n.t('users.activeCheck') }}</strong>
-                <small>{{ i18n.t('users.activeCheckHint') }}</small>
-              </span>
-            </label>
-          </div>
-        </div>
-
-        <div class="drawer-actions">
-          <button class="button secondary" type="button" (click)="closeDrawer()">
-            {{ i18n.t('common.cancel') }}
-          </button>
-          <button class="button primary" type="submit" [disabled]="store.loading()">
-            {{ i18n.t('users.save') }}
-          </button>
-        </div>
-      </form>
-    </aside>
-  }
 </section>

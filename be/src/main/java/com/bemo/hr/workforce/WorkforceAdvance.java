@@ -31,6 +31,9 @@ public class WorkforceAdvance {
     @Column(name = "max_deduction_percent", precision = 5, scale = 2) private BigDecimal maxDeductionPercent;
     @Column(nullable = false, length = 30) private String status;
     @Column(length = 500) private String reason;
+    @Column(name = "first_installment_date", length = 10) private String firstInstallmentDate;
+    @Column(name = "deduction_mode", length = 20) private String deductionMode;
+    @Column(name = "deferral_periods") private Integer deferralPeriods;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
 
@@ -39,7 +42,9 @@ public class WorkforceAdvance {
     public WorkforceAdvance(String recipientType, String workerId, String contractorId,
                             BigDecimal amount, String termType, int totalInstallments,
                             BigDecimal installmentAmount, String deductionFrequency,
-                            BigDecimal maxDeductionPercent, String reason) {
+                            BigDecimal maxDeductionPercent, String reason,
+                            String firstInstallmentDate, String deductionMode,
+                            Integer deferralPeriods) {
         this.id = UUID.randomUUID().toString();
         this.recipientType = recipientType != null ? recipientType.strip().toUpperCase() : "WORKER";
         this.workerId = workerId;
@@ -53,6 +58,9 @@ public class WorkforceAdvance {
         this.maxDeductionPercent = maxDeductionPercent != null ? maxDeductionPercent : new BigDecimal("50.0");
         this.status = "ACTIVE";
         this.reason = reason;
+        this.firstInstallmentDate = firstInstallmentDate;
+        this.deductionMode = deductionMode != null ? deductionMode : "AUTO";
+        this.deferralPeriods = deferralPeriods != null ? deferralPeriods : 0;
     }
 
     public void deduct(BigDecimal value) {

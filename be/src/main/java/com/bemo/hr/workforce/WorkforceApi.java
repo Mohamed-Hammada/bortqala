@@ -211,7 +211,10 @@ public final class WorkforceApi {
         BigDecimal installmentAmount,
         String deductionFrequency,
         BigDecimal maxDeductionPercent,
-        String reason
+        String reason,
+        String firstInstallmentDate,
+        String deductionMode,
+        Integer deferralPeriods
     ) { }
 
     public record AdvanceResponse(
@@ -230,6 +233,9 @@ public final class WorkforceApi {
         BigDecimal maxDeductionPercent,
         String status,
         String reason,
+        String firstInstallmentDate,
+        String deductionMode,
+        int deferralPeriods,
         long createdAt
     ) { }
 }
