@@ -14,10 +14,11 @@ import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { OperationsStore } from './operations.store';
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+import { ItemCategory, UnitOfMeasure } from './operations.models';
 
 @Component({
   selector: 'app-operations-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent],
+  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent],
   providers: [OperationsStore],
   templateUrl: './operations.page.html',
   styleUrl: './operations.page.scss',
@@ -27,7 +28,7 @@ export class OperationsPage {
   readonly store = inject(OperationsStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
-  readonly drawer = signal<'item' | 'transaction' | 'advance' | null>(null);
+  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | null>(null);
   readonly itemPagination = new TablePagination();
   readonly movementPagination = new TablePagination();
   readonly balancePagination = new TablePagination();
@@ -42,6 +43,7 @@ export class OperationsPage {
   readonly advances = computed(() =>
     this.advancePagination.slice(this.store.snapshot().employeeAdvances),
   );
+
   readonly itemForm = new FormGroup({
     code: new FormControl('', { nonNullable: true, validators: Validators.required }),
     name: new FormControl('', { nonNullable: true, validators: Validators.required }),
@@ -51,6 +53,8 @@ export class OperationsPage {
     }),
     customItemType: new FormControl('', { nonNullable: true }),
     unitCode: new FormControl('KG', { nonNullable: true, validators: Validators.required }),
+    categoryId: new FormControl('', { nonNullable: true }),
+    uomId: new FormControl('', { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
   });
   readonly transactionForm = new FormGroup({
@@ -85,11 +89,33 @@ export class OperationsPage {
       validators: Validators.required,
     }),
   });
+  readonly adjustmentForm = new FormGroup({
+    itemId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    quantityDelta: new FormControl(0, {
+      nonNullable: true,
+      validators: [Validators.required],
+    }),
+    referenceCode: new FormControl('', { nonNullable: true }),
+    reason: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    occurredAt: new FormControl(this.nowInput(), {
+      nonNullable: true,
+      validators: Validators.required,
+    }),
+  });
+  readonly categoryForm = new FormGroup({
+    name: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    description: new FormControl('', { nonNullable: true }),
+  });
+  readonly uomForm = new FormGroup({
+    name: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    abbreviation: new FormControl('', { nonNullable: true }),
+    description: new FormControl('', { nonNullable: true }),
+  });
 
   constructor() {
     void this.store.load();
   }
-  open(kind: 'item' | 'transaction' | 'advance'): void {
+  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom'): void {
     this.drawer.set(kind);
   }
   close(): void {
@@ -103,7 +129,13 @@ export class OperationsPage {
     const raw = this.itemForm.getRawValue();
     const finalItemType = raw.itemType === 'CUSTOM' ? raw.customItemType : raw.itemType;
     if (!finalItemType || !finalItemType.trim()) return;
-    if (await this.store.createItem({ ...raw, itemType: finalItemType.trim(), version: null })) {
+    if (await this.store.createItem({
+      ...raw,
+      itemType: finalItemType.trim(),
+      categoryId: raw.categoryId || null,
+      uomId: raw.uomId || null,
+      version: null,
+    })) {
       this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.close();
     }
@@ -152,6 +184,44 @@ export class OperationsPage {
     const value = this.advanceForm.getRawValue();
     if (await this.store.advance({ ...value, occurredAt: new Date(value.occurredAt).getTime() })) {
       this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.close();
+    }
+  }
+  async saveAdjustment(): Promise<void> {
+    if (this.adjustmentForm.invalid) return this.adjustmentForm.markAllAsTouched();
+    const value = this.adjustmentForm.getRawValue();
+    if (value.quantityDelta === 0) {
+      this.notification.error('كمية التسوية يجب ألا تكون صفراً');
+      return;
+    }
+    if (await this.store.adjustment({
+      itemId: value.itemId,
+      quantityDelta: value.quantityDelta,
+      referenceCode: value.referenceCode || null,
+      reason: value.reason,
+      occurredAt: new Date(value.occurredAt).getTime(),
+    })) {
+      this.notification.success('تم إجراء تسوية المخزون بنجاح ✓');
+      this.close();
+    }
+  }
+  async saveCategory(): Promise<void> {
+    if (this.categoryForm.invalid) return this.categoryForm.markAllAsTouched();
+    const value = this.categoryForm.getRawValue();
+    if (await this.store.createCategory({ name: value.name, description: value.description || null })) {
+      this.notification.success('تم إنشاء تصنيف المخزون بنجاح ✓');
+      this.close();
+    }
+  }
+  async saveUom(): Promise<void> {
+    if (this.uomForm.invalid) return this.uomForm.markAllAsTouched();
+    const value = this.uomForm.getRawValue();
+    if (await this.store.createUom({
+      name: value.name,
+      abbreviation: value.abbreviation || null,
+      description: value.description || null,
+    })) {
+      this.notification.success('تم إنشاء وحدة القياس بنجاح ✓');
       this.close();
     }
   }
@@ -215,6 +285,15 @@ export class OperationsPage {
       } else if (this.drawer() === 'advance') {
         event.preventDefault();
         void this.saveAdvance();
+      } else if (this.drawer() === 'adjustment') {
+        event.preventDefault();
+        void this.saveAdjustment();
+      } else if (this.drawer() === 'category') {
+        event.preventDefault();
+        void this.saveCategory();
+      } else if (this.drawer() === 'uom') {
+        event.preventDefault();
+        void this.saveUom();
       }
     }
   }

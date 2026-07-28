@@ -30,17 +30,21 @@ public final class AuthApi {
             boolean active,
             Long version) { }
     public record PreferenceResponse(ThemePreference theme, TableDensity tableDensity,
-                                     String locale, ExcelTableStyle excelTableStyle, int defaultPageSize, Instant updatedAt) { }
+                                     String locale, ExcelTableStyle excelTableStyle, int defaultPageSize,
+                                     String defaultPage, Instant updatedAt) { }
     public record PreferenceRequest(@NotNull ThemePreference theme, @NotNull TableDensity tableDensity,
                                     @NotBlank @Pattern(regexp = "[a-zA-Z]{2}(-[a-zA-Z]{2})?") String locale,
                                     @NotNull ExcelTableStyle excelTableStyle,
-                                    @Min(5) @Max(500) Integer defaultPageSize) { }
+                                    @Min(5) @Max(500) Integer defaultPageSize,
+                                    String defaultPage) { }
     public record AppSettingsResponse(
             int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets,
             int minPasswordLength, boolean requireUppercase, boolean requireLowercase,
             boolean requireNumbers, boolean requireSpecialChars, boolean disallowSpaces,
             int maxPasswordLength, int passwordExpiryDays, int passwordHistoryCount,
             Instant updatedAt) { }
+    public record UserCategoryResponse(String id, String code, String name) { }
+
     public record AppSettingsRequest(
             @Min(5) @Max(10_080) int sessionTimeoutMinutes,
             boolean sessionTimeoutEnabled,

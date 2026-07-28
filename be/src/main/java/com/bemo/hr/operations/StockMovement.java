@@ -21,10 +21,12 @@ public class StockMovement {
     @Column(name = "item_id", nullable = false) private String itemId;
     @Column(name = "party_id") private String partyId;
     @Column(name = "operation_type", nullable = false, length = 50) private String operationType;
+    @Column(name = "document_type", length = 30) private String documentType;
     @Column(name = "quantity_delta", nullable = false, precision = 19, scale = 4) private BigDecimal quantityDelta;
     @Column(name = "loss_percentage", precision = 7, scale = 4) private BigDecimal lossPercentage;
     @Column(name = "reference_code", length = 100) private String referenceCode;
     @Column(length = 1000) private String note;
+    @Column(length = 1000) private String reason;
     @Column(name = "occurred_at", nullable = false) private Instant occurredAt;
     @Column(name = "created_by", nullable = false, length = 100) private String createdBy;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
@@ -43,6 +45,11 @@ public class StockMovement {
         this.note = nullable(note);
         this.occurredAt = occurredAt;
         this.createdBy = createdBy;
+    }
+
+    public void assignDocument(String documentType, String reason) {
+        this.documentType = documentType;
+        this.reason = nullable(reason);
     }
 
     @PrePersist void prePersist() { createdAt = Instant.now(); }

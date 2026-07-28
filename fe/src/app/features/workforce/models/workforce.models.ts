@@ -87,6 +87,15 @@ export interface LaborRequest {
   updatedAt: number;
 }
 
+export interface AdvanceRepayRequest {
+  amount: number;
+  repaymentType: 'PARTIAL' | 'FULL';
+  repaymentDate?: string;
+  paymentMethod?: string;
+  receiptRef?: string;
+  notes?: string;
+}
+
 export interface AttendanceCell {
   workerId: string;
   workDate: string;

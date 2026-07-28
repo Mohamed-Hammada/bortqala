@@ -1,9 +1,10 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WorkforceService } from '../../data-access/workforce.service';
-import { WorkforceAdvance } from '../../models/workforce.models';
+import { WorkforceAdvance, AdvanceRepayRequest } from '../../models/workforce.models';
 import { NotificationService } from '../../../../core/notification.service';
+import { exportCsv } from '../../../../core/download';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 
 @Component({
@@ -17,9 +18,12 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
           <span class="eyebrow">السلف والأقساط</span>
           <h1>إدارة سُلف العمال والمقاولين وجدولة الأقساط</h1>
         </div>
-        <button type="button" class="btn btn-primary" (click)="openCreateModal()">
-          + صرف سُلفة جديدة
-        </button>
+        <div style="display: flex; gap: 0.75rem;">
+          <button type="button" class="btn btn-secondary" (click)="exportCsv()">⇩ Excel</button>
+          <button type="button" class="btn btn-primary" (click)="openCreateModal()">
+            + صرف سُلفة جديدة
+          </button>
+        </div>
       </header>
 
       <!-- Summary Stats -->
@@ -242,6 +246,140 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
           <button type="button" class="btn btn-secondary" (click)="isModalOpen = false">إلغاء</button>
         </div>
       </app-modal-dialog>
+
+      <!-- Repayment Modal -->
+      <app-modal-dialog
+        [isOpen]="repayModalOpen()"
+        title="سداد سلفة مبكر"
+        size="normal"
+        [preventOutsideClose]="true"
+        (close)="closeRepayModal()">
+
+        @if (repayTarget(); as adv) {
+          <div class="repay-container">
+
+            <!-- Recipient Info -->
+            <div class="repay-info-grid">
+              <div class="repay-info-item">
+                <span class="info-label">المستفيد</span>
+                <span class="info-value">{{ adv.recipientType === 'WORKER' ? adv.workerName : adv.contractorName }}</span>
+              </div>
+              <div class="repay-info-item">
+                <span class="info-label">النوع</span>
+                <span class="info-value">{{ adv.recipientType === 'WORKER' ? 'عامل' : 'مقاول' }}</span>
+              </div>
+              <div class="repay-info-item">
+                <span class="info-label">المبلغ الأصلي</span>
+                <span class="info-value">{{ adv.amount | number:'1.0-0' }} ج.م</span>
+              </div>
+              <div class="repay-info-item">
+                <span class="info-label">المسدّد سابقاً</span>
+                <span class="info-value">{{ (adv.amount - adv.remainingBalance) | number:'1.0-0' }} ج.م</span>
+              </div>
+              <div class="repay-info-item">
+                <span class="info-label">الرصيد المتبقي</span>
+                <span class="info-value balance-highlight">{{ adv.remainingBalance | number:'1.0-0' }} ج.م</span>
+              </div>
+            </div>
+
+            <!-- Repayment Type -->
+            <div class="repay-type-group">
+              <label class="repay-type-option">
+                <input type="radio" [(ngModel)]="repayForm.repaymentType" name="repayType"
+                       value="FULL" (change)="onRepayTypeChange()" />
+                <span>سداد كامل — سيتم إغلاق السلفة بالكامل</span>
+              </label>
+              <label class="repay-type-option">
+                <input type="radio" [(ngModel)]="repayForm.repaymentType" name="repayType"
+                       value="PARTIAL" (change)="onRepayTypeChange()" />
+                <span>سداد جزئي — سيتبقى رصيد بعد السداد</span>
+              </label>
+            </div>
+
+            <!-- Amount -->
+            <div class="form-group">
+              <label>مبلغ السداد (ج.م) *</label>
+              <input type="number" [(ngModel)]="repayForm.amount" name="repayAmount"
+                     class="form-input" min="1" [max]="adv.remainingBalance" />
+              <small class="hint">الحد الأقصى: {{ adv.remainingBalance | number:'1.0-0' }} ج.م</small>
+            </div>
+
+            <!-- Date & Method Row -->
+            <div class="form-grid">
+              <div class="form-group">
+                <label>تاريخ السداد</label>
+                <input type="date" [(ngModel)]="repayForm.repaymentDate" name="repayDate" class="form-input" />
+              </div>
+              <div class="form-group">
+                <label>طريقة السداد</label>
+                <select [(ngModel)]="repayForm.paymentMethod" name="repayMethod" class="form-input">
+                  <option value="">اختر</option>
+                  <option value="CASH">نقداً</option>
+                  <option value="BANK_TRANSFER">تحويل بنكي</option>
+                  <option value="CHEQUE">شيك</option>
+                  <option value="DEDUCTION">خصم من المستحقات</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Receipt Ref -->
+            <div class="form-group">
+              <label>رقم الإيصال أو مرجع الدفع</label>
+              <input type="text" [(ngModel)]="repayForm.receiptRef" name="receiptRef" class="form-input"
+                     placeholder="اختياري" />
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group">
+              <label>ملاحظات</label>
+              <input type="text" [(ngModel)]="repayForm.notes" name="repayNotes" class="form-input"
+                     placeholder="اختياري" />
+            </div>
+
+            <!-- Preview -->
+            @if (repayPreview(); as preview) {
+              <div class="repay-preview" [class.preview-close]="preview.willClose">
+                <strong>معاينة النتيجة:</strong>
+                <div class="preview-row">
+                  <span>الرصيد قبل السداد:</span>
+                  <span>{{ preview.before | number:'1.0-0' }} ج.م</span>
+                </div>
+                <div class="preview-row">
+                  <span>مبلغ السداد:</span>
+                  <span class="deduct-amount">- {{ preview.amount | number:'1.0-0' }} ج.م</span>
+                </div>
+                <div class="preview-row total-row">
+                  <span>الرصيد بعد السداد:</span>
+                  <span [class.zero-balance]="preview.after <= 0">{{ preview.after | number:'1.0-0' }} ج.م</span>
+                </div>
+                <div class="preview-impact">{{ preview.impact }}</div>
+              </div>
+            }
+          </div>
+        }
+        @if (repayTarget()) {
+          <div modal-actions class="modal-actions-bar">
+            <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="confirmRepayment()">
+              {{ saving() ? 'جارٍ التنفيذ...' : 'تأكيد السداد' }}
+            </button>
+            <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="closeRepayModal()">إلغاء</button>
+          </div>
+        }
+      </app-modal-dialog>
+
+      <!-- Confirmation Dialog -->
+      @if (confirmAction(); as action) {
+        <div class="confirm-overlay" (click)="cancelAction()">
+          <div class="confirm-dialog" (click)="$event.stopPropagation()">
+            <div class="confirm-icon">⚠️</div>
+            <div class="confirm-message">{{ action.message }}</div>
+            <div class="confirm-actions">
+              <button type="button" class="btn btn-primary" (click)="action.onConfirm()">تأكيد</button>
+              <button type="button" class="btn btn-secondary" (click)="cancelAction()">إلغاء</button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -281,6 +419,33 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
     .form-input { padding: 0.625rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; }
     .summary-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.875rem; color: #1e40af; }
     .modal-actions-bar { width: 100%; display: flex; gap: 0.75rem; justify-content: flex-start; }
+
+    /* Repayment Modal Styles */
+    .repay-container { display: flex; flex-direction: column; gap: 1rem; }
+    .repay-info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; background: #f8fafc; border-radius: 8px; padding: 0.75rem; }
+    .repay-info-item { display: flex; flex-direction: column; gap: 0.25rem; }
+    .info-label { font-size: 0.75rem; color: #64748b; }
+    .info-value { font-size: 0.9375rem; font-weight: 700; color: #0f172a; }
+    .balance-highlight { color: #dc2626; font-size: 1.125rem; }
+    .repay-type-group { display: flex; flex-direction: column; gap: 0.5rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 0.75rem; }
+    .repay-type-option { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem; }
+    .repay-type-option input[type="radio"] { width: 1rem; height: 1rem; accent-color: #d97706; }
+    .repay-preview { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.875rem; display: flex; flex-direction: column; gap: 0.375rem; }
+    .repay-preview.preview-close { background: #fef2f2; border-color: #fecaca; }
+    .preview-row { display: flex; justify-content: space-between; }
+    .preview-row.total-row { border-top: 1px solid #e2e8f0; padding-top: 0.375rem; font-weight: 700; }
+    .deduct-amount { color: #dc2626; }
+    .zero-balance { color: #16a34a; }
+    .preview-impact { font-weight: 600; color: #1e40af; margin-top: 0.25rem; }
+    .repay-preview.preview-close .preview-impact { color: #dc2626; }
+    .hint { font-size: 0.75rem; color: #94a3b8; }
+
+    /* Confirmation Dialog */
+    .confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+    .confirm-dialog { background: #fff; border-radius: 12px; padding: 2rem; min-width: 360px; max-width: 480px; text-align: center; display: flex; flex-direction: column; gap: 1rem; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .confirm-icon { font-size: 2rem; }
+    .confirm-message { font-size: 1rem; color: #334155; line-height: 1.6; }
+    .confirm-actions { display: flex; gap: 0.75rem; justify-content: center; }
   `]
 })
 export class AdvancesComponent implements OnInit {
@@ -290,6 +455,29 @@ export class AdvancesComponent implements OnInit {
   loading = signal(false);
   saving = signal(false);
   isModalOpen = false;
+
+  // Repayment modal state
+  repayModalOpen = signal(false);
+  repayTarget = signal<WorkforceAdvance | null>(null);
+  repayForm: {
+    repaymentType: 'PARTIAL' | 'FULL';
+    amount: number;
+    repaymentDate: string;
+    paymentMethod: string;
+    receiptRef: string;
+    notes: string;
+  } = this.defaultRepayForm();
+
+  repayPreview = computed(() => {
+    const adv = this.repayTarget();
+    if (!adv) return null;
+    const before = adv.remainingBalance;
+    const amount = this.repayForm.amount || 0;
+    const after = Math.max(0, before - amount);
+    const willClose = after <= 0;
+    const impact = willClose ? 'سيتم إغلاق السلفة بالكامل' : `سيتبقى رصيد ${after} ج.م بعد السداد`;
+    return { before, amount, after, willClose, impact };
+  });
 
   form: {
     recipientType: string; workerId: string; contractorId: string;
@@ -358,43 +546,141 @@ export class AdvancesComponent implements OnInit {
     });
   }
 
+  confirmAction = signal<{ message: string; onConfirm: () => void } | null>(null);
+
   pauseAdvance(adv: WorkforceAdvance) {
-    if (!confirm(`هل أنت متأكد من إيقاف اقتطاع السلفة الخاصة بـ (${adv.recipientType === 'WORKER' ? adv.workerName : adv.contractorName})؟`)) return;
-    this.workforceService.pauseAdvance(adv.id).subscribe({
-      next: () => {
-        this.notificationService.success('تم إيقاف خصم السلفة مؤقتاً ✓');
-        this.workforceService.loadAdvances().subscribe();
-      },
-      error: (e) => this.notificationService.error('فشل إيقاف السلفة: ' + (e?.error?.message ?? e?.message))
+    const msg = `هل أنت متأكد من إيقاف اقتطاع السلفة الخاصة بـ (${adv.recipientType === 'WORKER' ? adv.workerName : adv.contractorName})؟`;
+    this.confirmAction.set({
+      message: msg,
+      onConfirm: () => {
+        this.confirmAction.set(null);
+        this.workforceService.pauseAdvance(adv.id).subscribe({
+          next: () => {
+            this.notificationService.success('تم إيقاف خصم السلفة مؤقتاً ✓');
+            this.workforceService.loadAdvances().subscribe();
+          },
+          error: (e) => this.notificationService.error('فشل إيقاف السلفة: ' + (e?.error?.message ?? e?.message))
+        });
+      }
     });
   }
 
   resumeAdvance(adv: WorkforceAdvance) {
-    if (!confirm(`هل أنت متأكد من استئناف اقتطاع السلفة؟`)) return;
-    this.workforceService.resumeAdvance(adv.id).subscribe({
-      next: () => {
-        this.notificationService.success('تم استئناف خصم السلفة بنجاح ✓');
-        this.workforceService.loadAdvances().subscribe();
-      },
-      error: (e) => this.notificationService.error('فشل استئناف السلفة: ' + (e?.error?.message ?? e?.message))
+    this.confirmAction.set({
+      message: 'هل أنت متأكد من استئناف اقتطاع السلفة؟',
+      onConfirm: () => {
+        this.confirmAction.set(null);
+        this.workforceService.resumeAdvance(adv.id).subscribe({
+          next: () => {
+            this.notificationService.success('تم استئناف خصم السلفة بنجاح ✓');
+            this.workforceService.loadAdvances().subscribe();
+          },
+          error: (e) => this.notificationService.error('فشل استئناف السلفة: ' + (e?.error?.message ?? e?.message))
+        });
+      }
     });
   }
 
-  repayAdvance(adv: WorkforceAdvance) {
-    const valStr = prompt(`أدخل مبلغ السداد المبكر (الرصيد المتبقي الحالي: ${adv.remainingBalance} ج.م):`, String(adv.installmentAmount));
-    if (!valStr) return;
-    const val = parseFloat(valStr);
-    if (isNaN(val) || val <= 0) {
-      this.notificationService.warning('يرجى إدخال مبلغ سداد صحيح');
+  cancelAction() {
+    this.confirmAction.set(null);
+  }
+
+  openRepayModal(adv: WorkforceAdvance) {
+    this.repayTarget.set(adv);
+    this.repayForm = this.defaultRepayForm();
+    this.repayForm.amount = adv.remainingBalance;
+    this.repayForm.repaymentDate = new Date().toISOString().slice(0, 10);
+    this.repayModalOpen.set(true);
+  }
+
+  onRepayTypeChange() {
+    const adv = this.repayTarget();
+    if (!adv) return;
+    if (this.repayForm.repaymentType === 'FULL') {
+      this.repayForm.amount = adv.remainingBalance;
+    }
+  }
+
+  confirmRepayment() {
+    const adv = this.repayTarget();
+    if (!adv) return;
+    const amount = this.repayForm.amount;
+    if (!amount || amount <= 0) {
+      this.notificationService.warning('يجب إدخال مبلغ سداد صحيح');
       return;
     }
-    this.workforceService.repayAdvance(adv.id, val).subscribe({
+    if (amount > adv.remainingBalance) {
+      this.notificationService.warning('مبلغ السداد لا يمكن أن يتجاوز الرصيد المتبقي');
+      return;
+    }
+    if (this.repayForm.repaymentType === 'FULL' && amount !== adv.remainingBalance) {
+      this.notificationService.warning('عند السداد الكامل، يجب أن يساوي المبلغ الرصيد المتبقي');
+      return;
+    }
+
+    this.saving.set(true);
+    const payload: AdvanceRepayRequest = {
+      amount,
+      repaymentType: this.repayForm.repaymentType,
+      repaymentDate: this.repayForm.repaymentDate || undefined,
+      paymentMethod: this.repayForm.paymentMethod || undefined,
+      receiptRef: this.repayForm.receiptRef || undefined,
+      notes: this.repayForm.notes || undefined
+    };
+    this.workforceService.repayAdvance(adv.id, payload).subscribe({
       next: () => {
-        this.notificationService.success(`تم إدخال السداد المبكر بمبلغ ${val} ج.م بنجاح ✓`);
+        this.saving.set(false);
+        this.repayModalOpen.set(false);
+        this.repayTarget.set(null);
+        this.notificationService.success(`تم تسجيل السداد بمبلغ ${amount} ج.م بنجاح ✓`);
         this.workforceService.loadAdvances().subscribe();
       },
-      error: (e) => this.notificationService.error('فشل السداد: ' + (e?.error?.message ?? e?.message))
+      error: (e) => {
+        this.saving.set(false);
+        const msg = e?.error?.detail ?? e?.error?.message ?? e?.message ?? 'خطأ غير متوقع';
+        this.notificationService.error('فشل السداد: ' + msg);
+      }
     });
+  }
+
+  closeRepayModal() {
+    this.repayModalOpen.set(false);
+    this.repayTarget.set(null);
+  }
+
+  repayAdvance(adv: WorkforceAdvance) {
+    this.openRepayModal(adv);
+  }
+
+  exportCsv(): void {
+    const rows = this.workforceService.advances().map((adv) => ({
+      recipient: adv.recipientType === 'WORKER' ? adv.workerName : adv.contractorName,
+      type: adv.recipientType === 'WORKER' ? 'عامل' : 'مقاول',
+      amount: adv.amount,
+      termType: this.getTermLabel(adv.termType),
+      totalInstallments: adv.totalInstallments,
+      installmentAmount: adv.installmentAmount,
+      remainingBalance: adv.remainingBalance,
+      deductionFrequency: this.getFrequencyLabel(adv.deductionFrequency),
+      maxDeductionPercent: adv.maxDeductionPercent,
+      status: this.getStatusLabel(adv.status),
+    }));
+    exportCsv(
+      rows,
+      [
+        { key: 'recipient', label: 'الجهة المستفيدة' },
+        { key: 'type', label: 'النوع' },
+        { key: 'amount', label: 'المبلغ الكلي' },
+        { key: 'termType', label: 'نوع السلفة' },
+        { key: 'totalInstallments', label: 'الأقساط' },
+        { key: 'installmentAmount', label: 'قيمة القسط' },
+        { key: 'remainingBalance', label: 'الرصيد المتبقي' },
+        { key: 'deductionFrequency', label: 'دورية الخصم' },
+        { key: 'maxDeductionPercent', label: 'أقصى خصم %' },
+        { key: 'status', label: 'الحالة' },
+      ],
+      `advances-${new Date().toISOString().slice(0, 10)}.csv`,
+    );
   }
 
   // --- Labels ---
@@ -421,6 +707,17 @@ export class AdvancesComponent implements OnInit {
       installmentAmount: 1000, deductionFrequency: 'HALF_MONTH',
       maxDeductionPercent: 50, reason: '',
       firstInstallmentDate: '', deductionMode: 'AUTO', deferralPeriods: 0
+    };
+  }
+
+  private defaultRepayForm() {
+    return {
+      repaymentType: 'FULL' as 'PARTIAL' | 'FULL',
+      amount: 0,
+      repaymentDate: '',
+      paymentMethod: '',
+      receiptRef: '',
+      notes: ''
     };
   }
 }

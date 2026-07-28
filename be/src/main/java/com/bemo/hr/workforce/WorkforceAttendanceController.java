@@ -28,4 +28,17 @@ public class WorkforceAttendanceController {
     public List<ManualAttendanceEntry> saveBatch(@Valid @RequestBody WorkforceApi.BatchAttendanceRequest request) {
         return attendanceService.saveBatch(request);
     }
+
+    @PostMapping("/bulk-update")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    public WorkforceApi.BulkUpdateAttendanceResponse bulkUpdate(
+            @Valid @RequestBody WorkforceApi.BulkUpdateAttendanceRequest request) {
+        return attendanceService.bulkUpdate(request);
+    }
+
+    @GetMapping("/calculation-rules")
+    public WorkforceApi.CalculationRulesResponse getCalculationRules(
+            @RequestParam(required = false) String date) {
+        return attendanceService.getCalculationRules(date);
+    }
 }

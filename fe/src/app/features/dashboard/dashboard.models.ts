@@ -42,3 +42,29 @@ export interface Dashboard {
   categories: CategoryMetric[];
   recentImports: RecentImport[];
 }
+
+export interface AttendanceChartPoint {
+  label: string;
+  present: number;
+  absent: number;
+  late: number;
+  exception: number;
+}
+
+export interface PayrollSummary {
+  totalEmployees: number;
+  paidCount: number;
+  pendingCount: number;
+  totalGross: number;
+  totalPaid: number;
+  totalPending: number;
+}
+
+export interface DepartmentMetric {
+  departmentId: string;
+  departmentName: string;
+  employeeCount: number;
+  presentDays: number;
+  scheduledDays: number;
+  rate: number;
+}

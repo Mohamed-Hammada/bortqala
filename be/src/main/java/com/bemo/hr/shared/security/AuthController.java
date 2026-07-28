@@ -49,6 +49,9 @@ public class AuthController {
         return authService.updateAppSettings(request);
     }
 
+    @GetMapping("/auth/user-categories")
+    List<AuthApi.UserCategoryResponse> userCategories() { return authService.listCategories(); }
+
     @GetMapping("/users")
     @PreAuthorize("hasRole('ADMIN')")
     List<AuthApi.UserResponse> users() { return authService.listUsers(); }

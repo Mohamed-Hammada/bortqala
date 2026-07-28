@@ -11,6 +11,7 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   tableDensity: 'COMFORTABLE',
   locale: 'ar-EG',
   excelTableStyle: 'GOLD',
+  defaultPage: '/dashboard',
   updatedAt: null,
 };
 
@@ -59,7 +60,7 @@ export class AuthService {
   }
 
   updatePreferences(
-    preferences: Pick<UserPreferences, 'theme' | 'tableDensity' | 'locale' | 'excelTableStyle'>,
+    preferences: Pick<UserPreferences, 'theme' | 'tableDensity' | 'locale' | 'excelTableStyle' | 'defaultPage'>,
   ) {
     return this.httpClient.put<UserPreferences>('/api/v1/auth/preferences', preferences).pipe(
       tap((updated) => {

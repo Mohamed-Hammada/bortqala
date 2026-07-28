@@ -5,7 +5,10 @@
       <h1>دورة المشتريات (Purchase Requests to Payments)</h1>
       <p>طلبات الشراء ← طلبات العروض RFQ ← أوامر الشراء PO ← استلام البضائع GRN ← فواتير وسداد الموردين.</p>
     </div>
-    <button class="button primary" (click)="openNew()">＋ أمر شراء جديد (PO)</button>
+    <div class="header-actions">
+      <button class="button secondary" (click)="exportCsv()">⇩ Excel</button>
+      <button class="button primary" (click)="openNew()">＋ أمر شراء جديد (PO)</button>
+    </div>
   </header>
 
   @if (loading()) {
@@ -67,7 +70,7 @@
             <tr>
               <td><strong class="ltr">{{ po.poNumber }}</strong></td>
               <td class="ltr">{{ date(po.poDate) }}</td>
-              <td><strong>{{ po.supplierId }}</strong></td>
+              <td><strong>{{ po.supplierName || po.supplierId }}</strong></td>
               <td>{{ po.paymentTerms || '—' }}</td>
               <td class="ltr"><strong>{{ po.totalAmount | number:'1.2-2' }}</strong> <small>ج.م</small></td>
               <td>

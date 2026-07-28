@@ -2,17 +2,31 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { WorkforceService } from '../../data-access/workforce.service';
 import { NotificationService } from '../../../../core/notification.service';
+import { exportCsv } from '../../../../core/download';
 import { Worker, AttendanceCell } from '../../models/workforce.models';
 
 interface DayCell {
   attendanceValue: number; // 1, 0.5, 0
   overtimeHours: number;
+  deductionHours: number;
   notes: string;
 }
 
 type AttendanceMatrix = { [workerId: string]: { [date: string]: DayCell } };
+
+interface CalculationRules {
+  overtimeRate: number;
+  overtimeThresholdHours: number;
+  deductionRatePerHour: number;
+  holidayPayRate: number;
+  standardDailyHours: string;
+  description: string;
+}
+
+type StatusOption<T = string> = { value: T; label: string };
 
 @Component({
   selector: 'app-manual-attendance',
@@ -26,6 +40,7 @@ type AttendanceMatrix = { [workerId: string]: { [date: string]: DayCell } };
           <h1>جدول تسجيل حضور العمالة — مصفوفة متعددة الأيام</h1>
         </div>
         <div class="header-actions">
+          <button type="button" class="btn btn-secondary" (click)="exportCsv()">⇩ Excel</button>
           <button type="button" class="btn btn-secondary" (click)="applyFullDayAll()">
             تعيين يوم كامل للكل
           </button>
@@ -73,6 +88,26 @@ type AttendanceMatrix = { [workerId: string]: { [date: string]: DayCell } };
             </select>
           </div>
           <div class="control-group">
+            <label>بحث بالاسم/الكود</label>
+            <input type="text" [(ngModel)]="searchText" (input)="onFilterChange()"
+              placeholder="ابحث..." class="form-input search-input" />
+          </div>
+          <div class="control-group">
+            <label>حالة الحضور</label>
+              <select [(ngModel)]="selectedAttendanceStatus" (change)="onFilterChange()" class="form-input">
+              @for (opt of attendanceStatusOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="control-group toggle-group">
+            <label>&nbsp;</label>
+            <label class="toggle-label">
+              <input type="checkbox" [(ngModel)]="showInactive" (change)="onFilterChange()" />
+              <span class="toggle-text">إظهار العمال غير النشطين</span>
+            </label>
+          </div>
+          <div class="control-group">
             <label>&nbsp;</label>
             <button type="button" class="btn btn-outline" (click)="loadData()">
               🔄 تحديث البيانات
@@ -113,6 +148,30 @@ type AttendanceMatrix = { [workerId: string]: { [date: string]: DayCell } };
         </div>
       }
 
+      <!-- Calculation Rules Banner -->
+      @if (rules(); as r) {
+        <div class="card rules-card">
+          <details>
+            <summary class="rules-summary">📊 قواعد احتساب الحضور والانصراف</summary>
+            <div class="rules-body">
+              <div class="rule-item">
+                <span class="rule-label">معدل الأوفرتايم:</span>
+                <span class="rule-value">{{ r.overtimeRate }}× بعد {{ r.overtimeThresholdHours }} ساعات</span>
+              </div>
+              <div class="rule-item">
+                <span class="rule-label">معدل خصم ساعة:</span>
+                <span class="rule-value">الأجر اليومي ÷ {{ r.standardDailyHours }}</span>
+              </div>
+              <div class="rule-item">
+                <span class="rule-label">معدل أجر العطلات:</span>
+                <span class="rule-value">{{ r.holidayPayRate }}× الأجر العادي</span>
+              </div>
+              <p class="rules-desc">{{ r.description }}</p>
+            </div>
+          </details>
+        </div>
+      }
+
       <!-- Matrix Table -->
       @else {
         <div class="card matrix-card">
@@ -123,10 +182,34 @@ type AttendanceMatrix = { [workerId: string]: { [date: string]: DayCell } };
             <span class="legend-item absent">■ غياب (0)</span>
           </div>
 
+          <!-- Bulk Actions Bar -->
+          @if (selectedWorkerIds().size > 0) {
+            <div class="bulk-bar">
+              <span class="bulk-count">{{ selectedWorkerIds().size }} عامل محدد</span>
+              <select [(ngModel)]="bulkStatusValue" class="form-input bulk-select">
+                @for (opt of bulkStatusOptions; track opt.value) {
+                  <option [ngValue]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+              <button type="button" class="btn btn-primary btn-sm" (click)="applyBulkStatus()">
+                تطبيق على المحددين
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" (click)="clearSelection()">
+                إلغاء التحديد
+              </button>
+            </div>
+          }
+
           <div class="table-scroll-wrapper">
             <table class="matrix-table">
               <thead>
                 <tr>
+                  <th class="sticky-col check-col">
+                    <input type="checkbox"
+                      [checked]="allSelected()"
+                      (change)="toggleSelectAll()"
+                      class="row-check" />
+                  </th>
                   <th class="sticky-col worker-col">كود العامل</th>
                   <th class="sticky-col name-col">اسم العامل</th>
                   <th class="sticky-col rate-col">اليومية</th>
@@ -140,13 +223,26 @@ type AttendanceMatrix = { [workerId: string]: { [date: string]: DayCell } };
                   }
                   <th class="total-col">إجمالي أيام</th>
                   <th class="total-col">الإجمالي (ج.م)</th>
+                  <th class="indicator-col">مؤشرات</th>
                 </tr>
               </thead>
               <tbody>
                 @for (w of filteredWorkers(); track w.id) {
-                  <tr>
+                  <tr [class.selected-row]="isSelected(w.id)">
+                    <td class="sticky-col check-col">
+                      <input type="checkbox"
+                        [checked]="isSelected(w.id)"
+                        (change)="toggleWorker(w.id)"
+                        class="row-check" />
+                    </td>
                     <td class="sticky-col worker-col"><strong>{{ w.code }}</strong></td>
-                    <td class="sticky-col name-col">{{ w.fullName }}<br><small class="contractor-name">{{ w.contractorName }}</small></td>
+                    <td class="sticky-col name-col">
+                      {{ w.fullName }}<br>
+                      <small class="contractor-name">{{ w.contractorName }}</small>
+                      @if (w.status === 'INACTIVE') {
+                        <span class="badge-inactive">غير نشط</span>
+                      }
+                    </td>
                     <td class="sticky-col rate-col">{{ w.defaultDailyRate | number:'1.0-0' }} ج.م</td>
                     @for (date of dates(); track date) {
                       <td class="cell-td" [class.weekend-cell]="isWeekend(date)">
@@ -170,12 +266,20 @@ type AttendanceMatrix = { [workerId: string]: { [date: string]: DayCell } };
                     <td class="total-col total-amount">
                       <strong>{{ getWorkerTotalAmount(w) | number:'1.0-0' }} ج.م</strong>
                     </td>
+                    <td class="indicator-col">
+                      @if (hasOvertime(w.id)) {
+                        <span class="indicator overtime-i" title="يوجد أوفرتايم">⏰</span>
+                      }
+                      @if (hasDeduction(w.id)) {
+                        <span class="indicator deduction-i" title="يوجد خصم">⚠️</span>
+                      }
+                    </td>
                   </tr>
                 }
               </tbody>
               <tfoot>
                 <tr class="totals-row">
-                  <td class="sticky-col" colspan="3"><strong>الإجمالي اليومي</strong></td>
+                  <td class="sticky-col" colspan="4"><strong>الإجمالي اليومي</strong></td>
                   @for (date of dates(); track date) {
                     <td class="total-col">
                       <strong>{{ getDayTotal(date) | number:'1.1-1' }}</strong>
@@ -257,11 +361,39 @@ type AttendanceMatrix = { [workerId: string]: { [date: string]: DayCell } };
     .contractor-name { font-size: 0.75rem; color: #94a3b8; }
     .totals-row { background: #f1f5f9; font-weight: 700; }
     .grand-total { text-align: center; color: #1e40af; font-size: 0.9375rem; }
+    /* Search input */
+    .search-input { min-width: 140px; }
+    /* Toggle group */
+    .toggle-group { justify-content: flex-end; }
+    .toggle-label { display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.8125rem; color: #334155; user-select: none; }
+    .toggle-text { font-weight: 500; }
+    /* Checkbox column */
+    .check-col { position: sticky; background: #fff; z-index: 8; right: 310px; min-width: 36px; text-align: center; }
+    .row-check { width: 16px; height: 16px; cursor: pointer; accent-color: #d97706; }
+    .selected-row { background: #fefce8 !important; }
+    /* Bulk bar */
+    .bulk-bar { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.75rem; margin-bottom: 0.625rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .bulk-count { font-weight: 700; color: #b45309; font-size: 0.875rem; }
+    .bulk-select { width: auto; padding: 0.3rem 0.5rem; }
+    .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.8125rem; }
+    /* Indicator column */
+    .indicator-col { min-width: 48px; background: #f8fafc; font-size: 1rem; text-align: center; }
+    .indicator { cursor: help; display: inline-block; margin: 0 1px; }
+    .badge-inactive { display: inline-block; background: #fef2f2; color: #dc2626; font-size: 0.6875rem; padding: 0.125rem 0.375rem; border-radius: 4px; margin-right: 0.375rem; font-weight: 600; }
+    /* Calculation rules card */
+    .rules-card { background: #f0fdf4; border-color: #bbf7d0; padding: 0.75rem 1rem; }
+    .rules-summary { font-weight: 700; color: #166534; cursor: pointer; font-size: 0.875rem; }
+    .rules-body { margin-top: 0.625rem; display: flex; flex-direction: column; gap: 0.375rem; }
+    .rule-item { display: flex; gap: 0.5rem; font-size: 0.8125rem; }
+    .rule-label { color: #475569; font-weight: 600; min-width: 110px; }
+    .rule-value { color: #0f172a; font-weight: 500; }
+    .rules-desc { font-size: 0.75rem; color: #64748b; margin-top: 0.375rem; font-style: italic; }
   `]
 })
 export class ManualAttendanceComponent implements OnInit {
   private workforceService = inject(WorkforceService);
   private notificationService = inject(NotificationService);
+  private http = inject(HttpClient);
 
   workers = this.workforceService.workers;
   contractors = this.workforceService.contractors;
@@ -273,16 +405,56 @@ export class ManualAttendanceComponent implements OnInit {
 
   selectedContractorId = signal<string>('');
   selectedCategoryId = signal<string>('');
+  searchText = signal<string>('');
+  selectedAttendanceStatus = signal<string>('all');
+  showInactive = signal<boolean>(false);
+  selectedWorkerIds = signal<Set<string>>(new Set());
+  bulkStatusValue = signal<number>(1);
+  rules = signal<CalculationRules | null>(null);
+
+  readonly attendanceStatusOptions: StatusOption[] = [
+    { value: 'all', label: 'الكل' },
+    { value: 'present', label: 'حاضر (1)' },
+    { value: 'half', label: 'نصف يوم (½)' },
+    { value: 'absent', label: 'غائب (—)' },
+  ];
+
+  readonly bulkStatusOptions: StatusOption<number>[] = [
+    { value: 1, label: 'يوم كامل (1)' },
+    { value: 0.5, label: 'نصف يوم (½)' },
+    { value: 0, label: 'غائب (—)' },
+  ];
 
   filteredWorkers = computed(() => {
     let list = this.workers();
     const contractorId = this.selectedContractorId();
     const categoryId = this.selectedCategoryId();
+    const search = this.searchText().trim().toLowerCase();
+    const statusFilter = this.selectedAttendanceStatus();
+    const inactiveShown = this.showInactive();
+
     if (contractorId) {
       list = list.filter(w => w.contractorId === contractorId);
     }
     if (categoryId) {
       list = list.filter(w => w.categoryId === categoryId);
+    }
+    if (search) {
+      list = list.filter(w =>
+        w.fullName.toLowerCase().includes(search) ||
+        w.code.toLowerCase().includes(search)
+      );
+    }
+    if (!inactiveShown) {
+      list = list.filter(w => w.status !== 'INACTIVE');
+    }
+    if (statusFilter !== 'all') {
+      const targetValue = statusFilter === 'present' ? 1 : statusFilter === 'half' ? 0.5 : 0;
+      list = list.filter(w => {
+        const cells = this.matrix[w.id];
+        if (!cells) return false;
+        return Object.values(cells).some(c => c.attendanceValue === targetValue);
+      });
     }
     return list;
   });
@@ -291,6 +463,12 @@ export class ManualAttendanceComponent implements OnInit {
 
   startDate = '';
   endDate = '';
+
+  allSelected = computed(() => {
+    const fw = this.filteredWorkers();
+    if (fw.length === 0) return false;
+    return fw.every(w => this.selectedWorkerIds().has(w.id));
+  });
 
   grandTotal = computed(() => {
     let total = 0;
@@ -352,18 +530,17 @@ export class ManualAttendanceComponent implements OnInit {
   }
 
   onFilterChange() {
-    // signal-based reactivity handles filteredWorkers automatically
+    this.selectedWorkerIds.set(new Set());
   }
 
   onPeriodChange() {
     const newDates = this.generateDateRange(this.startDate, this.endDate);
     this.dates.set(newDates);
-    // Re-initialize matrix for new dates while keeping existing values
     for (const w of this.workers()) {
       if (!this.matrix[w.id]) this.matrix[w.id] = {};
       for (const date of newDates) {
         if (!this.matrix[w.id][date]) {
-          this.matrix[w.id][date] = { attendanceValue: 1, overtimeHours: 0, notes: '' };
+          this.matrix[w.id][date] = { attendanceValue: 1, overtimeHours: 0, deductionHours: 0, notes: '' };
         }
       }
     }
@@ -373,6 +550,7 @@ export class ManualAttendanceComponent implements OnInit {
     if (!this.startDate || !this.endDate) return;
     this.loading.set(true);
     this.loadError.set(null);
+    this.loadCalculationRules();
 
     forkJoin({
       contractors: this.workforceService.loadContractors(),
@@ -390,6 +568,42 @@ export class ManualAttendanceComponent implements OnInit {
     });
   }
 
+  private loadCalculationRules() {
+    this.http.get<CalculationRules>('/api/v1/workforce/attendance/calculation-rules', {
+      params: { date: this.startDate || '' }
+    }).subscribe({
+      next: (r) => this.rules.set(r),
+      error: () => { /* non-critical */ }
+    });
+  }
+
+  exportCsv(): void {
+    const workers = this.filteredWorkers();
+    const dateList = this.dates();
+    const rows = workers.map((w) => {
+      const row: Record<string, string | number | null | undefined> = {
+        code: w.code,
+        name: w.fullName,
+        dailyRate: w.defaultDailyRate ?? 0,
+        totalDays: this.getWorkerTotalDays(w.id),
+        totalAmount: this.getWorkerTotalAmount(w),
+      };
+      for (const date of dateList) {
+        row[date] = this.matrix[w.id]?.[date]?.attendanceValue ?? 0;
+      }
+      return row;
+    });
+    const columns = [
+      { key: 'code', label: 'كود العامل' },
+      { key: 'name', label: 'اسم العامل' },
+      { key: 'dailyRate', label: 'اليومية' },
+      ...dateList.map((d) => ({ key: d, label: d })),
+      { key: 'totalDays', label: 'إجمالي أيام' },
+      { key: 'totalAmount', label: 'الإجمالي (ج.م)' },
+    ];
+    exportCsv(rows, columns, `manual-attendance-${this.startDate}-${this.endDate}.csv`);
+  }
+
   private initMatrix(workers: Worker[]) {
     const dates = this.generateDateRange(this.startDate, this.endDate);
     this.dates.set(dates);
@@ -397,7 +611,7 @@ export class ManualAttendanceComponent implements OnInit {
       if (!this.matrix[w.id]) this.matrix[w.id] = {};
       for (const date of dates) {
         if (!this.matrix[w.id][date]) {
-          this.matrix[w.id][date] = { attendanceValue: 1, overtimeHours: 0, notes: '' };
+          this.matrix[w.id][date] = { attendanceValue: 1, overtimeHours: 0, deductionHours: 0, notes: '' };
         }
       }
     }
@@ -413,6 +627,52 @@ export class ManualAttendanceComponent implements OnInit {
     }
   }
 
+  // --- Bulk selection ---
+  toggleSelectAll() {
+    const current = this.selectedWorkerIds();
+    if (this.allSelected()) {
+      this.selectedWorkerIds.set(new Set());
+    } else {
+      this.selectedWorkerIds.set(new Set(this.filteredWorkers().map(w => w.id)));
+    }
+  }
+
+  isSelected(workerId: string): boolean {
+    return this.selectedWorkerIds().has(workerId);
+  }
+
+  clearSelection() {
+    this.selectedWorkerIds.set(new Set());
+  }
+
+  toggleWorker(workerId: string) {
+    const next = new Set(this.selectedWorkerIds());
+    if (next.has(workerId)) {
+      next.delete(workerId);
+    } else {
+      next.add(workerId);
+    }
+    this.selectedWorkerIds.set(next);
+  }
+
+  applyBulkStatus() {
+    const ids = [...this.selectedWorkerIds()];
+    if (ids.length === 0) {
+      this.notificationService.warning('اختر عاملاً واحداً على الأقل');
+      return;
+    }
+    const value = this.bulkStatusValue();
+    for (const wId of ids) {
+      for (const date of this.dates()) {
+        if (this.matrix[wId]?.[date]) {
+          this.matrix[wId][date].attendanceValue = value;
+        }
+      }
+    }
+    this.notificationService.success(`تم تطبيق التحديث على ${ids.length} عامل`);
+    this.selectedWorkerIds.set(new Set());
+  }
+
   saveAttendance() {
     const entries: AttendanceCell[] = [];
     for (const w of this.filteredWorkers()) {
@@ -424,6 +684,7 @@ export class ManualAttendanceComponent implements OnInit {
             workDate: date,
             attendanceValue: cell.attendanceValue,
             overtimeHours: cell.overtimeHours || undefined,
+            deductionHours: cell.deductionHours || undefined,
             notes: cell.notes || undefined
           });
         }
@@ -461,6 +722,30 @@ export class ManualAttendanceComponent implements OnInit {
     return this.filteredWorkers().reduce((sum, w) => sum + (this.matrix[w.id]?.[date]?.attendanceValue ?? 0), 0);
   }
 
+  getStatusLabel(value: number): string {
+    if (value === 1) return 'حاضر';
+    if (value === 0.5) return 'نصف يوم';
+    return 'غائب';
+  }
+
+  getStatusClass(value: number): string {
+    if (value === 1) return 'status-present';
+    if (value === 0.5) return 'status-half';
+    return 'status-absent';
+  }
+
+  hasOvertime(workerId: string): boolean {
+    return this.dates().some(date =>
+      (this.matrix[workerId]?.[date]?.overtimeHours ?? 0) > 0
+    );
+  }
+
+  hasDeduction(workerId: string): boolean {
+    return this.dates().some(date =>
+      (this.matrix[workerId]?.[date]?.deductionHours ?? 0) > 0
+    );
+  }
+
   // --- Date helpers ---
   private generateDateRange(start: string, end: string): string[] {
     if (!start || !end) return [];
@@ -479,7 +764,7 @@ export class ManualAttendanceComponent implements OnInit {
   isWeekend(dateStr: string): boolean {
     const [y, m, d] = dateStr.split('-').map(Number);
     const day = new Date(y, m - 1, d, 12, 0, 0).getDay();
-    return day === 5 || day === 6; // Fri/Sat
+    return day === 5 || day === 6;
   }
 
   getDayName(dateStr: string): string {

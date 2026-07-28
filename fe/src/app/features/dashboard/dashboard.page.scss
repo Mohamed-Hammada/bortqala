@@ -40,7 +40,187 @@
   width: 90px;
 }
 
-/* Priority 1: Hero Grid */
+/* Summary Cards Row */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.summary-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  flex-shrink: 0;
+
+  &.employees { background: rgba(37, 99, 235, 0.1); }
+  &.attendance { background: rgba(16, 185, 129, 0.1); }
+  &.approvals { background: rgba(245, 158, 11, 0.1); }
+  &.payroll { background: rgba(139, 92, 246, 0.1); }
+}
+
+.summary-card-body {
+  min-width: 0;
+}
+
+.summary-card-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.summary-card-value {
+  display: block;
+  font-size: 26px;
+  font-weight: 700;
+  font-family: var(--heading-font);
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.summary-card-body small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+.mini-meter {
+  height: 4px;
+  border-radius: 4px;
+  background: var(--surface-hover);
+  overflow: hidden;
+  margin-top: 4px;
+
+  i {
+    display: block;
+    height: 100%;
+    background: var(--success);
+    border-radius: inherit;
+  }
+}
+
+/* Chart Section */
+.chart-section {
+  padding: 20px;
+  border: 1px solid var(--line);
+  margin-bottom: 20px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0;
+    font-size: 16px;
+    font-family: var(--heading-font);
+  }
+}
+
+.chart-controls {
+  display: flex;
+  gap: 8px;
+
+  select {
+    height: 34px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+    padding: 0 8px;
+    font-size: 13px;
+    color: var(--ink);
+  }
+}
+
+.chart-loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--muted);
+}
+
+.bar-chart {
+  overflow-x: auto;
+}
+
+.bar-chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.legend-item {
+  padding: 2px 8px;
+  border-radius: 4px;
+
+  &.present { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+  &.absent { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+  &.late { background: rgba(245, 158, 11, 0.15); color: var(--warning-text); }
+}
+
+.bar-chart-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  min-height: 200px;
+  padding: 8px 0;
+}
+
+.bar-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.bar-stack {
+  width: 100%;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 1px;
+  height: 160px;
+  justify-content: flex-end;
+}
+
+.bar {
+  width: 70%;
+  border-radius: 3px 3px 0 0;
+  min-height: 2px;
+  transition: height 0.3s ease;
+
+  &.bar-present { background: var(--success); }
+  &.bar-absent { background: var(--danger); }
+  &.bar-late { background: var(--warning-text); }
+}
+
+.bar-label {
+  font-size: 9px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Hero Grid */
 .hero-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr);
@@ -124,125 +304,7 @@
   margin-top: 8px;
 }
 
-/* Priority 2: Enriched KPI Cards */
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.kpi-card {
-  padding: 18px 20px;
-  border: 1px solid var(--line);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow);
-    border-color: var(--gold);
-  }
-}
-
-.kpi-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.kpi-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--surface-muted);
-  border: 1px solid var(--line);
-  display: grid;
-  place-items: center;
-  font-size: 17px;
-  color: var(--gold);
-
-  &.warning {
-    background: var(--warning-soft);
-  }
-
-  &.danger {
-    background: var(--danger-soft);
-    color: var(--danger);
-  }
-}
-
-.kpi-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 12px;
-
-  &.success {
-    background: var(--success-soft);
-    color: var(--success);
-  }
-
-  &.warning {
-    background: var(--warning-soft);
-    color: var(--warning-text);
-  }
-
-  &.info {
-    background: var(--surface-muted);
-    color: var(--secondary-text);
-  }
-
-  &.danger {
-    background: var(--danger-soft);
-    color: var(--danger);
-  }
-}
-
-.kpi-label {
-  display: block;
-  color: var(--muted);
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
-.kpi-value {
-  display: block;
-  font: 700 28px var(--heading-font);
-  color: var(--ink);
-  margin: 4px 0 6px;
-
-  .unit {
-    font-size: 16px;
-    color: var(--muted);
-    font-weight: 500;
-  }
-}
-
-.kpi-hint {
-  display: block;
-  color: var(--muted);
-  font-size: 11.5px;
-}
-
-.kpi-action {
-  display: inline-block;
-  color: var(--warning);
-  font-size: 12px;
-  font-weight: 700;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
-.metrics .attention {
-  border-color: rgba(212, 160, 23, 0.4);
-  background: linear-gradient(180deg, var(--surface) 0%, rgba(212, 160, 23, 0.05) 100%);
-}
-
-/* Executive Factory Operations Units (4-Quadrant Grid) */
+/* Executive Factory Operations Units */
 .executive-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -403,33 +465,7 @@
   }
 }
 
-.warehouse-meter-bar {
-  margin-top: 4px;
-
-  .label {
-    display: block;
-    font-size: 11.5px;
-    color: var(--muted);
-    font-weight: 600;
-    margin-bottom: 4px;
-  }
-
-  .meter-line {
-    height: 6px;
-    border-radius: 8px;
-    background: var(--surface-hover);
-    overflow: hidden;
-
-    i {
-      display: block;
-      height: 100%;
-      background: var(--gold);
-      border-radius: inherit;
-    }
-  }
-}
-
-/* Priority 3: Details Content Grid */
+/* Details Content Grid */
 .content-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
@@ -530,13 +566,13 @@ td small {
   .content-grid {
     grid-template-columns: 1fr;
   }
-  .metrics {
+  .summary-cards {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 580px) {
-  .metrics {
+  .summary-cards {
     grid-template-columns: 1fr;
   }
   .report-state {

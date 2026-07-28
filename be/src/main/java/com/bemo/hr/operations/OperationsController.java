@@ -19,6 +19,7 @@ import com.bemo.hr.reporting.application.ExcelExportOptions;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/operations")
@@ -43,6 +44,31 @@ public class OperationsController {
     OperationsApi.Snapshot advance(@Valid @RequestBody OperationsApi.AdvanceRequest request, Authentication authentication) {
         return operationsService.recordAdvance(request, authentication.getName());
     }
+
+    @GetMapping("/item-categories")
+    List<OperationsApi.ItemCategoryView> listCategories() { return operationsService.listItemCategories(); }
+
+    @PostMapping("/item-categories") @ResponseStatus(HttpStatus.CREATED)
+    OperationsApi.ItemCategoryView createCategory(@Valid @RequestBody OperationsApi.ItemCategoryRequest request) {
+        return operationsService.createItemCategory(request);
+    }
+
+    @GetMapping("/uoms")
+    List<OperationsApi.UnitOfMeasureView> listUoms() { return operationsService.listUnitOfMeasures(); }
+
+    @PostMapping("/uoms") @ResponseStatus(HttpStatus.CREATED)
+    OperationsApi.UnitOfMeasureView createUom(@Valid @RequestBody OperationsApi.UnitOfMeasureRequest request) {
+        return operationsService.createUnitOfMeasure(request);
+    }
+
+    @GetMapping("/negative-balances")
+    List<OperationsApi.NegativeBalanceView> negativeBalances() { return operationsService.getNegativeBalances(); }
+
+    @PostMapping("/adjustments") @ResponseStatus(HttpStatus.CREATED)
+    OperationsApi.Snapshot adjustment(@Valid @RequestBody OperationsApi.AdjustmentRequest request, Authentication authentication) {
+        return operationsService.createStockAdjustment(request, authentication.getName());
+    }
+
     @GetMapping("/export.xlsx")
     ResponseEntity<byte[]> export(Authentication authentication) {
         var preference=authService.currentPreferences(authentication.getName());

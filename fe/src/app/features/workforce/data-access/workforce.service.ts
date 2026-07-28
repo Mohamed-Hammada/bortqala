@@ -147,8 +147,8 @@ export class WorkforceService {
     return this.http.post<WorkforceAdvance>(`/api/v1/workforce/advances/${id}/resume`, {});
   }
 
-  repayAdvance(id: string, amount: number): Observable<WorkforceAdvance> {
-    return this.http.post<WorkforceAdvance>(`/api/v1/workforce/advances/${id}/repay`, { amount });
+  repayAdvance(id: string, payload: any): Observable<WorkforceAdvance> {
+    return this.http.post<WorkforceAdvance>(`/api/v1/workforce/advances/${id}/repay`, payload);
   }
 
   // Import Analysis

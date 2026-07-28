@@ -16,6 +16,7 @@ import { NotificationService } from '../../core/notification.service';
 
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
+import { exportCsv } from '../../core/download';
 
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 
@@ -133,42 +134,7 @@ export class UsersPage {
   }
 
   getMenuLabel(id: string): string {
-    const map: Record<string, string> = {
-      'organization': 'الهيكل التنظيمي والشركات',
-      'audit-logs': 'سجل التدقيق والمراقبة',
-      'dashboard': 'لوحة التحكم والمؤشرات',
-      'categories': 'قواعد وفئات الدوام',
-      'employees': 'الموظفون وسجلات الخدمة',
-      'imports': 'استيراد ملخصات الحضور',
-      'parties': 'الموردون والعملاء الجهات',
-      'reports': 'تقارير الحضور والمعالجة',
-      'operations': 'المخزون وحركات المستودعات',
-      'procurement': 'أوامر المشتريات والاستلام',
-      'sales': 'المبيعات والعملاء',
-      'production': 'التصنيع وأوامر الشغل',
-      'quality': 'فحص الجودة والمطابقة',
-      'payroll': 'المرتبات والأجور والتسويات',
-      'accounts': 'دليل الحسابات',
-      'journal-entries': 'قيود اليومية',
-      'banks': 'الحسابات الخزينة والبنك',
-      'tax-currency': 'الضرائب والعملات',
-      'fiscal-periods': 'الفترات المالية والسنوات',
-      'users': 'المستخدمون وإدارة الصلاحيات',
-      'settings': 'إعدادات النظام والتفضيلات',
-      'workforce-dashboard': 'لوحة متابعة العمالة',
-      'workforce-contractors': 'سجل مقاولي العمالة',
-      'workforce-workers': 'سجل العمالة اليومية',
-      'workforce-categories': 'فئات وتصنيفات العمالة',
-      'workforce-requests': 'طلبات توريد العمالة',
-      'workforce-attendance': 'تسجيل الحضور اليدوي للعمال',
-      'workforce-settlements': 'كشوف تسوية أجور العمالة',
-      'workforce-advances': 'سُلف وأقساط العمالة',
-      'workforce-accounts': 'حسابات المقاولين والشركاء',
-      'workforce-reports': 'تقارير ميزانية العمالة'
-    };
-    if (map[id]) return map[id];
-    const opt = this.menuOptions.find((m) => m.id === id);
-    return opt ? this.i18n.t(opt.labelKey) : id;
+    return this.PERMISSION_LABELS[id] ?? id;
   }
 
   selectAllMenus(): void {
@@ -192,10 +158,44 @@ export class UsersPage {
     canViewSalary: new FormControl(true, { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
     version: new FormControl<number | null>(null),
+    categoryId: new FormControl<string | null>(null),
   });
+
+  readonly PERMISSION_LABELS: Record<string, string> = {
+    'dashboard': 'Dashboard & KPIs',
+    'categories': 'Attendance Categories & Rules',
+    'employees': 'Employee Records',
+    'imports': 'Attendance Import',
+    'parties': 'Parties (Suppliers/Customers)',
+    'reports': 'Reports',
+    'workforce-dashboard': 'Workforce Dashboard',
+    'workforce-contractors': 'Contractor Registry',
+    'workforce-workers': 'Worker Registry',
+    'workforce-categories': 'Worker Categories',
+    'workforce-requests': 'Labor Requests',
+    'workforce-attendance': 'Manual Attendance',
+    'workforce-settlements': 'Settlement Sheets',
+    'workforce-advances': 'Advances & Installments',
+    'workforce-accounts': 'Contractor Accounts',
+    'workforce-reports': 'Workforce Reports',
+    'operations': 'Inventory & Warehouse',
+    'procurement': 'Purchase Orders',
+    'sales': 'Sales & Customers',
+    'production': 'Manufacturing & Work Orders',
+    'quality': 'QC & Compliance',
+    'payroll': 'Payroll & Salary',
+    'accounts': 'Chart of Accounts',
+    'journal-entries': 'Journal Entries',
+    'banks': 'Bank & Treasury',
+    'tax-currency': 'Tax & Currency',
+    'fiscal-periods': 'Fiscal Periods',
+    'users': 'Users & Permissions',
+    'settings': 'System Settings',
+  };
 
   constructor() {
     void this.store.load();
+    void this.store.loadCategories();
     void this.loadPolicy();
   }
 
@@ -223,6 +223,7 @@ export class UsersPage {
       canViewSalary: true,
       active: true,
       version: null,
+      categoryId: null,
     });
     this.drawerOpen.set(true);
   }
@@ -240,6 +241,7 @@ export class UsersPage {
       canViewSalary: item.canViewSalary ?? true,
       active: item.active,
       version: item.version,
+      categoryId: (item as any).categoryId ?? null,
     });
     this.drawerOpen.set(true);
   }
@@ -338,6 +340,27 @@ export class UsersPage {
   closeDrawer(): void {
     this.drawerOpen.set(false);
     this.submitted.set(false);
+  }
+
+  exportCsv(): void {
+    const rows = this.paged().map((user) => ({
+      username: user.username,
+      displayName: user.displayName,
+      roles: user.roles.join(', '),
+      allowedMenus: user.allowedMenus?.length ?? 0,
+      active: user.active ? 'نشط' : 'غير نشط',
+    }));
+    exportCsv(
+      rows,
+      [
+        { key: 'username', label: 'اسم المستخدم' },
+        { key: 'displayName', label: 'الاسم المعروض' },
+        { key: 'roles', label: 'الأدوار' },
+        { key: 'allowedMenus', label: 'عدد الصلاحيات' },
+        { key: 'active', label: 'الحالة' },
+      ],
+      `users-${new Date().toISOString().slice(0, 10)}.csv`,
+    );
   }
 
   @HostListener('document:keydown', ['$event']) onKeyDown(event: KeyboardEvent): void {

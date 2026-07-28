@@ -5,6 +5,7 @@ import { WorkforceService } from '../../data-access/workforce.service';
 import { SettlementPeriod, SettlementCalculationSummary } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 import { I18nService } from '../../../../core/i18n.service';
+import { NotificationService } from '../../../../core/notification.service';
 
 @Component({
   selector: 'app-settlement-periods',
@@ -153,6 +154,7 @@ import { I18nService } from '../../../../core/i18n.service';
 export class SettlementPeriodsComponent implements OnInit {
   workforceService = inject(WorkforceService);
   i18n = inject(I18nService);
+  notification = inject(NotificationService);
 
   isCreateModalOpen = false;
   isSummaryModalOpen = false;
@@ -190,7 +192,7 @@ export class SettlementPeriodsComponent implements OnInit {
   }
 
   approvePeriod(id: string) {
-    this.workforceService.approvePeriod(id).subscribe(() => alert('تم اعتماد وقفل فترة التسوية بنجاح'));
+    this.workforceService.approvePeriod(id).subscribe(() => this.notification.success('تم اعتماد وقفل فترة التسوية بنجاح'));
   }
 
   exportExcel(id: string, code: string) {

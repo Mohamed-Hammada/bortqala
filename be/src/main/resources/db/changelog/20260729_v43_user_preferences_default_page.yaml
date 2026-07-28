@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-43-user-preferences-default-page
+      author: hr-platform
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: user_preferences
+        - not:
+            columnExists:
+              tableName: user_preferences
+              columnName: default_page
+      changes:
+        - addColumn:
+            tableName: user_preferences
+            columns:
+              - column:
+                  name: default_page
+                  type: VARCHAR(100)
+                  defaultValue: /dashboard
+                  constraints:
+                    nullable: false

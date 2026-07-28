@@ -200,7 +200,8 @@ public class HrConfigurationService {
         scheduleRuleRepository.flush();
         var schedules = requests.stream()
                 .map(request -> new ScheduleRule(categoryId, request.name(), request.effectiveFrom(),
-                        request.effectiveTo(), request.startTime(), request.expectedMinutesOverride(), request.graceMinutes()))
+                        request.effectiveTo(), request.startTime(), request.expectedMinutesOverride(), request.graceMinutes(),
+                        request.endTime(), request.scope(), request.scopeCategoryId()))
                 .toList();
         scheduleRuleRepository.saveAll(schedules);
     }
@@ -208,7 +209,8 @@ public class HrConfigurationService {
     private CategoryApi.Response toCategoryResponse(AttendanceCategory category) {
         var schedules = scheduleRuleRepository.findByCategoryIdOrderByEffectiveFromAsc(category.getId()).stream()
                 .map(rule -> new CategoryApi.ScheduleResponse(rule.getId(), rule.getName(), rule.getEffectiveFrom(),
-                        rule.getEffectiveTo(), rule.getStartTime(), rule.getExpectedMinutesOverride(), rule.getGraceMinutes()))
+                        rule.getEffectiveTo(), rule.getStartTime(), rule.getExpectedMinutesOverride(), rule.getGraceMinutes(),
+                        rule.getEndTime(), rule.getScope(), rule.getScopeCategoryId()))
                 .toList();
         return new CategoryApi.Response(category.getId(), category.getCode(), category.getName(),
                 category.getExpectedDailyMinutes(), category.getPayCycle(), category.getAttendanceMode(),

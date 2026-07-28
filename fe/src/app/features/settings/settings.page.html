@@ -121,9 +121,21 @@
             </label>
           </div>
         </fieldset>
-      </div>
 
-        <!-- Section 4: Menu Navigation Visibility Settings -->
+        <!-- Section 4: Default Landing Page -->
+        <fieldset class="settings-group">
+          <legend class="group-title">{{ i18n.t('settings.defaultPageTitle') }}</legend>
+          <p class="group-hint">{{ i18n.t('settings.defaultPageHint') }}</p>
+          <div class="field">
+            <select formControlName="defaultPage" style="max-width: 300px;">
+              @for (page of availablePages; track page.path) {
+                <option [value]="page.path">{{ i18n.t(page.labelKey) }}</option>
+              }
+            </select>
+          </div>
+        </fieldset>
+
+        <!-- Section 5: Menu Navigation Visibility Settings -->
         <fieldset class="settings-group" style="margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
           <legend class="group-title">{{ i18n.t('settings.sidebarTitle') }}</legend>
           <p class="group-hint">{{ i18n.t('settings.sidebarHint') }}</p>
@@ -150,6 +162,47 @@
             </div>
           </div>
         </fieldset>
+
+        <!-- Section 6: Notification Preferences -->
+        <fieldset class="settings-group" style="margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+          <legend class="group-title">{{ i18n.t('settings.notificationsTitle') }}</legend>
+          <p class="group-hint">{{ i18n.t('settings.notificationsHint') }}</p>
+
+          <div class="field-stack" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem;">
+            <label class="selectable-card" style="display: flex; align-items: center; gap: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer;">
+              <input type="checkbox" [checked]="notificationPrefs().emailApprovals" (change)="updateNotificationPrefs('emailApprovals', $any($event.target).checked)" />
+              <span>
+                <strong>{{ i18n.t('settings.emailApprovalsLabel') }}</strong>
+                <small style="display: block; color: #64748b;">{{ i18n.t('settings.emailApprovalsHint') }}</small>
+              </span>
+            </label>
+
+            <label class="selectable-card" style="display: flex; align-items: center; gap: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer;">
+              <input type="checkbox" [checked]="notificationPrefs().emailPayroll" (change)="updateNotificationPrefs('emailPayroll', $any($event.target).checked)" />
+              <span>
+                <strong>{{ i18n.t('settings.emailPayrollLabel') }}</strong>
+                <small style="display: block; color: #64748b;">{{ i18n.t('settings.emailPayrollHint') }}</small>
+              </span>
+            </label>
+
+            <label class="selectable-card" style="display: flex; align-items: center; gap: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer;">
+              <input type="checkbox" [checked]="notificationPrefs().pushApprovals" (change)="updateNotificationPrefs('pushApprovals', $any($event.target).checked)" />
+              <span>
+                <strong>{{ i18n.t('settings.pushApprovalsLabel') }}</strong>
+                <small style="display: block; color: #64748b;">{{ i18n.t('settings.pushApprovalsHint') }}</small>
+              </span>
+            </label>
+
+            <label class="selectable-card" style="display: flex; align-items: center; gap: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer;">
+              <input type="checkbox" [checked]="notificationPrefs().pushPayroll" (change)="updateNotificationPrefs('pushPayroll', $any($event.target).checked)" />
+              <span>
+                <strong>{{ i18n.t('settings.pushPayrollLabel') }}</strong>
+                <small style="display: block; color: #64748b;">{{ i18n.t('settings.pushPayrollHint') }}</small>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+      </div>
 
       <div class="actions settings-toolbar">
         <button class="button secondary" type="button" (click)="cancel()">
@@ -329,7 +382,7 @@
   @if (activeTab() === 'reports') {
     <form class="card settings-card" [formGroup]="form" (ngSubmit)="saveAll()">
       <div class="settings-sections">
-        <!-- Section 4: Excel Export Styling -->
+        <!-- Section: Excel Export Styling -->
         <fieldset class="settings-group">
           <legend class="group-title">{{ i18n.t('settings.excelTitle') }}</legend>
           <p class="group-hint">{{ i18n.t('settings.excelHint') }}</p>
@@ -395,3 +448,16 @@
     </form>
   }
 </section>
+
+@if (confirmAction(); as action) {
+  <div class="confirm-overlay" (click)="confirmAction.set(null)">
+    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+      <div class="confirm-icon">&#9888;&#65039;</div>
+      <div class="confirm-message">{{ action.message }}</div>
+      <div class="confirm-actions">
+        <button type="button" class="button primary" (click)="action.onConfirm()">تأكيد</button>
+        <button type="button" class="button secondary" (click)="confirmAction.set(null)">إلغاء</button>
+      </div>
+    </div>
+  </div>
+}

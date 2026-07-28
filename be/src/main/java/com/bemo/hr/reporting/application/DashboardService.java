@@ -5,6 +5,8 @@ import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.employee.domain.PayCycle;
+import com.bemo.hr.payroll.domain.PaymentStatus;
+import com.bemo.hr.payroll.infrastructure.SalaryPaymentRepository;
 import com.bemo.hr.reporting.api.DashboardApi;
 import com.bemo.hr.reporting.domain.AttendanceDecision;
 import com.bemo.hr.reporting.domain.DailyStatus;
@@ -14,9 +16,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.bemo.hr.operations.OperationsService;
 
@@ -29,6 +38,7 @@ public class DashboardService {
     private final DailyAttendanceResultRepository dailyAttendanceResultRepository;
     private final ImportBatchRepository importBatchRepository;
     private final PunchRecordRepository punchRecordRepository;
+    private final SalaryPaymentRepository salaryPaymentRepository;
     private final OperationsService operationsService;
     private final ZoneId companyZone;
 
@@ -36,11 +46,13 @@ public class DashboardService {
                             AttendanceReportRepository attendanceReportRepository,
                             DailyAttendanceResultRepository dailyAttendanceResultRepository,
                             ImportBatchRepository importBatchRepository, PunchRecordRepository punchRecordRepository,
+                            SalaryPaymentRepository salaryPaymentRepository,
                             OperationsService operationsService,
                             @Value("${hr.company-zone:Africa/Cairo}") String companyZone) {
         this.attendanceCategoryRepository = attendanceCategoryRepository; this.employeeRepository = employeeRepository;
         this.attendanceReportRepository = attendanceReportRepository; this.dailyAttendanceResultRepository = dailyAttendanceResultRepository;
         this.importBatchRepository = importBatchRepository; this.punchRecordRepository = punchRecordRepository;
+        this.salaryPaymentRepository = salaryPaymentRepository;
         this.operationsService = operationsService;
         this.companyZone = ZoneId.of(companyZone);
     }
@@ -54,7 +66,7 @@ public class DashboardService {
         long scheduled = rows.stream().filter(row -> row.getStatus() != DailyStatus.NON_WORKDAY && row.getStatus() != DailyStatus.HOLIDAY).count();
         long present = rows.stream().filter(row -> row.getStatus() == DailyStatus.PRESENT || row.getDecision() == AttendanceDecision.NORMAL_DAY).count();
         double rate = scheduled == 0 ? 0 : Math.round((present * 10_000.0 / scheduled)) / 100.0;
-        var categoryMetrics = rows.stream().collect(java.util.stream.Collectors.groupingBy(com.bemo.hr.reporting.domain.DailyAttendanceResult::getCategoryId))
+        var categoryMetrics = rows.stream().collect(Collectors.groupingBy(com.bemo.hr.reporting.domain.DailyAttendanceResult::getCategoryId))
                 .entrySet().stream().map(entry -> {
                     var values = entry.getValue();
                     var arrivals = values.stream().map(com.bemo.hr.reporting.domain.DailyAttendanceResult::getFirstPunch)
@@ -64,7 +76,7 @@ public class DashboardService {
                             values.stream().filter(value -> value.getStatus() == DailyStatus.PRESENT || value.getDecision() == AttendanceDecision.NORMAL_DAY).count(),
                             values.stream().filter(com.bemo.hr.reporting.domain.DailyAttendanceResult::isBlocking).count(), typical,
                             values.stream().mapToLong(com.bemo.hr.reporting.domain.DailyAttendanceResult::getOvertimeMinutes).sum());
-                }).sorted(java.util.Comparator.comparing(DashboardApi.CategoryMetric::categoryName)).toList();
+                }).sorted(Comparator.comparing(DashboardApi.CategoryMetric::categoryName)).toList();
         var recent = importBatchRepository.findAllByOrderByImportedAtDesc().stream().limit(5)
                 .map(batch -> new DashboardApi.RecentImport(batch.getId(), batch.getFileName(), batch.getDeviceName(),
                         batch.getImportedRows(), batch.getErrorRows(), batch.getImportedAt())).toList();
@@ -95,5 +107,90 @@ public class DashboardService {
                 categoryMetrics,
                 recent
         );
+    }
+
+    public List<DashboardApi.AttendanceChartPoint> attendanceChart(String period, String departmentId, int year, int month) {
+        var periodYm = YearMonth.of(year, month);
+        var report = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
+                PayCycle.MONTHLY, periodYm.atDay(1), periodYm.atEndOfMonth()).orElse(null);
+        if (report == null) return List.of();
+
+        var rows = dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(report.getId());
+        if (departmentId != null && !departmentId.isBlank()) {
+            rows = rows.stream().filter(r -> departmentId.equals(r.getCategoryId())).toList();
+        }
+
+        Map<LocalDate, List<com.bemo.hr.reporting.domain.DailyAttendanceResult>> byDay;
+        if ("WEEK".equalsIgnoreCase(period)) {
+            byDay = rows.stream().collect(Collectors.groupingBy(r -> r.getWorkDate(), LinkedHashMap::new, Collectors.toList()));
+        } else {
+            byDay = rows.stream().collect(Collectors.groupingBy(r -> r.getWorkDate(), LinkedHashMap::new, Collectors.toList()));
+        }
+
+        return byDay.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> {
+                    var dayRows = entry.getValue();
+                    long present = dayRows.stream().filter(r -> r.getStatus() == DailyStatus.PRESENT || r.getDecision() == AttendanceDecision.NORMAL_DAY).count();
+                    long absent = dayRows.stream().filter(r -> r.getStatus() == DailyStatus.NO_PUNCH).count();
+                    long late = dayRows.stream().filter(r -> r.getLateMinutes() > 0).count();
+                    long exc = dayRows.stream().filter(com.bemo.hr.reporting.domain.DailyAttendanceResult::isBlocking).count();
+                    return new DashboardApi.AttendanceChartPoint(entry.getKey().toString(), present, absent, late, exc);
+                })
+                .toList();
+    }
+
+    public DashboardApi.PayrollSummaryRecord payrollSummary(int year, int month) {
+        var employees = employeeRepository.findAll().stream().filter(com.bemo.hr.employee.domain.Employee::isActive).toList();
+        int totalActive = employees.size();
+
+        var payments = salaryPaymentRepository.findByPeriodYearAndPeriodMonthOrderByCreatedAtDesc(year, month);
+        int paidCount = 0;
+        int pendingCount = 0;
+        BigDecimal totalGross = BigDecimal.ZERO;
+        BigDecimal totalPaid = BigDecimal.ZERO;
+        BigDecimal totalPending = BigDecimal.ZERO;
+
+        for (var p : payments) {
+            BigDecimal gross = p.getGrossAmount() == null ? BigDecimal.ZERO : p.getGrossAmount();
+            BigDecimal net = p.getNetAmount() == null ? BigDecimal.ZERO : p.getNetAmount();
+            totalGross = totalGross.add(gross);
+            if (p.getPaymentStatus() == PaymentStatus.PAID || p.getPaymentStatus() == PaymentStatus.POSTED) {
+                paidCount++;
+                totalPaid = totalPaid.add(net);
+            } else {
+                pendingCount++;
+                totalPending = totalPending.add(net);
+            }
+        }
+
+        return new DashboardApi.PayrollSummaryRecord(totalActive, paidCount, pendingCount, totalGross, totalPaid, totalPending);
+    }
+
+    public List<DashboardApi.DepartmentMetric> departmentMetrics(int year, int month) {
+        var periodYm = YearMonth.of(year, month);
+        var report = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
+                PayCycle.MONTHLY, periodYm.atDay(1), periodYm.atEndOfMonth()).orElse(null);
+        if (report == null) return List.of();
+
+        var rows = dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(report.getId());
+        var employees = employeeRepository.findAll().stream()
+                .filter(com.bemo.hr.employee.domain.Employee::isActive)
+                .collect(Collectors.groupingBy(com.bemo.hr.employee.domain.Employee::getCategoryId));
+
+        return rows.stream()
+                .collect(Collectors.groupingBy(r -> r.getCategoryId()))
+                .entrySet().stream()
+                .map(entry -> {
+                    var catRows = entry.getValue();
+                    var catName = catRows.getFirst().getCategoryName();
+                    long scheduled = catRows.stream().filter(r -> r.getStatus() != DailyStatus.NON_WORKDAY && r.getStatus() != DailyStatus.HOLIDAY).count();
+                    long present = catRows.stream().filter(r -> r.getStatus() == DailyStatus.PRESENT || r.getDecision() == AttendanceDecision.NORMAL_DAY).count();
+                    double rate = scheduled == 0 ? 0 : Math.round((present * 10_000.0 / scheduled)) / 100.0;
+                    int empCount = employees.getOrDefault(entry.getKey(), List.of()).size();
+                    return new DashboardApi.DepartmentMetric(entry.getKey(), catName, empCount, present, scheduled, rate);
+                })
+                .sorted(Comparator.comparing(DashboardApi.DepartmentMetric::departmentName))
+                .toList();
     }
 }

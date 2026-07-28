@@ -8,15 +8,35 @@ import java.util.List;
 
 public class ProcurementApi {
 
+    public record PurchaseOrderLineResponse(
+            String id,
+            String itemName,
+            String itemCategory,
+            BigDecimal quantity,
+            String unitOfMeasure,
+            BigDecimal unitPrice,
+            BigDecimal lineTotal
+    ) {}
+
+    public record PurchaseOrderLinePayload(
+            @NotBlank String itemName,
+            String itemCategory,
+            @NotNull BigDecimal quantity,
+            String unitOfMeasure,
+            @NotNull BigDecimal unitPrice
+    ) {}
+
     public record PurchaseOrderResponse(
             String id,
             String poNumber,
             long poDate,
             String supplierId,
+            String supplierName,
             String purchaseRequestId,
             String paymentTerms,
             String status,
             BigDecimal totalAmount,
+            List<PurchaseOrderLineResponse> items,
             long createdAt,
             long updatedAt
     ) {}
@@ -27,6 +47,7 @@ public class ProcurementApi {
             @NotBlank String supplierId,
             String purchaseRequestId,
             String paymentTerms,
-            @NotNull BigDecimal totalAmount
+            @NotNull BigDecimal totalAmount,
+            List<PurchaseOrderLinePayload> items
     ) {}
 }

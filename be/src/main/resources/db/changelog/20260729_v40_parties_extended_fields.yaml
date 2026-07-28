@@ -1,0 +1,67 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-40-parties-extended-fields
+      author: hr-platform
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: business_parties
+        - not:
+            columnExists:
+              tableName: business_parties
+              columnName: managed_type
+      changes:
+        - addColumn:
+            tableName: business_parties
+            columns:
+              - column:
+                  name: managed_type
+                  type: VARCHAR(30)
+                  defaultValue: DIRECT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: responsible_party_id
+                  type: VARCHAR(36)
+              - column:
+                  name: currency_code
+                  type: VARCHAR(10)
+                  defaultValue: EGP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: invoice_policy
+                  type: VARCHAR(30)
+                  defaultValue: E_INVOICE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: payment_terms
+                  type: VARCHAR(30)
+                  defaultValue: CASH
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tax_id
+                  type: VARCHAR(50)
+              - column:
+                  name: bank_account
+                  type: VARCHAR(100)
+      rollback:
+        - dropColumn:
+            tableName: business_parties
+            columns:
+              - column:
+                  name: managed_type
+              - column:
+                  name: responsible_party_id
+              - column:
+                  name: currency_code
+              - column:
+                  name: invoice_policy
+              - column:
+                  name: payment_terms
+              - column:
+                  name: tax_id
+              - column:
+                  name: bank_account

@@ -31,6 +31,9 @@ type ScheduleForm = FormGroup<{
   startTime: FormControl<string>;
   expectedMinutesOverride: FormControl<number | null>;
   graceMinutes: FormControl<number>;
+  endTime: FormControl<string>;
+  scope: FormControl<string>;
+  scopeCategoryId: FormControl<string>;
 }>;
 @Component({
   selector: 'app-categories-page',
@@ -44,6 +47,7 @@ export class CategoriesPage {
   readonly store = inject(CategoriesStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
+  readonly confirmAction = signal<{ message: string; onConfirm: () => void } | null>(null);
   readonly drawerOpen = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly pagination = new TablePagination();
@@ -142,6 +146,9 @@ export class CategoriesPage {
           nonNullable: true,
           validators: [Validators.min(0), Validators.max(240)],
         }),
+        endTime: new FormControl(value?.endTime?.slice(0, 5) ?? '', { nonNullable: true }),
+        scope: new FormControl(value?.scope ?? 'ALL', { nonNullable: true }),
+        scopeCategoryId: new FormControl(value?.scopeCategoryId ?? '', { nonNullable: true }),
       }),
     );
   }
@@ -173,6 +180,8 @@ export class CategoriesPage {
         effectiveFrom: dateInputToEpoch(item.effectiveFrom),
         effectiveTo: item.effectiveTo ? dateInputToEpoch(item.effectiveTo) : null,
         startTime: item.startTime.length === 5 ? `${item.startTime}:00` : item.startTime,
+        endTime: item.endTime ? (item.endTime.length === 5 ? `${item.endTime}:00` : item.endTime) : null,
+        scopeCategoryId: item.scope === 'SPECIFIC_CATEGORY' ? item.scopeCategoryId || null : null,
       })),
     };
     if (await this.store.save(this.editingId(), payload)) {
@@ -180,11 +189,16 @@ export class CategoriesPage {
       this.drawerOpen.set(false);
     }
   }
-  async deactivate(item: AttendanceCategory) {
-    if (confirm(this.i18n.t('categories.deactivateConfirm', { name: item.name }))) {
-      await this.store.deactivate(item.id);
-      this.notification.info(this.i18n.t('common.save') + ' ✓');
-    }
+  deactivate(item: AttendanceCategory) {
+    this.confirmAction.set({
+      message: this.i18n.t('categories.deactivateConfirm', { name: item.name }),
+      onConfirm: () => {
+        this.confirmAction.set(null);
+        this.store.deactivate(item.id).then(() => {
+          this.notification.info(this.i18n.t('common.save') + ' ✓');
+        });
+      },
+    });
   }
   closeDrawer(): void {
     this.drawerOpen.set(false);

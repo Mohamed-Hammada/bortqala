@@ -49,9 +49,8 @@ public class WorkforceAdvanceController {
 
     @PostMapping("/{id}/repay")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
-    public WorkforceApi.AdvanceResponse repay(@org.springframework.web.bind.annotation.PathVariable String id, @RequestBody java.util.Map<String, java.math.BigDecimal> body, Authentication auth) {
+    public WorkforceApi.AdvanceResponse repay(@org.springframework.web.bind.annotation.PathVariable String id, @Valid @RequestBody WorkforceApi.AdvanceRepayRequest request, Authentication auth) {
         String username = auth != null ? auth.getName() : "system";
-        java.math.BigDecimal amount = body.getOrDefault("amount", java.math.BigDecimal.ZERO);
-        return advanceService.repay(id, amount, username);
+        return advanceService.repay(id, request, username);
     }
 }

@@ -1,13 +1,15 @@
+import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DashboardStore } from './dashboard.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { I18nService } from '../../core/i18n.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [RouterLink, TablePaginationComponent],
+  imports: [RouterLink, TablePaginationComponent, FormsModule, DecimalPipe],
   providers: [DashboardStore],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss',
@@ -27,6 +29,21 @@ export class DashboardPage {
   readonly monthKeys = Array.from({ length: 12 }, (_, index) => `month.${index + 1}`);
   readonly activeKpiModal = signal<{ title: string; value: string | number; details: string[] } | null>(null);
 
+  readonly selectedPeriod = signal<'WEEK' | 'MONTH'>('MONTH');
+  readonly selectedDepartmentId = signal<string | null>(null);
+  readonly departmentOptions = computed(() => {
+    const depts = this.store.departmentMetrics();
+    return [{ id: null as string | null, name: this.i18n.t('dashboard.allDepartments') }, ...depts.map(d => ({ id: d.departmentId, name: d.departmentName }))];
+  });
+  readonly chartMaxValue = computed(() => {
+    const points = this.store.chartData();
+    if (!points.length) return 100;
+    return Math.max(...points.flatMap(p => [p.present, p.absent, p.late]), 10);
+  });
+  readonly totalEmployees = computed(() => this.store.data()?.activeEmployees ?? 0);
+  readonly attendanceRate = computed(() => this.store.data()?.attendanceRate ?? 0);
+  readonly pendingApprovals = computed(() => this.store.data()?.unresolvedCount ?? 0);
+
   constructor() {
     this.route.queryParams.subscribe((params: Record<string, string>) => {
       const y = Number(params['year']) || new Date().getFullYear();
@@ -35,8 +52,25 @@ export class DashboardPage {
         this.year.set(y);
         this.month.set(m);
       }
-      void this.store.load(y, m);
+      void this.loadAll();
     });
+  }
+
+  private async loadAll(): Promise<void> {
+    await this.store.loadAll(
+      this.year(),
+      this.month(),
+      this.selectedPeriod(),
+      this.selectedDepartmentId(),
+    );
+  }
+
+  changePeriodFilter(): void {
+    void this.store.loadChartData(this.selectedPeriod(), this.selectedDepartmentId(), this.year(), this.month());
+  }
+
+  onDepartmentChange(): void {
+    void this.store.loadChartData(this.selectedPeriod(), this.selectedDepartmentId(), this.year(), this.month());
   }
 
   openKpiDetails(title: string, value: string | number, details: string[]) {
@@ -61,7 +95,7 @@ export class DashboardPage {
     }
   }
   reload(): void {
-    void this.store.load(this.year(), this.month());
+    void this.loadAll();
   }
 
   formatLastUpdated(value: string | null): string {

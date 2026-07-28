@@ -44,6 +44,15 @@ public class ScheduleRule {
     @Column(name = "grace_minutes", nullable = false)
     private int graceMinutes;
 
+    @Column(name = "end_time")
+    private LocalTime endTime;
+
+    @Column(name = "scope", nullable = false)
+    private String scope = "ALL";
+
+    @Column(name = "scope_category_id")
+    private String scopeCategoryId;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -55,6 +64,13 @@ public class ScheduleRule {
 
     public ScheduleRule(String categoryId, String name, LocalDate effectiveFrom, LocalDate effectiveTo,
                         LocalTime startTime, Integer expectedMinutesOverride, int graceMinutes) {
+        this(categoryId, name, effectiveFrom, effectiveTo, startTime, expectedMinutesOverride, graceMinutes,
+                null, "ALL", null);
+    }
+
+    public ScheduleRule(String categoryId, String name, LocalDate effectiveFrom, LocalDate effectiveTo,
+                        LocalTime startTime, Integer expectedMinutesOverride, int graceMinutes,
+                        LocalTime endTime, String scope, String scopeCategoryId) {
         this.id = UUID.randomUUID().toString();
         this.categoryId = categoryId;
         this.name = name.strip();
@@ -63,6 +79,9 @@ public class ScheduleRule {
         this.startTime = startTime;
         this.expectedMinutesOverride = expectedMinutesOverride;
         this.graceMinutes = graceMinutes;
+        this.endTime = endTime;
+        this.scope = scope != null ? scope : "ALL";
+        this.scopeCategoryId = scopeCategoryId;
     }
 
     @PrePersist
@@ -83,4 +102,7 @@ public class ScheduleRule {
     public LocalTime getStartTime() { return startTime; }
     public Integer getExpectedMinutesOverride() { return expectedMinutesOverride; }
     public int getGraceMinutes() { return graceMinutes; }
+    public LocalTime getEndTime() { return endTime; }
+    public String getScope() { return scope; }
+    public String getScopeCategoryId() { return scopeCategoryId; }
 }

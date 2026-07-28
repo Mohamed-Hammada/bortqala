@@ -9,4 +9,5 @@ public interface ManualAttendanceEntryRepository extends JpaRepository<ManualAtt
     List<ManualAttendanceEntry> findByWorkDate(String workDate);
     List<ManualAttendanceEntry> findByWorkerIdAndWorkDateBetween(String workerId, String startDate, String endDate);
     List<ManualAttendanceEntry> findByWorkDateBetween(String startDate, String endDate);
+    List<ManualAttendanceEntry> findByWorkDateAndWorkerIdIn(String workDate, List<String> workerIds);
 }

@@ -45,6 +45,46 @@
   }
 
   @if (store.data(); as data) {
+    <!-- Summary Cards Row -->
+    <div class="summary-cards">
+      <article class="card summary-card">
+        <div class="summary-card-icon employees">👥</div>
+        <div class="summary-card-body">
+          <span class="summary-card-label">{{ i18n.t('dashboard.totalEmployees') }}</span>
+          <strong class="summary-card-value">{{ totalEmployees() }}</strong>
+          <small>{{ i18n.t('dashboard.activeEmployees') }}</small>
+        </div>
+      </article>
+      <article class="card summary-card">
+        <div class="summary-card-icon attendance">📊</div>
+        <div class="summary-card-body">
+          <span class="summary-card-label">{{ i18n.t('dashboard.attendanceRate') }}</span>
+          <strong class="summary-card-value">{{ attendanceRate() }}%</strong>
+          <div class="mini-meter"><i [style.width.%]="attendanceRate()"></i></div>
+        </div>
+      </article>
+      <article class="card summary-card">
+        <div class="summary-card-icon approvals">⏳</div>
+        <div class="summary-card-body">
+          <span class="summary-card-label">{{ i18n.t('dashboard.pendingApprovals') }}</span>
+          <strong class="summary-card-value">{{ pendingApprovals() }}</strong>
+          <small>{{ i18n.t('dashboard.needsReview') }}</small>
+        </div>
+      </article>
+      <article class="card summary-card">
+        <div class="summary-card-icon payroll">💰</div>
+        <div class="summary-card-body">
+          <span class="summary-card-label">{{ i18n.t('dashboard.payrollSummary') }}</span>
+          @if (store.payrollSummary(); as ps) {
+            <strong class="summary-card-value">{{ ps.totalGross | number: '1.0-0' }}</strong>
+            <small>{{ i18n.t('dashboard.paidCount', { paid: ps.paidCount, total: ps.totalEmployees }) }}</small>
+          } @else {
+            <strong class="summary-card-value">—</strong>
+          }
+        </div>
+      </article>
+    </div>
+
     <!-- Priority 1: Monthly Summary Hero -->
     <div class="hero-grid">
       <article class="report-state card">
@@ -91,9 +131,53 @@
       </article>
     </div>
 
-    <!-- Priority 2: Executive Factory Operations Units (100% Real Database Data) -->
+    <!-- Attendance Chart Section -->
+    <div class="card chart-section">
+      <div class="chart-header">
+        <h3>{{ i18n.t('dashboard.attendanceChart') }}</h3>
+        <div class="chart-controls">
+          <select [ngModel]="selectedPeriod()" (ngModelChange)="selectedPeriod.set($event); changePeriodFilter()">
+            <option value="WEEK">{{ i18n.t('dashboard.week') }}</option>
+            <option value="MONTH">{{ i18n.t('dashboard.month') }}</option>
+          </select>
+          <select [ngModel]="selectedDepartmentId()" (ngModelChange)="selectedDepartmentId.set($event); onDepartmentChange()">
+            @for (opt of departmentOptions(); track $index) {
+              <option [ngValue]="opt.id">{{ opt.name }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      @if (store.chartLoading()) {
+        <div class="chart-loading">{{ i18n.t('common.loading') }}</div>
+      } @else if (store.chartData(); as points) {
+        @if (points.length) {
+          <div class="bar-chart">
+            <div class="bar-chart-legend">
+              <span class="legend-item present">{{ i18n.t('dashboard.present') }}</span>
+              <span class="legend-item absent">{{ i18n.t('dashboard.absent') }}</span>
+              <span class="legend-item late">{{ i18n.t('dashboard.late') }}</span>
+            </div>
+            <div class="bar-chart-container">
+              @for (point of points; track point.label) {
+                <div class="bar-column">
+                  <div class="bar-stack">
+                    <div class="bar bar-present" [style.height.%]="(point.present / chartMaxValue()) * 80" [title]="'Present: ' + point.present"></div>
+                    <div class="bar bar-absent" [style.height.%]="(point.absent / chartMaxValue()) * 80" [title]="'Absent: ' + point.absent"></div>
+                    <div class="bar bar-late" [style.height.%]="(point.late / chartMaxValue()) * 80" [title]="'Late: ' + point.late"></div>
+                  </div>
+                  <span class="bar-label">{{ point.label.slice(5) }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        } @else {
+          <div class="empty-state">{{ i18n.t('dashboard.noChartData') }}</div>
+        }
+      }
+    </div>
+
+    <!-- Priority 2: Executive Factory Operations Units -->
     <div class="executive-grid">
-      <!-- Unit 1: Attendance & Discipline -->
       <article class="card exec-unit-card">
         <div class="unit-head">
           <h3>{{ i18n.t('dashboard.unitAttendance') }}</h3>
@@ -127,7 +211,6 @@
         </div>
       </article>
 
-      <!-- Unit 2: Inventory & Warehouse -->
       <article class="card exec-unit-card">
         <div class="unit-head">
           <h3>{{ i18n.t('dashboard.unitInventory') }}</h3>
@@ -153,7 +236,6 @@
         </div>
       </article>
 
-      <!-- Unit 3: Commercial Partners & Ledger -->
       <article class="card exec-unit-card">
         <div class="unit-head">
           <h3>{{ i18n.t('dashboard.unitPartners') }}</h3>
@@ -171,7 +253,6 @@
         </div>
       </article>
 
-      <!-- Unit 4: Biometric Imports & Categories -->
       <article class="card exec-unit-card">
         <div class="unit-head">
           <h3>{{ i18n.t('dashboard.unitBiometrics') }}</h3>
@@ -189,6 +270,52 @@
         </div>
       </article>
     </div>
+
+    <!-- Department Metrics Table -->
+    <article class="card section-card">
+      <div class="section-title">
+        <div>
+          <h2>{{ i18n.t('dashboard.departmentMetrics') }}</h2>
+          <p>{{ i18n.t('dashboard.departmentMetricsHint') }}</p>
+        </div>
+      </div>
+      @if (store.departmentMetrics(); as depts) {
+        @if (depts.length) {
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('dashboard.department') }}</th>
+                  <th>{{ i18n.t('dashboard.employees') }}</th>
+                  <th>{{ i18n.t('dashboard.presentDays') }}</th>
+                  <th>{{ i18n.t('dashboard.scheduledDays') }}</th>
+                  <th>{{ i18n.t('dashboard.rate') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (dept of depts; track dept.departmentId) {
+                  <tr>
+                    <td><strong>{{ dept.departmentName }}</strong></td>
+                    <td>{{ dept.employeeCount }}</td>
+                    <td>{{ dept.presentDays }}</td>
+                    <td>{{ dept.scheduledDays }}</td>
+                    <td>
+                      <span class="status" [class.success]="dept.rate >= 80" [class.warning]="dept.rate < 80">
+                        {{ dept.rate }}%
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="empty-state">
+            <strong>{{ i18n.t('dashboard.noResults') }}</strong>
+          </div>
+        }
+      }
+    </article>
 
     <!-- Priority 3: Details Content Grid -->
     <div class="content-grid">

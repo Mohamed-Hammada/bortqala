@@ -41,6 +41,7 @@ export class EmployeesPage {
   readonly store = inject(EmployeesStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
+  readonly confirmAction = signal<{ message: string; onConfirm: () => void } | null>(null);
   readonly drawerOpen = signal(false);
   readonly submitAttempted = signal(false);
   readonly pagination = new TablePagination();
@@ -158,11 +159,16 @@ export class EmployeesPage {
     }
   }
 
-  async deactivate(item: Employee) {
-    if (confirm(this.i18n.t('employees.deactivateConfirm', { name: item.fullName }))) {
-      await this.store.deactivate(item.id);
-      this.notification.info(this.i18n.t('common.save') + ' ✓');
-    }
+  deactivate(item: Employee) {
+    this.confirmAction.set({
+      message: this.i18n.t('employees.deactivateConfirm', { name: item.fullName }),
+      onConfirm: () => {
+        this.confirmAction.set(null);
+        this.store.deactivate(item.id).then(() => {
+          this.notification.info(this.i18n.t('common.save') + ' ✓');
+        });
+      },
+    });
   }
 
   closeDrawer(): void {

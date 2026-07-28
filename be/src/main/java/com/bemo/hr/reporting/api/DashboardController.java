@@ -22,4 +22,42 @@ public class DashboardController {
         int targetMonth = (month != null && month >= 1 && month <= 12) ? month : current.getMonthValue();
         return dashboardService.dashboard(targetYear, targetMonth);
     }
+
+    @GetMapping("/summary")
+    DashboardApi.Response summary(@RequestParam(required = false) Integer year,
+                                  @RequestParam(required = false) Integer month) {
+        return dashboard(year, month);
+    }
+
+    @GetMapping("/attendance-chart")
+    java.util.List<DashboardApi.AttendanceChartPoint> attendanceChart(
+            @RequestParam(defaultValue = "MONTH") String period,
+            @RequestParam(required = false) String departmentId,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+        var current = YearMonth.now();
+        int y = (year != null && year >= 2000 && year <= 2100) ? year : current.getYear();
+        int m = (month != null && month >= 1 && month <= 12) ? month : current.getMonthValue();
+        return dashboardService.attendanceChart(period, departmentId, y, m);
+    }
+
+    @GetMapping("/payroll-summary")
+    DashboardApi.PayrollSummaryRecord payrollSummary(
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+        var current = YearMonth.now();
+        int y = (year != null && year >= 2000 && year <= 2100) ? year : current.getYear();
+        int m = (month != null && month >= 1 && month <= 12) ? month : current.getMonthValue();
+        return dashboardService.payrollSummary(y, m);
+    }
+
+    @GetMapping("/department-metrics")
+    java.util.List<DashboardApi.DepartmentMetric> departmentMetrics(
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+        var current = YearMonth.now();
+        int y = (year != null && year >= 2000 && year <= 2100) ? year : current.getYear();
+        int m = (month != null && month >= 1 && month <= 12) ? month : current.getMonthValue();
+        return dashboardService.departmentMetrics(y, m);
+    }
 }

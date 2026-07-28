@@ -3,6 +3,7 @@ package com.bemo.hr.shared.security;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.i18n.TranslationService;
+import com.bemo.hr.workforce.WorkerCategoryRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Propagation;
 
 import java.time.Instant;
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -33,13 +35,15 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final com.bemo.hr.audit.application.AuditService auditService;
     private final TranslationService translationService;
+    private final WorkerCategoryRepository workerCategoryRepository;
 
     public AuthService(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, JwtProperties jwtProperties,
                        AppUserRepository appUserRepository, RoleRepository roleRepository,
                        TenantApplicationRepository tenantApplicationRepository,
                        UserPreferenceService userPreferenceService, PasswordEncoder passwordEncoder,
                        com.bemo.hr.audit.application.AuditService auditService,
-                       TranslationService translationService) {
+                       TranslationService translationService,
+                       WorkerCategoryRepository workerCategoryRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
         this.jwtProperties = jwtProperties;
@@ -50,6 +54,7 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.auditService = auditService;
         this.translationService = translationService;
+        this.workerCategoryRepository = workerCategoryRepository;
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -103,6 +108,12 @@ public class AuthService {
     public java.util.List<AuthApi.UserResponse> listUsers() {
         return appUserRepository.findAllByAppIdOrderByDisplayNameAsc(TenantContext.require()).stream()
                 .map(this::toResponse).toList();
+    }
+
+    public List<AuthApi.UserCategoryResponse> listCategories() {
+        return workerCategoryRepository.findByStatus("ACTIVE").stream()
+                .map(c -> new AuthApi.UserCategoryResponse(c.getId(), c.getCode(), c.getName()))
+                .toList();
     }
 
     public AuthApi.AppSettingsResponse currentAppSettings() {
@@ -265,7 +276,8 @@ public class AuthService {
 
     private AuthApi.PreferenceResponse toResponse(UserPreference preference) {
         return new AuthApi.PreferenceResponse(preference.getTheme(), preference.getTableDensity(),
-                preference.getLocale(), preference.getExcelTableStyle(), preference.getDefaultPageSize(), preference.getUpdatedAt());
+                preference.getLocale(), preference.getExcelTableStyle(), preference.getDefaultPageSize(),
+                preference.getDefaultPage(), preference.getUpdatedAt());
     }
 
     private TenantApplication requireCurrentApp() {

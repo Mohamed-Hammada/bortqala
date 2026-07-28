@@ -3,11 +3,25 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { AuthService } from '../../core/auth/auth.service';
-import { ExcelTableStyle, TableDensity, ThemePreference } from '../../core/auth/auth.models';
+import { ExcelTableStyle, NotificationPreferences, TableDensity, ThemePreference } from '../../core/auth/auth.models';
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
 
 export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports';
+
+const NOTIFICATION_KEY = 'bemo_notification_prefs';
+
+function loadNotificationPrefs(): NotificationPreferences {
+  try {
+    const raw = localStorage.getItem(NOTIFICATION_KEY);
+    if (raw) return JSON.parse(raw) as NotificationPreferences;
+  } catch { /* ignore */ }
+  return { emailApprovals: true, emailPayroll: false, pushApprovals: true, pushPayroll: false };
+}
+
+function saveNotificationPrefs(prefs: NotificationPreferences): void {
+  localStorage.setItem(NOTIFICATION_KEY, JSON.stringify(prefs));
+}
 
 @Component({
   selector: 'app-settings-page',
@@ -32,11 +46,24 @@ export class SettingsPage {
   readonly appSettingsSaving = signal(false);
   readonly appSettingsSaved = signal(false);
   readonly appSettingsError = signal<string | null>(null);
+  readonly confirmAction = signal<{ message: string; onConfirm: () => void } | null>(null);
   readonly desktop = typeof window !== 'undefined' && '__TAURI__' in window;
   readonly licenseMessage = signal<string | null>(null);
 
   readonly showFavorites = signal(localStorage.getItem('bemo_show_favorites') !== 'false');
   readonly showRecentlyUsed = signal(localStorage.getItem('bemo_show_recently_used') !== 'false');
+  readonly notificationPrefs = signal<NotificationPreferences>(loadNotificationPrefs());
+
+  readonly availablePages = [
+    { path: '/dashboard', labelKey: 'nav.dashboard' },
+    { path: '/employees', labelKey: 'nav.employees' },
+    { path: '/reports', labelKey: 'nav.reports' },
+    { path: '/payroll', labelKey: 'nav.payroll' },
+    { path: '/operations', labelKey: 'nav.operations' },
+    { path: '/parties', labelKey: 'nav.parties' },
+    { path: '/categories', labelKey: 'nav.categories' },
+    { path: '/imports', labelKey: 'nav.imports' },
+  ];
 
   toggleShowFavorites(val: boolean) {
     this.showFavorites.set(val);
@@ -55,6 +82,13 @@ export class SettingsPage {
     this.notification.success(this.i18n.t('settings.menuCleared'));
   }
 
+  updateNotificationPrefs(key: keyof NotificationPreferences, value: boolean) {
+    const updated = { ...this.notificationPrefs(), [key]: value };
+    this.notificationPrefs.set(updated);
+    saveNotificationPrefs(updated);
+    this.notification.success(this.i18n.t('settings.notificationSaved'));
+  }
+
   readonly form = this.formBuilder.nonNullable.group({
     theme: [this.authService.preferences().theme as ThemePreference, Validators.required],
     tableDensity: [
@@ -66,6 +100,7 @@ export class SettingsPage {
       this.authService.preferences().excelTableStyle as ExcelTableStyle,
       Validators.required,
     ],
+    defaultPage: [this.authService.preferences().defaultPage ?? '/dashboard', Validators.required],
   });
 
   readonly appSettingsForm = this.formBuilder.nonNullable.group({
@@ -91,8 +126,18 @@ export class SettingsPage {
     this.activeTab.set(tab);
   }
 
-  async releaseLicense(): Promise<void> {
-    if (!this.desktop || !confirm(this.i18n.t('settings.licenseReleaseConfirm'))) return;
+  releaseLicense(): void {
+    if (!this.desktop) return;
+    this.confirmAction.set({
+      message: this.i18n.t('settings.licenseReleaseConfirm'),
+      onConfirm: () => {
+        this.confirmAction.set(null);
+        this.executeReleaseLicense();
+      },
+    });
+  }
+
+  private async executeReleaseLicense(): Promise<void> {
     try {
       const tauri = (
         window as unknown as { __TAURI__: { core: { invoke: (name: string) => Promise<void> } } }
@@ -111,6 +156,7 @@ export class SettingsPage {
       tableDensity: prefs.tableDensity as TableDensity,
       locale: prefs.locale,
       excelTableStyle: prefs.excelTableStyle as ExcelTableStyle,
+      defaultPage: prefs.defaultPage ?? '/dashboard',
     });
   }
 

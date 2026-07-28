@@ -9,7 +9,15 @@ export interface UserPreferences {
   locale: string;
   excelTableStyle: ExcelTableStyle;
   defaultPageSize?: number;
+  defaultPage?: string;
   updatedAt: number | null;
+}
+
+export interface NotificationPreferences {
+  emailApprovals: boolean;
+  emailPayroll: boolean;
+  pushApprovals: boolean;
+  pushPayroll: boolean;
 }
 
 export interface AuthUser {

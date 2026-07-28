@@ -28,6 +28,7 @@ public class UserPreference {
     @Enumerated(EnumType.STRING) @Column(name = "excel_table_style", nullable = false, length = 20)
     private ExcelTableStyle excelTableStyle;
     @Column(name = "default_page_size", nullable = false) private int defaultPageSize = 25;
+    @Column(name = "default_page", length = 100) private String defaultPage = "/dashboard";
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
 
@@ -41,19 +42,27 @@ public class UserPreference {
         this.locale = "ar-EG";
         this.excelTableStyle = ExcelTableStyle.GOLD;
         this.defaultPageSize = 25;
+        this.defaultPage = "/dashboard";
     }
 
     public void update(ThemePreference theme, TableDensity tableDensity, String locale, ExcelTableStyle excelTableStyle) {
-        update(theme, tableDensity, locale, excelTableStyle, null);
+        update(theme, tableDensity, locale, excelTableStyle, null, null);
     }
 
     public void update(ThemePreference theme, TableDensity tableDensity, String locale, ExcelTableStyle excelTableStyle, Integer defaultPageSize) {
+        update(theme, tableDensity, locale, excelTableStyle, defaultPageSize, null);
+    }
+
+    public void update(ThemePreference theme, TableDensity tableDensity, String locale, ExcelTableStyle excelTableStyle, Integer defaultPageSize, String defaultPage) {
         this.theme = theme;
         this.tableDensity = tableDensity;
         this.locale = locale.equalsIgnoreCase("en-US") ? "en-US" : "ar-EG";
         this.excelTableStyle = excelTableStyle;
         if (defaultPageSize != null && defaultPageSize > 0) {
             this.defaultPageSize = defaultPageSize;
+        }
+        if (defaultPage != null && !defaultPage.isBlank()) {
+            this.defaultPage = defaultPage;
         }
     }
 

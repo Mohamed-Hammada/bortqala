@@ -41,7 +41,10 @@ public final class CategoryApi {
             LocalDate effectiveTo,
             @NotNull LocalTime startTime,
             @Min(1) @Max(1_440) Integer expectedMinutesOverride,
-            @Min(0) @Max(240) int graceMinutes) {
+            @Min(0) @Max(240) int graceMinutes,
+            LocalTime endTime,
+            String scope,
+            String scopeCategoryId) {
     }
 
     public record Response(
@@ -68,6 +71,9 @@ public final class CategoryApi {
             LocalDate effectiveTo,
             LocalTime startTime,
             Integer expectedMinutesOverride,
-            int graceMinutes) {
+            int graceMinutes,
+            LocalTime endTime,
+            String scope,
+            String scopeCategoryId) {
     }
 }

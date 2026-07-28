@@ -99,11 +99,44 @@ public class WorkforceAdvanceService {
     }
 
     @Transactional
-    public WorkforceApi.AdvanceResponse repay(String id, BigDecimal amount, String user) {
+    public WorkforceApi.AdvanceResponse repay(String id, WorkforceApi.AdvanceRepayRequest request, String user) {
         WorkforceAdvance adv = advanceRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة"));
+
+        BigDecimal amount = request.amount();
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessRuleException("يجب أن يكون مبلغ السداد أكبر من صفر");
+        }
+        if (amount.compareTo(adv.getRemainingBalance()) > 0) {
+            throw new BusinessRuleException("مبلغ السداد لا يمكن أن يتجاوز الرصيد المتبقي (" + adv.getRemainingBalance() + " ج.م)");
+        }
+        if ("FULL".equalsIgnoreCase(request.repaymentType()) && amount.compareTo(adv.getRemainingBalance()) != 0) {
+            throw new BusinessRuleException("عند السداد الكامل، يجب أن يساوي المبلغ الرصيد المتبقي (" + adv.getRemainingBalance() + " ج.م)");
+        }
+
+        BigDecimal oldBalance = adv.getRemainingBalance();
         adv.repay(amount);
-        auditService.record("EARLY_REPAYMENT", "ADVANCE", adv.getId(), user, "Repaid " + amount, null);
+
+        String notes = request.notes() != null ? request.notes() : "";
+        if (request.paymentMethod() != null) notes = "طريقة السداد: " + request.paymentMethod() + " | " + notes;
+        if (request.receiptRef() != null) notes = "رقم الإيصال: " + request.receiptRef() + " | " + notes;
+        if (request.repaymentDate() != null) notes = "تاريخ السداد: " + request.repaymentDate() + " | " + notes;
+
+        WorkforceAdvanceLedgerEntry entry = new WorkforceAdvanceLedgerEntry(
+            adv.getId(), "REPAYMENT", amount, adv.getRemainingBalance(),
+            notes, user
+        );
+        ledgerRepository.save(entry);
+
+        String details = "{\"type\":\"" + request.repaymentType()
+            + "\",\"amount\":" + amount
+            + ",\"oldBalance\":" + oldBalance
+            + ",\"newBalance\":" + adv.getRemainingBalance()
+            + ",\"paymentMethod\":\"" + (request.paymentMethod() != null ? request.paymentMethod() : "")
+            + "\",\"receiptRef\":\"" + (request.receiptRef() != null ? request.receiptRef() : "")
+            + "\"}";
+        auditService.record("EARLY_REPAYMENT", "ADVANCE", adv.getId(), user, details, null);
+
         return mapToResponse(advanceRepository.save(adv));
     }
 

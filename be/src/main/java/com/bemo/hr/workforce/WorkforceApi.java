@@ -200,7 +200,38 @@ public final class WorkforceApi {
         BigDecimal netContractorsPayable
     ) { }
 
+    // --- Bulk Attendance Update DTOs ---
+    public record BulkUpdateAttendanceRequest(
+        @NotBlank String workDate,
+        @NotNull List<@NotBlank String> workerIds,
+        @NotNull BigDecimal attendanceValue,
+        boolean overrideExisting
+    ) { }
+
+    public record BulkUpdateAttendanceResponse(
+        int updatedCount
+    ) { }
+
+    // --- Calculation Rules DTOs ---
+    public record CalculationRulesResponse(
+        @NotNull BigDecimal overtimeRate,
+        @NotNull BigDecimal overtimeThresholdHours,
+        @NotNull BigDecimal deductionRatePerHour,
+        @NotNull BigDecimal holidayPayRate,
+        @NotNull String standardDailyHours,
+        @NotBlank String description
+    ) { }
+
     // Advance DTOs
+    public record AdvanceRepayRequest(
+        @NotNull BigDecimal amount,
+        @NotBlank String repaymentType,    // PARTIAL or FULL
+        String repaymentDate,
+        String paymentMethod,
+        String receiptRef,
+        String notes
+    ) { }
+
     public record AdvanceCreateRequest(
         @NotBlank String recipientType,
         String workerId,

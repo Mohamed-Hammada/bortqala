@@ -7,8 +7,12 @@
     </div>
     <div class="toolbar">
       <button class="button secondary" (click)="store.export()">⇩ Excel</button
+      ><button class="button secondary" (click)="open('category')">+ {{ i18n.t('operations.newCategory') || 'تصنيف' }}</button
+      ><button class="button secondary" (click)="open('uom')">+ {{ i18n.t('operations.newUom') || 'وحدة قياس' }}</button
       ><button class="button secondary" (click)="open('advance')">
         {{ i18n.t('operations.newAdvance') }}</button
+      ><button class="button secondary" (click)="open('adjustment')">
+        {{ i18n.t('operations.newAdjustment') || 'تسوية مخزون' }}</button
       ><button class="button secondary" (click)="open('item')">
         {{ i18n.t('operations.newItem') }}</button
       ><button class="button primary" (click)="open('transaction')">
@@ -22,6 +26,18 @@
   @if (store.error()) {
     <div class="alert error">{{ store.error() }}</div>
   }
+
+  @if (store.negativeBalances().length > 0) {
+    <div class="alert warning">
+      <strong>⚠ {{ i18n.t('operations.negativeBalancesTitle') || 'أرصدة سلبية' }}</strong>
+      <ul>
+        @for (nb of store.negativeBalances(); track nb.itemId) {
+          <li>{{ nb.itemName }} ({{ nb.itemCode }}) : <strong class="negative">{{ nb.currentBalance }}</strong></li>
+        }
+      </ul>
+    </div>
+  }
+
   @if (!store.loading()) {
   <div class="metric-grid">
     <article class="metric-card">
@@ -55,7 +71,9 @@
           <th>{{ i18n.t('common.code') }}</th>
           <th>{{ i18n.t('common.name') }}</th>
           <th>{{ i18n.t('operations.itemType') }}</th>
+          <th>{{ i18n.t('operations.category') || 'التصنيف' }}</th>
           <th>{{ i18n.t('operations.unit') }}</th>
+          <th>{{ i18n.t('operations.uom') || 'الوحدة' }}</th>
           <th>{{ i18n.t('operations.balance') }}</th>
         </tr>
       </thead>
@@ -67,14 +85,16 @@
               <strong>{{ item.name }}</strong>
             </td>
             <td>{{ itemTypeLabel(item.itemType) }}</td>
+            <td>{{ item.categoryName ?? '—' }}</td>
             <td>{{ item.unitCode }}</td>
+            <td>{{ item.uomName ?? '—' }}</td>
             <td>
               <strong [class.negative]="item.currentBalance < 0">{{ item.currentBalance }}</strong>
             </td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="5">
+            <td colspan="7">
               <div class="empty-state">{{ i18n.t('operations.noItems') }}</div>
             </td>
           </tr>
@@ -102,11 +122,13 @@
         <tr>
           <th>{{ i18n.t('operations.date') }}</th>
           <th>{{ i18n.t('operations.operation') }}</th>
+          <th>{{ i18n.t('operations.documentType') || 'نوع المستند' }}</th>
           <th>{{ i18n.t('operations.item') }}</th>
           <th>{{ i18n.t('operations.party') }}</th>
           <th>{{ i18n.t('operations.quantity') }}</th>
           <th>{{ i18n.t('operations.loss') }}</th>
           <th>{{ i18n.t('operations.reference') }}</th>
+          <th>{{ i18n.t('operations.reason') || 'السبب' }}</th>
         </tr>
       </thead>
       <tbody>
@@ -114,6 +136,7 @@
           <tr>
             <td class="ltr">{{ date(row.occurredAt) }}</td>
             <td>{{ operationLabel(row.operationType) }}</td>
+            <td>{{ row.documentType ?? '—' }}</td>
             <td>{{ row.itemName }}</td>
             <td>{{ row.partyName ?? '—' }}</td>
             <td>
@@ -121,10 +144,11 @@
             </td>
             <td>{{ row.lossPercentage ?? '—' }}</td>
             <td>{{ row.referenceCode ?? '—' }}</td>
+            <td>{{ row.reason ?? '—' }}</td>
           </tr>
         } @empty {
           <tr>
-            <td colspan="7">
+            <td colspan="9">
               <div class="empty-state">{{ i18n.t('operations.noMovements') }}</div>
             </td>
           </tr>
@@ -234,3 +258,292 @@
   </div>
   } <!-- end @if (!store.loading()) -->
 </section>
+
+<!-- Item Modal -->
+@if (drawer() === 'item') {
+  <app-modal-dialog
+    [isOpen]="true"
+    title="إنشاء صنف مخزون جديد"
+    (close)="close()"
+  >
+    <form [formGroup]="itemForm" (ngSubmit)="saveItem()">
+      <div class="form-grid">
+        <div class="field">
+          <label>{{ i18n.t('common.code') }} *</label>
+          <input class="ltr" formControlName="code" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('common.name') }} *</label>
+          <input formControlName="name" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.itemType') }} *</label>
+          <select formControlName="itemType">
+            <option value="RAW_MATERIAL">{{ i18n.t('operations.rawMaterial') || 'مادة خام' }}</option>
+            <option value="PACKAGING">{{ i18n.t('operations.packaging') || 'تعبئة وتغليف' }}</option>
+            <option value="PRODUCTION_SUPPLY">{{ i18n.t('operations.productionSupply') || 'مستلزمات إنتاج' }}</option>
+            <option value="SORTING_OUTPUT">{{ i18n.t('operations.sortingOutput') || 'مخرجات فرز' }}</option>
+            <option value="FINISHED_GOOD">{{ i18n.t('operations.finishedGood') || 'سلعة تامة' }}</option>
+            <option value="CUSTOM">{{ i18n.t('operations.customType') || 'نوع مخصص' }}</option>
+          </select>
+        </div>
+        @if (itemForm.controls.itemType.value === 'CUSTOM') {
+          <div class="field">
+            <label>{{ i18n.t('operations.customType') || 'نوع مخصص' }} *</label>
+            <input formControlName="customItemType" />
+          </div>
+        }
+        <div class="field">
+          <label>{{ i18n.t('operations.category') || 'التصنيف' }}</label>
+          <select formControlName="categoryId">
+            <option value="">-- {{ i18n.t('operations.selectCategory') || 'اختر التصنيف' }} --</option>
+            @for (cat of store.categories(); track cat.id) {
+              <option [value]="cat.id">{{ cat.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.unitCode') || 'كود الوحدة' }} *</label>
+          <input formControlName="unitCode" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.uom') || 'الوحدة' }}</label>
+          <select formControlName="uomId">
+            <option value="">-- {{ i18n.t('operations.selectUom') || 'اختر الوحدة' }} --</option>
+            @for (u of store.uoms(); track u.id) {
+              <option [value]="u.id">{{ u.name }} {{ u.abbreviation ? '(' + u.abbreviation + ')' : '' }}</option>
+            }
+          </select>
+        </div>
+        <div class="field-checkbox">
+          <label>
+            <input type="checkbox" formControlName="active" />
+            {{ i18n.t('common.active') || 'نشط' }}
+          </label>
+        </div>
+      </div>
+      <div modal-actions class="modal-actions-bar">
+        <button class="button primary" type="submit">{{ i18n.t('common.save') || 'حفظ' }}</button>
+        <button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') || 'إلغاء' }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+}
+
+<!-- Category Modal -->
+@if (drawer() === 'category') {
+  <app-modal-dialog
+    [isOpen]="true"
+    title="تصنيف مخزون جديد"
+    (close)="close()"
+  >
+    <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
+      <div class="form-grid">
+        <div class="field">
+          <label>{{ i18n.t('common.name') || 'الاسم' }} *</label>
+          <input formControlName="name" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('common.description') || 'وصف' }}</label>
+          <textarea formControlName="description" rows="3"></textarea>
+        </div>
+      </div>
+      <div modal-actions class="modal-actions-bar">
+        <button class="button primary" type="submit">{{ i18n.t('common.save') || 'حفظ' }}</button>
+        <button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') || 'إلغاء' }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+}
+
+<!-- UOM Modal -->
+@if (drawer() === 'uom') {
+  <app-modal-dialog
+    [isOpen]="true"
+    title="وحدة قياس جديدة"
+    (close)="close()"
+  >
+    <form [formGroup]="uomForm" (ngSubmit)="saveUom()">
+      <div class="form-grid">
+        <div class="field">
+          <label>{{ i18n.t('common.name') || 'الاسم' }} *</label>
+          <input formControlName="name" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.abbreviation') || 'اختصار' }}</label>
+          <input formControlName="abbreviation" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('common.description') || 'وصف' }}</label>
+          <textarea formControlName="description" rows="3"></textarea>
+        </div>
+      </div>
+      <div modal-actions class="modal-actions-bar">
+        <button class="button primary" type="submit">{{ i18n.t('common.save') || 'حفظ' }}</button>
+        <button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') || 'إلغاء' }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+}
+
+<!-- Adjustment Modal -->
+@if (drawer() === 'adjustment') {
+  <app-modal-dialog
+    [isOpen]="true"
+    title="تسوية مخزون"
+    (close)="close()"
+  >
+    <form [formGroup]="adjustmentForm" (ngSubmit)="saveAdjustment()">
+      <div class="form-grid">
+        <div class="field">
+          <label>{{ i18n.t('operations.item') || 'الصنف' }} *</label>
+          <select formControlName="itemId">
+            <option value="">-- {{ i18n.t('operations.selectItem') || 'اختر صنف' }} --</option>
+            @for (item of store.snapshot().items; track item.id) {
+              <option [value]="item.id">{{ item.name }} ({{ item.code }})</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.quantity') || 'الكمية' }} *</label>
+          <input type="number" formControlName="quantityDelta" step="any" />
+          <small>{{ i18n.t('operations.adjustmentHint') || 'القيم الموجبة إضافة، السالبة خصم' }}</small>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.reference') || 'مرجع' }}</label>
+          <input formControlName="referenceCode" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.reason') || 'السبب' }} *</label>
+          <textarea formControlName="reason" rows="3"></textarea>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.date') || 'التاريخ' }} *</label>
+          <input type="datetime-local" formControlName="occurredAt" />
+        </div>
+      </div>
+      <div modal-actions class="modal-actions-bar">
+        <button class="button primary" type="submit">{{ i18n.t('common.save') || 'حفظ' }}</button>
+        <button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') || 'إلغاء' }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+}
+
+<!-- Transaction Modal -->
+@if (drawer() === 'transaction') {
+  <app-modal-dialog
+    [isOpen]="true"
+    title="{{ i18n.t('operations.newTransaction') }}"
+    (close)="close()"
+  >
+    <form [formGroup]="transactionForm" (ngSubmit)="saveTransaction()">
+      <div class="form-grid">
+        <div class="field">
+          <label>{{ i18n.t('operations.item') || 'الصنف' }}</label>
+          <select formControlName="itemId">
+            <option value="">-- {{ i18n.t('operations.selectItem') || 'اختر صنف' }} --</option>
+            @for (item of store.snapshot().items; track item.id) {
+              <option [value]="item.id">{{ item.name }} ({{ item.code }})</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.party') || 'الطرف' }}</label>
+          <select formControlName="partyId">
+            <option value="">-- {{ i18n.t('operations.selectParty') || 'اختر طرف' }} --</option>
+            @for (p of store.parties(); track p.id) {
+              <option [value]="p.id">{{ p.name }} ({{ p.code }})</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.operation') || 'نوع الحركة' }} *</label>
+          <select formControlName="operationType">
+            <option value="SUPPLY_RECEIPT">{{ i18n.t('operations.operationType.supplyReceipt') }}</option>
+            <option value="PAYMENT">{{ i18n.t('operations.operationType.payment') }}</option>
+            <option value="PROCESSING_INTAKE">{{ i18n.t('operations.operationType.processingIntake') }}</option>
+            <option value="PROCESSING_DELIVERY">{{ i18n.t('operations.operationType.processingDelivery') }}</option>
+            <option value="EXPORT_SALE">{{ i18n.t('operations.operationType.exportSale') }}</option>
+            <option value="SORTING_SALE">{{ i18n.t('operations.operationType.sortingSale') }}</option>
+            <option value="ADJUSTMENT">{{ i18n.t('operations.operationType.adjustment') }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.quantity') || 'الكمية' }} *</label>
+          <input type="number" formControlName="quantityDelta" min="0" step="any" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.amount') || 'المبلغ' }}</label>
+          <input type="number" formControlName="amountDelta" min="0" step="any" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.loss') || 'نسبة الفقد' }}</label>
+          <input type="number" formControlName="lossPercentage" min="0" max="100" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.reference') || 'مرجع' }}</label>
+          <input formControlName="referenceCode" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.note') || 'ملاحظة' }}</label>
+          <textarea formControlName="note" rows="3"></textarea>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.date') || 'التاريخ' }} *</label>
+          <input type="datetime-local" formControlName="occurredAt" />
+        </div>
+      </div>
+      <div modal-actions class="modal-actions-bar">
+        <button class="button primary" type="submit">{{ i18n.t('common.save') || 'حفظ' }}</button>
+        <button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') || 'إلغاء' }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+}
+
+<!-- Advance Modal -->
+@if (drawer() === 'advance') {
+  <app-modal-dialog
+    [isOpen]="true"
+    title="{{ i18n.t('operations.newAdvance') }}"
+    (close)="close()"
+  >
+    <form [formGroup]="advanceForm" (ngSubmit)="saveAdvance()">
+      <div class="form-grid">
+        <div class="field">
+          <label>{{ i18n.t('operations.employee') || 'الموظف' }} *</label>
+          <select formControlName="employeeId">
+            <option value="">-- {{ i18n.t('operations.selectEmployee') || 'اختر موظف' }} --</option>
+            @for (e of store.employees(); track e.id) {
+              <option [value]="e.id">{{ e.fullName }} ({{ e.employeeCode }})</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.amount') || 'المبلغ' }} *</label>
+          <input type="number" formControlName="amountDelta" step="any" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.entry') || 'النوع' }} *</label>
+          <select formControlName="entryType">
+            <option value="ADVANCE">{{ i18n.t('operations.advancePaid') || 'سلفة' }}</option>
+            <option value="REPAYMENT">{{ i18n.t('operations.advanceRepaid') || 'تسديد' }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.note') || 'ملاحظة' }}</label>
+          <textarea formControlName="note" rows="3"></textarea>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.date') || 'التاريخ' }} *</label>
+          <input type="datetime-local" formControlName="occurredAt" />
+        </div>
+      </div>
+      <div modal-actions class="modal-actions-bar">
+        <button class="button primary" type="submit">{{ i18n.t('common.save') || 'حفظ' }}</button>
+        <button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') || 'إلغاء' }}</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+}

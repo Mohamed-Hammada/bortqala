@@ -214,3 +214,16 @@
     </div>
   </main>
 </div>
+
+@if (confirmDialog.confirmState(); as state) {
+  <div class="confirm-overlay" (click)="confirmDialog.resolve(false)">
+    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+      <div class="confirm-icon">&#9888;&#65039;</div>
+      <div class="confirm-message">{{ state.message }}</div>
+      <div class="confirm-actions">
+        <button type="button" class="button primary" (click)="confirmDialog.resolve(true)">تأكيد</button>
+        <button type="button" class="button secondary" (click)="confirmDialog.resolve(false)">إلغاء</button>
+      </div>
+    </div>
+  </div>
+}

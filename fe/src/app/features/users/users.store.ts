@@ -4,6 +4,13 @@ import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { I18nService } from '../../core/i18n.service';
 import { AuthUser, RoleCode } from '../../core/auth/auth.models';
+
+export interface UserCategory {
+  id: string;
+  code: string;
+  name: string;
+}
+
 export interface UserPayload {
   username: string;
   displayName: string;
@@ -13,7 +20,9 @@ export interface UserPayload {
   canViewSalary?: boolean;
   active: boolean;
   version: number | null;
+  categoryId?: string | null;
 }
+
 @Injectable()
 export class UsersStore {
   private readonly i18n = inject(I18nService);
@@ -21,6 +30,9 @@ export class UsersStore {
   readonly items = signal<AuthUser[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  readonly categories = signal<UserCategory[]>([]);
+  readonly categoriesLoading = signal(false);
+
   async load() {
     this.loading.set(true);
     try {
@@ -31,6 +43,18 @@ export class UsersStore {
       this.loading.set(false);
     }
   }
+
+  async loadCategories() {
+    this.categoriesLoading.set(true);
+    try {
+      this.categories.set(await firstValueFrom(this.http.get<UserCategory[]>('/api/v1/auth/user-categories')));
+    } catch {
+      this.categories.set([]);
+    } finally {
+      this.categoriesLoading.set(false);
+    }
+  }
+
   async save(id: string | null, payload: UserPayload) {
     this.loading.set(true);
     this.error.set(null);

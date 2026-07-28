@@ -4,6 +4,7 @@ import com.bemo.hr.reporting.domain.ReportStatus;
 
 import java.time.Instant;
 import java.time.LocalTime;
+import java.math.BigDecimal;
 import java.util.List;
 
 public final class DashboardApi {
@@ -38,4 +39,10 @@ public final class DashboardApi {
     public record CategoryMetric(String categoryId, String categoryName, long employeeDays, long presentDays,
                                  long exceptionDays, LocalTime typicalArrival, long overtimeMinutes) { }
     public record RecentImport(String id, String fileName, String deviceName, int importedRows, int errorRows, Instant importedAt) { }
+
+    public record AttendanceChartPoint(String label, long present, long absent, long late, long exception) { }
+    public record PayrollSummaryRecord(int totalEmployees, int paidCount, int pendingCount,
+                                       BigDecimal totalGross, BigDecimal totalPaid, BigDecimal totalPending) { }
+    public record DepartmentMetric(String departmentId, String departmentName, int employeeCount,
+                                   long presentDays, long scheduledDays, double rate) { }
 }

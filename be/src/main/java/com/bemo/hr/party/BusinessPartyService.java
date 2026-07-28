@@ -22,9 +22,12 @@ class BusinessPartyService {
     @Transactional
     BusinessPartyApi.Response create(BusinessPartyApi.Request request) {
         validateUniqueCode(request.code(), null);
+        validateManagedType(request.managedType());
         var party = businessPartyRepository.save(new BusinessParty(request.code(), request.name(), request.partyType(),
-                request.contactPerson(), request.phone(), request.notes(), request.active()));
-        
+                request.contactPerson(), request.phone(), request.notes(), request.active(),
+                request.managedType(), request.responsiblePartyId(), request.currencyCode(),
+                request.invoicePolicy(), request.paymentTerms(), request.taxId(), request.bankAccount()));
+
         auditService.record("CREATE", "BUSINESS_PARTY", party.getId(), getCurrentUser(),
                 "{\"code\":\"" + party.getCode() + "\",\"name\":\"" + party.getName() + "\"}", null);
         return response(party);
@@ -37,8 +40,11 @@ class BusinessPartyService {
             throw new BusinessRuleException("This business party changed since it was loaded. Refresh and try again.");
         }
         validateUniqueCode(request.code(), id);
+        validateManagedType(request.managedType());
         party.update(request.code(), request.name(), request.partyType(), request.contactPerson(), request.phone(),
-                request.notes(), request.active());
+                request.notes(), request.active(), request.managedType(), request.responsiblePartyId(),
+                request.currencyCode(), request.invoicePolicy(), request.paymentTerms(), request.taxId(),
+                request.bankAccount());
 
         auditService.record("UPDATE", "BUSINESS_PARTY", party.getId(), getCurrentUser(),
                 "{\"code\":\"" + party.getCode() + "\",\"name\":\"" + party.getName() + "\"}", null);
@@ -67,9 +73,18 @@ class BusinessPartyService {
         if (duplicate) throw new BusinessRuleException("Business party code already exists.");
     }
 
+    private void validateManagedType(String managedType) {
+        if (managedType != null && !managedType.isBlank()
+                && !java.util.Set.of("DIRECT", "AGENT", "BROKER", "CONTRACT", "OTHER").contains(managedType)) {
+            throw new BusinessRuleException("Invalid managedType. Allowed: DIRECT, AGENT, BROKER, CONTRACT, OTHER.");
+        }
+    }
+
     private BusinessPartyApi.Response response(BusinessParty party) {
         return new BusinessPartyApi.Response(party.getId(), party.getCode(), party.getName(), party.getPartyType(),
-                party.getContactPerson(), party.getPhone(), party.getNotes(), party.isActive(), party.getVersion(),
-                party.getCreatedAt(), party.getUpdatedAt());
+                party.getContactPerson(), party.getPhone(), party.getNotes(),
+                party.getManagedType(), party.getResponsiblePartyId(), party.getCurrencyCode(),
+                party.getInvoicePolicy(), party.getPaymentTerms(), party.getTaxId(), party.getBankAccount(),
+                party.isActive(), party.getVersion(), party.getCreatedAt(), party.getUpdatedAt());
     }
 }

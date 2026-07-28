@@ -16,8 +16,11 @@ public final class OperationsApi {
 
     public record ItemRequest(@NotBlank @Size(max = 50) String code, @NotBlank @Size(max = 160) String name,
                               @NotBlank @Size(max = 50) String itemType, @NotBlank @Size(max = 30) String unitCode,
+                              String categoryId, String uomId,
                               boolean active, Long version) { }
-    public record ItemView(String id, String code, String name, String itemType, String unitCode, boolean active,
+    public record ItemView(String id, String code, String name, String itemType, String unitCode,
+                           String categoryId, String categoryName, String uomId, String uomName,
+                           boolean active,
                            BigDecimal currentBalance, long version, Instant createdAt, Instant updatedAt) { }
     public record TransactionRequest(String itemId, String partyId, @NotBlank @Size(max = 50) String operationType,
                                      @NotNull @Digits(integer = 15, fraction = 4) BigDecimal quantityDelta,
@@ -26,8 +29,9 @@ public final class OperationsApi {
                                      @Size(max = 100) String referenceCode, @Size(max = 1000) String note,
                                      @NotNull Instant occurredAt) { }
     public record StockMovementView(String id, String itemId, String itemCode, String itemName, String partyId,
-                                    String partyName, String operationType, BigDecimal quantityDelta,
-                                    BigDecimal lossPercentage, String referenceCode, String note,
+                                    String partyName, String operationType, String documentType,
+                                    BigDecimal quantityDelta,
+                                    BigDecimal lossPercentage, String referenceCode, String note, String reason,
                                     Instant occurredAt, String createdBy, Instant createdAt) { }
     public record LedgerView(String id, String partyId, String partyName, String entryType, BigDecimal amountDelta,
                              String referenceCode, String note, Instant occurredAt, String createdBy, Instant createdAt) { }
@@ -41,4 +45,24 @@ public final class OperationsApi {
     public record Snapshot(List<ItemView> items, List<StockMovementView> movements,
                            List<PartyBalance> partyBalances, List<LedgerView> ledgerEntries,
                            List<AdvanceView> employeeAdvances) { }
+
+    public record ItemCategoryRequest(@NotBlank @Size(max = 100) String name,
+                                      @Size(max = 500) String description) { }
+    public record ItemCategoryView(String id, String name, String description, boolean active,
+                                   Instant createdAt, Instant updatedAt) { }
+
+    public record UnitOfMeasureRequest(@NotBlank @Size(max = 50) String name,
+                                       @Size(max = 20) String abbreviation,
+                                       @Size(max = 500) String description) { }
+    public record UnitOfMeasureView(String id, String name, String abbreviation, String description, boolean active,
+                                    Instant createdAt, Instant updatedAt) { }
+
+    public record AdjustmentRequest(@NotBlank String itemId,
+                                    @NotNull @Digits(integer = 15, fraction = 4) BigDecimal quantityDelta,
+                                    @Size(max = 100) String referenceCode,
+                                    @Size(max = 1000) String reason,
+                                    @NotNull Instant occurredAt) { }
+
+    public record NegativeBalanceView(String itemId, String itemCode, String itemName,
+                                      BigDecimal currentBalance) { }
 }

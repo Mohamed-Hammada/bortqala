@@ -24,6 +24,8 @@ public class InventoryItem {
     @Column(nullable = false, length = 160) private String name;
     @Column(name = "item_type", nullable = false, length = 50) private String itemType;
     @Column(name = "unit_code", nullable = false, length = 30) private String unitCode;
+    @Column(name = "category_id", length = 36) private String categoryId;
+    @Column(name = "uom_id", length = 36) private String uomId;
     @Column(nullable = false) private boolean active;
     @Version private long version;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
@@ -42,6 +44,11 @@ public class InventoryItem {
         this.itemType = normalized(itemType);
         this.unitCode = normalized(unitCode);
         this.active = active;
+    }
+
+    public void assignMasterData(String categoryId, String uomId) {
+        this.categoryId = categoryId;
+        this.uomId = uomId;
     }
 
     @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }

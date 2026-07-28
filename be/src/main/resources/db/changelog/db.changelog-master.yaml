@@ -77,5 +77,15 @@ databaseChangeLog:
       file: db/changelog/20260728_v38_audit_payroll_erp_fixes.yaml
   - include:
       file: db/changelog/20260728_v39_error_translations.yaml
+  - include:
+      file: db/changelog/20260729_v40_parties_extended_fields.yaml
+  - include:
+      file: db/changelog/20260729_v41_purchase_order_line_columns.yaml
+  - include:
+      file: db/changelog/20260729_v42_inventory_master_data.yaml
+  - include:
+      file: db/changelog/20260729_v42_schedule_rules_extended.yaml
+  - include:
+      file: db/changelog/20260729_v43_user_preferences_default_page.yaml
 
 

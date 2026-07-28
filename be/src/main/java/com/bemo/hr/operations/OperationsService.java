@@ -6,11 +6,14 @@ import com.bemo.hr.party.BusinessParty;
 import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
+import com.bemo.hr.shared.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,6 +28,8 @@ public class OperationsService {
     private final BusinessPartyRepository businessPartyRepository;
     private final EmployeeRepository employeeRepository;
     private final AttendanceCategoryRepository attendanceCategoryRepository;
+    private final ItemCategoryRepository itemCategoryRepository;
+    private final UnitOfMeasureRepository unitOfMeasureRepository;
     private final OperationsExcelExporter operationsExcelExporter;
     private final com.bemo.hr.audit.application.AuditService auditService;
 
@@ -69,15 +74,19 @@ public class OperationsService {
         var partyMap = parties.stream().collect(Collectors.toMap(BusinessParty::getId, Function.identity()));
         var employees = employeeRepository.findAllByOrderByFullNameAsc();
         var employeeMap = employees.stream().collect(Collectors.toMap(com.bemo.hr.employee.domain.Employee::getId, Function.identity()));
+        var categories = itemCategoryRepository.findAll().stream().collect(Collectors.toMap(ItemCategory::getId, Function.identity()));
+        var uoms = unitOfMeasureRepository.findAll().stream().collect(Collectors.toMap(UnitOfMeasure::getId, Function.identity()));
 
-        var itemViews = items.stream().map(item -> itemView(item, stockMovementRepository.balance(item.getId()))).toList();
+        var itemViews = items.stream().map(item -> itemView(item, stockMovementRepository.balance(item.getId()), categories, uoms)).toList();
         var movements = stockMovementRepository.findAllByOrderByOccurredAtDesc().stream().map(movement -> {
             var item = itemMap.get(movement.getItemId());
             var party = partyMap.get(movement.getPartyId());
             return new OperationsApi.StockMovementView(movement.getId(), movement.getItemId(),
                     item == null ? "—" : item.getCode(), item == null ? "—" : item.getName(), movement.getPartyId(),
-                    party == null ? null : party.getName(), movement.getOperationType(), movement.getQuantityDelta(),
-                    movement.getLossPercentage(), movement.getReferenceCode(), movement.getNote(), movement.getOccurredAt(),
+                    party == null ? null : party.getName(), movement.getOperationType(), movement.getDocumentType(),
+                    movement.getQuantityDelta(),
+                    movement.getLossPercentage(), movement.getReferenceCode(), movement.getNote(), movement.getReason(),
+                    movement.getOccurredAt(),
                     movement.getCreatedBy(), movement.getCreatedAt());
         }).toList();
         var balances = parties.stream().map(party -> new OperationsApi.PartyBalance(party.getId(), party.getCode(),
@@ -98,11 +107,67 @@ public class OperationsService {
         return new OperationsApi.Snapshot(itemViews, movements, balances, ledger, advances);
     }
 
+    public List<OperationsApi.ItemCategoryView> listItemCategories() {
+        return itemCategoryRepository.findByActiveTrueAndAppIdOrderByNameAsc(getCurrentAppId())
+                .stream().map(this::categoryView).toList();
+    }
+
+    @Transactional
+    public OperationsApi.ItemCategoryView createItemCategory(OperationsApi.ItemCategoryRequest request) {
+        if (itemCategoryRepository.findByNameAndAppId(request.name().strip(), getCurrentAppId()).isPresent()) {
+            throw new BusinessRuleException("Item category already exists.");
+        }
+        var entity = itemCategoryRepository.save(new ItemCategory(request.name(), request.description()));
+        return categoryView(entity);
+    }
+
+    public List<OperationsApi.UnitOfMeasureView> listUnitOfMeasures() {
+        return unitOfMeasureRepository.findByActiveTrueAndAppIdOrderByNameAsc(getCurrentAppId())
+                .stream().map(this::uomView).toList();
+    }
+
+    @Transactional
+    public OperationsApi.UnitOfMeasureView createUnitOfMeasure(OperationsApi.UnitOfMeasureRequest request) {
+        if (unitOfMeasureRepository.findByNameAndAppId(request.name().strip(), getCurrentAppId()).isPresent()) {
+            throw new BusinessRuleException("Unit of measure already exists.");
+        }
+        var entity = unitOfMeasureRepository.save(new UnitOfMeasure(request.name(), request.abbreviation(), request.description()));
+        return uomView(entity);
+    }
+
+    public List<OperationsApi.NegativeBalanceView> getNegativeBalances() {
+        var items = inventoryItemRepository.findAll();
+        return items.stream()
+                .map(item -> Map.entry(item, stockMovementRepository.balance(item.getId())))
+                .filter(e -> e.getValue().compareTo(BigDecimal.ZERO) < 0)
+                .map(e -> new OperationsApi.NegativeBalanceView(
+                        e.getKey().getId(), e.getKey().getCode(), e.getKey().getName(), e.getValue()))
+                .toList();
+    }
+
+    @Transactional
+    public OperationsApi.Snapshot createStockAdjustment(OperationsApi.AdjustmentRequest request, String actor) {
+        if (request.quantityDelta().signum() == 0) {
+            throw new BusinessRuleException("Adjustment quantity cannot be zero.");
+        }
+        requireItem(request.itemId());
+        var sm = stockMovementRepository.save(new StockMovement(
+                request.itemId(), null, "ADJUSTMENT", request.quantityDelta(),
+                null, request.referenceCode(), null, request.occurredAt(), actor));
+        sm.assignDocument("ADJUSTMENT", request.reason());
+        auditService.record("STOCK_ADJUSTMENT", "STOCK_ITEM", request.itemId(), actor,
+                "Stock adjustment qty: " + request.quantityDelta() + " reason: " + request.reason(), null);
+        return snapshot();
+    }
+
     @Transactional
     public OperationsApi.ItemView createItem(OperationsApi.ItemRequest request) {
         if (inventoryItemRepository.existsByCodeIgnoreCase(request.code())) throw new BusinessRuleException("Item code already exists.");
         var item = inventoryItemRepository.save(new InventoryItem(request.code(), request.name(), request.itemType(), request.unitCode()));
-        return itemView(item, BigDecimal.ZERO);
+        if (request.categoryId() != null || request.uomId() != null) {
+            item.assignMasterData(request.categoryId(), request.uomId());
+        }
+        return itemView(item, BigDecimal.ZERO, Map.of(), Map.of());
     }
 
     @Transactional
@@ -111,7 +176,10 @@ public class OperationsService {
         if (request.version() == null || request.version() != item.getVersion()) throw new BusinessRuleException("This item changed. Refresh and retry.");
         if (inventoryItemRepository.existsByCodeIgnoreCaseAndIdNot(request.code(), id)) throw new BusinessRuleException("Item code already exists.");
         item.update(request.code(), request.name(), request.itemType(), request.unitCode(), request.active());
-        return itemView(item, stockMovementRepository.balance(id));
+        if (request.categoryId() != null || request.uomId() != null) {
+            item.assignMasterData(request.categoryId(), request.uomId());
+        }
+        return itemView(item, stockMovementRepository.balance(id), Map.of(), Map.of());
     }
 
     @Transactional
@@ -180,7 +248,28 @@ public class OperationsService {
     }
     private String normalizeId(String id) { return id == null || id.isBlank() ? null : id; }
     private OperationsApi.ItemView itemView(InventoryItem item, BigDecimal balance) {
+        return itemView(item, balance, itemCategoryRepository.findAll().stream().collect(Collectors.toMap(ItemCategory::getId, Function.identity())),
+                unitOfMeasureRepository.findAll().stream().collect(Collectors.toMap(UnitOfMeasure::getId, Function.identity())));
+    }
+    private OperationsApi.ItemView itemView(InventoryItem item, BigDecimal balance,
+                                            Map<String, ItemCategory> categoryMap,
+                                            Map<String, UnitOfMeasure> uomMap) {
+        var cat = item.getCategoryId() == null ? null : categoryMap.get(item.getCategoryId());
+        var uom = item.getUomId() == null ? null : uomMap.get(item.getUomId());
         return new OperationsApi.ItemView(item.getId(), item.getCode(), item.getName(), item.getItemType(), item.getUnitCode(),
+                item.getCategoryId(), cat == null ? null : cat.getName(),
+                item.getUomId(), uom == null ? null : uom.getName(),
                 item.isActive(), balance, item.getVersion(), item.getCreatedAt(), item.getUpdatedAt());
+    }
+    private OperationsApi.ItemCategoryView categoryView(ItemCategory c) {
+        return new OperationsApi.ItemCategoryView(c.getId(), c.getName(), c.getDescription(), c.isActive(),
+                c.getCreatedAt(), c.getUpdatedAt());
+    }
+    private OperationsApi.UnitOfMeasureView uomView(UnitOfMeasure u) {
+        return new OperationsApi.UnitOfMeasureView(u.getId(), u.getName(), u.getAbbreviation(), u.getDescription(), u.isActive(),
+                u.getCreatedAt(), u.getUpdatedAt());
+    }
+    private String getCurrentAppId() {
+        return TenantContext.require();
     }
 }

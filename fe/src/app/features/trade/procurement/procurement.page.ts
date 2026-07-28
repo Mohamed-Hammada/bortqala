@@ -7,6 +7,7 @@ import { NotificationService } from '../../../core/notification.service';
 import { apiErrorMessage } from '../../../core/api-error';
 import { DecimalPipe } from '@angular/common';
 import { formatDate } from '../../../core/date';
+import { downloadBlob, exportCsv } from '../../../core/download';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 
 export interface PurchaseOrderItem {
@@ -20,6 +21,16 @@ export interface PurchaseOrderItem {
   deliveryDate: string;
 }
 
+export interface PurchaseOrderLineResponse {
+  id: string;
+  itemName: string;
+  itemCategory: string;
+  quantity: number;
+  unitOfMeasure: string;
+  unitPrice: number;
+  lineTotal: number;
+}
+
 export interface PurchaseOrder {
   id: string;
   poNumber: string;
@@ -29,6 +40,7 @@ export interface PurchaseOrder {
   paymentTerms?: string;
   status: 'DRAFT' | 'ISSUED' | 'RECEIVED' | 'CANCELLED';
   totalAmount: number;
+  items: PurchaseOrderLineResponse[];
   createdAt: number;
   updatedAt: number;
 }
@@ -170,5 +182,28 @@ export class ProcurementPage {
 
   date(ms: number) {
     return formatDate(ms);
+  }
+
+  exportCsv(): void {
+    const rows = this.orders().map((po) => ({
+      poNumber: po.poNumber,
+      poDate: this.date(po.poDate),
+      supplier: po.supplierName || po.supplierId,
+      paymentTerms: po.paymentTerms || '',
+      totalAmount: po.totalAmount,
+      status: po.status,
+    }));
+    exportCsv(
+      rows,
+      [
+        { key: 'poNumber', label: 'رقم أمر الشراء' },
+        { key: 'poDate', label: 'تاريخ الأمر' },
+        { key: 'supplier', label: 'المورد' },
+        { key: 'paymentTerms', label: 'شروط الدفع' },
+        { key: 'totalAmount', label: 'الإجمالي' },
+        { key: 'status', label: 'الحالة' },
+      ],
+      `procurement-${new Date().toISOString().slice(0, 10)}.csv`,
+    );
   }
 }

@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { formatDate, formatTime } from '../../core/date';
 import { I18nService } from '../../core/i18n.service';
+import { FormsModule } from '@angular/forms';
 import {
   AttendanceDecision,
   DailyResult,
@@ -14,10 +15,29 @@ import { ReportsStore } from './reports.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { NotificationService } from '../../core/notification.service';
+import { CommonModule } from '@angular/common';
+
+interface BulkPreviewData {
+  decision: AttendanceDecision;
+  statusType: DailyStatus;
+  matchingCount: number;
+  editableCount: number;
+  excludedCount: number;
+  decisionLabel: string;
+  statusLabel: string;
+}
+
+interface DeviceDowntimeEvent {
+  date: string;
+  categoryName: string;
+  location: string;
+  affectedCount: number;
+  decision?: 'NORMAL_DAY' | 'ABSENT' | 'HOLIDAY' | 'DEVICE_FAILURE' | 'INDIVIDUAL_REVIEW';
+}
 
 @Component({
   selector: 'app-report-review-page',
-  imports: [RouterLink, TablePaginationComponent],
+  imports: [RouterLink, TablePaginationComponent, FormsModule, CommonModule],
   providers: [ReportsStore],
   templateUrl: './report-review.page.html',
   styleUrl: './report-review.page.scss',
@@ -32,6 +52,22 @@ export class ReportReviewPage {
   readonly expandedRowId = signal<string | null>(null);
   readonly id = inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
   readonly pagination = new TablePagination();
+
+  // Bulk preview modal
+  readonly bulkPreview = signal<BulkPreviewData | null>(null);
+  readonly executing = signal(false);
+
+  // Prompt modal state (generic for chained prompts)
+  readonly promptState = signal<{
+    titleKey: string;
+    defaultValue: string;
+    onConfirm: (value: string) => void;
+    onCancel: () => void;
+  } | null>(null);
+
+  // Device downtime detection
+  readonly showDowntimeSection = signal(false);
+  readonly downtimeEvents = signal<DeviceDowntimeEvent[]>([]);
   readonly greenCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.healthTier(r) === 'GREEN').length);
   readonly yellowCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.healthTier(r) === 'YELLOW').length);
   readonly redCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.healthTier(r) === 'RED').length);
@@ -57,8 +93,47 @@ export class ReportReviewPage {
   });
   readonly pagedRows = computed(() => this.pagination.slice(this.rows()));
   constructor() {
-    void this.store.load(this.id);
+    this.store.load(this.id).then(() => this.detectDowntime());
   }
+  // Device downtime detection
+  detectDowntime() {
+    const results = this.store.details()?.dailyResults ?? [];
+    const categories = this.store.details()?.categories ?? [];
+
+    const byDateAndCategory = new Map<string, Map<string, DailyResult[]>>();
+    for (const r of results) {
+      const dateKey = new Date(r.workDate).toISOString().slice(0, 10);
+      if (!byDateAndCategory.has(dateKey)) byDateAndCategory.set(dateKey, new Map());
+      const catMap = byDateAndCategory.get(dateKey)!;
+      if (!catMap.has(r.categoryName)) catMap.set(r.categoryName, []);
+      catMap.get(r.categoryName)!.push(r);
+    }
+
+    const events: DeviceDowntimeEvent[] = [];
+    for (const [date, catMap] of byDateAndCategory) {
+      for (const [catName, catResults] of catMap) {
+        const noPunchCount = catResults.filter(r => r.status === 'NO_PUNCH' || r.status === 'MANUAL_ENTRY').length;
+        const totalCount = catResults.length;
+        if (totalCount >= 3 && noPunchCount / totalCount >= 0.7) {
+          events.push({
+            date,
+            categoryName: catName,
+            location: '',
+            affectedCount: noPunchCount,
+          });
+        }
+      }
+    }
+
+    this.downtimeEvents.set(events);
+    this.showDowntimeSection.set(events.length > 0);
+  }
+
+  downtimeDecision(event: DeviceDowntimeEvent, decision: DeviceDowntimeEvent['decision']) {
+    event.decision = decision;
+    this.downtimeEvents.update(events => [...events]);
+  }
+
   toggleRowExpand(id: string) {
     this.expandedRowId.update((prev) => (prev === id ? null : id));
   }
@@ -108,15 +183,34 @@ export class ReportReviewPage {
         ? this.i18n.t('review.decisionDeduct')
         : this.i18n.t('review.approvedLeave');
 
-    const confirmMsg =
-      `${this.i18n.t('review.confirmBulkPreview')}\n` +
-      `${this.i18n.t('review.confirmBulkMatching', { count: allMatching.length })}\n` +
-      `${this.i18n.t('review.confirmBulkEditable', { count: editable.length })}\n` +
-      `${this.i18n.t('review.confirmBulkExcluded', { count: excludedCount })}\n\n` +
-      `${this.i18n.t('review.confirmBulkApply', { decision: decText, count: editable.length, status: statusText })}`;
+    this.bulkPreview.set({
+      decision,
+      statusType,
+      matchingCount: allMatching.length,
+      editableCount: editable.length,
+      excludedCount,
+      decisionLabel: decText,
+      statusLabel: statusText
+    });
+  }
 
-    if (!confirm(confirmMsg)) return;
+  closeBulkPreview() {
+    if (this.executing()) return;
+    this.bulkPreview.set(null);
+  }
 
+  async executeBulkDecision() {
+    const preview = this.bulkPreview();
+    if (!preview) return;
+
+    const allResults = this.store.details()?.dailyResults ?? [];
+    const editable = allResults.filter((r) => r.status === preview.statusType && this.blocking(r));
+    if (!editable.length) {
+      this.bulkPreview.set(null);
+      return;
+    }
+
+    this.executing.set(true);
     try {
       let successCount = 0;
       const opId = 'BULK-' + Date.now();
@@ -124,17 +218,20 @@ export class ReportReviewPage {
         await this.store.decide(
           this.id,
           r.id,
-          decision,
-          decision === 'NORMAL_DAY' ? r.expectedMinutes : 0,
-          `${this.i18n.t('review.bulkProcessId')} [${opId}] - ${decText}`
+          preview.decision,
+          preview.decision === 'NORMAL_DAY' ? r.expectedMinutes : 0,
+          `${this.i18n.t('review.bulkProcessId')} [${opId}] - ${preview.decisionLabel}`
         );
         successCount++;
       }
+      this.bulkPreview.set(null);
+      this.executing.set(false);
       this.notification.success(
         this.i18n.t('review.bulkSuccess', { count: successCount }) +
-        (excludedCount > 0 ? this.i18n.t('review.bulkExcludedNote', { count: excludedCount }) : '')
+        (preview.excludedCount > 0 ? this.i18n.t('review.bulkExcludedNote', { count: preview.excludedCount }) : '')
       );
     } catch (e: any) {
+      this.executing.set(false);
       this.notification.error(this.i18n.t('review.bulkError', { error: e?.message ?? this.i18n.t('api.unexpected') }));
     }
   }
@@ -197,33 +294,70 @@ export class ReportReviewPage {
         return value;
     }
   }
-  async decide(row: DailyResult, decision: AttendanceDecision) {
-    let worked: number | null = null;
+  decide(row: DailyResult, decision: AttendanceDecision) {
     if (
       decision === 'NORMAL_DAY' &&
       (row.status === 'MANUAL_ENTRY' || row.status === 'SINGLE_PUNCH')
     ) {
-      const input = prompt(this.i18n.t('review.workedMinutesPrompt'), String(row.expectedMinutes));
-      if (input === null) return;
-      worked = Number(input);
-      if (!Number.isFinite(worked) || worked < 0) return;
+      this.promptState.set({
+        titleKey: 'review.workedMinutesPrompt',
+        defaultValue: String(row.expectedMinutes),
+        onConfirm: (input) => {
+          const worked = Number(input);
+          if (!Number.isFinite(worked) || worked < 0) return;
+          this.promptState.set({
+            titleKey: 'review.decisionNotePrompt',
+            defaultValue: '',
+            onConfirm: (note) => {
+              this.promptState.set(null);
+              this.store.decide(this.id, row.id, decision, worked, note || null);
+            },
+            onCancel: () => this.promptState.set(null),
+          });
+        },
+        onCancel: () => this.promptState.set(null),
+      });
+    } else {
+      this.promptState.set({
+        titleKey: 'review.decisionNotePrompt',
+        defaultValue: '',
+        onConfirm: (note) => {
+          this.promptState.set(null);
+          this.store.decide(this.id, row.id, decision, null, note || null);
+        },
+        onCancel: () => this.promptState.set(null),
+      });
     }
-    const note = prompt(this.i18n.t('review.decisionNotePrompt')) ?? null;
-    await this.store.decide(this.id, row.id, decision, worked, note);
   }
-  async holiday(item: HolidayProposal, confirming: boolean) {
-    const name = confirming
-      ? (prompt(this.i18n.t('review.holidayNamePrompt'), this.i18n.t('review.confirmedHoliday')) ??
-        null)
-      : null;
-    if (confirming && name === null) return;
-    const note = prompt(this.i18n.t('review.notePrompt')) ?? null;
-    await this.store.decideHoliday(
-      this.id,
-      item.id,
-      confirming ? 'CONFIRMED' : 'REJECTED',
-      name,
-      note,
-    );
+  holiday(item: HolidayProposal, confirming: boolean) {
+    if (confirming) {
+      this.promptState.set({
+        titleKey: 'review.holidayNamePrompt',
+        defaultValue: this.i18n.t('review.confirmedHoliday'),
+        onConfirm: (name) => {
+          if (!name) return;
+          this.promptState.set({
+            titleKey: 'review.notePrompt',
+            defaultValue: '',
+            onConfirm: (note) => {
+              this.promptState.set(null);
+              this.store.decideHoliday(this.id, item.id, 'CONFIRMED', name, note || null);
+            },
+            onCancel: () => this.promptState.set(null),
+          });
+        },
+        onCancel: () => this.promptState.set(null),
+      });
+    } else {
+      this.promptState.set({
+        titleKey: 'review.notePrompt',
+        defaultValue: '',
+        onConfirm: (note) => {
+          this.promptState.set(null);
+          this.store.decideHoliday(this.id, item.id, 'REJECTED', null, note || null);
+        },
+        onCancel: () => this.promptState.set(null),
+      });
+    }
   }
 }

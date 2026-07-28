@@ -207,6 +207,28 @@
                 <label>{{ i18n.t('categories.graceMinutes') }}</label>
                 <input type="number" formControlName="graceMinutes" />
               </div>
+              <div class="field">
+                <label>{{ i18n.t('categories.endTime') }}</label>
+                <input type="time" formControlName="endTime" />
+              </div>
+              <div class="field">
+                <label>{{ i18n.t('categories.scope') }}</label>
+                <select formControlName="scope">
+                  <option value="ALL">{{ i18n.t('categories.scopeAll') }}</option>
+                  <option value="SPECIFIC_CATEGORY">{{ i18n.t('categories.scopeCategory') }}</option>
+                </select>
+              </div>
+              @if (group.controls.scope.value === 'SPECIFIC_CATEGORY') {
+                <div class="field">
+                  <label>{{ i18n.t('categories.scopeCategoryId') }}</label>
+                  <select formControlName="scopeCategoryId">
+                    <option value="">—</option>
+                    @for (cat of store.items(); track cat.id) {
+                      <option [value]="cat.id">{{ cat.name }}</option>
+                    }
+                  </select>
+                </div>
+              }
             </div>
           </div>
         }
@@ -226,4 +248,17 @@
       </button>
     </div>
   </app-modal-dialog>
+
+  @if (confirmAction(); as action) {
+    <div class="confirm-overlay" (click)="confirmAction.set(null)">
+      <div class="confirm-dialog" (click)="$event.stopPropagation()">
+        <div class="confirm-icon">&#9888;&#65039;</div>
+        <div class="confirm-message">{{ action.message }}</div>
+        <div class="confirm-actions">
+          <button type="button" class="button primary" (click)="action.onConfirm()">تأكيد</button>
+          <button type="button" class="button secondary" (click)="confirmAction.set(null)">إلغاء</button>
+        </div>
+      </div>
+    </div>
+  }
 </section>

@@ -26,6 +26,13 @@ public class BusinessParty {
     @Column(name = "contact_person", length = 160) private String contactPerson;
     @Column(length = 50) private String phone;
     @Column(length = 1000) private String notes;
+    @Column(name = "managed_type", nullable = false, length = 30) private String managedType;
+    @Column(name = "responsible_party_id", length = 36) private String responsiblePartyId;
+    @Column(name = "currency_code", nullable = false, length = 10) private String currencyCode;
+    @Column(name = "invoice_policy", nullable = false, length = 30) private String invoicePolicy;
+    @Column(name = "payment_terms", nullable = false, length = 30) private String paymentTerms;
+    @Column(name = "tax_id", length = 50) private String taxId;
+    @Column(name = "bank_account", length = 100) private String bankAccount;
     @Column(nullable = false) private boolean active;
     @Version private long version;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
@@ -34,13 +41,18 @@ public class BusinessParty {
     protected BusinessParty() { }
 
     public BusinessParty(String code, String name, String partyType, String contactPerson,
-                         String phone, String notes, boolean active) {
+                         String phone, String notes, boolean active,
+                         String managedType, String responsiblePartyId, String currencyCode,
+                         String invoicePolicy, String paymentTerms, String taxId, String bankAccount) {
         this.id = UUID.randomUUID().toString();
-        update(code, name, partyType, contactPerson, phone, notes, active);
+        update(code, name, partyType, contactPerson, phone, notes, active,
+               managedType, responsiblePartyId, currencyCode, invoicePolicy, paymentTerms, taxId, bankAccount);
     }
 
     public void update(String code, String name, String partyType, String contactPerson,
-                       String phone, String notes, boolean active) {
+                       String phone, String notes, boolean active,
+                       String managedType, String responsiblePartyId, String currencyCode,
+                       String invoicePolicy, String paymentTerms, String taxId, String bankAccount) {
         this.code = code.strip().toUpperCase(Locale.ROOT);
         this.name = name.strip();
         this.partyType = partyType.strip().toUpperCase(Locale.ROOT).replace(' ', '_');
@@ -48,6 +60,13 @@ public class BusinessParty {
         this.phone = nullable(phone);
         this.notes = nullable(notes);
         this.active = active;
+        this.managedType = managedType;
+        this.responsiblePartyId = nullable(responsiblePartyId);
+        this.currencyCode = currencyCode;
+        this.invoicePolicy = invoicePolicy;
+        this.paymentTerms = paymentTerms;
+        this.taxId = nullable(taxId);
+        this.bankAccount = nullable(bankAccount);
     }
 
     public void deactivate() { this.active = false; }

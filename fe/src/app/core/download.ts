@@ -7,6 +7,28 @@ export function downloadBlob(blob: Blob, fileName: string): void {
   URL.revokeObjectURL(url);
 }
 
+export function exportCsv(
+  rows: Record<string, string | number | null | undefined>[],
+  columns: { key: string; label: string }[],
+  fileName: string,
+): void {
+  const BOM = '\uFEFF';
+  const header = columns.map((c) => `"${c.label}"`).join(',');
+  const body = rows
+    .map((row) =>
+      columns
+        .map((c) => {
+          const val = row[c.key];
+          if (val === null || val === undefined) return '""';
+          return `"${String(val).replace(/"/g, '""')}"`;
+        })
+        .join(','),
+    )
+    .join('\n');
+  const blob = new Blob([BOM + header + '\n' + body], { type: 'text/csv;charset=utf-8;' });
+  downloadBlob(blob, fileName);
+}
+
 export function timestampedExcelFileName(
   arabicName: string,
   englishName: string,

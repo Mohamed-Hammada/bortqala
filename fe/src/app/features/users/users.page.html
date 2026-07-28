@@ -5,7 +5,10 @@
       <h1>{{ i18n.t('users.title') }}</h1>
       <p>{{ i18n.t('users.description') }}</p>
     </div>
-    <button class="button primary" (click)="openNew()">＋ {{ i18n.t('users.add') }}</button>
+    <div class="header-actions">
+      <button class="button secondary" (click)="exportCsv()">⇩ Excel</button>
+      <button class="button primary" (click)="openNew()">＋ {{ i18n.t('users.add') }}</button>
+    </div>
   </header>
 
   @if (store.loading()) {
@@ -157,7 +160,22 @@
           }
         </div>
 
-        <!-- Section 2: User Roles -->
+        <!-- Section 2: User Category -->
+        <div class="form-section-head">
+          <span>📂</span> {{ i18n.t('users.sectionCategory') }}
+        </div>
+
+        <div class="field span-2">
+          <label>{{ i18n.t('users.category') }}</label>
+          <select formControlName="categoryId">
+            <option [ngValue]="null">— {{ i18n.t('common.none') }} —</option>
+            @for (cat of store.categories(); track cat.id) {
+              <option [ngValue]="cat.id">{{ cat.name }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Section 3: User Roles -->
         <div class="form-section-head">
           <span>🔑</span> {{ i18n.t('users.sectionRoles') }}
         </div>
@@ -181,7 +199,7 @@
           </div>
         </div>
 
-        <!-- Section 3: Grouped Module Permissions -->
+        <!-- Section 4: Grouped Module Permissions -->
         <div class="form-section-head">
           <span>🖥️</span> {{ i18n.t('users.sectionMenus') }} (مقسمة حسب الوحدات)
           <div class="quick-actions">
@@ -221,7 +239,7 @@
           </div>
         </div>
 
-        <!-- Section 4: Special Financial Permissions -->
+        <!-- Section 5: Special Financial Permissions -->
         <div class="form-section-head">
           <span>🔒</span> {{ i18n.t('users.sectionSpecialPermissions') }}
         </div>
@@ -236,7 +254,7 @@
           </label>
         </div>
 
-        <!-- Section 5: Account Status -->
+        <!-- Section 6: Account Status -->
         <div class="form-section-head">
           <span>🛡️</span> {{ i18n.t('users.sectionStatus') }}
         </div>

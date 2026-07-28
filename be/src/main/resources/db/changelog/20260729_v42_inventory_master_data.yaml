@@ -1,0 +1,84 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-v42-inventory-master-data
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: item_categories
+      changes:
+        # --- item_categories ---
+        - createTable:
+            tableName: item_categories
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_item_cat_app, references: apps(id) } }
+              - column: { name: name, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: description, type: varchar(500) }
+              - column: { name: active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: item_categories
+            columnNames: app_id, name
+            constraintName: uk_item_categories_app_name
+
+        # --- unit_of_measures ---
+        - createTable:
+            tableName: unit_of_measures
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_uom_app, references: apps(id) } }
+              - column: { name: name, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: abbreviation, type: varchar(20) }
+              - column: { name: description, type: varchar(500) }
+              - column: { name: active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: unit_of_measures
+            columnNames: app_id, name
+            constraintName: uk_uom_app_name
+
+        # --- alter inventory_items ---
+        - addColumn:
+            tableName: inventory_items
+            columns:
+              - column:
+                  name: category_id
+                  type: varchar(36)
+        - addColumn:
+            tableName: inventory_items
+            columns:
+              - column:
+                  name: uom_id
+                  type: varchar(36)
+        - addForeignKeyConstraint:
+            baseTableName: inventory_items
+            baseColumnNames: category_id
+            referencedTableName: item_categories
+            referencedColumnNames: id
+            constraintName: fk_inventory_item_category
+            onDelete: SET NULL
+        - addForeignKeyConstraint:
+            baseTableName: inventory_items
+            baseColumnNames: uom_id
+            referencedTableName: unit_of_measures
+            referencedColumnNames: id
+            constraintName: fk_inventory_item_uom
+            onDelete: SET NULL
+
+        # --- alter stock_movements ---
+        - addColumn:
+            tableName: stock_movements
+            columns:
+              - column:
+                  name: document_type
+                  type: varchar(30)
+        - addColumn:
+            tableName: stock_movements
+            columns:
+              - column:
+                  name: reason
+                  type: varchar(1000)

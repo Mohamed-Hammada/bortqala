@@ -281,6 +281,20 @@ h3 {
   background: rgba(239, 68, 68, 0.2);
 }
 
+/* Confirmation Dialog Overlay */
+.confirm-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex;
+  align-items: center; justify-content: center; z-index: 9999;
+}
+.confirm-dialog {
+  background: #fff; border-radius: 12px; padding: 2rem; min-width: 360px;
+  max-width: 480px; text-align: center; display: flex; flex-direction: column;
+  gap: 1rem; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+.confirm-icon { font-size: 2rem; }
+.confirm-message { font-size: 1rem; color: #334155; line-height: 1.6; }
+.confirm-actions { display: flex; gap: 0.75rem; justify-content: center; }
+
 .button:disabled {
   opacity: 0.5;
   cursor: not-allowed;

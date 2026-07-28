@@ -10,6 +10,9 @@ export interface ScheduleRule {
   startTime: string;
   expectedMinutesOverride: number | null;
   graceMinutes: number;
+  endTime: string | null;
+  scope: string;
+  scopeCategoryId: string | null;
 }
 export interface AttendanceCategory {
   id: string;

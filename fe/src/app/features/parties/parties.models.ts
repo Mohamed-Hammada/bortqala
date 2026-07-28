@@ -6,6 +6,13 @@ export interface BusinessParty {
   contactPerson: string | null;
   phone: string | null;
   notes: string | null;
+  managedType: string;
+  responsiblePartyId: string | null;
+  currencyCode: string;
+  invoicePolicy: string;
+  paymentTerms: string;
+  taxId: string | null;
+  bankAccount: string | null;
   active: boolean;
   version: number;
   createdAt: number;
@@ -19,6 +26,13 @@ export interface BusinessPartyPayload {
   contactPerson: string | null;
   phone: string | null;
   notes: string | null;
+  managedType: string;
+  responsiblePartyId: string | null;
+  currencyCode: string;
+  invoicePolicy: string;
+  paymentTerms: string;
+  taxId: string | null;
+  bankAccount: string | null;
   active: boolean;
   version: number | null;
 }

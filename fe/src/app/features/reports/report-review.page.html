@@ -388,5 +388,117 @@
         (pageSizeChange)="pagination.changePageSize($event)"
       />
     </div>
+
+    <!-- Device Downtime Detection Section -->
+    @if (showDowntimeSection() && downtimeEvents().length) {
+      <div class="card downtimes-card">
+        <div class="section-head">
+          <h2>⚡ {{ i18n.t('review.downtimeHeading', undefined, 'احتمال عطل جهاز') }}</h2>
+          <p>{{ i18n.t('review.downtimeHint', undefined, 'يبدو أن أكثر من 70% من الفئة لا توجد لهم بصمات في التاريخ نفسه.') }}</p>
+        </div>
+        <div class="downtime-grid">
+          @for (event of downtimeEvents(); track event.date + event.categoryName) {
+            <div class="downtime-card" [class.resolved]="event.decision">
+              <div class="downtime-header">
+                <strong>{{ event.date }}</strong>
+                <span class="cat-pill">{{ event.categoryName }}</span>
+                <span class="count-badge">{{ event.affectedCount }} {{ i18n.t('review.employeeCountSuffix', undefined, 'شخص') }}</span>
+              </div>
+              @if (!event.decision) {
+                <div class="downtime-actions">
+                  <button class="btn-decide normal" (click)="downtimeDecision(event, 'NORMAL_DAY')">
+                    {{ i18n.t('decision.normalDay') }}
+                  </button>
+                  <button class="btn-decide deduct" (click)="downtimeDecision(event, 'ABSENT')">
+                    {{ i18n.t('review.absent', undefined, 'غياب') }}
+                  </button>
+                  <button class="btn-decide leave" (click)="downtimeDecision(event, 'HOLIDAY')">
+                    {{ i18n.t('review.officialHoliday', undefined, 'إجازة رسمية') }}
+                  </button>
+                  <button class="btn-decide deduct" (click)="downtimeDecision(event, 'DEVICE_FAILURE')">
+                    {{ i18n.t('review.deviceFailure', undefined, 'عطل جهاز') }}
+                  </button>
+                  <button class="btn-decide" (click)="downtimeDecision(event, 'INDIVIDUAL_REVIEW')">
+                    {{ i18n.t('review.individualReview', undefined, 'مراجعة فردية') }}
+                  </button>
+                </div>
+              } @else {
+                <div class="downtime-result">
+                  <span class="status-pill success">
+                    ✓ {{ event.decision === 'NORMAL_DAY' ? i18n.t('decision.normalDay') : event.decision === 'ABSENT' ? i18n.t('review.absent', undefined, 'غياب') : event.decision === 'HOLIDAY' ? i18n.t('review.officialHoliday', undefined, 'إجازة رسمية') : event.decision === 'DEVICE_FAILURE' ? i18n.t('review.deviceFailure', undefined, 'عطل جهاز') : i18n.t('review.individualReview', undefined, 'مراجعة فردية') }}
+                  </span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Bulk Preview Modal Overlay -->
+    @if (bulkPreview(); as preview) {
+      <div class="modal-overlay" (click)="closeBulkPreview()">
+        <div class="central-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>{{ i18n.t('review.bulkPreviewTitle', undefined, 'معاينة الإجراء الجماعي') }}</h3>
+          </div>
+          <div class="modal-body">
+            <div class="bulk-preview-summary">
+              <div class="preview-row">
+                <span class="label">{{ i18n.t('review.statusLabel', undefined, 'الحالة') }}:</span>
+                <span class="value">{{ preview.statusLabel }}</span>
+              </div>
+              <div class="preview-row">
+                <span class="label">{{ i18n.t('review.decisionLabel', undefined, 'القرار') }}:</span>
+                <span class="value highlight">{{ preview.decisionLabel }}</span>
+              </div>
+              <div class="preview-divider"></div>
+              <div class="preview-row">
+                <span class="label">{{ i18n.t('review.bulkMatching', undefined, 'السجلات المطابقة') }}:</span>
+                <span class="value">{{ preview.matchingCount }}</span>
+              </div>
+              <div class="preview-row highlight-row">
+                <span class="label">{{ i18n.t('review.bulkEditable', undefined, 'السجلات القابلة للتعديل') }}:</span>
+                <span class="value editable-count">{{ preview.editableCount }}</span>
+              </div>
+              @if (preview.excludedCount > 0) {
+                <div class="preview-row muted">
+                  <span class="label">{{ i18n.t('review.bulkExcluded', undefined, 'مستبعدة (معتمدة/مقفلة)') }}:</span>
+                  <span class="value">{{ preview.excludedCount }}</span>
+                </div>
+              }
+            </div>
+            <p class="bulk-preview-note">
+              {{ i18n.t('review.bulkApplyNote', { decision: preview.decisionLabel, count: preview.editableCount, status: preview.statusLabel }, 'سيتم تطبيق "' + preview.decisionLabel + '" على ' + preview.editableCount + ' سجل من نوع "' + preview.statusLabel + '"') }}
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button class="button gold" [disabled]="executing()" (click)="executeBulkDecision()">
+              {{ executing() ? i18n.t('common.executing', undefined, 'جارٍ التنفيذ...') : (i18n.t('common.confirm', undefined, 'تأكيد') + ' (' + preview.editableCount + ')') }}
+            </button>
+            <button class="button secondary" [disabled]="executing()" (click)="closeBulkPreview()">
+              {{ i18n.t('common.cancel', undefined, 'إلغاء') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (promptState(); as ps) {
+      <div class="modal-overlay" (click)="ps.onCancel()">
+        <div class="central-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>{{ i18n.t(ps.titleKey) }}</h3>
+          </div>
+          <div class="modal-body">
+            <input #promptInput class="form-input ltr" type="text" [value]="ps.defaultValue" autofocus />
+          </div>
+          <div class="modal-footer">
+            <button class="button gold" (click)="ps.onConfirm(promptInput.value)">{{ i18n.t('common.confirm', undefined, 'تأكيد') }}</button>
+            <button class="button secondary" (click)="ps.onCancel()">{{ i18n.t('common.cancel', undefined, 'إلغاء') }}</button>
+          </div>
+        </div>
+      </div>
+    }
   }
 </section>

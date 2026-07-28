@@ -4,6 +4,7 @@ import { filter } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { RoleCode } from '../auth/auth.models';
 import { I18nService } from '../i18n.service';
+import { ConfirmDialogService } from '../confirm-dialog.service';
 import { IconComponent, IconName } from '../../shared/ui/icon/icon.component';
 import { ToastContainerComponent } from '../../shared/ui/toast/toast-container.component';
 import { NetworkService } from '../network.service';
@@ -46,6 +47,7 @@ const COLLAPSED_GROUPS_KEY = 'hr-collapsed-groups';
 export class AppShellComponent {
   readonly authService = inject(AuthService);
   readonly i18n = inject(I18nService);
+  readonly confirmDialog = inject(ConfirmDialogService);
   readonly network = inject(NetworkService);
   readonly router = inject(Router);
 

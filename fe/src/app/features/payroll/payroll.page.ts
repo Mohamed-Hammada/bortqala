@@ -46,6 +46,8 @@ export class PayrollPage {
   readonly year = signal(new Date().getFullYear());
   readonly month = signal(new Date().getMonth() + 1);
   readonly selectedCategory = signal<string>('');
+  readonly confirmAction = signal<{ message: string; onConfirm: () => void } | null>(null);
+  readonly promptState = signal<{ title: string; onConfirm: (value: string) => void; onCancel: () => void } | null>(null);
   readonly drawerOpen = signal(false);
   readonly selectedRow = signal<PayrollRow | null>(null);
 
@@ -132,14 +134,22 @@ export class PayrollPage {
     this.payForm.patchValue({ netAmount: net }, { emitEvent: false });
   }
 
-  async submitPayment(): Promise<void> {
+  submitPayment(): void {
     const row = this.selectedRow();
     if (!row || this.payForm.invalid) return;
 
-    if (!confirm(this.i18n.t('confirm.disburseTitle') + '\n\n' + this.i18n.t('confirm.disburseMessage'))) {
-      return;
-    }
+    this.confirmAction.set({
+      message: this.i18n.t('confirm.disburseTitle') + '\n\n' + this.i18n.t('confirm.disburseMessage'),
+      onConfirm: () => {
+        this.confirmAction.set(null);
+        this.executeSubmitPayment();
+      },
+    });
+  }
 
+  private async executeSubmitPayment(): Promise<void> {
+    const row = this.selectedRow();
+    if (!row) return;
     const raw = this.payForm.getRawValue();
     const ok = await this.store.recordPayment({
       employeeId: row.employeeId,
@@ -164,7 +174,7 @@ export class PayrollPage {
     }
   }
 
-  async transitionPeriod(targetStatus: string): Promise<void> {
+  transitionPeriod(targetStatus: string): void {
     let titleKey = '';
     let msgKey = '';
 
@@ -177,10 +187,19 @@ export class PayrollPage {
     }
 
     if (titleKey && msgKey) {
-      const confirmed = confirm(`${this.i18n.t(titleKey)}\n\n${this.i18n.t(msgKey)}`);
-      if (!confirmed) return;
+      this.confirmAction.set({
+        message: `${this.i18n.t(titleKey)}\n\n${this.i18n.t(msgKey)}`,
+        onConfirm: () => {
+          this.confirmAction.set(null);
+          this.executeTransitionPeriod(targetStatus);
+        },
+      });
+    } else {
+      this.executeTransitionPeriod(targetStatus);
     }
+  }
 
+  private async executeTransitionPeriod(targetStatus: string): Promise<void> {
     const ok = await this.store.transitionStatus({
       periodYear: this.year(),
       periodMonth: this.month(),
@@ -193,24 +212,37 @@ export class PayrollPage {
     }
   }
 
-  async reversePayment(row: PayrollRow): Promise<void> {
+  reversePayment(row: PayrollRow): void {
     if (!row.id) return;
-    const reason = prompt(this.i18n.t('payroll.reversePrompt'));
-    if (!reason || !reason.trim()) return;
-
-    const ok = await this.store.reversePayment({
-      paymentId: row.id,
-      reason: reason.trim(),
+    this.promptState.set({
+      title: this.i18n.t('payroll.reversePrompt'),
+      onConfirm: (reason) => {
+        this.promptState.set(null);
+        if (!reason.trim()) return;
+        this.store.reversePayment({
+          paymentId: row.id!,
+          reason: reason.trim(),
+        }).then((ok) => {
+          if (ok) {
+            this.notification.success(this.i18n.t('payroll.reverseSuccess'));
+          }
+        });
+      },
+      onCancel: () => this.promptState.set(null),
     });
-    if (ok) {
-      this.notification.success(this.i18n.t('payroll.reverseSuccess'));
-    }
   }
 
-  async payBulk(): Promise<void> {
-    if (!confirm(this.i18n.t('confirm.disburseTitle') + '\n\n' + this.i18n.t('confirm.disburseMessage'))) {
-      return;
-    }
+  payBulk(): void {
+    this.confirmAction.set({
+      message: this.i18n.t('confirm.disburseTitle') + '\n\n' + this.i18n.t('confirm.disburseMessage'),
+      onConfirm: () => {
+        this.confirmAction.set(null);
+        this.executePayBulk();
+      },
+    });
+  }
+
+  private async executePayBulk(): Promise<void> {
     const ok = await this.store.payBulk({
       periodYear: this.year(),
       periodMonth: this.month(),

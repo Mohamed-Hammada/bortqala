@@ -2,7 +2,14 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
-import { EmployeeOption, OperationsSnapshot, PartyOption } from './operations.models';
+import {
+  EmployeeOption,
+  ItemCategory,
+  NegativeBalance,
+  OperationsSnapshot,
+  PartyOption,
+  UnitOfMeasure,
+} from './operations.models';
 import { downloadBlob, timestampedExcelFileName } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
 
@@ -21,6 +28,9 @@ export class OperationsStore {
   readonly snapshot = signal<OperationsSnapshot>(empty);
   readonly parties = signal<PartyOption[]>([]);
   readonly employees = signal<EmployeeOption[]>([]);
+  readonly categories = signal<ItemCategory[]>([]);
+  readonly uoms = signal<UnitOfMeasure[]>([]);
+  readonly negativeBalances = signal<NegativeBalance[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
@@ -28,14 +38,20 @@ export class OperationsStore {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const [snapshot, parties, employees] = await Promise.all([
+      const [snapshot, parties, employees, categories, uoms, negativeBalances] = await Promise.all([
         firstValueFrom(this.http.get<OperationsSnapshot>('/api/v1/operations')),
         firstValueFrom(this.http.get<PartyOption[]>('/api/v1/parties')),
         firstValueFrom(this.http.get<EmployeeOption[]>('/api/v1/employees')),
+        firstValueFrom(this.http.get<ItemCategory[]>('/api/v1/operations/item-categories')),
+        firstValueFrom(this.http.get<UnitOfMeasure[]>('/api/v1/operations/uoms')),
+        firstValueFrom(this.http.get<NegativeBalance[]>('/api/v1/operations/negative-balances')),
       ]);
       this.snapshot.set(snapshot);
       this.parties.set(parties);
       this.employees.set(employees);
+      this.categories.set(categories);
+      this.uoms.set(uoms);
+      this.negativeBalances.set(negativeBalances);
     } catch (error) {
       this.error.set(apiErrorMessage(error, this.i18n));
     } finally {
@@ -51,6 +67,15 @@ export class OperationsStore {
   }
   async advance(payload: object): Promise<boolean> {
     return this.post('/api/v1/operations/advances', payload, true);
+  }
+  async adjustment(payload: object): Promise<boolean> {
+    return this.post('/api/v1/operations/adjustments', payload, true);
+  }
+  async createCategory(payload: object): Promise<boolean> {
+    return this.post('/api/v1/operations/item-categories', payload, false);
+  }
+  async createUom(payload: object): Promise<boolean> {
+    return this.post('/api/v1/operations/uoms', payload, false);
   }
   async export(): Promise<void> {
     try {
