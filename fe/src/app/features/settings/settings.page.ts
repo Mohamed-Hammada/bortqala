@@ -7,8 +7,11 @@ import { ExcelTableStyle, TableDensity, ThemePreference } from '../../core/auth/
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
 
+export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports';
+
 @Component({
   selector: 'app-settings-page',
+  standalone: true,
   imports: [ReactiveFormsModule],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.scss',
@@ -19,6 +22,9 @@ export class SettingsPage {
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
   private readonly formBuilder = inject(FormBuilder);
+
+  readonly activeTab = signal<SettingsTab>('appearance');
+
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
   readonly saved = signal(false);
@@ -28,6 +34,7 @@ export class SettingsPage {
   readonly appSettingsError = signal<string | null>(null);
   readonly desktop = typeof window !== 'undefined' && '__TAURI__' in window;
   readonly licenseMessage = signal<string | null>(null);
+
   readonly form = this.formBuilder.nonNullable.group({
     theme: [this.authService.preferences().theme as ThemePreference, Validators.required],
     tableDensity: [
@@ -40,15 +47,28 @@ export class SettingsPage {
       Validators.required,
     ],
   });
+
   readonly appSettingsForm = this.formBuilder.nonNullable.group({
     sessionTimeoutMinutes: [480, [Validators.required, Validators.min(5), Validators.max(10_080)]],
     sessionTimeoutEnabled: [true, Validators.required],
     showReportPresets: [true, Validators.required],
-    minPasswordLength: [8, [Validators.required, Validators.min(6), Validators.max(32)]],
+    minPasswordLength: [8, [Validators.required, Validators.min(6), Validators.max(128)]],
+    requireUppercase: [false],
+    requireLowercase: [false],
+    requireNumbers: [false],
+    requireSpecialChars: [false],
+    disallowSpaces: [false],
+    maxPasswordLength: [128, [Validators.min(0), Validators.max(256)]],
+    passwordExpiryDays: [0, [Validators.min(0), Validators.max(365)]],
+    passwordHistoryCount: [0, [Validators.min(0), Validators.max(50)]],
   });
 
   constructor() {
     if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) void this.loadAppSettings();
+  }
+
+  setTab(tab: SettingsTab): void {
+    this.activeTab.set(tab);
   }
 
   async releaseLicense(): Promise<void> {
@@ -74,7 +94,7 @@ export class SettingsPage {
     });
   }
 
-  async save(): Promise<void> {
+  async saveUserPreferences(): Promise<void> {
     if (this.form.invalid) return;
     this.saving.set(true);
     try {
@@ -102,14 +122,33 @@ export class SettingsPage {
         sessionTimeoutEnabled: saved.sessionTimeoutEnabled,
         showReportPresets: saved.showReportPresets,
         minPasswordLength: saved.minPasswordLength ?? 8,
+        requireUppercase: saved.requireUppercase ?? false,
+        requireLowercase: saved.requireLowercase ?? false,
+        requireNumbers: saved.requireNumbers ?? false,
+        requireSpecialChars: saved.requireSpecialChars ?? false,
+        disallowSpaces: saved.disallowSpaces ?? false,
+        maxPasswordLength: saved.maxPasswordLength ?? 128,
+        passwordExpiryDays: saved.passwordExpiryDays ?? 0,
+        passwordHistoryCount: saved.passwordHistoryCount ?? 0,
       });
-      this.notification.success(this.i18n.t('settings.sessionSaved'));
+      this.notification.success(this.i18n.t('settings.saveAllSystemSettings', undefined, 'تم حفظ جميع الإعدادات بنجاح.'));
     } catch (error) {
       const msg = apiErrorMessage(error, this.i18n);
       this.notification.error(msg);
     } finally {
       this.appSettingsSaving.set(false);
     }
+  }
+
+  async saveAll(): Promise<void> {
+    await this.saveUserPreferences();
+    if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+      await this.saveAppSettings();
+    }
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.form.dirty || this.appSettingsForm.dirty;
   }
 
   private async loadAppSettings(): Promise<void> {
@@ -121,6 +160,14 @@ export class SettingsPage {
         sessionTimeoutEnabled: settings.sessionTimeoutEnabled ?? true,
         showReportPresets: settings.showReportPresets ?? true,
         minPasswordLength: settings.minPasswordLength ?? 8,
+        requireUppercase: settings.requireUppercase ?? false,
+        requireLowercase: settings.requireLowercase ?? false,
+        requireNumbers: settings.requireNumbers ?? false,
+        requireSpecialChars: settings.requireSpecialChars ?? false,
+        disallowSpaces: settings.disallowSpaces ?? false,
+        maxPasswordLength: settings.maxPasswordLength ?? 128,
+        passwordExpiryDays: settings.passwordExpiryDays ?? 0,
+        passwordHistoryCount: settings.passwordHistoryCount ?? 0,
       });
     } catch (error) {
       this.appSettingsError.set(apiErrorMessage(error, this.i18n));

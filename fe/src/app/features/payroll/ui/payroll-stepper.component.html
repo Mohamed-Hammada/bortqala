@@ -1,0 +1,28 @@
+<div class="payroll-stepper-container" role="region" aria-label="مسار حالة المرتبات">
+  <div class="stepper-track">
+    @for (step of steps; track step.key; let idx = $index) {
+      <div
+        class="step-item"
+        [class.completed]="isStepCompleted(idx)"
+        [class.active]="isStepActive(idx)"
+      >
+        <div class="step-badge">
+          @if (isStepCompleted(idx)) {
+            <span>✓</span>
+          } @else {
+            <span>{{ step.stepNumber }}</span>
+          }
+        </div>
+        <div class="step-label">
+          {{ isEn() ? step.labelEn : step.labelAr }}
+        </div>
+      </div>
+      @if (idx < steps.length - 1) {
+        <div
+          class="step-line"
+          [class.active]="isStepCompleted(idx)"
+        ></div>
+      }
+    }
+  </div>
+</div>

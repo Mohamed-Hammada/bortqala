@@ -45,3 +45,31 @@ export function formatTime(value: number): string {
     minute: '2-digit',
   }).format(new Date(value));
 }
+
+export function formatDateReadable(value: number | string | null | undefined, locale: string = 'ar-EG'): string {
+  if (value === null || value === undefined || value === '') return '—';
+  let date: Date;
+  if (typeof value === 'number') {
+    date = new Date(value);
+  } else if (typeof value === 'string') {
+    const num = Number(value);
+    if (!isNaN(num) && num > 100000000000) {
+      date = new Date(num);
+    } else {
+      date = new Date(value);
+    }
+  } else {
+    return '—';
+  }
+
+  if (isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  return new Intl.DateTimeFormat(locale.startsWith('en') ? 'en-US' : 'ar-EG', {
+    timeZone: COMPANY_TIME_ZONE,
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  }).format(date);
+}

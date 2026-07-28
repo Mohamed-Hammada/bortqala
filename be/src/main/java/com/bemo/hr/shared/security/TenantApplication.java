@@ -38,6 +38,30 @@ public class TenantApplication {
     @Column(name = "min_password_length", nullable = false)
     private int minPasswordLength = 8;
 
+    @Column(name = "require_uppercase", nullable = false)
+    private boolean requireUppercase;
+
+    @Column(name = "require_lowercase", nullable = false)
+    private boolean requireLowercase;
+
+    @Column(name = "require_numbers", nullable = false)
+    private boolean requireNumbers;
+
+    @Column(name = "require_special_chars", nullable = false)
+    private boolean requireSpecialChars;
+
+    @Column(name = "disallow_spaces", nullable = false)
+    private boolean disallowSpaces;
+
+    @Column(name = "max_password_length", nullable = false)
+    private int maxPasswordLength = 128;
+
+    @Column(name = "password_expiry_days", nullable = false)
+    private int passwordExpiryDays;
+
+    @Column(name = "password_history_count", nullable = false)
+    private int passwordHistoryCount;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -55,6 +79,7 @@ public class TenantApplication {
         this.sessionTimeoutEnabled = true;
         this.showReportPresets = true;
         this.minPasswordLength = 8;
+        this.maxPasswordLength = 128;
     }
 
     public void updateSettings(int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets) {
@@ -66,6 +91,20 @@ public class TenantApplication {
         this.sessionTimeoutEnabled = sessionTimeoutEnabled;
         this.showReportPresets = showReportPresets;
         this.minPasswordLength = minPasswordLength <= 0 ? 8 : minPasswordLength;
+    }
+
+    public void updatePasswordPolicy(int minPasswordLength, boolean requireUppercase, boolean requireLowercase,
+                                     boolean requireNumbers, boolean requireSpecialChars, boolean disallowSpaces,
+                                     int maxPasswordLength, int passwordExpiryDays, int passwordHistoryCount) {
+        this.minPasswordLength = minPasswordLength <= 0 ? 8 : Math.min(minPasswordLength, 128);
+        this.requireUppercase = requireUppercase;
+        this.requireLowercase = requireLowercase;
+        this.requireNumbers = requireNumbers;
+        this.requireSpecialChars = requireSpecialChars;
+        this.disallowSpaces = disallowSpaces;
+        this.maxPasswordLength = maxPasswordLength <= 0 ? 128 : Math.max(maxPasswordLength, this.minPasswordLength);
+        this.passwordExpiryDays = Math.max(passwordExpiryDays, 0);
+        this.passwordHistoryCount = Math.max(passwordHistoryCount, 0);
     }
 
     @PrePersist
@@ -82,5 +121,13 @@ public class TenantApplication {
     public boolean isSessionTimeoutEnabled() { return sessionTimeoutEnabled; }
     public boolean isShowReportPresets() { return showReportPresets; }
     public int getMinPasswordLength() { return minPasswordLength; }
+    public boolean isRequireUppercase() { return requireUppercase; }
+    public boolean isRequireLowercase() { return requireLowercase; }
+    public boolean isRequireNumbers() { return requireNumbers; }
+    public boolean isRequireSpecialChars() { return requireSpecialChars; }
+    public boolean isDisallowSpaces() { return disallowSpaces; }
+    public int getMaxPasswordLength() { return maxPasswordLength; }
+    public int getPasswordExpiryDays() { return passwordExpiryDays; }
+    public int getPasswordHistoryCount() { return passwordHistoryCount; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

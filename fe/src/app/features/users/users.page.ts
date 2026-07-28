@@ -7,7 +7,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AuthUser, RoleCode } from '../../core/auth/auth.models';
+import { AuthUser, AppSettings, RoleCode } from '../../core/auth/auth.models';
 import { UserPayload, UsersStore } from './users.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
@@ -66,7 +66,7 @@ export class UsersPage {
     { id: 'users', labelKey: 'nav.users' },
     { id: 'settings', labelKey: 'settings.title' },
   ];
-  readonly minPasswordLength = signal(8);
+  readonly passwordPolicy = signal<Partial<AppSettings>>({ minPasswordLength: 8 });
   readonly form = new FormGroup({
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     displayName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -89,9 +89,7 @@ export class UsersPage {
   private async loadPolicy(): Promise<void> {
     try {
       const settings = await firstValueFrom(this.auth.appSettings());
-      if (settings?.minPasswordLength) {
-        this.minPasswordLength.set(settings.minPasswordLength);
-      }
+      this.passwordPolicy.set(settings);
     } catch {}
   }
 
@@ -164,17 +162,46 @@ export class UsersPage {
     return this.form.controls.allowedMenus.value.includes(id);
   }
 
+  validatePassword(pwd: string): string | null {
+    const policy = this.passwordPolicy();
+    const minLen = policy.minPasswordLength ?? 8;
+    const maxLen = policy.maxPasswordLength ?? 128;
+    if (!pwd) return null;
+    if (pwd.length < minLen) {
+      return this.i18n.t('users.passwordHint', { min: minLen });
+    }
+    if (maxLen > 0 && pwd.length > maxLen) {
+      return this.i18n.t('users.passwordMaxHint', { max: maxLen });
+    }
+    if (policy.disallowSpaces && pwd.includes(' ')) {
+      return this.i18n.t('users.passwordNoSpaces');
+    }
+    if (policy.requireUppercase && !/[A-Z]/.test(pwd)) {
+      return this.i18n.t('users.passwordNeedUppercase');
+    }
+    if (policy.requireLowercase && !/[a-z]/.test(pwd)) {
+      return this.i18n.t('users.passwordNeedLowercase');
+    }
+    if (policy.requireNumbers && !/[0-9]/.test(pwd)) {
+      return this.i18n.t('users.passwordNeedNumber');
+    }
+    if (policy.requireSpecialChars && !/[^A-Za-z0-9]/.test(pwd)) {
+      return this.i18n.t('users.passwordNeedSpecial');
+    }
+    return null;
+  }
+
   async submit() {
     this.submitted.set(true);
     const pwd = this.form.controls.password.value;
-    const minLen = this.minPasswordLength();
     if (!this.editingId() && !pwd) {
-      this.notification.error(this.i18n.t('users.passwordHint', { min: minLen }));
+      this.notification.error(this.i18n.t('users.passwordHint', { min: this.passwordPolicy().minPasswordLength ?? 8 }));
       this.form.markAllAsTouched();
       return;
     }
-    if (pwd && pwd.length < minLen) {
-      this.notification.error(this.i18n.t('users.passwordHint', { min: minLen }));
+    const pwdError = this.validatePassword(pwd);
+    if (pwdError) {
+      this.notification.error(pwdError);
       this.form.markAllAsTouched();
       return;
     }

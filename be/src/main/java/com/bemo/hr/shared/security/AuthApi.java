@@ -35,6 +35,23 @@ public final class AuthApi {
                                     @NotBlank @Pattern(regexp = "[a-zA-Z]{2}(-[a-zA-Z]{2})?") String locale,
                                     @NotNull ExcelTableStyle excelTableStyle,
                                     @Min(5) @Max(500) Integer defaultPageSize) { }
-    public record AppSettingsResponse(int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets, int minPasswordLength, Instant updatedAt) { }
-    public record AppSettingsRequest(@Min(5) @Max(10_080) int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets, @Min(6) @Max(32) Integer minPasswordLength) { }
+    public record AppSettingsResponse(
+            int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets,
+            int minPasswordLength, boolean requireUppercase, boolean requireLowercase,
+            boolean requireNumbers, boolean requireSpecialChars, boolean disallowSpaces,
+            int maxPasswordLength, int passwordExpiryDays, int passwordHistoryCount,
+            Instant updatedAt) { }
+    public record AppSettingsRequest(
+            @Min(5) @Max(10_080) int sessionTimeoutMinutes,
+            boolean sessionTimeoutEnabled,
+            boolean showReportPresets,
+            @Min(6) @Max(128) Integer minPasswordLength,
+            boolean requireUppercase,
+            boolean requireLowercase,
+            boolean requireNumbers,
+            boolean requireSpecialChars,
+            boolean disallowSpaces,
+            @Min(0) @Max(256) Integer maxPasswordLength,
+            @Min(0) @Max(365) Integer passwordExpiryDays,
+            @Min(0) @Max(50) Integer passwordHistoryCount) { }
 }

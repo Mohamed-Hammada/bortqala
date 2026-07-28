@@ -11,18 +11,39 @@
         📊 {{ i18n.t('payroll.exportExcel', undefined, 'تصدير كشف الصرف (Excel)') }}
       </button>
       @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'])) {
-        <button class="button secondary" type="button" (click)="transitionPeriod('APPROVED')" [disabled]="store.loading() || store.data()?.periodStatus === 'APPROVED'">
+        <button
+          class="button secondary"
+          type="button"
+          (click)="transitionPeriod('APPROVED')"
+          [disabled]="store.loading() || store.data()?.periodStatus === 'APPROVED' || store.data()?.periodStatus === 'POSTED' || store.data()?.periodStatus === 'PAID'"
+        >
           🔒 {{ i18n.t('payroll.approvePeriod') }}
         </button>
-        <button class="button secondary" type="button" (click)="transitionPeriod('POSTED')" [disabled]="store.loading() || store.data()?.periodStatus === 'POSTED'">
+        <button
+          class="button secondary"
+          type="button"
+          (click)="transitionPeriod('POSTED')"
+          [disabled]="store.loading() || store.data()?.periodStatus === 'POSTED' || store.data()?.periodStatus === 'PAID'"
+        >
           📖 {{ i18n.t('payroll.postGl') }}
         </button>
-        <button class="button primary" type="button" (click)="payBulk()" [disabled]="store.loading() || (store.data()?.summary?.pendingCount ?? 0) === 0">
+        <button
+          class="button primary"
+          type="button"
+          (click)="payBulk()"
+          [disabled]="store.loading() || (store.data()?.summary?.pendingCount ?? 0) === 0"
+        >
           ⚡ {{ i18n.t('payroll.disburseAll', undefined, 'صرف الكشف بالكامل') }}
         </button>
       }
     </div>
   </header>
+
+  <!-- Payroll Visual Stepper -->
+  <app-payroll-stepper
+    [currentStatus]="store.data()?.periodStatus || 'DRAFT'"
+    [isEn]="i18n.locale() === 'en-US'"
+  />
 
   <!-- Period & Year Selector & Status Filter -->
   <div class="card filter-card">
@@ -61,8 +82,18 @@
     </div>
   </div>
 
+  <!-- Loading Skeleton State -->
+  @if (store.loading()) {
+    <app-skeleton [rowCount]="6" (retry)="reload()" />
+  }
+
+  <!-- Error Alert State -->
+  @if (store.error(); as err) {
+    <app-skeleton [loading]="false" [error]="err" (retry)="reload()" />
+  }
+
   <!-- KPI Metrics Bar -->
-  @if (store.data(); as data) {
+  @if (!store.loading() && !store.error() && store.data(); as data) {
     <div class="metrics-grid">
       <div class="metric-card">
         <span class="metric-icon">👥</span>
@@ -100,121 +131,118 @@
     </div>
   }
 
-  @if (store.error(); as err) {
-    <div class="alert error">{{ err }}</div>
-  }
-
-  @if (store.loading()) {
-    <div class="loading"></div>
-  }
-
   <!-- Main Payroll Table -->
-  <div class="table-card">
-    <table>
-      <thead>
-        <tr>
-          <th>{{ i18n.t('payroll.employee', undefined, 'الموظف / العامل') }}</th>
-          <th>{{ i18n.t('payroll.breakdown') }}</th>
-          <th>{{ i18n.t('payroll.activeAdvance', undefined, 'رصيد السلف') }}</th>
-          <th>{{ i18n.t('payroll.gross', undefined, 'الإجمالي (Gross)') }}</th>
-          <th>{{ i18n.t('payroll.advancesDeductedCol', undefined, 'خصم السلفة') }}</th>
-          <th>{{ i18n.t('payroll.net', undefined, 'الصافي (Net Payout)') }}</th>
-          <th>{{ i18n.t('payroll.paidAtAndRef') }}</th>
-          <th>{{ i18n.t('payroll.status', undefined, 'حالة القيد') }}</th>
-          <th>{{ i18n.t('payroll.action', undefined, 'الإجراءات') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (row of pagedRows(); track row.employeeId) {
-          <tr [class.reversed-row]="row.paymentStatus === 'REVERSED'">
-            <td>
-              <strong>{{ row.employeeName }}</strong>
-              <small class="emp-meta">{{ row.employeeCode }} · {{ row.categoryName }}</small>
-            </td>
-            <td>
-              <div class="breakdown-stack">
-                <small>{{ i18n.t('payroll.baseSalaryLabel') }}: {{ row.baseSalary | number:'1.0-0' }} ج.م</small>
-                <small class="text-success">+ {{ i18n.t('payroll.bonusLabel') }}: {{ row.attendanceBonus | number:'1.0-0' }} ج.م</small>
-                <small class="text-danger">- {{ i18n.t('payroll.deductionLabel') }}: {{ row.attendanceDeduction | number:'1.0-0' }} ج.م</small>
-              </div>
-            </td>
-            <td>
-              <span [class.text-warning]="row.activeAdvancesBalance > 0">
-                {{ row.activeAdvancesBalance | number:'1.2-2' }} ج.م
-              </span>
-            </td>
-            <td>{{ row.grossAmount | number:'1.2-2' }} ج.م</td>
-            <td>
-              <span [class.text-danger]="row.advancesDeducted > 0">
-                - {{ row.advancesDeducted | number:'1.2-2' }} ج.م
-              </span>
-            </td>
-            <td>
-              <strong class="net-text">{{ row.netAmount | number:'1.2-2' }} ج.م</strong>
-            </td>
-            <td>
-              <small class="ltr-text">{{ formatDate(row.paidAt) }}</small>
-              @if (row.referenceCode) {
-                <small class="ref-code">مرجع: {{ row.referenceCode }}</small>
-              }
-            </td>
-            <td>
-              <span
-                class="status"
-                [class.success]="row.paymentStatus === 'PAID' || row.paymentStatus === 'POSTED'"
-                [class.warning]="row.paymentStatus === 'DRAFT' || row.paymentStatus === 'CALCULATED' || row.paymentStatus === 'PENDING'"
-                [class.neutral]="row.paymentStatus === 'APPROVED' || row.paymentStatus === 'REVIEWED'"
-                [class.danger]="row.paymentStatus === 'REVERSED' || row.paymentStatus === 'CANCELLED'"
-              >
-                {{ statusLabel(row.paymentStatus) }}
-              </span>
-            </td>
-            <td>
-              <div class="table-row-actions">
-                @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'])) {
-                  @if (row.paymentStatus !== 'PAID' && row.paymentStatus !== 'POSTED' && row.paymentStatus !== 'REVERSED') {
-                    <button
-                      class="button primary"
-                      type="button"
-                      (click)="openPaymentDrawer(row)"
-                    >
-                      💵 {{ i18n.t('payroll.disburseAll') || 'صرف مرتب' }}
-                    </button>
-                  }
-                  @if (row.paymentStatus === 'PAID' || row.paymentStatus === 'POSTED') {
-                    <button
-                      class="button secondary danger-btn"
-                      type="button"
-                      (click)="reversePayment(row)"
-                    >
-                      ↩️ {{ i18n.t('payroll.reverse', undefined, 'تراجع') }}
-                    </button>
-                  }
-                }
-              </div>
-            </td>
-          </tr>
-        } @empty {
+  @if (!store.loading() && !store.error()) {
+    <div class="table-card">
+      <table>
+        <thead>
           <tr>
-            <td colspan="9">
-              <div class="empty-state">
-                <strong>{{ i18n.t('payroll.noRows', undefined, 'لا توجد بيانات صرف لهذا الشهر') }}</strong>
-                <p>{{ i18n.t('payroll.noRowsHint', undefined, 'تأكد من اختيار الشهر والسنة المناسبين وتوافر موظفين مكتملي البيانات.') }}</p>
-              </div>
-            </td>
+            <th>{{ i18n.t('payroll.employee', undefined, 'الموظف / العامل') }}</th>
+            <th>{{ i18n.t('payroll.breakdown') }}</th>
+            <th>{{ i18n.t('payroll.activeAdvance', undefined, 'رصيد السلف') }}</th>
+            <th>{{ i18n.t('payroll.gross', undefined, 'الإجمالي (Gross)') }}</th>
+            <th>{{ i18n.t('payroll.advancesDeductedCol', undefined, 'خصم السلفة') }}</th>
+            <th>{{ i18n.t('payroll.net', undefined, 'الصافي (Net Payout)') }}</th>
+            <th>{{ i18n.t('payroll.paidAtAndRef') }}</th>
+            <th>{{ i18n.t('payroll.status', undefined, 'حالة القيد') }}</th>
+            <th>{{ i18n.t('payroll.action', undefined, 'الإجراءات') }}</th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (row of pagedRows(); track row.employeeId) {
+            <tr [class.reversed-row]="row.paymentStatus === 'REVERSED'">
+              <td>
+                <strong>{{ row.employeeName }}</strong>
+                <small class="emp-meta">{{ row.employeeCode }} · {{ row.categoryName }}</small>
+              </td>
+              <td>
+                <div class="breakdown-stack">
+                  <small>{{ i18n.t('payroll.baseSalaryLabel') }}: {{ row.baseSalary | number:'1.0-0' }} ج.م</small>
+                  <small class="text-success">+ {{ i18n.t('payroll.bonusLabel') }}: {{ row.attendanceBonus | number:'1.0-0' }} ج.م</small>
+                  <small class="text-danger">- {{ i18n.t('payroll.deductionLabel') }}: {{ row.attendanceDeduction | number:'1.0-0' }} ج.م</small>
+                </div>
+              </td>
+              <td>
+                <span [class.text-warning]="row.activeAdvancesBalance > 0">
+                  {{ row.activeAdvancesBalance | number:'1.2-2' }} ج.م
+                </span>
+              </td>
+              <td>{{ row.grossAmount | number:'1.2-2' }} ج.م</td>
+              <td>
+                <span [class.text-danger]="row.advancesDeducted > 0">
+                  - {{ row.advancesDeducted | number:'1.2-2' }} ج.م
+                </span>
+              </td>
+              <td>
+                <strong class="net-text">{{ row.netAmount | number:'1.2-2' }} ج.م</strong>
+              </td>
+              <td>
+                <small class="ltr-text">{{ formatDateStr(row.paidAt) }}</small>
+                @if (row.referenceCode) {
+                  <small class="ref-code">مرجع: {{ row.referenceCode }}</small>
+                }
+              </td>
+              <td>
+                <span
+                  class="status"
+                  [class.success]="row.paymentStatus === 'PAID' || row.paymentStatus === 'POSTED'"
+                  [class.warning]="row.paymentStatus === 'DRAFT' || row.paymentStatus === 'CALCULATED' || row.paymentStatus === 'PENDING'"
+                  [class.neutral]="row.paymentStatus === 'APPROVED' || row.paymentStatus === 'REVIEWED'"
+                  [class.danger]="row.paymentStatus === 'REVERSED' || row.paymentStatus === 'CANCELLED'"
+                >
+                  {{ statusLabel(row.paymentStatus) }}
+                </span>
+              </td>
+              <td>
+                <div class="table-row-actions">
+                  @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'])) {
+                    @if (row.paymentStatus !== 'PAID' && row.paymentStatus !== 'POSTED' && row.paymentStatus !== 'REVERSED') {
+                      <button
+                        class="button primary"
+                        type="button"
+                        (click)="openPaymentDrawer(row)"
+                      >
+                        💵 {{ i18n.t('payroll.disburseEmployeeSalary') }}
+                      </button>
+                    }
+                    @if (row.paymentStatus === 'PAID' || row.paymentStatus === 'POSTED') {
+                      <button
+                        class="button secondary danger-btn"
+                        type="button"
+                        (click)="reversePayment(row)"
+                      >
+                        ↩️ {{ i18n.t('payroll.reverse', undefined, 'تراجع') }}
+                      </button>
+                    }
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="9">
+                <app-empty-state
+                  icon="💸"
+                  [title]="i18n.t('payroll.noRows', undefined, 'لا توجد بيانات صرف لهذا الشهر')"
+                  [description]="i18n.t('payroll.noRowsHint', undefined, 'تأكد من اختيار الشهر والسنة المناسبين وتوافر موظفين مكتملي البيانات.')"
+                  [actionLabel]="i18n.t('payroll.refresh', undefined, 'تحديث البيانات')"
+                  (action)="reload()"
+                />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
 
-    <app-table-pagination
-      [total]="rows().length"
-      [page]="pagination.currentPage(rows().length)"
-      [pageSize]="pagination.pageSize()"
-      (pageChange)="pagination.changePage($event, rows().length)"
-      (pageSizeChange)="pagination.changePageSize($event)"
-    />
-  </div>
+      <app-table-pagination
+        [total]="rows().length"
+        [page]="pagination.currentPage(rows().length)"
+        [pageSize]="pagination.pageSize()"
+        (pageChange)="pagination.changePage($event, rows().length)"
+        (pageSizeChange)="pagination.changePageSize($event)"
+      />
+    </div>
+  }
 </section>
 
 <!-- Payment Drawer Modal -->

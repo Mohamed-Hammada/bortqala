@@ -76,7 +76,7 @@ export class AuthService {
     return this.httpClient.get<AppSettings>('/api/v1/admin/app-settings');
   }
 
-  updateAppSettings(payload: { sessionTimeoutMinutes: number; sessionTimeoutEnabled: boolean; showReportPresets: boolean }) {
+  updateAppSettings(payload: Omit<AppSettings, 'updatedAt'>) {
     return this.httpClient.put<AppSettings>('/api/v1/admin/app-settings', payload);
   }
 

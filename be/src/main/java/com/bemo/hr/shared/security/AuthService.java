@@ -106,6 +106,20 @@ public class AuthService {
         var app = requireCurrentApp();
         int minPass = request.minPasswordLength() == null || request.minPasswordLength() <= 0 ? 8 : request.minPasswordLength();
         app.updateSettings(request.sessionTimeoutMinutes(), request.sessionTimeoutEnabled(), request.showReportPresets(), minPass);
+        int maxPass = request.maxPasswordLength() == null || request.maxPasswordLength() <= 0 ? 128 : request.maxPasswordLength();
+        int expiry = request.passwordExpiryDays() == null ? 0 : request.passwordExpiryDays();
+        int history = request.passwordHistoryCount() == null ? 0 : request.passwordHistoryCount();
+        app.updatePasswordPolicy(
+                minPass,
+                request.requireUppercase(),
+                request.requireLowercase(),
+                request.requireNumbers(),
+                request.requireSpecialChars(),
+                request.disallowSpaces(),
+                maxPass,
+                expiry,
+                history
+        );
         return toSettingsResponse(app);
     }
 
@@ -170,12 +184,11 @@ public class AuthService {
     private void validate(AuthApi.UserUpsertRequest request, String appId, String currentId, boolean passwordRequired) {
         if (request.roles() == null || request.roles().isEmpty()) throw new BusinessRuleException("Select at least one role.");
         var app = requireCurrentApp();
-        int minLength = app.getMinPasswordLength() > 0 ? app.getMinPasswordLength() : 8;
         if (passwordRequired && (request.password() == null || request.password().isBlank())) {
             throw new BusinessRuleException("Password is required for a new user.");
         }
-        if (request.password() != null && !request.password().isBlank() && request.password().length() < minLength) {
-            throw new BusinessRuleException("كلمة المرور يجب أن لا تقل عن " + minLength + " أحرف حسب سياسة أمان النظام الحالية.");
+        if (request.password() != null && !request.password().isBlank()) {
+            validatePasswordStrength(request.password(), app);
         }
         boolean duplicate = currentId == null
                 ? appUserRepository.existsByAppIdAndUsernameIgnoreCase(appId, request.username())
@@ -183,10 +196,36 @@ public class AuthService {
         if (duplicate) throw new BusinessRuleException("Username already exists.");
     }
 
+    private void validatePasswordStrength(String password, TenantApplication app) {
+        int minLen = app.getMinPasswordLength() > 0 ? app.getMinPasswordLength() : 8;
+        int maxLen = app.getMaxPasswordLength() > 0 ? app.getMaxPasswordLength() : 128;
+
+        if (password.length() < minLen) {
+            throw new BusinessRuleException("كلمة المرور يجب أن لا تقل عن " + minLen + " أحرف حسب سياسة أمان النظام الحالية.");
+        }
+        if (password.length() > maxLen) {
+            throw new BusinessRuleException("كلمة المرور يجب أن لا تتجاوز " + maxLen + " حرفاً حسب سياسة أمان النظام الحالية.");
+        }
+        if (app.isDisallowSpaces() && password.contains(" ")) {
+            throw new BusinessRuleException("كلمة المرور يجب أن لا تحتوي على مسافات.");
+        }
+        if (app.isRequireUppercase() && !password.chars().anyMatch(Character::isUpperCase)) {
+            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على حرف كبير على الأقل.");
+        }
+        if (app.isRequireLowercase() && !password.chars().anyMatch(Character::isLowerCase)) {
+            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على حرف صغير على الأقل.");
+        }
+        if (app.isRequireNumbers() && !password.chars().anyMatch(Character::isDigit)) {
+            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.");
+        }
+        if (app.isRequireSpecialChars() && !password.matches(".*[^A-Za-z0-9].*")) {
+            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل.");
+        }
+    }
+
     private Set<Role> requireRoles(Set<RoleCode> codes) {
         var roles = roleRepository.findAllById(codes);
         if (roles.size() != codes.size()) {
-            // Auto-create missing roles dynamically if needed
             for (RoleCode code : codes) {
                 if (!roleRepository.existsById(code)) {
                     roleRepository.save(new Role(code, code.name().replace('_', ' ')));
@@ -232,6 +271,14 @@ public class AuthService {
                 app.isSessionTimeoutEnabled(),
                 app.isShowReportPresets(),
                 app.getMinPasswordLength(),
+                app.isRequireUppercase(),
+                app.isRequireLowercase(),
+                app.isRequireNumbers(),
+                app.isRequireSpecialChars(),
+                app.isDisallowSpaces(),
+                app.getMaxPasswordLength(),
+                app.getPasswordExpiryDays(),
+                app.getPasswordHistoryCount(),
                 app.getUpdatedAt()
         );
     }

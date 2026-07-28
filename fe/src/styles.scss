@@ -209,7 +209,7 @@ h3 {
 
 /* Button Hierarchy */
 .button {
-  min-height: var(--input-min-height);
+  min-height: max(40px, var(--input-min-height));
   padding: 0 14px;
   display: inline-flex;
   align-items: center;
@@ -222,6 +222,14 @@ h3 {
   font-size: 13.5px;
   text-decoration: none;
   transition: all 0.15s ease;
+}
+
+.icon-button {
+  min-width: 40px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .button.primary {

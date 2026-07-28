@@ -1,0 +1,12 @@
+<div class="empty-state-box">
+  <div class="icon-bubble">{{ icon() }}</div>
+  <h3 class="title">{{ title() }}</h3>
+  @if (description()) {
+    <p class="description">{{ description() }}</p>
+  }
+  @if (actionLabel()) {
+    <button type="button" class="button primary action-btn" (click)="onAction()">
+      ➕ {{ actionLabel() }}
+    </button>
+  }
+</div>

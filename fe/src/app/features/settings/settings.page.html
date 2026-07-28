@@ -7,140 +7,145 @@
     </div>
   </header>
 
-  <form class="card settings-card" [formGroup]="form" (ngSubmit)="save()">
-    <div class="settings-sections">
-      <!-- Section 1: Appearance & Theme -->
-      <fieldset class="settings-group">
-        <legend class="group-title">{{ i18n.t('settings.theme') }}</legend>
-        <p class="group-hint">{{ i18n.t('settings.themeHint') }}</p>
-        <div class="theme-cards-grid">
-          <label class="theme-preview-card" [class.selected]="form.controls.theme.value === 'LIGHT'">
-            <input type="radio" formControlName="theme" value="LIGHT" />
-            <div class="card-icon">☀</div>
-            <div class="card-info">
-              <strong>{{ i18n.t('settings.light') }}</strong>
-              <small>Clean white workspace</small>
-            </div>
-          </label>
+  <!-- Settings Tabs Header -->
+  <nav class="settings-nav-tabs" aria-label="تبويبات الإعدادات">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'appearance'"
+      (click)="setTab('appearance')"
+    >
+      🎨 {{ i18n.t('settings.tabAppearance', undefined, 'المظهر واللغة') }}
+    </button>
 
-          <label class="theme-preview-card" [class.selected]="form.controls.theme.value === 'DARK'">
-            <input type="radio" formControlName="theme" value="DARK" />
-            <div class="card-icon">🌙</div>
-            <div class="card-info">
-              <strong>{{ i18n.t('settings.dark') }}</strong>
-              <small>Sleek high-contrast dark</small>
-            </div>
-          </label>
-
-          <label class="theme-preview-card" [class.selected]="form.controls.theme.value === 'SYSTEM'">
-            <input type="radio" formControlName="theme" value="SYSTEM" />
-            <div class="card-icon">💻</div>
-            <div class="card-info">
-              <strong>{{ i18n.t('settings.system') }}</strong>
-              <small>Match OS preferences</small>
-            </div>
-          </label>
-        </div>
-      </fieldset>
-
-      <!-- Section 2: Table Density -->
-      <fieldset class="settings-group">
-        <legend class="group-title">{{ i18n.t('settings.density') }}</legend>
-        <p class="group-hint">{{ i18n.t('settings.densityHint') }}</p>
-        <div class="segmented-pills-grid">
-          <label class="segmented-pill-option" [class.selected]="form.controls.tableDensity.value === 'COMFORTABLE'">
-            <input type="radio" formControlName="tableDensity" value="COMFORTABLE" />
-            <span>{{ i18n.t('settings.comfortable') }} (40px)</span>
-          </label>
-          <label class="segmented-pill-option" [class.selected]="form.controls.tableDensity.value === 'COMPACT'">
-            <input type="radio" formControlName="tableDensity" value="COMPACT" />
-            <span>{{ i18n.t('settings.compact') }} (34px)</span>
-          </label>
-          <label class="segmented-pill-option" [class.selected]="form.controls.tableDensity.value === 'DENSE'">
-            <input type="radio" formControlName="tableDensity" value="DENSE" />
-            <span>{{ i18n.t('settings.dense') }} (28px)</span>
-          </label>
-        </div>
-      </fieldset>
-
-      <!-- Section 3: Language -->
-      <fieldset class="settings-group">
-        <legend class="group-title">{{ i18n.t('settings.language') }}</legend>
-        <p class="group-hint">اختر لغة واجهة النظام (Interface Locale)</p>
-        <div class="segmented-pills-grid two-col">
-          <label class="segmented-pill-option" [class.selected]="form.controls.locale.value === 'ar-EG'">
-            <input type="radio" formControlName="locale" value="ar-EG" />
-            <span>{{ i18n.t('settings.arabic') }} (RTL)</span>
-          </label>
-          <label class="segmented-pill-option" [class.selected]="form.controls.locale.value === 'en-US'">
-            <input type="radio" formControlName="locale" value="en-US" />
-            <span>{{ i18n.t('settings.english') }} (LTR)</span>
-          </label>
-        </div>
-      </fieldset>
-
-      <!-- Section 4: Excel Export Styling -->
-      <fieldset class="settings-group">
-        <legend class="group-title">{{ i18n.t('settings.excelTitle') }}</legend>
-        <p class="group-hint">{{ i18n.t('settings.excelHint') }}</p>
-        <div class="excel-theme-grid">
-          <label class="excel-preview-card gold" [class.selected]="form.controls.excelTableStyle.value === 'GOLD'">
-            <input type="radio" formControlName="excelTableStyle" value="GOLD" />
-            <div class="mini-excel-table gold-tbl">
-              <div class="tbl-head">🟨 {{ i18n.t('settings.excelGold') }}</div>
-              <div class="tbl-row"><span>Row 1</span><span>100</span></div>
-            </div>
-          </label>
-
-          <label class="excel-preview-card blue" [class.selected]="form.controls.excelTableStyle.value === 'BLUE'">
-            <input type="radio" formControlName="excelTableStyle" value="BLUE" />
-            <div class="mini-excel-table blue-tbl">
-              <div class="tbl-head">🟦 {{ i18n.t('settings.excelBlue') }}</div>
-              <div class="tbl-row"><span>Row 1</span><span>100</span></div>
-            </div>
-          </label>
-
-          <label class="excel-preview-card green" [class.selected]="form.controls.excelTableStyle.value === 'GREEN'">
-            <input type="radio" formControlName="excelTableStyle" value="GREEN" />
-            <div class="mini-excel-table green-tbl">
-              <div class="tbl-head">🟩 {{ i18n.t('settings.excelGreen') }}</div>
-              <div class="tbl-row"><span>Row 1</span><span>100</span></div>
-            </div>
-          </label>
-
-          <label class="excel-preview-card gray" [class.selected]="form.controls.excelTableStyle.value === 'GRAY'">
-            <input type="radio" formControlName="excelTableStyle" value="GRAY" />
-            <div class="mini-excel-table gray-tbl">
-              <div class="tbl-head">⬜ {{ i18n.t('settings.excelGray') }}</div>
-              <div class="tbl-row"><span>Row 1</span><span>100</span></div>
-            </div>
-          </label>
-        </div>
-      </fieldset>
-    </div>
-
-    <div class="actions settings-toolbar">
-      <button class="button secondary" type="button" (click)="cancel()">
-        {{ i18n.t('common.cancel') }}
+    @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'session'"
+        (click)="setTab('session')"
+      >
+        ⏳ {{ i18n.t('settings.tabSession', undefined, 'الجلسة') }}
       </button>
-      <button class="button primary" type="submit" [disabled]="saving() || form.invalid">
-        {{ i18n.t(saving() ? 'settings.saving' : 'settings.save') }}
-      </button>
-    </div>
-  </form>
 
-  @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'security'"
+        (click)="setTab('security')"
+      >
+        🛡️ {{ i18n.t('settings.tabSecurity', undefined, 'الأمان') }}
+      </button>
+    }
+
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'reports'"
+      (click)="setTab('reports')"
+    >
+      📊 {{ i18n.t('settings.tabReports', undefined, 'التقارير والتصدير') }}
+    </button>
+  </nav>
+
+  <!-- Tab 1: Appearance & Language -->
+  @if (activeTab() === 'appearance') {
+    <form class="card settings-card" [formGroup]="form" (ngSubmit)="saveUserPreferences()">
+      <div class="settings-sections">
+        <!-- Section 1: Appearance & Theme -->
+        <fieldset class="settings-group">
+          <legend class="group-title">{{ i18n.t('settings.theme') }}</legend>
+          <p class="group-hint">{{ i18n.t('settings.themeHint') }}</p>
+          <div class="theme-cards-grid">
+            <label class="theme-preview-card" [class.selected]="form.controls.theme.value === 'LIGHT'">
+              <input type="radio" formControlName="theme" value="LIGHT" />
+              <div class="card-icon">☀</div>
+              <div class="card-info">
+                <strong>{{ i18n.t('settings.light') }}</strong>
+                <small>Clean white workspace</small>
+              </div>
+            </label>
+
+            <label class="theme-preview-card" [class.selected]="form.controls.theme.value === 'DARK'">
+              <input type="radio" formControlName="theme" value="DARK" />
+              <div class="card-icon">🌙</div>
+              <div class="card-info">
+                <strong>{{ i18n.t('settings.dark') }}</strong>
+                <small>Sleek high-contrast dark</small>
+              </div>
+            </label>
+
+            <label class="theme-preview-card" [class.selected]="form.controls.theme.value === 'SYSTEM'">
+              <input type="radio" formControlName="theme" value="SYSTEM" />
+              <div class="card-icon">💻</div>
+              <div class="card-info">
+                <strong>{{ i18n.t('settings.system') }}</strong>
+                <small>Match OS preferences</small>
+              </div>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Section 2: Table Density -->
+        <fieldset class="settings-group">
+          <legend class="group-title">{{ i18n.t('settings.density') }}</legend>
+          <p class="group-hint">{{ i18n.t('settings.densityHint') }}</p>
+          <div class="segmented-pills-grid">
+            <label class="segmented-pill-option" [class.selected]="form.controls.tableDensity.value === 'COMFORTABLE'">
+              <input type="radio" formControlName="tableDensity" value="COMFORTABLE" />
+              <span>{{ i18n.t('settings.comfortable') }} (40px)</span>
+            </label>
+            <label class="segmented-pill-option" [class.selected]="form.controls.tableDensity.value === 'COMPACT'">
+              <input type="radio" formControlName="tableDensity" value="COMPACT" />
+              <span>{{ i18n.t('settings.compact') }} (34px)</span>
+            </label>
+            <label class="segmented-pill-option" [class.selected]="form.controls.tableDensity.value === 'DENSE'">
+              <input type="radio" formControlName="tableDensity" value="DENSE" />
+              <span>{{ i18n.t('settings.dense') }} (28px)</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <!-- Section 3: Language -->
+        <fieldset class="settings-group">
+          <legend class="group-title">{{ i18n.t('settings.language') }}</legend>
+          <p class="group-hint">اختر لغة واجهة النظام (Interface Locale)</p>
+          <div class="segmented-pills-grid two-col">
+            <label class="segmented-pill-option" [class.selected]="form.controls.locale.value === 'ar-EG'">
+              <input type="radio" formControlName="locale" value="ar-EG" />
+              <span>{{ i18n.t('settings.arabic') }} (RTL)</span>
+            </label>
+            <label class="segmented-pill-option" [class.selected]="form.controls.locale.value === 'en-US'">
+              <input type="radio" formControlName="locale" value="en-US" />
+              <span>{{ i18n.t('settings.english') }} (LTR)</span>
+            </label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="actions settings-toolbar">
+        <button class="button secondary" type="button" (click)="cancel()">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button class="button primary" type="submit" [disabled]="saving() || form.invalid">
+          💾 {{ i18n.t('settings.saveAllSystemSettings', undefined, 'حفظ جميع الإعدادات') }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- Tab 2: Session Settings (Admin only) -->
+  @if (activeTab() === 'session' && authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
     <form
       class="card settings-card admin-settings"
       [formGroup]="appSettingsForm"
       (ngSubmit)="saveAppSettings()"
     >
       <fieldset class="settings-group">
-        <legend class="group-title">⚙️ إعدادات النظام المتقدمة (Enterprise App Settings)</legend>
-        <p class="group-hint">التحكم في تفعيل مدة الجلسة وإظهار شريط التقارير الجاهزة للمستخدمين</p>
+        <legend class="group-title">⚙️ إعدادات مدة انتهاء الجلسة (Session Timeout Configuration)</legend>
+        <p class="group-hint">التحكم في التوقيت التلقائي لإغلاق الجلسات غير النشطة لحماية بيانات الشركة</p>
 
-        <div class="field-stack" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
-          <!-- Session Timeout Enable / Disable -->
+        <div class="field-stack">
           <label class="selectable-card">
             <input type="checkbox" formControlName="sessionTimeoutEnabled" />
             <span>
@@ -160,62 +165,205 @@
                 max="10080"
                 formControlName="sessionTimeoutMinutes"
               />
-              <small class="field-hint" style="color: var(--gold); font-weight: 600; margin-top: 4px; display: block;">
+              <small class="field-hint session-hint">
                 {{ i18n.t('settings.sessionMinutesHint') }}
               </small>
             </div>
           }
-
-          <!-- Show / Hide Report Presets Toolbar -->
-          <label class="selectable-card">
-            <input type="checkbox" formControlName="showReportPresets" />
-            <span>
-              <strong>إظهار شريط الاختصارات الجاهزة في شاشة التقارير (Show Quick Report Presets)</strong>
-              <small>إظهار أو إخفاء قسم "اختصارات جاهزة: الشهر الكامل أو النصف الأول/الثاني" في صفحة التقارير.</small>
-            </span>
-          </label>
-
-          <!-- Password Policy Minimum Length -->
-          <div class="field" style="margin-top: 8px;">
-            <label for="min-password-length">{{ i18n.t('settings.minPasswordLength', undefined, 'الحد الأدنى لطول كلمة المرور (Password Policy)') }}</label>
-            <select id="min-password-length" formControlName="minPasswordLength" class="ltr">
-              <option [value]="6">6 أحرف (6 Characters)</option>
-              <option [value]="8">8 أحرف (8 Characters - Default)</option>
-              <option [value]="10">10 أحرف (10 Characters)</option>
-              <option [value]="12">12 حرفاً (12 Characters)</option>
-              <option [value]="16">16 حرفاً (16 Characters)</option>
-            </select>
-            <small class="field-hint" style="color: var(--secondary-text); margin-top: 4px; display: block;">
-              تطبق هذه السياسة تلقائياً على جميع المستخدمين عند إنشاء أو تغيير كلمة المرور.
-            </small>
-          </div>
         </div>
       </fieldset>
-      <div class="actions" style="margin-top: 16px;">
+
+      <div class="settings-toolbar">
         <button
           class="button primary"
           type="submit"
           [disabled]="appSettingsLoading() || appSettingsSaving() || appSettingsForm.invalid"
         >
-          {{ i18n.t('settings.sessionSave') }}
+          💾 {{ i18n.t('settings.saveAllSystemSettings', undefined, 'حفظ جميع الإعدادات') }}
         </button>
       </div>
     </form>
   }
-  @if (desktop) {
-    <section class="card settings-card admin-settings">
+
+  <!-- Tab 3: Security & Password Policy (Admin only) -->
+  @if (activeTab() === 'security' && authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+    <form
+      class="card settings-card admin-settings"
+      [formGroup]="appSettingsForm"
+      (ngSubmit)="saveAppSettings()"
+    >
       <fieldset class="settings-group">
-        <legend class="group-title">{{ i18n.t('settings.licenseTitle') }}</legend>
-        <p class="group-hint">{{ i18n.t('settings.licenseHint') }}</p>
-        @if (licenseMessage()) {
-          <div class="alert">{{ licenseMessage() }}</div>
-        }
+        <legend class="group-title">🔒 سياسة الأمان وكلمات المرور (Security & Password Policy)</legend>
+        <p class="group-hint">تحديد الاشتراطات الخاصة بكلمات المرور للمستخدمين ومدد صلاحيتها</p>
+
+        <div class="password-policy-section">
+          <div class="policy-rules-grid">
+            <div class="policy-field">
+              <label for="min-password-length">{{ i18n.t('settings.minPasswordLength', undefined, 'Minimum Length') }}</label>
+              <input id="min-password-length" class="ltr" type="number" min="6" max="128" formControlName="minPasswordLength" />
+            </div>
+            <div class="policy-field">
+              <label for="max-password-length">{{ i18n.t('settings.maxPasswordLength', undefined, 'Maximum Length') }}</label>
+              <input id="max-password-length" class="ltr" type="number" min="0" max="256" formControlName="maxPasswordLength" />
+              <small class="field-hint">{{ i18n.t('settings.maxPasswordLengthHint', undefined, '0 = unlimited') }}</small>
+            </div>
+            <div class="policy-field">
+              <label for="password-expiry">{{ i18n.t('settings.passwordExpiryDays', undefined, 'Password Age') }}</label>
+              <input id="password-expiry" class="ltr" type="number" min="0" max="365" formControlName="passwordExpiryDays" />
+              <small class="field-hint">{{ i18n.t('settings.passwordExpiryHint', undefined, '0 = disabled') }} · {{ i18n.t('settings.days', undefined, 'days') }}</small>
+            </div>
+            <div class="policy-field">
+              <label for="password-history">{{ i18n.t('settings.passwordHistoryCount', undefined, 'History Count') }}</label>
+              <input id="password-history" class="ltr" type="number" min="0" max="50" formControlName="passwordHistoryCount" />
+              <small class="field-hint">{{ i18n.t('settings.passwordHistoryHint', undefined, '0 = disabled') }}</small>
+            </div>
+          </div>
+
+          <div class="policy-requirements-card">
+            <div class="policy-card-header">
+              <h4 class="policy-card-title">{{ i18n.t('settings.charRequirements', undefined, 'Character Requirements') }}</h4>
+            </div>
+            <div class="policy-switch-row">
+              <label class="policy-switch-label" for="req-uppercase">
+                <span class="policy-switch-text">{{ i18n.t('settings.requireUppercase', undefined, 'Uppercase') }} <span class="switch-hint">(A-Z)</span></span>
+                <div class="switch-track" [class.on]="appSettingsForm.controls.requireUppercase.value">
+                  <input id="req-uppercase" type="checkbox" formControlName="requireUppercase" />
+                  <span class="switch-thumb"></span>
+                </div>
+              </label>
+            </div>
+            <div class="policy-switch-row">
+              <label class="policy-switch-label" for="req-lowercase">
+                <span class="policy-switch-text">{{ i18n.t('settings.requireLowercase', undefined, 'Lowercase') }} <span class="switch-hint">(a-z)</span></span>
+                <div class="switch-track" [class.on]="appSettingsForm.controls.requireLowercase.value">
+                  <input id="req-lowercase" type="checkbox" formControlName="requireLowercase" />
+                  <span class="switch-thumb"></span>
+                </div>
+              </label>
+            </div>
+            <div class="policy-switch-row">
+              <label class="policy-switch-label" for="req-numbers">
+                <span class="policy-switch-text">{{ i18n.t('settings.requireNumbers', undefined, 'Numbers') }} <span class="switch-hint">(0-9)</span></span>
+                <div class="switch-track" [class.on]="appSettingsForm.controls.requireNumbers.value">
+                  <input id="req-numbers" type="checkbox" formControlName="requireNumbers" />
+                  <span class="switch-thumb"></span>
+                </div>
+              </label>
+            </div>
+            <div class="policy-switch-row">
+              <label class="policy-switch-label" for="req-special">
+                <span class="policy-switch-text">{{ i18n.t('settings.requireSpecialChars', undefined, 'Special Characters') }} <span class="switch-hint">(!@#$%)</span></span>
+                <div class="switch-track" [class.on]="appSettingsForm.controls.requireSpecialChars.value">
+                  <input id="req-special" type="checkbox" formControlName="requireSpecialChars" />
+                  <span class="switch-thumb"></span>
+                </div>
+              </label>
+            </div>
+            <div class="policy-switch-row last">
+              <label class="policy-switch-label" for="req-no-spaces">
+                <span class="policy-switch-text">{{ i18n.t('settings.disallowSpaces', undefined, 'Disallow Spaces') }}</span>
+                <div class="switch-track" [class.on]="appSettingsForm.controls.disallowSpaces.value">
+                  <input id="req-no-spaces" type="checkbox" formControlName="disallowSpaces" />
+                  <span class="switch-thumb"></span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
       </fieldset>
-      <div class="actions">
-        <button class="button secondary" type="button" (click)="releaseLicense()">
-          {{ i18n.t('settings.licenseRelease') }}
+
+      @if (desktop) {
+        <fieldset class="settings-group">
+          <legend class="group-title">{{ i18n.t('settings.licenseTitle') }}</legend>
+          <p class="group-hint">{{ i18n.t('settings.licenseHint') }}</p>
+          @if (licenseMessage()) {
+            <div class="alert">{{ licenseMessage() }}</div>
+          }
+          <button class="button secondary" type="button" (click)="releaseLicense()">
+            {{ i18n.t('settings.licenseRelease') }}
+          </button>
+        </fieldset>
+      }
+
+      <div class="settings-toolbar">
+        <button
+          class="button primary"
+          type="submit"
+          [disabled]="appSettingsLoading() || appSettingsSaving() || appSettingsForm.invalid"
+        >
+          💾 {{ i18n.t('settings.saveAllSystemSettings', undefined, 'حفظ جميع الإعدادات') }}
         </button>
       </div>
-    </section>
+    </form>
+  }
+
+  <!-- Tab 4: Reports & Export -->
+  @if (activeTab() === 'reports') {
+    <form class="card settings-card" [formGroup]="form" (ngSubmit)="saveAll()">
+      <div class="settings-sections">
+        <!-- Section 4: Excel Export Styling -->
+        <fieldset class="settings-group">
+          <legend class="group-title">{{ i18n.t('settings.excelTitle') }}</legend>
+          <p class="group-hint">{{ i18n.t('settings.excelHint') }}</p>
+          <div class="excel-theme-grid">
+            <label class="excel-preview-card gold" [class.selected]="form.controls.excelTableStyle.value === 'GOLD'">
+              <input type="radio" formControlName="excelTableStyle" value="GOLD" />
+              <div class="mini-excel-table gold-tbl">
+                <div class="tbl-head">🟨 {{ i18n.t('settings.excelGold') }}</div>
+                <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+              </div>
+            </label>
+
+            <label class="excel-preview-card blue" [class.selected]="form.controls.excelTableStyle.value === 'BLUE'">
+              <input type="radio" formControlName="excelTableStyle" value="BLUE" />
+              <div class="mini-excel-table blue-tbl">
+                <div class="tbl-head">🟦 {{ i18n.t('settings.excelBlue') }}</div>
+                <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+              </div>
+            </label>
+
+            <label class="excel-preview-card green" [class.selected]="form.controls.excelTableStyle.value === 'GREEN'">
+              <input type="radio" formControlName="excelTableStyle" value="GREEN" />
+              <div class="mini-excel-table green-tbl">
+                <div class="tbl-head">🟩 {{ i18n.t('settings.excelGreen') }}</div>
+                <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+              </div>
+            </label>
+
+            <label class="excel-preview-card gray" [class.selected]="form.controls.excelTableStyle.value === 'GRAY'">
+              <input type="radio" formControlName="excelTableStyle" value="GRAY" />
+              <div class="mini-excel-table gray-tbl">
+                <div class="tbl-head">⬜ {{ i18n.t('settings.excelGray') }}</div>
+                <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+              </div>
+            </label>
+          </div>
+        </fieldset>
+
+        @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+          <div [formGroup]="appSettingsForm">
+            <fieldset class="settings-group">
+              <legend class="group-title">📊 تفضيلات التقارير الجاهزة</legend>
+              <label class="selectable-card">
+                <input type="checkbox" formControlName="showReportPresets" />
+                <span>
+                  <strong>إظهار شريط الاختصارات الجاهزة في شاشة التقارير (Show Quick Report Presets)</strong>
+                  <small>إظهار أو إخفاء قسم "اختصارات جاهزة: الشهر الكامل أو النصف الأول/الثاني" في صفحة التقارير.</small>
+                </span>
+              </label>
+            </fieldset>
+          </div>
+        }
+      </div>
+
+      <div class="actions settings-toolbar">
+        <button class="button secondary" type="button" (click)="cancel()">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button class="button primary" type="submit" [disabled]="saving() || form.invalid">
+          💾 {{ i18n.t('settings.saveAllSystemSettings', undefined, 'حفظ جميع الإعدادات') }}
+        </button>
+      </div>
+    </form>
   }
 </section>

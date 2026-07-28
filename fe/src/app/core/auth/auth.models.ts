@@ -37,6 +37,14 @@ export interface AppSettings {
   sessionTimeoutEnabled: boolean;
   showReportPresets: boolean;
   minPasswordLength?: number;
+  requireUppercase?: boolean;
+  requireLowercase?: boolean;
+  requireNumbers?: boolean;
+  requireSpecialChars?: boolean;
+  disallowSpaces?: boolean;
+  maxPasswordLength?: number;
+  passwordExpiryDays?: number;
+  passwordHistoryCount?: number;
   updatedAt: number;
 }
 

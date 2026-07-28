@@ -60,7 +60,30 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'warning.missingScheduleRule': 'لا توجد مواعيد عمل سارية لهذا اليوم.',
     'dashboard.noReportHint': 'لم يتم استخراج تقرير الحضور والغياب لهذا الشهر بعد.',
     'settings.minPasswordLength': 'الحد الأدنى لطول كلمة المرور',
+    'settings.maxPasswordLength': 'الحد الأقصى لطول كلمة المرور',
+    'settings.maxPasswordLengthHint': '0 = بدون حد أقصى',
+    'settings.passwordPolicy': 'سياسة كلمة المرور (Password Policy)',
+    'settings.requireUppercase': 'يجب أن تحتوي على حروف كبيرة',
+    'settings.requireUppercaseHint': 'مثال: ABC',
+    'settings.requireLowercase': 'يجب أن تحتوي على حروف صغيرة',
+    'settings.requireLowercaseHint': 'مثال: abc',
+    'settings.requireNumbers': 'يجب أن تحتوي على أرقام',
+    'settings.requireNumbersHint': 'مثال: 123',
+    'settings.requireSpecialChars': 'يجب أن تحتوي على رموز خاصة',
+    'settings.requireSpecialCharsHint': 'مثال: @#$%',
+    'settings.disallowSpaces': ' عدم السماح بالمسافات',
+    'settings.disallowSpacesHint': 'لا توجد مسافات مسموحة',
+    'settings.passwordExpiryDays': 'صلاحية كلمة المرور (أيام)',
+    'settings.passwordExpiryHint': '0 = معطل',
+    'settings.passwordHistoryCount': 'عدد كلمات المرور السابقة',
+    'settings.passwordHistoryHint': '0 = معطل',
     'users.passwordHint': 'كلمة المرور يجب أن لا تقل عن {min} أحرف.',
+    'users.passwordMaxHint': 'كلمة المرور يجب أن لا تتجاوز {max} حرفاً.',
+    'users.passwordNoSpaces': 'كلمة المرور يجب أن لا تحتوي على مسافات.',
+    'users.passwordNeedUppercase': 'كلمة المرور يجب أن تحتوي على حرف كبير واحد على الأقل.',
+    'users.passwordNeedLowercase': 'كلمة المرور يجب أن تحتوي على حرف صغير واحد على الأقل.',
+    'users.passwordNeedNumber': 'كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.',
+    'users.passwordNeedSpecial': 'كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل.',
     'review.reviewProgress': 'نسبة مراجعة السجلات',
     'review.noPunchesFound': 'لا توجد سجلات حضور للمراجعة',
     'review.pendingDecision': 'بانتظار القرار',
@@ -133,7 +156,27 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'payroll.confirmDisbursement': 'تأكيد وصرف المرتب وقيد المستند',
     'payroll.savingDisbursement': 'جاري التسجيل والقيد...',
     'payroll.reverse': 'تراجع',
-    'payroll.disburseAll': 'صرف الكشف بالكامل',
+    'payroll.disburseEmployeeSalary': 'صرف مرتب الموظف',
+    'payroll.statusDraft': 'مسودة',
+    'payroll.statusReview': 'مراجعة',
+    'payroll.statusApproved': 'اعتماد وقفل',
+    'payroll.statusPosted': 'ترحيل محاسبي',
+    'payroll.statusDisbursed': 'صرف المرتبات',
+    'payroll.gross': 'إجمالي الراتب (Gross)',
+    'payroll.net': 'صافي الصرف (Net Payout)',
+    'settings.tabAppearance': 'المظهر واللغة',
+    'settings.tabSession': 'الجلسة',
+    'settings.tabSecurity': 'الأمان',
+    'settings.tabReports': 'التقارير والتصدير',
+    'settings.saveAllSystemSettings': 'حفظ جميع الإعدادات',
+    'nav.favorites': 'المفضلة',
+    'nav.recentlyUsed': 'المستخدمة مؤخرًا',
+    'confirm.approveTitle': 'تأكيد اعتماد وقفل الكشف',
+    'confirm.approveMessage': 'سيؤدي الاعتماد إلى تجميد جميع بيانات الحضور والاستحقاقات المالية لهذا الشهر ومنع أي تعديل إضافي عليها.',
+    'confirm.postTitle': 'تأكيد الترحيل المحاسبي',
+    'confirm.postMessage': 'سيؤدي الترحيل إلى إنشاء قيد يومية متوازن في شجرة الحسابات (إثبات مصروف المرتبات والالتزامات المستحقة).',
+    'confirm.disburseTitle': 'تأكيد صرف المرتبات',
+    'confirm.disburseMessage': 'سيؤدي الصرف إلى قيد سداد الخزينة/البنك واستقطاع السلف القائمة للموظفين.',
   },
   'en-US': {
     'api.connectionError': 'Unable to reach the server. Make sure the backend is running.',
@@ -183,8 +226,31 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'warning.singlePunchIncomplete': 'One punch is incomplete and requires review.',
     'warning.missingScheduleRule': 'No effective schedule rule for this workday.',
     'dashboard.noReportHint': 'No attendance report generated for this month yet.',
-    'settings.minPasswordLength': 'Minimum Password Length Policy',
+    'settings.minPasswordLength': 'Minimum Password Length',
+    'settings.maxPasswordLength': 'Maximum Password Length',
+    'settings.maxPasswordLengthHint': '0 = no limit',
+    'settings.passwordPolicy': 'Password Policy',
+    'settings.requireUppercase': 'Require uppercase letters',
+    'settings.requireUppercaseHint': 'e.g. ABC',
+    'settings.requireLowercase': 'Require lowercase letters',
+    'settings.requireLowercaseHint': 'e.g. abc',
+    'settings.requireNumbers': 'Require numbers',
+    'settings.requireNumbersHint': 'e.g. 123',
+    'settings.requireSpecialChars': 'Require special characters',
+    'settings.requireSpecialCharsHint': 'e.g. @#$%',
+    'settings.disallowSpaces': 'Disallow spaces',
+    'settings.disallowSpacesHint': 'No whitespace allowed',
+    'settings.passwordExpiryDays': 'Password Expiry (Days)',
+    'settings.passwordExpiryHint': '0 = disabled',
+    'settings.passwordHistoryCount': 'Password History Count',
+    'settings.passwordHistoryHint': '0 = disabled',
     'users.passwordHint': 'Password must be at least {min} characters.',
+    'users.passwordMaxHint': 'Password must not exceed {max} characters.',
+    'users.passwordNoSpaces': 'Password must not contain spaces.',
+    'users.passwordNeedUppercase': 'Password must contain at least one uppercase letter.',
+    'users.passwordNeedLowercase': 'Password must contain at least one lowercase letter.',
+    'users.passwordNeedNumber': 'Password must contain at least one number.',
+    'users.passwordNeedSpecial': 'Password must contain at least one special character.',
     'review.reviewProgress': 'Review Progress',
     'review.noPunchesFound': 'No attendance records to review',
     'review.pendingDecision': 'Pending Decision',
@@ -258,6 +324,27 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'payroll.savingDisbursement': 'Posting & Saving...',
     'payroll.reverse': 'Reverse',
     'payroll.disburseAll': 'Disburse All',
+    'payroll.disburseEmployeeSalary': 'Disburse Employee Salary',
+    'payroll.statusDraft': 'Draft',
+    'payroll.statusReview': 'Review',
+    'payroll.statusApproved': 'Approved & Locked',
+    'payroll.statusPosted': 'Posted to GL',
+    'payroll.statusDisbursed': 'Disbursed',
+    'payroll.gross': 'Gross Payout',
+    'payroll.net': 'Net Payout',
+    'settings.tabAppearance': 'Appearance & Language',
+    'settings.tabSession': 'Session',
+    'settings.tabSecurity': 'Security',
+    'settings.tabReports': 'Reports & Export',
+    'settings.saveAllSystemSettings': 'Save All Settings',
+    'nav.favorites': 'Favorites',
+    'nav.recentlyUsed': 'Recently Used',
+    'confirm.approveTitle': 'Confirm Payroll Approval & Locking',
+    'confirm.approveMessage': 'Approving will freeze all attendance and salary calculations for this month and prevent further edits.',
+    'confirm.postTitle': 'Confirm General Ledger Posting',
+    'confirm.postMessage': 'Posting will generate a balanced general ledger journal entry (recording salary expense and liabilities).',
+    'confirm.disburseTitle': 'Confirm Payroll Disbursement',
+    'confirm.disburseMessage': 'Disbursing will create treasury/bank payout vouchers and settle outstanding employee advances.',
   },
 };
 
@@ -283,6 +370,12 @@ export class I18nService {
     const supported: SupportedLocale = locale.toLowerCase().startsWith('en') ? 'en-US' : 'ar-EG';
     this.locale.set(supported);
     localStorage.setItem(LOCALE_STORAGE_KEY, supported);
+
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('lang', supported.startsWith('en') ? 'en' : 'ar');
+      document.documentElement.setAttribute('dir', supported.startsWith('en') ? 'ltr' : 'rtl');
+    }
+
     const cached = this.cache.get(supported);
     if (cached) {
       this.messages.set(cached);
@@ -300,6 +393,11 @@ export class I18nService {
   }
 
   private storedLocale(): SupportedLocale {
-    return localStorage.getItem(LOCALE_STORAGE_KEY) === 'en-US' ? 'en-US' : 'ar-EG';
+    const loc = localStorage.getItem(LOCALE_STORAGE_KEY) === 'en-US' ? 'en-US' : 'ar-EG';
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('lang', loc.startsWith('en') ? 'en' : 'ar');
+      document.documentElement.setAttribute('dir', loc.startsWith('en') ? 'ltr' : 'rtl');
+    }
+    return loc;
   }
 }

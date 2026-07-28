@@ -24,97 +24,103 @@
     </div>
     <span>{{ i18n.t('employees.count', { count: filtered().length }) }}</span>
   </div>
+
   @if (store.loading()) {
-    <div class="loading"></div>
+    <app-skeleton [rowCount]="5" (retry)="reload()" />
   }
-  @if (store.error()) {
-    <div class="alert error">{{ store.error() }}</div>
+
+  @if (store.error(); as err) {
+    <app-skeleton [loading]="false" [error]="err" (retry)="reload()" />
   }
-  @if (!store.loading()) {
-  <div class="table-card">
-    <table>
-      <thead>
-        <tr>
-          <th>{{ i18n.t('employees.employee') }}</th>
-          <th>{{ i18n.t('employees.category') }}</th>
-          <th>{{ i18n.t('employees.employmentType') }}</th>
-          <th>{{ i18n.t('employees.baseSalary') }}</th>
-          <th>{{ i18n.t('employees.deviceUserId') }}</th>
-          <th>{{ i18n.t('employees.activePeriod') }}</th>
-          <th>{{ i18n.t('employees.status') }}</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of paged(); track item.id) {
+
+  @if (!store.loading() && !store.error()) {
+    <div class="table-card">
+      <table>
+        <thead>
           <tr>
-            <td>
-              <strong>{{ item.fullName }}</strong
-              ><small class="ltr">{{ item.employeeCode }}</small>
-            </td>
-            <td>{{ item.categoryName }}</td>
-            <td>
-              <span class="status neutral">{{ typeLabel(item.employmentType) }}</span>
-            </td>
-            <td>
-              @if (auth.canViewSalary()) {
-                <strong>{{ item.baseSalary | number:'1.2-2' }}</strong> <small>ج.م</small>
-              } @else {
-                <span class="status neutral" [attr.title]="i18n.t('employees.salaryHiddenHint')">🔒 {{ i18n.t('employees.salaryHidden') }}</span>
-              }
-            </td>
-            <td>
-              @if (item.deviceUserId) {
-                <code>{{ item.deviceUserId }}</code>
-              } @else {
-                <span class="status warning">⚠️ لم يتم ربط رقم البصمة (Unlinked)</span>
-              }
-            </td>
-            <td>
-              <span class="ltr">{{ date(item.activeFrom) }}</span
-              ><small>
-                @if (item.activeTo) {
-                  {{ i18n.t('employees.until') }} {{ date(item.activeTo) }}
+            <th>{{ i18n.t('employees.employee') }}</th>
+            <th>{{ i18n.t('employees.category') }}</th>
+            <th>{{ i18n.t('employees.employmentType') }}</th>
+            <th>{{ i18n.t('employees.baseSalary') }}</th>
+            <th>{{ i18n.t('employees.deviceUserId') }}</th>
+            <th>{{ i18n.t('employees.activePeriod') }}</th>
+            <th>{{ i18n.t('employees.status') }}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of paged(); track item.id) {
+            <tr>
+              <td>
+                <strong>{{ item.fullName }}</strong
+                ><small class="ltr">{{ item.employeeCode }}</small>
+              </td>
+              <td>{{ item.categoryName }}</td>
+              <td>
+                <span class="status neutral">{{ typeLabel(item.employmentType) }}</span>
+              </td>
+              <td>
+                @if (auth.canViewSalary()) {
+                  <strong>{{ item.baseSalary | number:'1.2-2' }}</strong> <small>ج.م</small>
                 } @else {
-                  {{ i18n.t('employees.ongoing') }}
+                  <span class="status neutral" [attr.title]="i18n.t('employees.salaryHiddenHint')">🔒 {{ i18n.t('employees.salaryHidden') }}</span>
                 }
-              </small>
-            </td>
-            <td>
-              <span class="status" [class.success]="item.active" [class.neutral]="!item.active">{{
-                i18n.t(item.active ? 'common.active' : 'common.inactive')
-              }}</span>
-            </td>
-            <td>
-              <div class="row-actions">
-                <button (click)="openEdit(item)" [attr.aria-label]="i18n.t('common.edit')" [attr.title]="i18n.t('common.edit')">✎</button
-                ><button class="danger-link" (click)="deactivate(item)" [disabled]="!item.active" [attr.aria-label]="i18n.t('common.delete')" [attr.title]="i18n.t('common.delete')">
-                  ×
-                </button>
-              </div>
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="7">
-              <div class="empty-state">
-                <strong>{{ i18n.t('employees.noResults') }}</strong
-                >{{ i18n.t('employees.noResultsHint') }}
-              </div>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-    <app-table-pagination
-      [total]="filtered().length"
-      [page]="pagination.currentPage(filtered().length)"
-      [pageSize]="pagination.pageSize()"
-      (pageChange)="pagination.changePage($event, filtered().length)"
-      (pageSizeChange)="pagination.changePageSize($event)"
-    />
-  </div>
-  } <!-- end @if (!store.loading()) -->
+              </td>
+              <td>
+                @if (item.deviceUserId) {
+                  <code>{{ item.deviceUserId }}</code>
+                } @else {
+                  <span class="status warning">⚠️ لم يتم ربط رقم البصمة</span>
+                }
+              </td>
+              <td>
+                <span class="ltr">{{ date(item.activeFrom) }}</span
+                ><small>
+                  @if (item.activeTo) {
+                    {{ i18n.t('employees.until') }} {{ date(item.activeTo) }}
+                  } @else {
+                    {{ i18n.t('employees.ongoing') }}
+                  }
+                </small>
+              </td>
+              <td>
+                <span class="status" [class.success]="item.active" [class.neutral]="!item.active">{{
+                  i18n.t(item.active ? 'common.active' : 'common.inactive')
+                }}</span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button (click)="openEdit(item)" [attr.aria-label]="i18n.t('common.edit')" [attr.title]="i18n.t('common.edit')">✎</button
+                  ><button class="danger-link" (click)="deactivate(item)" [disabled]="!item.active" [attr.aria-label]="i18n.t('common.delete')" [attr.title]="i18n.t('common.delete')">
+                    ×
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="8">
+                <app-empty-state
+                  icon="👥"
+                  [title]="i18n.t('employees.noResults', undefined, 'لا يوجد موظفون مضافون حتى الآن')"
+                  [description]="i18n.t('employees.noResultsHint', undefined, 'ابدأ بإضافة موظف جديد لتحديد الفئة والراتب ورقم البصمة.')"
+                  [actionLabel]="i18n.t('employees.add', undefined, 'إضافة موظف جديد')"
+                  (action)="openNew()"
+                />
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <app-table-pagination
+        [total]="filtered().length"
+        [page]="pagination.currentPage(filtered().length)"
+        [pageSize]="pagination.pageSize()"
+        (pageChange)="pagination.changePage($event, filtered().length)"
+        (pageSizeChange)="pagination.changePageSize($event)"
+      />
+    </div>
+  }
 
   <!-- Dialog / Drawer -->
   @if (drawerOpen()) {
@@ -228,7 +234,7 @@
         <div class="drawer-actions">
           <button class="button primary" type="submit" [disabled]="store.loading()">
             {{ i18n.t('employees.save') }}</button
-          ><button class="button secondary" type="button" (click)="drawerOpen.set(false)">
+          ><button class="button secondary" type="button" (click)="closeDrawer()">
             {{ i18n.t('common.cancel') }}
           </button>
         </div>

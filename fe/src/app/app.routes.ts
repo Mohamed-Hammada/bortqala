@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, roleGuard } from './core/auth/auth.guard';
+import { unsavedChangesGuard } from './core/unsaved-changes.guard';
 
 export const routes: Routes = [
   {
@@ -27,6 +28,7 @@ export const routes: Routes = [
       {
         path: 'employees',
         canActivate: [roleGuard],
+        canDeactivate: [unsavedChangesGuard],
         data: { roles: ['ADMIN', 'HR_MANAGER'] },
         loadComponent: () =>
           import('./features/employees/employees.page').then((module) => module.EmployeesPage),
@@ -148,6 +150,7 @@ export const routes: Routes = [
       },
       {
         path: 'settings',
+        canDeactivate: [unsavedChangesGuard],
         loadComponent: () =>
           import('./features/settings/settings.page').then((module) => module.SettingsPage),
       },

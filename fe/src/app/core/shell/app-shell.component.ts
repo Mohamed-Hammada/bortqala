@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { RoleCode } from '../auth/auth.models';
 import { I18nService } from '../i18n.service';
 import { IconComponent, IconName } from '../../shared/ui/icon/icon.component';
 import { ToastContainerComponent } from '../../shared/ui/toast/toast-container.component';
-
 import { NetworkService } from '../network.service';
 
 export type WorkspaceGroup =
@@ -30,8 +30,13 @@ export interface WorkspaceSection {
   items: NavItem[];
 }
 
+const FAVORITES_STORAGE_KEY = 'hr-favorites';
+const RECENT_STORAGE_KEY = 'hr-recent-menus';
+const COLLAPSED_GROUPS_KEY = 'hr-collapsed-groups';
+
 @Component({
   selector: 'app-shell',
+  standalone: true,
   imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ToastContainerComponent],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
@@ -47,27 +52,9 @@ export class AppShellComponent {
   readonly menuOpen = signal(false);
   readonly collapsed = signal(false);
 
-  readonly userRolesLabel = computed(() => {
-    const roles = this.authService.user()?.roles ?? [];
-    return roles
-      .map((r) => {
-        switch (r) {
-          case 'SUPER_ADMIN':
-            return this.i18n.t('role.superAdmin');
-          case 'ADMIN':
-            return this.i18n.t('role.admin');
-          case 'HR_MANAGER':
-            return this.i18n.t('role.hrManager');
-          case 'HR_REVIEWER':
-            return this.i18n.t('role.hrReviewer');
-          case 'VIEWER':
-            return this.i18n.t('role.viewer');
-          default:
-            return r;
-        }
-      })
-      .join(' · ');
-  });
+  readonly favorites = signal<string[]>(this.loadStoredArray(FAVORITES_STORAGE_KEY, ['payroll', 'employees']));
+  readonly recentIds = signal<string[]>(this.loadStoredArray(RECENT_STORAGE_KEY, ['dashboard']));
+  readonly collapsedGroups = signal<string[]>(this.loadStoredArray(COLLAPSED_GROUPS_KEY, []));
 
   readonly items: NavItem[] = [
     {
@@ -258,6 +245,41 @@ export class AppShellComponent {
     },
   ];
 
+  readonly favoriteItems = computed<NavItem[]>(() => {
+    const favs = this.favorites();
+    return this.items.filter((item) => favs.includes(item.menuId) && this.visible(item));
+  });
+
+  readonly recentItems = computed<NavItem[]>(() => {
+    const recents = this.recentIds();
+    const favs = this.favorites();
+    return this.items
+      .filter((item) => recents.includes(item.menuId) && !favs.includes(item.menuId) && this.visible(item))
+      .slice(0, 4);
+  });
+
+  readonly userRolesLabel = computed(() => {
+    const roles = this.authService.user()?.roles ?? [];
+    return roles
+      .map((r) => {
+        switch (r) {
+          case 'SUPER_ADMIN':
+            return this.i18n.t('role.superAdmin');
+          case 'ADMIN':
+            return this.i18n.t('role.admin');
+          case 'HR_MANAGER':
+            return this.i18n.t('role.hrManager');
+          case 'HR_REVIEWER':
+            return this.i18n.t('role.hrReviewer');
+          case 'VIEWER':
+            return this.i18n.t('role.viewer');
+          default:
+            return r;
+        }
+      })
+      .join(' · ');
+  });
+
   readonly workspaceSections = computed<WorkspaceSection[]>(() => {
     const groups: { key: WorkspaceGroup; items: NavItem[] }[] = [
       { key: 'workspace.people', items: [] },
@@ -279,6 +301,14 @@ export class AppShellComponent {
       .map((g) => ({ titleKey: g.key, items: g.items }));
   });
 
+  constructor() {
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe((event) => {
+        this.trackRecentNavigation(event.urlAfterRedirects);
+      });
+  }
+
   visible(item: NavItem): boolean {
     const user = this.authService.user();
     if (user && user.roles.includes('SUPER_ADMIN')) {
@@ -289,6 +319,47 @@ export class AppShellComponent {
     return roleOk && menuOk;
   }
 
+  isFavorite(menuId: string): boolean {
+    return this.favorites().includes(menuId);
+  }
+
+  toggleFavorite(menuId: string, event?: Event): void {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const current = this.favorites();
+    let updated: string[];
+    if (current.includes(menuId)) {
+      updated = current.filter((id) => id !== menuId);
+    } else {
+      updated = [...current, menuId];
+    }
+    this.favorites.set(updated);
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(updated));
+  }
+
+  isGroupCollapsed(groupKey: string): boolean {
+    return this.collapsedGroups().includes(groupKey);
+  }
+
+  toggleGroupCollapse(groupKey: string): void {
+    const current = this.collapsedGroups();
+    let updated: string[];
+    if (current.includes(groupKey)) {
+      updated = current.filter((k) => k !== groupKey);
+    } else {
+      updated = [...current, groupKey];
+    }
+    this.collapsedGroups.set(updated);
+    localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify(updated));
+  }
+
+  onNavItemClick(item: NavItem): void {
+    this.pushRecent(item.menuId);
+    this.closeMenu();
+  }
+
   closeMenu(): void {
     this.menuOpen.set(false);
   }
@@ -296,5 +367,28 @@ export class AppShellComponent {
   logout(): void {
     this.authService.logout();
     void this.router.navigate(['/login']);
+  }
+
+  private trackRecentNavigation(url: string): void {
+    const matched = this.items.find((i) => url.startsWith(i.path));
+    if (matched) {
+      this.pushRecent(matched.menuId);
+    }
+  }
+
+  private pushRecent(menuId: string): void {
+    const current = this.recentIds().filter((id) => id !== menuId);
+    const updated = [menuId, ...current].slice(0, 5);
+    this.recentIds.set(updated);
+    localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(updated));
+  }
+
+  private loadStoredArray(key: string, fallback: string[]): string[] {
+    try {
+      const val = localStorage.getItem(key);
+      return val ? JSON.parse(val) : fallback;
+    } catch {
+      return fallback;
+    }
   }
 }

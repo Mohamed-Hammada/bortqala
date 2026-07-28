@@ -1,0 +1,38 @@
+@if (error(); as err) {
+  <div class="skeleton-error-box" role="alert">
+    <div class="brand-logo-badge">
+      <span class="logo-mark">BEMO</span>
+      <span class="logo-subtitle">ERP Platform</span>
+    </div>
+    <div class="error-content">
+      <h3>⚠️ حدث خطأ أثناء التحميل</h3>
+      <p>{{ err || errorMessage() }}</p>
+      <button type="button" class="button primary retry-btn" (click)="onRetry()">
+        🔄 {{ retryText() }}
+      </button>
+    </div>
+  </div>
+} @else if (loading()) {
+  <div class="skeleton-container" aria-busy="true" aria-label="جاري التحميل">
+    <div class="skeleton-header">
+      <div class="skeleton-brand">
+        <div class="brand-logo-pulse">BEMO</div>
+        <div class="skeleton-line short"></div>
+      </div>
+      <div class="skeleton-line medium"></div>
+    </div>
+    <div class="skeleton-body">
+      @for (row of skeletonRows; track row) {
+        <div class="skeleton-row">
+          <div class="skeleton-cell avatar"></div>
+          <div class="skeleton-cell flex-1">
+            <div class="skeleton-line long"></div>
+            <div class="skeleton-line short"></div>
+          </div>
+          <div class="skeleton-cell medium"></div>
+          <div class="skeleton-cell short"></div>
+        </div>
+      }
+    </div>
+  </div>
+}

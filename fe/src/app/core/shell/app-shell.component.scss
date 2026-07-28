@@ -198,11 +198,60 @@ nav {
 .workspace-header {
   padding: 4px 8px 2px;
   font-size: 10.5px;
-  font-weight: 800;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--gold);
-  opacity: 0.9;
+  color: var(--sidebar-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &.section-title-static {
+    color: var(--gold, #b8860b);
+    font-weight: 800;
+  }
+
+  &.group-toggle-btn {
+    width: 100%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: inherit;
+    font-family: inherit;
+    border-radius: 4px;
+    padding: 6px 8px;
+    min-height: 36px;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--sidebar-ink);
+    }
+
+    .chevron-arrow {
+      font-size: 9px;
+      opacity: 0.7;
+    }
+  }
+}
+
+.fav-star-btn {
+  background: transparent;
+  border: none;
+  color: var(--sidebar-muted);
+  opacity: 0.3;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  margin-inline-start: auto;
+
+  &:hover,
+  &.active {
+    color: #fbbf24;
+    opacity: 1;
+  }
 }
 
 .sidebar.collapsed .workspace-header {

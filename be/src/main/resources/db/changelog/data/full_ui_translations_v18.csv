@@ -779,8 +779,83 @@ x18-ar-390;nav.quality;ar-EG;فحص ومراقبة الجودة
 x18-en-390;nav.quality;en-US;Quality Control
 x18-ar-391;nav.qualityHint;ar-EG;محاضر فحص الشحنات واختبار الجودة والرفض
 x18-en-391;nav.qualityHint;en-US;Incoming & production quality inspection logs
-
-
-
-
-
+x18-ar-392;confirm.disburseMessage;ar-EG;سيؤدي الصرف إلى قيد سداد الخزينة/البنك واستقطاع السلف القائمة للموظفين.
+x18-en-392;confirm.disburseMessage;en-US;Disbursing will create treasury/bank payout vouchers and settle outstanding employee advances.
+x18-ar-393;confirm.disburseTitle;ar-EG;تأكيد صرف المرتبات
+x18-en-393;confirm.disburseTitle;en-US;Confirm Payroll Disbursement
+x18-ar-394;employees.deviceUserIdRequired;ar-EG;رقم الجهاز مطلوب للموظف النشط في فئات الحضور الآلي (البصمة)
+x18-en-394;employees.deviceUserIdRequired;en-US;Device User ID is required for active employees in biometric categories
+x18-ar-395;employees.drawerEyebrow;ar-EG;بيانات وملف الموظف
+x18-en-395;employees.drawerEyebrow;en-US;Employee Profile & Identity
+x18-ar-396;employees.salaryHidden;ar-EG;مخفي
+x18-en-396;employees.salaryHidden;en-US;Hidden
+x18-ar-397;employees.salaryHiddenHint;ar-EG;ليس لديك صلاحية لعرض الراتب
+x18-en-397;employees.salaryHiddenHint;en-US;You do not have permission to view salary details
+x18-ar-398;employees.validationError;ar-EG;يرجى ملء جميع الحقول المطلوبة بشكل صحيح قبل الحفظ
+x18-en-398;employees.validationError;en-US;Please complete all required fields correctly before saving
+x18-ar-399;nav.favorites;ar-EG;المفضلة
+x18-en-399;nav.favorites;en-US;Favorites
+x18-ar-400;nav.recentlyUsed;ar-EG;المستخدمة مؤخرًا
+x18-en-400;nav.recentlyUsed;en-US;Recently Used
+x18-ar-401;payroll.disburseEmployeeSalary;ar-EG;صرف مرتب الموظف
+x18-en-401;payroll.disburseEmployeeSalary;en-US;Disburse Employee Salary
+x18-ar-402;payroll.refresh;ar-EG;تحديث البيانات
+x18-en-402;payroll.refresh;en-US;Refresh Data
+x18-ar-403;payroll.statusDisbursed;ar-EG;صرف المرتبات
+x18-en-403;payroll.statusDisbursed;en-US;Disbursed
+x18-ar-404;payroll.statusReview;ar-EG;مراجعة
+x18-en-404;payroll.statusReview;en-US;Review
+x18-ar-405;reports.emptyNoRecords;ar-EG;لا توجد سجلات حضور / لا ينطبق
+x18-en-405;reports.emptyNoRecords;en-US;No attendance records / N/A
+x18-ar-406;settings.charRequirements;ar-EG;شروط أحرف كلمة المرور
+x18-en-406;settings.charRequirements;en-US;Character Requirements
+x18-ar-407;settings.days;ar-EG;أيام
+x18-en-407;settings.days;en-US;days
+x18-ar-408;settings.disallowSpaces;ar-EG;عدم السماح بالمسافات
+x18-en-408;settings.disallowSpaces;en-US;Disallow spaces
+x18-ar-409;settings.maxPasswordLength;ar-EG;الحد الأقصى لطول كلمة المرور
+x18-en-409;settings.maxPasswordLength;en-US;Maximum Password Length
+x18-ar-410;settings.maxPasswordLengthHint;ar-EG;0 = بدون حد أقصى
+x18-en-410;settings.maxPasswordLengthHint;en-US;0 = no limit
+x18-ar-411;settings.passwordExpiryDays;ar-EG;صلاحية كلمة المرور (أيام)
+x18-en-411;settings.passwordExpiryDays;en-US;Password Expiry (Days)
+x18-ar-412;settings.passwordExpiryHint;ar-EG;0 = معطل
+x18-en-412;settings.passwordExpiryHint;en-US;0 = disabled
+x18-ar-413;settings.passwordHistoryCount;ar-EG;عدد كلمات المرور السابقة
+x18-en-413;settings.passwordHistoryCount;en-US;Password History Count
+x18-ar-414;settings.passwordHistoryHint;ar-EG;0 = معطل
+x18-en-414;settings.passwordHistoryHint;en-US;0 = disabled
+x18-ar-415;settings.requireLowercase;ar-EG;يجب أن تحتوي على حروف صغيرة
+x18-en-415;settings.requireLowercase;en-US;Require lowercase letters
+x18-ar-416;settings.requireNumbers;ar-EG;يجب أن تحتوي على أرقام
+x18-en-416;settings.requireNumbers;en-US;Require numbers
+x18-ar-417;settings.requireSpecialChars;ar-EG;يجب أن تحتوي على رموز خاصة
+x18-en-417;settings.requireSpecialChars;en-US;Require special characters
+x18-ar-418;settings.requireUppercase;ar-EG;يجب أن تحتوي على حروف كبيرة
+x18-en-418;settings.requireUppercase;en-US;Require uppercase letters
+x18-ar-419;settings.saveAllSystemSettings;ar-EG;حفظ جميع الإعدادات
+x18-en-419;settings.saveAllSystemSettings;en-US;Save All Settings
+x18-ar-420;settings.tabAppearance;ar-EG;المظهر واللغة
+x18-en-420;settings.tabAppearance;en-US;Appearance & Language
+x18-ar-421;settings.tabReports;ar-EG;التقارير والتصدير
+x18-en-421;settings.tabReports;en-US;Reports & Export
+x18-ar-422;settings.tabSecurity;ar-EG;الأمان
+x18-en-422;settings.tabSecurity;en-US;Security
+x18-ar-423;settings.tabSession;ar-EG;الجلسة
+x18-en-423;settings.tabSession;en-US;Session
+x18-ar-424;users.canViewSalary;ar-EG;عرض رواتب الموظفين والمستحقات المالية
+x18-en-424;users.canViewSalary;en-US;View Employee Salaries & Financial Details
+x18-ar-425;users.passwordMaxHint;ar-EG;كلمة المرور يجب أن لا تتجاوز {max} حرفاً.
+x18-en-425;users.passwordMaxHint;en-US;Password must not exceed {max} characters.
+x18-ar-426;users.passwordNeedLowercase;ar-EG;كلمة المرور يجب أن تحتوي على حرف صغير واحد على الأقل.
+x18-en-426;users.passwordNeedLowercase;en-US;Password must contain at least one lowercase letter.
+x18-ar-427;users.passwordNeedNumber;ar-EG;كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.
+x18-en-427;users.passwordNeedNumber;en-US;Password must contain at least one number.
+x18-ar-428;users.passwordNeedSpecial;ar-EG;كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل.
+x18-en-428;users.passwordNeedSpecial;en-US;Password must contain at least one special character.
+x18-ar-429;users.passwordNeedUppercase;ar-EG;كلمة المرور يجب أن تحتوي على حرف كبير واحد على الأقل.
+x18-en-429;users.passwordNeedUppercase;en-US;Password must contain at least one uppercase letter.
+x18-ar-430;users.passwordNoSpaces;ar-EG;كلمة المرور يجب أن لا تحتوي على مسافات.
+x18-en-430;users.passwordNoSpaces;en-US;Password must not contain spaces.
+x18-ar-431;users.sectionSpecialPermissions;ar-EG;الصلاحيات وتصاريح المالية الخاصة
+x18-en-431;users.sectionSpecialPermissions;en-US;Special Financial Permissions

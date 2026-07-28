@@ -156,7 +156,7 @@
                 {{ i18n.t(showPassword() ? 'login.hide' : 'login.show') }}
               </button>
             </div>
-            <small class="password-hint">✓ {{ i18n.t('users.passwordHint', { min: minPasswordLength() }) }}</small>
+            <small class="password-hint">✓ {{ i18n.t('users.passwordHint', { min: passwordPolicy().minPasswordLength ?? 8 }) }}</small>
           </div>
 
           <!-- Section 2: System Roles -->

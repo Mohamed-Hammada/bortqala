@@ -7,18 +7,28 @@ import {
   signal,
 } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { dateInputToEpoch, epochToDateInput, formatDate } from '../../core/date';
+import { DecimalPipe } from '@angular/common';
+import { dateInputToEpoch, epochToDateInput, formatDateReadable } from '../../core/date';
 import { Employee, EmployeePayload, EmploymentType } from './employees.models';
 import { EmployeesStore } from './employees.store';
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
-import { DecimalPipe } from '@angular/common';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
+import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
+import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { AuthService } from '../../core/auth/auth.service';
+
 @Component({
   selector: 'app-employees-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent, DecimalPipe],
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    TablePaginationComponent,
+    DecimalPipe,
+    SkeletonComponent,
+    EmptyStateComponent,
+  ],
   providers: [EmployeesStore],
   templateUrl: './employees.page.html',
   styleUrl: './employees.page.scss',
@@ -40,6 +50,7 @@ export class EmployeesPage {
     const cat = this.store.categories().find((c) => c.id === selectedId);
     return cat?.attendanceMode === 'BIOMETRIC';
   }
+
   readonly filtered = computed(() => {
     const q = this.search().trim().toLowerCase();
     return this.store
@@ -52,7 +63,9 @@ export class EmployeesPage {
           (item.deviceUserId ?? '').toLowerCase().includes(q),
       );
   });
+
   readonly paged = computed(() => this.pagination.slice(this.filtered()));
+
   readonly form = new FormGroup({
     employeeCode: new FormControl('', { nonNullable: true }),
     fullName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -68,8 +81,9 @@ export class EmployeesPage {
     active: new FormControl(true, { nonNullable: true }),
     version: new FormControl<number | null>(null),
   });
+
   constructor() {
-    void this.store.load();
+    void this.reload();
     this.form.controls.categoryId.valueChanges.subscribe((catId) => {
       const cat = this.store.categories().find((c) => c.id === catId);
       if (cat?.attendanceMode === 'BIOMETRIC') {
@@ -80,6 +94,11 @@ export class EmployeesPage {
       this.form.controls.deviceUserId.updateValueAndValidity();
     });
   }
+
+  async reload(): Promise<void> {
+    await this.store.load();
+  }
+
   openNew() {
     this.submitAttempted.set(false);
     this.editingId.set(null);
@@ -97,6 +116,7 @@ export class EmployeesPage {
     });
     this.drawerOpen.set(true);
   }
+
   openEdit(item: Employee) {
     this.submitAttempted.set(false);
     this.editingId.set(item.id);
@@ -114,6 +134,7 @@ export class EmployeesPage {
     });
     this.drawerOpen.set(true);
   }
+
   async submit() {
     this.submitAttempted.set(true);
     if (this.form.invalid) {
@@ -134,16 +155,23 @@ export class EmployeesPage {
       this.drawerOpen.set(false);
     }
   }
+
   async deactivate(item: Employee) {
     if (confirm(this.i18n.t('employees.deactivateConfirm', { name: item.fullName }))) {
       await this.store.deactivate(item.id);
       this.notification.info(this.i18n.t('common.save') + ' ✓');
     }
   }
+
   closeDrawer(): void {
     this.drawerOpen.set(false);
     this.submitAttempted.set(false);
   }
+
+  hasUnsavedChanges(): boolean {
+    return this.form.dirty && this.drawerOpen();
+  }
+
   @HostListener('document:keydown', ['$event']) onKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Escape' && this.drawerOpen()) {
       this.closeDrawer();
@@ -154,10 +182,12 @@ export class EmployeesPage {
       }
     }
   }
+
   typeLabel(value: EmploymentType) {
     return this.i18n.t(value === 'FIXED' ? 'employment.fixed' : 'employment.daily');
   }
+
   date(value: number) {
-    return formatDate(value);
+    return formatDateReadable(value, this.i18n.locale());
   }
 }
