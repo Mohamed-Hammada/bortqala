@@ -55,6 +55,24 @@ type AttendanceMatrix = { [workerId: string]: { [date: string]: DayCell } };
             </div>
           </div>
           <div class="control-group">
+            <label>المقاول</label>
+            <select [(ngModel)]="selectedContractorId" (change)="onFilterChange()" class="form-input">
+              <option value="">الكل</option>
+              @for (c of contractors(); track c.id) {
+                <option [value]="c.id">{{ c.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="control-group">
+            <label>فئة العامل</label>
+            <select [(ngModel)]="selectedCategoryId" (change)="onFilterChange()" class="form-input">
+              <option value="">الكل</option>
+              @for (cat of categories(); track cat.id) {
+                <option [value]="cat.id">{{ cat.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="control-group">
             <label>&nbsp;</label>
             <button type="button" class="btn btn-outline" (click)="loadData()">
               🔄 تحديث البيانات
@@ -64,7 +82,7 @@ type AttendanceMatrix = { [workerId: string]: { [date: string]: DayCell } };
         <div class="period-summary" *ngIf="dates().length > 0">
           <span class="badge-info">
             📅 {{ dates().length }} يوم | من {{ startDate }} إلى {{ endDate }}
-            | {{ workers().length }} عامل | إجمالي الخلايا: {{ dates().length * workers().length }}
+            | {{ filteredWorkers().length }} عامل | إجمالي الخلايا: {{ dates().length * filteredWorkers().length }}
           </span>
         </div>
       </div>
@@ -88,10 +106,10 @@ type AttendanceMatrix = { [workerId: string]: { [date: string]: DayCell } };
       }
 
       <!-- Empty Workers -->
-      @else if (workers().length === 0) {
+      @else if (filteredWorkers().length === 0) {
         <div class="card empty-card">
           <div class="empty-icon">👷</div>
-          <p>لا يوجد عمال مسجلون. أضف عمالاً من قسم العمال أولاً.</p>
+          <p>{{ selectedContractorId() || selectedCategoryId() ? 'لا يوجد عمال مطابقون للفلترة المحددة.' : 'لا يوجد عمال مسجلون. أضف عمالاً من قسم العمال أولاً.' }}</p>
         </div>
       }
 
@@ -125,7 +143,7 @@ type AttendanceMatrix = { [workerId: string]: { [date: string]: DayCell } };
                 </tr>
               </thead>
               <tbody>
-                @for (w of workers(); track w.id) {
+                @for (w of filteredWorkers(); track w.id) {
                   <tr>
                     <td class="sticky-col worker-col"><strong>{{ w.code }}</strong></td>
                     <td class="sticky-col name-col">{{ w.fullName }}<br><small class="contractor-name">{{ w.contractorName }}</small></td>
@@ -246,10 +264,28 @@ export class ManualAttendanceComponent implements OnInit {
   private notificationService = inject(NotificationService);
 
   workers = this.workforceService.workers;
+  contractors = this.workforceService.contractors;
+  categories = this.workforceService.categories;
   loading = signal(false);
   saving = signal(false);
   loadError = signal<string | null>(null);
   dates = signal<string[]>([]);
+
+  selectedContractorId = signal<string>('');
+  selectedCategoryId = signal<string>('');
+
+  filteredWorkers = computed(() => {
+    let list = this.workers();
+    const contractorId = this.selectedContractorId();
+    const categoryId = this.selectedCategoryId();
+    if (contractorId) {
+      list = list.filter(w => w.contractorId === contractorId);
+    }
+    if (categoryId) {
+      list = list.filter(w => w.categoryId === categoryId);
+    }
+    return list;
+  });
 
   matrix: AttendanceMatrix = {};
 
@@ -258,7 +294,7 @@ export class ManualAttendanceComponent implements OnInit {
 
   grandTotal = computed(() => {
     let total = 0;
-    for (const w of this.workers()) {
+    for (const w of this.filteredWorkers()) {
       total += this.getWorkerTotalAmount(w);
     }
     return total;
@@ -315,6 +351,10 @@ export class ManualAttendanceComponent implements OnInit {
     this.onPeriodChange();
   }
 
+  onFilterChange() {
+    // signal-based reactivity handles filteredWorkers automatically
+  }
+
   onPeriodChange() {
     const newDates = this.generateDateRange(this.startDate, this.endDate);
     this.dates.set(newDates);
@@ -335,6 +375,8 @@ export class ManualAttendanceComponent implements OnInit {
     this.loadError.set(null);
 
     forkJoin({
+      contractors: this.workforceService.loadContractors(),
+      categories: this.workforceService.loadCategories(),
       workers: this.workforceService.loadWorkers(),
     }).subscribe({
       next: ({ workers }) => {
@@ -362,7 +404,7 @@ export class ManualAttendanceComponent implements OnInit {
   }
 
   applyFullDayAll() {
-    for (const w of this.workers()) {
+    for (const w of this.filteredWorkers()) {
       for (const date of this.dates()) {
         if (this.matrix[w.id]?.[date]) {
           this.matrix[w.id][date].attendanceValue = 1;
@@ -373,7 +415,7 @@ export class ManualAttendanceComponent implements OnInit {
 
   saveAttendance() {
     const entries: AttendanceCell[] = [];
-    for (const w of this.workers()) {
+    for (const w of this.filteredWorkers()) {
       for (const date of this.dates()) {
         const cell = this.matrix[w.id]?.[date];
         if (cell) {
@@ -416,7 +458,7 @@ export class ManualAttendanceComponent implements OnInit {
   }
 
   getDayTotal(date: string): number {
-    return this.workers().reduce((sum, w) => sum + (this.matrix[w.id]?.[date]?.attendanceValue ?? 0), 0);
+    return this.filteredWorkers().reduce((sum, w) => sum + (this.matrix[w.id]?.[date]?.attendanceValue ?? 0), 0);
   }
 
   // --- Date helpers ---

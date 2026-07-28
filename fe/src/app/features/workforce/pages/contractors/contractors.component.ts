@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { I18nService } from '../../../../core/i18n.service';
 import { WorkforceService } from '../../data-access/workforce.service';
 import { Contractor, ContractorAccountingModel, PaymentRouting } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
@@ -43,7 +44,7 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
               <td>{{ c.phone }}</td>
               <td><span class="badge model-badge">{{ getModelLabel(c.accountingModel) }}</span></td>
               <td>{{ getRoutingLabel(c.paymentRouting) }}</td>
-              <td><span class="badge active">{{ c.status }}</span></td>
+              <td><span class="badge active">{{ contractorStatusLabel(c.status) }}</span></td>
               <td>
                 <button type="button" class="btn btn-sm" (click)="openEditModal(c)">تعديل</button>
               </td>
@@ -175,6 +176,11 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
 })
 export class ContractorsComponent implements OnInit {
   workforceService = inject(WorkforceService);
+  i18n = inject(I18nService);
+
+  contractorStatusLabel(s: string): string {
+    return s === 'ACTIVE' ? this.i18n.t('common.active') : this.i18n.t('common.inactive');
+  }
 
   isModalOpen = false;
   editingContractor: Contractor | null = null;

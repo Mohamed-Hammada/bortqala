@@ -116,7 +116,7 @@
           <span class="ai-badge-icon">⚡</span>
           <div>
             <h3>{{ i18n.t('review.aiHeading') }}</h3>
-            <p [innerHTML]="i18n.t('review.aiSummary', { singlePunch: singlePunchCount(), noPunch: noPunchCount() })">
+            <p>{{ i18n.t('review.aiSummary', { singlePunch: singlePunchCount(), noPunch: noPunchCount(), manualEntry: manualEntryCount(), missingSchedule: missingScheduleCount() }) }}
             </p>
           </div>
         </div>
@@ -126,6 +126,12 @@
           </button>
           <button class="button secondary btn-sm" [disabled]="noPunchCount() === 0" (click)="bulkDecide('DEDUCT', 'NO_PUNCH')">
             {{ i18n.t('review.aiDeductButton', { count: noPunchCount() }) }}
+          </button>
+          <button class="button secondary btn-sm" [disabled]="manualEntryCount() === 0" (click)="bulkDecide('NORMAL_DAY', 'MANUAL_ENTRY')">
+            {{ i18n.t('review.manualEntryBulk', { count: manualEntryCount() }) }}
+          </button>
+          <button class="button secondary btn-sm" [disabled]="missingScheduleCount() === 0" (click)="bulkDecide('APPROVED_LEAVE', 'MISSING_SCHEDULE')">
+            {{ i18n.t('review.missingScheduleBulk', { count: missingScheduleCount() }) }}
           </button>
         </div>
       </div>
@@ -147,7 +153,7 @@
                   [class.warning]="item.status === 'PENDING'"
                   [class.success]="item.status === 'CONFIRMED'"
                 >
-                  {{ item.status }}
+                  {{ item.status === 'PENDING' ? i18n.t('review.holidayPending') : item.status === 'CONFIRMED' ? i18n.t('review.holidayConfirmed') : i18n.t('review.holidayRejected') }}
                 </span>
                 <h3>{{ item.categoryName }}</h3>
                 <p>

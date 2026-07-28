@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { WorkforceService } from '../../data-access/workforce.service';
 import { SettlementPeriod, SettlementCalculationSummary } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
+import { I18nService } from '../../../../core/i18n.service';
 
 @Component({
   selector: 'app-settlement-periods',
@@ -38,8 +39,8 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
               <td><strong>{{ p.periodCode }}</strong></td>
               <td>{{ p.startDate }}</td>
               <td>{{ p.endDate }}</td>
-              <td>{{ p.cycleType === 'HALF_MONTH' ? 'نصف شهرية (15 يوم)' : p.cycleType }}</td>
-              <td><span class="badge" [class.approved]="p.status === 'APPROVED'" [class.review]="p.status === 'REVIEW'">{{ p.status }}</span></td>
+              <td>{{ cycleLabel(p.cycleType) }}</td>
+              <td><span class="badge" [class.approved]="p.status === 'APPROVED'" [class.review]="p.status === 'REVIEW'">{{ statusLabel(p.status) }}</span></td>
               <td class="actions-cell">
                 <button type="button" class="btn btn-sm btn-secondary" (click)="calculatePeriod(p.id)">إعادة احتساب الفترة</button>
                 <button type="button" class="btn btn-sm btn-success" (click)="exportExcel(p.id, p.periodCode)">📥 تصدير كشف المدة (إكسيل)</button>
@@ -151,12 +152,22 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
 })
 export class SettlementPeriodsComponent implements OnInit {
   workforceService = inject(WorkforceService);
+  i18n = inject(I18nService);
 
   isCreateModalOpen = false;
   isSummaryModalOpen = false;
   summary: SettlementCalculationSummary | null = null;
 
   createForm = { periodCode: '', startDate: '2026-08-01', endDate: '2026-08-15', cycleType: 'HALF_MONTH' };
+
+  statusLabel(s: string): string {
+    const key = 'settlement.status' + s;
+    return this.i18n.t(key);
+  }
+  cycleLabel(c: string): string {
+    const key = 'settlement.cycle' + c;
+    return this.i18n.t(key);
+  }
 
   ngOnInit() {
     this.workforceService.loadSettlementPeriods().subscribe();

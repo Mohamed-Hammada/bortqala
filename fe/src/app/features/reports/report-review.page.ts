@@ -40,6 +40,8 @@ export class ReportReviewPage {
   readonly unresolvedRowsCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => this.blocking(r)).length);
   readonly singlePunchCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => r.status === 'SINGLE_PUNCH' && this.blocking(r)).length);
   readonly noPunchCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => r.status === 'NO_PUNCH' && this.blocking(r)).length);
+  readonly manualEntryCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => r.status === 'MANUAL_ENTRY' && this.blocking(r)).length);
+  readonly missingScheduleCount = computed(() => (this.store.details()?.dailyResults ?? []).filter((r) => r.status === 'MISSING_SCHEDULE' && this.blocking(r)).length);
   readonly reviewedCount = computed(() => Math.max(0, this.totalCount() - this.unresolvedCount()));
   readonly reviewedPercent = computed(() => (this.totalCount() > 0 ? Math.round((this.reviewedCount() / this.totalCount()) * 100) : 0));
   readonly canReview = computed(() => this.auth.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER']));
@@ -97,8 +99,14 @@ export class ReportReviewPage {
       ? this.i18n.t('review.statusSinglePunch')
       : statusType === 'NO_PUNCH'
         ? this.i18n.t('review.statusNoPunch')
-        : this.i18n.t('review.statusManualEntry');
-    const decText = decision === 'NORMAL_DAY' ? this.i18n.t('review.decisionNormalDay') : this.i18n.t('review.decisionDeduct');
+        : statusType === 'MANUAL_ENTRY'
+          ? this.i18n.t('review.statusManualEntry')
+          : this.i18n.t('review.statusMissingSchedule');
+    const decText = decision === 'NORMAL_DAY'
+      ? this.i18n.t('review.decisionNormalDay')
+      : decision === 'DEDUCT'
+        ? this.i18n.t('review.decisionDeduct')
+        : this.i18n.t('review.approvedLeave');
 
     const confirmMsg =
       `${this.i18n.t('review.confirmBulkPreview')}\n` +

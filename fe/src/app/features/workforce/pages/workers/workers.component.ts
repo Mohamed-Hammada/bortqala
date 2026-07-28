@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { I18nService } from '../../../../core/i18n.service';
 import { WorkforceService } from '../../data-access/workforce.service';
 import { Worker } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
@@ -45,7 +46,7 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
               <td>{{ w.defaultDailyRate | number:'1.2-2' }} ج.م</td>
               <td>{{ w.standardDailyHours }} س</td>
               <td>{{ w.attendanceMode === 'MANUAL' ? 'يدوي' : 'بصمة' }}</td>
-              <td><span class="badge active">{{ w.status }}</span></td>
+              <td><span class="badge active">{{ workerStatusLabel(w.status) }}</span></td>
               <td>
                 <button type="button" class="btn btn-sm" (click)="openEditModal(w)">تعديل</button>
               </td>
@@ -141,6 +142,11 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
 })
 export class WorkersComponent implements OnInit {
   workforceService = inject(WorkforceService);
+  i18n = inject(I18nService);
+
+  workerStatusLabel(s: string): string {
+    return s === 'ACTIVE' ? this.i18n.t('common.active') : this.i18n.t('common.inactive');
+  }
 
   isModalOpen = false;
   editingWorker: Worker | null = null;
