@@ -95,6 +95,13 @@
         </div>
       }
 
+      <!-- Workspace Controls -->
+      <div class="workspace-section-tools">
+        <button type="button" class="expand-all-btn" (click)="expandAllGroups()">
+          📂 {{ i18n.t('action.expandAll', undefined, 'فتح كل القوائم') }}
+        </button>
+      </div>
+
       <!-- Workspace Collapsible Sections -->
       @for (section of workspaceSections(); track section.titleKey) {
         <div class="workspace-section" [class.is-collapsed]="isGroupCollapsed(section.titleKey)">

@@ -12,6 +12,7 @@ const LOCALE_STORAGE_KEY = 'hr-platform-locale';
 
 const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
   'ar-EG': {
+    'action.expandAll': 'فتح كل القوائم',
     'api.connectionError': 'تعذر الاتصال بالخادم. تأكد أن الـ backend يعمل.',
     'api.unauthorized': 'انتهت الجلسة أو بيانات الدخول غير صحيحة.',
     'api.unexpected': 'حدث خطأ غير متوقع. حاول مرة أخرى.',
@@ -192,6 +193,7 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'confirm.disburseMessage': 'سيؤدي الصرف إلى قيد سداد الخزينة/البنك واستقطاع السلف القائمة للموظفين.',
   },
   'en-US': {
+    'action.expandAll': 'Expand All',
     'api.connectionError': 'Unable to reach the server. Make sure the backend is running.',
     'api.unauthorized': 'The session expired or the credentials are invalid.',
     'api.unexpected': 'An unexpected error occurred. Please try again.',

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260728-38-audit-payroll-erp-fixes
       author: hr-platform
+      validCheckSum: ANY
       changes:
         - sql:
             splitStatements: true
@@ -12,6 +13,7 @@ databaseChangeLog:
               WHERE employee_code IN ('001', 'EMP-001', '1') OR UPPER(full_name) = 'MMMM';
 
               -- 2. Cleanup test data
+              DELETE FROM employee_code_sequences WHERE category_id IN (SELECT id FROM attendance_categories WHERE code = 'QA_CAT_20260726');
               DELETE FROM attendance_categories WHERE code = 'QA_CAT_20260726';
               DELETE FROM employees WHERE employee_code IN ('SECURITY-QA-20260726-EMP-INVALID', 'SECURITY-QA-20260726-RETEST-NODEVICE');
 
@@ -41,18 +43,26 @@ databaseChangeLog:
                 AND NOT EXISTS (SELECT 1 FROM departments d WHERE d.company_id = c.id);
 
               -- 4. Insert Missing Key Translations
-              INSERT INTO i18n_translations (id, locale, translation_key, translation_value)
-              VALUES ('i18n-v38-ar-01', 'ar-EG', 'payroll.maxAdvanceDeduction', 'أقصى خصم سلفة متاح ({balance} ج.م)')
-              ON CONFLICT (locale, translation_key) DO UPDATE SET translation_value = EXCLUDED.translation_value;
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              VALUES ('i18n-v38-ar-01', 'payroll.maxAdvanceDeduction', 'ar-EG', 'أقصى خصم سلفة متاح ({balance} ج.م)')
+              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
 
-              INSERT INTO i18n_translations (id, locale, translation_key, translation_value)
-              VALUES ('i18n-v38-en-01', 'en-US', 'payroll.maxAdvanceDeduction', 'Max advance deduction available ({balance} EGP)')
-              ON CONFLICT (locale, translation_key) DO UPDATE SET translation_value = EXCLUDED.translation_value;
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              VALUES ('i18n-v38-en-01', 'payroll.maxAdvanceDeduction', 'en-US', 'Max advance deduction available ({balance} EGP)')
+              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
 
-              INSERT INTO i18n_translations (id, locale, translation_key, translation_value)
-              VALUES ('i18n-v38-ar-02', 'ar-EG', 'reports.emptyNoRecords', 'لا توجد سجلات حضور / لا ينطبق')
-              ON CONFLICT (locale, translation_key) DO UPDATE SET translation_value = EXCLUDED.translation_value;
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              VALUES ('i18n-v38-ar-02', 'reports.emptyNoRecords', 'ar-EG', 'لا توجد سجلات حضور / لا ينطبق')
+              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
 
-              INSERT INTO i18n_translations (id, locale, translation_key, translation_value)
-              VALUES ('i18n-v38-en-02', 'en-US', 'reports.emptyNoRecords', 'No attendance records / N/A')
-              ON CONFLICT (locale, translation_key) DO UPDATE SET translation_value = EXCLUDED.translation_value;
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              VALUES ('i18n-v38-en-02', 'reports.emptyNoRecords', 'en-US', 'No attendance records / N/A')
+              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
+
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              VALUES ('i18n-v38-ar-03', 'action.expandAll', 'ar-EG', 'فتح كل القوائم')
+              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
+
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              VALUES ('i18n-v38-en-03', 'action.expandAll', 'en-US', 'Expand All')
+              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;

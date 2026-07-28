@@ -55,7 +55,7 @@ export class AppShellComponent {
 
   readonly favorites = signal<string[]>(this.loadStoredArray(FAVORITES_STORAGE_KEY, ['payroll', 'employees']));
   readonly recentIds = signal<string[]>(this.loadStoredArray(RECENT_STORAGE_KEY, ['dashboard']));
-  readonly collapsedGroups = signal<string[]>(this.loadStoredArray(COLLAPSED_GROUPS_KEY, []));
+  readonly collapsedGroups = signal<string[]>(this.loadStoredCollapsedGroups());
 
   readonly items: NavItem[] = [
     {
@@ -388,6 +388,7 @@ export class AppShellComponent {
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
         this.trackRecentNavigation(event.urlAfterRedirects);
+        this.autoExpandActiveGroup(event.urlAfterRedirects);
       });
   }
 
@@ -441,6 +442,17 @@ export class AppShellComponent {
     localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify(updated));
   }
 
+  expandAllGroups(): void {
+    this.collapsedGroups.set([]);
+    localStorage.removeItem(COLLAPSED_GROUPS_KEY);
+  }
+
+  collapseAllGroups(): void {
+    const allGroups = this.workspaceSections().map((s) => s.titleKey);
+    this.collapsedGroups.set(allGroups);
+    localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify(allGroups));
+  }
+
   onNavItemClick(item: NavItem): void {
     this.pushRecent(item.menuId);
     this.closeMenu();
@@ -462,6 +474,18 @@ export class AppShellComponent {
     }
   }
 
+  private autoExpandActiveGroup(url: string): void {
+    const matched = this.items.find((i) => url.startsWith(i.path));
+    if (matched && matched.workspace) {
+      const current = this.collapsedGroups();
+      if (current.includes(matched.workspace)) {
+        const updated = current.filter((k) => k !== matched.workspace);
+        this.collapsedGroups.set(updated);
+        localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify(updated));
+      }
+    }
+  }
+
   private pushRecent(menuId: string): void {
     const current = this.recentIds().filter((id) => id !== menuId);
     const updated = [menuId, ...current].slice(0, 5);
@@ -475,6 +499,21 @@ export class AppShellComponent {
       return val ? JSON.parse(val) : fallback;
     } catch {
       return fallback;
+    }
+  }
+
+  private loadStoredCollapsedGroups(): string[] {
+    try {
+      const raw = localStorage.getItem(COLLAPSED_GROUPS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw) as string[];
+      if (Array.isArray(parsed) && parsed.length >= 5) {
+        localStorage.removeItem(COLLAPSED_GROUPS_KEY);
+        return [];
+      }
+      return parsed;
+    } catch {
+      return [];
     }
   }
 }
