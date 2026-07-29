@@ -161,6 +161,7 @@ public class AuthService {
         }
         int minPass = request.minPasswordLength() == null || request.minPasswordLength() <= 0 ? 8 : request.minPasswordLength();
         app.updateSettings(request.sessionTimeoutMinutes(), request.sessionTimeoutEnabled(), request.showReportPresets(), minPass);
+        app.updateAttendanceAnomalyThreshold(request.attendanceAnomalyThresholdPercent());
         app.updateProcurementNumbering(request.automaticProcurementNumbering());
         if (hasRole(actor, RoleCode.SUPER_ADMIN)) {
             app.updateDashboardPolicy(request.adminDashboardCustomizationEnabled());
@@ -363,6 +364,7 @@ public class AuthService {
                 app.getSessionTimeoutMinutes(),
                 app.isSessionTimeoutEnabled(),
                 app.isShowReportPresets(),
+                app.getAttendanceAnomalyThresholdPercent(),
                 app.isAutomaticProcurementNumbering(),
                 app.isAdminDashboardCustomizationEnabled(),
                 app.getMinPasswordLength(),

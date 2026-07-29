@@ -52,6 +52,24 @@ public class PurchaseOrder {
     @Column(name = "currency_code", nullable = false, length = 10)
     private String currencyCode;
 
+    @Column(name = "base_currency_code", nullable = false, length = 10)
+    private String baseCurrencyCode = "EGP";
+
+    @Column(name = "exchange_rate", nullable = false, precision = 18, scale = 6)
+    private BigDecimal exchangeRate = BigDecimal.ONE;
+
+    @Column(name = "exchange_rate_date", nullable = false)
+    private LocalDate exchangeRateDate;
+
+    @Column(name = "exchange_rate_source", nullable = false, length = 50)
+    private String exchangeRateSource = "BASE_CURRENCY";
+
+    @Column(name = "exchange_rate_override_reason", length = 500)
+    private String exchangeRateOverrideReason;
+
+    @Column(name = "base_total_amount", nullable = false, precision = 15, scale = 2)
+    private BigDecimal baseTotalAmount = BigDecimal.ZERO;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status;
@@ -82,6 +100,8 @@ public class PurchaseOrder {
         this.currencyCode = currencyCode == null || currencyCode.isBlank() ? "EGP" : currencyCode.strip().toUpperCase();
         this.status = Status.DRAFT;
         this.totalAmount = totalAmount == null ? BigDecimal.ZERO : totalAmount;
+        this.exchangeRateDate = poDate;
+        this.baseTotalAmount = this.totalAmount;
     }
 
     public void updateStatus(Status status) {
@@ -100,6 +120,19 @@ public class PurchaseOrder {
         this.totalAmount = totalAmount;
     }
 
+    public void applyExchangeRate(String baseCurrencyCode, BigDecimal exchangeRate, LocalDate rateDate,
+                                  String source, String overrideReason) {
+        if (exchangeRate == null || exchangeRate.signum() <= 0) {
+            throw new IllegalArgumentException("Exchange rate must be greater than zero.");
+        }
+        this.baseCurrencyCode = baseCurrencyCode;
+        this.exchangeRate = exchangeRate;
+        this.exchangeRateDate = rateDate;
+        this.exchangeRateSource = source;
+        this.exchangeRateOverrideReason = overrideReason == null || overrideReason.isBlank() ? null : overrideReason.strip();
+        this.baseTotalAmount = totalAmount.multiply(exchangeRate).setScale(2, java.math.RoundingMode.HALF_UP);
+    }
+
     @PrePersist
     void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
 
@@ -113,6 +146,12 @@ public class PurchaseOrder {
     public String getPurchaseRequestId() { return purchaseRequestId; }
     public String getPaymentTerms() { return paymentTerms; }
     public String getCurrencyCode() { return currencyCode; }
+    public String getBaseCurrencyCode() { return baseCurrencyCode; }
+    public BigDecimal getExchangeRate() { return exchangeRate; }
+    public LocalDate getExchangeRateDate() { return exchangeRateDate; }
+    public String getExchangeRateSource() { return exchangeRateSource; }
+    public String getExchangeRateOverrideReason() { return exchangeRateOverrideReason; }
+    public BigDecimal getBaseTotalAmount() { return baseTotalAmount; }
     public Status getStatus() { return status; }
     public BigDecimal getTotalAmount() { return totalAmount; }
     public long getCreatedAt() { return createdAt; }

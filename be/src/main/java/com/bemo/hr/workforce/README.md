@@ -24,3 +24,7 @@ This package implements the core business domain, data persistence, settlement c
 **EN:** Workforce imports persist the original workbook, checksum, mapping, row-level validation, and immutable before/after evidence. The workflow supports preview, duplicate detection, Arabic RTL error workbooks, idempotent commit, valid-row policy, and audited reversal without deleting import history.
 
 **AR:** يحفظ استيراد العمال الملف الأصلي وبصمته ومطابقة الأعمدة والتحقق لكل صف ودليل ما قبل/بعد غير القابل للمحو. ويدعم المعاينة واكتشاف التكرار وملف أخطاء عربي RTL والتنفيذ غير المكرر وسياسة الصفوف الصحيحة والتراجع المسجل دون حذف تاريخ الاستيراد.
+
+**EN:** Manual attendance now reloads persisted cells and returns transactional batch summaries with created, updated, unchanged, and row-level validation failures. Advance policies have effective dates and immutable versions; each advance and settlement stores the policy version snapshot used.
+
+**AR:** يعيد الحضور اليدوي الآن تحميل الخلايا المحفوظة ويعيد ملخص حفظ جماعي داخل معاملة واحدة يشمل الجديد والمحدث وغير المتغير وأخطاء كل خلية. كما أصبحت سياسات السلف مؤرخة وذات إصدارات غير قابلة للمحو، وتحفظ كل سلفة وتسوية لقطة إصدار السياسة المستخدمة.

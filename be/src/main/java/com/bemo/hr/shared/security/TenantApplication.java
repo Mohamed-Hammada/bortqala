@@ -35,6 +35,9 @@ public class TenantApplication {
     @Column(name = "show_report_presets", nullable = false)
     private boolean showReportPresets = true;
 
+    @Column(name = "attendance_anomaly_threshold_percent", nullable = false)
+    private int attendanceAnomalyThresholdPercent = 70;
+
     @Column(name = "automatic_procurement_numbering", nullable = false)
     private boolean automaticProcurementNumbering = true;
 
@@ -84,6 +87,7 @@ public class TenantApplication {
         this.sessionTimeoutMinutes = 480;
         this.sessionTimeoutEnabled = true;
         this.showReportPresets = true;
+        this.attendanceAnomalyThresholdPercent = 70;
         this.automaticProcurementNumbering = true;
         this.adminDashboardCustomizationEnabled = true;
         this.minPasswordLength = 8;
@@ -103,6 +107,13 @@ public class TenantApplication {
 
     public void updateProcurementNumbering(boolean automaticProcurementNumbering) {
         this.automaticProcurementNumbering = automaticProcurementNumbering;
+    }
+
+    public void updateAttendanceAnomalyThreshold(int attendanceAnomalyThresholdPercent) {
+        if (attendanceAnomalyThresholdPercent < 1 || attendanceAnomalyThresholdPercent > 100) {
+            throw new com.bemo.hr.shared.domain.BusinessRuleException("نسبة اكتشاف شذوذ البصمة يجب أن تكون بين 1 و100.");
+        }
+        this.attendanceAnomalyThresholdPercent = attendanceAnomalyThresholdPercent;
     }
 
     public void updateDashboardPolicy(boolean adminDashboardCustomizationEnabled) {
@@ -136,6 +147,7 @@ public class TenantApplication {
     public int getSessionTimeoutMinutes() { return sessionTimeoutMinutes; }
     public boolean isSessionTimeoutEnabled() { return sessionTimeoutEnabled; }
     public boolean isShowReportPresets() { return showReportPresets; }
+    public int getAttendanceAnomalyThresholdPercent() { return attendanceAnomalyThresholdPercent; }
     public boolean isAutomaticProcurementNumbering() { return automaticProcurementNumbering; }
     public boolean isAdminDashboardCustomizationEnabled() { return adminDashboardCustomizationEnabled; }
     public int getMinPasswordLength() { return minPasswordLength; }

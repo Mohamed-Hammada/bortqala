@@ -12,7 +12,8 @@ import {
   ReportStatus,
   BulkDecisionRequest,
   BulkDecisionResponse,
-  DowntimeDecisionRequest,
+  DayAnomaly,
+  DayAnomalyDecision,
 } from './reports.models';
 import { ReportsStore } from './reports.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
@@ -29,16 +30,6 @@ interface BulkPreviewData {
   decisionLabel: string;
   statusLabel: string;
   operationId: string;
-}
-
-interface DeviceDowntimeEvent {
-  date: string;
-  categoryName: string;
-  categoryId: string;
-  location: string;
-  affectedCount: number;
-  decision?: 'NORMAL_DAY' | 'ABSENT' | 'HOLIDAY' | 'DEVICE_FAILURE' | 'INDIVIDUAL_REVIEW';
-  saving?: boolean;
 }
 
 interface ReportFilters {
@@ -86,9 +77,12 @@ export class ReportReviewPage {
     onCancel: () => void;
   } | null>(null);
 
-  // Device downtime detection
-  readonly showDowntimeSection = signal(false);
-  readonly downtimeEvents = signal<DeviceDowntimeEvent[]>([]);
+  readonly detectingAnomalies = signal(false);
+  readonly anomalySavingId = signal<string | null>(null);
+  readonly anomalyPreview = signal<{ anomaly: DayAnomaly; decision: DayAnomalyDecision; reason: string } | null>(null);
+  readonly dayAnomalies = computed(() => this.store.details()?.dayAnomalies ?? []);
+  readonly openDayAnomalies = computed(() => this.dayAnomalies().filter(item => item.status === 'OPEN'));
+  readonly dayAnomalyHistory = computed(() => this.dayAnomalies().filter(item => item.status !== 'OPEN'));
 
   // Filtered base data — all counts come from this to ensure consistency
   readonly filteredResults = computed(() => {
@@ -149,62 +143,64 @@ export class ReportReviewPage {
       .map(r => ({ id: r.categoryId, name: r.categoryName }));
   });
   constructor() {
-    this.store.load(this.id).then(() => this.detectDowntime());
-  }
-  // Device downtime detection
-  detectDowntime() {
-    const results = this.store.details()?.dailyResults ?? [];
-    const byDateAndCategory = new Map<string, Map<string, { results: DailyResult[]; categoryId: string }>>();
-    for (const r of results) {
-      const dateKey = typeof r.workDate === 'number'
-        ? new Date(r.workDate).toISOString().slice(0, 10)
-        : String(r.workDate).slice(0, 10);
-      if (!byDateAndCategory.has(dateKey)) byDateAndCategory.set(dateKey, new Map());
-      const catMap = byDateAndCategory.get(dateKey)!;
-      if (!catMap.has(r.categoryName)) catMap.set(r.categoryName, { results: [], categoryId: r.categoryId });
-      catMap.get(r.categoryName)!.results.push(r);
-    }
-
-    const events: DeviceDowntimeEvent[] = [];
-    for (const [date, catMap] of byDateAndCategory) {
-      for (const [catName, catData] of catMap) {
-        const noPunchCount = catData.results.filter(r => r.status === 'NO_PUNCH' || r.status === 'MANUAL_ENTRY').length;
-        const totalCount = catData.results.length;
-        if (totalCount >= 2 && noPunchCount / totalCount >= 0.7) {
-          events.push({
-            date,
-            categoryName: catName,
-            categoryId: catData.categoryId,
-            location: '',
-            affectedCount: noPunchCount,
-          });
-        }
-      }
-    }
-    this.downtimeEvents.set(events);
-    this.showDowntimeSection.set(events.length > 0);
+    void this.store.load(this.id);
   }
 
-  downtimeDecision(event: DeviceDowntimeEvent, decision: NonNullable<DeviceDowntimeEvent['decision']>) {
-    event.decision = decision;
-    event.saving = true;
-    this.downtimeEvents.update(events => [...events]);
-    const request: DowntimeDecisionRequest = {
-      date: event.date,
-      categoryId: event.categoryId,
-      location: event.location,
-      decision: decision,
-    };
-    this.store.saveDowntimeDecision(this.id, request).then(success => {
-      event.saving = false;
-      this.downtimeEvents.update(events => [...events]);
-      if (success) {
-        this.notification.success(this.i18n.t('review.downtimeSaved', undefined, 'تم حفظ قرار عطل الجهاز بنجاح ✓'));
-      } else {
-        this.notification.error(this.i18n.t('review.downtimeSaveError', undefined, 'فشل حفظ قرار عطل الجهاز'));
-        this.downtimeEvents.update(events => [...events]);
-      }
+  async detectDayAnomalies(): Promise<void> {
+    this.detectingAnomalies.set(true);
+    const success = await this.store.detectDayAnomalies(this.id);
+    this.detectingAnomalies.set(false);
+    if (success) this.notification.success('اكتمل فحص الأيام غير الطبيعية وفق النسبة المضبوطة.');
+    else this.notification.error(this.store.error() ?? 'تعذر فحص شذوذ البصمة.');
+  }
+
+  previewAnomalyDecision(anomaly: DayAnomaly, decision: DayAnomalyDecision): void {
+    this.anomalyPreview.set({ anomaly, decision, reason: '' });
+  }
+
+  updateAnomalyReason(reason: string): void {
+    this.anomalyPreview.update(current => current ? { ...current, reason } : null);
+  }
+
+  async executeAnomalyDecision(): Promise<void> {
+    const preview = this.anomalyPreview();
+    if (!preview) return;
+    if (!preview.reason.trim()) {
+      this.notification.warning('اكتب سبب القرار قبل التنفيذ.');
+      return;
+    }
+    this.anomalySavingId.set(preview.anomaly.id);
+    const response = await this.store.decideDayAnomaly(this.id, preview.anomaly.id, {
+      decision: preview.decision,
+      reason: preview.reason.trim(),
+      operationId: crypto.randomUUID(),
     });
+    this.anomalySavingId.set(null);
+    if (response) {
+      this.notification.success(`تم تطبيق القرار على ${response.appliedCount} سجل، وتجاوز ${response.skippedCount}.`);
+      this.anomalyPreview.set(null);
+    } else this.notification.error(this.store.error() ?? 'تعذر تنفيذ قرار الشذوذ.');
+  }
+
+  async reverseDayAnomaly(anomaly: DayAnomaly): Promise<void> {
+    this.anomalySavingId.set(anomaly.id);
+    const response = await this.store.reverseDayAnomaly(this.id, anomaly.id);
+    this.anomalySavingId.set(null);
+    if (response) this.notification.success(`تم إنشاء القيد العكسي واستعادة ${response.appliedCount} سجل.`);
+    else this.notification.error(this.store.error() ?? 'تعذر التراجع عن القرار.');
+  }
+
+  async reopenDayAnomaly(anomaly: DayAnomaly): Promise<void> {
+    this.anomalySavingId.set(anomaly.id);
+    const success = await this.store.reopenDayAnomaly(this.id, anomaly.id);
+    this.anomalySavingId.set(null);
+    if (success) this.notification.success('أعيد فتح حالة الشذوذ لاتخاذ قرار جديد.');
+    else this.notification.error(this.store.error() ?? 'تعذر إعادة فتح الحالة.');
+  }
+
+  anomalyDecisionLabel(decision: DayAnomalyDecision | null): string {
+    return ({ DEVICE_OUTAGE: 'تعطل جهاز أو انقطاع كهرباء', OFFICIAL_HOLIDAY: 'إجازة رسمية',
+      ABSENCE: 'غياب', PRESENT: 'اعتبار اليوم حضوراً', DEFER: 'تأجيل القرار' } as Record<string, string>)[decision ?? ''] ?? '—';
   }
 
   toggleFilterPanel() {

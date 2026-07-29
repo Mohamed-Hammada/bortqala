@@ -29,6 +29,13 @@ public class WorkforceAdvanceController {
     @GetMapping("/policies")
     public List<WorkforceApi.AdvancePolicyResponse> policies() { return advanceService.listPolicies(); }
 
+    @GetMapping("/policies/effective")
+    public WorkforceApi.AdvancePolicyResponse effectivePolicy(
+            @org.springframework.web.bind.annotation.RequestParam String workerId,
+            @org.springframework.web.bind.annotation.RequestParam String date) {
+        return advanceService.effectivePolicy(workerId, date);
+    }
+
     @PutMapping("/policies")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public WorkforceApi.AdvancePolicyResponse savePolicy(@Valid @RequestBody WorkforceApi.AdvancePolicyRequest request, Authentication auth) {

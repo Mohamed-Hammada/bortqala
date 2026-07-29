@@ -1,4 +1,15 @@
-import { Component, Input, Output, EventEmitter, HostListener, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import {
+  AfterViewChecked,
+  Component,
+  ElementRef,
+  EventEmitter,
+  HostListener,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
 
@@ -68,7 +79,7 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
     }
 
     .modal-dialog-box.wide {
-      max-width: 960px;
+      max-width: var(--modal-wide-max-width, 960px);
     }
 
     .modal-dialog-box.large {
@@ -115,7 +126,7 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
     }
 
     .modal-body {
-      padding: 1.5rem;
+      padding: var(--modal-body-padding, 1.5rem);
       overflow-y: auto;
       flex: 1;
     }
@@ -152,7 +163,7 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
     }
   `]
 })
-export class ModalDialogComponent implements AfterViewInit {
+export class ModalDialogComponent implements OnChanges, AfterViewChecked {
   // Structural call sites create the component only while open; explicit bindings
   // still override this value for components that stay mounted.
   @Input() isOpen = true;
@@ -165,12 +176,22 @@ export class ModalDialogComponent implements AfterViewInit {
   @Output() close = new EventEmitter<void>();
   @Output() closeModal = new EventEmitter<void>();
   @ViewChild('dialogBox') dialogBox?: ElementRef;
+  private focusPending = false;
 
-  ngAfterViewInit() {
-    if (this.isOpen && this.dialogBox) {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isOpen']?.currentValue === true) {
+      this.focusPending = true;
+    }
+  }
+
+  ngAfterViewChecked(): void {
+    if (this.focusPending && this.dialogBox) {
+      this.focusPending = false;
       queueMicrotask(() => {
         const dialog = this.dialogBox?.nativeElement as HTMLElement | undefined;
         const firstControl = dialog?.querySelector<HTMLElement>(
+          '.modal-body input:not([disabled]):not([readonly]), .modal-body select:not([disabled]), .modal-body textarea:not([disabled]), .modal-body button:not([disabled])',
+        ) ?? dialog?.querySelector<HTMLElement>(
           'input:not([disabled]):not([readonly]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])',
         );
         (firstControl ?? dialog)?.focus();

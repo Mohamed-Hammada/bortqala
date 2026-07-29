@@ -14,6 +14,10 @@ import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
 import com.bemo.hr.reporting.api.ReportingApi;
 import com.bemo.hr.reporting.domain.AttendanceDecision;
 import com.bemo.hr.reporting.domain.AttendanceReport;
+import com.bemo.hr.reporting.domain.DayAnomaly;
+import com.bemo.hr.reporting.domain.DayAnomalyDecision;
+import com.bemo.hr.reporting.domain.DayAnomalyResultSnapshot;
+import com.bemo.hr.reporting.domain.DayAnomalyStatus;
 import com.bemo.hr.reporting.domain.DailyAttendanceCalculator;
 import com.bemo.hr.reporting.domain.DailyAttendanceResult;
 import com.bemo.hr.reporting.domain.DailyStatus;
@@ -21,10 +25,14 @@ import com.bemo.hr.reporting.domain.HolidayProposal;
 import com.bemo.hr.reporting.domain.HolidayProposalStatus;
 import com.bemo.hr.reporting.domain.ReportStatus;
 import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
+import com.bemo.hr.reporting.infrastructure.DayAnomalyRepository;
+import com.bemo.hr.reporting.infrastructure.DayAnomalyResultSnapshotRepository;
 import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
 import com.bemo.hr.reporting.infrastructure.HolidayProposalRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
+import com.bemo.hr.shared.security.TenantApplicationRepository;
+import com.bemo.hr.shared.security.TenantContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +45,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -52,6 +62,8 @@ public class ReportingService {
     private final AttendanceReportRepository attendanceReportRepository;
     private final DailyAttendanceResultRepository dailyAttendanceResultRepository;
     private final HolidayProposalRepository holidayProposalRepository;
+    private final DayAnomalyRepository dayAnomalyRepository;
+    private final DayAnomalyResultSnapshotRepository dayAnomalyResultSnapshotRepository;
     private final ConfirmedHolidayRepository confirmedHolidayRepository;
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final ScheduleRuleRepository scheduleRuleRepository;
@@ -60,10 +72,13 @@ public class ReportingService {
     private final ReportExporter reportExporter;
     private final ZoneId companyZone;
     private final com.bemo.hr.audit.application.AuditService auditService;
+    private final TenantApplicationRepository tenantApplicationRepository;
 
     public ReportingService(AttendanceReportRepository attendanceReportRepository,
                             DailyAttendanceResultRepository dailyAttendanceResultRepository,
                             HolidayProposalRepository holidayProposalRepository,
+                            DayAnomalyRepository dayAnomalyRepository,
+                            DayAnomalyResultSnapshotRepository dayAnomalyResultSnapshotRepository,
                             ConfirmedHolidayRepository confirmedHolidayRepository,
                             AttendanceCategoryRepository attendanceCategoryRepository,
                             ScheduleRuleRepository scheduleRuleRepository,
@@ -71,10 +86,13 @@ public class ReportingService {
                             PunchRecordRepository punchRecordRepository,
                             ReportExporter reportExporter,
                             @Value("${hr.company-zone:Africa/Cairo}") String companyZone,
-                            com.bemo.hr.audit.application.AuditService auditService) {
+                            com.bemo.hr.audit.application.AuditService auditService,
+                            TenantApplicationRepository tenantApplicationRepository) {
         this.attendanceReportRepository = attendanceReportRepository;
         this.dailyAttendanceResultRepository = dailyAttendanceResultRepository;
         this.holidayProposalRepository = holidayProposalRepository;
+        this.dayAnomalyRepository = dayAnomalyRepository;
+        this.dayAnomalyResultSnapshotRepository = dayAnomalyResultSnapshotRepository;
         this.confirmedHolidayRepository = confirmedHolidayRepository;
         this.attendanceCategoryRepository = attendanceCategoryRepository;
         this.scheduleRuleRepository = scheduleRuleRepository;
@@ -83,6 +101,7 @@ public class ReportingService {
         this.reportExporter = reportExporter;
         this.companyZone = ZoneId.of(companyZone);
         this.auditService = auditService;
+        this.tenantApplicationRepository = tenantApplicationRepository;
     }
 
     public List<ReportingApi.Summary> list() {
@@ -168,6 +187,7 @@ public class ReportingService {
             }
         }
         dailyAttendanceResultRepository.saveAll(results);
+        detectAnomalies(report, results);
 
         var proposals = createHolidayProposals(report, results, categories);
         holidayProposalRepository.saveAll(proposals);
@@ -266,6 +286,106 @@ public class ReportingService {
     }
 
     @Transactional
+    public ReportingApi.Details detectDayAnomalies(String reportId, String actor) {
+        var report = requireEditable(reportId);
+        var results = dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(reportId);
+        int created = detectAnomalies(report, results);
+        auditService.record("DAY_ANOMALY_DETECT", "ATTENDANCE_REPORT", reportId, actor,
+                "{\"created\":" + created + ",\"threshold\":" + anomalyThreshold() + "}", null);
+        return details(report);
+    }
+
+    @Transactional
+    public ReportingApi.DayAnomalyActionResponse decideDayAnomaly(String reportId, String anomalyId,
+            ReportingApi.DayAnomalyDecisionRequest request, String actor) {
+        var report = requireEditable(reportId);
+        var anomaly = requireAnomaly(reportId, anomalyId);
+        if (anomaly.isReplay(request.operationId())) {
+            if (anomaly.getDecision() != request.decision()) {
+                throw new BusinessRuleException("معرّف العملية مستخدم لقرار شذوذ مختلف.");
+            }
+            return new ReportingApi.DayAnomalyActionResponse(details(report), anomaly.getAffectedCount(), 0, 0);
+        }
+
+        int applied = 0;
+        int skipped = 0;
+        if (request.decision() != DayAnomalyDecision.DEFER) {
+            var snapshots = dayAnomalyResultSnapshotRepository.findByAnomalyId(anomalyId);
+            var byId = dailyAttendanceResultRepository.findAllById(
+                    snapshots.stream().map(DayAnomalyResultSnapshot::getDailyResultId).toList()).stream()
+                    .collect(Collectors.toMap(DailyAttendanceResult::getId, Function.identity()));
+            for (var snapshot : snapshots) {
+                var result = byId.get(snapshot.getDailyResultId());
+                if (result == null || !result.getReportId().equals(reportId) || !result.isBlocking()) {
+                    skipped++;
+                    continue;
+                }
+                String note = "[DAY_ANOMALY:" + anomalyId + "] " + request.reason();
+                switch (request.decision()) {
+                    case DEVICE_OUTAGE, PRESENT -> result.decide(AttendanceDecision.NORMAL_DAY,
+                            result.getExpectedMinutes(), note, actor);
+                    case OFFICIAL_HOLIDAY -> result.decide(AttendanceDecision.OFFICIAL_HOLIDAY,
+                            result.getExpectedMinutes(), note, actor);
+                    case ABSENCE -> result.decide(AttendanceDecision.ABSENCE, 0, note, actor);
+                    case DEFER -> { }
+                }
+                applied++;
+            }
+            dailyAttendanceResultRepository.saveAll(byId.values());
+        }
+        anomaly.decide(request.decision(), request.reason(), request.operationId(), actor);
+        refreshUnresolved(report);
+        auditService.record("DAY_ANOMALY_DECISION", "ATTENDANCE_DAY_ANOMALY", anomalyId, actor,
+                "{\"reportId\":\"" + reportId + "\",\"decision\":\"" + request.decision()
+                        + "\",\"affected\":" + anomaly.getAffectedCount() + ",\"applied\":" + applied
+                        + ",\"skipped\":" + skipped + ",\"operationId\":\"" + request.operationId() + "\"}", null);
+        return new ReportingApi.DayAnomalyActionResponse(details(report), anomaly.getAffectedCount(), applied, skipped);
+    }
+
+    @Transactional
+    public ReportingApi.DayAnomalyActionResponse reverseDayAnomaly(String reportId, String anomalyId, String actor) {
+        var report = requireEditable(reportId);
+        var anomaly = requireAnomaly(reportId, anomalyId);
+        if (anomaly.getStatus() != DayAnomalyStatus.RESOLVED) {
+            throw new BusinessRuleException("لا يمكن التراجع إلا عن حالة شذوذ معالجة.");
+        }
+        var snapshots = dayAnomalyResultSnapshotRepository.findByAnomalyId(anomalyId);
+        var byId = dailyAttendanceResultRepository.findAllById(
+                snapshots.stream().map(DayAnomalyResultSnapshot::getDailyResultId).toList()).stream()
+                .collect(Collectors.toMap(DailyAttendanceResult::getId, Function.identity()));
+        int restored = 0;
+        int skipped = 0;
+        String marker = "[DAY_ANOMALY:" + anomalyId + "]";
+        for (var snapshot : snapshots) {
+            var result = byId.get(snapshot.getDailyResultId());
+            if (result == null || result.getDecisionNote() == null || !result.getDecisionNote().contains(marker)) {
+                skipped++;
+                continue;
+            }
+            result.restoreDecision(snapshot.getPreviousDecision(), snapshot.getPreviousManualMinutes(),
+                    snapshot.getPreviousNote(), snapshot.getPreviousDecidedBy(), snapshot.getPreviousDecidedAt());
+            restored++;
+        }
+        dailyAttendanceResultRepository.saveAll(byId.values());
+        anomaly.reverse(actor);
+        refreshUnresolved(report);
+        auditService.record("DAY_ANOMALY_REVERSE", "ATTENDANCE_DAY_ANOMALY", anomalyId, actor,
+                "{\"reportId\":\"" + reportId + "\",\"restored\":" + restored
+                        + ",\"skipped\":" + skipped + "}", null);
+        return new ReportingApi.DayAnomalyActionResponse(details(report), anomaly.getAffectedCount(), restored, skipped);
+    }
+
+    @Transactional
+    public ReportingApi.Details reopenDayAnomaly(String reportId, String anomalyId, String actor) {
+        var report = requireEditable(reportId);
+        var anomaly = requireAnomaly(reportId, anomalyId);
+        anomaly.reopen(actor);
+        auditService.record("DAY_ANOMALY_REOPEN", "ATTENDANCE_DAY_ANOMALY", anomalyId, actor,
+                "{\"reportId\":\"" + reportId + "\"}", null);
+        return details(report);
+    }
+
+    @Transactional
     public ReportingApi.Details decideHoliday(String reportId, String proposalId,
                                                ReportingApi.HolidayDecisionRequest request, String actor) {
         var report = requireEditable(reportId);
@@ -332,13 +452,55 @@ public class ReportingService {
         return proposals;
     }
 
+    private int detectAnomalies(AttendanceReport report, List<DailyAttendanceResult> results) {
+        int threshold = anomalyThreshold();
+        var grouped = results.stream()
+                .filter(item -> item.getStatus() != DailyStatus.NON_WORKDAY && item.getStatus() != DailyStatus.HOLIDAY)
+                .collect(Collectors.groupingBy(item -> new DayCategoryKey(
+                        item.getWorkDate(), item.getCategoryId(), item.getCategoryName())));
+        int created = 0;
+        for (var entry : grouped.entrySet()) {
+            var group = entry.getValue();
+            if (group.size() < 2) continue;
+            var affected = group.stream().filter(this::missingDevicePunch).filter(DailyAttendanceResult::isBlocking).toList();
+            BigDecimal percentage = BigDecimal.valueOf(affected.size()).multiply(BigDecimal.valueOf(100))
+                    .divide(BigDecimal.valueOf(group.size()), 2, RoundingMode.HALF_UP);
+            if (affected.isEmpty() || percentage.compareTo(BigDecimal.valueOf(threshold)) < 0) continue;
+            var key = entry.getKey();
+            if (dayAnomalyRepository.findByReportIdAndCategoryIdAndWorkDate(
+                    report.getId(), key.categoryId(), key.workDate()).isPresent()) continue;
+            int affectedMinutes = affected.stream().mapToInt(DailyAttendanceResult::getExpectedMinutes).sum();
+            var anomaly = dayAnomalyRepository.save(new DayAnomaly(report.getId(), key.workDate(),
+                    key.categoryId(), key.categoryName(), null, affected.size(), group.size(),
+                    percentage, threshold, affectedMinutes));
+            dayAnomalyResultSnapshotRepository.saveAll(affected.stream()
+                    .map(item -> new DayAnomalyResultSnapshot(anomaly.getId(), item)).toList());
+            created++;
+        }
+        return created;
+    }
+
+    private boolean missingDevicePunch(DailyAttendanceResult item) {
+        return item.getPunchCount() == 0
+                && (item.getStatus() == DailyStatus.NO_PUNCH || item.getStatus() == DailyStatus.MANUAL_ENTRY);
+    }
+
+    private int anomalyThreshold() {
+        String appId = TenantContext.currentOrSystem();
+        if ("SYSTEM".equals(appId)) return 70;
+        return tenantApplicationRepository.findById(appId)
+                .map(app -> app.getAttendanceAnomalyThresholdPercent())
+                .orElse(70);
+    }
+
     private ReportingApi.Details details(AttendanceReport report) {
         var results = dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(report.getId());
         var proposals = holidayProposalRepository.findByReportIdOrderByWorkDateAscCategoryNameAsc(report.getId());
+        var anomalies = dayAnomalyRepository.findByReportIdOrderByWorkDateAscCategoryNameAsc(report.getId());
         var categories = results.stream().collect(Collectors.groupingBy(DailyAttendanceResult::getCategoryId)).entrySet().stream()
                 .map(entry -> categorySummary(entry.getKey(), entry.getValue())).sorted(Comparator.comparing(ReportingApi.CategorySummary::categoryName)).toList();
         return new ReportingApi.Details(summary(report), categories, results.stream().map(this::daily).toList(),
-                proposals.stream().map(this::proposal).toList());
+                proposals.stream().map(this::proposal).toList(), anomalies.stream().map(this::anomaly).toList());
     }
 
     private ReportingApi.CategorySummary categorySummary(String categoryId, List<DailyAttendanceResult> items) {
@@ -363,6 +525,10 @@ public class ReportingService {
 
     private AttendanceReport requireReport(String id) { return attendanceReportRepository.findById(id).orElseThrow(() -> new NotFoundException("Report not found.")); }
     private AttendanceReport requireEditable(String id) { var report = requireReport(id); if (report.getStatus() != ReportStatus.IN_REVIEW) throw new BusinessRuleException("Only in-review reports can be changed."); return report; }
+    private DayAnomaly requireAnomaly(String reportId, String anomalyId) {
+        return dayAnomalyRepository.findById(anomalyId).filter(item -> item.getReportId().equals(reportId))
+                .orElseThrow(() -> new NotFoundException("حالة الشذوذ غير موجودة داخل هذا التقرير."));
+    }
 
     private ReportingApi.Summary summary(AttendanceReport report) {
         return new ReportingApi.Summary(report.getId(), report.getPeriodStart(), report.getPeriodEnd(), report.getPayCycle(), report.getStatus(),
@@ -380,6 +546,16 @@ public class ReportingService {
         return new ReportingApi.HolidayProposalView(item.getId(), item.getCategoryId(), item.getCategoryName(), item.getWorkDate(),
                 item.getActiveEmployeeCount(), item.getStatus(), item.getNote(), item.getDecidedBy(), item.getDecidedAt());
     }
+    private ReportingApi.DayAnomalyView anomaly(DayAnomaly item) {
+        return new ReportingApi.DayAnomalyView(item.getId(), item.getReportId(), item.getWorkDate(),
+                item.getCategoryId(), item.getCategoryName(), item.getLocation(), item.getAffectedCount(),
+                item.getTotalEmployeeCount(), item.getAbsencePercentage(), item.getThresholdPercentage(),
+                item.getAffectedExpectedMinutes(), item.getStatus(), item.getDecision(), item.getReason(),
+                item.getDecidedBy(), item.getDecidedAt(), item.getReversedBy(), item.getReversedAt(),
+                item.getReopenedBy(), item.getReopenedAt(), item.getCreatedAt());
+    }
+
+    private record DayCategoryKey(LocalDate workDate, String categoryId, String categoryName) { }
 
     private void validatePeriod(LocalDate start, LocalDate end) {
         if (end.isBefore(start)) throw new BusinessRuleException("Report end date cannot be before start date.");

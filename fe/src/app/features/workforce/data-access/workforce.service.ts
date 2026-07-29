@@ -10,6 +10,8 @@ import {
   SettlementCalculationSummary,
   WorkforceAdvance,
   AttendanceCell,
+  ManualAttendanceEntry,
+  BatchAttendanceResponse,
   AdvancePolicy,
   SettlementIssue,
   WorkforceImportBatch,
@@ -111,8 +113,14 @@ export class WorkforceService {
   }
 
   // Attendance Matrix
-  saveAttendanceBatch(entries: AttendanceCell[]): Observable<any> {
-    return this.http.post('/api/v1/workforce/attendance/batch', { entries });
+  loadAttendance(startDate: string, endDate: string): Observable<ManualAttendanceEntry[]> {
+    return this.http.get<ManualAttendanceEntry[]>('/api/v1/workforce/attendance', {
+      params: { startDate, endDate },
+    });
+  }
+
+  saveAttendanceBatch(entries: AttendanceCell[]): Observable<BatchAttendanceResponse> {
+    return this.http.post<BatchAttendanceResponse>('/api/v1/workforce/attendance/batch', { entries });
   }
 
   // Settlement Periods
@@ -183,6 +191,12 @@ export class WorkforceService {
     return this.http.put<AdvancePolicy>('/api/v1/workforce/advances/policies', payload).pipe(
       tap(() => this.loadAdvancePolicies().subscribe())
     );
+  }
+
+  loadEffectiveAdvancePolicy(workerId: string, date: string): Observable<AdvancePolicy> {
+    return this.http.get<AdvancePolicy>('/api/v1/workforce/advances/policies/effective', {
+      params: { workerId, date },
+    });
   }
 
   pauseAdvance(id: string): Observable<WorkforceAdvance> {

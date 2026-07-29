@@ -150,9 +150,12 @@
         } @else {
           <div class="field"><label>رقم أمر الشراء *</label><input class="ltr" formControlName="poNumber" /></div>
         }
-        <div class="field"><label>تاريخ الأمر *</label><input type="date" class="ltr" formControlName="poDate" /><small>يمكن اختيار تاريخ سابق أو حالي أو مستقبلي.</small></div>
+        <div class="field"><label>تاريخ الأمر *</label><input type="date" class="ltr" formControlName="poDate" [readOnly]="!!editingPoId()" /><small>{{ editingPoId() ? 'ثابت بعد الحفظ لارتباطه بلقطة سعر الصرف.' : 'يمكن اختيار تاريخ سابق أو حالي أو مستقبلي.' }}</small></div>
         <div class="field"><label>المورد *</label><select formControlName="supplierId" (change)="onPoSupplierSelected()"><option value="">— اختر مورداً مسجلاً —</option>@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select><small>المورد يُختار من دليل الموردين. <a routerLink="/parties">إضافة مورد جديد</a></small></div>
-        <div class="field"><label>عملة العملية *</label><select formControlName="currencyCode">@for (currency of currencies(); track currency.code) {<option [value]="currency.code">{{ currency.code }} — {{ currency.name }}</option>}</select><small>تبدأ بعملة المورد الافتراضية ويمكن تغييرها لهذه العملية.</small></div>
+        <div class="field"><label>عملة العملية *</label><select formControlName="currencyCode" (change)="onPoCurrencyChanged()">@for (currency of currencies(); track currency.code) {<option [value]="currency.code">{{ currency.code }} — {{ currency.name }}</option>}</select><small>{{ editingPoId() ? 'عملة مثبتة مع المستند.' : 'تبدأ بعملة المورد الافتراضية ويمكن تغييرها لهذه العملية.' }}</small></div>
+        <div class="field"><label>سعر الصرف إلى {{ baseCurrencyCode() }} *</label><input type="number" min="0.000001" step="0.000001" class="ltr" formControlName="exchangeRate" [readOnly]="!!editingPoId()" /><small>لقطة بتاريخ المستند؛ لن تتغير بعد الحفظ.</small></div>
+        @if (!editingPoId() && poRateOverridden()) { <div class="field span-2"><label>سبب تعديل سعر الصرف *</label><input formControlName="exchangeRateOverrideReason" placeholder="سبب الاعتماد اليدوي ومصدر السعر" /></div> }
+        @if (editingPoSnapshot(); as snapshot) { <div class="field span-2"><label>بيانات لقطة سعر الصرف</label><span class="readonly-value">{{ snapshot.exchangeRateSource }} · {{ date(snapshot.exchangeRateDate) }}@if (snapshot.exchangeRateOverrideReason) { · {{ snapshot.exchangeRateOverrideReason }}}</span></div> }
         <div class="field"><label>شروط السداد</label><input formControlName="paymentTerms" /></div>
       </div>
       <div class="po-items-section">
@@ -165,11 +168,11 @@
             <div><label>الكمية</label><input type="number" min="1" [(ngModel)]="item.quantity" [ngModelOptions]="{standalone: true}" /></div>
             <div><label>سعر الوحدة</label><input type="number" min="0" [(ngModel)]="item.unitPrice" [ngModelOptions]="{standalone: true}" /></div>
             <div><label>الإجمالي</label><strong>{{ (item.quantity * item.unitPrice) | number:'1.2-2' }} {{ poForm.controls.currencyCode.value }}</strong></div>
-            <button type="button" class="remove-btn" aria-label="حذف بند أمر الشراء" appTooltip="حذف البند — إزالة هذا الصنف من أمر الشراء" (click)="removeItemLine($index)">×</button>
+            <app-icon-button icon="×" label="حذف البند" description="إزالة الصنف من أمر الشراء" [itemName]="item.itemName" variant="danger" (pressed)="removeItemLine($index)" />
           </div>
           }
         </div>
-        <div class="total-bar"><span>إجمالي أمر الشراء:</span><strong>{{ totalCalculated() | number:'1.2-2' }} {{ poForm.controls.currencyCode.value }}</strong></div>
+        <div class="total-bar"><span>إجمالي أمر الشراء:</span><strong>{{ totalCalculated() | number:'1.2-2' }} {{ poForm.controls.currencyCode.value }} · {{ poBaseTotal() | number:'1.2-2' }} {{ baseCurrencyCode() }}</strong></div>
       </div>
       <div modal-actions class="modal-actions-bar">
         <button class="button primary" type="submit" [disabled]="submitting() || poForm.invalid || totalCalculated() <= 0">{{ editingPoId() ? 'حفظ التعديلات' : 'حفظ أمر الشراء' }}</button>
@@ -238,7 +241,9 @@
         }
         <div class="field"><label>تاريخ الفاتورة *</label><input type="date" class="ltr" formControlName="invoiceDate" /></div>
         <div class="field"><label>المورد *</label><select formControlName="supplierId" (change)="onInvoiceSupplierSelected()">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
-        <div class="field"><label>عملة العملية *</label><select formControlName="currencyCode">@for (currency of currencies(); track currency.code) {<option [value]="currency.code">{{ currency.code }} — {{ currency.name }}</option>}</select></div>
+        <div class="field"><label>عملة العملية *</label><select formControlName="currencyCode" (change)="onInvoiceCurrencyChanged()">@for (currency of currencies(); track currency.code) {<option [value]="currency.code">{{ currency.code }} — {{ currency.name }}</option>}</select></div>
+        <div class="field"><label>سعر الصرف إلى {{ baseCurrencyCode() }} *</label><input type="number" min="0.000001" step="0.000001" class="ltr" formControlName="exchangeRate" /><small>يُثبت مع الفاتورة ويُستخدم في القيد المالي.</small></div>
+        @if (invoiceRateOverridden()) { <div class="field span-2"><label>سبب تعديل سعر الصرف *</label><input formControlName="exchangeRateOverrideReason" placeholder="سبب الاعتماد اليدوي ومصدر السعر" /></div> }
         <div class="field"><label>أمر الشراء</label><select formControlName="purchaseOrderId"><option value="">— بدون —</option>@for (po of orders(); track po.id) {<option [value]="po.id">{{ po.poNumber }}</option>}</select></div>
         <div class="field"><label>إذن الاستلام</label><select formControlName="goodsReceiptId"><option value="">— بدون —</option>@for (grn of goodsReceipts(); track grn.id) {<option [value]="grn.id">{{ grn.grnNumber }}</option>}</select></div>
         <div class="field"><label>المبلغ الأصلي * <span tabindex="0" aria-label="شرح المبلغ الأصلي" appTooltip="المبلغ الأصلي — قيمة الفاتورة قبل الخصم والضريبة">ⓘ</span></label><input type="number" min="0" formControlName="totalAmount" /></div>
@@ -247,7 +252,7 @@
         <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="ltr" formControlName="dueDate" /></div>
         <div class="field span-2"><label>ملاحظات</label><input formControlName="notes" /></div>
       </div>
-      <div class="total-bar"><span>صافي المبلغ <span tabindex="0" aria-label="شرح صافي المبلغ" appTooltip="صافي المبلغ — الأصلي ناقص الخصم زائد الضريبة">ⓘ</span>:</span><strong>{{ invNetAmount() | number:'1.2-2' }} {{ invForm.controls.currencyCode.value }}</strong></div>
+      <div class="total-bar"><span>صافي المبلغ <span tabindex="0" aria-label="شرح صافي المبلغ" appTooltip="صافي المبلغ — الأصلي ناقص الخصم زائد الضريبة">ⓘ</span>:</span><strong>{{ invNetAmount() | number:'1.2-2' }} {{ invForm.controls.currencyCode.value }} · {{ invBaseNetAmount() | number:'1.2-2' }} {{ baseCurrencyCode() }}</strong></div>
       <div modal-actions class="modal-actions-bar">
         <button class="button primary" type="submit" [disabled]="submitting() || invForm.invalid">تسجيل الفاتورة</button>
         <button class="button secondary" type="button" (click)="invModalOpen.set(false)">إلغاء</button>

@@ -31,3 +31,12 @@
 **EN:** Supplier payments are idempotent by operation ID. The backend rejects cross-supplier invoices, closed invoices, non-positive amounts, and amounts above the live outstanding balance. These checks remain authoritative even when the API is called outside the UI.
 
 **AR:** دفعات الموردين محمية من التكرار بمعرّف العملية. ويرفض الخادم الفاتورة التابعة لمورد آخر، والفاتورة المغلقة، والمبلغ غير الموجب، وأي مبلغ يتجاوز الرصيد المتبقي الفعلي، حتى عند استدعاء الواجهة البرمجية مباشرةً.
+# Exchange-rate snapshots / لقطات سعر الصرف
+
+**EN:** Purchase orders and supplier invoices store transaction/base currencies, rate, rate date, source, manual override reason, and base-currency totals. Supplier ledger postings use the frozen base amount.
+
+**AR:** تحفظ أوامر الشراء وفواتير المورد عملة العملية والأساس والسعر وتاريخه ومصدره وسبب التعديل اليدوي والإجمالي بالعملة الأساسية، وتستخدم قيود المورد القيمة الأساسية المجمدة.
+
+**EN:** Once a purchase order is first saved, its document date, transaction currency, exchange rate, source, and override reason are immutable. Draft editing still permits supplier, terms, item, quantity, and price changes, and recomputes the base total with the frozen rate.
+
+**AR:** بعد أول حفظ لأمر الشراء يثبت تاريخ المستند وعملة العملية وسعر الصرف ومصدره وسبب التعديل. يظل تعديل المورد والشروط والصنف والكمية والسعر متاحاً للمسودة، ويعاد حساب الإجمالي الأساسي بالسعر المثبت.

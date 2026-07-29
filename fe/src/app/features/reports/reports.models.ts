@@ -87,6 +87,7 @@ export interface ReportDetails {
   categories: CategorySummary[];
   dailyResults: DailyResult[];
   holidayProposals: HolidayProposal[];
+  dayAnomalies: DayAnomaly[];
 }
 export interface BulkDecisionRequest {
   decision: AttendanceDecision;
@@ -109,6 +110,43 @@ export interface DowntimeDecisionRequest {
   location: string;
   decision: string;
   note?: string;
+}
+
+export type DayAnomalyStatus = 'OPEN' | 'DEFERRED' | 'RESOLVED' | 'REVERSED';
+export type DayAnomalyDecision = 'DEVICE_OUTAGE' | 'OFFICIAL_HOLIDAY' | 'ABSENCE' | 'PRESENT' | 'DEFER';
+export interface DayAnomaly {
+  id: string;
+  reportId: string;
+  workDate: number;
+  categoryId: string;
+  categoryName: string;
+  location: string | null;
+  affectedCount: number;
+  totalEmployeeCount: number;
+  absencePercentage: number;
+  thresholdPercentage: number;
+  affectedExpectedMinutes: number;
+  status: DayAnomalyStatus;
+  decision: DayAnomalyDecision | null;
+  reason: string | null;
+  decidedBy: string | null;
+  decidedAt: number | null;
+  reversedBy: string | null;
+  reversedAt: number | null;
+  reopenedBy: string | null;
+  reopenedAt: number | null;
+  createdAt: number;
+}
+export interface DayAnomalyDecisionRequest {
+  decision: DayAnomalyDecision;
+  reason: string;
+  operationId: string;
+}
+export interface DayAnomalyActionResponse {
+  details: ReportDetails;
+  affectedCount: number;
+  appliedCount: number;
+  skippedCount: number;
 }
 
 export type { ReportStatus };

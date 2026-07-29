@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { unsavedChangesGuard } from '../../core/unsaved-changes.guard';
 
 export const WORKFORCE_ROUTES: Routes = [
   {
@@ -28,6 +29,7 @@ export const WORKFORCE_ROUTES: Routes = [
   },
   {
     path: 'attendance',
+    canDeactivate: [unsavedChangesGuard],
     loadComponent: () => import('./pages/manual-attendance/manual-attendance.component').then(m => m.ManualAttendanceComponent)
   },
   {

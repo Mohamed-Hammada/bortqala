@@ -133,8 +133,9 @@ public class WorkforceSettlementService {
             grossWorkersAmount = grossWorkersAmount.add(gross);
 
             BigDecimal advanceDeduction = BigDecimal.ZERO;
-            for (WorkforceAdvance advance : advanceRepository.findByWorkerId(worker.getId()).stream()
-                    .filter(item -> "ACTIVE".equalsIgnoreCase(item.getStatus())).toList()) {
+            List<WorkforceAdvance> activeAdvances = advanceRepository.findByWorkerId(worker.getId()).stream()
+                    .filter(item -> "ACTIVE".equalsIgnoreCase(item.getStatus())).toList();
+            for (WorkforceAdvance advance : activeAdvances) {
                 BigDecimal maxAllowed = gross.multiply(advance.getMaxDeductionPercent())
                         .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
                 BigDecimal actual = advance.getInstallmentAmount().min(maxAllowed).min(advance.getRemainingBalance());
@@ -143,8 +144,13 @@ public class WorkforceSettlementService {
             totalAdvanceDeductions = totalAdvanceDeductions.add(advanceDeduction);
             BigDecimal net = gross.subtract(advanceDeduction).setScale(2, RoundingMode.HALF_UP);
             netWorkersAmount = netWorkersAmount.add(net);
-            workerSettlementRepository.save(new WorkerSettlement(periodId, worker.getId(), worker.getContractorId(),
-                    units, dailyRate, gross, BigDecimal.ZERO, BigDecimal.ZERO, advanceDeduction, net));
+            WorkerSettlement settlement = new WorkerSettlement(periodId, worker.getId(), worker.getContractorId(),
+                    units, dailyRate, gross, BigDecimal.ZERO, BigDecimal.ZERO, advanceDeduction, net);
+            settlement.applyAdvancePolicySnapshot(activeAdvances.stream().map(advance -> advance.getId() + ":"
+                    + (advance.getAppliedPolicyId() == null ? "DIRECT" : advance.getAppliedPolicyId()) + ":v"
+                    + (advance.getAppliedPolicyVersion() == null ? 0 : advance.getAppliedPolicyVersion()) + ":"
+                    + advance.getMaxDeductionPercent()).collect(Collectors.joining(";")));
+            workerSettlementRepository.save(settlement);
         }
 
         BigDecimal netContractorsPayable = BigDecimal.ZERO;

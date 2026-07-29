@@ -25,7 +25,7 @@ public class WorkforceAttendanceController {
 
     @PostMapping("/batch")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
-    public List<ManualAttendanceEntry> saveBatch(@Valid @RequestBody WorkforceApi.BatchAttendanceRequest request) {
+    public WorkforceApi.BatchAttendanceResponse saveBatch(@Valid @RequestBody WorkforceApi.BatchAttendanceRequest request) {
         return attendanceService.saveBatch(request);
     }
 

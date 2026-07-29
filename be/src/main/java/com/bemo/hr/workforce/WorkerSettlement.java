@@ -28,6 +28,7 @@ public class WorkerSettlement {
     @Column(name = "deductions_amount", precision = 12, scale = 2) private BigDecimal deductionsAmount;
     @Column(name = "advance_deductions", precision = 12, scale = 2) private BigDecimal advanceDeductions;
     @Column(name = "net_amount", precision = 12, scale = 2) private BigDecimal netAmount;
+    @Column(name = "advance_policy_snapshot", length = 2000) private String advancePolicySnapshot;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
 
     protected WorkerSettlement() { }
@@ -49,6 +50,8 @@ public class WorkerSettlement {
         this.advanceDeductions = advanceDeductions != null ? advanceDeductions : BigDecimal.ZERO;
         this.netAmount = netAmount != null ? netAmount : BigDecimal.ZERO;
     }
+
+    public void applyAdvancePolicySnapshot(String snapshot) { this.advancePolicySnapshot = snapshot; }
 
     @PrePersist void prePersist() { createdAt = Instant.now(); }
 }

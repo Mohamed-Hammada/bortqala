@@ -20,14 +20,23 @@ public class ProcurementApi {
 
     public record PurchaseOrderResponse(
             String id, String poNumber, long poDate, String supplierId, String supplierName,
-            String purchaseRequestId, String paymentTerms, String currencyCode, String status, BigDecimal totalAmount,
+            String purchaseRequestId, String paymentTerms, String currencyCode,
+            String baseCurrencyCode, BigDecimal exchangeRate, long exchangeRateDate,
+            String exchangeRateSource, String exchangeRateOverrideReason, BigDecimal baseTotalAmount,
+            String status, BigDecimal totalAmount,
             List<PurchaseOrderLineResponse> items, long createdAt, long updatedAt
     ) {}
 
     public record PurchaseOrderPayload(
             String poNumber, long poDate, @NotBlank String supplierId,
             String purchaseRequestId, String paymentTerms, String currencyCode,
+            BigDecimal exchangeRate, String exchangeRateOverrideReason,
             List<PurchaseOrderLinePayload> items
+    ) {}
+
+    public record ExchangeRateQuote(
+            String currencyCode, String baseCurrencyCode, BigDecimal exchangeRate,
+            long rateDate, String source
     ) {}
 
     // ─── Goods Receipt ────────────────────────────────────────────────
@@ -66,6 +75,8 @@ public class ProcurementApi {
             String id, String invoiceNumber, String supplierId, String supplierName,
             String purchaseOrderId, String goodsReceiptId, String responsiblePartyId,
             String internalReference, String missingInvoiceReason, String currencyCode,
+            String baseCurrencyCode, BigDecimal exchangeRate, long exchangeRateDate,
+            String exchangeRateSource, String exchangeRateOverrideReason, BigDecimal baseNetAmount,
             long invoiceDate, BigDecimal totalAmount,
             BigDecimal discountAmount, BigDecimal taxAmount, BigDecimal netAmount,
             BigDecimal paidAmount, BigDecimal outstandingAmount,
@@ -75,7 +86,8 @@ public class ProcurementApi {
     public record SupplierInvoicePayload(
             String invoiceNumber, @NotBlank String supplierId,
             String purchaseOrderId, String goodsReceiptId, String internalReference,
-            String missingInvoiceReason, String currencyCode, long invoiceDate, @NotNull BigDecimal totalAmount,
+            String missingInvoiceReason, String currencyCode, BigDecimal exchangeRate,
+            String exchangeRateOverrideReason, long invoiceDate, @NotNull BigDecimal totalAmount,
             BigDecimal discountAmount, BigDecimal taxAmount, Long dueDate, String notes
     ) {}
 

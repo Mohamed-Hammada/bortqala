@@ -453,49 +453,92 @@
       />
     </div>
 
-    <!-- Device Downtime Detection Section -->
-    @if (showDowntimeSection() && downtimeEvents().length) {
-      <div class="card downtimes-card">
-        <div class="section-head">
-          <h2>⚡ {{ i18n.t('review.downtimeHeading', {}, 'احتمال عطل جهاز') }}</h2>
-          <p>{{ i18n.t('review.downtimeHint', {}, 'يبدو أن أكثر من 70% من الفئة لا توجد لهم بصمات في التاريخ نفسه.') }}</p>
+    <!-- Persisted day anomaly workflow -->
+    <div class="card downtimes-card">
+      <div class="section-head anomaly-section-head">
+        <div>
+          <h2>⚡ حالات شذوذ البصمة اليومية</h2>
+          <p>يكشف الخادم الأيام التي تتجاوز نسبة الغياب عن البصمة المضبوطة، ولا يطبق أي قرار تلقائياً.</p>
         </div>
+        <button class="button secondary" [disabled]="detectingAnomalies()" (click)="detectDayAnomalies()">
+          {{ detectingAnomalies() ? 'جارٍ الفحص...' : 'فحص الأيام غير الطبيعية' }}
+        </button>
+      </div>
+
+      @if (openDayAnomalies().length) {
         <div class="downtime-grid">
-          @for (event of downtimeEvents(); track event.date + event.categoryName) {
-            <div class="downtime-card" [class.resolved]="event.decision">
+          @for (anomaly of openDayAnomalies(); track anomaly.id) {
+            <article class="downtime-card">
               <div class="downtime-header">
-                <strong>{{ event.date }}</strong>
-                <span class="cat-pill">{{ event.categoryName }}</span>
-                <span class="count-badge">{{ event.affectedCount }} {{ i18n.t('review.employeeCountSuffix', {}, 'شخص') }}</span>
+                <strong>{{ date(anomaly.workDate) }}</strong>
+                <span class="cat-pill">{{ anomaly.categoryName }}</span>
+                <span class="count-badge">{{ anomaly.affectedCount }} من {{ anomaly.totalEmployeeCount }} موظف</span>
+                <span class="status-pill warning">{{ anomaly.absencePercentage }}% بلا بصمة · الحد {{ anomaly.thresholdPercentage }}%</span>
               </div>
-              <p class="context-note">سيُطبق القرار على {{ event.affectedCount }} سجلاً بلا بصمة في فئة {{ event.categoryName }} بتاريخ {{ event.date }} فقط. راجع النطاق قبل التأكيد.</p>
-              @if (!event.decision) {
-                <div class="downtime-actions">
-                  <button class="btn-decide normal" [disabled]="event.saving" (click)="downtimeDecision(event, 'NORMAL_DAY')">
-                    {{ event.saving ? '...' : i18n.t('decision.normalDay') }}
-                  </button>
-                  <button class="btn-decide deduct" [disabled]="event.saving" (click)="downtimeDecision(event, 'ABSENT')">
-                    {{ event.saving ? '...' : i18n.t('review.absent', {}, 'غياب') }}
-                  </button>
-                  <button class="btn-decide leave" [disabled]="event.saving" (click)="downtimeDecision(event, 'HOLIDAY')">
-                    {{ event.saving ? '...' : i18n.t('review.officialHoliday', {}, 'إجازة رسمية') }}
-                  </button>
-                  <button class="btn-decide deduct" [disabled]="event.saving" (click)="downtimeDecision(event, 'DEVICE_FAILURE')">
-                    {{ event.saving ? '...' : i18n.t('review.deviceFailure', {}, 'عطل جهاز') }}
-                  </button>
-                  <button class="btn-decide" [disabled]="event.saving" (click)="downtimeDecision(event, 'INDIVIDUAL_REVIEW')">
-                    {{ event.saving ? '...' : i18n.t('review.individualReview', {}, 'مراجعة فردية') }}
-                  </button>
-                </div>
-              } @else {
-                <div class="downtime-result">
-                  <span class="status-pill success">
-                    ✓ {{ event.decision === 'NORMAL_DAY' ? i18n.t('decision.normalDay') : event.decision === 'ABSENT' ? i18n.t('review.absent', {}, 'غياب') : event.decision === 'HOLIDAY' ? i18n.t('review.officialHoliday', {}, 'إجازة رسمية') : event.decision === 'DEVICE_FAILURE' ? i18n.t('review.deviceFailure', {}, 'عطل جهاز') : i18n.t('review.individualReview', {}, 'مراجعة فردية') }}
-                  </span>
-                </div>
-              }
-            </div>
+              <p class="context-note">
+                سيشمل القرار {{ anomaly.affectedCount }} سجلاً في هذا التاريخ والفئة فقط. إجمالي وقت الأجر المتوقع المتأثر
+                <strong>{{ anomaly.affectedExpectedMinutes / 60 | number:'1.1-1' }} ساعة</strong> قبل التنفيذ.
+              </p>
+              <div class="downtime-actions">
+                <button class="btn-decide normal" (click)="previewAnomalyDecision(anomaly, 'DEVICE_OUTAGE')">تعطل جهاز / انقطاع كهرباء</button>
+                <button class="btn-decide leave" (click)="previewAnomalyDecision(anomaly, 'OFFICIAL_HOLIDAY')">إجازة رسمية</button>
+                <button class="btn-decide deduct" (click)="previewAnomalyDecision(anomaly, 'ABSENCE')">غياب</button>
+                <button class="btn-decide normal" (click)="previewAnomalyDecision(anomaly, 'PRESENT')">اعتبار اليوم حضوراً</button>
+                <button class="btn-decide" (click)="previewAnomalyDecision(anomaly, 'DEFER')">تأجيل القرار</button>
+              </div>
+            </article>
           }
+        </div>
+      } @else {
+        <div class="empty-state"><strong>لا توجد حالات شذوذ مفتوحة.</strong><p>الحالات المعالجة لا تعود كتذكير إلا بعد إعادة فتحها صراحةً.</p></div>
+      }
+
+      @if (dayAnomalyHistory().length) {
+        <details class="anomaly-history">
+          <summary>سجل الحالات المعالجة والمؤجلة ({{ dayAnomalyHistory().length }})</summary>
+          <div class="downtime-grid">
+            @for (anomaly of dayAnomalyHistory(); track anomaly.id) {
+              <article class="downtime-card resolved">
+                <div class="downtime-header">
+                  <strong>{{ date(anomaly.workDate) }}</strong>
+                  <span class="cat-pill">{{ anomaly.categoryName }}</span>
+                  <span class="status-pill success">{{ anomaly.status === 'RESOLVED' ? 'معالجة' : anomaly.status === 'DEFERRED' ? 'مؤجلة' : 'تم التراجع' }}</span>
+                </div>
+                <p>{{ anomalyDecisionLabel(anomaly.decision) }} · {{ anomaly.reason || 'بدون سبب' }}</p>
+                <small>{{ anomaly.decidedBy || '—' }} · {{ anomaly.decidedAt ? date(anomaly.decidedAt) : '—' }}</small>
+                <div class="downtime-actions">
+                  @if (anomaly.status === 'RESOLVED') {
+                    <button class="button danger btn-sm" [disabled]="anomalySavingId() === anomaly.id" (click)="reverseDayAnomaly(anomaly)">إنشاء قيد عكسي</button>
+                  }
+                  @if (anomaly.status === 'DEFERRED' || anomaly.status === 'REVERSED') {
+                    <button class="button secondary btn-sm" [disabled]="anomalySavingId() === anomaly.id" (click)="reopenDayAnomaly(anomaly)">إعادة فتح الحالة</button>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        </details>
+      }
+    </div>
+
+    @if (anomalyPreview(); as preview) {
+      <div class="modal-overlay" (click)="anomalyPreview.set(null)">
+        <div class="central-modal" (click)="$event.stopPropagation()">
+          <div class="modal-header"><h3>معاينة قرار شذوذ البصمة</h3></div>
+          <div class="modal-body">
+            <p><strong>{{ anomalyDecisionLabel(preview.decision) }}</strong> — {{ date(preview.anomaly.workDate) }} · {{ preview.anomaly.categoryName }}</p>
+            <div class="bulk-preview-summary">
+              <div class="preview-row"><span class="label">الموظفون المتأثرون</span><span class="value">{{ preview.anomaly.affectedCount }}</span></div>
+              <div class="preview-row"><span class="label">وقت الأجر المتوقع</span><span class="value">{{ preview.anomaly.affectedExpectedMinutes / 60 | number:'1.1-1' }} ساعة</span></div>
+              <div class="preview-row highlight-row"><span class="label">تأثير القرار</span><span class="value">{{ preview.decision === 'ABSENCE' ? 'خصم الوقت المتوقع بالكامل' : preview.decision === 'DEFER' ? 'لا تغيير في الرواتب الآن' : 'احتساب الوقت المتوقع كوقت مدفوع' }}</span></div>
+            </div>
+            <label for="anomaly-reason">سبب القرار *</label>
+            <textarea id="anomaly-reason" rows="3" [ngModel]="preview.reason" (ngModelChange)="updateAnomalyReason($event)" placeholder="مثال: انقطاع كهرباء مؤكد من مسؤول الموقع"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button class="button gold" [disabled]="anomalySavingId() === preview.anomaly.id" (click)="executeAnomalyDecision()">تأكيد التطبيق على {{ preview.anomaly.affectedCount }}</button>
+            <button class="button secondary" [disabled]="anomalySavingId() === preview.anomaly.id" (click)="anomalyPreview.set(null)">إلغاء</button>
+          </div>
         </div>
       </div>
     }

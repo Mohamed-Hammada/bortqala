@@ -13,3 +13,8 @@
 **AR:** يظهر التخصيص والحركة الآن في شريط مستقل أسفل عنوان اللوحة مباشرة، مع تلميحات مرئية ومنسقة تعمل أيضاً بتركيز لوحة المفاتيح لتسهيل الوصول إلى الأدوات.
 
 **AR:** ملخص شهري لحالة التقرير والاستثناءات والحضور والتأخير والإضافي والهويات غير المربوطة والفئات والاستيرادات.
+# Shared filters and drill-down / الفلاتر والانتقال للتفاصيل
+
+**EN:** Dashboard period and organizational filters are persisted in URL query parameters. Workforce KPI cards and chart bars navigate to their related detail pages with the active filter context.
+
+**AR:** تُحفظ فلاتر الفترة والتنظيم في رابط لوحة المتابعة، وتنتقل بطاقات ورسوم لوحة القوى العاملة إلى صفحات التفاصيل مع سياق الفلاتر الفعال.

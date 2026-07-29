@@ -77,6 +77,7 @@ export interface AppSettings {
   sessionTimeoutMinutes: number;
   sessionTimeoutEnabled: boolean;
   showReportPresets: boolean;
+  attendanceAnomalyThresholdPercent: number;
   automaticProcurementNumbering: boolean;
   adminDashboardCustomizationEnabled: boolean;
   minPasswordLength?: number;

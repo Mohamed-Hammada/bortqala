@@ -34,6 +34,9 @@ public class WorkforceAdvance {
     @Column(name = "first_installment_date", length = 10) private String firstInstallmentDate;
     @Column(name = "deduction_mode", length = 20) private String deductionMode;
     @Column(name = "deferral_periods") private Integer deferralPeriods;
+    @Column(name = "applied_policy_id", length = 36) private String appliedPolicyId;
+    @Column(name = "applied_policy_version") private Integer appliedPolicyVersion;
+    @Column(name = "applied_policy_snapshot", length = 1000) private String appliedPolicySnapshot;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
 
@@ -75,6 +78,16 @@ public class WorkforceAdvance {
     public void pause() { this.status = "PAUSED"; }
     public void resume() { this.status = "ACTIVE"; }
     public void repay(BigDecimal value) { deduct(value); }
+
+    public void applyPolicySnapshot(WorkforceAdvancePolicy policy) {
+        if (policy == null) return;
+        this.appliedPolicyId = policy.getId();
+        this.appliedPolicyVersion = policy.getVersion();
+        this.appliedPolicySnapshot = "v" + policy.getVersion() + "|" + policy.getScopeType() + "|"
+                + policy.getDeductionMode() + "|" + policy.getDeductionFrequency() + "|"
+                + policy.getMaxDeductionPercent() + "|" + policy.getDefaultInstallments() + "|"
+                + policy.getDeferralPeriods() + "|" + policy.getEffectiveFrom() + "|" + policy.getEffectiveTo();
+    }
 
     @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
     @PreUpdate void preUpdate() { updatedAt = Instant.now(); }

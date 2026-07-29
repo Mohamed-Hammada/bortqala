@@ -65,6 +65,14 @@ public class DailyAttendanceResult {
 
     public boolean isBlocking() { return decision == null && (status == DailyStatus.NO_PUNCH || status == DailyStatus.SINGLE_PUNCH || status == DailyStatus.MANUAL_ENTRY || status == DailyStatus.MISSING_SCHEDULE); }
     public void decide(AttendanceDecision decision, Integer manualWorkedMinutes, String note, String actor) { this.decision = decision; this.manualWorkedMinutes = manualWorkedMinutes; this.decisionNote = note; this.decidedBy = actor; this.decidedAt = Instant.now(); }
+    public void restoreDecision(AttendanceDecision decision, Integer manualWorkedMinutes, String note,
+                                String actor, Instant decidedAt) {
+        this.decision = decision;
+        this.manualWorkedMinutes = manualWorkedMinutes;
+        this.decisionNote = note;
+        this.decidedBy = actor;
+        this.decidedAt = decidedAt;
+    }
     public void confirmHoliday(String actor) { status = DailyStatus.HOLIDAY; warning = null; decide(AttendanceDecision.APPROVED_LEAVE, null, "Confirmed category holiday", actor); }
 
     public String getId() { return id; } public String getReportId() { return reportId; } public String getEmployeeId() { return employeeId; }

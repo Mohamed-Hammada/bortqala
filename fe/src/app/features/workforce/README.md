@@ -11,3 +11,7 @@
 **EN:** Settlement screens expose calculation progress, version, actor, execution time, retained last-valid totals, stale-input warnings, affected workers, and guarded Review/Approve/Lock actions. The reports/import screen implements upload, mapping, validation, preview, commit, result, error download, and audited reversal; unimplemented report actions are not displayed.
 
 **AR:** تعرض شاشات التسوية تقدم الاحتساب وإصداره ومنفذه ووقت التنفيذ وآخر إجماليات صحيحة وتحذير تغير المدخلات والعمال المتأثرين، مع إجراءات مراجعة واعتماد وقفل منضبطة. وتنفذ شاشة التقارير والاستيراد الرفع والمطابقة والتحقق والمعاينة والتنفيذ والنتيجة وتنزيل الأخطاء والتراجع المسجل، ولا تعرض إجراءات تقارير غير منفذة.
+
+**EN:** Manual attendance loads saved entries, marks dirty/error cells, shows the server batch summary, and guards navigation and reload. The workforce dashboard shares contractor/category/location/status filters through URL parameters and supports chart/KPI drill-down. Advance screens show effective policy dates and versions before creation.
+
+**AR:** يحمل الحضور اليدوي السجلات المحفوظة ويميز الخلايا المعدلة والخاطئة ويعرض ملخص الخادم ويحمي التنقل وإعادة التحميل. وتتشارك لوحة القوى العاملة فلاتر المقاول والفئة والموقع والحالة داخل الرابط وتدعم الانتقال من الرسم والبطاقة للتفاصيل، وتعرض شاشة السلف إصدار السياسة الفعلي قبل الصرف.

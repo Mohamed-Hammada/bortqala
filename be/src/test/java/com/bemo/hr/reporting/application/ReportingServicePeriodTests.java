@@ -12,7 +12,10 @@ import com.bemo.hr.reporting.api.ReportingApi;
 import com.bemo.hr.reporting.domain.AttendanceReport;
 import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
 import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
+import com.bemo.hr.reporting.infrastructure.DayAnomalyRepository;
+import com.bemo.hr.reporting.infrastructure.DayAnomalyResultSnapshotRepository;
 import com.bemo.hr.reporting.infrastructure.HolidayProposalRepository;
+import com.bemo.hr.shared.security.TenantApplicationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +34,8 @@ class ReportingServicePeriodTests {
     @Mock private AttendanceReportRepository attendanceReportRepository;
     @Mock private DailyAttendanceResultRepository dailyAttendanceResultRepository;
     @Mock private HolidayProposalRepository holidayProposalRepository;
+    @Mock private DayAnomalyRepository dayAnomalyRepository;
+    @Mock private DayAnomalyResultSnapshotRepository dayAnomalyResultSnapshotRepository;
     @Mock private ConfirmedHolidayRepository confirmedHolidayRepository;
     @Mock private AttendanceCategoryRepository attendanceCategoryRepository;
     @Mock private ScheduleRuleRepository scheduleRuleRepository;
@@ -38,14 +43,18 @@ class ReportingServicePeriodTests {
     @Mock private PunchRecordRepository punchRecordRepository;
     @Mock private ReportExporter reportExporter;
     @Mock private com.bemo.hr.audit.application.AuditService auditService;
+    @Mock private TenantApplicationRepository tenantApplicationRepository;
 
     private ReportingService reportingService;
 
     @BeforeEach
     void setUp() {
+        org.mockito.Mockito.lenient().when(dayAnomalyRepository.findByReportIdOrderByWorkDateAscCategoryNameAsc(any()))
+                .thenReturn(List.of());
         reportingService = new ReportingService(attendanceReportRepository, dailyAttendanceResultRepository,
-                holidayProposalRepository, confirmedHolidayRepository, attendanceCategoryRepository,
-                scheduleRuleRepository, employeeRepository, punchRecordRepository, reportExporter, "Africa/Cairo", auditService);
+                holidayProposalRepository, dayAnomalyRepository, dayAnomalyResultSnapshotRepository,
+                confirmedHolidayRepository, attendanceCategoryRepository, scheduleRuleRepository, employeeRepository,
+                punchRecordRepository, reportExporter, "Africa/Cairo", auditService, tenantApplicationRepository);
     }
 
     @Test

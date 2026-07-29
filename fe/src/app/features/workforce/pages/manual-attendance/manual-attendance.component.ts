@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, HostListener, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { WorkforceService } from '../../data-access/workforce.service';
 import { NotificationService } from '../../../../core/notification.service';
 import { exportCsv } from '../../../../core/download';
-import { Worker, AttendanceCell } from '../../models/workforce.models';
+import { Worker, AttendanceCell, ManualAttendanceEntry, BatchAttendanceResponse } from '../../models/workforce.models';
 import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-tooltip.directive';
 
 interface DayCell {
@@ -49,8 +49,8 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
           <button type="button" class="btn btn-secondary" (click)="applyFullDayAll()">
             تعيين يوم كامل للكل
           </button>
-          <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="saveAttendance()">
-            {{ saving() ? 'جارٍ الحفظ...' : 'حفظ جميع التسجيلات' }}
+          <button type="button" class="btn btn-primary" [disabled]="saving() || dirtyCellKeys().size === 0" (click)="saveAttendance()">
+            {{ saving() ? 'جارٍ الحفظ...' : 'حفظ التعديلات (' + dirtyCellKeys().size + ')' }}
           </button>
         </div>
       </header>
@@ -114,7 +114,7 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
           </div>
           <div class="control-group">
             <label>&nbsp;</label>
-            <button type="button" class="btn btn-outline" (click)="loadData()">
+            <button type="button" class="btn btn-outline" (click)="refreshData()">
               🔄 تحديث البيانات
             </button>
           </div>
@@ -123,9 +123,21 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
           <span class="badge-info">
             📅 {{ dates().length }} يوم | من {{ startDate }} إلى {{ endDate }}
             | {{ filteredWorkers().length }} عامل | إجمالي الخلايا: {{ dates().length * filteredWorkers().length }}
+            @if (dirtyCellKeys().size > 0) { | <strong>{{ dirtyCellKeys().size }} خلية معدلة غير محفوظة</strong> }
           </span>
         </div>
       </div>
+
+      @if (saveSummary(); as summary) {
+        <div class="card save-summary" role="status" aria-live="polite">
+          <strong>ملخص آخر عملية حفظ</strong>
+          <span class="summary-created">جديد: {{ summary.createdCount }}</span>
+          <span class="summary-updated">محدّث: {{ summary.updatedCount }}</span>
+          <span>متجاوز دون تغيير: {{ summary.skippedCount }}</span>
+          <span [class.summary-failed]="summary.failedCount > 0">فشل: {{ summary.failedCount }}</span>
+          @if (summary.failedCount > 0) { <small>صحّح الخلايا المعلّمة بالأحمر ثم أعد الحفظ؛ التعديلات الصحيحة محفوظة.</small> }
+        </div>
+      }
 
       <!-- Loading Skeleton -->
       @if (loading()) {
@@ -141,7 +153,7 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
       @else if (loadError()) {
         <div class="card error-card">
           <span>⚠️ {{ loadError() }}</span>
-          <button type="button" class="btn btn-outline" (click)="loadData()">إعادة المحاولة</button>
+          <button type="button" class="btn btn-outline" (click)="refreshData()">إعادة المحاولة</button>
         </div>
       }
 
@@ -262,9 +274,13 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
                     </td>
                     <td class="sticky-col rate-col">{{ w.defaultDailyRate | number:'1.0-0' }} ج.م</td>
                     @for (date of dates(); track date) {
-                      <td class="cell-td" [class.weekend-cell]="isWeekend(date)">
+                      <td class="cell-td" [class.weekend-cell]="isWeekend(date)"
+                          [class.cell-dirty]="isCellDirty(w.id, date)"
+                          [class.cell-invalid]="cellError(w.id, date)"
+                          [attr.title]="cellError(w.id, date) || null">
                         <select
                           [(ngModel)]="matrix[w.id][date].attendanceValue"
+                          (ngModelChange)="markCellDirty(w.id, date)"
                           [name]="'att_' + w.id + '_' + date"
                           class="cell-select"
                           [class.cell-full]="matrix[w.id][date].attendanceValue === 1"
@@ -275,6 +291,9 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
                           <option [ngValue]="0.5">½</option>
                           <option [ngValue]="0">—</option>
                         </select>
+                        @if (cellError(w.id, date); as error) {
+                          <span class="cell-error-mark" [attr.aria-label]="error">!</span>
+                        }
                       </td>
                     }
                     <td class="total-col total-days">
@@ -368,6 +387,10 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
     .weekend-col { background: #fef9ec !important; }
     .weekend-cell { background: #fefce8; }
     .cell-td { padding: 0.125rem; }
+    .cell-dirty { box-shadow: inset 0 0 0 2px #f59e0b; position: relative; }
+    .cell-dirty::after { content: ''; position: absolute; inset-inline-start: 2px; top: 2px; width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; }
+    .cell-invalid { box-shadow: inset 0 0 0 2px #dc2626; position: relative; }
+    .cell-error-mark { position: absolute; inset-inline-end: 1px; bottom: 1px; width: 13px; height: 13px; border-radius: 50%; background: #dc2626; color: white; font-size: 10px; line-height: 13px; font-weight: 800; }
     .cell-select { width: 48px; padding: 0.25rem; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: 700; font-size: 0.8125rem; text-align: center; cursor: pointer; }
     .cell-full { background: #dcfce7; color: #15803d; border-color: #86efac; }
     .cell-half { background: #fef3c7; color: #b45309; border-color: #fde68a; }
@@ -394,6 +417,11 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
     .bulk-context { color: #78350f; font-size: .75rem; max-width: 280px; }
     .bulk-select { width: auto; padding: 0.3rem 0.5rem; }
     .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.8125rem; }
+    .save-summary { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1.25rem; background: #f8fafc; font-size: .875rem; }
+    .save-summary strong { color: #0f172a; }
+    .summary-created, .summary-updated { color: #166534; }
+    .summary-failed { color: #b91c1c; font-weight: 800; }
+    .save-summary small { flex-basis: 100%; color: #b91c1c; }
     /* Indicator column */
     .indicator-col { min-width: 48px; background: #f8fafc; font-size: 1rem; text-align: center; }
     .indicator { cursor: help; display: inline-block; margin: 0 1px; }
@@ -420,6 +448,10 @@ export class ManualAttendanceComponent implements OnInit {
   saving = signal(false);
   loadError = signal<string | null>(null);
   dates = signal<string[]>([]);
+  dirtyCellKeys = signal<Set<string>>(new Set());
+  cellErrors = signal<Map<string, string>>(new Map());
+  saveSummary = signal<BatchAttendanceResponse | null>(null);
+  private lastLoadedPeriod: { startDate: string; endDate: string } | null = null;
 
   selectedContractorId = signal<string>('');
   selectedCategoryId = signal<string>('');
@@ -505,7 +537,6 @@ export class ManualAttendanceComponent implements OnInit {
 
   ngOnInit() {
     this.setCurrentHalfMonth();
-    this.loadData();
   }
 
   setCurrentHalfMonth() {
@@ -559,17 +590,18 @@ export class ManualAttendanceComponent implements OnInit {
   }
 
   onPeriodChange() {
+    if (!this.confirmDiscardChanges()) {
+      if (this.lastLoadedPeriod) {
+        this.startDate = this.lastLoadedPeriod.startDate;
+        this.endDate = this.lastLoadedPeriod.endDate;
+      }
+      return;
+    }
+    this.clearEditState();
     const newDates = this.generateDateRange(this.startDate, this.endDate);
     this.dates.set(newDates);
     this.selectedDateIds.set(new Set(newDates));
-    for (const w of this.workers()) {
-      if (!this.matrix[w.id]) this.matrix[w.id] = {};
-      for (const date of newDates) {
-        if (!this.matrix[w.id][date]) {
-          this.matrix[w.id][date] = { attendanceValue: 1, overtimeHours: 0, deductionHours: 0, notes: '' };
-        }
-      }
-    }
+    this.loadData();
   }
 
   loadData() {
@@ -582,10 +614,13 @@ export class ManualAttendanceComponent implements OnInit {
       contractors: this.workforceService.loadContractors(),
       categories: this.workforceService.loadCategories(),
       workers: this.workforceService.loadWorkers(),
+      attendance: this.workforceService.loadAttendance(this.startDate, this.endDate),
     }).subscribe({
-      next: ({ workers }) => {
-        this.initMatrix(workers);
+      next: ({ workers, attendance }) => {
+        this.initMatrix(workers, attendance);
         this.selectedDateIds.set(new Set(this.dates()));
+        this.lastLoadedPeriod = { startDate: this.startDate, endDate: this.endDate };
+        this.clearEditState();
         this.loading.set(false);
       },
       error: (e) => {
@@ -593,6 +628,12 @@ export class ManualAttendanceComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  refreshData(): void {
+    if (!this.confirmDiscardChanges()) return;
+    this.clearEditState();
+    this.loadData();
   }
 
   private loadCalculationRules() {
@@ -631,24 +672,32 @@ export class ManualAttendanceComponent implements OnInit {
     exportCsv(rows, columns, `manual-attendance-${this.startDate}-${this.endDate}.csv`);
   }
 
-  private initMatrix(workers: Worker[]) {
+  private initMatrix(workers: Worker[], entries: ManualAttendanceEntry[]) {
     const dates = this.generateDateRange(this.startDate, this.endDate);
     this.dates.set(dates);
+    this.matrix = {};
     for (const w of workers) {
-      if (!this.matrix[w.id]) this.matrix[w.id] = {};
+      this.matrix[w.id] = {};
       for (const date of dates) {
-        if (!this.matrix[w.id][date]) {
-          this.matrix[w.id][date] = { attendanceValue: 1, overtimeHours: 0, deductionHours: 0, notes: '' };
-        }
+        this.matrix[w.id][date] = { attendanceValue: 1, overtimeHours: 0, deductionHours: 0, notes: '' };
       }
+    }
+    for (const entry of entries) {
+      const cell = this.matrix[entry.workerId]?.[entry.workDate];
+      if (!cell) continue;
+      cell.attendanceValue = Number(entry.attendanceValue);
+      cell.overtimeHours = Number(entry.overtimeHours ?? 0);
+      cell.deductionHours = Number(entry.deductionHours ?? 0);
+      cell.notes = entry.notes ?? '';
     }
   }
 
   applyFullDayAll() {
     for (const w of this.filteredWorkers()) {
       for (const date of this.dates()) {
-        if (this.matrix[w.id]?.[date]) {
+        if (this.matrix[w.id]?.[date] && this.matrix[w.id][date].attendanceValue !== 1) {
           this.matrix[w.id][date].attendanceValue = 1;
+          this.markCellDirty(w.id, date);
         }
       }
     }
@@ -715,6 +764,7 @@ export class ManualAttendanceComponent implements OnInit {
         if (this.matrix[wId]?.[date]) {
           if (preview.kind === 'attendance') this.matrix[wId][date].attendanceValue = value;
           else this.matrix[wId][date].overtimeHours = this.bulkOvertimeHours();
+          this.markCellDirty(wId, date);
         }
       }
     }
@@ -725,20 +775,20 @@ export class ManualAttendanceComponent implements OnInit {
 
   saveAttendance() {
     const entries: AttendanceCell[] = [];
-    for (const w of this.filteredWorkers()) {
-      for (const date of this.dates()) {
-        const cell = this.matrix[w.id]?.[date];
-        if (cell) {
-          entries.push({
-            workerId: w.id,
-            workDate: date,
-            attendanceValue: cell.attendanceValue,
-            overtimeHours: cell.overtimeHours || undefined,
-            deductionHours: cell.deductionHours || undefined,
-            notes: cell.notes || undefined
-          });
-        }
-      }
+    for (const cellKey of this.dirtyCellKeys()) {
+      const separator = cellKey.lastIndexOf('|');
+      const workerId = cellKey.slice(0, separator);
+      const workDate = cellKey.slice(separator + 1);
+      const cell = this.matrix[workerId]?.[workDate];
+      if (!cell) continue;
+      entries.push({
+        workerId,
+        workDate,
+        attendanceValue: cell.attendanceValue,
+        overtimeHours: cell.overtimeHours || undefined,
+        deductionHours: cell.deductionHours || undefined,
+        notes: cell.notes || undefined
+      });
     }
 
     if (entries.length === 0) {
@@ -748,15 +798,79 @@ export class ManualAttendanceComponent implements OnInit {
 
     this.saving.set(true);
     this.workforceService.saveAttendanceBatch(entries).subscribe({
-      next: () => {
+      next: (response) => {
         this.saving.set(false);
-        this.notificationService.success(`تم حفظ ${entries.length} تسجيل حضور بنجاح ✓`);
+        this.saveSummary.set(response);
+        const failedKeys = new Set(response.errors
+          .filter(error => error.workerId && error.workDate)
+          .map(error => this.cellKey(error.workerId!, error.workDate!)));
+        this.cellErrors.set(new Map(response.errors
+          .filter(error => error.workerId && error.workDate)
+          .map(error => [this.cellKey(error.workerId!, error.workDate!), error.message])));
+        this.dirtyCellKeys.update(current => {
+          const next = new Set(current);
+          for (const entry of entries) {
+            const key = this.cellKey(entry.workerId, entry.workDate);
+            if (!failedKeys.has(key)) next.delete(key);
+          }
+          return next;
+        });
+        if (response.failedCount > 0) {
+          this.notificationService.warning(`حُفظ الصحيح: ${response.createdCount + response.updatedCount}، وفشل ${response.failedCount}. راجع الخلايا الحمراء.`);
+        } else {
+          this.notificationService.success(`تم الحفظ: ${response.createdCount} جديد، ${response.updatedCount} محدّث، ${response.skippedCount} دون تغيير.`);
+        }
       },
       error: (e) => {
         this.saving.set(false);
         this.notificationService.error('حدث خطأ أثناء الحفظ: ' + (e?.error?.detail ?? e?.message ?? 'خطأ غير متوقع'));
       }
     });
+  }
+
+  markCellDirty(workerId: string, workDate: string): void {
+    const key = this.cellKey(workerId, workDate);
+    this.dirtyCellKeys.update(current => new Set(current).add(key));
+    this.cellErrors.update(current => {
+      if (!current.has(key)) return current;
+      const next = new Map(current);
+      next.delete(key);
+      return next;
+    });
+    this.saveSummary.set(null);
+  }
+
+  isCellDirty(workerId: string, workDate: string): boolean {
+    return this.dirtyCellKeys().has(this.cellKey(workerId, workDate));
+  }
+
+  cellError(workerId: string, workDate: string): string | null {
+    return this.cellErrors().get(this.cellKey(workerId, workDate)) ?? null;
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.dirtyCellKeys().size > 0;
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  preventUnload(event: BeforeUnloadEvent): void {
+    if (!this.hasUnsavedChanges()) return;
+    event.preventDefault();
+    event.returnValue = '';
+  }
+
+  private cellKey(workerId: string, workDate: string): string {
+    return `${workerId}|${workDate}`;
+  }
+
+  private clearEditState(): void {
+    this.dirtyCellKeys.set(new Set());
+    this.cellErrors.set(new Map());
+    this.saveSummary.set(null);
+  }
+
+  private confirmDiscardChanges(): boolean {
+    return !this.hasUnsavedChanges() || window.confirm('لديك تعديلات حضور غير محفوظة. هل تريد تجاهلها والمتابعة؟');
   }
 
   // --- Calculation helpers ---

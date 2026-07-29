@@ -103,6 +103,7 @@
 
   <!-- User Form Central Modal Dialog -->
   <app-modal-dialog
+    class="users-dialog"
     [isOpen]="drawerOpen()"
     [title]="i18n.t(editingId() ? 'users.editTitle' : 'users.newTitle')"
     size="wide"
@@ -121,22 +122,23 @@
         </div>
 
         <div class="field">
-          <label><span class="required">*</span> {{ i18n.t('users.username') }}</label>
-          <input class="ltr" formControlName="username" autocomplete="off" placeholder="admin" />
+          <label for="user-username"><span class="required">*</span> {{ i18n.t('users.username') }}</label>
+          <input id="user-username" class="ltr" formControlName="username" autocomplete="off" placeholder="admin" />
         </div>
 
         <div class="field">
-          <label><span class="required">*</span> {{ i18n.t('users.displayName') }}</label>
-          <input formControlName="displayName" placeholder="محمد أحمد" />
+          <label for="user-display-name"><span class="required">*</span> {{ i18n.t('users.displayName') }}</label>
+          <input id="user-display-name" formControlName="displayName" placeholder="محمد أحمد" />
         </div>
 
         <div class="field span-2 password-field">
-          <label>
+          <label for="user-password">
             @if (!editingId()) { <span class="required">*</span> }
             {{ i18n.t('users.password') }}
           </label>
           <div class="password-input-wrap">
             <input
+              id="user-password"
               [type]="showPassword() ? 'text' : 'password'"
               class="ltr"
               formControlName="password"
@@ -147,6 +149,8 @@
               type="button"
               class="toggle-pass-btn"
               (click)="showPassword.set(!showPassword())"
+              [attr.aria-label]="i18n.t(showPassword() ? 'users.hidePassword' : 'users.showPassword')"
+              [attr.title]="i18n.t(showPassword() ? 'users.hidePassword' : 'users.showPassword')"
             >
               {{ showPassword() ? '👁️' : '🙈' }}
             </button>
@@ -166,8 +170,8 @@
         </div>
 
         <div class="field span-2">
-          <label>{{ i18n.t('users.category') }}</label>
-          <select formControlName="categoryId">
+          <label for="user-category">{{ i18n.t('users.category') }}</label>
+          <select id="user-category" formControlName="categoryId">
             <option [ngValue]="null">— {{ i18n.t('common.none') }} —</option>
             @for (cat of store.categories(); track cat.id) {
               <option [ngValue]="cat.id">{{ cat.name }}</option>
@@ -200,28 +204,40 @@
         </div>
 
         <!-- Section 4: Grouped Module Permissions -->
-        <div class="form-section-head">
-          <span>🖥️</span> {{ i18n.t('users.sectionMenus') }} (مقسمة حسب الوحدات)
+        <div class="form-section-head permissions-section-head">
+          <span class="section-title-copy">
+            <span aria-hidden="true">🖥️</span>
+            <span>
+              {{ i18n.t('users.sectionMenus') }}
+              <small>{{ i18n.t('users.menuGroupsHint') }}</small>
+            </span>
+          </span>
           <div class="quick-actions">
-            <button type="button" class="btn btn-sm btn-link" (click)="selectAllMenus()">تحديد الكل</button>
-            <button type="button" class="btn btn-sm btn-link" (click)="clearAllMenus()">إلغاء تحديد الكل</button>
+            <button type="button" class="permission-action" (click)="selectAllMenus()">
+              {{ i18n.t('users.selectAllMenus') }}
+            </button>
+            <button type="button" class="permission-action" (click)="clearAllMenus()">
+              {{ i18n.t('users.clearAllMenus') }}
+            </button>
           </div>
         </div>
 
         <div class="field span-2">
           <div class="module-groups-grid">
-            @for (group of menuGroups; track group.title) {
+            @for (group of menuGroups; track group.titleKey) {
               <div class="module-group-card">
-                <div class="module-group-header" (click)="toggleModule(group.ids)">
+                <label class="module-group-header">
                   <input
                     type="checkbox"
                     [checked]="isModuleAllSelected(group.ids)"
                     [indeterminate]="isModulePartiallySelected(group.ids)"
-                    (click)="$event.stopPropagation(); toggleModule(group.ids)"
+                    (change)="toggleModule(group.ids)"
                   />
-                  <strong>{{ group.title }}</strong>
-                  <span class="count-badge">{{ group.ids.length }} صلاحيات</span>
-                </div>
+                  <strong>{{ i18n.t(group.titleKey) }}</strong>
+                  <span class="count-badge">
+                    {{ i18n.t(group.ids.length === 1 ? 'users.permissionOne' : 'users.permissionCount', { count: group.ids.length }) }}
+                  </span>
+                </label>
                 <div class="module-group-items">
                   @for (id of group.ids; track id) {
                     <label class="menu-item-check">
@@ -281,7 +297,7 @@
       </div>
     </form>
 
-    <div modal-actions class="drawer-actions">
+    <div modal-actions class="user-modal-actions">
       <button class="button primary" type="button" (click)="submit()" [disabled]="store.loading()">
         {{ i18n.t('users.save') }}
       </button>

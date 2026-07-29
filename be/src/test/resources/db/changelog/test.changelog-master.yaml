@@ -130,6 +130,36 @@ databaseChangeLog:
       file: db/changelog/20260729_v55_keyboard_shortcuts.yaml
   - include:
       file: db/changelog/20260729_v56_dashboard_customization.yaml
+  - include:
+      file: db/changelog/20260729_v62_attendance_day_anomalies.yaml
+  - changeSet:
+      id: test-v63-procurement-currency-prerequisites
+      author: codex
+      dbms: h2
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS currency_code VARCHAR(10) DEFAULT 'EGP' NOT NULL;
+              ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS currency_code VARCHAR(10) DEFAULT 'EGP' NOT NULL;
+              ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(15,2) DEFAULT 0;
+              ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS tax_amount NUMERIC(15,2) DEFAULT 0;
+              ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS net_amount NUMERIC(15,2) DEFAULT 0;
+              UPDATE supplier_invoices SET net_amount = total_amount - COALESCE(discount_amount, 0) + COALESCE(tax_amount, 0);
+              CREATE TABLE IF NOT EXISTS workforce_advance_policies (
+                id VARCHAR(36) PRIMARY KEY, app_id VARCHAR(36) NOT NULL, scope_type VARCHAR(20) NOT NULL,
+                scope_id VARCHAR(36), deduction_mode VARCHAR(20) DEFAULT 'AUTO' NOT NULL,
+                deduction_frequency VARCHAR(30) DEFAULT 'HALF_MONTH' NOT NULL,
+                max_deduction_percent NUMERIC(5,2) DEFAULT 50 NOT NULL,
+                default_installments INT DEFAULT 1 NOT NULL, deferral_periods INT DEFAULT 0 NOT NULL,
+                active BOOLEAN DEFAULT TRUE NOT NULL, created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                updated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                CONSTRAINT uk_advance_policy_scope UNIQUE (app_id, scope_type, scope_id)
+              );
+  - include:
+      file: db/changelog/20260729_v63_procurement_exchange_rate_snapshots.yaml
+  - include:
+      file: db/changelog/20260729_v64_advance_policy_versions.yaml
   # Liquibase 5 cannot reliably resolve lowercase H2 tables in tableExists
   # preconditions. Apply the skipped production column additions directly.
   - changeSet:

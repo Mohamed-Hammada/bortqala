@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { NotificationService, ToastMessage } from '../../../core/notification.service';
+import { IconButtonComponent } from '../icon-button/icon-button.component';
 
 @Component({
   selector: 'app-toast-container',
   standalone: true,
+  imports: [IconButtonComponent],
   templateUrl: './toast-container.component.html',
   styleUrl: './toast-container.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

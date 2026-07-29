@@ -1,5 +1,6 @@
 package com.bemo.hr.workforce;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
@@ -165,7 +166,23 @@ public final class WorkforceApi {
     ) { }
 
     public record BatchAttendanceRequest(
-        @NotNull List<AttendanceCell> entries
+        @NotNull List<@Valid AttendanceCell> entries
+    ) { }
+
+    public record AttendanceCellError(
+        String workerId,
+        String workDate,
+        String field,
+        String message
+    ) { }
+
+    public record BatchAttendanceResponse(
+        int createdCount,
+        int updatedCount,
+        int skippedCount,
+        int failedCount,
+        List<ManualAttendanceEntry> savedEntries,
+        List<AttendanceCellError> errors
     ) { }
 
     // Settlement Period DTOs
@@ -292,6 +309,9 @@ public final class WorkforceApi {
         String firstInstallmentDate,
         String deductionMode,
         int deferralPeriods,
+        String appliedPolicyId,
+        Integer appliedPolicyVersion,
+        String appliedPolicySnapshot,
         long createdAt
     ) { }
 
@@ -303,7 +323,9 @@ public final class WorkforceApi {
         @NotNull BigDecimal maxDeductionPercent,
         int defaultInstallments,
         int deferralPeriods,
-        boolean active
+        boolean active,
+        @NotBlank String effectiveFrom,
+        String effectiveTo
     ) { }
 
     public record AdvancePolicyResponse(
@@ -316,6 +338,9 @@ public final class WorkforceApi {
         BigDecimal maxDeductionPercent,
         int defaultInstallments,
         int deferralPeriods,
+        int version,
+        String effectiveFrom,
+        String effectiveTo,
         boolean active,
         long updatedAt
     ) { }

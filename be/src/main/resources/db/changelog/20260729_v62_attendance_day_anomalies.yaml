@@ -1,0 +1,127 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_attendance_anomaly_threshold_to_apps
+      author: Mohamed-Hammada
+      changes:
+        - addColumn:
+            tableName: apps
+            columns:
+              - column:
+                  name: attendance_anomaly_threshold_percent
+                  type: INT
+                  defaultValueNumeric: 70
+                  constraints: { nullable: false }
+      rollback:
+        - dropColumn: { tableName: apps, columnName: attendance_anomaly_threshold_percent }
+
+  - changeSet:
+      id: create_attendance_day_anomalies_table
+      author: Mohamed-Hammada
+      changes:
+        - createTable:
+            tableName: attendance_day_anomalies
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: report_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: work_date, type: date, constraints: { nullable: false } }
+              - column: { name: category_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: category_name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: location, type: VARCHAR(150) }
+              - column: { name: affected_count, type: INT, constraints: { nullable: false } }
+              - column: { name: total_employee_count, type: INT, constraints: { nullable: false } }
+              - column: { name: absence_percentage, type: "NUMERIC(5,2)", constraints: { nullable: false } }
+              - column: { name: threshold_percentage, type: INT, constraints: { nullable: false } }
+              - column: { name: affected_expected_minutes, type: INT, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: decision, type: VARCHAR(30) }
+              - column: { name: reason, type: VARCHAR(500) }
+              - column: { name: operation_id, type: VARCHAR(80) }
+              - column: { name: decided_by, type: VARCHAR(160) }
+              - column: { name: decided_at, type: timestamp }
+              - column: { name: reversed_by, type: VARCHAR(160) }
+              - column: { name: reversed_at, type: timestamp }
+              - column: { name: reopened_by, type: VARCHAR(160) }
+              - column: { name: reopened_at, type: timestamp }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: attendance_day_anomalies
+            columnNames: app_id, report_id, category_id, work_date
+            constraintName: uq_attendance_day_anomalies_scope
+        - addUniqueConstraint:
+            tableName: attendance_day_anomalies
+            columnNames: app_id, operation_id
+            constraintName: uq_attendance_day_anomalies_operation
+        - addForeignKeyConstraint:
+            baseTableName: attendance_day_anomalies
+            baseColumnNames: report_id
+            referencedTableName: reports
+            referencedColumnNames: id
+            constraintName: fk_attendance_day_anomalies_report
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: attendance_day_anomalies
+            baseColumnNames: app_id
+            referencedTableName: apps
+            referencedColumnNames: id
+            constraintName: fk_attendance_day_anomalies_app
+        - createIndex:
+            tableName: attendance_day_anomalies
+            indexName: idx_attendance_day_anomalies_report_status
+            columns:
+              - column: { name: app_id }
+              - column: { name: report_id }
+              - column: { name: status }
+              - column: { name: work_date }
+      rollback:
+        - dropTable: { tableName: attendance_day_anomalies }
+
+  - changeSet:
+      id: create_attendance_day_anomaly_results_table
+      author: Mohamed-Hammada
+      changes:
+        - createTable:
+            tableName: attendance_day_anomaly_results
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: anomaly_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: daily_result_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: previous_decision, type: VARCHAR(30) }
+              - column: { name: previous_manual_minutes, type: INT }
+              - column: { name: previous_note, type: VARCHAR(500) }
+              - column: { name: previous_decided_by, type: VARCHAR(160) }
+              - column: { name: previous_decided_at, type: timestamp }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: attendance_day_anomaly_results
+            columnNames: app_id, anomaly_id, daily_result_id
+            constraintName: uq_attendance_day_anomaly_results_scope
+        - addForeignKeyConstraint:
+            baseTableName: attendance_day_anomaly_results
+            baseColumnNames: anomaly_id
+            referencedTableName: attendance_day_anomalies
+            referencedColumnNames: id
+            constraintName: fk_attendance_day_anomaly_results_anomaly
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: attendance_day_anomaly_results
+            baseColumnNames: daily_result_id
+            referencedTableName: daily_results
+            referencedColumnNames: id
+            constraintName: fk_attendance_day_anomaly_results_daily
+        - addForeignKeyConstraint:
+            baseTableName: attendance_day_anomaly_results
+            baseColumnNames: app_id
+            referencedTableName: apps
+            referencedColumnNames: id
+            constraintName: fk_attendance_day_anomaly_results_app
+        - createIndex:
+            tableName: attendance_day_anomaly_results
+            indexName: idx_attendance_day_anomaly_results_anomaly
+            columns:
+              - column: { name: app_id }
+              - column: { name: anomaly_id }
+      rollback:
+        - dropTable: { tableName: attendance_day_anomaly_results }

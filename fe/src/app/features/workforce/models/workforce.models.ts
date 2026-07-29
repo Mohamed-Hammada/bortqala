@@ -109,6 +109,29 @@ export interface AttendanceCell {
   notes?: string;
 }
 
+export interface ManualAttendanceEntry extends AttendanceCell {
+  id: string;
+  source: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface AttendanceCellError {
+  workerId?: string;
+  workDate?: string;
+  field: string;
+  message: string;
+}
+
+export interface BatchAttendanceResponse {
+  createdCount: number;
+  updatedCount: number;
+  skippedCount: number;
+  failedCount: number;
+  savedEntries: ManualAttendanceEntry[];
+  errors: AttendanceCellError[];
+}
+
 export interface SettlementPeriod {
   id: string;
   periodCode: string;
@@ -199,6 +222,9 @@ export interface WorkforceAdvance {
   status: string;
   reason?: string;
   createdAt: number;
+  appliedPolicyId?: string;
+  appliedPolicyVersion?: number;
+  appliedPolicySnapshot?: string;
 }
 
 export interface AdvancePolicy {
@@ -211,6 +237,9 @@ export interface AdvancePolicy {
   maxDeductionPercent: number;
   defaultInstallments: number;
   deferralPeriods: number;
+  version: number;
+  effectiveFrom: string;
+  effectiveTo?: string;
   active: boolean;
   updatedAt?: number;
 }

@@ -11,3 +11,7 @@
 **AR:** تتضمن صلاحيات المستخدم مفتاحاً مستقلاً لتخصيص لوحة المتابعة، ويكون مفعلاً افتراضياً للمستخدمين الحاليين والجدد ما لم يوقفه المدير.
 
 **AR:** يُحمّل تعيين الفئة مباشرة من فئات الموظفين والعمال النشطة ويُحفظ في الخادم ويُعاد عند التعديل. وتشمل خيارات القوائم صلاحيات المؤسسة وسجل التدقيق بتسميات مترجمة.
+
+**EN:** The create/edit user dialog uses a compact responsive two-column layout. Roles and menu permissions are grouped into accessible selection cards, with translated labels, module-level selection, select/clear-all actions, a fixed action footer, and keyboard-first focus.
+
+**AR:** تستخدم نافذة إنشاء وتعديل المستخدم تخطيطاً مدمجاً ومتجاوباً من عمودين. جُمعت الأدوار وصلاحيات القوائم في بطاقات اختيار واضحة ومتاحة بلوحة المفاتيح، مع تسميات مترجمة واختيار على مستوى الوحدة وأوامر تحديد/إلغاء الكل وتذييل ثابت للحفظ.

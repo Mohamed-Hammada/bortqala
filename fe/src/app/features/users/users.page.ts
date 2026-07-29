@@ -81,11 +81,11 @@ export class UsersPage {
   ];
   readonly menuGroups = [
     {
-      title: 'الموارد البشرية والموظفون',
+      titleKey: 'users.groupPeople',
       ids: ['employees', 'categories', 'imports', 'organization']
     },
     {
-      title: 'العمالة والمقاولون',
+      titleKey: 'users.groupWorkforce',
       ids: [
         'workforce-dashboard', 'workforce-contractors', 'workforce-workers',
         'workforce-categories', 'workforce-requests', 'workforce-attendance',
@@ -93,23 +93,23 @@ export class UsersPage {
       ]
     },
     {
-      title: 'المخزون والعمليات',
+      titleKey: 'users.groupOperations',
       ids: ['operations', 'production', 'quality']
     },
     {
-      title: 'المشتريات والمبيعات',
+      titleKey: 'users.groupTrade',
       ids: ['procurement', 'sales', 'parties']
     },
     {
-      title: 'المرتبات والأجور',
+      titleKey: 'users.groupPayroll',
       ids: ['payroll']
     },
     {
-      title: 'المالية والحسابات',
+      titleKey: 'users.groupFinance',
       ids: ['accounts', 'journal-entries', 'banks', 'tax-currency', 'fiscal-periods']
     },
     {
-      title: 'التقارير والإدارة',
+      titleKey: 'users.groupAdministration',
       ids: ['dashboard', 'reports', 'audit-logs', 'users', 'settings']
     }
   ];
@@ -136,7 +136,8 @@ export class UsersPage {
   }
 
   getMenuLabel(id: string): string {
-    return this.PERMISSION_LABELS[id] ?? id;
+    const option = this.menuOptions.find((item) => item.id === id);
+    return option ? this.i18n.t(option.labelKey) : id;
   }
 
   selectAllMenus(): void {
@@ -163,40 +164,6 @@ export class UsersPage {
     version: new FormControl<number | null>(null),
     categoryId: new FormControl<string | null>(null),
   });
-
-  readonly PERMISSION_LABELS: Record<string, string> = {
-    'dashboard': 'Dashboard & KPIs',
-    'categories': 'Attendance Categories & Rules',
-    'employees': 'Employee Records',
-    'imports': 'Attendance Import',
-    'parties': 'Parties (Suppliers/Customers)',
-    'reports': 'Reports',
-    'workforce-dashboard': 'Workforce Dashboard',
-    'workforce-contractors': 'Contractor Registry',
-    'workforce-workers': 'Worker Registry',
-    'workforce-categories': 'Worker Categories',
-    'workforce-requests': 'Labor Requests',
-    'workforce-attendance': 'Manual Attendance',
-    'workforce-settlements': 'Settlement Sheets',
-    'workforce-advances': 'Advances & Installments',
-    'workforce-accounts': 'Contractor Accounts',
-    'workforce-reports': 'Workforce Reports',
-    'operations': 'Inventory & Warehouse',
-    'procurement': 'Purchase Orders',
-    'sales': 'Sales & Customers',
-    'production': 'Manufacturing & Work Orders',
-    'quality': 'QC & Compliance',
-    'payroll': 'Payroll & Salary',
-    'accounts': 'Chart of Accounts',
-    'journal-entries': 'Journal Entries',
-    'banks': 'Bank & Treasury',
-    'tax-currency': 'Tax & Currency',
-    'fiscal-periods': 'Fiscal Periods',
-    'organization': 'Organization Settings',
-    'audit-logs': 'Audit Logs',
-    'users': 'Users & Permissions',
-    'settings': 'System Settings',
-  };
 
   constructor() {
     void this.store.load();

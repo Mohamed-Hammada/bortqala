@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_purchase_order_exchange_rate_snapshot
+      author: Mohamed-Hammada
+      changes:
+        - addColumn:
+            tableName: purchase_orders
+            columns:
+              - column: { name: base_currency_code, type: VARCHAR(10), defaultValue: EGP, constraints: { nullable: false } }
+              - column: { name: exchange_rate, type: "NUMERIC(18,6)", defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: exchange_rate_date, type: DATE, defaultValueComputed: CURRENT_DATE, constraints: { nullable: false } }
+              - column: { name: exchange_rate_source, type: VARCHAR(50), defaultValue: MIGRATED_DOCUMENT, constraints: { nullable: false } }
+              - column: { name: exchange_rate_override_reason, type: VARCHAR(500) }
+              - column: { name: base_total_amount, type: "NUMERIC(15,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+        - sql:
+            sql: |
+              UPDATE purchase_orders
+                 SET exchange_rate_date = po_date,
+                     exchange_rate = COALESCE((SELECT c.exchange_rate FROM currencies c WHERE c.app_id = purchase_orders.app_id AND UPPER(c.code) = UPPER(purchase_orders.currency_code)), 1),
+                     base_total_amount = total_amount * COALESCE((SELECT c.exchange_rate FROM currencies c WHERE c.app_id = purchase_orders.app_id AND UPPER(c.code) = UPPER(purchase_orders.currency_code)), 1)
+      rollback:
+        - dropColumn: { tableName: purchase_orders, columnName: base_total_amount }
+        - dropColumn: { tableName: purchase_orders, columnName: exchange_rate_override_reason }
+        - dropColumn: { tableName: purchase_orders, columnName: exchange_rate_source }
+        - dropColumn: { tableName: purchase_orders, columnName: exchange_rate_date }
+        - dropColumn: { tableName: purchase_orders, columnName: exchange_rate }
+        - dropColumn: { tableName: purchase_orders, columnName: base_currency_code }
+
+  - changeSet:
+      id: add_supplier_invoice_exchange_rate_snapshot
+      author: Mohamed-Hammada
+      changes:
+        - addColumn:
+            tableName: supplier_invoices
+            columns:
+              - column: { name: base_currency_code, type: VARCHAR(10), defaultValue: EGP, constraints: { nullable: false } }
+              - column: { name: exchange_rate, type: "NUMERIC(18,6)", defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: exchange_rate_date, type: DATE, defaultValueComputed: CURRENT_DATE, constraints: { nullable: false } }
+              - column: { name: exchange_rate_source, type: VARCHAR(50), defaultValue: MIGRATED_DOCUMENT, constraints: { nullable: false } }
+              - column: { name: exchange_rate_override_reason, type: VARCHAR(500) }
+              - column: { name: base_net_amount, type: "NUMERIC(15,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+        - sql:
+            sql: |
+              UPDATE supplier_invoices
+                 SET exchange_rate_date = invoice_date,
+                     exchange_rate = COALESCE((SELECT c.exchange_rate FROM currencies c WHERE c.app_id = supplier_invoices.app_id AND UPPER(c.code) = UPPER(supplier_invoices.currency_code)), 1),
+                     base_net_amount = net_amount * COALESCE((SELECT c.exchange_rate FROM currencies c WHERE c.app_id = supplier_invoices.app_id AND UPPER(c.code) = UPPER(supplier_invoices.currency_code)), 1)
+      rollback:
+        - dropColumn: { tableName: supplier_invoices, columnName: base_net_amount }
+        - dropColumn: { tableName: supplier_invoices, columnName: exchange_rate_override_reason }
+        - dropColumn: { tableName: supplier_invoices, columnName: exchange_rate_source }
+        - dropColumn: { tableName: supplier_invoices, columnName: exchange_rate_date }
+        - dropColumn: { tableName: supplier_invoices, columnName: exchange_rate }
+        - dropColumn: { tableName: supplier_invoices, columnName: base_currency_code }

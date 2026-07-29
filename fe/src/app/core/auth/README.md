@@ -10,4 +10,8 @@
 
 **EN:** Every API call also receives a fresh cryptographically random client correlation id and the browser installation's stable device id. The server returns its own independent correlation id. Unit tests lock this behavior down.
 
+**EN:** The typed tenant settings contract includes the attendance day-anomaly percentage so administrators can configure biometric-outage detection without bypassing backend validation.
+
+**AR:** يتضمن عقد إعدادات الشركة نسبة شذوذ يوم الحضور حتى يستطيع المدير ضبط اكتشاف تعطل البصمة مع بقاء التحقق النهائي في الخادم.
+
 **AR:** كل API call يرسل رقم تتبع جديدًا ورقم جهاز ثابتًا لهذا المتصفح، والخادم يرجع رقم تتبع مستقلًا خاصًا به.

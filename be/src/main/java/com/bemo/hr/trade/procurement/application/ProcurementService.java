@@ -5,6 +5,7 @@ import com.bemo.hr.operations.PartnerLedgerEntry;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
 import com.bemo.hr.operations.OperationsService;
 import com.bemo.hr.finance.infrastructure.CurrencyRepository;
+import com.bemo.hr.finance.domain.Currency;
 import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
@@ -108,8 +109,11 @@ public class ProcurementService {
                 .map(item -> item.quantity().multiply(item.unitPrice()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         LocalDate poDate = Instant.ofEpochMilli(payload.poDate()).atZone(ZoneOffset.UTC).toLocalDate();
+        ExchangeRateSnapshot rate = resolveExchangeRate(currencyCode, poDate, payload.exchangeRate(),
+                payload.exchangeRateOverrideReason());
         PurchaseOrder po = new PurchaseOrder(resolvePoNumber(payload.poNumber(), null), poDate, payload.supplierId(),
                 payload.purchaseRequestId(), payload.paymentTerms(), currencyCode, calculatedTotal);
+        po.applyExchangeRate(rate.baseCurrencyCode(), rate.rate(), rate.rateDate(), rate.source(), rate.overrideReason());
         PurchaseOrder saved = purchaseOrderRepository.save(po);
         List<PurchaseOrderLine> lines = buildLines(saved.getId(), payload.items());
         purchaseOrderLineRepository.saveAll(lines);
@@ -126,13 +130,16 @@ public class ProcurementService {
             throw new BusinessRuleException("Only draft purchase orders can be edited.");
         requireSupplier(payload.supplierId());
         validateLines(payload.items());
-        String currencyCode = resolveCurrency(payload.currencyCode(), payload.supplierId());
+        String currencyCode = po.getCurrencyCode();
         BigDecimal calculatedTotal = payload.items().stream()
                 .map(item -> item.quantity().multiply(item.unitPrice()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         LocalDate poDate = Instant.ofEpochMilli(payload.poDate()).atZone(ZoneOffset.UTC).toLocalDate();
+        validateFrozenPurchaseOrderExchangeSnapshot(po, payload, poDate);
         po.updateDraft(resolvePoNumber(payload.poNumber(), po.getId()), poDate, payload.supplierId(),
                 payload.purchaseRequestId(), payload.paymentTerms(), currencyCode, calculatedTotal);
+        po.applyExchangeRate(po.getBaseCurrencyCode(), po.getExchangeRate(), po.getExchangeRateDate(),
+                po.getExchangeRateSource(), po.getExchangeRateOverrideReason());
         purchaseOrderLineRepository.deleteByPurchaseOrderId(po.getId());
         List<PurchaseOrderLine> lines = buildLines(po.getId(), payload.items());
         purchaseOrderLineRepository.saveAll(lines);
@@ -277,6 +284,8 @@ public class ProcurementService {
         }
 
         LocalDate invoiceDate = Instant.ofEpochMilli(payload.invoiceDate()).atZone(ZoneOffset.UTC).toLocalDate();
+        ExchangeRateSnapshot rate = resolveExchangeRate(currencyCode, invoiceDate, payload.exchangeRate(),
+                payload.exchangeRateOverrideReason());
         LocalDate dueDate = payload.dueDate() != null
                 ? Instant.ofEpochMilli(payload.dueDate()).atZone(ZoneOffset.UTC).toLocalDate()
                 : null;
@@ -287,10 +296,11 @@ public class ProcurementService {
                 payload.purchaseOrderId(), payload.goodsReceiptId(), supplier.getResponsiblePartyId(),
                 invoiceDate, payload.totalAmount(),
                 payload.discountAmount(), payload.taxAmount(), dueDate, invoiceNotes);
+        inv.applyExchangeRate(rate.baseCurrencyCode(), rate.rate(), rate.rateDate(), rate.source(), rate.overrideReason());
         SupplierInvoice saved = supplierInvoiceRepository.save(inv);
 
         partnerLedgerEntryRepository.save(new PartnerLedgerEntry(
-                saved.getSupplierId(), "PURCHASE_INVOICE", saved.getNetAmount().negate(),
+                saved.getSupplierId(), "PURCHASE_INVOICE", saved.getBaseNetAmount().negate(),
                 saved.getDocumentReference(), "فاتورة مشتريات: " + saved.getDocumentReference(),
                 saved.getInvoiceDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
 
@@ -341,7 +351,8 @@ public class ProcurementService {
         inv.updatePaymentStatus(paidBefore.add(saved.getAmount()));
 
         partnerLedgerEntryRepository.save(new PartnerLedgerEntry(
-                saved.getSupplierId(), "SUPPLIER_PAYMENT", saved.getAmount(),
+                saved.getSupplierId(), "SUPPLIER_PAYMENT",
+                saved.getAmount().multiply(inv.getExchangeRate()).setScale(2, java.math.RoundingMode.HALF_UP),
                 saved.getPaymentNumber(), "دفعة مورد: " + saved.getPaymentNumber(),
                 saved.getPaymentDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
 
@@ -375,6 +386,54 @@ public class ProcurementService {
         currencyRepository.findByCodeIgnoreCaseAndActiveTrue(normalized)
                 .orElseThrow(() -> new BusinessRuleException("يجب اختيار عملة نشطة ومسجلة في إعدادات العملات."));
         return normalized;
+    }
+
+    public ProcurementApi.ExchangeRateQuote exchangeRateQuote(String currencyCode, long documentDate) {
+        LocalDate date = Instant.ofEpochMilli(documentDate).atZone(ZoneOffset.UTC).toLocalDate();
+        ExchangeRateSnapshot snapshot = resolveExchangeRate(currencyCode, date, null, null);
+        return new ProcurementApi.ExchangeRateQuote(currencyCode.strip().toUpperCase(java.util.Locale.ROOT),
+                snapshot.baseCurrencyCode(), snapshot.rate(), toEpochMs(snapshot.rateDate()), snapshot.source());
+    }
+
+    private ExchangeRateSnapshot resolveExchangeRate(String currencyCode, LocalDate documentDate,
+                                                      BigDecimal requestedRate, String overrideReason) {
+        Currency currency = currencyRepository.findByCodeIgnoreCaseAndActiveTrue(currencyCode)
+                .orElseThrow(() -> new BusinessRuleException("لا يوجد سعر صرف نشط للعملة المحددة."));
+        String baseCurrency = currencyRepository.findAllByOrderByCodeAsc().stream()
+                .filter(item -> item.isActive() && item.isBase()).map(Currency::getCode).findFirst().orElse("EGP");
+        BigDecimal configuredRate = currency.getCode().equalsIgnoreCase(baseCurrency)
+                ? BigDecimal.ONE : currency.getExchangeRate();
+        if (configuredRate == null || configuredRate.signum() <= 0) {
+            throw new BusinessRuleException("لا يمكن ترحيل المستند: لا يتوفر سعر صرف صالح للعملة " + currency.getCode() + ".");
+        }
+        BigDecimal effectiveRate = requestedRate == null ? configuredRate : requestedRate;
+        if (effectiveRate.signum() <= 0) throw new BusinessRuleException("سعر الصرف يجب أن يكون أكبر من صفر.");
+        boolean manuallyOverridden = effectiveRate.compareTo(configuredRate) != 0;
+        if (manuallyOverridden && (overrideReason == null || overrideReason.isBlank())) {
+            throw new BusinessRuleException("اكتب سبب تعديل سعر الصرف يدوياً.");
+        }
+        String source = manuallyOverridden ? "MANUAL_OVERRIDE"
+                : currency.getCode().equalsIgnoreCase(baseCurrency) ? "BASE_CURRENCY" : "CURRENCY_MASTER";
+        return new ExchangeRateSnapshot(baseCurrency, effectiveRate, documentDate, source,
+                manuallyOverridden ? overrideReason.strip() : null);
+    }
+
+    private void validateFrozenPurchaseOrderExchangeSnapshot(PurchaseOrder po,
+            ProcurementApi.PurchaseOrderPayload payload, LocalDate requestedDocumentDate) {
+        if (!po.getPoDate().equals(requestedDocumentDate)) {
+            throw new BusinessRuleException("لا يمكن تغيير تاريخ أمر الشراء بعد حفظ لقطة سعر الصرف.");
+        }
+        if (payload.currencyCode() != null && !payload.currencyCode().isBlank()
+                && !po.getCurrencyCode().equalsIgnoreCase(payload.currencyCode().strip())) {
+            throw new BusinessRuleException("لا يمكن تغيير عملة أمر الشراء بعد الحفظ؛ أنشئ مستنداً جديداً.");
+        }
+        if (payload.exchangeRate() != null && payload.exchangeRate().compareTo(po.getExchangeRate()) != 0) {
+            throw new BusinessRuleException("سعر الصرف مثبت مع أمر الشراء ولا يمكن تغييره بعد الحفظ.");
+        }
+        if (payload.exchangeRateOverrideReason() != null && !payload.exchangeRateOverrideReason().isBlank()
+                && !java.util.Objects.equals(po.getExchangeRateOverrideReason(), payload.exchangeRateOverrideReason().strip())) {
+            throw new BusinessRuleException("سبب تعديل سعر الصرف جزء من اللقطة المثبتة ولا يمكن تغييره.");
+        }
     }
 
     private void validateLines(List<ProcurementApi.PurchaseOrderLinePayload> items) {
@@ -480,7 +539,9 @@ public class ProcurementService {
                                                               Map<String, String> supplierNames) {
         return new ProcurementApi.PurchaseOrderResponse(po.getId(), po.getPoNumber(), toEpochMs(po.getPoDate()),
                 po.getSupplierId(), supplierNames.get(po.getSupplierId()), po.getPurchaseRequestId(),
-                po.getPaymentTerms(), po.getCurrencyCode(), po.getStatus().name(), po.getTotalAmount(),
+                po.getPaymentTerms(), po.getCurrencyCode(), po.getBaseCurrencyCode(), po.getExchangeRate(),
+                toEpochMs(po.getExchangeRateDate()), po.getExchangeRateSource(), po.getExchangeRateOverrideReason(),
+                po.getBaseTotalAmount(), po.getStatus().name(), po.getTotalAmount(),
                 lines.stream().map(this::toLineResponse).toList(), po.getCreatedAt(), po.getUpdatedAt());
     }
 
@@ -507,6 +568,8 @@ public class ProcurementService {
         return new ProcurementApi.SupplierInvoiceResponse(inv.getId(), inv.getInvoiceNumber(), inv.getSupplierId(),
                 supplierNames.get(inv.getSupplierId()), inv.getPurchaseOrderId(), inv.getGoodsReceiptId(),
                 inv.getResponsiblePartyId(), inv.getInternalReference(), inv.getMissingInvoiceReason(), inv.getCurrencyCode(),
+                inv.getBaseCurrencyCode(), inv.getExchangeRate(), toEpochMs(inv.getExchangeRateDate()),
+                inv.getExchangeRateSource(), inv.getExchangeRateOverrideReason(), inv.getBaseNetAmount(),
                 toEpochMs(inv.getInvoiceDate()),
                 inv.getTotalAmount(), inv.getDiscountAmount(), inv.getTaxAmount(), inv.getNetAmount(),
                 paidAmount, outstandingAmount,
@@ -531,6 +594,9 @@ public class ProcurementService {
                 .filter(payment -> "POSTED".equals(payment.getStatus()))
                 .map(SupplierPayment::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
+
+    private record ExchangeRateSnapshot(String baseCurrencyCode, BigDecimal rate, LocalDate rateDate,
+                                        String source, String overrideReason) { }
 
     private String getCurrentUser() {
         var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();

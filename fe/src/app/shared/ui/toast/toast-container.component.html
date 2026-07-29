@@ -3,7 +3,7 @@
     <div class="toast-card" [class]="toast.type">
       <span class="toast-icon">{{ iconFor(toast.type) }}</span>
       <p class="toast-message">{{ toast.message }}</p>
-      <button class="toast-close" type="button" (click)="dismiss(toast)" aria-label="Close notification">×</button>
+      <app-icon-button icon="×" label="إغلاق الإشعار" description="إخفاء هذه الرسالة" (pressed)="dismiss(toast)" />
     </div>
   }
 </div>

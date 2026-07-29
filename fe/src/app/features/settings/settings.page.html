@@ -271,6 +271,23 @@
         </div>
       </fieldset>
 
+      <fieldset class="settings-group">
+        <legend class="group-title">اكتشاف انقطاع أجهزة البصمة</legend>
+        <p class="group-hint">ينشئ النظام حالة شذوذ يومي عندما تبلغ نسبة الموظفين بلا بصمة هذا الحد داخل الفئة.</p>
+        <div class="field session-timeout-field">
+          <label for="attendance-anomaly-threshold">نسبة الاكتشاف (%)</label>
+          <input
+            id="attendance-anomaly-threshold"
+            class="ltr"
+            type="number"
+            min="1"
+            max="100"
+            formControlName="attendanceAnomalyThresholdPercent"
+          />
+          <small class="field-hint session-hint">القيمة الافتراضية 70%. لا يطبق النظام قراراً تلقائياً.</small>
+        </div>
+      </fieldset>
+
       @if (authService.isSuperAdmin()) {
         <fieldset class="settings-group">
           <legend class="group-title">{{ i18n.t('settings.dashboardPolicyTitle') }}</legend>

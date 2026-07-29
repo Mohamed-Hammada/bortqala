@@ -18,4 +18,8 @@
 
 **EN:** `AppTooltipDirective` displays action name, concise purpose, and an optional shortcut after 350 ms on hover or keyboard focus. It preserves `aria-describedby`, supports RTL positioning, limits copy to two lines, and closes on blur, pointer exit, click, scroll, resize, or Escape. Icon-only controls must also provide an `aria-label`.
 
+**EN:** `IconButtonComponent` is the standard icon-only action control. It requires a human-readable label and supplies the matching `aria-label` and unified tooltip, with optional description, item name, and shortcut.
+
+**AR:** المكوّن `IconButtonComponent` هو الزر القياسي للإجراءات المعتمدة على الأيقونات فقط؛ ويتطلب اسماً واضحاً ويضيف `aria-label` والتلميح الموحد مع وصف واسم عنصر واختصار اختياري.
+
 **AR:** يعرض `AppTooltipDirective` اسم الإجراء ووصفاً مختصراً والاختصار الاختياري بعد 350 مللي ثانية عند المرور أو الوصول بلوحة المفاتيح. ويحافظ على `aria-describedby` ويدعم RTL ويقصر النص على سطرين ويغلق عند فقد التركيز أو مغادرة المؤشر أو النقر أو التمرير أو تغيير الحجم أو Escape. ويجب أن يوفر كل زر يعتمد على الأيقونة فقط `aria-label`.

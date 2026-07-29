@@ -123,5 +123,11 @@ databaseChangeLog:
       file: db/changelog/20260729_v60_workforce_import_workflow.yaml
   - include:
       file: db/changelog/20260729_v61_supplier_payment_idempotency.yaml
+  - include:
+      file: db/changelog/20260729_v62_attendance_day_anomalies.yaml
+  - include:
+      file: db/changelog/20260729_v63_procurement_exchange_rate_snapshots.yaml
+  - include:
+      file: db/changelog/20260729_v64_advance_policy_versions.yaml
 
 

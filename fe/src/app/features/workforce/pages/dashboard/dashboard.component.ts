@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { WorkforceService } from '../../data-access/workforce.service';
@@ -7,29 +9,38 @@ import { WorkforceService } from '../../data-access/workforce.service';
 @Component({
   selector: 'app-workforce-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="workforce-container" [class.motion-enabled]="animationsEnabled()" [class.motion-disabled]="!animationsEnabled()">
       <header class="page-header">
         <div><span class="eyebrow">العمالة والمقاولون</span><h1>لوحة متابعة العمالة والتشغيل اليومي</h1></div>
       </header>
 
+      <section class="card shared-filters" aria-label="فلاتر لوحة القوى العاملة">
+        <div><label>المقاول</label><select [ngModel]="selectedContractorId()" (ngModelChange)="selectedContractorId.set($event); persistFilters()"><option value="">الكل</option>@for (item of workforceService.contractors(); track item.id) {<option [value]="item.id">{{ item.name }}</option>}</select></div>
+        <div><label>فئة العامل</label><select [ngModel]="selectedCategoryId()" (ngModelChange)="selectedCategoryId.set($event); persistFilters()"><option value="">الكل</option>@for (item of workforceService.categories(); track item.id) {<option [value]="item.id">{{ item.name }}</option>}</select></div>
+        <div><label>الموقع</label><select [ngModel]="selectedLocationId()" (ngModelChange)="selectedLocationId.set($event); persistFilters()"><option value="">كل المواقع</option>@for (location of locationOptions(); track location) {<option [value]="location">{{ location }}</option>}</select></div>
+        <div><label>حالة النشاط</label><select [ngModel]="selectedStatus()" (ngModelChange)="selectedStatus.set($event); persistFilters()"><option value="">الكل</option><option value="ACTIVE">نشط</option><option value="INACTIVE">غير نشط</option></select></div>
+        <button type="button" (click)="clearFilters()">مسح الفلاتر</button>
+        <small>الفلاتر مشتركة بين البطاقات والرسوم ومحفوظة داخل رابط الصفحة.</small>
+      </section>
+
       @if (loading()) { <div class="loading-state">جاري تحميل البيانات...</div> }
       @else if (loadError()) { <div class="error-state">{{ loadError() }} <button (click)="ngOnInit()">إعادة المحاولة</button></div> }
       @else {
         <div class="kpi-grid">
-          <div class="kpi-card"><span class="kpi-title">المقاولون النشطون</span><span class="kpi-value">{{ workforceService.contractors().length }}</span></div>
-          <div class="kpi-card"><span class="kpi-title">إجمالي العمالة المسجلة</span><span class="kpi-value">{{ workforceService.workers().length }}</span></div>
-          <div class="kpi-card"><span class="kpi-title">طلبات العمالة النشطة</span><span class="kpi-value">{{ workforceService.laborRequests().length }}</span></div>
-          <div class="kpi-card"><span class="kpi-title">السلف القائمة</span><span class="kpi-value">{{ workforceService.advances().length }}</span></div>
+          <a class="kpi-card" routerLink="/workforce/contractors"><span class="kpi-title">المقاولون النشطون</span><span class="kpi-value">{{ filteredContractorCount() }}</span><small>فتح التفاصيل ←</small></a>
+          <a class="kpi-card" routerLink="/workforce/workers" [queryParams]="filterQueryParams()"><span class="kpi-title">إجمالي العمالة المطابقة</span><span class="kpi-value">{{ filteredWorkers().length }}</span><small>فتح العمال ←</small></a>
+          <a class="kpi-card" routerLink="/workforce/labor-requests"><span class="kpi-title">طلبات العمالة النشطة</span><span class="kpi-value">{{ workforceService.laborRequests().length }}</span><small>فتح الطلبات ←</small></a>
+          <a class="kpi-card" routerLink="/workforce/advances"><span class="kpi-title">السلف القائمة</span><span class="kpi-value">{{ workforceService.advances().length }}</span><small>فتح السلف ←</small></a>
         </div>
 
         <div class="dashboard-grid">
           <section class="card chart-card">
-            <div class="chart-head"><div><span class="chart-eyebrow">توزيع القوى العاملة</span><h3>العمال حسب المقاول</h3></div><strong>{{ workforceService.workers().length }} عامل</strong></div>
+            <div class="chart-head"><div><span class="chart-eyebrow">توزيع القوى العاملة</span><h3>العمال حسب المقاول</h3></div><strong>{{ filteredWorkers().length }} عامل</strong></div>
             <div class="bar-chart" role="img" aria-label="رسم يوضح عدد العمال حسب المقاول">
               @for (item of contractorSeries(); track item.id) {
-                <div class="bar-row"><span>{{ item.label }}</span><div class="bar-track"><i [style.width.%]="item.percent"></i></div><strong>{{ item.value }}</strong></div>
+                <a class="bar-row" routerLink="/workforce/workers" [queryParams]="{ contractorId: item.id }"><span>{{ item.label }}</span><div class="bar-track"><i [style.width.%]="item.percent"></i></div><strong>{{ item.value }}</strong></a>
               } @empty { <p class="empty-cell">لا توجد بيانات كافية للرسم</p> }
             </div>
           </section>
@@ -38,7 +49,7 @@ import { WorkforceService } from '../../data-access/workforce.service';
             <div class="chart-head"><div><span class="chart-eyebrow">المزيج التشغيلي</span><h3>العمال حسب الفئة</h3></div></div>
             <div class="bar-chart category-bars" role="img" aria-label="رسم يوضح عدد العمال حسب الفئة">
               @for (item of categorySeries(); track item.id) {
-                <div class="bar-row"><span>{{ item.label }}</span><div class="bar-track"><i [style.width.%]="item.percent"></i></div><strong>{{ item.value }}</strong></div>
+                <a class="bar-row" routerLink="/workforce/workers" [queryParams]="{ categoryId: item.id }"><span>{{ item.label }}</span><div class="bar-track"><i [style.width.%]="item.percent"></i></div><strong>{{ item.value }}</strong></a>
               } @empty { <p class="empty-cell">لا توجد بيانات كافية للرسم</p> }
             </div>
           </section>
@@ -62,7 +73,7 @@ import { WorkforceService } from '../../data-access/workforce.service';
             <table class="data-table">
               <thead><tr><th>كود المقاول</th><th>اسم المقاول</th><th>نموذج المحاسبة</th><th>دورة التسوية</th><th>الحالة</th></tr></thead>
               <tbody>
-                <tr *ngFor="let c of workforceService.contractors()"><td><strong>{{ c.code }}</strong></td><td>{{ c.name }}</td><td><span class="badge model-badge">{{ getModelLabel(c.accountingModel) }}</span></td><td>كل {{ c.settlementCycleDays }} يوم</td><td><span class="badge active">{{ c.status }}</span></td></tr>
+                <tr *ngFor="let c of filteredContractors()"><td><strong>{{ c.code }}</strong></td><td>{{ c.name }}</td><td><span class="badge model-badge">{{ getModelLabel(c.accountingModel) }}</span></td><td>كل {{ c.settlementCycleDays }} يوم</td><td><span class="badge active">{{ c.status }}</span></td></tr>
                 <tr *ngIf="workforceService.contractors().length === 0"><td colspan="5" class="empty-cell">لا يوجد مقاولون مسجلون حالياً</td></tr>
               </tbody>
             </table>
@@ -78,6 +89,13 @@ import { WorkforceService } from '../../data-access/workforce.service';
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
     .kpi-card, .card { background: #fff; padding: 1.25rem; border-radius: 12px; border: 1px solid #e2e8f0; }
     .kpi-card { display: flex; flex-direction: column; gap: .5rem; }
+    a.kpi-card, a.bar-row { color: inherit; text-decoration: none; }
+    a.kpi-card:hover, a.bar-row:hover { border-color: #f59e0b; transform: translateY(-1px); }
+    .shared-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem; }
+    .shared-filters div { display: flex; flex-direction: column; gap: .25rem; }
+    .shared-filters label, .shared-filters small { font-size: .75rem; color: #64748b; }
+    .shared-filters select, .shared-filters button { border: 1px solid #cbd5e1; border-radius: 8px; padding: .5rem .65rem; background: white; }
+    .shared-filters small { flex-basis: 100%; }
     .kpi-title, .chart-eyebrow { font-size: .8rem; color: #64748b; font-weight: 700; }
     .kpi-value { font-size: 1.875rem; font-weight: 800; color: #0f172a; }
     .dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
@@ -116,9 +134,25 @@ import { WorkforceService } from '../../data-access/workforce.service';
 export class WorkforceDashboardComponent implements OnInit {
   workforceService = inject(WorkforceService);
   private auth = inject(AuthService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
   loading = signal(true);
   loadError = signal<string | null>(null);
   animationsEnabled = computed(() => this.auth.preferences().dashboardAnimationsEnabled);
+  selectedContractorId = signal('');
+  selectedCategoryId = signal('');
+  selectedLocationId = signal('');
+  selectedStatus = signal('');
+  filteredWorkers = computed(() => this.workforceService.workers().filter(worker =>
+    (!this.selectedContractorId() || worker.contractorId === this.selectedContractorId())
+    && (!this.selectedCategoryId() || worker.categoryId === this.selectedCategoryId())
+    && (!this.selectedLocationId() || worker.branchId === this.selectedLocationId())
+    && (!this.selectedStatus() || worker.status === this.selectedStatus())));
+  filteredContractors = computed(() => this.workforceService.contractors().filter(item =>
+    !this.selectedContractorId() || item.id === this.selectedContractorId()));
+  filteredContractorCount = computed(() => new Set(this.filteredWorkers().map(worker => worker.contractorId)).size);
+  locationOptions = computed(() => [...new Set(this.workforceService.workers().map(worker => worker.branchId).filter((value): value is string => !!value))]);
+  filterQueryParams = computed(() => ({ contractorId: this.selectedContractorId() || null, categoryId: this.selectedCategoryId() || null, branchId: this.selectedLocationId() || null, status: this.selectedStatus() || null }));
   contractorSeries = computed(() => this.breakdown(this.workforceService.contractors().map(item => ({ id: item.id, label: item.name })), worker => worker.contractorId));
   categorySeries = computed(() => this.breakdown(this.workforceService.categories().map(item => ({ id: item.id, label: item.name })), worker => worker.categoryId));
   requestedWorkers = computed(() => this.workforceService.laborRequests().flatMap(request => request.items ?? []).reduce((sum, item) => sum + item.requestedCount, 0));
@@ -132,6 +166,12 @@ export class WorkforceDashboardComponent implements OnInit {
   advanceRemainingPercent = computed(() => this.advanceGranted() > 0 ? Math.min(100, this.advanceRemaining() * 100 / this.advanceGranted()) : 0);
 
   ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      this.selectedContractorId.set(params['contractorId'] ?? '');
+      this.selectedCategoryId.set(params['categoryId'] ?? '');
+      this.selectedLocationId.set(params['locationId'] ?? '');
+      this.selectedStatus.set(params['status'] ?? '');
+    });
     this.loading.set(true);
     this.loadError.set(null);
     forkJoin({
@@ -146,12 +186,24 @@ export class WorkforceDashboardComponent implements OnInit {
     });
   }
 
+  persistFilters(): void {
+    void this.router.navigate([], { relativeTo: this.route, queryParams: {
+      contractorId: this.selectedContractorId() || null, categoryId: this.selectedCategoryId() || null,
+      locationId: this.selectedLocationId() || null, status: this.selectedStatus() || null,
+    }, queryParamsHandling: 'merge' });
+  }
+
+  clearFilters(): void {
+    this.selectedContractorId.set(''); this.selectedCategoryId.set(''); this.selectedLocationId.set(''); this.selectedStatus.set('');
+    this.persistFilters();
+  }
+
   getModelLabel(model: string): string {
     return ({ worker_net_total: 'مجموع صافي العمال', contractor_daily_rate: 'سعر تعاقد مستقل', worker_cost_plus_fee: 'تكلفة العمال + عمولة', fixed_period_amount: 'مبلغ ثابت للفترة' } as Record<string, string>)[model] ?? model;
   }
 
   private breakdown(labels: Array<{ id: string; label: string }>, selector: (worker: { contractorId: string; categoryId: string }) => string) {
-    const counts = labels.map(label => ({ ...label, value: this.workforceService.workers().filter(worker => selector(worker) === label.id).length }));
+    const counts = labels.map(label => ({ ...label, value: this.filteredWorkers().filter(worker => selector(worker) === label.id).length }));
     const max = Math.max(1, ...counts.map(item => item.value));
     return counts.filter(item => item.value > 0).sort((a, b) => b.value - a.value).slice(0, 6).map(item => ({ ...item, percent: item.value * 100 / max }));
   }

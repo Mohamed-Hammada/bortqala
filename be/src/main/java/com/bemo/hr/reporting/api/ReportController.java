@@ -67,6 +67,34 @@ public class ReportController {
         return reportingService.saveDowntimeDecision(reportId, request, authentication.getName());
     }
 
+    @PostMapping("/{reportId}/day-anomalies/detect")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    ReportingApi.Details detectDayAnomalies(@PathVariable String reportId, Authentication authentication) {
+        return reportingService.detectDayAnomalies(reportId, authentication.getName());
+    }
+
+    @PostMapping("/{reportId}/day-anomalies/{anomalyId}/decision")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    ReportingApi.DayAnomalyActionResponse decideDayAnomaly(@PathVariable String reportId,
+            @PathVariable String anomalyId, @Valid @RequestBody ReportingApi.DayAnomalyDecisionRequest request,
+            Authentication authentication) {
+        return reportingService.decideDayAnomaly(reportId, anomalyId, request, authentication.getName());
+    }
+
+    @PostMapping("/{reportId}/day-anomalies/{anomalyId}/reverse")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    ReportingApi.DayAnomalyActionResponse reverseDayAnomaly(@PathVariable String reportId,
+            @PathVariable String anomalyId, Authentication authentication) {
+        return reportingService.reverseDayAnomaly(reportId, anomalyId, authentication.getName());
+    }
+
+    @PostMapping("/{reportId}/day-anomalies/{anomalyId}/reopen")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    ReportingApi.Details reopenDayAnomaly(@PathVariable String reportId, @PathVariable String anomalyId,
+                                          Authentication authentication) {
+        return reportingService.reopenDayAnomaly(reportId, anomalyId, authentication.getName());
+    }
+
     @PutMapping("/{reportId}/holiday-proposals/{proposalId}/decision")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     ReportingApi.Details decideHoliday(@PathVariable String reportId, @PathVariable String proposalId,

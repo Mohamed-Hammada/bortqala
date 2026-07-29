@@ -46,6 +46,12 @@ public class ProcurementController {
         return procurementService.numberingSettings();
     }
 
+    @GetMapping("/exchange-rate")
+    public ProcurementApi.ExchangeRateQuote exchangeRate(@RequestParam String currencyCode,
+                                                          @RequestParam long documentDate) {
+        return procurementService.exchangeRateQuote(currencyCode, documentDate);
+    }
+
     @PostMapping("/orders")
     @Transactional
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")

@@ -17,6 +17,10 @@
 **AR:** يُحفظ تعيين فئة المستخدم في `app_users.category_id`، ويجمع المحدد فئات الموظفين والعمال النشطة ويرفض الخادم أي معرف غير معروف أو غير نشط.
 **EN:** Tenant application settings include the procurement numbering policy. Automatic mode is the default; administrators may switch to validated unique manual PO/GRN numbers.
 
+**EN:** Tenant settings also store the configurable daily attendance anomaly threshold used to detect probable biometric-device outages.
+
+**AR:** تحفظ إعدادات الشركة أيضاً نسبة شذوذ الحضور اليومية القابلة للضبط والمستخدمة لاكتشاف احتمالات تعطل أجهزة البصمة.
+
 ## Dashboard policy / سياسة لوحة المتابعة
 
 **EN:** Dashboard layouts and motion preferences are persisted per user. An admin can enable or disable layout customization for each user, while only a Super Admin can enable or disable customization for Admin accounts at tenant level. Motion remains an independent accessibility preference.

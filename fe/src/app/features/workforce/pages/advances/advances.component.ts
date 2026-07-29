@@ -30,7 +30,7 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
 
       <div class="card policy-summary-card">
         <div><strong>سياسة السلف الافتراضية والاستثناءات</strong><p>الأولوية: استثناء العامل ← استثناء الفئة ← الإعداد العام. ويمكن تجاوزها داخل السلفة نفسها.</p></div>
-        <div class="policy-chips">@for (policy of workforceService.advancePolicies(); track policy.id) {<span class="badge policy-chip">{{ policy.scopeName || getPolicyScopeLabel(policy) }} · {{ policy.deductionMode === 'AUTO' ? 'تلقائي' : 'يدوي' }} · {{ policy.maxDeductionPercent }}%</span>}</div>
+        <div class="policy-chips">@for (policy of workforceService.advancePolicies(); track policy.id) {<span class="badge policy-chip">{{ policy.scopeName || getPolicyScopeLabel(policy) }} · إصدار {{ policy.version }} · {{ policy.effectiveFrom }} → {{ policy.effectiveTo || 'مفتوحة' }} · {{ policy.deductionMode === 'AUTO' ? 'تلقائي' : 'يدوي' }} · {{ policy.maxDeductionPercent }}%</span>}</div>
       </div>
 
       <!-- Summary Stats -->
@@ -159,6 +159,15 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
               </div>
             }
 
+            @if (effectivePolicyPreview(); as policy) {
+              <div class="summary-box col-span-2">
+                <strong>السياسة الفعلية التي سيحفظها الخادم مع السلفة:</strong>
+                {{ policy.scopeName || getPolicyScopeLabel(policy) }} · إصدار {{ policy.version }} ·
+                {{ policy.deductionMode === 'AUTO' ? 'خصم تلقائي' : 'خصم يدوي' }} · حد {{ policy.maxDeductionPercent }}% ·
+                سارية من {{ policy.effectiveFrom }} {{ policy.effectiveTo ? 'حتى ' + policy.effectiveTo : '' }}
+              </div>
+            }
+
             <!-- Amount -->
             <div class="form-group">
               <label>مبلغ السُلفة (ج.م) *</label>
@@ -192,7 +201,7 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
               <div class="form-group">
                 <label>تاريخ أول قسط</label>
                 <input type="date" [(ngModel)]="form.firstInstallmentDate" name="firstInstallmentDate"
-                       class="form-input" />
+                       class="form-input" (ngModelChange)="applyAdvancePolicy()" />
               </div>
 
               <div class="form-group">
@@ -265,6 +274,8 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
             <div class="form-group"><label>الحد الأقصى من مستحق الفترة %</label><input type="number" min="1" max="100" [(ngModel)]="policyForm.maxDeductionPercent" name="policyMax" class="form-input" /></div>
             <div class="form-group"><label>عدد الأقساط الافتراضي</label><input type="number" min="1" max="60" [(ngModel)]="policyForm.defaultInstallments" name="policyInstallments" class="form-input" /></div>
             <div class="form-group"><label>فترات التأجيل الافتراضية</label><input type="number" min="0" max="12" [(ngModel)]="policyForm.deferralPeriods" name="policyDeferral" class="form-input" /></div>
+            <div class="form-group"><label>تاريخ بداية السريان *</label><input type="date" [(ngModel)]="policyForm.effectiveFrom" name="policyEffectiveFrom" class="form-input" /></div>
+            <div class="form-group"><label>تاريخ نهاية السريان</label><input type="date" [(ngModel)]="policyForm.effectiveTo" name="policyEffectiveTo" class="form-input" /></div>
             <label class="form-group"><span>الحالة</span><input type="checkbox" [(ngModel)]="policyForm.active" name="policyActive" /> مفعّلة</label>
           </div>
         </form>
@@ -485,6 +496,7 @@ export class AdvancesComponent implements OnInit {
   isModalOpen = false;
   policyModalOpen = signal(false);
   policyForm: AdvancePolicy = this.defaultPolicyForm();
+  effectivePolicyPreview = signal<AdvancePolicy | null>(null);
 
   // Repayment modal state
   repayModalOpen = signal(false);
@@ -554,6 +566,8 @@ export class AdvancesComponent implements OnInit {
 
   savePolicy(): void {
     if (this.policyForm.scopeType !== 'GLOBAL' && !this.policyForm.scopeId) { this.notificationService.warning('اختر الفئة أو العامل للاستثناء'); return; }
+    if (!this.policyForm.effectiveFrom) { this.notificationService.warning('أدخل تاريخ بداية سريان السياسة'); return; }
+    if (this.policyForm.effectiveTo && this.policyForm.effectiveTo < this.policyForm.effectiveFrom) { this.notificationService.warning('تاريخ نهاية السياسة يسبق تاريخ البداية'); return; }
     this.saving.set(true);
     this.workforceService.saveAdvancePolicy(this.policyForm).subscribe({
       next: () => { this.saving.set(false); this.policyModalOpen.set(false); this.notificationService.success('تم حفظ سياسة السلف بنجاح ✓'); },
@@ -562,11 +576,15 @@ export class AdvancesComponent implements OnInit {
   }
 
   applyAdvancePolicy(): void {
-    const policies = this.workforceService.advancePolicies().filter(policy => policy.active);
+    const effectiveDate = this.form.firstInstallmentDate || new Date().toISOString().slice(0, 10);
+    const policies = this.workforceService.advancePolicies().filter(policy => policy.active
+      && policy.effectiveFrom <= effectiveDate && (!policy.effectiveTo || policy.effectiveTo >= effectiveDate));
     const worker = this.workforceService.workers().find(item => item.id === this.form.workerId);
-    const policy = policies.find(item => item.scopeType === 'WORKER' && item.scopeId === worker?.id)
-      ?? policies.find(item => item.scopeType === 'CATEGORY' && item.scopeId === worker?.categoryId)
-      ?? policies.find(item => item.scopeType === 'GLOBAL');
+    const newest = (items: AdvancePolicy[]) => items.sort((a, b) => b.version - a.version)[0];
+    const policy = newest(policies.filter(item => item.scopeType === 'WORKER' && item.scopeId === worker?.id))
+      ?? newest(policies.filter(item => item.scopeType === 'CATEGORY' && item.scopeId === worker?.categoryId))
+      ?? newest(policies.filter(item => item.scopeType === 'GLOBAL'));
+    this.effectivePolicyPreview.set(policy ?? null);
     if (!policy) return;
     Object.assign(this.form, { deductionMode: policy.deductionMode, deductionFrequency: policy.deductionFrequency, maxDeductionPercent: policy.maxDeductionPercent, totalInstallments: policy.defaultInstallments, deferralPeriods: policy.deferralPeriods });
     this.recalcInstallment();
@@ -780,6 +798,6 @@ export class AdvancesComponent implements OnInit {
   }
 
   private defaultPolicyForm(): AdvancePolicy {
-    return { scopeType: 'GLOBAL', scopeId: '', deductionMode: 'AUTO', deductionFrequency: 'HALF_MONTH', maxDeductionPercent: 50, defaultInstallments: 1, deferralPeriods: 0, active: true };
+    return { scopeType: 'GLOBAL', scopeId: '', deductionMode: 'AUTO', deductionFrequency: 'HALF_MONTH', maxDeductionPercent: 50, defaultInstallments: 1, deferralPeriods: 0, version: 1, effectiveFrom: new Date().toISOString().slice(0, 10), effectiveTo: '', active: true };
   }
 }

@@ -12,6 +12,7 @@ import org.hibernate.annotations.TenantId;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.Objects;
 
 @Entity
 @Table(name = "manual_attendance_entries")
@@ -58,6 +59,32 @@ public class ManualAttendanceEntry {
         this.effectiveDailyRate = effectiveDailyRate != null ? effectiveDailyRate : BigDecimal.ZERO;
         this.source = source != null ? source.strip().toUpperCase() : "MANUAL";
         this.notes = notes;
+    }
+
+    public boolean hasSameManualValues(BigDecimal attendanceValue, String checkIn, String checkOut,
+                                       BigDecimal actualHours, BigDecimal overtimeHours,
+                                       BigDecimal deductionHours, BigDecimal effectiveDailyRate,
+                                       String notes) {
+        return decimalEquals(this.attendanceValue, attendanceValue)
+                && Objects.equals(this.checkIn, checkIn)
+                && Objects.equals(this.checkOut, checkOut)
+                && decimalEquals(this.actualHours, zeroIfNull(actualHours))
+                && decimalEquals(this.overtimeHours, zeroIfNull(overtimeHours))
+                && decimalEquals(this.deductionHours, zeroIfNull(deductionHours))
+                && decimalEquals(this.effectiveDailyRate, zeroIfNull(effectiveDailyRate))
+                && Objects.equals(normalizeText(this.notes), normalizeText(notes));
+    }
+
+    private static BigDecimal zeroIfNull(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private static boolean decimalEquals(BigDecimal left, BigDecimal right) {
+        return zeroIfNull(left).compareTo(zeroIfNull(right)) == 0;
+    }
+
+    private static String normalizeText(String value) {
+        return value == null || value.isBlank() ? null : value;
     }
 
     @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }

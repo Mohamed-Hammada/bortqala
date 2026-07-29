@@ -79,3 +79,8 @@
 - [x] Supplier-scoped invoice payments with outstanding-balance validation and idempotent operation IDs
 - [x] Versioned workforce settlement recalculation summaries, stale-input detection, issues, and guarded lifecycle
 - [x] Complete workforce Excel import workflow with mapping, validation, preview, duplicate detection, error workbook, commit, and reversal
+- [x] Persisted biometric day-anomaly detection with configurable thresholds, impact preview, decisions, defer/reopen, idempotency, audit, and reversal
+- [x] Transactional manual-attendance dirty-cell saving with reload persistence, per-cell errors, summary, and unsaved-change guard
+- [x] Frozen procurement exchange-rate snapshots, base-currency totals, override reasons, and base-value ledger postings
+- [x] Effective-dated versioned advance policies with applied snapshots on advances and settlements
+- [x] URL-persisted workforce dashboard filters with KPI/chart drill-down and a reusable accessible icon-button component

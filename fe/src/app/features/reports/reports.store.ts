@@ -8,6 +8,8 @@ import {
   AttendanceDecision,
   BulkDecisionRequest,
   BulkDecisionResponse,
+  DayAnomalyActionResponse,
+  DayAnomalyDecisionRequest,
   DowntimeDecisionRequest,
   HolidayProposalStatus,
   PeriodOption,
@@ -134,6 +136,26 @@ export class ReportsStore {
     );
   }
 
+  async detectDayAnomalies(reportId: string): Promise<boolean> {
+    return this.mutate(this.http.post<ReportDetails>(`/api/v1/reports/${reportId}/day-anomalies/detect`, {}));
+  }
+
+  async decideDayAnomaly(reportId: string, anomalyId: string,
+                         request: DayAnomalyDecisionRequest): Promise<DayAnomalyActionResponse | null> {
+    return this.anomalyAction(this.http.post<DayAnomalyActionResponse>(
+      `/api/v1/reports/${reportId}/day-anomalies/${anomalyId}/decision`, request));
+  }
+
+  async reverseDayAnomaly(reportId: string, anomalyId: string): Promise<DayAnomalyActionResponse | null> {
+    return this.anomalyAction(this.http.post<DayAnomalyActionResponse>(
+      `/api/v1/reports/${reportId}/day-anomalies/${anomalyId}/reverse`, {}));
+  }
+
+  async reopenDayAnomaly(reportId: string, anomalyId: string): Promise<boolean> {
+    return this.mutate(this.http.post<ReportDetails>(
+      `/api/v1/reports/${reportId}/day-anomalies/${anomalyId}/reopen`, {}));
+  }
+
   async export(id: string): Promise<void> {
     try {
       downloadBlob(
@@ -157,6 +179,21 @@ export class ReportsStore {
     } catch (error) {
       this.error.set(apiErrorMessage(error, this.i18n));
       return false;
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
+  private async anomalyAction(request: Observable<DayAnomalyActionResponse>): Promise<DayAnomalyActionResponse | null> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      const response = await firstValueFrom(request);
+      this.details.set(response.details);
+      return response;
+    } catch (error) {
+      this.error.set(apiErrorMessage(error, this.i18n));
+      return null;
     } finally {
       this.loading.set(false);
     }

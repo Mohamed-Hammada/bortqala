@@ -27,3 +27,12 @@
 **EN:** The payment dialog limits invoice choices to open invoices for the selected supplier and clears an incompatible invoice when the supplier changes. Each option shows invoice number, date, currency, total, and outstanding balance, and the amount cannot exceed that balance.
 
 **AR:** تقصر نافذة الدفع قائمة الفواتير على الفواتير المفتوحة للمورد المختار، وتلغي اختيار الفاتورة غير المتوافقة عند تغيير المورد. ويعرض كل خيار رقم الفاتورة وتاريخها وعملتها وإجماليها ورصيدها المتبقي، ولا تسمح النافذة بتجاوز هذا الرصيد.
+# Currency snapshot UX / تجربة لقطة العملة
+
+**EN:** PO and invoice dialogs show the exchange rate and totals in transaction and base currencies, require a reason for manual overrides, and display the frozen values returned by the server.
+
+**AR:** تعرض نوافذ أمر الشراء والفاتورة سعر الصرف والإجماليات بعملة العملية والعملة الأساسية، وتطلب سبباً للتعديل اليدوي وتحفظ القيم المجمدة التي يعيدها الخادم.
+
+**EN:** On an existing draft purchase order, the exchange snapshot fields are visibly locked while supplier, terms, item, quantity, and unit price remain editable.
+
+**AR:** عند تعديل أمر شراء محفوظ تظهر حقول لقطة سعر الصرف مقفلة بوضوح، بينما تظل حقول المورد والشروط والصنف والكمية وسعر الوحدة قابلة للتعديل.

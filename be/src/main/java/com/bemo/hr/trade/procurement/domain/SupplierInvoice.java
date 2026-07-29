@@ -24,6 +24,12 @@ public class SupplierInvoice {
     @Column(name = "internal_reference", nullable = false, length = 50) private String internalReference;
     @Column(name = "missing_invoice_reason", length = 255) private String missingInvoiceReason;
     @Column(name = "currency_code", nullable = false, length = 10) private String currencyCode;
+    @Column(name = "base_currency_code", nullable = false, length = 10) private String baseCurrencyCode = "EGP";
+    @Column(name = "exchange_rate", nullable = false, precision = 18, scale = 6) private BigDecimal exchangeRate = BigDecimal.ONE;
+    @Column(name = "exchange_rate_date", nullable = false) private LocalDate exchangeRateDate;
+    @Column(name = "exchange_rate_source", nullable = false, length = 50) private String exchangeRateSource = "BASE_CURRENCY";
+    @Column(name = "exchange_rate_override_reason", length = 500) private String exchangeRateOverrideReason;
+    @Column(name = "base_net_amount", nullable = false, precision = 15, scale = 2) private BigDecimal baseNetAmount = BigDecimal.ZERO;
     @Column(name = "supplier_id", nullable = false, length = 36) private String supplierId;
     @Column(name = "purchase_order_id", length = 36) private String purchaseOrderId;
     @Column(name = "goods_receipt_id", length = 36) private String goodsReceiptId;
@@ -71,9 +77,24 @@ public class SupplierInvoice {
         this.taxAmount = taxAmount;
         this.netAmount = totalAmount.subtract(discountAmount != null ? discountAmount : BigDecimal.ZERO)
                 .add(taxAmount != null ? taxAmount : BigDecimal.ZERO);
+        this.exchangeRateDate = invoiceDate;
+        this.baseNetAmount = this.netAmount;
         this.dueDate = dueDate;
         this.notes = notes;
         this.status = Status.UNPAID.name();
+    }
+
+    public void applyExchangeRate(String baseCurrencyCode, BigDecimal exchangeRate, LocalDate rateDate,
+                                  String source, String overrideReason) {
+        if (exchangeRate == null || exchangeRate.signum() <= 0) {
+            throw new IllegalArgumentException("Exchange rate must be greater than zero.");
+        }
+        this.baseCurrencyCode = baseCurrencyCode;
+        this.exchangeRate = exchangeRate;
+        this.exchangeRateDate = rateDate;
+        this.exchangeRateSource = source;
+        this.exchangeRateOverrideReason = overrideReason == null || overrideReason.isBlank() ? null : overrideReason.strip();
+        this.baseNetAmount = netAmount.multiply(exchangeRate).setScale(2, java.math.RoundingMode.HALF_UP);
     }
 
     public void updatePaymentStatus(BigDecimal paidAmount) {
@@ -91,6 +112,12 @@ public class SupplierInvoice {
     public String getInternalReference() { return internalReference; }
     public String getMissingInvoiceReason() { return missingInvoiceReason; }
     public String getCurrencyCode() { return currencyCode; }
+    public String getBaseCurrencyCode() { return baseCurrencyCode; }
+    public BigDecimal getExchangeRate() { return exchangeRate; }
+    public LocalDate getExchangeRateDate() { return exchangeRateDate; }
+    public String getExchangeRateSource() { return exchangeRateSource; }
+    public String getExchangeRateOverrideReason() { return exchangeRateOverrideReason; }
+    public BigDecimal getBaseNetAmount() { return baseNetAmount; }
     public String getSupplierId() { return supplierId; }
     public String getPurchaseOrderId() { return purchaseOrderId; }
     public String getGoodsReceiptId() { return goodsReceiptId; }

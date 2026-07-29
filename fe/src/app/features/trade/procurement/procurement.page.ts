@@ -11,17 +11,18 @@ import { downloadBlob, exportCsv } from '../../../core/download';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 import { RouterLink } from '@angular/router';
 import { AppTooltipDirective } from '../../../shared/ui/app-tooltip/app-tooltip.directive';
+import { IconButtonComponent } from '../../../shared/ui/icon-button/icon-button.component';
 
 interface PurchaseOrderLineResponse { id: string; itemId: string; itemName: string; itemCategory: string; quantity: number; unitOfMeasure: string; unitPrice: number; lineTotal: number; }
-interface PurchaseOrder { id: string; poNumber: string; poDate: number; supplierId: string; supplierName?: string; paymentTerms?: string; currencyCode: string; status: string; totalAmount: number; items: PurchaseOrderLineResponse[]; createdAt: number; updatedAt: number; }
+interface PurchaseOrder { id: string; poNumber: string; poDate: number; supplierId: string; supplierName?: string; paymentTerms?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseTotalAmount: number; status: string; totalAmount: number; items: PurchaseOrderLineResponse[]; createdAt: number; updatedAt: number; }
 interface GoodsReceiptLineResponse { id: string; purchaseOrderLineId: string; itemId: string; itemName: string; itemCategory: string; deliveredQuantity: number; rejectedQuantity: number; deductedQuantity: number; quantity: number; unitOfMeasure: string; unitPrice: number; locationId?: string; lotNumber?: string; qualityReason?: string; }
 interface GoodsReceipt { id: string; grnNumber: string; receiptDate: number; purchaseOrderId: string; supplierId: string; supplierName?: string; warehouseId?: string; status: string; currencyCode: string; notes?: string; lines: GoodsReceiptLineResponse[]; createdAt: number; }
-interface SupplierInvoice { id: string; invoiceNumber?: string; internalReference: string; missingInvoiceReason?: string; currencyCode: string; supplierId: string; supplierName?: string; purchaseOrderId?: string; goodsReceiptId?: string; responsiblePartyId?: string; invoiceDate: number; totalAmount: number; discountAmount?: number; taxAmount?: number; netAmount: number; paidAmount: number; outstandingAmount: number; dueDate?: number; notes?: string; status: string; createdAt: number; updatedAt: number; }
+interface SupplierInvoice { id: string; invoiceNumber?: string; internalReference: string; missingInvoiceReason?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseNetAmount: number; supplierId: string; supplierName?: string; purchaseOrderId?: string; goodsReceiptId?: string; responsiblePartyId?: string; invoiceDate: number; totalAmount: number; discountAmount?: number; taxAmount?: number; netAmount: number; paidAmount: number; outstandingAmount: number; dueDate?: number; notes?: string; status: string; createdAt: number; updatedAt: number; }
 interface SupplierPayment { id: string; paymentNumber: string; paymentDate: number; supplierId: string; supplierName?: string; supplierInvoiceId: string; amount: number; currencyCode: string; paymentMethod: string; notes?: string; operationId: string; status: string; createdAt: number; }
 interface Party { id: string; code: string; name: string; partyType: string; active: boolean; managedType?: 'DIRECT' | 'MANAGED'; responsiblePartyId?: string; currencyCode?: string; paymentTerms?: string; }
 interface InventoryItem { id: string; code: string; name: string; categoryName?: string; uomName?: string; unitCode?: string; active: boolean; }
 interface NumberingSettings { automaticNumbering: boolean; }
-interface Currency { code: string; name: string; symbol: string; active: boolean; }
+interface Currency { code: string; name: string; symbol: string; isBase: boolean; exchangeRate: number; active: boolean; }
 
 export function calculatePurchaseOrderTotal(items: ReadonlyArray<{ quantity: number; unitPrice: number }>): number {
   return items.reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0);
@@ -36,7 +37,7 @@ export function filterPayableInvoices<T extends { supplierId: string; status: st
 
 @Component({
   selector: 'app-procurement-page',
-  imports: [ReactiveFormsModule, FormsModule, DecimalPipe, ModalDialogComponent, RouterLink, AppTooltipDirective],
+  imports: [ReactiveFormsModule, FormsModule, DecimalPipe, ModalDialogComponent, RouterLink, AppTooltipDirective, IconButtonComponent],
   templateUrl: './procurement.page.html',
   styleUrl: './procurement.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -63,6 +64,7 @@ export class ProcurementPage {
 
   readonly modalOpen = signal(false);
   readonly editingPoId = signal<string | null>(null);
+  readonly editingPoSnapshot = signal<PurchaseOrder | null>(null);
   readonly poItems = signal<Array<{ itemId: string; itemName: string; itemCategory: string; quantity: number; unitOfMeasure: string; unitPrice: number; currency: string; warehouse: string; deliveryDate: string }>>([]);
 
   readonly poForm = new FormGroup({
@@ -71,11 +73,14 @@ export class ProcurementPage {
     supplierId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     paymentTerms: new FormControl('Net 30 Days', { nonNullable: true }),
     currencyCode: new FormControl('EGP', { nonNullable: true, validators: [Validators.required] }),
+    exchangeRate: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0.000001)] }),
+    exchangeRateOverrideReason: new FormControl('', { nonNullable: true }),
   });
 
   totalCalculated(): number {
     return calculatePurchaseOrderTotal(this.poItems());
   }
+  poBaseTotal(): number { return this.totalCalculated() * this.poForm.controls.exchangeRate.value; }
 
   // ─── GRN Form ─────────────────────────────────────────────────────
 
@@ -114,11 +119,14 @@ export class ProcurementPage {
     dueDate: new FormControl('', { nonNullable: true }),
     notes: new FormControl('', { nonNullable: true }),
     currencyCode: new FormControl('EGP', { nonNullable: true, validators: [Validators.required] }),
+    exchangeRate: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0.000001)] }),
+    exchangeRateOverrideReason: new FormControl('', { nonNullable: true }),
   });
   invNetAmount(): number {
     const v = this.invForm.getRawValue();
     return Math.max(0, v.totalAmount - v.discountAmount + v.taxAmount);
   }
+  invBaseNetAmount(): number { return this.invNetAmount() * this.invForm.controls.exchangeRate.value; }
 
   // ─── Payment Form ─────────────────────────────────────────────────
 
@@ -174,8 +182,14 @@ export class ProcurementPage {
   openNewPo() {
     const s = this.suppliers();
     this.editingPoId.set(null);
+    this.editingPoSnapshot.set(null);
+    this.poForm.controls.poDate.enable({ emitEvent: false });
+    this.poForm.controls.currencyCode.enable({ emitEvent: false });
+    this.poForm.controls.exchangeRate.enable({ emitEvent: false });
+    this.poForm.controls.exchangeRateOverrideReason.enable({ emitEvent: false });
     const supplier = s[0];
-    this.poForm.reset({ poNumber: '', poDate: new Date().toISOString().substring(0, 10), supplierId: supplier?.id ?? '', paymentTerms: supplier?.paymentTerms ?? 'Net 30 Days', currencyCode: supplier?.currencyCode ?? 'EGP' });
+    const currencyCode = supplier?.currencyCode ?? 'EGP';
+    this.poForm.reset({ poNumber: '', poDate: new Date().toISOString().substring(0, 10), supplierId: supplier?.id ?? '', paymentTerms: supplier?.paymentTerms ?? 'Net 30 Days', currencyCode, exchangeRate: this.configuredRate(currencyCode), exchangeRateOverrideReason: '' });
     const firstItem = this.inventoryItems()[0];
     this.poItems.set([{ itemId: firstItem?.id ?? '', itemName: firstItem?.name ?? '', itemCategory: firstItem?.categoryName ?? '', quantity: 1, unitOfMeasure: firstItem?.uomName ?? firstItem?.unitCode ?? '', unitPrice: 0, currency: 'EGP', warehouse: 'المستودع الرئيسي', deliveryDate: new Date().toISOString().substring(0, 10) }]);
     this.modalOpen.set(true);
@@ -184,7 +198,12 @@ export class ProcurementPage {
   openEditPo(po: PurchaseOrder) {
     if (po.status !== 'DRAFT') return;
     this.editingPoId.set(po.id);
-    this.poForm.reset({ poNumber: po.poNumber, poDate: epochToDateInput(po.poDate), supplierId: po.supplierId, paymentTerms: po.paymentTerms ?? '', currencyCode: po.currencyCode ?? 'EGP' });
+    this.editingPoSnapshot.set(po);
+    this.poForm.reset({ poNumber: po.poNumber, poDate: epochToDateInput(po.poDate), supplierId: po.supplierId, paymentTerms: po.paymentTerms ?? '', currencyCode: po.currencyCode ?? 'EGP', exchangeRate: po.exchangeRate ?? 1, exchangeRateOverrideReason: po.exchangeRateOverrideReason ?? '' });
+    this.poForm.controls.poDate.disable({ emitEvent: false });
+    this.poForm.controls.currencyCode.disable({ emitEvent: false });
+    this.poForm.controls.exchangeRate.disable({ emitEvent: false });
+    this.poForm.controls.exchangeRateOverrideReason.disable({ emitEvent: false });
     this.poItems.set(po.items.map(item => ({
       itemId: item.itemId, itemName: item.itemName, itemCategory: item.itemCategory ?? '',
       quantity: item.quantity, unitOfMeasure: item.unitOfMeasure ?? '', unitPrice: item.unitPrice,
@@ -201,7 +220,18 @@ export class ProcurementPage {
   }
   onPoSupplierSelected(): void {
     const supplier = this.suppliers().find(item => item.id === this.poForm.controls.supplierId.value);
-    if (supplier) this.poForm.patchValue({ currencyCode: supplier.currencyCode ?? 'EGP', paymentTerms: supplier.paymentTerms ?? this.poForm.controls.paymentTerms.value });
+    if (supplier) {
+      if (this.editingPoId()) {
+        this.poForm.patchValue({ paymentTerms: supplier.paymentTerms ?? this.poForm.controls.paymentTerms.value });
+        return;
+      }
+      const currencyCode = supplier.currencyCode ?? 'EGP';
+      this.poForm.patchValue({ currencyCode, exchangeRate: this.configuredRate(currencyCode), exchangeRateOverrideReason: '', paymentTerms: supplier.paymentTerms ?? this.poForm.controls.paymentTerms.value });
+    }
+  }
+  onPoCurrencyChanged(): void {
+    if (this.editingPoId()) return;
+    this.poForm.patchValue({ exchangeRate: this.configuredRate(this.poForm.controls.currencyCode.value), exchangeRateOverrideReason: '' });
   }
   removeItemLine(idx: number) { if (this.poItems().length > 1) this.poItems.update(i => i.filter((_, n) => n !== idx)); else this.notification.warning('يجب وجود بند شراء واحد على الأقل'); }
 
@@ -210,10 +240,11 @@ export class ProcurementPage {
     if (this.poForm.invalid) { this.poForm.markAllAsTouched(); return; }
     if (!this.automaticNumbering() && !this.poForm.controls.poNumber.value.trim()) { this.poForm.controls.poNumber.markAsTouched(); return; }
     if (this.poItems().length === 0 || this.poItems().some(item => !item.itemId || item.quantity <= 0 || item.unitPrice < 0)) { this.notification.warning('اختر صنف مخزون وأدخل كمية وسعراً صحيحين لكل بند'); return; }
+    if (!this.editingPoId() && this.poRateOverridden() && !this.poForm.controls.exchangeRateOverrideReason.value.trim()) { this.notification.warning('اكتب سبب تعديل سعر الصرف يدوياً.'); return; }
     this.submitting.set(true);
     try {
       const v = this.poForm.getRawValue();
-      const payload = { poNumber: this.automaticNumbering() ? null : v.poNumber.trim(), poDate: dateInputToEpoch(v.poDate), supplierId: v.supplierId, paymentTerms: v.paymentTerms, currencyCode: v.currencyCode, items: this.poItems() };
+      const payload = { poNumber: this.automaticNumbering() ? null : v.poNumber.trim(), poDate: dateInputToEpoch(v.poDate), supplierId: v.supplierId, paymentTerms: v.paymentTerms, currencyCode: v.currencyCode, exchangeRate: v.exchangeRate, exchangeRateOverrideReason: v.exchangeRateOverrideReason || null, items: this.poItems() };
       const editingId = this.editingPoId();
       await firstValueFrom(editingId
         ? this.http.put(`/api/v1/trade/procurement/orders/${editingId}`, payload)
@@ -269,13 +300,20 @@ export class ProcurementPage {
   openNewInvoice() {
     const s = this.suppliers();
     const supplier = s[0];
-    this.invForm.reset({ hasSupplierInvoice: true, invoiceNumber: '', supplierId: supplier?.id ?? '', purchaseOrderId: '', goodsReceiptId: '', internalReference: '', missingInvoiceReason: '', invoiceDate: new Date().toISOString().substring(0, 10), totalAmount: 0, discountAmount: 0, taxAmount: 0, dueDate: '', notes: '', currencyCode: supplier?.currencyCode ?? 'EGP' });
+    const currencyCode = supplier?.currencyCode ?? 'EGP';
+    this.invForm.reset({ hasSupplierInvoice: true, invoiceNumber: '', supplierId: supplier?.id ?? '', purchaseOrderId: '', goodsReceiptId: '', internalReference: '', missingInvoiceReason: '', invoiceDate: new Date().toISOString().substring(0, 10), totalAmount: 0, discountAmount: 0, taxAmount: 0, dueDate: '', notes: '', currencyCode, exchangeRate: this.configuredRate(currencyCode), exchangeRateOverrideReason: '' });
     this.invModalOpen.set(true);
   }
 
   onInvoiceSupplierSelected(): void {
     const supplier = this.suppliers().find(item => item.id === this.invForm.controls.supplierId.value);
-    if (supplier) this.invForm.patchValue({ currencyCode: supplier.currencyCode ?? 'EGP' });
+    if (supplier) {
+      const currencyCode = supplier.currencyCode ?? 'EGP';
+      this.invForm.patchValue({ currencyCode, exchangeRate: this.configuredRate(currencyCode), exchangeRateOverrideReason: '' });
+    }
+  }
+  onInvoiceCurrencyChanged(): void {
+    this.invForm.patchValue({ exchangeRate: this.configuredRate(this.invForm.controls.currencyCode.value), exchangeRateOverrideReason: '' });
   }
 
   onInvoiceAvailabilityChanged(): void {
@@ -288,6 +326,7 @@ export class ProcurementPage {
     const invoiceValue = this.invForm.getRawValue();
     if (invoiceValue.hasSupplierInvoice && !invoiceValue.invoiceNumber.trim()) { this.notification.warning('أدخل رقم فاتورة المورد، أو اختر «لا توجد فاتورة من المورد».'); return; }
     if (!invoiceValue.hasSupplierInvoice && (!invoiceValue.internalReference.trim() || !invoiceValue.missingInvoiceReason.trim())) { this.notification.warning('أدخل المرجع الداخلي وسبب عدم وجود فاتورة المورد.'); return; }
+    if (this.invoiceRateOverridden() && !invoiceValue.exchangeRateOverrideReason.trim()) { this.notification.warning('اكتب سبب تعديل سعر الصرف يدوياً.'); return; }
     this.submitting.set(true);
     try {
       const v = this.invForm.getRawValue();
@@ -295,6 +334,7 @@ export class ProcurementPage {
         invoiceNumber: v.hasSupplierInvoice ? v.invoiceNumber.trim() : null, supplierId: v.supplierId, purchaseOrderId: v.purchaseOrderId || null,
         goodsReceiptId: v.goodsReceiptId || null, internalReference: v.internalReference || null,
         missingInvoiceReason: v.hasSupplierInvoice ? null : v.missingInvoiceReason || null, currencyCode: v.currencyCode,
+        exchangeRate: v.exchangeRate, exchangeRateOverrideReason: v.exchangeRateOverrideReason || null,
         invoiceDate: new Date(v.invoiceDate).getTime(), totalAmount: v.totalAmount,
         discountAmount: v.discountAmount > 0 ? v.discountAmount : null, taxAmount: v.taxAmount > 0 ? v.taxAmount : null,
         dueDate: v.dueDate ? new Date(v.dueDate).getTime() : null, notes: v.notes || null,
@@ -356,6 +396,13 @@ export class ProcurementPage {
     return ({ DRAFT: 'مسودة', ISSUED: 'صادر', PARTIALLY_RECEIVED: 'استلام جزئي', RECEIVED: 'مستلم بالكامل', CANCELLED: 'ملغي' } as Record<string, string>)[status] ?? status;
   }
   invoiceReference(invoice: SupplierInvoice): string { return invoice.invoiceNumber || invoice.internalReference; }
+  baseCurrencyCode(): string { return this.currencies().find(currency => currency.isBase)?.code ?? 'EGP'; }
+  configuredRate(currencyCode: string): number {
+    const currency = this.currencies().find(item => item.code === currencyCode);
+    return currency?.isBase ? 1 : Number(currency?.exchangeRate ?? 0);
+  }
+  poRateOverridden(): boolean { return Math.abs(this.poForm.controls.exchangeRate.value - this.configuredRate(this.poForm.controls.currencyCode.value)) > 0.000001; }
+  invoiceRateOverridden(): boolean { return Math.abs(this.invForm.controls.exchangeRate.value - this.configuredRate(this.invForm.controls.currencyCode.value)) > 0.000001; }
 
   async exportExcel(): Promise<void> {
     try {

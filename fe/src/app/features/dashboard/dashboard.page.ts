@@ -84,6 +84,8 @@ export class DashboardPage {
     this.route.queryParams.subscribe((params: Record<string, string>) => {
       const y = Number(params['year']) || new Date().getFullYear();
       const m = Number(params['month']) || new Date().getMonth() + 1;
+      this.selectedPeriod.set(params['period'] === 'WEEK' ? 'WEEK' : 'MONTH');
+      this.selectedDepartmentId.set(params['department'] || null);
       if (y !== this.year() || m !== this.month()) {
         this.year.set(y);
         this.month.set(m);
@@ -169,11 +171,19 @@ export class DashboardPage {
   }
 
   changePeriodFilter(): void {
-    void this.store.loadChartData(this.selectedPeriod(), this.selectedDepartmentId(), this.year(), this.month());
+    void this.persistSharedFilters();
   }
 
   onDepartmentChange(): void {
-    void this.store.loadChartData(this.selectedPeriod(), this.selectedDepartmentId(), this.year(), this.month());
+    void this.persistSharedFilters();
+  }
+
+  private async persistSharedFilters(): Promise<void> {
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { period: this.selectedPeriod(), department: this.selectedDepartmentId() || null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   openKpiDetails(title: string, value: string | number, details: string[]) {
