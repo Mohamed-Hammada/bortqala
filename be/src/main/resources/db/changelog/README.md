@@ -41,3 +41,7 @@ V6 adds the per-application session timeout and its Arabic/English settings tran
 **EN:** V62 adds persisted attendance day anomalies and the tenant threshold. V63 freezes procurement exchange-rate snapshots and base totals. V64 versions advance policies by effective dates and stores the applied policy snapshot on advances and settlements.
 
 **AR:** يضيف V62 حالات شذوذ الحضور اليومية المحفوظة ونسبة الشركة. ويثبت V63 لقطات سعر الصرف وإجماليات العملة الأساسية للمشتريات. ويضيف V64 إصدارات مؤرخة لسياسات السلف ويحفظ لقطة السياسة المستخدمة مع السلف والتسويات.
+
+**EN:** V65 adds the complete Arabic/English database translation catalog for the responsive user dialog, including password visibility, menu selection, permission counts, and module group labels.
+
+**AR:** يضيف V65 كتالوج ترجمات قاعدة البيانات الكامل بالعربية والإنجليزية لنافذة المستخدم المتجاوبة، بما يشمل إظهار كلمة المرور واختيار القوائم وعدد الصلاحيات وتسميات مجموعات الوحدات.

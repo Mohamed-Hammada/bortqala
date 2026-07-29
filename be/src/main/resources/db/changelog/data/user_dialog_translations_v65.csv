@@ -1,0 +1,29 @@
+id;translation_key;locale;text_value
+x65-001-ar;users.showPassword;ar-EG;إظهار كلمة المرور
+x65-001-en;users.showPassword;en-US;Show password
+x65-002-ar;users.hidePassword;ar-EG;إخفاء كلمة المرور
+x65-002-en;users.hidePassword;en-US;Hide password
+x65-003-ar;users.menuGroupsHint;ar-EG;مقسمة حسب وحدات النظام
+x65-003-en;users.menuGroupsHint;en-US;Grouped by system module
+x65-004-ar;users.selectAllMenus;ar-EG;تحديد الكل
+x65-004-en;users.selectAllMenus;en-US;Select all
+x65-005-ar;users.clearAllMenus;ar-EG;إلغاء تحديد الكل
+x65-005-en;users.clearAllMenus;en-US;Clear all
+x65-006-ar;users.permissionOne;ar-EG;صلاحية واحدة
+x65-006-en;users.permissionOne;en-US;1 permission
+x65-007-ar;users.permissionCount;ar-EG;{count} صلاحيات
+x65-007-en;users.permissionCount;en-US;{count} permissions
+x65-008-ar;users.groupPeople;ar-EG;الموارد البشرية والموظفون
+x65-008-en;users.groupPeople;en-US;People & employees
+x65-009-ar;users.groupWorkforce;ar-EG;العمالة والمقاولون
+x65-009-en;users.groupWorkforce;en-US;Workforce & contractors
+x65-010-ar;users.groupOperations;ar-EG;المخزون والعمليات
+x65-010-en;users.groupOperations;en-US;Inventory & operations
+x65-011-ar;users.groupTrade;ar-EG;المشتريات والمبيعات
+x65-011-en;users.groupTrade;en-US;Procurement & sales
+x65-012-ar;users.groupPayroll;ar-EG;المرتبات والأجور
+x65-012-en;users.groupPayroll;en-US;Payroll & wages
+x65-013-ar;users.groupFinance;ar-EG;المالية والحسابات
+x65-013-en;users.groupFinance;en-US;Finance & accounting
+x65-014-ar;users.groupAdministration;ar-EG;التقارير والإدارة
+x65-014-en;users.groupAdministration;en-US;Reports & administration

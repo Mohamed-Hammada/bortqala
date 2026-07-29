@@ -112,11 +112,17 @@
 
     <!-- Enhanced Filter Bar -->
     <div class="filter-bar">
-      <button class="button secondary btn-sm" (click)="toggleFilterPanel()">
+      <button
+        class="button secondary btn-sm"
+        type="button"
+        [attr.aria-expanded]="showFilterPanel()"
+        aria-controls="report-filter-panel"
+        (click)="toggleFilterPanel()"
+      >
         {{ showFilterPanel() ? '▲' : '▼' }} {{ i18n.t('review.filters', {}, 'تصفية متقدمة') }}
       </button>
       @if (showFilterPanel()) {
-        <div class="filter-panel">
+        <div id="report-filter-panel" class="filter-panel">
           <div class="filter-grid">
             <div class="filter-field">
               <label>{{ i18n.t('review.fromDate', {}, 'من تاريخ') }}</label>
@@ -172,9 +178,9 @@
 
     <!-- Smart Recommendation & Bulk Decision Section — counts always match filtered results -->
     @if (canReview() && totalCount() > 0 && unresolvedCount() > 0) {
-      <div class="smart-ai-box">
+      <section class="smart-ai-box" [attr.aria-label]="i18n.t('review.aiHeading')">
         <div class="ai-header">
-          <span class="ai-badge-icon">⚡</span>
+          <span class="ai-badge-icon" aria-hidden="true">⚡</span>
           <div>
             <h3>{{ i18n.t('review.aiHeading') }}</h3>
             <p>{{ i18n.t('review.aiSummary', { singlePunch: singlePunchCount(), noPunch: noPunchCount(), manualEntry: manualEntryCount(), missingSchedule: missingScheduleCount() }) }}
@@ -198,7 +204,7 @@
             {{ i18n.t('review.missingScheduleBulk', { count: missingScheduleCount() }) }}
           </button>
         </div>
-      </div>
+      </section>
     }
 
     <!-- Holiday Group Proposals -->
@@ -251,7 +257,7 @@
         >
           <span class="dot red"></span>
           <span>{{ i18n.t('review.unresolvedFilterLabel') }}</span>
-          <span class="count-badge">{{ data.report.unresolvedCount }}</span>
+          <span class="count-badge">{{ unresolvedCount() }}</span>
         </button>
 
         <button
@@ -291,7 +297,7 @@
         >
           <span class="dot gray"></span>
           <span>{{ i18n.t('review.allFilterLabel') }}</span>
-          <span class="count-badge">{{ data.dailyResults.length }}</span>
+          <span class="count-badge">{{ totalCount() }}</span>
         </button>
       </div>
     </div>
@@ -323,7 +329,12 @@
               (click)="toggleRowExpand(row.id)"
             >
               <td class="expand-cell">
-                <button class="expand-btn" type="button" [attr.aria-label]="i18n.t('review.ariaToggleDetails')">
+                <button
+                  class="expand-btn"
+                  type="button"
+                  [attr.aria-label]="i18n.t('review.ariaToggleDetails')"
+                  [attr.aria-expanded]="expandedRowId() === row.id"
+                >
                   {{ expandedRowId() === row.id ? '▼' : '►' }}
                 </button>
               </td>

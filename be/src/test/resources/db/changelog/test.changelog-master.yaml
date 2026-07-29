@@ -160,6 +160,8 @@ databaseChangeLog:
       file: db/changelog/20260729_v63_procurement_exchange_rate_snapshots.yaml
   - include:
       file: db/changelog/20260729_v64_advance_policy_versions.yaml
+  - include:
+      file: db/changelog/20260729_v65_user_dialog_translations.yaml
   # Liquibase 5 cannot reliably resolve lowercase H2 tables in tableExists
   # preconditions. Apply the skipped production column additions directly.
   - changeSet:

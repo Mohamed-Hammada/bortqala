@@ -10,3 +10,9 @@
 **EN:** Report review displays persisted threshold anomalies, affected employee/payroll-time preview, five decisions, processed history, reversal, and explicit reopen.
 
 **AR:** تعرض مراجعة التقرير حالات الشذوذ المحفوظة ومعاينة الموظفين ووقت الأجر المتأثر والقرارات الخمسة والسجل والتراجع وإعادة الفتح الصريحة.
+
+# Review workspace UI / واجهة مراجعة التقرير
+
+**EN:** The review workspace keeps KPI cards, advanced filters, Smart AI bulk actions, filtered status tabs, and anomaly controls within the available content width. Bulk actions use responsive grids, the page never creates document-level horizontal overflow, and wide attendance data scrolls only inside its table container.
+
+**AR:** تحافظ واجهة المراجعة على بطاقات المؤشرات والتصفية المتقدمة والإجراءات الجماعية الذكية وتبويبات الحالات وأدوات الشذوذ داخل عرض المحتوى المتاح. تستخدم الإجراءات تخطيطاً متجاوباً، ولا تنشئ الصفحة تمريراً أفقياً عاماً، بينما يظل تمرير بيانات الحضور العريضة داخل الجدول فقط.
