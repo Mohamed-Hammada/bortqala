@@ -44,7 +44,7 @@ V6 adds the per-application session timeout and its Arabic/English settings tran
 
 **EN:** V65 adds the complete Arabic/English database translation catalog for the responsive user dialog, including password visibility, menu selection, permission counts, and module group labels.
 
-**EN:** V66 adds tenant-owned live biometric IP/API devices, manual and scheduled synchronization state, and durable sync feedback. V67 removes the known invalid legacy supplier phone and adds audited compensating inventory reversals for the two invalid negative inbound QA movements; the original evidence rows remain untouched.
+**EN:** V66 adds tenant-owned live biometric IP/API devices, manual and scheduled synchronization state, and durable sync feedback. The former V67 legacy QA correction is retained only as a test fixture; it is not part of the production release chain.
 
 ## Folder convention for V68+
 
@@ -58,5 +58,13 @@ V6 adds the per-application session timeout and its Arabic/English settings tran
 - `src/test/resources/db/changelog/test-data/`: test fixtures only; never included by production.
 
 The production `db.changelog-master.yaml` includes only ordered release masters. The development database was explicitly approved for recreation when the historical files were physically categorized, so the categorized paths are now canonical.
+
+## Production/test data boundary
+
+- Production always includes the global translation catalog and platform roles, including `ADMIN` and `SUPER_ADMIN`.
+- Admin and Super Admin accounts are ensured idempotently after Liquibase by the mandatory application bootstrap.
+- Demo categories, organizations, fiscal periods, sample exchange rates, QA cleanup, and legacy QA corrections live only under `src/test/resources/db/changelog/test-data/`.
+- The production master must never include a path under `src/test/resources` or `db/changelog/test-data`.
+- Optional Java demo scenarios require a `dev`/`demo` profile plus `hr.bootstrap.demo-data=true`; production cannot activate that initializer.
 
 **AR:** يضيف V65 كتالوج ترجمات قاعدة البيانات الكامل بالعربية والإنجليزية لنافذة المستخدم المتجاوبة، بما يشمل إظهار كلمة المرور واختيار القوائم وعدد الصلاحيات وتسميات مجموعات الوحدات.

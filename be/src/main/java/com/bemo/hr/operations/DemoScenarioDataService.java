@@ -13,6 +13,7 @@ import com.bemo.hr.party.BusinessPartyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Profile;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Profile({"dev", "demo"})
 @RequiredArgsConstructor
 public class DemoScenarioDataService {
     private static final String DEMO_CHECKSUM = "4d07d64bf6a12b134ad0eaee56d79ee6a7283f61a86aee622f1ff1a5803b12e5";

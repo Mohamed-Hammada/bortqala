@@ -36,9 +36,7 @@ public class OrganizationController {
     }
 
     @GetMapping
-    @Transactional
     public OrganizationApi.OrganizationHierarchyResponse getHierarchy() {
-        ensureDefaultOrganization();
         var companies = companyRepository.findAllByOrderByCodeAsc().stream().map(this::toResponse).toList();
         var branches = branchRepository.findAllByOrderByCodeAsc().stream().map(this::toResponse).toList();
         var warehouses = warehouseRepository.findAllByOrderByCodeAsc().stream().map(this::toResponse).toList();
@@ -48,19 +46,8 @@ public class OrganizationController {
 
     // --- Companies ---
     @GetMapping("/companies")
-    @Transactional
     public List<OrganizationApi.CompanyResponse> listCompanies() {
-        ensureDefaultOrganization();
         return companyRepository.findAllByOrderByCodeAsc().stream().map(this::toResponse).toList();
-    }
-
-    private void ensureDefaultOrganization() {
-        if (companyRepository.count() == 0) {
-            Company demoCompany = companyRepository.save(new Company("DEMO", "شركة البرتقال للتنمية الزراعية والصناعية (Bemo Demo)", "300123456700003", "1010998877", true));
-            Branch mainBranch = branchRepository.save(new Branch(demoCompany.getId(), "MAIN-BR", "الفرع الرئيسي — الجيزة / النوبارية", "الجيزة - مصر", true));
-            warehouseRepository.save(new Warehouse(mainBranch.getId(), "WH-01", "مستودع المركز الرئيسي للمحاصيل والمنتجات", "النوبارية - البحيرة", true));
-            departmentRepository.save(new Department(demoCompany.getId(), "HR-DEPT", "إدارة الموارد البشرية والعمليات", null, true));
-        }
     }
 
     @PostMapping("/companies")

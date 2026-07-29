@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: test-data-cleanup-not-a-phone
+      author: Mohamed-Hammada
+      comment: Test-only cleanup for the historical invalid phone fixture.
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: business_parties
+        - columnExists:
+            tableName: business_parties
+            columnName: phone
+      changes:
+        - update:
+            tableName: business_parties
+            where: phone = 'NOT-A-PHONE' OR phone = 'not-a-phone'
+            columns:
+              - column:
+                  name: phone
+                  value: null
+                  type: VARCHAR(50)

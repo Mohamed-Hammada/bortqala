@@ -11,7 +11,7 @@
 - **Loading State & Hydration UX (P1-01, QA-015, QA-016)**: Added skeleton loaders during cold loads on `/`, `/dashboard`, `/reports`, eliminating premature zero-data empty state flashes.
 - **Payroll Lifecycle & State Guardrails (P1-02)**: Blocked individual and bulk salary disbursement at both API service layer and UI components unless the payroll cycle is in `APPROVED` or `POSTED` status. Converted epoch-millisecond dates into localized human-readable dates.
 - **Immutable Append-Only Audit Logging (P1-03)**: Connected `AuditService.record()` across user authentication, payroll state transitions, report approvals/reopens, inventory movements, and settings changes.
-- **Linked ERP Transactions & Hierarchy (P1-04)**: Auto-bootstrapped default DEMO company (`30000000-0000-0000-0000-000000000001`), main branch, warehouse, and department. Auto-seeded 2026 fiscal periods for accounting entries.
+- **Linked ERP Transactions & Hierarchy (P1-04)**: Added tenant-scoped company, branch, warehouse, and department APIs. Read operations are side-effect free; production organization data is created explicitly by authorized users, while sample organization/fiscal data lives only in the test changelog.
 - **QA Defects & UX Enhancements**:
   - **QA-001**: Standardized empty report status UI to "لا توجد سجلات / لا ينطبق" when 0 records exist.
   - **QA-004**: Enforced mandatory biometric device ID field for active biometric employees with inline Arabic validation message.
@@ -19,9 +19,9 @@
   - **QA-007**: Synchronized dashboard year switch (2025 vs 2026) with summary cards, canceled stale HTTP requests, and preserved URL query params.
   - **QA-008 & QA-012**: Corrected employee `001` name to `محمد أحمد علي`. Replaced bare action icon buttons (`✎`, `×`) with explicit text labels, tooltips, and keyboard accessibility.
   - **QA-011**: Added missing translation keys (`payroll.maxAdvanceDeduction`, `reports.emptyNoRecords`, etc.) and ensured instant reactive locale toggle.
-- **Liquibase Database Migration (`v38`)**: Created `20260728_v38_audit_payroll_erp_fixes.yaml` for database cleanup, employee name fixes, default company bootstrapping, and translation rows.
+- **Liquibase Database Migration (`v38`)**: Production V38 now contains only mandatory translation rows and required schema fields. Its former DEMO organization, currency, employee-name, and QA-cleanup records are isolated in the test-only changelog.
 - **Attendance Report Bulk Decisions (P0)**: Implemented backend bulk-decision API with operation ID for idempotency (`POST /api/v1/reports/{id}/bulk-decision`), new `AttendanceDecision` types (`ABSENCE`, `OFFICIAL_HOLIDAY`, `INDIVIDUAL_REVIEW`), device/power-outage decision persistence (`PUT /api/v1/reports/{id}/downtime-decision`). Frontend enhanced filter panel (date range, category, attendance condition, review status), recommendation counts computed from filtered data, downtime decisions saved to backend with non-blocking feedback.
-- **Business Parties / Supplier Relationship Model (P0)**: Added `nameEn`, `email`, `address`, `relationshipStartDate`, `relationshipEndDate` fields to `BusinessParty` entity. Updated API DTOs with validation (`@Email`, `@Pattern` for phone/tax ID). Enforced managed-type (`DIRECT`/`MANAGED`) with responsible-party requirement for managed suppliers. Added `POST /api/v1/parties/cleanup-phone` admin endpoint. Created Liquibase `v44` migration for new columns + data cleanup (`NOT-A-PHONE`, legacy managed types). Frontend form updated with new fields, validation errors, conditional date pickers for managed suppliers, and i18n keys.
+- **Business Parties / Supplier Relationship Model (P0)**: Added `nameEn`, `email`, `address`, `relationshipStartDate`, `relationshipEndDate` fields to `BusinessParty` entity. Updated API DTOs with validation (`@Email`, `@Pattern` for phone/tax ID). Enforced managed-type (`DIRECT`/`MANAGED`) with responsible-party requirement for managed suppliers. Added `POST /api/v1/parties/cleanup-phone` admin endpoint. Production V44 contains the schema and generic managed-type normalization; the known invalid QA phone cleanup is test-only. Frontend form updated with new fields, validation errors, conditional date pickers for managed suppliers, and i18n keys.
 - **Bilingual Translation Catalog (P1)**: Added Liquibase V52 with the 508 missing Arabic/English database rows. All 714 literal frontend keys now pass `npm run check:i18n`, and the Angular Vitest target is runnable locally and in CI.
 - **Procurement Document Flow (P0)**: Implemented the connected PO/GRN/invoice/payment pipeline. PO totals are derived from validated inventory-linked lines. GRNs support partial receiving, delivered/rejected/quality-deducted quantities, warehouse location and lot trace, block over-receipt, and post only accepted quantity to inventory. Supplier invoices preserve PO, GRN, supplier, and responsible-party trace; direct/managed invoice rules are enforced. Partial and multiple payments update outstanding balances and the partner ledger. A real multi-sheet `.xlsx` export is available. Liquibase V45, V49, and V50 carry the document, trace, and inventory-receiving schema.
 - **Procurement Entry UX & Configurable Numbering (P0)**: Added tenant settings for either server-generated locked numeric PO/GRN sequences or unique manual numbers. Automatic numbering continues after each company's existing highest document number. PO dates accept historical/current/future values, draft orders can update supplier/date/item/quantity/price, line units come from the inventory master, and eligible draft/issued/partially received orders are selectable with their lines in GRN entry. Supplier selection is restricted to active registered suppliers. Liquibase V53 carries the setting, sequence storage, uniqueness rules, and Arabic/English UI copy.
@@ -33,7 +33,7 @@
 - **Unified Tooltip Accessibility (P1)**: Standardized 350ms hover/focus delay, two-line RTL surfaces, Escape dismissal, `aria-describedby`, and icon-only `aria-label` coverage in the shell and audited controls; added financial and bulk-action context help.
 - **GRN Reliability & Validation (P0)**: Fixed goods-receipt line persistence, server-calculated remaining PO quantities, partial/full PO transitions, accepted-quantity inventory posting, negative/over-receipt validation, explicit Arabic UI feedback, decimal quantity steps, and the responsive accessible GRN dialog.
 - **Live Biometric Device Integration (P0)**: Added tenant-owned IP/API device connections, immediate and scheduled synchronization, durable status/cursor state, batch and punch idempotency, identity matching, audit logging, and an Arabic responsive management UI alongside CSV/XLS/XLSX fallback.
-- **Legacy Data Correction (P1)**: Cleared the known invalid QA supplier phone and posted audited compensating reversal movements for the two invalid negative inbound receipts while retaining their original evidence.
+- **Production/Test Bootstrap Boundary (P0)**: Production always installs translations and platform roles, then idempotently ensures configured Admin and Super Admin accounts. Demo organization, attendance, currency, supplier, inventory, and legacy QA correction data is reachable only through the test changelog or an explicitly enabled `dev`/`demo` profile.
 
 ---
 
@@ -61,7 +61,7 @@
 - [x] Append-only Audit Trail logging active across all sensitive actions
 - [x] Mandatory biometric device ID validation for active biometric employees
 - [x] Single positive quantity input model for inventory movements
-- [x] Auto-bootstrapped DEMO company and 2026 fiscal periods
+- [x] Mandatory translations, roles, Admin, and Super Admin bootstrap with production credentials; DEMO organization/fiscal fixtures isolated from production
 - [x] Attendance report bulk decisions with idempotent backend API, filtered recommendation counts, device outage persistence
 - [x] Supplier direct/managed relationship model, responsible partner, email/address/nameEn fields, field validation, data cleanup
 - [x] Full procurement document flow: GRN with lines, supplier invoices with discount/tax, payments with auto-ledger, PO receive/cancel
@@ -88,4 +88,4 @@
 - [x] URL-persisted workforce dashboard filters with KPI/chart drill-down and a reusable accessible icon-button component
 - [x] Issued-PO goods receipts persist, update remaining quantities/status, and post accepted inventory with field-level quantity validation
 - [x] Live biometric IP/API device synchronization with scheduling, idempotency, persisted results, and upload fallback
-- [x] Audited legacy phone cleanup and compensating stock reversals with original history retained
+- [x] Legacy QA phone/reversal scenarios retained under the test-only changelog and excluded from production

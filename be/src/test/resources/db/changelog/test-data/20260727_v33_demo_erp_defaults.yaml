@@ -15,7 +15,7 @@ databaseChangeLog:
               INSERT INTO companies (id, app_id, code, name, tax_number, commercial_registry, active, created_at, updated_at)
               SELECT '30000000-0000-0000-0000-000000000001', a.id, 'DEMO-CO', 'شركة البرتقالة للتصدير والتصنيع', 'EG-123456789', 'CR-987654', TRUE, 1753574400000, 1753574400000
               FROM apps a
-              WHERE UPPER(a.code) = 'DEMO'
+              WHERE UPPER(a.code) = 'TEST'
                 AND NOT EXISTS (SELECT 1 FROM companies c WHERE c.app_id = a.id);
 
               INSERT INTO branches (id, app_id, company_id, code, name, location, active, created_at, updated_at)
@@ -39,25 +39,25 @@ databaseChangeLog:
               -- 3. Seed Default Fiscal Periods for 2025 & 2026
               INSERT INTO fiscal_periods (id, app_id, fiscal_year, period_number, period_name, start_date, end_date, status, created_at, updated_at)
               SELECT '40000000-0000-0000-0000-000000202501', a.id, 2025, 1, 'يناير 2025', DATE '2025-01-01', DATE '2025-01-31', 'CLOSED', 1753574400000, 1753574400000
-              FROM apps a WHERE UPPER(a.code) = 'DEMO' AND NOT EXISTS (SELECT 1 FROM fiscal_periods f WHERE f.app_id = a.id AND f.fiscal_year = 2025 AND f.period_number = 1);
+              FROM apps a WHERE UPPER(a.code) = 'TEST' AND NOT EXISTS (SELECT 1 FROM fiscal_periods f WHERE f.app_id = a.id AND f.fiscal_year = 2025 AND f.period_number = 1);
 
               INSERT INTO fiscal_periods (id, app_id, fiscal_year, period_number, period_name, start_date, end_date, status, created_at, updated_at)
               SELECT '40000000-0000-0000-0000-000000202502', a.id, 2025, 2, 'فبراير 2025', DATE '2025-02-01', DATE '2025-02-28', 'CLOSED', 1753574400000, 1753574400000
-              FROM apps a WHERE UPPER(a.code) = 'DEMO' AND NOT EXISTS (SELECT 1 FROM fiscal_periods f WHERE f.app_id = a.id AND f.fiscal_year = 2025 AND f.period_number = 2);
+              FROM apps a WHERE UPPER(a.code) = 'TEST' AND NOT EXISTS (SELECT 1 FROM fiscal_periods f WHERE f.app_id = a.id AND f.fiscal_year = 2025 AND f.period_number = 2);
 
               INSERT INTO fiscal_periods (id, app_id, fiscal_year, period_number, period_name, start_date, end_date, status, created_at, updated_at)
               SELECT '40000000-0000-0000-0000-000000202607', a.id, 2026, 7, 'يوليو 2026', DATE '2026-07-01', DATE '2026-07-31', 'OPEN', 1753574400000, 1753574400000
-              FROM apps a WHERE UPPER(a.code) = 'DEMO' AND NOT EXISTS (SELECT 1 FROM fiscal_periods f WHERE f.app_id = a.id AND f.fiscal_year = 2026 AND f.period_number = 7);
+              FROM apps a WHERE UPPER(a.code) = 'TEST' AND NOT EXISTS (SELECT 1 FROM fiscal_periods f WHERE f.app_id = a.id AND f.fiscal_year = 2026 AND f.period_number = 7);
 
               -- 4. Seed Currencies & Tax Rates
               INSERT INTO currencies (id, app_id, code, name, symbol, exchange_rate, is_base, active, created_at, updated_at)
               SELECT '50000000-0000-0000-0000-000000000001', a.id, 'EGP', 'الجنيه المصري', 'ج.م', 1.000000, TRUE, TRUE, 1753574400000, 1753574400000
-              FROM apps a WHERE UPPER(a.code) = 'DEMO' AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'EGP');
+              FROM apps a WHERE UPPER(a.code) = 'TEST' AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'EGP');
 
               INSERT INTO currencies (id, app_id, code, name, symbol, exchange_rate, is_base, active, created_at, updated_at)
               SELECT '50000000-0000-0000-0000-000000000002', a.id, 'USD', 'الدولار الأمريكي', '$', 50.000000, FALSE, TRUE, 1753574400000, 1753574400000
-              FROM apps a WHERE UPPER(a.code) = 'DEMO' AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'USD');
+              FROM apps a WHERE UPPER(a.code) = 'TEST' AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'USD');
 
               INSERT INTO tax_rates (id, app_id, code, name, rate_percentage, tax_type, active, created_at, updated_at)
               SELECT '60000000-0000-0000-0000-000000000001', a.id, 'VAT-14', 'ضريبة القيمة المضافة 14%', 14.00, 'VAT', TRUE, 1753574400000, 1753574400000
-              FROM apps a WHERE UPPER(a.code) = 'DEMO' AND NOT EXISTS (SELECT 1 FROM tax_rates t WHERE t.app_id = a.id AND t.code = 'VAT-14');
+              FROM apps a WHERE UPPER(a.code) = 'TEST' AND NOT EXISTS (SELECT 1 FROM tax_rates t WHERE t.app_id = a.id AND t.code = 'VAT-14');

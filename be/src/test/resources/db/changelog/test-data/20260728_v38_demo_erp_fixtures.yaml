@@ -1,0 +1,69 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260728-38-demo-erp-fixtures
+      author: hr-platform
+      comment: Test-only DEMO organization, QA cleanup, and sample currency fixtures.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              -- 1. Fix Employee 001 name & invalid test names
+              UPDATE employees
+              SET full_name = 'محمد أحمد علي'
+              WHERE employee_code IN ('001', 'EMP-001', '1') OR UPPER(full_name) = 'MMMM';
+
+              -- 2. Cleanup test data
+              DELETE FROM employee_code_sequences WHERE category_id IN (SELECT id FROM attendance_categories WHERE code = 'QA_CAT_20260726');
+              DELETE FROM attendance_categories WHERE code = 'QA_CAT_20260726';
+              DELETE FROM employees WHERE employee_code IN ('SECURITY-QA-20260726-EMP-INVALID', 'SECURITY-QA-20260726-RETEST-NODEVICE');
+
+              -- 3. Ensure Default Organization for DEMO App
+              INSERT INTO companies (id, app_id, code, name, tax_number, commercial_registry, active, created_at, updated_at)
+              SELECT '30000000-0000-0000-0000-000000000001', a.id, 'DEMO-CO', 'شركة البرتقالة للتصدير والتصنيع (Bemo Demo)', 'EG-123456789', 'CR-987654', TRUE, 1753574400000, 1753574400000
+              FROM apps a
+              WHERE UPPER(a.code) = 'TEST'
+                AND NOT EXISTS (SELECT 1 FROM companies c WHERE c.app_id = a.id);
+
+              INSERT INTO branches (id, app_id, company_id, code, name, location, active, created_at, updated_at)
+              SELECT '30000000-0000-0000-0000-000000000002', c.app_id, c.id, 'BR-MAIN', 'الفرع الرئيسي - الجيزة / النوبارية', 'الجيزة - مصر', TRUE, 1753574400000, 1753574400000
+              FROM companies c
+              WHERE c.code = 'DEMO-CO'
+                AND NOT EXISTS (SELECT 1 FROM branches b WHERE b.company_id = c.id);
+
+              INSERT INTO warehouses (id, app_id, branch_id, code, name, location, active, created_at, updated_at)
+              SELECT '30000000-0000-0000-0000-000000000003', b.app_id, b.id, 'WH-MAIN', 'المستودع الرئيسي للمحاصيل والمنتجات', 'النوبارية - البحيرة', TRUE, 1753574400000, 1753574400000
+              FROM branches b
+              WHERE b.code = 'BR-MAIN'
+                AND NOT EXISTS (SELECT 1 FROM warehouses w WHERE w.branch_id = b.id);
+
+              INSERT INTO departments (id, app_id, company_id, code, name, active, created_at, updated_at)
+              SELECT '30000000-0000-0000-0000-000000000004', c.app_id, c.id, 'DEP-GEN', 'إدارة الموارد البشرية والعمليات', TRUE, 1753574400000, 1753574400000
+              FROM companies c
+              WHERE c.code = 'DEMO-CO'
+                AND NOT EXISTS (SELECT 1 FROM departments d WHERE d.company_id = c.id);
+
+
+  - changeSet:
+      id: 20260728-38-seed-demo-currencies
+      author: Mohamed-Hammada
+      validCheckSum: ANY
+      comment: Seed default currencies for DEMO app
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO currencies (id, app_id, code, name, symbol, is_base, exchange_rate, active, created_at, updated_at)
+              SELECT '50000000-0000-0000-0000-000000000011', a.id, 'EGP', 'الجنيه المصري', 'ج.م', TRUE, 1.0, TRUE, 1753574400000, 1753574400000
+              FROM apps a WHERE UPPER(a.code) = 'TEST'
+              AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'EGP');
+
+              INSERT INTO currencies (id, app_id, code, name, symbol, is_base, exchange_rate, active, created_at, updated_at)
+              SELECT '50000000-0000-0000-0000-000000000012', a.id, 'USD', 'الدولار الأمريكي', '$', FALSE, 50.0, TRUE, 1753574400000, 1753574400000
+              FROM apps a WHERE UPPER(a.code) = 'TEST'
+              AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'USD');
+
+              INSERT INTO currencies (id, app_id, code, name, symbol, is_base, exchange_rate, active, created_at, updated_at)
+              SELECT '50000000-0000-0000-0000-000000000013', a.id, 'EUR', 'اليورو', '€', FALSE, 55.0, TRUE, 1753574400000, 1753574400000
+              FROM apps a WHERE UPPER(a.code) = 'TEST'
+              AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'EUR');
+

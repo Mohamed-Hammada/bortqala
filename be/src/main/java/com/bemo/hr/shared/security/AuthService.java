@@ -354,8 +354,6 @@ public class AuthService {
     private TenantApplication requireCurrentApp() {
         String appId = TenantContext.require();
         return tenantApplicationRepository.findById(appId)
-                .or(() -> tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue("DEMO"))
-                .or(() -> tenantApplicationRepository.findAll().stream().findFirst())
                 .orElseThrow(() -> new NotFoundException("Application not found."));
     }
 

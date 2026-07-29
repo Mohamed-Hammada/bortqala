@@ -2,6 +2,12 @@ databaseChangeLog:
   - changeSet:
       id: seed_super_admin_role
       author: Mohamed-Hammada
+      comment: Mandatory platform role required by the idempotent super-admin bootstrap.
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM roles WHERE code = 'SUPER_ADMIN'
       changes:
         - insert:
             tableName: roles
@@ -12,3 +18,7 @@ databaseChangeLog:
               - column:
                   name: name_ar
                   value: مدير النظام الأعلى
+      rollback:
+        - delete:
+            tableName: roles
+            where: code = 'SUPER_ADMIN'

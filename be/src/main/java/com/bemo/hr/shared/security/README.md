@@ -8,6 +8,12 @@
 
 **AR:** دخول باسم مستخدم وكلمة مرور مشفرة بـ BCrypt، وJWT بلا جلسة، وOrigins موثوقة قابلة للإعداد، وإدارة مستخدمين مع عدة أدوار لكل مستخدم. الإنتاج يتطلب `HR_JWT_SECRET`.
 
+## Mandatory bootstrap / التهيئة الإلزامية
+
+**EN:** Every application start idempotently ensures one operational Admin and one Super Admin after Liquibase has installed the mandatory `ADMIN` and `SUPER_ADMIN` roles. Non-dev deployments must provide `HR_BOOTSTRAP_APP_CODE`, `HR_BOOTSTRAP_APP_NAME`, `HR_BOOTSTRAP_ADMIN_USERNAME`, `HR_BOOTSTRAP_ADMIN_PASSWORD`, `HR_BOOTSTRAP_SUPER_ADMIN_USERNAME`, and `HR_BOOTSTRAP_SUPER_ADMIN_PASSWORD`; startup fails when any value is missing. Demo records are not part of this bootstrap.
+
+**AR:** يضمن كل تشغيل للتطبيق ـ بدون تكرار ـ وجود حساب مدير تشغيل وحساب مدير شامل بعد أن يضيف Liquibase دوري `ADMIN` و`SUPER_ADMIN` الإلزاميين. يجب على البيئات غير التطويرية توفير متغيرات `HR_BOOTSTRAP_*` الخاصة بالشركة والحسابين، ويتوقف التشغيل بوضوح إذا كانت أي قيمة مفقودة. البيانات التجريبية ليست جزءاً من هذه التهيئة.
+
 **EN:** Per-user navigation preferences persist favorite and recently used menu IDs, section visibility, and the recent-item limit through `/api/v1/auth/preferences/navigation`, so the same settings follow the user across devices without changing permissions.
 
 **AR:** تُحفظ تفضيلات التنقل لكل مستخدم، بما فيها المفضلة والعناصر المستخدمة حديثاً وإظهار الأقسام والحد الأقصى للعناصر، عبر `/api/v1/auth/preferences/navigation` لتتزامن بين الأجهزة دون تغيير الصلاحيات.

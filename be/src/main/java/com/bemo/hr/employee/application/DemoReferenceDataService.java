@@ -7,6 +7,7 @@ import com.bemo.hr.employee.domain.ScheduleRule;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Profile;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Service
+@Profile({"dev", "demo"})
 public class DemoReferenceDataService {
     private static final int SATURDAY_TO_THURSDAY_MASK = 111;
     private static final LocalDate DEFAULT_EFFECTIVE_FROM = LocalDate.of(2026, 1, 1);

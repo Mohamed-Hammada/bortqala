@@ -12,6 +12,8 @@ Inventory adjustments are ADMIN-only, require an explicit approval acknowledgeme
 
 Procurement resolves item names, categories, and fixed units of measure from the inventory master through this service; client-supplied descriptive fields are never trusted as master data.
 
+Demo employees, punches, parties, inventory movements, ledger entries, and advances are opt-in development fixtures. Production startup never creates them.
+
 ## العربية
 
 هذه الحزمة مسؤولة عن أصناف المخزن، وحركات الكمية الموجبة والسالبة، ودفاتر الموردين والعملاء، وسُلف الموظفين. يمكن للعملية الواحدة أن تؤثر على المخزون والحساب المالي معًا داخل معاملة واحدة. الأرصدة ناتجة من جمع الحركات ولا يتم تعديلها مباشرة.
@@ -23,3 +25,5 @@ Procurement resolves item names, categories, and fixed units of measure from the
 تسويات المخزون متاحة للمدير فقط وتتطلب إقرار اعتماد وسبباً صريحاً، وتبقى كسجلات إضافية غير قابلة لمحو التاريخ، ولا يمكنها إنشاء رصيد سالب. تُصحح الأرصدة السالبة القديمة بمستندات تسوية موجبة.
 
 تستمد المشتريات اسم الصنف وتصنيفه ووحدة قياسه الثابتة من دليل المخزون عبر هذه الخدمة، ولا تعتمد على البيانات الوصفية المرسلة من الواجهة كبيانات رئيسية.
+
+الموظفون والبصمات والأطراف وحركات المخزون والقيود والسلف النموذجية بيانات تطوير اختيارية، ولا ينشئها تشغيل الإنتاج.
