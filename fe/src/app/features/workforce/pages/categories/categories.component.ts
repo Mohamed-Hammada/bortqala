@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { WorkforceService } from '../../data-access/workforce.service';
 import { WorkerCategory } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
+import { downloadBlob } from '../../../../core/download';
 
 @Component({
   selector: 'app-categories',
@@ -16,9 +17,7 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
           <span class="eyebrow">إدارة فئات العمالة</span>
           <h1>الفئات التشغيلية واليوميات القياسية</h1>
         </div>
-        <button type="button" class="btn btn-primary" (click)="openCreateModal()">
-          + إضافة فئة جديدة
-        </button>
+        <div class="header-actions"><button type="button" class="btn btn-secondary" (click)="exportExcel()">⇩ تصدير Excel</button><button type="button" class="btn btn-primary" (click)="openCreateModal()">+ إضافة فئة جديدة</button></div>
       </header>
 
       <div class="card">
@@ -105,6 +104,7 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
     .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
     .eyebrow { font-size: 0.875rem; color: #d97706; font-weight: 600; }
     .page-header { display: flex; justify-content: space-between; align-items: center; }
+    .header-actions { display: flex; gap: .75rem; }
     .page-header h1 { font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0 0 0; }
     .card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 1.25rem; }
     .data-table { width: 100%; border-collapse: collapse; text-align: right; }
@@ -131,6 +131,10 @@ export class CategoriesComponent implements OnInit {
 
   ngOnInit() {
     this.workforceService.loadCategories().subscribe();
+  }
+
+  exportExcel(): void {
+    this.workforceService.exportCategoriesExcel().subscribe(blob => downloadBlob(blob, `worker-categories-${new Date().toISOString().slice(0, 10)}.xlsx`));
   }
 
   getCycleLabel(cycle: string): string {

@@ -12,6 +12,7 @@
           class="icon-button collapse-toggle"
           type="button"
           (click)="collapsed.set(!collapsed())"
+          [attr.aria-label]="collapsed() ? i18n.t('action.openMenu') : i18n.t('action.closeMenu')"
           [appTooltip]="collapsed() ? i18n.t('action.openMenu') : i18n.t('action.closeMenu')"
         >
           <app-icon name="menu" />
@@ -52,7 +53,8 @@
                 type="button"
                 class="fav-star-btn active"
                 (click)="toggleFavorite(item.menuId, $event)"
-                [title]="i18n.t('appShell.favoriteTooltip')"
+                [attr.aria-label]="i18n.t('appShell.favoriteTooltip')"
+                [appTooltip]="i18n.t('appShell.favoriteTooltip')"
               >
                 ★
               </button>
@@ -86,7 +88,8 @@
                 class="fav-star-btn"
                 [class.active]="isFavorite(item.menuId)"
                 (click)="toggleFavorite(item.menuId, $event)"
-                [title]="i18n.t('appShell.addFavoriteTooltip')"
+                [attr.aria-label]="i18n.t('appShell.addFavoriteTooltip')"
+                [appTooltip]="i18n.t('appShell.addFavoriteTooltip')"
               >
                 ★
               </button>
@@ -113,6 +116,7 @@
             type="button"
             class="workspace-header group-toggle-btn"
             (click)="toggleGroupCollapse(section.titleKey)"
+            [attr.aria-label]="i18n.t(section.titleKey) + ' — ' + (isGroupCollapsed(section.titleKey) ? i18n.t('shortcuts.expandGroup') : i18n.t('shortcuts.collapseGroup'))"
             [appTooltip]="isGroupCollapsed(section.titleKey) ? i18n.t('shortcuts.expandGroup') : i18n.t('shortcuts.collapseGroup')"
           >
             <span>{{ i18n.t(section.titleKey) }}</span>
@@ -141,7 +145,8 @@
                     class="fav-star-btn"
                     [class.active]="isFavorite(item.menuId)"
                     (click)="toggleFavorite(item.menuId, $event)"
-                    [title]="i18n.t('appShell.pinFavoriteTooltip')"
+                    [attr.aria-label]="i18n.t('appShell.pinFavoriteTooltip')"
+                    [appTooltip]="i18n.t('appShell.pinFavoriteTooltip')"
                   >
                     ★
                   </button>
@@ -251,7 +256,7 @@
           <h2>{{ i18n.t('shortcuts.quickNavTitle') }}</h2>
           <p>{{ i18n.t('shortcuts.quickNavHint') }}</p>
         </div>
-        <button type="button" class="shortcut-close" (click)="closeShortcutPanels()" [appTooltip]="i18n.t('shortcuts.closeDialog')">✕</button>
+        <button type="button" class="shortcut-close" (click)="closeShortcutPanels()" [attr.aria-label]="i18n.t('shortcuts.closeDialog')" [appTooltip]="i18n.t('shortcuts.closeDialog')">✕</button>
       </header>
       <div class="quick-nav-search-wrap">
         <span aria-hidden="true">⌕</span>
@@ -313,7 +318,7 @@
           <h2>{{ i18n.t('shortcuts.title') }}</h2>
           <p>{{ i18n.t('shortcuts.subtitle') }}</p>
         </div>
-        <button type="button" class="shortcut-close" (click)="closeShortcutPanels()" [appTooltip]="i18n.t('shortcuts.closeDialog')">✕</button>
+        <button type="button" class="shortcut-close" (click)="closeShortcutPanels()" [attr.aria-label]="i18n.t('shortcuts.closeDialog')" [appTooltip]="i18n.t('shortcuts.closeDialog')">✕</button>
       </header>
       <div class="shortcut-reference-grid">
         <section>

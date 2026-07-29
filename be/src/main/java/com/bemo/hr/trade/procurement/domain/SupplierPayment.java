@@ -21,6 +21,7 @@ public class SupplierPayment {
     @Column(name = "payment_date", nullable = false) private LocalDate paymentDate;
     @Column(name = "supplier_id", nullable = false, length = 36) private String supplierId;
     @Column(name = "supplier_invoice_id", nullable = false, length = 36) private String supplierInvoiceId;
+    @Column(name = "operation_id", nullable = false, length = 80) private String operationId;
     @Column(nullable = false, precision = 15, scale = 2) private BigDecimal amount;
     @Column(name = "payment_method", nullable = false, length = 30) private String paymentMethod;
     @Column(length = 500) private String notes;
@@ -30,12 +31,13 @@ public class SupplierPayment {
     protected SupplierPayment() {}
 
     public SupplierPayment(String paymentNumber, LocalDate paymentDate, String supplierId,
-                           String supplierInvoiceId, BigDecimal amount, String paymentMethod, String notes) {
+                           String supplierInvoiceId, String operationId, BigDecimal amount, String paymentMethod, String notes) {
         this.id = UUID.randomUUID().toString();
         this.paymentNumber = paymentNumber.strip();
         this.paymentDate = paymentDate;
         this.supplierId = supplierId;
         this.supplierInvoiceId = supplierInvoiceId;
+        this.operationId = operationId;
         this.amount = amount;
         this.paymentMethod = paymentMethod;
         this.notes = notes;
@@ -47,6 +49,7 @@ public class SupplierPayment {
     public LocalDate getPaymentDate() { return paymentDate; }
     public String getSupplierId() { return supplierId; }
     public String getSupplierInvoiceId() { return supplierInvoiceId; }
+    public String getOperationId() { return operationId; }
     public BigDecimal getAmount() { return amount; }
     public String getPaymentMethod() { return paymentMethod; }
     public String getNotes() { return notes; }

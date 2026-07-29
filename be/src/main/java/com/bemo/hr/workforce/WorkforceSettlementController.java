@@ -25,6 +25,16 @@ public class WorkforceSettlementController {
         return settlementService.listPeriods();
     }
 
+    @GetMapping("/periods/{id}")
+    public WorkforceApi.SettlementPeriodResponse getPeriod(@PathVariable String id) {
+        return settlementService.getPeriod(id);
+    }
+
+    @GetMapping("/periods/{id}/issues")
+    public List<WorkforceApi.SettlementIssueResponse> listIssues(@PathVariable String id) {
+        return settlementService.listIssues(id);
+    }
+
     @PostMapping("/periods")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
@@ -38,10 +48,22 @@ public class WorkforceSettlementController {
         return settlementService.calculatePeriod(id);
     }
 
+    @PostMapping("/periods/{id}/review")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    public WorkforceApi.SettlementPeriodResponse reviewPeriod(@PathVariable String id) {
+        return settlementService.reviewPeriod(id);
+    }
+
     @PostMapping("/periods/{id}/approve")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public WorkforceApi.SettlementPeriodResponse approvePeriod(@PathVariable String id) {
         return settlementService.approvePeriod(id);
+    }
+
+    @PostMapping("/periods/{id}/lock")
+    @PreAuthorize("hasRole('ADMIN')")
+    public WorkforceApi.SettlementPeriodResponse lockPeriod(@PathVariable String id) {
+        return settlementService.lockPeriod(id);
     }
 
     @GetMapping(value = "/periods/{id}/export-excel", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")

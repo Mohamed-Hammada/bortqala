@@ -498,7 +498,7 @@
           <h2>{{ i18n.t('dashboard.editorTitle') }}</h2>
           <p>{{ i18n.t('dashboard.editorHint') }}</p>
         </div>
-        <button type="button" class="button secondary" (click)="closeDashboardEditor()" [appTooltip]="i18n.t('common.close')">✕</button>
+        <button type="button" class="button secondary" (click)="closeDashboardEditor()" [attr.aria-label]="i18n.t('common.close')" [appTooltip]="i18n.t('common.close')">✕</button>
       </header>
       <div class="editor-list">
         @for (widget of widgetOptions; track widget.id) {

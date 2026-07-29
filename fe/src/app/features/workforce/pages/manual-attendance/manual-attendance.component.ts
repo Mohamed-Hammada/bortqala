@@ -7,6 +7,7 @@ import { WorkforceService } from '../../data-access/workforce.service';
 import { NotificationService } from '../../../../core/notification.service';
 import { exportCsv } from '../../../../core/download';
 import { Worker, AttendanceCell } from '../../models/workforce.models';
+import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-tooltip.directive';
 
 interface DayCell {
   attendanceValue: number; // 1, 0.5, 0
@@ -28,10 +29,14 @@ interface CalculationRules {
 
 type StatusOption<T = string> = { value: T; label: string };
 
+export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string | null, workerCount: number): boolean {
+  return !loading && !loadError && workerCount > 0;
+}
+
 @Component({
   selector: 'app-manual-attendance',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AppTooltipDirective],
   template: `
     <div class="workforce-container">
       <header class="page-header">
@@ -40,7 +45,7 @@ type StatusOption<T = string> = { value: T; label: string };
           <h1>جدول تسجيل حضور العمالة — مصفوفة متعددة الأيام</h1>
         </div>
         <div class="header-actions">
-          <button type="button" class="btn btn-secondary" (click)="exportCsv()">⇩ Excel</button>
+          <button type="button" class="btn btn-secondary" (click)="exportCsv()" appTooltip="تصدير الحضور — تنزيل المصفوفة الحالية إلى ملف">⇩ Excel</button>
           <button type="button" class="btn btn-secondary" (click)="applyFullDayAll()">
             تعيين يوم كامل للكل
           </button>
@@ -173,7 +178,7 @@ type StatusOption<T = string> = { value: T; label: string };
       }
 
       <!-- Matrix Table -->
-      @else {
+      @if (matrixVisible()) {
         <div class="card matrix-card">
           <!-- Legend -->
           <div class="legend-row">
@@ -186,6 +191,7 @@ type StatusOption<T = string> = { value: T; label: string };
           @if (selectedWorkerIds().size > 0) {
             <div class="bulk-bar">
               <span class="bulk-count">{{ selectedWorkerIds().size }} عامل × {{ selectedDateIds().size }} يوم</span>
+              <span class="bulk-context">لن تُعدّل العملية إلا {{ selectedWorkerIds().size * selectedDateIds().size }} خلية محددة. ستظهر معاينة إلزامية قبل التنفيذ.</span>
               <select [(ngModel)]="bulkStatusValue" class="form-input bulk-select">
                 @for (opt of bulkStatusOptions; track opt.value) {
                   <option [ngValue]="opt.value">{{ opt.label }}</option>
@@ -385,6 +391,7 @@ type StatusOption<T = string> = { value: T; label: string };
     /* Bulk bar */
     .bulk-bar { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.75rem; margin-bottom: 0.625rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
     .bulk-count { font-weight: 700; color: #b45309; font-size: 0.875rem; }
+    .bulk-context { color: #78350f; font-size: .75rem; max-width: 280px; }
     .bulk-select { width: auto; padding: 0.3rem 0.5rem; }
     .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.8125rem; }
     /* Indicator column */
@@ -491,6 +498,10 @@ export class ManualAttendanceComponent implements OnInit {
     }
     return total;
   });
+
+  matrixVisible(): boolean {
+    return shouldRenderAttendanceMatrix(this.loading(), this.loadError(), this.filteredWorkers().length);
+  }
 
   ngOnInit() {
     this.setCurrentHalfMonth();

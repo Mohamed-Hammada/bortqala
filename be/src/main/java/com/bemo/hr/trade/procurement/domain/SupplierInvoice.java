@@ -20,7 +20,10 @@ public class SupplierInvoice {
 
     @Id private String id;
     @TenantId @Column(name = "app_id", nullable = false) private String appId;
-    @Column(name = "invoice_number", nullable = false, length = 50) private String invoiceNumber;
+    @Column(name = "invoice_number", length = 50) private String invoiceNumber;
+    @Column(name = "internal_reference", nullable = false, length = 50) private String internalReference;
+    @Column(name = "missing_invoice_reason", length = 255) private String missingInvoiceReason;
+    @Column(name = "currency_code", nullable = false, length = 10) private String currencyCode;
     @Column(name = "supplier_id", nullable = false, length = 36) private String supplierId;
     @Column(name = "purchase_order_id", length = 36) private String purchaseOrderId;
     @Column(name = "goods_receipt_id", length = 36) private String goodsReceiptId;
@@ -43,8 +46,21 @@ public class SupplierInvoice {
                            LocalDate invoiceDate, BigDecimal totalAmount,
                            BigDecimal discountAmount, BigDecimal taxAmount,
                            LocalDate dueDate, String notes) {
+        this(invoiceNumber, invoiceNumber, null, "EGP", supplierId, purchaseOrderId, goodsReceiptId,
+                responsiblePartyId, invoiceDate, totalAmount, discountAmount, taxAmount, dueDate, notes);
+    }
+
+    public SupplierInvoice(String invoiceNumber, String internalReference, String missingInvoiceReason,
+                           String currencyCode, String supplierId, String purchaseOrderId,
+                           String goodsReceiptId, String responsiblePartyId,
+                           LocalDate invoiceDate, BigDecimal totalAmount,
+                           BigDecimal discountAmount, BigDecimal taxAmount,
+                           LocalDate dueDate, String notes) {
         this.id = UUID.randomUUID().toString();
-        this.invoiceNumber = invoiceNumber.strip();
+        this.invoiceNumber = invoiceNumber == null || invoiceNumber.isBlank() ? null : invoiceNumber.strip();
+        this.internalReference = internalReference.strip();
+        this.missingInvoiceReason = missingInvoiceReason == null || missingInvoiceReason.isBlank() ? null : missingInvoiceReason.strip();
+        this.currencyCode = currencyCode == null || currencyCode.isBlank() ? "EGP" : currencyCode.strip().toUpperCase();
         this.supplierId = supplierId;
         this.purchaseOrderId = purchaseOrderId;
         this.goodsReceiptId = goodsReceiptId;
@@ -71,6 +87,10 @@ public class SupplierInvoice {
 
     public String getId() { return id; }
     public String getInvoiceNumber() { return invoiceNumber; }
+    public String getDocumentReference() { return invoiceNumber != null ? invoiceNumber : internalReference; }
+    public String getInternalReference() { return internalReference; }
+    public String getMissingInvoiceReason() { return missingInvoiceReason; }
+    public String getCurrencyCode() { return currencyCode; }
     public String getSupplierId() { return supplierId; }
     public String getPurchaseOrderId() { return purchaseOrderId; }
     public String getGoodsReceiptId() { return goodsReceiptId; }

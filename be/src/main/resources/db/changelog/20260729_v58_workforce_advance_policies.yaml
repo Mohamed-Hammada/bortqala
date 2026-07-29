@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: v58-workforce-advance-policies
+      author: codex
+      changes:
+        - createTable:
+            tableName: workforce_advance_policies
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: scope_type, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: scope_id, type: varchar(36) }
+              - column: { name: deduction_mode, type: varchar(20), defaultValue: AUTO, constraints: { nullable: false } }
+              - column: { name: deduction_frequency, type: varchar(30), defaultValue: HALF_MONTH, constraints: { nullable: false } }
+              - column: { name: max_deduction_percent, type: "numeric(5,2)", defaultValueNumeric: 50, constraints: { nullable: false } }
+              - column: { name: default_installments, type: int, defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: deferral_periods, type: int, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: workforce_advance_policies
+            columnNames: app_id, scope_type, scope_id
+            constraintName: uk_advance_policy_scope
+        - sql:
+            dbms: postgresql
+            sql: >-
+              INSERT INTO workforce_advance_policies
+              (id, app_id, scope_type, scope_id, deduction_mode, deduction_frequency,
+               max_deduction_percent, default_installments, deferral_periods, active, created_at, updated_at)
+              SELECT gen_random_uuid()::text, id, 'GLOBAL', NULL, 'AUTO', 'HALF_MONTH', 50, 1, 0, true, now(), now()
+              FROM apps;

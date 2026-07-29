@@ -170,7 +170,7 @@ export class ReportReviewPage {
       for (const [catName, catData] of catMap) {
         const noPunchCount = catData.results.filter(r => r.status === 'NO_PUNCH' || r.status === 'MANUAL_ENTRY').length;
         const totalCount = catData.results.length;
-        if (totalCount >= 3 && noPunchCount / totalCount >= 0.7) {
+        if (totalCount >= 2 && noPunchCount / totalCount >= 0.7) {
           events.push({
             date,
             categoryName: catName,

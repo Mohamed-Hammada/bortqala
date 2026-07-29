@@ -20,13 +20,13 @@ public class ProcurementApi {
 
     public record PurchaseOrderResponse(
             String id, String poNumber, long poDate, String supplierId, String supplierName,
-            String purchaseRequestId, String paymentTerms, String status, BigDecimal totalAmount,
+            String purchaseRequestId, String paymentTerms, String currencyCode, String status, BigDecimal totalAmount,
             List<PurchaseOrderLineResponse> items, long createdAt, long updatedAt
     ) {}
 
     public record PurchaseOrderPayload(
             String poNumber, long poDate, @NotBlank String supplierId,
-            String purchaseRequestId, String paymentTerms,
+            String purchaseRequestId, String paymentTerms, String currencyCode,
             List<PurchaseOrderLinePayload> items
     ) {}
 
@@ -49,7 +49,7 @@ public class ProcurementApi {
     public record GoodsReceiptResponse(
             String id, String grnNumber, long receiptDate, String purchaseOrderId,
             String supplierId, String supplierName, String warehouseId, String status,
-            String notes, List<GoodsReceiptLineResponse> lines, long createdAt
+            String currencyCode, String notes, List<GoodsReceiptLineResponse> lines, long createdAt
     ) {}
 
     public record GoodsReceiptPayload(
@@ -65,6 +65,7 @@ public class ProcurementApi {
     public record SupplierInvoiceResponse(
             String id, String invoiceNumber, String supplierId, String supplierName,
             String purchaseOrderId, String goodsReceiptId, String responsiblePartyId,
+            String internalReference, String missingInvoiceReason, String currencyCode,
             long invoiceDate, BigDecimal totalAmount,
             BigDecimal discountAmount, BigDecimal taxAmount, BigDecimal netAmount,
             BigDecimal paidAmount, BigDecimal outstandingAmount,
@@ -74,7 +75,7 @@ public class ProcurementApi {
     public record SupplierInvoicePayload(
             String invoiceNumber, @NotBlank String supplierId,
             String purchaseOrderId, String goodsReceiptId, String internalReference,
-            String missingInvoiceReason, long invoiceDate, @NotNull BigDecimal totalAmount,
+            String missingInvoiceReason, String currencyCode, long invoiceDate, @NotNull BigDecimal totalAmount,
             BigDecimal discountAmount, BigDecimal taxAmount, Long dueDate, String notes
     ) {}
 
@@ -83,12 +84,12 @@ public class ProcurementApi {
     public record SupplierPaymentResponse(
             String id, String paymentNumber, long paymentDate, String supplierId,
             String supplierName, String supplierInvoiceId, BigDecimal amount,
-            String paymentMethod, String notes, String status, long createdAt
+            String currencyCode, String paymentMethod, String notes, String operationId, String status, long createdAt
     ) {}
 
     public record SupplierPaymentPayload(
             @NotBlank String paymentNumber, long paymentDate, @NotBlank String supplierId,
             @NotBlank String supplierInvoiceId, @NotNull BigDecimal amount,
-            @NotBlank String paymentMethod, String notes
+            @NotBlank String paymentMethod, String notes, @NotBlank String operationId
     ) {}
 }

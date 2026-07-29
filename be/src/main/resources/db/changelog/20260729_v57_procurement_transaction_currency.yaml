@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: v57-procurement-transaction-currency
+      author: codex
+      changes:
+        - addColumn:
+            tableName: purchase_orders
+            columns:
+              - column:
+                  name: currency_code
+                  type: varchar(10)
+                  defaultValue: EGP
+                  constraints: { nullable: false }
+        - addColumn:
+            tableName: supplier_invoices
+            columns:
+              - column:
+                  name: currency_code
+                  type: varchar(10)
+                  defaultValue: EGP
+                  constraints: { nullable: false }
+              - column:
+                  name: internal_reference
+                  type: varchar(50)
+              - column:
+                  name: missing_invoice_reason
+                  type: varchar(255)
+        - sql:
+            dbms: postgresql
+            sql: >-
+              UPDATE purchase_orders po SET currency_code = COALESCE(NULLIF(bp.currency_code, ''), 'EGP')
+              FROM business_parties bp WHERE bp.id = po.supplier_id;
+              UPDATE supplier_invoices si SET currency_code = COALESCE(NULLIF(bp.currency_code, ''), 'EGP'),
+              internal_reference = COALESCE(NULLIF(si.internal_reference, ''), si.invoice_number)
+              FROM business_parties bp WHERE bp.id = si.supplier_id;
+              UPDATE supplier_invoices SET internal_reference = invoice_number WHERE internal_reference IS NULL;
+        - addNotNullConstraint:
+            tableName: supplier_invoices
+            columnName: internal_reference
+            columnDataType: varchar(50)
+        - dropNotNullConstraint:
+            tableName: supplier_invoices
+            columnName: invoice_number
+            columnDataType: varchar(50)
+

@@ -43,7 +43,7 @@
     @if (activeTab() === 'po') {
     <div class="table-card">
       <table>
-        <thead><tr><th>رقم الأمر</th><th>التاريخ</th><th>المورد</th><th>شروط الدفع</th><th>الإجمالي</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+        <thead><tr><th>رقم الأمر</th><th>التاريخ</th><th>المورد</th><th>شروط الدفع</th><th>العملة</th><th>الإجمالي</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
         <tbody>
           @for (po of orders(); track po.id) {
           <tr>
@@ -51,7 +51,8 @@
             <td class="ltr">{{ date(po.poDate) }}</td>
             <td><strong>{{ po.supplierName || po.supplierId }}</strong></td>
             <td>{{ po.paymentTerms || '—' }}</td>
-            <td class="ltr"><strong>{{ po.totalAmount | number:'1.2-2' }}</strong></td>
+            <td class="ltr">{{ po.currencyCode }}</td>
+            <td class="ltr"><strong>{{ po.totalAmount | number:'1.2-2' }} {{ po.currencyCode }}</strong></td>
             <td><span class="status" [class.warning]="po.status === 'DRAFT'" [class.success]="po.status === 'ISSUED'" [class.info]="po.status === 'RECEIVED' || po.status === 'PARTIALLY_RECEIVED'" [class.neutral]="po.status === 'CANCELLED'">{{ poStatusLabel(po.status) }}</span></td>
             <td>
               <div class="table-row-actions">
@@ -64,7 +65,7 @@
               </div>
             </td>
           </tr>
-          } @empty { <tr><td colspan="7"><div class="empty-state">لا توجد أوامر شراء. اضغط "أمر شراء جديد" للبدء.</div></td></tr> }
+          } @empty { <tr><td colspan="8"><div class="empty-state">لا توجد أوامر شراء. اضغط "أمر شراء جديد" للبدء.</div></td></tr> }
         </tbody>
       </table>
     </div>
@@ -94,13 +95,14 @@
     @if (activeTab() === 'invoice') {
     <div class="table-card">
       <table>
-        <thead><tr><th>رقم الفاتورة</th><th>التاريخ</th><th>المورد</th><th>الإجمالي</th><th>الخصم</th><th>الضريبة</th><th>الصافي</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+        <thead><tr><th>فاتورة المورد / المرجع</th><th>التاريخ</th><th>المورد</th><th>العملة</th><th>الإجمالي</th><th>الخصم</th><th>الضريبة</th><th>الصافي</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
         <tbody>
           @for (inv of invoices(); track inv.id) {
           <tr>
-            <td><strong class="ltr">{{ inv.invoiceNumber }}</strong></td>
+            <td><strong class="ltr">{{ invoiceReference(inv) }}</strong><small>{{ inv.invoiceNumber ? 'فاتورة مورد' : 'بدون فاتورة — مرجع داخلي' }}</small></td>
             <td class="ltr">{{ date(inv.invoiceDate) }}</td>
             <td>{{ inv.supplierName || inv.supplierId }}</td>
+            <td class="ltr">{{ inv.currencyCode }}</td>
             <td class="ltr">{{ inv.totalAmount | number:'1.2-2' }}</td>
             <td class="ltr">{{ (inv.discountAmount ?? 0) | number:'1.2-2' }}</td>
             <td class="ltr">{{ (inv.taxAmount ?? 0) | number:'1.2-2' }}</td>
@@ -108,7 +110,7 @@
             <td><span class="status" [class.warning]="inv.status !== 'PAID'" [class.success]="inv.status === 'PAID'">{{ inv.status === 'PAID' ? 'مدفوعة' : inv.status === 'PARTIALLY_PAID' ? 'مدفوعة جزئياً' : 'غير مدفوعة' }}</span></td>
             <td>@if (inv.status !== 'PAID') {<button class="button primary btn-sm" (click)="openNewPayment(inv)">💰 سداد</button>}</td>
           </tr>
-          } @empty { <tr><td colspan="9"><div class="empty-state">لا توجد فواتير موردين مسجلة.</div></td></tr> }
+          } @empty { <tr><td colspan="10"><div class="empty-state">لا توجد فواتير موردين مسجلة.</div></td></tr> }
         </tbody>
       </table>
     </div>
@@ -118,7 +120,7 @@
     @if (activeTab() === 'payment') {
     <div class="table-card">
       <table>
-        <thead><tr><th>رقم الدفعة</th><th>تاريخ الدفع</th><th>المورد</th><th>الفاتورة</th><th>المبلغ</th><th>طريقة الدفع</th><th>الحالة</th></tr></thead>
+        <thead><tr><th>رقم الدفعة</th><th>تاريخ الدفع</th><th>المورد</th><th>الفاتورة</th><th>المبلغ</th><th>العملة</th><th>طريقة الدفع</th><th>الحالة</th></tr></thead>
         <tbody>
           @for (pmt of payments(); track pmt.id) {
           <tr>
@@ -127,10 +129,11 @@
             <td>{{ pmt.supplierName || pmt.supplierId }}</td>
             <td class="ltr">{{ pmt.supplierInvoiceId }}</td>
             <td class="ltr"><strong>{{ pmt.amount | number:'1.2-2' }}</strong></td>
+            <td class="ltr">{{ pmt.currencyCode }}</td>
             <td>{{ pmt.paymentMethod === 'BANK_TRANSFER' ? 'تحويل بنكي' : pmt.paymentMethod === 'CASH' ? 'نقدي' : pmt.paymentMethod === 'CHEQUE' ? 'شيك' : pmt.paymentMethod }}</td>
             <td><span class="status success">{{ pmt.status === 'POSTED' ? 'مُرحّلة' : pmt.status }}</span></td>
           </tr>
-          } @empty { <tr><td colspan="7"><div class="empty-state">لا توجد مدفوعات مسجلة.</div></td></tr> }
+          } @empty { <tr><td colspan="8"><div class="empty-state">لا توجد مدفوعات مسجلة.</div></td></tr> }
         </tbody>
       </table>
     </div>
@@ -148,7 +151,8 @@
           <div class="field"><label>رقم أمر الشراء *</label><input class="ltr" formControlName="poNumber" /></div>
         }
         <div class="field"><label>تاريخ الأمر *</label><input type="date" class="ltr" formControlName="poDate" /><small>يمكن اختيار تاريخ سابق أو حالي أو مستقبلي.</small></div>
-        <div class="field"><label>المورد *</label><select formControlName="supplierId"><option value="">— اختر مورداً مسجلاً —</option>@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select><small>المورد يُختار من دليل الموردين. <a routerLink="/parties">إضافة مورد جديد</a></small></div>
+        <div class="field"><label>المورد *</label><select formControlName="supplierId" (change)="onPoSupplierSelected()"><option value="">— اختر مورداً مسجلاً —</option>@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select><small>المورد يُختار من دليل الموردين. <a routerLink="/parties">إضافة مورد جديد</a></small></div>
+        <div class="field"><label>عملة العملية *</label><select formControlName="currencyCode">@for (currency of currencies(); track currency.code) {<option [value]="currency.code">{{ currency.code }} — {{ currency.name }}</option>}</select><small>تبدأ بعملة المورد الافتراضية ويمكن تغييرها لهذه العملية.</small></div>
         <div class="field"><label>شروط السداد</label><input formControlName="paymentTerms" /></div>
       </div>
       <div class="po-items-section">
@@ -160,12 +164,12 @@
             <div><label>الوحدة</label><span class="readonly-value">{{ item.unitOfMeasure || 'تُحدد من الصنف' }}</span></div>
             <div><label>الكمية</label><input type="number" min="1" [(ngModel)]="item.quantity" [ngModelOptions]="{standalone: true}" /></div>
             <div><label>سعر الوحدة</label><input type="number" min="0" [(ngModel)]="item.unitPrice" [ngModelOptions]="{standalone: true}" /></div>
-            <div><label>الإجمالي</label><strong>{{ (item.quantity * item.unitPrice) | number:'1.2-2' }}</strong></div>
-            <button type="button" class="remove-btn" (click)="removeItemLine($index)">×</button>
+            <div><label>الإجمالي</label><strong>{{ (item.quantity * item.unitPrice) | number:'1.2-2' }} {{ poForm.controls.currencyCode.value }}</strong></div>
+            <button type="button" class="remove-btn" aria-label="حذف بند أمر الشراء" appTooltip="حذف البند — إزالة هذا الصنف من أمر الشراء" (click)="removeItemLine($index)">×</button>
           </div>
           }
         </div>
-        <div class="total-bar"><span>الإجمالي:</span><strong>{{ totalCalculated() | number:'1.2-2' }}</strong></div>
+        <div class="total-bar"><span>إجمالي أمر الشراء:</span><strong>{{ totalCalculated() | number:'1.2-2' }} {{ poForm.controls.currencyCode.value }}</strong></div>
       </div>
       <div modal-actions class="modal-actions-bar">
         <button class="button primary" type="submit" [disabled]="submitting() || poForm.invalid || totalCalculated() <= 0">{{ editingPoId() ? 'حفظ التعديلات' : 'حفظ أمر الشراء' }}</button>
@@ -199,10 +203,10 @@
           <div class="po-item-row">
             <div><label>الصنف</label><span>{{ item.itemName }}</span></div>
             <div><label>الوحدة</label><span>{{ item.unitOfMeasure }}</span></div>
-            <div><label>المستلم</label><input type="number" min="0.01" [(ngModel)]="item.deliveredQuantity" [ngModelOptions]="{standalone: true}" /></div>
-            <div><label>المرفوض</label><input type="number" min="0" [(ngModel)]="item.rejectedQuantity" [ngModelOptions]="{standalone: true}" /></div>
-            <div><label>الخصم النوعي</label><input type="number" min="0" [(ngModel)]="item.deductedQuantity" [ngModelOptions]="{standalone: true}" /></div>
-            <div><label>المقبول</label><strong>{{ item.deliveredQuantity - item.rejectedQuantity - item.deductedQuantity | number:'1.2-2' }}</strong></div>
+            <div><label>الكمية الأصلية المستلمة</label><input type="number" min="0.01" [(ngModel)]="item.deliveredQuantity" [ngModelOptions]="{standalone: true}" /><small>{{ item.unitOfMeasure }}</small></div>
+            <div><label>الكمية المرفوضة</label><input type="number" min="0" [(ngModel)]="item.rejectedQuantity" [ngModelOptions]="{standalone: true}" /><small>{{ item.unitOfMeasure }}</small></div>
+            <div><label>الكمية المخصومة</label><input type="number" min="0" [(ngModel)]="item.deductedQuantity" [ngModelOptions]="{standalone: true}" /><small>{{ item.unitOfMeasure }} — خصم جودة فعلي وليس نسبة</small></div>
+            <div><label>الكمية المقبولة</label><strong>{{ item.deliveredQuantity - item.rejectedQuantity - item.deductedQuantity | number:'1.2-2' }} {{ item.unitOfMeasure }}</strong></div>
             <div><label>الموقع / التشغيلة</label><input [(ngModel)]="item.locationId" [ngModelOptions]="{standalone: true}" placeholder="الموقع" /><input [(ngModel)]="item.lotNumber" [ngModelOptions]="{standalone: true}" placeholder="رقم التشغيلة" /></div>
             <div><label>سبب الرفض أو الخصم</label><input [(ngModel)]="item.qualityReason" [ngModelOptions]="{standalone: true}" /></div>
             <div><label>سعر الوحدة</label><span>{{ item.unitPrice | number:'1.2-2' }}</span></div>
@@ -225,20 +229,25 @@
   <app-modal-dialog [isOpen]="true" title="فاتورة مورد جديدة" (close)="invModalOpen.set(false)">
     <form [formGroup]="invForm" (ngSubmit)="submitInvoice()">
       <div class="form-grid">
-        <div class="field"><label>رقم فاتورة المورد</label><input class="ltr" formControlName="invoiceNumber" /></div>
-        <div class="field"><label>مرجع داخلي عند عدم وجود فاتورة</label><input class="ltr" formControlName="internalReference" /></div>
-        <div class="field"><label>سبب عدم وجود فاتورة</label><input formControlName="missingInvoiceReason" /></div>
+        <div class="field"><label>هل توجد فاتورة شراء من المورد؟</label><select formControlName="hasSupplierInvoice" (change)="onInvoiceAvailabilityChanged()"><option [ngValue]="true">نعم — توجد فاتورة مورد</option><option [ngValue]="false">لا — مورد بدون فاتورة شراء</option></select></div>
+        @if (invForm.controls.hasSupplierInvoice.value) {
+          <div class="field"><label>رقم فاتورة المورد *</label><input class="ltr" formControlName="invoiceNumber" autocomplete="off" /><small>يُدخل كما هو في مستند المورد ولا يولده النظام.</small></div>
+        } @else {
+          <div class="field"><label>مرجع داخلي *</label><input class="ltr" formControlName="internalReference" autocomplete="off" /></div>
+          <div class="field"><label>سبب عدم وجود فاتورة *</label><input formControlName="missingInvoiceReason" /></div>
+        }
         <div class="field"><label>تاريخ الفاتورة *</label><input type="date" class="ltr" formControlName="invoiceDate" /></div>
-        <div class="field"><label>المورد *</label><select formControlName="supplierId">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
+        <div class="field"><label>المورد *</label><select formControlName="supplierId" (change)="onInvoiceSupplierSelected()">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
+        <div class="field"><label>عملة العملية *</label><select formControlName="currencyCode">@for (currency of currencies(); track currency.code) {<option [value]="currency.code">{{ currency.code }} — {{ currency.name }}</option>}</select></div>
         <div class="field"><label>أمر الشراء</label><select formControlName="purchaseOrderId"><option value="">— بدون —</option>@for (po of orders(); track po.id) {<option [value]="po.id">{{ po.poNumber }}</option>}</select></div>
         <div class="field"><label>إذن الاستلام</label><select formControlName="goodsReceiptId"><option value="">— بدون —</option>@for (grn of goodsReceipts(); track grn.id) {<option [value]="grn.id">{{ grn.grnNumber }}</option>}</select></div>
-        <div class="field"><label>الإجمالي *</label><input type="number" min="0" formControlName="totalAmount" /></div>
-        <div class="field"><label>قيمة الخصم</label><input type="number" min="0" formControlName="discountAmount" /></div>
+        <div class="field"><label>المبلغ الأصلي * <span tabindex="0" aria-label="شرح المبلغ الأصلي" appTooltip="المبلغ الأصلي — قيمة الفاتورة قبل الخصم والضريبة">ⓘ</span></label><input type="number" min="0" formControlName="totalAmount" /></div>
+        <div class="field"><label>قيمة الخصم <span tabindex="0" aria-label="شرح قيمة الخصم" appTooltip="قيمة الخصم — مبلغ يُطرح من المبلغ الأصلي">ⓘ</span></label><input type="number" min="0" formControlName="discountAmount" /></div>
         <div class="field"><label>الضريبة</label><input type="number" min="0" formControlName="taxAmount" /></div>
         <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="ltr" formControlName="dueDate" /></div>
         <div class="field span-2"><label>ملاحظات</label><input formControlName="notes" /></div>
       </div>
-      <div class="total-bar"><span>الصافي بعد الخصم والضريبة:</span><strong>{{ invNetAmount() | number:'1.2-2' }}</strong></div>
+      <div class="total-bar"><span>صافي المبلغ <span tabindex="0" aria-label="شرح صافي المبلغ" appTooltip="صافي المبلغ — الأصلي ناقص الخصم زائد الضريبة">ⓘ</span>:</span><strong>{{ invNetAmount() | number:'1.2-2' }} {{ invForm.controls.currencyCode.value }}</strong></div>
       <div modal-actions class="modal-actions-bar">
         <button class="button primary" type="submit" [disabled]="submitting() || invForm.invalid">تسجيل الفاتورة</button>
         <button class="button secondary" type="button" (click)="invModalOpen.set(false)">إلغاء</button>
@@ -254,8 +263,8 @@
       <div class="form-grid">
         <div class="field"><label>رقم الدفعة *</label><input class="ltr" formControlName="paymentNumber" /></div>
         <div class="field"><label>تاريخ الدفع *</label><input type="date" class="ltr" formControlName="paymentDate" /></div>
-        <div class="field"><label>المورد *</label><select formControlName="supplierId">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
-        <div class="field"><label>الفاتورة *</label><select formControlName="supplierInvoiceId">@for (inv of unpaidInvoices(); track inv.id) {<option [value]="inv.id">{{ inv.invoiceNumber }} — متبقي {{ inv.outstandingAmount | number:'1.2-2' }}</option>}</select></div>
+        <div class="field"><label>المورد *</label><select formControlName="supplierId" (change)="onPaymentSupplierChanged()">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
+        <div class="field"><label>الفاتورة / المرجع *</label><select formControlName="supplierInvoiceId" (change)="onPaymentInvoiceChanged()"><option value="">— اختر فاتورة مفتوحة لهذا المورد —</option>@for (inv of payableInvoices(); track inv.id) {<option [value]="inv.id">{{ invoiceReference(inv) }} · {{ date(inv.invoiceDate) }} · {{ inv.currencyCode }} · إجمالي {{ inv.netAmount | number:'1.2-2' }} · متبقي {{ inv.outstandingAmount | number:'1.2-2' }}</option>}</select><small>تظهر فقط الفواتير المفتوحة الخاصة بالمورد المحدد.</small></div>
         <div class="field"><label>المبلغ *</label><input type="number" min="0.01" formControlName="amount" /></div>
         <div class="field"><label>طريقة الدفع *</label><select formControlName="paymentMethod"><option value="BANK_TRANSFER">تحويل بنكي</option><option value="CASH">نقدي</option><option value="CHEQUE">شيك</option></select></div>
         <div class="field span-2"><label>ملاحظات</label><input formControlName="notes" /></div>

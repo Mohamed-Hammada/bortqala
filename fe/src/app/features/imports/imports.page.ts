@@ -7,10 +7,11 @@ import { NotificationService } from '../../core/notification.service';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { ImportStatus } from './imports.models';
+import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
 
 @Component({
   selector: 'app-imports-page',
-  imports: [RouterLink, TablePaginationComponent],
+  imports: [RouterLink, TablePaginationComponent, AppTooltipDirective],
   providers: [ImportsStore],
   templateUrl: './imports.page.html',
   styleUrl: './imports.page.scss',

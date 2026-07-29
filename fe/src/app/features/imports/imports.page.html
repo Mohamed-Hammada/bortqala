@@ -67,7 +67,7 @@
               <small>{{ formatFileSize(file()?.size ?? 0) }} · {{ i18n.t('imports.completed') }}</small>
             </div>
           </div>
-          <button type="button" class="remove-file-btn" (click)="clearFile($event)" title="إزالة الملف">×</button>
+          <button type="button" class="remove-file-btn" (click)="clearFile($event)" aria-label="إزالة الملف المختار" appTooltip="إزالة الملف — إلغاء اختيار الملف الحالي">×</button>
         </div>
       }
     </div>

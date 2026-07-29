@@ -9,7 +9,12 @@ import {
   SettlementPeriod,
   SettlementCalculationSummary,
   WorkforceAdvance,
-  AttendanceCell
+  AttendanceCell,
+  AdvancePolicy,
+  SettlementIssue,
+  WorkforceImportBatch,
+  WorkforceImportValidation,
+  WorkforceImportCommit
 } from '../models/workforce.models';
 
 @Injectable({ providedIn: 'root' })
@@ -22,6 +27,7 @@ export class WorkforceService {
   laborRequests = signal<LaborRequest[]>([]);
   settlementPeriods = signal<SettlementPeriod[]>([]);
   advances = signal<WorkforceAdvance[]>([]);
+  advancePolicies = signal<AdvancePolicy[]>([]);
   loading = signal<boolean>(false);
 
   // Contractors
@@ -47,6 +53,10 @@ export class WorkforceService {
     );
   }
 
+  exportContractorsExcel(): Observable<Blob> {
+    return this.http.get('/api/v1/workforce/contractors/export.xlsx', { responseType: 'blob' });
+  }
+
   // Worker Categories
   loadCategories(): Observable<WorkerCategory[]> {
     return this.http.get<WorkerCategory[]>('/api/v1/workforce/categories').pipe(
@@ -58,6 +68,10 @@ export class WorkforceService {
     return this.http.post<WorkerCategory>('/api/v1/workforce/categories', payload).pipe(
       tap(() => this.loadCategories().subscribe())
     );
+  }
+
+  exportCategoriesExcel(): Observable<Blob> {
+    return this.http.get('/api/v1/workforce/categories/export.xlsx', { responseType: 'blob' });
   }
 
   // Workers
@@ -77,6 +91,10 @@ export class WorkforceService {
     return this.http.put<Worker>(`/api/v1/workforce/workers/${id}`, payload).pipe(
       tap(() => this.loadWorkers().subscribe())
     );
+  }
+
+  exportWorkersExcel(): Observable<Blob> {
+    return this.http.get('/api/v1/workforce/workers/export.xlsx', { responseType: 'blob' });
   }
 
   // Labor Requests
@@ -114,6 +132,16 @@ export class WorkforceService {
     return this.http.post<SettlementCalculationSummary>(`/api/v1/workforce/settlements/periods/${id}/calculate`, {});
   }
 
+  loadSettlementIssues(id: string): Observable<SettlementIssue[]> {
+    return this.http.get<SettlementIssue[]>(`/api/v1/workforce/settlements/periods/${id}/issues`);
+  }
+
+  reviewPeriod(id: string): Observable<SettlementPeriod> {
+    return this.http.post<SettlementPeriod>(`/api/v1/workforce/settlements/periods/${id}/review`, {}).pipe(
+      tap(() => this.loadSettlementPeriods().subscribe())
+    );
+  }
+
   approvePeriod(id: string): Observable<SettlementPeriod> {
     return this.http.post<SettlementPeriod>(`/api/v1/workforce/settlements/periods/${id}/approve`, {}).pipe(
       tap(() => this.loadSettlementPeriods().subscribe())
@@ -139,6 +167,24 @@ export class WorkforceService {
     );
   }
 
+  lockPeriod(id: string): Observable<SettlementPeriod> {
+    return this.http.post<SettlementPeriod>(`/api/v1/workforce/settlements/periods/${id}/lock`, {}).pipe(
+      tap(() => this.loadSettlementPeriods().subscribe())
+    );
+  }
+
+  loadAdvancePolicies(): Observable<AdvancePolicy[]> {
+    return this.http.get<AdvancePolicy[]>('/api/v1/workforce/advances/policies').pipe(
+      tap(res => this.advancePolicies.set(res))
+    );
+  }
+
+  saveAdvancePolicy(payload: AdvancePolicy): Observable<AdvancePolicy> {
+    return this.http.put<AdvancePolicy>('/api/v1/workforce/advances/policies', payload).pipe(
+      tap(() => this.loadAdvancePolicies().subscribe())
+    );
+  }
+
   pauseAdvance(id: string): Observable<WorkforceAdvance> {
     return this.http.post<WorkforceAdvance>(`/api/v1/workforce/advances/${id}/pause`, {});
   }
@@ -151,9 +197,48 @@ export class WorkforceService {
     return this.http.post<WorkforceAdvance>(`/api/v1/workforce/advances/${id}/repay`, payload);
   }
 
-  // Import Analysis
+  // Workforce import workflow
+  loadImportBatches(): Observable<WorkforceImportBatch[]> {
+    return this.http.get<WorkforceImportBatch[]>('/api/v1/workforce/imports');
+  }
+
+  uploadImport(file: File): Observable<WorkforceImportBatch> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return this.http.post<WorkforceImportBatch>('/api/v1/workforce/imports/upload', formData);
+  }
+
+  saveImportMapping(id: string, columns: Record<string, string>): Observable<WorkforceImportBatch> {
+    return this.http.post<WorkforceImportBatch>(`/api/v1/workforce/imports/${id}/mapping`, { columns });
+  }
+
+  validateImport(id: string): Observable<WorkforceImportValidation> {
+    return this.http.post<WorkforceImportValidation>(`/api/v1/workforce/imports/${id}/validate`, {});
+  }
+
+  previewImport(id: string): Observable<WorkforceImportValidation> {
+    return this.http.get<WorkforceImportValidation>(`/api/v1/workforce/imports/${id}/preview`);
+  }
+
+  commitImport(id: string, operationId: string, importValidRowsOnly: boolean): Observable<WorkforceImportCommit> {
+    return this.http.post<WorkforceImportCommit>(`/api/v1/workforce/imports/${id}/commit`, { operationId, importValidRowsOnly });
+  }
+
+  reverseImport(id: string): Observable<WorkforceImportBatch> {
+    return this.http.post<WorkforceImportBatch>(`/api/v1/workforce/imports/${id}/reverse`, {});
+  }
+
+  downloadImportErrors(id: string): Observable<Blob> {
+    return this.http.get(`/api/v1/workforce/imports/${id}/errors.xlsx`, { responseType: 'blob' });
+  }
+
+  downloadImportOriginal(id: string): Observable<Blob> {
+    return this.http.get(`/api/v1/workforce/imports/${id}/original`, { responseType: 'blob' });
+  }
+
+  // Legacy diagnostic compatibility
   analyzeImport(summaryDays?: number, settlementDays?: number): Observable<any> {
-    return this.http.post('/api/v1/workforce/import/analyze', null, {
+    return this.http.post('/api/v1/workforce/imports/analyze', null, {
       params: { summaryDays: summaryDays || 1550, settlementDays: settlementDays || 1635 }
     });
   }

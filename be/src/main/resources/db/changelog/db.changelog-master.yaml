@@ -113,5 +113,15 @@ databaseChangeLog:
       file: db/changelog/20260729_v55_keyboard_shortcuts.yaml
   - include:
       file: db/changelog/20260729_v56_dashboard_customization.yaml
+  - include:
+      file: db/changelog/20260729_v57_procurement_transaction_currency.yaml
+  - include:
+      file: db/changelog/20260729_v58_workforce_advance_policies.yaml
+  - include:
+      file: db/changelog/20260729_v59_settlement_calculation_results.yaml
+  - include:
+      file: db/changelog/20260729_v60_workforce_import_workflow.yaml
+  - include:
+      file: db/changelog/20260729_v61_supplier_payment_idempotency.yaml
 
 

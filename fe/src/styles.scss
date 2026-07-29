@@ -751,6 +751,10 @@ tbody tr:hover td {
   text-align: start;
   pointer-events: none;
   animation: tooltip-in 120ms ease-out both;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 @keyframes tooltip-in {

@@ -468,6 +468,7 @@
                 <span class="cat-pill">{{ event.categoryName }}</span>
                 <span class="count-badge">{{ event.affectedCount }} {{ i18n.t('review.employeeCountSuffix', {}, 'شخص') }}</span>
               </div>
+              <p class="context-note">سيُطبق القرار على {{ event.affectedCount }} سجلاً بلا بصمة في فئة {{ event.categoryName }} بتاريخ {{ event.date }} فقط. راجع النطاق قبل التأكيد.</p>
               @if (!event.decision) {
                 <div class="downtime-actions">
                   <button class="btn-decide normal" [disabled]="event.saving" (click)="downtimeDecision(event, 'NORMAL_DAY')">

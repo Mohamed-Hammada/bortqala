@@ -10,6 +10,7 @@ import { formatDate } from '../../../core/date';
 import { TablePagination } from '../../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../../shared/ui/table-pagination/table-pagination.component';
 import { Account } from '../accounts/accounts.page';
+import { AppTooltipDirective } from '../../../shared/ui/app-tooltip/app-tooltip.directive';
 
 export interface JournalEntryLine {
   id?: string;
@@ -47,7 +48,7 @@ export interface JournalEntryPage {
 
 @Component({
   selector: 'app-journal-entries-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent, DecimalPipe],
+  imports: [ReactiveFormsModule, TablePaginationComponent, DecimalPipe, AppTooltipDirective],
   templateUrl: './journal-entries.page.html',
   styleUrl: './journal-entries.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

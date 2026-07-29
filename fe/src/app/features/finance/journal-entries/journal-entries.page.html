@@ -142,7 +142,7 @@
                     <input type="text" [value]="line.memo" (input)="updateLine($index, 'memo', $any($event.target).value)" placeholder="ملاحظات السطر..." />
                   </td>
                   <td>
-                    <button class="button secondary btn-sm danger-btn" type="button" (click)="removeLine($index)">×</button>
+                    <button class="button secondary btn-sm danger-btn" type="button" (click)="removeLine($index)" aria-label="حذف سطر القيد" appTooltip="حذف السطر — إزالة هذا الطرف من القيد">×</button>
                   </td>
                 </tr>
               }

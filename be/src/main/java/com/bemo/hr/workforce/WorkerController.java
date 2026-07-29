@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import java.nio.charset.StandardCharsets;
 
 import java.util.List;
 
@@ -21,6 +26,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WorkerController {
     private final WorkerService workerService;
+    private final WorkforceMasterDataExcelExporter excelExporter;
+
+    @GetMapping(value = "/export.xlsx", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    public ResponseEntity<byte[]> exportExcel() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.setContentDisposition(ContentDisposition.attachment().filename("workers.xlsx", StandardCharsets.UTF_8).build());
+        return ResponseEntity.ok().headers(headers).body(excelExporter.workers(workerService.list()));
+    }
 
     @GetMapping
     public List<WorkforceApi.WorkerResponse> list(@RequestParam(required = false) String contractorId) {

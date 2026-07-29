@@ -19,3 +19,11 @@
 **EN:** Procurement forms support native Tab order, Enter submission and Escape cancellation. Order dates accept past, current or future dates. Suppliers are selected from active supplier master data, units are fixed from the selected inventory item, draft lines remain editable, and receipt entry immediately loads the selected order lines. Number fields follow the tenant's automatic/manual numbering setting.
 
 **AR:** تدعم نماذج المشتريات ترتيب Tab الطبيعي والإرسال بزر Enter والإلغاء بزر Escape. يقبل تاريخ الأمر تاريخاً سابقاً أو حالياً أو مستقبلياً. ويُختار المورد من الموردين النشطين، وتثبت الوحدة من الصنف المحدد، وتظل بنود المسودة قابلة للتعديل، ويحمّل إذن الاستلام بنود الأمر المختار فوراً. وتتبع حقول الأرقام إعداد الشركة للترقيم التلقائي أو اليدوي.
+
+**EN:** Line and document totals are evaluated from the current editable values, so changing quantity or price immediately enables saving with the correct amount. Purchase orders and invoices expose transaction currency, invoice availability is explicit, and the no-invoice path never manufactures a supplier invoice number. Financial help tooltips explain original, discount, net, and installment values.
+
+**AR:** تُحسب إجماليات البنود والمستند من القيم القابلة للتعديل الحالية، لذلك يؤدي تغيير الكمية أو السعر إلى تحديث المبلغ وتمكين الحفظ فوراً. وتعرض أوامر الشراء والفواتير عملة العملية، ويُحدد وجود فاتورة المورد صراحةً، ولا ينشئ مسار بدون فاتورة رقماً وهمياً. وتشرح التلميحات المالية المبلغ الأصلي والخصم والصافي والأقساط.
+
+**EN:** The payment dialog limits invoice choices to open invoices for the selected supplier and clears an incompatible invoice when the supplier changes. Each option shows invoice number, date, currency, total, and outstanding balance, and the amount cannot exceed that balance.
+
+**AR:** تقصر نافذة الدفع قائمة الفواتير على الفواتير المفتوحة للمورد المختار، وتلغي اختيار الفاتورة غير المتوافقة عند تغيير المورد. ويعرض كل خيار رقم الفاتورة وتاريخها وعملتها وإجماليها ورصيدها المتبقي، ولا تسمح النافذة بتجاوز هذا الرصيد.

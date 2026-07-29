@@ -1,11 +1,22 @@
 package com.bemo.hr.workforce;
 
+import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.shared.domain.BusinessRuleException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,48 +27,79 @@ public class WorkforceSettlementService {
     private final WorkforceSettlementPeriodRepository periodRepository;
     private final WorkerSettlementRepository workerSettlementRepository;
     private final ContractorSettlementRepository contractorSettlementRepository;
+    private final WorkforceSettlementIssueRepository issueRepository;
     private final ManualAttendanceEntryRepository attendanceRepository;
     private final WorkerRepository workerRepository;
     private final ContractorRepository contractorRepository;
     private final WorkforceAdvanceRepository advanceRepository;
+    private final WorkforceAdvancePolicyRepository advancePolicyRepository;
     private final WorkforceExcelExportService excelExportService;
+    private final AuditService auditService;
+    private final PlatformTransactionManager platformTransactionManager;
 
     @Transactional(readOnly = true)
     public byte[] exportPeriodExcel(String periodId) {
         try {
             return excelExportService.generatePeriodExcel(periodId);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate workforce settlement Excel export", e);
+        } catch (Exception exception) {
+            throw new BusinessRuleException("تعذر إنشاء ملف Excel لفترة التسوية: " + exception.getMessage());
         }
     }
 
     @Transactional(readOnly = true)
     public List<WorkforceApi.SettlementPeriodResponse> listPeriods() {
-        return periodRepository.findAll().stream().map(this::mapPeriodToResponse).toList();
+        return periodRepository.findAll().stream()
+                .sorted(Comparator.comparing(WorkforceSettlementPeriod::getStartDate).reversed())
+                .map(this::mapPeriodToResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public WorkforceApi.SettlementPeriodResponse getPeriod(String periodId) {
+        return mapPeriodToResponse(requirePeriod(periodId));
     }
 
     @Transactional
     public WorkforceApi.SettlementPeriodResponse createPeriod(WorkforceApi.SettlementPeriodRequest request) {
+        if (request.startDate().compareTo(request.endDate()) > 0) {
+            throw new BusinessRuleException("تاريخ بداية فترة التسوية يجب ألا يتجاوز تاريخ النهاية.");
+        }
         WorkforceSettlementPeriod period = new WorkforceSettlementPeriod(
-            request.periodCode(), request.startDate(), request.endDate(),
-            request.cycleType(), "DRAFT"
-        );
-        return mapPeriodToResponse(periodRepository.save(period));
+                request.periodCode(), request.startDate(), request.endDate(), request.cycleType(), "DRAFT");
+        WorkforceSettlementPeriod saved = periodRepository.save(period);
+        auditService.record("CREATE", "WORKFORCE_SETTLEMENT_PERIOD", saved.getId(), actor(),
+                "{\"periodCode\":\"" + saved.getPeriodCode() + "\"}", null);
+        return mapPeriodToResponse(saved);
     }
 
-    @Transactional
     public WorkforceApi.SettlementCalculationSummary calculatePeriod(String periodId) {
-        WorkforceSettlementPeriod period = periodRepository.findById(periodId)
-            .orElseThrow(() -> new IllegalArgumentException("Settlement period not found: " + periodId));
+        TransactionTemplate transactionTemplate = new TransactionTemplate(platformTransactionManager);
+        try {
+            return transactionTemplate.execute(status -> calculateInTransaction(periodId));
+        } catch (RuntimeException exception) {
+            transactionTemplate.executeWithoutResult(status -> {
+                WorkforceSettlementPeriod period = requirePeriod(periodId);
+                period.markCalculationFailed(rootMessage(exception));
+                auditService.record("CALCULATE_FAILED", "WORKFORCE_SETTLEMENT_PERIOD", period.getId(), actor(),
+                        "{\"reason\":\"" + json(rootMessage(exception)) + "\"}", null);
+            });
+            throw exception;
+        }
+    }
 
-        if ("LOCKED".equalsIgnoreCase(period.getStatus()) || "APPROVED".equalsIgnoreCase(period.getStatus())) {
-            throw new IllegalStateException("Cannot recalculate a locked or approved settlement period.");
+    private WorkforceApi.SettlementCalculationSummary calculateInTransaction(String periodId) {
+        WorkforceSettlementPeriod period = requirePeriod(periodId);
+        if ("LOCKED".equals(period.getStatus()) || "APPROVED".equals(period.getStatus())) {
+            throw new BusinessRuleException("لا يمكن إعادة احتساب فترة معتمدة أو مقفلة.");
         }
 
-        // Fetch all attendance entries in range
         List<ManualAttendanceEntry> entries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
         Map<String, List<ManualAttendanceEntry>> workerEntries = entries.stream()
-            .collect(Collectors.groupingBy(ManualAttendanceEntry::getWorkerId));
+                .collect(Collectors.groupingBy(ManualAttendanceEntry::getWorkerId));
+        List<Worker> allWorkers = workerRepository.findAll();
+        List<Contractor> contractors = contractorRepository.findAll();
+        String fingerprint = inputFingerprint(entries, allWorkers);
+        int nextVersion = period.getCalculationVersion() + 1;
+        List<WorkforceSettlementIssue> issues = new ArrayList<>();
 
         BigDecimal totalAttendanceUnits = BigDecimal.ZERO;
         BigDecimal grossWorkersAmount = BigDecimal.ZERO;
@@ -65,135 +107,205 @@ public class WorkforceSettlementService {
         BigDecimal totalAdvanceDeductions = BigDecimal.ZERO;
         BigDecimal netWorkersAmount = BigDecimal.ZERO;
 
-        // Clear previous calculations for this period if drafting
-        List<WorkerSettlement> existingWorkerSettlements = workerSettlementRepository.findByPeriodId(periodId);
-        workerSettlementRepository.deleteAll(existingWorkerSettlements);
-        List<ContractorSettlement> existingContractorSettlements = contractorSettlementRepository.findByPeriodId(periodId);
-        contractorSettlementRepository.deleteAll(existingContractorSettlements);
+        workerSettlementRepository.deleteAll(workerSettlementRepository.findByPeriodId(periodId));
+        contractorSettlementRepository.deleteAll(contractorSettlementRepository.findByPeriodId(periodId));
 
-        List<Worker> allWorkers = workerRepository.findAll();
+        int calculatedWorkers = 0;
         for (Worker worker : allWorkers) {
             List<ManualAttendanceEntry> list = workerEntries.get(worker.getId());
-            if (list == null || list.isEmpty()) continue;
-
-            BigDecimal units = list.stream()
-                .map(ManualAttendanceEntry::getAttendanceValue)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            if (list == null || list.isEmpty()) {
+                if ("ACTIVE".equalsIgnoreCase(worker.getStatus())) {
+                    issues.add(new WorkforceSettlementIssue(periodId, nextVersion, worker.getId(), worker.getFullName(),
+                            "WARNING", "NO_ATTENDANCE", "لا توجد سجلات حضور للعامل داخل الفترة."));
+                }
+                continue;
+            }
+            if (worker.getDefaultDailyRate() == null || worker.getDefaultDailyRate().signum() <= 0) {
+                issues.add(new WorkforceSettlementIssue(periodId, nextVersion, worker.getId(), worker.getFullName(),
+                        "ERROR", "MISSING_DAILY_RATE", "سعر اليومية غير صالح ويجب تصحيحه قبل الاعتماد."));
+            }
+            calculatedWorkers++;
+            BigDecimal units = list.stream().map(ManualAttendanceEntry::getAttendanceValue)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             totalAttendanceUnits = totalAttendanceUnits.add(units);
-
-            BigDecimal dailyRate = worker.getDefaultDailyRate();
+            BigDecimal dailyRate = worker.getDefaultDailyRate() == null ? BigDecimal.ZERO : worker.getDefaultDailyRate();
             BigDecimal gross = units.multiply(dailyRate).setScale(2, RoundingMode.HALF_UP);
             grossWorkersAmount = grossWorkersAmount.add(gross);
 
-            // Calculate advance deduction eligibility
             BigDecimal advanceDeduction = BigDecimal.ZERO;
-            List<WorkforceAdvance> activeAdvances = advanceRepository.findByWorkerId(worker.getId()).stream()
-                .filter(a -> "ACTIVE".equalsIgnoreCase(a.getStatus())).toList();
-
-            for (WorkforceAdvance adv : activeAdvances) {
-                BigDecimal maxAllowed = gross.multiply(adv.getMaxDeductionPercent()).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-                BigDecimal wanted = adv.getInstallmentAmount();
-                BigDecimal actualDeducted = wanted.min(maxAllowed).min(adv.getRemainingBalance());
-                advanceDeduction = advanceDeduction.add(actualDeducted);
+            for (WorkforceAdvance advance : advanceRepository.findByWorkerId(worker.getId()).stream()
+                    .filter(item -> "ACTIVE".equalsIgnoreCase(item.getStatus())).toList()) {
+                BigDecimal maxAllowed = gross.multiply(advance.getMaxDeductionPercent())
+                        .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+                BigDecimal actual = advance.getInstallmentAmount().min(maxAllowed).min(advance.getRemainingBalance());
+                advanceDeduction = advanceDeduction.add(actual);
             }
             totalAdvanceDeductions = totalAdvanceDeductions.add(advanceDeduction);
-
             BigDecimal net = gross.subtract(advanceDeduction).setScale(2, RoundingMode.HALF_UP);
             netWorkersAmount = netWorkersAmount.add(net);
-
-            WorkerSettlement ws = new WorkerSettlement(
-                periodId, worker.getId(), worker.getContractorId(),
-                units, dailyRate, gross, BigDecimal.ZERO, BigDecimal.ZERO, advanceDeduction, net
-            );
-            workerSettlementRepository.save(ws);
+            workerSettlementRepository.save(new WorkerSettlement(periodId, worker.getId(), worker.getContractorId(),
+                    units, dailyRate, gross, BigDecimal.ZERO, BigDecimal.ZERO, advanceDeduction, net));
         }
 
-        // Calculate Contractor Settlements based on selected Accounting Model
-        List<Contractor> contractors = contractorRepository.findAll();
         BigDecimal netContractorsPayable = BigDecimal.ZERO;
-
-        for (Contractor c : contractors) {
-            List<WorkerSettlement> cWorkerSettlements = workerSettlementRepository.findByPeriodIdAndContractorId(periodId, c.getId());
-            if (cWorkerSettlements.isEmpty() && !"fixed_period_amount".equalsIgnoreCase(c.getAccountingModel())) {
-                continue;
-            }
-
-            BigDecimal cWorkersNet = cWorkerSettlements.stream()
-                .map(WorkerSettlement::getNetAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            BigDecimal cGross = BigDecimal.ZERO;
-            BigDecimal cNetPayable = BigDecimal.ZERO;
-            BigDecimal cCommission = BigDecimal.ZERO;
-            BigDecimal cRatesTotal = BigDecimal.ZERO;
-
-            String model = c.getAccountingModel() != null ? c.getAccountingModel().toLowerCase() : "worker_net_total";
-
+        int calculatedContractors = 0;
+        for (Contractor contractor : contractors) {
+            List<WorkerSettlement> workerSettlements = workerSettlementRepository
+                    .findByPeriodIdAndContractorId(periodId, contractor.getId());
+            if (workerSettlements.isEmpty() && !"fixed_period_amount".equalsIgnoreCase(contractor.getAccountingModel())) continue;
+            calculatedContractors++;
+            BigDecimal workersNet = workerSettlements.stream().map(WorkerSettlement::getNetAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal gross;
+            BigDecimal payable;
+            BigDecimal commission = BigDecimal.ZERO;
+            BigDecimal rateTotal = BigDecimal.ZERO;
+            String model = contractor.getAccountingModel() == null ? "worker_net_total" : contractor.getAccountingModel().toLowerCase();
             switch (model) {
                 case "contractor_daily_rate" -> {
-                    BigDecimal totalUnits = cWorkerSettlements.stream()
-                        .map(WorkerSettlement::getTotalAttendanceUnits)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                    cRatesTotal = totalUnits.multiply(c.getDefaultDailyRate()).setScale(2, RoundingMode.HALF_UP);
-                    cGross = cRatesTotal;
-                    cNetPayable = cGross;
+                    BigDecimal units = workerSettlements.stream().map(WorkerSettlement::getTotalAttendanceUnits)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    rateTotal = units.multiply(contractor.getDefaultDailyRate()).setScale(2, RoundingMode.HALF_UP);
+                    gross = rateTotal; payable = gross;
                 }
                 case "worker_cost_plus_fee" -> {
-                    cGross = cWorkersNet;
-                    if ("percentage".equalsIgnoreCase(c.getFeeType())) {
-                        cCommission = cWorkersNet.multiply(c.getFeeValue()).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
-                    } else {
-                        cCommission = c.getFeeValue() != null ? c.getFeeValue() : BigDecimal.ZERO;
-                    }
-                    cNetPayable = cGross.add(cCommission);
+                    gross = workersNet;
+                    commission = "percentage".equalsIgnoreCase(contractor.getFeeType())
+                            ? workersNet.multiply(contractor.getFeeValue()).divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP)
+                            : contractor.getFeeValue();
+                    if (commission == null) commission = BigDecimal.ZERO;
+                    payable = gross.add(commission);
                 }
-                case "fixed_period_amount" -> {
-                    cGross = c.getFixedPeriodAmount() != null ? c.getFixedPeriodAmount() : BigDecimal.ZERO;
-                    cNetPayable = cGross;
-                }
-                case "worker_net_total" -> {
-                    cGross = cWorkersNet;
-                    cNetPayable = cGross;
-                }
-                default -> {
-                    cGross = cWorkersNet;
-                    cNetPayable = cGross;
-                }
+                case "fixed_period_amount" -> { gross = contractor.getFixedPeriodAmount(); if (gross == null) gross = BigDecimal.ZERO; payable = gross; }
+                default -> { gross = workersNet; payable = gross; }
             }
-
-            netContractorsPayable = netContractorsPayable.add(cNetPayable);
-
-            ContractorSettlement cs = new ContractorSettlement(
-                periodId, c.getId(), model, cWorkersNet, cRatesTotal, cCommission,
-                c.getFixedPeriodAmount(), BigDecimal.ZERO, BigDecimal.ZERO, cGross, cNetPayable, BigDecimal.ZERO, "REVIEW"
-            );
-            contractorSettlementRepository.save(cs);
+            netContractorsPayable = netContractorsPayable.add(payable);
+            contractorSettlementRepository.save(new ContractorSettlement(periodId, contractor.getId(), model,
+                    workersNet, rateTotal, commission, contractor.getFixedPeriodAmount(), BigDecimal.ZERO,
+                    BigDecimal.ZERO, gross, payable, BigDecimal.ZERO, "CALCULATED"));
         }
 
-        period.setStatus("REVIEW");
+        issueRepository.saveAll(issues);
+        int warningCount = (int) issues.stream().filter(issue -> "WARNING".equals(issue.getSeverity())).count();
+        int errorCount = (int) issues.stream().filter(issue -> "ERROR".equals(issue.getSeverity())).count();
+        String currentActor = actor();
+        period.markCalculated(currentActor, fingerprint, calculatedWorkers, grossWorkersAmount,
+                totalDeductions, totalAdvanceDeductions, netWorkersAmount, warningCount, errorCount);
         periodRepository.save(period);
+        auditService.record("CALCULATE", "WORKFORCE_SETTLEMENT_PERIOD", period.getId(), currentActor,
+                "{\"version\":" + period.getCalculationVersion() + ",\"records\":" + calculatedWorkers
+                        + ",\"warnings\":" + warningCount + ",\"errors\":" + errorCount + "}", null);
 
-        return new WorkforceApi.SettlementCalculationSummary(
-            period.getId(), period.getPeriodCode(),
-            workerEntries.size(), contractors.size(),
-            totalAttendanceUnits, grossWorkersAmount, totalDeductions,
-            totalAdvanceDeductions, netWorkersAmount, netContractorsPayable
-        );
+        return new WorkforceApi.SettlementCalculationSummary(period.getId(), period.getPeriodCode(), calculatedWorkers,
+                calculatedContractors, totalAttendanceUnits, grossWorkersAmount, totalDeductions,
+                totalAdvanceDeductions, netWorkersAmount, netContractorsPayable, period.getStatus(),
+                period.getCalculationVersion(), period.getLastCalculatedAt().toEpochMilli(), currentActor,
+                warningCount, errorCount, issues.stream().map(this::mapIssue).toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<WorkforceApi.SettlementIssueResponse> listIssues(String periodId) {
+        WorkforceSettlementPeriod period = requirePeriod(periodId);
+        return issueRepository.findByPeriodIdAndCalculationVersionOrderBySeverityDescWorkerNameAsc(
+                periodId, period.getCalculationVersion()).stream().map(this::mapIssue).toList();
+    }
+
+    @Transactional
+    public WorkforceApi.SettlementPeriodResponse reviewPeriod(String periodId) {
+        WorkforceSettlementPeriod period = requireFreshCalculated(periodId, "CALCULATED");
+        period.setStatus("REVIEWED");
+        auditService.record("REVIEW", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
+                "{\"version\":" + period.getCalculationVersion() + "}", null);
+        return mapPeriodToResponse(periodRepository.save(period));
     }
 
     @Transactional
     public WorkforceApi.SettlementPeriodResponse approvePeriod(String periodId) {
-        WorkforceSettlementPeriod period = periodRepository.findById(periodId)
-            .orElseThrow(() -> new IllegalArgumentException("Period not found: " + periodId));
+        WorkforceSettlementPeriod period = requireFreshCalculated(periodId, "REVIEWED");
+        if (period.getResultErrorCount() > 0) throw new BusinessRuleException("يجب معالجة أخطاء التسوية قبل الاعتماد.");
         period.setStatus("APPROVED");
+        auditService.record("APPROVE", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
+                "{\"version\":" + period.getCalculationVersion() + "}", null);
         return mapPeriodToResponse(periodRepository.save(period));
     }
 
-    private WorkforceApi.SettlementPeriodResponse mapPeriodToResponse(WorkforceSettlementPeriod p) {
-        return new WorkforceApi.SettlementPeriodResponse(
-            p.getId(), p.getPeriodCode(), p.getStartDate(), p.getEndDate(),
-            p.getCycleType(), p.getStatus(),
-            p.getCreatedAt().toEpochMilli(), p.getUpdatedAt().toEpochMilli()
-        );
+    @Transactional
+    public WorkforceApi.SettlementPeriodResponse lockPeriod(String periodId) {
+        WorkforceSettlementPeriod period = requirePeriod(periodId);
+        if (!"APPROVED".equals(period.getStatus())) throw new BusinessRuleException("لا يمكن قفل الفترة قبل اعتمادها.");
+        period.setStatus("LOCKED");
+        auditService.record("LOCK", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
+                "{\"version\":" + period.getCalculationVersion() + "}", null);
+        return mapPeriodToResponse(periodRepository.save(period));
     }
+
+    private WorkforceSettlementPeriod requireFreshCalculated(String periodId, String requiredStatus) {
+        WorkforceSettlementPeriod period = requirePeriod(periodId);
+        if (!requiredStatus.equals(period.getStatus())) {
+            throw new BusinessRuleException("الحالة الحالية لا تسمح بهذا الإجراء. الحالة المطلوبة: " + requiredStatus);
+        }
+        if (needsRecalculation(period)) throw new BusinessRuleException("تغيرت بيانات الحضور أو الأسعار أو السياسات؛ أعد الاحتساب أولاً.");
+        return period;
+    }
+
+    private WorkforceSettlementPeriod requirePeriod(String periodId) {
+        return periodRepository.findById(periodId)
+                .orElseThrow(() -> new BusinessRuleException("فترة التسوية غير موجودة: " + periodId));
+    }
+
+    private WorkforceApi.SettlementPeriodResponse mapPeriodToResponse(WorkforceSettlementPeriod period) {
+        return new WorkforceApi.SettlementPeriodResponse(period.getId(), period.getPeriodCode(), period.getStartDate(),
+                period.getEndDate(), period.getCycleType(), period.getStatus(), period.getCalculationVersion(),
+                epoch(period.getLastCalculatedAt()), period.getLastCalculatedBy(), epoch(period.getLastCalculationFailedAt()),
+                period.getLastCalculationError(), needsRecalculation(period), period.getResultRecordCount(),
+                period.getResultGrossAmount(), period.getResultDeductions(), period.getResultAdvances(),
+                period.getResultNetAmount(), period.getResultWarningCount(), period.getResultErrorCount(),
+                period.getCreatedAt().toEpochMilli(), period.getUpdatedAt().toEpochMilli());
+    }
+
+    private WorkforceApi.SettlementIssueResponse mapIssue(WorkforceSettlementIssue issue) {
+        return new WorkforceApi.SettlementIssueResponse(issue.getId(), issue.getWorkerId(), issue.getWorkerName(),
+                issue.getSeverity(), issue.getCode(), issue.getMessage());
+    }
+
+    private boolean needsRecalculation(WorkforceSettlementPeriod period) {
+        if (period.getCalculationVersion() == 0 || period.getInputFingerprint() == null) return true;
+        return !period.getInputFingerprint().equals(inputFingerprint(
+                attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate()), workerRepository.findAll()));
+    }
+
+    private String inputFingerprint(List<ManualAttendanceEntry> entries, List<Worker> workers) {
+        try {
+            StringBuilder source = new StringBuilder();
+            entries.stream().sorted(Comparator.comparing(ManualAttendanceEntry::getId)).forEach(entry -> source
+                    .append(entry.getId()).append('|').append(entry.getWorkDate()).append('|')
+                    .append(entry.getAttendanceValue()).append('|').append(entry.getUpdatedAt()).append(';'));
+            workers.stream().sorted(Comparator.comparing(Worker::getId)).forEach(worker -> source
+                    .append(worker.getId()).append('|').append(worker.getDefaultDailyRate()).append('|')
+                    .append(worker.getContractorId()).append('|').append(worker.getUpdatedAt()).append(';'));
+            advanceRepository.findAll().stream().sorted(Comparator.comparing(WorkforceAdvance::getId)).forEach(advance -> source
+                    .append(advance.getId()).append('|').append(advance.getRemainingBalance()).append('|')
+                    .append(advance.getUpdatedAt()).append(';'));
+            advancePolicyRepository.findAll().stream().sorted(Comparator.comparing(WorkforceAdvancePolicy::getId)).forEach(policy -> source
+                    .append(policy.getId()).append('|').append(policy.getMaxDeductionPercent()).append('|')
+                    .append(policy.getUpdatedAt()).append(';'));
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
+                    .digest(source.toString().getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception exception) {
+            throw new IllegalStateException("تعذر تكوين بصمة مدخلات التسوية.", exception);
+        }
+    }
+
+    private String actor() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication == null ? "system" : authentication.getName();
+    }
+
+    private Long epoch(Instant instant) { return instant == null ? null : instant.toEpochMilli(); }
+    private String rootMessage(Throwable throwable) {
+        Throwable current = throwable;
+        while (current.getCause() != null) current = current.getCause();
+        return current.getMessage() == null ? "خطأ غير متوقع أثناء الاحتساب." : current.getMessage();
+    }
+    private String json(String value) { return value.replace("\\", "\\\\").replace("\"", "\\\""); }
 }

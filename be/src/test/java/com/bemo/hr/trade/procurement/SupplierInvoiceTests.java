@@ -20,4 +20,15 @@ class SupplierInvoiceTests {
         invoice.updatePaymentStatus(new BigDecimal("900"));
         assertThat(invoice.getStatus()).isEqualTo("PAID");
     }
+
+    @Test
+    void keepsSupplierInvoiceNumberEmptyForTransactionsWithoutAnInvoice() {
+        var invoice = new SupplierInvoice(null, "INT-42", "المورد لم يصدر فاتورة", "EGP",
+                "supplier-1", null, null, null, LocalDate.of(2026, 7, 29),
+                new BigDecimal("1000"), BigDecimal.ZERO, BigDecimal.ZERO, null, null);
+
+        assertThat(invoice.getInvoiceNumber()).isNull();
+        assertThat(invoice.getInternalReference()).isEqualTo("INT-42");
+        assertThat(invoice.getDocumentReference()).isEqualTo("INT-42");
+    }
 }

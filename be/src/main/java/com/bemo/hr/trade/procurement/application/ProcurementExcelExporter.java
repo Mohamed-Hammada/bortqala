@@ -27,15 +27,15 @@ public class ProcurementExcelExporter {
             var orderSheet = workbook.createSheet(arabic ? "أوامر الشراء" : "Purchase Orders");
             orderSheet.setRightToLeft(arabic);
             metadata(orderSheet, arabic, actor);
-            row(orderSheet, 2, header, arabic ? new String[]{"رقم الأمر","التاريخ","المورد","الحالة","الإجمالي"}
-                    : new String[]{"PO Number","Date","Supplier","Status","Total"});
+            row(orderSheet, 2, header, arabic ? new String[]{"رقم الأمر","التاريخ","المورد","العملة","الحالة","الإجمالي"}
+                    : new String[]{"PO Number","Date","Supplier","Currency","Status","Total"});
             int index = 3;
             for (var value : orders) {
                 var row = orderSheet.createRow(index++);
                 text(row, 0, value.poNumber()); date(row, 1, value.poDate()); text(row, 2, value.supplierName());
-                text(row, 3, value.status()); number(row, 4, value.totalAmount());
+                text(row, 3, value.currencyCode()); text(row, 4, value.status()); number(row, 5, value.totalAmount());
             }
-            finish(orderSheet, 5);
+            finish(orderSheet, 6);
 
             var receiptSheet = workbook.createSheet(arabic ? "إيصالات البضائع" : "Goods Receipts");
             receiptSheet.setRightToLeft(arabic); metadata(receiptSheet, arabic, actor);
@@ -51,29 +51,31 @@ public class ProcurementExcelExporter {
 
             var invoiceSheet = workbook.createSheet(arabic ? "فواتير الموردين" : "Supplier Invoices");
             invoiceSheet.setRightToLeft(arabic); metadata(invoiceSheet, arabic, actor);
-            row(invoiceSheet, 2, header, arabic ? new String[]{"رقم الفاتورة","التاريخ","المورد","الأصلي","الخصم","الضريبة","الصافي","المدفوع","المتبقي","الحالة"}
-                    : new String[]{"Invoice","Date","Supplier","Original","Discount","Tax","Net","Paid","Outstanding","Status"});
+            row(invoiceSheet, 2, header, arabic ? new String[]{"رقم الفاتورة","المرجع الداخلي","التاريخ","المورد","العملة","الأصلي","الخصم","الضريبة","الصافي","المدفوع","المتبقي","الحالة"}
+                    : new String[]{"Invoice","Internal Reference","Date","Supplier","Currency","Original","Discount","Tax","Net","Paid","Outstanding","Status"});
             index = 3;
             for (var value : invoices) {
                 var row = invoiceSheet.createRow(index++);
-                text(row, 0, value.invoiceNumber()); date(row, 1, value.invoiceDate()); text(row, 2, value.supplierName());
-                number(row, 3, value.totalAmount()); number(row, 4, value.discountAmount()); number(row, 5, value.taxAmount());
-                number(row, 6, value.netAmount()); number(row, 7, value.paidAmount()); number(row, 8, value.outstandingAmount());
-                text(row, 9, value.status());
+                text(row, 0, value.invoiceNumber()); text(row, 1, value.internalReference()); date(row, 2, value.invoiceDate());
+                text(row, 3, value.supplierName()); text(row, 4, value.currencyCode());
+                number(row, 5, value.totalAmount()); number(row, 6, value.discountAmount()); number(row, 7, value.taxAmount());
+                number(row, 8, value.netAmount()); number(row, 9, value.paidAmount()); number(row, 10, value.outstandingAmount());
+                text(row, 11, value.status());
             }
-            finish(invoiceSheet, 10);
+            finish(invoiceSheet, 12);
 
             var paymentSheet = workbook.createSheet(arabic ? "مدفوعات الموردين" : "Supplier Payments");
             paymentSheet.setRightToLeft(arabic); metadata(paymentSheet, arabic, actor);
-            row(paymentSheet, 2, header, arabic ? new String[]{"رقم الدفعة","التاريخ","المورد","الفاتورة","المبلغ","الطريقة","الحالة"}
-                    : new String[]{"Payment","Date","Supplier","Invoice","Amount","Method","Status"});
+            row(paymentSheet, 2, header, arabic ? new String[]{"رقم الدفعة","التاريخ","المورد","الفاتورة","المبلغ","العملة","الطريقة","الحالة"}
+                    : new String[]{"Payment","Date","Supplier","Invoice","Amount","Currency","Method","Status"});
             index = 3;
             for (var value : payments) {
                 var row = paymentSheet.createRow(index++);
                 text(row, 0, value.paymentNumber()); date(row, 1, value.paymentDate()); text(row, 2, value.supplierName());
-                text(row, 3, value.supplierInvoiceId()); number(row, 4, value.amount()); text(row, 5, value.paymentMethod()); text(row, 6, value.status());
+                text(row, 3, value.supplierInvoiceId()); number(row, 4, value.amount()); text(row, 5, value.currencyCode());
+                text(row, 6, value.paymentMethod()); text(row, 7, value.status());
             }
-            finish(paymentSheet, 7);
+            finish(paymentSheet, 8);
             workbook.write(output);
             return output.toByteArray();
         } catch (Exception exception) {

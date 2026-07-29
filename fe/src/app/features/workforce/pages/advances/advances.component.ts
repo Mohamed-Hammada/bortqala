@@ -2,15 +2,16 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WorkforceService } from '../../data-access/workforce.service';
-import { WorkforceAdvance, AdvanceRepayRequest } from '../../models/workforce.models';
+import { WorkforceAdvance, AdvanceRepayRequest, AdvancePolicy } from '../../models/workforce.models';
 import { NotificationService } from '../../../../core/notification.service';
 import { exportCsv } from '../../../../core/download';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
+import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-tooltip.directive';
 
 @Component({
   selector: 'app-advances',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalDialogComponent],
+  imports: [CommonModule, FormsModule, ModalDialogComponent, AppTooltipDirective],
   template: `
     <div class="workforce-container">
       <header class="page-header">
@@ -19,12 +20,18 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
           <h1>إدارة سُلف العمال والمقاولين وجدولة الأقساط</h1>
         </div>
         <div style="display: flex; gap: 0.75rem;">
+          <button type="button" class="btn btn-secondary" (click)="openPolicyModal()">⚙ سياسة الخصم</button>
           <button type="button" class="btn btn-secondary" (click)="exportCsv()">⇩ Excel</button>
           <button type="button" class="btn btn-primary" (click)="openCreateModal()">
             + صرف سُلفة جديدة
           </button>
         </div>
       </header>
+
+      <div class="card policy-summary-card">
+        <div><strong>سياسة السلف الافتراضية والاستثناءات</strong><p>الأولوية: استثناء العامل ← استثناء الفئة ← الإعداد العام. ويمكن تجاوزها داخل السلفة نفسها.</p></div>
+        <div class="policy-chips">@for (policy of workforceService.advancePolicies(); track policy.id) {<span class="badge policy-chip">{{ policy.scopeName || getPolicyScopeLabel(policy) }} · {{ policy.deductionMode === 'AUTO' ? 'تلقائي' : 'يدوي' }} · {{ policy.maxDeductionPercent }}%</span>}</div>
+      </div>
 
       <!-- Summary Stats -->
       <div class="stats-row">
@@ -135,7 +142,7 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
             @if (form.recipientType === 'WORKER') {
               <div class="form-group">
                 <label>اختر العامل *</label>
-                <select [(ngModel)]="form.workerId" name="workerId" class="form-input">
+                <select [(ngModel)]="form.workerId" name="workerId" class="form-input" (ngModelChange)="applyAdvancePolicy()">
                   @for (w of workforceService.workers(); track w.id) {
                     <option [value]="w.id">{{ w.fullName }} ({{ w.code }})</option>
                   }
@@ -177,7 +184,7 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
               </div>
 
               <div class="form-group">
-                <label>قيمة القسط (ج.م) — محسوبة تلقائياً</label>
+                <label>قيمة القسط (ج.م) — محسوبة تلقائياً <span tabindex="0" aria-label="شرح احتساب الأقساط" appTooltip="طريقة احتساب الأقساط — مبلغ السلفة ÷ عدد الأقساط ويمكن تعديله">ⓘ</span></label>
                 <input type="number" [(ngModel)]="form.installmentAmount" name="installmentAmount"
                        class="form-input" min="1" />
               </div>
@@ -247,6 +254,23 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
         </div>
       </app-modal-dialog>
 
+      <app-modal-dialog [isOpen]="policyModalOpen()" title="سياسة خصم السلف" size="normal" [preventOutsideClose]="true" (close)="policyModalOpen.set(false)">
+        <form class="modal-form">
+          <div class="form-grid">
+            <div class="form-group"><label>نطاق السياسة *</label><select [(ngModel)]="policyForm.scopeType" name="policyScope" class="form-input" (ngModelChange)="policyForm.scopeId = ''"><option value="GLOBAL">إعداد عام</option><option value="CATEGORY">استثناء حسب الفئة</option><option value="WORKER">استثناء حسب العامل</option></select></div>
+            @if (policyForm.scopeType === 'CATEGORY') {<div class="form-group"><label>الفئة *</label><select [(ngModel)]="policyForm.scopeId" name="policyCategory" class="form-input">@for (category of workforceService.categories(); track category.id) {<option [value]="category.id">{{ category.name }}</option>}</select></div>}
+            @if (policyForm.scopeType === 'WORKER') {<div class="form-group"><label>العامل *</label><select [(ngModel)]="policyForm.scopeId" name="policyWorker" class="form-input">@for (worker of workforceService.workers(); track worker.id) {<option [value]="worker.id">{{ worker.fullName }} ({{ worker.code }})</option>}</select></div>}
+            <div class="form-group"><label>طريقة الخصم الافتراضية</label><select [(ngModel)]="policyForm.deductionMode" name="policyMode" class="form-input"><option value="AUTO">تلقائي مع التسوية</option><option value="MANUAL">يدوي</option></select></div>
+            <div class="form-group"><label>دورية الخصم</label><select [(ngModel)]="policyForm.deductionFrequency" name="policyFrequency" class="form-input"><option value="HALF_MONTH">نصف شهري</option><option value="MONTHLY">شهري</option><option value="WEEKLY">أسبوعي</option></select></div>
+            <div class="form-group"><label>الحد الأقصى من مستحق الفترة %</label><input type="number" min="1" max="100" [(ngModel)]="policyForm.maxDeductionPercent" name="policyMax" class="form-input" /></div>
+            <div class="form-group"><label>عدد الأقساط الافتراضي</label><input type="number" min="1" max="60" [(ngModel)]="policyForm.defaultInstallments" name="policyInstallments" class="form-input" /></div>
+            <div class="form-group"><label>فترات التأجيل الافتراضية</label><input type="number" min="0" max="12" [(ngModel)]="policyForm.deferralPeriods" name="policyDeferral" class="form-input" /></div>
+            <label class="form-group"><span>الحالة</span><input type="checkbox" [(ngModel)]="policyForm.active" name="policyActive" /> مفعّلة</label>
+          </div>
+        </form>
+        <div modal-actions class="modal-actions-bar"><button type="button" class="btn btn-primary" [disabled]="saving()" (click)="savePolicy()">حفظ السياسة</button><button type="button" class="btn btn-secondary" (click)="policyModalOpen.set(false)">إلغاء</button></div>
+      </app-modal-dialog>
+
       <!-- Repayment Modal -->
       <app-modal-dialog
         [isOpen]="repayModalOpen()"
@@ -269,7 +293,7 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
                 <span class="info-value">{{ adv.recipientType === 'WORKER' ? 'عامل' : 'مقاول' }}</span>
               </div>
               <div class="repay-info-item">
-                <span class="info-label">المبلغ الأصلي</span>
+                <span class="info-label">المبلغ الأصلي <span tabindex="0" aria-label="شرح المبلغ الأصلي" appTooltip="المبلغ الأصلي — كامل قيمة السلفة عند الصرف">ⓘ</span></span>
                 <span class="info-value">{{ adv.amount | number:'1.0-0' }} ج.م</span>
               </div>
               <div class="repay-info-item">
@@ -277,7 +301,7 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
                 <span class="info-value">{{ (adv.amount - adv.remainingBalance) | number:'1.0-0' }} ج.م</span>
               </div>
               <div class="repay-info-item">
-                <span class="info-label">الرصيد المتبقي</span>
+                <span class="info-label">الرصيد المتبقي <span tabindex="0" aria-label="شرح الرصيد المتبقي" appTooltip="الرصيد المتبقي — المبلغ الأصلي ناقص كل السداد والخصومات المسجلة">ⓘ</span></span>
                 <span class="info-value balance-highlight">{{ adv.remainingBalance | number:'1.0-0' }} ج.م</span>
               </div>
             </div>
@@ -388,6 +412,10 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
     .page-header { display: flex; justify-content: space-between; align-items: center; }
     .page-header h1 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0 0 0; }
     .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .policy-summary-card { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+    .policy-summary-card p { margin: .25rem 0 0; color: #64748b; font-size: .8rem; }
+    .policy-chips { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: flex-end; }
+    .policy-chip { background: #eff6ff; color: #1d4ed8; }
     .stat-card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.375rem; }
     .stat-label { font-size: 0.8125rem; color: #64748b; }
     .stat-value { font-size: 1.5rem; font-weight: 800; color: #0f172a; }
@@ -455,6 +483,8 @@ export class AdvancesComponent implements OnInit {
   loading = signal(false);
   saving = signal(false);
   isModalOpen = false;
+  policyModalOpen = signal(false);
+  policyForm: AdvancePolicy = this.defaultPolicyForm();
 
   // Repayment modal state
   repayModalOpen = signal(false);
@@ -498,12 +528,15 @@ export class AdvancesComponent implements OnInit {
     });
     this.workforceService.loadWorkers().subscribe();
     this.workforceService.loadContractors().subscribe();
+    this.workforceService.loadCategories().subscribe();
+    this.workforceService.loadAdvancePolicies().subscribe();
   }
 
   openCreateModal() {
     this.form = this.defaultForm();
     const workers = this.workforceService.workers();
     if (workers.length > 0) this.form.workerId = workers[0].id;
+    this.applyAdvancePolicy();
     this.isModalOpen = true;
   }
 
@@ -514,7 +547,32 @@ export class AdvancesComponent implements OnInit {
     const contractors = this.workforceService.contractors();
     if (this.form.recipientType === 'WORKER' && workers.length > 0) this.form.workerId = workers[0].id;
     if (this.form.recipientType === 'CONTRACTOR' && contractors.length > 0) this.form.contractorId = contractors[0].id;
+    this.applyAdvancePolicy();
   }
+
+  openPolicyModal(): void { this.policyForm = this.defaultPolicyForm(); this.policyModalOpen.set(true); }
+
+  savePolicy(): void {
+    if (this.policyForm.scopeType !== 'GLOBAL' && !this.policyForm.scopeId) { this.notificationService.warning('اختر الفئة أو العامل للاستثناء'); return; }
+    this.saving.set(true);
+    this.workforceService.saveAdvancePolicy(this.policyForm).subscribe({
+      next: () => { this.saving.set(false); this.policyModalOpen.set(false); this.notificationService.success('تم حفظ سياسة السلف بنجاح ✓'); },
+      error: error => { this.saving.set(false); this.notificationService.error(error?.error?.detail ?? 'تعذّر حفظ السياسة'); },
+    });
+  }
+
+  applyAdvancePolicy(): void {
+    const policies = this.workforceService.advancePolicies().filter(policy => policy.active);
+    const worker = this.workforceService.workers().find(item => item.id === this.form.workerId);
+    const policy = policies.find(item => item.scopeType === 'WORKER' && item.scopeId === worker?.id)
+      ?? policies.find(item => item.scopeType === 'CATEGORY' && item.scopeId === worker?.categoryId)
+      ?? policies.find(item => item.scopeType === 'GLOBAL');
+    if (!policy) return;
+    Object.assign(this.form, { deductionMode: policy.deductionMode, deductionFrequency: policy.deductionFrequency, maxDeductionPercent: policy.maxDeductionPercent, totalInstallments: policy.defaultInstallments, deferralPeriods: policy.deferralPeriods });
+    this.recalcInstallment();
+  }
+
+  getPolicyScopeLabel(policy: AdvancePolicy): string { return policy.scopeType === 'GLOBAL' ? 'الإعداد العام' : policy.scopeType === 'CATEGORY' ? 'استثناء فئة' : 'استثناء عامل'; }
 
   recalcInstallment() {
     if (this.form.totalInstallments > 0 && this.form.amount > 0) {
@@ -719,5 +777,9 @@ export class AdvancesComponent implements OnInit {
       receiptRef: '',
       notes: ''
     };
+  }
+
+  private defaultPolicyForm(): AdvancePolicy {
+    return { scopeType: 'GLOBAL', scopeId: '', deductionMode: 'AUTO', deductionFrequency: 'HALF_MONTH', maxDeductionPercent: 50, defaultInstallments: 1, deferralPeriods: 0, active: true };
   }
 }

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import java.util.List;
 
@@ -23,6 +24,15 @@ public class WorkforceAdvanceController {
     @GetMapping
     public List<WorkforceApi.AdvanceResponse> list() {
         return advanceService.list();
+    }
+
+    @GetMapping("/policies")
+    public List<WorkforceApi.AdvancePolicyResponse> policies() { return advanceService.listPolicies(); }
+
+    @PutMapping("/policies")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    public WorkforceApi.AdvancePolicyResponse savePolicy(@Valid @RequestBody WorkforceApi.AdvancePolicyRequest request, Authentication auth) {
+        return advanceService.savePolicy(request, auth != null ? auth.getName() : "system");
     }
 
     @PostMapping

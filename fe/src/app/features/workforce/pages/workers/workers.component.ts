@@ -5,6 +5,7 @@ import { I18nService } from '../../../../core/i18n.service';
 import { WorkforceService } from '../../data-access/workforce.service';
 import { Worker } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
+import { downloadBlob } from '../../../../core/download';
 
 @Component({
   selector: 'app-workers',
@@ -17,9 +18,7 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
           <span class="eyebrow">إدارة العمال</span>
           <h1>سجل العمال اليوميين والمؤقتين</h1>
         </div>
-        <button type="button" class="btn btn-primary" (click)="openCreateModal()">
-          + إضافة عامل جديد
-        </button>
+        <div class="header-actions"><button type="button" class="btn btn-secondary" (click)="exportExcel()">⇩ تصدير Excel</button><button type="button" class="btn btn-primary" (click)="openCreateModal()">+ إضافة عامل جديد</button></div>
       </header>
 
       <div class="card">
@@ -122,6 +121,7 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
     .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
     .eyebrow { font-size: 0.875rem; color: #d97706; font-weight: 600; }
     .page-header { display: flex; justify-content: space-between; align-items: center; }
+    .header-actions { display: flex; gap: .75rem; }
     .page-header h1 { font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0 0 0; }
     .card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 1.25rem; }
     .data-table { width: 100%; border-collapse: collapse; text-align: right; }
@@ -159,6 +159,10 @@ export class WorkersComponent implements OnInit {
     this.workforceService.loadWorkers().subscribe();
     this.workforceService.loadContractors().subscribe();
     this.workforceService.loadCategories().subscribe();
+  }
+
+  exportExcel(): void {
+    this.workforceService.exportWorkersExcel().subscribe(blob => downloadBlob(blob, `workers-${new Date().toISOString().slice(0, 10)}.xlsx`));
   }
 
   openCreateModal() {

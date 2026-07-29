@@ -23,3 +23,11 @@
 **EN:** V53 adds tenant-level procurement document sequences and unique PO/GRN numbers. Administrators choose automatic locked numeric numbering, which continues after the highest existing company document number, or unique manual numbering. Draft orders can edit date, supplier, item, quantity and price; item name/category/unit always come from inventory master data. Draft, issued and partially received orders remain available when creating a receipt.
 
 **AR:** يضيف V53 تسلسلاً لمستندات المشتريات لكل شركة مع منع تكرار أرقام أوامر الشراء وأذون الاستلام. يختار المدير بين الترقيم التلقائي المقفل أو الترقيم اليدوي غير المكرر. ويمكن تعديل تاريخ المسودة والمورد والصنف والكمية والسعر، بينما يأتي اسم الصنف وتصنيفه ووحدته دائماً من دليل المخزون. وتظل المسودات والأوامر الصادرة والمستلمة جزئياً متاحة عند إنشاء إذن الاستلام.
+
+**EN:** V57 adds validated transaction currency to purchase orders and supplier invoices, defaulting from the supplier while permitting an active configured currency override. Supplier-without-invoice transactions now persist a null supplier invoice number with a separate mandatory internal reference and reason. Receipt quantities retain delivered/original, rejected, quality-deducted, and accepted values.
+
+**AR:** يضيف V57 عملة عملية متحققاً منها لأوامر الشراء وفواتير الموردين، وتبدأ بعملة المورد مع السماح باختيار عملة نشطة أخرى. وتحفظ معاملة المورد بدون فاتورة رقم فاتورة فارغاً فعلياً مع مرجع داخلي وسبب إلزاميين. كما يحتفظ الاستلام بالكميات الأصلية والمرفوضة والمخصومة للجودة والمقبولة.
+
+**EN:** Supplier payments are idempotent by operation ID. The backend rejects cross-supplier invoices, closed invoices, non-positive amounts, and amounts above the live outstanding balance. These checks remain authoritative even when the API is called outside the UI.
+
+**AR:** دفعات الموردين محمية من التكرار بمعرّف العملية. ويرفض الخادم الفاتورة التابعة لمورد آخر، والفاتورة المغلقة، والمبلغ غير الموجب، وأي مبلغ يتجاوز الرصيد المتبقي الفعلي، حتى عند استدعاء الواجهة البرمجية مباشرةً.

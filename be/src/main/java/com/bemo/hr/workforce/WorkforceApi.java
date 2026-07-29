@@ -183,6 +183,19 @@ public final class WorkforceApi {
         String endDate,
         String cycleType,
         String status,
+        int calculationVersion,
+        Long lastCalculatedAt,
+        String lastCalculatedBy,
+        Long lastCalculationFailedAt,
+        String lastCalculationError,
+        boolean needsRecalculation,
+        int resultRecordCount,
+        BigDecimal resultGrossAmount,
+        BigDecimal resultDeductions,
+        BigDecimal resultAdvances,
+        BigDecimal resultNetAmount,
+        int resultWarningCount,
+        int resultErrorCount,
         long createdAt,
         long updatedAt
     ) { }
@@ -197,7 +210,19 @@ public final class WorkforceApi {
         BigDecimal totalDeductions,
         BigDecimal totalAdvanceDeductions,
         BigDecimal netWorkersAmount,
-        BigDecimal netContractorsPayable
+        BigDecimal netContractorsPayable,
+        String status,
+        int calculationVersion,
+        long executedAt,
+        String executedBy,
+        int warningCount,
+        int errorCount,
+        List<SettlementIssueResponse> issues
+    ) { }
+
+    public record SettlementIssueResponse(
+        String id, String workerId, String workerName, String severity,
+        String code, String message
     ) { }
 
     // --- Bulk Attendance Update DTOs ---
@@ -268,5 +293,30 @@ public final class WorkforceApi {
         String deductionMode,
         int deferralPeriods,
         long createdAt
+    ) { }
+
+    public record AdvancePolicyRequest(
+        @NotBlank String scopeType,
+        String scopeId,
+        @NotBlank String deductionMode,
+        @NotBlank String deductionFrequency,
+        @NotNull BigDecimal maxDeductionPercent,
+        int defaultInstallments,
+        int deferralPeriods,
+        boolean active
+    ) { }
+
+    public record AdvancePolicyResponse(
+        String id,
+        String scopeType,
+        String scopeId,
+        String scopeName,
+        String deductionMode,
+        String deductionFrequency,
+        BigDecimal maxDeductionPercent,
+        int defaultInstallments,
+        int deferralPeriods,
+        boolean active,
+        long updatedAt
     ) { }
 }

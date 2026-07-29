@@ -28,17 +28,20 @@
 - **Keyboard, Navigation & Import UX (P1)**: Added form Enter-to-submit, modal Escape-to-cancel, predictable Tab focus, focus-on-open, sidebar expand-all/collapse-all controls, Arabic import completion states, and more robust Excel date parsing including unformatted serial dates and common day/month/year formats.
 - **Advanced Keyboard Navigation & Tooltips (P1)**: Added permission-aware `Ctrl+K` quick navigation with search and arrow/Enter selection, `?` shortcut help, `G`-then-letter direct menu chords, a dedicated settings reference tab, and descriptive tooltips carrying shortcut hints across shell navigation and controls. Liquibase V55 carries the Arabic/English copy.
 - **Dynamic Dashboard Customization & Motion (P1)**: Added server-backed per-user widget visibility/order and motion preferences, per-user admin permission switches, a Super Admin-only tenant policy for Admin accounts, richer attendance/payroll/department charts, reduced-motion support, and Liquibase V56 bilingual copy.
+- **Procurement Totals, Currency & Invoice Evidence (P0)**: Fixed live PO total recalculation and save enablement, added validated transaction currency defaulted from the supplier, separated nullable supplier invoice numbers from internal references, and made delivered/rejected/deducted/accepted receipt quantities explicit. Liquibase V57 carries the schema.
+- **Workforce Reliability & Analysis (P0/P1)**: Fixed the hidden manual-attendance matrix, added analytical workforce charts honoring the motion preference, real Excel exports for contractors/workers/categories, and tenant advance policies with global/category/worker precedence. Liquibase V58 carries advance policies.
+- **Unified Tooltip Accessibility (P1)**: Standardized 350ms hover/focus delay, two-line RTL surfaces, Escape dismissal, `aria-describedby`, and icon-only `aria-label` coverage in the shell and audited controls; added financial and bulk-action context help.
 
 ---
 
 ## [ORPHANS & PENDING]
 *(See Bemo ERP — Remaining and Incomplete Work document for full backlog)*
 - **P0**: Execute and verify historical negative-stock cleanup using the implemented approved adjustment workflow and before/after exception report
-- **P0/P1**: Complete procurement commercial metadata (currency/exchange rate, expected delivery, line tax/discount), controlled financial-discount approval, and cancellation/reversal ledger postings
+- **P1**: Complete remaining procurement commercial metadata (exchange-rate snapshots, expected delivery, line tax/discount), controlled financial-discount approval, and cancellation/reversal ledger postings
 - **P1**: Unified category master (employee/worker scope), enhanced work-schedule rules with overlap detection
-- **P1**: Complete one unified employee/worker category source and the deduction-policy inheritance/lifecycle
+- **P1**: Complete one unified employee/worker category source; advance deduction policy inheritance is implemented, while broader payroll deduction-policy lifecycle remains
 - **P1**: Finish remaining bilingual labels and per-flow retry feedback standardization
-- **P1**: Excel export coverage across all operational screens
+- **P1**: Finish Excel export coverage for remaining operational screens beyond workforce master data
 - **P2**: Detailed dashboards with charts and drill-down
 - **P2**: Extend detailed charts/drill-down beyond the main dashboard to every department dashboard
 
@@ -68,3 +71,11 @@
 - [x] Server-backed Favorites and Recently Used visibility, limits, history clearing, and favorite reset
 - [x] Manual worker attendance contractor/category/status filters and selected worker/date bulk preview controls
 - [x] Per-user dynamic dashboard layouts, Super Admin/Admin policy hierarchy, richer charts, and optional accessible motion
+- [x] Live PO totals, transaction currency, and true supplier-without-invoice references
+- [x] Visible manual-attendance matrix independent of the calculation-rules banner
+- [x] Workforce analytical charts and Excel exports for contractors, workers, and worker categories
+- [x] Global advance policy with category/worker exceptions and per-advance override
+- [x] Unified delayed RTL tooltips with Escape and icon-button accessibility labels
+- [x] Supplier-scoped invoice payments with outstanding-balance validation and idempotent operation IDs
+- [x] Versioned workforce settlement recalculation summaries, stale-input detection, issues, and guarded lifecycle
+- [x] Complete workforce Excel import workflow with mapping, validation, preview, duplicate detection, error workbook, commit, and reversal

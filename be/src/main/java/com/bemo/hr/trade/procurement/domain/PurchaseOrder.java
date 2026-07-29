@@ -49,6 +49,9 @@ public class PurchaseOrder {
     @Column(name = "payment_terms", length = 255)
     private String paymentTerms;
 
+    @Column(name = "currency_code", nullable = false, length = 10)
+    private String currencyCode;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status;
@@ -65,12 +68,18 @@ public class PurchaseOrder {
     protected PurchaseOrder() {}
 
     public PurchaseOrder(String poNumber, LocalDate poDate, String supplierId, String purchaseRequestId, String paymentTerms, BigDecimal totalAmount) {
+        this(poNumber, poDate, supplierId, purchaseRequestId, paymentTerms, "EGP", totalAmount);
+    }
+
+    public PurchaseOrder(String poNumber, LocalDate poDate, String supplierId, String purchaseRequestId,
+                         String paymentTerms, String currencyCode, BigDecimal totalAmount) {
         this.id = UUID.randomUUID().toString();
         this.poNumber = poNumber.strip();
         this.poDate = poDate;
         this.supplierId = supplierId;
         this.purchaseRequestId = purchaseRequestId == null || purchaseRequestId.isBlank() ? null : purchaseRequestId.strip();
         this.paymentTerms = paymentTerms == null ? null : paymentTerms.strip();
+        this.currencyCode = currencyCode == null || currencyCode.isBlank() ? "EGP" : currencyCode.strip().toUpperCase();
         this.status = Status.DRAFT;
         this.totalAmount = totalAmount == null ? BigDecimal.ZERO : totalAmount;
     }
@@ -80,13 +89,14 @@ public class PurchaseOrder {
     }
 
     public void updateDraft(String poNumber, LocalDate poDate, String supplierId, String purchaseRequestId,
-                            String paymentTerms, BigDecimal totalAmount) {
+                            String paymentTerms, String currencyCode, BigDecimal totalAmount) {
         if (status != Status.DRAFT) throw new IllegalStateException("Only draft purchase orders can be edited.");
         this.poNumber = poNumber.strip();
         this.poDate = poDate;
         this.supplierId = supplierId;
         this.purchaseRequestId = purchaseRequestId == null || purchaseRequestId.isBlank() ? null : purchaseRequestId.strip();
         this.paymentTerms = paymentTerms == null || paymentTerms.isBlank() ? null : paymentTerms.strip();
+        this.currencyCode = currencyCode == null || currencyCode.isBlank() ? "EGP" : currencyCode.strip().toUpperCase();
         this.totalAmount = totalAmount;
     }
 
@@ -102,6 +112,7 @@ public class PurchaseOrder {
     public String getSupplierId() { return supplierId; }
     public String getPurchaseRequestId() { return purchaseRequestId; }
     public String getPaymentTerms() { return paymentTerms; }
+    public String getCurrencyCode() { return currencyCode; }
     public Status getStatus() { return status; }
     public BigDecimal getTotalAmount() { return totalAmount; }
     public long getCreatedAt() { return createdAt; }

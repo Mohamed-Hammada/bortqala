@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter, HostListener, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
 
 @Component({
   selector: 'app-modal-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AppTooltipDirective],
   template: `
     <div *ngIf="isOpen" class="modal-backdrop" (click)="onBackdropClick($event)">
       <div 
@@ -20,7 +21,7 @@ import { CommonModule } from '@angular/common';
         
         <header class="modal-header">
           <h2 [id]="titleId" class="modal-title">{{ title }}</h2>
-          <button type="button" class="close-btn" aria-label="Close" (click)="onClose()">
+          <button type="button" class="close-btn" aria-label="إغلاق النافذة" appTooltip="إغلاق — إلغاء وإغلاق النافذة · Esc" (click)="onClose()">
             ✕
           </button>
         </header>

@@ -1,0 +1,77 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_calculation_result_columns_to_workforce_settlement_periods
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: workforce_settlement_periods
+              columnName: calculation_version
+      changes:
+        - addColumn:
+            tableName: workforce_settlement_periods
+            columns:
+              - column: { name: calculation_version, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: last_calculated_at, type: timestamp }
+              - column: { name: last_calculated_by, type: VARCHAR(160) }
+              - column: { name: last_calculation_failed_at, type: timestamp }
+              - column: { name: last_calculation_error, type: VARCHAR(1000) }
+              - column: { name: input_fingerprint, type: VARCHAR(64) }
+              - column: { name: result_record_count, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: result_gross_amount, type: "NUMERIC(15,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: result_deductions, type: "NUMERIC(15,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: result_advances, type: "NUMERIC(15,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: result_net_amount, type: "NUMERIC(15,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: result_warning_count, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: result_error_count, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - sql: UPDATE workforce_settlement_periods SET status = 'CALCULATED' WHERE status = 'REVIEW'
+      rollback:
+        - dropColumn:
+            tableName: workforce_settlement_periods
+            columns:
+              - column: { name: calculation_version }
+              - column: { name: last_calculated_at }
+              - column: { name: last_calculated_by }
+              - column: { name: last_calculation_failed_at }
+              - column: { name: last_calculation_error }
+              - column: { name: input_fingerprint }
+              - column: { name: result_record_count }
+              - column: { name: result_gross_amount }
+              - column: { name: result_deductions }
+              - column: { name: result_advances }
+              - column: { name: result_net_amount }
+              - column: { name: result_warning_count }
+              - column: { name: result_error_count }
+
+  - changeSet:
+      id: create_workforce_settlement_issues_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.workforce_settlement_issues
+      changes:
+        - createTable:
+            tableName: workforce_settlement_issues
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: period_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: calculation_version, type: INT, constraints: { nullable: false } }
+              - column: { name: worker_id, type: VARCHAR(36) }
+              - column: { name: worker_name, type: VARCHAR(160) }
+              - column: { name: severity, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: code, type: VARCHAR(60), constraints: { nullable: false } }
+              - column: { name: message, type: VARCHAR(500), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - createIndex:
+            tableName: workforce_settlement_issues
+            indexName: idx_workforce_settlement_issues_period_version
+            columns:
+              - column: { name: app_id }
+              - column: { name: period_id }
+              - column: { name: calculation_version }
+      rollback:
+        - dropTable: { tableName: workforce_settlement_issues }

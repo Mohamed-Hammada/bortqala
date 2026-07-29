@@ -17,8 +17,10 @@ public class WorkforceAdvanceService {
     private final WorkforceAdvanceInstallmentRepository installmentRepository;
     private final WorkforceAdvanceLedgerEntryRepository ledgerRepository;
     private final WorkerRepository workerRepository;
+    private final WorkerCategoryRepository categoryRepository;
     private final ContractorRepository contractorRepository;
     private final AuditService auditService;
+    private final WorkforceAdvancePolicyRepository policyRepository;
 
     @Transactional(readOnly = true)
     public List<WorkforceApi.AdvanceResponse> list() {
@@ -27,8 +29,14 @@ public class WorkforceAdvanceService {
 
     @Transactional
     public WorkforceApi.AdvanceResponse create(WorkforceApi.AdvanceCreateRequest request, String createdBy) {
+        WorkforceAdvancePolicy policy = effectivePolicy(request.workerId());
+        String deductionMode = valueOrDefault(request.deductionMode(), policy != null ? policy.getDeductionMode() : "AUTO");
+        String deductionFrequency = valueOrDefault(request.deductionFrequency(), policy != null ? policy.getDeductionFrequency() : "HALF_MONTH");
+        BigDecimal maxDeductionPercent = request.maxDeductionPercent() != null ? request.maxDeductionPercent()
+                : policy != null ? policy.getMaxDeductionPercent() : new BigDecimal("50");
         BigDecimal instAmount = request.installmentAmount();
-        int count = request.totalInstallments() != null ? Math.max(1, request.totalInstallments()) : 1;
+        int count = request.totalInstallments() != null ? Math.max(1, request.totalInstallments())
+                : policy != null ? policy.getDefaultInstallments() : 1;
         if (instAmount == null || instAmount.compareTo(BigDecimal.ZERO) == 0) {
             instAmount = request.amount().divide(new BigDecimal(count), 2, RoundingMode.HALF_UP);
         }
@@ -36,8 +44,9 @@ public class WorkforceAdvanceService {
         WorkforceAdvance adv = new WorkforceAdvance(
             request.recipientType(), request.workerId(), request.contractorId(),
             request.amount(), request.termType(), count, instAmount,
-            request.deductionFrequency(), request.maxDeductionPercent(), request.reason(),
-            request.firstInstallmentDate(), request.deductionMode(), request.deferralPeriods()
+            deductionFrequency, maxDeductionPercent, request.reason(),
+            request.firstInstallmentDate(), deductionMode,
+            request.deferralPeriods() != null ? request.deferralPeriods() : policy != null ? policy.getDeferralPeriods() : 0
         );
         WorkforceAdvance saved = advanceRepository.save(adv);
 
@@ -53,8 +62,8 @@ public class WorkforceAdvanceService {
             baseDate = java.time.LocalDate.now();
         }
 
-        boolean isMonthly = "MONTHLY".equalsIgnoreCase(request.deductionFrequency());
-        int deferral = request.deferralPeriods() != null ? request.deferralPeriods() : 0;
+        boolean isMonthly = "MONTHLY".equalsIgnoreCase(deductionFrequency);
+        int deferral = request.deferralPeriods() != null ? request.deferralPeriods() : policy != null ? policy.getDeferralPeriods() : 0;
 
         for (int i = 1; i <= count; i++) {
             java.time.LocalDate instDate = isMonthly
@@ -79,6 +88,51 @@ public class WorkforceAdvanceService {
 
         return mapToResponse(saved);
     }
+
+    @Transactional(readOnly = true)
+    public List<WorkforceApi.AdvancePolicyResponse> listPolicies() {
+        return policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc().stream().map(this::mapPolicy).toList();
+    }
+
+    @Transactional
+    public WorkforceApi.AdvancePolicyResponse savePolicy(WorkforceApi.AdvancePolicyRequest request, String actor) {
+        String scopeType = request.scopeType().strip().toUpperCase(java.util.Locale.ROOT);
+        if (!List.of("GLOBAL", "CATEGORY", "WORKER").contains(scopeType)) throw new BusinessRuleException("نطاق سياسة السلف غير صالح.");
+        if (!"GLOBAL".equals(scopeType) && (request.scopeId() == null || request.scopeId().isBlank())) throw new BusinessRuleException("اختر الفئة أو العامل للاستثناء.");
+        if (request.maxDeductionPercent().signum() <= 0 || request.maxDeductionPercent().compareTo(new BigDecimal("100")) > 0) throw new BusinessRuleException("نسبة الخصم يجب أن تكون بين 1 و100.");
+        WorkforceAdvancePolicy policy = policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc().stream()
+                .filter(item -> item.getScopeType().equals(scopeType) && java.util.Objects.equals(item.getScopeId(), "GLOBAL".equals(scopeType) ? null : request.scopeId()))
+                .findFirst().orElseGet(() -> new WorkforceAdvancePolicy(scopeType, request.scopeId(), request.deductionMode(), request.deductionFrequency(), request.maxDeductionPercent(), request.defaultInstallments(), request.deferralPeriods(), request.active()));
+        policy.update(scopeType, request.scopeId(), request.deductionMode(), request.deductionFrequency(), request.maxDeductionPercent(), request.defaultInstallments(), request.deferralPeriods(), request.active());
+        WorkforceAdvancePolicy saved = policyRepository.save(policy);
+        auditService.record("UPSERT", "ADVANCE_POLICY", saved.getId(), actor, "{\"scopeType\":\"" + scopeType + "\"}", null);
+        return mapPolicy(saved);
+    }
+
+    private WorkforceAdvancePolicy effectivePolicy(String workerId) {
+        List<WorkforceAdvancePolicy> policies = policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc().stream().filter(WorkforceAdvancePolicy::isActive).toList();
+        if (workerId != null && !workerId.isBlank()) {
+            var workerPolicy = policies.stream().filter(item -> "WORKER".equals(item.getScopeType()) && workerId.equals(item.getScopeId())).findFirst();
+            if (workerPolicy.isPresent()) return workerPolicy.get();
+            String categoryId = workerRepository.findById(workerId).map(Worker::getCategoryId).orElse(null);
+            var categoryPolicy = policies.stream().filter(item -> "CATEGORY".equals(item.getScopeType()) && java.util.Objects.equals(categoryId, item.getScopeId())).findFirst();
+            if (categoryPolicy.isPresent()) return categoryPolicy.get();
+        }
+        return policies.stream().filter(item -> "GLOBAL".equals(item.getScopeType())).findFirst().orElse(null);
+    }
+
+    private WorkforceApi.AdvancePolicyResponse mapPolicy(WorkforceAdvancePolicy policy) {
+        String scopeName = switch (policy.getScopeType()) {
+            case "WORKER" -> workerRepository.findById(policy.getScopeId()).map(Worker::getFullName).orElse("—");
+            case "CATEGORY" -> categoryRepository.findById(policy.getScopeId()).map(WorkerCategory::getName).orElse("—");
+            default -> "الإعداد العام";
+        };
+        return new WorkforceApi.AdvancePolicyResponse(policy.getId(), policy.getScopeType(), policy.getScopeId(), scopeName,
+                policy.getDeductionMode(), policy.getDeductionFrequency(), policy.getMaxDeductionPercent(),
+                policy.getDefaultInstallments(), policy.getDeferralPeriods(), policy.isActive(), policy.getUpdatedAt().toEpochMilli());
+    }
+
+    private String valueOrDefault(String value, String fallback) { return value == null || value.isBlank() ? fallback : value; }
 
     @Transactional
     public WorkforceApi.AdvanceResponse pause(String id, String user) {

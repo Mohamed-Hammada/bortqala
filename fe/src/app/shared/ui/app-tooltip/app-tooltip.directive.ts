@@ -21,11 +21,20 @@ export class AppTooltipDirective implements OnDestroy {
   private readonly document = inject(DOCUMENT);
   private tooltipElement: HTMLElement | null = null;
   private previousDescribedBy: string | null = null;
+  private showTimer: ReturnType<typeof setTimeout> | null = null;
 
   @Input({ required: true }) appTooltip = '';
 
   @HostListener('mouseenter')
-  show(): void {
+  scheduleShow(): void {
+    if (!this.appTooltip.trim() || this.tooltipElement || this.showTimer) return;
+    this.showTimer = setTimeout(() => {
+      this.showTimer = null;
+      this.show();
+    }, 350);
+  }
+
+  private show(): void {
     if (!this.appTooltip.trim() || this.tooltipElement) return;
 
     const tooltip = this.renderer.createElement('div') as HTMLElement;
@@ -50,13 +59,17 @@ export class AppTooltipDirective implements OnDestroy {
 
   @HostListener('focusin', ['$event'])
   onFocus(event: FocusEvent): void {
-    if (event.target === this.elementRef.nativeElement) this.show();
+    if (event.target === this.elementRef.nativeElement) this.scheduleShow();
   }
 
   @HostListener('mouseleave')
   @HostListener('focusout')
   @HostListener('click')
   hide(): void {
+    if (this.showTimer) {
+      clearTimeout(this.showTimer);
+      this.showTimer = null;
+    }
     if (!this.tooltipElement) return;
     this.renderer.removeChild(this.document.body, this.tooltipElement);
     this.tooltipElement = null;

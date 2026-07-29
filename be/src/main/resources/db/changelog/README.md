@@ -29,3 +29,11 @@ V6 adds the per-application session timeout and its Arabic/English settings tran
 **AR:** يضيف V56 صلاحيات تخصيص لوحة المتابعة على مستوى الشركة والمستخدم، وحفظ ترتيب العناصر، وخيار الحركة المستقل، ونصوص اللوحة بالعربية والإنجليزية.
 
 **AR:** يضيف V53 ترقيم مشتريات قابلاً للضبط لكل شركة، وتخزيناً آمناً للتسلسل، وقيود عدم تكرار أرقام أوامر الشراء وأذون الاستلام، ونصوص التنقل والإعدادات وحالة الاستيراد بالعربية والإنجليزية.
+
+**EN:** V57 adds procurement transaction currency and separates a nullable supplier invoice number from the mandatory internal reference used for no-invoice transactions. V58 adds tenant-owned global/category/worker advance deduction policies and seeds a safe global default for every tenant.
+
+**AR:** يضيف V57 عملة عملية المشتريات ويفصل رقم فاتورة المورد القابل للفراغ عن المرجع الداخلي الإلزامي لمعاملات بدون فاتورة. ويضيف V58 سياسات خصم سلف مملوكة للشركة على مستوى عام أو فئة أو عامل، مع إعداد عام آمن لكل شركة.
+
+**EN:** V59 stores settlement calculation versions, execution summaries, failure details, input fingerprints, and versioned worker issues. V60 adds durable import batches, row validation evidence, original files, duplicate checksums, idempotent operation IDs, and reversible change evidence. V61 makes every supplier payment operation ID mandatory and tenant-unique.
+
+**AR:** يحفظ V59 إصدارات احتساب التسويات وملخص التنفيذ وتفاصيل الفشل وبصمة المدخلات ومشكلات العمال حسب الإصدار. ويضيف V60 دفعات استيراد دائمة وأدلة تحقق الصفوف والملفات الأصلية وبصمات منع التكرار ومعرفات العمليات وأدلة التغيير القابلة للعكس. ويجعل V61 معرف كل عملية دفع للمورد إلزامياً وفريداً داخل الشركة.

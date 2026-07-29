@@ -1,0 +1,110 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_workforce_import_batches_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.workforce_import_batches
+      changes:
+        - createTable:
+            tableName: workforce_import_batches
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: file_name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: content_type, type: VARCHAR(100) }
+              - column: { name: checksum, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: original_file, type: BLOB, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(30), constraints: { nullable: false } }
+              - column: { name: headers_text, type: VARCHAR(2000) }
+              - column: { name: column_mapping, type: VARCHAR(2000) }
+              - column: { name: total_rows, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: valid_rows, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: invalid_rows, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: imported_rows, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: operation_id, type: VARCHAR(80) }
+              - column: { name: created_by, type: VARCHAR(160), constraints: { nullable: false } }
+              - column: { name: imported_at, type: timestamp }
+              - column: { name: reversed_at, type: timestamp }
+              - column: { name: reversed_by, type: VARCHAR(160) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: workforce_import_batches
+            columnNames: app_id, checksum
+            constraintName: uq_workforce_import_batches_app_checksum
+        - addUniqueConstraint:
+            tableName: workforce_import_batches
+            columnNames: app_id, operation_id
+            constraintName: uq_workforce_import_batches_app_operation
+      rollback:
+        - dropTable: { tableName: workforce_import_batches }
+
+  - changeSet:
+      id: create_workforce_import_rows_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.workforce_import_rows
+      changes:
+        - createTable:
+            tableName: workforce_import_rows
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: batch_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: row_number, type: INT, constraints: { nullable: false } }
+              - column: { name: raw_data, type: VARCHAR(4000), constraints: { nullable: false } }
+              - column: { name: worker_code, type: VARCHAR(50) }
+              - column: { name: worker_id, type: VARCHAR(36) }
+              - column: { name: work_date, type: VARCHAR(10) }
+              - column: { name: attendance_value, type: "NUMERIC(4,2)" }
+              - column: { name: validation_status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: error_code, type: VARCHAR(60) }
+              - column: { name: error_message, type: VARCHAR(500) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - createIndex:
+            tableName: workforce_import_rows
+            indexName: idx_workforce_import_rows_batch
+            columns:
+              - column: { name: app_id }
+              - column: { name: batch_id }
+              - column: { name: row_number }
+      rollback:
+        - dropTable: { tableName: workforce_import_rows }
+
+  - changeSet:
+      id: create_workforce_import_changes_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.workforce_import_changes
+      changes:
+        - createTable:
+            tableName: workforce_import_changes
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: batch_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: attendance_entry_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: created_new, type: BOOLEAN, constraints: { nullable: false } }
+              - column: { name: before_value, type: "NUMERIC(4,2)" }
+              - column: { name: before_source, type: VARCHAR(30) }
+              - column: { name: before_notes, type: VARCHAR(500) }
+              - column: { name: after_value, type: "NUMERIC(4,2)", constraints: { nullable: false } }
+              - column: { name: reversed_at, type: timestamp }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - createIndex:
+            tableName: workforce_import_changes
+            indexName: idx_workforce_import_changes_batch
+            columns:
+              - column: { name: app_id }
+              - column: { name: batch_id }
+      rollback:
+        - dropTable: { tableName: workforce_import_changes }

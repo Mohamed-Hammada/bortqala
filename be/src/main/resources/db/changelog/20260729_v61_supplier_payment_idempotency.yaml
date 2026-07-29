@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_operation_id_to_supplier_payments
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: supplier_payments
+              columnName: operation_id
+      changes:
+        - addColumn:
+            tableName: supplier_payments
+            columns:
+              - column: { name: operation_id, type: VARCHAR(80) }
+        - sql: UPDATE supplier_payments SET operation_id = 'legacy-' || id WHERE operation_id IS NULL
+        - addNotNullConstraint:
+            tableName: supplier_payments
+            columnName: operation_id
+            columnDataType: VARCHAR(80)
+        - addUniqueConstraint:
+            tableName: supplier_payments
+            columnNames: app_id, operation_id
+            constraintName: uq_supplier_payments_app_operation
+      rollback:
+        - dropUniqueConstraint: { tableName: supplier_payments, constraintName: uq_supplier_payments_app_operation }
+        - dropColumn: { tableName: supplier_payments, columnName: operation_id }

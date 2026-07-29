@@ -10,20 +10,33 @@ import { dateInputToEpoch, epochToDateInput, formatDate } from '../../../core/da
 import { downloadBlob, exportCsv } from '../../../core/download';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 import { RouterLink } from '@angular/router';
+import { AppTooltipDirective } from '../../../shared/ui/app-tooltip/app-tooltip.directive';
 
 interface PurchaseOrderLineResponse { id: string; itemId: string; itemName: string; itemCategory: string; quantity: number; unitOfMeasure: string; unitPrice: number; lineTotal: number; }
-interface PurchaseOrder { id: string; poNumber: string; poDate: number; supplierId: string; supplierName?: string; paymentTerms?: string; status: string; totalAmount: number; items: PurchaseOrderLineResponse[]; createdAt: number; updatedAt: number; }
+interface PurchaseOrder { id: string; poNumber: string; poDate: number; supplierId: string; supplierName?: string; paymentTerms?: string; currencyCode: string; status: string; totalAmount: number; items: PurchaseOrderLineResponse[]; createdAt: number; updatedAt: number; }
 interface GoodsReceiptLineResponse { id: string; purchaseOrderLineId: string; itemId: string; itemName: string; itemCategory: string; deliveredQuantity: number; rejectedQuantity: number; deductedQuantity: number; quantity: number; unitOfMeasure: string; unitPrice: number; locationId?: string; lotNumber?: string; qualityReason?: string; }
-interface GoodsReceipt { id: string; grnNumber: string; receiptDate: number; purchaseOrderId: string; supplierId: string; supplierName?: string; warehouseId?: string; status: string; notes?: string; lines: GoodsReceiptLineResponse[]; createdAt: number; }
-interface SupplierInvoice { id: string; invoiceNumber: string; supplierId: string; supplierName?: string; purchaseOrderId?: string; goodsReceiptId?: string; responsiblePartyId?: string; invoiceDate: number; totalAmount: number; discountAmount?: number; taxAmount?: number; netAmount: number; paidAmount: number; outstandingAmount: number; dueDate?: number; notes?: string; status: string; createdAt: number; updatedAt: number; }
-interface SupplierPayment { id: string; paymentNumber: string; paymentDate: number; supplierId: string; supplierName?: string; supplierInvoiceId: string; amount: number; paymentMethod: string; notes?: string; status: string; createdAt: number; }
-interface Party { id: string; code: string; name: string; partyType: string; active: boolean; managedType?: 'DIRECT' | 'MANAGED'; responsiblePartyId?: string; }
+interface GoodsReceipt { id: string; grnNumber: string; receiptDate: number; purchaseOrderId: string; supplierId: string; supplierName?: string; warehouseId?: string; status: string; currencyCode: string; notes?: string; lines: GoodsReceiptLineResponse[]; createdAt: number; }
+interface SupplierInvoice { id: string; invoiceNumber?: string; internalReference: string; missingInvoiceReason?: string; currencyCode: string; supplierId: string; supplierName?: string; purchaseOrderId?: string; goodsReceiptId?: string; responsiblePartyId?: string; invoiceDate: number; totalAmount: number; discountAmount?: number; taxAmount?: number; netAmount: number; paidAmount: number; outstandingAmount: number; dueDate?: number; notes?: string; status: string; createdAt: number; updatedAt: number; }
+interface SupplierPayment { id: string; paymentNumber: string; paymentDate: number; supplierId: string; supplierName?: string; supplierInvoiceId: string; amount: number; currencyCode: string; paymentMethod: string; notes?: string; operationId: string; status: string; createdAt: number; }
+interface Party { id: string; code: string; name: string; partyType: string; active: boolean; managedType?: 'DIRECT' | 'MANAGED'; responsiblePartyId?: string; currencyCode?: string; paymentTerms?: string; }
 interface InventoryItem { id: string; code: string; name: string; categoryName?: string; uomName?: string; unitCode?: string; active: boolean; }
 interface NumberingSettings { automaticNumbering: boolean; }
+interface Currency { code: string; name: string; symbol: string; active: boolean; }
+
+export function calculatePurchaseOrderTotal(items: ReadonlyArray<{ quantity: number; unitPrice: number }>): number {
+  return items.reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0);
+}
+
+export function filterPayableInvoices<T extends { supplierId: string; status: string }>(
+  invoices: readonly T[], supplierId: string,
+): T[] {
+  return invoices.filter(invoice => invoice.supplierId === supplierId
+    && (invoice.status === 'UNPAID' || invoice.status === 'PARTIALLY_PAID'));
+}
 
 @Component({
   selector: 'app-procurement-page',
-  imports: [ReactiveFormsModule, FormsModule, DecimalPipe, ModalDialogComponent, RouterLink],
+  imports: [ReactiveFormsModule, FormsModule, DecimalPipe, ModalDialogComponent, RouterLink, AppTooltipDirective],
   templateUrl: './procurement.page.html',
   styleUrl: './procurement.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -42,6 +55,7 @@ export class ProcurementPage {
   readonly payments = signal<SupplierPayment[]>([]);
   readonly suppliers = signal<Party[]>([]);
   readonly inventoryItems = signal<InventoryItem[]>([]);
+  readonly currencies = signal<Currency[]>([]);
   readonly activeTab = signal<'po' | 'grn' | 'invoice' | 'payment'>('po');
   readonly automaticNumbering = signal(true);
 
@@ -56,9 +70,12 @@ export class ProcurementPage {
     poDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
     supplierId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     paymentTerms: new FormControl('Net 30 Days', { nonNullable: true }),
+    currencyCode: new FormControl('EGP', { nonNullable: true, validators: [Validators.required] }),
   });
 
-  totalCalculated = computed(() => this.poItems().reduce((s, i) => s + (i.quantity * i.unitPrice), 0));
+  totalCalculated(): number {
+    return calculatePurchaseOrderTotal(this.poItems());
+  }
 
   // ─── GRN Form ─────────────────────────────────────────────────────
 
@@ -83,6 +100,7 @@ export class ProcurementPage {
 
   readonly invModalOpen = signal(false);
   readonly invForm = new FormGroup({
+    hasSupplierInvoice: new FormControl(true, { nonNullable: true }),
     invoiceNumber: new FormControl('', { nonNullable: true }),
     supplierId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     purchaseOrderId: new FormControl('', { nonNullable: true }),
@@ -95,15 +113,18 @@ export class ProcurementPage {
     taxAmount: new FormControl(0, { nonNullable: true }),
     dueDate: new FormControl('', { nonNullable: true }),
     notes: new FormControl('', { nonNullable: true }),
+    currencyCode: new FormControl('EGP', { nonNullable: true, validators: [Validators.required] }),
   });
-  readonly invNetAmount = computed(() => {
+  invNetAmount(): number {
     const v = this.invForm.getRawValue();
     return Math.max(0, v.totalAmount - v.discountAmount + v.taxAmount);
-  });
+  }
 
   // ─── Payment Form ─────────────────────────────────────────────────
 
   readonly pmtModalOpen = signal(false);
+  readonly paymentOperationId = signal('');
+  readonly selectedPaymentSupplierId = signal('');
   readonly pmtForm = new FormGroup({
     paymentNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     paymentDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
@@ -115,13 +136,14 @@ export class ProcurementPage {
   });
 
   readonly unpaidInvoices = computed(() => this.invoices().filter(i => i.status === 'UNPAID' || i.status === 'PARTIALLY_PAID'));
+  readonly payableInvoices = computed(() => filterPayableInvoices(this.invoices(), this.selectedPaymentSupplierId()));
 
   constructor() { void this.loadAll(); }
 
   async loadAll() {
     this.loading.set(true);
     this.error.set(null);
-    try { await Promise.all([this.loadNumberingSettings(), this.loadOrders(), this.loadSuppliers(), this.loadInventoryItems(), this.loadGoodsReceipts(), this.loadInvoices(), this.loadPayments()]); }
+    try { await Promise.all([this.loadNumberingSettings(), this.loadOrders(), this.loadSuppliers(), this.loadCurrencies(), this.loadInventoryItems(), this.loadGoodsReceipts(), this.loadInvoices(), this.loadPayments()]); }
     catch (e) { this.error.set(apiErrorMessage(e, this.i18n)); }
     finally { this.loading.set(false); }
   }
@@ -138,6 +160,10 @@ export class ProcurementPage {
     const parties = await firstValueFrom(this.http.get<Party[]>('/api/v1/parties')) ?? [];
     this.suppliers.set(parties.filter(party => party.active && party.partyType === 'SUPPLIER'));
   }
+  async loadCurrencies() {
+    const currencies = await firstValueFrom(this.http.get<Currency[]>('/api/v1/finance/currencies')) ?? [];
+    this.currencies.set(currencies.filter(currency => currency.active));
+  }
   async loadInventoryItems() {
     const snapshot = await firstValueFrom(this.http.get<{ items: InventoryItem[] }>('/api/v1/operations'));
     this.inventoryItems.set((snapshot?.items ?? []).filter(item => item.active));
@@ -148,7 +174,8 @@ export class ProcurementPage {
   openNewPo() {
     const s = this.suppliers();
     this.editingPoId.set(null);
-    this.poForm.reset({ poNumber: '', poDate: new Date().toISOString().substring(0, 10), supplierId: s.length > 0 ? s[0].id : '', paymentTerms: 'Net 30 Days' });
+    const supplier = s[0];
+    this.poForm.reset({ poNumber: '', poDate: new Date().toISOString().substring(0, 10), supplierId: supplier?.id ?? '', paymentTerms: supplier?.paymentTerms ?? 'Net 30 Days', currencyCode: supplier?.currencyCode ?? 'EGP' });
     const firstItem = this.inventoryItems()[0];
     this.poItems.set([{ itemId: firstItem?.id ?? '', itemName: firstItem?.name ?? '', itemCategory: firstItem?.categoryName ?? '', quantity: 1, unitOfMeasure: firstItem?.uomName ?? firstItem?.unitCode ?? '', unitPrice: 0, currency: 'EGP', warehouse: 'المستودع الرئيسي', deliveryDate: new Date().toISOString().substring(0, 10) }]);
     this.modalOpen.set(true);
@@ -157,7 +184,7 @@ export class ProcurementPage {
   openEditPo(po: PurchaseOrder) {
     if (po.status !== 'DRAFT') return;
     this.editingPoId.set(po.id);
-    this.poForm.reset({ poNumber: po.poNumber, poDate: epochToDateInput(po.poDate), supplierId: po.supplierId, paymentTerms: po.paymentTerms ?? '' });
+    this.poForm.reset({ poNumber: po.poNumber, poDate: epochToDateInput(po.poDate), supplierId: po.supplierId, paymentTerms: po.paymentTerms ?? '', currencyCode: po.currencyCode ?? 'EGP' });
     this.poItems.set(po.items.map(item => ({
       itemId: item.itemId, itemName: item.itemName, itemCategory: item.itemCategory ?? '',
       quantity: item.quantity, unitOfMeasure: item.unitOfMeasure ?? '', unitPrice: item.unitPrice,
@@ -172,6 +199,10 @@ export class ProcurementPage {
     const item = this.inventoryItems().find(candidate => candidate.id === line.itemId);
     if (item) Object.assign(line, { itemName: item.name, itemCategory: item.categoryName ?? '', unitOfMeasure: item.uomName ?? item.unitCode ?? '' });
   }
+  onPoSupplierSelected(): void {
+    const supplier = this.suppliers().find(item => item.id === this.poForm.controls.supplierId.value);
+    if (supplier) this.poForm.patchValue({ currencyCode: supplier.currencyCode ?? 'EGP', paymentTerms: supplier.paymentTerms ?? this.poForm.controls.paymentTerms.value });
+  }
   removeItemLine(idx: number) { if (this.poItems().length > 1) this.poItems.update(i => i.filter((_, n) => n !== idx)); else this.notification.warning('يجب وجود بند شراء واحد على الأقل'); }
 
   async submitPo() {
@@ -182,7 +213,7 @@ export class ProcurementPage {
     this.submitting.set(true);
     try {
       const v = this.poForm.getRawValue();
-      const payload = { poNumber: this.automaticNumbering() ? null : v.poNumber.trim(), poDate: dateInputToEpoch(v.poDate), supplierId: v.supplierId, paymentTerms: v.paymentTerms, items: this.poItems() };
+      const payload = { poNumber: this.automaticNumbering() ? null : v.poNumber.trim(), poDate: dateInputToEpoch(v.poDate), supplierId: v.supplierId, paymentTerms: v.paymentTerms, currencyCode: v.currencyCode, items: this.poItems() };
       const editingId = this.editingPoId();
       await firstValueFrom(editingId
         ? this.http.put(`/api/v1/trade/procurement/orders/${editingId}`, payload)
@@ -237,20 +268,33 @@ export class ProcurementPage {
 
   openNewInvoice() {
     const s = this.suppliers();
-    this.invForm.reset({ invoiceNumber: 'INV-' + Math.floor(1000 + Math.random() * 9000), supplierId: s.length > 0 ? s[0].id : '', purchaseOrderId: '', goodsReceiptId: '', internalReference: '', missingInvoiceReason: '', invoiceDate: new Date().toISOString().substring(0, 10), totalAmount: 0, discountAmount: 0, taxAmount: 0, dueDate: '', notes: '' });
+    const supplier = s[0];
+    this.invForm.reset({ hasSupplierInvoice: true, invoiceNumber: '', supplierId: supplier?.id ?? '', purchaseOrderId: '', goodsReceiptId: '', internalReference: '', missingInvoiceReason: '', invoiceDate: new Date().toISOString().substring(0, 10), totalAmount: 0, discountAmount: 0, taxAmount: 0, dueDate: '', notes: '', currencyCode: supplier?.currencyCode ?? 'EGP' });
     this.invModalOpen.set(true);
+  }
+
+  onInvoiceSupplierSelected(): void {
+    const supplier = this.suppliers().find(item => item.id === this.invForm.controls.supplierId.value);
+    if (supplier) this.invForm.patchValue({ currencyCode: supplier.currencyCode ?? 'EGP' });
+  }
+
+  onInvoiceAvailabilityChanged(): void {
+    if (!this.invForm.controls.hasSupplierInvoice.value) this.invForm.controls.invoiceNumber.setValue('');
   }
 
   async submitInvoice() {
     if (this.submitting()) return;
     if (this.invForm.invalid) { this.invForm.markAllAsTouched(); return; }
+    const invoiceValue = this.invForm.getRawValue();
+    if (invoiceValue.hasSupplierInvoice && !invoiceValue.invoiceNumber.trim()) { this.notification.warning('أدخل رقم فاتورة المورد، أو اختر «لا توجد فاتورة من المورد».'); return; }
+    if (!invoiceValue.hasSupplierInvoice && (!invoiceValue.internalReference.trim() || !invoiceValue.missingInvoiceReason.trim())) { this.notification.warning('أدخل المرجع الداخلي وسبب عدم وجود فاتورة المورد.'); return; }
     this.submitting.set(true);
     try {
       const v = this.invForm.getRawValue();
       await firstValueFrom(this.http.post('/api/v1/trade/procurement/invoices', {
-        invoiceNumber: v.invoiceNumber || null, supplierId: v.supplierId, purchaseOrderId: v.purchaseOrderId || null,
+        invoiceNumber: v.hasSupplierInvoice ? v.invoiceNumber.trim() : null, supplierId: v.supplierId, purchaseOrderId: v.purchaseOrderId || null,
         goodsReceiptId: v.goodsReceiptId || null, internalReference: v.internalReference || null,
-        missingInvoiceReason: v.missingInvoiceReason || null,
+        missingInvoiceReason: v.hasSupplierInvoice ? null : v.missingInvoiceReason || null, currencyCode: v.currencyCode,
         invoiceDate: new Date(v.invoiceDate).getTime(), totalAmount: v.totalAmount,
         discountAmount: v.discountAmount > 0 ? v.discountAmount : null, taxAmount: v.taxAmount > 0 ? v.taxAmount : null,
         dueDate: v.dueDate ? new Date(v.dueDate).getTime() : null, notes: v.notes || null,
@@ -266,8 +310,26 @@ export class ProcurementPage {
 
   openNewPayment(inv?: SupplierInvoice) {
     const s = this.suppliers();
-    this.pmtForm.reset({ paymentNumber: 'PMT-' + Math.floor(1000 + Math.random() * 9000), paymentDate: new Date().toISOString().substring(0, 10), supplierId: inv ? inv.supplierId : (s.length > 0 ? s[0].id : ''), supplierInvoiceId: inv ? inv.id : '', amount: inv ? inv.outstandingAmount : 0, paymentMethod: 'BANK_TRANSFER', notes: '' });
+    const supplierId = inv ? inv.supplierId : (s.length > 0 ? s[0].id : '');
+    this.paymentOperationId.set(crypto.randomUUID());
+    this.selectedPaymentSupplierId.set(supplierId);
+    this.pmtForm.reset({ paymentNumber: 'PMT-' + Math.floor(1000 + Math.random() * 9000), paymentDate: new Date().toISOString().substring(0, 10), supplierId, supplierInvoiceId: inv ? inv.id : '', amount: inv ? inv.outstandingAmount : 0, paymentMethod: 'BANK_TRANSFER', notes: '' });
     this.pmtModalOpen.set(true);
+  }
+
+  onPaymentSupplierChanged(): void {
+    const supplierId = this.pmtForm.controls.supplierId.value;
+    this.selectedPaymentSupplierId.set(supplierId);
+    const selected = this.invoices().find(invoice => invoice.id === this.pmtForm.controls.supplierInvoiceId.value);
+    if (selected && selected.supplierId !== supplierId) {
+      this.pmtForm.patchValue({ supplierInvoiceId: '', amount: 0 });
+      this.notification.warning('تم إلغاء اختيار الفاتورة السابقة لأنها لا تخص المورد المحدد.');
+    }
+  }
+
+  onPaymentInvoiceChanged(): void {
+    const invoice = this.payableInvoices().find(item => item.id === this.pmtForm.controls.supplierInvoiceId.value);
+    this.pmtForm.controls.amount.setValue(invoice?.outstandingAmount ?? 0);
   }
 
   async submitPayment() {
@@ -276,7 +338,10 @@ export class ProcurementPage {
     this.submitting.set(true);
     try {
       const v = this.pmtForm.getRawValue();
-      await firstValueFrom(this.http.post('/api/v1/trade/procurement/payments', { paymentNumber: v.paymentNumber, paymentDate: new Date(v.paymentDate).getTime(), supplierId: v.supplierId, supplierInvoiceId: v.supplierInvoiceId, amount: v.amount, paymentMethod: v.paymentMethod, notes: v.notes || null }));
+      const invoice = this.payableInvoices().find(item => item.id === v.supplierInvoiceId);
+      if (!invoice) { this.notification.error('اختر فاتورة مفتوحة تخص المورد المحدد.'); return; }
+      if (v.amount > invoice.outstandingAmount) { this.notification.error(`المبلغ يتجاوز الرصيد المتبقي ${invoice.outstandingAmount} ${invoice.currencyCode}.`); return; }
+      await firstValueFrom(this.http.post('/api/v1/trade/procurement/payments', { paymentNumber: v.paymentNumber, paymentDate: new Date(v.paymentDate).getTime(), supplierId: v.supplierId, supplierInvoiceId: v.supplierInvoiceId, amount: v.amount, paymentMethod: v.paymentMethod, notes: v.notes || null, operationId: this.paymentOperationId() }));
       this.notification.success('تم تسجيل دفعة المورد بنجاح ✓');
       this.pmtModalOpen.set(false);
       await this.loadAll();
@@ -290,6 +355,7 @@ export class ProcurementPage {
   poStatusLabel(status: string): string {
     return ({ DRAFT: 'مسودة', ISSUED: 'صادر', PARTIALLY_RECEIVED: 'استلام جزئي', RECEIVED: 'مستلم بالكامل', CANCELLED: 'ملغي' } as Record<string, string>)[status] ?? status;
   }
+  invoiceReference(invoice: SupplierInvoice): string { return invoice.invoiceNumber || invoice.internalReference; }
 
   async exportExcel(): Promise<void> {
     try {

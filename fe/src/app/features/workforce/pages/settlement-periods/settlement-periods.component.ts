@@ -1,208 +1,110 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WorkforceService } from '../../data-access/workforce.service';
-import { SettlementPeriod, SettlementCalculationSummary } from '../../models/workforce.models';
+import { SettlementIssue, SettlementPeriod, SettlementCalculationSummary } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
-import { I18nService } from '../../../../core/i18n.service';
 import { NotificationService } from '../../../../core/notification.service';
+import { downloadBlob } from '../../../../core/download';
 
 @Component({
   selector: 'app-settlement-periods',
   standalone: true,
   imports: [CommonModule, FormsModule, ModalDialogComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="workforce-container">
+    <section class="workforce-container" dir="rtl">
       <header class="page-header">
-        <div>
-          <span class="eyebrow">دورة التسوية المستندية</span>
-          <h1>فترات تسوية العمالة والمقاولين (1-15 و 16-نهاية الشهر)</h1>
-        </div>
-        <button type="button" class="btn btn-primary" (click)="openCreateModal()">
-          + فتح فترة تسوية جديدة
-        </button>
+        <div><span class="eyebrow">دورة التسوية المستندية</span><h1>فترات تسوية العمالة والمقاولين</h1><p>احتساب محفوظ بالإصدار مع مراجعة واعتماد وقفل واضحين.</p></div>
+        <button type="button" class="btn primary" (click)="openCreateModal()">＋ فتح فترة جديدة</button>
       </header>
 
-      <div class="card">
+      <div class="state-flow" aria-label="دورة حالات التسوية">
+        <span>1 مسودة</span><b>←</b><span>2 تم الاحتساب</span><b>←</b><span>3 تمت المراجعة</span><b>←</b><span>4 معتمدة</span><b>←</b><span>5 مقفلة</span>
+      </div>
+
+      @if (pageError()) { <div class="alert error">{{ pageError() }}</div> }
+      @if (workforceService.loading()) { <div class="alert">جارٍ تحميل فترات التسوية…</div> }
+
+      <div class="card table-wrap">
         <table class="data-table">
-          <thead>
-            <tr>
-              <th>كود الفترة</th>
-              <th>تاريخ البداية</th>
-              <th>تاريخ النهاية</th>
-              <th>نوع الفترة</th>
-              <th>حالة التسوية</th>
-              <th>إجراءات الحساب والقفل</th>
-            </tr>
-          </thead>
+          <thead><tr><th>الفترة</th><th>الحالة</th><th>آخر احتساب</th><th>الإصدار</th><th>ملخص النتيجة</th><th>التحذيرات</th><th>الإجراءات</th></tr></thead>
           <tbody>
-            <tr *ngFor="let p of workforceService.settlementPeriods()">
-              <td><strong>{{ p.periodCode }}</strong></td>
-              <td>{{ p.startDate }}</td>
-              <td>{{ p.endDate }}</td>
-              <td>{{ cycleLabel(p.cycleType) }}</td>
-              <td><span class="badge" [class.approved]="p.status === 'APPROVED'" [class.review]="p.status === 'REVIEW'">{{ statusLabel(p.status) }}</span></td>
-              <td class="actions-cell">
-                <button type="button" class="btn btn-sm btn-secondary" (click)="calculatePeriod(p.id)">إعادة احتساب الفترة</button>
-                <button type="button" class="btn btn-sm btn-success" (click)="exportExcel(p.id, p.periodCode)">📥 تصدير كشف المدة (إكسيل)</button>
-                <button *ngIf="p.status !== 'APPROVED'" type="button" class="btn btn-sm btn-primary" (click)="approvePeriod(p.id)">اعتماد وقفل الفترة</button>
-              </td>
-            </tr>
+            @for (period of workforceService.settlementPeriods(); track period.id) {
+              <tr [class.stale]="period.needsRecalculation">
+                <td><strong>{{ period.periodCode }}</strong><small>{{ period.startDate }} ← {{ period.endDate }} · {{ cycleLabel(period.cycleType) }}</small></td>
+                <td><span class="badge" [class]="'badge ' + period.status.toLowerCase()">{{ statusLabel(period.status) }}</span>@if (period.needsRecalculation) { <small class="stale-note">⚠ يحتاج إعادة احتساب قبل الاعتماد</small> }</td>
+                <td>@if (period.lastCalculatedAt) { <strong>{{ period.lastCalculatedAt | date:'yyyy-MM-dd HH:mm' }}</strong><small>{{ period.lastCalculatedBy }}</small> } @else { — }
+                  @if (period.lastCalculationError) { <small class="failure">آخر محاولة فشلت: {{ period.lastCalculationError }}</small> }
+                </td>
+                <td>v{{ period.calculationVersion }}</td>
+                <td><span>{{ period.resultRecordCount }} سجل</span><small>إجمالي {{ period.resultGrossAmount | number:'1.2-2' }} · خصومات {{ period.resultDeductions | number:'1.2-2' }} · سلف {{ period.resultAdvances | number:'1.2-2' }} · صافي {{ period.resultNetAmount | number:'1.2-2' }}</small></td>
+                <td><button type="button" class="link-btn" (click)="showIssues(period)">⚠ {{ period.resultWarningCount }} · ⛔ {{ period.resultErrorCount }}</button></td>
+                <td class="actions">
+                  <button type="button" class="btn secondary" [disabled]="calculatingId() === period.id || period.status === 'APPROVED' || period.status === 'LOCKED'" (click)="calculatePeriod(period)">{{ calculatingId() === period.id ? 'جارٍ الاحتساب…' : 'إعادة الاحتساب' }}</button>
+                  @if (period.status === 'CALCULATED' && !period.needsRecalculation) { <button type="button" class="btn" (click)="reviewPeriod(period)">تأكيد المراجعة</button> }
+                  @if (period.status === 'REVIEWED' && !period.needsRecalculation && period.resultErrorCount === 0) { <button type="button" class="btn primary" (click)="approvePeriod(period)">اعتماد</button> }
+                  @if (period.status === 'APPROVED') { <button type="button" class="btn danger" (click)="lockPeriod(period)">قفل نهائي</button> }
+                  <button type="button" class="btn success" [disabled]="period.calculationVersion === 0" (click)="exportExcel(period)">⇩ Excel</button>
+                </td>
+              </tr>
+            } @empty { <tr><td colspan="7" class="empty">لا توجد فترات تسوية.</td></tr> }
           </tbody>
         </table>
       </div>
 
-      <!-- Calculation Summary Modal -->
-      <app-modal-dialog
-        [isOpen]="isSummaryModalOpen"
-        title="معاينة ونتيجة احتساب فترة التسوية"
-        size="wide"
-        (close)="isSummaryModalOpen = false">
-        
-        <div *ngIf="summary" class="summary-details">
+      <app-modal-dialog [isOpen]="summaryOpen()" title="نتيجة إعادة احتساب التسوية" size="wide" (close)="summaryOpen.set(false)">
+        @if (calculationError()) { <div class="alert error"><strong>فشلت المحاولة الجديدة.</strong><span>{{ calculationError() }}</span><small>ظلت آخر نتيجة ناجحة محفوظة دون تغيير.</small></div> }
+        @if (summary(); as result) {
+          <div class="run-meta"><span>نجحت العملية</span><span>الإصدار v{{ result.calculationVersion }}</span><span>{{ result.executedAt | date:'yyyy-MM-dd HH:mm:ss' }}</span><span>بواسطة {{ result.executedBy }}</span></div>
           <div class="summary-grid">
-            <div class="summary-item">
-              <label>عدد العمال المحسوبين:</label>
-              <strong>{{ summary.totalWorkers }}</strong>
-            </div>
-            <div class="summary-item">
-              <label>إجمالي وحدات الحضور:</label>
-              <strong>{{ summary.totalAttendanceUnits }} يوم/وحدة</strong>
-            </div>
-            <div class="summary-item">
-              <label>إجمالي مستحقات العمال القائمة:</label>
-              <strong>{{ summary.grossWorkersAmount | number:'1.2-2' }} ج.م</strong>
-            </div>
-            <div class="summary-item">
-              <label>إجمالي خصومات السلف الأقساط:</label>
-              <strong>{{ summary.totalAdvanceDeductions | number:'1.2-2' }} ج.م</strong>
-            </div>
-            <div class="summary-item net-item">
-              <label>صافي مستحق العمال النهائي:</label>
-              <strong>{{ summary.netWorkersAmount | number:'1.2-2' }} ج.م</strong>
-            </div>
-            <div class="summary-item net-item">
-              <label>صافي مستحق المقاولين النهائي:</label>
-              <strong>{{ summary.netContractorsPayable | number:'1.2-2' }} ج.م</strong>
-            </div>
+            <article><small>السجلات</small><strong>{{ result.totalWorkers }}</strong></article><article><small>إجمالي المستحقات</small><strong>{{ result.grossWorkersAmount | number:'1.2-2' }}</strong></article>
+            <article><small>الخصومات</small><strong>{{ result.totalDeductions | number:'1.2-2' }}</strong></article><article><small>السلف</small><strong>{{ result.totalAdvanceDeductions | number:'1.2-2' }}</strong></article>
+            <article><small>صافي العمال</small><strong>{{ result.netWorkersAmount | number:'1.2-2' }}</strong></article><article><small>صافي المقاولين</small><strong>{{ result.netContractorsPayable | number:'1.2-2' }}</strong></article>
           </div>
-        </div>
-
-        <div modal-actions class="modal-actions-bar">
-          <button type="button" class="btn btn-primary" (click)="isSummaryModalOpen = false">إغلاق المعاينة</button>
-        </div>
+        }
+        @if (issues().length) {
+          <h3 id="settlement-issues">السجلات التي تحتاج إجراء ({{ issues().length }})</h3>
+          <table class="data-table"><thead><tr><th>العامل</th><th>النوع</th><th>المشكلة</th><th>الإجراء</th></tr></thead><tbody>@for (issue of issues(); track issue.id) {<tr><td>{{ issue.workerName || issue.workerId || '—' }}</td><td>{{ issue.severity === 'ERROR' ? 'خطأ' : 'تحذير' }}</td><td>{{ issue.message }}</td><td><a href="/workforce/workers">فتح سجل العمال</a></td></tr>}</tbody></table>
+        } @else { <p class="empty">لا توجد تحذيرات أو أخطاء في الإصدار المحدد.</p> }
+        <div modal-actions><button type="button" class="btn primary" (click)="summaryOpen.set(false)">إغلاق</button></div>
       </app-modal-dialog>
 
-      <!-- Create Period Modal -->
-      <app-modal-dialog
-        [isOpen]="isCreateModalOpen"
-        title="إنشاء فترة تسوية جديدة"
-        size="normal"
-        [preventOutsideClose]="true"
-        (close)="isCreateModalOpen = false">
-
-        <form (ngSubmit)="savePeriod()" class="modal-form">
-          <div class="form-group">
-            <label>كود الفترة *</label>
-            <input type="text" [(ngModel)]="createForm.periodCode" name="periodCode" required class="form-input" />
-          </div>
-          <div class="form-group">
-            <label>تاريخ البداية *</label>
-            <input type="date" [(ngModel)]="createForm.startDate" name="startDate" required class="form-input" />
-          </div>
-          <div class="form-group">
-            <label>تاريخ النهاية *</label>
-            <input type="date" [(ngModel)]="createForm.endDate" name="endDate" required class="form-input" />
-          </div>
-        </form>
-
-        <div modal-actions class="modal-actions-bar">
-          <button type="button" class="btn btn-primary" (click)="savePeriod()">إنشاء الفترة</button>
-          <button type="button" class="btn btn-secondary" (click)="isCreateModalOpen = false">إلغاء</button>
-        </div>
+      <app-modal-dialog [isOpen]="createOpen()" title="إنشاء فترة تسوية" [preventOutsideClose]="true" (close)="createOpen.set(false)">
+        <form class="form" (ngSubmit)="savePeriod()"><label>كود الفترة *<input [(ngModel)]="createForm.periodCode" name="periodCode" required /></label><label>تاريخ البداية *<input type="date" [(ngModel)]="createForm.startDate" name="startDate" required /></label><label>تاريخ النهاية *<input type="date" [(ngModel)]="createForm.endDate" name="endDate" required /></label></form>
+        <div modal-actions><button type="button" class="btn primary" (click)="savePeriod()">إنشاء</button><button type="button" class="btn secondary" (click)="createOpen.set(false)">إلغاء</button></div>
       </app-modal-dialog>
-    </div>
+    </section>
   `,
   styles: [`
-    .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
-    .eyebrow { font-size: 0.875rem; color: #d97706; font-weight: 600; }
-    .page-header { display: flex; justify-content: space-between; align-items: center; }
-    .page-header h1 { font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0 0 0; }
-    .card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 1.25rem; }
-    .data-table { width: 100%; border-collapse: collapse; text-align: right; }
-    .data-table th, .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; }
-    .btn { padding: 0.625rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; }
-    .btn-primary { background: #d97706; color: #fff; }
-    .btn-success { background: #16a34a; color: #fff; }
-    .btn-secondary { background: #e2e8f0; color: #334155; }
-    .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.875rem; }
-    .actions-cell { display: flex; gap: 0.5rem; }
-    .badge { padding: 0.25rem 0.625rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
-    .badge.approved { background: #dcfce7; color: #166534; }
-    .badge.review { background: #fef3c7; color: #92400e; }
-    .summary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-    .summary-item { background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 0.25rem; }
-    .summary-item.net-item { background: #fffbeb; border-color: #fde68a; }
-    .summary-item label { font-size: 0.875rem; color: #64748b; }
-    .summary-item strong { font-size: 1.25rem; color: #0f172a; }
-    .form-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
-    .form-group label { font-weight: 600; font-size: 0.875rem; color: #334155; }
-    .form-input { padding: 0.625rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; }
-    .modal-actions-bar { width: 100%; display: flex; gap: 0.75rem; justify-content: flex-end; }
+    .workforce-container{padding:1.5rem;display:grid;gap:1.25rem}.page-header{display:flex;justify-content:space-between;gap:1rem;align-items:center}.page-header h1{margin:.2rem 0}.page-header p,small{color:#64748b}.eyebrow{color:#b7791f;font-weight:800}.state-flow{display:flex;gap:.65rem;flex-wrap:wrap;align-items:center;background:#fff8e7;border:1px solid #ead7a4;border-radius:12px;padding:.8rem}.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px}.table-wrap{overflow:auto}.data-table{width:100%;border-collapse:collapse;min-width:1050px}.data-table th,.data-table td{padding:.75rem;border-bottom:1px solid #edf0f4;text-align:right;vertical-align:top}.data-table td small{display:block;margin-top:.3rem}.actions{display:flex;gap:.35rem;flex-wrap:wrap}.btn{border:0;border-radius:8px;padding:.55rem .75rem;font-weight:700;cursor:pointer;background:#e8edf3;color:#243247}.btn:disabled{opacity:.5;cursor:not-allowed}.primary{background:#b7791f;color:#fff}.secondary{background:#e8edf3}.success{background:#dcfce7;color:#166534}.danger{background:#fee2e2;color:#991b1b}.badge{display:inline-block;border-radius:999px;padding:.25rem .6rem;background:#eef2f7}.badge.calculated{background:#dbeafe;color:#1d4ed8}.badge.reviewed{background:#fef3c7;color:#92400e}.badge.approved,.badge.locked{background:#dcfce7;color:#166534}.stale{background:#fffaf0}.stale-note,.failure{color:#b45309!important}.failure{max-width:280px}.alert{padding:.8rem;border-radius:10px;background:#eff6ff;display:grid;gap:.25rem}.alert.error{background:#fef2f2;color:#991b1b}.run-meta,.summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}.run-meta{margin-bottom:1rem}.run-meta span,.summary-grid article{padding:.8rem;border:1px solid #e2e8f0;border-radius:10px}.summary-grid article{display:grid;gap:.25rem}.summary-grid strong{font-size:1.25rem}.link-btn{border:0;background:transparent;color:#9a6700;text-decoration:underline;cursor:pointer}.form{display:grid;gap:1rem}.form label{display:grid;gap:.35rem;font-weight:700}.form input{padding:.65rem;border:1px solid #cbd5e1;border-radius:8px}.empty{padding:1rem;text-align:center;color:#64748b}@media(max-width:900px){.page-header{align-items:stretch;flex-direction:column}.run-meta,.summary-grid{grid-template-columns:1fr 1fr}}
   `]
 })
 export class SettlementPeriodsComponent implements OnInit {
-  workforceService = inject(WorkforceService);
-  i18n = inject(I18nService);
-  notification = inject(NotificationService);
+  readonly workforceService = inject(WorkforceService);
+  private readonly notification = inject(NotificationService);
+  readonly createOpen = signal(false);
+  readonly summaryOpen = signal(false);
+  readonly calculatingId = signal<string | null>(null);
+  readonly summary = signal<SettlementCalculationSummary | null>(null);
+  readonly issues = signal<SettlementIssue[]>([]);
+  readonly calculationError = signal<string | null>(null);
+  readonly pageError = signal<string | null>(null);
+  createForm = { periodCode: '', startDate: new Date().toISOString().slice(0, 10), endDate: new Date().toISOString().slice(0, 10), cycleType: 'HALF_MONTH' };
 
-  isCreateModalOpen = false;
-  isSummaryModalOpen = false;
-  summary: SettlementCalculationSummary | null = null;
-
-  createForm = { periodCode: '', startDate: '2026-08-01', endDate: '2026-08-15', cycleType: 'HALF_MONTH' };
-
-  statusLabel(s: string): string {
-    const key = 'settlement.status' + s;
-    return this.i18n.t(key);
+  ngOnInit(): void { this.reload(); }
+  reload(): void { this.workforceService.loadSettlementPeriods().subscribe({ error: error => this.pageError.set(error?.error?.detail ?? 'تعذر تحميل فترات التسوية.') }); }
+  openCreateModal(): void { this.createForm = { periodCode: `PER-${Date.now().toString().slice(-6)}`, startDate: new Date().toISOString().slice(0, 10), endDate: new Date().toISOString().slice(0, 10), cycleType: 'HALF_MONTH' }; this.createOpen.set(true); }
+  savePeriod(): void { this.workforceService.createSettlementPeriod(this.createForm).subscribe({ next: () => { this.createOpen.set(false); this.notification.success('تم إنشاء فترة التسوية.'); }, error: error => this.notification.error(error?.error?.detail ?? 'تعذر إنشاء الفترة.') }); }
+  calculatePeriod(period: SettlementPeriod): void {
+    this.calculatingId.set(period.id); this.calculationError.set(null); this.summary.set(null); this.issues.set([]); this.summaryOpen.set(true);
+    this.workforceService.calculatePeriod(period.id).subscribe({ next: result => { this.summary.set(result); this.issues.set(result.issues); this.calculatingId.set(null); this.reload(); this.notification.success(`تم الاحتساب بنجاح — الإصدار v${result.calculationVersion}`); }, error: error => { this.calculatingId.set(null); this.calculationError.set(error?.error?.detail ?? 'فشلت إعادة الاحتساب.'); this.reload(); } });
   }
-  cycleLabel(c: string): string {
-    const key = 'settlement.cycle' + c;
-    return this.i18n.t(key);
-  }
-
-  ngOnInit() {
-    this.workforceService.loadSettlementPeriods().subscribe();
-  }
-
-  openCreateModal() {
-    this.createForm = { periodCode: 'PER-' + Math.floor(100 + Math.random() * 900), startDate: '2026-08-01', endDate: '2026-08-15', cycleType: 'HALF_MONTH' };
-    this.isCreateModalOpen = true;
-  }
-
-  savePeriod() {
-    this.workforceService.createSettlementPeriod(this.createForm).subscribe(() => this.isCreateModalOpen = false);
-  }
-
-  calculatePeriod(id: string) {
-    this.workforceService.calculatePeriod(id).subscribe(res => {
-      this.summary = res;
-      this.isSummaryModalOpen = true;
-    });
-  }
-
-  approvePeriod(id: string) {
-    this.workforceService.approvePeriod(id).subscribe(() => this.notification.success('تم اعتماد وقفل فترة التسوية بنجاح'));
-  }
-
-  exportExcel(id: string, code: string) {
-    this.workforceService.exportSettlementPeriodExcel(id).subscribe(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `Workforce_Settlement_Period_${code}.xlsx`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    });
-  }
+  showIssues(period: SettlementPeriod): void { this.summary.set(null); this.calculationError.set(period.lastCalculationError ?? null); this.summaryOpen.set(true); this.workforceService.loadSettlementIssues(period.id).subscribe({ next: value => this.issues.set(value), error: error => this.calculationError.set(error?.error?.detail ?? 'تعذر تحميل المشاكل.') }); }
+  reviewPeriod(period: SettlementPeriod): void { this.workforceService.reviewPeriod(period.id).subscribe({ next: () => this.notification.success('تم تسجيل مراجعة الفترة.'), error: error => this.notification.error(error?.error?.detail ?? 'تعذر مراجعة الفترة.') }); }
+  approvePeriod(period: SettlementPeriod): void { this.workforceService.approvePeriod(period.id).subscribe({ next: () => this.notification.success('تم اعتماد الفترة.'), error: error => this.notification.error(error?.error?.detail ?? 'تعذر اعتماد الفترة.') }); }
+  lockPeriod(period: SettlementPeriod): void { this.workforceService.lockPeriod(period.id).subscribe({ next: () => this.notification.success('تم قفل الفترة نهائياً.'), error: error => this.notification.error(error?.error?.detail ?? 'تعذر قفل الفترة.') }); }
+  exportExcel(period: SettlementPeriod): void { this.workforceService.exportSettlementPeriodExcel(period.id).subscribe({ next: blob => downloadBlob(blob, `settlement-${period.periodCode}-v${period.calculationVersion}.xlsx`), error: error => this.notification.error(error?.error?.detail ?? 'تعذر التصدير.') }); }
+  statusLabel(status: string): string { return ({ DRAFT:'مسودة', CALCULATED:'تم الاحتساب', REVIEWED:'تمت المراجعة', APPROVED:'معتمدة', LOCKED:'مقفلة' } as Record<string,string>)[status] ?? status; }
+  cycleLabel(cycle: string): string { return cycle === 'HALF_MONTH' ? 'نصف شهري' : cycle === 'MONTHLY' ? 'شهري' : cycle; }
 }

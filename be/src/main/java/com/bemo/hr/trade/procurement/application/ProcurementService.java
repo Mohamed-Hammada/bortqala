@@ -4,6 +4,7 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.operations.PartnerLedgerEntry;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
 import com.bemo.hr.operations.OperationsService;
+import com.bemo.hr.finance.infrastructure.CurrencyRepository;
 import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
@@ -52,6 +53,7 @@ public class ProcurementService {
     private final ProcurementExcelExporter procurementExcelExporter;
     private final OperationsService operationsService;
     private final TenantApplicationRepository tenantApplicationRepository;
+    private final CurrencyRepository currencyRepository;
 
     public ProcurementService(PurchaseOrderRepository purchaseOrderRepository,
                               PurchaseOrderLineRepository purchaseOrderLineRepository,
@@ -64,7 +66,8 @@ public class ProcurementService {
                               AuditService auditService,
                               ProcurementExcelExporter procurementExcelExporter,
                               OperationsService operationsService,
-                              TenantApplicationRepository tenantApplicationRepository) {
+                              TenantApplicationRepository tenantApplicationRepository,
+                              CurrencyRepository currencyRepository) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.purchaseOrderLineRepository = purchaseOrderLineRepository;
         this.procurementDocumentSequenceRepository = procurementDocumentSequenceRepository;
@@ -77,6 +80,7 @@ public class ProcurementService {
         this.procurementExcelExporter = procurementExcelExporter;
         this.operationsService = operationsService;
         this.tenantApplicationRepository = tenantApplicationRepository;
+        this.currencyRepository = currencyRepository;
     }
 
     public ProcurementApi.NumberingSettings numberingSettings() {
@@ -99,12 +103,13 @@ public class ProcurementService {
     public ProcurementApi.PurchaseOrderResponse create(ProcurementApi.PurchaseOrderPayload payload) {
         requireSupplier(payload.supplierId());
         validateLines(payload.items());
+        String currencyCode = resolveCurrency(payload.currencyCode(), payload.supplierId());
         BigDecimal calculatedTotal = payload.items().stream()
                 .map(item -> item.quantity().multiply(item.unitPrice()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         LocalDate poDate = Instant.ofEpochMilli(payload.poDate()).atZone(ZoneOffset.UTC).toLocalDate();
         PurchaseOrder po = new PurchaseOrder(resolvePoNumber(payload.poNumber(), null), poDate, payload.supplierId(),
-                payload.purchaseRequestId(), payload.paymentTerms(), calculatedTotal);
+                payload.purchaseRequestId(), payload.paymentTerms(), currencyCode, calculatedTotal);
         PurchaseOrder saved = purchaseOrderRepository.save(po);
         List<PurchaseOrderLine> lines = buildLines(saved.getId(), payload.items());
         purchaseOrderLineRepository.saveAll(lines);
@@ -121,12 +126,13 @@ public class ProcurementService {
             throw new BusinessRuleException("Only draft purchase orders can be edited.");
         requireSupplier(payload.supplierId());
         validateLines(payload.items());
+        String currencyCode = resolveCurrency(payload.currencyCode(), payload.supplierId());
         BigDecimal calculatedTotal = payload.items().stream()
                 .map(item -> item.quantity().multiply(item.unitPrice()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         LocalDate poDate = Instant.ofEpochMilli(payload.poDate()).atZone(ZoneOffset.UTC).toLocalDate();
         po.updateDraft(resolvePoNumber(payload.poNumber(), po.getId()), poDate, payload.supplierId(),
-                payload.purchaseRequestId(), payload.paymentTerms(), calculatedTotal);
+                payload.purchaseRequestId(), payload.paymentTerms(), currencyCode, calculatedTotal);
         purchaseOrderLineRepository.deleteByPurchaseOrderId(po.getId());
         List<PurchaseOrderLine> lines = buildLines(po.getId(), payload.items());
         purchaseOrderLineRepository.saveAll(lines);
@@ -256,7 +262,9 @@ public class ProcurementService {
         if (missingInvoice && ((payload.internalReference() == null || payload.internalReference().isBlank())
                 || payload.missingInvoiceReason() == null || payload.missingInvoiceReason().isBlank()))
             throw new BusinessRuleException("Managed supplier transactions without an invoice require an internal reference and reason.");
-        String documentNumber = missingInvoice ? payload.internalReference() : payload.invoiceNumber();
+        String internalReference = payload.internalReference() == null || payload.internalReference().isBlank()
+                ? payload.invoiceNumber().strip() : payload.internalReference().strip();
+        String currencyCode = resolveCurrency(payload.currencyCode(), payload.supplierId());
         BigDecimal discount = payload.discountAmount() == null ? BigDecimal.ZERO : payload.discountAmount();
         BigDecimal tax = payload.taxAmount() == null ? BigDecimal.ZERO : payload.taxAmount();
         if (payload.totalAmount().signum() <= 0 || discount.signum() < 0 || tax.signum() < 0
@@ -274,7 +282,8 @@ public class ProcurementService {
                 : null;
 
         String invoiceNotes = missingInvoice ? payload.missingInvoiceReason() + (payload.notes() == null ? "" : " — " + payload.notes()) : payload.notes();
-        SupplierInvoice inv = new SupplierInvoice(documentNumber, payload.supplierId(),
+        SupplierInvoice inv = new SupplierInvoice(missingInvoice ? null : payload.invoiceNumber(), internalReference,
+                missingInvoice ? payload.missingInvoiceReason() : null, currencyCode, payload.supplierId(),
                 payload.purchaseOrderId(), payload.goodsReceiptId(), supplier.getResponsiblePartyId(),
                 invoiceDate, payload.totalAmount(),
                 payload.discountAmount(), payload.taxAmount(), dueDate, invoiceNotes);
@@ -282,11 +291,11 @@ public class ProcurementService {
 
         partnerLedgerEntryRepository.save(new PartnerLedgerEntry(
                 saved.getSupplierId(), "PURCHASE_INVOICE", saved.getNetAmount().negate(),
-                saved.getInvoiceNumber(), "فاتورة مشتريات: " + saved.getInvoiceNumber(),
+                saved.getDocumentReference(), "فاتورة مشتريات: " + saved.getDocumentReference(),
                 saved.getInvoiceDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
 
         auditService.record("CREATE", "SUPPLIER_INVOICE", saved.getId(), getCurrentUser(),
-                "{\"invoiceNumber\":\"" + saved.getInvoiceNumber() + "\",\"amount\":" + saved.getNetAmount() + "}", null);
+                "{\"invoiceNumber\":\"" + saved.getDocumentReference() + "\",\"amount\":" + saved.getNetAmount() + "}", null);
         return toInvoiceResponse(saved, resolveNames(List.of(saved.getSupplierId())));
     }
 
@@ -300,23 +309,33 @@ public class ProcurementService {
 
     @Transactional
     public ProcurementApi.SupplierPaymentResponse createSupplierPayment(ProcurementApi.SupplierPaymentPayload payload) {
+        var replay = supplierPaymentRepository.findByOperationId(payload.operationId());
+        if (replay.isPresent()) {
+            SupplierPayment existing = replay.get();
+            if (!existing.getSupplierId().equals(payload.supplierId())
+                    || !existing.getSupplierInvoiceId().equals(payload.supplierInvoiceId())
+                    || existing.getAmount().compareTo(payload.amount()) != 0) {
+                throw new BusinessRuleException("معرّف عملية الدفع مستخدم لدفعة مختلفة.");
+            }
+            return toPaymentResponse(existing, resolveNames(List.of(existing.getSupplierId())));
+        }
         SupplierInvoice inv = supplierInvoiceRepository.findById(payload.supplierInvoiceId())
                 .orElseThrow(() -> new BusinessRuleException("الفاتورة غير موجودة"));
         if ("PAID".equals(inv.getStatus()) || "CANCELLED".equals(inv.getStatus()))
             throw new BusinessRuleException("الفاتورة مدفوعة بالفعل أو ملغية");
 
         if (!inv.getSupplierId().equals(payload.supplierId()))
-            throw new BusinessRuleException("Payment supplier must match the invoice supplier.");
+            throw new BusinessRuleException("الفاتورة المحددة لا تخص المورد المختار. اختر فاتورة مفتوحة لنفس المورد.");
         if (payload.amount().signum() <= 0)
-            throw new BusinessRuleException("Payment amount must be greater than zero.");
+            throw new BusinessRuleException("يجب أن يكون مبلغ الدفعة أكبر من صفر.");
         BigDecimal paidBefore = paidAmount(inv.getId());
         BigDecimal outstanding = inv.getNetAmount().subtract(paidBefore);
         if (payload.amount().compareTo(outstanding) > 0)
-            throw new BusinessRuleException("Payment cannot exceed the current outstanding balance.");
+            throw new BusinessRuleException("مبلغ الدفعة يتجاوز الرصيد المتبقي للفاتورة وهو " + outstanding + " " + inv.getCurrencyCode() + ".");
 
         LocalDate paymentDate = Instant.ofEpochMilli(payload.paymentDate()).atZone(ZoneOffset.UTC).toLocalDate();
         SupplierPayment pmt = new SupplierPayment(payload.paymentNumber(), paymentDate, payload.supplierId(),
-                payload.supplierInvoiceId(), payload.amount(), payload.paymentMethod(), payload.notes());
+                payload.supplierInvoiceId(), payload.operationId(), payload.amount(), payload.paymentMethod(), payload.notes());
         SupplierPayment saved = supplierPaymentRepository.save(pmt);
 
         inv.updatePaymentStatus(paidBefore.add(saved.getAmount()));
@@ -327,7 +346,8 @@ public class ProcurementService {
                 saved.getPaymentDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
 
         auditService.record("CREATE", "SUPPLIER_PAYMENT", saved.getId(), getCurrentUser(),
-                "{\"paymentNumber\":\"" + saved.getPaymentNumber() + "\",\"amount\":" + saved.getAmount() + "}", null);
+                "{\"paymentNumber\":\"" + saved.getPaymentNumber() + "\",\"operationId\":\""
+                        + saved.getOperationId() + "\",\"amount\":" + saved.getAmount() + "}", null);
         return toPaymentResponse(saved, resolveNames(List.of(saved.getSupplierId())));
     }
 
@@ -343,6 +363,18 @@ public class ProcurementService {
                 .orElseThrow(() -> new BusinessRuleException("المورد غير موجود في دليل الموردين."));
         if (!supplier.isActive() || !"SUPPLIER".equals(supplier.getPartyType()))
             throw new BusinessRuleException("يجب اختيار مورد نشط ومسجل في دليل الموردين.");
+    }
+
+    private String resolveCurrency(String requested, String supplierId) {
+        String supplierCurrency = businessPartyRepository.findById(supplierId)
+                .map(com.bemo.hr.party.BusinessParty::getCurrencyCode)
+                .orElse("EGP");
+        String code = requested == null || requested.isBlank() ? supplierCurrency : requested;
+        if (code == null || code.isBlank()) code = "EGP";
+        String normalized = code.strip().toUpperCase(java.util.Locale.ROOT);
+        currencyRepository.findByCodeIgnoreCaseAndActiveTrue(normalized)
+                .orElseThrow(() -> new BusinessRuleException("يجب اختيار عملة نشطة ومسجلة في إعدادات العملات."));
+        return normalized;
     }
 
     private void validateLines(List<ProcurementApi.PurchaseOrderLinePayload> items) {
@@ -448,7 +480,7 @@ public class ProcurementService {
                                                               Map<String, String> supplierNames) {
         return new ProcurementApi.PurchaseOrderResponse(po.getId(), po.getPoNumber(), toEpochMs(po.getPoDate()),
                 po.getSupplierId(), supplierNames.get(po.getSupplierId()), po.getPurchaseRequestId(),
-                po.getPaymentTerms(), po.getStatus().name(), po.getTotalAmount(),
+                po.getPaymentTerms(), po.getCurrencyCode(), po.getStatus().name(), po.getTotalAmount(),
                 lines.stream().map(this::toLineResponse).toList(), po.getCreatedAt(), po.getUpdatedAt());
     }
 
@@ -460,7 +492,7 @@ public class ProcurementService {
     private ProcurementApi.GoodsReceiptResponse toGrnResponse(GoodsReceipt grn, Map<String, String> supplierNames) {
         return new ProcurementApi.GoodsReceiptResponse(grn.getId(), grn.getGrnNumber(), toEpochMs(grn.getReceiptDate()),
                 grn.getPurchaseOrderId(), grn.getSupplierId(), supplierNames.get(grn.getSupplierId()),
-                grn.getWarehouseId(), grn.getStatus(), grn.getNotes(),
+                grn.getWarehouseId(), grn.getStatus(), requirePo(grn.getPurchaseOrderId()).getCurrencyCode(), grn.getNotes(),
                 grn.getLines().stream().map(l -> new ProcurementApi.GoodsReceiptLineResponse(
                         l.getId(), l.getPurchaseOrderLineId(), l.getItemId(), l.getItemName(), l.getItemCategory(),
                         l.getDeliveredQuantity(), l.getRejectedQuantity(), l.getDeductedQuantity(),
@@ -474,7 +506,8 @@ public class ProcurementService {
         BigDecimal outstandingAmount = inv.getNetAmount().subtract(paidAmount).max(BigDecimal.ZERO);
         return new ProcurementApi.SupplierInvoiceResponse(inv.getId(), inv.getInvoiceNumber(), inv.getSupplierId(),
                 supplierNames.get(inv.getSupplierId()), inv.getPurchaseOrderId(), inv.getGoodsReceiptId(),
-                inv.getResponsiblePartyId(), toEpochMs(inv.getInvoiceDate()),
+                inv.getResponsiblePartyId(), inv.getInternalReference(), inv.getMissingInvoiceReason(), inv.getCurrencyCode(),
+                toEpochMs(inv.getInvoiceDate()),
                 inv.getTotalAmount(), inv.getDiscountAmount(), inv.getTaxAmount(), inv.getNetAmount(),
                 paidAmount, outstandingAmount,
                 inv.getDueDate() != null ? toEpochMs(inv.getDueDate()) : null,
@@ -484,8 +517,13 @@ public class ProcurementService {
     private ProcurementApi.SupplierPaymentResponse toPaymentResponse(SupplierPayment pmt, Map<String, String> supplierNames) {
         return new ProcurementApi.SupplierPaymentResponse(pmt.getId(), pmt.getPaymentNumber(),
                 toEpochMs(pmt.getPaymentDate()), pmt.getSupplierId(), supplierNames.get(pmt.getSupplierId()),
-                pmt.getSupplierInvoiceId(), pmt.getAmount(), pmt.getPaymentMethod(), pmt.getNotes(),
-                pmt.getStatus(), pmt.getCreatedAt());
+                pmt.getSupplierInvoiceId(), pmt.getAmount(), supplierPaymentCurrency(pmt), pmt.getPaymentMethod(), pmt.getNotes(),
+                pmt.getOperationId(), pmt.getStatus(), pmt.getCreatedAt());
+    }
+
+    private String supplierPaymentCurrency(SupplierPayment payment) {
+        return supplierInvoiceRepository.findById(payment.getSupplierInvoiceId())
+                .map(SupplierInvoice::getCurrencyCode).orElse("EGP");
     }
 
     private BigDecimal paidAmount(String invoiceId) {

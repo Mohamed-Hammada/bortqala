@@ -13,3 +13,9 @@
 **EN:** `AppTooltipDirective` renders a styled accessible overlay on hover and keyboard focus, removes it on blur, click, scroll, resize, or Escape, and keeps `aria-describedby` synchronized.
 
 **AR:** يعرض `AppTooltipDirective` تلميحاً مرئياً منسقاً عند المرور أو تركيز لوحة المفاتيح، ويغلقه عند فقد التركيز أو النقر أو التمرير أو تغيير الحجم أو Escape، مع ربطه بعنصر التحكم عبر `aria-describedby`.
+
+## Unified tooltips / التلميحات الموحدة
+
+**EN:** `AppTooltipDirective` displays action name, concise purpose, and an optional shortcut after 350 ms on hover or keyboard focus. It preserves `aria-describedby`, supports RTL positioning, limits copy to two lines, and closes on blur, pointer exit, click, scroll, resize, or Escape. Icon-only controls must also provide an `aria-label`.
+
+**AR:** يعرض `AppTooltipDirective` اسم الإجراء ووصفاً مختصراً والاختصار الاختياري بعد 350 مللي ثانية عند المرور أو الوصول بلوحة المفاتيح. ويحافظ على `aria-describedby` ويدعم RTL ويقصر النص على سطرين ويغلق عند فقد التركيز أو مغادرة المؤشر أو النقر أو التمرير أو تغيير الحجم أو Escape. ويجب أن يوفر كل زر يعتمد على الأيقونة فقط `aria-label`.

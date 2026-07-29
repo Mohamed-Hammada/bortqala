@@ -6,11 +6,12 @@ import { WorkforceService } from '../../data-access/workforce.service';
 import { NotificationService } from '../../../../core/notification.service';
 import { LaborRequest, LaborRequestItem } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
+import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-tooltip.directive';
 
 @Component({
   selector: 'app-labor-requests',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalDialogComponent],
+  imports: [CommonModule, FormsModule, ModalDialogComponent, AppTooltipDirective],
   template: `
     <div class="workforce-container">
       <header class="page-header">
@@ -193,7 +194,7 @@ import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-d
                   <input type="number" [(ngModel)]="item.acceptedCount" [name]="'acc_' + i"
                          class="form-input" min="0" />
                 </div>
-                <button type="button" class="btn btn-remove" (click)="removeItem(i)" title="حذف البند">✕</button>
+                <button type="button" class="btn btn-remove" (click)="removeItem(i)" aria-label="حذف بند طلب العمالة" appTooltip="حذف البند — إزالة هذه الفئة من الطلب">✕</button>
               </div>
             }
 
