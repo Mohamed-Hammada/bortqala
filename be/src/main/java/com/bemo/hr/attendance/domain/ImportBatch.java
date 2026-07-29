@@ -59,6 +59,13 @@ public class ImportBatch {
     @PrePersist
     void prePersist() { importedAt = Instant.now(); }
 
+    public void updateCounts(int totalRows, int importedRows, int errorRows) {
+        this.totalRows = totalRows;
+        this.importedRows = importedRows;
+        this.errorRows = errorRows;
+        this.status = errorRows == 0 ? ImportStatus.COMPLETED : ImportStatus.COMPLETED_WITH_ERRORS;
+    }
+
     public String getId() { return id; }
     public String getChecksum() { return checksum; }
     public String getFileName() { return fileName; }

@@ -184,44 +184,138 @@
 
   <!-- ══════════════ GRN MODAL ══════════════ -->
   @if (grnModalOpen()) {
-  <app-modal-dialog [isOpen]="true" title="إذن استلام جديد (GRN)" (close)="grnModalOpen.set(false)">
-    <form [formGroup]="grnForm" (ngSubmit)="submitGrn()">
-      <div class="form-grid">
+  <app-modal-dialog [isOpen]="true" title="إذن استلام جديد (GRN)" size="large"
+    [preventOutsideClose]="submitting()" (close)="grnModalOpen.set(false)">
+    <form class="grn-form" [formGroup]="grnForm" (ngSubmit)="submitGrn()">
+      <section class="grn-document-card" aria-label="بيانات إذن الاستلام">
+        <div class="grn-section-heading">
+          <div>
+            <span class="section-icon" aria-hidden="true">📦</span>
+            <div>
+              <h3>بيانات المستند</h3>
+              <p>اختر أمر الشراء وتاريخ الاستلام، ثم راجع الكميات قبل التسجيل.</p>
+            </div>
+          </div>
+          <span class="grn-status-badge">مسودة جديدة</span>
+        </div>
+        <div class="form-grid grn-document-grid">
         @if (automaticNumbering()) {
           <div class="field"><label>رقم الإذن</label><span class="readonly-value">تلقائي — يولد عند الحفظ</span></div>
         } @else {
-          <div class="field"><label>رقم الإذن *</label><input class="ltr" formControlName="grnNumber" /></div>
+          <div class="field"><label for="grn-number">رقم الإذن *</label><input id="grn-number" class="ltr" formControlName="grnNumber" /></div>
         }
-        <div class="field"><label>تاريخ الاستلام *</label><input type="date" class="ltr" formControlName="receiptDate" /></div>
-        <div class="field"><label>أمر الشراء *</label><select formControlName="purchaseOrderId" (change)="onGrnPoSelected()"><option value="">— اختر أمر الشراء —</option>@for (po of receivableOrders(); track po.id) {<option [value]="po.id">{{ po.poNumber }} — {{ po.supplierName }} — {{ poStatusLabel(po.status) }}</option>}</select></div>
+        <div class="field"><label for="grn-receipt-date">تاريخ الاستلام *</label><input id="grn-receipt-date" type="date" class="ltr" formControlName="receiptDate" /></div>
+        <div class="field span-2"><label for="grn-purchase-order">أمر الشراء *</label><select id="grn-purchase-order" formControlName="purchaseOrderId" (change)="onGrnPoSelected()"><option value="">— اختر أمر شراء مُصدراً —</option>@for (po of receivableOrders(); track po.id) {<option [value]="po.id">{{ po.poNumber }} — {{ po.supplierName }} — {{ poStatusLabel(po.status) }}</option>}</select></div>
         <div class="field"><label>المورد</label><span class="readonly-value">{{ selectedGrnSupplierName() }}</span></div>
-        <div class="field"><label>المستودع</label><input formControlName="warehouseId" placeholder="المستودع الرئيسي" /></div>
-        <div class="field"><label>ملاحظات</label><input formControlName="notes" /></div>
-      </div>
+        <div class="field"><label for="grn-warehouse">المستودع</label><input id="grn-warehouse" formControlName="warehouseId" placeholder="المستودع الرئيسي" /></div>
+        <div class="field span-2"><label for="grn-notes">ملاحظات</label><input id="grn-notes" formControlName="notes" placeholder="ملاحظات اختيارية على الاستلام" /></div>
+        </div>
+      </section>
+
+      @if (grnForm.controls.purchaseOrderId.value && grnItems().length === 0) {
+        <div class="grn-empty-message" role="status">تم استلام جميع بنود أمر الشراء المحدد، ولا توجد كمية متبقية لإنشاء إذن جديد.</div>
+      }
       @if (grnItems().length > 0) {
-      <div class="po-items-section">
-        <div class="po-items-header"><h4>بنود الاستلام من أمر الشراء</h4></div>
-        <div class="po-items-list">
-          @for (item of grnItems(); track $index) {
-          <div class="po-item-row">
-            <div><label>الصنف</label><span>{{ item.itemName }}</span></div>
-            <div><label>الوحدة</label><span>{{ item.unitOfMeasure }}</span></div>
-            <div><label>الكمية الأصلية المستلمة</label><input type="number" min="0.01" [(ngModel)]="item.deliveredQuantity" [ngModelOptions]="{standalone: true}" /><small>{{ item.unitOfMeasure }}</small></div>
-            <div><label>الكمية المرفوضة</label><input type="number" min="0" [(ngModel)]="item.rejectedQuantity" [ngModelOptions]="{standalone: true}" /><small>{{ item.unitOfMeasure }}</small></div>
-            <div><label>الكمية المخصومة</label><input type="number" min="0" [(ngModel)]="item.deductedQuantity" [ngModelOptions]="{standalone: true}" /><small>{{ item.unitOfMeasure }} — خصم جودة فعلي وليس نسبة</small></div>
-            <div><label>الكمية المقبولة</label><strong>{{ item.deliveredQuantity - item.rejectedQuantity - item.deductedQuantity | number:'1.2-2' }} {{ item.unitOfMeasure }}</strong></div>
-            <div><label>الموقع / التشغيلة</label><input [(ngModel)]="item.locationId" [ngModelOptions]="{standalone: true}" placeholder="الموقع" /><input [(ngModel)]="item.lotNumber" [ngModelOptions]="{standalone: true}" placeholder="رقم التشغيلة" /></div>
-            <div><label>سبب الرفض أو الخصم</label><input [(ngModel)]="item.qualityReason" [ngModelOptions]="{standalone: true}" /></div>
-            <div><label>سعر الوحدة</label><span>{{ item.unitPrice | number:'1.2-2' }}</span></div>
-            <div><label>الإجمالي المقبول</label><strong>{{ ((item.deliveredQuantity - item.rejectedQuantity - item.deductedQuantity) * item.unitPrice) | number:'1.2-2' }}</strong></div>
+      <section class="grn-lines-section" aria-label="بنود إذن الاستلام">
+        <div class="grn-section-heading">
+          <div>
+            <span class="section-icon" aria-hidden="true">🧾</span>
+            <div>
+              <h3>بنود الاستلام</h3>
+              <p>{{ grnItems().length }} بند · الكمية المقبولة فقط هي التي ستضاف إلى رصيد المخزون.</p>
+            </div>
           </div>
+        </div>
+        <div class="grn-lines-list">
+          @for (item of grnItems(); track item.purchaseOrderLineId; let index = $index) {
+          <article class="grn-line-card" [class.has-error]="grnLineError(item, 'delivered') || grnLineError(item, 'rejected') || grnLineError(item, 'deducted') || grnLineError(item, 'accepted')">
+            <header class="grn-line-header">
+              <div class="line-number">{{ index + 1 }}</div>
+              <div class="line-identity">
+                <strong>{{ item.itemName }}</strong>
+                <span>{{ item.itemCategory || 'بدون تصنيف' }} · {{ item.unitOfMeasure }}</span>
+              </div>
+              <div class="line-order-summary">
+                <span>المطلوب <b>{{ item.orderedQuantity | number:'1.0-2' }}</b></span>
+                <span>مستلم سابقاً <b>{{ item.previouslyReceivedQuantity | number:'1.0-2' }}</b></span>
+                <span class="remaining">المتبقي <b>{{ item.remainingQuantity | number:'1.0-2' }}</b></span>
+              </div>
+            </header>
+
+            <div class="grn-quantity-grid">
+              <div class="field quantity-field">
+                <label [for]="'grn-delivered-' + index">الكمية المستلمة *</label>
+                <div class="input-with-unit">
+                  <input [id]="'grn-delivered-' + index" type="number" min="0.000001" step="any"
+                    [(ngModel)]="item.deliveredQuantity" [ngModelOptions]="{standalone: true}"
+                    [class.invalid]="grnLineError(item, 'delivered') || grnLineError(item, 'accepted')"
+                    [attr.aria-invalid]="!!(grnLineError(item, 'delivered') || grnLineError(item, 'accepted'))"
+                    [attr.aria-describedby]="'grn-delivered-error-' + index" />
+                  <span>{{ item.unitOfMeasure }}</span>
+                </div>
+                @if (grnLineError(item, 'delivered') || grnLineError(item, 'accepted'); as message) {
+                  <small class="field-error" [id]="'grn-delivered-error-' + index">{{ message }}</small>
+                }
+              </div>
+              <div class="field quantity-field">
+                <label [for]="'grn-rejected-' + index">الكمية المرفوضة</label>
+                <div class="input-with-unit">
+                  <input [id]="'grn-rejected-' + index" type="number" min="0" step="any"
+                    [(ngModel)]="item.rejectedQuantity" [ngModelOptions]="{standalone: true}"
+                    [class.invalid]="grnLineError(item, 'rejected')"
+                    [attr.aria-invalid]="!!grnLineError(item, 'rejected')"
+                    [attr.aria-describedby]="'grn-rejected-error-' + index" />
+                  <span>{{ item.unitOfMeasure }}</span>
+                </div>
+                @if (grnLineError(item, 'rejected'); as message) {
+                  <small class="field-error" [id]="'grn-rejected-error-' + index">{{ message }}</small>
+                }
+              </div>
+              <div class="field quantity-field">
+                <label [for]="'grn-deducted-' + index">خصم الجودة</label>
+                <div class="input-with-unit">
+                  <input [id]="'grn-deducted-' + index" type="number" min="0" step="any"
+                    [(ngModel)]="item.deductedQuantity" [ngModelOptions]="{standalone: true}"
+                    [class.invalid]="grnLineError(item, 'deducted')"
+                    [attr.aria-invalid]="!!grnLineError(item, 'deducted')"
+                    [attr.aria-describedby]="'grn-deducted-error-' + index" />
+                  <span>{{ item.unitOfMeasure }}</span>
+                </div>
+                @if (grnLineError(item, 'deducted'); as message) {
+                  <small class="field-error" [id]="'grn-deducted-error-' + index">{{ message }}</small>
+                }
+              </div>
+              <div class="accepted-quantity" [class.invalid]="acceptedGrnQuantity(item) === null || grnLineError(item, 'accepted')">
+                <span>صافي المقبول</span>
+                @if (acceptedGrnQuantity(item) !== null) {
+                  <strong>{{ acceptedGrnQuantity(item) | number:'1.0-2' }} <small>{{ item.unitOfMeasure }}</small></strong>
+                  <small>{{ (acceptedGrnQuantity(item)! * item.unitPrice) | number:'1.2-2' }} {{ selectedGrnCurrencyCode() }}</small>
+                } @else {
+                  <strong>—</strong>
+                  <small>صحح الكميات أولاً</small>
+                }
+              </div>
+            </div>
+
+            <div class="grn-line-meta">
+              <div class="field"><label [for]="'grn-location-' + index">الموقع</label><input [id]="'grn-location-' + index" [(ngModel)]="item.locationId" [ngModelOptions]="{standalone: true}" placeholder="مثال: A-01" /></div>
+              <div class="field"><label [for]="'grn-lot-' + index">رقم التشغيلة</label><input [id]="'grn-lot-' + index" [(ngModel)]="item.lotNumber" [ngModelOptions]="{standalone: true}" placeholder="اختياري" /></div>
+              <div class="field span-2"><label [for]="'grn-quality-reason-' + index">سبب الرفض أو الخصم</label><input [id]="'grn-quality-reason-' + index" [(ngModel)]="item.qualityReason" [ngModelOptions]="{standalone: true}" placeholder="اكتب السبب عند وجود كمية مرفوضة أو مخصومة" /></div>
+            </div>
+          </article>
           }
         </div>
-      </div>
+      </section>
       }
       <div modal-actions class="modal-actions-bar">
-        <button class="button primary" type="submit" [disabled]="submitting() || grnForm.invalid || grnItems().length === 0">تسجيل إذن الاستلام</button>
-        <button class="button secondary" type="button" (click)="grnModalOpen.set(false)">إلغاء</button>
+        <div class="grn-action-hint" aria-live="polite">
+          @if (grnHasErrors()) { <span class="invalid-hint">راجع الحقول المعلّمة قبل التسجيل</span> }
+          @else { <span class="valid-hint">جاهز للتسجيل وإضافة الكمية المقبولة للمخزون</span> }
+        </div>
+        <button class="button secondary" type="button" [disabled]="submitting()" (click)="grnModalOpen.set(false)">إلغاء</button>
+        <button class="button primary" type="submit" [disabled]="submitting() || grnHasErrors()">
+          {{ submitting() ? 'جارٍ التسجيل…' : 'تسجيل إذن الاستلام' }}
+        </button>
       </div>
     </form>
   </app-modal-dialog>

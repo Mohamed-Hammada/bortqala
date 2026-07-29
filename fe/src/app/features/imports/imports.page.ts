@@ -8,10 +8,12 @@ import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { ImportStatus } from './imports.models';
 import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
+import { FormsModule } from '@angular/forms';
+import { BiometricDevice } from './imports.models';
 
 @Component({
   selector: 'app-imports-page',
-  imports: [RouterLink, TablePaginationComponent, AppTooltipDirective],
+  imports: [RouterLink, TablePaginationComponent, AppTooltipDirective, FormsModule],
   providers: [ImportsStore],
   templateUrl: './imports.page.html',
   styleUrl: './imports.page.scss',
@@ -27,6 +29,12 @@ export class ImportsPage {
   readonly expanded = signal<string | null>(null);
   readonly pagination = new TablePagination();
   readonly pagedUnmatched = computed(() => this.pagination.slice(this.store.unmatched()));
+  readonly editingDeviceId = signal<string | null>(null);
+  readonly connectionName = signal('');
+  readonly endpointUrl = signal('');
+  readonly syncIntervalMinutes = signal(15);
+  readonly connectionEnabled = signal(true);
+  readonly syncingDeviceId = signal<string | null>(null);
 
   constructor() {
     void this.store.load();
@@ -89,5 +97,55 @@ export class ImportsPage {
 
   statusLabel(status: ImportStatus): string {
     return this.i18n.t(status === 'COMPLETED' ? 'imports.completed' : 'imports.completedWithErrors');
+  }
+
+  editDevice(device: BiometricDevice): void {
+    this.editingDeviceId.set(device.id);
+    this.connectionName.set(device.name);
+    this.endpointUrl.set(device.endpointUrl);
+    this.syncIntervalMinutes.set(device.syncIntervalMinutes);
+    this.connectionEnabled.set(device.enabled);
+  }
+
+  resetDeviceForm(): void {
+    this.editingDeviceId.set(null);
+    this.connectionName.set('');
+    this.endpointUrl.set('');
+    this.syncIntervalMinutes.set(15);
+    this.connectionEnabled.set(true);
+  }
+
+  async saveDevice(): Promise<void> {
+    const name = this.connectionName().trim();
+    const endpointUrl = this.endpointUrl().trim();
+    if (!name || !endpointUrl || this.syncIntervalMinutes() < 1) {
+      this.notification.warning('أدخل اسم الجهاز ورابط API وفترة مزامنة صحيحة.');
+      return;
+    }
+    const saved = await this.store.saveDevice({
+      name,
+      endpointUrl,
+      enabled: this.connectionEnabled(),
+      syncIntervalMinutes: this.syncIntervalMinutes(),
+    }, this.editingDeviceId() ?? undefined);
+    if (saved) {
+      this.notification.success(this.editingDeviceId() ? 'تم تحديث إعدادات جهاز البصمة.' : 'تم إضافة جهاز البصمة للربط المباشر.');
+      this.resetDeviceForm();
+    }
+  }
+
+  async syncDevice(device: BiometricDevice): Promise<void> {
+    this.syncingDeviceId.set(device.id);
+    try {
+      const result = await this.store.syncDevice(device.id);
+      if (!result) return;
+      if (result.device.lastStatus === 'FAILED') {
+        this.notification.error(result.device.lastMessage || 'فشلت مزامنة جهاز البصمة.');
+      } else {
+        this.notification.success(`اكتملت المزامنة: ${result.importedRows} بصمة جديدة، ${result.duplicateRows} مكررة.`);
+      }
+    } finally {
+      this.syncingDeviceId.set(null);
+    }
   }
 }

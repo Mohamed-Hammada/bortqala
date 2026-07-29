@@ -20,6 +20,93 @@
     <div class="alert success">{{ store.success() }}</div>
   }
 
+  <section class="live-sync-card card" aria-labelledby="live-sync-title">
+    <div class="live-sync-head">
+      <div class="live-sync-title">
+        <span class="live-indicator" aria-hidden="true"></span>
+        <div>
+          <p class="eyebrow">الربط المباشر</p>
+          <h2 id="live-sync-title">مزامنة أجهزة البصمة عبر IP / API</h2>
+          <p>اربط واجهة الجهاز، شغّل المزامنة الآن، أو اترك النظام يجلب البصمات تلقائياً حسب الفترة المحددة.</p>
+        </div>
+      </div>
+      <span class="api-format" appTooltip="صيغة API — مصفوفة JSON داخل punches وبها deviceUserId وpunchedAt">JSON API ⓘ</span>
+    </div>
+
+    <div class="device-connection-layout">
+      <form class="device-form" (ngSubmit)="saveDevice()">
+        <div class="device-form-title">
+          <strong>{{ editingDeviceId() ? 'تعديل الاتصال' : 'إضافة اتصال جديد' }}</strong>
+          @if (editingDeviceId()) {
+            <button type="button" class="text-button" (click)="resetDeviceForm()">إلغاء التعديل</button>
+          }
+        </div>
+        <div class="device-fields">
+          <div class="field">
+            <label for="biometric-device-name">اسم الجهاز *</label>
+            <input id="biometric-device-name" name="biometricDeviceName" [ngModel]="connectionName()"
+              (ngModelChange)="connectionName.set($event)" placeholder="جهاز بوابة المصنع" autocomplete="off" />
+          </div>
+          <div class="field endpoint-field">
+            <label for="biometric-endpoint">رابط IP / API *</label>
+            <input id="biometric-endpoint" name="biometricEndpoint" class="ltr" type="url"
+              [ngModel]="endpointUrl()" (ngModelChange)="endpointUrl.set($event)"
+              placeholder="http://192.168.1.50/api/punches" autocomplete="off" />
+            <small>يضيف النظام معامل <code>since</code> بعد أول مزامنة ناجحة.</small>
+          </div>
+          <div class="field">
+            <label for="biometric-interval">التكرار بالدقائق *</label>
+            <input id="biometric-interval" name="biometricInterval" type="number" min="1" max="1440" step="1"
+              [ngModel]="syncIntervalMinutes()" (ngModelChange)="syncIntervalMinutes.set(+$event)" />
+          </div>
+          <label class="device-enabled-toggle">
+            <input type="checkbox" name="biometricEnabled" [ngModel]="connectionEnabled()"
+              (ngModelChange)="connectionEnabled.set($event)" />
+            <span>المزامنة التلقائية مفعلة</span>
+          </label>
+          <button class="button primary" type="submit" [disabled]="store.loading() || !connectionName().trim() || !endpointUrl().trim()">
+            {{ editingDeviceId() ? 'حفظ التعديلات' : 'إضافة الجهاز' }}
+          </button>
+        </div>
+      </form>
+
+      <div class="connected-devices">
+        @for (device of store.devices(); track device.id) {
+          <article class="device-row" [class.failed]="device.lastStatus === 'FAILED'">
+            <div class="device-icon" aria-hidden="true">◉</div>
+            <div class="device-details">
+              <div>
+                <strong>{{ device.name }}</strong>
+                <span class="connection-state" [class.online]="device.enabled" [class.failed]="device.lastStatus === 'FAILED'">
+                  {{ !device.enabled ? 'متوقف' : device.lastStatus === 'FAILED' ? 'فشل آخر اتصال' : 'نشط' }}
+                </span>
+              </div>
+              <code class="ltr">{{ device.endpointUrl }}</code>
+              <small>
+                كل {{ device.syncIntervalMinutes }} دقيقة ·
+                آخر مزامنة: {{ device.lastSyncAt ? dateTime(device.lastSyncAt) : 'لم تتم بعد' }}
+                @if (device.lastMessage) { · {{ device.lastMessage }} }
+              </small>
+            </div>
+            <div class="device-actions">
+              <button type="button" class="button secondary btn-sm" (click)="editDevice(device)">تعديل</button>
+              <button type="button" class="button gold btn-sm" [disabled]="syncingDeviceId() === device.id || store.loading()"
+                (click)="syncDevice(device)">
+                {{ syncingDeviceId() === device.id ? 'جارٍ الاتصال…' : 'مزامنة الآن' }}
+              </button>
+            </div>
+          </article>
+        } @empty {
+          <div class="empty-device-state">
+            <span aria-hidden="true">⌁</span>
+            <strong>لا توجد أجهزة مرتبطة بعد</strong>
+            <p>أضف رابط API للجهاز لبدء الجلب المباشر والمجدول.</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
   <!-- Hero Drag & Drop Dropzone -->
   <div
     class="dropzone-hero card"

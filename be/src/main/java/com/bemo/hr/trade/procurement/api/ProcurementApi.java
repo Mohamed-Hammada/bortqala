@@ -1,7 +1,10 @@
 package com.bemo.hr.trade.procurement.api;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -10,7 +13,8 @@ public class ProcurementApi {
 
     public record PurchaseOrderLineResponse(
             String id, String itemId, String itemName, String itemCategory,
-            BigDecimal quantity, String unitOfMeasure, BigDecimal unitPrice, BigDecimal lineTotal
+            BigDecimal quantity, BigDecimal receivedQuantity, BigDecimal remainingQuantity,
+            String unitOfMeasure, BigDecimal unitPrice, BigDecimal lineTotal
     ) {}
 
     public record PurchaseOrderLinePayload(
@@ -50,7 +54,9 @@ public class ProcurementApi {
 
     public record GoodsReceiptLinePayload(
             @NotBlank String purchaseOrderLineId, @NotBlank String itemId, @NotBlank String itemName, String itemCategory,
-            BigDecimal deliveredQuantity, BigDecimal rejectedQuantity, BigDecimal deductedQuantity,
+            @NotNull @DecimalMin(value = "0.000001") BigDecimal deliveredQuantity,
+            @NotNull @DecimalMin(value = "0") BigDecimal rejectedQuantity,
+            @NotNull @DecimalMin(value = "0") BigDecimal deductedQuantity,
             BigDecimal quantity, String unitOfMeasure, @NotNull BigDecimal unitPrice,
             String locationId, String lotNumber, String qualityReason
     ) {}
@@ -64,7 +70,7 @@ public class ProcurementApi {
     public record GoodsReceiptPayload(
             String grnNumber, long receiptDate, @NotBlank String purchaseOrderId,
             @NotBlank String supplierId, String warehouseId, String notes,
-            @NotNull List<GoodsReceiptLinePayload> lines
+            @NotNull @Size(min = 1) List<@Valid GoodsReceiptLinePayload> lines
     ) {}
 
     public record NumberingSettings(boolean automaticNumbering) {}

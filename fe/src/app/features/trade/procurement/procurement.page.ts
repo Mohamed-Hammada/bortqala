@@ -13,7 +13,7 @@ import { RouterLink } from '@angular/router';
 import { AppTooltipDirective } from '../../../shared/ui/app-tooltip/app-tooltip.directive';
 import { IconButtonComponent } from '../../../shared/ui/icon-button/icon-button.component';
 
-interface PurchaseOrderLineResponse { id: string; itemId: string; itemName: string; itemCategory: string; quantity: number; unitOfMeasure: string; unitPrice: number; lineTotal: number; }
+interface PurchaseOrderLineResponse { id: string; itemId: string; itemName: string; itemCategory: string; quantity: number; receivedQuantity: number; remainingQuantity: number; unitOfMeasure: string; unitPrice: number; lineTotal: number; }
 interface PurchaseOrder { id: string; poNumber: string; poDate: number; supplierId: string; supplierName?: string; paymentTerms?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseTotalAmount: number; status: string; totalAmount: number; items: PurchaseOrderLineResponse[]; createdAt: number; updatedAt: number; }
 interface GoodsReceiptLineResponse { id: string; purchaseOrderLineId: string; itemId: string; itemName: string; itemCategory: string; deliveredQuantity: number; rejectedQuantity: number; deductedQuantity: number; quantity: number; unitOfMeasure: string; unitPrice: number; locationId?: string; lotNumber?: string; qualityReason?: string; }
 interface GoodsReceipt { id: string; grnNumber: string; receiptDate: number; purchaseOrderId: string; supplierId: string; supplierName?: string; warehouseId?: string; status: string; currencyCode: string; notes?: string; lines: GoodsReceiptLineResponse[]; createdAt: number; }
@@ -23,6 +23,24 @@ interface Party { id: string; code: string; name: string; partyType: string; act
 interface InventoryItem { id: string; code: string; name: string; categoryName?: string; uomName?: string; unitCode?: string; active: boolean; }
 interface NumberingSettings { automaticNumbering: boolean; }
 interface Currency { code: string; name: string; symbol: string; isBase: boolean; exchangeRate: number; active: boolean; }
+interface GoodsReceiptDraftLine {
+  purchaseOrderLineId: string;
+  itemId: string;
+  itemName: string;
+  itemCategory: string;
+  orderedQuantity: number;
+  previouslyReceivedQuantity: number;
+  remainingQuantity: number;
+  deliveredQuantity: number;
+  rejectedQuantity: number;
+  deductedQuantity: number;
+  quantity: number;
+  unitOfMeasure: string;
+  unitPrice: number;
+  locationId: string;
+  lotNumber: string;
+  qualityReason: string;
+}
 
 export function calculatePurchaseOrderTotal(items: ReadonlyArray<{ quantity: number; unitPrice: number }>): number {
   return items.reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0);
@@ -93,13 +111,16 @@ export class ProcurementPage {
     warehouseId: new FormControl('', { nonNullable: true }),
     notes: new FormControl('', { nonNullable: true }),
   });
-  readonly grnItems = signal<Array<{ purchaseOrderLineId: string; itemId: string; itemName: string; itemCategory: string; deliveredQuantity: number; rejectedQuantity: number; deductedQuantity: number; quantity: number; unitOfMeasure: string; unitPrice: number; locationId: string; lotNumber: string; qualityReason: string }>>([]);
+  readonly grnItems = signal<GoodsReceiptDraftLine[]>([]);
 
-  readonly receivableOrders = computed(() => this.orders().filter(o => ['DRAFT', 'ISSUED', 'PARTIALLY_RECEIVED'].includes(o.status)));
+  readonly receivableOrders = computed(() => this.orders().filter(o => ['ISSUED', 'PARTIALLY_RECEIVED'].includes(o.status)));
   readonly selectedGrnSupplierName = computed(() => {
     const po = this.orders().find(order => order.id === this.grnForm.controls.purchaseOrderId.value);
     return po?.supplierName ?? this.suppliers().find(supplier => supplier.id === po?.supplierId)?.name ?? '—';
   });
+  readonly selectedGrnCurrencyCode = computed(() =>
+    this.orders().find(order => order.id === this.grnForm.controls.purchaseOrderId.value)?.currencyCode ?? '',
+  );
 
   // ─── Invoice Form ─────────────────────────────────────────────────
 
@@ -275,23 +296,119 @@ export class ProcurementPage {
     const po = this.orders().find(o => o.id === poId);
     if (po) {
       this.grnForm.patchValue({ supplierId: po.supplierId });
-      this.grnItems.set(po.items.map(l => ({ purchaseOrderLineId: l.id, itemId: l.itemId, itemName: l.itemName, itemCategory: l.itemCategory ?? '', deliveredQuantity: l.quantity, rejectedQuantity: 0, deductedQuantity: 0, quantity: l.quantity, unitOfMeasure: l.unitOfMeasure ?? '', unitPrice: l.unitPrice, locationId: '', lotNumber: '', qualityReason: '' })));
+      this.grnItems.set(po.items
+        .filter(line => Number(line.remainingQuantity ?? line.quantity) > 0)
+        .map(line => {
+          const remaining = Number(line.remainingQuantity ?? line.quantity);
+          return {
+            purchaseOrderLineId: line.id,
+            itemId: line.itemId,
+            itemName: line.itemName,
+            itemCategory: line.itemCategory ?? '',
+            orderedQuantity: Number(line.quantity),
+            previouslyReceivedQuantity: Number(line.receivedQuantity ?? 0),
+            remainingQuantity: remaining,
+            deliveredQuantity: remaining,
+            rejectedQuantity: 0,
+            deductedQuantity: 0,
+            quantity: remaining,
+            unitOfMeasure: line.unitOfMeasure ?? '',
+            unitPrice: line.unitPrice,
+            locationId: '',
+            lotNumber: '',
+            qualityReason: '',
+          };
+        }));
+    } else {
+      this.grnForm.patchValue({ supplierId: '' });
+      this.grnItems.set([]);
     }
+  }
+
+  acceptedGrnQuantity(item: GoodsReceiptDraftLine): number | null {
+    const delivered = Number(item.deliveredQuantity);
+    const rejected = Number(item.rejectedQuantity);
+    const deducted = Number(item.deductedQuantity);
+    if (![delivered, rejected, deducted].every(Number.isFinite)
+      || delivered <= 0 || rejected < 0 || deducted < 0 || rejected + deducted > delivered) {
+      return null;
+    }
+    return delivered - rejected - deducted;
+  }
+
+  grnLineError(item: GoodsReceiptDraftLine, field: 'delivered' | 'rejected' | 'deducted' | 'accepted'): string | null {
+    const delivered = Number(item.deliveredQuantity);
+    const rejected = Number(item.rejectedQuantity);
+    const deducted = Number(item.deductedQuantity);
+    if (field === 'delivered' && (!Number.isFinite(delivered) || delivered <= 0)) {
+      return 'أدخل كمية مستلمة أكبر من صفر.';
+    }
+    if (field === 'rejected' && (!Number.isFinite(rejected) || rejected < 0)) {
+      return 'الكمية المرفوضة لا يمكن أن تكون سالبة.';
+    }
+    if (field === 'deducted' && (!Number.isFinite(deducted) || deducted < 0)) {
+      return 'الكمية المخصومة لا يمكن أن تكون سالبة.';
+    }
+    if (Number.isFinite(delivered) && Number.isFinite(rejected) && Number.isFinite(deducted)
+      && rejected >= 0 && deducted >= 0 && rejected + deducted > delivered) {
+      return 'المرفوض والمخصوم أكبر من الكمية المستلمة.';
+    }
+    const accepted = this.acceptedGrnQuantity(item);
+    if (field === 'accepted' && accepted !== null && accepted > item.remainingQuantity) {
+      return `الكمية المقبولة تتجاوز المتبقي (${item.remainingQuantity} ${item.unitOfMeasure}).`;
+    }
+    return null;
+  }
+
+  grnHasErrors(): boolean {
+    if (this.grnForm.invalid || this.grnItems().length === 0) return true;
+    let acceptedTotal = 0;
+    for (const item of this.grnItems()) {
+      const accepted = this.acceptedGrnQuantity(item);
+      if (accepted === null || accepted > item.remainingQuantity) return true;
+      acceptedTotal += accepted;
+    }
+    return acceptedTotal <= 0;
   }
 
   async submitGrn() {
     if (this.submitting()) return;
-    if (this.grnForm.invalid) { this.grnForm.markAllAsTouched(); return; }
+    if (this.grnForm.invalid) {
+      this.grnForm.markAllAsTouched();
+      this.notification.warning('أكمل الحقول المطلوبة قبل تسجيل إذن الاستلام.');
+      return;
+    }
     if (!this.automaticNumbering() && !this.grnForm.controls.grnNumber.value.trim()) { this.grnForm.controls.grnNumber.markAsTouched(); return; }
-    if (this.grnItems().length === 0 || this.grnItems().some(item => item.deliveredQuantity <= 0 || item.rejectedQuantity < 0 || item.deductedQuantity < 0 || item.rejectedQuantity + item.deductedQuantity > item.deliveredQuantity)) { this.notification.warning('راجع الكمية المستلمة والمرفوضة والمخصومة'); return; }
+    if (this.grnHasErrors()) {
+      this.notification.warning('راجع أخطاء الكميات الموضحة أسفل الحقول قبل التسجيل.');
+      return;
+    }
     this.submitting.set(true);
     try {
       const v = this.grnForm.getRawValue();
-      await firstValueFrom(this.http.post('/api/v1/trade/procurement/goods-receipts', { grnNumber: this.automaticNumbering() ? null : v.grnNumber.trim(), receiptDate: dateInputToEpoch(v.receiptDate), purchaseOrderId: v.purchaseOrderId, supplierId: v.supplierId, warehouseId: v.warehouseId || null, notes: v.notes || null, lines: this.grnItems() }));
-      this.notification.success('تم تسجيل إذن الاستلام وإضافة الأصناف للمخزن ✓');
+      const lines = this.grnItems().map(item => ({
+        ...item,
+        quantity: this.acceptedGrnQuantity(item),
+        locationId: item.locationId.trim() || null,
+        lotNumber: item.lotNumber.trim() || null,
+        qualityReason: item.qualityReason.trim() || null,
+      }));
+      const saved = await firstValueFrom(this.http.post<GoodsReceipt>('/api/v1/trade/procurement/goods-receipts', {
+        grnNumber: this.automaticNumbering() ? null : v.grnNumber.trim(),
+        receiptDate: dateInputToEpoch(v.receiptDate),
+        purchaseOrderId: v.purchaseOrderId,
+        supplierId: v.supplierId,
+        warehouseId: v.warehouseId.trim() || null,
+        notes: v.notes.trim() || null,
+        lines,
+      }));
+      this.notification.success(`تم تسجيل إذن الاستلام رقم ${saved.grnNumber} وإضافة الكمية المقبولة للمخزن بنجاح.`);
       this.grnModalOpen.set(false);
       await this.loadAll();
-    } catch (e) { this.notification.error('فشل تسجيل إذن الاستلام: ' + apiErrorMessage(e, this.i18n)); }
+      this.activeTab.set('grn');
+    } catch (e) {
+      this.notification.error('تعذر تسجيل إذن الاستلام. ' + apiErrorMessage(e, this.i18n));
+    }
     finally { this.submitting.set(false); }
   }
 

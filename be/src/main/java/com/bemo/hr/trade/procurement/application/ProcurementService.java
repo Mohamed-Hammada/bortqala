@@ -192,7 +192,7 @@ public class ProcurementService {
     @Transactional
     public ProcurementApi.GoodsReceiptResponse createGoodsReceipt(ProcurementApi.GoodsReceiptPayload payload) {
         PurchaseOrder po = requirePo(payload.purchaseOrderId());
-        if (po.getStatus() != PurchaseOrder.Status.DRAFT && po.getStatus() != PurchaseOrder.Status.ISSUED
+        if (po.getStatus() != PurchaseOrder.Status.ISSUED
                 && po.getStatus() != PurchaseOrder.Status.PARTIALLY_RECEIVED)
             throw new BusinessRuleException("يمكن إضافة إذن استلام فقط لأوامر الشراء المفتوحة");
 
@@ -214,21 +214,22 @@ public class ProcurementService {
                 throw new BusinessRuleException("Goods receipt line does not belong to the selected purchase order.");
             if (ordered.getItemId() == null || !ordered.getItemId().equals(line.itemId()))
                 throw new BusinessRuleException("Goods receipt inventory item must match its purchase-order line.");
-            BigDecimal delivered = line.deliveredQuantity() != null ? line.deliveredQuantity() : line.quantity();
-            BigDecimal rejected = line.rejectedQuantity() == null ? BigDecimal.ZERO : line.rejectedQuantity();
-            BigDecimal deducted = line.deductedQuantity() == null ? BigDecimal.ZERO : line.deductedQuantity();
+            BigDecimal delivered = line.deliveredQuantity();
+            BigDecimal rejected = line.rejectedQuantity();
+            BigDecimal deducted = line.deductedQuantity();
             if (delivered == null || delivered.signum() <= 0 || rejected.signum() < 0 || deducted.signum() < 0)
-                throw new BusinessRuleException("Delivered quantity must be positive; rejected and deducted quantities cannot be negative.");
+                throw new BusinessRuleException("الكمية المستلمة يجب أن تكون أكبر من صفر، ولا يمكن أن تكون المرفوضة أو المخصومة سالبة.");
             BigDecimal accepted = delivered.subtract(rejected).subtract(deducted);
             if (accepted.signum() < 0)
-                throw new BusinessRuleException("Rejected and deducted quantities cannot exceed delivered quantity.");
+                throw new BusinessRuleException("مجموع الكمية المرفوضة والمخصومة لا يمكن أن يتجاوز الكمية المستلمة.");
             BigDecimal remaining = ordered.getQuantity().subtract(previouslyAccepted.getOrDefault(ordered.getId(), BigDecimal.ZERO));
             if (accepted.compareTo(remaining) > 0)
-                throw new BusinessRuleException("Accepted quantity exceeds the remaining purchase-order quantity for " + ordered.getItemName() + ".");
+                throw new BusinessRuleException("الكمية المقبولة تتجاوز المتبقي في أمر الشراء للصنف: " + ordered.getItemName());
             previouslyAccepted.merge(ordered.getId(), accepted, BigDecimal::add);
-            return new GoodsReceiptLine(null, line.purchaseOrderLineId(), line.itemId(), ordered.getItemName(),
+            return new GoodsReceiptLine(line.purchaseOrderLineId(), line.itemId(), ordered.getItemName(),
                     ordered.getItemCategory(), delivered, rejected, deducted, accepted, ordered.getUnitOfMeasure(),
-                    ordered.getUnitPrice(), line.locationId(), line.lotNumber(), line.qualityReason());
+                    ordered.getUnitPrice(), normalizeOptional(line.locationId()), normalizeOptional(line.lotNumber()),
+                    normalizeOptional(line.qualityReason()));
         }).toList();
         if (lines.stream().map(GoodsReceiptLine::getQuantity).reduce(BigDecimal.ZERO, BigDecimal::add).signum() <= 0)
             throw new BusinessRuleException("Goods receipt must contain an accepted quantity.");
@@ -537,17 +538,34 @@ public class ProcurementService {
 
     private ProcurementApi.PurchaseOrderResponse toPoResponse(PurchaseOrder po, List<PurchaseOrderLine> lines,
                                                               Map<String, String> supplierNames) {
+        Map<String, BigDecimal> received = acceptedQuantities(po.getId());
         return new ProcurementApi.PurchaseOrderResponse(po.getId(), po.getPoNumber(), toEpochMs(po.getPoDate()),
                 po.getSupplierId(), supplierNames.get(po.getSupplierId()), po.getPurchaseRequestId(),
                 po.getPaymentTerms(), po.getCurrencyCode(), po.getBaseCurrencyCode(), po.getExchangeRate(),
                 toEpochMs(po.getExchangeRateDate()), po.getExchangeRateSource(), po.getExchangeRateOverrideReason(),
                 po.getBaseTotalAmount(), po.getStatus().name(), po.getTotalAmount(),
-                lines.stream().map(this::toLineResponse).toList(), po.getCreatedAt(), po.getUpdatedAt());
+                lines.stream().map(line -> toLineResponse(line, received)).toList(), po.getCreatedAt(), po.getUpdatedAt());
     }
 
-    private ProcurementApi.PurchaseOrderLineResponse toLineResponse(PurchaseOrderLine line) {
+    private ProcurementApi.PurchaseOrderLineResponse toLineResponse(PurchaseOrderLine line,
+                                                                    Map<String, BigDecimal> received) {
+        BigDecimal receivedQuantity = received.getOrDefault(line.getId(), BigDecimal.ZERO);
+        BigDecimal remainingQuantity = line.getQuantity().subtract(receivedQuantity).max(BigDecimal.ZERO);
         return new ProcurementApi.PurchaseOrderLineResponse(line.getId(), line.getItemId(), line.getItemName(), line.getItemCategory(),
-                line.getQuantity(), line.getUnitOfMeasure(), line.getUnitPrice(), line.getLineTotal());
+                line.getQuantity(), receivedQuantity, remainingQuantity, line.getUnitOfMeasure(),
+                line.getUnitPrice(), line.getLineTotal());
+    }
+
+    private Map<String, BigDecimal> acceptedQuantities(String purchaseOrderId) {
+        Map<String, BigDecimal> accepted = new HashMap<>();
+        goodsReceiptRepository.findByPurchaseOrderId(purchaseOrderId).forEach(receipt ->
+                receipt.getLines().forEach(line -> accepted.merge(
+                        line.getPurchaseOrderLineId(), line.getQuantity(), BigDecimal::add)));
+        return accepted;
+    }
+
+    private String normalizeOptional(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
     }
 
     private ProcurementApi.GoodsReceiptResponse toGrnResponse(GoodsReceipt grn, Map<String, String> supplierNames) {

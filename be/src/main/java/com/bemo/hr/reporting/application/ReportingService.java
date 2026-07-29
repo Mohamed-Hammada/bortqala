@@ -331,10 +331,12 @@ public class ReportingService {
                 }
                 applied++;
             }
-            dailyAttendanceResultRepository.saveAll(byId.values());
+            dailyAttendanceResultRepository.saveAllAndFlush(byId.values());
         }
         anomaly.decide(request.decision(), request.reason(), request.operationId(), actor);
+        dayAnomalyRepository.saveAndFlush(anomaly);
         refreshUnresolved(report);
+        attendanceReportRepository.saveAndFlush(report);
         auditService.record("DAY_ANOMALY_DECISION", "ATTENDANCE_DAY_ANOMALY", anomalyId, actor,
                 "{\"reportId\":\"" + reportId + "\",\"decision\":\"" + request.decision()
                         + "\",\"affected\":" + anomaly.getAffectedCount() + ",\"applied\":" + applied
@@ -366,9 +368,11 @@ public class ReportingService {
                     snapshot.getPreviousNote(), snapshot.getPreviousDecidedBy(), snapshot.getPreviousDecidedAt());
             restored++;
         }
-        dailyAttendanceResultRepository.saveAll(byId.values());
+        dailyAttendanceResultRepository.saveAllAndFlush(byId.values());
         anomaly.reverse(actor);
+        dayAnomalyRepository.saveAndFlush(anomaly);
         refreshUnresolved(report);
+        attendanceReportRepository.saveAndFlush(report);
         auditService.record("DAY_ANOMALY_REVERSE", "ATTENDANCE_DAY_ANOMALY", anomalyId, actor,
                 "{\"reportId\":\"" + reportId + "\",\"restored\":" + restored
                         + ",\"skipped\":" + skipped + "}", null);
@@ -380,6 +384,7 @@ public class ReportingService {
         var report = requireEditable(reportId);
         var anomaly = requireAnomaly(reportId, anomalyId);
         anomaly.reopen(actor);
+        dayAnomalyRepository.saveAndFlush(anomaly);
         auditService.record("DAY_ANOMALY_REOPEN", "ATTENDANCE_DAY_ANOMALY", anomalyId, actor,
                 "{\"reportId\":\"" + reportId + "\"}", null);
         return details(report);

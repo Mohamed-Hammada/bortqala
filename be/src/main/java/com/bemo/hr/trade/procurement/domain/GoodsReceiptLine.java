@@ -2,7 +2,10 @@ package com.bemo.hr.trade.procurement.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.TenantId;
 
@@ -15,7 +18,9 @@ public class GoodsReceiptLine {
 
     @Id private String id;
     @TenantId @Column(name = "app_id", nullable = false) private String appId;
-    @Column(name = "goods_receipt_id", nullable = false, length = 36) private String goodsReceiptId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "goods_receipt_id", nullable = false)
+    private GoodsReceipt goodsReceipt;
     @Column(name = "purchase_order_line_id", length = 36) private String purchaseOrderLineId;
     @Column(name = "item_id", length = 36) private String itemId;
     @Column(name = "item_name", nullable = false, length = 255) private String itemName;
@@ -32,12 +37,11 @@ public class GoodsReceiptLine {
 
     protected GoodsReceiptLine() {}
 
-    public GoodsReceiptLine(String goodsReceiptId, String purchaseOrderLineId, String itemId, String itemName,
+    public GoodsReceiptLine(String purchaseOrderLineId, String itemId, String itemName,
                             String itemCategory, BigDecimal deliveredQuantity, BigDecimal rejectedQuantity,
                             BigDecimal deductedQuantity, BigDecimal quantity, String unitOfMeasure,
                             BigDecimal unitPrice, String locationId, String lotNumber, String qualityReason) {
         this.id = UUID.randomUUID().toString();
-        this.goodsReceiptId = goodsReceiptId;
         this.purchaseOrderLineId = purchaseOrderLineId;
         this.itemId = itemId;
         this.itemName = itemName;
@@ -53,8 +57,12 @@ public class GoodsReceiptLine {
         this.qualityReason = qualityReason;
     }
 
+    void attachTo(GoodsReceipt goodsReceipt) {
+        this.goodsReceipt = goodsReceipt;
+    }
+
     public String getId() { return id; }
-    public String getGoodsReceiptId() { return goodsReceiptId; }
+    public String getGoodsReceiptId() { return goodsReceipt == null ? null : goodsReceipt.getId(); }
     public String getPurchaseOrderLineId() { return purchaseOrderLineId; }
     public String getItemId() { return itemId; }
     public String getItemName() { return itemName; }

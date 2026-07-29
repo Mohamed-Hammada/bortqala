@@ -109,6 +109,8 @@ class ReportingDayAnomalyTests {
         assertThat(decision.appliedCount()).isEqualTo(3);
         assertThat(anomaly.getStatus()).isEqualTo(DayAnomalyStatus.RESOLVED);
         assertThat(results.subList(0, 3)).allMatch(item -> item.getDecision() == AttendanceDecision.NORMAL_DAY);
+        verify(anomalyRepository).saveAndFlush(anomaly);
+        verify(resultRepository).saveAllAndFlush(any());
 
         var replay = service.decideDayAnomaly(report.getId(), anomaly.getId(),
                 new ReportingApi.DayAnomalyDecisionRequest(DayAnomalyDecision.DEVICE_OUTAGE,

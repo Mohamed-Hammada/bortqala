@@ -46,10 +46,12 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
         </div>
         <div class="header-actions">
           <button type="button" class="btn btn-secondary" (click)="exportCsv()" appTooltip="تصدير الحضور — تنزيل المصفوفة الحالية إلى ملف">⇩ Excel</button>
-          <button type="button" class="btn btn-secondary" (click)="applyFullDayAll()">
+          <button type="button" class="btn btn-secondary" (click)="applyFullDayAll()"
+            appTooltip="يوم كامل للكل — يغيّر كل الخلايا الظاهرة إلى دوام كامل">
             تعيين يوم كامل للكل
           </button>
-          <button type="button" class="btn btn-primary" [disabled]="saving() || dirtyCellKeys().size === 0" (click)="saveAttendance()">
+          <button type="button" class="btn btn-primary" [disabled]="saving() || dirtyCellKeys().size === 0" (click)="saveAttendance()"
+            appTooltip="حفظ التعديلات — يرسل كل الخلايا المعدّلة في عملية واحدة">
             {{ saving() ? 'جارٍ الحفظ...' : 'حفظ التعديلات (' + dirtyCellKeys().size + ')' }}
           </button>
         </div>
@@ -59,12 +61,14 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
       <div class="card controls-card">
         <div class="controls-row">
           <div class="control-group">
-            <label>تاريخ البداية</label>
-            <input type="date" [(ngModel)]="startDate" class="form-input" (change)="onPeriodChange()" />
+            <label for="manual-start-date">تاريخ البداية</label>
+            <input id="manual-start-date" type="date" [(ngModel)]="startDate" class="form-input" (change)="onPeriodChange()"
+              appTooltip="تاريخ البداية — أول يوم يظهر في مصفوفة الحضور" />
           </div>
           <div class="control-group">
-            <label>تاريخ النهاية</label>
-            <input type="date" [(ngModel)]="endDate" class="form-input" (change)="onPeriodChange()" />
+            <label for="manual-end-date">تاريخ النهاية</label>
+            <input id="manual-end-date" type="date" [(ngModel)]="endDate" class="form-input" (change)="onPeriodChange()"
+              appTooltip="تاريخ النهاية — آخر يوم يظهر في مصفوفة الحضور" />
           </div>
           <div class="control-group presets">
             <label>اختصارات الفترة</label>
@@ -75,8 +79,9 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
             </div>
           </div>
           <div class="control-group">
-            <label>المقاول</label>
-            <select [(ngModel)]="selectedContractorId" (change)="onFilterChange()" class="form-input">
+            <label for="manual-contractor">المقاول</label>
+            <select id="manual-contractor" [(ngModel)]="selectedContractorId" (change)="onFilterChange()" class="form-input"
+              appTooltip="المقاول — تصفية العمال حسب المقاول">
               <option value="">الكل</option>
               @for (c of contractors(); track c.id) {
                 <option [value]="c.id">{{ c.name }}</option>
@@ -84,8 +89,9 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
             </select>
           </div>
           <div class="control-group">
-            <label>فئة العامل</label>
-            <select [(ngModel)]="selectedCategoryId" (change)="onFilterChange()" class="form-input">
+            <label for="manual-category">فئة العامل</label>
+            <select id="manual-category" [(ngModel)]="selectedCategoryId" (change)="onFilterChange()" class="form-input"
+              appTooltip="فئة العامل — تصفية المصفوفة حسب الفئة">
               <option value="">الكل</option>
               @for (cat of categories(); track cat.id) {
                 <option [value]="cat.id">{{ cat.name }}</option>
@@ -93,13 +99,15 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
             </select>
           </div>
           <div class="control-group">
-            <label>بحث بالاسم/الكود</label>
-            <input type="text" [(ngModel)]="searchText" (input)="onFilterChange()"
+            <label for="manual-search">بحث بالاسم/الكود</label>
+            <input id="manual-search" type="text" [(ngModel)]="searchText" (input)="onFilterChange()"
+              appTooltip="بحث العمال — اكتب الاسم أو الكود"
               placeholder="ابحث..." class="form-input search-input" />
           </div>
           <div class="control-group">
-            <label>حالة الحضور</label>
-              <select [(ngModel)]="selectedAttendanceStatus" (change)="onFilterChange()" class="form-input">
+            <label for="manual-status">حالة الحضور</label>
+              <select id="manual-status" [(ngModel)]="selectedAttendanceStatus" (change)="onFilterChange()" class="form-input"
+                appTooltip="حالة الحضور — عرض العمال الذين لديهم الحالة المختارة">
               @for (opt of attendanceStatusOptions; track opt.value) {
                 <option [value]="opt.value">{{ opt.label }}</option>
               }
@@ -108,13 +116,15 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
           <div class="control-group toggle-group">
             <label>&nbsp;</label>
             <label class="toggle-label">
-              <input type="checkbox" [(ngModel)]="showInactive" (change)="onFilterChange()" />
+              <input type="checkbox" [(ngModel)]="showInactive" (change)="onFilterChange()"
+                aria-label="إظهار العمال غير النشطين" appTooltip="إظهار غير النشطين — تضمين العمال الموقوفين في النتائج" />
               <span class="toggle-text">إظهار العمال غير النشطين</span>
             </label>
           </div>
           <div class="control-group">
             <label>&nbsp;</label>
-            <button type="button" class="btn btn-outline" (click)="refreshData()">
+            <button type="button" class="btn btn-outline" (click)="refreshData()"
+              appTooltip="تحديث البيانات — إعادة تحميل المصفوفة من الخادم">
               🔄 تحديث البيانات
             </button>
           </div>
@@ -204,7 +214,9 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
             <div class="bulk-bar">
               <span class="bulk-count">{{ selectedWorkerIds().size }} عامل × {{ selectedDateIds().size }} يوم</span>
               <span class="bulk-context">لن تُعدّل العملية إلا {{ selectedWorkerIds().size * selectedDateIds().size }} خلية محددة. ستظهر معاينة إلزامية قبل التنفيذ.</span>
-              <select [(ngModel)]="bulkStatusValue" class="form-input bulk-select">
+              <select [(ngModel)]="bulkStatusValue" class="form-input bulk-select"
+                aria-label="حالة الحضور المطلوب تطبيقها جماعياً"
+                appTooltip="حالة الحضور الجماعية — القيمة التي ستطبق على الخلايا المحددة">
                 @for (opt of bulkStatusOptions; track opt.value) {
                   <option [ngValue]="opt.value">{{ opt.label }}</option>
                 }
@@ -236,6 +248,8 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
                     <input type="checkbox"
                       [checked]="allSelected()"
                       (change)="toggleSelectAll()"
+                      aria-label="تحديد جميع العمال الظاهرين"
+                      appTooltip="تحديد الكل — اختيار أو إلغاء اختيار جميع العمال الظاهرين"
                       class="row-check" />
                   </th>
                   <th class="sticky-col worker-col">كود العامل</th>
@@ -244,7 +258,9 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
                   @for (date of dates(); track date) {
                     <th class="date-col" [class.weekend-col]="isWeekend(date)">
                       <div class="date-header">
-                        <input type="checkbox" [checked]="selectedDateIds().has(date)" (change)="toggleDate(date)" [attr.aria-label]="'تحديد ' + date" />
+                        <input type="checkbox" [checked]="selectedDateIds().has(date)" (change)="toggleDate(date)"
+                          [attr.aria-label]="'تحديد تاريخ ' + date"
+                          [appTooltip]="'تحديد التاريخ — تطبيق الإجراءات الجماعية على ' + date" />
                         <span class="day-name">{{ getDayName(date) }}</span>
                         <span class="day-num">{{ date.slice(-2) }}</span>
                       </div>
@@ -262,6 +278,8 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
                       <input type="checkbox"
                         [checked]="isSelected(w.id)"
                         (change)="toggleWorker(w.id)"
+                        [attr.aria-label]="'تحديد العامل ' + w.fullName"
+                        [appTooltip]="'تحديد العامل — ' + w.fullName"
                         class="row-check" />
                     </td>
                     <td class="sticky-col worker-col"><strong>{{ w.code }}</strong></td>
@@ -286,6 +304,8 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
                           [class.cell-full]="matrix[w.id][date].attendanceValue === 1"
                           [class.cell-half]="matrix[w.id][date].attendanceValue === 0.5"
                           [class.cell-absent]="matrix[w.id][date].attendanceValue === 0"
+                          [attr.aria-label]="'حالة حضور ' + w.fullName + ' بتاريخ ' + date"
+                          [appTooltip]="'حضور ' + w.fullName + ' — ' + date + ' · اختر دوام كامل أو نصف يوم أو غياب'"
                         >
                           <option [ngValue]="1">1</option>
                           <option [ngValue]="0.5">½</option>

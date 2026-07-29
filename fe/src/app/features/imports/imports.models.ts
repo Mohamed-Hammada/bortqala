@@ -24,3 +24,29 @@ export interface UnmatchedIdentity {
   firstPunch: number;
   lastPunch: number;
 }
+export interface BiometricDevice {
+  id: string;
+  name: string;
+  endpointUrl: string;
+  enabled: boolean;
+  syncIntervalMinutes: number;
+  lastSyncAt: number | null;
+  lastSuccessfulPunchAt: number | null;
+  nextSyncAt: number | null;
+  lastStatus: 'NEVER_SYNCED' | 'SUCCESS' | 'FAILED';
+  lastMessage: string | null;
+  createdAt: number;
+}
+export interface BiometricDeviceRequest {
+  name: string;
+  endpointUrl: string;
+  enabled: boolean;
+  syncIntervalMinutes: number;
+}
+export interface BiometricDeviceSyncResult {
+  device: BiometricDevice;
+  receivedRows: number;
+  importedRows: number;
+  duplicateRows: number;
+  duplicateBatch: boolean;
+}

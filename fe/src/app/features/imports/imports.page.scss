@@ -319,9 +319,245 @@ td small {
   overflow: auto;
 }
 
+.live-sync-card {
+  padding: 0;
+  overflow: hidden;
+  border-color: color-mix(in srgb, var(--gold) 35%, var(--line));
+}
+
+.live-sync-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 8%, var(--surface)) 0%, var(--surface) 62%);
+}
+
+.live-sync-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.live-sync-title h2,
+.live-sync-title p {
+  margin: 0;
+}
+
+.live-sync-title h2 {
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.live-sync-title p:last-child {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.live-indicator {
+  width: 11px;
+  height: 11px;
+  margin-top: 9px;
+  border-radius: 50%;
+  background: #16a36a;
+  box-shadow: 0 0 0 5px rgba(22, 163, 106, .12);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+.api-format {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: help;
+}
+
+.device-connection-layout {
+  display: grid;
+  grid-template-columns: minmax(330px, .8fr) minmax(440px, 1.2fr);
+  min-height: 230px;
+}
+
+.device-form {
+  padding: 18px 20px;
+  border-inline-end: 1px solid var(--line);
+  background: var(--surface-muted);
+}
+
+.device-form-title,
+.device-fields,
+.connected-devices {
+  display: grid;
+  gap: 12px;
+}
+
+.device-form-title {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.text-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--gold-strong);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.device-fields {
+  grid-template-columns: 1fr 140px;
+}
+
+.device-fields .endpoint-field {
+  grid-column: 1 / -1;
+}
+
+.device-fields .endpoint-field small {
+  color: var(--muted);
+}
+
+.device-enabled-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--input-min-height);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.device-enabled-toggle input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--gold);
+}
+
+.connected-devices {
+  align-content: start;
+  max-height: 340px;
+  padding: 18px;
+  overflow-y: auto;
+}
+
+.device-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.device-row.failed {
+  border-color: color-mix(in srgb, var(--danger) 48%, var(--line));
+}
+
+.device-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: rgba(22, 163, 106, .1);
+  color: #0a8a55;
+  font-size: 19px;
+}
+
+.device-details {
+  min-width: 0;
+}
+
+.device-details > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.device-details code,
+.device-details small {
+  display: block;
+  max-width: 100%;
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.connection-state {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 800;
+}
+
+.connection-state.online {
+  background: rgba(22, 163, 106, .1);
+  color: #087647;
+}
+
+.connection-state.failed {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+}
+
+.device-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-sm {
+  padding: 6px 9px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.empty-device-state {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  min-height: 180px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.empty-device-state > span {
+  font-size: 35px;
+  color: var(--gold);
+}
+
+.empty-device-state p {
+  margin: 3px 0 0;
+  font-size: 12px;
+}
+
+@keyframes live-pulse {
+  50% { box-shadow: 0 0 0 9px rgba(22, 163, 106, 0); }
+}
+
 @media (max-width: 1050px) {
   .section-grid {
     grid-template-columns: 1fr;
+  }
+  .device-connection-layout {
+    grid-template-columns: 1fr;
+  }
+  .device-form {
+    border-inline-end: 0;
+    border-bottom: 1px solid var(--line);
   }
 }
 
@@ -338,5 +574,25 @@ td small {
   }
   .counts {
     display: none;
+  }
+  .live-sync-head,
+  .device-row {
+    align-items: flex-start;
+  }
+  .api-format {
+    display: none;
+  }
+  .device-fields {
+    grid-template-columns: 1fr;
+  }
+  .device-fields .endpoint-field {
+    grid-column: auto;
+  }
+  .device-row {
+    grid-template-columns: 32px minmax(0, 1fr);
+  }
+  .device-actions {
+    grid-column: 2;
+    flex-wrap: wrap;
   }
 }

@@ -4,7 +4,6 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -30,8 +29,7 @@ public class GoodsReceipt {
     @Column(name = "status", nullable = false, length = 20) private String status;
     @Column(length = 500) private String notes;
     @Column(name = "created_at", nullable = false) private long createdAt;
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "goods_receipt_id")
+    @OneToMany(mappedBy = "goodsReceipt", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GoodsReceiptLine> lines = new ArrayList<>();
 
     protected GoodsReceipt() {}
@@ -46,7 +44,15 @@ public class GoodsReceipt {
         this.warehouseId = warehouseId;
         this.status = "POSTED";
         this.notes = notes;
-        this.lines = lines != null ? lines : new ArrayList<>();
+        this.lines = new ArrayList<>();
+        if (lines != null) {
+            lines.forEach(this::addLine);
+        }
+    }
+
+    private void addLine(GoodsReceiptLine line) {
+        line.attachTo(this);
+        this.lines.add(line);
     }
 
     @PrePersist void prePersist() { createdAt = System.currentTimeMillis(); }

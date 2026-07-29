@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-v66-live-biometric-devices
+      author: codex
+      comment: Stores tenant-scoped HTTP biometric device connections and durable synchronization state.
+      changes:
+        - createTable:
+            tableName: biometric_devices
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(150), constraints: { nullable: false } }
+              - column: { name: endpoint_url, type: varchar(1000), constraints: { nullable: false } }
+              - column: { name: enabled, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: sync_interval_minutes, type: int, defaultValueNumeric: 15, constraints: { nullable: false } }
+              - column: { name: last_sync_at, type: timestamp with time zone }
+              - column: { name: last_successful_punch_at, type: timestamp with time zone }
+              - column: { name: next_sync_at, type: timestamp with time zone }
+              - column: { name: last_status, type: varchar(20), defaultValue: NEVER_SYNCED, constraints: { nullable: false } }
+              - column: { name: last_message, type: varchar(500) }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addForeignKeyConstraint:
+            baseTableName: biometric_devices
+            baseColumnNames: app_id
+            referencedTableName: apps
+            referencedColumnNames: id
+            constraintName: fk_biometric_devices_app
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: biometric_devices
+            columnNames: app_id,name
+            constraintName: uk_biometric_devices_app_name
+        - createIndex:
+            tableName: biometric_devices
+            indexName: ix_biometric_devices_due
+            columns:
+              - column: { name: app_id }
+              - column: { name: enabled }
+              - column: { name: next_sync_at }
+      rollback:
+        - dropTable: { tableName: biometric_devices }

@@ -1,6 +1,9 @@
 package com.bemo.hr.attendance.api;
 
 import com.bemo.hr.attendance.application.BiometricImportService;
+import com.bemo.hr.attendance.application.BiometricDeviceSyncService;
+import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,9 +20,12 @@ import java.util.List;
 @RequestMapping("/api/v1/imports")
 public class BiometricImportController {
     private final BiometricImportService biometricImportService;
+    private final BiometricDeviceSyncService biometricDeviceSyncService;
 
-    public BiometricImportController(BiometricImportService biometricImportService) {
+    public BiometricImportController(BiometricImportService biometricImportService,
+                                     BiometricDeviceSyncService biometricDeviceSyncService) {
         this.biometricImportService = biometricImportService;
+        this.biometricDeviceSyncService = biometricDeviceSyncService;
     }
 
     @GetMapping
@@ -36,4 +42,32 @@ public class BiometricImportController {
 
     @GetMapping("/unmatched")
     List<ImportApi.UnmatchedIdentityResponse> unmatched() { return biometricImportService.unmatchedIdentities(); }
+
+    @GetMapping("/devices")
+    List<ImportApi.DeviceResponse> devices() {
+        return biometricDeviceSyncService.listDevices();
+    }
+
+    @PostMapping("/devices")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @ResponseStatus(HttpStatus.CREATED)
+    ImportApi.DeviceResponse createDevice(@Valid @org.springframework.web.bind.annotation.RequestBody ImportApi.DeviceRequest request,
+                                           Authentication authentication) {
+        return biometricDeviceSyncService.create(request, authentication.getName());
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/devices/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    ImportApi.DeviceResponse updateDevice(@org.springframework.web.bind.annotation.PathVariable String id,
+                                           @Valid @org.springframework.web.bind.annotation.RequestBody ImportApi.DeviceRequest request,
+                                           Authentication authentication) {
+        return biometricDeviceSyncService.update(id, request, authentication.getName());
+    }
+
+    @PostMapping("/devices/{id}/sync")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    ImportApi.DeviceSyncResponse syncDevice(@org.springframework.web.bind.annotation.PathVariable String id,
+                                             Authentication authentication) {
+        return biometricDeviceSyncService.sync(id, authentication.getName());
+    }
 }

@@ -9,6 +9,8 @@ import java.time.Instant;
 import java.util.List;
 
 public interface PunchRecordRepository extends JpaRepository<PunchRecord, String> {
+    boolean existsByDeviceUserIdAndPunchedAt(String deviceUserId, Instant punchedAt);
+
     @Query("select p from PunchRecord p where p.punchedAt >= :from and p.punchedAt < :to order by p.punchedAt")
     List<PunchRecord> findInRange(@Param("from") Instant from, @Param("to") Instant to);
 

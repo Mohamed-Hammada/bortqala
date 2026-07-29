@@ -4,13 +4,20 @@ import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { downloadBlob, timestampedExcelFileName } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
-import { ImportBatch, UnmatchedIdentity } from './imports.models';
+import {
+  BiometricDevice,
+  BiometricDeviceRequest,
+  BiometricDeviceSyncResult,
+  ImportBatch,
+  UnmatchedIdentity,
+} from './imports.models';
 @Injectable()
 export class ImportsStore {
   private readonly http = inject(HttpClient);
   private readonly i18n = inject(I18nService);
   readonly batches = signal<ImportBatch[]>([]);
   readonly unmatched = signal<UnmatchedIdentity[]>([]);
+  readonly devices = signal<BiometricDevice[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
@@ -18,14 +25,48 @@ export class ImportsStore {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const [batches, unmatched] = await Promise.all([
+      const [batches, unmatched, devices] = await Promise.all([
         firstValueFrom(this.http.get<ImportBatch[]>('/api/v1/imports')),
         firstValueFrom(this.http.get<UnmatchedIdentity[]>('/api/v1/imports/unmatched')),
+        firstValueFrom(this.http.get<BiometricDevice[]>('/api/v1/imports/devices')),
       ]);
       this.batches.set(batches);
       this.unmatched.set(unmatched);
+      this.devices.set(devices);
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));
+    } finally {
+      this.loading.set(false);
+    }
+  }
+  async saveDevice(payload: BiometricDeviceRequest, id?: string): Promise<boolean> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      await firstValueFrom(id
+        ? this.http.put<BiometricDevice>(`/api/v1/imports/devices/${id}`, payload)
+        : this.http.post<BiometricDevice>('/api/v1/imports/devices', payload));
+      await this.load();
+      return true;
+    } catch (error) {
+      this.error.set(apiErrorMessage(error, this.i18n));
+      return false;
+    } finally {
+      this.loading.set(false);
+    }
+  }
+  async syncDevice(id: string): Promise<BiometricDeviceSyncResult | null> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      const result = await firstValueFrom(
+        this.http.post<BiometricDeviceSyncResult>(`/api/v1/imports/devices/${id}/sync`, {}),
+      );
+      await this.load();
+      return result;
+    } catch (error) {
+      this.error.set(apiErrorMessage(error, this.i18n));
+      return null;
     } finally {
       this.loading.set(false);
     }
