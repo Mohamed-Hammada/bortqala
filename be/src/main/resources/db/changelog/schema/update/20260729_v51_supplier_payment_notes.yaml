@@ -7,4 +7,3 @@ databaseChangeLog:
             tableName: supplier_payments
             columns:
               - column: { name: notes, type: varchar(500) }
-

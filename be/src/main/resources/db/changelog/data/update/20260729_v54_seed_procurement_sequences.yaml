@@ -36,4 +36,3 @@ databaseChangeLog:
                   procurement_document_sequences.next_value,
                   EXCLUDED.next_value
               )
-

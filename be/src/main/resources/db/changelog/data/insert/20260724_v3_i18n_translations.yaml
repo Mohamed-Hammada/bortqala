@@ -19,8 +19,8 @@ databaseChangeLog:
             constraintName: uq_translations_key_locale
         - loadData:
             tableName: translations
-            file: data/translations.csv
-            relativeToChangelogFile: true
+            file: db/changelog/data/insert/files/translations.csv
+            relativeToChangelogFile: false
             encoding: UTF-8
             separator: ;
       rollback:

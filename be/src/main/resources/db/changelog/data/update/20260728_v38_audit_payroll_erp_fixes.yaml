@@ -86,17 +86,13 @@ databaseChangeLog:
               FROM apps a WHERE UPPER(a.code) = 'DEMO'
               AND NOT EXISTS (SELECT 1 FROM currencies c WHERE c.app_id = a.id AND c.code = 'USD');
 
-              INSERT INTO app_translations (id, app_id, translation_key, locale, text_value, created_at, updated_at)
-              SELECT 'ar-38-001', a.id, 'users.passwordMinLength', 'ar-EG', 'كلمة المرور يجب أن لا تقل عن {min} أحرف.', 1753574400000, 1753574400000
-              FROM apps a WHERE UPPER(a.code) = 'DEMO'
-              AND NOT EXISTS (SELECT 1 FROM app_translations t WHERE t.app_id = a.id AND t.translation_key = 'users.passwordMinLength' AND t.locale = 'ar-EG');
-              -- VALUES ('ar-38-001', 'users.passwordMinLength', 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              VALUES ('ar-38-001', 'users.passwordMinLength', 'ar-EG', 'كلمة المرور يجب أن لا تقل عن {min} أحرف.')
+              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
 
-              INSERT INTO app_translations (id, app_id, translation_key, locale, text_value, created_at, updated_at)
-              SELECT 'en-38-002', a.id, 'users.passwordMinLength', 'en-US', 'Password must be at least {min} characters.', 1753574400000, 1753574400000
-              FROM apps a WHERE UPPER(a.code) = 'DEMO'
-              AND NOT EXISTS (SELECT 1 FROM app_translations t WHERE t.app_id = a.id AND t.translation_key = 'users.passwordMinLength' AND t.locale = 'en-US');
-              -- VALUES ('en-38-002', 'users.passwordMinLength', 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              VALUES ('en-38-002', 'users.passwordMinLength', 'en-US', 'Password must be at least {min} characters.')
+              ON CONFLICT (translation_key, locale) DO UPDATE SET text_value = EXCLUDED.text_value;
 
               INSERT INTO currencies (id, app_id, code, name, symbol, is_base, exchange_rate, active, created_at, updated_at)
               SELECT gen_random_uuid()::text, a.id, 'EUR', 'اليورو', '€', FALSE, 55.0, TRUE, extract(epoch from now())*1000, extract(epoch from now())*1000

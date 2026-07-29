@@ -37,8 +37,8 @@ databaseChangeLog:
       changes:
         - loadData:
             tableName: translations
-            file: data/business_party_translations_v10.csv
-            relativeToChangelogFile: true
+            file: db/changelog/data/insert/files/business_party_translations_v10.csv
+            relativeToChangelogFile: false
             encoding: UTF-8
             separator: ;
       rollback:

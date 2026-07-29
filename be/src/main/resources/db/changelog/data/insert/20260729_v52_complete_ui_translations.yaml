@@ -1,18 +1,26 @@
 databaseChangeLog:
   - changeSet:
-      id: 20260729-v55-keyboard-shortcuts-copy
+      id: 20260729-v52-complete-ui-translations
       author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM translations WHERE id = 'x52-001'
       changes:
         - loadData:
             tableName: translations
-            file: data/keyboard_shortcuts_translations_v55.csv
-            relativeToChangelogFile: true
+            file: db/changelog/data/insert/files/complete_ui_translations_v52.csv
+            relativeToChangelogFile: false
             encoding: UTF-8
             separator: ;
+            quotchar: '"'
             columns:
               - column: { header: id, name: id, type: STRING }
               - column: { header: translation_key, name: translation_key, type: STRING }
               - column: { header: locale, name: locale, type: STRING }
               - column: { header: text_value, name: text_value, type: STRING }
       rollback:
-        - delete: { tableName: translations, where: "id LIKE 'x55-%'" }
+        - delete:
+            tableName: translations
+            where: id LIKE 'x52-%'

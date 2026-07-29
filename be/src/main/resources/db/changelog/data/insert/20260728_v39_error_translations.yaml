@@ -5,7 +5,7 @@ databaseChangeLog:
       comment: Seed localized error response messages for ApiExceptionHandler
       changes:
         - loadData:
-            file: db/changelog/data/error_translations_v39.csv
+            file: db/changelog/data/insert/files/error_translations_v39.csv
             relativeToChangelogFile: false
             separator: ";"
             encoding: UTF-8

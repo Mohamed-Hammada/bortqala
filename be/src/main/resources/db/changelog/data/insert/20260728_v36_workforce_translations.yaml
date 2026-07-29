@@ -10,8 +10,8 @@ databaseChangeLog:
       changes:
         - loadData:
             tableName: translations
-            file: data/workforce_translations_v36.csv
-            relativeToChangelogFile: true
+            file: db/changelog/data/insert/files/workforce_translations_v36.csv
+            relativeToChangelogFile: false
             encoding: UTF-8
             separator: ;
       rollback:

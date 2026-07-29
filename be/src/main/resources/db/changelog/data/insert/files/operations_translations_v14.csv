@@ -49,8 +49,8 @@ x14-ar-024;operations.party;ar-EG;المورد أو العميل
 x14-en-024;operations.party;en-US;Supplier or customer
 x14-ar-025;operations.quantity;ar-EG;الكمية
 x14-en-025;operations.quantity;en-US;Quantity
-x14-ar-026;operations.loss;ar-EG;الهالك %
-x14-en-026;operations.loss;en-US;Loss %
+x14-ar-026;operations.loss;ar-EG;نسبة الهالك
+x14-en-026;operations.loss;en-US;Loss percentage
 x14-ar-027;operations.reference;ar-EG;رقم المرجع
 x14-en-027;operations.reference;en-US;Reference
 x14-ar-028;operations.noMovements;ar-EG;لا توجد حركات مخزون بعد.
@@ -89,7 +89,7 @@ x14-ar-044;operations.quantityDelta;ar-EG;تغير الكمية (+ / -)
 x14-en-044;operations.quantityDelta;en-US;Quantity change (+ / -)
 x14-ar-045;operations.amountDelta;ar-EG;تغير المبلغ (+ / -)
 x14-en-045;operations.amountDelta;en-US;Amount change (+ / -)
-x14-ar-046;operations.lossPercentage;ar-EG;نسبة الهالك أو المكبّة %
+x14-ar-046;operations.lossPercentage;ar-EG;النسبة المئوية للهالك أو المكبّة
 x14-en-046;operations.lossPercentage;en-US;Loss percentage
 x14-ar-047;operations.chooseEmployee;ar-EG;اختر الموظف
 x14-en-047;operations.chooseEmployee;en-US;Choose employee

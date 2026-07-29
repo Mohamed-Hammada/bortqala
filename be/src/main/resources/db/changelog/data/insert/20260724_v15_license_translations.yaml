@@ -6,6 +6,6 @@ databaseChangeLog:
         - onFail: MARK_RAN
         - sqlCheck: { expectedResult: 0, sql: "SELECT COUNT(*) FROM translations WHERE id = 'x15-ar-001'" }
       changes:
-        - loadData: { tableName: translations, file: data/license_translations_v15.csv, relativeToChangelogFile: true, encoding: UTF-8, separator: ";" }
+        - loadData: { tableName: translations, file: db/changelog/data/insert/files/license_translations_v15.csv, relativeToChangelogFile: false, encoding: UTF-8, separator: ";" }
       rollback:
         - delete: { tableName: translations, where: "id LIKE 'x15-%'" }

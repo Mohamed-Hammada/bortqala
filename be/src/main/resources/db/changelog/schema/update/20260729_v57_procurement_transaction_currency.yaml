@@ -42,4 +42,3 @@ databaseChangeLog:
             tableName: supplier_invoices
             columnName: invoice_number
             columnDataType: varchar(50)
-

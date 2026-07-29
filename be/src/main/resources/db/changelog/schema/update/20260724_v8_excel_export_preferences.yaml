@@ -20,8 +20,8 @@ databaseChangeLog:
       changes:
         - loadData:
             tableName: translations
-            file: data/excel_export_translations_v8.csv
-            relativeToChangelogFile: true
+            file: db/changelog/data/insert/files/excel_export_translations_v8.csv
+            relativeToChangelogFile: false
             encoding: UTF-8
             separator: ;
       rollback:

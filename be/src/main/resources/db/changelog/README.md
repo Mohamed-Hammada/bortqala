@@ -46,4 +46,17 @@ V6 adds the per-application session timeout and its Arabic/English settings tran
 
 **EN:** V66 adds tenant-owned live biometric IP/API devices, manual and scheduled synchronization state, and durable sync feedback. V67 removes the known invalid legacy supplier phone and adds audited compensating inventory reversals for the two invalid negative inbound QA movements; the original evidence rows remain untouched.
 
+## Folder convention for V68+
+
+- `releases/20260729_v1_v67.changelog-master.yaml`: ordered baseline release after the approved development-database rebuild.
+- `schema/create/`: new tables, sequences, indexes, and constraints.
+- `schema/update/`: alterations to existing schema.
+- `data/insert/`: production reference-data and translation inserts.
+- `data/update/`: audited backfills and corrective updates.
+- `data/delete/`: narrowly approved deletes with explicit evidence/rollback policy.
+- `releases/`: dependency-ordered release masters that include files across the operation folders.
+- `src/test/resources/db/changelog/test-data/`: test fixtures only; never included by production.
+
+The production `db.changelog-master.yaml` includes only ordered release masters. The development database was explicitly approved for recreation when the historical files were physically categorized, so the categorized paths are now canonical.
+
 **AR:** يضيف V65 كتالوج ترجمات قاعدة البيانات الكامل بالعربية والإنجليزية لنافذة المستخدم المتجاوبة، بما يشمل إظهار كلمة المرور واختيار القوائم وعدد الصلاحيات وتسميات مجموعات الوحدات.

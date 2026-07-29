@@ -31,8 +31,8 @@ databaseChangeLog:
       changes:
         - loadData:
             tableName: translations
-            file: data/dashboard_customization_translations_v56.csv
-            relativeToChangelogFile: true
+            file: db/changelog/data/insert/files/dashboard_customization_translations_v56.csv
+            relativeToChangelogFile: false
             encoding: UTF-8
             separator: ;
             columns:

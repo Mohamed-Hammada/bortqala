@@ -42,8 +42,8 @@ databaseChangeLog:
       changes:
         - loadData:
             tableName: translations
-            file: data/navigation_keyboard_translations_v53.csv
-            relativeToChangelogFile: true
+            file: db/changelog/data/insert/files/navigation_keyboard_translations_v53.csv
+            relativeToChangelogFile: false
             encoding: UTF-8
             separator: ;
             columns:
