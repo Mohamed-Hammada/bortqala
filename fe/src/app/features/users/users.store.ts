@@ -9,6 +9,7 @@ export interface UserCategory {
   id: string;
   code: string;
   name: string;
+  scope: 'EMPLOYEE' | 'WORKER';
 }
 
 export interface UserPayload {
@@ -18,6 +19,7 @@ export interface UserPayload {
   roles: RoleCode[];
   allowedMenus?: string[];
   canViewSalary?: boolean;
+  dashboardCustomizationEnabled?: boolean;
   active: boolean;
   version: number | null;
   categoryId?: string | null;

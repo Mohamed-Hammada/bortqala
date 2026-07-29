@@ -42,4 +42,10 @@ class BusinessPartyController {
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deactivate(@PathVariable String id) { businessPartyService.deactivate(id); }
+
+    @PostMapping("/cleanup-phone")
+    @PreAuthorize("hasRole('ADMIN')")
+    java.util.Map<String, Integer> cleanupInvalidPhone() {
+        return java.util.Map.of("cleaned", businessPartyService.cleanupInvalidPhone());
+    }
 }

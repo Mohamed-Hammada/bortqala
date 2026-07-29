@@ -64,17 +64,18 @@
       </div>
     </header>
 
-    <!-- Compact KPI Summary Cards -->
+    <!-- Compact KPI Summary Cards — totals from filtered view -->
     <div class="kpi-grid">
-      <article class="kpi-card unresolved" [class.attention]="data.report.unresolvedCount > 0">
+      <article class="kpi-card unresolved" [class.attention]="unresolvedCount() > 0">
         <div class="kpi-icon">⚠️</div>
         <div class="kpi-body">
           <span class="kpi-label">{{ i18n.t('review.unresolved') }}</span>
-          <strong class="kpi-value">{{ data.report.unresolvedCount }}</strong>
+          <strong class="kpi-value">{{ unresolvedCount() }}</strong>
+          <small class="kpi-sub">{{ i18n.t('review.ofTotal', { count: totalCount() }, 'من ' + totalCount()) }}</small>
         </div>
         @if (totalCount() === 0) {
           <span class="kpi-badge neutral">{{ i18n.t('review.kpiNoData') }}</span>
-        } @else if (data.report.unresolvedCount > 0) {
+        } @else if (unresolvedCount() > 0) {
           <span class="kpi-badge warning">{{ i18n.t('review.kpiRequiresDecision') }}</span>
         } @else {
           <span class="kpi-badge success">{{ i18n.t('review.kpiFullyReviewed') }}</span>
@@ -109,8 +110,68 @@
       </article>
     </div>
 
-    <!-- Smart AI Recommendation & Bulk Decision Section -->
-    @if (canReview() && totalCount() > 0 && unresolvedRowsCount() > 0) {
+    <!-- Enhanced Filter Bar -->
+    <div class="filter-bar">
+      <button class="button secondary btn-sm" (click)="toggleFilterPanel()">
+        {{ showFilterPanel() ? '▲' : '▼' }} {{ i18n.t('review.filters', {}, 'تصفية متقدمة') }}
+      </button>
+      @if (showFilterPanel()) {
+        <div class="filter-panel">
+          <div class="filter-grid">
+            <div class="filter-field">
+              <label>{{ i18n.t('review.fromDate', {}, 'من تاريخ') }}</label>
+              <input type="date" class="form-input ltr" [value]="reportFilters().dateFrom"
+                     (change)="updateFilter('dateFrom', $any($event.target).value)" />
+            </div>
+            <div class="filter-field">
+              <label>{{ i18n.t('review.toDate', {}, 'إلى تاريخ') }}</label>
+              <input type="date" class="form-input ltr" [value]="reportFilters().dateTo"
+                     (change)="updateFilter('dateTo', $any($event.target).value)" />
+            </div>
+            <div class="filter-field">
+              <label>{{ i18n.t('review.filterCategory', {}, 'الفئة') }}</label>
+              <select class="form-input" [value]="reportFilters().categoryId"
+                      (change)="updateFilter('categoryId', $any($event.target).value)">
+                <option value="">{{ i18n.t('common.all', {}, 'الكل') }}</option>
+                @for (cat of uniqueCategories(); track cat.id) {
+                  <option [value]="cat.id">{{ cat.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="filter-field">
+              <label>{{ i18n.t('review.filterCondition', {}, 'حالة الحضور') }}</label>
+              <select class="form-input" [value]="reportFilters().attendanceCondition"
+                      (change)="updateFilter('attendanceCondition', $any($event.target).value)">
+                <option value="">{{ i18n.t('common.all', {}, 'الكل') }}</option>
+                <option value="COMPLETE">{{ i18n.t('review.conditionComplete', {}, 'دخول وخروج كامل') }}</option>
+                <option value="ONE_PUNCH">{{ i18n.t('review.conditionOnePunch', {}, 'بصمة واحدة فقط') }}</option>
+                <option value="NO_PUNCH">{{ i18n.t('review.conditionNoPunch', {}, 'لا توجد بصمات') }}</option>
+                <option value="LATE">{{ i18n.t('review.conditionLate', {}, 'تأخر عن الدوام') }}</option>
+                <option value="EARLY">{{ i18n.t('review.conditionEarly', {}, 'انصراف مبكر') }}</option>
+                <option value="MISSING_HOURS">{{ i18n.t('review.conditionMissingHours', {}, 'ساعات عمل ناقصة') }}</option>
+              </select>
+            </div>
+            <div class="filter-field">
+              <label>{{ i18n.t('review.filterReviewStatus', {}, 'حالة المراجعة') }}</label>
+              <select class="form-input" [value]="reportFilters().reviewStatus"
+                      (change)="updateFilter('reviewStatus', $any($event.target).value)">
+                <option value="">{{ i18n.t('common.all', {}, 'الكل') }}</option>
+                <option value="UNRESOLVED">{{ i18n.t('review.unresolvedFilterLabel', {}, 'غير محلولة') }}</option>
+                <option value="REVIEWED">{{ i18n.t('review.reviewedFilter', {}, 'تمت المراجعة') }}</option>
+                <option value="APPROVED">{{ i18n.t('review.approvedFilter', {}, 'معتمد') }}</option>
+                <option value="LOCKED">{{ i18n.t('review.lockedFilter', {}, 'مقفل') }}</option>
+              </select>
+            </div>
+          </div>
+          <button class="button secondary btn-sm" (click)="clearFilters()">
+            {{ i18n.t('review.clearFilters', {}, 'مسح التصفية') }}
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Smart Recommendation & Bulk Decision Section — counts always match filtered results -->
+    @if (canReview() && totalCount() > 0 && unresolvedCount() > 0) {
       <div class="smart-ai-box">
         <div class="ai-header">
           <span class="ai-badge-icon">⚡</span>
@@ -126,6 +187,9 @@
           </button>
           <button class="button secondary btn-sm" [disabled]="noPunchCount() === 0" (click)="bulkDecide('DEDUCT', 'NO_PUNCH')">
             {{ i18n.t('review.aiDeductButton', { count: noPunchCount() }) }}
+          </button>
+          <button class="button secondary btn-sm" [disabled]="noPunchCount() === 0" (click)="bulkDecide('ABSENCE', 'NO_PUNCH')">
+            {{ i18n.t('review.aiAbsenceButton', { count: noPunchCount() }, 'غياب (' + noPunchCount() + ')') }}
           </button>
           <button class="button secondary btn-sm" [disabled]="manualEntryCount() === 0" (click)="bulkDecide('NORMAL_DAY', 'MANUAL_ENTRY')">
             {{ i18n.t('review.manualEntryBulk', { count: manualEntryCount() }) }}
@@ -360,7 +424,7 @@
                     </div>
                     @if (row.warning) {
                       <div class="evidence-note">
-                        📌 <strong>{{ i18n.t('review.evidenceTitle', undefined, 'الدليل والتشخيص التلقائي:') }}</strong> {{ warningLabel(row.warning) }}
+                        📌 <strong>{{ i18n.t('review.evidenceTitle', {}, 'الدليل والتشخيص التلقائي:') }}</strong> {{ warningLabel(row.warning) }}
                       </div>
                     }
                   </div>
@@ -393,8 +457,8 @@
     @if (showDowntimeSection() && downtimeEvents().length) {
       <div class="card downtimes-card">
         <div class="section-head">
-          <h2>⚡ {{ i18n.t('review.downtimeHeading', undefined, 'احتمال عطل جهاز') }}</h2>
-          <p>{{ i18n.t('review.downtimeHint', undefined, 'يبدو أن أكثر من 70% من الفئة لا توجد لهم بصمات في التاريخ نفسه.') }}</p>
+          <h2>⚡ {{ i18n.t('review.downtimeHeading', {}, 'احتمال عطل جهاز') }}</h2>
+          <p>{{ i18n.t('review.downtimeHint', {}, 'يبدو أن أكثر من 70% من الفئة لا توجد لهم بصمات في التاريخ نفسه.') }}</p>
         </div>
         <div class="downtime-grid">
           @for (event of downtimeEvents(); track event.date + event.categoryName) {
@@ -402,30 +466,30 @@
               <div class="downtime-header">
                 <strong>{{ event.date }}</strong>
                 <span class="cat-pill">{{ event.categoryName }}</span>
-                <span class="count-badge">{{ event.affectedCount }} {{ i18n.t('review.employeeCountSuffix', undefined, 'شخص') }}</span>
+                <span class="count-badge">{{ event.affectedCount }} {{ i18n.t('review.employeeCountSuffix', {}, 'شخص') }}</span>
               </div>
               @if (!event.decision) {
                 <div class="downtime-actions">
-                  <button class="btn-decide normal" (click)="downtimeDecision(event, 'NORMAL_DAY')">
-                    {{ i18n.t('decision.normalDay') }}
+                  <button class="btn-decide normal" [disabled]="event.saving" (click)="downtimeDecision(event, 'NORMAL_DAY')">
+                    {{ event.saving ? '...' : i18n.t('decision.normalDay') }}
                   </button>
-                  <button class="btn-decide deduct" (click)="downtimeDecision(event, 'ABSENT')">
-                    {{ i18n.t('review.absent', undefined, 'غياب') }}
+                  <button class="btn-decide deduct" [disabled]="event.saving" (click)="downtimeDecision(event, 'ABSENT')">
+                    {{ event.saving ? '...' : i18n.t('review.absent', {}, 'غياب') }}
                   </button>
-                  <button class="btn-decide leave" (click)="downtimeDecision(event, 'HOLIDAY')">
-                    {{ i18n.t('review.officialHoliday', undefined, 'إجازة رسمية') }}
+                  <button class="btn-decide leave" [disabled]="event.saving" (click)="downtimeDecision(event, 'HOLIDAY')">
+                    {{ event.saving ? '...' : i18n.t('review.officialHoliday', {}, 'إجازة رسمية') }}
                   </button>
-                  <button class="btn-decide deduct" (click)="downtimeDecision(event, 'DEVICE_FAILURE')">
-                    {{ i18n.t('review.deviceFailure', undefined, 'عطل جهاز') }}
+                  <button class="btn-decide deduct" [disabled]="event.saving" (click)="downtimeDecision(event, 'DEVICE_FAILURE')">
+                    {{ event.saving ? '...' : i18n.t('review.deviceFailure', {}, 'عطل جهاز') }}
                   </button>
-                  <button class="btn-decide" (click)="downtimeDecision(event, 'INDIVIDUAL_REVIEW')">
-                    {{ i18n.t('review.individualReview', undefined, 'مراجعة فردية') }}
+                  <button class="btn-decide" [disabled]="event.saving" (click)="downtimeDecision(event, 'INDIVIDUAL_REVIEW')">
+                    {{ event.saving ? '...' : i18n.t('review.individualReview', {}, 'مراجعة فردية') }}
                   </button>
                 </div>
               } @else {
                 <div class="downtime-result">
                   <span class="status-pill success">
-                    ✓ {{ event.decision === 'NORMAL_DAY' ? i18n.t('decision.normalDay') : event.decision === 'ABSENT' ? i18n.t('review.absent', undefined, 'غياب') : event.decision === 'HOLIDAY' ? i18n.t('review.officialHoliday', undefined, 'إجازة رسمية') : event.decision === 'DEVICE_FAILURE' ? i18n.t('review.deviceFailure', undefined, 'عطل جهاز') : i18n.t('review.individualReview', undefined, 'مراجعة فردية') }}
+                    ✓ {{ event.decision === 'NORMAL_DAY' ? i18n.t('decision.normalDay') : event.decision === 'ABSENT' ? i18n.t('review.absent', {}, 'غياب') : event.decision === 'HOLIDAY' ? i18n.t('review.officialHoliday', {}, 'إجازة رسمية') : event.decision === 'DEVICE_FAILURE' ? i18n.t('review.deviceFailure', {}, 'عطل جهاز') : i18n.t('review.individualReview', {}, 'مراجعة فردية') }}
                   </span>
                 </div>
               }
@@ -440,30 +504,30 @@
       <div class="modal-overlay" (click)="closeBulkPreview()">
         <div class="central-modal" (click)="$event.stopPropagation()">
           <div class="modal-header">
-            <h3>{{ i18n.t('review.bulkPreviewTitle', undefined, 'معاينة الإجراء الجماعي') }}</h3>
+            <h3>{{ i18n.t('review.bulkPreviewTitle', {}, 'معاينة الإجراء الجماعي') }}</h3>
           </div>
           <div class="modal-body">
             <div class="bulk-preview-summary">
               <div class="preview-row">
-                <span class="label">{{ i18n.t('review.statusLabel', undefined, 'الحالة') }}:</span>
+                <span class="label">{{ i18n.t('review.statusLabel', {}, 'الحالة') }}:</span>
                 <span class="value">{{ preview.statusLabel }}</span>
               </div>
               <div class="preview-row">
-                <span class="label">{{ i18n.t('review.decisionLabel', undefined, 'القرار') }}:</span>
+                <span class="label">{{ i18n.t('review.decisionLabel', {}, 'القرار') }}:</span>
                 <span class="value highlight">{{ preview.decisionLabel }}</span>
               </div>
               <div class="preview-divider"></div>
               <div class="preview-row">
-                <span class="label">{{ i18n.t('review.bulkMatching', undefined, 'السجلات المطابقة') }}:</span>
+                <span class="label">{{ i18n.t('review.bulkMatching', {}, 'السجلات المطابقة') }}:</span>
                 <span class="value">{{ preview.matchingCount }}</span>
               </div>
               <div class="preview-row highlight-row">
-                <span class="label">{{ i18n.t('review.bulkEditable', undefined, 'السجلات القابلة للتعديل') }}:</span>
+                <span class="label">{{ i18n.t('review.bulkEditable', {}, 'السجلات القابلة للتعديل') }}:</span>
                 <span class="value editable-count">{{ preview.editableCount }}</span>
               </div>
               @if (preview.excludedCount > 0) {
                 <div class="preview-row muted">
-                  <span class="label">{{ i18n.t('review.bulkExcluded', undefined, 'مستبعدة (معتمدة/مقفلة)') }}:</span>
+                  <span class="label">{{ i18n.t('review.bulkExcluded', {}, 'مستبعدة (معتمدة/مقفلة)') }}:</span>
                   <span class="value">{{ preview.excludedCount }}</span>
                 </div>
               }
@@ -474,10 +538,10 @@
           </div>
           <div class="modal-footer">
             <button class="button gold" [disabled]="executing()" (click)="executeBulkDecision()">
-              {{ executing() ? i18n.t('common.executing', undefined, 'جارٍ التنفيذ...') : (i18n.t('common.confirm', undefined, 'تأكيد') + ' (' + preview.editableCount + ')') }}
+              {{ executing() ? i18n.t('common.executing', {}, 'جارٍ التنفيذ...') : (i18n.t('common.confirm', {}, 'تأكيد') + ' (' + preview.editableCount + ')') }}
             </button>
             <button class="button secondary" [disabled]="executing()" (click)="closeBulkPreview()">
-              {{ i18n.t('common.cancel', undefined, 'إلغاء') }}
+              {{ i18n.t('common.cancel', {}, 'إلغاء') }}
             </button>
           </div>
         </div>
@@ -494,8 +558,8 @@
             <input #promptInput class="form-input ltr" type="text" [value]="ps.defaultValue" autofocus />
           </div>
           <div class="modal-footer">
-            <button class="button gold" (click)="ps.onConfirm(promptInput.value)">{{ i18n.t('common.confirm', undefined, 'تأكيد') }}</button>
-            <button class="button secondary" (click)="ps.onCancel()">{{ i18n.t('common.cancel', undefined, 'إلغاء') }}</button>
+            <button class="button gold" (click)="ps.onConfirm(promptInput.value)">{{ i18n.t('common.confirm', {}, 'تأكيد') }}</button>
+            <button class="button secondary" (click)="ps.onCancel()">{{ i18n.t('common.cancel', {}, 'إلغاء') }}</button>
           </div>
         </div>
       </div>

@@ -1,11 +1,10 @@
-# AGENT SESSION SUMMARY — Complete
-- Replaced all hardcoded user-facing messages in FE (dashboard, settings, report-review, audit-logs, fiscal-periods, login, app-shell, payroll) with `i18n.t()` translation keys
-- Added all new keys to `DEFAULT_FALLBACKS` in `i18n.service.ts` (ar-EG + en-US), removed duplicates
-- Backend: added `translate()`, `translateOrDefault()`, `isSupported()` to `TranslationService.java`
-- Backend: `ApiExceptionHandler.java` now locale-aware using `Accept-Language` header
-- Backend: created Liquibase v39 migration (`error.*` translation keys) + CSV seed
-- Remaining FE files to update (lower priority): minor feature templates, `api-error.ts` KNOWN_MESSAGES
-- Fixed pre-existing duplicate `review.fullyReviewedTag` keys; FE production build passes clean
+# AGENT SESSION SUMMARY — July 29, 2026
+## Session 1: Attendance Bulk Decisions + Business Parties Extended
+- **P0: Attendance Report Bulk Decisions** — Backend: `POST /api/v1/reports/{id}/bulk-decision` (operation-ID idempotency), `PUT /api/v1/reports/{id}/downtime-decision`. New `AttendanceDecision` types: `ABSENCE`, `OFFICIAL_HOLIDAY`, `INDIVIDUAL_REVIEW`. Frontend: enhanced filter panel (date, category, attendance condition, review status), recommendation counts from filtered data, downtime persistence. Audit logging.
+- **P0: Business Parties/Suppliers** — Added `nameEn`, `email`, `address`, `relationshipStartDate`, `relationshipEndDate` to entity, API DTOs, frontend models/form/template. Validation: `@Email`, phone pattern, tax ID pattern. Managed-type restricted to `DIRECT`/`MANAGED`; responsible-party required for managed. Data cleanup endpoint `POST /api/v1/parties/cleanup-phone`. Liquibase `v44` migration for columns + data cleanup. New i18n keys for parties page.
+- Updated `PROJECT_MAP.md` with both completed items.
+## Session 2: Procurement Document Flow (GRN, Invoices, Payments)
+- **P0: Procurement Document Flow** — Backend: GoodsReceipt, SupplierInvoice, SupplierPayment entities + repos + API DTOs + service. PO transitions: `receive()` (ISSUED→RECEIVED), `cancel()`. GRN creation auto-transitions PO to RECEIVED. Invoice creation auto-creates partner ledger debit entry. Payment creation auto-marks invoice PAID + creates partner ledger credit entry. Extracted `PartnerLedgerEntryRepository` as public. Controller: `GET/POST /goods-receipts`, `/invoices`, `/payments`, `POST /orders/{id}/receive`, `POST /orders/{id}/cancel`. Liquibase v45: `goods_receipt_lines` table, GRN notes column, invoice discount/tax/net/due_date/notes columns. Frontend: tabbed procurement page (PO/GRN/Invoices/Payments), centered dialogs for each document type, receive/cancel PO actions, invoice with discount/tax calc, payment linked to unpaid invoices. All 5 workflow steps active.
 
 # HR platform handoff
 

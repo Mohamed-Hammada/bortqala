@@ -1,184 +1,270 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">سلسلة الإمداد ودورة الشراء (Procurement & Purchasing Workflow)</p>
-      <h1>دورة المشتريات (Purchase Requests to Payments)</h1>
-      <p>طلبات الشراء ← طلبات العروض RFQ ← أوامر الشراء PO ← استلام البضائع GRN ← فواتير وسداد الموردين.</p>
+      <p class="eyebrow">دورة المشتريات (Procurement Cycle)</p>
+      <h1>المشتريات والفواتير والمدفوعات</h1>
+      <p>طلبات الشراء ← أوامر الشراء ← إذن الاستلام ← فواتير الموردين ← السداد والقيود المحاسبية</p>
     </div>
     <div class="header-actions">
-      <button class="button secondary" (click)="exportCsv()">⇩ Excel</button>
-      <button class="button primary" (click)="openNew()">＋ أمر شراء جديد (PO)</button>
+      <button class="button secondary" (click)="exportExcel()">⇩ Excel</button>
+      @if (activeTab() === 'po') {<button class="button primary" (click)="openNewPo()">＋ أمر شراء جديد</button>}
+      @if (activeTab() === 'grn') {<button class="button primary" (click)="openNewGrn()">＋ إذن استلام جديد</button>}
+      @if (activeTab() === 'invoice') {<button class="button primary" (click)="openNewInvoice()">＋ فاتورة مورد</button>}
+      @if (activeTab() === 'payment') {<button class="button primary" (click)="openNewPayment()">＋ دفعة مورد</button>}
     </div>
   </header>
 
-  @if (loading()) {
-    <div class="loading"></div>
-  }
-  @if (error()) {
-    <div class="alert error">{{ error() }}</div>
-  }
+  @if (loading()) { <div class="loading"></div> }
+  @if (error()) { <div class="alert error">{{ error() }}</div> }
 
-  <!-- Workflow Pipeline Cards -->
+  <!-- Tabs -->
+  <nav class="tabs">
+    <button class="tab" [class.active]="activeTab() === 'po'" (click)="activeTab.set('po')">📋 أوامر الشراء</button>
+    <button class="tab" [class.active]="activeTab() === 'grn'" (click)="activeTab.set('grn')">📦 إذن الاستلام</button>
+    <button class="tab" [class.active]="activeTab() === 'invoice'" (click)="activeTab.set('invoice')">🧾 فواتير الموردين</button>
+    <button class="tab" [class.active]="activeTab() === 'payment'" (click)="activeTab.set('payment')">💰 المدفوعات</button>
+  </nav>
+
+  <!-- Workflow Pipeline -->
   <div class="workflow-steps">
-    <div class="step-card active">
-      <span class="step-num">1</span>
-      <strong>طلب شراء (PR)</strong>
-      <small>احتياج القسم</small>
-    </div>
+    <div class="step-card active"><span class="step-num">1</span><strong>طلب شراء</strong><small>احتياج القسم</small></div>
     <div class="step-arrow">→</div>
-    <div class="step-card active">
-      <span class="step-num">2</span>
-      <strong>عرض سعر (RFQ)</strong>
-      <small>أسعار الموردين</small>
-    </div>
+    <div class="step-card active"><span class="step-num">2</span><strong>عرض سعر</strong><small>أسعار الموردين</small></div>
     <div class="step-arrow">→</div>
-    <div class="step-card active">
-      <span class="step-num">3</span>
-      <strong>أمر شراء (PO)</strong>
-      <small>التعاقد مع المورد</small>
-    </div>
+    <div class="step-card active"><span class="step-num">3</span><strong>أمر شراء</strong><small>التعاقد مع المورد</small></div>
     <div class="step-arrow">→</div>
-    <div class="step-card">
-      <span class="step-num">4</span>
-      <strong>إذن استلام (GRN)</strong>
-      <small>إضافة للمخزن</small>
-    </div>
+    <div class="step-card active"><span class="step-num">4</span><strong>إذن استلام</strong><small>إضافة للمخزن</small></div>
     <div class="step-arrow">→</div>
-    <div class="step-card">
-      <span class="step-num">5</span>
-      <strong>فاتورة وسداد</strong>
-      <small>الاستحقاق المالي</small>
-    </div>
+    <div class="step-card active"><span class="step-num">5</span><strong>فاتورة وسداد</strong><small>الاستحقاق المالي</small></div>
   </div>
 
   @if (!loading()) {
+    <!-- ──── PURCHASE ORDERS ──── -->
+    @if (activeTab() === 'po') {
     <div class="table-card">
       <table>
-        <thead>
-          <tr>
-            <th>رقم أمر الشراء</th>
-            <th>تاريخ الأمر</th>
-            <th>كود / اسم المورد</th>
-            <th>شروط الدفع</th>
-            <th>إجمالي المشتريات</th>
-            <th>حالة الأمر</th>
-            <th>الإجراءات</th>
-          </tr>
-        </thead>
+        <thead><tr><th>رقم الأمر</th><th>التاريخ</th><th>المورد</th><th>شروط الدفع</th><th>الإجمالي</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
         <tbody>
           @for (po of orders(); track po.id) {
-            <tr>
-              <td><strong class="ltr">{{ po.poNumber }}</strong></td>
-              <td class="ltr">{{ date(po.poDate) }}</td>
-              <td><strong>{{ po.supplierName || po.supplierId }}</strong></td>
-              <td>{{ po.paymentTerms || '—' }}</td>
-              <td class="ltr"><strong>{{ po.totalAmount | number:'1.2-2' }}</strong> <small>ج.م</small></td>
-              <td>
-                <span
-                  class="status"
-                  [class.warning]="po.status === 'DRAFT'"
-                  [class.success]="po.status === 'ISSUED'"
-                  [class.info]="po.status === 'RECEIVED'"
-                >
-                  {{ po.status === 'DRAFT' ? 'مسودة (Draft)' : po.status === 'ISSUED' ? 'مُصْدَر للمورد (Issued)' : 'تم الاستلام بالمخزن (Received)' }}
-                </span>
-              </td>
-              <td>
-                <div class="table-row-actions">
-                  @if (po.status === 'DRAFT') {
-                    <button class="button primary btn-sm" (click)="issuePo(po)">📨 إصدار للمورد</button>
-                  }
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="7">
-                <div class="empty-state">لا توجد أوامر شراء مسجلة بعد. اضغط <strong>"أمر شراء جديد"</strong> للبدء.</div>
-              </td>
-            </tr>
-          }
+          <tr>
+            <td><strong class="ltr">{{ po.poNumber }}</strong></td>
+            <td class="ltr">{{ date(po.poDate) }}</td>
+            <td><strong>{{ po.supplierName || po.supplierId }}</strong></td>
+            <td>{{ po.paymentTerms || '—' }}</td>
+            <td class="ltr"><strong>{{ po.totalAmount | number:'1.2-2' }}</strong></td>
+            <td><span class="status" [class.warning]="po.status === 'DRAFT'" [class.success]="po.status === 'ISSUED'" [class.info]="po.status === 'RECEIVED' || po.status === 'PARTIALLY_RECEIVED'" [class.neutral]="po.status === 'CANCELLED'">{{ poStatusLabel(po.status) }}</span></td>
+            <td>
+              <div class="table-row-actions">
+                @if (po.status === 'DRAFT') {
+                  <button class="button secondary btn-sm" (click)="openEditPo(po)">✏️ تعديل</button>
+                  <button class="button primary btn-sm" (click)="issuePo(po)">📨 إصدار</button>
+                }
+                @if (po.status === 'ISSUED' || po.status === 'PARTIALLY_RECEIVED') {<button class="button success btn-sm" (click)="openNewGrn(po)">📦 إنشاء إذن استلام</button>}
+                @if (po.status !== 'CANCELLED' && po.status !== 'RECEIVED') {<button class="button danger btn-sm" (click)="cancelPo(po)">❌ إلغاء</button>}
+              </div>
+            </td>
+          </tr>
+          } @empty { <tr><td colspan="7"><div class="empty-state">لا توجد أوامر شراء. اضغط "أمر شراء جديد" للبدء.</div></td></tr> }
         </tbody>
       </table>
     </div>
+    }
+
+    <!-- ──── GOODS RECEIPTS ──── -->
+    @if (activeTab() === 'grn') {
+    <div class="table-card">
+      <table>
+        <thead><tr><th>رقم الإذن</th><th>تاريخ الاستلام</th><th>المورد</th><th>ملاحظات</th><th>الحالة</th></tr></thead>
+        <tbody>
+          @for (g of goodsReceipts(); track g.id) {
+          <tr>
+            <td><strong class="ltr">{{ g.grnNumber }}</strong></td>
+            <td class="ltr">{{ date(g.receiptDate) }}</td>
+            <td>{{ g.supplierName || g.supplierId }}</td>
+            <td>{{ g.notes || '—' }}</td>
+            <td><span class="status success">{{ g.status === 'POSTED' ? 'مُرحّل' : g.status }}</span></td>
+          </tr>
+          } @empty { <tr><td colspan="5"><div class="empty-state">لا توجد إذون استلام مسجلة. اضغط "إذن استلام جديد".</div></td></tr> }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    <!-- ──── SUPPLIER INVOICES ──── -->
+    @if (activeTab() === 'invoice') {
+    <div class="table-card">
+      <table>
+        <thead><tr><th>رقم الفاتورة</th><th>التاريخ</th><th>المورد</th><th>الإجمالي</th><th>الخصم</th><th>الضريبة</th><th>الصافي</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+        <tbody>
+          @for (inv of invoices(); track inv.id) {
+          <tr>
+            <td><strong class="ltr">{{ inv.invoiceNumber }}</strong></td>
+            <td class="ltr">{{ date(inv.invoiceDate) }}</td>
+            <td>{{ inv.supplierName || inv.supplierId }}</td>
+            <td class="ltr">{{ inv.totalAmount | number:'1.2-2' }}</td>
+            <td class="ltr">{{ (inv.discountAmount ?? 0) | number:'1.2-2' }}</td>
+            <td class="ltr">{{ (inv.taxAmount ?? 0) | number:'1.2-2' }}</td>
+            <td class="ltr"><strong>{{ inv.netAmount | number:'1.2-2' }}</strong><small> / متبقي {{ inv.outstandingAmount | number:'1.2-2' }}</small></td>
+            <td><span class="status" [class.warning]="inv.status !== 'PAID'" [class.success]="inv.status === 'PAID'">{{ inv.status === 'PAID' ? 'مدفوعة' : inv.status === 'PARTIALLY_PAID' ? 'مدفوعة جزئياً' : 'غير مدفوعة' }}</span></td>
+            <td>@if (inv.status !== 'PAID') {<button class="button primary btn-sm" (click)="openNewPayment(inv)">💰 سداد</button>}</td>
+          </tr>
+          } @empty { <tr><td colspan="9"><div class="empty-state">لا توجد فواتير موردين مسجلة.</div></td></tr> }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    <!-- ──── SUPPLIER PAYMENTS ──── -->
+    @if (activeTab() === 'payment') {
+    <div class="table-card">
+      <table>
+        <thead><tr><th>رقم الدفعة</th><th>تاريخ الدفع</th><th>المورد</th><th>الفاتورة</th><th>المبلغ</th><th>طريقة الدفع</th><th>الحالة</th></tr></thead>
+        <tbody>
+          @for (pmt of payments(); track pmt.id) {
+          <tr>
+            <td><strong class="ltr">{{ pmt.paymentNumber }}</strong></td>
+            <td class="ltr">{{ date(pmt.paymentDate) }}</td>
+            <td>{{ pmt.supplierName || pmt.supplierId }}</td>
+            <td class="ltr">{{ pmt.supplierInvoiceId }}</td>
+            <td class="ltr"><strong>{{ pmt.amount | number:'1.2-2' }}</strong></td>
+            <td>{{ pmt.paymentMethod === 'BANK_TRANSFER' ? 'تحويل بنكي' : pmt.paymentMethod === 'CASH' ? 'نقدي' : pmt.paymentMethod === 'CHEQUE' ? 'شيك' : pmt.paymentMethod }}</td>
+            <td><span class="status success">{{ pmt.status === 'POSTED' ? 'مُرحّلة' : pmt.status }}</span></td>
+          </tr>
+          } @empty { <tr><td colspan="7"><div class="empty-state">لا توجد مدفوعات مسجلة.</div></td></tr> }
+        </tbody>
+      </table>
+    </div>
+    }
   }
 
+  <!-- ══════════════ PO MODAL ══════════════ -->
   @if (modalOpen()) {
-    <app-modal-dialog
-      title="أمر شراء جديد (Purchase Order)"
-      (closeModal)="closeModal()"
-    >
-      <form [formGroup]="poForm" (ngSubmit)="submitPo()">
-        <div class="form-grid">
-          <div class="field">
-            <label>رقم أمر الشراء *</label>
-            <input class="ltr" formControlName="poNumber" />
+  <app-modal-dialog [isOpen]="true" [title]="editingPoId() ? 'تعديل أمر الشراء' : 'أمر شراء جديد'" (close)="modalOpen.set(false)">
+    <form [formGroup]="poForm" (ngSubmit)="submitPo()">
+      <div class="form-grid">
+        @if (automaticNumbering()) {
+          <div class="field"><label>رقم أمر الشراء</label><span class="readonly-value">{{ editingPoId() ? poForm.controls.poNumber.value : 'تلقائي — يولد عند الحفظ' }}</span></div>
+        } @else {
+          <div class="field"><label>رقم أمر الشراء *</label><input class="ltr" formControlName="poNumber" /></div>
+        }
+        <div class="field"><label>تاريخ الأمر *</label><input type="date" class="ltr" formControlName="poDate" /><small>يمكن اختيار تاريخ سابق أو حالي أو مستقبلي.</small></div>
+        <div class="field"><label>المورد *</label><select formControlName="supplierId"><option value="">— اختر مورداً مسجلاً —</option>@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select><small>المورد يُختار من دليل الموردين. <a routerLink="/parties">إضافة مورد جديد</a></small></div>
+        <div class="field"><label>شروط السداد</label><input formControlName="paymentTerms" /></div>
+      </div>
+      <div class="po-items-section">
+        <div class="po-items-header"><h4>بنود أمر الشراء</h4><button type="button" class="button secondary btn-sm" (click)="addItemLine()">＋ إضافة بند</button></div>
+        <div class="po-items-list">
+          @for (item of poItems(); track $index) {
+          <div class="po-item-row">
+            <div><label>صنف المخزون</label><select [(ngModel)]="item.itemId" [ngModelOptions]="{standalone: true}" (change)="onPoItemSelected($index)"><option value="">— اختر —</option>@for (stockItem of inventoryItems(); track stockItem.id) {<option [value]="stockItem.id">{{ stockItem.code }} — {{ stockItem.name }}</option>}</select></div>
+            <div><label>الوحدة</label><span class="readonly-value">{{ item.unitOfMeasure || 'تُحدد من الصنف' }}</span></div>
+            <div><label>الكمية</label><input type="number" min="1" [(ngModel)]="item.quantity" [ngModelOptions]="{standalone: true}" /></div>
+            <div><label>سعر الوحدة</label><input type="number" min="0" [(ngModel)]="item.unitPrice" [ngModelOptions]="{standalone: true}" /></div>
+            <div><label>الإجمالي</label><strong>{{ (item.quantity * item.unitPrice) | number:'1.2-2' }}</strong></div>
+            <button type="button" class="remove-btn" (click)="removeItemLine($index)">×</button>
           </div>
-          <div class="field">
-            <label>تاريخ الأمر *</label>
-            <input type="date" class="ltr" formControlName="poDate" />
-          </div>
-          <div class="field">
-            <label>اختر المورد من سجل الجهات *</label>
-            <select formControlName="supplierId">
-              <option value="">-- اختر المورد --</option>
-              @for (s of suppliers(); track s.id) {
-                <option [value]="s.id">{{ s.name }} ({{ s.code }})</option>
-              }
-            </select>
-          </div>
-          <div class="field">
-            <label>شروط السداد والتسليم</label>
-            <input formControlName="paymentTerms" placeholder="Net 30 Days..." />
-          </div>
+          }
         </div>
+        <div class="total-bar"><span>الإجمالي:</span><strong>{{ totalCalculated() | number:'1.2-2' }}</strong></div>
+      </div>
+      <div modal-actions class="modal-actions-bar">
+        <button class="button primary" type="submit" [disabled]="submitting() || poForm.invalid || totalCalculated() <= 0">{{ editingPoId() ? 'حفظ التعديلات' : 'حفظ أمر الشراء' }}</button>
+        <button class="button secondary" type="button" (click)="modalOpen.set(false)">إلغاء</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+  }
 
-        <!-- Purchase Order Line Items Section -->
-        <div class="po-items-section" style="margin-top: 1.25rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
-            <h4 style="margin: 0; font-weight: 700; color: #0f172a;">بنود أمر الشراء (Item Lines)</h4>
-            <button type="button" class="button secondary btn-sm" (click)="addItemLine()">＋ إضافة بند جديد</button>
+  <!-- ══════════════ GRN MODAL ══════════════ -->
+  @if (grnModalOpen()) {
+  <app-modal-dialog [isOpen]="true" title="إذن استلام جديد (GRN)" (close)="grnModalOpen.set(false)">
+    <form [formGroup]="grnForm" (ngSubmit)="submitGrn()">
+      <div class="form-grid">
+        @if (automaticNumbering()) {
+          <div class="field"><label>رقم الإذن</label><span class="readonly-value">تلقائي — يولد عند الحفظ</span></div>
+        } @else {
+          <div class="field"><label>رقم الإذن *</label><input class="ltr" formControlName="grnNumber" /></div>
+        }
+        <div class="field"><label>تاريخ الاستلام *</label><input type="date" class="ltr" formControlName="receiptDate" /></div>
+        <div class="field"><label>أمر الشراء *</label><select formControlName="purchaseOrderId" (change)="onGrnPoSelected()"><option value="">— اختر أمر الشراء —</option>@for (po of receivableOrders(); track po.id) {<option [value]="po.id">{{ po.poNumber }} — {{ po.supplierName }} — {{ poStatusLabel(po.status) }}</option>}</select></div>
+        <div class="field"><label>المورد</label><span class="readonly-value">{{ selectedGrnSupplierName() }}</span></div>
+        <div class="field"><label>المستودع</label><input formControlName="warehouseId" placeholder="المستودع الرئيسي" /></div>
+        <div class="field"><label>ملاحظات</label><input formControlName="notes" /></div>
+      </div>
+      @if (grnItems().length > 0) {
+      <div class="po-items-section">
+        <div class="po-items-header"><h4>بنود الاستلام من أمر الشراء</h4></div>
+        <div class="po-items-list">
+          @for (item of grnItems(); track $index) {
+          <div class="po-item-row">
+            <div><label>الصنف</label><span>{{ item.itemName }}</span></div>
+            <div><label>الوحدة</label><span>{{ item.unitOfMeasure }}</span></div>
+            <div><label>المستلم</label><input type="number" min="0.01" [(ngModel)]="item.deliveredQuantity" [ngModelOptions]="{standalone: true}" /></div>
+            <div><label>المرفوض</label><input type="number" min="0" [(ngModel)]="item.rejectedQuantity" [ngModelOptions]="{standalone: true}" /></div>
+            <div><label>الخصم النوعي</label><input type="number" min="0" [(ngModel)]="item.deductedQuantity" [ngModelOptions]="{standalone: true}" /></div>
+            <div><label>المقبول</label><strong>{{ item.deliveredQuantity - item.rejectedQuantity - item.deductedQuantity | number:'1.2-2' }}</strong></div>
+            <div><label>الموقع / التشغيلة</label><input [(ngModel)]="item.locationId" [ngModelOptions]="{standalone: true}" placeholder="الموقع" /><input [(ngModel)]="item.lotNumber" [ngModelOptions]="{standalone: true}" placeholder="رقم التشغيلة" /></div>
+            <div><label>سبب الرفض أو الخصم</label><input [(ngModel)]="item.qualityReason" [ngModelOptions]="{standalone: true}" /></div>
+            <div><label>سعر الوحدة</label><span>{{ item.unitPrice | number:'1.2-2' }}</span></div>
+            <div><label>الإجمالي المقبول</label><strong>{{ ((item.deliveredQuantity - item.rejectedQuantity - item.deductedQuantity) * item.unitPrice) | number:'1.2-2' }}</strong></div>
           </div>
-
-          <div style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem;">
-            @for (item of poItems(); track $index) {
-              <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 0.5rem; align-items: center;">
-                <div>
-                  <label style="font-size: 0.75rem; color: #64748b;">اسم الصنف *</label>
-                  <input type="text" [(ngModel)]="item.itemName" [name]="'item_name_' + $index" [ngModelOptions]="{standalone: true}" style="width: 100%; padding: 0.375rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8125rem;" placeholder="اسم الصنف / كود..." />
-                </div>
-                <div>
-                  <label style="font-size: 0.75rem; color: #64748b;">الوحدة</label>
-                  <input type="text" [(ngModel)]="item.unitOfMeasure" [name]="'item_unit_' + $index" [ngModelOptions]="{standalone: true}" style="width: 100%; padding: 0.375rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8125rem;" placeholder="طن/كيلو/عدد" />
-                </div>
-                <div>
-                  <label style="font-size: 0.75rem; color: #64748b;">الكمية *</label>
-                  <input type="number" min="1" [(ngModel)]="item.quantity" [name]="'item_qty_' + $index" [ngModelOptions]="{standalone: true}" style="width: 100%; padding: 0.375rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8125rem;" />
-                </div>
-                <div>
-                  <label style="font-size: 0.75rem; color: #64748b;">سعر الوحدة *</label>
-                  <input type="number" min="0" [(ngModel)]="item.unitPrice" [name]="'item_price_' + $index" [ngModelOptions]="{standalone: true}" style="width: 100%; padding: 0.375rem; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 0.8125rem;" />
-                </div>
-                <div>
-                  <label style="font-size: 0.75rem; color: #64748b;">الإجمالي</label>
-                  <strong style="font-size: 0.875rem; color: #1e40af; display: block; padding-top: 0.375rem;">{{ (item.quantity * item.unitPrice) | number:'1.2-2' }}</strong>
-                </div>
-                <button type="button" style="background: none; border: none; color: #dc2626; font-size: 1.25rem; cursor: pointer; padding: 0.25rem;" (click)="removeItemLine($index)">×</button>
-              </div>
-            }
-          </div>
-
-          <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 600; color: #1e40af;">إجمالي قيمة أمر الشراء المحسوبة تلقائياً:</span>
-            <strong style="font-size: 1.125rem; color: #1d4ed8;">{{ totalCalculated() | number:'1.2-2' }} ج.م</strong>
-          </div>
+          }
         </div>
+      </div>
+      }
+      <div modal-actions class="modal-actions-bar">
+        <button class="button primary" type="submit" [disabled]="submitting() || grnForm.invalid || grnItems().length === 0">تسجيل إذن الاستلام</button>
+        <button class="button secondary" type="button" (click)="grnModalOpen.set(false)">إلغاء</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+  }
 
-        <div modal-actions class="modal-actions-bar">
-          <button class="button primary" type="submit" [disabled]="poForm.invalid || totalCalculated() <= 0">حفظ وأصدار أمر الشراء</button>
-          <button class="button secondary" type="button" (click)="closeModal()">إلغاء</button>
-        </div>
-      </form>
-    </app-modal-dialog>
+  <!-- ══════════════ INVOICE MODAL ══════════════ -->
+  @if (invModalOpen()) {
+  <app-modal-dialog [isOpen]="true" title="فاتورة مورد جديدة" (close)="invModalOpen.set(false)">
+    <form [formGroup]="invForm" (ngSubmit)="submitInvoice()">
+      <div class="form-grid">
+        <div class="field"><label>رقم فاتورة المورد</label><input class="ltr" formControlName="invoiceNumber" /></div>
+        <div class="field"><label>مرجع داخلي عند عدم وجود فاتورة</label><input class="ltr" formControlName="internalReference" /></div>
+        <div class="field"><label>سبب عدم وجود فاتورة</label><input formControlName="missingInvoiceReason" /></div>
+        <div class="field"><label>تاريخ الفاتورة *</label><input type="date" class="ltr" formControlName="invoiceDate" /></div>
+        <div class="field"><label>المورد *</label><select formControlName="supplierId">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
+        <div class="field"><label>أمر الشراء</label><select formControlName="purchaseOrderId"><option value="">— بدون —</option>@for (po of orders(); track po.id) {<option [value]="po.id">{{ po.poNumber }}</option>}</select></div>
+        <div class="field"><label>إذن الاستلام</label><select formControlName="goodsReceiptId"><option value="">— بدون —</option>@for (grn of goodsReceipts(); track grn.id) {<option [value]="grn.id">{{ grn.grnNumber }}</option>}</select></div>
+        <div class="field"><label>الإجمالي *</label><input type="number" min="0" formControlName="totalAmount" /></div>
+        <div class="field"><label>قيمة الخصم</label><input type="number" min="0" formControlName="discountAmount" /></div>
+        <div class="field"><label>الضريبة</label><input type="number" min="0" formControlName="taxAmount" /></div>
+        <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="ltr" formControlName="dueDate" /></div>
+        <div class="field span-2"><label>ملاحظات</label><input formControlName="notes" /></div>
+      </div>
+      <div class="total-bar"><span>الصافي بعد الخصم والضريبة:</span><strong>{{ invNetAmount() | number:'1.2-2' }}</strong></div>
+      <div modal-actions class="modal-actions-bar">
+        <button class="button primary" type="submit" [disabled]="submitting() || invForm.invalid">تسجيل الفاتورة</button>
+        <button class="button secondary" type="button" (click)="invModalOpen.set(false)">إلغاء</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+  }
+
+  <!-- ══════════════ PAYMENT MODAL ══════════════ -->
+  @if (pmtModalOpen()) {
+  <app-modal-dialog [isOpen]="true" title="دفعة مورد جديدة" (close)="pmtModalOpen.set(false)">
+    <form [formGroup]="pmtForm" (ngSubmit)="submitPayment()">
+      <div class="form-grid">
+        <div class="field"><label>رقم الدفعة *</label><input class="ltr" formControlName="paymentNumber" /></div>
+        <div class="field"><label>تاريخ الدفع *</label><input type="date" class="ltr" formControlName="paymentDate" /></div>
+        <div class="field"><label>المورد *</label><select formControlName="supplierId">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
+        <div class="field"><label>الفاتورة *</label><select formControlName="supplierInvoiceId">@for (inv of unpaidInvoices(); track inv.id) {<option [value]="inv.id">{{ inv.invoiceNumber }} — متبقي {{ inv.outstandingAmount | number:'1.2-2' }}</option>}</select></div>
+        <div class="field"><label>المبلغ *</label><input type="number" min="0.01" formControlName="amount" /></div>
+        <div class="field"><label>طريقة الدفع *</label><select formControlName="paymentMethod"><option value="BANK_TRANSFER">تحويل بنكي</option><option value="CASH">نقدي</option><option value="CHEQUE">شيك</option></select></div>
+        <div class="field span-2"><label>ملاحظات</label><input formControlName="notes" /></div>
+      </div>
+      <div modal-actions class="modal-actions-bar">
+        <button class="button primary" type="submit" [disabled]="submitting() || pmtForm.invalid">تسجيل الدفعة</button>
+        <button class="button secondary" type="button" (click)="pmtModalOpen.set(false)">إلغاء</button>
+      </div>
+    </form>
+  </app-modal-dialog>
   }
 </section>

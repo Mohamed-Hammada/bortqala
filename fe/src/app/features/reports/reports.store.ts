@@ -6,6 +6,9 @@ import { downloadBlob, timestampedExcelFileName } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
 import {
   AttendanceDecision,
+  BulkDecisionRequest,
+  BulkDecisionResponse,
+  DowntimeDecisionRequest,
   HolidayProposalStatus,
   PeriodOption,
   ReportDetails,
@@ -112,6 +115,23 @@ export class ReportsStore {
 
   async reopen(id: string): Promise<boolean> {
     return this.mutate(this.http.post<ReportDetails>(`/api/v1/reports/${id}/reopen`, {}));
+  }
+
+  async bulkDecision(reportId: string, request: BulkDecisionRequest): Promise<BulkDecisionResponse | null> {
+    try {
+      return await firstValueFrom(
+        this.http.post<BulkDecisionResponse>(`/api/v1/reports/${reportId}/bulk-decision`, request)
+      );
+    } catch (error) {
+      this.error.set(apiErrorMessage(error, this.i18n));
+      return null;
+    }
+  }
+
+  async saveDowntimeDecision(reportId: string, request: DowntimeDecisionRequest): Promise<boolean> {
+    return this.mutate(
+      this.http.put<ReportDetails>(`/api/v1/reports/${reportId}/downtime-decision`, request)
+    );
   }
 
   async export(id: string): Promise<void> {

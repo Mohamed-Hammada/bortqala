@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-v54-seed-procurement-sequences
+      author: codex
+      dbms: postgresql
+      changes:
+        - sql:
+            splitStatements: false
+            sql: |
+              INSERT INTO procurement_document_sequences (id, app_id, document_type, next_value)
+              SELECT md5(a.id || ':PURCHASE_ORDER'),
+                     a.id,
+                     'PURCHASE_ORDER',
+                     COALESCE(MAX(CASE
+                         WHEN po.po_number ~ '[0-9]+$'
+                         THEN substring(po.po_number FROM '([0-9]+)$')::bigint
+                         ELSE 0
+                     END), 0) + 1
+              FROM apps a
+              LEFT JOIN purchase_orders po ON po.app_id = a.id
+              GROUP BY a.id
+              UNION ALL
+              SELECT md5(a.id || ':GOODS_RECEIPT'),
+                     a.id,
+                     'GOODS_RECEIPT',
+                     COALESCE(MAX(CASE
+                         WHEN gr.grn_number ~ '[0-9]+$'
+                         THEN substring(gr.grn_number FROM '([0-9]+)$')::bigint
+                         ELSE 0
+                     END), 0) + 1
+              FROM apps a
+              LEFT JOIN goods_receipts gr ON gr.app_id = a.id
+              GROUP BY a.id
+              ON CONFLICT (app_id, document_type) DO UPDATE
+              SET next_value = GREATEST(
+                  procurement_document_sequences.next_value,
+                  EXCLUDED.next_value
+              )
+

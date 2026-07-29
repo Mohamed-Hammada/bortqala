@@ -61,10 +61,19 @@ public class OperationsController {
         return operationsService.createUnitOfMeasure(request);
     }
 
+    @GetMapping("/uom-conversions")
+    List<OperationsApi.UnitConversionView> listUnitConversions() { return operationsService.listUnitConversions(); }
+
+    @PostMapping("/uom-conversions") @ResponseStatus(HttpStatus.CREATED)
+    OperationsApi.UnitConversionView createUnitConversion(@Valid @RequestBody OperationsApi.UnitConversionRequest request, Authentication authentication) {
+        return operationsService.createUnitConversion(request, authentication.getName());
+    }
+
     @GetMapping("/negative-balances")
     List<OperationsApi.NegativeBalanceView> negativeBalances() { return operationsService.getNegativeBalances(); }
 
     @PostMapping("/adjustments") @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.Snapshot adjustment(@Valid @RequestBody OperationsApi.AdjustmentRequest request, Authentication authentication) {
         return operationsService.createStockAdjustment(request, authentication.getName());
     }

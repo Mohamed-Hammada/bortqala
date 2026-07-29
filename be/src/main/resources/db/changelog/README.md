@@ -11,3 +11,21 @@ V5 adds the Arabic and English database translation for the session-expired logi
 V6 adds the per-application session timeout and its Arabic/English settings translations. V7 adds the translated invalid-credentials message used separately from session expiry.
 
 يضيف V6 مدة جلسة قابلة للتحكم لكل تطبيق وترجمات إعداداتها بالعربية والإنجليزية. ويضيف V7 رسالة بيانات الدخول غير الصحيحة المترجمة، مستقلة عن رسالة انتهاء الجلسة.
+
+**EN:** V47 persists per-user sidebar visibility, favorites, recent history, and the configurable recent-item limit. V48-V50 add user category assignment, supplier invoice traceability, and inventory-linked quality-aware goods receiving. V51 aligns supplier-payment notes with the persisted entity so PostgreSQL schema validation succeeds. V52 completes every literal frontend translation in both Arabic and English. The H2 test changelog now mirrors all production migrations through V52.
+
+**AR:** يحفظ V47 إعدادات إظهار أقسام القائمة والمفضلة والسجل الحديث والحد الأقصى للعناصر لكل مستخدم. كما يتبع سجل H2 الاختباري جميع ترحيلات الإنتاج حتى V47 للتحقق من كل حقول الكيانات الحالية.
+
+**AR:** يستكمل V52 جميع مفاتيح الترجمة الحرفية المستخدمة في الواجهة باللغتين العربية والإنجليزية، ويتبع سجل H2 الاختباري الآن جميع ترحيلات الإنتاج حتى V52.
+
+**EN:** V53 adds configurable tenant procurement numbering, locked sequence storage that continues after existing document numbers, unique PO/GRN constraints, and the new Arabic/English navigation, settings and import-status copy.
+
+**EN:** V54 seeds and reconciles each PostgreSQL tenant's purchase-order and goods-receipt counters from its highest existing document number before automatic numbering is used.
+
+**EN:** V55 adds the Arabic/English database translation catalog for permission-aware quick navigation, shortcut help, menu chords, and tooltip copy.
+
+**EN:** V56 adds tenant and per-user dashboard customization permissions, persisted widget layouts, the independent motion preference, and Arabic/English dashboard copy.
+
+**AR:** يضيف V56 صلاحيات تخصيص لوحة المتابعة على مستوى الشركة والمستخدم، وحفظ ترتيب العناصر، وخيار الحركة المستقل، ونصوص اللوحة بالعربية والإنجليزية.
+
+**AR:** يضيف V53 ترقيم مشتريات قابلاً للضبط لكل شركة، وتخزيناً آمناً للتسلسل، وقيود عدم تكرار أرقام أوامر الشراء وأذون الاستلام، ونصوص التنقل والإعدادات وحالة الاستيراد بالعربية والإنجليزية.

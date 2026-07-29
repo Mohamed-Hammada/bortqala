@@ -103,7 +103,7 @@ public class DemoScenarioDataService {
         if (employeeAdvanceEntryRepository.count() == 0)
             employeeAdvanceEntryRepository.save(new EmployeeAdvanceEntry(eligibleEmployee.getId(), new BigDecimal("1500"), "ADVANCE", "سلفة تجريبية", Instant.now(), "demo-seed"));
     }
-    private BusinessParty party(String code,String name,String type){return businessPartyRepository.findByCodeIgnoreCase(code).orElseGet(()->businessPartyRepository.save(new BusinessParty(code,name,type,null,null,"بيانات تجريبية",true,"DIRECT",null,"EGP","E_INVOICE","CASH",null,null)));}
+    private BusinessParty party(String code,String name,String type){return businessPartyRepository.findByCodeIgnoreCase(code).orElseGet(()->businessPartyRepository.save(new BusinessParty(code,name,null,type,null,null,null,null,"بيانات تجريبية",true,"DIRECT",null,null,null,"EGP","E_INVOICE","CASH",null,null)));}
     private InventoryItem item(String code,String name,String type,String unit){return inventoryItemRepository.findAll().stream().filter(value->value.getCode().equalsIgnoreCase(code)).findFirst().orElseGet(()->inventoryItemRepository.save(new InventoryItem(code,name,type,unit)));}
     private void movement(InventoryItem item,BusinessParty party,String type,String quantity,String amount,String loss,String reference,Instant at){stockMovementRepository.save(new StockMovement(item.getId(),party.getId(),type,new BigDecimal(quantity),loss==null?null:new BigDecimal(loss),reference,"بيانات تجريبية",at,"demo-seed"));}
     private void ledger(BusinessParty party,String type,String amount,String reference,Instant at){partnerLedgerEntryRepository.save(new PartnerLedgerEntry(party.getId(),type,new BigDecimal(amount),reference,"بيانات تجريبية",at,"demo-seed"));}

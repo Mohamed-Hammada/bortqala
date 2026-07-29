@@ -421,6 +421,10 @@
           <label>{{ i18n.t('operations.date') || 'التاريخ' }} *</label>
           <input type="datetime-local" formControlName="occurredAt" />
         </div>
+        <label class="selectable-card span-2">
+          <input type="checkbox" formControlName="approved" />
+          <span>أؤكد أن هذه التسوية راجعها واعتمدها مستخدم مخول، وأن السبب والمستند المرجعي صحيحان.</span>
+        </label>
       </div>
       <div modal-actions class="modal-actions-bar">
         <button class="button primary" type="submit">{{ i18n.t('common.save') || 'حفظ' }}</button>

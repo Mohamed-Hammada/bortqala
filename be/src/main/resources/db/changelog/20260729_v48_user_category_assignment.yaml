@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: v48-user-category-assignment
+      author: codex
+      changes:
+        - addColumn:
+            tableName: app_users
+            columns:
+              - column: { name: category_id, type: varchar(36) }

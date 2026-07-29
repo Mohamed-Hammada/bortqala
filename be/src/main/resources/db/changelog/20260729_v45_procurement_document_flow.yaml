@@ -1,0 +1,102 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-45-goods-receipt-lines
+      author: system
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: goods_receipt_lines
+      changes:
+        - createTable:
+            tableName: goods_receipt_lines
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints: { primaryKey: true, nullable: false }
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints: { nullable: false }
+              - column:
+                  name: goods_receipt_id
+                  type: VARCHAR(36)
+                  constraints: { nullable: false }
+              - column:
+                  name: purchase_order_line_id
+                  type: VARCHAR(36)
+              - column:
+                  name: item_name
+                  type: VARCHAR(255)
+                  constraints: { nullable: false }
+              - column:
+                  name: item_category
+                  type: VARCHAR(100)
+              - column:
+                  name: quantity
+                  type: NUMERIC(15,2)
+                  constraints: { nullable: false }
+              - column:
+                  name: unit_of_measure
+                  type: VARCHAR(50)
+              - column:
+                  name: unit_price
+                  type: NUMERIC(15,2)
+                  constraints: { nullable: false }
+        - addForeignKeyConstraint:
+            baseTableName: goods_receipt_lines
+            baseColumnNames: goods_receipt_id
+            referencedTableName: goods_receipts
+            referencedColumnNames: id
+            constraintName: fk_grl_goods_receipt_id
+
+  - changeSet:
+      id: 20260729-45-goods-receipts-notes
+      author: system
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: goods_receipts
+        - not:
+            columnExists:
+              tableName: goods_receipts
+              columnName: notes
+      changes:
+        - addColumn:
+            tableName: goods_receipts
+            columns:
+              - column:
+                  name: notes
+                  type: VARCHAR(500)
+
+  - changeSet:
+      id: 20260729-45-supplier-invoice-columns
+      author: system
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: supplier_invoices
+        - not:
+            columnExists:
+              tableName: supplier_invoices
+              columnName: discount_amount
+      changes:
+        - addColumn:
+            tableName: supplier_invoices
+            columns:
+              - column:
+                  name: discount_amount
+                  type: NUMERIC(15,2)
+              - column:
+                  name: tax_amount
+                  type: NUMERIC(15,2)
+              - column:
+                  name: net_amount
+                  type: NUMERIC(15,2)
+              - column:
+                  name: due_date
+                  type: DATE
+              - column:
+                  name: notes
+                  type: VARCHAR(500)

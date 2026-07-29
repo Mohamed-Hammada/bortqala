@@ -21,13 +21,6 @@ interface StockMovementRepository extends JpaRepository<StockMovement, String> {
     List<Object[]> findNegativeBalanceItemIds();
 }
 
-interface PartnerLedgerEntryRepository extends JpaRepository<PartnerLedgerEntry, String> {
-    List<PartnerLedgerEntry> findAllByOrderByOccurredAtDesc();
-    List<PartnerLedgerEntry> findByPartyIdOrderByOccurredAtDesc(String partyId);
-    @Query("select coalesce(sum(e.amountDelta), 0) from PartnerLedgerEntry e where e.partyId = :partyId")
-    BigDecimal balance(String partyId);
-}
-
 interface EmployeeAdvanceEntryRepository extends JpaRepository<EmployeeAdvanceEntry, String> {
     List<EmployeeAdvanceEntry> findAllByOrderByOccurredAtDesc();
     @Query("select coalesce(sum(e.amountDelta), 0) from EmployeeAdvanceEntry e where e.employeeId = :employeeId")
@@ -44,4 +37,10 @@ interface UnitOfMeasureRepository extends JpaRepository<UnitOfMeasure, String> {
     Optional<UnitOfMeasure> findByNameAndAppId(String name, String appId);
     List<UnitOfMeasure> findByActiveTrueAndAppIdOrderByNameAsc(String appId);
     List<UnitOfMeasure> findByAppIdOrderByNameAsc(String appId);
+}
+
+interface UnitConversionRepository extends JpaRepository<UnitConversion, String> {
+    List<UnitConversion> findByFromUomIdOrToUomIdOrderByFromUomId(String fromUomId, String toUomId);
+    Optional<UnitConversion> findByFromUomIdAndToUomId(String fromUomId, String toUomId);
+    List<UnitConversion> findAllByOrderByFromUomId();
 }

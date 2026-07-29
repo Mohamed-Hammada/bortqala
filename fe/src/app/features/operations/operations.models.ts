@@ -100,3 +100,12 @@ export interface NegativeBalance {
   itemName: string;
   currentBalance: number;
 }
+export interface UnitConversion {
+  id: string;
+  fromUomId: string;
+  fromUomName: string;
+  toUomId: string;
+  toUomName: string;
+  factor: number;
+  createdAt: number;
+}

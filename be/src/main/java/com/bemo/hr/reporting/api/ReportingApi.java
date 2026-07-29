@@ -24,6 +24,13 @@ public final class ReportingApi {
                                   @Size(max = 500) String note) { }
     public record HolidayDecisionRequest(@NotNull HolidayProposalStatus status, @Size(max = 150) String holidayName,
                                          @Size(max = 500) String note) { }
+    public record BulkDecisionRequest(@NotNull AttendanceDecision decision, @NotNull String statusFilter,
+                                      @Size(max = 500) String note, @NotNull String operationId) { }
+    public record BulkDecisionResponse(int matchingCount, int editableCount, int excludedCount, int successCount,
+                                       List<String> excludedRecordIds) { }
+    public record DowntimeDecisionRequest(@NotNull String date, @Size(max = 100) String categoryId,
+                                          @Size(max = 100) String location,
+                                          @NotNull String decision, @Size(max = 500) String note) { }
     public enum PeriodKind { MONTHLY, FIRST_HALF, SECOND_HALF }
     public record PeriodOption(int year, int month, PeriodKind kind, LocalDate start, LocalDate end) { }
     public record Summary(String id, LocalDate periodStart, LocalDate periodEnd, PayCycle payCycle, ReportStatus status,

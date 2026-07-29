@@ -15,6 +15,7 @@ import { CommonModule } from '@angular/common';
         role="dialog" 
         aria-modal="true" 
         [attr.aria-labelledby]="titleId"
+        tabindex="-1"
         (click)="$event.stopPropagation()">
         
         <header class="modal-header">
@@ -151,7 +152,9 @@ import { CommonModule } from '@angular/common';
   `]
 })
 export class ModalDialogComponent implements AfterViewInit {
-  @Input() isOpen = false;
+  // Structural call sites create the component only while open; explicit bindings
+  // still override this value for components that stay mounted.
+  @Input() isOpen = true;
   @Input() title = '';
   @Input() titleId = 'modal-title-' + Math.random().toString(36).substring(2, 9);
   @Input() size: 'normal' | 'wide' | 'large' = 'normal';
@@ -159,11 +162,18 @@ export class ModalDialogComponent implements AfterViewInit {
   @Input() preventOutsideClose = false;
 
   @Output() close = new EventEmitter<void>();
+  @Output() closeModal = new EventEmitter<void>();
   @ViewChild('dialogBox') dialogBox?: ElementRef;
 
   ngAfterViewInit() {
     if (this.isOpen && this.dialogBox) {
-      this.dialogBox.nativeElement.focus();
+      queueMicrotask(() => {
+        const dialog = this.dialogBox?.nativeElement as HTMLElement | undefined;
+        const firstControl = dialog?.querySelector<HTMLElement>(
+          'input:not([disabled]):not([readonly]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])',
+        );
+        (firstControl ?? dialog)?.focus();
+      });
     }
   }
 
@@ -183,5 +193,6 @@ export class ModalDialogComponent implements AfterViewInit {
 
   onClose() {
     this.close.emit();
+    this.closeModal.emit();
   }
 }

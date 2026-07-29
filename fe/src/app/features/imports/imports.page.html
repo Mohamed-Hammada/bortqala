@@ -173,11 +173,8 @@
                 [class.success]="!item.errorRows"
                 [class.warning]="item.errorRows"
               >
-                {{
-                  item.errorRows
-                    ? i18n.t('imports.errorCount', { count: item.errorRows })
-                    : i18n.t('imports.completed')
-                }}
+                {{ statusLabel(item.status) }}
+                @if (item.errorRows) { <small>{{ i18n.t('imports.errorCount', { count: item.errorRows }) }}</small> }
               </span>
             </button>
             @if (expanded() === item.id && item.errors.length) {

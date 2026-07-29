@@ -22,4 +22,17 @@ public class UserPreferenceService {
         preference.update(request.theme(), request.tableDensity(), request.locale(), request.excelTableStyle(), request.defaultPageSize(), request.defaultPage());
         return preference;
     }
+
+    public UserPreference updateNavigation(String userId, AuthApi.NavigationPreferenceRequest request) {
+        var preference = currentOrCreate(userId);
+        preference.updateNavigation(request.showFavorites(), request.showRecentlyUsed(), request.maxRecentlyUsed(),
+                request.favoriteMenuIds(), request.recentMenuIds());
+        return preference;
+    }
+
+    public UserPreference updateDashboard(String userId, AuthApi.DashboardPreferenceRequest request, boolean layoutAllowed) {
+        var preference = currentOrCreate(userId);
+        preference.updateDashboard(request.widgetIds(), request.animationsEnabled(), layoutAllowed);
+        return preference;
+    }
 }

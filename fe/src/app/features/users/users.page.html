@@ -254,6 +254,16 @@
           </label>
         </div>
 
+        <div class="field span-2">
+          <label class="selectable-card menu-card">
+            <input type="checkbox" formControlName="dashboardCustomizationEnabled" />
+            <span>
+              <strong>📊 {{ i18n.t('users.dashboardCustomization') }}</strong>
+              <small>{{ i18n.t('users.dashboardCustomizationHint') }}</small>
+            </span>
+          </label>
+        </div>
+
         <!-- Section 6: Account Status -->
         <div class="form-section-head">
           <span>🛡️</span> {{ i18n.t('users.sectionStatus') }}

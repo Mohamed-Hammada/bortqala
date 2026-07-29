@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: v49-procurement-invoice-trace
+      author: codex
+      changes:
+        - addColumn:
+            tableName: supplier_invoices
+            columns:
+              - column: { name: goods_receipt_id, type: varchar(36) }
+              - column: { name: responsible_party_id, type: varchar(36) }

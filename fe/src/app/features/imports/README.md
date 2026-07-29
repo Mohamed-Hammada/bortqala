@@ -1,5 +1,5 @@
-# Biometric imports / استيراد البصمة
+# Imports / الاستيراد
 
-**EN:** Idempotent CSV/XLS/XLSX upload, durable row errors, batch history, and unmatched device-identity review with Excel exports.
+**EN:** Biometric Excel/CSV upload shows localized Arabic/English batch statuses and Cairo-local timestamps. The backend accepts formatted and unformatted Excel dates and reports invalid date rows in Arabic.
 
-**AR:** رفع CSV/XLS/XLSX بأمان من التكرار وحفظ أخطاء الصفوف وسجل الدفعات ومراجعة هويات الجهاز غير المربوطة مع Excel.
+**AR:** يعرض استيراد Excel وCSV للبصمة حالات الدفعات بالعربية أو الإنجليزية وأوقات القاهرة المحلية. ويقبل الخادم تواريخ Excel المنسقة وغير المنسقة ويعرض خطأ صف التاريخ غير الصحيح بالعربية.

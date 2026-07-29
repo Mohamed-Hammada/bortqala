@@ -175,6 +175,44 @@ public class ReportingService {
         return details(report);
     }
 
+    private final java.util.Set<String> processedOperations = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    @Transactional
+    public ReportingApi.BulkDecisionResponse bulkDecide(String reportId, ReportingApi.BulkDecisionRequest request, String actor) {
+        if (!processedOperations.add(request.operationId())) {
+            throw new BusinessRuleException("هذه العملية تم تنفيذها بالفعل (معرف العملية مكرر)");
+        }
+        var report = requireEditable(reportId);
+        DailyStatus targetStatus;
+        try {
+            targetStatus = DailyStatus.valueOf(request.statusFilter());
+        } catch (IllegalArgumentException e) {
+            throw new BusinessRuleException("حالة التصفية غير صالحة: " + request.statusFilter());
+        }
+        var allResults = dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(reportId);
+        var matching = allResults.stream().filter(r -> r.getStatus() == targetStatus).toList();
+        var editable = matching.stream().filter(r -> r.isBlocking()).toList();
+        var excluded = matching.stream().filter(r -> !r.isBlocking()).toList();
+
+        int successCount = 0;
+        for (var result : editable) {
+            Integer worked = (request.decision() == AttendanceDecision.NORMAL_DAY &&
+                (result.getStatus() == DailyStatus.MANUAL_ENTRY || result.getStatus() == DailyStatus.SINGLE_PUNCH))
+                ? result.getExpectedMinutes() : 0;
+            result.decide(request.decision(), worked,
+                "BULK[" + request.operationId() + "]: " + (request.note() != null ? request.note() : ""), actor);
+            successCount++;
+        }
+        dailyAttendanceResultRepository.saveAll(editable);
+        refreshUnresolved(report);
+        auditService.record("BULK_DECISION", "ATTENDANCE_REPORT", reportId, actor,
+            "{\"operationId\":\"" + request.operationId() + "\",\"decision\":\"" + request.decision()
+            + "\",\"statusFilter\":\"" + request.statusFilter() + "\",\"matching\":" + matching.size()
+            + ",\"editable\":" + editable.size() + ",\"excluded\":" + excluded.size() + "}", null);
+        return new ReportingApi.BulkDecisionResponse(matching.size(), editable.size(), excluded.size(), successCount,
+            excluded.stream().map(DailyAttendanceResult::getId).toList());
+    }
+
     @Transactional
     public ReportingApi.Details decideDaily(String reportId, String resultId, ReportingApi.DecisionRequest request, String actor) {
         var report = requireEditable(reportId);
@@ -188,6 +226,42 @@ public class ReportingService {
         if (worked == null && request.decision() != AttendanceDecision.NORMAL_DAY) worked = 0;
         result.decide(request.decision(), worked, request.note(), actor);
         refreshUnresolved(report);
+        return details(report);
+    }
+
+    @Transactional
+    public ReportingApi.Details saveDowntimeDecision(String reportId, ReportingApi.DowntimeDecisionRequest request, String actor) {
+        var report = requireEditable(reportId);
+        LocalDate date;
+        try { date = LocalDate.parse(request.date()); } catch (Exception e) {
+            throw new BusinessRuleException("تاريخ غير صالح: " + request.date());
+        }
+        String categoryId = request.categoryId() != null && !request.categoryId().isBlank() ? request.categoryId() : "ALL";
+        var results = categoryId.equals("ALL")
+            ? dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(reportId).stream()
+                .filter(r -> r.getWorkDate().equals(date)).toList()
+            : dailyAttendanceResultRepository.findByReportIdAndCategoryIdAndWorkDate(reportId, categoryId, date);
+
+        String decision = request.decision();
+        String note = request.note() != null ? request.note() : "";
+        for (var result : results) {
+            if (!result.isBlocking()) continue;
+            switch (decision) {
+                case "NORMAL_DAY" -> result.decide(AttendanceDecision.NORMAL_DAY, result.getExpectedMinutes(),
+                    "جهاز/كهرباء - يوم عمل عادي: " + note + " [" + actor + "]", actor);
+                case "ABSENT" -> result.decide(AttendanceDecision.ABSENCE, 0,
+                    "جهاز/كهرباء - غياب: " + note + " [" + actor + "]", actor);
+                case "HOLIDAY" -> result.decide(AttendanceDecision.OFFICIAL_HOLIDAY, result.getExpectedMinutes(),
+                    "جهاز/كهرباء - إجازة رسمية: " + note + " [" + actor + "]", actor);
+                case "DEVICE_FAILURE" -> result.decide(AttendanceDecision.NORMAL_DAY, result.getExpectedMinutes(),
+                    "عطل جهاز: " + note + " [" + actor + "]", actor);
+                case "INDIVIDUAL_REVIEW" -> { /* leave for individual review */ }
+            }
+        }
+        dailyAttendanceResultRepository.saveAll(results);
+        refreshUnresolved(report);
+        auditService.record("DOWNTIME_DECISION", "ATTENDANCE_REPORT", reportId, actor,
+            "{\"date\":\"" + date + "\",\"categoryId\":\"" + categoryId + "\",\"decision\":\"" + decision + "\",\"affected\":" + results.size() + "}", null);
         return details(report);
     }
 

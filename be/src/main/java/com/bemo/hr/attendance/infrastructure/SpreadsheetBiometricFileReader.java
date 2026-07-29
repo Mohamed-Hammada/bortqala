@@ -184,8 +184,15 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
     }
 
     private LocalDate excelDate(Cell cell, DataFormatter formatter) {
-        if (cell != null && cell.getCellType() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell)) {
-            return cell.getLocalDateTimeCellValue().toLocalDate();
+        if (cell != null && cell.getCellType() == CellType.NUMERIC) {
+            double numeric = cell.getNumericCellValue();
+            long whole = Math.round(numeric);
+            if (Math.abs(numeric - whole) < 0.000001 && whole >= 19000101 && whole <= 99991231) {
+                return LocalDate.parse(Long.toString(whole), DateTimeFormatter.BASIC_ISO_DATE);
+            }
+            if (DateUtil.isValidExcelDate(numeric)) {
+                return DateUtil.getLocalDateTime(numeric).toLocalDate();
+            }
         }
         return parseDate(formatter.formatCellValue(cell));
     }
@@ -200,11 +207,13 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
     private LocalDate parseDate(String value) {
         String normalized = value.strip();
         for (var formatter : List.of(DateTimeFormatter.ISO_LOCAL_DATE,
-                DateTimeFormatter.ofPattern("d/M/yyyy"), DateTimeFormatter.ofPattern("M/d/yyyy"))) {
+                DateTimeFormatter.ofPattern("d/M/yyyy"), DateTimeFormatter.ofPattern("M/d/yyyy"),
+                DateTimeFormatter.ofPattern("d-M-yyyy"), DateTimeFormatter.ofPattern("d.M.yyyy"),
+                DateTimeFormatter.ofPattern("yyyy/M/d"))) {
             try { return LocalDate.parse(normalized, formatter); }
             catch (DateTimeParseException ignored) { }
         }
-        throw new IllegalArgumentException("Invalid day value.");
+        throw new IllegalArgumentException("قيمة التاريخ غير صحيحة. استخدم تاريخ Excel أو صيغة يوم/شهر/سنة.");
     }
 
     private LocalTime parseTime(String value, boolean required) {

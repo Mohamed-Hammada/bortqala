@@ -60,9 +60,17 @@ public final class OperationsApi {
     public record AdjustmentRequest(@NotBlank String itemId,
                                     @NotNull @Digits(integer = 15, fraction = 4) BigDecimal quantityDelta,
                                     @Size(max = 100) String referenceCode,
-                                    @Size(max = 1000) String reason,
+                                    @NotBlank @Size(max = 1000) String reason,
+                                    boolean approved,
                                     @NotNull Instant occurredAt) { }
 
     public record NegativeBalanceView(String itemId, String itemCode, String itemName,
                                       BigDecimal currentBalance) { }
+
+    public record UnitConversionRequest(@NotBlank @Size(max = 36) String fromUomId,
+                                        @NotBlank @Size(max = 36) String toUomId,
+                                        @NotNull BigDecimal factor) { }
+    public record UnitConversionView(String id, String fromUomId, String fromUomName,
+                                     String toUomId, String toUomName,
+                                     BigDecimal factor, Instant createdAt) { }
 }

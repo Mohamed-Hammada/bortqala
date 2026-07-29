@@ -39,14 +39,27 @@ public class AuthController {
         return authService.updatePreferences(authentication.getName(), request);
     }
 
+    @PutMapping("/auth/preferences/navigation")
+    AuthApi.PreferenceResponse updateNavigationPreferences(
+            @Valid @RequestBody AuthApi.NavigationPreferenceRequest request, Authentication authentication) {
+        return authService.updateNavigationPreferences(authentication.getName(), request);
+    }
+
+    @PutMapping("/auth/preferences/dashboard")
+    AuthApi.PreferenceResponse updateDashboardPreferences(
+            @Valid @RequestBody AuthApi.DashboardPreferenceRequest request, Authentication authentication) {
+        return authService.updateDashboardPreferences(authentication.getName(), request);
+    }
+
     @GetMapping("/admin/app-settings")
     @PreAuthorize("hasRole('ADMIN')")
     AuthApi.AppSettingsResponse appSettings() { return authService.currentAppSettings(); }
 
     @PutMapping("/admin/app-settings")
     @PreAuthorize("hasRole('ADMIN')")
-    AuthApi.AppSettingsResponse updateAppSettings(@Valid @RequestBody AuthApi.AppSettingsRequest request) {
-        return authService.updateAppSettings(request);
+    AuthApi.AppSettingsResponse updateAppSettings(@Valid @RequestBody AuthApi.AppSettingsRequest request,
+                                                  Authentication authentication) {
+        return authService.updateAppSettings(request, authentication.getName());
     }
 
     @GetMapping("/auth/user-categories")

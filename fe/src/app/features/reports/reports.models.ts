@@ -7,7 +7,7 @@ export type DailyStatus =
   | 'NON_WORKDAY'
   | 'HOLIDAY'
   | 'MISSING_SCHEDULE';
-export type AttendanceDecision = 'DEDUCT' | 'NORMAL_DAY' | 'APPROVED_LEAVE';
+export type AttendanceDecision = 'DEDUCT' | 'NORMAL_DAY' | 'APPROVED_LEAVE' | 'ABSENCE' | 'OFFICIAL_HOLIDAY' | 'INDIVIDUAL_REVIEW';
 export type HolidayProposalStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED';
 export type ReportPayCycle = 'MONTHLY' | 'HALF_MONTHLY' | 'THIRTY_DAYS';
 export interface ReportSummary {
@@ -88,4 +88,27 @@ export interface ReportDetails {
   dailyResults: DailyResult[];
   holidayProposals: HolidayProposal[];
 }
+export interface BulkDecisionRequest {
+  decision: AttendanceDecision;
+  statusFilter: string;
+  note?: string;
+  operationId: string;
+}
+
+export interface BulkDecisionResponse {
+  matchingCount: number;
+  editableCount: number;
+  excludedCount: number;
+  successCount: number;
+  excludedRecordIds: string[];
+}
+
+export interface DowntimeDecisionRequest {
+  date: string;
+  categoryId: string;
+  location: string;
+  decision: string;
+  note?: string;
+}
+
 export type { ReportStatus };

@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: v47-user-navigation-preferences
+      author: codex
+      changes:
+        - addColumn:
+            tableName: user_preferences
+            columns:
+              - column: { name: show_favorites, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: show_recently_used, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: max_recently_used, type: int, defaultValueNumeric: 4, constraints: { nullable: false } }
+              - column: { name: favorite_menu_ids, type: varchar(4000), defaultValue: '', constraints: { nullable: false } }
+              - column: { name: recent_menu_ids, type: varchar(4000), defaultValue: '', constraints: { nullable: false } }
+        - insert:
+            tableName: translations
+            columns:
+              - column: { name: id, value: v47-ar-max-recent }
+              - column: { name: translation_key, value: settings.maxRecentlyUsed }
+              - column: { name: locale, value: ar-EG }
+              - column: { name: text_value, value: الحد الأقصى للعناصر المستخدمة حديثاً }
+        - insert:
+            tableName: translations
+            columns:
+              - column: { name: id, value: v47-en-max-recent }
+              - column: { name: translation_key, value: settings.maxRecentlyUsed }
+              - column: { name: locale, value: en-US }
+              - column: { name: text_value, value: Maximum recently used items }
+        - insert:
+            tableName: translations
+            columns:
+              - column: { name: id, value: v47-ar-reset-favorites }
+              - column: { name: translation_key, value: settings.resetFavorites }
+              - column: { name: locale, value: ar-EG }
+              - column: { name: text_value, value: إعادة تعيين المفضلة }
+        - insert:
+            tableName: translations
+            columns:
+              - column: { name: id, value: v47-en-reset-favorites }
+              - column: { name: translation_key, value: settings.resetFavorites }
+              - column: { name: locale, value: en-US }
+              - column: { name: text_value, value: Reset favorites }

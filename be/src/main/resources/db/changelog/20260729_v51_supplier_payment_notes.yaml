@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: v51-supplier-payment-notes
+      author: codex
+      changes:
+        - addColumn:
+            tableName: supplier_payments
+            columns:
+              - column: { name: notes, type: varchar(500) }
+

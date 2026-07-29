@@ -4,6 +4,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.i18n.TranslationService;
 import com.bemo.hr.workforce.WorkerCategoryRepository;
+import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,6 +37,7 @@ public class AuthService {
     private final com.bemo.hr.audit.application.AuditService auditService;
     private final TranslationService translationService;
     private final WorkerCategoryRepository workerCategoryRepository;
+    private final AttendanceCategoryRepository attendanceCategoryRepository;
 
     public AuthService(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, JwtProperties jwtProperties,
                        AppUserRepository appUserRepository, RoleRepository roleRepository,
@@ -43,7 +45,8 @@ public class AuthService {
                        UserPreferenceService userPreferenceService, PasswordEncoder passwordEncoder,
                        com.bemo.hr.audit.application.AuditService auditService,
                        TranslationService translationService,
-                       WorkerCategoryRepository workerCategoryRepository) {
+                       WorkerCategoryRepository workerCategoryRepository,
+                       AttendanceCategoryRepository attendanceCategoryRepository) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
         this.jwtProperties = jwtProperties;
@@ -55,6 +58,7 @@ public class AuthService {
         this.auditService = auditService;
         this.translationService = translationService;
         this.workerCategoryRepository = workerCategoryRepository;
+        this.attendanceCategoryRepository = attendanceCategoryRepository;
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -83,8 +87,9 @@ public class AuthService {
                     JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
             auditService.record("USER_LOGIN", "USER", user.getId(), user.getUsername(), "Successful login", null);
             return new AuthApi.LoginResponse(token, "Bearer", expiresAt,
-                    new AuthApi.AppResponse(app.getId(), app.getCode(), app.getName()), toResponse(user),
-                    toResponse(preferenceFor(user)));
+                    new AuthApi.AppResponse(app.getId(), app.getCode(), app.getName(),
+                            app.isAdminDashboardCustomizationEnabled()), toResponse(user),
+                    toPreferenceResponse(preferenceFor(user), user, app));
         } finally {
             TenantContext.clear();
         }
@@ -96,13 +101,34 @@ public class AuthService {
 
     @Transactional
     public AuthApi.PreferenceResponse currentPreferences(String username) {
-        return toResponse(preferenceFor(requireByUsername(TenantContext.require(), username)));
+        var app = requireCurrentApp();
+        var user = requireByUsername(app.getId(), username);
+        return toPreferenceResponse(preferenceFor(user), user, app);
     }
 
     @Transactional
     public AuthApi.PreferenceResponse updatePreferences(String username, AuthApi.PreferenceRequest request) {
-        var user = requireByUsername(TenantContext.require(), username);
-        return toResponse(userPreferenceService.update(user.getId(), request));
+        var app = requireCurrentApp();
+        var user = requireByUsername(app.getId(), username);
+        return toPreferenceResponse(userPreferenceService.update(user.getId(), request), user, app);
+    }
+
+    @Transactional
+    public AuthApi.PreferenceResponse updateNavigationPreferences(String username, AuthApi.NavigationPreferenceRequest request) {
+        var app = requireCurrentApp();
+        var user = requireByUsername(app.getId(), username);
+        return toPreferenceResponse(userPreferenceService.updateNavigation(user.getId(), request), user, app);
+    }
+
+    @Transactional
+    public AuthApi.PreferenceResponse updateDashboardPreferences(String username, AuthApi.DashboardPreferenceRequest request) {
+        var app = requireCurrentApp();
+        var user = requireByUsername(app.getId(), username);
+        boolean layoutAllowed = dashboardLayoutAllowed(user, app);
+        var result = userPreferenceService.updateDashboard(user.getId(), request, layoutAllowed);
+        auditService.record("DASHBOARD_PREFERENCES_UPDATE", "USER_PREFERENCE", user.getId(), username,
+                "Updated dashboard preferences; layoutAllowed=" + layoutAllowed, null);
+        return toPreferenceResponse(result, user, app);
     }
 
     public java.util.List<AuthApi.UserResponse> listUsers() {
@@ -111,9 +137,14 @@ public class AuthService {
     }
 
     public List<AuthApi.UserCategoryResponse> listCategories() {
-        return workerCategoryRepository.findByStatus("ACTIVE").stream()
-                .map(c -> new AuthApi.UserCategoryResponse(c.getId(), c.getCode(), c.getName()))
-                .toList();
+        var categories = new java.util.ArrayList<AuthApi.UserCategoryResponse>();
+        attendanceCategoryRepository.findAllByOrderByNameAsc().stream().filter(c -> c.isActive())
+                .map(c -> new AuthApi.UserCategoryResponse(c.getId(), c.getCode(), c.getName(), "EMPLOYEE"))
+                .forEach(categories::add);
+        workerCategoryRepository.findByStatus("ACTIVE").stream()
+                .map(c -> new AuthApi.UserCategoryResponse(c.getId(), c.getCode(), c.getName(), "WORKER"))
+                .forEach(categories::add);
+        return categories.stream().sorted(java.util.Comparator.comparing(AuthApi.UserCategoryResponse::name)).toList();
     }
 
     public AuthApi.AppSettingsResponse currentAppSettings() {
@@ -121,10 +152,19 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthApi.AppSettingsResponse updateAppSettings(AuthApi.AppSettingsRequest request) {
+    public AuthApi.AppSettingsResponse updateAppSettings(AuthApi.AppSettingsRequest request, String currentUsername) {
         var app = requireCurrentApp();
+        var actor = requireByUsername(app.getId(), currentUsername);
+        if (request.adminDashboardCustomizationEnabled() != app.isAdminDashboardCustomizationEnabled()
+                && !hasRole(actor, RoleCode.SUPER_ADMIN)) {
+            throw new BusinessRuleException("Only a Super Admin can change dashboard customization access for admins.");
+        }
         int minPass = request.minPasswordLength() == null || request.minPasswordLength() <= 0 ? 8 : request.minPasswordLength();
         app.updateSettings(request.sessionTimeoutMinutes(), request.sessionTimeoutEnabled(), request.showReportPresets(), minPass);
+        app.updateProcurementNumbering(request.automaticProcurementNumbering());
+        if (hasRole(actor, RoleCode.SUPER_ADMIN)) {
+            app.updateDashboardPolicy(request.adminDashboardCustomizationEnabled());
+        }
         int maxPass = request.maxPasswordLength() == null || request.maxPasswordLength() <= 0 ? 128 : request.maxPasswordLength();
         int expiry = request.passwordExpiryDays() == null ? 0 : request.passwordExpiryDays();
         int history = request.passwordHistoryCount() == null ? 0 : request.passwordHistoryCount();
@@ -139,7 +179,8 @@ public class AuthService {
                 expiry,
                 history
         );
-        auditService.record("SETTINGS_UPDATE", "TENANT_APPLICATION", app.getId(), "ADMIN", "Updated tenant settings and security policy", null);
+        auditService.record("SETTINGS_UPDATE", "TENANT_APPLICATION", app.getId(), currentUsername,
+                "Updated tenant settings, security policy, and dashboard policy", null);
         return toSettingsResponse(app);
     }
 
@@ -148,7 +189,10 @@ public class AuthService {
         String appId = TenantContext.require();
         validate(request, appId, null, true);
         var user = new AppUser(appId, request.username(), request.displayName(), passwordEncoder.encode(request.password()),
-                requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary());
+                requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary(),
+                request.dashboardCustomizationEnabled());
+        validateCategory(request.categoryId());
+        user.assignCategory(request.categoryId());
         appUserRepository.save(user);
         auditService.record("USER_CREATE", "USER", user.getId(), request.username(), "Created user " + user.getDisplayName(), null);
         return toResponse(user);
@@ -182,7 +226,11 @@ public class AuthService {
         }
         String passwordHash = request.password() == null || request.password().isBlank()
                 ? null : passwordEncoder.encode(request.password());
-        user.update(request.username(), request.displayName(), passwordHash, request.active(), requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary());
+        user.update(request.username(), request.displayName(), passwordHash, request.active(),
+                requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary(),
+                request.dashboardCustomizationEnabled());
+        validateCategory(request.categoryId());
+        user.assignCategory(request.categoryId());
         auditService.record("USER_UPDATE", "USER", user.getId(), currentUsername, "Updated user " + user.getUsername() + " active=" + user.isActive(), null);
         return toResponse(user);
     }
@@ -199,7 +247,7 @@ public class AuthService {
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(app.getId(), username).orElseGet(() -> {
             var roles = requireRoles(roleCodes);
             return appUserRepository.save(new AppUser(app.getId(), username, displayName,
-                    passwordEncoder.encode(password), roles, Set.of("dashboard","categories","employees","imports","parties","reports","operations","payroll","users","settings","workforce-dashboard","workforce-contractors","workforce-workers","workforce-categories","workforce-requests","workforce-attendance","workforce-settlements","workforce-advances","workforce-accounts","workforce-reports"), true));
+                    passwordEncoder.encode(password), roles, Set.of("dashboard","categories","employees","imports","parties","reports","operations","payroll","users","settings","workforce-dashboard","workforce-contractors","workforce-workers","workforce-categories","workforce-requests","workforce-attendance","workforce-settlements","workforce-advances","workforce-accounts","workforce-reports"), true, true));
         });
     }
 
@@ -267,17 +315,39 @@ public class AuthService {
     private AuthApi.UserResponse toResponse(AppUser user) {
         return new AuthApi.UserResponse(user.getId(), user.getUsername(), user.getDisplayName(),
                 user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
-                user.getAllowedMenus(), user.isCanViewSalary(), user.isActive(), user.getVersion());
+                user.getAllowedMenus(), user.isCanViewSalary(), user.getCategoryId(),
+                user.isDashboardCustomizationEnabled(), user.isActive(), user.getVersion());
+    }
+
+    private boolean hasRole(AppUser user, RoleCode roleCode) {
+        return user.getRoles().stream().anyMatch(role -> role.getCode() == roleCode);
+    }
+
+    private void validateCategory(String categoryId) {
+        if (categoryId == null || categoryId.isBlank()) return;
+        boolean exists = attendanceCategoryRepository.findById(categoryId).filter(c -> c.isActive()).isPresent()
+                || workerCategoryRepository.findById(categoryId).filter(c -> "ACTIVE".equals(c.getStatus())).isPresent();
+        if (!exists) throw new BusinessRuleException("Select an active category.");
     }
 
     private UserPreference preferenceFor(AppUser user) {
         return userPreferenceService.currentOrCreate(user.getId());
     }
 
-    private AuthApi.PreferenceResponse toResponse(UserPreference preference) {
+    private AuthApi.PreferenceResponse toPreferenceResponse(UserPreference preference, AppUser user, TenantApplication app) {
         return new AuthApi.PreferenceResponse(preference.getTheme(), preference.getTableDensity(),
                 preference.getLocale(), preference.getExcelTableStyle(), preference.getDefaultPageSize(),
-                preference.getDefaultPage(), preference.getUpdatedAt());
+                preference.getDefaultPage(), preference.isShowFavorites(), preference.isShowRecentlyUsed(),
+                preference.getMaxRecentlyUsed(), preference.favoriteMenuIds(), preference.recentMenuIds(),
+                preference.dashboardWidgetIds(), preference.isDashboardAnimationsEnabled(),
+                dashboardLayoutAllowed(user, app),
+                preference.getUpdatedAt());
+    }
+
+    private boolean dashboardLayoutAllowed(AppUser user, TenantApplication app) {
+        if (hasRole(user, RoleCode.SUPER_ADMIN)) return true;
+        if (!user.isDashboardCustomizationEnabled()) return false;
+        return !hasRole(user, RoleCode.ADMIN) || app.isAdminDashboardCustomizationEnabled();
     }
 
     private TenantApplication requireCurrentApp() {
@@ -293,6 +363,8 @@ public class AuthService {
                 app.getSessionTimeoutMinutes(),
                 app.isSessionTimeoutEnabled(),
                 app.isShowReportPresets(),
+                app.isAutomaticProcurementNumbering(),
+                app.isAdminDashboardCustomizationEnabled(),
                 app.getMinPasswordLength(),
                 app.isRequireUppercase(),
                 app.isRequireLowercase(),

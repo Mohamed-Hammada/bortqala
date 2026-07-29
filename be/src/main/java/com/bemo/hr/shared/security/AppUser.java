@@ -50,6 +50,12 @@ public class AppUser {
     @Column(name = "can_view_salary", nullable = false)
     private boolean canViewSalary = true;
 
+    @Column(name = "category_id", length = 36)
+    private String categoryId;
+
+    @Column(name = "dashboard_customization_enabled", nullable = false)
+    private boolean dashboardCustomizationEnabled = true;
+
     @Version
     private long version;
 
@@ -62,13 +68,15 @@ public class AppUser {
     protected AppUser() {
     }
 
-    public AppUser(String appId, String username, String displayName, String passwordHash, Set<Role> roles, Set<String> allowedMenus, Boolean canViewSalary) {
+    public AppUser(String appId, String username, String displayName, String passwordHash, Set<Role> roles,
+                   Set<String> allowedMenus, Boolean canViewSalary, Boolean dashboardCustomizationEnabled) {
         this.id = UUID.randomUUID().toString();
         this.appId = appId;
-        update(username, displayName, passwordHash, true, roles, allowedMenus, canViewSalary);
+        update(username, displayName, passwordHash, true, roles, allowedMenus, canViewSalary, dashboardCustomizationEnabled);
     }
 
-    public void update(String username, String displayName, String passwordHash, boolean active, Set<Role> roles, Set<String> allowedMenus, Boolean canViewSalary) {
+    public void update(String username, String displayName, String passwordHash, boolean active, Set<Role> roles,
+                       Set<String> allowedMenus, Boolean canViewSalary, Boolean dashboardCustomizationEnabled) {
         this.username = username.strip().toLowerCase();
         this.displayName = displayName.strip();
         if (passwordHash != null) this.passwordHash = passwordHash;
@@ -76,11 +84,16 @@ public class AppUser {
         this.roles.clear();
         this.roles.addAll(roles);
         this.canViewSalary = canViewSalary == null ? true : canViewSalary;
+        this.dashboardCustomizationEnabled = dashboardCustomizationEnabled == null || dashboardCustomizationEnabled;
         if (allowedMenus != null && !allowedMenus.isEmpty()) {
             this.allowedMenus = String.join(",", allowedMenus);
         } else {
             this.allowedMenus = "dashboard,employees,categories,reports,imports,parties,operations,payroll,users,settings,workforce-dashboard,workforce-contractors,workforce-workers,workforce-categories,workforce-requests,workforce-attendance,workforce-settlements,workforce-advances,workforce-accounts,workforce-reports";
         }
+    }
+
+    public void assignCategory(String categoryId) {
+        this.categoryId = categoryId == null || categoryId.isBlank() ? null : categoryId;
     }
 
     @PrePersist
@@ -96,6 +109,8 @@ public class AppUser {
     public String getPasswordHash() { return passwordHash; }
     public boolean isActive() { return active; }
     public boolean isCanViewSalary() { return canViewSalary; }
+    public String getCategoryId() { return categoryId; }
+    public boolean isDashboardCustomizationEnabled() { return dashboardCustomizationEnabled; }
     public Set<Role> getRoles() { return Set.copyOf(roles); }
     public Set<String> getAllowedMenus() {
         if (allowedMenus == null || allowedMenus.isBlank()) {

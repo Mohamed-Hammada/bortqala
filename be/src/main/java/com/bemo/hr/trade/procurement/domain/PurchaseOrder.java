@@ -22,6 +22,7 @@ public class PurchaseOrder {
     public enum Status {
         DRAFT,
         ISSUED,
+        PARTIALLY_RECEIVED,
         RECEIVED,
         CANCELLED
     }
@@ -76,6 +77,17 @@ public class PurchaseOrder {
 
     public void updateStatus(Status status) {
         this.status = status;
+    }
+
+    public void updateDraft(String poNumber, LocalDate poDate, String supplierId, String purchaseRequestId,
+                            String paymentTerms, BigDecimal totalAmount) {
+        if (status != Status.DRAFT) throw new IllegalStateException("Only draft purchase orders can be edited.");
+        this.poNumber = poNumber.strip();
+        this.poDate = poDate;
+        this.supplierId = supplierId;
+        this.purchaseRequestId = purchaseRequestId == null || purchaseRequestId.isBlank() ? null : purchaseRequestId.strip();
+        this.paymentTerms = paymentTerms == null || paymentTerms.isBlank() ? null : paymentTerms.strip();
+        this.totalAmount = totalAmount;
     }
 
     @PrePersist

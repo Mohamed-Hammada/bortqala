@@ -87,5 +87,31 @@ databaseChangeLog:
       file: db/changelog/20260729_v42_schedule_rules_extended.yaml
   - include:
       file: db/changelog/20260729_v43_user_preferences_default_page.yaml
+  - include:
+      file: db/changelog/20260729_v44_business_parties_extra_fields.yaml
+  - include:
+      file: db/changelog/20260729_v45_procurement_document_flow.yaml
+  - include:
+      file: db/changelog/20260729_v46_unit_conversions.yaml
+  - include:
+      file: db/changelog/20260729_v47_navigation_preferences.yaml
+  - include:
+      file: db/changelog/20260729_v48_user_category_assignment.yaml
+  - include:
+      file: db/changelog/20260729_v49_procurement_invoice_trace.yaml
+  - include:
+      file: db/changelog/20260729_v50_procurement_inventory_receiving.yaml
+  - include:
+      file: db/changelog/20260729_v51_supplier_payment_notes.yaml
+  - include:
+      file: db/changelog/20260729_v52_complete_ui_translations.yaml
+  - include:
+      file: db/changelog/20260729_v53_procurement_sequences_and_keyboard_copy.yaml
+  - include:
+      file: db/changelog/20260729_v54_seed_procurement_sequences.yaml
+  - include:
+      file: db/changelog/20260729_v55_keyboard_shortcuts.yaml
+  - include:
+      file: db/changelog/20260729_v56_dashboard_customization.yaml
 
 

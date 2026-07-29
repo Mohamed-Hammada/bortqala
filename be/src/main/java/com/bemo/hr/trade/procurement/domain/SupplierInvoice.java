@@ -1,0 +1,88 @@
+package com.bemo.hr.trade.procurement.domain;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.TenantId;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
+
+@Entity
+@Table(name = "supplier_invoices")
+public class SupplierInvoice {
+
+    public enum Status { UNPAID, PARTIALLY_PAID, PAID, CANCELLED }
+
+    @Id private String id;
+    @TenantId @Column(name = "app_id", nullable = false) private String appId;
+    @Column(name = "invoice_number", nullable = false, length = 50) private String invoiceNumber;
+    @Column(name = "supplier_id", nullable = false, length = 36) private String supplierId;
+    @Column(name = "purchase_order_id", length = 36) private String purchaseOrderId;
+    @Column(name = "goods_receipt_id", length = 36) private String goodsReceiptId;
+    @Column(name = "responsible_party_id", length = 36) private String responsiblePartyId;
+    @Column(name = "invoice_date", nullable = false) private LocalDate invoiceDate;
+    @Column(name = "total_amount", nullable = false, precision = 15, scale = 2) private BigDecimal totalAmount;
+    @Column(name = "discount_amount", precision = 15, scale = 2) private BigDecimal discountAmount;
+    @Column(name = "tax_amount", precision = 15, scale = 2) private BigDecimal taxAmount;
+    @Column(name = "net_amount", precision = 15, scale = 2) private BigDecimal netAmount;
+    @Column(name = "due_date") private LocalDate dueDate;
+    @Column(length = 500) private String notes;
+    @Column(nullable = false, length = 20) private String status;
+    @Column(name = "created_at", nullable = false) private long createdAt;
+    @Column(name = "updated_at", nullable = false) private long updatedAt;
+
+    protected SupplierInvoice() {}
+
+    public SupplierInvoice(String invoiceNumber, String supplierId, String purchaseOrderId,
+                           String goodsReceiptId, String responsiblePartyId,
+                           LocalDate invoiceDate, BigDecimal totalAmount,
+                           BigDecimal discountAmount, BigDecimal taxAmount,
+                           LocalDate dueDate, String notes) {
+        this.id = UUID.randomUUID().toString();
+        this.invoiceNumber = invoiceNumber.strip();
+        this.supplierId = supplierId;
+        this.purchaseOrderId = purchaseOrderId;
+        this.goodsReceiptId = goodsReceiptId;
+        this.responsiblePartyId = responsiblePartyId;
+        this.invoiceDate = invoiceDate;
+        this.totalAmount = totalAmount;
+        this.discountAmount = discountAmount;
+        this.taxAmount = taxAmount;
+        this.netAmount = totalAmount.subtract(discountAmount != null ? discountAmount : BigDecimal.ZERO)
+                .add(taxAmount != null ? taxAmount : BigDecimal.ZERO);
+        this.dueDate = dueDate;
+        this.notes = notes;
+        this.status = Status.UNPAID.name();
+    }
+
+    public void updatePaymentStatus(BigDecimal paidAmount) {
+        if (paidAmount == null || paidAmount.signum() <= 0) this.status = Status.UNPAID.name();
+        else if (paidAmount.compareTo(netAmount) >= 0) this.status = Status.PAID.name();
+        else this.status = Status.PARTIALLY_PAID.name();
+    }
+
+    @PrePersist void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    @PreUpdate void preUpdate() { updatedAt = System.currentTimeMillis(); }
+
+    public String getId() { return id; }
+    public String getInvoiceNumber() { return invoiceNumber; }
+    public String getSupplierId() { return supplierId; }
+    public String getPurchaseOrderId() { return purchaseOrderId; }
+    public String getGoodsReceiptId() { return goodsReceiptId; }
+    public String getResponsiblePartyId() { return responsiblePartyId; }
+    public LocalDate getInvoiceDate() { return invoiceDate; }
+    public BigDecimal getTotalAmount() { return totalAmount; }
+    public BigDecimal getDiscountAmount() { return discountAmount; }
+    public BigDecimal getTaxAmount() { return taxAmount; }
+    public BigDecimal getNetAmount() { return netAmount; }
+    public LocalDate getDueDate() { return dueDate; }
+    public String getNotes() { return notes; }
+    public String getStatus() { return status; }
+    public long getCreatedAt() { return createdAt; }
+    public long getUpdatedAt() { return updatedAt; }
+}

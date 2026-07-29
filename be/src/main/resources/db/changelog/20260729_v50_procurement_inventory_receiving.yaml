@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: v50-procurement-inventory-receiving
+      author: codex
+      changes:
+        - addColumn:
+            tableName: purchase_order_lines
+            columns:
+              - column: { name: item_id, type: varchar(36) }
+        - addColumn:
+            tableName: goods_receipt_lines
+            columns:
+              - column: { name: item_id, type: varchar(36) }
+              - column: { name: delivered_quantity, type: "numeric(15,2)" }
+              - column: { name: rejected_quantity, type: "numeric(15,2)", defaultValueNumeric: 0 }
+              - column: { name: deducted_quantity, type: "numeric(15,2)", defaultValueNumeric: 0 }
+              - column: { name: location_id, type: varchar(36) }
+              - column: { name: lot_number, type: varchar(100) }
+              - column: { name: quality_reason, type: varchar(500) }

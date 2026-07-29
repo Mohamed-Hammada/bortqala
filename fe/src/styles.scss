@@ -617,22 +617,24 @@ tbody tr:hover td {
   cursor: pointer;
 }
 
-/* Standardized Full-Height Side Drawer Overlay System */
+/* Standardized centered data-entry dialog system (legacy class name retained). */
 .drawer {
   position: fixed;
-  top: 0;
-  bottom: 0;
-  right: 0;
-  left: auto;
+  top: 50%;
+  left: 50%;
+  right: auto;
+  bottom: auto;
   z-index: 1000;
-  width: min(680px, 100vw);
-  height: 100vh;
+  width: min(760px, calc(100vw - 24px));
+  max-height: min(90dvh, 900px);
   padding: 22px 26px;
   overflow-y: auto;
   background: var(--surface);
-  border-left: 1px solid var(--line);
-  box-shadow: -12px 0 48px rgba(0, 0, 0, 0.65);
-  animation: drawer-in-ltr 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  transform: translate(-50%, -50%);
+  animation: dialog-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
 
@@ -652,11 +654,10 @@ tbody tr:hover td {
 :host-context([dir='rtl']) .drawer,
 [dir='rtl'] .drawer {
   right: auto;
-  left: 0;
-  border-left: 0;
-  border-right: 1px solid var(--line);
-  box-shadow: 12px 0 48px rgba(0, 0, 0, 0.65);
-  animation: drawer-in-rtl 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  left: 50%;
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  animation: dialog-in 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .drawer-backdrop {
@@ -733,6 +734,30 @@ tbody tr:hover td {
   text-align: left;
 }
 
+.app-tooltip-surface {
+  position: fixed;
+  z-index: 5000;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: 8px 11px;
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
+  border-radius: 8px;
+  background: var(--ink, #18202b);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.55;
+  text-align: start;
+  pointer-events: none;
+  animation: tooltip-in 120ms ease-out both;
+}
+
+@keyframes tooltip-in {
+  from { opacity: 0; transform: translateY(3px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 @keyframes page-in {
   from {
     opacity: 0;
@@ -740,21 +765,14 @@ tbody tr:hover td {
   }
 }
 
-@keyframes drawer-in-ltr {
+@keyframes dialog-in {
   from {
-    transform: translateX(100%);
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 12px)) scale(0.985);
   }
   to {
-    transform: translateX(0);
-  }
-}
-
-@keyframes drawer-in-rtl {
-  from {
-    transform: translateX(-100%);
-  }
-  to {
-    transform: translateX(0);
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
   }
 }
 
@@ -795,6 +813,8 @@ tbody tr:hover td {
   }
   .drawer {
     padding: 14px;
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
   }
   .drawer-actions {
     margin: 14px -14px -14px;

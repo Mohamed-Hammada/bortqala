@@ -2,7 +2,7 @@
   <app-toast-container />
   <aside class="sidebar" [class.open]="menuOpen()" [class.collapsed]="collapsed()">
     <div class="brand">
-      <span class="brand-mark" [attr.title]="authService.app()?.name ?? 'Bemo HR'">B</span>
+      <span class="brand-mark" [appTooltip]="authService.app()?.name ?? 'Bemo HR'">B</span>
       <div class="brand-info">
         <strong>{{ authService.app()?.name ?? i18n.t('app.defaultName') }}</strong
         ><small>{{ authService.app()?.code }} · {{ i18n.t('app.attendanceReports') }}</small>
@@ -12,7 +12,7 @@
           class="icon-button collapse-toggle"
           type="button"
           (click)="collapsed.set(!collapsed())"
-          [attr.title]="collapsed() ? i18n.t('action.openMenu') : i18n.t('action.closeMenu')"
+          [appTooltip]="collapsed() ? i18n.t('action.openMenu') : i18n.t('action.closeMenu')"
         >
           <app-icon name="menu" />
         </button>
@@ -22,6 +22,7 @@
         type="button"
         (click)="closeMenu()"
         [attr.aria-label]="i18n.t('action.closeMenu')"
+        [appTooltip]="i18n.t('action.closeMenu')"
       >
         <app-icon name="close" />
       </button>
@@ -36,7 +37,7 @@
             <a
               [routerLink]="item.path"
               routerLinkActive="active"
-              [attr.title]="i18n.t(item.labelKey)"
+              [appTooltip]="navTooltip(item)"
               (click)="onNavItemClick(item)"
               class="nav-item favorite-item"
             >
@@ -69,7 +70,7 @@
             <a
               [routerLink]="item.path"
               routerLinkActive="active"
-              [attr.title]="i18n.t(item.labelKey)"
+              [appTooltip]="navTooltip(item)"
               (click)="onNavItemClick(item)"
               class="nav-item recent-item"
             >
@@ -97,8 +98,11 @@
 
       <!-- Workspace Controls -->
       <div class="workspace-section-tools">
-        <button type="button" class="expand-all-btn" (click)="expandAllGroups()">
+        <button type="button" class="expand-all-btn" (click)="expandAllGroups()" [appTooltip]="i18n.t('action.expandAll')">
           📂 {{ i18n.t('action.expandAll') }}
+        </button>
+        <button type="button" class="expand-all-btn" (click)="collapseAllGroups()" [appTooltip]="i18n.t('action.collapseAll')">
+          📁 {{ i18n.t('action.collapseAll') }}
         </button>
       </div>
 
@@ -109,6 +113,7 @@
             type="button"
             class="workspace-header group-toggle-btn"
             (click)="toggleGroupCollapse(section.titleKey)"
+            [appTooltip]="isGroupCollapsed(section.titleKey) ? i18n.t('shortcuts.expandGroup') : i18n.t('shortcuts.collapseGroup')"
           >
             <span>{{ i18n.t(section.titleKey) }}</span>
             <span class="chevron-arrow">{{ isGroupCollapsed(section.titleKey) ? '◀' : '▼' }}</span>
@@ -120,7 +125,7 @@
                 <a
                   [routerLink]="item.path"
                   routerLinkActive="active"
-                  [attr.title]="i18n.t(item.labelKey)"
+                  [appTooltip]="navTooltip(item)"
                   (click)="onNavItemClick(item)"
                   class="nav-item"
                 >
@@ -150,7 +155,7 @@
     </nav>
 
     <div class="sidebar-foot">
-      <span class="avatar" [attr.title]="authService.user()?.displayName">{{ authService.user()?.displayName?.charAt(0) }}</span>
+      <span class="avatar" [appTooltip]="authService.user()?.displayName ?? ''">{{ authService.user()?.displayName?.charAt(0) }}</span>
       <div class="user-info">
         <strong>{{ authService.user()?.displayName }}</strong
         ><small>{{ userRolesLabel() }}</small>
@@ -160,7 +165,7 @@
         type="button"
         (click)="logout()"
         [attr.aria-label]="i18n.t('action.logout')"
-        [attr.title]="i18n.t('action.logout')"
+        [appTooltip]="i18n.t('action.logout')"
       >
         <app-icon name="logout" />
       </button>
@@ -186,24 +191,35 @@
         type="button"
         (click)="menuOpen.set(true)"
         [attr.aria-label]="i18n.t('action.openMenu')"
+        [appTooltip]="i18n.t('action.openMenu')"
       >
         <app-icon name="menu" />
       </button>
       <strong>{{ authService.app()?.name ?? i18n.t('app.defaultName') }}</strong>
       <div class="global-search-container">
-        <input
-          type="search"
-          class="global-search-input"
-          [placeholder]="i18n.t('appShell.searchPlaceholder')"
-          [value]="searchQuery()"
-          (input)="searchQuery.set($any($event.target).value)"
-        />
+        <button
+          type="button"
+          class="global-search-input quick-search-trigger"
+          (click)="openQuickNav()"
+          [appTooltip]="i18n.t('shortcuts.quickNavTooltip')"
+        >
+          <span>{{ i18n.t('appShell.searchPlaceholder') }}</span>
+          <kbd>Ctrl K</kbd>
+        </button>
       </div>
+      <button
+        class="icon-button shortcut-help-trigger"
+        type="button"
+        (click)="openShortcutHelp()"
+        [attr.aria-label]="i18n.t('shortcuts.showHelp')"
+        [appTooltip]="i18n.t('shortcuts.openHelpTooltip')"
+      >?</button>
       <button
         class="icon-button"
         type="button"
         (click)="logout()"
         [attr.aria-label]="i18n.t('action.logout')"
+        [appTooltip]="i18n.t('action.logout')"
       >
         <app-icon name="logout" />
       </button>
@@ -214,6 +230,115 @@
     </div>
   </main>
 </div>
+
+@if (chordWaiting()) {
+  <div class="shortcut-chord-hint" role="status">
+    <kbd>G</kbd> {{ i18n.t('shortcuts.waitingForDestination') }}
+  </div>
+}
+
+@if (quickNavOpen()) {
+  <div class="shortcut-overlay" (click)="closeShortcutPanels()">
+    <section
+      class="shortcut-dialog quick-nav-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="i18n.t('shortcuts.quickNavTitle')"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="shortcut-dialog-header">
+        <div>
+          <h2>{{ i18n.t('shortcuts.quickNavTitle') }}</h2>
+          <p>{{ i18n.t('shortcuts.quickNavHint') }}</p>
+        </div>
+        <button type="button" class="shortcut-close" (click)="closeShortcutPanels()" [appTooltip]="i18n.t('shortcuts.closeDialog')">✕</button>
+      </header>
+      <div class="quick-nav-search-wrap">
+        <span aria-hidden="true">⌕</span>
+        <input
+          data-quick-nav-search
+          type="search"
+          [placeholder]="i18n.t('shortcuts.searchPlaceholder')"
+          [value]="searchQuery()"
+          (input)="updateQuickNavQuery($any($event.target).value)"
+          (keydown)="onQuickNavKeydown($event)"
+        />
+        <kbd>Esc</kbd>
+      </div>
+      <div class="quick-nav-results" role="listbox">
+        @for (item of quickNavItems(); track item.path; let index = $index) {
+          <button
+            type="button"
+            class="quick-nav-result"
+            [class.selected]="selectedQuickNavIndex() === index"
+            (mouseenter)="selectedQuickNavIndex.set(index)"
+            (click)="navigateToItem(item)"
+            role="option"
+            [attr.aria-selected]="selectedQuickNavIndex() === index"
+            [appTooltip]="navTooltip(item)"
+          >
+            <span class="quick-nav-icon"><app-icon [name]="item.icon" /></span>
+            <span class="quick-nav-copy">
+              <strong>{{ i18n.t(item.labelKey) }}</strong>
+              <small>{{ i18n.t(item.descriptionKey) }}</small>
+            </span>
+            @if (shortcut(item); as menuShortcut) {
+              <kbd>{{ menuShortcut.keys }}</kbd>
+            }
+          </button>
+        } @empty {
+          <div class="quick-nav-empty">{{ i18n.t('shortcuts.noResults') }}</div>
+        }
+      </div>
+      <footer class="quick-nav-footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> {{ i18n.t('shortcuts.move') }}</span>
+        <span><kbd>Enter</kbd> {{ i18n.t('shortcuts.open') }}</span>
+        <button type="button" (click)="openShortcutHelp()">? {{ i18n.t('shortcuts.showAll') }}</button>
+      </footer>
+    </section>
+  </div>
+}
+
+@if (shortcutHelpOpen()) {
+  <div class="shortcut-overlay" (click)="closeShortcutPanels()">
+    <section
+      class="shortcut-dialog shortcut-reference-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="i18n.t('shortcuts.title')"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="shortcut-dialog-header">
+        <div>
+          <h2>{{ i18n.t('shortcuts.title') }}</h2>
+          <p>{{ i18n.t('shortcuts.subtitle') }}</p>
+        </div>
+        <button type="button" class="shortcut-close" (click)="closeShortcutPanels()" [appTooltip]="i18n.t('shortcuts.closeDialog')">✕</button>
+      </header>
+      <div class="shortcut-reference-grid">
+        <section>
+          <h3>{{ i18n.t('shortcuts.globalTitle') }}</h3>
+          @for (shortcutItem of globalShortcuts; track shortcutItem.labelKey) {
+            <div class="shortcut-row">
+              <span>{{ i18n.t(shortcutItem.labelKey) }}</span>
+              <kbd>{{ shortcutItem.keys }}</kbd>
+            </div>
+          }
+        </section>
+        <section>
+          <h3>{{ i18n.t('shortcuts.navigationTitle') }}</h3>
+          @for (shortcutItem of menuShortcuts; track shortcutItem.menuId) {
+            <div class="shortcut-row">
+              <span>{{ i18n.t(shortcutItem.labelKey) }}</span>
+              <kbd>{{ shortcutItem.keys }}</kbd>
+            </div>
+          }
+        </section>
+      </div>
+      <p class="shortcut-permission-note">{{ i18n.t('shortcuts.availableByPermission') }}</p>
+    </section>
+  </div>
+}
 
 @if (confirmDialog.confirmState(); as state) {
   <div class="confirm-overlay" (click)="confirmDialog.resolve(false)">

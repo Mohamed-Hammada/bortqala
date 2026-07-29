@@ -24,6 +24,9 @@ public class PurchaseOrderLine {
     @Column(name = "purchase_order_id", nullable = false, length = 36)
     private String purchaseOrderId;
 
+    @Column(name = "item_id", length = 36)
+    private String itemId;
+
     @Column(name = "item_name", nullable = false, length = 255)
     private String itemName;
 
@@ -47,10 +50,11 @@ public class PurchaseOrderLine {
 
     protected PurchaseOrderLine() {}
 
-    public PurchaseOrderLine(String purchaseOrderId, String itemName, String itemCategory,
+    public PurchaseOrderLine(String purchaseOrderId, String itemId, String itemName, String itemCategory,
                              BigDecimal quantity, String unitOfMeasure, BigDecimal unitPrice) {
         this.id = UUID.randomUUID().toString();
         this.purchaseOrderId = purchaseOrderId;
+        this.itemId = itemId;
         this.itemName = itemName;
         this.itemCategory = itemCategory;
         this.quantity = quantity;
@@ -64,6 +68,7 @@ public class PurchaseOrderLine {
 
     public String getId() { return id; }
     public String getPurchaseOrderId() { return purchaseOrderId; }
+    public String getItemId() { return itemId; }
     public String getItemName() { return itemName; }
     public String getItemCategory() { return itemCategory; }
     public BigDecimal getQuantity() { return quantity; }

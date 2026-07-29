@@ -56,6 +56,40 @@ class SpreadsheetBiometricFileReaderTests {
     }
 
     @Test
+    void acceptsUnformattedExcelSerialAndDayMonthYearDates() throws Exception {
+        byte[] file;
+        try (var workbook = new XSSFWorkbook(); var output = new ByteArrayOutputStream()) {
+            var sheet = workbook.createSheet("attendance");
+            var header = sheet.createRow(0);
+            String[] headers = {"Employee code", "Day", "Official check-in", "Official check-out", "Actual check-in", "Actual check-out"};
+            for (int index = 0; index < headers.length; index++) header.createCell(index).setCellValue(headers[index]);
+            var numericDate = sheet.createRow(1);
+            numericDate.createCell(0).setCellValue("EMP-003");
+            numericDate.createCell(1).setCellValue(org.apache.poi.ss.usermodel.DateUtil.getExcelDate(java.time.LocalDate.of(2026, 7, 29).atStartOfDay()));
+            numericDate.createCell(2).setCellValue("08:00");
+            numericDate.createCell(3).setCellValue("16:00");
+            numericDate.createCell(4).setCellValue("08:05");
+            numericDate.createCell(5).setCellValue("16:10");
+            var textualDate = sheet.createRow(2);
+            textualDate.createCell(0).setCellValue("EMP-004");
+            textualDate.createCell(1).setCellValue("30-07-2026");
+            textualDate.createCell(2).setCellValue("08:00");
+            textualDate.createCell(3).setCellValue("16:00");
+            textualDate.createCell(4).setCellValue("08:00");
+            textualDate.createCell(5).setCellValue("16:00");
+            workbook.write(output);
+            file = output.toByteArray();
+        }
+
+        var parsed = reader.read("attendance.xlsx", new ByteArrayInputStream(file));
+
+        assertThat(parsed.errors()).isEmpty();
+        assertThat(parsed.importedRows()).isEqualTo(2);
+        assertThat(parsed.rows()).extracting(row -> row.punchedAt()).contains(
+                Instant.parse("2026-07-29T05:05:00Z"), Instant.parse("2026-07-30T05:00:00Z"));
+    }
+
+    @Test
     void rejectsLegacyOrIncompleteColumnSetsWithTheNewBilingualContract() {
         String csv = "device_user_id,punched_at\n10,2026-07-24 08:00\n";
 

@@ -97,6 +97,7 @@ export class OperationsPage {
     }),
     referenceCode: new FormControl('', { nonNullable: true }),
     reason: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    approved: new FormControl(false, { nonNullable: true, validators: Validators.requiredTrue }),
     occurredAt: new FormControl(this.nowInput(), {
       nonNullable: true,
       validators: Validators.required,
@@ -199,6 +200,7 @@ export class OperationsPage {
       quantityDelta: value.quantityDelta,
       referenceCode: value.referenceCode || null,
       reason: value.reason,
+      approved: value.approved,
       occurredAt: new Date(value.occurredAt).getTime(),
     })) {
       this.notification.success('تم إجراء تسوية المخزون بنجاح ✓');

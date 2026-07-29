@@ -35,6 +35,12 @@ public class TenantApplication {
     @Column(name = "show_report_presets", nullable = false)
     private boolean showReportPresets = true;
 
+    @Column(name = "automatic_procurement_numbering", nullable = false)
+    private boolean automaticProcurementNumbering = true;
+
+    @Column(name = "admin_dashboard_customization_enabled", nullable = false)
+    private boolean adminDashboardCustomizationEnabled = true;
+
     @Column(name = "min_password_length", nullable = false)
     private int minPasswordLength = 8;
 
@@ -78,6 +84,8 @@ public class TenantApplication {
         this.sessionTimeoutMinutes = 480;
         this.sessionTimeoutEnabled = true;
         this.showReportPresets = true;
+        this.automaticProcurementNumbering = true;
+        this.adminDashboardCustomizationEnabled = true;
         this.minPasswordLength = 8;
         this.maxPasswordLength = 128;
     }
@@ -91,6 +99,14 @@ public class TenantApplication {
         this.sessionTimeoutEnabled = sessionTimeoutEnabled;
         this.showReportPresets = showReportPresets;
         this.minPasswordLength = minPasswordLength <= 0 ? 8 : minPasswordLength;
+    }
+
+    public void updateProcurementNumbering(boolean automaticProcurementNumbering) {
+        this.automaticProcurementNumbering = automaticProcurementNumbering;
+    }
+
+    public void updateDashboardPolicy(boolean adminDashboardCustomizationEnabled) {
+        this.adminDashboardCustomizationEnabled = adminDashboardCustomizationEnabled;
     }
 
     public void updatePasswordPolicy(int minPasswordLength, boolean requireUppercase, boolean requireLowercase,
@@ -120,6 +136,8 @@ public class TenantApplication {
     public int getSessionTimeoutMinutes() { return sessionTimeoutMinutes; }
     public boolean isSessionTimeoutEnabled() { return sessionTimeoutEnabled; }
     public boolean isShowReportPresets() { return showReportPresets; }
+    public boolean isAutomaticProcurementNumbering() { return automaticProcurementNumbering; }
+    public boolean isAdminDashboardCustomizationEnabled() { return adminDashboardCustomizationEnabled; }
     public int getMinPasswordLength() { return minPasswordLength; }
     public boolean isRequireUppercase() { return requireUppercase; }
     public boolean isRequireLowercase() { return requireLowercase; }

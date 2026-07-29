@@ -73,8 +73,9 @@
   } <!-- end @if (!store.loading()) -->
   @if (drawerOpen()) {
     <app-modal-dialog
+      [isOpen]="true"
       [title]="i18n.t(editingId() ? 'parties.editTitle' : 'parties.newTitle')"
-      (closeModal)="closeDrawer()"
+      (close)="closeDrawer()"
     >
       <form [formGroup]="form" (ngSubmit)="submit()">
         @if (submitted() && form.invalid) {
@@ -90,6 +91,10 @@
             <input formControlName="name" />
           </div>
           <div class="field">
+            <label>{{ i18n.t('parties.partyNameEn') }}</label>
+            <input formControlName="nameEn" />
+          </div>
+          <div class="field">
             <label>{{ i18n.t('parties.type') }} *</label>
             <select formControlName="partyType">
               @for (type of knownTypes; track type) {
@@ -98,21 +103,29 @@
             </select>
           </div>
           <div class="field">
-            <label>نوع الإدارة / التعامل</label>
+            <label>نوع التعامل</label>
             <select formControlName="managedType">
-              <option value="DIRECT">تعامل مباشر (Direct Supplier)</option>
-              <option value="MANAGED">عن طريق مسؤول / وساطة (Managed Supplier)</option>
+              <option value="DIRECT">مباشر (Direct Supplier)</option>
+              <option value="MANAGED">بالوساطة (Managed Supplier)</option>
             </select>
           </div>
           @if (form.controls.managedType.value === 'MANAGED') {
             <div class="field">
               <label>المسؤول / الشريك الإداري *</label>
               <select formControlName="responsiblePartyId">
-                <option value="">-- اختر المسئول الإداري --</option>
+                <option value="">-- اختر المسئول --</option>
                 @for (p of store.items(); track p.id) {
                   <option [value]="p.id">{{ p.name }} ({{ p.code }})</option>
                 }
               </select>
+            </div>
+            <div class="field">
+              <label>تاريخ بدء العلاقة</label>
+              <input class="ltr" formControlName="relationshipStartDate" type="date" />
+            </div>
+            <div class="field">
+              <label>تاريخ انتهاء العلاقة</label>
+              <input class="ltr" formControlName="relationshipEndDate" type="date" />
             </div>
           }
           <div class="field">
@@ -158,6 +171,17 @@
             @if (phoneError()) {
               <small class="error-text" style="color: #dc2626; font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ phoneError() }}</small>
             }
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('parties.email') }}</label>
+            <input class="ltr" formControlName="email" placeholder="email@example.com" />
+            @if (emailError()) {
+              <small class="error-text" style="color: #dc2626; font-size: 0.75rem; margin-top: 0.25rem; display: block;">{{ emailError() }}</small>
+            }
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('parties.address') }}</label>
+            <input formControlName="address" />
           </div>
           <div class="field span-2">
             <label>{{ i18n.t('parties.notes') }}</label>

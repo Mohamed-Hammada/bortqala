@@ -185,19 +185,29 @@ type StatusOption<T = string> = { value: T; label: string };
           <!-- Bulk Actions Bar -->
           @if (selectedWorkerIds().size > 0) {
             <div class="bulk-bar">
-              <span class="bulk-count">{{ selectedWorkerIds().size }} عامل محدد</span>
+              <span class="bulk-count">{{ selectedWorkerIds().size }} عامل × {{ selectedDateIds().size }} يوم</span>
               <select [(ngModel)]="bulkStatusValue" class="form-input bulk-select">
                 @for (opt of bulkStatusOptions; track opt.value) {
                   <option [ngValue]="opt.value">{{ opt.label }}</option>
                 }
               </select>
-              <button type="button" class="btn btn-primary btn-sm" (click)="applyBulkStatus()">
-                تطبيق على المحددين
+              <button type="button" class="btn btn-primary btn-sm" (click)="previewBulk('attendance')">
+                معاينة تطبيق الحضور
               </button>
+              <input type="number" min="0" step="0.5" [(ngModel)]="bulkOvertimeHours" class="form-input bulk-select" aria-label="ساعات الأوفر تايم" />
+              <button type="button" class="btn btn-primary btn-sm" (click)="previewBulk('overtime')">معاينة الأوفر تايم</button>
               <button type="button" class="btn btn-outline btn-sm" (click)="clearSelection()">
                 إلغاء التحديد
               </button>
             </div>
+            @if (bulkPreview(); as preview) {
+              <div class="bulk-bar" role="alertdialog" aria-label="معاينة التعديل المجمع">
+                <strong>سيتم تحديث {{ preview.workerCount }} عامل في {{ preview.dayCount }} يوم ({{ preview.cellCount }} خلية).</strong>
+                <span>{{ preview.kind === 'attendance' ? 'قيمة الحضور: ' + bulkStatusValue() : 'ساعات الأوفر تايم: ' + bulkOvertimeHours() }}</span>
+                <button type="button" class="btn btn-primary btn-sm" (click)="confirmBulk()">تأكيد التطبيق</button>
+                <button type="button" class="btn btn-outline btn-sm" (click)="bulkPreview.set(null)">إلغاء</button>
+              </div>
+            }
           }
 
           <div class="table-scroll-wrapper">
@@ -216,6 +226,7 @@ type StatusOption<T = string> = { value: T; label: string };
                   @for (date of dates(); track date) {
                     <th class="date-col" [class.weekend-col]="isWeekend(date)">
                       <div class="date-header">
+                        <input type="checkbox" [checked]="selectedDateIds().has(date)" (change)="toggleDate(date)" [attr.aria-label]="'تحديد ' + date" />
                         <span class="day-name">{{ getDayName(date) }}</span>
                         <span class="day-num">{{ date.slice(-2) }}</span>
                       </div>
@@ -409,7 +420,10 @@ export class ManualAttendanceComponent implements OnInit {
   selectedAttendanceStatus = signal<string>('all');
   showInactive = signal<boolean>(false);
   selectedWorkerIds = signal<Set<string>>(new Set());
+  selectedDateIds = signal<Set<string>>(new Set());
   bulkStatusValue = signal<number>(1);
+  bulkOvertimeHours = signal<number>(0);
+  bulkPreview = signal<{ kind: 'attendance' | 'overtime'; workerCount: number; dayCount: number; cellCount: number } | null>(null);
   rules = signal<CalculationRules | null>(null);
 
   readonly attendanceStatusOptions: StatusOption[] = [
@@ -536,6 +550,7 @@ export class ManualAttendanceComponent implements OnInit {
   onPeriodChange() {
     const newDates = this.generateDateRange(this.startDate, this.endDate);
     this.dates.set(newDates);
+    this.selectedDateIds.set(new Set(newDates));
     for (const w of this.workers()) {
       if (!this.matrix[w.id]) this.matrix[w.id] = {};
       for (const date of newDates) {
@@ -559,6 +574,7 @@ export class ManualAttendanceComponent implements OnInit {
     }).subscribe({
       next: ({ workers }) => {
         this.initMatrix(workers);
+        this.selectedDateIds.set(new Set(this.dates()));
         this.loading.set(false);
       },
       error: (e) => {
@@ -643,6 +659,14 @@ export class ManualAttendanceComponent implements OnInit {
 
   clearSelection() {
     this.selectedWorkerIds.set(new Set());
+    this.bulkPreview.set(null);
+  }
+
+  toggleDate(date: string): void {
+    const next = new Set(this.selectedDateIds());
+    if (next.has(date)) next.delete(date); else next.add(date);
+    this.selectedDateIds.set(next);
+    this.bulkPreview.set(null);
   }
 
   toggleWorker(workerId: string) {
@@ -655,22 +679,37 @@ export class ManualAttendanceComponent implements OnInit {
     this.selectedWorkerIds.set(next);
   }
 
-  applyBulkStatus() {
+  previewBulk(kind: 'attendance' | 'overtime'): void {
     const ids = [...this.selectedWorkerIds()];
-    if (ids.length === 0) {
+    const selectedDates = [...this.selectedDateIds()];
+    if (ids.length === 0 || selectedDates.length === 0) {
       this.notificationService.warning('اختر عاملاً واحداً على الأقل');
       return;
     }
+    if (kind === 'overtime' && this.bulkOvertimeHours() < 0) {
+      this.notificationService.warning('ساعات الأوفر تايم لا يمكن أن تكون سالبة');
+      return;
+    }
+    this.bulkPreview.set({ kind, workerCount: ids.length, dayCount: selectedDates.length, cellCount: ids.length * selectedDates.length });
+  }
+
+  confirmBulk(): void {
+    const preview = this.bulkPreview();
+    if (!preview) return;
+    const ids = [...this.selectedWorkerIds()];
+    const selectedDates = [...this.selectedDateIds()];
     const value = this.bulkStatusValue();
     for (const wId of ids) {
-      for (const date of this.dates()) {
+      for (const date of selectedDates) {
         if (this.matrix[wId]?.[date]) {
-          this.matrix[wId][date].attendanceValue = value;
+          if (preview.kind === 'attendance') this.matrix[wId][date].attendanceValue = value;
+          else this.matrix[wId][date].overtimeHours = this.bulkOvertimeHours();
         }
       }
     }
-    this.notificationService.success(`تم تطبيق التحديث على ${ids.length} عامل`);
+    this.notificationService.success(`تم تطبيق التحديث على ${preview.cellCount} خلية`);
     this.selectedWorkerIds.set(new Set());
+    this.bulkPreview.set(null);
   }
 
   saveAttendance() {

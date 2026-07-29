@@ -44,11 +44,27 @@ public class ReportController {
         return reportingService.create(request, authentication.getName());
     }
 
+    @PostMapping("/{reportId}/bulk-decision")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    ReportingApi.BulkDecisionResponse bulkDecision(@PathVariable String reportId,
+                                                   @Valid @RequestBody ReportingApi.BulkDecisionRequest request,
+                                                   Authentication authentication) {
+        return reportingService.bulkDecide(reportId, request, authentication.getName());
+    }
+
     @PutMapping("/{reportId}/daily-results/{resultId}/decision")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     ReportingApi.Details decideDaily(@PathVariable String reportId, @PathVariable String resultId,
                                      @Valid @RequestBody ReportingApi.DecisionRequest request, Authentication authentication) {
         return reportingService.decideDaily(reportId, resultId, request, authentication.getName());
+    }
+
+    @PutMapping("/{reportId}/downtime-decision")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    ReportingApi.Details saveDowntimeDecision(@PathVariable String reportId,
+                                              @Valid @RequestBody ReportingApi.DowntimeDecisionRequest request,
+                                              Authentication authentication) {
+        return reportingService.saveDowntimeDecision(reportId, request, authentication.getName());
     }
 
     @PutMapping("/{reportId}/holiday-proposals/{proposalId}/decision")

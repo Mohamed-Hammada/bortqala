@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-v53-procurement-sequences
+      author: codex
+      changes:
+        - addColumn:
+            tableName: apps
+            columns:
+              - column:
+                  name: automatic_procurement_numbering
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints: { nullable: false }
+        - createTable:
+            tableName: procurement_document_sequences
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_procurement_sequence_app, references: apps(id) } }
+              - column: { name: document_type, type: varchar(30), constraints: { nullable: false } }
+              - column: { name: next_value, type: bigint, defaultValueNumeric: 1, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: procurement_document_sequences
+            columnNames: app_id, document_type
+            constraintName: uk_procurement_sequence_app_type
+        - addUniqueConstraint:
+            tableName: purchase_orders
+            columnNames: app_id, po_number
+            constraintName: uk_purchase_order_app_number
+        - addUniqueConstraint:
+            tableName: goods_receipts
+            columnNames: app_id, grn_number
+            constraintName: uk_goods_receipt_app_number
+      rollback:
+        - dropUniqueConstraint: { tableName: goods_receipts, constraintName: uk_goods_receipt_app_number }
+        - dropUniqueConstraint: { tableName: purchase_orders, constraintName: uk_purchase_order_app_number }
+        - dropTable: { tableName: procurement_document_sequences }
+        - dropColumn: { tableName: apps, columnName: automatic_procurement_numbering }
+
+  - changeSet:
+      id: 20260729-v53-navigation-copy
+      author: codex
+      changes:
+        - loadData:
+            tableName: translations
+            file: data/navigation_keyboard_translations_v53.csv
+            relativeToChangelogFile: true
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'x53-%'" }

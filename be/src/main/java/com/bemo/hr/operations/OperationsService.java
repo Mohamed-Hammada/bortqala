@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -30,6 +31,7 @@ public class OperationsService {
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final ItemCategoryRepository itemCategoryRepository;
     private final UnitOfMeasureRepository unitOfMeasureRepository;
+    private final UnitConversionRepository unitConversionRepository;
     private final OperationsExcelExporter operationsExcelExporter;
     private final com.bemo.hr.audit.application.AuditService auditService;
 
@@ -43,6 +45,10 @@ public class OperationsService {
 
     public long countInventoryItems() {
         return inventoryItemRepository.count();
+    }
+
+    public OperationsApi.ItemView inventoryItem(String id) {
+        return itemView(requireItem(id), stockMovementRepository.balance(id));
     }
 
     public long countLowStockItems() {
@@ -135,6 +141,40 @@ public class OperationsService {
         return uomView(entity);
     }
 
+    public List<OperationsApi.UnitConversionView> listUnitConversions() {
+        var conversions = unitConversionRepository.findAllByOrderByFromUomId();
+        var uoms = unitOfMeasureRepository.findAll().stream().collect(Collectors.toMap(UnitOfMeasure::getId, Function.identity()));
+        return conversions.stream().map(c -> {
+            var from = uoms.get(c.getFromUomId());
+            var to = uoms.get(c.getToUomId());
+            return new OperationsApi.UnitConversionView(c.getId(), c.getFromUomId(),
+                    from == null ? "—" : from.getName(),
+                    c.getToUomId(), to == null ? "—" : to.getName(),
+                    c.getFactor(), c.getCreatedAt());
+        }).toList();
+    }
+
+    @Transactional
+    public OperationsApi.UnitConversionView createUnitConversion(OperationsApi.UnitConversionRequest request, String actor) {
+        if (unitConversionRepository.findByFromUomIdAndToUomId(request.fromUomId(), request.toUomId()).isPresent()) {
+            throw new BusinessRuleException("Conversion already exists between these units.");
+        }
+        if (request.factor().signum() <= 0) {
+            throw new BusinessRuleException("Conversion factor must be positive.");
+        }
+        var entity = unitConversionRepository.save(new UnitConversion(request.fromUomId(), request.toUomId(), request.factor(), actor));
+        var uoms = unitOfMeasureRepository.findAll().stream().collect(Collectors.toMap(UnitOfMeasure::getId, Function.identity()));
+        var from = uoms.get(entity.getFromUomId());
+        var to = uoms.get(entity.getToUomId());
+        auditService.record("CREATE", "UNIT_CONVERSION", entity.getId(), actor,
+                "Conversion: " + (from == null ? entity.getFromUomId() : from.getName())
+                        + " -> " + (to == null ? entity.getToUomId() : to.getName()) + " = " + entity.getFactor(), null);
+        return new OperationsApi.UnitConversionView(entity.getId(), entity.getFromUomId(),
+                from == null ? "—" : from.getName(),
+                entity.getToUomId(), to == null ? "—" : to.getName(),
+                entity.getFactor(), entity.getCreatedAt());
+    }
+
     public List<OperationsApi.NegativeBalanceView> getNegativeBalances() {
         var items = inventoryItemRepository.findAll();
         return items.stream()
@@ -147,10 +187,16 @@ public class OperationsService {
 
     @Transactional
     public OperationsApi.Snapshot createStockAdjustment(OperationsApi.AdjustmentRequest request, String actor) {
+        if (!request.approved()) {
+            throw new BusinessRuleException("An authorized approval is required for inventory adjustments.");
+        }
         if (request.quantityDelta().signum() == 0) {
             throw new BusinessRuleException("Adjustment quantity cannot be zero.");
         }
         requireItem(request.itemId());
+        if (stockMovementRepository.balance(request.itemId()).add(request.quantityDelta()).signum() < 0) {
+            throw new BusinessRuleException("Inventory adjustment cannot create a negative balance.");
+        }
         var sm = stockMovementRepository.save(new StockMovement(
                 request.itemId(), null, "ADJUSTMENT", request.quantityDelta(),
                 null, request.referenceCode(), null, request.occurredAt(), actor));
@@ -216,6 +262,20 @@ public class OperationsService {
             auditService.record("PARTNER_LEDGER_ENTRY", "BUSINESS_PARTY", partyId, actor, "Recorded partner financial entry amount: " + request.amountDelta(), null);
         }
         return snapshot();
+    }
+
+    @Transactional
+    public void recordGoodsReceipt(String itemId, String supplierId, BigDecimal acceptedQuantity,
+                                   String grnNumber, String note, Instant occurredAt, String actor) {
+        requireItem(itemId);
+        if (acceptedQuantity == null || acceptedQuantity.signum() <= 0) {
+            throw new BusinessRuleException("Accepted goods-receipt quantity must be positive.");
+        }
+        var movement = stockMovementRepository.save(new StockMovement(itemId, normalizeId(supplierId),
+                "PURCHASE_RECEIPT", acceptedQuantity, null, grnNumber, note, occurredAt, actor));
+        movement.assignDocument("GOODS_RECEIPT", "Accepted quantity posted from supplier receipt");
+        auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
+                "Goods receipt " + grnNumber + " accepted qty: " + acceptedQuantity, null);
     }
 
     @Transactional

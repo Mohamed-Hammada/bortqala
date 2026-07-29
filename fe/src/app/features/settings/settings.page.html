@@ -46,6 +46,16 @@
     >
       📊 {{ i18n.t('settings.tabReports', undefined, 'التقارير والتصدير') }}
     </button>
+
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'shortcuts'"
+      (click)="setTab('shortcuts')"
+      [attr.title]="i18n.t('shortcuts.subtitle')"
+    >
+      ⌨ {{ i18n.t('settings.tabShortcuts') }}
+    </button>
   </nav>
 
   <!-- Tab 1: Appearance & Language -->
@@ -157,8 +167,15 @@
               </span>
             </label>
 
+            <div class="field">
+              <label for="max-recently-used">{{ i18n.t('settings.maxRecentlyUsed', undefined, 'Maximum recently used items') }}</label>
+              <input id="max-recently-used" type="number" min="1" max="20" [value]="maxRecentlyUsed()"
+                     (change)="setMaxRecentlyUsed(+$any($event.target).value)" />
+            </div>
+
             <div style="margin-top: 0.5rem;">
               <button type="button" class="button secondary btn-sm" (click)="clearRecentHistory()">{{ i18n.t('settings.clearRecentButton') }}</button>
+              <button type="button" class="button secondary btn-sm" (click)="resetFavorites()">{{ i18n.t('settings.resetFavorites', undefined, 'Reset favorites') }}</button>
             </div>
           </div>
         </fieldset>
@@ -252,6 +269,30 @@
             </div>
           }
         </div>
+      </fieldset>
+
+      @if (authService.isSuperAdmin()) {
+        <fieldset class="settings-group">
+          <legend class="group-title">{{ i18n.t('settings.dashboardPolicyTitle') }}</legend>
+          <label class="selectable-card">
+            <input type="checkbox" formControlName="adminDashboardCustomizationEnabled" />
+            <span>
+              <strong>{{ i18n.t('settings.adminDashboardCustomization') }}</strong>
+              <small>{{ i18n.t('settings.adminDashboardCustomizationHint') }}</small>
+            </span>
+          </label>
+        </fieldset>
+      }
+
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.procurementNumberingTitle') }}</legend>
+        <label class="selectable-card">
+          <input type="checkbox" formControlName="automaticProcurementNumbering" />
+          <span>
+            <strong>{{ i18n.t('settings.procurementNumberingAutomatic') }}</strong>
+            <small>{{ i18n.t('settings.procurementNumberingHint') }}</small>
+          </span>
+        </label>
       </fieldset>
 
       <div class="settings-toolbar">
@@ -446,6 +487,42 @@
         </button>
       </div>
     </form>
+  }
+
+  @if (activeTab() === 'shortcuts') {
+    <section class="card settings-card shortcuts-settings-card">
+      <header class="shortcuts-settings-header">
+        <div>
+          <h2>{{ i18n.t('shortcuts.title') }}</h2>
+          <p>{{ i18n.t('shortcuts.subtitle') }}</p>
+        </div>
+        <kbd>?</kbd>
+      </header>
+
+      <div class="shortcuts-settings-grid">
+        <section>
+          <h3>{{ i18n.t('shortcuts.globalTitle') }}</h3>
+          @for (shortcut of globalShortcuts; track shortcut.labelKey) {
+            <div class="settings-shortcut-row">
+              <span>{{ i18n.t(shortcut.labelKey) }}</span>
+              <kbd>{{ shortcut.keys }}</kbd>
+            </div>
+          }
+        </section>
+
+        <section>
+          <h3>{{ i18n.t('shortcuts.navigationTitle') }}</h3>
+          @for (shortcut of menuShortcuts; track shortcut.menuId) {
+            <div class="settings-shortcut-row">
+              <span>{{ i18n.t(shortcut.labelKey) }}</span>
+              <kbd>{{ shortcut.keys }}</kbd>
+            </div>
+          }
+        </section>
+      </div>
+
+      <p class="shortcuts-settings-note">{{ i18n.t('shortcuts.availableByPermission') }}</p>
+    </section>
   }
 </section>
 

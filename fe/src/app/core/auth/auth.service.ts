@@ -3,7 +3,15 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { tap } from 'rxjs';
 import { ThemeService } from '../theme.service';
 import { I18nService } from '../i18n.service';
-import { AppSettings, AuthUser, LoginResponse, RoleCode, UserPreferences } from './auth.models';
+import {
+  AppSettings,
+  AuthUser,
+  DashboardPreferences,
+  LoginResponse,
+  NavigationPreferences,
+  RoleCode,
+  UserPreferences,
+} from './auth.models';
 
 const STORAGE_KEY = 'hr-platform-session';
 const DEFAULT_PREFERENCES: UserPreferences = {
@@ -12,6 +20,14 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   locale: 'ar-EG',
   excelTableStyle: 'GOLD',
   defaultPage: '/dashboard',
+  showFavorites: true,
+  showRecentlyUsed: true,
+  maxRecentlyUsed: 4,
+  favoriteMenuIds: [],
+  recentMenuIds: [],
+  dashboardWidgetIds: ['summary', 'report', 'attendance-chart', 'insights', 'units', 'departments', 'categories', 'imports'],
+  dashboardAnimationsEnabled: true,
+  dashboardLayoutCustomizationAllowed: true,
   updatedAt: null,
 };
 
@@ -73,13 +89,44 @@ export class AuthService {
     );
   }
 
+  updateNavigationPreferences(preferences: NavigationPreferences) {
+    return this.httpClient.put<UserPreferences>('/api/v1/auth/preferences/navigation', preferences).pipe(
+      tap((updated) => this.replacePreferences(updated)),
+    );
+  }
+
+  updateDashboardPreferences(preferences: DashboardPreferences) {
+    return this.httpClient.put<UserPreferences>('/api/v1/auth/preferences/dashboard', preferences).pipe(
+      tap((updated) => this.replacePreferences(updated)),
+    );
+  }
+
+  refreshPreferences() {
+    return this.httpClient.get<UserPreferences>('/api/v1/auth/preferences').pipe(
+      tap((updated) => this.replacePreferences(updated)),
+    );
+  }
+
   appSettings() {
     return this.httpClient.get<AppSettings>('/api/v1/admin/app-settings');
   }
 
   updateAppSettings(payload: Omit<AppSettings, 'updatedAt'>) {
-    return this.httpClient.put<AppSettings>('/api/v1/admin/app-settings', payload);
+    return this.httpClient.put<AppSettings>('/api/v1/admin/app-settings', payload).pipe(
+      tap((settings) => this.replaceDashboardPolicy(settings.adminDashboardCustomizationEnabled)),
+    );
   }
+
+  readonly canCustomizeDashboard = computed(() => {
+    const effectivePreference = this.preferences().dashboardLayoutCustomizationAllowed;
+    if (effectivePreference !== undefined) return effectivePreference;
+    const user = this.user();
+    if (!user) return false;
+    if (user.roles.includes('SUPER_ADMIN')) return true;
+    if (user.dashboardCustomizationEnabled === false) return false;
+    if (user.roles.includes('ADMIN')) return this.app()?.adminDashboardCustomizationEnabled !== false;
+    return true;
+  });
 
   readonly canViewSalary = computed(() => {
     const u = this.user();
@@ -124,5 +171,21 @@ export class AuthService {
       localStorage.removeItem(STORAGE_KEY);
       return null;
     }
+  }
+
+  private replacePreferences(updated: UserPreferences): void {
+    const session = this.session();
+    if (!session) return;
+    const next = { ...session, preferences: { ...DEFAULT_PREFERENCES, ...updated } };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    this.session.set(next);
+  }
+
+  private replaceDashboardPolicy(enabled: boolean): void {
+    const session = this.session();
+    if (!session) return;
+    const next = { ...session, app: { ...session.app, adminDashboardCustomizationEnabled: enabled } };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    this.session.set(next);
   }
 }

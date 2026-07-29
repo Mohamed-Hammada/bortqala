@@ -23,10 +23,15 @@ class BusinessPartyService {
     BusinessPartyApi.Response create(BusinessPartyApi.Request request) {
         validateUniqueCode(request.code(), null);
         validateManagedType(request.managedType());
-        var party = businessPartyRepository.save(new BusinessParty(request.code(), request.name(), request.partyType(),
-                request.contactPerson(), request.phone(), request.notes(), request.active(),
-                request.managedType(), request.responsiblePartyId(), request.currencyCode(),
-                request.invoicePolicy(), request.paymentTerms(), request.taxId(), request.bankAccount()));
+        validateFields(request);
+        var party = businessPartyRepository.save(new BusinessParty(
+                request.code(), request.name(), request.nameEn(), request.partyType(),
+                request.contactPerson(), request.phone(), request.email(), request.address(),
+                request.notes(), request.active(),
+                request.managedType(), request.responsiblePartyId(),
+                request.relationshipStartDate(), request.relationshipEndDate(),
+                request.currencyCode(), request.invoicePolicy(), request.paymentTerms(),
+                request.taxId(), request.bankAccount()));
 
         auditService.record("CREATE", "BUSINESS_PARTY", party.getId(), getCurrentUser(),
                 "{\"code\":\"" + party.getCode() + "\",\"name\":\"" + party.getName() + "\"}", null);
@@ -41,10 +46,14 @@ class BusinessPartyService {
         }
         validateUniqueCode(request.code(), id);
         validateManagedType(request.managedType());
-        party.update(request.code(), request.name(), request.partyType(), request.contactPerson(), request.phone(),
-                request.notes(), request.active(), request.managedType(), request.responsiblePartyId(),
-                request.currencyCode(), request.invoicePolicy(), request.paymentTerms(), request.taxId(),
-                request.bankAccount());
+        validateFields(request);
+        party.update(request.code(), request.name(), request.nameEn(), request.partyType(),
+                request.contactPerson(), request.phone(), request.email(), request.address(),
+                request.notes(), request.active(),
+                request.managedType(), request.responsiblePartyId(),
+                request.relationshipStartDate(), request.relationshipEndDate(),
+                request.currencyCode(), request.invoicePolicy(), request.paymentTerms(),
+                request.taxId(), request.bankAccount());
 
         auditService.record("UPDATE", "BUSINESS_PARTY", party.getId(), getCurrentUser(),
                 "{\"code\":\"" + party.getCode() + "\",\"name\":\"" + party.getName() + "\"}", null);
@@ -56,6 +65,20 @@ class BusinessPartyService {
         BusinessParty p = require(id);
         p.deactivate();
         auditService.record("DEACTIVATE", "BUSINESS_PARTY", p.getId(), getCurrentUser(), "Deactivated", null);
+    }
+
+    @Transactional
+    int cleanupInvalidPhone() {
+        var parties = businessPartyRepository.findAllByOrderByNameAsc();
+        int count = 0;
+        for (var p : parties) {
+            if ("NOT-A-PHONE".equalsIgnoreCase(p.getPhone())) {
+                p.clearPhone();
+                count++;
+            }
+        }
+        businessPartyRepository.flush();
+        return count;
     }
 
     private String getCurrentUser() {
@@ -75,16 +98,33 @@ class BusinessPartyService {
 
     private void validateManagedType(String managedType) {
         if (managedType != null && !managedType.isBlank()
-                && !java.util.Set.of("DIRECT", "AGENT", "BROKER", "CONTRACT", "OTHER").contains(managedType)) {
-            throw new BusinessRuleException("Invalid managedType. Allowed: DIRECT, AGENT, BROKER, CONTRACT, OTHER.");
+                && !java.util.Set.of("DIRECT", "MANAGED").contains(managedType)) {
+            throw new BusinessRuleException("Invalid relationship type. Allowed: DIRECT, MANAGED.");
+        }
+    }
+
+    private void validateFields(BusinessPartyApi.Request r) {
+        if (r.email() != null && !r.email().isBlank()
+                && !r.email().matches("^[\\w.%+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
+            throw new BusinessRuleException("Invalid email format.");
+        }
+        if (r.taxId() != null && !r.taxId().isBlank()
+                && !r.taxId().matches("^[A-Za-z0-9\\-]{6,50}$")) {
+            throw new BusinessRuleException("Invalid tax ID format.");
+        }
+        if (r.managedType() != null && r.managedType().equals("MANAGED")
+                && (r.responsiblePartyId() == null || r.responsiblePartyId().isBlank())) {
+            throw new BusinessRuleException("Responsible partner is required for managed suppliers.");
         }
     }
 
     private BusinessPartyApi.Response response(BusinessParty party) {
-        return new BusinessPartyApi.Response(party.getId(), party.getCode(), party.getName(), party.getPartyType(),
-                party.getContactPerson(), party.getPhone(), party.getNotes(),
-                party.getManagedType(), party.getResponsiblePartyId(), party.getCurrencyCode(),
-                party.getInvoicePolicy(), party.getPaymentTerms(), party.getTaxId(), party.getBankAccount(),
+        return new BusinessPartyApi.Response(party.getId(), party.getCode(), party.getName(), party.getNameEn(),
+                party.getPartyType(), party.getContactPerson(), party.getPhone(), party.getEmail(), party.getAddress(),
+                party.getNotes(), party.getManagedType(), party.getResponsiblePartyId(),
+                party.getRelationshipStartDate(), party.getRelationshipEndDate(),
+                party.getCurrencyCode(), party.getInvoicePolicy(), party.getPaymentTerms(),
+                party.getTaxId(), party.getBankAccount(),
                 party.isActive(), party.getVersion(), party.getCreatedAt(), party.getUpdatedAt());
     }
 }

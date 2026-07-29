@@ -6,6 +6,7 @@ import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
+import { ImportStatus } from './imports.models';
 
 @Component({
   selector: 'app-imports-page',
@@ -83,5 +84,9 @@ export class ImportsPage {
 
   dateTime(value: number) {
     return formatDateTime(value);
+  }
+
+  statusLabel(status: ImportStatus): string {
+    return this.i18n.t(status === 'COMPLETED' ? 'imports.completed' : 'imports.completedWithErrors');
   }
 }

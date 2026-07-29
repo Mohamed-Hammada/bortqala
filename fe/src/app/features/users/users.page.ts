@@ -74,6 +74,8 @@ export class UsersPage {
     { id: 'banks', labelKey: 'nav.banks' },
     { id: 'tax-currency', labelKey: 'nav.taxCurrency' },
     { id: 'fiscal-periods', labelKey: 'nav.fiscalPeriods' },
+    { id: 'organization', labelKey: 'nav.organization' },
+    { id: 'audit-logs', labelKey: 'nav.auditLogs' },
     { id: 'users', labelKey: 'nav.users' },
     { id: 'settings', labelKey: 'settings.title' },
   ];
@@ -156,6 +158,7 @@ export class UsersPage {
     }),
     allowedMenus: new FormControl<string[]>([], { nonNullable: true }),
     canViewSalary: new FormControl(true, { nonNullable: true }),
+    dashboardCustomizationEnabled: new FormControl(true, { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
     version: new FormControl<number | null>(null),
     categoryId: new FormControl<string | null>(null),
@@ -189,6 +192,8 @@ export class UsersPage {
     'banks': 'Bank & Treasury',
     'tax-currency': 'Tax & Currency',
     'fiscal-periods': 'Fiscal Periods',
+    'organization': 'Organization Settings',
+    'audit-logs': 'Audit Logs',
     'users': 'Users & Permissions',
     'settings': 'System Settings',
   };
@@ -221,6 +226,7 @@ export class UsersPage {
       roles: ['VIEWER'],
       allowedMenus: ['dashboard', 'reports'],
       canViewSalary: true,
+      dashboardCustomizationEnabled: true,
       active: true,
       version: null,
       categoryId: null,
@@ -239,9 +245,10 @@ export class UsersPage {
       roles: item.roles,
       allowedMenus: item.allowedMenus ?? this.menuOptions.map((m) => m.id),
       canViewSalary: item.canViewSalary ?? true,
+      dashboardCustomizationEnabled: item.dashboardCustomizationEnabled ?? true,
       active: item.active,
       version: item.version,
-      categoryId: (item as any).categoryId ?? null,
+      categoryId: item.categoryId ?? null,
     });
     this.drawerOpen.set(true);
   }

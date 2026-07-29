@@ -45,6 +45,11 @@ public final class CategoryApi {
             LocalTime endTime,
             String scope,
             String scopeCategoryId) {
+        public ScheduleRequest(String name, LocalDate effectiveFrom, LocalDate effectiveTo,
+                               LocalTime startTime, Integer expectedMinutesOverride, int graceMinutes) {
+            this(name, effectiveFrom, effectiveTo, startTime, expectedMinutesOverride, graceMinutes,
+                    null, "ALL", null);
+        }
     }
 
     public record Response(

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
@@ -7,7 +7,14 @@ import { I18nService } from '../i18n.service';
 import { ConfirmDialogService } from '../confirm-dialog.service';
 import { IconComponent, IconName } from '../../shared/ui/icon/icon.component';
 import { ToastContainerComponent } from '../../shared/ui/toast/toast-container.component';
+import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
 import { NetworkService } from '../network.service';
+import {
+  GLOBAL_SHORTCUTS,
+  MENU_SHORTCUTS,
+  MenuShortcut,
+  shortcutForMenu,
+} from '../app-shortcuts';
 
 export type WorkspaceGroup =
   | 'workspace.people'
@@ -32,14 +39,12 @@ export interface WorkspaceSection {
   items: NavItem[];
 }
 
-const FAVORITES_STORAGE_KEY = 'hr-favorites';
-const RECENT_STORAGE_KEY = 'hr-recent-menus';
 const COLLAPSED_GROUPS_KEY = 'hr-collapsed-groups';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ToastContainerComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ToastContainerComponent, AppTooltipDirective],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -54,9 +59,16 @@ export class AppShellComponent {
   readonly searchQuery = signal('');
   readonly menuOpen = signal(false);
   readonly collapsed = signal(false);
+  readonly quickNavOpen = signal(false);
+  readonly shortcutHelpOpen = signal(false);
+  readonly selectedQuickNavIndex = signal(0);
+  readonly chordWaiting = signal(false);
+  readonly globalShortcuts = GLOBAL_SHORTCUTS;
+  readonly menuShortcuts = MENU_SHORTCUTS;
+  private chordTimer: ReturnType<typeof setTimeout> | null = null;
 
-  readonly favorites = signal<string[]>(this.loadStoredArray(FAVORITES_STORAGE_KEY, ['payroll', 'employees']));
-  readonly recentIds = signal<string[]>(this.loadStoredArray(RECENT_STORAGE_KEY, ['dashboard']));
+  readonly favorites = signal<string[]>(this.authService.preferences().favoriteMenuIds);
+  readonly recentIds = signal<string[]>(this.authService.preferences().recentMenuIds);
   readonly collapsedGroups = signal<string[]>(this.loadStoredCollapsedGroups());
 
   readonly items: NavItem[] = [
@@ -328,17 +340,29 @@ export class AppShellComponent {
     },
   ];
 
+  readonly quickNavItems = computed<NavItem[]>(() => {
+    const query = this.searchQuery().trim().toLocaleLowerCase();
+    return this.items.filter((item) => {
+      if (!this.visible(item)) return false;
+      if (!query) return true;
+      const searchable = `${this.i18n.t(item.labelKey)} ${this.i18n.t(item.descriptionKey)}`.toLocaleLowerCase();
+      return searchable.includes(query);
+    });
+  });
+
   readonly favoriteItems = computed<NavItem[]>(() => {
+    if (!this.authService.preferences().showFavorites) return [];
     const favs = this.favorites();
     return this.items.filter((item) => favs.includes(item.menuId) && this.visible(item));
   });
 
   readonly recentItems = computed<NavItem[]>(() => {
+    if (!this.authService.preferences().showRecentlyUsed) return [];
     const recents = this.recentIds();
     const favs = this.favorites();
     return this.items
       .filter((item) => recents.includes(item.menuId) && !favs.includes(item.menuId) && this.visible(item))
-      .slice(0, 4);
+      .slice(0, this.authService.preferences().maxRecentlyUsed);
   });
 
   readonly userRolesLabel = computed(() => {
@@ -386,6 +410,11 @@ export class AppShellComponent {
   });
 
   constructor() {
+    effect(() => {
+      const preferences = this.authService.preferences();
+      this.favorites.set([...preferences.favoriteMenuIds]);
+      this.recentIds.set([...preferences.recentMenuIds]);
+    }, { allowSignalWrites: true });
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
@@ -425,7 +454,7 @@ export class AppShellComponent {
       updated = [...current, menuId];
     }
     this.favorites.set(updated);
-    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(updated));
+    this.persistNavigation(updated, this.recentIds());
   }
 
   isGroupCollapsed(groupKey: string): boolean {
@@ -453,6 +482,128 @@ export class AppShellComponent {
     const allGroups = this.workspaceSections().map((s) => s.titleKey);
     this.collapsedGroups.set(allGroups);
     localStorage.setItem(COLLAPSED_GROUPS_KEY, JSON.stringify(allGroups));
+  }
+
+  openQuickNav(): void {
+    this.shortcutHelpOpen.set(false);
+    this.searchQuery.set('');
+    this.selectedQuickNavIndex.set(0);
+    this.quickNavOpen.set(true);
+    queueMicrotask(() => {
+      document.querySelector<HTMLInputElement>('[data-quick-nav-search]')?.focus();
+    });
+  }
+
+  openShortcutHelp(): void {
+    this.quickNavOpen.set(false);
+    this.shortcutHelpOpen.set(true);
+  }
+
+  closeShortcutPanels(): void {
+    this.quickNavOpen.set(false);
+    this.shortcutHelpOpen.set(false);
+    this.searchQuery.set('');
+    this.clearChord();
+  }
+
+  updateQuickNavQuery(value: string): void {
+    this.searchQuery.set(value);
+    this.selectedQuickNavIndex.set(0);
+  }
+
+  onQuickNavKeydown(event: KeyboardEvent): void {
+    const count = this.quickNavItems().length;
+    if (event.key === 'ArrowDown' && count > 0) {
+      event.preventDefault();
+      this.selectedQuickNavIndex.update((index) => (index + 1) % count);
+      return;
+    }
+    if (event.key === 'ArrowUp' && count > 0) {
+      event.preventDefault();
+      this.selectedQuickNavIndex.update((index) => (index - 1 + count) % count);
+      return;
+    }
+    if (event.key === 'Enter' && count > 0) {
+      event.preventDefault();
+      const item = this.quickNavItems()[this.selectedQuickNavIndex()];
+      if (item) this.navigateToItem(item);
+    }
+  }
+
+  navigateToItem(item: NavItem): void {
+    if (!this.visible(item)) return;
+    this.onNavItemClick(item);
+    this.closeShortcutPanels();
+    void this.router.navigateByUrl(item.path);
+  }
+
+  shortcut(item: NavItem): MenuShortcut | undefined {
+    return shortcutForMenu(item.menuId);
+  }
+
+  navTooltip(item: NavItem): string {
+    const shortcut = this.shortcut(item);
+    const details = `${this.i18n.t(item.labelKey)} — ${this.i18n.t(item.descriptionKey)}`;
+    return shortcut ? `${details} · ${shortcut.keys}` : details;
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onGlobalShortcut(event: KeyboardEvent): void {
+    if (event.isComposing) return;
+    const key = event.key.toLocaleLowerCase();
+    const target = event.target;
+    const typing = target instanceof HTMLElement
+      && target.matches('input, textarea, select, [contenteditable="true"]');
+
+    if ((event.ctrlKey || event.metaKey) && !event.altKey && key === 'k') {
+      event.preventDefault();
+      this.openQuickNav();
+      return;
+    }
+
+    if (event.key === 'Escape' && (this.quickNavOpen() || this.shortcutHelpOpen() || this.chordWaiting())) {
+      event.preventDefault();
+      this.closeShortcutPanels();
+      return;
+    }
+
+    if (!typing && !event.ctrlKey && !event.metaKey && !event.altKey && event.key === '?') {
+      event.preventDefault();
+      this.openShortcutHelp();
+      return;
+    }
+
+    if (typing || event.ctrlKey || event.metaKey || event.altKey || this.quickNavOpen() || this.shortcutHelpOpen()) return;
+
+    if (this.chordWaiting()) {
+      event.preventDefault();
+      const shortcut = this.menuShortcuts.find((item) => item.chordKey === key);
+      this.clearChord();
+      if (shortcut) {
+        const item = this.items.find((candidate) => candidate.menuId === shortcut.menuId);
+        if (item && this.visible(item)) this.navigateToItem(item);
+      }
+      return;
+    }
+
+    if (key === 'g') {
+      event.preventDefault();
+      this.chordWaiting.set(true);
+      this.chordTimer = setTimeout(() => this.clearChord(), 1800);
+    }
+  }
+
+  @HostListener('keydown', ['$event'])
+  submitFormOnEnter(event: KeyboardEvent): void {
+    if (event.key !== 'Enter' || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey || event.isComposing) return;
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    if (target.matches('textarea, select, button, [contenteditable="true"]')) return;
+    if (target instanceof HTMLInputElement && ['button', 'submit', 'reset', 'file'].includes(target.type)) return;
+    const form = target.closest('form');
+    if (!form) return;
+    event.preventDefault();
+    form.requestSubmit();
   }
 
   onNavItemClick(item: NavItem): void {
@@ -490,18 +641,20 @@ export class AppShellComponent {
 
   private pushRecent(menuId: string): void {
     const current = this.recentIds().filter((id) => id !== menuId);
-    const updated = [menuId, ...current].slice(0, 5);
+    const updated = [menuId, ...current].slice(0, this.authService.preferences().maxRecentlyUsed);
     this.recentIds.set(updated);
-    localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(updated));
+    this.persistNavigation(this.favorites(), updated);
   }
 
-  private loadStoredArray(key: string, fallback: string[]): string[] {
-    try {
-      const val = localStorage.getItem(key);
-      return val ? JSON.parse(val) : fallback;
-    } catch {
-      return fallback;
-    }
+  private persistNavigation(favoriteMenuIds: string[], recentMenuIds: string[]): void {
+    const preferences = this.authService.preferences();
+    this.authService.updateNavigationPreferences({
+      showFavorites: preferences.showFavorites,
+      showRecentlyUsed: preferences.showRecentlyUsed,
+      maxRecentlyUsed: preferences.maxRecentlyUsed,
+      favoriteMenuIds,
+      recentMenuIds,
+    }).subscribe();
   }
 
   private loadStoredCollapsedGroups(): string[] {
@@ -517,5 +670,11 @@ export class AppShellComponent {
     } catch {
       return [];
     }
+  }
+
+  private clearChord(): void {
+    this.chordWaiting.set(false);
+    if (this.chordTimer) clearTimeout(this.chordTimer);
+    this.chordTimer = null;
   }
 }

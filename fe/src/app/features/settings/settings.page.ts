@@ -6,8 +6,9 @@ import { AuthService } from '../../core/auth/auth.service';
 import { ExcelTableStyle, NotificationPreferences, TableDensity, ThemePreference } from '../../core/auth/auth.models';
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
+import { GLOBAL_SHORTCUTS, MENU_SHORTCUTS } from '../../core/app-shortcuts';
 
-export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports';
+export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports' | 'shortcuts';
 
 const NOTIFICATION_KEY = 'bemo_notification_prefs';
 
@@ -50,9 +51,12 @@ export class SettingsPage {
   readonly desktop = typeof window !== 'undefined' && '__TAURI__' in window;
   readonly licenseMessage = signal<string | null>(null);
 
-  readonly showFavorites = signal(localStorage.getItem('bemo_show_favorites') !== 'false');
-  readonly showRecentlyUsed = signal(localStorage.getItem('bemo_show_recently_used') !== 'false');
+  readonly showFavorites = signal(this.authService.preferences().showFavorites);
+  readonly showRecentlyUsed = signal(this.authService.preferences().showRecentlyUsed);
+  readonly maxRecentlyUsed = signal(this.authService.preferences().maxRecentlyUsed);
   readonly notificationPrefs = signal<NotificationPreferences>(loadNotificationPrefs());
+  readonly globalShortcuts = GLOBAL_SHORTCUTS;
+  readonly menuShortcuts = MENU_SHORTCUTS;
 
   readonly availablePages = [
     { path: '/dashboard', labelKey: 'nav.dashboard' },
@@ -65,21 +69,27 @@ export class SettingsPage {
     { path: '/imports', labelKey: 'nav.imports' },
   ];
 
-  toggleShowFavorites(val: boolean) {
+  async toggleShowFavorites(val: boolean) {
     this.showFavorites.set(val);
-    localStorage.setItem('bemo_show_favorites', String(val));
-    this.notification.success(this.i18n.t('settings.menuSavedFavorites'));
+    await this.saveNavigationPreferences(this.i18n.t('settings.menuSavedFavorites'));
   }
 
-  toggleShowRecentlyUsed(val: boolean) {
+  async toggleShowRecentlyUsed(val: boolean) {
     this.showRecentlyUsed.set(val);
-    localStorage.setItem('bemo_show_recently_used', String(val));
-    this.notification.success(this.i18n.t('settings.menuSavedRecent'));
+    await this.saveNavigationPreferences(this.i18n.t('settings.menuSavedRecent'));
   }
 
-  clearRecentHistory() {
-    localStorage.removeItem('bemo_recent_menus');
-    this.notification.success(this.i18n.t('settings.menuCleared'));
+  async setMaxRecentlyUsed(value: number): Promise<void> {
+    this.maxRecentlyUsed.set(Math.max(1, Math.min(20, value || 1)));
+    await this.saveNavigationPreferences(this.i18n.t('settings.menuSavedRecent'));
+  }
+
+  async clearRecentHistory(): Promise<void> {
+    await this.saveNavigationPreferences(this.i18n.t('settings.menuCleared'), []);
+  }
+
+  async resetFavorites(): Promise<void> {
+    await this.saveNavigationPreferences(this.i18n.t('settings.menuCleared'), undefined, []);
   }
 
   updateNotificationPrefs(key: keyof NotificationPreferences, value: boolean) {
@@ -107,6 +117,8 @@ export class SettingsPage {
     sessionTimeoutMinutes: [480, [Validators.required, Validators.min(5), Validators.max(10_080)]],
     sessionTimeoutEnabled: [true, Validators.required],
     showReportPresets: [true, Validators.required],
+    automaticProcurementNumbering: [true, Validators.required],
+    adminDashboardCustomizationEnabled: [true, Validators.required],
     minPasswordLength: [8, [Validators.required, Validators.min(6), Validators.max(128)]],
     requireUppercase: [false],
     requireLowercase: [false],
@@ -187,6 +199,8 @@ export class SettingsPage {
         sessionTimeoutMinutes: saved.sessionTimeoutMinutes,
         sessionTimeoutEnabled: saved.sessionTimeoutEnabled,
         showReportPresets: saved.showReportPresets,
+        automaticProcurementNumbering: saved.automaticProcurementNumbering ?? true,
+        adminDashboardCustomizationEnabled: saved.adminDashboardCustomizationEnabled ?? true,
         minPasswordLength: saved.minPasswordLength ?? 8,
         requireUppercase: saved.requireUppercase ?? false,
         requireLowercase: saved.requireLowercase ?? false,
@@ -225,6 +239,8 @@ export class SettingsPage {
         sessionTimeoutMinutes: settings.sessionTimeoutMinutes,
         sessionTimeoutEnabled: settings.sessionTimeoutEnabled ?? true,
         showReportPresets: settings.showReportPresets ?? true,
+        automaticProcurementNumbering: settings.automaticProcurementNumbering ?? true,
+        adminDashboardCustomizationEnabled: settings.adminDashboardCustomizationEnabled ?? true,
         minPasswordLength: settings.minPasswordLength ?? 8,
         requireUppercase: settings.requireUppercase ?? false,
         requireLowercase: settings.requireLowercase ?? false,
@@ -239,6 +255,25 @@ export class SettingsPage {
       this.appSettingsError.set(apiErrorMessage(error, this.i18n));
     } finally {
       this.appSettingsLoading.set(false);
+    }
+  }
+
+  private async saveNavigationPreferences(message: string, recentMenuIds?: string[], favoriteMenuIds?: string[]): Promise<void> {
+    const current = this.authService.preferences();
+    try {
+      await firstValueFrom(this.authService.updateNavigationPreferences({
+        showFavorites: this.showFavorites(),
+        showRecentlyUsed: this.showRecentlyUsed(),
+        maxRecentlyUsed: this.maxRecentlyUsed(),
+        favoriteMenuIds: favoriteMenuIds ?? current.favoriteMenuIds,
+        recentMenuIds: recentMenuIds ?? current.recentMenuIds,
+      }));
+      this.notification.success(message);
+    } catch (error) {
+      this.notification.error(apiErrorMessage(error, this.i18n));
+      this.showFavorites.set(current.showFavorites);
+      this.showRecentlyUsed.set(current.showRecentlyUsed);
+      this.maxRecentlyUsed.set(current.maxRecentlyUsed);
     }
   }
 }

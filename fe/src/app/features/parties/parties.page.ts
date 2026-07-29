@@ -52,12 +52,15 @@ export class PartiesPage {
   readonly form = new FormGroup({
     code: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    nameEn: new FormControl('', { nonNullable: true }),
     partyType: new FormControl('SUPPLIER', {
       nonNullable: true,
       validators: [Validators.required],
     }),
     managedType: new FormControl('DIRECT', { nonNullable: true }),
     responsiblePartyId: new FormControl('', { nonNullable: true }),
+    relationshipStartDate: new FormControl('', { nonNullable: true }),
+    relationshipEndDate: new FormControl('', { nonNullable: true }),
     currencyCode: new FormControl('EGP', { nonNullable: true }),
     invoicePolicy: new FormControl('E_INVOICE', { nonNullable: true }),
     paymentTerms: new FormControl('CASH', { nonNullable: true }),
@@ -68,6 +71,11 @@ export class PartiesPage {
       nonNullable: true,
       validators: [Validators.pattern(/^(01[0125][0-9]{8}|\+?[0-9]{8,15})?$/)]
     }),
+    email: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.pattern(/^([\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,})?$/)]
+    }),
+    address: new FormControl('', { nonNullable: true }),
     notes: new FormControl('', { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
     version: new FormControl<number | null>(null),
@@ -77,6 +85,14 @@ export class PartiesPage {
     const ctrl = this.form.controls.phone;
     if ((this.submitted() || ctrl.touched) && ctrl.hasError('pattern')) {
       return 'رقم الهاتف غير صحيح. يرجى إدخال رقم هاتف صحيح (مثال: 01012345678)';
+    }
+    return null;
+  });
+
+  readonly emailError = computed(() => {
+    const ctrl = this.form.controls.email;
+    if ((this.submitted() || ctrl.touched) && ctrl.hasError('pattern')) {
+      return 'البريد الإلكتروني غير صحيح';
     }
     return null;
   });
@@ -91,11 +107,23 @@ export class PartiesPage {
     this.form.reset({
       code: '',
       name: '',
+      nameEn: '',
       partyType: 'SUPPLIER',
       contactPerson: '',
       phone: '',
+      email: '',
+      address: '',
       notes: '',
       active: true,
+      managedType: 'DIRECT',
+      responsiblePartyId: '',
+      relationshipStartDate: '',
+      relationshipEndDate: '',
+      currencyCode: 'EGP',
+      invoicePolicy: 'E_INVOICE',
+      paymentTerms: 'CASH',
+      taxId: '',
+      bankAccount: '',
       version: null,
     });
     this.drawerOpen.set(true);
@@ -107,11 +135,23 @@ export class PartiesPage {
     this.form.reset({
       code: item.code,
       name: item.name,
+      nameEn: item.nameEn ?? '',
       partyType: item.partyType,
       contactPerson: item.contactPerson ?? '',
       phone: item.phone ?? '',
+      email: item.email ?? '',
+      address: item.address ?? '',
       notes: item.notes ?? '',
       active: item.active,
+      managedType: item.managedType,
+      responsiblePartyId: item.responsiblePartyId ?? '',
+      relationshipStartDate: item.relationshipStartDate ?? '',
+      relationshipEndDate: item.relationshipEndDate ?? '',
+      currencyCode: item.currencyCode,
+      invoicePolicy: item.invoicePolicy,
+      paymentTerms: item.paymentTerms,
+      taxId: item.taxId ?? '',
+      bankAccount: item.bankAccount ?? '',
       version: item.version,
     });
     this.drawerOpen.set(true);
@@ -128,7 +168,15 @@ export class PartiesPage {
       ...value,
       contactPerson: value.contactPerson.trim() || null,
       phone: value.phone.trim() || null,
+      email: value.email.trim() || null,
+      address: value.address.trim() || null,
+      nameEn: value.nameEn.trim() || null,
       notes: value.notes.trim() || null,
+      responsiblePartyId: value.responsiblePartyId.trim() || null,
+      relationshipStartDate: value.relationshipStartDate.trim() || null,
+      relationshipEndDate: value.relationshipEndDate.trim() || null,
+      taxId: value.taxId.trim() || null,
+      bankAccount: value.bankAccount.trim() || null,
     };
     if (await this.store.save(this.editingId(), payload)) this.closeDrawer();
   }

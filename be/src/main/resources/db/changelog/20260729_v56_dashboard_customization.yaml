@@ -1,0 +1,44 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-v56-dashboard-customization-schema
+      author: codex
+      changes:
+        - addColumn:
+            tableName: apps
+            columns:
+              - column: { name: admin_dashboard_customization_enabled, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+        - addColumn:
+            tableName: app_users
+            columns:
+              - column: { name: dashboard_customization_enabled, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+        - addColumn:
+            tableName: user_preferences
+            columns:
+              - column:
+                  name: dashboard_widget_ids
+                  type: varchar(1000)
+                  defaultValue: summary,report,attendance-chart,insights,units,departments,categories,imports
+                  constraints: { nullable: false }
+              - column: { name: dashboard_animations_enabled, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+      rollback:
+        - dropColumn: { tableName: user_preferences, columnName: dashboard_animations_enabled }
+        - dropColumn: { tableName: user_preferences, columnName: dashboard_widget_ids }
+        - dropColumn: { tableName: app_users, columnName: dashboard_customization_enabled }
+        - dropColumn: { tableName: apps, columnName: admin_dashboard_customization_enabled }
+  - changeSet:
+      id: 20260729-v56-dashboard-customization-copy
+      author: codex
+      changes:
+        - loadData:
+            tableName: translations
+            file: data/dashboard_customization_translations_v56.csv
+            relativeToChangelogFile: true
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'x56-%'" }

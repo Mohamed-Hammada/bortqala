@@ -1,0 +1,85 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-44-business-parties-extra-fields
+      author: hr-platform
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: business_parties
+        - not:
+            columnExists:
+              tableName: business_parties
+              columnName: email
+      changes:
+        - addColumn:
+            tableName: business_parties
+            columns:
+              - column:
+                  name: name_en
+                  type: VARCHAR(160)
+              - column:
+                  name: email
+                  type: VARCHAR(100)
+              - column:
+                  name: address
+                  type: VARCHAR(500)
+              - column:
+                  name: relationship_start_date
+                  type: VARCHAR(10)
+              - column:
+                  name: relationship_end_date
+                  type: VARCHAR(10)
+      rollback:
+        - dropColumn:
+            tableName: business_parties
+            columns:
+              - column:
+                  name: name_en
+              - column:
+                  name: email
+              - column:
+                  name: address
+              - column:
+                  name: relationship_start_date
+              - column:
+                  name: relationship_end_date
+
+  - changeSet:
+      id: 20260729-44-cleanup-not-a-phone
+      author: hr-platform
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: business_parties
+        - columnExists:
+            tableName: business_parties
+            columnName: phone
+      changes:
+        - update:
+            tableName: business_parties
+            where: phone = 'NOT-A-PHONE' OR phone = 'not-a-phone'
+            columns:
+              - column:
+                  name: phone
+                  value: null
+                  type: VARCHAR(50)
+
+  - changeSet:
+      id: 20260729-44-update-managed-type
+      author: hr-platform
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: business_parties
+        - columnExists:
+            tableName: business_parties
+            columnName: managed_type
+      changes:
+        - update:
+            tableName: business_parties
+            where: managed_type NOT IN ('DIRECT', 'MANAGED')
+            columns:
+              - column:
+                  name: managed_type
+                  value: DIRECT
+                  type: VARCHAR(30)
