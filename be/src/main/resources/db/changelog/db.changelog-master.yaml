@@ -133,5 +133,7 @@ databaseChangeLog:
       file: db/changelog/20260729_v65_user_dialog_translations.yaml
   - include:
       file: db/changelog/20260729_v66_live_biometric_devices.yaml
+  - include:
+      file: db/changelog/20260729_v67_legacy_data_reversals.yaml
 
 

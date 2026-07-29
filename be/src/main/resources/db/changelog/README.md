@@ -44,4 +44,6 @@ V6 adds the per-application session timeout and its Arabic/English settings tran
 
 **EN:** V65 adds the complete Arabic/English database translation catalog for the responsive user dialog, including password visibility, menu selection, permission counts, and module group labels.
 
+**EN:** V66 adds tenant-owned live biometric IP/API devices, manual and scheduled synchronization state, and durable sync feedback. V67 removes the known invalid legacy supplier phone and adds audited compensating inventory reversals for the two invalid negative inbound QA movements; the original evidence rows remain untouched.
+
 **AR:** يضيف V65 كتالوج ترجمات قاعدة البيانات الكامل بالعربية والإنجليزية لنافذة المستخدم المتجاوبة، بما يشمل إظهار كلمة المرور واختيار القوائم وعدد الصلاحيات وتسميات مجموعات الوحدات.

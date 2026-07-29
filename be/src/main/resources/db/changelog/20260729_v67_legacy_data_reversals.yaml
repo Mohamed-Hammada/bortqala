@@ -1,0 +1,146 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-v67-legacy-data-reversals
+      author: codex
+      comment: Clear the known invalid supplier phone and reverse invalid negative inbound QA movements without deleting history.
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: business_parties
+        - tableExists:
+            tableName: stock_movements
+        - tableExists:
+            tableName: audit_logs
+      changes:
+        - sql:
+            splitStatements: true
+            stripComments: true
+            sql: |
+              INSERT INTO audit_logs (
+                  id, app_id, action, entity_type, entity_id, username,
+                  details_json, ip_address, occurred_at
+              )
+              SELECT
+                  'b2db9cdf-e80e-466a-a201-4bdf58c2f1a0',
+                  app_id,
+                  'LEGACY_DATA_CORRECTION',
+                  'BUSINESS_PARTY',
+                  id,
+                  'system-migration-v67',
+                  '{"field":"phone","oldValue":"NOT-A-PHONE-2","newValue":null,"reason":"Invalid legacy phone removed"}',
+                  NULL,
+                  1785366000000
+              FROM business_parties
+              WHERE id = 'fd7bc893-1012-44f9-95cc-8ccee5a76c46'
+                AND phone = 'NOT-A-PHONE-2'
+                AND NOT EXISTS (
+                    SELECT 1 FROM audit_logs
+                    WHERE id = 'b2db9cdf-e80e-466a-a201-4bdf58c2f1a0'
+                );
+
+              UPDATE business_parties
+              SET phone = NULL,
+                  version = version + 1,
+                  updated_at = CURRENT_TIMESTAMP
+              WHERE id = 'fd7bc893-1012-44f9-95cc-8ccee5a76c46'
+                AND phone = 'NOT-A-PHONE-2';
+
+              INSERT INTO stock_movements (
+                  id, app_id, item_id, party_id, operation_type, document_type,
+                  quantity_delta, loss_percentage, reference_code, note, reason,
+                  occurred_at, created_by, created_at
+              )
+              SELECT
+                  'c8e9c01d-527c-4a55-a4df-6725518a54b5',
+                  app_id,
+                  item_id,
+                  party_id,
+                  'ADJUSTMENT',
+                  'REVERSAL',
+                  ABS(quantity_delta),
+                  NULL,
+                  'REV-QA-20260726-RETEST-NEG',
+                  'Reversal of invalid negative inbound QA movement; original record retained.',
+                  'Original movement 6725518a-54b8-4eef-9182-cf123473a9b5',
+                  CURRENT_TIMESTAMP,
+                  'system-migration-v67',
+                  CURRENT_TIMESTAMP
+              FROM stock_movements original
+              WHERE original.id = '6725518a-54b8-4eef-9182-cf123473a9b5'
+                AND original.operation_type = 'SUPPLY_RECEIPT'
+                AND original.quantity_delta < 0
+                AND NOT EXISTS (
+                    SELECT 1 FROM stock_movements
+                    WHERE id = 'c8e9c01d-527c-4a55-a4df-6725518a54b5'
+                );
+
+              INSERT INTO stock_movements (
+                  id, app_id, item_id, party_id, operation_type, document_type,
+                  quantity_delta, loss_percentage, reference_code, note, reason,
+                  occurred_at, created_by, created_at
+              )
+              SELECT
+                  'c8e9c01d-527c-4a55-a4df-948a8cf5dc62',
+                  app_id,
+                  item_id,
+                  party_id,
+                  'ADJUSTMENT',
+                  'REVERSAL',
+                  ABS(quantity_delta),
+                  NULL,
+                  'REV-QA-20260726-NEG-STOCK',
+                  'Reversal of invalid negative inbound QA movement; original record retained.',
+                  'Original movement 948a8cf5-dc62-4e38-a5de-2c18621d8c86',
+                  CURRENT_TIMESTAMP,
+                  'system-migration-v67',
+                  CURRENT_TIMESTAMP
+              FROM stock_movements original
+              WHERE original.id = '948a8cf5-dc62-4e38-a5de-2c18621d8c86'
+                AND original.operation_type = 'SUPPLY_RECEIPT'
+                AND original.quantity_delta < 0
+                AND NOT EXISTS (
+                    SELECT 1 FROM stock_movements
+                    WHERE id = 'c8e9c01d-527c-4a55-a4df-948a8cf5dc62'
+                );
+
+              INSERT INTO audit_logs (
+                  id, app_id, action, entity_type, entity_id, username,
+                  details_json, ip_address, occurred_at
+              )
+              SELECT
+                  '5df5a343-d803-4e69-bdf4-6725518a54b5',
+                  app_id,
+                  'REVERSAL_CREATE',
+                  'STOCK_MOVEMENT',
+                  'c8e9c01d-527c-4a55-a4df-6725518a54b5',
+                  'system-migration-v67',
+                  '{"originalMovementId":"6725518a-54b8-4eef-9182-cf123473a9b5","reversalQuantity":1.0000,"reason":"Invalid negative inbound movement"}',
+                  NULL,
+                  1785366000000
+              FROM stock_movements
+              WHERE id = 'c8e9c01d-527c-4a55-a4df-6725518a54b5'
+                AND NOT EXISTS (
+                    SELECT 1 FROM audit_logs
+                    WHERE id = '5df5a343-d803-4e69-bdf4-6725518a54b5'
+                );
+
+              INSERT INTO audit_logs (
+                  id, app_id, action, entity_type, entity_id, username,
+                  details_json, ip_address, occurred_at
+              )
+              SELECT
+                  '5df5a343-d803-4e69-bdf4-948a8cf5dc62',
+                  app_id,
+                  'REVERSAL_CREATE',
+                  'STOCK_MOVEMENT',
+                  'c8e9c01d-527c-4a55-a4df-948a8cf5dc62',
+                  'system-migration-v67',
+                  '{"originalMovementId":"948a8cf5-dc62-4e38-a5de-2c18621d8c86","reversalQuantity":1000.0000,"reason":"Invalid negative inbound movement"}',
+                  NULL,
+                  1785366000000
+              FROM stock_movements
+              WHERE id = 'c8e9c01d-527c-4a55-a4df-948a8cf5dc62'
+                AND NOT EXISTS (
+                    SELECT 1 FROM audit_logs
+                    WHERE id = '5df5a343-d803-4e69-bdf4-948a8cf5dc62'
+                );

@@ -164,6 +164,8 @@ databaseChangeLog:
       file: db/changelog/20260729_v65_user_dialog_translations.yaml
   - include:
       file: db/changelog/20260729_v66_live_biometric_devices.yaml
+  - include:
+      file: db/changelog/20260729_v67_legacy_data_reversals.yaml
   # Liquibase 5 cannot reliably resolve lowercase H2 tables in tableExists
   # preconditions. Apply the skipped production column additions directly.
   - changeSet:

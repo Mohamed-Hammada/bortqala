@@ -31,12 +31,14 @@
 - **Procurement Totals, Currency & Invoice Evidence (P0)**: Fixed live PO total recalculation and save enablement, added validated transaction currency defaulted from the supplier, separated nullable supplier invoice numbers from internal references, and made delivered/rejected/deducted/accepted receipt quantities explicit. Liquibase V57 carries the schema.
 - **Workforce Reliability & Analysis (P0/P1)**: Fixed the hidden manual-attendance matrix, added analytical workforce charts honoring the motion preference, real Excel exports for contractors/workers/categories, and tenant advance policies with global/category/worker precedence. Liquibase V58 carries advance policies.
 - **Unified Tooltip Accessibility (P1)**: Standardized 350ms hover/focus delay, two-line RTL surfaces, Escape dismissal, `aria-describedby`, and icon-only `aria-label` coverage in the shell and audited controls; added financial and bulk-action context help.
+- **GRN Reliability & Validation (P0)**: Fixed goods-receipt line persistence, server-calculated remaining PO quantities, partial/full PO transitions, accepted-quantity inventory posting, negative/over-receipt validation, explicit Arabic UI feedback, decimal quantity steps, and the responsive accessible GRN dialog.
+- **Live Biometric Device Integration (P0)**: Added tenant-owned IP/API device connections, immediate and scheduled synchronization, durable status/cursor state, batch and punch idempotency, identity matching, audit logging, and an Arabic responsive management UI alongside CSV/XLS/XLSX fallback.
+- **Legacy Data Correction (P1)**: Cleared the known invalid QA supplier phone and posted audited compensating reversal movements for the two invalid negative inbound receipts while retaining their original evidence.
 
 ---
 
 ## [ORPHANS & PENDING]
 *(See Bemo ERP — Remaining and Incomplete Work document for full backlog)*
-- **P0**: Execute and verify historical negative-stock cleanup using the implemented approved adjustment workflow and before/after exception report
 - **P1**: Complete remaining procurement commercial metadata (exchange-rate snapshots, expected delivery, line tax/discount), controlled financial-discount approval, and cancellation/reversal ledger postings
 - **P1**: Unified category master (employee/worker scope), enhanced work-schedule rules with overlap detection
 - **P1**: Complete one unified employee/worker category source; advance deduction policy inheritance is implemented, while broader payroll deduction-policy lifecycle remains
@@ -84,3 +86,6 @@
 - [x] Frozen procurement exchange-rate snapshots, base-currency totals, override reasons, and base-value ledger postings
 - [x] Effective-dated versioned advance policies with applied snapshots on advances and settlements
 - [x] URL-persisted workforce dashboard filters with KPI/chart drill-down and a reusable accessible icon-button component
+- [x] Issued-PO goods receipts persist, update remaining quantities/status, and post accepted inventory with field-level quantity validation
+- [x] Live biometric IP/API device synchronization with scheduling, idempotency, persisted results, and upload fallback
+- [x] Audited legacy phone cleanup and compensating stock reversals with original history retained
