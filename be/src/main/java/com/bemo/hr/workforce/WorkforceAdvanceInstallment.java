@@ -37,7 +37,7 @@ public class WorkforceAdvanceInstallment {
     }
 
     public void applyDeduction(BigDecimal value, String periodId) {
-        if (value == null) return;
+        if (value == null || value.signum() <= 0) return;
         this.deductedAmount = this.deductedAmount.add(value);
         this.periodId = periodId;
         if (this.deductedAmount.compareTo(this.amount) >= 0) {
@@ -45,5 +45,17 @@ public class WorkforceAdvanceInstallment {
         } else if (this.deductedAmount.compareTo(BigDecimal.ZERO) > 0) {
             this.status = "PARTIAL";
         }
+    }
+
+    public BigDecimal remainingAmount() {
+        return amount.subtract(deductedAmount == null ? BigDecimal.ZERO : deductedAmount).max(BigDecimal.ZERO);
+    }
+
+    public void reverseDeduction(BigDecimal value) {
+        if (value == null || value.signum() <= 0) return;
+        this.deductedAmount = (this.deductedAmount == null ? BigDecimal.ZERO : this.deductedAmount)
+                .subtract(value).max(BigDecimal.ZERO);
+        this.status = this.deductedAmount.signum() == 0 ? "PENDING"
+                : this.deductedAmount.compareTo(this.amount) >= 0 ? "PAID" : "PARTIAL";
     }
 }

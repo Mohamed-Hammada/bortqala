@@ -16,6 +16,7 @@ import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
 import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
+import com.bemo.hr.workforce.WorkforceAdvanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,7 @@ public class PayrollService {
     private final AttendanceReportRepository attendanceReportRepository;
     private final DailyAttendanceResultRepository dailyAttendanceResultRepository;
     private final OperationsService operationsService;
+    private final WorkforceAdvanceService workforceAdvanceService;
     private final PayrollExcelExporter payrollExcelExporter;
     private final com.bemo.hr.audit.application.AuditService auditService;
 
@@ -136,7 +138,9 @@ public class PayrollService {
                 createdAt = payment.getCreatedAt();
             } else {
                 // Derived immutable estimation with advance safety
-                advances = activeAdvances.signum() <= 0 ? BigDecimal.ZERO : activeAdvances.min(gross.subtract(deductions).max(BigDecimal.ZERO));
+                BigDecimal availableForAdvance = gross.subtract(deductions).max(BigDecimal.ZERO);
+                advances = workforceAdvanceService.calculateEmployeePayrollDeduction(
+                        emp.getId(), end, availableForAdvance, activeAdvances);
                 net = gross.subtract(advances).subtract(deductions).max(BigDecimal.ZERO);
             }
 
@@ -234,7 +238,8 @@ public class PayrollService {
         BigDecimal deductions = request.otherDeductions() == null ? BigDecimal.ZERO : request.otherDeductions();
         BigDecimal bonus = request.bonuses() == null ? BigDecimal.ZERO : request.bonuses();
         BigDecimal availableForAdvance = gross.add(bonus).subtract(deductions).max(BigDecimal.ZERO);
-        BigDecimal advances = activeAdvances.signum() <= 0 ? BigDecimal.ZERO : activeAdvances.min(availableForAdvance);
+        BigDecimal advances = workforceAdvanceService.calculateEmployeePayrollDeduction(
+                emp.getId(), pEnd, availableForAdvance, activeAdvances);
         BigDecimal net = gross.add(bonus).subtract(advances).subtract(deductions).max(BigDecimal.ZERO);
 
         SalaryPayment entity;
@@ -254,13 +259,15 @@ public class PayrollService {
 
         // If advances were deducted, record a settlement entry in employee advances ledger
         if (advances.signum() > 0) {
+            String periodReference = request.periodYear() + "/" + request.periodMonth();
             operationsService.recordAdvanceSettlement(
                     emp.getId(),
                     advances.negate(),
-                    "تسوية سلفة تلقائية مع صرف مرتب " + request.periodYear() + "/" + request.periodMonth(),
+                    "تسوية سلفة تلقائية مع صرف مرتب " + periodReference,
                     paidAtInstant,
                     actor
             );
+            workforceAdvanceService.applyEmployeePayrollSettlement(emp.getId(), advances, periodReference, actor);
         }
 
         auditService.record("PAYROLL_DISBURSEMENT", "SALARY_PAYMENT", entity.getId(), actor,
@@ -309,13 +316,16 @@ public class PayrollService {
 
         BigDecimal deductedAdvances = payment.getAdvancesDeducted();
         if (deductedAdvances != null && deductedAdvances.signum() > 0) {
+            String periodReference = payment.getPeriodYear() + "/" + payment.getPeriodMonth();
             operationsService.recordAdvanceSettlement(
                     payment.getEmployeeId(),
                     deductedAdvances,
-                    "إلغاء واسترداد تسوية سلفة للتراجع عن صرف مرتب " + payment.getPeriodYear() + "/" + payment.getPeriodMonth() + " (السبب: " + request.reason() + ")",
+                    "إلغاء واسترداد تسوية سلفة للتراجع عن صرف مرتب " + periodReference + " (السبب: " + request.reason() + ")",
                     Instant.now(),
                     actor
             );
+            workforceAdvanceService.reverseEmployeePayrollSettlement(
+                    payment.getEmployeeId(), deductedAdvances, periodReference, actor);
         }
 
         payment.markAsReversed(request.reason(), actor);

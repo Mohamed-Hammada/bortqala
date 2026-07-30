@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260729_v70_system_status_translations.yaml
   - include:
       file: db/changelog/data/update/20260729_v71_bemo_erp_branding.yaml
+  - include:
+      file: db/changelog/schema/update/20260730_v72_add_employee_to_workforce_advances.yaml

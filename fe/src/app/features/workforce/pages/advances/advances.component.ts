@@ -7,6 +7,7 @@ import { NotificationService } from '../../../../core/notification.service';
 import { exportCsv } from '../../../../core/download';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-tooltip.directive';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-advances',
@@ -17,7 +18,7 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
       <header class="page-header">
         <div>
           <span class="eyebrow">السلف والأقساط</span>
-          <h1>إدارة سُلف العمال والمقاولين وجدولة الأقساط</h1>
+          <h1>إدارة سُلف الموظفين والعمال والمقاولين وجدولة الأقساط</h1>
         </div>
         <div style="display: flex; gap: 0.75rem;">
           <button type="button" class="btn btn-secondary" (click)="openPolicyModal()">⚙ سياسة الخصم</button>
@@ -29,7 +30,7 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
       </header>
 
       <div class="card policy-summary-card">
-        <div><strong>سياسة السلف الافتراضية والاستثناءات</strong><p>الأولوية: استثناء العامل ← استثناء الفئة ← الإعداد العام. ويمكن تجاوزها داخل السلفة نفسها.</p></div>
+        <div><strong>سياسة السلف الافتراضية والاستثناءات</strong><p>الأولوية: استثناء المستفيد ← استثناء فئته ← الإعداد العام، للموظفين والعمال. ويمكن تجاوزها داخل السلفة نفسها.</p></div>
         <div class="policy-chips">@for (policy of workforceService.advancePolicies(); track policy.id) {<span class="badge policy-chip">{{ policy.scopeName || getPolicyScopeLabel(policy) }} · إصدار {{ policy.version }} · {{ policy.effectiveFrom }} → {{ policy.effectiveTo || 'مفتوحة' }} · {{ policy.deductionMode === 'AUTO' ? 'تلقائي' : 'يدوي' }} · {{ policy.maxDeductionPercent }}%</span>}</div>
       </div>
 
@@ -80,8 +81,8 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
             <tbody>
               @for (adv of workforceService.advances(); track adv.id) {
                 <tr>
-                  <td><strong>{{ adv.recipientType === 'WORKER' ? adv.workerName : adv.contractorName }}</strong></td>
-                  <td><span class="badge type-badge">{{ adv.recipientType === 'WORKER' ? '👷 عامل' : '🏗️ مقاول' }}</span></td>
+                  <td><strong>{{ recipientName(adv) }}</strong></td>
+                  <td><span class="badge type-badge">{{ recipientTypeLabel(adv.recipientType) }}</span></td>
                   <td>{{ adv.amount | number:'1.2-2' }} ج.م</td>
                   <td><span class="badge term-badge" [class.long-term]="adv.termType === 'LONG_TERM'">{{ getTermLabel(adv.termType) }}</span></td>
                   <td>{{ adv.totalInstallments }} قسط</td>
@@ -135,6 +136,7 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
                       (ngModelChange)="onRecipientTypeChange()">
                 <option value="WORKER">عامل</option>
                 <option value="CONTRACTOR">مقاول</option>
+                <option value="EMPLOYEE">موظف</option>
               </select>
             </div>
 
@@ -148,12 +150,25 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
                   }
                 </select>
               </div>
-            } @else {
+            } @else if (form.recipientType === 'CONTRACTOR') {
               <div class="form-group">
                 <label>اختر المقاول *</label>
                 <select [(ngModel)]="form.contractorId" name="contractorId" class="form-input">
                   @for (c of workforceService.contractors(); track c.id) {
                     <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
+                  }
+                </select>
+              </div>
+            } @else {
+              <div class="form-group">
+                <label>اختر الموظف *</label>
+                <select [(ngModel)]="form.employeeId" name="employeeId" class="form-input"
+                        aria-label="اختر الموظف المستفيد من السلفة" (ngModelChange)="applyAdvancePolicy()">
+                  @if (workforceService.employees().length === 0) {
+                    <option value="" disabled>لا يوجد موظفون نشطون متاحون</option>
+                  }
+                  @for (employee of workforceService.employees(); track employee.id) {
+                    <option [value]="employee.id">{{ employee.fullName }} ({{ employee.employeeCode }})</option>
                   }
                 </select>
               </div>
@@ -266,9 +281,11 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
       <app-modal-dialog [isOpen]="policyModalOpen()" title="سياسة خصم السلف" size="normal" [preventOutsideClose]="true" (close)="policyModalOpen.set(false)">
         <form class="modal-form">
           <div class="form-grid">
-            <div class="form-group"><label>نطاق السياسة *</label><select [(ngModel)]="policyForm.scopeType" name="policyScope" class="form-input" (ngModelChange)="policyForm.scopeId = ''"><option value="GLOBAL">إعداد عام</option><option value="CATEGORY">استثناء حسب الفئة</option><option value="WORKER">استثناء حسب العامل</option></select></div>
+            <div class="form-group"><label>نطاق السياسة *</label><select [(ngModel)]="policyForm.scopeType" name="policyScope" class="form-input" (ngModelChange)="policyForm.scopeId = ''"><option value="GLOBAL">إعداد عام</option><option value="CATEGORY">استثناء حسب فئة العمال</option><option value="WORKER">استثناء حسب العامل</option><option value="EMPLOYEE_CATEGORY">استثناء حسب فئة الموظفين</option><option value="EMPLOYEE">استثناء حسب الموظف</option></select></div>
             @if (policyForm.scopeType === 'CATEGORY') {<div class="form-group"><label>الفئة *</label><select [(ngModel)]="policyForm.scopeId" name="policyCategory" class="form-input">@for (category of workforceService.categories(); track category.id) {<option [value]="category.id">{{ category.name }}</option>}</select></div>}
             @if (policyForm.scopeType === 'WORKER') {<div class="form-group"><label>العامل *</label><select [(ngModel)]="policyForm.scopeId" name="policyWorker" class="form-input">@for (worker of workforceService.workers(); track worker.id) {<option [value]="worker.id">{{ worker.fullName }} ({{ worker.code }})</option>}</select></div>}
+            @if (policyForm.scopeType === 'EMPLOYEE_CATEGORY') {<div class="form-group"><label>فئة الموظفين *</label><select [(ngModel)]="policyForm.scopeId" name="policyEmployeeCategory" class="form-input">@for (category of employeeCategories(); track category.id) {<option [value]="category.id">{{ category.name }}</option>}</select></div>}
+            @if (policyForm.scopeType === 'EMPLOYEE') {<div class="form-group"><label>الموظف *</label><select [(ngModel)]="policyForm.scopeId" name="policyEmployee" class="form-input">@for (employee of workforceService.employees(); track employee.id) {<option [value]="employee.id">{{ employee.fullName }} ({{ employee.employeeCode }})</option>}</select></div>}
             <div class="form-group"><label>طريقة الخصم الافتراضية</label><select [(ngModel)]="policyForm.deductionMode" name="policyMode" class="form-input"><option value="AUTO">تلقائي مع التسوية</option><option value="MANUAL">يدوي</option></select></div>
             <div class="form-group"><label>دورية الخصم</label><select [(ngModel)]="policyForm.deductionFrequency" name="policyFrequency" class="form-input"><option value="HALF_MONTH">نصف شهري</option><option value="MONTHLY">شهري</option><option value="WEEKLY">أسبوعي</option></select></div>
             <div class="form-group"><label>الحد الأقصى من مستحق الفترة %</label><input type="number" min="1" max="100" [(ngModel)]="policyForm.maxDeductionPercent" name="policyMax" class="form-input" /></div>
@@ -297,11 +314,11 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
             <div class="repay-info-grid">
               <div class="repay-info-item">
                 <span class="info-label">المستفيد</span>
-                <span class="info-value">{{ adv.recipientType === 'WORKER' ? adv.workerName : adv.contractorName }}</span>
+                <span class="info-value">{{ recipientName(adv) }}</span>
               </div>
               <div class="repay-info-item">
                 <span class="info-label">النوع</span>
-                <span class="info-value">{{ adv.recipientType === 'WORKER' ? 'عامل' : 'مقاول' }}</span>
+                <span class="info-value">{{ recipientTypeLabel(adv.recipientType) }}</span>
               </div>
               <div class="repay-info-item">
                 <span class="info-label">المبلغ الأصلي <span tabindex="0" aria-label="شرح المبلغ الأصلي" appTooltip="المبلغ الأصلي — كامل قيمة السلفة عند الصرف">ⓘ</span></span>
@@ -490,6 +507,7 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
 export class AdvancesComponent implements OnInit {
   workforceService = inject(WorkforceService);
   private notificationService = inject(NotificationService);
+  private route = inject(ActivatedRoute);
 
   loading = signal(false);
   saving = signal(false);
@@ -522,7 +540,7 @@ export class AdvancesComponent implements OnInit {
   });
 
   form: {
-    recipientType: string; workerId: string; contractorId: string;
+    recipientType: string; workerId: string; contractorId: string; employeeId: string;
     amount: number; termType: string; totalInstallments: number;
     installmentAmount: number; deductionFrequency: string;
     maxDeductionPercent: number; reason: string;
@@ -531,6 +549,11 @@ export class AdvancesComponent implements OnInit {
 
   totalGranted = () => this.workforceService.advances().reduce((s, a) => s + (a.amount ?? 0), 0);
   totalRemaining = () => this.workforceService.advances().reduce((s, a) => s + (a.remainingBalance ?? 0), 0);
+  employeeCategories = computed(() => {
+    const unique = new Map<string, string>();
+    this.workforceService.employees().forEach(employee => unique.set(employee.categoryId, employee.categoryName));
+    return Array.from(unique, ([id, name]) => ({ id, name }));
+  });
 
   ngOnInit() {
     this.loading.set(true);
@@ -540,14 +563,26 @@ export class AdvancesComponent implements OnInit {
     });
     this.workforceService.loadWorkers().subscribe();
     this.workforceService.loadContractors().subscribe();
+    this.workforceService.loadEmployees().subscribe({
+      next: () => {
+        if (this.route.snapshot.queryParamMap.get('recipientType') === 'EMPLOYEE') {
+          this.openCreateModal('EMPLOYEE');
+        }
+      }
+    });
     this.workforceService.loadCategories().subscribe();
     this.workforceService.loadAdvancePolicies().subscribe();
   }
 
-  openCreateModal() {
+  openCreateModal(recipientType: 'WORKER' | 'CONTRACTOR' | 'EMPLOYEE' = 'WORKER') {
     this.form = this.defaultForm();
+    this.form.recipientType = recipientType;
     const workers = this.workforceService.workers();
-    if (workers.length > 0) this.form.workerId = workers[0].id;
+    const contractors = this.workforceService.contractors();
+    const employees = this.workforceService.employees();
+    if (recipientType === 'WORKER' && workers.length > 0) this.form.workerId = workers[0].id;
+    if (recipientType === 'CONTRACTOR' && contractors.length > 0) this.form.contractorId = contractors[0].id;
+    if (recipientType === 'EMPLOYEE' && employees.length > 0) this.form.employeeId = employees[0].id;
     this.applyAdvancePolicy();
     this.isModalOpen = true;
   }
@@ -555,10 +590,13 @@ export class AdvancesComponent implements OnInit {
   onRecipientTypeChange() {
     this.form.workerId = '';
     this.form.contractorId = '';
+    this.form.employeeId = '';
     const workers = this.workforceService.workers();
     const contractors = this.workforceService.contractors();
+    const employees = this.workforceService.employees();
     if (this.form.recipientType === 'WORKER' && workers.length > 0) this.form.workerId = workers[0].id;
     if (this.form.recipientType === 'CONTRACTOR' && contractors.length > 0) this.form.contractorId = contractors[0].id;
+    if (this.form.recipientType === 'EMPLOYEE' && employees.length > 0) this.form.employeeId = employees[0].id;
     this.applyAdvancePolicy();
   }
 
@@ -580,9 +618,13 @@ export class AdvancesComponent implements OnInit {
     const policies = this.workforceService.advancePolicies().filter(policy => policy.active
       && policy.effectiveFrom <= effectiveDate && (!policy.effectiveTo || policy.effectiveTo >= effectiveDate));
     const worker = this.workforceService.workers().find(item => item.id === this.form.workerId);
+    const employee = this.workforceService.employees().find(item => item.id === this.form.employeeId);
     const newest = (items: AdvancePolicy[]) => items.sort((a, b) => b.version - a.version)[0];
-    const policy = newest(policies.filter(item => item.scopeType === 'WORKER' && item.scopeId === worker?.id))
-      ?? newest(policies.filter(item => item.scopeType === 'CATEGORY' && item.scopeId === worker?.categoryId))
+    const policy = (this.form.recipientType === 'EMPLOYEE'
+      ? newest(policies.filter(item => item.scopeType === 'EMPLOYEE' && item.scopeId === employee?.id))
+        ?? newest(policies.filter(item => item.scopeType === 'EMPLOYEE_CATEGORY' && item.scopeId === employee?.categoryId))
+      : newest(policies.filter(item => item.scopeType === 'WORKER' && item.scopeId === worker?.id))
+        ?? newest(policies.filter(item => item.scopeType === 'CATEGORY' && item.scopeId === worker?.categoryId)))
       ?? newest(policies.filter(item => item.scopeType === 'GLOBAL'));
     this.effectivePolicyPreview.set(policy ?? null);
     if (!policy) return;
@@ -590,7 +632,16 @@ export class AdvancesComponent implements OnInit {
     this.recalcInstallment();
   }
 
-  getPolicyScopeLabel(policy: AdvancePolicy): string { return policy.scopeType === 'GLOBAL' ? 'الإعداد العام' : policy.scopeType === 'CATEGORY' ? 'استثناء فئة' : 'استثناء عامل'; }
+  getPolicyScopeLabel(policy: AdvancePolicy): string {
+    const labels: Record<AdvancePolicy['scopeType'], string> = {
+      GLOBAL: 'الإعداد العام',
+      CATEGORY: 'استثناء فئة عمال',
+      WORKER: 'استثناء عامل',
+      EMPLOYEE_CATEGORY: 'استثناء فئة موظفين',
+      EMPLOYEE: 'استثناء موظف',
+    };
+    return labels[policy.scopeType];
+  }
 
   recalcInstallment() {
     if (this.form.totalInstallments > 0 && this.form.amount > 0) {
@@ -601,6 +652,13 @@ export class AdvancesComponent implements OnInit {
   saveAdvance() {
     if (!this.form.amount || this.form.amount <= 0) {
       this.notificationService.warning('يجب إدخال مبلغ السلفة');
+      return;
+    }
+    const selectedRecipientId = this.form.recipientType === 'WORKER'
+      ? this.form.workerId : this.form.recipientType === 'CONTRACTOR'
+        ? this.form.contractorId : this.form.employeeId;
+    if (!selectedRecipientId) {
+      this.notificationService.warning('اختر المستفيد من السلفة');
       return;
     }
     if (this.form.termType === 'LONG_TERM' && this.form.totalInstallments < 2) {
@@ -625,7 +683,7 @@ export class AdvancesComponent implements OnInit {
   confirmAction = signal<{ message: string; onConfirm: () => void } | null>(null);
 
   pauseAdvance(adv: WorkforceAdvance) {
-    const msg = `هل أنت متأكد من إيقاف اقتطاع السلفة الخاصة بـ (${adv.recipientType === 'WORKER' ? adv.workerName : adv.contractorName})؟`;
+    const msg = `هل أنت متأكد من إيقاف اقتطاع السلفة الخاصة بـ (${this.recipientName(adv)})؟`;
     this.confirmAction.set({
       message: msg,
       onConfirm: () => {
@@ -730,8 +788,8 @@ export class AdvancesComponent implements OnInit {
 
   exportCsv(): void {
     const rows = this.workforceService.advances().map((adv) => ({
-      recipient: adv.recipientType === 'WORKER' ? adv.workerName : adv.contractorName,
-      type: adv.recipientType === 'WORKER' ? 'عامل' : 'مقاول',
+      recipient: this.recipientName(adv),
+      type: this.recipientTypeLabel(adv.recipientType),
       amount: adv.amount,
       termType: this.getTermLabel(adv.termType),
       totalInstallments: adv.totalInstallments,
@@ -776,9 +834,19 @@ export class AdvancesComponent implements OnInit {
     return m[status] ?? status;
   }
 
+  recipientName(advance: WorkforceAdvance): string {
+    if (advance.recipientType === 'EMPLOYEE') return advance.employeeName ?? '—';
+    if (advance.recipientType === 'CONTRACTOR') return advance.contractorName ?? '—';
+    return advance.workerName ?? '—';
+  }
+
+  recipientTypeLabel(type: WorkforceAdvance['recipientType']): string {
+    return type === 'EMPLOYEE' ? '👤 موظف' : type === 'CONTRACTOR' ? '🏗️ مقاول' : '👷 عامل';
+  }
+
   private defaultForm() {
     return {
-      recipientType: 'WORKER', workerId: '', contractorId: '',
+      recipientType: 'WORKER', workerId: '', contractorId: '', employeeId: '',
       amount: 1000, termType: 'SHORT_TERM', totalInstallments: 1,
       installmentAmount: 1000, deductionFrequency: 'HALF_MONTH',
       maxDeductionPercent: 50, reason: '',

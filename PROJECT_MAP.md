@@ -85,6 +85,7 @@
 - [x] Transactional manual-attendance dirty-cell saving with reload persistence, per-cell errors, summary, and unsaved-change guard
 - [x] Frozen procurement exchange-rate snapshots, base-currency totals, override reasons, and base-value ledger postings
 - [x] Effective-dated versioned advance policies with applied snapshots on advances and settlements
+- [x] Employee advances use the shared installment workflow, employee/category policy overrides, payroll allocation, reversal, and employee-ledger synchronization
 - [x] URL-persisted workforce dashboard filters with KPI/chart drill-down and a reusable accessible icon-button component
 - [x] Issued-PO goods receipts persist, update remaining quantities/status, and post accepted inventory with field-level quantity validation
 - [x] Live biometric IP/API device synchronization with scheduling, idempotency, persisted results, and upload fallback

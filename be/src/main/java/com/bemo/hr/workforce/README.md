@@ -28,3 +28,7 @@ This package implements the core business domain, data persistence, settlement c
 **EN:** Manual attendance now reloads persisted cells and returns transactional batch summaries with created, updated, unchanged, and row-level validation failures. Advance policies have effective dates and immutable versions; each advance and settlement stores the policy version snapshot used.
 
 **AR:** يعيد الحضور اليدوي الآن تحميل الخلايا المحفوظة ويعيد ملخص حفظ جماعي داخل معاملة واحدة يشمل الجديد والمحدث وغير المتغير وأخطاء كل خلية. كما أصبحت سياسات السلف مؤرخة وذات إصدارات غير قابلة للمحو، وتحفظ كل سلفة وتسوية لقطة إصدار السياسة المستخدمة.
+
+**EN:** Employee recipients now use the same advance, installment, policy, repayment, and audit workflow as workers and contractors. Employee and employee-category policy overrides are supported, eligible-category rules are enforced by the backend, and payroll deductions consume only due automatic installments within the configured percentage cap.
+
+**AR:** أصبح الموظف مستفيداً مدعوماً في دورة السلف والأقساط والسياسات والسداد والتدقيق نفسها الخاصة بالعمال والمقاولين. تدعم السياسات استثناء الموظف وفئة الموظفين، ويتحقق الخادم من سماح الفئة بالسلف، ولا تخصم الرواتب إلا الأقساط الآلية المستحقة في حدود النسبة المضبوطة.

@@ -22,6 +22,7 @@ public class WorkforceAdvance {
     @Column(name = "recipient_type", nullable = false, length = 30) private String recipientType;
     @Column(name = "worker_id", length = 36) private String workerId;
     @Column(name = "contractor_id", length = 36) private String contractorId;
+    @Column(name = "employee_id", length = 36) private String employeeId;
     @Column(precision = 12, scale = 2, nullable = false) private BigDecimal amount;
     @Column(name = "term_type", nullable = false, length = 30) private String termType;
     @Column(name = "total_installments", nullable = false) private int totalInstallments;
@@ -42,7 +43,7 @@ public class WorkforceAdvance {
 
     protected WorkforceAdvance() { }
 
-    public WorkforceAdvance(String recipientType, String workerId, String contractorId,
+    public WorkforceAdvance(String recipientType, String workerId, String contractorId, String employeeId,
                             BigDecimal amount, String termType, int totalInstallments,
                             BigDecimal installmentAmount, String deductionFrequency,
                             BigDecimal maxDeductionPercent, String reason,
@@ -52,6 +53,7 @@ public class WorkforceAdvance {
         this.recipientType = recipientType != null ? recipientType.strip().toUpperCase() : "WORKER";
         this.workerId = workerId;
         this.contractorId = contractorId;
+        this.employeeId = employeeId;
         this.amount = amount != null ? amount : BigDecimal.ZERO;
         this.termType = termType != null ? termType.strip().toUpperCase() : "SHORT_TERM";
         this.totalInstallments = Math.max(1, totalInstallments);
@@ -78,6 +80,15 @@ public class WorkforceAdvance {
     public void pause() { this.status = "PAUSED"; }
     public void resume() { this.status = "ACTIVE"; }
     public void repay(BigDecimal value) { deduct(value); }
+
+    public BigDecimal restore(BigDecimal value) {
+        if (value == null || value.signum() <= 0) return BigDecimal.ZERO;
+        BigDecimal room = amount.subtract(remainingBalance).max(BigDecimal.ZERO);
+        BigDecimal restored = value.min(room);
+        remainingBalance = remainingBalance.add(restored);
+        if (restored.signum() > 0 && "PAID_OFF".equals(status)) status = "ACTIVE";
+        return restored;
+    }
 
     public void applyPolicySnapshot(WorkforceAdvancePolicy policy) {
         if (policy == null) return;

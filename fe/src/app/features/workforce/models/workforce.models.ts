@@ -207,11 +207,13 @@ export interface WorkforceImportCommit {
 
 export interface WorkforceAdvance {
   id: string;
-  recipientType: 'WORKER' | 'CONTRACTOR';
+  recipientType: 'WORKER' | 'CONTRACTOR' | 'EMPLOYEE';
   workerId?: string;
   workerName?: string;
   contractorId?: string;
   contractorName?: string;
+  employeeId?: string;
+  employeeName?: string;
   amount: number;
   termType: TermType;
   totalInstallments: number;
@@ -229,7 +231,7 @@ export interface WorkforceAdvance {
 
 export interface AdvancePolicy {
   id?: string;
-  scopeType: 'GLOBAL' | 'CATEGORY' | 'WORKER';
+  scopeType: 'GLOBAL' | 'CATEGORY' | 'WORKER' | 'EMPLOYEE_CATEGORY' | 'EMPLOYEE';
   scopeId?: string;
   scopeName?: string;
   deductionMode: 'AUTO' | 'MANUAL';
@@ -242,4 +244,13 @@ export interface AdvancePolicy {
   effectiveTo?: string;
   active: boolean;
   updatedAt?: number;
+}
+
+export interface AdvanceEmployeeOption {
+  id: string;
+  employeeCode: string;
+  fullName: string;
+  categoryId: string;
+  categoryName: string;
+  active: boolean;
 }

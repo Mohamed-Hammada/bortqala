@@ -27,3 +27,7 @@ Demo employees, punches, parties, inventory movements, ledger entries, and advan
 تستمد المشتريات اسم الصنف وتصنيفه ووحدة قياسه الثابتة من دليل المخزون عبر هذه الخدمة، ولا تعتمد على البيانات الوصفية المرسلة من الواجهة كبيانات رئيسية.
 
 الموظفون والبصمات والأطراف وحركات المخزون والقيود والسلف النموذجية بيانات تطوير اختيارية، ولا ينشئها تشغيل الإنتاج.
+
+**EN:** The employee advance ledger remains the financial source used by payroll. Scheduled employee advances and manual repayments from the workforce module mirror their signed entries here in the same backend transaction.
+
+**AR:** يظل دفتر سلف الموظفين المصدر المالي الذي تستخدمه الرواتب. وتعكس سلف الموظفين المجدولة وعمليات سدادها اليدوي قيودها الموقعة هنا داخل معاملة الخادم نفسها.

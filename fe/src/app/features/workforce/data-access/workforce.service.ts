@@ -16,7 +16,8 @@ import {
   SettlementIssue,
   WorkforceImportBatch,
   WorkforceImportValidation,
-  WorkforceImportCommit
+  WorkforceImportCommit,
+  AdvanceEmployeeOption
 } from '../models/workforce.models';
 
 @Injectable({ providedIn: 'root' })
@@ -26,6 +27,7 @@ export class WorkforceService {
   contractors = signal<Contractor[]>([]);
   categories = signal<WorkerCategory[]>([]);
   workers = signal<Worker[]>([]);
+  employees = signal<AdvanceEmployeeOption[]>([]);
   laborRequests = signal<LaborRequest[]>([]);
   settlementPeriods = signal<SettlementPeriod[]>([]);
   advances = signal<WorkforceAdvance[]>([]);
@@ -92,6 +94,12 @@ export class WorkforceService {
   updateWorker(id: string, payload: Partial<Worker>): Observable<Worker> {
     return this.http.put<Worker>(`/api/v1/workforce/workers/${id}`, payload).pipe(
       tap(() => this.loadWorkers().subscribe())
+    );
+  }
+
+  loadEmployees(): Observable<AdvanceEmployeeOption[]> {
+    return this.http.get<AdvanceEmployeeOption[]>('/api/v1/employees').pipe(
+      tap(res => this.employees.set(res.filter(employee => employee.active)))
     );
   }
 
@@ -193,9 +201,11 @@ export class WorkforceService {
     );
   }
 
-  loadEffectiveAdvancePolicy(workerId: string, date: string): Observable<AdvancePolicy> {
+  loadEffectiveAdvancePolicy(recipientType: 'WORKER' | 'EMPLOYEE', recipientId: string, date: string): Observable<AdvancePolicy> {
     return this.http.get<AdvancePolicy>('/api/v1/workforce/advances/policies/effective', {
-      params: { workerId, date },
+      params: recipientType === 'EMPLOYEE'
+        ? { recipientType, employeeId: recipientId, date }
+        : { recipientType, workerId: recipientId, date },
     });
   }
 

@@ -31,9 +31,11 @@ public class WorkforceAdvanceController {
 
     @GetMapping("/policies/effective")
     public WorkforceApi.AdvancePolicyResponse effectivePolicy(
-            @org.springframework.web.bind.annotation.RequestParam String workerId,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String recipientType,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String workerId,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String employeeId,
             @org.springframework.web.bind.annotation.RequestParam String date) {
-        return advanceService.effectivePolicy(workerId, date);
+        return advanceService.effectivePolicy(recipientType, workerId, employeeId, date);
     }
 
     @PutMapping("/policies")

@@ -19,6 +19,7 @@ import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { AuthService } from '../../core/auth/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-employees-page',
@@ -41,12 +42,19 @@ export class EmployeesPage {
   readonly store = inject(EmployeesStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
+  private readonly router = inject(Router);
   readonly confirmAction = signal<{ message: string; onConfirm: () => void } | null>(null);
   readonly drawerOpen = signal(false);
   readonly submitAttempted = signal(false);
   readonly pagination = new TablePagination();
   readonly editingId = signal<string | null>(null);
   readonly search = signal('');
+
+  openEmployeeAdvances(): void {
+    void this.router.navigate(['/workforce/advances'], {
+      queryParams: { recipientType: 'EMPLOYEE' },
+    });
+  }
 
   isBiometricCategorySelected(): boolean {
     const selectedId = this.form.controls.categoryId.value;

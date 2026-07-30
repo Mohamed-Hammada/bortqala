@@ -281,14 +281,38 @@ public class OperationsService {
     @Transactional
     public OperationsApi.Snapshot recordAdvance(OperationsApi.AdvanceRequest request, String actor) {
         if (request.amountDelta().signum() == 0) throw new BusinessRuleException("Advance amount cannot be zero.");
-        var employee = employeeRepository.findById(request.employeeId()).orElseThrow(() -> new NotFoundException("Employee not found."));
+        var employee = employeeRepository.findById(request.employeeId())
+                .orElseThrow(() -> new NotFoundException("Employee not found."));
         var category = attendanceCategoryRepository.findById(employee.getCategoryId())
                 .orElseThrow(() -> new NotFoundException("Employee category not found."));
-        if (!category.isAllowsEmployeeAdvances()) throw new BusinessRuleException("This employee category does not allow advances.");
-        var adv = employeeAdvanceEntryRepository.save(new EmployeeAdvanceEntry(employee.getId(), request.amountDelta(),
+        if (!category.isAllowsEmployeeAdvances()) {
+            throw new BusinessRuleException("This employee category does not allow advances.");
+        }
+        employeeAdvanceEntryRepository.save(new EmployeeAdvanceEntry(employee.getId(), request.amountDelta(),
                 request.entryType(), request.note(), request.occurredAt(), actor));
-        auditService.record("EMPLOYEE_ADVANCE", "EMPLOYEE", employee.getId(), actor, "Recorded advance for " + employee.getFullName() + " amount: " + request.amountDelta(), null);
+        auditService.record("EMPLOYEE_ADVANCE", "EMPLOYEE", employee.getId(), actor,
+                "Recorded advance for " + employee.getFullName() + " amount: " + request.amountDelta(), null);
         return snapshot();
+    }
+
+    @Transactional
+    public void recordAdvanceIssuance(String employeeId, BigDecimal amount, String entryType, String note,
+                                      Instant occurredAt, String actor) {
+        if (amount == null || amount.signum() <= 0) {
+            throw new BusinessRuleException("يجب أن يكون مبلغ السلفة أكبر من صفر.");
+        }
+        var employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new NotFoundException("الموظف غير موجود."));
+        if (!employee.isActive()) throw new BusinessRuleException("لا يمكن صرف سلفة لموظف غير نشط.");
+        var category = attendanceCategoryRepository.findById(employee.getCategoryId())
+                .orElseThrow(() -> new NotFoundException("فئة الموظف غير موجودة."));
+        if (!category.isAllowsEmployeeAdvances()) {
+            throw new BusinessRuleException("فئة هذا الموظف لا تسمح بصرف السلف.");
+        }
+        employeeAdvanceEntryRepository.save(new EmployeeAdvanceEntry(employee.getId(), amount,
+                entryType, note, occurredAt == null ? Instant.now() : occurredAt, actor));
+        auditService.record("EMPLOYEE_ADVANCE", "EMPLOYEE", employee.getId(), actor,
+                "Recorded advance for " + employee.getFullName() + " amount: " + amount, null);
     }
 
     public BigDecimal getAdvanceBalance(String employeeId) {
