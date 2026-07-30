@@ -1,4 +1,4 @@
-# Bemo HR & Factory Operations Platform (نظام بيمو لإدارة الموارد البشرية والعمليات المصنعية)
+# Bemo ERP (نظام بيمو المتكامل لإدارة الأعمال)
 
 An enterprise, multi-tenant HR attendance, shift scheduling, inventory, and factory operations platform built for companies, factories (fruit/orange processing & packing), and industrial enterprises replacing manual paper notes and Excel spreadsheets.
 
@@ -77,7 +77,7 @@ The repository contains `be/` (Spring Boot 4.1 backend with bundled Angular UI),
 ### Prerequisites
 - Java 26
 - Node 24.18+ / npm 11+
-- PostgreSQL 18.4 (`jdbc:postgresql://localhost:5432/hr_platform`, user `root`, password `root`)
+- PostgreSQL 18.4 (`jdbc:postgresql://localhost:5432/bemo_erp`, user `root`, password `root`)
 
 ### Run Backend & Frontend
 
@@ -153,4 +153,3 @@ docker compose logs -f
 - **Company Code**: `DEMO`
 - **Username**: `admin`
 - **Password**: `Admin@12345`
-

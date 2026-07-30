@@ -1,1 +1,1 @@
-Generated `hr-platform.jar` is staged here by `npm run prepare` and is not maintained manually.
+Generated `bemo-erp.jar` is staged here by `npm run prepare` and is not maintained manually.

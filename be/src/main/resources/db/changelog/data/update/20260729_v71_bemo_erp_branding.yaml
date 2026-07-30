@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-v71-update-bemo-erp-branding
+      author: Mohamed-Hammada
+      comment: Renames user-visible platform branding without changing tenant company names.
+      changes:
+        - sql:
+            sql: >
+              UPDATE translations
+              SET text_value = CASE
+                WHEN translation_key = 'app.defaultName' AND locale = 'ar-EG' THEN 'بيمو ERP'
+                WHEN translation_key = 'app.defaultName' AND locale = 'en-US' THEN 'Bemo ERP'
+                WHEN translation_key = 'login.product' AND locale = 'ar-EG' THEN 'منصة بيمو المتكاملة لإدارة الأعمال'
+                WHEN translation_key = 'login.product' AND locale = 'en-US' THEN 'Bemo ERP Business Platform'
+                WHEN translation_key = 'appShell.offlineBanner' AND locale = 'ar-EG' THEN '⚡ <strong>تنبيه انقطاع الاتصال:</strong> يتعذر الوصول إلى الخادم حالياً. يمكنك مراجعة البيانات المحفوظة، وسيعاد الفحص تلقائياً.'
+                WHEN translation_key = 'appShell.offlineBanner' AND locale = 'en-US' THEN '⚡ <strong>Offline:</strong> The server is currently unreachable. You can review cached data and the connection will be checked automatically.'
+                ELSE text_value
+              END
+              WHERE translation_key IN ('app.defaultName', 'login.product', 'appShell.offlineBanner');
+      rollback:
+        - sql:
+            sql: >
+              UPDATE translations
+              SET text_value = CASE
+                WHEN translation_key = 'app.defaultName' AND locale = 'ar-EG' THEN 'بيمو HR'
+                WHEN translation_key = 'app.defaultName' AND locale = 'en-US' THEN 'Bemo HR'
+                WHEN translation_key = 'login.product' AND locale = 'ar-EG' THEN 'بيمو لإدارة الموارد البشرية'
+                WHEN translation_key = 'login.product' AND locale = 'en-US' THEN 'Bemo HR management'
+                WHEN translation_key = 'appShell.offlineBanner' AND locale = 'ar-EG' THEN '⚡ <strong>تنبيه انقطاع الاتصال (Offline Mode):</strong> أنت تعمل حالياً دون اتصال بالشبكة، سيعاد التزامن فور عودة الاتصال.'
+                WHEN translation_key = 'appShell.offlineBanner' AND locale = 'en-US' THEN '⚡ <strong>Offline Mode:</strong> You are currently offline. Synchronization will resume when connection is restored.'
+                ELSE text_value
+              END
+              WHERE translation_key IN ('app.defaultName', 'login.product', 'appShell.offlineBanner');

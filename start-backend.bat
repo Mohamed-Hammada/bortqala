@@ -1,7 +1,7 @@
 @echo off
-title Bemo HR Backend (Spring Boot)
+title Bemo ERP Backend (Spring Boot)
 echo ========================================================
-echo Starting Bemo HR Spring Boot Backend (Port 8080)...
+echo Starting Bemo ERP Spring Boot Backend (Port 8080)...
 echo ========================================================
 echo.
 
@@ -19,7 +19,7 @@ if errorlevel 1 (
  exit /b 1
 )
 
-if not exist "build\libs\hr-platform-0.0.1-SNAPSHOT.jar" (
+if not exist "build\libs\bemo-erp-0.0.1-SNAPSHOT.jar" (
  echo.
  echo [ERROR] Backend JAR was not created.
  pause
@@ -34,7 +34,7 @@ echo.
 java ^
  -Xms512m ^
  -Xmx2g ^
- -jar build\libs\hr-platform-0.0.1-SNAPSHOT.jar ^
+ -jar build\libs\bemo-erp-0.0.1-SNAPSHOT.jar ^
  --spring.profiles.active=dev
 
 set "BACKEND_EXIT_CODE=%ERRORLEVEL%"

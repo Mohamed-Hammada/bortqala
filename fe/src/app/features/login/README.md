@@ -9,3 +9,7 @@ Expired protected sessions arrive with `reason=session-expired` and display the 
 يستخدم الدخول كود التطبيق واسم المستخدم وكلمة المرور، ويحمّل لغة المستخدم المحفوظة ويطبقها بالكامل قبل الانتقال إلى الواجهة.
 
 **AR:** دخول باسم المستخدم وكلمة المرور للحصول على جلسة JWT ثم الانتقال إلى الواجهة المناسبة للصلاحيات.
+
+**EN:** Login uses the Bemo ERP product identity and shared installable-app logo while tenant company names remain independent.
+
+**AR:** تستخدم شاشة الدخول هوية Bemo ERP وشعار التطبيق القابل للتثبيت، مع بقاء اسم كل شركة مستقلاً عن اسم المنتج.

@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260729-v69-seed-client-cache-version
+      author: Mohamed-Hammada
+      comment: Mandatory runtime seed; this is not demo or test data.
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM system_settings WHERE setting_key = 'client_cache_version'
+      changes:
+        - insert:
+            tableName: system_settings
+            columns:
+              - column: { name: setting_key, value: client_cache_version }
+              - column: { name: setting_value, value: "2026.07.29.1" }
+              - column: { name: updated_by, value: liquibase }
+              - column: { name: change_reason, value: Initial production cache generation }
+      rollback:
+        - delete:
+            tableName: system_settings
+            where: "setting_key = 'client_cache_version'"

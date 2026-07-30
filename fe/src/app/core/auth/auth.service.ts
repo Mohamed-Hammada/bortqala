@@ -13,7 +13,7 @@ import {
   UserPreferences,
 } from './auth.models';
 
-const STORAGE_KEY = 'hr-platform-session';
+const STORAGE_KEY = 'bemo-erp-session';
 const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'SYSTEM',
   tableDensity: 'COMFORTABLE',

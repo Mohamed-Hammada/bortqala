@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Bemo HR",
+  "productName": "Bemo ERP",
   "version": "0.1.0",
   "identifier": "com.bemo.hr.desktop",
   "build": {
@@ -11,7 +11,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Bemo HR",
+        "title": "Bemo ERP",
         "url": "index.html",
         "width": 1440,
         "height": 900,

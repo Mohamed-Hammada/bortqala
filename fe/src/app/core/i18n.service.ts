@@ -8,7 +8,7 @@ interface TranslationBundle {
   messages: Record<string, string>;
 }
 
-const LOCALE_STORAGE_KEY = 'hr-platform-locale';
+const LOCALE_STORAGE_KEY = 'bemo-erp-locale';
 
 const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
   'ar-EG': {
@@ -421,7 +421,11 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'fiscal.empty': 'لا توجد فترات مالية لهذه السنة. اضغط "إنشاء فترات السنة" للبدء.',
     'fiscal.created': 'تم إنشاء الفترات المالية للسنة بنجاح ✓',
     'fiscal.statusChanged': 'تم تغيير حالة الفترة إلى ({status}) ✓',
-    'appShell.offlineBanner': '⚡ <strong>تنبيه انقطاع الاتصال (Offline Mode):</strong> أنت تعمل حالياً دون اتصال بالشبكة، سيعاد التزامن فور عودة الاتصال.',
+    'appShell.offlineBanner': '⚡ <strong>تنبيه انقطاع الاتصال:</strong> يتعذر الوصول إلى الخادم حالياً. يمكنك مراجعة البيانات المحفوظة، وسيعاد الفحص تلقائياً.',
+    'appShell.serverChecking': 'جارٍ فحص الخادم…',
+    'appShell.serverOnline': 'الخادم متصل',
+    'appShell.serverOffline': 'الخادم غير متصل',
+    'appShell.serverRetry': 'إعادة فحص اتصال الخادم',
     'appShell.searchPlaceholder': '🔍 بحث سريع بالمناطق والوظائف (Ctrl+K)...',
     'appShell.favoriteTooltip': 'إزالة من المفضلة',
     'appShell.addFavoriteTooltip': 'إضافة للمفضلة',
@@ -1001,7 +1005,11 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'fiscal.empty': 'No fiscal periods for this year. Click "Generate Fiscal Year" to start.',
     'fiscal.created': 'Fiscal periods created successfully ✓',
     'fiscal.statusChanged': 'Period status changed to ({status}) ✓',
-    'appShell.offlineBanner': '⚡ <strong>Offline Mode:</strong> You are currently offline. Synchronization will resume when connection is restored.',
+    'appShell.offlineBanner': '⚡ <strong>Offline:</strong> The server is currently unreachable. You can review cached data and the connection will be checked automatically.',
+    'appShell.serverChecking': 'Checking server…',
+    'appShell.serverOnline': 'Server online',
+    'appShell.serverOffline': 'Server offline',
+    'appShell.serverRetry': 'Check the server connection again',
     'appShell.searchPlaceholder': '🔍 Quick search by area or function (Ctrl+K)...',
     'appShell.favoriteTooltip': 'Remove from favorites',
     'appShell.addFavoriteTooltip': 'Add to favorites',

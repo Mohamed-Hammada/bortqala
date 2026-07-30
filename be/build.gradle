@@ -6,7 +6,11 @@ plugins {
 
 group = 'com.bemo'
 version = '0.0.1-SNAPSHOT'
-description = 'Configurable HR attendance and payroll review platform'
+description = 'Bemo ERP business operations platform'
+
+springBoot {
+    buildInfo()
+}
 
 java {
     toolchain {

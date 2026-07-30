@@ -2,7 +2,9 @@
   <app-toast-container />
   <aside class="sidebar" [class.open]="menuOpen()" [class.collapsed]="collapsed()">
     <div class="brand">
-      <span class="brand-mark" [appTooltip]="authService.app()?.name ?? 'Bemo HR'">B</span>
+      <span class="brand-mark" [appTooltip]="authService.app()?.name ?? 'Bemo ERP'">
+        <img src="/icons/bemo-erp-logo.svg" alt="" width="36" height="36" />
+      </span>
       <div class="brand-info">
         <strong>{{ authService.app()?.name ?? i18n.t('app.defaultName') }}</strong
         ><small>{{ authService.app()?.code }} · {{ i18n.t('app.attendanceReports') }}</small>
@@ -28,6 +30,28 @@
         <app-icon name="close" />
       </button>
     </div>
+
+    <button
+      type="button"
+      class="server-status"
+      [class.online]="network.backendState() === 'ONLINE'"
+      [class.offline]="network.backendState() === 'OFFLINE'"
+      [class.checking]="network.backendState() === 'CHECKING'"
+      (click)="network.checkNow()"
+      [attr.aria-label]="i18n.t('appShell.serverRetry')"
+      [appTooltip]="(network.backendStatus()?.service ?? 'Bemo ERP') + ' · ' + (network.backendStatus()?.version ?? '—')"
+    >
+      <span class="server-status-dot" aria-hidden="true"></span>
+      <span class="server-status-label">
+        {{
+          network.backendState() === 'ONLINE'
+            ? i18n.t('appShell.serverOnline')
+            : network.backendState() === 'OFFLINE'
+              ? i18n.t('appShell.serverOffline')
+              : i18n.t('appShell.serverChecking')
+        }}
+      </span>
+    </button>
 
     <nav [attr.aria-label]="i18n.t('nav.main')">
       <!-- Section: Favorites -->

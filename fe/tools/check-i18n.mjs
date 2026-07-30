@@ -17,16 +17,25 @@ const walk = (directory) => {
 walk(sourceRoot);
 
 const byLocale = new Map([['ar-EG', new Set()], ['en-US', new Set()]]);
-for (const name of readdirSync(translationsRoot).filter((value) => value.endsWith('.csv'))) {
-  const lines = readFileSync(join(translationsRoot, name), 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).slice(1);
+const filesUnder = (directory, extension) => {
+  const files = [];
+  for (const name of readdirSync(directory)) {
+    const path = join(directory, name);
+    if (statSync(path).isDirectory()) files.push(...filesUnder(path, extension));
+    else if (name.endsWith(extension)) files.push(path);
+  }
+  return files;
+};
+for (const path of filesUnder(translationsRoot, '.csv')) {
+  const lines = readFileSync(path, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).slice(1);
   for (const line of lines) {
     const columns = line.split(';');
     if (columns.length >= 4 && byLocale.has(columns[2])) byLocale.get(columns[2]).add(columns[1]);
   }
 }
 const changelogRoot = resolve('../be/src/main/resources/db/changelog');
-for (const name of readdirSync(changelogRoot).filter((value) => value.endsWith('.yaml'))) {
-  const source = readFileSync(join(changelogRoot, name), 'utf8');
+for (const path of filesUnder(changelogRoot, '.yaml')) {
+  const source = readFileSync(path, 'utf8');
   for (const match of source.matchAll(/translation_key,\s*value:\s*['"]?([\w.-]+)['"]?[\s\S]{0,350}?locale,\s*value:\s*['"]?([\w-]+)['"]?/g)) {
     if (byLocale.has(match[2])) byLocale.get(match[2]).add(match[1]);
   }

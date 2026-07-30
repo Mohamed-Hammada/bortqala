@@ -1,4 +1,4 @@
-# Bemo HR desktop / تطبيق Bemo HR لسطح المكتب
+# Bemo ERP desktop / تطبيق Bemo ERP لسطح المكتب
 
 ## English
 

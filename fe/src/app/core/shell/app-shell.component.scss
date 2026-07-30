@@ -114,10 +114,77 @@
   display: grid;
   place-items: center;
   border-radius: 10px;
-  background: var(--gold);
-  color: #0F172A;
-  font: 700 18px var(--heading-font);
+  overflow: hidden;
+  background: #14241f;
   box-shadow: 0 4px 12px rgba(212, 160, 23, 0.30);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.server-status {
+  width: calc(100% - 8px);
+  min-height: 34px;
+  margin: 8px 4px 2px;
+  padding: 6px 9px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--sidebar-line);
+  border-radius: 8px;
+  color: var(--sidebar-muted);
+  background: var(--surface-muted);
+  font: 700 11px var(--body-font);
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+}
+
+.server-status-dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #94a3b8;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.16);
+}
+
+.server-status.online .server-status-dot {
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16);
+}
+
+.server-status.offline {
+  color: var(--danger);
+}
+
+.server-status.offline .server-status-dot {
+  background: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
+}
+
+.server-status.checking .server-status-dot {
+  animation: server-pulse 1.1s ease-in-out infinite;
+}
+
+.sidebar.collapsed .server-status {
+  width: 42px;
+  justify-content: center;
+  margin-inline: auto;
+}
+
+.sidebar.collapsed .server-status-label {
+  display: none;
+}
+
+@keyframes server-pulse {
+  50% { opacity: 0.35; transform: scale(0.8); }
 }
 
 .brand-info {
@@ -857,5 +924,8 @@ kbd {
   .main-area,
   .nav-item {
     transition: none;
+  }
+  .server-status.checking .server-status-dot {
+    animation: none;
   }
 }

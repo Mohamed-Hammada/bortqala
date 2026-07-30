@@ -29,3 +29,9 @@
 **EN:** Shell navigation, quick actions, shortcuts, menu controls, and dashboard actions use the shared styled tooltip overlay instead of relying on the browser's native `title` popup.
 
 **AR:** تستخدم عناصر تنقل التطبيق والإجراءات السريعة والاختصارات وأزرار القوائم واللوحة تلميح التطبيق المرئي المشترك بدلاً من الاعتماد على نافذة `title` الافتراضية للمتصفح.
+
+## PWA lifecycle / دورة تطبيق PWA
+
+**EN:** Production builds generate an Angular service worker and installable Bemo ERP manifest. Startup and 30-second checks call `/api/v1/system/status`; when its durable cache generation changes, only Cache Storage and the old service-worker registration are cleared before a one-time reload. Authentication and user preferences are preserved.
+
+**AR:** تنشئ نسخة الإنتاج Service Worker وملف تثبيت خاصاً بـ Bemo ERP. يستدعي بدء التطبيق والفحص كل 30 ثانية `/api/v1/system/status`، وعند تغير إصدار الكاش المحفوظ في الخادم يتم مسح Cache Storage وتسجيل Service Worker القديم فقط ثم إعادة التحميل مرة واحدة، دون حذف جلسة المستخدم أو تفضيلاته.

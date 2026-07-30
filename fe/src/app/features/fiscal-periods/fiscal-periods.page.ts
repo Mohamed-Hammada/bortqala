@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
@@ -31,12 +32,17 @@ export class FiscalPeriodsPage {
   async load() {
     this.loading.set(true);
     this.error.set(null);
+    this.periods.set([]);
     try {
       const data = await firstValueFrom(
         this.http.get<FiscalPeriod[]>('/api/v1/fiscal-periods', { params: { year: this.year() } }),
       );
       this.periods.set(data);
     } catch (e) {
+      if (e instanceof HttpErrorResponse && (e.status === 404 || e.status === 204)) {
+        this.periods.set([]);
+        return;
+      }
       this.error.set(apiErrorMessage(e, this.i18n));
     } finally {
       this.loading.set(false);

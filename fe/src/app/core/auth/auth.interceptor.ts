@@ -8,7 +8,7 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const token = authService.token();
-  const deviceKey = 'hr-platform-device-id';
+  const deviceKey = 'bemo-erp-device-id';
   let deviceId = localStorage.getItem(deviceKey);
   if (!deviceId) {
     deviceId = createRequestId();

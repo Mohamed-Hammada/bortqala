@@ -47,8 +47,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/v1/auth/login", "/api/v1/i18n/**", "/actuator/health").permitAll()
-                        .requestMatchers("/", "/index.html", "/favicon.ico", "/*.js", "/*.css", "/assets/**",
+                        .requestMatchers("/api/v1/auth/login", "/api/v1/i18n/**", "/api/v1/system/status",
+                                "/actuator/health", "/actuator/health/**").permitAll()
+                        .requestMatchers("/", "/index.html", "/favicon.ico", "/*.js", "/*.css", "/*.json",
+                                "/*.webmanifest", "/*.svg", "/*.png", "/assets/**", "/icons/**",
                                 "/login", "/dashboard", "/categories", "/employees", "/imports", "/parties",
                                 "/reports", "/reports/*", "/settings", "/users").permitAll()
                         .anyRequest().authenticated())

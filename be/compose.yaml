@@ -2,18 +2,18 @@ services:
   postgres:
     image: postgres:18-alpine
     environment:
-      POSTGRES_DB: hr_platform
-      POSTGRES_USER: hr_platform
-      POSTGRES_PASSWORD: hr_platform
+      POSTGRES_DB: bemo_erp
+      POSTGRES_USER: bemo_erp
+      POSTGRES_PASSWORD: bemo_erp
     ports:
       - "5432:5432"
     volumes:
-      - hr-platform-postgres:/var/lib/postgresql/data
+      - bemo-erp-postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hr_platform -d hr_platform"]
+      test: ["CMD-SHELL", "pg_isready -U bemo_erp -d bemo_erp"]
       interval: 5s
       timeout: 3s
       retries: 10
 
 volumes:
-  hr-platform-postgres:
+  bemo-erp-postgres:

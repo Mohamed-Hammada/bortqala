@@ -6,10 +6,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-public class HrPlatformApplication {
+public class BemoErpApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(HrPlatformApplication.class, args);
+		SpringApplication.run(BemoErpApplication.class, args);
 	}
 
 }

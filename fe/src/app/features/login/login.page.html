@@ -13,10 +13,10 @@
 
     <div class="story-copy">
       <div class="brand-badge">
-        <span class="monogram">{{ i18n.locale() === 'ar-EG' ? 'ب' : 'B' }}</span>
+        <span class="monogram"><img src="/icons/bemo-erp-logo.svg" alt="" width="48" height="48" /></span>
         <div class="brand-titles">
-          <strong>Bemo HR</strong>
-          <small>Enterprise Platform</small>
+          <strong>Bemo ERP</strong>
+          <small>Business Operations Platform</small>
         </div>
       </div>
       <p [innerHTML]="i18n.t('login.tagline')"></p>
@@ -44,8 +44,8 @@
           </button>
         </div>
         <div class="logo-watermark">
-          <span class="mini-logo">B</span>
-          <span class="company-tag">{{ authService.app()?.name ?? 'Bemo HR' }}</span>
+          <span class="mini-logo"><img src="/icons/bemo-erp-logo.svg" alt="" width="22" height="22" /></span>
+          <span class="company-tag">{{ authService.app()?.name ?? 'Bemo ERP' }}</span>
         </div>
       </div>
 

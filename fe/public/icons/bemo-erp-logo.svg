@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Bemo ERP</title>
+  <desc id="desc">Three connected business modules forming the letter B.</desc>
+  <rect width="512" height="512" rx="112" fill="#14241f"/>
+  <path d="M154 112v288" fill="none" stroke="#f7f4ec" stroke-width="42" stroke-linecap="round"/>
+  <path d="M177 135h104c57 0 91 28 91 70s-34 70-91 70H177" fill="none" stroke="#d4a017" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M177 275h123c58 0 92 28 92 70s-34 70-92 70H177" fill="none" stroke="#d4a017" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="154" cy="135" r="17" fill="#f7f4ec"/>
+  <circle cx="154" cy="275" r="17" fill="#f7f4ec"/>
+  <circle cx="154" cy="400" r="17" fill="#f7f4ec"/>
+</svg>

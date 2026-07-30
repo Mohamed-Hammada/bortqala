@@ -28,3 +28,9 @@
 **EN:** Tenant settings expose the percentage used by the backend to create daily biometric outage anomalies.
 
 **AR:** تعرض إعدادات الشركة النسبة التي يستخدمها الخادم لإنشاء حالات شذوذ انقطاع البصمة اليومية.
+
+## Saved-state guard / حارس التغييرات
+
+**EN:** Successful user-preference and application-setting saves mark their reactive forms pristine. Navigation prompts only appear for changes made after the last successful save.
+
+**AR:** بعد نجاح حفظ تفضيلات المستخدم أو إعدادات الشركة تُعلّم النماذج كبيانات محفوظة، لذلك لا يظهر تحذير المغادرة إلا للتغييرات التي تمت بعد آخر حفظ ناجح.

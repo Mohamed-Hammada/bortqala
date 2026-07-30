@@ -1,6 +1,6 @@
 # Backend — HR & Factory Operations API (`be/`)
 
-Spring Boot 4.1 modular monolith built with Java 26, Spring Data JPA, Hibernate ORM, PostgreSQL 18.4 (`jdbc:postgresql://localhost:5432/hr_platform`), and Liquibase schema migrations.
+Spring Boot 4.1 modular monolith for Bemo ERP, built with Java 26, Spring Data JPA, Hibernate ORM, PostgreSQL 18.4 (`jdbc:postgresql://localhost:5432/bemo_erp`), and Liquibase schema migrations.
 
 ---
 
@@ -55,9 +55,8 @@ docker build -t bemo-hr-backend .
 
 | Configuration Variable | Purpose / Default Value |
 |---|---|
-| `DB_URL` | `jdbc:postgresql://localhost:5432/hr_platform` |
+| `DB_URL` | `jdbc:postgresql://localhost:5432/bemo_erp` |
 | `DB_USERNAME` | PostgreSQL username (`root`) |
 | `DB_PASSWORD` | PostgreSQL password (`root`) |
 | `HR_JWT_SECRET` | HS256 secret (minimum 32 bytes) |
 | `HR_COMPANY_ZONE` | Time zone (`Africa/Cairo`) |
-

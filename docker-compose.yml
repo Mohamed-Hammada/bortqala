@@ -1,13 +1,13 @@
-name: bemo-hr-platform
+name: bemo-erp
 
 services:
   # 1. PostgreSQL Database Service
   db:
     image: postgres:17-alpine
-    container_name: bemo-hr-db
+    container_name: bemo-erp-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-hr_platform}
+      POSTGRES_DB: ${POSTGRES_DB:-bemo_erp}
       POSTGRES_USER: ${POSTGRES_USER:-root}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-root}
     ports:
@@ -15,26 +15,26 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-root} -d ${POSTGRES_DB:-hr_platform}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-root} -d ${POSTGRES_DB:-bemo_erp}"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - hr_network
+      - bemo_erp_network
 
   # 2. Spring Boot Backend Service
   backend:
     build:
       context: ./be
       dockerfile: Dockerfile
-    container_name: bemo-hr-backend
+    container_name: bemo-erp-backend
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-hr_platform}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-bemo_erp}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-root}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-root}
       HR_JWT_SECRET: ${HR_JWT_SECRET:-bemo_hr_super_secret_jwt_key_2026_production_at_least_32_bytes}
@@ -42,26 +42,26 @@ services:
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     networks:
-      - hr_network
+      - bemo_erp_network
 
   # 3. Angular Frontend (Nginx Web Server & Reverse Proxy)
   frontend:
     build:
       context: ./fe
       dockerfile: Dockerfile
-    container_name: bemo-hr-frontend
+    container_name: bemo-erp-frontend
     restart: unless-stopped
     depends_on:
       - backend
     ports:
       - "${FRONTEND_PORT:-80}:80"
     networks:
-      - hr_network
+      - bemo_erp_network
 
 volumes:
   postgres_data:
     driver: local
 
 networks:
-  hr_network:
+  bemo_erp_network:
     driver: bridge

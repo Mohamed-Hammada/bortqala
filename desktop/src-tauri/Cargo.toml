@@ -1,7 +1,7 @@
 [package]
 name = "bemo-hr-desktop"
 version = "0.1.0"
-description = "Bemo HR desktop launcher"
+description = "Bemo ERP desktop launcher"
 authors = ["Bemo"]
 edition = "2024"
 

@@ -1,7 +1,7 @@
 @echo off
-title Bemo HR Platform - Docker Deployment
+title Bemo ERP Platform - Docker Deployment
 echo ========================================================
-echo       BEMO HR PLATFORM - DOCKER ONE-CLICK DEPLOY
+echo       BEMO ERP PLATFORM - DOCKER ONE-CLICK DEPLOY
 echo ========================================================
 echo.
 

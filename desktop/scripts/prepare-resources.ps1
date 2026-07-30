@@ -21,7 +21,7 @@ try {
 
 $jar = Get-ChildItem (Join-Path $repositoryRoot 'be\build\libs\*.jar') | Where-Object Name -NotMatch 'plain' | Select-Object -First 1
 if (-not $jar) { throw 'Spring Boot jar was not produced.' }
-Copy-Item -LiteralPath $jar.FullName -Destination (Join-Path $backendResources 'hr-platform.jar') -Force
+Copy-Item -LiteralPath $jar.FullName -Destination (Join-Path $backendResources 'bemo-erp.jar') -Force
 
 if (Test-Path -LiteralPath $runtimeResources) { Remove-Item -LiteralPath $runtimeResources -Recurse -Force }
 $jlink = Join-Path $env:JAVA_HOME 'bin\jlink.exe'

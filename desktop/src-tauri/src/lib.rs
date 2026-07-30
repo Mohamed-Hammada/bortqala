@@ -165,13 +165,13 @@ fn ensure_postgres(
                 &port.to_string(),
                 "-U",
                 &secrets.database_username,
-                "hr_platform",
+                "bemo_erp",
             ])
             .env("PGPASSWORD", &secrets.database_password),
     )
     .output();
     Ok((
-        format!("jdbc:postgresql://127.0.0.1:{port}/hr_platform"),
+        format!("jdbc:postgresql://127.0.0.1:{port}/bemo_erp"),
         pg_ctl,
         data,
     ))
@@ -186,7 +186,7 @@ fn start_backend(
     backend_port: Arc<Mutex<Option<u16>>>,
 ) -> Result<Arc<Mutex<Option<Child>>>, String> {
     let java = resources.join("runtime").join("bin").join("java.exe");
-    let jar = resources.join("backend").join("hr-platform.jar");
+    let jar = resources.join("backend").join("bemo-erp.jar");
     if !java.exists() || !jar.exists() {
         return Err("The packaged Java runtime or backend jar is missing.".into());
     }
@@ -385,5 +385,5 @@ pub fn run() {
             }
         })
         .run(tauri::generate_context!())
-        .expect("error while running Bemo HR desktop");
+        .expect("error while running Bemo ERP desktop");
 }

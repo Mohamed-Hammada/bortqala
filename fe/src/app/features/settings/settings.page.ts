@@ -178,6 +178,7 @@ export class SettingsPage {
     this.saving.set(true);
     try {
       await firstValueFrom(this.authService.updatePreferences(this.form.getRawValue()));
+      this.form.markAsPristine();
       this.notification.success(this.i18n.t('settings.saved'));
     } catch (error) {
       const msg = apiErrorMessage(error, this.i18n);
@@ -213,6 +214,7 @@ export class SettingsPage {
         passwordExpiryDays: saved.passwordExpiryDays ?? 0,
         passwordHistoryCount: saved.passwordHistoryCount ?? 0,
       });
+      this.appSettingsForm.markAsPristine();
       this.notification.success(this.i18n.t('settings.saveAllSystemSettings', undefined, 'تم حفظ جميع الإعدادات بنجاح.'));
     } catch (error) {
       const msg = apiErrorMessage(error, this.i18n);
@@ -254,6 +256,7 @@ export class SettingsPage {
         passwordExpiryDays: settings.passwordExpiryDays ?? 0,
         passwordHistoryCount: settings.passwordHistoryCount ?? 0,
       });
+      this.appSettingsForm.markAsPristine();
     } catch (error) {
       this.appSettingsError.set(apiErrorMessage(error, this.i18n));
     } finally {

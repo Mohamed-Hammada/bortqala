@@ -1,4 +1,4 @@
-# PROJECT_MAP.md - Bemo HR & Operations Platform
+# PROJECT_MAP.md - Bemo ERP
 
 ## System Flow & Architecture
 - **Backend (`be/`)**: Spring Boot, PostgreSQL, App-Scoped JWT Auth, Multi-Role Authorization, Multi-Tenant (`@TenantId`), i18n database backend (`/api/v1/i18n/{locale}`).

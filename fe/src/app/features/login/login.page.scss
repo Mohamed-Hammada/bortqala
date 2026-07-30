@@ -63,10 +63,15 @@
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: #D4A017;
-  color: #0F172A;
-  font: 700 26px var(--heading-font);
+  overflow: hidden;
+  background: #14241f;
   box-shadow: 0 6px 18px rgba(212, 160, 23, 0.35);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .brand-titles strong {
@@ -170,11 +175,16 @@
   width: 22px;
   height: 22px;
   border-radius: 5px;
-  background: #D4A017;
-  color: #0F172A;
+  overflow: hidden;
+  background: #14241f;
   display: grid;
   place-items: center;
-  font: 700 13px var(--heading-font);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .company-tag {

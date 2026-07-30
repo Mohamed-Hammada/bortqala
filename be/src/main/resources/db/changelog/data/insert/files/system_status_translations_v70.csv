@@ -1,0 +1,11 @@
+id;translation_key;locale;text_value
+x70-001;appShell.serverChecking;ar-EG;جارٍ فحص الخادم…
+x70-002;appShell.serverChecking;en-US;Checking server…
+x70-003;appShell.serverOnline;ar-EG;الخادم متصل
+x70-004;appShell.serverOnline;en-US;Server online
+x70-005;appShell.serverOffline;ar-EG;الخادم غير متصل
+x70-006;appShell.serverOffline;en-US;Server offline
+x70-007;appShell.serverRetry;ar-EG;إعادة فحص اتصال الخادم
+x70-008;appShell.serverRetry;en-US;Check the server connection again
+x70-009;users.passwordMinLength;ar-EG;كلمة المرور يجب أن لا تقل عن {min} أحرف.
+x70-010;users.passwordMinLength;en-US;Password must be at least {min} characters.
