@@ -10,6 +10,7 @@ import { ImportStatus } from './imports.models';
 import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
 import { FormsModule } from '@angular/forms';
 import { BiometricDevice } from './imports.models';
+import { exportCsv } from '../../core/download';
 
 @Component({
   selector: 'app-imports-page',
@@ -35,6 +36,22 @@ export class ImportsPage {
   readonly syncIntervalMinutes = signal(15);
   readonly connectionEnabled = signal(true);
   readonly syncingDeviceId = signal<string | null>(null);
+  readonly showTemplateModal = signal(false);
+
+  downloadTemplate(): void {
+    const columns = [
+      { key: 'deviceUserId', label: 'كود البصمة / العامل' },
+      { key: 'punchedAt', label: 'تاريخ ووقت البصمة' },
+      { key: 'deviceName', label: 'اسم الجهاز' }
+    ];
+    const sampleRows = [
+      { deviceUserId: '101', punchedAt: '2026-07-31 08:30:00', deviceName: 'بوابة المصنع' },
+      { deviceUserId: '101', punchedAt: '2026-07-31 17:00:00', deviceName: 'بوابة المصنع' },
+      { deviceUserId: '102', punchedAt: '2026-07-31 08:45:00', deviceName: 'البوابة الرئيسية' }
+    ];
+    exportCsv(sampleRows, columns, 'قالب_استيراد_البصمات.csv');
+    this.notification.success('تم تنزيل قالب استيراد البصمة بنجاح.');
+  }
 
   constructor() {
     void this.store.load();

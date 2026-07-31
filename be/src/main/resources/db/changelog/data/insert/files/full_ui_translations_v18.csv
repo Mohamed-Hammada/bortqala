@@ -859,3 +859,143 @@ x18-ar-430;users.passwordNoSpaces;ar-EG;كلمة المرور يجب أن لا �
 x18-en-430;users.passwordNoSpaces;en-US;Password must not contain spaces.
 x18-ar-431;users.sectionSpecialPermissions;ar-EG;الصلاحيات وتصاريح المالية الخاصة
 x18-en-431;users.sectionSpecialPermissions;en-US;Special Financial Permissions
+x18-ar-432;manualAttendance.newEntry;ar-EG;➕ إدخال حضور جديد
+x18-en-432;manualAttendance.newEntry;en-US;➕ New Attendance Entry
+x18-ar-433;manualAttendance.importExcel;ar-EG;📥 استيراد Excel
+x18-en-433;manualAttendance.importExcel;en-US;📥 Import Excel
+x18-ar-434;manualAttendance.exportExcel;ar-EG;⇩ Excel
+x18-en-434;manualAttendance.exportExcel;en-US;⇩ Excel
+x18-ar-461;manualAttendance.setFullDayAll;ar-EG;يوم كامل للكل — يغيّر كل الخلايا الظاهرة إلى دوام كامل
+x18-en-461;manualAttendance.setFullDayAll;en-US;Full day for all — Changes all visible cells to full day
+x18-ar-462;manualAttendance.setFullDayAllLabel;ar-EG;تعيين يوم كامل للكل
+x18-en-462;manualAttendance.setFullDayAllLabel;en-US;Set Full Day for All
+x18-ar-435;manualAttendance.saveAttendance;ar-EG;إدخال وحفظ الحضور
+x18-en-435;manualAttendance.saveAttendance;en-US;Save Attendance
+x18-ar-436;manualAttendance.saveAttendanceCount;ar-EG;إدخال وحفظ الحضور ({count})
+x18-en-436;manualAttendance.saveAttendanceCount;en-US;Save Attendance ({count})
+x18-ar-437;manualAttendance.saving;ar-EG;جارٍ الحفظ...
+x18-en-437;manualAttendance.saving;en-US;Saving...
+x18-ar-438;manualAttendance.selectWorker;ar-EG;-- اختر العامل --
+x18-en-438;manualAttendance.selectWorker;en-US;-- Select Worker --
+x18-ar-439;manualAttendance.selectWorkerLabel;ar-EG;اختيار العامل *
+x18-en-439;manualAttendance.selectWorkerLabel;en-US;Select Worker *
+x18-ar-440;manualAttendance.attendanceDateLabel;ar-EG;تاريخ الحضور *
+x18-en-440;manualAttendance.attendanceDateLabel;en-US;Attendance Date *
+x18-ar-441;manualAttendance.attendanceStatusLabel;ar-EG;حالة الحضور *
+x18-en-441;manualAttendance.attendanceStatusLabel;en-US;Attendance Status *
+x18-ar-442;manualAttendance.overtimeHoursLabel;ar-EG;ساعات الأوفر تايم
+x18-en-442;manualAttendance.overtimeHoursLabel;en-US;Overtime Hours
+x18-ar-443;manualAttendance.deductionHoursLabel;ar-EG;ساعات الخصم
+x18-en-443;manualAttendance.deductionHoursLabel;en-US;Deduction Hours
+x18-ar-444;manualAttendance.notesLabel;ar-EG;ملاحظات
+x18-en-444;manualAttendance.notesLabel;en-US;Notes
+x18-ar-445;manualAttendance.confirmEntry;ar-EG;تأكيد الإدخال
+x18-en-445;manualAttendance.confirmEntry;en-US;Confirm Entry
+x18-ar-446;manualAttendance.importModalTitle;ar-EG;📥 استيراد الحضور اليدوي من Excel / CSV
+x18-en-446;manualAttendance.importModalTitle;en-US;📥 Import Manual Attendance from Excel / CSV
+x18-ar-447;manualAttendance.importModalDesc;ar-EG;قم بإرفاق ملف Excel أو CSV يحتوي على سجلات حضور العمالة لإدخالها مباشرة في المصفوفة.
+x18-en-447;manualAttendance.importModalDesc;en-US;Attach an Excel or CSV file containing worker attendance records to insert directly into the matrix.
+x18-ar-448;manualAttendance.requiredColumnsNote;ar-EG;💡 الأعمدة المطلوبة في الملف:
+x18-en-448;manualAttendance.requiredColumnsNote;en-US;💡 Required columns in file:
+x18-ar-449;manualAttendance.requiredColumnsList;ar-EG;كود العامل • التاريخ (YYYY-MM-DD) • قيمة الحضور (1 / 0.5 / 0) • ساعات الأوفر تايم • ساعات الخصم • ملاحظات
+x18-en-449;manualAttendance.requiredColumnsList;en-US;Worker Code • Date (YYYY-MM-DD) • Attendance Value (1 / 0.5 / 0) • Overtime Hours • Deduction Hours • Notes
+x18-ar-450;manualAttendance.downloadTemplate;ar-EG;📄 تنزيل نموذج الاستيراد Excel
+x18-en-450;manualAttendance.downloadTemplate;en-US;📄 Download Excel Import Template
+x18-ar-451;manualAttendance.startImport;ar-EG;بدء الاستيراد
+x18-en-451;manualAttendance.startImport;en-US;Start Import
+x18-ar-452;manualAttendance.entrySuccess;ar-EG;تم إدخال بيانات الحضور للعامل بنجاح. انقر "إدخال وحفظ الحضور" لإكمال الحفظ الدائم.
+x18-en-452;manualAttendance.entrySuccess;en-US;Attendance data inserted successfully. Click "Save Attendance" to complete permanent save.
+x18-ar-453;manualAttendance.templateSuccess;ar-EG;تم تنزيل قالب الإدخال اليدوي بنجاح.
+x18-en-453;manualAttendance.templateSuccess;en-US;Manual entry template downloaded successfully.
+x18-ar-454;manualAttendance.emptyFileError;ar-EG;الملف فارغ أو لا يحتوي على صفوف بيانات.
+x18-en-454;manualAttendance.emptyFileError;en-US;File is empty or contains no data rows.
+x18-ar-455;manualAttendance.importSuccessCount;ar-EG;تم استيراد {count} سجل حضور من ملف Excel بنجاح إلى المصفوفة. انقر "إدخال وحفظ الحضور" لإكمال الحفظ.
+x18-en-455;manualAttendance.importSuccessCount;en-US;Successfully imported {count} attendance records from Excel into matrix. Click "Save Attendance" to complete save.
+x18-ar-456;manualAttendance.noMatchingWorkers;ar-EG;لم يتم العثور على سجلات متطابقة مع أكواد العمال الحالية.
+x18-en-456;manualAttendance.noMatchingWorkers;en-US;No matching records found for current worker codes.
+x18-ar-457;imports.viewTemplate;ar-EG;📄 معاينة وتحميل قالب الاستيراد
+x18-en-457;imports.viewTemplate;en-US;📄 View & Download Import Template
+x18-ar-458;imports.templateTitle;ar-EG;📄 قالب ملف استيراد البصمة
+x18-en-458;imports.templateTitle;en-US;📄 Biometric Punch Import Template
+x18-ar-459;imports.downloadTemplate;ar-EG;⇩ تنزيل ملف القالب CSV/Excel
+x18-en-459;imports.downloadTemplate;en-US;⇩ Download Template CSV/Excel
+x18-ar-460;reportsImport.downloadTemplate;ar-EG;📄 تنزيل نموذج Excel
+x18-en-460;reportsImport.downloadTemplate;en-US;📄 Download Excel Template
+x18-ar-463;imports.liveSyncEyebrow;ar-EG;الربط المباشر
+x18-en-463;imports.liveSyncEyebrow;en-US;Live Sync
+x18-ar-464;imports.liveSyncTitle;ar-EG;مزامنة أجهزة البصمة عبر IP / API
+x18-en-464;imports.liveSyncTitle;en-US;Biometric Device Synchronization via IP / API
+x18-ar-465;imports.liveSyncDesc;ar-EG;اربط واجهة الجهاز، شغّل المزامنة الآن، أو اترك النظام يجلب البصمات تلقائياً حسب الفترة المحددة.
+x18-en-465;imports.liveSyncDesc;en-US;Connect device API, sync now, or allow the system to fetch punches automatically based on interval.
+x18-ar-466;imports.apiFormatTooltip;ar-EG;صيغة API — مصفوفة JSON داخل punches وبها deviceUserId وpunchedAt
+x18-en-466;imports.apiFormatTooltip;en-US;API format — JSON array inside punches containing deviceUserId and punchedAt
+x18-ar-467;imports.editConnection;ar-EG;تعديل الاتصال
+x18-en-467;imports.editConnection;en-US;Edit Connection
+x18-ar-468;imports.addConnection;ar-EG;إضافة اتصال جديد
+x18-en-468;imports.addConnection;en-US;Add New Connection
+x18-ar-469;imports.cancelEdit;ar-EG;إلغاء التعديل
+x18-en-469;imports.cancelEdit;en-US;Cancel Edit
+x18-ar-470;imports.deviceNameLabel;ar-EG;اسم الجهاز *
+x18-en-470;imports.deviceNameLabel;en-US;Device Name *
+x18-ar-471;imports.deviceNamePlaceholder;ar-EG;جهاز بوابة المصنع
+x18-en-471;imports.deviceNamePlaceholder;en-US;Factory Gate Device
+x18-ar-472;imports.endpointUrlLabel;ar-EG;رابط IP / API *
+x18-en-472;imports.endpointUrlLabel;en-US;IP / API Endpoint *
+x18-ar-473;imports.endpointHint;ar-EG;يضيف النظام معامل since بعد أول مزامنة ناجحة.
+x18-en-473;imports.endpointHint;en-US;System appends since parameter after first successful sync.
+x18-ar-474;imports.intervalLabel;ar-EG;التكرار بالدقائق *
+x18-en-474;imports.intervalLabel;en-US;Interval in Minutes *
+x18-ar-475;imports.autoSyncEnabled;ar-EG;المزامنة التلقائية مفعلة
+x18-en-475;imports.autoSyncEnabled;en-US;Automatic Sync Enabled
+x18-ar-476;imports.saveDeviceChanges;ar-EG;حفظ التعديلات
+x18-en-476;imports.saveDeviceChanges;en-US;Save Changes
+x18-ar-477;imports.addDeviceButton;ar-EG;إضافة الجهاز
+x18-en-477;imports.addDeviceButton;en-US;Add Device
+x18-ar-478;imports.stopped;ar-EG;متوقف
+x18-en-478;imports.stopped;en-US;Stopped
+x18-ar-479;imports.lastConnectionFailed;ar-EG;فشل آخر اتصال
+x18-en-479;imports.lastConnectionFailed;en-US;Last connection failed
+x18-ar-480;imports.active;ar-EG;نشط
+x18-en-480;imports.active;en-US;Active
+x18-ar-481;imports.syncEveryMinutes;ar-EG;كل {minutes} دقيقة
+x18-en-481;imports.syncEveryMinutes;en-US;Every {minutes} min
+x18-ar-482;imports.lastSyncAtLabel;ar-EG;آخر مزامنة
+x18-en-482;imports.lastSyncAtLabel;en-US;Last Sync
+x18-ar-483;imports.notSyncedYet;ar-EG;لم تتم بعد
+x18-en-483;imports.notSyncedYet;en-US;Not synced yet
+x18-ar-484;imports.connecting;ar-EG;جارٍ الاتصال…
+x18-en-484;imports.connecting;en-US;Connecting…
+x18-ar-485;imports.syncNow;ar-EG;مزامنة الآن
+x18-en-485;imports.syncNow;en-US;Sync Now
+x18-ar-486;imports.noDevicesYet;ar-EG;لا توجد أجهزة مرتبطة بعد
+x18-en-486;imports.noDevicesYet;en-US;No connected devices yet
+x18-ar-487;imports.noDevicesHint;ar-EG;أضف رابط API للجهاز لبدء الجلب المباشر والمجدول.
+x18-en-487;imports.noDevicesHint;en-US;Add device API endpoint to enable direct and scheduled punch fetching.
+x18-ar-488;imports.dropPrompt;ar-EG;اسحب ملف البصمة هنا أو اختر من الجهاز
+x18-en-488;imports.dropPrompt;en-US;Drag & drop attendance file here or browse file from device
+x18-ar-489;imports.defaultDevicePlaceholder;ar-EG;جهاز الحضور الرئيسي
+x18-en-489;imports.defaultDevicePlaceholder;en-US;Main Attendance Device
+x18-ar-490;imports.removeFile;ar-EG;إزالة الملف المختار
+x18-en-490;imports.removeFile;en-US;Remove selected file
+x18-ar-491;imports.templateInstructions;ar-EG;استخدم هذا القالب لإعداد ملفات بصمات العمالة وتنسيق التواريخ بشكل صحيح قبل رفعها إلى النظام.
+x18-en-491;imports.templateInstructions;en-US;Use this template to prepare attendance punch files and format dates properly before uploading.
+x18-ar-492;imports.templateColCode;ar-EG;كود البصمة / العامل
+x18-en-492;imports.templateColCode;en-US;Punch / Worker Code
+x18-ar-493;imports.templateColDate;ar-EG;تاريخ ووقت البصمة
+x18-en-493;imports.templateColDate;en-US;Punch Date & Time
+x18-ar-494;imports.templateColDevice;ar-EG;اسم الجهاز
+x18-en-494;imports.templateColDevice;en-US;Device Name
+x18-ar-495;imports.templateSampleDevice;ar-EG;جهاز بوابة المصنع
+x18-en-495;imports.templateSampleDevice;en-US;Factory Gate Device
+x18-ar-496;imports.templateFormatNotes;ar-EG;💡 ملاحظات التنسيق:
+x18-en-496;imports.templateFormatNotes;en-US;💡 Formatting Notes:
+x18-ar-497;imports.templateFormatRule1;ar-EG;يدعم النظام صيغ CSV, XLS, XLSX.
+x18-en-497;imports.templateFormatRule1;en-US;System supports CSV, XLS, XLSX formats.
+x18-ar-498;imports.templateFormatRule2;ar-EG;صيغة التاريخ والوقت المطلوبة: YYYY-MM-DD HH:mm:ss.
+x18-en-498;imports.templateFormatRule2;en-US;Required date & time format: YYYY-MM-DD HH:mm:ss.
+x18-ar-499;imports.templateFormatRule3;ar-EG;كود البصمة يجب أن يطابق كود العامل المعرّف في النظام.
+x18-en-499;imports.templateFormatRule3;en-US;Punch code must match defined worker code in the system.
+x18-ar-500;common.edit;ar-EG;تعديل
+x18-en-500;common.edit;en-US;Edit
+
+

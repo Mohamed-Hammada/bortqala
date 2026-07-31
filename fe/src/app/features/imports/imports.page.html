@@ -5,9 +5,14 @@
       <h1>{{ i18n.t('imports.title') }}</h1>
       <p>{{ i18n.t('imports.description') }}</p>
     </div>
-    <button class="button secondary" (click)="store.export('imports')">
-      ⇩ {{ i18n.t('imports.exportHistory') }} Excel
-    </button>
+    <div class="header-actions" style="display: flex; gap: 0.5rem; align-items: center;">
+      <button class="button gold" (click)="showTemplateModal.set(true)">
+        {{ i18n.t('imports.viewTemplate') }}
+      </button>
+      <button class="button secondary" (click)="store.export('imports')">
+        ⇩ {{ i18n.t('imports.exportHistory') }} Excel
+      </button>
+    </div>
   </header>
 
   @if (store.loading()) {
@@ -25,47 +30,47 @@
       <div class="live-sync-title">
         <span class="live-indicator" aria-hidden="true"></span>
         <div>
-          <p class="eyebrow">الربط المباشر</p>
-          <h2 id="live-sync-title">مزامنة أجهزة البصمة عبر IP / API</h2>
-          <p>اربط واجهة الجهاز، شغّل المزامنة الآن، أو اترك النظام يجلب البصمات تلقائياً حسب الفترة المحددة.</p>
+          <p class="eyebrow">{{ i18n.t('imports.liveSyncEyebrow') }}</p>
+          <h2 id="live-sync-title">{{ i18n.t('imports.liveSyncTitle') }}</h2>
+          <p>{{ i18n.t('imports.liveSyncDesc') }}</p>
         </div>
       </div>
-      <span class="api-format" appTooltip="صيغة API — مصفوفة JSON داخل punches وبها deviceUserId وpunchedAt">JSON API ⓘ</span>
+      <span class="api-format" [appTooltip]="i18n.t('imports.apiFormatTooltip')">JSON API ⓘ</span>
     </div>
 
     <div class="device-connection-layout">
       <form class="device-form" (ngSubmit)="saveDevice()">
         <div class="device-form-title">
-          <strong>{{ editingDeviceId() ? 'تعديل الاتصال' : 'إضافة اتصال جديد' }}</strong>
+          <strong>{{ editingDeviceId() ? i18n.t('imports.editConnection') : i18n.t('imports.addConnection') }}</strong>
           @if (editingDeviceId()) {
-            <button type="button" class="text-button" (click)="resetDeviceForm()">إلغاء التعديل</button>
+            <button type="button" class="text-button" (click)="resetDeviceForm()">{{ i18n.t('imports.cancelEdit') }}</button>
           }
         </div>
         <div class="device-fields">
           <div class="field">
-            <label for="biometric-device-name">اسم الجهاز *</label>
+            <label for="biometric-device-name">{{ i18n.t('imports.deviceNameLabel') }}</label>
             <input id="biometric-device-name" name="biometricDeviceName" [ngModel]="connectionName()"
-              (ngModelChange)="connectionName.set($event)" placeholder="جهاز بوابة المصنع" autocomplete="off" />
+              (ngModelChange)="connectionName.set($event)" [placeholder]="i18n.t('imports.deviceNamePlaceholder')" autocomplete="off" />
           </div>
           <div class="field endpoint-field">
-            <label for="biometric-endpoint">رابط IP / API *</label>
+            <label for="biometric-endpoint">{{ i18n.t('imports.endpointUrlLabel') }}</label>
             <input id="biometric-endpoint" name="biometricEndpoint" class="ltr" type="url"
               [ngModel]="endpointUrl()" (ngModelChange)="endpointUrl.set($event)"
               placeholder="http://192.168.1.50/api/punches" autocomplete="off" />
-            <small>يضيف النظام معامل <code>since</code> بعد أول مزامنة ناجحة.</small>
+            <small>{{ i18n.t('imports.endpointHint') }}</small>
           </div>
           <div class="field">
-            <label for="biometric-interval">التكرار بالدقائق *</label>
+            <label for="biometric-interval">{{ i18n.t('imports.intervalLabel') }}</label>
             <input id="biometric-interval" name="biometricInterval" type="number" min="1" max="1440" step="1"
               [ngModel]="syncIntervalMinutes()" (ngModelChange)="syncIntervalMinutes.set(+$event)" />
           </div>
           <label class="device-enabled-toggle">
             <input type="checkbox" name="biometricEnabled" [ngModel]="connectionEnabled()"
               (ngModelChange)="connectionEnabled.set($event)" />
-            <span>المزامنة التلقائية مفعلة</span>
+            <span>{{ i18n.t('imports.autoSyncEnabled') }}</span>
           </label>
           <button class="button primary" type="submit" [disabled]="store.loading() || !connectionName().trim() || !endpointUrl().trim()">
-            {{ editingDeviceId() ? 'حفظ التعديلات' : 'إضافة الجهاز' }}
+            {{ editingDeviceId() ? i18n.t('imports.saveDeviceChanges') : i18n.t('imports.addDeviceButton') }}
           </button>
         </div>
       </form>
@@ -78,29 +83,29 @@
               <div>
                 <strong>{{ device.name }}</strong>
                 <span class="connection-state" [class.online]="device.enabled" [class.failed]="device.lastStatus === 'FAILED'">
-                  {{ !device.enabled ? 'متوقف' : device.lastStatus === 'FAILED' ? 'فشل آخر اتصال' : 'نشط' }}
+                  {{ !device.enabled ? i18n.t('imports.stopped') : device.lastStatus === 'FAILED' ? i18n.t('imports.lastConnectionFailed') : i18n.t('imports.active') }}
                 </span>
               </div>
               <code class="ltr">{{ device.endpointUrl }}</code>
               <small>
-                كل {{ device.syncIntervalMinutes }} دقيقة ·
-                آخر مزامنة: {{ device.lastSyncAt ? dateTime(device.lastSyncAt) : 'لم تتم بعد' }}
+                {{ i18n.t('imports.syncEveryMinutes', { minutes: device.syncIntervalMinutes }) }} ·
+                {{ i18n.t('imports.lastSyncAtLabel') }}: {{ device.lastSyncAt ? dateTime(device.lastSyncAt) : i18n.t('imports.notSyncedYet') }}
                 @if (device.lastMessage) { · {{ device.lastMessage }} }
               </small>
             </div>
             <div class="device-actions">
-              <button type="button" class="button secondary btn-sm" (click)="editDevice(device)">تعديل</button>
+              <button type="button" class="button secondary btn-sm" (click)="editDevice(device)">{{ i18n.t('common.edit') }}</button>
               <button type="button" class="button gold btn-sm" [disabled]="syncingDeviceId() === device.id || store.loading()"
                 (click)="syncDevice(device)">
-                {{ syncingDeviceId() === device.id ? 'جارٍ الاتصال…' : 'مزامنة الآن' }}
+                {{ syncingDeviceId() === device.id ? i18n.t('imports.connecting') : i18n.t('imports.syncNow') }}
               </button>
             </div>
           </article>
         } @empty {
           <div class="empty-device-state">
             <span aria-hidden="true">⌁</span>
-            <strong>لا توجد أجهزة مرتبطة بعد</strong>
-            <p>أضف رابط API للجهاز لبدء الجلب المباشر والمجدول.</p>
+            <strong>{{ i18n.t('imports.noDevicesYet') }}</strong>
+            <p>{{ i18n.t('imports.noDevicesHint') }}</p>
           </div>
         }
       </div>
@@ -137,11 +142,7 @@
         <div class="dropzone-text">
           <h2>{{ i18n.t('imports.uploadTitle') }}</h2>
           <p class="drop-prompt">
-            @if (i18n.locale() === 'ar-EG') {
-              اسحب ملف البصمة هنا أو <span class="browse-link">اختر من الجهاز</span>
-            } @else {
-              Drag & drop attendance file here or <span class="browse-link">browse file</span>
-            }
+            {{ i18n.t('imports.dropPrompt') }}
           </p>
           <span class="file-types-hint">CSV • XLS • XLSX ({{ i18n.t('imports.requiredColumns') }})</span>
         </div>
@@ -154,7 +155,7 @@
               <small>{{ formatFileSize(file()?.size ?? 0) }} · {{ i18n.t('imports.completed') }}</small>
             </div>
           </div>
-          <button type="button" class="remove-file-btn" (click)="clearFile($event)" aria-label="إزالة الملف المختار" appTooltip="إزالة الملف — إلغاء اختيار الملف الحالي">×</button>
+          <button type="button" class="remove-file-btn" (click)="clearFile($event)" [attr.aria-label]="i18n.t('imports.removeFile')" [appTooltip]="i18n.t('imports.removeFile')">×</button>
         </div>
       }
     </div>
@@ -163,7 +164,7 @@
     <div class="dropzone-footer">
       <div class="field device-field">
         <label>{{ i18n.t('imports.deviceName') }}</label>
-        <input #deviceInput [value]="deviceName()" (input)="deviceName.set(deviceInput.value)" placeholder="جهاز الحضور الرئيسي" />
+        <input #deviceInput [value]="deviceName()" (input)="deviceName.set(deviceInput.value)" [placeholder]="i18n.t('imports.defaultDevicePlaceholder')" />
       </div>
       <button
         class="button primary submit-import-btn"
@@ -284,4 +285,53 @@
       </div>
     </section>
   </div>
+
+  @if (showTemplateModal()) {
+    <div class="modal-backdrop" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;" (click)="showTemplateModal.set(false)">
+      <div class="modal-box card" style="background:#fff;border-radius:14px;max-width:650px;width:100%;padding:1.5rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);" (click)="$event.stopPropagation()">
+        <header class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid #e2e8f0;padding-bottom:0.75rem;">
+          <h3 style="margin:0;">{{ i18n.t('imports.templateTitle') }}</h3>
+          <button type="button" class="close-btn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;" (click)="showTemplateModal.set(false)">×</button>
+        </header>
+        <div class="modal-body" style="display:grid;gap:1rem;">
+          <p>{{ i18n.t('imports.templateInstructions') }}</p>
+          <div class="table-card" style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+              <thead>
+                <tr style="background:#f8fafc;">
+                  <th style="padding:0.6rem;border:1px solid #e2e8f0;text-align:right;">{{ i18n.t('imports.templateColCode') }}</th>
+                  <th style="padding:0.6rem;border:1px solid #e2e8f0;text-align:right;">{{ i18n.t('imports.templateColDate') }}</th>
+                  <th style="padding:0.6rem;border:1px solid #e2e8f0;text-align:right;">{{ i18n.t('imports.templateColDevice') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:0.6rem;border:1px solid #e2e8f0;"><code>101</code></td>
+                  <td style="padding:0.6rem;border:1px solid #e2e8f0;"><code class="ltr">2026-07-31 08:30:00</code></td>
+                  <td style="padding:0.6rem;border:1px solid #e2e8f0;">{{ i18n.t('imports.templateSampleDevice') }}</td>
+                </tr>
+                <tr>
+                  <td style="padding:0.6rem;border:1px solid #e2e8f0;"><code>101</code></td>
+                  <td style="padding:0.6rem;border:1px solid #e2e8f0;"><code class="ltr">2026-07-31 17:00:00</code></td>
+                  <td style="padding:0.6rem;border:1px solid #e2e8f0;">{{ i18n.t('imports.templateSampleDevice') }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="template-notes" style="background:#fffbeb;border:1px solid #fef3c7;padding:0.8rem;border-radius:8px;font-size:0.875rem;">
+            <p style="margin:0 0 0.4rem 0;"><strong>{{ i18n.t('imports.templateFormatNotes') }}</strong></p>
+            <ul style="margin:0;padding-right:1.2rem;display:grid;gap:0.3rem;">
+              <li>{{ i18n.t('imports.templateFormatRule1') }}</li>
+              <li>{{ i18n.t('imports.templateFormatRule2') }}</li>
+              <li>{{ i18n.t('imports.templateFormatRule3') }}</li>
+            </ul>
+          </div>
+        </div>
+        <footer class="modal-footer" style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1.2rem;padding-top:0.75rem;border-top:1px solid #e2e8f0;">
+          <button type="button" class="button primary" (click)="downloadTemplate()">{{ i18n.t('imports.downloadTemplate') }}</button>
+          <button type="button" class="button secondary" (click)="showTemplateModal.set(false)">{{ i18n.t('common.close') }}</button>
+        </footer>
+      </div>
+    </div>
+  }
 </section>

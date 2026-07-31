@@ -292,7 +292,7 @@
           (input)="updateQuickNavQuery($any($event.target).value)"
           (keydown)="onQuickNavKeydown($event)"
         />
-        <kbd>Esc</kbd>
+        <kbd>Ctrl + K</kbd>
       </div>
       <div class="quick-nav-results" role="listbox">
         @for (item of quickNavItems(); track item.path; let index = $index) {

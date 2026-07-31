@@ -555,7 +555,7 @@ export class AppShellComponent {
     const typing = target instanceof HTMLElement
       && target.matches('input, textarea, select, [contenteditable="true"]');
 
-    if ((event.ctrlKey || event.metaKey) && !event.altKey && key === 'k') {
+    if (((event.ctrlKey || event.metaKey) && !event.altKey && (key === 'k' || key === '/')) || (!typing && !event.ctrlKey && !event.metaKey && !event.altKey && event.key === '/')) {
       event.preventDefault();
       this.openQuickNav();
       return;

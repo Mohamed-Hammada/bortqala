@@ -5,7 +5,8 @@ import { RouterLink } from '@angular/router';
 import { WorkforceService } from '../../data-access/workforce.service';
 import { WorkforceImportBatch, WorkforceImportCommit, WorkforceImportValidation } from '../../models/workforce.models';
 import { NotificationService } from '../../../../core/notification.service';
-import { downloadBlob } from '../../../../core/download';
+import { I18nService } from '../../../../core/i18n.service';
+import { downloadBlob, exportCsv } from '../../../../core/download';
 
 @Component({
   selector: 'app-reports-import',
@@ -22,8 +23,9 @@ import { downloadBlob } from '../../../../core/download';
         <article class="card workflow">
           <section>
             <h2>1. رفع ملف XLSX</h2>
-            <input #fileInput type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" (change)="selectFile($event)" />
+            <input #fileInput type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.csv" (change)="selectFile($event)" />
             <button class="btn primary" type="button" [disabled]="!selectedFile() || busy()" (click)="upload()">{{ busy() ? 'جارٍ الرفع…' : 'رفع وحفظ الملف الأصلي' }}</button>
+            <button class="btn" type="button" (click)="downloadTemplate()">{{ i18n.t('reportsImport.downloadTemplate') }}</button>
           </section>
 
           @if (batch(); as current) {
@@ -60,6 +62,7 @@ import { downloadBlob } from '../../../../core/download';
 export class ReportsImportComponent implements OnInit {
   private readonly service = inject(WorkforceService);
   private readonly notification = inject(NotificationService);
+  readonly i18n = inject(I18nService);
   readonly selectedFile = signal<File | null>(null);
   readonly batch = signal<WorkforceImportBatch | null>(null);
   readonly batches = signal<WorkforceImportBatch[]>([]);
@@ -82,6 +85,20 @@ export class ReportsImportComponent implements OnInit {
   openBatch(item: WorkforceImportBatch): void { this.batch.set(item); this.mapping = { workerCode: item.columnMapping['workerCode'] ?? '', workDate: item.columnMapping['workDate'] ?? '', attendanceValue: item.columnMapping['attendanceValue'] ?? '' }; this.commitResult.set(null); this.error.set(null); if (['VALIDATED','READY','IMPORTED','REVERSED'].includes(item.status)) { this.run(() => this.service.previewImport(item.id), value => { this.validation.set(value); this.step.set(item.status === 'IMPORTED' || item.status === 'REVERSED' ? 6 : 4); }); } else { this.validation.set(null); this.step.set(item.status === 'MAPPED' ? 3 : 2); } }
   downloadErrors(item: WorkforceImportBatch): void { this.service.downloadImportErrors(item.id).subscribe({ next: blob => downloadBlob(blob, `workforce-import-errors-${item.id}.xlsx`), error: e => this.fail(e) }); }
   downloadOriginal(item: WorkforceImportBatch): void { this.service.downloadImportOriginal(item.id).subscribe({ next: blob => downloadBlob(blob, item.fileName), error: e => this.fail(e) }); }
+  downloadTemplate(): void {
+    const columns = [
+      { key: 'workerCode', label: 'كود العامل' },
+      { key: 'workDate', label: 'تاريخ العمل' },
+      { key: 'attendanceValue', label: 'قيمة الحضور' }
+    ];
+    const sampleRows = [
+      { workerCode: 'EMP-001', workDate: '2026-07-31', attendanceValue: '1' },
+      { workerCode: 'EMP-002', workDate: '2026-07-31', attendanceValue: '0.5' },
+      { workerCode: 'EMP-003', workDate: '2026-07-31', attendanceValue: '0' }
+    ];
+    exportCsv(sampleRows, columns, 'قالب_استيراد_تقارير_العمالة.csv');
+    this.notification.success('تم تنزيل نموذج استيراد تقارير العمالة بنجاح.');
+  }
   mappingComplete(): boolean { return Boolean(this.mapping.workerCode && this.mapping.workDate && this.mapping.attendanceValue); }
   statusLabel(status: string): string { return ({UPLOADED:'مرفوع',MAPPED:'تمت المطابقة',VALIDATED:'تم التحقق مع أخطاء',READY:'جاهز',IMPORTED:'تم الاستيراد',REVERSED:'تم التراجع'} as Record<string,string>)[status] ?? status; }
   private refreshHistory(): void { this.service.loadImportBatches().subscribe({ next: value => this.batches.set(value), error: e => this.fail(e) }); }

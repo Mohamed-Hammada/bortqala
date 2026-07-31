@@ -10,7 +10,7 @@ export interface MenuShortcut extends AppShortcut {
 }
 
 export const GLOBAL_SHORTCUTS: readonly AppShortcut[] = [
-  { labelKey: 'shortcuts.openQuickNav', keys: 'Ctrl + K' },
+  { labelKey: 'shortcuts.openQuickNav', keys: 'Ctrl + K / /' },
   { labelKey: 'shortcuts.showHelp', keys: '?' },
   { labelKey: 'shortcuts.closeDialog', keys: 'Esc' },
   { labelKey: 'shortcuts.submitForm', keys: 'Enter' },

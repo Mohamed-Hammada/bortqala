@@ -8,6 +8,7 @@ import { NotificationService } from '../../../../core/notification.service';
 import { exportCsv } from '../../../../core/download';
 import { Worker, AttendanceCell, ManualAttendanceEntry, BatchAttendanceResponse } from '../../models/workforce.models';
 import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-tooltip.directive';
+import { I18nService } from '../../../../core/i18n.service';
 
 interface DayCell {
   attendanceValue: number; // 1, 0.5, 0
@@ -45,14 +46,22 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
           <h1>جدول تسجيل حضور العمالة — مصفوفة متعددة الأيام</h1>
         </div>
         <div class="header-actions">
-          <button type="button" class="btn btn-secondary" (click)="exportCsv()" appTooltip="تصدير الحضور — تنزيل المصفوفة الحالية إلى ملف">⇩ Excel</button>
+          <button type="button" class="btn btn-outline" (click)="openManualEntryModal()" [appTooltip]="i18n.t('manualAttendance.newEntry')">
+            {{ i18n.t('manualAttendance.newEntry') }}
+          </button>
+          <button type="button" class="btn btn-outline" (click)="openImportModal()" [appTooltip]="i18n.t('manualAttendance.importExcel')">
+            {{ i18n.t('manualAttendance.importExcel') }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="exportCsv()" [appTooltip]="i18n.t('manualAttendance.exportExcel')">
+            {{ i18n.t('manualAttendance.exportExcel') }}
+          </button>
           <button type="button" class="btn btn-secondary" (click)="applyFullDayAll()"
-            appTooltip="يوم كامل للكل — يغيّر كل الخلايا الظاهرة إلى دوام كامل">
-            تعيين يوم كامل للكل
+            [appTooltip]="i18n.t('manualAttendance.setFullDayAll', undefined, 'يوم كامل للكل — يغيّر كل الخلايا الظاهرة إلى دوام كامل')">
+            {{ i18n.t('manualAttendance.setFullDayAllLabel', undefined, 'تعيين يوم كامل للكل') }}
           </button>
           <button type="button" class="btn btn-primary" [disabled]="saving() || dirtyCellKeys().size === 0" (click)="saveAttendance()"
-            appTooltip="حفظ التعديلات — يرسل كل الخلايا المعدّلة في عملية واحدة">
-            {{ saving() ? 'جارٍ الحفظ...' : 'حفظ التعديلات (' + dirtyCellKeys().size + ')' }}
+            [appTooltip]="i18n.t('manualAttendance.saveAttendance')">
+            {{ saving() ? i18n.t('manualAttendance.saving') : (dirtyCellKeys().size > 0 ? i18n.t('manualAttendance.saveAttendanceCount', { count: dirtyCellKeys().size }) : i18n.t('manualAttendance.saveAttendance')) }}
           </button>
         </div>
       </header>
@@ -350,6 +359,105 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
           </div>
         </div>
       }
+
+      <!-- Manual Single Entry Modal -->
+      @if (entryModalOpen()) {
+        <div class="modal-backdrop" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;" (click)="closeManualEntryModal()">
+          <div class="modal-box card" style="background:#fff;border-radius:14px;max-width:550px;width:100%;padding:1.5rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);" (click)="$event.stopPropagation()">
+            <header class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid #e2e8f0;padding-bottom:0.75rem;">
+              <h3 style="margin:0;color:#0f172a;">{{ i18n.t('manualAttendance.newEntry') }}</h3>
+              <button type="button" class="close-btn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;" (click)="closeManualEntryModal()">×</button>
+            </header>
+            <form (ngSubmit)="submitManualEntry()" style="display:grid;gap:1rem;">
+              <div class="control-group">
+                <label for="entry-worker">{{ i18n.t('manualAttendance.selectWorkerLabel') }}</label>
+                <select id="entry-worker" [ngModel]="entryWorkerId()" (ngModelChange)="entryWorkerId.set($event)" name="entryWorkerId" class="form-input" required>
+                  <option value="">{{ i18n.t('manualAttendance.selectWorker') }}</option>
+                  @for (w of workers(); track w.id) {
+                    <option [value]="w.id">{{ w.code }} — {{ w.fullName }} ({{ w.contractorName }})</option>
+                  }
+                </select>
+              </div>
+
+              <div class="control-group">
+                <label for="entry-date">{{ i18n.t('manualAttendance.attendanceDateLabel') }}</label>
+                <input id="entry-date" type="date" [ngModel]="entryDate()" (ngModelChange)="entryDate.set($event)" name="entryDate" class="form-input" required />
+              </div>
+
+              <div class="control-group">
+                <label for="entry-value">{{ i18n.t('manualAttendance.attendanceStatusLabel') }}</label>
+                <select id="entry-value" [ngModel]="entryAttendanceValue()" (ngModelChange)="entryAttendanceValue.set(+$event)" name="entryAttendanceValue" class="form-input">
+                  <option [value]="1">يوم كامل (1)</option>
+                  <option [value]="0.5">نصف يوم (0.5)</option>
+                  <option [value]="0">غائب (0)</option>
+                </select>
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+                <div class="control-group">
+                  <label for="entry-overtime">{{ i18n.t('manualAttendance.overtimeHoursLabel') }}</label>
+                  <input id="entry-overtime" type="number" min="0" step="0.5" [ngModel]="entryOvertimeHours()" (ngModelChange)="entryOvertimeHours.set(+$event)" name="entryOvertimeHours" class="form-input" />
+                </div>
+                <div class="control-group">
+                  <label for="entry-deduction">{{ i18n.t('manualAttendance.deductionHoursLabel') }}</label>
+                  <input id="entry-deduction" type="number" min="0" step="0.5" [ngModel]="entryDeductionHours()" (ngModelChange)="entryDeductionHours.set(+$event)" name="entryDeductionHours" class="form-input" />
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label for="entry-notes">{{ i18n.t('manualAttendance.notesLabel') }}</label>
+                <input id="entry-notes" type="text" [ngModel]="entryNotes()" (ngModelChange)="entryNotes.set($event)" name="entryNotes" class="form-input" placeholder="ملاحظات اختيارية..." />
+              </div>
+
+              <footer style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem;border-top:1px solid #e2e8f0;padding-top:0.75rem;">
+                <button type="submit" class="btn btn-primary" [disabled]="!entryWorkerId() || !entryDate()">{{ i18n.t('manualAttendance.confirmEntry') }}</button>
+                <button type="button" class="btn btn-secondary" (click)="closeManualEntryModal()">{{ i18n.t('common.close') }}</button>
+              </footer>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- Excel Import Modal -->
+      @if (importModalOpen()) {
+        <div class="modal-backdrop" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;" (click)="closeImportModal()">
+          <div class="modal-box card" style="background:#fff;border-radius:14px;max-width:650px;width:100%;padding:1.5rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);" (click)="$event.stopPropagation()">
+            <header class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid #e2e8f0;padding-bottom:0.75rem;">
+              <h3 style="margin:0;color:#0f172a;">{{ i18n.t('manualAttendance.importModalTitle') }}</h3>
+              <button type="button" class="close-btn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;" (click)="closeImportModal()">×</button>
+            </header>
+            <div style="display:grid;gap:1rem;">
+              <p>{{ i18n.t('manualAttendance.importModalDesc') }}</p>
+              
+              <div style="border:2px dashed #cbd5e1;padding:1.5rem;border-radius:10px;text-align:center;background:#f8fafc;">
+                <input type="file" accept=".csv,.xlsx,.xls,.txt" (change)="onImportFileChange($event)" style="margin-bottom:0.5rem;" />
+                @if (importFile(); as f) {
+                  <p style="margin:0.5rem 0 0 0;font-weight:700;color:#1e40af;">📄 {{ f.name }}</p>
+                }
+              </div>
+
+              <div style="background:#fffbeb;border:1px solid #fde68a;padding:0.75rem;border-radius:8px;font-size:0.8125rem;">
+                <p style="margin:0 0 0.3rem 0;font-weight:700;color:#92400e;">{{ i18n.t('manualAttendance.requiredColumnsNote') }}</p>
+                <p style="margin:0;color:#78350f;">
+                  {{ i18n.t('manualAttendance.requiredColumnsList') }}
+                </p>
+              </div>
+
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem;border-top:1px solid #e2e8f0;padding-top:0.75rem;">
+                <button type="button" class="btn btn-outline" (click)="downloadExcelTemplate()">
+                  {{ i18n.t('manualAttendance.downloadTemplate') }}
+                </button>
+                <div style="display:flex;gap:0.5rem;">
+                  <button type="button" class="btn btn-primary" [disabled]="!importFile()" (click)="processImportFile()">
+                    {{ i18n.t('manualAttendance.startImport') }}
+                  </button>
+                  <button type="button" class="btn btn-secondary" (click)="closeImportModal()">{{ i18n.t('common.close') }}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -460,6 +568,7 @@ export class ManualAttendanceComponent implements OnInit {
   private workforceService = inject(WorkforceService);
   private notificationService = inject(NotificationService);
   private http = inject(HttpClient);
+  readonly i18n = inject(I18nService);
 
   workers = this.workforceService.workers;
   contractors = this.workforceService.contractors;
@@ -484,6 +593,148 @@ export class ManualAttendanceComponent implements OnInit {
   bulkOvertimeHours = signal<number>(0);
   bulkPreview = signal<{ kind: 'attendance' | 'overtime'; workerCount: number; dayCount: number; cellCount: number } | null>(null);
   rules = signal<CalculationRules | null>(null);
+
+  entryModalOpen = signal(false);
+  importModalOpen = signal(false);
+  entryWorkerId = signal('');
+  entryDate = signal('');
+  entryAttendanceValue = signal<number>(1);
+  entryOvertimeHours = signal<number>(0);
+  entryDeductionHours = signal<number>(0);
+  entryNotes = signal('');
+  importFile = signal<File | null>(null);
+
+  openManualEntryModal(): void {
+    this.entryWorkerId.set(this.filteredWorkers()[0]?.id ?? '');
+    this.entryDate.set(this.startDate || new Date().toISOString().slice(0, 10));
+    this.entryAttendanceValue.set(1);
+    this.entryOvertimeHours.set(0);
+    this.entryDeductionHours.set(0);
+    this.entryNotes.set('');
+    this.entryModalOpen.set(true);
+  }
+
+  closeManualEntryModal(): void {
+    this.entryModalOpen.set(false);
+  }
+
+  submitManualEntry(): void {
+    const wId = this.entryWorkerId();
+    const d = this.entryDate();
+    if (!wId || !d) return;
+
+    if (!this.matrix[wId]) {
+      this.matrix[wId] = {};
+    }
+    if (!this.matrix[wId][d]) {
+      this.matrix[wId][d] = { attendanceValue: 1, overtimeHours: 0, deductionHours: 0, notes: '' };
+    }
+
+    this.matrix[wId][d].attendanceValue = this.entryAttendanceValue();
+    this.matrix[wId][d].overtimeHours = this.entryOvertimeHours();
+    this.matrix[wId][d].deductionHours = this.entryDeductionHours();
+    this.matrix[wId][d].notes = this.entryNotes();
+
+    this.markCellDirty(wId, d);
+    this.closeManualEntryModal();
+    this.notificationService.success(this.i18n.t('manualAttendance.entrySuccess'));
+  }
+
+  openImportModal(): void {
+    this.importFile.set(null);
+    this.importModalOpen.set(true);
+  }
+
+  closeImportModal(): void {
+    this.importModalOpen.set(false);
+    this.importFile.set(null);
+  }
+
+  downloadExcelTemplate(): void {
+    const columns = [
+      { key: 'workerCode', label: 'كود العامل' },
+      { key: 'date', label: 'التاريخ' },
+      { key: 'attendanceValue', label: 'قيمة الحضور' },
+      { key: 'overtimeHours', label: 'ساعات الأوفر تايم' },
+      { key: 'deductionHours', label: 'ساعات الخصم' },
+      { key: 'notes', label: 'ملاحظات' }
+    ];
+    const sampleRows = [
+      { workerCode: 'EMP-001', date: '2026-07-31', attendanceValue: '1', overtimeHours: '2', deductionHours: '0', notes: 'وردية كاملة' },
+      { workerCode: 'EMP-002', date: '2026-07-31', attendanceValue: '0.5', overtimeHours: '0', deductionHours: '0', notes: 'نصف يوم' },
+      { workerCode: 'EMP-003', date: '2026-07-31', attendanceValue: '0', overtimeHours: '0', deductionHours: '0', notes: 'غياب' }
+    ];
+    exportCsv(sampleRows, columns, 'قالب_الإدخال_اليدوي_للحضور.csv');
+    this.notificationService.success(this.i18n.t('manualAttendance.templateSuccess'));
+  }
+
+  onImportFileChange(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
+    this.importFile.set(file);
+  }
+
+  processImportFile(): void {
+    const file = this.importFile();
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      if (!text) return;
+
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length < 2) {
+        this.notificationService.warning(this.i18n.t('manualAttendance.emptyFileError'));
+        return;
+      }
+
+      let importedCount = 0;
+      const workerMap = new Map(this.workers().map(w => [w.code.trim().toLowerCase(), w]));
+
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
+        if (cols.length < 2) continue;
+
+        const code = cols[0]?.toLowerCase();
+        const date = cols[1];
+        if (!code || !date) continue;
+
+        const worker = workerMap.get(code);
+        if (!worker) continue;
+
+        let attVal = 1;
+        const rawVal = (cols[2] || '').toLowerCase();
+        if (rawVal === '0.5' || rawVal === 'half' || rawVal.includes('نصف')) attVal = 0.5;
+        else if (rawVal === '0' || rawVal === 'absent' || rawVal.includes('غا')) attVal = 0;
+        else if (rawVal === '1' || rawVal === 'full' || rawVal.includes('حاضر')) attVal = 1;
+
+        const overtime = parseFloat(cols[3]) || 0;
+        const deduction = parseFloat(cols[4]) || 0;
+        const notes = cols[5] || '';
+
+        if (!this.matrix[worker.id]) this.matrix[worker.id] = {};
+        if (!this.matrix[worker.id][date]) {
+          this.matrix[worker.id][date] = { attendanceValue: attVal, overtimeHours: overtime, deductionHours: deduction, notes };
+        } else {
+          this.matrix[worker.id][date].attendanceValue = attVal;
+          this.matrix[worker.id][date].overtimeHours = overtime;
+          this.matrix[worker.id][date].deductionHours = deduction;
+          this.matrix[worker.id][date].notes = notes;
+        }
+
+        this.markCellDirty(worker.id, date);
+        importedCount++;
+      }
+
+      this.closeImportModal();
+      if (importedCount > 0) {
+        this.notificationService.success(this.i18n.t('manualAttendance.importSuccessCount', { count: importedCount }));
+      } else {
+        this.notificationService.warning(this.i18n.t('manualAttendance.noMatchingWorkers'));
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  }
 
   readonly attendanceStatusOptions: StatusOption[] = [
     { value: 'all', label: 'الكل' },
