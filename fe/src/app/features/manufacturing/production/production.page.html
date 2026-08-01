@@ -1,12 +1,12 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">التصنيع وتخطيط احتياجات المواد (MRP & Production)</p>
-      <h1>أوامر الإنتاج وقوائم المكونات (BOM & Work Orders)</h1>
-      <p>تخطيط الإنتاج وتخصيص المواد الخام وسحبها وصرف المنتج التام للمخازن.</p>
+      <p class="eyebrow">{{ i18n.t('production.eyebrow') }}</p>
+      <h1>{{ i18n.t('production.title') }}</h1>
+      <p>{{ i18n.t('production.description') }}</p>
     </div>
     <button class="button primary" (click)="openNew()">
-      ＋ {{ activeTab() === 'orders' ? 'أمر إنتاج جديد (MO)' : 'قائمة مكونات جديدة (BOM)' }}
+      ＋ {{ activeTab() === 'orders' ? i18n.t('production.addOrder') : i18n.t('production.addBom') }}
     </button>
   </header>
 
@@ -21,10 +21,10 @@
   <div class="filter-pills-bar">
     <div class="pills-group">
       <button class="pill-tab" [class.active]="activeTab() === 'orders'" (click)="activeTab.set('orders')">
-        🏭 أوامر الإنتاج والتصنيع ({{ orders().length }})
+        🏭 {{ i18n.t('production.tabOrders') }} ({{ orders().length }})
       </button>
       <button class="pill-tab" [class.active]="activeTab() === 'boms'" (click)="activeTab.set('boms')">
-        📜 قوائم المكونات والتركيب BOM ({{ boms().length }})
+        📜 {{ i18n.t('production.tabBoms') }} ({{ boms().length }})
       </button>
     </div>
   </div>
@@ -36,12 +36,12 @@
         <table>
           <thead>
             <tr>
-              <th>رقم أمر الإنتاج</th>
-              <th>تاريخ البدء</th>
-              <th>قائمة المكونات (BOM ID)</th>
-              <th>الكمية المستهدفة للإنتاج</th>
-              <th>حالة الأمر</th>
-              <th>الإجراءات</th>
+              <th>{{ i18n.t('production.colOrderNumber') }}</th>
+              <th>{{ i18n.t('production.colStartDate') }}</th>
+              <th>{{ i18n.t('production.colBom') }}</th>
+              <th>{{ i18n.t('production.colTargetQuantity') }}</th>
+              <th>{{ i18n.t('production.colStatus') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -50,7 +50,7 @@
                 <td><strong class="ltr">{{ o.orderNumber }}</strong></td>
                 <td class="ltr">{{ date(o.startDate) }}</td>
                 <td class="ltr"><code>{{ o.bomId }}</code></td>
-                <td class="ltr"><strong>{{ o.targetQuantity | number:'1.0-2' }}</strong> وحدة</td>
+                <td class="ltr"><strong>{{ o.targetQuantity | number:'1.0-2' }}</strong> {{ i18n.t('common.unit') }}</td>
                 <td>
                   <span
                     class="status"
@@ -58,16 +58,16 @@
                     [class.info]="o.status === 'IN_PROGRESS'"
                     [class.success]="o.status === 'COMPLETED'"
                   >
-                    {{ o.status === 'PLANNED' ? 'مخطط (Planned)' : o.status === 'IN_PROGRESS' ? 'قيد التصنيع (In Progress)' : 'مكتمل ومرحّل للمخزن (Completed)' }}
+                    {{ o.status === 'PLANNED' ? i18n.t('production.statusPlanned') : o.status === 'IN_PROGRESS' ? i18n.t('production.statusInProgress') : i18n.t('production.statusCompleted') }}
                   </span>
                 </td>
                 <td>
                   <div class="table-row-actions">
                     @if (o.status === 'PLANNED') {
-                      <button class="button primary btn-sm" (click)="startOrder(o)">⚡ بدء الإنتاج</button>
+                      <button class="button primary btn-sm" (click)="startOrder(o)">⚡ {{ i18n.t('production.start') }}</button>
                     }
                     @if (o.status === 'IN_PROGRESS') {
-                      <button class="button success btn-sm" (click)="completeOrder(o)">✔ إكمال وإيداع بالمخزن</button>
+                      <button class="button success btn-sm" (click)="completeOrder(o)">✔ {{ i18n.t('production.complete') }}</button>
                     }
                   </div>
                 </td>
@@ -75,7 +75,7 @@
             } @empty {
               <tr>
                 <td colspan="6">
-                  <div class="empty-state">لا توجد أوامر إنتاج مسجلة بعد. اضغط <strong>"أمر إنتاج جديد"</strong> للبدء.</div>
+                  <div class="empty-state">{{ i18n.t('production.emptyOrders') }}</div>
                 </td>
               </tr>
             }
@@ -90,11 +90,11 @@
         <table>
           <thead>
             <tr>
-              <th>كود الـ BOM</th>
-              <th>اسم المنتج النهائي (Finished Good)</th>
-              <th>كمية الناتج (Yield Quantity)</th>
-              <th>ملاحظات</th>
-              <th>الحالة</th>
+              <th>{{ i18n.t('production.colBomCode') }}</th>
+              <th>{{ i18n.t('production.colFinishedGood') }}</th>
+              <th>{{ i18n.t('production.colYieldQuantity') }}</th>
+              <th>{{ i18n.t('common.notes') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -102,14 +102,14 @@
               <tr>
                 <td><strong class="ltr">{{ b.bomCode }}</strong></td>
                 <td><strong>{{ b.finishedGoodName }}</strong></td>
-                <td class="ltr"><strong>{{ b.yieldQuantity | number:'1.0-2' }}</strong> وحدة</td>
+                <td class="ltr"><strong>{{ b.yieldQuantity | number:'1.0-2' }}</strong> {{ i18n.t('common.unit') }}</td>
                 <td>{{ b.notes || '—' }}</td>
-                <td><span class="status" [class.success]="b.active">{{ b.active ? 'نشط' : 'معطل' }}</span></td>
+                <td><span class="status" [class.success]="b.active">{{ b.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
               </tr>
             } @empty {
               <tr>
                 <td colspan="5">
-                  <div class="empty-state">لا توجد قوائم مكونات مسجلة بعد.</div>
+                  <div class="empty-state">{{ i18n.t('production.emptyBoms') }}</div>
                 </td>
               </tr>
             }
@@ -119,74 +119,71 @@
     }
   }
 
-  @if (drawerOpen()) {
-    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
-    <aside class="drawer">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">إدارة التصنيع</p>
-          <h2>{{ activeTab() === 'orders' ? 'أمر إنتاج جديد' : 'قائمة مكونات جديدة (BOM)' }}</h2>
+  <app-modal-dialog
+    [isOpen]="drawerOpen()"
+    [title]="activeTab() === 'orders' ? i18n.t('production.orderTitle') : i18n.t('production.bomTitle')"
+    size="wide"
+    (close)="closeDrawer()"
+  >
+    @if (activeTab() === 'orders') {
+      <form [formGroup]="orderForm" class="modal-form" (ngSubmit)="submitOrder()">
+        <div class="form-grid">
+          <div class="field">
+            <label>{{ i18n.t('production.orderNumberLabel') }} *</label>
+            <input class="ltr" formControlName="orderNumber" />
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('production.startDateLabel') }} *</label>
+            <input type="date" class="ltr" formControlName="startDate" />
+          </div>
+          <div class="field span-2">
+            <label>{{ i18n.t('production.selectBomLabel') }} *</label>
+            <select formControlName="bomId">
+              @for (b of boms(); track b.id) {
+                <option [value]="b.id">{{ b.bomCode }} — {{ b.finishedGoodName }}</option>
+              }
+            </select>
+          </div>
+          <div class="field span-2">
+            <label>{{ i18n.t('production.targetQuantityLabel') }} *</label>
+            <input type="number" class="ltr" formControlName="targetQuantity" />
+          </div>
         </div>
-        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
-      </div>
+      </form>
+    }
 
+    @if (activeTab() === 'boms') {
+      <form [formGroup]="bomForm" class="modal-form" (ngSubmit)="submitBom()">
+        <div class="form-grid">
+          <div class="field">
+            <label>{{ i18n.t('production.bomCodeLabel') }} *</label>
+            <input class="ltr" formControlName="bomCode" />
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('production.finishedGoodNameLabel') }} *</label>
+            <input formControlName="finishedGoodName" />
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('production.yieldQuantityLabel') }} *</label>
+            <input type="number" class="ltr" formControlName="yieldQuantity" />
+          </div>
+          <div class="field span-2">
+            <label>{{ i18n.t('common.notes') }}</label>
+            <input formControlName="notes" />
+          </div>
+        </div>
+      </form>
+    }
+
+    <div modal-actions>
       @if (activeTab() === 'orders') {
-        <form [formGroup]="orderForm" (ngSubmit)="submitOrder()">
-          <div class="form-grid">
-            <div class="field">
-              <label>رقم أمر الإنتاج *</label>
-              <input class="ltr" formControlName="orderNumber" />
-            </div>
-            <div class="field">
-              <label>تاريخ البدء *</label>
-              <input type="date" class="ltr" formControlName="startDate" />
-            </div>
-            <div class="field span-2">
-              <label>اختر قائمة المكونات (BOM) *</label>
-              <select formControlName="bomId">
-                @for (b of boms(); track b.id) {
-                  <option [value]="b.id">{{ b.bomCode }} — {{ b.finishedGoodName }}</option>
-                }
-              </select>
-            </div>
-            <div class="field span-2">
-              <label>الكمية المستهدفة للإنتاج *</label>
-              <input type="number" class="ltr" formControlName="targetQuantity" />
-            </div>
-          </div>
-          <div class="drawer-actions">
-            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-            <button class="button primary" type="submit" [disabled]="orderForm.invalid">حفظ أمر الإنتاج</button>
-          </div>
-        </form>
+        <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+        <button class="button primary" type="button" (click)="submitOrder()" [disabled]="orderForm.invalid">{{ i18n.t('production.saveOrder') }}</button>
       }
-
       @if (activeTab() === 'boms') {
-        <form [formGroup]="bomForm" (ngSubmit)="submitBom()">
-          <div class="form-grid">
-            <div class="field">
-              <label>كود الـ BOM *</label>
-              <input class="ltr" formControlName="bomCode" />
-            </div>
-            <div class="field">
-              <label>اسم المنتج النهائي *</label>
-              <input formControlName="finishedGoodName" />
-            </div>
-            <div class="field">
-              <label>كمية الناتج *</label>
-              <input type="number" class="ltr" formControlName="yieldQuantity" />
-            </div>
-            <div class="field span-2">
-              <label>ملاحظات</label>
-              <input formControlName="notes" />
-            </div>
-          </div>
-          <div class="drawer-actions">
-            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-            <button class="button primary" type="submit" [disabled]="bomForm.invalid">حفظ قائمة المكونات</button>
-          </div>
-        </form>
+        <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+        <button class="button primary" type="button" (click)="submitBom()" [disabled]="bomForm.invalid">{{ i18n.t('production.saveBom') }}</button>
       }
-    </aside>
-  }
+    </div>
+  </app-modal-dialog>
 </section>

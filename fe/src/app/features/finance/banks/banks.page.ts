@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { I18nService } from '../../../core/i18n.service';
 import { NotificationService } from '../../../core/notification.service';
 import { apiErrorMessage } from '../../../core/api-error';
+import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 
 export interface BankAccount {
   id: string;
@@ -18,7 +19,7 @@ export interface BankAccount {
 
 @Component({
   selector: 'app-banks-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ModalDialogComponent],
   templateUrl: './banks.page.html',
   styleUrl: './banks.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

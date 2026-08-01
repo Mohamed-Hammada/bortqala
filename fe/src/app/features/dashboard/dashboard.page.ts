@@ -11,10 +11,11 @@ import { AuthService } from '../../core/auth/auth.service';
 import { DashboardWidgetId } from '../../core/auth/auth.models';
 import { NotificationService } from '../../core/notification.service';
 import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [RouterLink, TablePaginationComponent, FormsModule, DecimalPipe, AppTooltipDirective],
+  imports: [RouterLink, TablePaginationComponent, FormsModule, DecimalPipe, AppTooltipDirective, ModalDialogComponent],
   providers: [DashboardStore],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss',

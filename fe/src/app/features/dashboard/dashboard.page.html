@@ -489,48 +489,48 @@
       </article>
     </div>
   }
-  @if (dashboardEditorOpen()) {
-    <div class="drawer-backdrop" (click)="closeDashboardEditor()"></div>
-    <aside class="dashboard-editor" role="dialog" aria-modal="true" [attr.aria-label]="i18n.t('dashboard.editorTitle')">
-      <header>
-        <div>
-          <p class="eyebrow">{{ i18n.t('dashboard.customize') }}</p>
-          <h2>{{ i18n.t('dashboard.editorTitle') }}</h2>
-          <p>{{ i18n.t('dashboard.editorHint') }}</p>
-        </div>
-        <button type="button" class="button secondary" (click)="closeDashboardEditor()" [attr.aria-label]="i18n.t('common.close')" [appTooltip]="i18n.t('common.close')">✕</button>
-      </header>
-      <div class="editor-list">
-        @for (widget of widgetOptions; track widget.id) {
-          <div class="editor-row" [class.disabled]="!widgetVisible(widget.id)">
-            <label>
-              <input type="checkbox" [checked]="widgetVisible(widget.id)"
-                (change)="toggleWidget(widget.id, $any($event.target).checked)" />
-              <span>{{ i18n.t(widget.labelKey) }}</span>
-            </label>
-            <div class="reorder-actions">
-              <button type="button" (click)="moveWidget(widget.id, -1)" [disabled]="!widgetVisible(widget.id)"
-                [appTooltip]="i18n.t('dashboard.moveUp')">↑</button>
-              <button type="button" (click)="moveWidget(widget.id, 1)" [disabled]="!widgetVisible(widget.id)"
-                [appTooltip]="i18n.t('dashboard.moveDown')">↓</button>
-            </div>
+  <app-modal-dialog
+    class="dashboard-customization-dialog"
+    [isOpen]="dashboardEditorOpen()"
+    [title]="i18n.t('dashboard.editorTitle')"
+    size="wide"
+    [preventOutsideClose]="true"
+    (close)="closeDashboardEditor()"
+  >
+    <p class="dashboard-customization-hint">{{ i18n.t('dashboard.editorHint') }}</p>
+
+    <div class="editor-list">
+      @for (widget of widgetOptions; track widget.id) {
+        <div class="editor-row" [class.disabled]="!widgetVisible(widget.id)">
+          <label>
+            <input type="checkbox" [checked]="widgetVisible(widget.id)"
+              (change)="toggleWidget(widget.id, $any($event.target).checked)" />
+            <span>{{ i18n.t(widget.labelKey) }}</span>
+          </label>
+          <div class="reorder-actions">
+            <button type="button" (click)="moveWidget(widget.id, -1)" [disabled]="!widgetVisible(widget.id)"
+              [appTooltip]="i18n.t('dashboard.moveUp')">↑</button>
+            <button type="button" (click)="moveWidget(widget.id, 1)" [disabled]="!widgetVisible(widget.id)"
+              [appTooltip]="i18n.t('dashboard.moveDown')">↓</button>
           </div>
-        }
-      </div>
-      <label class="editor-animation-toggle">
-        <input type="checkbox" [checked]="animationsEnabled()" (change)="animationsEnabled.set($any($event.target).checked)" />
-        <span><strong>{{ i18n.t('dashboard.animations') }}</strong><small>{{ i18n.t('dashboard.animationsHint') }}</small></span>
-      </label>
-      <footer>
-        <button type="button" class="button secondary" (click)="resetDashboard()">{{ i18n.t('dashboard.resetLayout') }}</button>
-        <span class="editor-spacer"></span>
-        <button type="button" class="button secondary" (click)="closeDashboardEditor()">{{ i18n.t('common.cancel') }}</button>
-        <button type="button" class="button primary" (click)="saveDashboard()" [disabled]="dashboardSaving()">
-          {{ i18n.t('common.save') }}
-        </button>
-      </footer>
-    </aside>
-  }
+        </div>
+      }
+    </div>
+
+    <label class="editor-animation-toggle">
+      <input type="checkbox" [checked]="animationsEnabled()" (change)="animationsEnabled.set($any($event.target).checked)" />
+      <span><strong>{{ i18n.t('dashboard.animations') }}</strong><small>{{ i18n.t('dashboard.animationsHint') }}</small></span>
+    </label>
+
+    <div modal-actions class="dashboard-customization-actions">
+      <button type="button" class="button secondary" (click)="resetDashboard()">{{ i18n.t('dashboard.resetLayout') }}</button>
+      <span class="editor-spacer"></span>
+      <button type="button" class="button secondary" (click)="closeDashboardEditor()">{{ i18n.t('common.cancel') }}</button>
+      <button type="button" class="button primary" (click)="saveDashboard()" [disabled]="dashboardSaving()">
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </app-modal-dialog>
   <!-- KPI Drill-Down Modal -->
   @if (activeKpiModal(); as modal) {
     <div class="drawer-backdrop" (click)="closeKpiModal()"></div>

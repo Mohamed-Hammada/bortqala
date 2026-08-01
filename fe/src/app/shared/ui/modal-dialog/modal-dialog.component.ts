@@ -11,8 +11,10 @@ import {
   Output,
   SimpleChanges,
   ViewChild,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { I18nService } from '../../../core/i18n.service';
 import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
 
 @Component({
@@ -21,32 +23,37 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
   imports: [CommonModule, AppTooltipDirective],
   template: `
     <div *ngIf="isOpen" class="modal-backdrop" (click)="onBackdropClick($event)">
-      <div 
+      <section
         #dialogBox
-        class="modal-dialog-box" 
+        class="modal-dialog-box"
         [class.wide]="size === 'wide'"
         [class.large]="size === 'large'"
-        role="dialog" 
-        aria-modal="true" 
+        role="dialog"
+        aria-modal="true"
         [attr.aria-labelledby]="titleId"
         tabindex="-1"
-        (click)="$event.stopPropagation()">
-        
+      >
         <header class="modal-header">
           <h2 [id]="titleId" class="modal-title">{{ title }}</h2>
-          <button type="button" class="close-btn" aria-label="إغلاق النافذة" appTooltip="إغلاق — إلغاء وإغلاق النافذة · Esc" (click)="onClose()">
+          <button
+            type="button"
+            class="close-btn"
+            [attr.aria-label]="i18n.t('common.close')"
+            [appTooltip]="i18n.t('modal.closeTooltip')"
+            (click)="onClose()"
+          >
             ✕
           </button>
         </header>
 
-        <div class="modal-body" #modalBodyRef>
+        <div #modalBody class="modal-body">
           <ng-content></ng-content>
         </div>
 
-        <footer class="modal-footer" *ngIf="showFooter">
+        <footer class="modal-actions" *ngIf="showFooter">
           <ng-content select="[modal-actions]"></ng-content>
         </footer>
-      </div>
+      </section>
     </div>
   `,
   styles: [`
@@ -57,73 +64,83 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      width: 100vw;
+      z-index: 10000;
+
+      display: grid;
+      place-items: center;
+
+      width: 100%;
       height: 100dvh;
-      background: rgba(15, 23, 42, 0.65);
-      backdrop-filter: blur(4px);
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       padding: 16px;
-      box-sizing: border-box;
+
       overflow: hidden;
+      box-sizing: border-box;
+      background: rgb(15 23 42 / 58%);
+      backdrop-filter: blur(4px);
       animation: fadeIn 0.2s ease-out;
     }
 
     .modal-dialog-box {
-      background: var(--surface, #ffffff);
-      color: var(--ink, #0f172a);
-      border-radius: 16px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-      width: 100%;
-      max-width: 640px;
+      width: min(100%, 720px);
       max-height: calc(100dvh - 32px);
+
       display: flex;
       flex-direction: column;
-      box-sizing: border-box;
+
+      min-height: 0;
       overflow: hidden;
-      margin: auto;
+      box-sizing: border-box;
+
+      color: var(--ink, #0f172a);
+      background: var(--surface, #ffffff);
+      border-radius: 14px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
       animation: zoomIn 0.2s ease-out;
     }
 
     .modal-dialog-box.wide {
-      max-width: var(--modal-wide-max-width, 960px);
+      width: min(100%, var(--modal-wide-max-width, 900px));
     }
 
     .modal-dialog-box.large {
-      max-width: 1100px;
+      width: min(100%, var(--modal-large-max-width, 1120px));
     }
 
-    .modal-header {
-      padding: 1.25rem 1.5rem;
-      background: var(--surface-muted, #f8fafc);
-      border-bottom: 1px solid var(--line, #e2e8f0);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .modal-header,
+    .modal-actions {
       flex: 0 0 auto;
     }
 
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 1.25rem 1.5rem;
+      background: var(--surface-muted, #f8fafc);
+      border-bottom: 1px solid var(--line, #e2e8f0);
+    }
+
     .modal-title {
+      margin: 0;
       font-size: 1.25rem;
       font-weight: 700;
       color: var(--ink, #1e293b);
-      margin: 0;
     }
 
     .close-btn {
-      background: transparent;
-      border: none;
-      font-size: 1.25rem;
-      color: var(--muted, #64748b);
-      cursor: pointer;
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex: 0 0 auto;
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted, #64748b);
+      font-size: 1.25rem;
+      cursor: pointer;
       transition: all 0.15s ease;
     }
 
@@ -133,21 +150,29 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
     }
 
     .modal-body {
-      padding: var(--modal-body-padding, 1.5rem);
-      overflow-y: auto;
       flex: 1 1 auto;
       min-height: 0;
+
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+
+      padding: var(--modal-body-padding, 20px);
     }
 
-    .modal-footer {
-      padding: 1rem 1.5rem;
-      background: var(--surface-muted, #f8fafc);
-      border-top: 1px solid var(--line, #e2e8f0);
+    .modal-actions {
+      position: static;
+      inset: auto;
+
       display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      justify-content: flex-end;
-      flex: 0 0 auto;
+      flex-wrap: wrap;
+      gap: 10px;
+
+      margin: 0;
+      padding: 16px 20px;
+
+      background: var(--surface);
+      border-top: 1px solid var(--line, #e2e8f0);
     }
 
     @keyframes fadeIn {
@@ -162,11 +187,17 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
 
     @media (max-width: 640px) {
       .modal-dialog-box {
-        max-width: 100% !important;
-        height: calc(100dvh - 16px);
-        max-height: calc(100dvh - 16px);
+        width: 100% !important;
+        max-height: calc(100dvh - 32px);
         border-radius: 12px;
-        margin: auto;
+      }
+
+      .modal-header {
+        padding: 1rem 1.25rem;
+      }
+
+      .modal-actions {
+        padding: 12px 16px;
       }
     }
   `]
@@ -181,9 +212,16 @@ export class ModalDialogComponent implements OnInit, OnChanges, OnDestroy, After
 
   @Output() close = new EventEmitter<void>();
   @Output() closeModal = new EventEmitter<void>();
-  @ViewChild('dialogBox') dialogBox?: ElementRef;
-  @ViewChild('modalBodyRef') modalBodyRef?: ElementRef;
-  private focusPending = false;
+
+  @ViewChild('dialogBox')
+  private dialogBox?: ElementRef<HTMLElement>;
+
+  @ViewChild('modalBody')
+  private modalBody?: ElementRef<HTMLElement>;
+
+  readonly i18n = inject(I18nService);
+
+  private wasOpen = false;
   private isLocked = false;
   private isTeleported = false;
   private static openModalsCount = 0;
@@ -200,7 +238,6 @@ export class ModalDialogComponent implements OnInit, OnChanges, OnDestroy, After
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen']) {
       if (changes['isOpen'].currentValue === true) {
-        this.focusPending = true;
         this.teleportToBody();
         this.lockBodyScroll();
       } else if (changes['isOpen'].previousValue === true) {
@@ -214,6 +251,60 @@ export class ModalDialogComponent implements OnInit, OnChanges, OnDestroy, After
     if (this.isTeleported && typeof document !== 'undefined' && this.elementRef?.nativeElement?.parentNode) {
       this.elementRef.nativeElement.parentNode.removeChild(this.elementRef.nativeElement);
     }
+  }
+
+  ngAfterViewChecked(): void {
+    if (this.isOpen && !this.wasOpen) {
+      this.wasOpen = true;
+
+      queueMicrotask(() => {
+        const dialog = this.dialogBox?.nativeElement;
+        const body = this.modalBody?.nativeElement ?? dialog?.querySelector<HTMLElement>('.modal-body');
+
+        if (body) {
+          body.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        }
+
+        const firstControl = dialog?.querySelector<HTMLElement>(
+          '.modal-body input:not([disabled]):not([readonly]), .modal-body select:not([disabled]), .modal-body textarea:not([disabled]), .modal-body button:not([disabled])',
+        ) ?? dialog?.querySelector<HTMLElement>(
+          'input:not([disabled]):not([readonly]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])',
+        );
+
+        if (firstControl) {
+          firstControl.focus({ preventScroll: true });
+        } else if (dialog) {
+          dialog.focus({ preventScroll: true });
+        }
+
+        if (body) {
+          body.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        }
+      });
+    }
+
+    if (!this.isOpen) {
+      this.wasOpen = false;
+    }
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: Event) {
+    if (this.isOpen) {
+      event.preventDefault();
+      this.onClose();
+    }
+  }
+
+  onBackdropClick(event: MouseEvent) {
+    if (!this.preventOutsideClose && event.target === event.currentTarget) {
+      this.onClose();
+    }
+  }
+
+  onClose() {
+    this.close.emit();
+    this.closeModal.emit();
   }
 
   private teleportToBody(): void {
@@ -239,53 +330,5 @@ export class ModalDialogComponent implements OnInit, OnChanges, OnDestroy, After
         document.body.style.overflow = '';
       }
     }
-  }
-
-  ngAfterViewChecked(): void {
-    if (this.focusPending && this.dialogBox) {
-      this.focusPending = false;
-      queueMicrotask(() => {
-        const dialog = this.dialogBox?.nativeElement as HTMLElement | undefined;
-        const body = (this.modalBodyRef?.nativeElement as HTMLElement | undefined) ?? dialog?.querySelector<HTMLElement>('.modal-body');
-        if (body) {
-          body.scrollTop = 0;
-        }
-
-        const firstControl = dialog?.querySelector<HTMLElement>(
-          '.modal-body input:not([disabled]):not([readonly]), .modal-body select:not([disabled]), .modal-body textarea:not([disabled]), .modal-body button:not([disabled])',
-        ) ?? dialog?.querySelector<HTMLElement>(
-          'input:not([disabled]):not([readonly]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])',
-        );
-        
-        if (firstControl) {
-          firstControl.focus({ preventScroll: true });
-        } else if (dialog) {
-          dialog.focus({ preventScroll: true });
-        }
-
-        if (body) {
-          body.scrollTop = 0;
-        }
-      });
-    }
-  }
-
-  @HostListener('document:keydown.escape', ['$event'])
-  onEscapeKey(event: Event) {
-    if (this.isOpen) {
-      event.preventDefault();
-      this.onClose();
-    }
-  }
-
-  onBackdropClick(event: MouseEvent) {
-    if (!this.preventOutsideClose) {
-      this.onClose();
-    }
-  }
-
-  onClose() {
-    this.close.emit();
-    this.closeModal.emit();
   }
 }
