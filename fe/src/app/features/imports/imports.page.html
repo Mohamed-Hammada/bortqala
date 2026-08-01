@@ -286,52 +286,51 @@
     </section>
   </div>
 
-  @if (showTemplateModal()) {
-    <div class="modal-backdrop" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;" (click)="showTemplateModal.set(false)">
-      <div class="modal-box card" style="background:#fff;border-radius:14px;max-width:650px;width:100%;padding:1.5rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);" (click)="$event.stopPropagation()">
-        <header class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid #e2e8f0;padding-bottom:0.75rem;">
-          <h3 style="margin:0;">{{ i18n.t('imports.templateTitle') }}</h3>
-          <button type="button" class="close-btn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;" (click)="showTemplateModal.set(false)">×</button>
-        </header>
-        <div class="modal-body" style="display:grid;gap:1rem;">
-          <p>{{ i18n.t('imports.templateInstructions') }}</p>
-          <div class="table-card" style="overflow-x:auto;">
-            <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
-              <thead>
-                <tr style="background:#f8fafc;">
-                  <th style="padding:0.6rem;border:1px solid #e2e8f0;text-align:right;">{{ i18n.t('imports.templateColCode') }}</th>
-                  <th style="padding:0.6rem;border:1px solid #e2e8f0;text-align:right;">{{ i18n.t('imports.templateColDate') }}</th>
-                  <th style="padding:0.6rem;border:1px solid #e2e8f0;text-align:right;">{{ i18n.t('imports.templateColDevice') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style="padding:0.6rem;border:1px solid #e2e8f0;"><code>101</code></td>
-                  <td style="padding:0.6rem;border:1px solid #e2e8f0;"><code class="ltr">2026-07-31 08:30:00</code></td>
-                  <td style="padding:0.6rem;border:1px solid #e2e8f0;">{{ i18n.t('imports.templateSampleDevice') }}</td>
-                </tr>
-                <tr>
-                  <td style="padding:0.6rem;border:1px solid #e2e8f0;"><code>101</code></td>
-                  <td style="padding:0.6rem;border:1px solid #e2e8f0;"><code class="ltr">2026-07-31 17:00:00</code></td>
-                  <td style="padding:0.6rem;border:1px solid #e2e8f0;">{{ i18n.t('imports.templateSampleDevice') }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="template-notes" style="background:#fffbeb;border:1px solid #fef3c7;padding:0.8rem;border-radius:8px;font-size:0.875rem;">
-            <p style="margin:0 0 0.4rem 0;"><strong>{{ i18n.t('imports.templateFormatNotes') }}</strong></p>
-            <ul style="margin:0;padding-right:1.2rem;display:grid;gap:0.3rem;">
-              <li>{{ i18n.t('imports.templateFormatRule1') }}</li>
-              <li>{{ i18n.t('imports.templateFormatRule2') }}</li>
-              <li>{{ i18n.t('imports.templateFormatRule3') }}</li>
-            </ul>
-          </div>
-        </div>
-        <footer class="modal-footer" style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1.2rem;padding-top:0.75rem;border-top:1px solid #e2e8f0;">
-          <button type="button" class="button primary" (click)="downloadTemplate()">{{ i18n.t('imports.downloadTemplate') }}</button>
-          <button type="button" class="button secondary" (click)="showTemplateModal.set(false)">{{ i18n.t('common.close') }}</button>
-        </footer>
+  <app-modal-dialog
+    [isOpen]="showTemplateModal()"
+    [title]="i18n.t('imports.templateTitle')"
+    size="wide"
+    [preventOutsideClose]="true"
+    (close)="showTemplateModal.set(false)">
+
+    <div style="display:grid;gap:1rem;">
+      <p>{{ i18n.t('imports.templateInstructions') }}</p>
+      <div class="table-card" style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+          <thead>
+            <tr style="background:var(--surface-muted);">
+              <th style="padding:0.6rem;border:1px solid var(--line);text-align:right;">{{ i18n.t('imports.templateColCode') }}</th>
+              <th style="padding:0.6rem;border:1px solid var(--line);text-align:right;">{{ i18n.t('imports.templateColDate') }}</th>
+              <th style="padding:0.6rem;border:1px solid var(--line);text-align:right;">{{ i18n.t('imports.templateColDevice') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:0.6rem;border:1px solid var(--line);"><code>101</code></td>
+              <td style="padding:0.6rem;border:1px solid var(--line);"><code class="ltr">2026-07-31 08:30:00</code></td>
+              <td style="padding:0.6rem;border:1px solid var(--line);">{{ i18n.t('imports.templateSampleDevice') }}</td>
+            </tr>
+            <tr>
+              <td style="padding:0.6rem;border:1px solid var(--line);"><code>101</code></td>
+              <td style="padding:0.6rem;border:1px solid var(--line);"><code class="ltr">2026-07-31 17:00:00</code></td>
+              <td style="padding:0.6rem;border:1px solid var(--line);">{{ i18n.t('imports.templateSampleDevice') }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="template-notes" style="background:var(--warning-soft);border:1px solid var(--warning);padding:0.8rem;border-radius:8px;font-size:0.875rem;">
+        <p style="margin:0 0 0.4rem 0;"><strong>{{ i18n.t('imports.templateFormatNotes') }}</strong></p>
+        <ul style="margin:0;padding-right:1.2rem;display:grid;gap:0.3rem;">
+          <li>{{ i18n.t('imports.templateFormatRule1') }}</li>
+          <li>{{ i18n.t('imports.templateFormatRule2') }}</li>
+          <li>{{ i18n.t('imports.templateFormatRule3') }}</li>
+        </ul>
       </div>
     </div>
-  }
+
+    <div modal-actions style="display:flex;justify-content:flex-end;gap:0.5rem;width:100%;">
+      <button type="button" class="button primary" (click)="downloadTemplate()">{{ i18n.t('imports.downloadTemplate') }}</button>
+      <button type="button" class="button secondary" (click)="showTemplateModal.set(false)">{{ i18n.t('common.close') }}</button>
+    </div>
+  </app-modal-dialog>
 </section>

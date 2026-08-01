@@ -8,6 +8,7 @@ import { NotificationService } from '../../../../core/notification.service';
 import { exportCsv } from '../../../../core/download';
 import { Worker, AttendanceCell, ManualAttendanceEntry, BatchAttendanceResponse } from '../../models/workforce.models';
 import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-tooltip.directive';
+import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 import { I18nService } from '../../../../core/i18n.service';
 
 interface DayCell {
@@ -37,7 +38,7 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
 @Component({
   selector: 'app-manual-attendance',
   standalone: true,
-  imports: [CommonModule, FormsModule, AppTooltipDirective],
+  imports: [CommonModule, FormsModule, AppTooltipDirective, ModalDialogComponent],
   template: `
     <div class="workforce-container">
       <header class="page-header">
@@ -361,103 +362,99 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
       }
 
       <!-- Manual Single Entry Modal -->
-      @if (entryModalOpen()) {
-        <div class="modal-backdrop" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;" (click)="closeManualEntryModal()">
-          <div class="modal-box card" style="background:#fff;border-radius:14px;max-width:550px;width:100%;padding:1.5rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);" (click)="$event.stopPropagation()">
-            <header class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid #e2e8f0;padding-bottom:0.75rem;">
-              <h3 style="margin:0;color:#0f172a;">{{ i18n.t('manualAttendance.newEntry') }}</h3>
-              <button type="button" class="close-btn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;" (click)="closeManualEntryModal()">×</button>
-            </header>
-            <form (ngSubmit)="submitManualEntry()" style="display:grid;gap:1rem;">
-              <div class="control-group">
-                <label for="entry-worker">{{ i18n.t('manualAttendance.selectWorkerLabel') }}</label>
-                <select id="entry-worker" [ngModel]="entryWorkerId()" (ngModelChange)="entryWorkerId.set($event)" name="entryWorkerId" class="form-input" required>
-                  <option value="">{{ i18n.t('manualAttendance.selectWorker') }}</option>
-                  @for (w of workers(); track w.id) {
-                    <option [value]="w.id">{{ w.code }} — {{ w.fullName }} ({{ w.contractorName }})</option>
-                  }
-                </select>
-              </div>
-
-              <div class="control-group">
-                <label for="entry-date">{{ i18n.t('manualAttendance.attendanceDateLabel') }}</label>
-                <input id="entry-date" type="date" [ngModel]="entryDate()" (ngModelChange)="entryDate.set($event)" name="entryDate" class="form-input" required />
-              </div>
-
-              <div class="control-group">
-                <label for="entry-value">{{ i18n.t('manualAttendance.attendanceStatusLabel') }}</label>
-                <select id="entry-value" [ngModel]="entryAttendanceValue()" (ngModelChange)="entryAttendanceValue.set(+$event)" name="entryAttendanceValue" class="form-input">
-                  <option [value]="1">يوم كامل (1)</option>
-                  <option [value]="0.5">نصف يوم (0.5)</option>
-                  <option [value]="0">غائب (0)</option>
-                </select>
-              </div>
-
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-                <div class="control-group">
-                  <label for="entry-overtime">{{ i18n.t('manualAttendance.overtimeHoursLabel') }}</label>
-                  <input id="entry-overtime" type="number" min="0" step="0.5" [ngModel]="entryOvertimeHours()" (ngModelChange)="entryOvertimeHours.set(+$event)" name="entryOvertimeHours" class="form-input" />
-                </div>
-                <div class="control-group">
-                  <label for="entry-deduction">{{ i18n.t('manualAttendance.deductionHoursLabel') }}</label>
-                  <input id="entry-deduction" type="number" min="0" step="0.5" [ngModel]="entryDeductionHours()" (ngModelChange)="entryDeductionHours.set(+$event)" name="entryDeductionHours" class="form-input" />
-                </div>
-              </div>
-
-              <div class="control-group">
-                <label for="entry-notes">{{ i18n.t('manualAttendance.notesLabel') }}</label>
-                <input id="entry-notes" type="text" [ngModel]="entryNotes()" (ngModelChange)="entryNotes.set($event)" name="entryNotes" class="form-input" placeholder="ملاحظات اختيارية..." />
-              </div>
-
-              <footer style="display:flex;justify-content:flex-end;gap:0.5rem;margin-top:1rem;border-top:1px solid #e2e8f0;padding-top:0.75rem;">
-                <button type="submit" class="btn btn-primary" [disabled]="!entryWorkerId() || !entryDate()">{{ i18n.t('manualAttendance.confirmEntry') }}</button>
-                <button type="button" class="btn btn-secondary" (click)="closeManualEntryModal()">{{ i18n.t('common.close') }}</button>
-              </footer>
-            </form>
+      <app-modal-dialog
+        [isOpen]="entryModalOpen()"
+        [title]="i18n.t('manualAttendance.newEntry')"
+        size="normal"
+        [preventOutsideClose]="true"
+        (close)="closeManualEntryModal()">
+        
+        <form (ngSubmit)="submitManualEntry()" class="modal-form" style="display:grid;gap:1rem;">
+          <div class="control-group">
+            <label for="entry-worker">{{ i18n.t('manualAttendance.selectWorkerLabel') }}</label>
+            <select id="entry-worker" [ngModel]="entryWorkerId()" (ngModelChange)="entryWorkerId.set($event)" name="entryWorkerId" class="form-input" required>
+              <option value="">{{ i18n.t('manualAttendance.selectWorker') }}</option>
+              @for (w of workers(); track w.id) {
+                <option [value]="w.id">{{ w.code }} — {{ w.fullName }} ({{ w.contractorName }})</option>
+              }
+            </select>
           </div>
-        </div>
-      }
 
-      <!-- Excel Import Modal -->
-      @if (importModalOpen()) {
-        <div class="modal-backdrop" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:1rem;" (click)="closeImportModal()">
-          <div class="modal-box card" style="background:#fff;border-radius:14px;max-width:650px;width:100%;padding:1.5rem;box-shadow:0 10px 30px rgba(0,0,0,0.2);" (click)="$event.stopPropagation()">
-            <header class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid #e2e8f0;padding-bottom:0.75rem;">
-              <h3 style="margin:0;color:#0f172a;">{{ i18n.t('manualAttendance.importModalTitle') }}</h3>
-              <button type="button" class="close-btn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;" (click)="closeImportModal()">×</button>
-            </header>
-            <div style="display:grid;gap:1rem;">
-              <p>{{ i18n.t('manualAttendance.importModalDesc') }}</p>
-              
-              <div style="border:2px dashed #cbd5e1;padding:1.5rem;border-radius:10px;text-align:center;background:#f8fafc;">
-                <input type="file" accept=".csv,.xlsx,.xls,.txt" (change)="onImportFileChange($event)" style="margin-bottom:0.5rem;" />
-                @if (importFile(); as f) {
-                  <p style="margin:0.5rem 0 0 0;font-weight:700;color:#1e40af;">📄 {{ f.name }}</p>
-                }
-              </div>
+          <div class="control-group">
+            <label for="entry-date">{{ i18n.t('manualAttendance.attendanceDateLabel') }}</label>
+            <input id="entry-date" type="date" [ngModel]="entryDate()" (ngModelChange)="entryDate.set($event)" name="entryDate" class="form-input" required />
+          </div>
 
-              <div style="background:#fffbeb;border:1px solid #fde68a;padding:0.75rem;border-radius:8px;font-size:0.8125rem;">
-                <p style="margin:0 0 0.3rem 0;font-weight:700;color:#92400e;">{{ i18n.t('manualAttendance.requiredColumnsNote') }}</p>
-                <p style="margin:0;color:#78350f;">
-                  {{ i18n.t('manualAttendance.requiredColumnsList') }}
-                </p>
-              </div>
+          <div class="control-group">
+            <label for="entry-value">{{ i18n.t('manualAttendance.attendanceStatusLabel') }}</label>
+            <select id="entry-value" [ngModel]="entryAttendanceValue()" (ngModelChange)="entryAttendanceValue.set(+$event)" name="entryAttendanceValue" class="form-input">
+              <option [value]="1">يوم كامل (1)</option>
+              <option [value]="0.5">نصف يوم (0.5)</option>
+              <option [value]="0">غائب (0)</option>
+            </select>
+          </div>
 
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem;border-top:1px solid #e2e8f0;padding-top:0.75rem;">
-                <button type="button" class="btn btn-outline" (click)="downloadExcelTemplate()">
-                  {{ i18n.t('manualAttendance.downloadTemplate') }}
-                </button>
-                <div style="display:flex;gap:0.5rem;">
-                  <button type="button" class="btn btn-primary" [disabled]="!importFile()" (click)="processImportFile()">
-                    {{ i18n.t('manualAttendance.startImport') }}
-                  </button>
-                  <button type="button" class="btn btn-secondary" (click)="closeImportModal()">{{ i18n.t('common.close') }}</button>
-                </div>
-              </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+            <div class="control-group">
+              <label for="entry-overtime">{{ i18n.t('manualAttendance.overtimeHoursLabel') }}</label>
+              <input id="entry-overtime" type="number" min="0" step="0.5" [ngModel]="entryOvertimeHours()" (ngModelChange)="entryOvertimeHours.set(+$event)" name="entryOvertimeHours" class="form-input" />
+            </div>
+            <div class="control-group">
+              <label for="entry-deduction">{{ i18n.t('manualAttendance.deductionHoursLabel') }}</label>
+              <input id="entry-deduction" type="number" min="0" step="0.5" [ngModel]="entryDeductionHours()" (ngModelChange)="entryDeductionHours.set(+$event)" name="entryDeductionHours" class="form-input" />
             </div>
           </div>
+
+          <div class="control-group">
+            <label for="entry-notes">{{ i18n.t('manualAttendance.notesLabel') }}</label>
+            <input id="entry-notes" type="text" [ngModel]="entryNotes()" (ngModelChange)="entryNotes.set($event)" name="entryNotes" class="form-input" placeholder="ملاحظات اختيارية..." />
+          </div>
+        </form>
+
+        <div modal-actions style="display:flex;justify-content:flex-end;gap:0.5rem;width:100%;">
+          <button type="button" class="btn btn-primary" [disabled]="!entryWorkerId() || !entryDate()" (click)="submitManualEntry()">{{ i18n.t('manualAttendance.confirmEntry') }}</button>
+          <button type="button" class="btn btn-secondary" (click)="closeManualEntryModal()">{{ i18n.t('common.close') }}</button>
         </div>
-      }
+      </app-modal-dialog>
+
+      <!-- Excel Import Modal -->
+      <app-modal-dialog
+        [isOpen]="importModalOpen()"
+        [title]="i18n.t('manualAttendance.importModalTitle')"
+        size="wide"
+        [preventOutsideClose]="true"
+        (close)="closeImportModal()">
+
+        <div style="display:grid;gap:1rem;">
+          <p>{{ i18n.t('manualAttendance.importModalDesc') }}</p>
+          
+          <div style="border:2px dashed #cbd5e1;padding:1.5rem;border-radius:10px;text-align:center;background:var(--surface-muted);">
+            <input type="file" accept=".csv,.xlsx,.xls,.txt" (change)="onImportFileChange($event)" style="margin-bottom:0.5rem;" />
+            @if (importFile(); as f) {
+              <p style="margin:0.5rem 0 0 0;font-weight:700;color:var(--gold);">📄 {{ f.name }}</p>
+            }
+          </div>
+
+          <div style="background:var(--warning-soft);border:1px solid var(--warning);padding:0.75rem;border-radius:8px;font-size:0.8125rem;">
+            <p style="margin:0 0 0.3rem 0;font-weight:700;color:var(--warning-text);">{{ i18n.t('manualAttendance.requiredColumnsNote') }}</p>
+            <p style="margin:0;color:var(--warning-text);">
+              {{ i18n.t('manualAttendance.requiredColumnsList') }}
+            </p>
+          </div>
+        </div>
+
+        <div modal-actions style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+          <button type="button" class="btn btn-outline" (click)="downloadExcelTemplate()">
+            {{ i18n.t('manualAttendance.downloadTemplate') }}
+          </button>
+          <div style="display:flex;gap:0.5rem;">
+            <button type="button" class="btn btn-primary" [disabled]="!importFile()" (click)="processImportFile()">
+              {{ i18n.t('manualAttendance.startImport') }}
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="closeImportModal()">{{ i18n.t('common.close') }}</button>
+          </div>
+        </div>
+      </app-modal-dialog>
     </div>
   `,
   styles: [`

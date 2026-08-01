@@ -37,7 +37,7 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
           </button>
         </header>
 
-        <div class="modal-body">
+        <div class="modal-body" #modalBodyRef>
           <ng-content></ng-content>
         </div>
 
@@ -61,20 +61,23 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
       align-items: center;
       justify-content: center;
       padding: 1rem;
+      overflow-y: auto;
       animation: fadeIn 0.2s ease-out;
     }
 
     .modal-dialog-box {
-      background: #ffffff;
-      color: #0f172a;
+      background: var(--surface, #ffffff);
+      color: var(--ink, #0f172a);
       border-radius: 16px;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
       width: 100%;
       max-width: 640px;
-      max-height: 90vh;
+      max-height: calc(100vh - 2rem);
+      max-height: calc(100dvh - 2rem);
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      margin: auto;
       animation: zoomIn 0.2s ease-out;
     }
 
@@ -88,20 +91,18 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
 
     .modal-header {
       padding: 1.25rem 1.5rem;
-      background: #f8fafc;
-      border-bottom: 1px solid #e2e8f0;
+      background: var(--surface-muted, #f8fafc);
+      border-bottom: 1px solid var(--line, #e2e8f0);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      flex-shrink: 0;
     }
 
     .modal-title {
       font-size: 1.25rem;
       font-weight: 700;
-      color: #1e293b;
+      color: var(--ink, #1e293b);
       margin: 0;
     }
 
@@ -109,7 +110,7 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
       background: transparent;
       border: none;
       font-size: 1.25rem;
-      color: #64748b;
+      color: var(--muted, #64748b);
       cursor: pointer;
       width: 32px;
       height: 32px;
@@ -121,26 +122,26 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
     }
 
     .close-btn:hover {
-      background: #e2e8f0;
-      color: #0f172a;
+      background: var(--surface-hover, #e2e8f0);
+      color: var(--ink, #0f172a);
     }
 
     .modal-body {
       padding: var(--modal-body-padding, 1.5rem);
       overflow-y: auto;
-      flex: 1;
+      flex: 1 1 auto;
+      min-height: 0;
     }
 
     .modal-footer {
       padding: 1rem 1.5rem;
-      background: #f8fafc;
-      border-top: 1px solid #e2e8f0;
+      background: var(--surface-muted, #f8fafc);
+      border-top: 1px solid var(--line, #e2e8f0);
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      position: sticky;
-      bottom: 0;
-      z-index: 10;
+      justify-content: flex-end;
+      flex-shrink: 0;
     }
 
     @keyframes fadeIn {
@@ -156,16 +157,17 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
     @media (max-width: 640px) {
       .modal-dialog-box {
         max-width: 100% !important;
-        height: 100vh;
-        max-height: 100vh;
-        border-radius: 0;
+        height: calc(100vh - 1rem);
+        height: calc(100dvh - 1rem);
+        max-height: calc(100vh - 1rem);
+        max-height: calc(100dvh - 1rem);
+        border-radius: 12px;
+        margin: auto;
       }
     }
   `]
 })
 export class ModalDialogComponent implements OnChanges, AfterViewChecked {
-  // Structural call sites create the component only while open; explicit bindings
-  // still override this value for components that stay mounted.
   @Input() isOpen = true;
   @Input() title = '';
   @Input() titleId = 'modal-title-' + Math.random().toString(36).substring(2, 9);
@@ -176,6 +178,7 @@ export class ModalDialogComponent implements OnChanges, AfterViewChecked {
   @Output() close = new EventEmitter<void>();
   @Output() closeModal = new EventEmitter<void>();
   @ViewChild('dialogBox') dialogBox?: ElementRef;
+  @ViewChild('modalBodyRef') modalBodyRef?: ElementRef;
   private focusPending = false;
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -189,12 +192,26 @@ export class ModalDialogComponent implements OnChanges, AfterViewChecked {
       this.focusPending = false;
       queueMicrotask(() => {
         const dialog = this.dialogBox?.nativeElement as HTMLElement | undefined;
+        const body = (this.modalBodyRef?.nativeElement as HTMLElement | undefined) ?? dialog?.querySelector<HTMLElement>('.modal-body');
+        if (body) {
+          body.scrollTop = 0;
+        }
+
         const firstControl = dialog?.querySelector<HTMLElement>(
           '.modal-body input:not([disabled]):not([readonly]), .modal-body select:not([disabled]), .modal-body textarea:not([disabled]), .modal-body button:not([disabled])',
         ) ?? dialog?.querySelector<HTMLElement>(
           'input:not([disabled]):not([readonly]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])',
         );
-        (firstControl ?? dialog)?.focus();
+        
+        if (firstControl) {
+          firstControl.focus({ preventScroll: true });
+        } else if (dialog) {
+          dialog.focus({ preventScroll: true });
+        }
+
+        if (body) {
+          body.scrollTop = 0;
+        }
       });
     }
   }

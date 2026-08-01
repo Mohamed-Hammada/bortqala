@@ -8,13 +8,14 @@ import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { ImportStatus } from './imports.models';
 import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { FormsModule } from '@angular/forms';
 import { BiometricDevice } from './imports.models';
 import { exportCsv } from '../../core/download';
 
 @Component({
   selector: 'app-imports-page',
-  imports: [RouterLink, TablePaginationComponent, AppTooltipDirective, FormsModule],
+  imports: [RouterLink, TablePaginationComponent, AppTooltipDirective, FormsModule, ModalDialogComponent],
   providers: [ImportsStore],
   templateUrl: './imports.page.html',
   styleUrl: './imports.page.scss',
