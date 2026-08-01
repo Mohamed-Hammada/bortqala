@@ -213,10 +213,11 @@ export class DashboardPage {
   }
 
   formatLastUpdated(value: string | null): string {
-    if (!value) return new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+    const locale = this.i18n.locale();
+    if (!value) return new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
     try {
       const d = new Date(value);
-      return d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     } catch {
       return value;
     }

@@ -62,15 +62,15 @@
         </div>
         <div class="field span-2">
           <label>{{ i18n.t('banks.accountNumberLabel') }} *</label>
-          <input class="ltr" formControlName="accountNumber" placeholder="100234567890" />
+          <input class="ltr" formControlName="accountNumber" [placeholder]="i18n.t('banks.accountNumberPlaceholder')" />
         </div>
         <div class="field span-2">
           <label>{{ i18n.t('banks.ibanLabel') }}</label>
-          <input class="ltr" formControlName="iban" placeholder="EG123456789012345678901234" />
+          <input class="ltr" formControlName="iban" [placeholder]="i18n.t('banks.ibanPlaceholder')" />
         </div>
         <div class="field span-2">
           <label>{{ i18n.t('banks.swiftLabel') }}</label>
-          <input class="ltr" formControlName="swiftCode" placeholder="NBEGEGCX" />
+          <input class="ltr" formControlName="swiftCode" [placeholder]="i18n.t('banks.swiftPlaceholder')" />
         </div>
       </div>
     </form>

@@ -89,9 +89,9 @@ export class ProductionPage {
     if (this.activeTab() === 'boms') {
       this.bomForm.reset({
         bomCode: 'BOM-' + Math.floor(100 + Math.random() * 900),
-        finishedGoodName: this.i18n.t('production.defaultFinishedGood'),
+        finishedGoodName: '',
         yieldQuantity: 1,
-        notes: this.i18n.t('production.defaultNotes'),
+        notes: '',
       });
     } else {
       this.orderForm.reset({

@@ -120,7 +120,7 @@
         </div>
         <div class="field span-2">
           <label>{{ i18n.t('sales.totalAmountLabel') }} *</label>
-          <input type="number" class="ltr" formControlName="totalAmount" placeholder="15000" />
+          <input type="number" class="ltr" formControlName="totalAmount" [placeholder]="i18n.t('sales.totalAmountPlaceholder')" />
         </div>
       </div>
     </form>

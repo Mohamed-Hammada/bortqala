@@ -125,7 +125,7 @@
           <p>
             {{
               !data.reportStatus
-                ? i18n.t('dashboard.noReportHint', undefined, 'لم يتم استخراج تقرير الحضور لهذا الشهر بعد.')
+                ? i18n.t('dashboard.noReportHint')
                 : (data.unresolvedCount
                     ? i18n.t('dashboard.pendingDecisions', { count: data.unresolvedCount })
                     : i18n.t('dashboard.noPending'))
@@ -144,7 +144,7 @@
       <article class="score card">
         <div class="score-head">
           <span>{{ i18n.t('dashboard.attendanceRate') }}</span>
-          <span class="score-badge">▲ {{ data.attendanceRate >= 80 ? 'Good' : 'Review' }}</span>
+          <span class="score-badge">▲ {{ data.attendanceRate >= 80 ? i18n.t('dashboard.scoreGood') : i18n.t('dashboard.scoreReview') }}</span>
         </div>
         <strong>{{ data.attendanceRate }}%</strong>
         <div class="meter"><i [style.width.%]="data.attendanceRate"></i></div>
@@ -533,29 +533,24 @@
   </app-modal-dialog>
   <!-- KPI Drill-Down Modal -->
   @if (activeKpiModal(); as modal) {
-    <div class="drawer-backdrop" (click)="closeKpiModal()"></div>
-    <div class="kpi-modal">
-      <div class="kpi-modal-header">
-        <div>
-          <p class="eyebrow">{{ i18n.t('dashboard.kpiModalEyebrow') }}</p>
-          <h3>{{ modal.title }}</h3>
-        </div>
-        <button class="button secondary" type="button" (click)="closeKpiModal()">{{ i18n.t('dashboard.kpiClose') }}</button>
+    <app-modal-dialog
+      [title]="modal.title"
+      [showFooter]="false"
+      (close)="closeKpiModal()"
+    >
+      <p class="eyebrow">{{ i18n.t('dashboard.kpiModalEyebrow') }}</p>
+      <div class="kpi-big-stat">
+        <span class="stat-num">{{ modal.value }}</span>
+        <small>{{ i18n.t('dashboard.kpiTotalLabel') }}</small>
       </div>
-      <div class="kpi-modal-body">
-        <div class="kpi-big-stat">
-          <span class="stat-num">{{ modal.value }}</span>
-          <small>{{ i18n.t('dashboard.kpiTotalLabel') }}</small>
-        </div>
-        <div class="kpi-breakdown-list">
-          <h4>{{ i18n.t('dashboard.kpiBreakdownHeading') }}</h4>
-          <ul>
-            @for (detail of modal.details; track $index) {
-              <li>📌 {{ detail }}</li>
-            }
-          </ul>
-        </div>
+      <div class="kpi-breakdown-list">
+        <h4>{{ i18n.t('dashboard.kpiBreakdownHeading') }}</h4>
+        <ul>
+          @for (detail of modal.details; track $index) {
+            <li>📌 {{ detail }}</li>
+          }
+        </ul>
       </div>
-    </div>
+    </app-modal-dialog>
   }
 </section>

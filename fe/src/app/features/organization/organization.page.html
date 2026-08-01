@@ -1,11 +1,11 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">البنية الإدارية والهيكل المؤسسي (ERP Hierarchy)</p>
-      <h1>إدارة الشركات والفروع والمستودعات والإدارات</h1>
-      <p>توصيف الهيكل التنظيمي للشركة والفروع التابعة والمخازن والأقسام الإدارية.</p>
+      <p class="eyebrow">{{ i18n.t('organization.eyebrow') }}</p>
+      <h1>{{ i18n.t('organization.title') }}</h1>
+      <p>{{ i18n.t('organization.description') }}</p>
     </div>
-    <button class="button primary" (click)="openNew()">＋ إضافة عنصر جديد</button>
+    <button class="button primary" (click)="openNew()">＋ {{ i18n.t('organization.add') }}</button>
   </header>
 
   @if (loading()) {
@@ -19,16 +19,16 @@
   <div class="filter-pills-bar">
     <div class="pills-group">
       <button class="pill-tab" [class.active]="activeTab() === 'companies'" (click)="activeTab.set('companies')">
-        🏢 الشركات ({{ companies().length }})
+        🏢 {{ i18n.t('organization.tabCompanies') }} ({{ companies().length }})
       </button>
       <button class="pill-tab" [class.active]="activeTab() === 'branches'" (click)="activeTab.set('branches')">
-        🌿 الفروع ({{ branches().length }})
+        🌿 {{ i18n.t('organization.tabBranches') }} ({{ branches().length }})
       </button>
       <button class="pill-tab" [class.active]="activeTab() === 'warehouses'" (click)="activeTab.set('warehouses')">
-        📦 المستودعات والمخازن ({{ warehouses().length }})
+        📦 {{ i18n.t('organization.tabWarehouses') }} ({{ warehouses().length }})
       </button>
       <button class="pill-tab" [class.active]="activeTab() === 'departments'" (click)="activeTab.set('departments')">
-        🏛️ الإدارات والأقسام ({{ departments().length }})
+        🏛️ {{ i18n.t('organization.tabDepartments') }} ({{ departments().length }})
       </button>
     </div>
   </div>
@@ -40,11 +40,11 @@
         <table>
           <thead>
             <tr>
-              <th>كود الشركة</th>
-              <th>اسم الشركة</th>
-              <th>الرقم الضريبي</th>
-              <th>السجل التجاري</th>
-              <th>الحالة</th>
+              <th>{{ i18n.t('organization.companyCode') }}</th>
+              <th>{{ i18n.t('organization.companyName') }}</th>
+              <th>{{ i18n.t('organization.taxNumber') }}</th>
+              <th>{{ i18n.t('organization.commercialRegistry') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -54,10 +54,10 @@
                 <td><strong>{{ c.name }}</strong></td>
                 <td>{{ c.taxNumber || '—' }}</td>
                 <td>{{ c.commercialRegistry || '—' }}</td>
-                <td><span class="status" [class.success]="c.active">{{ c.active ? 'نشط' : 'معطل' }}</span></td>
+                <td><span class="status" [class.success]="c.active">{{ c.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
               </tr>
             } @empty {
-              <tr><td colspan="5"><div class="empty-state">لا توجد شركات مسجلة بعد</div></td></tr>
+              <tr><td colspan="5"><div class="empty-state">{{ i18n.t('organization.emptyCompanies') }}</div></td></tr>
             }
           </tbody>
         </table>
@@ -70,10 +70,10 @@
         <table>
           <thead>
             <tr>
-              <th>كود الفرع</th>
-              <th>اسم الفرع</th>
-              <th>الموقع / العنوان</th>
-              <th>الحالة</th>
+              <th>{{ i18n.t('organization.branchCode') }}</th>
+              <th>{{ i18n.t('organization.branchName') }}</th>
+              <th>{{ i18n.t('organization.location') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -82,10 +82,10 @@
                 <td><strong class="ltr">{{ b.code }}</strong></td>
                 <td><strong>{{ b.name }}</strong></td>
                 <td>{{ b.location || '—' }}</td>
-                <td><span class="status" [class.success]="b.active">{{ b.active ? 'نشط' : 'معطل' }}</span></td>
+                <td><span class="status" [class.success]="b.active">{{ b.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
               </tr>
             } @empty {
-              <tr><td colspan="4"><div class="empty-state">لا توجد فروع مسجلة بعد</div></td></tr>
+              <tr><td colspan="4"><div class="empty-state">{{ i18n.t('organization.emptyBranches') }}</div></td></tr>
             }
           </tbody>
         </table>
@@ -98,10 +98,10 @@
         <table>
           <thead>
             <tr>
-              <th>كود المستودع</th>
-              <th>اسم المستودع / المخزن</th>
-              <th>الموقع</th>
-              <th>الحالة</th>
+              <th>{{ i18n.t('organization.warehouseCode') }}</th>
+              <th>{{ i18n.t('organization.warehouseName') }}</th>
+              <th>{{ i18n.t('organization.location') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -110,10 +110,10 @@
                 <td><strong class="ltr">{{ w.code }}</strong></td>
                 <td><strong>{{ w.name }}</strong></td>
                 <td>{{ w.location || '—' }}</td>
-                <td><span class="status" [class.success]="w.active">{{ w.active ? 'نشط' : 'معطل' }}</span></td>
+                <td><span class="status" [class.success]="w.active">{{ w.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
               </tr>
             } @empty {
-              <tr><td colspan="4"><div class="empty-state">لا توجد مستودعات مسجلة بعد</div></td></tr>
+              <tr><td colspan="4"><div class="empty-state">{{ i18n.t('organization.emptyWarehouses') }}</div></td></tr>
             }
           </tbody>
         </table>
@@ -126,9 +126,9 @@
         <table>
           <thead>
             <tr>
-              <th>كود الإدارة</th>
-              <th>اسم الإدارة / القسم</th>
-              <th>الحالة</th>
+              <th>{{ i18n.t('organization.departmentCode') }}</th>
+              <th>{{ i18n.t('organization.departmentName') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -136,10 +136,10 @@
               <tr>
                 <td><strong class="ltr">{{ d.code }}</strong></td>
                 <td><strong>{{ d.name }}</strong></td>
-                <td><span class="status" [class.success]="d.active">{{ d.active ? 'نشط' : 'معطل' }}</span></td>
+                <td><span class="status" [class.success]="d.active">{{ d.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
               </tr>
             } @empty {
-              <tr><td colspan="3"><div class="empty-state">لا توجد إدارات مسجلة بعد</div></td></tr>
+              <tr><td colspan="3"><div class="empty-state">{{ i18n.t('organization.emptyDepartments') }}</div></td></tr>
             }
           </tbody>
         </table>
@@ -150,7 +150,7 @@
   <!-- Shared Modal Dialog for Creating Elements -->
   <app-modal-dialog
     [isOpen]="drawerOpen()"
-    [title]="activeTab() === 'companies' ? 'شركة جديدة' : activeTab() === 'branches' ? 'فرع جديد' : activeTab() === 'warehouses' ? 'مستودع جديد' : 'إدارة جديدة'"
+    [title]="activeTab() === 'companies' ? i18n.t('organization.newCompanyTitle') : activeTab() === 'branches' ? i18n.t('organization.newBranchTitle') : activeTab() === 'warehouses' ? i18n.t('organization.newWarehouseTitle') : i18n.t('organization.newDepartmentTitle')"
     size="wide"
     [preventOutsideClose]="true"
     (close)="closeDrawer()">
@@ -159,19 +159,19 @@
       <form [formGroup]="companyForm" (ngSubmit)="submitCompany()" id="company-form" class="modal-form">
         <div class="form-grid">
           <div class="field">
-            <label>كود الشركة *</label>
+            <label>{{ i18n.t('organization.companyCode') }} *</label>
             <input class="ltr" formControlName="code" placeholder="COMP-01" />
           </div>
           <div class="field">
-            <label>اسم الشركة *</label>
-            <input formControlName="name" placeholder="شركة المجموعة الرئيسية" />
+            <label>{{ i18n.t('organization.companyName') }} *</label>
+            <input formControlName="name" [placeholder]="i18n.t('organization.companyNamePlaceholder')" />
           </div>
           <div class="field">
-            <label>الرقم الضريبي</label>
+            <label>{{ i18n.t('organization.taxNumber') }}</label>
             <input class="ltr" formControlName="taxNumber" placeholder="300-123456" />
           </div>
           <div class="field">
-            <label>السجل التجاري</label>
+            <label>{{ i18n.t('organization.commercialRegistry') }}</label>
             <input class="ltr" formControlName="commercialRegistry" placeholder="CR-998811" />
           </div>
         </div>
@@ -182,7 +182,7 @@
       <form [formGroup]="branchForm" (ngSubmit)="submitBranch()" id="branch-form" class="modal-form">
         <div class="form-grid">
           <div class="field span-2">
-            <label>الشركة التابع لها *</label>
+            <label>{{ i18n.t('organization.parentCompany') }} *</label>
             <select formControlName="companyId">
               @for (c of companies(); track c.id) {
                 <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
@@ -190,16 +190,16 @@
             </select>
           </div>
           <div class="field">
-            <label>كود الفرع *</label>
+            <label>{{ i18n.t('organization.branchCode') }} *</label>
             <input class="ltr" formControlName="code" placeholder="BR-01" />
           </div>
           <div class="field">
-            <label>اسم الفرع *</label>
-            <input formControlName="name" placeholder="فرع القاهرة الرئيسي" />
+            <label>{{ i18n.t('organization.branchName') }} *</label>
+            <input formControlName="name" [placeholder]="i18n.t('organization.branchNamePlaceholder')" />
           </div>
           <div class="field span-2">
-            <label>الموقع / العنوان</label>
-            <input formControlName="location" placeholder="العنوان بالتفصيل..." />
+            <label>{{ i18n.t('organization.location') }}</label>
+            <input formControlName="location" [placeholder]="i18n.t('organization.locationPlaceholder')" />
           </div>
         </div>
       </form>
@@ -209,7 +209,7 @@
       <form [formGroup]="warehouseForm" (ngSubmit)="submitWarehouse()" id="warehouse-form" class="modal-form">
         <div class="form-grid">
           <div class="field span-2">
-            <label>الفرع التابع له *</label>
+            <label>{{ i18n.t('organization.parentBranch') }} *</label>
             <select formControlName="branchId">
               @for (b of branches(); track b.id) {
                 <option [value]="b.id">{{ b.name }} ({{ b.code }})</option>
@@ -217,16 +217,16 @@
             </select>
           </div>
           <div class="field">
-            <label>كود المستودع *</label>
+            <label>{{ i18n.t('organization.warehouseCode') }} *</label>
             <input class="ltr" formControlName="code" placeholder="WH-01" />
           </div>
           <div class="field">
-            <label>اسم المستودع / المخزن *</label>
-            <input formControlName="name" placeholder="مخزن المواد الخام" />
+            <label>{{ i18n.t('organization.warehouseName') }} *</label>
+            <input formControlName="name" [placeholder]="i18n.t('organization.warehouseNamePlaceholder')" />
           </div>
           <div class="field span-2">
-            <label>الموقع</label>
-            <input formControlName="location" placeholder="منطقة المخازن..." />
+            <label>{{ i18n.t('organization.location') }}</label>
+            <input formControlName="location" [placeholder]="i18n.t('organization.warehouseLocationPlaceholder')" />
           </div>
         </div>
       </form>
@@ -236,7 +236,7 @@
       <form [formGroup]="departmentForm" (ngSubmit)="submitDepartment()" id="department-form" class="modal-form">
         <div class="form-grid">
           <div class="field span-2">
-            <label>الشركة التابع لها *</label>
+            <label>{{ i18n.t('organization.parentCompany') }} *</label>
             <select formControlName="companyId">
               @for (c of companies(); track c.id) {
                 <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
@@ -244,33 +244,33 @@
             </select>
           </div>
           <div class="field">
-            <label>كود الإدارة *</label>
+            <label>{{ i18n.t('organization.departmentCode') }} *</label>
             <input class="ltr" formControlName="code" placeholder="DEP-HR" />
           </div>
           <div class="field">
-            <label>اسم الإدارة / القسم *</label>
-            <input formControlName="name" placeholder="إدارة الموارد البشرية" />
+            <label>{{ i18n.t('organization.departmentName') }} *</label>
+            <input formControlName="name" [placeholder]="i18n.t('organization.departmentNamePlaceholder')" />
           </div>
         </div>
       </form>
     }
 
-    <div modal-actions style="display:flex;justify-content:flex-end;gap:0.5rem;width:100%;">
+    <div modal-actions class="modal-form-actions">
       @if (activeTab() === 'companies') {
-        <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-        <button class="button primary" type="submit" form="company-form" [disabled]="companyForm.invalid">حفظ الشركة</button>
+        <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+        <button class="button primary" type="submit" form="company-form" [disabled]="companyForm.invalid">{{ i18n.t('organization.saveCompany') }}</button>
       }
       @if (activeTab() === 'branches') {
-        <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-        <button class="button primary" type="submit" form="branch-form" [disabled]="branchForm.invalid">حفظ الفرع</button>
+        <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+        <button class="button primary" type="submit" form="branch-form" [disabled]="branchForm.invalid">{{ i18n.t('organization.saveBranch') }}</button>
       }
       @if (activeTab() === 'warehouses') {
-        <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-        <button class="button primary" type="submit" form="warehouse-form" [disabled]="warehouseForm.invalid">حفظ المستودع</button>
+        <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+        <button class="button primary" type="submit" form="warehouse-form" [disabled]="warehouseForm.invalid">{{ i18n.t('organization.saveWarehouse') }}</button>
       }
       @if (activeTab() === 'departments') {
-        <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-        <button class="button primary" type="submit" form="department-form" [disabled]="departmentForm.invalid">حفظ الإدارة</button>
+        <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+        <button class="button primary" type="submit" form="department-form" [disabled]="departmentForm.invalid">{{ i18n.t('organization.saveDepartment') }}</button>
       }
     </div>
   </app-modal-dialog>

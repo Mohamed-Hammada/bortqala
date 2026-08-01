@@ -161,7 +161,7 @@
           </div>
           <div class="field">
             <label>{{ i18n.t('production.finishedGoodNameLabel') }} *</label>
-            <input formControlName="finishedGoodName" />
+            <input formControlName="finishedGoodName" [placeholder]="i18n.t('production.finishedGoodNamePlaceholder')" />
           </div>
           <div class="field">
             <label>{{ i18n.t('production.yieldQuantityLabel') }} *</label>
@@ -169,7 +169,7 @@
           </div>
           <div class="field span-2">
             <label>{{ i18n.t('common.notes') }}</label>
-            <input formControlName="notes" />
+            <input formControlName="notes" [placeholder]="i18n.t('production.notesPlaceholder')" />
           </div>
         </div>
       </form>
