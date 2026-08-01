@@ -11,10 +11,11 @@ import { AuthService } from '../../core/auth/auth.service';
 import { DashboardWidgetId } from '../../core/auth/auth.models';
 import { NotificationService } from '../../core/notification.service';
 import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [RouterLink, TablePaginationComponent, FormsModule, DecimalPipe, AppTooltipDirective],
+  imports: [RouterLink, TablePaginationComponent, FormsModule, DecimalPipe, AppTooltipDirective, ModalDialogComponent],
   providers: [DashboardStore],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss',
@@ -212,10 +213,11 @@ export class DashboardPage {
   }
 
   formatLastUpdated(value: string | null): string {
-    if (!value) return new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+    const locale = this.i18n.locale();
+    if (!value) return new Date().toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
     try {
       const d = new Date(value);
-      return d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      return d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     } catch {
       return value;
     }

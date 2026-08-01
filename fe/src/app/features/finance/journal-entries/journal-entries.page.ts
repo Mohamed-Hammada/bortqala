@@ -11,6 +11,7 @@ import { TablePagination } from '../../../shared/ui/table-pagination/pagination'
 import { TablePaginationComponent } from '../../../shared/ui/table-pagination/table-pagination.component';
 import { Account } from '../accounts/accounts.page';
 import { AppTooltipDirective } from '../../../shared/ui/app-tooltip/app-tooltip.directive';
+import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 
 export interface JournalEntryLine {
   id?: string;
@@ -48,7 +49,7 @@ export interface JournalEntryPage {
 
 @Component({
   selector: 'app-journal-entries-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent, DecimalPipe, AppTooltipDirective],
+  imports: [ReactiveFormsModule, TablePaginationComponent, DecimalPipe, AppTooltipDirective, ModalDialogComponent],
   templateUrl: './journal-entries.page.html',
   styleUrl: './journal-entries.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -158,7 +159,7 @@ export class JournalEntriesPage {
     const sumCredit = this.calculateSumCredit();
 
     if (Math.abs(sumDebit - sumCredit) > 0.001) {
-      this.error.set(`القيد غير متوازن! مجموع المدين (${sumDebit}) لا يساوي مجموع الدائن (${sumCredit})`);
+      this.error.set(this.i18n.t('journal.unbalancedError', { debit: sumDebit, credit: sumCredit }));
       return;
     }
 
@@ -173,7 +174,7 @@ export class JournalEntriesPage {
         lines: this.lines(),
       };
       await firstValueFrom(this.http.post('/api/v1/finance/journal-entries', payload));
-      this.notification.success('تم تسجيل قيد اليومية بنجاح ✓');
+      this.notification.success(this.i18n.t('journal.saved'));
       this.drawerOpen.set(false);
       await this.load(0);
     } catch (e) {
@@ -184,7 +185,7 @@ export class JournalEntriesPage {
   async postEntry(entry: JournalEntry) {
     try {
       await firstValueFrom(this.http.post(`/api/v1/finance/journal-entries/${entry.id}/post`, {}));
-      this.notification.success('تم ترحيل قيد اليومية للمحاسبة العامة بنجاح ✓');
+      this.notification.success(this.i18n.t('journal.posted'));
       await this.load(0);
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));

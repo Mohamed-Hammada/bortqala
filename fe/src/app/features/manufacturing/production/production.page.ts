@@ -7,6 +7,7 @@ import { I18nService } from '../../../core/i18n.service';
 import { NotificationService } from '../../../core/notification.service';
 import { apiErrorMessage } from '../../../core/api-error';
 import { formatDate } from '../../../core/date';
+import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 
 export interface BomHeader {
   id: string;
@@ -30,7 +31,7 @@ export interface ProductionOrder {
 
 @Component({
   selector: 'app-production-page',
-  imports: [ReactiveFormsModule, DecimalPipe],
+  imports: [ReactiveFormsModule, DecimalPipe, ModalDialogComponent],
   templateUrl: './production.page.html',
   styleUrl: './production.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -88,9 +89,9 @@ export class ProductionPage {
     if (this.activeTab() === 'boms') {
       this.bomForm.reset({
         bomCode: 'BOM-' + Math.floor(100 + Math.random() * 900),
-        finishedGoodName: 'منتج تام التصنيع أ',
+        finishedGoodName: '',
         yieldQuantity: 1,
-        notes: 'مكونات الإنتاج التجميعي',
+        notes: '',
       });
     } else {
       this.orderForm.reset({
@@ -112,7 +113,7 @@ export class ProductionPage {
     try {
       const val = this.bomForm.getRawValue();
       await firstValueFrom(this.http.post('/api/v1/manufacturing/boms', { ...val, active: true }));
-      this.notification.success('تمت إضافة قائمة المكونات (BOM) بنجاح ✓');
+      this.notification.success(this.i18n.t('production.bomSaved'));
       this.drawerOpen.set(false);
       await this.load();
     } catch (e) {
@@ -132,7 +133,7 @@ export class ProductionPage {
         startDate: startDateMs,
       };
       await firstValueFrom(this.http.post('/api/v1/manufacturing/orders', payload));
-      this.notification.success('تم إنشاء أمر الإنتاج والتصنيع بنجاح ✓');
+      this.notification.success(this.i18n.t('production.orderCreated'));
       this.drawerOpen.set(false);
       await this.load();
     } catch (e) {
@@ -143,7 +144,7 @@ export class ProductionPage {
   async startOrder(order: ProductionOrder) {
     try {
       await firstValueFrom(this.http.post(`/api/v1/manufacturing/orders/${order.id}/start`, {}));
-      this.notification.success('تم بدء العمل بأمر الإنتاج بنجاح ✓');
+      this.notification.success(this.i18n.t('production.orderStarted'));
       await this.load();
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));
@@ -153,7 +154,7 @@ export class ProductionPage {
   async completeOrder(order: ProductionOrder) {
     try {
       await firstValueFrom(this.http.post(`/api/v1/manufacturing/orders/${order.id}/complete`, {}));
-      this.notification.success('تم إكتمال التصنيع إضافة المنتج التام للمخزن ✓');
+      this.notification.success(this.i18n.t('production.orderCompleted'));
       await this.load();
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));

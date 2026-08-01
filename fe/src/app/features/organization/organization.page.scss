@@ -1,2 +1,9 @@
 .page { display: flex; flex-direction: column; gap: 20px; }
 .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
+
+.modal-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  width: 100%;
+}

@@ -1,0 +1,263 @@
+﻿id;translation_key;locale;text_value
+x73-001-ar;common.actions;ar-EG;الإجراءات
+x73-001-en;common.actions;en-US;Actions
+x73-002-ar;common.status;ar-EG;الحالة
+x73-002-en;common.status;en-US;Status
+x73-003-ar;common.egp;ar-EG;ج.م
+x73-003-en;common.egp;en-US;EGP
+x73-004-ar;common.unit;ar-EG;وحدة
+x73-004-en;common.unit;en-US;units
+x73-005-ar;modal.closeTooltip;ar-EG;إغلاق — إلغاء وإغلاق النافذة · Esc
+x73-005-en;modal.closeTooltip;en-US;Close — cancel and close the dialog · Esc
+x73-006-ar;banks.eyebrow;ar-EG;إدارة الخزينة والسيولة (Treasury & Cash Management)
+x73-006-en;banks.eyebrow;en-US;Treasury & Cash Management
+x73-007-ar;banks.title;ar-EG;الحسابات البنكية والخزائن (Bank Accounts)
+x73-007-en;banks.title;en-US;Bank Accounts
+x73-008-ar;banks.description;ar-EG;تسجيل وتتبع الحسابات المصرفية بالبنوك وأرقام الـ IBAN وسويفت كود.
+x73-008-en;banks.description;en-US;Register and track bank accounts, IBAN numbers, and SWIFT codes.
+x73-009-ar;banks.add;ar-EG;إضافة حساب بنكي جديد
+x73-009-en;banks.add;en-US;Add new bank account
+x73-010-ar;banks.colBank;ar-EG;اسم البنك
+x73-010-en;banks.colBank;en-US;Bank name
+x73-011-ar;banks.colAccountNumber;ar-EG;رقم الحساب المصرفي
+x73-011-en;banks.colAccountNumber;en-US;Account number
+x73-012-ar;banks.colIban;ar-EG;رقم الـ IBAN
+x73-012-en;banks.colIban;en-US;IBAN
+x73-013-ar;banks.colSwift;ar-EG;رمز السويفت (SWIFT)
+x73-013-en;banks.colSwift;en-US;SWIFT code
+x73-014-ar;banks.empty;ar-EG;لا توجد حسابات بنكية مسجلة بعد
+x73-014-en;banks.empty;en-US;No bank accounts registered yet
+x73-015-ar;banks.newTitle;ar-EG;حساب بنكي جديد
+x73-015-en;banks.newTitle;en-US;New bank account
+x73-016-ar;banks.bankNameLabel;ar-EG;اسم البنك
+x73-016-en;banks.bankNameLabel;en-US;Bank name
+x73-017-ar;banks.bankNamePlaceholder;ar-EG;مثال: البنك الأهلي المصري - فرع التجمع
+x73-017-en;banks.bankNamePlaceholder;en-US;e.g. National Bank of Egypt - a branch
+x73-018-ar;banks.accountNumberLabel;ar-EG;رقم الحساب المصرفي
+x73-018-en;banks.accountNumberLabel;en-US;Account number
+x73-019-ar;banks.ibanLabel;ar-EG;رقم الـ IBAN
+x73-019-en;banks.ibanLabel;en-US;IBAN
+x73-020-ar;banks.swiftLabel;ar-EG;رمز السويفت كود (SWIFT Code)
+x73-020-en;banks.swiftLabel;en-US;SWIFT code
+x73-021-ar;banks.save;ar-EG;حفظ الحساب البنكي
+x73-021-en;banks.save;en-US;Save bank account
+x73-022-ar;journal.eyebrow;ar-EG;دفتر اليومية العامة والقيود (General Ledger Journal)
+x73-022-en;journal.eyebrow;en-US;General Ledger Journal
+x73-023-ar;journal.title;ar-EG;القيود اليومية (Journal Entries)
+x73-023-en;journal.title;en-US;Journal Entries
+x73-024-ar;journal.description;ar-EG;تسجيل وترحيل قيود اليومية المزدوجة ومتابعة توازن الحسابات.
+x73-024-en;journal.description;en-US;Record and post double-entry journal vouchers and track account balance.
+x73-025-ar;journal.add;ar-EG;قيد يومية جديد
+x73-025-en;journal.add;en-US;New journal entry
+x73-026-ar;journal.colNumber;ar-EG;رقم القيد
+x73-026-en;journal.colNumber;en-US;Entry number
+x73-027-ar;journal.colDate;ar-EG;تاريخ القيد
+x73-027-en;journal.colDate;en-US;Entry date
+x73-028-ar;journal.colDescription;ar-EG;البيان / الشرح
+x73-028-en;journal.colDescription;en-US;Description
+x73-029-ar;journal.colReference;ar-EG;المرجع
+x73-029-en;journal.colReference;en-US;Reference
+x73-030-ar;journal.colDebitTotal;ar-EG;إجمالي المدين
+x73-030-en;journal.colDebitTotal;en-US;Total debit
+x73-031-ar;journal.colCreditTotal;ar-EG;إجمالي الدائن
+x73-031-en;journal.colCreditTotal;en-US;Total credit
+x73-032-ar;journal.colStatus;ar-EG;حالة القيد
+x73-032-en;journal.colStatus;en-US;Entry status
+x73-033-ar;journal.statusDraft;ar-EG;مسودة (Draft)
+x73-033-en;journal.statusDraft;en-US;Draft
+x73-034-ar;journal.statusPosted;ar-EG;مُرحَّل (Posted)
+x73-034-en;journal.statusPosted;en-US;Posted
+x73-035-ar;journal.statusReversed;ar-EG;متراجع عنه (Reversed)
+x73-035-en;journal.statusReversed;en-US;Reversed
+x73-036-ar;journal.post;ar-EG;ترحيل القيد
+x73-036-en;journal.post;en-US;Post entry
+x73-037-ar;journal.empty;ar-EG;لا توجد قيود يومية مسجلة بعد. اضغط "قيد يومية جديد" لإضافة قيد.
+x73-037-en;journal.empty;en-US;No journal entries registered yet. Click "New journal entry" to add one.
+x73-038-ar;journal.newTitle;ar-EG;إضافة قيد يومية جديد (Double-Entry Voucher)
+x73-038-en;journal.newTitle;en-US;New Double-Entry Voucher
+x73-039-ar;journal.numberLabel;ar-EG;رقم القيد
+x73-039-en;journal.numberLabel;en-US;Entry number
+x73-040-ar;journal.dateLabel;ar-EG;تاريخ القيد
+x73-040-en;journal.dateLabel;en-US;Entry date
+x73-041-ar;journal.descriptionLabel;ar-EG;البيان والشرح
+x73-041-en;journal.descriptionLabel;en-US;Description
+x73-042-ar;journal.descriptionPlaceholder;ar-EG;شرح القيد المحاسبي بالتفصيل...
+x73-042-en;journal.descriptionPlaceholder;en-US;Detailed accounting description...
+x73-043-ar;journal.referenceLabel;ar-EG;رقم المرجع / الفاتورة
+x73-043-en;journal.referenceLabel;en-US;Reference / invoice number
+x73-044-ar;journal.linesTitle;ar-EG;طرفي القيد (المدين والدائن)
+x73-044-en;journal.linesTitle;en-US;Journal lines (debit & credit)
+x73-045-ar;journal.colAccount;ar-EG;الحساب المحاسبي
+x73-045-en;journal.colAccount;en-US;Account
+x73-046-ar;journal.debit;ar-EG;مدين (Debit)
+x73-046-en;journal.debit;en-US;Debit
+x73-047-ar;journal.credit;ar-EG;دائن (Credit)
+x73-047-en;journal.credit;en-US;Credit
+x73-048-ar;journal.colLineNotes;ar-EG;ملاحظات السطر
+x73-048-en;journal.colLineNotes;en-US;Line notes
+x73-049-ar;journal.lineNotesPlaceholder;ar-EG;ملاحظات السطر...
+x73-049-en;journal.lineNotesPlaceholder;en-US;Line notes...
+x73-050-ar;journal.removeLineAria;ar-EG;حذف سطر القيد
+x73-050-en;journal.removeLineAria;en-US;Remove journal line
+x73-051-ar;journal.removeLineTooltip;ar-EG;حذف السطر — إزالة هذا الطرف من القيد
+x73-051-en;journal.removeLineTooltip;en-US;Remove line — delete this side of the entry
+x73-052-ar;journal.totalLabel;ar-EG;إجمالي القيد:
+x73-052-en;journal.totalLabel;en-US;Entry total:
+x73-053-ar;journal.balanced;ar-EG;✓ القيد متوازن
+x73-053-en;journal.balanced;en-US;✓ Entry balanced
+x73-054-ar;journal.unbalanced;ar-EG;❌ القيد غير متوازن
+x73-054-en;journal.unbalanced;en-US;❌ Entry unbalanced
+x73-055-ar;journal.addLine;ar-EG;إضافة سطر جديد
+x73-055-en;journal.addLine;en-US;Add new line
+x73-056-ar;journal.saveDraft;ar-EG;حفظ القيد كـ مسودة
+x73-056-en;journal.saveDraft;en-US;Save entry as draft
+x73-057-ar;journal.unbalancedError;ar-EG;القيد غير متوازن! مجموع المدين ({debit}) لا يساوي مجموع الدائن ({credit})
+x73-057-en;journal.unbalancedError;en-US;Entry unbalanced! Total debit ({debit}) does not equal total credit ({credit})
+x73-058-ar;journal.saved;ar-EG;تم تسجيل قيد اليومية بنجاح ✓
+x73-058-en;journal.saved;en-US;Journal entry recorded successfully ✓
+x73-059-ar;journal.posted;ar-EG;تم ترحيل قيد اليومية للمحاسبة العامة بنجاح ✓
+x73-059-en;journal.posted;en-US;Journal entry posted to the general ledger successfully ✓
+x73-060-ar;production.eyebrow;ar-EG;التصنيع وتخطيط احتياجات المواد (MRP & Production)
+x73-060-en;production.eyebrow;en-US;Manufacturing & Material Requirements Planning (MRP & Production)
+x73-061-ar;production.title;ar-EG;أوامر الإنتاج وقوائم المكونات (BOM & Work Orders)
+x73-061-en;production.title;en-US;Production Orders & BOMs (BOM & Work Orders)
+x73-062-ar;production.description;ar-EG;تخطيط الإنتاج وتخصيص المواد الخام وسحبها وصرف المنتج التام للمخازن.
+x73-062-en;production.description;en-US;Plan production, allocate and issue raw materials, and post finished goods to stores.
+x73-063-ar;production.addOrder;ar-EG;أمر إنتاج جديد (MO)
+x73-063-en;production.addOrder;en-US;New production order (MO)
+x73-064-ar;production.addBom;ar-EG;قائمة مكونات جديدة (BOM)
+x73-064-en;production.addBom;en-US;New BOM
+x73-065-ar;production.tabOrders;ar-EG;أوامر الإنتاج والتصنيع
+x73-065-en;production.tabOrders;en-US;Production orders
+x73-066-ar;production.tabBoms;ar-EG;قوائم المكونات والتركيب BOM
+x73-066-en;production.tabBoms;en-US;BOM lists
+x73-067-ar;production.colOrderNumber;ar-EG;رقم أمر الإنتاج
+x73-067-en;production.colOrderNumber;en-US;Order number
+x73-068-ar;production.colStartDate;ar-EG;تاريخ البدء
+x73-068-en;production.colStartDate;en-US;Start date
+x73-069-ar;production.colBom;ar-EG;قائمة المكونات (BOM ID)
+x73-069-en;production.colBom;en-US;BOM
+x73-070-ar;production.colTargetQuantity;ar-EG;الكمية المستهدفة للإنتاج
+x73-070-en;production.colTargetQuantity;en-US;Target quantity
+x73-071-ar;production.colStatus;ar-EG;حالة الأمر
+x73-071-en;production.colStatus;en-US;Order status
+x73-072-ar;production.statusPlanned;ar-EG;مخطط (Planned)
+x73-072-en;production.statusPlanned;en-US;Planned
+x73-073-ar;production.statusInProgress;ar-EG;قيد التصنيع (In Progress)
+x73-073-en;production.statusInProgress;en-US;In Progress
+x73-074-ar;production.statusCompleted;ar-EG;مكتمل ومرحّل للمخزن (Completed)
+x73-074-en;production.statusCompleted;en-US;Completed
+x73-075-ar;production.start;ar-EG;بدء الإنتاج
+x73-075-en;production.start;en-US;Start production
+x73-076-ar;production.complete;ar-EG;إكمال وإيداع بالمخزن
+x73-076-en;production.complete;en-US;Complete & post to store
+x73-077-ar;production.emptyOrders;ar-EG;لا توجد أوامر إنتاج مسجلة بعد. اضغط "أمر إنتاج جديد" للبدء.
+x73-077-en;production.emptyOrders;en-US;No production orders registered yet. Click "New production order" to start.
+x73-078-ar;production.colBomCode;ar-EG;كود الـ BOM
+x73-078-en;production.colBomCode;en-US;BOM code
+x73-079-ar;production.colFinishedGood;ar-EG;اسم المنتج النهائي (Finished Good)
+x73-079-en;production.colFinishedGood;en-US;Finished good
+x73-080-ar;production.colYieldQuantity;ar-EG;كمية الناتج (Yield Quantity)
+x73-080-en;production.colYieldQuantity;en-US;Yield quantity
+x73-081-ar;production.emptyBoms;ar-EG;لا توجد قوائم مكونات مسجلة بعد.
+x73-081-en;production.emptyBoms;en-US;No BOMs registered yet.
+x73-082-ar;production.orderTitle;ar-EG;أمر إنتاج جديد
+x73-082-en;production.orderTitle;en-US;New production order
+x73-083-ar;production.bomTitle;ar-EG;قائمة مكونات جديدة (BOM)
+x73-083-en;production.bomTitle;en-US;New BOM
+x73-084-ar;production.orderNumberLabel;ar-EG;رقم أمر الإنتاج
+x73-084-en;production.orderNumberLabel;en-US;Order number
+x73-085-ar;production.startDateLabel;ar-EG;تاريخ البدء
+x73-085-en;production.startDateLabel;en-US;Start date
+x73-086-ar;production.selectBomLabel;ar-EG;اختر قائمة المكونات (BOM)
+x73-086-en;production.selectBomLabel;en-US;Select BOM
+x73-087-ar;production.targetQuantityLabel;ar-EG;الكمية المستهدفة للإنتاج
+x73-087-en;production.targetQuantityLabel;en-US;Target quantity
+x73-088-ar;production.bomCodeLabel;ar-EG;كود الـ BOM
+x73-088-en;production.bomCodeLabel;en-US;BOM code
+x73-089-ar;production.finishedGoodNameLabel;ar-EG;اسم المنتج النهائي
+x73-089-en;production.finishedGoodNameLabel;en-US;Finished good name
+x73-090-ar;production.yieldQuantityLabel;ar-EG;كمية الناتج
+x73-090-en;production.yieldQuantityLabel;en-US;Yield quantity
+x73-091-ar;production.saveOrder;ar-EG;حفظ أمر الإنتاج
+x73-091-en;production.saveOrder;en-US;Save production order
+x73-092-ar;production.saveBom;ar-EG;حفظ قائمة المكونات
+x73-092-en;production.saveBom;en-US;Save BOM
+x73-093-ar;production.bomSaved;ar-EG;تمت إضافة قائمة المكونات (BOM) بنجاح ✓
+x73-093-en;production.bomSaved;en-US;BOM added successfully ✓
+x73-094-ar;production.orderCreated;ar-EG;تم إنشاء أمر الإنتاج والتصنيع بنجاح ✓
+x73-094-en;production.orderCreated;en-US;Production order created successfully ✓
+x73-095-ar;production.orderStarted;ar-EG;تم بدء العمل بأمر الإنتاج بنجاح ✓
+x73-095-en;production.orderStarted;en-US;Production order started successfully ✓
+x73-096-ar;production.orderCompleted;ar-EG;تم إكتمال التصنيع وإيداع المنتج التام بالمخزن ✓
+x73-096-en;production.orderCompleted;en-US;Production completed and finished goods posted to store ✓
+x73-097-ar;production.defaultFinishedGood;ar-EG;منتج تام التصنيع أ
+x73-097-en;production.defaultFinishedGood;en-US;Finished good A
+x73-098-ar;production.defaultNotes;ar-EG;مكونات الإنتاج التجميعي
+x73-098-en;production.defaultNotes;en-US;Assembly production components
+x73-099-ar;sales.eyebrow;ar-EG;سلسلة الإمداد ودورة البيع والتحصيل (Sales & Collection Workflow)
+x73-099-en;sales.eyebrow;en-US;Supply Chain — Sales & Collection Workflow
+x73-100-ar;sales.title;ar-EG;دورة المبيعات (Sales Quotations to Collections)
+x73-100-en;sales.title;en-US;Sales Cycle (Quotations to Collections)
+x73-101-ar;sales.description;ar-EG;عروض الأسعار ← أوامر البيع SO ← إذن التسليم والصرف من المخزن ← فواتير وتحصيل العملاء.
+x73-101-en;sales.description;en-US;Quotations → Sales Orders SO → Delivery & store issues → Customer invoices & collections.
+x73-102-ar;sales.add;ar-EG;أمر بيع جديد (SO)
+x73-102-en;sales.add;en-US;New sales order (SO)
+x73-103-ar;sales.stepQuotation;ar-EG;عرض سعر (Quotation)
+x73-103-en;sales.stepQuotation;en-US;Quotation
+x73-104-ar;sales.stepQuotationDesc;ar-EG;تسعير للعميل
+x73-104-en;sales.stepQuotationDesc;en-US;Customer pricing
+x73-105-ar;sales.stepOrder;ar-EG;أمر بيع (Sales Order)
+x73-105-en;sales.stepOrder;en-US;Sales Order
+x73-106-ar;sales.stepOrderDesc;ar-EG;تأكيد طلب العميل
+x73-106-en;sales.stepOrderDesc;en-US;Confirm customer request
+x73-107-ar;sales.stepDelivery;ar-EG;إذن تسليم (Delivery)
+x73-107-en;sales.stepDelivery;en-US;Delivery
+x73-108-ar;sales.stepDeliveryDesc;ar-EG;خصم وصرف من المخزن
+x73-108-en;sales.stepDeliveryDesc;en-US;Issue & release from store
+x73-109-ar;sales.stepInvoice;ar-EG;فاتورة عميل
+x73-109-en;sales.stepInvoice;en-US;Customer invoice
+x73-110-ar;sales.stepInvoiceDesc;ar-EG;الاستحقاق المالي
+x73-110-en;sales.stepInvoiceDesc;en-US;Financial due
+x73-111-ar;sales.stepPayment;ar-EG;تحصيل النقدية
+x73-111-en;sales.stepPayment;en-US;Cash collection
+x73-112-ar;sales.stepPaymentDesc;ar-EG;إيداع بالبنك / الخزينة
+x73-112-en;sales.stepPaymentDesc;en-US;Bank / treasury deposit
+x73-113-ar;sales.colSoNumber;ar-EG;رقم أمر البيع
+x73-113-en;sales.colSoNumber;en-US;Sales order number
+x73-114-ar;sales.colOrderDate;ar-EG;تاريخ الأمر
+x73-114-en;sales.colOrderDate;en-US;Order date
+x73-115-ar;sales.colCustomer;ar-EG;كود / اسم العميل
+x73-115-en;sales.colCustomer;en-US;Customer
+x73-116-ar;sales.colTotal;ar-EG;إجمالي قيمة المبيعات
+x73-116-en;sales.colTotal;en-US;Total sales value
+x73-117-ar;sales.colStatus;ar-EG;حالة الأمر
+x73-117-en;sales.colStatus;en-US;Order status
+x73-118-ar;sales.statusDraft;ar-EG;مسودة (Draft)
+x73-118-en;sales.statusDraft;en-US;Draft
+x73-119-ar;sales.statusConfirmed;ar-EG;مؤكد من العميل (Confirmed)
+x73-119-en;sales.statusConfirmed;en-US;Confirmed
+x73-120-ar;sales.statusDelivered;ar-EG;تم التسليم من المخزن (Delivered)
+x73-120-en;sales.statusDelivered;en-US;Delivered
+x73-121-ar;sales.confirm;ar-EG;تأكيد أمر البيع
+x73-121-en;sales.confirm;en-US;Confirm sales order
+x73-122-ar;sales.empty;ar-EG;لا توجد أوامر بيع مسجلة بعد. اضغط "أمر بيع جديد" للبدء.
+x73-122-en;sales.empty;en-US;No sales orders registered yet. Click "New sales order" to start.
+x73-123-ar;sales.newTitle;ar-EG;أمر بيع جديد (Sales Order)
+x73-123-en;sales.newTitle;en-US;New Sales Order
+x73-124-ar;sales.soNumberLabel;ar-EG;رقم أمر البيع
+x73-124-en;sales.soNumberLabel;en-US;Sales order number
+x73-125-ar;sales.orderDateLabel;ar-EG;تاريخ الأمر
+x73-125-en;sales.orderDateLabel;en-US;Order date
+x73-126-ar;sales.customerLabel;ar-EG;العميل
+x73-126-en;sales.customerLabel;en-US;Customer
+x73-127-ar;sales.customerPlaceholder;ar-EG;كود / اسم العميل...
+x73-127-en;sales.customerPlaceholder;en-US;Customer code / name...
+x73-128-ar;sales.totalAmountLabel;ar-EG;إجمالي قيمة البيع (ج.م)
+x73-128-en;sales.totalAmountLabel;en-US;Total sales value (EGP)
+x73-129-ar;sales.save;ar-EG;حفظ أمر البيع
+x73-129-en;sales.save;en-US;Save sales order
+x73-130-ar;sales.soCreated;ar-EG;تم إنشاء أمر البيع بنجاح ✓
+x73-130-en;sales.soCreated;en-US;Sales order created successfully ✓
+x73-131-ar;sales.soConfirmed;ar-EG;تم تأكيد أمر البيع بنجاح ✓
+x73-131-en;sales.soConfirmed;en-US;Sales order confirmed successfully ✓

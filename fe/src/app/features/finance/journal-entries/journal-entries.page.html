@@ -1,11 +1,11 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">دفتر اليومية العامة والقيود (General Ledger Journal)</p>
-      <h1>القيود اليومية (Journal Entries)</h1>
-      <p>تسجيل وترحيل قيود اليومية المزدوجة ومتابعة توازن الحسابات.</p>
+      <p class="eyebrow">{{ i18n.t('journal.eyebrow') }}</p>
+      <h1>{{ i18n.t('journal.title') }}</h1>
+      <p>{{ i18n.t('journal.description') }}</p>
     </div>
-    <button class="button primary" (click)="openNew()">＋ قيد يومية جديد</button>
+    <button class="button primary" (click)="openNew()">＋ {{ i18n.t('journal.add') }}</button>
   </header>
 
   @if (loading()) {
@@ -20,14 +20,14 @@
       <table>
         <thead>
           <tr>
-            <th>رقم القيد</th>
-            <th>تاريخ القيد</th>
-            <th>البيان / الشرح</th>
-            <th>المرجع</th>
-            <th>إجمالي المدين</th>
-            <th>إجمالي الدائن</th>
-            <th>حالة القيد</th>
-            <th>الإجراءات</th>
+            <th>{{ i18n.t('journal.colNumber') }}</th>
+            <th>{{ i18n.t('journal.colDate') }}</th>
+            <th>{{ i18n.t('journal.colDescription') }}</th>
+            <th>{{ i18n.t('journal.colReference') }}</th>
+            <th>{{ i18n.t('journal.colDebitTotal') }}</th>
+            <th>{{ i18n.t('journal.colCreditTotal') }}</th>
+            <th>{{ i18n.t('journal.colStatus') }}</th>
+            <th>{{ i18n.t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -37,8 +37,8 @@
               <td class="ltr">{{ date(e.entryDate) }}</td>
               <td><strong>{{ e.description }}</strong></td>
               <td>{{ e.reference || '—' }}</td>
-              <td class="ltr"><strong>{{ e.totalDebit | number:'1.2-2' }}</strong> <small>ج.م</small></td>
-              <td class="ltr"><strong>{{ e.totalCredit | number:'1.2-2' }}</strong> <small>ج.م</small></td>
+              <td class="ltr"><strong>{{ e.totalDebit | number:'1.2-2' }}</strong> <small>{{ i18n.t('common.egp') }}</small></td>
+              <td class="ltr"><strong>{{ e.totalCredit | number:'1.2-2' }}</strong> <small>{{ i18n.t('common.egp') }}</small></td>
               <td>
                 <span
                   class="status"
@@ -46,13 +46,13 @@
                   [class.success]="e.status === 'POSTED'"
                   [class.danger]="e.status === 'REVERSED'"
                 >
-                  {{ e.status === 'DRAFT' ? 'مسودة (Draft)' : e.status === 'POSTED' ? 'مُرحَّل (Posted)' : 'متراجع عنه (Reversed)' }}
+                  {{ e.status === 'DRAFT' ? i18n.t('journal.statusDraft') : e.status === 'POSTED' ? i18n.t('journal.statusPosted') : i18n.t('journal.statusReversed') }}
                 </span>
               </td>
               <td>
                 <div class="table-row-actions">
                   @if (e.status === 'DRAFT') {
-                    <button class="button primary btn-sm" (click)="postEntry(e)">📖 ترحيل القيد</button>
+                    <button class="button primary btn-sm" (click)="postEntry(e)">📖 {{ i18n.t('journal.post') }}</button>
                   }
                 </div>
               </td>
@@ -60,7 +60,7 @@
           } @empty {
             <tr>
               <td colspan="8">
-                <div class="empty-state">لا توجد قيود يومية مسجلة بعد. اضغط <strong>"قيد يومية جديد"</strong> لإضافة قيد.</div>
+                <div class="empty-state">{{ i18n.t('journal.empty') }}</div>
               </td>
             </tr>
           }
@@ -77,48 +77,44 @@
     </div>
   }
 
-  <!-- Drawer for Creating Double-Entry Journal -->
-  @if (drawerOpen()) {
-    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
-    <aside class="drawer drawer-large">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">قيود اليومية العامة</p>
-          <h2>إضافة قيد يومية جديد (Double-Entry Voucher)</h2>
-        </div>
-        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
-      </div>
-
-      <form [formGroup]="entryForm" (ngSubmit)="submitEntry()">
+  <!-- Shared Modal for Creating Double-Entry Journal -->
+  <app-modal-dialog
+    class="journal-entry-dialog"
+    [isOpen]="drawerOpen()"
+    [title]="i18n.t('journal.newTitle')"
+    size="wide"
+    (close)="closeDrawer()"
+  >
+    <form [formGroup]="entryForm" class="modal-form" (ngSubmit)="submitEntry()">
         <div class="form-grid">
           <div class="field">
-            <label>رقم القيد *</label>
+            <label>{{ i18n.t('journal.numberLabel') }} *</label>
             <input class="ltr" formControlName="entryNumber" />
           </div>
           <div class="field">
-            <label>تاريخ القيد *</label>
+            <label>{{ i18n.t('journal.dateLabel') }} *</label>
             <input type="date" class="ltr" formControlName="entryDate" />
           </div>
           <div class="field span-2">
-            <label>البيان والشرح *</label>
-            <input formControlName="description" placeholder="شرح القيد المحاسبي بالتفصيل..." />
+            <label>{{ i18n.t('journal.descriptionLabel') }} *</label>
+            <input formControlName="description" [placeholder]="i18n.t('journal.descriptionPlaceholder')" />
           </div>
           <div class="field span-2">
-            <label>رقم المرجع / الفاتورة</label>
-            <input class="ltr" formControlName="reference" placeholder="REF-001" />
+            <label>{{ i18n.t('journal.referenceLabel') }}</label>
+            <input class="ltr" formControlName="reference" [placeholder]="i18n.t('journal.referencePlaceholder')" />
           </div>
         </div>
 
         <!-- Journal Lines Table -->
         <div class="lines-section">
-          <h3>طرفي القيد (المدين والدائن)</h3>
+          <h3>{{ i18n.t('journal.linesTitle') }}</h3>
           <table class="lines-table">
             <thead>
               <tr>
-                <th>الحساب المحاسبي *</th>
-                <th>مدين (Debit)</th>
-                <th>دائن (Credit)</th>
-                <th>ملاحظات السطر</th>
+                <th>{{ i18n.t('journal.colAccount') }} *</th>
+                <th>{{ i18n.t('journal.debit') }}</th>
+                <th>{{ i18n.t('journal.credit') }}</th>
+                <th>{{ i18n.t('journal.colLineNotes') }}</th>
                 <th></th>
               </tr>
             </thead>
@@ -139,17 +135,17 @@
                     <input type="number" class="ltr" [value]="line.credit" (input)="updateLine($index, 'credit', +$any($event.target).value)" />
                   </td>
                   <td>
-                    <input type="text" [value]="line.memo" (input)="updateLine($index, 'memo', $any($event.target).value)" placeholder="ملاحظات السطر..." />
+                    <input type="text" [value]="line.memo" (input)="updateLine($index, 'memo', $any($event.target).value)" [placeholder]="i18n.t('journal.lineNotesPlaceholder')" />
                   </td>
                   <td>
-                    <button class="button secondary btn-sm danger-btn" type="button" (click)="removeLine($index)" aria-label="حذف سطر القيد" appTooltip="حذف السطر — إزالة هذا الطرف من القيد">×</button>
+                    <button class="button secondary btn-sm danger-btn" type="button" (click)="removeLine($index)" [attr.aria-label]="i18n.t('journal.removeLineAria')" [appTooltip]="i18n.t('journal.removeLineTooltip')">×</button>
                   </td>
                 </tr>
               }
             </tbody>
             <tfoot>
               <tr>
-                <td><strong>إجمالي القيد:</strong></td>
+                <td><strong>{{ i18n.t('journal.totalLabel') }}</strong></td>
                 <td class="ltr"><strong>{{ calculateSumDebit() | number:'1.2-2' }}</strong></td>
                 <td class="ltr"><strong>{{ calculateSumCredit() | number:'1.2-2' }}</strong></td>
                 <td colspan="2">
@@ -158,22 +154,22 @@
                     [class.success]="calculateSumDebit() === calculateSumCredit() && calculateSumDebit() > 0"
                     [class.danger]="calculateSumDebit() !== calculateSumCredit()"
                   >
-                    {{ calculateSumDebit() === calculateSumCredit() && calculateSumDebit() > 0 ? '✓ القيد متوازن' : '❌ القيد غير متوازن' }}
+                    {{ calculateSumDebit() === calculateSumCredit() && calculateSumDebit() > 0 ? i18n.t('journal.balanced') : i18n.t('journal.unbalanced') }}
                   </span>
                 </td>
               </tr>
             </tfoot>
           </table>
-          <button class="button secondary btn-sm" type="button" (click)="addLine()">＋ إضافة سطر جديد</button>
+          <button class="button secondary btn-sm" type="button" (click)="addLine()">＋ {{ i18n.t('journal.addLine') }}</button>
         </div>
 
-        <div class="drawer-actions">
-          <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-          <button class="button primary" type="submit" [disabled]="entryForm.invalid || calculateSumDebit() !== calculateSumCredit() || calculateSumDebit() === 0">
-            حفظ القيد كـ مسودة
-          </button>
-        </div>
-      </form>
-    </aside>
-  }
+    </form>
+
+    <div modal-actions>
+      <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="button" (click)="submitEntry()" [disabled]="entryForm.invalid || calculateSumDebit() !== calculateSumCredit() || calculateSumDebit() === 0">
+        {{ i18n.t('journal.saveDraft') }}
+      </button>
+    </div>
+  </app-modal-dialog>
 </section>

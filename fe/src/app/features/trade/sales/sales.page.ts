@@ -7,6 +7,7 @@ import { NotificationService } from '../../../core/notification.service';
 import { apiErrorMessage } from '../../../core/api-error';
 import { DecimalPipe } from '@angular/common';
 import { formatDate } from '../../../core/date';
+import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 
 export interface SalesOrder {
   id: string;
@@ -22,7 +23,7 @@ export interface SalesOrder {
 
 @Component({
   selector: 'app-sales-page',
-  imports: [ReactiveFormsModule, DecimalPipe],
+  imports: [ReactiveFormsModule, DecimalPipe, ModalDialogComponent],
   templateUrl: './sales.page.html',
   styleUrl: './sales.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -90,7 +91,7 @@ export class SalesPage {
         totalAmount: val.totalAmount,
       };
       await firstValueFrom(this.http.post('/api/v1/trade/sales/orders', payload));
-      this.notification.success('تم إنشاء أمر البيع بنجاح ✓');
+      this.notification.success(this.i18n.t('sales.soCreated'));
       this.drawerOpen.set(false);
       await this.load();
     } catch (e) {
@@ -101,7 +102,7 @@ export class SalesPage {
   async confirmSo(so: SalesOrder) {
     try {
       await firstValueFrom(this.http.post(`/api/v1/trade/sales/orders/${so.id}/confirm`, {}));
-      this.notification.success('تم تأكيد أمر البيع بنجاح ✓');
+      this.notification.success(this.i18n.t('sales.soConfirmed'));
       await this.load();
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));

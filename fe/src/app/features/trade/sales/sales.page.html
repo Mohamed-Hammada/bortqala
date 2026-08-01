@@ -1,11 +1,11 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">سلسلة الإمداد ودورة البيع والتحصيل (Sales & Collection Workflow)</p>
-      <h1>دورة المبيعات (Sales Quotations to Collections)</h1>
-      <p>عروض الأسعار ← أوامر البيع SO ← إذن التسليم والصرف من المخزن ← فواتير وتحصيل العملاء.</p>
+      <p class="eyebrow">{{ i18n.t('sales.eyebrow') }}</p>
+      <h1>{{ i18n.t('sales.title') }}</h1>
+      <p>{{ i18n.t('sales.description') }}</p>
     </div>
-    <button class="button primary" (click)="openNew()">＋ أمر بيع جديد (SO)</button>
+    <button class="button primary" (click)="openNew()">＋ {{ i18n.t('sales.add') }}</button>
   </header>
 
   @if (loading()) {
@@ -19,32 +19,32 @@
   <div class="workflow-steps">
     <div class="step-card active">
       <span class="step-num">1</span>
-      <strong>عرض سعر (Quotation)</strong>
-      <small>تسعير للعميل</small>
+      <strong>{{ i18n.t('sales.stepQuotation') }}</strong>
+      <small>{{ i18n.t('sales.stepQuotationDesc') }}</small>
     </div>
     <div class="step-arrow">→</div>
     <div class="step-card active">
       <span class="step-num">2</span>
-      <strong>أمر بيع (Sales Order)</strong>
-      <small>تأكيد طلب العميل</small>
+      <strong>{{ i18n.t('sales.stepOrder') }}</strong>
+      <small>{{ i18n.t('sales.stepOrderDesc') }}</small>
     </div>
     <div class="step-arrow">→</div>
     <div class="step-card">
       <span class="step-num">3</span>
-      <strong>إذن تسليم (Delivery)</strong>
-      <small>خصم وصرف من المخزن</small>
+      <strong>{{ i18n.t('sales.stepDelivery') }}</strong>
+      <small>{{ i18n.t('sales.stepDeliveryDesc') }}</small>
     </div>
     <div class="step-arrow">→</div>
     <div class="step-card">
       <span class="step-num">4</span>
-      <strong>فاتورة عميل</strong>
-      <small>الاستحقاق المالي</small>
+      <strong>{{ i18n.t('sales.stepInvoice') }}</strong>
+      <small>{{ i18n.t('sales.stepInvoiceDesc') }}</small>
     </div>
     <div class="step-arrow">→</div>
     <div class="step-card">
       <span class="step-num">5</span>
-      <strong>تحصيل النقدية</strong>
-      <small>إيداع بالبنك / الخزينة</small>
+      <strong>{{ i18n.t('sales.stepPayment') }}</strong>
+      <small>{{ i18n.t('sales.stepPaymentDesc') }}</small>
     </div>
   </div>
 
@@ -53,12 +53,12 @@
       <table>
         <thead>
           <tr>
-            <th>رقم أمر البيع</th>
-            <th>تاريخ الأمر</th>
-            <th>كود / اسم العميل</th>
-            <th>إجمالي قيمة المبيعات</th>
-            <th>حالة الأمر</th>
-            <th>الإجراءات</th>
+            <th>{{ i18n.t('sales.colSoNumber') }}</th>
+            <th>{{ i18n.t('sales.colOrderDate') }}</th>
+            <th>{{ i18n.t('sales.colCustomer') }}</th>
+            <th>{{ i18n.t('sales.colTotal') }}</th>
+            <th>{{ i18n.t('sales.colStatus') }}</th>
+            <th>{{ i18n.t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -67,7 +67,7 @@
               <td><strong class="ltr">{{ so.soNumber }}</strong></td>
               <td class="ltr">{{ date(so.soDate) }}</td>
               <td><strong>{{ so.customerId }}</strong></td>
-              <td class="ltr"><strong>{{ so.totalAmount | number:'1.2-2' }}</strong> <small>ج.م</small></td>
+              <td class="ltr"><strong>{{ so.totalAmount | number:'1.2-2' }}</strong> <small>{{ i18n.t('common.egp') }}</small></td>
               <td>
                 <span
                   class="status"
@@ -75,13 +75,13 @@
                   [class.success]="so.status === 'CONFIRMED'"
                   [class.info]="so.status === 'DELIVERED'"
                 >
-                  {{ so.status === 'DRAFT' ? 'مسودة (Draft)' : so.status === 'CONFIRMED' ? 'مؤكد من العميل (Confirmed)' : 'تم التسليم من المخزن (Delivered)' }}
+                  {{ so.status === 'DRAFT' ? i18n.t('sales.statusDraft') : so.status === 'CONFIRMED' ? i18n.t('sales.statusConfirmed') : i18n.t('sales.statusDelivered') }}
                 </span>
               </td>
               <td>
                 <div class="table-row-actions">
                   @if (so.status === 'DRAFT') {
-                    <button class="button primary btn-sm" (click)="confirmSo(so)">✔ تأكيد أمر البيع</button>
+                    <button class="button primary btn-sm" (click)="confirmSo(so)">✔ {{ i18n.t('sales.confirm') }}</button>
                   }
                 </div>
               </td>
@@ -89,7 +89,7 @@
           } @empty {
             <tr>
               <td colspan="6">
-                <div class="empty-state">لا توجد أوامر بيع مسجلة بعد. اضغط <strong>"أمر بيع جديد"</strong> للبدء.</div>
+                <div class="empty-state">{{ i18n.t('sales.empty') }}</div>
               </td>
             </tr>
           }
@@ -98,41 +98,36 @@
     </div>
   }
 
-  @if (drawerOpen()) {
-    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
-    <aside class="drawer">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">إدارة المبيعات</p>
-          <h2>أمر بيع جديد (Sales Order)</h2>
+  <app-modal-dialog
+    [isOpen]="drawerOpen()"
+    [title]="i18n.t('sales.newTitle')"
+    size="wide"
+    (close)="closeDrawer()"
+  >
+    <form [formGroup]="soForm" class="modal-form" (ngSubmit)="submitSo()">
+      <div class="form-grid">
+        <div class="field">
+          <label>{{ i18n.t('sales.soNumberLabel') }} *</label>
+          <input class="ltr" formControlName="soNumber" />
         </div>
-        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
+        <div class="field">
+          <label>{{ i18n.t('sales.orderDateLabel') }} *</label>
+          <input type="date" class="ltr" formControlName="soDate" />
+        </div>
+        <div class="field span-2">
+          <label>{{ i18n.t('sales.customerLabel') }} *</label>
+          <input formControlName="customerId" [placeholder]="i18n.t('sales.customerPlaceholder')" />
+        </div>
+        <div class="field span-2">
+          <label>{{ i18n.t('sales.totalAmountLabel') }} *</label>
+          <input type="number" class="ltr" formControlName="totalAmount" [placeholder]="i18n.t('sales.totalAmountPlaceholder')" />
+        </div>
       </div>
+    </form>
 
-      <form [formGroup]="soForm" (ngSubmit)="submitSo()">
-        <div class="form-grid">
-          <div class="field">
-            <label>رقم أمر البيع *</label>
-            <input class="ltr" formControlName="soNumber" />
-          </div>
-          <div class="field">
-            <label>تاريخ الأمر *</label>
-            <input type="date" class="ltr" formControlName="soDate" />
-          </div>
-          <div class="field span-2">
-            <label>العميل *</label>
-            <input formControlName="customerId" placeholder="كود / اسم العميل..." />
-          </div>
-          <div class="field span-2">
-            <label>إجمالي قيمة البيع (ج.م) *</label>
-            <input type="number" class="ltr" formControlName="totalAmount" placeholder="15000" />
-          </div>
-        </div>
-        <div class="drawer-actions">
-          <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-          <button class="button primary" type="submit" [disabled]="soForm.invalid">حفظ أمر البيع</button>
-        </div>
-      </form>
-    </aside>
-  }
+    <div modal-actions>
+      <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="button" (click)="submitSo()" [disabled]="soForm.invalid">{{ i18n.t('sales.save') }}</button>
+    </div>
+  </app-modal-dialog>
 </section>
