@@ -170,7 +170,11 @@ h3 {
 
 .page {
   padding: 14px clamp(12px, 2vw, 24px) 24px;
-  animation: page-in 0.15s ease-out both;
+  animation: page-in 0.15s ease-out;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 100%;
 }
 
 .page-header {
@@ -785,7 +789,9 @@ tbody tr:hover td {
 @keyframes page-in {
   from {
     opacity: 0;
-    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
   }
 }
 

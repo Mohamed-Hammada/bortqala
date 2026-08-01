@@ -7,9 +7,11 @@ import { NotificationService } from '../../core/notification.service';
 import { apiErrorMessage } from '../../core/api-error';
 import { Branch, Company, Department, OrganizationHierarchy, Warehouse } from './organization.models';
 
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+
 @Component({
   selector: 'app-organization-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ModalDialogComponent],
   templateUrl: './organization.page.html',
   styleUrl: './organization.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

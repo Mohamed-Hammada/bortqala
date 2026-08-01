@@ -6,6 +6,8 @@ import {
   HostListener,
   Input,
   OnChanges,
+  OnDestroy,
+  OnInit,
   Output,
   SimpleChanges,
   ViewChild,
@@ -48,19 +50,24 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
     </div>
   `,
   styles: [`
+    :host {
+      display: contents;
+    }
+
     .modal-backdrop {
       position: fixed;
-      inset-block: 0;
-      inset-inline-start: var(--current-sidebar-width, 0px);
-      inset-inline-end: 0;
+      inset: 0;
+      width: 100vw;
+      height: 100dvh;
       background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(4px);
       z-index: 9999;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 1rem;
-      overflow-y: auto;
+      padding: 16px;
+      box-sizing: border-box;
+      overflow: hidden;
       animation: fadeIn 0.2s ease-out;
     }
 
@@ -71,10 +78,10 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
       width: 100%;
       max-width: 640px;
-      max-height: calc(100vh - 2rem);
-      max-height: calc(100dvh - 2rem);
+      max-height: calc(100dvh - 32px);
       display: flex;
       flex-direction: column;
+      box-sizing: border-box;
       overflow: hidden;
       margin: auto;
       animation: zoomIn 0.2s ease-out;
@@ -95,7 +102,7 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex-shrink: 0;
+      flex: 0 0 auto;
     }
 
     .modal-title {
@@ -140,7 +147,7 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
       align-items: center;
       gap: 0.75rem;
       justify-content: flex-end;
-      flex-shrink: 0;
+      flex: 0 0 auto;
     }
 
     @keyframes fadeIn {
@@ -156,17 +163,15 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
     @media (max-width: 640px) {
       .modal-dialog-box {
         max-width: 100% !important;
-        height: calc(100vh - 1rem);
-        height: calc(100dvh - 1rem);
-        max-height: calc(100vh - 1rem);
-        max-height: calc(100dvh - 1rem);
+        height: calc(100dvh - 16px);
+        max-height: calc(100dvh - 16px);
         border-radius: 12px;
         margin: auto;
       }
     }
   `]
 })
-export class ModalDialogComponent implements OnChanges, AfterViewChecked {
+export class ModalDialogComponent implements OnInit, OnChanges, OnDestroy, AfterViewChecked {
   @Input() isOpen = true;
   @Input() title = '';
   @Input() titleId = 'modal-title-' + Math.random().toString(36).substring(2, 9);
@@ -179,10 +184,60 @@ export class ModalDialogComponent implements OnChanges, AfterViewChecked {
   @ViewChild('dialogBox') dialogBox?: ElementRef;
   @ViewChild('modalBodyRef') modalBodyRef?: ElementRef;
   private focusPending = false;
+  private isLocked = false;
+  private isTeleported = false;
+  private static openModalsCount = 0;
+
+  constructor(private elementRef: ElementRef) {}
+
+  ngOnInit(): void {
+    if (this.isOpen) {
+      this.teleportToBody();
+      this.lockBodyScroll();
+    }
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['isOpen']?.currentValue === true) {
-      this.focusPending = true;
+    if (changes['isOpen']) {
+      if (changes['isOpen'].currentValue === true) {
+        this.focusPending = true;
+        this.teleportToBody();
+        this.lockBodyScroll();
+      } else if (changes['isOpen'].previousValue === true) {
+        this.unlockBodyScroll();
+      }
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.unlockBodyScroll();
+    if (this.isTeleported && typeof document !== 'undefined' && this.elementRef?.nativeElement?.parentNode) {
+      this.elementRef.nativeElement.parentNode.removeChild(this.elementRef.nativeElement);
+    }
+  }
+
+  private teleportToBody(): void {
+    if (!this.isTeleported && typeof document !== 'undefined' && document.body) {
+      document.body.appendChild(this.elementRef.nativeElement);
+      this.isTeleported = true;
+    }
+  }
+
+  private lockBodyScroll() {
+    if (!this.isLocked && typeof document !== 'undefined') {
+      this.isLocked = true;
+      ModalDialogComponent.openModalsCount++;
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  private unlockBodyScroll() {
+    if (this.isLocked && typeof document !== 'undefined') {
+      this.isLocked = false;
+      ModalDialogComponent.openModalsCount = Math.max(0, ModalDialogComponent.openModalsCount - 1);
+      if (ModalDialogComponent.openModalsCount === 0) {
+        document.body.style.overflow = '';
+      }
     }
   }
 

@@ -147,135 +147,131 @@
     }
   }
 
-  <!-- Drawer Modal for Creating Elements -->
-  @if (drawerOpen()) {
-    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
-    <aside class="drawer">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">إضافة عنصر للهيكل المؤسسي</p>
-          <h2>
-            {{ activeTab() === 'companies' ? 'شركة جديدة' : activeTab() === 'branches' ? 'فرع جديد' : activeTab() === 'warehouses' ? 'مستودع جديد' : 'إدارة جديدة' }}
-          </h2>
+  <!-- Shared Modal Dialog for Creating Elements -->
+  <app-modal-dialog
+    [isOpen]="drawerOpen()"
+    [title]="activeTab() === 'companies' ? 'شركة جديدة' : activeTab() === 'branches' ? 'فرع جديد' : activeTab() === 'warehouses' ? 'مستودع جديد' : 'إدارة جديدة'"
+    size="wide"
+    [preventOutsideClose]="true"
+    (close)="closeDrawer()">
+
+    @if (activeTab() === 'companies') {
+      <form [formGroup]="companyForm" (ngSubmit)="submitCompany()" id="company-form" class="modal-form">
+        <div class="form-grid">
+          <div class="field">
+            <label>كود الشركة *</label>
+            <input class="ltr" formControlName="code" placeholder="COMP-01" />
+          </div>
+          <div class="field">
+            <label>اسم الشركة *</label>
+            <input formControlName="name" placeholder="شركة المجموعة الرئيسية" />
+          </div>
+          <div class="field">
+            <label>الرقم الضريبي</label>
+            <input class="ltr" formControlName="taxNumber" placeholder="300-123456" />
+          </div>
+          <div class="field">
+            <label>السجل التجاري</label>
+            <input class="ltr" formControlName="commercialRegistry" placeholder="CR-998811" />
+          </div>
         </div>
-        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
-      </div>
+      </form>
+    }
 
+    @if (activeTab() === 'branches') {
+      <form [formGroup]="branchForm" (ngSubmit)="submitBranch()" id="branch-form" class="modal-form">
+        <div class="form-grid">
+          <div class="field span-2">
+            <label>الشركة التابع لها *</label>
+            <select formControlName="companyId">
+              @for (c of companies(); track c.id) {
+                <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>كود الفرع *</label>
+            <input class="ltr" formControlName="code" placeholder="BR-01" />
+          </div>
+          <div class="field">
+            <label>اسم الفرع *</label>
+            <input formControlName="name" placeholder="فرع القاهرة الرئيسي" />
+          </div>
+          <div class="field span-2">
+            <label>الموقع / العنوان</label>
+            <input formControlName="location" placeholder="العنوان بالتفصيل..." />
+          </div>
+        </div>
+      </form>
+    }
+
+    @if (activeTab() === 'warehouses') {
+      <form [formGroup]="warehouseForm" (ngSubmit)="submitWarehouse()" id="warehouse-form" class="modal-form">
+        <div class="form-grid">
+          <div class="field span-2">
+            <label>الفرع التابع له *</label>
+            <select formControlName="branchId">
+              @for (b of branches(); track b.id) {
+                <option [value]="b.id">{{ b.name }} ({{ b.code }})</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>كود المستودع *</label>
+            <input class="ltr" formControlName="code" placeholder="WH-01" />
+          </div>
+          <div class="field">
+            <label>اسم المستودع / المخزن *</label>
+            <input formControlName="name" placeholder="مخزن المواد الخام" />
+          </div>
+          <div class="field span-2">
+            <label>الموقع</label>
+            <input formControlName="location" placeholder="منطقة المخازن..." />
+          </div>
+        </div>
+      </form>
+    }
+
+    @if (activeTab() === 'departments') {
+      <form [formGroup]="departmentForm" (ngSubmit)="submitDepartment()" id="department-form" class="modal-form">
+        <div class="form-grid">
+          <div class="field span-2">
+            <label>الشركة التابع لها *</label>
+            <select formControlName="companyId">
+              @for (c of companies(); track c.id) {
+                <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>كود الإدارة *</label>
+            <input class="ltr" formControlName="code" placeholder="DEP-HR" />
+          </div>
+          <div class="field">
+            <label>اسم الإدارة / القسم *</label>
+            <input formControlName="name" placeholder="إدارة الموارد البشرية" />
+          </div>
+        </div>
+      </form>
+    }
+
+    <div modal-actions style="display:flex;justify-content:flex-end;gap:0.5rem;width:100%;">
       @if (activeTab() === 'companies') {
-        <form [formGroup]="companyForm" (ngSubmit)="submitCompany()">
-          <div class="form-grid">
-            <div class="field">
-              <label>كود الشركة *</label>
-              <input class="ltr" formControlName="code" placeholder="COMP-01" />
-            </div>
-            <div class="field">
-              <label>اسم الشركة *</label>
-              <input formControlName="name" placeholder="شركة المجموعة الرئيسية" />
-            </div>
-            <div class="field">
-              <label>الرقم الضريبي</label>
-              <input class="ltr" formControlName="taxNumber" placeholder="300-123456" />
-            </div>
-            <div class="field">
-              <label>السجل التجاري</label>
-              <input class="ltr" formControlName="commercialRegistry" placeholder="CR-998811" />
-            </div>
-          </div>
-          <div class="drawer-actions">
-            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-            <button class="button primary" type="submit" [disabled]="companyForm.invalid">حفظ الشركة</button>
-          </div>
-        </form>
+        <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+        <button class="button primary" type="submit" form="company-form" [disabled]="companyForm.invalid">حفظ الشركة</button>
       }
-
       @if (activeTab() === 'branches') {
-        <form [formGroup]="branchForm" (ngSubmit)="submitBranch()">
-          <div class="form-grid">
-            <div class="field span-2">
-              <label>الشركة التابع لها *</label>
-              <select formControlName="companyId">
-                @for (c of companies(); track c.id) {
-                  <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
-                }
-              </select>
-            </div>
-            <div class="field">
-              <label>كود الفرع *</label>
-              <input class="ltr" formControlName="code" placeholder="BR-01" />
-            </div>
-            <div class="field">
-              <label>اسم الفرع *</label>
-              <input formControlName="name" placeholder="فرع القاهرة الرئيسي" />
-            </div>
-            <div class="field span-2">
-              <label>الموقع / العنوان</label>
-              <input formControlName="location" placeholder="العنوان بالتفصيل..." />
-            </div>
-          </div>
-          <div class="drawer-actions">
-            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-            <button class="button primary" type="submit" [disabled]="branchForm.invalid">حفظ الفرع</button>
-          </div>
-        </form>
+        <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+        <button class="button primary" type="submit" form="branch-form" [disabled]="branchForm.invalid">حفظ الفرع</button>
       }
-
       @if (activeTab() === 'warehouses') {
-        <form [formGroup]="warehouseForm" (ngSubmit)="submitWarehouse()">
-          <div class="form-grid">
-            <div class="field span-2">
-              <label>الفرع التابع له *</label>
-              <select formControlName="branchId">
-                @for (b of branches(); track b.id) {
-                  <option [value]="b.id">{{ b.name }} ({{ b.code }})</option>
-                }
-              </select>
-            </div>
-            <div class="field">
-              <label>كود المستودع *</label>
-              <input class="ltr" formControlName="code" placeholder="WH-01" />
-            </div>
-            <div class="field">
-              <label>اسم المستودع / المخزن *</label>
-              <input formControlName="name" placeholder="مخزن المواد الخام" />
-            </div>
-            <div class="field span-2">
-              <label>الموقع</label>
-              <input formControlName="location" placeholder="منطقة المخازن..." />
-            </div>
-          </div>
-          <div class="drawer-actions">
-            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-            <button class="button primary" type="submit" [disabled]="warehouseForm.invalid">حفظ المستودع</button>
-          </div>
-        </form>
+        <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+        <button class="button primary" type="submit" form="warehouse-form" [disabled]="warehouseForm.invalid">حفظ المستودع</button>
       }
-
       @if (activeTab() === 'departments') {
-        <form [formGroup]="departmentForm" (ngSubmit)="submitDepartment()">
-          <div class="form-grid">
-            <div class="field span-2">
-              <label>الشركة التابع لها *</label>
-              <select formControlName="companyId">
-                @for (c of companies(); track c.id) {
-                  <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
-                }
-              </select>
-            </div>
-            <div class="field">
-              <label>كود الإدارة *</label>
-              <input class="ltr" formControlName="code" placeholder="DEP-HR" />
-            </div>
-            <div class="field">
-              <label>اسم الإدارة / القسم *</label>
-              <input formControlName="name" placeholder="إدارة الموارد البشرية" />
-            </div>
-          </div>
-          <div class="drawer-actions">
-            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-            <button class="button primary" type="submit" [disabled]="departmentForm.invalid">حفظ الإدارة</button>
-          </div>
-        </form>
+        <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
+        <button class="button primary" type="submit" form="department-form" [disabled]="departmentForm.invalid">حفظ الإدارة</button>
       }
-    </aside>
-  }
+    </div>
+  </app-modal-dialog>
 </section>
