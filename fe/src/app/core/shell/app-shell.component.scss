@@ -842,8 +842,12 @@ kbd {
 /* Main Area Layout with Smooth 220ms Margins */
 .main-area {
   min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--canvas);
   margin-right: 280px;
   transition: margin-right 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  --current-sidebar-width: 280px;
 }
 
 :host-context([dir='ltr']) .main-area {
@@ -854,11 +858,29 @@ kbd {
 
 .main-area.collapsed {
   margin-right: 76px;
+  --current-sidebar-width: 76px;
 }
 
 :host-context([dir='ltr']) .main-area.collapsed {
   margin-right: 0;
   margin-left: 76px;
+}
+
+.content-wrapper {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.content-wrapper > router-outlet + * {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
 }
 
 .mobile-header {
@@ -903,6 +925,7 @@ kbd {
   :host-context([dir='ltr']) .main-area.collapsed {
     margin-right: 0;
     margin-left: 0;
+    --current-sidebar-width: 0px;
   }
   .mobile-header {
     display: flex;

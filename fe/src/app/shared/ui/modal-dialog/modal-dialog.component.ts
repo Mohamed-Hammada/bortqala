@@ -50,10 +50,9 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
   styles: [`
     .modal-backdrop {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      inset-block: 0;
+      inset-inline-start: var(--current-sidebar-width, 0px);
+      inset-inline-end: 0;
       background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(4px);
       z-index: 9999;
