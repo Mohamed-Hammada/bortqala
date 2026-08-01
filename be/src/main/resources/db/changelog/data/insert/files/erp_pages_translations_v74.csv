@@ -95,3 +95,15 @@ x74-047-ar;dashboard.scoreGood;ar-EG;جيد
 x74-047-en;dashboard.scoreGood;en-US;Good
 x74-048-ar;dashboard.scoreReview;ar-EG;مراجعة
 x74-048-en;dashboard.scoreReview;en-US;Review
+x74-049-ar;organization.companyCodePlaceholder;ar-EG;COMP-01
+x74-049-en;organization.companyCodePlaceholder;en-US;COMP-01
+x74-050-ar;organization.taxNumberPlaceholder;ar-EG;300-123456
+x74-050-en;organization.taxNumberPlaceholder;en-US;300-123456
+x74-051-ar;organization.commercialRegistryPlaceholder;ar-EG;CR-998811
+x74-051-en;organization.commercialRegistryPlaceholder;en-US;CR-998811
+x74-052-ar;organization.branchCodePlaceholder;ar-EG;BR-01
+x74-052-en;organization.branchCodePlaceholder;en-US;BR-01
+x74-053-ar;organization.warehouseCodePlaceholder;ar-EG;WH-01
+x74-053-en;organization.warehouseCodePlaceholder;en-US;WH-01
+x74-054-ar;organization.departmentCodePlaceholder;ar-EG;DEP-HR
+x74-054-en;organization.departmentCodePlaceholder;en-US;DEP-HR

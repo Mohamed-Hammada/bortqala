@@ -662,11 +662,6 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'settings.procurementNumberingAutomatic': 'ترقيم تلقائي متسلسل',
     'settings.procurementNumberingHint': 'عند تفعيله ينشئ الخادم أرقام أوامر الشراء وأذون الاستلام بالتتابع ويمنع تعديلها. عند إيقافه يدخل المستخدم أرقاماً يدوية غير مكررة.',
     'imports.completedWithErrors': 'مكتمل مع أخطاء',
-    'common.actions': 'الإجراءات',
-    'common.status': 'الحالة',
-    'common.egp': 'ج.م',
-    'common.unit': 'وحدة',
-    'modal.closeTooltip': 'إغلاق — إلغاء وإغلاق النافذة · Esc',
   },
   'en-US': {
     'common.close': 'Close',
@@ -1320,11 +1315,6 @@ const DEFAULT_FALLBACKS: Record<SupportedLocale, Record<string, string>> = {
     'settings.procurementNumberingAutomatic': 'Automatic sequential numbering',
     'settings.procurementNumberingHint': 'When enabled, the server generates sequential purchase-order and receipt numbers and locks them. When disabled, users enter unique manual numbers.',
     'imports.completedWithErrors': 'Completed with errors',
-    'common.actions': 'Actions',
-    'common.status': 'Status',
-    'common.egp': 'EGP',
-    'common.unit': 'units',
-    'modal.closeTooltip': 'Close — cancel and close the dialog · Esc',
   },
 };
 

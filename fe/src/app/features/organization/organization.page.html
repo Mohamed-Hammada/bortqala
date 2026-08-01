@@ -160,7 +160,7 @@
         <div class="form-grid">
           <div class="field">
             <label>{{ i18n.t('organization.companyCode') }} *</label>
-            <input class="ltr" formControlName="code" placeholder="COMP-01" />
+            <input class="ltr" formControlName="code" [placeholder]="i18n.t('organization.companyCodePlaceholder')" />
           </div>
           <div class="field">
             <label>{{ i18n.t('organization.companyName') }} *</label>
@@ -168,11 +168,11 @@
           </div>
           <div class="field">
             <label>{{ i18n.t('organization.taxNumber') }}</label>
-            <input class="ltr" formControlName="taxNumber" placeholder="300-123456" />
+            <input class="ltr" formControlName="taxNumber" [placeholder]="i18n.t('organization.taxNumberPlaceholder')" />
           </div>
           <div class="field">
             <label>{{ i18n.t('organization.commercialRegistry') }}</label>
-            <input class="ltr" formControlName="commercialRegistry" placeholder="CR-998811" />
+            <input class="ltr" formControlName="commercialRegistry" [placeholder]="i18n.t('organization.commercialRegistryPlaceholder')" />
           </div>
         </div>
       </form>
@@ -191,7 +191,7 @@
           </div>
           <div class="field">
             <label>{{ i18n.t('organization.branchCode') }} *</label>
-            <input class="ltr" formControlName="code" placeholder="BR-01" />
+            <input class="ltr" formControlName="code" [placeholder]="i18n.t('organization.branchCodePlaceholder')" />
           </div>
           <div class="field">
             <label>{{ i18n.t('organization.branchName') }} *</label>
@@ -218,7 +218,7 @@
           </div>
           <div class="field">
             <label>{{ i18n.t('organization.warehouseCode') }} *</label>
-            <input class="ltr" formControlName="code" placeholder="WH-01" />
+            <input class="ltr" formControlName="code" [placeholder]="i18n.t('organization.warehouseCodePlaceholder')" />
           </div>
           <div class="field">
             <label>{{ i18n.t('organization.warehouseName') }} *</label>
@@ -245,7 +245,7 @@
           </div>
           <div class="field">
             <label>{{ i18n.t('organization.departmentCode') }} *</label>
-            <input class="ltr" formControlName="code" placeholder="DEP-HR" />
+            <input class="ltr" formControlName="code" [placeholder]="i18n.t('organization.departmentCodePlaceholder')" />
           </div>
           <div class="field">
             <label>{{ i18n.t('organization.departmentName') }} *</label>
