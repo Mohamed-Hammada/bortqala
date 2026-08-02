@@ -27,6 +27,7 @@ public class AttendanceReport {
     @Enumerated(EnumType.STRING) @Column(name = "pay_cycle", nullable = false, length = 20) private PayCycle payCycle;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private ReportStatus status;
     @Column(name = "configuration_version", nullable = false, length = 64) private String configurationVersion;
+    @Column(name = "generation_hash", length = 64) private String generationHash;
     @Column(name = "unresolved_count", nullable = false) private int unresolvedCount;
     @Column(name = "created_by", nullable = false, length = 100) private String createdBy;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
@@ -40,11 +41,17 @@ public class AttendanceReport {
 
     public AttendanceReport(LocalDate periodStart, LocalDate periodEnd, PayCycle payCycle,
                             String configurationVersion, String createdBy) {
+        this(periodStart, periodEnd, payCycle, configurationVersion, null, createdBy);
+    }
+
+    public AttendanceReport(LocalDate periodStart, LocalDate periodEnd, PayCycle payCycle,
+                            String configurationVersion, String generationHash, String createdBy) {
         this.id = UUID.randomUUID().toString();
         this.periodStart = periodStart;
         this.periodEnd = periodEnd;
         this.payCycle = payCycle;
         this.configurationVersion = configurationVersion;
+        this.generationHash = generationHash;
         this.createdBy = createdBy;
         this.status = ReportStatus.DRAFT;
     }
@@ -70,6 +77,7 @@ public class AttendanceReport {
     public PayCycle getPayCycle() { return payCycle; }
     public ReportStatus getStatus() { return status; }
     public String getConfigurationVersion() { return configurationVersion; }
+    public String getGenerationHash() { return generationHash; }
     public int getUnresolvedCount() { return unresolvedCount; }
     public String getCreatedBy() { return createdBy; }
     public Instant getCreatedAt() { return createdAt; }

@@ -41,6 +41,11 @@ public class EmployeeController {
         return hrConfigurationService.updateEmployee(id, request);
     }
 
+    @GetMapping("/{id}/assignments")
+    List<EmployeeApi.AssignmentResponse> assignments(@PathVariable String id) {
+        return hrConfigurationService.getEmployeeAssignments(id);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)

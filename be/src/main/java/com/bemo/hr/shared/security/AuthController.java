@@ -28,6 +28,11 @@ public class AuthController {
     @GetMapping("/auth/me")
     AuthApi.UserResponse me(Authentication authentication) { return authService.current(authentication.getName()); }
 
+    @GetMapping("/users/me")
+    AuthApi.MeResponse usersMe(org.springframework.security.oauth2.jwt.Jwt jwt) {
+        return authService.me(jwt.getSubject(), jwt.getExpiresAt());
+    }
+
     @GetMapping("/auth/preferences")
     AuthApi.PreferenceResponse preferences(Authentication authentication) {
         return authService.currentPreferences(authentication.getName());

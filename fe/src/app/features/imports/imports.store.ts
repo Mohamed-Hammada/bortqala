@@ -9,6 +9,7 @@ import {
   BiometricDeviceRequest,
   BiometricDeviceSyncResult,
   ImportBatch,
+  ImportPreview,
   UnmatchedIdentity,
 } from './imports.models';
 @Injectable()
@@ -88,6 +89,34 @@ export class ImportsStore {
               errors: result.errorRows,
             }),
       );
+      await this.load();
+      return true;
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+      return false;
+    } finally {
+      this.loading.set(false);
+    }
+  }
+  async preview(file: File): Promise<ImportPreview | null> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      const data = new FormData();
+      data.append('file', file);
+      return await firstValueFrom(this.http.post<ImportPreview>('/api/v1/imports/preview', data));
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+      return null;
+    } finally {
+      this.loading.set(false);
+    }
+  }
+  async reverseBatch(id: string): Promise<boolean> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      await firstValueFrom(this.http.post<ImportBatch>(`/api/v1/imports/${id}/reverse`, {}));
       await this.load();
       return true;
     } catch (e) {

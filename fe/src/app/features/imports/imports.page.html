@@ -60,6 +60,19 @@
             <small>{{ i18n.t('imports.endpointHint') }}</small>
           </div>
           <div class="field">
+            <label for="biometric-username">{{ i18n.t('imports.biometricUsernameLabel', {}, 'اسم المستخدم (اختياري)') }}</label>
+            <input id="biometric-username" name="biometricUsername" class="ltr" autocomplete="off"
+              [ngModel]="deviceUsername()" (ngModelChange)="deviceUsername.set($event)" />
+          </div>
+          <div class="field">
+            <label for="biometric-password">
+              {{ i18n.t('imports.biometricPasswordLabel', {}, 'كلمة المرور (اختياري)') }}
+              @if (editingDeviceId()) { <small>{{ i18n.t('imports.biometricPasswordKeepHint', {}, 'اتركها فارغة للإبقاء على الحالية') }}</small> }
+            </label>
+            <input id="biometric-password" name="biometricPassword" class="ltr" type="password" autocomplete="new-password"
+              [ngModel]="devicePassword()" (ngModelChange)="devicePassword.set($event)" />
+          </div>
+          <div class="field">
             <label for="biometric-interval">{{ i18n.t('imports.intervalLabel') }}</label>
             <input id="biometric-interval" name="biometricInterval" type="number" min="1" max="1440" step="1"
               [ngModel]="syncIntervalMinutes()" (ngModelChange)="syncIntervalMinutes.set(+$event)" />
@@ -90,6 +103,9 @@
               <small>
                 {{ i18n.t('imports.syncEveryMinutes', { minutes: device.syncIntervalMinutes }) }} ·
                 {{ i18n.t('imports.lastSyncAtLabel') }}: {{ device.lastSyncAt ? dateTime(device.lastSyncAt) : i18n.t('imports.notSyncedYet') }}
+                @if (device.username || device.hasPassword) { ·
+                  {{ device.username ?? '' }}{{ device.hasPassword ? ' ••••' : '' }}
+                }
                 @if (device.lastMessage) { · {{ device.lastMessage }} }
               </small>
             </div>
@@ -167,6 +183,13 @@
         <input #deviceInput [value]="deviceName()" (input)="deviceName.set(deviceInput.value)" [placeholder]="i18n.t('imports.defaultDevicePlaceholder')" />
       </div>
       <button
+        class="button secondary submit-import-btn"
+        (click)="previewFile()"
+        [disabled]="!file() || store.loading()"
+      >
+        {{ previewing() ? i18n.t('imports.previewing', {}, 'جارٍ المعاينة…') : i18n.t('imports.previewAction', {}, 'معاينة') }}
+      </button>
+      <button
         class="button primary submit-import-btn"
         (click)="upload()"
         [disabled]="!file() || store.loading()"
@@ -174,6 +197,24 @@
         <span class="btn-icon">⚡</span> {{ i18n.t('imports.start') }}
       </button>
     </div>
+
+    @if (previewResult()) {
+      <div class="preview-card" [class.has-errors]="previewResult()!.errorRows > 0">
+        <div class="preview-head">
+          <strong>{{ i18n.t('imports.previewHead', {}, 'معاينة الملف') }}</strong>
+          <button type="button" class="text-button" (click)="previewResult.set(null)">×</button>
+        </div>
+        <div class="preview-stats">
+          <span><small>{{ i18n.t('imports.previewFileName', {}, 'الملف') }}</small> {{ previewResult()!.fileName }}</span>
+          <span><small>SHA-256</small><code class="ltr" [appTooltip]="previewResult()!.checksum">{{ previewShortHash(previewResult()!.checksum) }}</code></span>
+          <span><small>{{ i18n.t('imports.previewLines', {}, 'الأسطر') }}</small> {{ previewResult()!.totalRows }}</span>
+          <span><small>{{ i18n.t('imports.previewValid', {}, 'سليمة') }}</small> {{ previewResult()!.importedRows }}</span>
+          <span class="stat-error"><small>{{ i18n.t('imports.previewInvalid', {}, 'خاطئة') }}</small> {{ previewResult()!.errorRows }}</span>
+          <span><small>{{ i18n.t('imports.previewPunches', {}, 'بصمات') }}</small> {{ previewResult()!.rows.length }}</span>
+        </div>
+        <p class="preview-note">{{ i18n.t('imports.previewNote', {}, 'تأكَّد من المعاينة ثم اضغط «استيراد»؛ إعادة استيراد نفس الملف لن تنشئ بصمات مكررة.') }}</p>
+      </div>
+    }
   </div>
 
   <!-- Side-by-Side Workflow Layout: Batches History & Unmatched Identities -->
@@ -258,13 +299,23 @@
               </span>
               <span
                 class="status"
-                [class.success]="!item.errorRows"
+                [class.success]="!item.errorRows && item.status !== 'REVERSED'"
                 [class.warning]="item.errorRows"
+                [class.neutral]="item.status === 'REVERSED'"
               >
                 {{ statusLabel(item.status) }}
-                @if (item.errorRows) { <small>{{ i18n.t('imports.errorCount', { count: item.errorRows }) }}</small> }
+                @if (item.errorRows && item.status !== 'REVERSED') { <small>{{ i18n.t('imports.errorCount', { count: item.errorRows }) }}</small> }
               </span>
             </button>
+            @if (item.status !== 'REVERSED') {
+              <div class="batch-actions">
+                <button type="button" class="button danger btn-sm"
+                  [disabled]="reversingBatchId() === item.id || store.loading()"
+                  (click)="reverseBatch(item)">
+                  {{ reversingBatchId() === item.id ? i18n.t('imports.reversingBatch', {}, 'جارٍ التراجع…') : i18n.t('imports.reverseBatch', {}, 'تراجع') }}
+                </button>
+              </div>
+            }
             @if (expanded() === item.id && item.errors.length) {
               <div class="error-list">
                 @for (error of item.errors; track error.rowNumber) {

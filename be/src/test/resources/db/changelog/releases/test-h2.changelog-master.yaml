@@ -163,6 +163,33 @@ databaseChangeLog:
   - include:
       file: db/changelog/schema/create/20260729_v66_live_biometric_devices.yaml
   # Liquibase 5 cannot reliably resolve lowercase H2 tables in tableExists
+  # preconditions. Apply the production V77 changeset directly as H2 SQL.
+  - changeSet:
+      id: test-v77-employee-assignments
+      author: Mohamed-Hammada
+      dbms: h2
+      preConditions:
+        onFail: MARK_RAN
+        sqlCheck:
+          expectedResult: 0
+          sql: SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'employee_assignments'
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              CREATE TABLE employee_assignments (
+                id VARCHAR(36) PRIMARY KEY,
+                app_id VARCHAR(36) NOT NULL,
+                employee_id VARCHAR(36) NOT NULL,
+                category_id VARCHAR(36) NOT NULL,
+                effective_from DATE NOT NULL,
+                effective_to DATE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                CONSTRAINT uq_employee_assignments_app_employee_from UNIQUE (app_id, employee_id, effective_from)
+              );
+              CREATE INDEX idx_employee_assignments_employee_dates ON employee_assignments (employee_id, effective_from, effective_to);
+  # Liquibase 5 cannot reliably resolve lowercase H2 tables in tableExists
   # preconditions. Apply the skipped production column additions directly.
   - changeSet:
       id: test-current-schema-columns
@@ -197,3 +224,28 @@ databaseChangeLog:
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS net_amount NUMERIC(15,2);
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS due_date DATE;
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS notes VARCHAR(500);
+              ALTER TABLE biometric_devices ADD COLUMN IF NOT EXISTS device_username VARCHAR(150);
+              ALTER TABLE biometric_devices ADD COLUMN IF NOT EXISTS device_password_enc VARCHAR(1000);
+              ALTER TABLE reports ADD COLUMN IF NOT EXISTS generation_hash VARCHAR(64);
+              ALTER TABLE daily_results ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              CREATE TABLE IF NOT EXISTS attendance_report_decisions (
+                id VARCHAR(36) NOT NULL PRIMARY KEY,
+                app_id VARCHAR(36) NOT NULL,
+                report_id VARCHAR(36) NOT NULL,
+                result_id VARCHAR(36) NOT NULL,
+                operation_id VARCHAR(64) NOT NULL,
+                operation VARCHAR(30) NOT NULL,
+                previous_decision VARCHAR(30),
+                previous_manual_minutes INT,
+                previous_note VARCHAR(500),
+                previous_decided_by VARCHAR(100),
+                previous_decided_at TIMESTAMP WITH TIME ZONE,
+                new_decision VARCHAR(30) NOT NULL,
+                new_manual_minutes INT,
+                new_note VARCHAR(500),
+                actor VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                CONSTRAINT uq_report_decisions_operation UNIQUE (app_id, operation_id)
+              );
+              CREATE INDEX IF NOT EXISTS idx_report_decisions_report ON attendance_report_decisions (report_id);
+              CREATE INDEX IF NOT EXISTS idx_report_decisions_result ON attendance_report_decisions (result_id);

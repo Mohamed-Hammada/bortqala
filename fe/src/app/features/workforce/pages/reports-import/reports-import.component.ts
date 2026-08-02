@@ -7,6 +7,7 @@ import { WorkforceImportBatch, WorkforceImportCommit, WorkforceImportValidation 
 import { NotificationService } from '../../../../core/notification.service';
 import { I18nService } from '../../../../core/i18n.service';
 import { downloadBlob, exportCsv } from '../../../../core/download';
+import { apiErrorDetail } from '../../../../core/api-error';
 
 @Component({
   selector: 'app-reports-import',
@@ -105,5 +106,5 @@ export class ReportsImportComponent implements OnInit {
   private inferMapping(headers: string[]): Record<'workerCode'|'workDate'|'attendanceValue',string> { const find=(terms:string[])=>headers.find(h=>terms.some(t=>h.toLowerCase().includes(t)))??''; return {workerCode:find(['كود','worker code','code']),workDate:find(['تاريخ','date']),attendanceValue:find(['حضور','attendance','value'])}; }
   private resetResults(): void { this.validation.set(null); this.commitResult.set(null); this.operationId = crypto.randomUUID(); this.importValidRowsOnly = false; }
   private run<T>(request: () => import('rxjs').Observable<T>, done: (value: T) => void): void { this.busy.set(true); this.error.set(null); request().subscribe({ next: value => { this.busy.set(false); done(value); }, error: error => { this.busy.set(false); this.fail(error); } }); }
-  private fail(error: { error?: { detail?: string }; message?: string }): void { this.error.set(error?.error?.detail ?? error?.message ?? 'تعذر تنفيذ العملية.'); }
+  private fail(error: { error?: { detail?: string }; message?: string }): void { this.error.set(apiErrorDetail(error, error?.message ?? 'تعذر تنفيذ العملية.')); }
 }

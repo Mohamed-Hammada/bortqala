@@ -8,6 +8,7 @@ import com.bemo.hr.finance.infrastructure.CurrencyRepository;
 import com.bemo.hr.finance.domain.Currency;
 import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.trade.procurement.api.ProcurementApi;
@@ -55,6 +56,7 @@ public class ProcurementService {
     private final OperationsService operationsService;
     private final TenantApplicationRepository tenantApplicationRepository;
     private final CurrencyRepository currencyRepository;
+    private final IdempotencyService idempotencyService;
 
     public ProcurementService(PurchaseOrderRepository purchaseOrderRepository,
                               PurchaseOrderLineRepository purchaseOrderLineRepository,
@@ -68,7 +70,8 @@ public class ProcurementService {
                               ProcurementExcelExporter procurementExcelExporter,
                               OperationsService operationsService,
                               TenantApplicationRepository tenantApplicationRepository,
-                              CurrencyRepository currencyRepository) {
+                              CurrencyRepository currencyRepository,
+                              IdempotencyService idempotencyService) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.purchaseOrderLineRepository = purchaseOrderLineRepository;
         this.procurementDocumentSequenceRepository = procurementDocumentSequenceRepository;
@@ -82,6 +85,7 @@ public class ProcurementService {
         this.operationsService = operationsService;
         this.tenantApplicationRepository = tenantApplicationRepository;
         this.currencyRepository = currencyRepository;
+        this.idempotencyService = idempotencyService;
     }
 
     public ProcurementApi.NumberingSettings numberingSettings() {
@@ -320,6 +324,21 @@ public class ProcurementService {
 
     @Transactional
     public ProcurementApi.SupplierPaymentResponse createSupplierPayment(ProcurementApi.SupplierPaymentPayload payload) {
+        String requestHash = IdempotencyService.hash(payload.supplierId() + "|" + payload.supplierInvoiceId()
+                + "|" + payload.amount().stripTrailingZeros().toPlainString() + "|" + payload.paymentDate());
+        return idempotencyService.execute("SUPPLIER_PAYMENT", payload.operationId(), requestHash,
+                () -> createSupplierPaymentTransaction(payload),
+                payment -> payment.id(),
+                this::replayPayment);
+    }
+
+    private ProcurementApi.SupplierPaymentResponse replayPayment(String paymentId) {
+        SupplierPayment payment = supplierPaymentRepository.findById(paymentId)
+                .orElseThrow(() -> new BusinessRuleException("الدفعة غير موجودة."));
+        return toPaymentResponse(payment, resolveNames(List.of(payment.getSupplierId())));
+    }
+
+    private ProcurementApi.SupplierPaymentResponse createSupplierPaymentTransaction(ProcurementApi.SupplierPaymentPayload payload) {
         var replay = supplierPaymentRepository.findByOperationId(payload.operationId());
         if (replay.isPresent()) {
             SupplierPayment existing = replay.get();

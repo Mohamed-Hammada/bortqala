@@ -1,6 +1,8 @@
 package com.bemo.hr.workforce;
 
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.shared.api.TransitionResponse;
+import com.bemo.hr.shared.api.WorkflowTransitions;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +26,13 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class WorkforceSettlementService {
+    private static final Map<String, List<String>> SETTLEMENT_PERIOD_WORKFLOW = Map.of(
+            "DRAFT", List.of("CALCULATE", "DELETE"),
+            "CALCULATED", List.of("REVIEW", "RECALCULATE"),
+            "REVIEWED", List.of("APPROVE", "RECALCULATE"),
+            "APPROVED", List.of("LOCK", "EXPORT"),
+            "LOCKED", List.of("EXPORT"));
+
     private final WorkforceSettlementPeriodRepository periodRepository;
     private final WorkerSettlementRepository workerSettlementRepository;
     private final ContractorSettlementRepository contractorSettlementRepository;
@@ -217,32 +226,46 @@ public class WorkforceSettlementService {
     }
 
     @Transactional
-    public WorkforceApi.SettlementPeriodResponse reviewPeriod(String periodId) {
+    public TransitionResponse reviewPeriod(String periodId) {
         WorkforceSettlementPeriod period = requireFreshCalculated(periodId, "CALCULATED");
         period.setStatus("REVIEWED");
         auditService.record("REVIEW", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
-        return mapPeriodToResponse(periodRepository.save(period));
+        periodRepository.save(period);
+        return transition("REVIEWED", period);
     }
 
     @Transactional
-    public WorkforceApi.SettlementPeriodResponse approvePeriod(String periodId) {
+    public TransitionResponse approvePeriod(String periodId) {
         WorkforceSettlementPeriod period = requireFreshCalculated(periodId, "REVIEWED");
         if (period.getResultErrorCount() > 0) throw new BusinessRuleException("يجب معالجة أخطاء التسوية قبل الاعتماد.");
         period.setStatus("APPROVED");
         auditService.record("APPROVE", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
-        return mapPeriodToResponse(periodRepository.save(period));
+        periodRepository.save(period);
+        return transition("APPROVED", period);
     }
 
     @Transactional
-    public WorkforceApi.SettlementPeriodResponse lockPeriod(String periodId) {
+    public TransitionResponse lockPeriod(String periodId) {
         WorkforceSettlementPeriod period = requirePeriod(periodId);
         if (!"APPROVED".equals(period.getStatus())) throw new BusinessRuleException("لا يمكن قفل الفترة قبل اعتمادها.");
         period.setStatus("LOCKED");
         auditService.record("LOCK", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
-        return mapPeriodToResponse(periodRepository.save(period));
+        periodRepository.save(period);
+        return transition("LOCKED", period);
+    }
+
+    private TransitionResponse transition(String targetStatus, WorkforceSettlementPeriod period) {
+        List<String> actions = new ArrayList<>(WorkflowTransitions.allowedActions(targetStatus, SETTLEMENT_PERIOD_WORKFLOW));
+        if ("REVIEWED".equals(targetStatus)) {
+            actions.add("EXPORT");
+        }
+        if ("APPROVED".equals(targetStatus) && period.getResultErrorCount() > 0) {
+            actions.remove("LOCK");
+        }
+        return new TransitionResponse(targetStatus, period.getCalculationVersion(), actions);
     }
 
     private WorkforceSettlementPeriod requireFreshCalculated(String periodId, String requiredStatus) {

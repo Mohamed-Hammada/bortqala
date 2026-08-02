@@ -265,10 +265,12 @@ public class WorkforceExcelImportService {
             int outputRow = 1;
             for (WorkforceImportRow item : rows) {
                 Row row = sheet.createRow(outputRow++); row.createCell(0).setCellValue(item.getRowNumber());
-                row.createCell(1).setCellValue(item.getWorkerCode()); row.createCell(2).setCellValue(item.getWorkDate());
+                row.createCell(1).setCellValue(com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(item.getWorkerCode()));
+                row.createCell(2).setCellValue(com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(item.getWorkDate()));
                 if (item.getAttendanceValue() != null) row.createCell(3).setCellValue(item.getAttendanceValue().doubleValue());
-                row.createCell(4).setCellValue(item.getErrorCode()); row.createCell(5).setCellValue(item.getErrorMessage());
-                row.createCell(6).setCellValue(item.getRawData());
+                row.createCell(4).setCellValue(com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(item.getErrorCode()));
+                row.createCell(5).setCellValue(com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(item.getErrorMessage()));
+                row.createCell(6).setCellValue(com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(item.getRawData()));
             }
             for (int i = 0; i < headers.length; i++) { sheet.autoSizeColumn(i); sheet.setColumnWidth(i, Math.min(sheet.getColumnWidth(i), 12000)); }
             if (!rows.isEmpty()) {

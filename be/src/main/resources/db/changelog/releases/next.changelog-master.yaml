@@ -13,3 +13,17 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260801_v73_erp_pages_translations.yaml
   - include:
       file: db/changelog/data/insert/20260801_v74_erp_pages_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260801_v75_shared_idempotency.yaml
+  - include:
+      file: db/changelog/data/insert/20260801_v76_error_pages_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260801_v77_employee_assignments.yaml
+  - include:
+      file: db/changelog/schema/update/20260801_v78_biometric_device_credentials.yaml
+  - include:
+      file: db/changelog/schema/update/20260801_v79_report_generation_hash.yaml
+  - include:
+      file: db/changelog/schema/update/20260801_v80_report_decision_history.yaml
+  - include:
+      file: db/changelog/data/insert/20260801_v81_report_review_translations.yaml

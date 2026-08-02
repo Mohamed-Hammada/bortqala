@@ -1,5 +1,6 @@
 package com.bemo.hr.workforce;
 
+import com.bemo.hr.shared.api.TransitionResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -50,19 +51,19 @@ public class WorkforceSettlementController {
 
     @PostMapping("/periods/{id}/review")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
-    public WorkforceApi.SettlementPeriodResponse reviewPeriod(@PathVariable String id) {
+    public TransitionResponse reviewPeriod(@PathVariable String id) {
         return settlementService.reviewPeriod(id);
     }
 
     @PostMapping("/periods/{id}/approve")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
-    public WorkforceApi.SettlementPeriodResponse approvePeriod(@PathVariable String id) {
+    public TransitionResponse approvePeriod(@PathVariable String id) {
         return settlementService.approvePeriod(id);
     }
 
     @PostMapping("/periods/{id}/lock")
     @PreAuthorize("hasRole('ADMIN')")
-    public WorkforceApi.SettlementPeriodResponse lockPeriod(@PathVariable String id) {
+    public TransitionResponse lockPeriod(@PathVariable String id) {
         return settlementService.lockPeriod(id);
     }
 

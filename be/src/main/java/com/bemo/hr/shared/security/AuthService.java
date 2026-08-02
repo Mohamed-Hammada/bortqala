@@ -100,6 +100,21 @@ public class AuthService {
     }
 
     @Transactional
+    public AuthApi.MeResponse me(String username, Instant sessionExpiresAt) {
+        var app = requireCurrentApp();
+        var user = requireByUsername(app.getId(), username);
+        return new AuthApi.MeResponse(
+                user.getId(), user.getUsername(), user.getDisplayName(),
+                new AuthApi.TenantInfo(app.getId(), app.getCode(), app.getName()),
+                user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
+                user.getRoles().stream().map(role -> role.getCode().name()).sorted().collect(Collectors.toUnmodifiableSet()),
+                user.isCanViewSalary(), user.getCategoryId(),
+                dashboardLayoutAllowed(user, app), user.isActive(),
+                new AuthApi.SessionInfo(sessionExpiresAt, app.getSessionTimeoutMinutes(), app.isSessionTimeoutEnabled()),
+                user.getVersion());
+    }
+
+    @Transactional
     public AuthApi.PreferenceResponse currentPreferences(String username) {
         var app = requireCurrentApp();
         var user = requireByUsername(app.getId(), username);

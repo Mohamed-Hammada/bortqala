@@ -2,6 +2,8 @@ package com.bemo.hr.reporting.api;
 
 import com.bemo.hr.reporting.application.ReportingService;
 import com.bemo.hr.reporting.application.ExcelExportOptions;
+import com.bemo.hr.employee.domain.PayCycle;
+import com.bemo.hr.shared.api.TransitionResponse;
 import com.bemo.hr.shared.security.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ContentDisposition;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +39,19 @@ public class ReportController {
     @GetMapping List<ReportingApi.Summary> list() { return reportingService.list(); }
     @GetMapping("/{id}") ReportingApi.Details get(@PathVariable String id) { return reportingService.get(id); }
     @GetMapping("/available-periods") List<ReportingApi.PeriodOption> available(@RequestParam int year) { return reportingService.availablePeriods(year); }
+
+    @GetMapping("/preview")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    ReportingApi.PreviewResponse preview(@RequestParam LocalDate periodStart, @RequestParam LocalDate periodEnd,
+                                         @RequestParam PayCycle payCycle) {
+        return reportingService.preview(periodStart, periodEnd, payCycle);
+    }
+
+    @GetMapping("/{id}/decision-history")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    List<ReportingApi.DecisionHistoryView> decisionHistory(@PathVariable String id) {
+        return reportingService.decisionHistory(id);
+    }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
@@ -104,11 +120,11 @@ public class ReportController {
 
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
-    ReportingApi.Details approve(@PathVariable String id, Authentication authentication) { return reportingService.approve(id, authentication.getName()); }
+    TransitionResponse approve(@PathVariable String id, Authentication authentication) { return reportingService.approve(id, authentication.getName()); }
 
     @PostMapping("/{id}/reopen")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
-    ReportingApi.Details reopen(@PathVariable String id) { return reportingService.reopen(id); }
+    TransitionResponse reopen(@PathVariable String id) { return reportingService.reopen(id); }
 
     @GetMapping("/{id}/export")
     ResponseEntity<byte[]> export(@PathVariable String id, Authentication authentication) {

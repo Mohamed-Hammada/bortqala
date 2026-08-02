@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_idempotency_keys_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.idempotency_keys
+      changes:
+        - createTable:
+            tableName: idempotency_keys
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: operation_type, type: VARCHAR(60), constraints: { nullable: false } }
+              - column: { name: operation_id, type: VARCHAR(80), constraints: { nullable: false } }
+              - column: { name: request_hash, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: response_reference_or_body, type: VARCHAR(4000) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: completed_at, type: timestamp }
+        - addUniqueConstraint:
+            tableName: idempotency_keys
+            columnNames: app_id, operation_type, operation_id
+            constraintName: uq_idempotency_app_type_operation
+      rollback:
+        - dropTable: { tableName: idempotency_keys }

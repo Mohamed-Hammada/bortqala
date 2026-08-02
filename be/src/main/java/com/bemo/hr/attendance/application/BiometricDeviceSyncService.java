@@ -5,6 +5,7 @@ import com.bemo.hr.attendance.domain.BiometricDevice;
 import com.bemo.hr.attendance.domain.ImportBatch;
 import com.bemo.hr.attendance.domain.PunchRecord;
 import com.bemo.hr.attendance.infrastructure.BiometricDeviceRepository;
+import com.bemo.hr.attendance.infrastructure.DeviceCredentialsCrypto;
 import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
 import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
 import com.bemo.hr.audit.application.AuditService;
@@ -32,6 +33,7 @@ public class BiometricDeviceSyncService {
     private final PunchRecordRepository punchRecordRepository;
     private final EmployeeRepository employeeRepository;
     private final AuditService auditService;
+    private final DeviceCredentialsCrypto deviceCredentialsCrypto;
 
     public List<ImportApi.DeviceResponse> listDevices() {
         return biometricDeviceRepository.findAllByOrderByNameAsc().stream().map(this::response).toList();
@@ -42,8 +44,11 @@ public class BiometricDeviceSyncService {
         validateEndpoint(request.endpointUrl());
         BiometricDevice device = biometricDeviceRepository.save(new BiometricDevice(
                 request.name(), request.endpointUrl(), request.enabled(), request.syncIntervalMinutes()));
+        device.setCredentials(request.username(), deviceCredentialsCrypto.encrypt(request.password()));
+        biometricDeviceRepository.saveAndFlush(device);
         auditService.record("CREATE", "BIOMETRIC_DEVICE", device.getId(), actor,
-                "{\"name\":\"" + safe(device.getName()) + "\",\"enabled\":" + device.isEnabled() + "}", null);
+                "{\"name\":\"" + safe(device.getName()) + "\",\"enabled\":" + device.isEnabled()
+                        + ",\"hasPassword\":" + device.hasPassword() + "}", null);
         return response(device);
     }
 
@@ -52,9 +57,15 @@ public class BiometricDeviceSyncService {
         validateEndpoint(request.endpointUrl());
         BiometricDevice device = requireDevice(id);
         device.update(request.name(), request.endpointUrl(), request.enabled(), request.syncIntervalMinutes());
+        if (request.password() != null && !request.password().isBlank()) {
+            device.setCredentials(request.username(), deviceCredentialsCrypto.encrypt(request.password()));
+        } else {
+            device.setCredentials(request.username(), device.getPasswordEncrypted());
+        }
         biometricDeviceRepository.saveAndFlush(device);
         auditService.record("UPDATE", "BIOMETRIC_DEVICE", id, actor,
-                "{\"name\":\"" + safe(device.getName()) + "\",\"enabled\":" + device.isEnabled() + "}", null);
+                "{\"name\":\"" + safe(device.getName()) + "\",\"enabled\":" + device.isEnabled()
+                        + ",\"hasPassword\":" + device.hasPassword() + "}", null);
         return response(device);
     }
 
@@ -62,7 +73,9 @@ public class BiometricDeviceSyncService {
     public ImportApi.DeviceSyncResponse sync(String id, String actor) {
         BiometricDevice device = requireDevice(id);
         try {
-            BiometricDeviceClient.DeviceResponse remote = biometricDeviceClient.fetch(device);
+            BiometricDeviceClient.DeviceResponse remote = biometricDeviceClient.fetch(device,
+                    new BiometricDeviceClient.DeviceCredentials(device.getUsername(),
+                            deviceCredentialsCrypto.decrypt(device.getPasswordEncrypted())));
             String checksum = sha256(remote.rawContent());
             var existing = importBatchRepository.findByChecksum(checksum);
             if (existing.isPresent()) {
@@ -138,7 +151,7 @@ public class BiometricDeviceSyncService {
         return new ImportApi.DeviceResponse(device.getId(), device.getName(), device.getEndpointUrl(),
                 device.isEnabled(), device.getSyncIntervalMinutes(), device.getLastSyncAt(),
                 device.getLastSuccessfulPunchAt(), device.getNextSyncAt(), device.getLastStatus(),
-                device.getLastMessage(), device.getCreatedAt());
+                device.getLastMessage(), device.getUsername(), device.hasPassword(), device.getCreatedAt());
     }
 
     private String sha256(byte[] content) {

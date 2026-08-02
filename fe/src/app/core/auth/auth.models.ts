@@ -64,6 +64,27 @@ export interface AuthUser {
   version: number;
 }
 
+export interface MeSessionInfo {
+  expiresAt: number;
+  timeoutMinutes: number;
+  timeoutEnabled: boolean;
+}
+
+export interface MeResponse {
+  id: string;
+  username: string;
+  displayName: string;
+  tenant: { id: string; code: string; name: string };
+  roles: RoleCode[];
+  scopes: string[];
+  canViewSalary: boolean;
+  categoryId?: string | null;
+  dashboardCustomizationEnabled: boolean;
+  active: boolean;
+  session: MeSessionInfo;
+  version: number;
+}
+
 export interface LoginResponse {
   accessToken: string;
   tokenType: 'Bearer';
@@ -92,8 +113,20 @@ export interface AppSettings {
   updatedAt: number;
 }
 
-export interface ApiProblem {
-  title?: string;
+export interface ApiError {
+  code?: string;
+  message?: string;
+  localizedMessage?: string;
+  status?: number;
+  path?: string;
+  correlationId?: string;
+  timestamp?: string;
   detail?: string;
-  errors?: Record<string, string>;
+  fieldErrors?: ApiFieldError[];
+}
+
+export interface ApiFieldError {
+  field: string;
+  code?: string;
+  message?: string;
 }

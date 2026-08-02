@@ -19,6 +19,12 @@ public final class ImportApi {
 
     public record RowErrorResponse(int rowNumber, String message, String rawLine) { }
 
+    public record PreviewRowResponse(int rowNumber, String deviceUserId, String employeeName, long punchedAt, String rawLine) { }
+
+    public record PreviewResponse(
+            String fileName, String checksum, int totalRows, int importedRows, int errorRows,
+            List<PreviewRowResponse> rows, List<RowErrorResponse> errors) { }
+
     public record UnmatchedIdentityResponse(
             String deviceUserId, String observedName, long punchCount, Instant firstPunch, Instant lastPunch) { }
 
@@ -26,13 +32,15 @@ public final class ImportApi {
             @NotBlank String name,
             @NotBlank String endpointUrl,
             boolean enabled,
-            @Min(1) @Max(1440) int syncIntervalMinutes
+            @Min(1) @Max(1440) int syncIntervalMinutes,
+            String username,
+            String password
     ) { }
 
     public record DeviceResponse(
             String id, String name, String endpointUrl, boolean enabled, int syncIntervalMinutes,
             Instant lastSyncAt, Instant lastSuccessfulPunchAt, Instant nextSyncAt,
-            String lastStatus, String lastMessage, Instant createdAt
+            String lastStatus, String lastMessage, String username, boolean hasPassword, Instant createdAt
     ) { }
 
     public record DeviceSyncResponse(

@@ -31,6 +31,19 @@ public class BiometricImportController {
     @GetMapping
     List<ImportApi.BatchResponse> list() { return biometricImportService.listBatches(); }
 
+    @PostMapping(path = "/preview", consumes = "multipart/form-data")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    ImportApi.PreviewResponse preview(@RequestParam MultipartFile file) {
+        return biometricImportService.preview(file);
+    }
+
+    @PostMapping("/{id}/reverse")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    ImportApi.BatchResponse reverse(@org.springframework.web.bind.annotation.PathVariable String id,
+                                    Authentication authentication) {
+        return biometricImportService.reverse(id, authentication.getName());
+    }
+
     @PostMapping(consumes = "multipart/form-data")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     @ResponseStatus(HttpStatus.CREATED)

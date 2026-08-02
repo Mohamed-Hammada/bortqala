@@ -66,6 +66,12 @@ public class ImportBatch {
         this.status = errorRows == 0 ? ImportStatus.COMPLETED : ImportStatus.COMPLETED_WITH_ERRORS;
     }
 
+    public void reverse() {
+        this.status = ImportStatus.REVERSED;
+        this.importedRows = 0;
+        this.errorRows = 0;
+    }
+
     public String getId() { return id; }
     public String getChecksum() { return checksum; }
     public String getFileName() { return fileName; }

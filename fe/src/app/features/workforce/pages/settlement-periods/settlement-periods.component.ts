@@ -6,6 +6,7 @@ import { SettlementIssue, SettlementPeriod, SettlementCalculationSummary } from 
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 import { NotificationService } from '../../../../core/notification.service';
 import { downloadBlob } from '../../../../core/download';
+import { apiErrorDetail } from '../../../../core/api-error';
 
 @Component({
   selector: 'app-settlement-periods',
@@ -93,18 +94,18 @@ export class SettlementPeriodsComponent implements OnInit {
   createForm = { periodCode: '', startDate: new Date().toISOString().slice(0, 10), endDate: new Date().toISOString().slice(0, 10), cycleType: 'HALF_MONTH' };
 
   ngOnInit(): void { this.reload(); }
-  reload(): void { this.workforceService.loadSettlementPeriods().subscribe({ error: error => this.pageError.set(error?.error?.detail ?? 'تعذر تحميل فترات التسوية.') }); }
+  reload(): void { this.workforceService.loadSettlementPeriods().subscribe({ error: error => this.pageError.set(apiErrorDetail(error, 'تعذر تحميل فترات التسوية.')) }); }
   openCreateModal(): void { this.createForm = { periodCode: `PER-${Date.now().toString().slice(-6)}`, startDate: new Date().toISOString().slice(0, 10), endDate: new Date().toISOString().slice(0, 10), cycleType: 'HALF_MONTH' }; this.createOpen.set(true); }
-  savePeriod(): void { this.workforceService.createSettlementPeriod(this.createForm).subscribe({ next: () => { this.createOpen.set(false); this.notification.success('تم إنشاء فترة التسوية.'); }, error: error => this.notification.error(error?.error?.detail ?? 'تعذر إنشاء الفترة.') }); }
+  savePeriod(): void { this.workforceService.createSettlementPeriod(this.createForm).subscribe({ next: () => { this.createOpen.set(false); this.notification.success('تم إنشاء فترة التسوية.'); }, error: error => this.notification.error(apiErrorDetail(error, 'تعذر إنشاء الفترة.')) }); }
   calculatePeriod(period: SettlementPeriod): void {
     this.calculatingId.set(period.id); this.calculationError.set(null); this.summary.set(null); this.issues.set([]); this.summaryOpen.set(true);
-    this.workforceService.calculatePeriod(period.id).subscribe({ next: result => { this.summary.set(result); this.issues.set(result.issues); this.calculatingId.set(null); this.reload(); this.notification.success(`تم الاحتساب بنجاح — الإصدار v${result.calculationVersion}`); }, error: error => { this.calculatingId.set(null); this.calculationError.set(error?.error?.detail ?? 'فشلت إعادة الاحتساب.'); this.reload(); } });
+    this.workforceService.calculatePeriod(period.id).subscribe({ next: result => { this.summary.set(result); this.issues.set(result.issues); this.calculatingId.set(null); this.reload(); this.notification.success(`تم الاحتساب بنجاح — الإصدار v${result.calculationVersion}`); }, error: error => { this.calculatingId.set(null); this.calculationError.set(apiErrorDetail(error, 'فشلت إعادة الاحتساب.')); this.reload(); } });
   }
-  showIssues(period: SettlementPeriod): void { this.summary.set(null); this.calculationError.set(period.lastCalculationError ?? null); this.summaryOpen.set(true); this.workforceService.loadSettlementIssues(period.id).subscribe({ next: value => this.issues.set(value), error: error => this.calculationError.set(error?.error?.detail ?? 'تعذر تحميل المشاكل.') }); }
-  reviewPeriod(period: SettlementPeriod): void { this.workforceService.reviewPeriod(period.id).subscribe({ next: () => this.notification.success('تم تسجيل مراجعة الفترة.'), error: error => this.notification.error(error?.error?.detail ?? 'تعذر مراجعة الفترة.') }); }
-  approvePeriod(period: SettlementPeriod): void { this.workforceService.approvePeriod(period.id).subscribe({ next: () => this.notification.success('تم اعتماد الفترة.'), error: error => this.notification.error(error?.error?.detail ?? 'تعذر اعتماد الفترة.') }); }
-  lockPeriod(period: SettlementPeriod): void { this.workforceService.lockPeriod(period.id).subscribe({ next: () => this.notification.success('تم قفل الفترة نهائياً.'), error: error => this.notification.error(error?.error?.detail ?? 'تعذر قفل الفترة.') }); }
-  exportExcel(period: SettlementPeriod): void { this.workforceService.exportSettlementPeriodExcel(period.id).subscribe({ next: blob => downloadBlob(blob, `settlement-${period.periodCode}-v${period.calculationVersion}.xlsx`), error: error => this.notification.error(error?.error?.detail ?? 'تعذر التصدير.') }); }
+  showIssues(period: SettlementPeriod): void { this.summary.set(null); this.calculationError.set(period.lastCalculationError ?? null); this.summaryOpen.set(true); this.workforceService.loadSettlementIssues(period.id).subscribe({ next: value => this.issues.set(value), error: error => this.calculationError.set(apiErrorDetail(error, 'تعذر تحميل المشاكل.')) }); }
+  reviewPeriod(period: SettlementPeriod): void { this.workforceService.reviewPeriod(period.id).subscribe({ next: () => this.notification.success('تم تسجيل مراجعة الفترة.'), error: error => this.notification.error(apiErrorDetail(error, 'تعذر مراجعة الفترة.')) }); }
+  approvePeriod(period: SettlementPeriod): void { this.workforceService.approvePeriod(period.id).subscribe({ next: () => this.notification.success('تم اعتماد الفترة.'), error: error => this.notification.error(apiErrorDetail(error, 'تعذر اعتماد الفترة.')) }); }
+  lockPeriod(period: SettlementPeriod): void { this.workforceService.lockPeriod(period.id).subscribe({ next: () => this.notification.success('تم قفل الفترة نهائياً.'), error: error => this.notification.error(apiErrorDetail(error, 'تعذر قفل الفترة.')) }); }
+  exportExcel(period: SettlementPeriod): void { this.workforceService.exportSettlementPeriodExcel(period.id).subscribe({ next: blob => downloadBlob(blob, `settlement-${period.periodCode}-v${period.calculationVersion}.xlsx`), error: error => this.notification.error(apiErrorDetail(error, 'تعذر التصدير.')) }); }
   statusLabel(status: string): string { return ({ DRAFT:'مسودة', CALCULATED:'تم الاحتساب', REVIEWED:'تمت المراجعة', APPROVED:'معتمدة', LOCKED:'مقفلة' } as Record<string,string>)[status] ?? status; }
   cycleLabel(cycle: string): string { return cycle === 'HALF_MONTH' ? 'نصف شهري' : cycle === 'MONTHLY' ? 'شهري' : cycle; }
 }

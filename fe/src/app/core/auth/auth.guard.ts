@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivateFn, Router, UrlTree } from '@angular/router';
 import { RoleCode } from './auth.models';
 import { AuthService } from './auth.service';
 
@@ -14,8 +14,12 @@ export const authGuard: CanActivateFn = () => {
   return router.createUrlTree(['/login']);
 };
 
+export function roleGuardDecision(allowed: boolean, router: Router): boolean | UrlTree {
+  return allowed ? true : router.createUrlTree(['/forbidden']);
+}
+
 export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const authService = inject(AuthService);
   const roles = (route.data['roles'] as RoleCode[] | undefined) ?? [];
-  return authService.hasAnyRole(roles) ? true : inject(Router).createUrlTree(['/dashboard']);
+  return roleGuardDecision(authService.hasAnyRole(roles), inject(Router));
 };

@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Component
@@ -29,14 +30,19 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
     }
 
     @Override
-    public DeviceResponse fetch(BiometricDevice device) {
+    public DeviceResponse fetch(BiometricDevice device, BiometricDeviceClient.DeviceCredentials credentials) {
         try {
             URI endpoint = endpoint(device);
-            HttpRequest request = HttpRequest.newBuilder(endpoint)
+            HttpRequest.Builder builder = HttpRequest.newBuilder(endpoint)
                     .timeout(Duration.ofSeconds(20))
-                    .header("Accept", "application/json")
-                    .GET().build();
-            HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+                    .header("Accept", "application/json");
+            if (credentials != null && credentials.password() != null && !credentials.password().isBlank()) {
+                String user = credentials.username() == null ? "" : credentials.username();
+                String basic = Base64.getEncoder().encodeToString(
+                        (user + ":" + credentials.password()).getBytes(StandardCharsets.UTF_8));
+                builder.header("Authorization", "Basic " + basic);
+            }
+            HttpResponse<byte[]> response = httpClient.send(builder.GET().build(), HttpResponse.BodyHandlers.ofByteArray());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new BusinessRuleException("فشل الاتصال بجهاز البصمة. رمز الاستجابة: " + response.statusCode());
             }

@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { dateInputToEpoch, epochToDateInput, formatDate, formatDateTime } from '../../core/date';
 import { AuthService } from '../../core/auth/auth.service';
 import { AppSettings } from '../../core/auth/auth.models';
-import { PeriodOption, ReportPayCycle, ReportStatus } from './reports.models';
+import { PeriodOption, ReportPayCycle, ReportPreview, ReportStatus } from './reports.models';
 import { ReportsStore } from './reports.store';
 import { I18nService } from '../../core/i18n.service';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
@@ -24,6 +24,8 @@ export class ReportsPage {
   readonly authService = inject(AuthService);
   readonly year = signal(new Date().getFullYear());
   readonly customError = signal<string | null>(null);
+  readonly previewResult = signal<ReportPreview | null>(null);
+  readonly previewing = signal(false);
   readonly appSettings = signal<AppSettings | null>(null);
   readonly showReportPresets = computed(() => this.appSettings()?.showReportPresets ?? true);
   readonly pagination = new TablePagination();
@@ -43,6 +45,7 @@ export class ReportsPage {
       next: (settings) => this.appSettings.set(settings),
       error: () => {},
     });
+    this.periodForm.valueChanges.subscribe(() => this.previewResult.set(null));
   }
   changeYear(value: string): void {
     this.year.set(Number(value));
@@ -72,6 +75,21 @@ export class ReportsPage {
     }
     const id = await this.store.create({ periodStart, periodEnd, payCycle: value.payCycle });
     if (id) await this.router.navigate(['/reports', id]);
+  }
+
+  async previewCustom(): Promise<void> {
+    this.customError.set(null);
+    if (this.periodForm.invalid) {
+      this.periodForm.markAllAsTouched();
+      return;
+    }
+    const value = this.periodForm.getRawValue();
+    this.previewing.set(true);
+    try {
+      this.previewResult.set(await this.store.preview(value.periodStart, value.periodEnd, value.payCycle));
+    } finally {
+      this.previewing.set(false);
+    }
   }
 
   periodName(period: PeriodOption): string {

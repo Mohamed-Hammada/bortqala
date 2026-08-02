@@ -31,6 +31,11 @@ public class CategoryController {
     @GetMapping("/{id}")
     CategoryApi.Response get(@PathVariable String id) { return hrConfigurationService.getCategory(id); }
 
+    @GetMapping("/{id}/schedule-history")
+    List<CategoryApi.ScheduleResponse> scheduleHistory(@PathVariable String id) {
+        return hrConfigurationService.getScheduleHistory(id);
+    }
+
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)

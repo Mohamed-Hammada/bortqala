@@ -8,6 +8,7 @@ import {
   AuthUser,
   DashboardPreferences,
   LoginResponse,
+  MeResponse,
   NavigationPreferences,
   RoleCode,
   UserPreferences,
@@ -109,6 +110,10 @@ export class AuthService {
 
   appSettings() {
     return this.httpClient.get<AppSettings>('/api/v1/admin/app-settings');
+  }
+
+  fetchMe() {
+    return this.httpClient.get<MeResponse>('/api/v1/users/me');
   }
 
   updateAppSettings(payload: Omit<AppSettings, 'updatedAt'>) {

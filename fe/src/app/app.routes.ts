@@ -166,8 +166,19 @@ export const routes: Routes = [
         loadChildren: () =>
           import('./features/workforce/workforce.routes').then((module) => module.WORKFORCE_ROUTES),
       },
+      {
+        path: 'forbidden',
+        loadComponent: () =>
+          import('./features/errors/forbidden.page').then((module) => module.ForbiddenPage),
+      },
+      {
+        path: 'not-found',
+        loadComponent: () =>
+          import('./features/errors/not-found.page').then((module) => module.NotFoundPage),
+      },
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
+      { path: '**', redirectTo: 'not-found' },
     ],
   },
-  { path: '**', redirectTo: '' },
+  { path: '**', redirectTo: 'not-found' },
 ];

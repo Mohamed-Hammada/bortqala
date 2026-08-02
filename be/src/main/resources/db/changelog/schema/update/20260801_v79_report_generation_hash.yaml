@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260801-v79-report-generation-hash
+      author: codex
+      comment: Stores the SHA-256 input hash of the report-generation request (tenant + period + pay cycle) so duplicate generation replays the same report and the exact generating inputs are retained as evidence.
+      changes:
+        - addColumn:
+            tableName: reports
+            columns:
+              - column:
+                  name: generation_hash
+                  type: varchar(64)
+                  constraints:
+                    nullable: true
+        - addUniqueConstraint:
+            tableName: reports
+            columnNames: app_id, generation_hash
+            constraintName: uq_reports_app_generation_hash
+      rollback:
+        - dropUniqueConstraint:
+            tableName: reports
+            constraintName: uq_reports_app_generation_hash
+        - dropColumn:
+            tableName: reports
+            columnName: generation_hash

@@ -3,12 +3,15 @@ package com.bemo.hr.attendance.application;
 import com.bemo.hr.attendance.api.ImportApi;
 import com.bemo.hr.attendance.domain.ImportBatch;
 import com.bemo.hr.attendance.domain.ImportRowError;
+import com.bemo.hr.attendance.domain.ImportStatus;
 import com.bemo.hr.attendance.domain.PunchRecord;
 import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
 import com.bemo.hr.attendance.infrastructure.ImportRowErrorRepository;
 import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
+import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.domain.NotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,11 +29,48 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class BiometricImportService {
+    private static final int PREVIEW_LIMIT = 100;
+
     private final BiometricFileReader biometricFileReader;
     private final ImportBatchRepository importBatchRepository;
     private final PunchRecordRepository punchRecordRepository;
     private final ImportRowErrorRepository importRowErrorRepository;
     private final EmployeeRepository employeeRepository;
+    private final AuditService auditService;
+
+    @Transactional
+    public ImportApi.PreviewResponse preview(MultipartFile file) {
+        if (file.isEmpty()) throw new BusinessRuleException("Select a non-empty biometric file.");
+        try {
+            byte[] content = file.getBytes();
+            var parsed = biometricFileReader.read(file.getOriginalFilename() == null ? "biometric-file"
+                    : file.getOriginalFilename(), new ByteArrayInputStream(content));
+            return new ImportApi.PreviewResponse(
+                    file.getOriginalFilename() == null ? "biometric-file" : file.getOriginalFilename(),
+                    sha256(content), parsed.totalRows(), parsed.importedRows(), parsed.errors().size(),
+                    parsed.rows().stream().limit(PREVIEW_LIMIT).map(row -> new ImportApi.PreviewRowResponse(
+                            row.rowNumber(), row.deviceUserId(), row.employeeName(),
+                            row.punchedAt().toEpochMilli(), row.rawLine())).toList(),
+                    parsed.errors().stream().limit(PREVIEW_LIMIT).map(error -> new ImportApi.RowErrorResponse(
+                            error.rowNumber(), error.message(), error.rawLine())).toList());
+        } catch (IOException exception) {
+            throw new BusinessRuleException("Could not read the uploaded file.");
+        }
+    }
+
+    @Transactional
+    public ImportApi.BatchResponse reverse(String batchId, String actor) {
+        var batch = importBatchRepository.findById(batchId)
+                .orElseThrow(() -> new NotFoundException("سجل الاستيراد غير موجود."));
+        if (batch.getStatus() == ImportStatus.REVERSED) return toResponse(batch, false);
+        punchRecordRepository.deleteByBatchId(batchId);
+        importRowErrorRepository.deleteByBatchId(batchId);
+        batch.reverse();
+        importBatchRepository.saveAndFlush(batch);
+        auditService.record("REVERSE", "ATTENDANCE_IMPORT", batchId, actor,
+                "{\"fileName\":\"" + safe(batch.getFileName()) + "\",\"totalRows\":" + batch.getTotalRows() + "}", null);
+        return toResponse(batch, false);
+    }
 
     @Transactional
     public ImportApi.BatchResponse importFile(MultipartFile file, String deviceName, String actor) {
@@ -93,5 +133,9 @@ public class BiometricImportService {
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException("SHA-256 is not available.", exception);
         }
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

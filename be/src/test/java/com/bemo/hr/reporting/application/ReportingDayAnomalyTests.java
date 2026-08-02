@@ -53,6 +53,7 @@ class ReportingDayAnomalyTests {
     @Mock private ReportExporter exporter;
     @Mock private AuditService auditService;
     @Mock private TenantApplicationRepository tenantApplicationRepository;
+    @Mock private com.bemo.hr.reporting.infrastructure.AttendanceReportDecisionRepository attendanceReportDecisionRepository;
     private ReportingService service;
 
     @BeforeEach
@@ -60,7 +61,7 @@ class ReportingDayAnomalyTests {
         service = new ReportingService(reportRepository, resultRepository, holidayRepository, anomalyRepository,
                 snapshotRepository, confirmedHolidayRepository, categoryRepository, scheduleRepository,
                 employeeRepository, punchRepository, exporter, "Africa/Cairo", auditService,
-                tenantApplicationRepository);
+                tenantApplicationRepository, attendanceReportDecisionRepository);
     }
 
     @Test

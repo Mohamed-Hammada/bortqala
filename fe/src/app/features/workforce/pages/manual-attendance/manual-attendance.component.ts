@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { WorkforceService } from '../../data-access/workforce.service';
 import { NotificationService } from '../../../../core/notification.service';
 import { exportCsv } from '../../../../core/download';
+import { apiErrorDetail } from '../../../../core/api-error';
 import { Worker, AttendanceCell, ManualAttendanceEntry, BatchAttendanceResponse } from '../../models/workforce.models';
 import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-tooltip.directive';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
@@ -892,7 +893,7 @@ export class ManualAttendanceComponent implements OnInit {
         this.loading.set(false);
       },
       error: (e) => {
-        this.loadError.set('تعذّر تحميل بيانات العمال: ' + (e?.error?.detail ?? e?.message ?? 'خطأ غير متوقع'));
+        this.loadError.set('تعذّر تحميل بيانات العمال: ' + (apiErrorDetail(e, e?.message ?? 'خطأ غير متوقع')));
         this.loading.set(false);
       }
     });
@@ -1091,7 +1092,7 @@ export class ManualAttendanceComponent implements OnInit {
       },
       error: (e) => {
         this.saving.set(false);
-        this.notificationService.error('حدث خطأ أثناء الحفظ: ' + (e?.error?.detail ?? e?.message ?? 'خطأ غير متوقع'));
+        this.notificationService.error('حدث خطأ أثناء الحفظ: ' + (apiErrorDetail(e, e?.message ?? 'خطأ غير متوقع')));
       }
     });
   }

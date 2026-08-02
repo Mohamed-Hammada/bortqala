@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { TransitionResponse } from '../../../core/api.models';
 import {
   Contractor,
   WorkerCategory,
@@ -152,14 +153,14 @@ export class WorkforceService {
     return this.http.get<SettlementIssue[]>(`/api/v1/workforce/settlements/periods/${id}/issues`);
   }
 
-  reviewPeriod(id: string): Observable<SettlementPeriod> {
-    return this.http.post<SettlementPeriod>(`/api/v1/workforce/settlements/periods/${id}/review`, {}).pipe(
+  reviewPeriod(id: string): Observable<TransitionResponse> {
+    return this.http.post<TransitionResponse>(`/api/v1/workforce/settlements/periods/${id}/review`, {}).pipe(
       tap(() => this.loadSettlementPeriods().subscribe())
     );
   }
 
-  approvePeriod(id: string): Observable<SettlementPeriod> {
-    return this.http.post<SettlementPeriod>(`/api/v1/workforce/settlements/periods/${id}/approve`, {}).pipe(
+  approvePeriod(id: string): Observable<TransitionResponse> {
+    return this.http.post<TransitionResponse>(`/api/v1/workforce/settlements/periods/${id}/approve`, {}).pipe(
       tap(() => this.loadSettlementPeriods().subscribe())
     );
   }
@@ -183,8 +184,8 @@ export class WorkforceService {
     );
   }
 
-  lockPeriod(id: string): Observable<SettlementPeriod> {
-    return this.http.post<SettlementPeriod>(`/api/v1/workforce/settlements/periods/${id}/lock`, {}).pipe(
+  lockPeriod(id: string): Observable<TransitionResponse> {
+    return this.http.post<TransitionResponse>(`/api/v1/workforce/settlements/periods/${id}/lock`, {}).pipe(
       tap(() => this.loadSettlementPeriods().subscribe())
     );
   }

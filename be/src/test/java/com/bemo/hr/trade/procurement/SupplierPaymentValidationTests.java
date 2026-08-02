@@ -6,6 +6,8 @@ import com.bemo.hr.operations.OperationsService;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
 import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.idempotency.application.IdempotencyService;
+import com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.trade.procurement.api.ProcurementApi;
 import com.bemo.hr.trade.procurement.application.ProcurementExcelExporter;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -40,12 +43,16 @@ class SupplierPaymentValidationTests {
     void setUp() {
         supplierInvoiceRepository = mock(SupplierInvoiceRepository.class);
         supplierPaymentRepository = mock(SupplierPaymentRepository.class);
+        IdempotencyKeyRepository idempotencyKeyRepository = mock(IdempotencyKeyRepository.class);
+        when(idempotencyKeyRepository.findByOperationTypeAndOperationId(anyString(), anyString()))
+                .thenReturn(Optional.empty());
         procurementService = new ProcurementService(mock(PurchaseOrderRepository.class),
                 mock(PurchaseOrderLineRepository.class), mock(ProcurementDocumentSequenceRepository.class),
                 mock(GoodsReceiptRepository.class), supplierInvoiceRepository, supplierPaymentRepository,
                 mock(BusinessPartyRepository.class), mock(PartnerLedgerEntryRepository.class),
                 mock(AuditService.class), mock(ProcurementExcelExporter.class), mock(OperationsService.class),
-                mock(TenantApplicationRepository.class), mock(CurrencyRepository.class));
+                mock(TenantApplicationRepository.class), mock(CurrencyRepository.class),
+                new IdempotencyService(idempotencyKeyRepository));
         invoice = new SupplierInvoice("INV-100", "INV-100", null, "EGP", "supplier-a", null,
                 null, null, LocalDate.of(2026, 7, 29), new BigDecimal("100.00"),
                 BigDecimal.ZERO, BigDecimal.ZERO, null, null);

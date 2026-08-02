@@ -39,7 +39,7 @@
 
 ## [ORPHANS & PENDING]
 *(See Bemo ERP — Remaining and Incomplete Work document for full backlog)*
-- **P1**: Complete remaining procurement commercial metadata (exchange-rate snapshots, expected delivery, line tax/discount), controlled financial-discount approval, and cancellation/reversal ledger postings
+- **P1**: Complete remaining procurement commercial metadata (expected delivery, line tax/discount), controlled financial-discount approval, and cancellation/reversal ledger postings. Exchange-rate snapshots are implemented (V63) and verified — see COMPLETED & VERIFIED.
 - **P1**: Unified category master (employee/worker scope), enhanced work-schedule rules with overlap detection
 - **P1**: Complete one unified employee/worker category source; advance deduction policy inheritance is implemented, while broader payroll deduction-policy lifecycle remains
 - **P1**: Finish remaining bilingual labels and per-flow retry feedback standardization
