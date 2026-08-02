@@ -3,12 +3,14 @@ package com.bemo.hr.shared.security;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 
 import java.util.Collection;
+import java.util.List;
 
 public class RevocableJwtAuthenticationConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
@@ -35,6 +37,9 @@ public class RevocableJwtAuthenticationConverter implements Converter<Jwt, Abstr
             }
         }
         Collection<GrantedAuthority> authorities = authoritiesConverter.convert(jwt);
+        if (Boolean.TRUE.equals(jwt.getClaim("pwc"))) {
+            authorities = List.of(new SimpleGrantedAuthority(PasswordChangeAwareAccessDeniedHandler.PASSWORD_CHANGE_AUTHORITY));
+        }
         return new JwtAuthenticationToken(jwt, authorities);
     }
 }

@@ -28,9 +28,6 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 public class AuthService {
-    static final int MAX_LOGIN_ATTEMPTS = 5;
-    static final Duration LOCKOUT_DURATION = Duration.ofMinutes(15);
-
     private final AuthenticationManager authenticationManager;
     private final JwtEncoder jwtEncoder;
     private final JwtProperties jwtProperties;
@@ -41,6 +38,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
     private final LoginRateLimiter loginRateLimiter;
+    private final LoginStateService loginStateService;
+    private final RefreshCookieCodec refreshCookieCodec;
     private final com.bemo.hr.audit.application.AuditService auditService;
     private final TranslationService translationService;
     private final WorkerCategoryRepository workerCategoryRepository;
@@ -51,6 +50,8 @@ public class AuthService {
                        TenantApplicationRepository tenantApplicationRepository,
                        UserPreferenceService userPreferenceService, PasswordEncoder passwordEncoder,
                        RefreshTokenService refreshTokenService, LoginRateLimiter loginRateLimiter,
+                       LoginStateService loginStateService,
+                       RefreshCookieCodec refreshCookieCodec,
                        com.bemo.hr.audit.application.AuditService auditService,
                        TranslationService translationService,
                        WorkerCategoryRepository workerCategoryRepository,
@@ -65,6 +66,8 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.refreshTokenService = refreshTokenService;
         this.loginRateLimiter = loginRateLimiter;
+        this.loginStateService = loginStateService;
+        this.refreshCookieCodec = refreshCookieCodec;
         this.auditService = auditService;
         this.translationService = translationService;
         this.workerCategoryRepository = workerCategoryRepository;
@@ -77,7 +80,7 @@ public class AuthService {
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials."));
         TenantContext.set(app.getId());
         try {
-            if (!loginRateLimiter.allow(app.getId(), request.username(), deviceId, ip)) {
+            if (loginRateLimiter.isBlocked(app.getId(), request.username(), deviceId, ip)) {
                 throw new BadCredentialsException("Invalid credentials.");
             }
             var userOpt = appUserRepository.findByAppIdAndUsernameIgnoreCase(app.getId(), request.username());
@@ -94,15 +97,16 @@ public class AuthService {
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                         app.getId() + "|" + request.username(), request.password()));
             } catch (BadCredentialsException exception) {
-                recordFailedLogin(app.getId(), request.username(), now);
+                loginRateLimiter.recordFailure(app.getId(), request.username(), deviceId, ip);
+                loginStateService.recordFailure(app.getId(), request.username(), now);
                 throw exception;
             }
-            user.recordSuccessfulLogin(now);
+            loginStateService.recordSuccess(app.getId(), request.username(), now);
             loginRateLimiter.reset(app.getId(), request.username());
             Instant accessExpiresAt = issueAccessToken(app, user, now);
             var refresh = refreshTokenService.issue(app.getId(), user.getId(), deviceId);
             auditService.record("USER_LOGIN", "USER", user.getId(), user.getUsername(), "Successful login", null);
-            return new LoginResult(
+            return new LoginResult(app.getId(),
                     new AuthApi.LoginResponse(accessToken(app.getId(), user, now, accessExpiresAt), "Bearer", accessExpiresAt,
                             user.isMustChangePassword(),
                             new AuthApi.AppResponse(app.getId(), app.getCode(), app.getName(),
@@ -116,30 +120,25 @@ public class AuthService {
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public RefreshResult refresh(String cookieValue, String deviceId) {
-        if (cookieValue == null || cookieValue.isBlank()) {
-            throw new BusinessRuleException("Session is invalid or expired.",
-                    "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED);
-        }
-        String appId = cookieAppId(cookieValue);
-        String rawToken = cookieRawToken(cookieValue);
+        RefreshCookieCodec.Decoded decoded = refreshCookieCodec.decode(cookieValue);
+        String appId = decoded.appId();
         TenantContext.set(appId);
         try {
-            var refreshToken = refreshTokenService.requireActive(appId, rawToken);
-            var user = appUserRepository.findByAppIdAndId(appId, refreshToken.getUserId())
+            var rotation = refreshTokenService.rotate(appId, decoded.rawToken(), deviceId, "refresh");
+            var user = appUserRepository.findByAppIdAndId(appId, rotation.userId())
                     .orElseThrow(() -> new BusinessRuleException("Session is invalid or expired.",
                             "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED));
-            if (!user.isActive() || user.isMustChangePassword()) {
+            if (!user.isActive()) {
+                refreshTokenService.revoke(appId, rotation.rawValue(), "refresh");
                 throw new BusinessRuleException("Session is invalid or expired.",
                         "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED);
             }
             Instant now = Instant.now();
             Instant accessExpiresAt = issueAccessToken(appId, user, now);
-            String nextRaw = refreshTokenService.rotate(appId, rawToken, deviceId);
-            var next = refreshTokenService.requireActive(appId, nextRaw);
             auditService.record("TOKEN_REFRESH", "USER", user.getId(), user.getUsername(), "Refreshed session token", null);
-            return new RefreshResult(
+            return new RefreshResult(appId,
                     new AuthApi.RefreshResponse(accessToken(appId, user, now, accessExpiresAt), "Bearer", accessExpiresAt),
-                    nextRaw, next.getExpiresAt());
+                    rotation.rawValue(), rotation.expiresAt());
         } finally {
             TenantContext.clear();
         }
@@ -148,11 +147,10 @@ public class AuthService {
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void logout(String cookieValue, String username) {
         if (cookieValue == null || cookieValue.isBlank()) return;
-        String appId = cookieAppId(cookieValue);
-        String rawToken = cookieRawToken(cookieValue);
-        TenantContext.set(appId);
+        RefreshCookieCodec.Decoded decoded = refreshCookieCodec.decode(cookieValue);
+        TenantContext.set(decoded.appId());
         try {
-            refreshTokenService.revoke(appId, rawToken, username);
+            refreshTokenService.revoke(decoded.appId(), decoded.rawToken(), username);
         } finally {
             TenantContext.clear();
         }
@@ -339,12 +337,11 @@ public class AuthService {
             }
         }
 
-        boolean currentlyAdmin = isAdminUser(user);
-        boolean willBeAdmin = isAdminRoles(request.roles());
-        boolean disablingFinalAdmin = user.isActive() && request.active() == false && currentlyAdmin
-                && !willBeAdmin && activeAdminCount(appId) <= 1;
-        if (disablingFinalAdmin) {
-            throw new BusinessRuleException("لا يمكن تعطيل آخر مسؤول نشط في النظام.", "FINAL_ADMIN_PROTECTION", HttpStatus.BAD_REQUEST);
+        boolean targetCurrentlyActiveAdmin = user.isActive() && isAdminUser(user);
+        boolean targetWillBeActiveAdmin = request.active() && isAdminRoles(request.roles());
+        if (targetCurrentlyActiveAdmin && !targetWillBeActiveAdmin && activeAdminCount(appId) <= 1) {
+            throw new BusinessRuleException("لا يمكن تعطيل أو إزالة دور آخر مسؤول نشط في النظام.",
+                    "FINAL_ADMIN_PROTECTION", HttpStatus.BAD_REQUEST);
         }
 
         validate(request, appId, id, false);
@@ -357,7 +354,8 @@ public class AuthService {
                 requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary(),
                 request.dashboardCustomizationEnabled());
         if (passwordHash != null) {
-            user.markPasswordChanged(Instant.now());
+            user.requirePasswordChangeOnNextLogin();
+            user.bumpTokenVersion();
             refreshTokenService.revokeAllForUser(appId, user.getId(), currentUsername);
         }
         validateCategory(request.categoryId());
@@ -384,13 +382,6 @@ public class AuthService {
         });
     }
 
-    private void recordFailedLogin(String appId, String username, Instant now) {
-        appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, username).ifPresent(user -> {
-            user.recordFailedLogin(now, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION);
-            appUserRepository.save(user);
-        });
-    }
-
     private Instant issueAccessToken(TenantApplication app, AppUser user, Instant now) {
         return issueAccessToken(app.getId(), user, now);
     }
@@ -408,7 +399,8 @@ public class AuthService {
     private String accessToken(String appId, AppUser user, Instant now, Instant expiresAt) {
         var app = tenantApplicationRepository.findById(appId)
                 .orElseThrow(() -> new NotFoundException("Application not found."));
-        var claims = JwtClaimsSet.builder()
+        boolean passwordChangeRequired = user.isMustChangePassword();
+        var builder = JwtClaimsSet.builder()
                 .issuer(jwtProperties.issuer())
                 .issuedAt(now)
                 .expiresAt(expiresAt)
@@ -418,10 +410,12 @@ public class AuthService {
                 .claim("appCode", app.getCode())
                 .claim("name", user.getDisplayName())
                 .claim("tv", user.getTokenVersion())
-                .claim("roles", user.getRoles().stream().map(role -> role.getCode().name()).sorted().toList())
-                .build();
+                .claim("pwc", passwordChangeRequired)
+                .claim("roles", passwordChangeRequired
+                        ? List.of()
+                        : user.getRoles().stream().map(role -> role.getCode().name()).sorted().toList());
         return jwtEncoder.encode(JwtEncoderParameters.from(
-                JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
+                JwsHeader.with(MacAlgorithm.HS256).build(), builder.build())).getTokenValue();
     }
 
     private boolean isAdminUser(AppUser user) {
@@ -434,26 +428,10 @@ public class AuthService {
     }
 
     private long activeAdminCount(String appId) {
-        return appUserRepository.findAllByAppIdOrderByDisplayNameAsc(appId).stream()
+        return appUserRepository.lockAllByAppIdOrderByDisplayNameAsc(appId).stream()
                 .filter(AppUser::isActive)
                 .filter(this::isAdminUser)
                 .count();
-    }
-
-    private String cookieAppId(String cookieValue) {
-        int separator = cookieValue.indexOf(':');
-        if (separator <= 0) {
-            throw new BusinessRuleException("Session is invalid or expired.", "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED);
-        }
-        return cookieValue.substring(0, separator);
-    }
-
-    private String cookieRawToken(String cookieValue) {
-        int separator = cookieValue.indexOf(':');
-        if (separator <= 0 || separator == cookieValue.length() - 1) {
-            throw new BusinessRuleException("Session is invalid or expired.", "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED);
-        }
-        return cookieValue.substring(separator + 1);
     }
 
     private void validate(AuthApi.UserUpsertRequest request, String appId, String currentId, boolean passwordRequired) {
@@ -581,7 +559,7 @@ public class AuthService {
         );
     }
 
-    public record LoginResult(AuthApi.LoginResponse response, String refreshToken, Instant refreshExpiresAt) { }
+    public record LoginResult(String appId, AuthApi.LoginResponse response, String refreshToken, Instant refreshExpiresAt) { }
 
-    public record RefreshResult(AuthApi.RefreshResponse response, String refreshToken, Instant refreshExpiresAt) { }
+    public record RefreshResult(String appId, AuthApi.RefreshResponse response, String refreshToken, Instant refreshExpiresAt) { }
 }

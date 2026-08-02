@@ -1,7 +1,9 @@
 package com.bemo.hr.shared.security;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +17,10 @@ public interface AppUserRepository extends JpaRepository<AppUser, String> {
 
     @EntityGraph(attributePaths = "roles")
     List<AppUser> findAllByAppIdOrderByDisplayNameAsc(String appId);
+
+    @EntityGraph(attributePaths = "roles")
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<AppUser> lockAllByAppIdOrderByDisplayNameAsc(String appId);
 
     boolean existsByAppIdAndUsernameIgnoreCase(String appId, String username);
     boolean existsByAppIdAndUsernameIgnoreCaseAndIdNot(String appId, String username, String id);

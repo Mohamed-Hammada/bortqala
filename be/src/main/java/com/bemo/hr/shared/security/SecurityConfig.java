@@ -2,16 +2,21 @@ package com.bemo.hr.shared.security;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.proc.SecurityContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -24,6 +29,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -45,6 +51,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions.accessDeniedHandler(passwordChangeAwareAccessDeniedHandler(objectMapper)))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
@@ -55,7 +62,12 @@ public class SecurityConfig {
                                 "/actuator/health",
                                 "/actuator/health/**"
                         ).permitAll()
-                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers(
+                                "/api/v1/auth/change-password",
+                                "/api/v1/auth/logout",
+                                "/api/v1/auth/me"
+                        ).authenticated()
+                        .requestMatchers("/api/**").access(passwordChangeRestrictedRequestAuthorization())
                         .requestMatchers(
                                 "/",
                                 "/index.html",
@@ -73,6 +85,26 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter(appUserRepository))))
                 .addFilterAfter(requestAuditFilter, BearerTokenAuthenticationFilter.class)
                 .build();
+    }
+
+    @Bean
+    AuthorizationManager<RequestAuthorizationContext> passwordChangeRestrictedRequestAuthorization() {
+        return (supplier, context) -> {
+            Authentication authentication = supplier.get();
+            if (authentication == null || !authentication.isAuthenticated()
+                    || authentication instanceof AnonymousAuthenticationToken) {
+                return new AuthorizationDecision(false);
+            }
+            boolean restricted = authentication.getAuthorities().stream()
+                    .anyMatch(authority -> authority.getAuthority()
+                            .equals(PasswordChangeAwareAccessDeniedHandler.PASSWORD_CHANGE_AUTHORITY));
+            return new AuthorizationDecision(!restricted);
+        };
+    }
+
+    @Bean
+    PasswordChangeAwareAccessDeniedHandler passwordChangeAwareAccessDeniedHandler(ObjectMapper objectMapper) {
+        return new PasswordChangeAwareAccessDeniedHandler(objectMapper);
     }
 
     @Bean

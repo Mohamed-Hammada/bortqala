@@ -24,7 +24,10 @@ public class RefreshToken {
     @Column(name = "user_id", nullable = false, length = 36)
     private String userId;
 
-    @Column(name = "token_hash", nullable = false, unique = true, length = 64)
+    @Column(name = "family_id", nullable = false, length = 36)
+    private String familyId;
+
+    @Column(name = "token_hash", nullable = false, length = 64)
     private String tokenHash;
 
     @Column(name = "expires_at", nullable = false)
@@ -48,10 +51,11 @@ public class RefreshToken {
     protected RefreshToken() {
     }
 
-    public RefreshToken(String appId, String userId, String tokenHash, Instant expiresAt, String deviceId) {
+    public RefreshToken(String appId, String userId, String familyId, String tokenHash, Instant expiresAt, String deviceId) {
         this.id = UUID.randomUUID().toString();
         this.appId = appId;
         this.userId = userId;
+        this.familyId = familyId;
         this.tokenHash = tokenHash;
         this.expiresAt = expiresAt;
         this.deviceId = deviceId;
@@ -67,9 +71,15 @@ public class RefreshToken {
         this.revokedAt = Instant.now();
     }
 
+    public void markReused(String by) {
+        this.revokedBy = by;
+        this.revokedAt = Instant.now();
+    }
+
     public String getId() { return id; }
     public String getAppId() { return appId; }
     public String getUserId() { return userId; }
+    public String getFamilyId() { return familyId; }
     public String getTokenHash() { return tokenHash; }
     public Instant getExpiresAt() { return expiresAt; }
     public String getDeviceId() { return deviceId; }

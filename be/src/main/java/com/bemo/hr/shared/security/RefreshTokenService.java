@@ -2,6 +2,7 @@ package com.bemo.hr.shared.security;
 
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,38 +12,57 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
 public class RefreshTokenService {
+    private static final int CLEANUP_BATCH_SIZE = 500;
+
     private final RefreshTokenRepository refreshTokenRepository;
+    private final TenantApplicationRepository tenantApplicationRepository;
     private final JwtProperties jwtProperties;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository, JwtProperties jwtProperties) {
+    public RefreshTokenService(RefreshTokenRepository refreshTokenRepository,
+                               TenantApplicationRepository tenantApplicationRepository,
+                               JwtProperties jwtProperties) {
         this.refreshTokenRepository = refreshTokenRepository;
+        this.tenantApplicationRepository = tenantApplicationRepository;
         this.jwtProperties = jwtProperties;
     }
 
     public IssuedRefreshToken issue(String appId, String userId, String deviceId) {
         String raw = generateToken();
-        Duration ttl = jwtProperties.refreshTtl() != null ? jwtProperties.refreshTtl() : Duration.ofDays(30);
-        RefreshToken entity = new RefreshToken(appId, userId, hash(raw), Instant.now().plus(ttl), deviceId);
+        String familyId = UUID.randomUUID().toString();
+        Duration ttl = refreshTtl();
+        RefreshToken entity = new RefreshToken(appId, userId, familyId, hash(raw), Instant.now().plus(ttl), deviceId);
         refreshTokenRepository.save(entity);
         return new IssuedRefreshToken(raw, entity.getId(), entity.getExpiresAt());
     }
 
-    public String rotate(String appId, String rawToken, String deviceId) {
-        RefreshToken existing = requireActive(appId, rawToken);
+    @Transactional(noRollbackFor = BusinessRuleException.class)
+    public RotationResult rotate(String appId, String rawToken, String deviceId, String by) {
+        RefreshToken existing = refreshTokenRepository.findForRotationByAppIdAndTokenHash(appId, hash(rawToken))
+                .orElseThrow(() -> new BusinessRuleException("Session is invalid or expired.",
+                        "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED));
+        Instant now = Instant.now();
+        if (existing.getRevokedAt() != null || existing.getReplacedByTokenId() != null
+                || !existing.getExpiresAt().isAfter(now)) {
+            revokeFamily(appId, existing.getFamilyId(), by);
+            throw new BusinessRuleException("Session is invalid or expired.",
+                    "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED);
+        }
         String raw = generateToken();
-        Duration ttl = jwtProperties.refreshTtl() != null ? jwtProperties.refreshTtl() : Duration.ofDays(30);
-        RefreshToken replacement = new RefreshToken(appId, existing.getUserId(), hash(raw), Instant.now().plus(ttl), deviceId);
+        RefreshToken replacement = new RefreshToken(appId, existing.getUserId(), existing.getFamilyId(),
+                hash(raw), now.plus(refreshTtl()), deviceId);
         refreshTokenRepository.save(replacement);
         existing.markReplacedBy(replacement.getId());
-        return raw;
+        return new RotationResult(existing.getUserId(), raw, replacement.getExpiresAt());
     }
 
     public RefreshToken requireActive(String appId, String rawToken) {
@@ -75,6 +95,39 @@ public class RefreshTokenService {
         refreshTokenRepository.findAllByAppIdAndRevokedAtIsNull(appId).forEach(token -> token.revoke(by));
     }
 
+    @Scheduled(initialDelayString = "${hr.security.refresh-cleanup-initial-delay-ms:3600000}",
+            fixedDelayString = "${hr.security.refresh-cleanup-interval-ms:3600000}")
+    public void cleanupExpiredAndRevoked() {
+        for (TenantApplication app : tenantApplicationRepository.findAll()) {
+            TenantContext.set(app.getId());
+            try {
+                List<String> toDelete = new ArrayList<>();
+                refreshTokenRepository.findAll().stream()
+                        .filter(token -> token.getRevokedAt() != null || !token.getExpiresAt().isAfter(Instant.now()))
+                        .forEach(token -> toDelete.add(token.getId()));
+                deleteBatches(toDelete);
+            } finally {
+                TenantContext.clear();
+            }
+        }
+    }
+
+    private void deleteBatches(List<String> ids) {
+        for (int from = 0; from < ids.size(); from += CLEANUP_BATCH_SIZE) {
+            int to = Math.min(from + CLEANUP_BATCH_SIZE, ids.size());
+            refreshTokenRepository.deleteByIds(ids.subList(from, to));
+        }
+    }
+
+    private void revokeFamily(String appId, String familyId, String by) {
+        refreshTokenRepository.findAllByAppIdAndFamilyIdAndRevokedAtIsNull(appId, familyId)
+                .forEach(token -> token.revoke(by));
+    }
+
+    private Duration refreshTtl() {
+        return jwtProperties.refreshTtl() != null ? jwtProperties.refreshTtl() : Duration.ofDays(30);
+    }
+
     private String generateToken() {
         byte[] bytes = new byte[48];
         secureRandom.nextBytes(bytes);
@@ -91,4 +144,6 @@ public class RefreshTokenService {
     }
 
     public record IssuedRefreshToken(String rawValue, String id, Instant expiresAt) { }
+
+    public record RotationResult(String userId, String rawValue, Instant expiresAt) { }
 }

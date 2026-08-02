@@ -32,13 +32,19 @@ public class AuthController {
     private static final Duration REFRESH_COOKIE_MAX_AGE = Duration.ofDays(30);
 
     private final AuthService authService;
+    private final RefreshCookieCodec refreshCookieCodec;
+    private final ClientIpResolver clientIpResolver;
     private final String refreshCookieName;
     private final boolean refreshCookieSecure;
 
     public AuthController(AuthService authService,
+                          RefreshCookieCodec refreshCookieCodec,
+                          ClientIpResolver clientIpResolver,
                           @Value("${hr.security.refresh-cookie-name:bemo_refresh}") String refreshCookieName,
                           @Value("${hr.security.refresh-cookie-secure:true}") boolean refreshCookieSecure) {
         this.authService = authService;
+        this.refreshCookieCodec = refreshCookieCodec;
+        this.clientIpResolver = clientIpResolver;
         this.refreshCookieName = refreshCookieName;
         this.refreshCookieSecure = refreshCookieSecure;
     }
@@ -48,8 +54,9 @@ public class AuthController {
                                                 HttpServletRequest servletRequest,
                                                 HttpServletResponse servletResponse,
                                                 @RequestHeader(value = "X-Device-Id", required = false) String deviceId) {
-        AuthService.LoginResult result = authService.login(request, deviceId, clientIp(servletRequest));
-        setRefreshCookie(servletResponse, result.refreshToken(), result.refreshExpiresAt());
+        AuthService.LoginResult result = authService.login(request, deviceId, clientIpResolver.resolve(servletRequest));
+        setRefreshCookie(servletResponse, refreshCookieCodec.encode(result.appId(), result.refreshToken()),
+                result.refreshExpiresAt());
         return ResponseEntity.ok(result.response());
     }
 
@@ -59,7 +66,8 @@ public class AuthController {
                                                     @CookieValue(name = "${hr.security.refresh-cookie-name:bemo_refresh}", required = false) String refreshCookie,
                                                     @RequestHeader(value = "X-Device-Id", required = false) String deviceId) {
         AuthService.RefreshResult result = authService.refresh(refreshCookie, deviceId);
-        setRefreshCookie(servletResponse, result.refreshToken(), result.refreshExpiresAt());
+        setRefreshCookie(servletResponse, refreshCookieCodec.encode(result.appId(), result.refreshToken()),
+                result.refreshExpiresAt());
         return ResponseEntity.ok(result.response());
     }
 
@@ -85,14 +93,14 @@ public class AuthController {
     }
 
     @PostMapping("/users/{id}/revoke-sessions")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void revokeSessions(@PathVariable String id, Authentication authentication) {
         authService.revokeSessions(id, authentication.getName());
     }
 
     @PostMapping("/users/{id}/unlock")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void unlock(@PathVariable String id, Authentication authentication) {
         authService.unlock(id, authentication.getName());
@@ -179,14 +187,5 @@ public class AuthController {
                 .maxAge(Duration.ZERO)
                 .build();
         servletResponse.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-    }
-
-    private String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            int comma = forwarded.indexOf(',');
-            return comma > 0 ? forwarded.substring(0, comma).trim() : forwarded.trim();
-        }
-        return request.getRemoteAddr();
     }
 }
