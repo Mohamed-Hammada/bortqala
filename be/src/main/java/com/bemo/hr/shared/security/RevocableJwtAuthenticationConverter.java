@@ -25,12 +25,12 @@ public class RevocableJwtAuthenticationConverter implements Converter<Jwt, Abstr
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
-        Integer tokenVersion = jwt.getClaim("tv");
-        if (tokenVersion != null) {
+        Object rawTokenVersion = jwt.getClaim("tv");
+        if (rawTokenVersion instanceof Number tokenVersion) {
             String appId = jwt.getClaim("appId");
             String username = jwt.getSubject();
             boolean revoked = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, username)
-                    .map(user -> !user.isActive() || user.getTokenVersion() != tokenVersion)
+                    .map(user -> !user.isActive() || user.getTokenVersion() != tokenVersion.intValue())
                     .orElse(true);
             if (revoked) {
                 throw new BadCredentialsException("Session has been revoked.");
