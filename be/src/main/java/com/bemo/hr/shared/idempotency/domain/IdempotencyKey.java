@@ -6,12 +6,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.TenantId;
+import org.springframework.data.domain.Persistable;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "idempotency_keys")
-public class IdempotencyKey {
+public class IdempotencyKey implements Persistable<String> {
 
     public static final String STATUS_IN_PROGRESS = "IN_PROGRESS";
     public static final String STATUS_COMPLETED = "COMPLETED";
@@ -33,9 +35,9 @@ public class IdempotencyKey {
     @Column(name = "response_reference_or_body", length = 4000)
     private String responseReferenceOrBody;
     @Column(name = "created_at", nullable = false)
-    private long createdAt;
+    private Instant createdAt;
     @Column(name = "completed_at")
-    private Long completedAt;
+    private Instant completedAt;
 
     protected IdempotencyKey() {
     }
@@ -51,23 +53,24 @@ public class IdempotencyKey {
     public void complete(String responseReferenceOrBody) {
         this.status = STATUS_COMPLETED;
         this.responseReferenceOrBody = responseReferenceOrBody;
-        this.completedAt = System.currentTimeMillis();
+        this.completedAt = Instant.now();
     }
 
     public void fail() {
         this.status = STATUS_FAILED;
-        this.completedAt = System.currentTimeMillis();
+        this.completedAt = Instant.now();
     }
 
     public String getId() { return id; }
+    @Override public boolean isNew() { return createdAt == null; }
     public String getOperationType() { return operationType; }
     public String getOperationId() { return operationId; }
     public String getRequestHash() { return requestHash; }
     public String getStatus() { return status; }
     public String getResponseReferenceOrBody() { return responseReferenceOrBody; }
-    public long getCreatedAt() { return createdAt; }
-    public Long getCompletedAt() { return completedAt; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getCompletedAt() { return completedAt; }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); }
+    void prePersist() { createdAt = Instant.now(); }
 }

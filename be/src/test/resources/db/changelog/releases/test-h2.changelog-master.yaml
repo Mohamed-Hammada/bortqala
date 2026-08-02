@@ -140,6 +140,8 @@ databaseChangeLog:
             sql: |
               ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS currency_code VARCHAR(10) DEFAULT 'EGP' NOT NULL;
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS currency_code VARCHAR(10) DEFAULT 'EGP' NOT NULL;
+              ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS internal_reference VARCHAR(50);
+              ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS missing_invoice_reason VARCHAR(255);
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(15,2) DEFAULT 0;
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS tax_amount NUMERIC(15,2) DEFAULT 0;
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS net_amount NUMERIC(15,2) DEFAULT 0;
@@ -224,6 +226,7 @@ databaseChangeLog:
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS net_amount NUMERIC(15,2);
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS due_date DATE;
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS notes VARCHAR(500);
+              ALTER TABLE supplier_payments ADD COLUMN IF NOT EXISTS operation_id VARCHAR(80) DEFAULT 'legacy' NOT NULL;
               ALTER TABLE biometric_devices ADD COLUMN IF NOT EXISTS device_username VARCHAR(150);
               ALTER TABLE biometric_devices ADD COLUMN IF NOT EXISTS device_password_enc VARCHAR(1000);
               ALTER TABLE reports ADD COLUMN IF NOT EXISTS generation_hash VARCHAR(64);
@@ -249,3 +252,15 @@ databaseChangeLog:
               );
               CREATE INDEX IF NOT EXISTS idx_report_decisions_report ON attendance_report_decisions (report_id);
               CREATE INDEX IF NOT EXISTS idx_report_decisions_result ON attendance_report_decisions (result_id);
+              CREATE TABLE IF NOT EXISTS idempotency_keys (
+                id VARCHAR(36) NOT NULL PRIMARY KEY,
+                app_id VARCHAR(36) NOT NULL,
+                operation_type VARCHAR(60) NOT NULL,
+                operation_id VARCHAR(80) NOT NULL,
+                request_hash VARCHAR(64) NOT NULL,
+                status VARCHAR(20) NOT NULL,
+                response_reference_or_body VARCHAR(4000),
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                completed_at TIMESTAMP,
+                CONSTRAINT uq_idempotency_app_type_operation UNIQUE (app_id, operation_type, operation_id)
+              );

@@ -56,7 +56,7 @@ class SupplierPaymentValidationTests {
         invoice = new SupplierInvoice("INV-100", "INV-100", null, "EGP", "supplier-a", null,
                 null, null, LocalDate.of(2026, 7, 29), new BigDecimal("100.00"),
                 BigDecimal.ZERO, BigDecimal.ZERO, null, null);
-        when(supplierInvoiceRepository.findById(invoice.getId())).thenReturn(Optional.of(invoice));
+        when(supplierInvoiceRepository.findByIdForPayment(invoice.getId())).thenReturn(Optional.of(invoice));
         when(supplierPaymentRepository.findByOperationId("op-1")).thenReturn(Optional.empty());
         when(supplierPaymentRepository.findBySupplierInvoiceId(invoice.getId())).thenReturn(List.of());
     }

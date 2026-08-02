@@ -7,8 +7,8 @@ echo "========================================================"
 echo ""
 
 if [ ! -f ".env" ]; then
-    echo "[.env] file not found. Copying .env.example to .env ..."
-    cp .env.example .env
+    echo "[.env] file not found. Copying .env.development.example to .env ..."
+    cp .env.development.example .env
 fi
 
 echo "Building and starting Docker containers (PostgreSQL, Backend, Frontend)..."

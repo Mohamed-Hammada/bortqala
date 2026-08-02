@@ -131,14 +131,21 @@ The application includes full multi-container Docker support with **PostgreSQL 1
 ### 2. Manual Docker Compose Execution
 
 ```bash
-# 1. Copy environment template
-cp .env.example .env
+# 1. Copy the development environment template
+cp .env.development.example .env
 
 # 2. Build and start containers in background
 docker compose up --build -d
 
 # 3. View container logs
 docker compose logs -f
+```
+
+For production, copy `.env.production.example` to `.env`, replace every
+`CHANGE_ME` placeholder with a real secret, and start the overlay:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
 ### 3. Service Access & Endpoints

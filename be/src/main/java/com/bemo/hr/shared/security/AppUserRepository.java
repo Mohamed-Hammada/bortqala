@@ -11,9 +11,6 @@ public interface AppUserRepository extends JpaRepository<AppUser, String> {
     Optional<AppUser> findByAppIdAndUsernameIgnoreCase(String appId, String username);
 
     @EntityGraph(attributePaths = "roles")
-    List<AppUser> findByUsernameIgnoreCase(String username);
-
-    @EntityGraph(attributePaths = "roles")
     List<AppUser> findAllByAppIdOrderByDisplayNameAsc(String appId);
 
     boolean existsByAppIdAndUsernameIgnoreCase(String appId, String username);

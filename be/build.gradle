@@ -69,8 +69,12 @@ tasks.register('buildFrontend', Exec) {
     outputs.dir(frontendOutput)
 }
 
-tasks.named('processResources') {
+tasks.named('bootJar') {
     dependsOn tasks.named('buildFrontend')
+}
+
+tasks.named('processResources') {
+    mustRunAfter tasks.named('buildFrontend')
     from(frontendOutput.map { it.dir('browser') }) {
         into 'static'
     }

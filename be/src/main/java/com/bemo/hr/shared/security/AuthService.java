@@ -324,7 +324,6 @@ public class AuthService {
 
     private AppUser requireByUsername(String appId, String username) {
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, username)
-                .or(() -> appUserRepository.findByUsernameIgnoreCase(username).stream().findFirst())
                 .orElseThrow(() -> new NotFoundException("User not found."));
     }
 

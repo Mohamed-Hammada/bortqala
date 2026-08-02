@@ -349,7 +349,7 @@ public class ProcurementService {
             }
             return toPaymentResponse(existing, resolveNames(List.of(existing.getSupplierId())));
         }
-        SupplierInvoice inv = supplierInvoiceRepository.findById(payload.supplierInvoiceId())
+        SupplierInvoice inv = supplierInvoiceRepository.findByIdForPayment(payload.supplierInvoiceId())
                 .orElseThrow(() -> new BusinessRuleException("الفاتورة غير موجودة"));
         if ("PAID".equals(inv.getStatus()) || "CANCELLED".equals(inv.getStatus()))
             throw new BusinessRuleException("الفاتورة مدفوعة بالفعل أو ملغية");
