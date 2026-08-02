@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -57,6 +58,10 @@ public class TaxRate {
     @Column(name = "updated_at", nullable = false)
     private long updatedAt;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
+
     protected TaxRate() {}
 
     public TaxRate(String code, String name, BigDecimal ratePercentage, Type taxType, String accountId, boolean active) {
@@ -88,4 +93,5 @@ public class TaxRate {
     public boolean isActive() { return active; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
+    public long getVersion() { return version; }
 }

@@ -2,7 +2,6 @@ package com.bemo.hr.shared.security;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.proc.SecurityContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +32,7 @@ import org.springframework.security.web.access.intercept.RequestAuthorizationCon
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -46,7 +46,8 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http,
                                             com.bemo.hr.shared.observability.RequestAuditFilter requestAuditFilter,
                                             CorsConfigurationSource corsConfigurationSource,
-                                            AppUserRepository appUserRepository) throws Exception {
+                                            AppUserRepository appUserRepository,
+                                            ObjectMapper objectMapper) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
@@ -57,6 +58,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/refresh",
+                                "/api/v1/auth/logout",
                                 "/api/v1/i18n/**",
                                 "/api/v1/system/status",
                                 "/actuator/health",
@@ -64,7 +66,6 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(
                                 "/api/v1/auth/change-password",
-                                "/api/v1/auth/logout",
                                 "/api/v1/auth/me"
                         ).authenticated()
                         .requestMatchers("/api/**").access(passwordChangeRestrictedRequestAuthorization())

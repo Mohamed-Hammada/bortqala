@@ -14,28 +14,37 @@ public class LoginRateLimiter {
     static final int MAX_USERNAME_ATTEMPTS = 5;
     static final int MAX_DEVICE_ATTEMPTS = 15;
     static final int MAX_IP_ATTEMPTS = 50;
+    static final int MAX_GLOBAL_IP_ATTEMPTS = 100;
     static final Duration WINDOW = Duration.ofMinutes(15);
     static final int MAX_KEYS = 10_000;
 
     private final ConcurrentHashMap<String, Window> windows = new ConcurrentHashMap<>();
 
-    public boolean isBlocked(String tenantKey, String usernameKey, String deviceKey, String ipKey) {
-        if (blocked(key(tenantKey, usernameKey), MAX_USERNAME_ATTEMPTS)) return true;
-        if (deviceKey != null && !deviceKey.isBlank()
-                && blocked(key(tenantKey, "device", deviceKey), MAX_DEVICE_ATTEMPTS)) return true;
-        return blocked(key(tenantKey, "ip", ipKey), MAX_IP_ATTEMPTS);
+    public boolean isGlobalIpBlocked(String ipKey) {
+        return blocked(key("global-ip", ipKey), MAX_GLOBAL_IP_ATTEMPTS);
     }
 
-    public void recordFailure(String tenantKey, String usernameKey, String deviceKey, String ipKey) {
-        record(key(tenantKey, usernameKey), MAX_USERNAME_ATTEMPTS);
-        if (deviceKey != null && !deviceKey.isBlank()) {
-            record(key(tenantKey, "device", deviceKey), MAX_DEVICE_ATTEMPTS);
+    public boolean isTenantBlocked(String tenantId, String username, String deviceId, String ip) {
+        if (blocked(key(tenantId, "username", username), MAX_USERNAME_ATTEMPTS)) return true;
+        if (deviceId != null && !deviceId.isBlank()
+                && blocked(key(tenantId, "device", deviceId), MAX_DEVICE_ATTEMPTS)) return true;
+        return blocked(key(tenantId, "ip", ip), MAX_IP_ATTEMPTS);
+    }
+
+    public void recordFailure(String tenantId, String username, String deviceId, String ip) {
+        record(key(tenantId, "username", username), MAX_USERNAME_ATTEMPTS);
+        if (deviceId != null && !deviceId.isBlank()) {
+            record(key(tenantId, "device", deviceId), MAX_DEVICE_ATTEMPTS);
         }
-        record(key(tenantKey, "ip", ipKey), MAX_IP_ATTEMPTS);
+        record(key(tenantId, "ip", ip), MAX_IP_ATTEMPTS);
     }
 
-    public void reset(String tenantKey, String usernameKey) {
-        windows.remove(key(tenantKey, usernameKey));
+    public void recordGlobalIpFailure(String ipKey) {
+        record(key("global-ip", ipKey), MAX_GLOBAL_IP_ATTEMPTS);
+    }
+
+    public void reset(String tenantId, String username) {
+        windows.remove(key(tenantId, "username", username));
     }
 
     private boolean blocked(String key, int limit) {

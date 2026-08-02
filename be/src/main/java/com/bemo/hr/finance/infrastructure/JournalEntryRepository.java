@@ -12,4 +12,6 @@ import java.util.List;
 public interface JournalEntryRepository extends JpaRepository<JournalEntry, String> {
     Page<JournalEntry> findAllByOrderByEntryDateDescCreatedAtDesc(Pageable pageable);
     List<JournalEntry> findByStatusOrderByEntryDateDesc(JournalEntry.Status status);
+    boolean existsByAppIdAndEntryNumber(String appId, String entryNumber);
+    boolean existsByAppIdAndEntryNumberAndIdNot(String appId, String entryNumber, String id);
 }

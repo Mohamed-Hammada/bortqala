@@ -1,0 +1,110 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260802-v83-refresh-token-family
+      author: Mohamed-Hammada
+      comment: Adds the refresh-token family column so rotated tokens retain a shared family for reuse detection, backfills existing tokens into their own family, and enforces a non-null family going forward.
+      preConditions:
+        onFail: MARK_RAN
+        not:
+          columnExists:
+            tableName: refresh_tokens
+            columnName: family_id
+      changes:
+        - addColumn:
+            tableName: refresh_tokens
+            columns:
+              - column:
+                  name: family_id
+                  type: VARCHAR(36)
+
+        - sql:
+            sql: |
+              UPDATE refresh_tokens
+              SET family_id = id
+              WHERE family_id IS NULL;
+
+        - addNotNullConstraint:
+            tableName: refresh_tokens
+            columnName: family_id
+            columnDataType: VARCHAR(36)
+  - changeSet:
+      id: 20260802-v83-refresh-token-constraints
+      author: Mohamed-Hammada
+      comment: Adds the refresh-token hash uniqueness, family index and referential integrity so reuse detection can revoke an entire family and orphaned rows cascade.
+      preConditions:
+        onFail: MARK_RAN
+        not:
+          indexExists:
+            indexName: idx_refresh_tokens_app_family
+      changes:
+        - addUniqueConstraint:
+            constraintName: uq_refresh_tokens_app_hash
+            tableName: refresh_tokens
+            columnNames: app_id, token_hash
+        - createIndex:
+            tableName: refresh_tokens
+            indexName: idx_refresh_tokens_app_family
+            columns:
+              - column: { name: app_id }
+              - column: { name: family_id }
+        - addForeignKeyConstraint:
+            constraintName: fk_refresh_tokens_app
+            baseTableName: refresh_tokens
+            baseColumnNames: app_id
+            referencedTableName: apps
+            referencedColumnNames: id
+            onDelete: CASCADE
+            onUpdate: NO ACTION
+        - addForeignKeyConstraint:
+            constraintName: fk_refresh_tokens_user
+            baseTableName: refresh_tokens
+            baseColumnNames: user_id
+            referencedTableName: app_users
+            referencedColumnNames: id
+            onDelete: CASCADE
+            onUpdate: NO ACTION
+        - addForeignKeyConstraint:
+            constraintName: fk_refresh_tokens_replaced_by
+            baseTableName: refresh_tokens
+            baseColumnNames: replaced_by_token_id
+            referencedTableName: refresh_tokens
+            referencedColumnNames: id
+            onDelete: SET NULL
+            onUpdate: NO ACTION
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: refresh_tokens
+            constraintName: fk_refresh_tokens_replaced_by
+        - dropForeignKeyConstraint:
+            baseTableName: refresh_tokens
+            constraintName: fk_refresh_tokens_user
+        - dropForeignKeyConstraint:
+            baseTableName: refresh_tokens
+            constraintName: fk_refresh_tokens_app
+        - dropIndex:
+            indexName: idx_refresh_tokens_app_family
+            tableName: refresh_tokens
+        - dropUniqueConstraint:
+            constraintName: uq_refresh_tokens_app_hash
+            tableName: refresh_tokens
+  - changeSet:
+      id: 20260802-v83-domain-role-grant-fix
+      author: Mohamed-Hammada
+      comment: Applies the corrected HR_MANAGER grant. HR_MANAGER receives only the workforce roles (WORKFORCE_MANAGER, WORKFORCE_REVIEWER); PAYROLL_MANAGER and WORKFORCE_FINANCE are payment-authority roles that must be assigned manually per user after review.
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO user_roles (user_id, role_code)
+              SELECT ur.user_id, r.code
+              FROM user_roles ur
+              CROSS JOIN (VALUES
+                  ('WORKFORCE_MANAGER'),('WORKFORCE_REVIEWER')
+              ) AS r(code)
+              WHERE ur.role_code = 'HR_MANAGER'
+                AND NOT EXISTS (SELECT 1 FROM user_roles x WHERE x.user_id = ur.user_id AND x.role_code = r.code);
+      rollback:
+        - sql:
+            sql: |
+              DELETE FROM user_roles
+              WHERE role_code IN ('WORKFORCE_MANAGER','WORKFORCE_REVIEWER')
+                AND user_id IN (SELECT user_id FROM user_roles WHERE role_code = 'HR_MANAGER')

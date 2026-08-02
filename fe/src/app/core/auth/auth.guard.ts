@@ -5,13 +5,26 @@ import { AuthService } from './auth.service';
 
 export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
-  if (authService.authenticated()) return true;
-  const router = inject(Router);
-  if (authService.token()) {
-    authService.expireSession();
-    return router.createUrlTree(['/login'], { queryParams: { reason: 'session-expired' } });
+  if (!authService.authenticated()) {
+    const router = inject(Router);
+    if (authService.sessionRestorable()) {
+      authService.expireSession();
+      return router.createUrlTree(['/login'], { queryParams: { reason: 'session-expired' } });
+    }
+    return router.createUrlTree(['/login']);
   }
-  return router.createUrlTree(['/login']);
+  if (authService.mustChangePassword()) {
+    return inject(Router).createUrlTree(['/change-password']);
+  }
+  return true;
+};
+
+export const mustChangePasswordGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  if (!authService.authenticated()) return router.createUrlTree(['/login']);
+  if (authService.mustChangePassword()) return true;
+  return router.createUrlTree(['/dashboard']);
 };
 
 export function roleGuardDecision(allowed: boolean, router: Router): boolean | UrlTree {

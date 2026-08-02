@@ -1,15 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
-import { tap } from 'rxjs';
+import { Observable, catchError, tap, throwError } from 'rxjs';
 import { ThemeService } from '../theme.service';
 import { I18nService } from '../i18n.service';
 import {
   AppSettings,
   AuthUser,
+  ChangePasswordRequest,
   DashboardPreferences,
   LoginResponse,
   MeResponse,
   NavigationPreferences,
+  RefreshResponse,
   RoleCode,
   UserPreferences,
 } from './auth.models';
@@ -32,20 +34,30 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   updatedAt: null,
 };
 
+interface StoredSession {
+  expiresAt: number;
+  mustChangePassword: boolean;
+  app: LoginResponse['app'];
+  user: AuthUser;
+  preferences: UserPreferences;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly httpClient = inject(HttpClient);
   private readonly themeService = inject(ThemeService);
   private readonly i18nService = inject(I18nService);
-  private readonly session = signal<LoginResponse | null>(this.readSession());
+  private readonly session = signal<LoginResponse | null>(this.readStoredSession());
+  private refreshPromise: Promise<boolean> | null = null;
 
   readonly user = computed(() => this.session()?.user ?? null);
   readonly app = computed(() => this.session()?.app ?? null);
   readonly token = computed(() => this.session()?.accessToken ?? null);
   readonly preferences = computed(() => this.session()?.preferences ?? DEFAULT_PREFERENCES);
+  readonly mustChangePassword = computed(() => this.session()?.mustChangePassword ?? false);
   readonly authenticated = computed(() => {
     const session = this.session();
-    return !!session && new Date(session.expiresAt).getTime() > Date.now();
+    return !!session && !!session.accessToken && new Date(session.expiresAt).getTime() > Date.now();
   });
 
   constructor() {
@@ -58,35 +70,72 @@ export class AuthService {
 
   login(appCode: string, username: string, password: string) {
     return this.httpClient
-      .post<LoginResponse>('/api/v1/auth/login', { appCode, username, password })
+      .post<LoginResponse>('/api/v1/auth/login', { appCode, username, password }, { withCredentials: true })
       .pipe(
         tap((session) => {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
           this.session.set(session);
+          this.persistStoredSession(session);
         }),
       );
   }
 
+  tryRefresh(): Promise<boolean> {
+    if (!this.sessionRestorable()) return Promise.resolve(false);
+    if (this.refreshPromise) return this.refreshPromise;
+    this.refreshPromise = this.doRefresh().finally(() => {
+      this.refreshPromise = null;
+    });
+    return this.refreshPromise;
+  }
+
+  private doRefresh(): Promise<boolean> {
+    return new Promise((resolve) => {
+      this.httpClient.post<RefreshResponse>('/api/v1/auth/refresh', {}, { withCredentials: true }).pipe(
+        tap((refreshed) => {
+          const session = this.session();
+          if (session) {
+            const next = { ...session, accessToken: refreshed.accessToken, expiresAt: new Date(refreshed.expiresAt).getTime() };
+            this.session.set(next);
+            this.persistStoredSession(next);
+          }
+        }),
+      ).subscribe({
+        next: () => resolve(true),
+        error: () => resolve(false),
+      });
+    });
+  }
+
   logout(): void {
-    localStorage.removeItem(STORAGE_KEY);
-    this.session.set(null);
+    this.httpClient.post('/api/v1/auth/logout', {}, { withCredentials: true }).subscribe({
+      error: () => undefined,
+    });
+    this.clearSession();
   }
 
   expireSession(): void {
-    this.logout();
+    this.clearSession();
+  }
+
+  sessionRestorable(): boolean {
+    return localStorage.getItem(STORAGE_KEY) !== null;
+  }
+
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    const payload: ChangePasswordRequest = { currentPassword, newPassword };
+    return this.httpClient
+      .post<void>('/api/v1/auth/change-password', payload, { withCredentials: true })
+      .pipe(
+        tap(() => this.clearSession()),
+        catchError((error) => throwError(() => error)),
+      );
   }
 
   updatePreferences(
     preferences: Pick<UserPreferences, 'theme' | 'tableDensity' | 'locale' | 'excelTableStyle' | 'defaultPage'>,
   ) {
     return this.httpClient.put<UserPreferences>('/api/v1/auth/preferences', preferences).pipe(
-      tap((updated) => {
-        const session = this.session();
-        if (!session) return;
-        const next = { ...session, preferences: updated };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-        this.session.set(next);
-      }),
+      tap((updated) => this.replacePreferences(updated)),
     );
   }
 
@@ -155,22 +204,42 @@ export class AuthService {
     if (!user) return false;
     if (user.roles.includes('SUPER_ADMIN') || user.roles.includes('ADMIN')) return true;
     if (!user.allowedMenus || user.allowedMenus.length === 0) return true;
-    if (menuId.startsWith('workforce')) return true;
     return user.allowedMenus.includes(menuId);
   }
 
-  private readSession(): LoginResponse | null {
+  private clearSession(): void {
+    localStorage.removeItem(STORAGE_KEY);
+    this.session.set(null);
+  }
+
+  private persistStoredSession(session: LoginResponse): void {
+    const stored: StoredSession = {
+      expiresAt: session.expiresAt,
+      mustChangePassword: session.mustChangePassword,
+      app: session.app,
+      user: session.user,
+      preferences: session.preferences,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+  }
+
+  private readStoredSession(): LoginResponse | null {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
-      const session = JSON.parse(raw) as LoginResponse;
-      if (new Date(session.expiresAt).getTime() <= Date.now()) {
+      const stored = JSON.parse(raw) as StoredSession;
+      if (new Date(stored.expiresAt).getTime() <= Date.now()) {
         localStorage.removeItem(STORAGE_KEY);
         return null;
       }
       return {
-        ...session,
-        preferences: { ...DEFAULT_PREFERENCES, ...(session.preferences ?? {}) },
+        accessToken: '',
+        tokenType: 'Bearer',
+        expiresAt: stored.expiresAt,
+        mustChangePassword: stored.mustChangePassword,
+        app: stored.app,
+        user: stored.user,
+        preferences: { ...DEFAULT_PREFERENCES, ...(stored.preferences ?? {}) },
       };
     } catch {
       localStorage.removeItem(STORAGE_KEY);
@@ -182,15 +251,15 @@ export class AuthService {
     const session = this.session();
     if (!session) return;
     const next = { ...session, preferences: { ...DEFAULT_PREFERENCES, ...updated } };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     this.session.set(next);
+    this.persistStoredSession(next);
   }
 
   private replaceDashboardPolicy(enabled: boolean): void {
     const session = this.session();
     if (!session) return;
     const next = { ...session, app: { ...session.app, adminDashboardCustomizationEnabled: enabled } };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     this.session.set(next);
+    this.persistStoredSession(next);
   }
 }

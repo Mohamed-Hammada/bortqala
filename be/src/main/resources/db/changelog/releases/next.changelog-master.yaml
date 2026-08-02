@@ -29,3 +29,11 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260801_v81_report_review_translations.yaml
   - include:
       file: db/changelog/schema/update/20260802_v82_session_security_domain_roles.yaml
+  - include:
+      file: db/changelog/schema/update/20260802_v83_refresh_token_family_and_role_grant_fix.yaml
+  - include:
+      file: db/changelog/schema/update/20260802_v84_optimistic_locking_aggregates.yaml
+  - include:
+      file: db/changelog/data/insert/20260802_v85_change_password_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260802_v86_finance_journal_locking.yaml

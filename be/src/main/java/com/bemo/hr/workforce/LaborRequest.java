@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -29,6 +30,9 @@ public class LaborRequest {
     @Column(name = "approved_by", length = 160) private String approvedBy;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
 
     protected LaborRequest() { }
 
@@ -54,4 +58,6 @@ public class LaborRequest {
 
     @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
     @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
+
+    public long getVersion() { return version; }
 }

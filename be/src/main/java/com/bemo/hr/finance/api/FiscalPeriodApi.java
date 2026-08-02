@@ -14,6 +14,7 @@ public class FiscalPeriodApi {
             String status,
             String closedBy,
             Long closedAt,
+            long version,
             long createdAt,
             long updatedAt
     ) {}
@@ -27,6 +28,7 @@ public class FiscalPeriodApi {
     ) {}
 
     public record UpdateStatusPayload(
-            @NotNull String status
+            @NotNull String status,
+            Long expectedVersion
     ) {}
 }

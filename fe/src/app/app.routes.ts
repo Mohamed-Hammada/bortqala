@@ -1,11 +1,17 @@
 import { Routes } from '@angular/router';
-import { authGuard, roleGuard } from './core/auth/auth.guard';
+import { authGuard, mustChangePasswordGuard, roleGuard } from './core/auth/auth.guard';
 import { unsavedChangesGuard } from './core/unsaved-changes.guard';
 
 export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./features/login/login.page').then((module) => module.LoginPage),
+  },
+  {
+    path: 'change-password',
+    canActivate: [mustChangePasswordGuard],
+    loadComponent: () =>
+      import('./features/change-password/change-password.page').then((module) => module.ChangePasswordPage),
   },
   {
     path: '',
@@ -62,63 +68,82 @@ export const routes: Routes = [
       {
         path: 'trade/procurement',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        data: {
+          roles: [
+            'PROCUREMENT_MANAGER',
+            'PROCUREMENT_USER',
+            'INVENTORY_MANAGER',
+            'FINANCE_MANAGER',
+            'ACCOUNTANT',
+            'TREASURY_USER',
+            'HR_MANAGER',
+            'AUDITOR',
+          ],
+        },
         loadComponent: () =>
           import('./features/trade/procurement/procurement.page').then((module) => module.ProcurementPage),
       },
       {
         path: 'trade/sales',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        data: { roles: ['SALES_MANAGER', 'HR_MANAGER'] },
         loadComponent: () =>
           import('./features/trade/sales/sales.page').then((module) => module.SalesPage),
       },
       {
         path: 'manufacturing/production',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        data: { roles: ['MANUFACTURING_MANAGER', 'HR_MANAGER'] },
         loadComponent: () =>
           import('./features/manufacturing/production/production.page').then((module) => module.ProductionPage),
       },
       {
         path: 'manufacturing/quality',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        data: { roles: ['MANUFACTURING_MANAGER', 'QUALITY_MANAGER', 'HR_MANAGER'] },
         loadComponent: () =>
           import('./features/manufacturing/quality/quality.page').then((module) => module.QualityPage),
       },
       {
         path: 'payroll',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        data: { roles: ['PAYROLL_MANAGER', 'HR_MANAGER', 'HR_REVIEWER'] },
         loadComponent: () =>
           import('./features/payroll/payroll.page').then((module) => module.PayrollPage),
       },
       {
         path: 'finance/accounts',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        data: {
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER', 'AUDITOR'],
+        },
         loadComponent: () =>
           import('./features/finance/accounts/accounts.page').then((module) => module.AccountsPage),
       },
       {
         path: 'finance/journal-entries',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        data: {
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER', 'AUDITOR'],
+        },
         loadComponent: () =>
           import('./features/finance/journal-entries/journal-entries.page').then((module) => module.JournalEntriesPage),
       },
       {
         path: 'finance/banks',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        data: {
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER', 'AUDITOR'],
+        },
         loadComponent: () =>
           import('./features/finance/banks/banks.page').then((module) => module.BanksPage),
       },
       {
         path: 'finance/tax-currency',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        data: {
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER', 'AUDITOR'],
+        },
         loadComponent: () =>
           import('./features/finance/tax-currency/tax-currency.page').then((module) => module.TaxCurrencyPage),
       },
@@ -132,7 +157,9 @@ export const routes: Routes = [
       {
         path: 'fiscal-periods',
         canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        data: {
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER', 'AUDITOR'],
+        },
         loadComponent: () =>
           import('./features/fiscal-periods/fiscal-periods.page').then((module) => module.FiscalPeriodsPage),
       },
@@ -163,6 +190,10 @@ export const routes: Routes = [
       },
       {
         path: 'workforce',
+        canActivate: [roleGuard],
+        data: {
+          roles: ['WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE', 'HR_MANAGER', 'HR_REVIEWER'],
+        },
         loadChildren: () =>
           import('./features/workforce/workforce.routes').then((module) => module.WORKFORCE_ROUTES),
       },

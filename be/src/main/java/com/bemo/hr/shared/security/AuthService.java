@@ -74,17 +74,31 @@ public class AuthService {
         this.attendanceCategoryRepository = attendanceCategoryRepository;
     }
 
+    private static final String DUMMY_PASSWORD_HASH =
+            "$2a$12$XnjwgsuR3b/qd7/gd5SNmeewo2ZHV5Hw1Citn8vLnTcT9OaPckNYG";
+
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public LoginResult login(AuthApi.LoginRequest request, String deviceId, String ip) {
-        var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue(request.appCode())
-                .orElseThrow(() -> new BadCredentialsException("Invalid credentials."));
-        TenantContext.set(app.getId());
+        if (loginRateLimiter.isGlobalIpBlocked(ip)) {
+            performDummyPasswordCheck(request.password());
+            throw new BadCredentialsException("Invalid credentials.");
+        }
+        var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue(request.appCode());
+        if (app.isEmpty()) {
+            loginRateLimiter.recordGlobalIpFailure(ip);
+            performDummyPasswordCheck(request.password());
+            throw new BadCredentialsException("Invalid credentials.");
+        }
+        String appId = app.get().getId();
+        TenantContext.set(appId);
         try {
-            if (loginRateLimiter.isBlocked(app.getId(), request.username(), deviceId, ip)) {
+            if (loginRateLimiter.isTenantBlocked(appId, request.username(), deviceId, ip)) {
                 throw new BadCredentialsException("Invalid credentials.");
             }
-            var userOpt = appUserRepository.findByAppIdAndUsernameIgnoreCase(app.getId(), request.username());
+            var userOpt = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, request.username());
             if (userOpt.isEmpty()) {
+                loginRateLimiter.recordFailure(appId, request.username(), deviceId, ip);
+                performDummyPasswordCheck(request.password());
                 throw new BadCredentialsException("Invalid credentials.");
             }
             var user = userOpt.get();
@@ -95,27 +109,31 @@ public class AuthService {
             }
             try {
                 authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                        app.getId() + "|" + request.username(), request.password()));
+                        appId + "|" + request.username(), request.password()));
             } catch (BadCredentialsException exception) {
-                loginRateLimiter.recordFailure(app.getId(), request.username(), deviceId, ip);
-                loginStateService.recordFailure(app.getId(), request.username(), now);
+                loginRateLimiter.recordFailure(appId, request.username(), deviceId, ip);
+                loginStateService.recordFailure(appId, request.username(), now);
                 throw exception;
             }
-            loginStateService.recordSuccess(app.getId(), request.username(), now);
-            loginRateLimiter.reset(app.getId(), request.username());
-            Instant accessExpiresAt = issueAccessToken(app, user, now);
-            var refresh = refreshTokenService.issue(app.getId(), user.getId(), deviceId);
+            loginStateService.recordSuccess(appId, request.username(), now);
+            loginRateLimiter.reset(appId, request.username());
+            Instant accessExpiresAt = issueAccessToken(app.get(), user, now);
+            var refresh = refreshTokenService.issue(appId, user.getId(), deviceId);
             auditService.record("USER_LOGIN", "USER", user.getId(), user.getUsername(), "Successful login", null);
-            return new LoginResult(app.getId(),
-                    new AuthApi.LoginResponse(accessToken(app.getId(), user, now, accessExpiresAt), "Bearer", accessExpiresAt,
+            return new LoginResult(appId,
+                    new AuthApi.LoginResponse(accessToken(appId, user, now, accessExpiresAt), "Bearer", accessExpiresAt,
                             user.isMustChangePassword(),
-                            new AuthApi.AppResponse(app.getId(), app.getCode(), app.getName(),
-                                    app.isAdminDashboardCustomizationEnabled()), toResponse(user),
-                            toPreferenceResponse(preferenceFor(user), user, app)),
+                            new AuthApi.AppResponse(appId, app.get().getCode(), app.get().getName(),
+                                    app.get().isAdminDashboardCustomizationEnabled()), toResponse(user),
+                            toPreferenceResponse(preferenceFor(user), user, app.get())),
                     refresh.rawValue(), refresh.expiresAt());
         } finally {
             TenantContext.clear();
         }
+    }
+
+    private void performDummyPasswordCheck(String password) {
+        passwordEncoder.matches(password, DUMMY_PASSWORD_HASH);
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -145,12 +163,13 @@ public class AuthService {
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void logout(String cookieValue, String username) {
+    public void logout(String cookieValue) {
         if (cookieValue == null || cookieValue.isBlank()) return;
         RefreshCookieCodec.Decoded decoded = refreshCookieCodec.decode(cookieValue);
         TenantContext.set(decoded.appId());
         try {
-            refreshTokenService.revoke(decoded.appId(), decoded.rawToken(), username);
+            refreshTokenService.revoke(decoded.appId(), decoded.rawToken(),
+                    refreshTokenService.usernameFor(decoded.appId(), decoded.rawToken()));
         } finally {
             TenantContext.clear();
         }
@@ -324,8 +343,10 @@ public class AuthService {
             throw new BusinessRuleException("This user changed since it was loaded. Refresh and try again.");
         }
 
-        var actorOpt = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, currentUsername);
-        boolean actorIsSuperAdmin = actorOpt.map(u -> u.getRoles().stream().anyMatch(r -> r.getCode() == RoleCode.SUPER_ADMIN)).orElse(true);
+        var actor = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, currentUsername)
+                .orElseThrow(() -> new org.springframework.security.access.AccessDeniedException("Current user not found."));
+        boolean actorIsSuperAdmin = actor.getRoles().stream()
+                .anyMatch(role -> role.getCode() == RoleCode.SUPER_ADMIN);
         boolean targetIsSuperAdmin = user.getRoles().stream().anyMatch(r -> r.getCode() == RoleCode.SUPER_ADMIN);
 
         if (!actorIsSuperAdmin) {

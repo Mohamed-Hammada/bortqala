@@ -73,12 +73,14 @@ public class AuthController {
 
     @PostMapping("/auth/logout")
     ResponseEntity<Void> logout(HttpServletResponse servletResponse,
-                                @CookieValue(name = "${hr.security.refresh-cookie-name:bemo_refresh}", required = false) String refreshCookie,
-                                Authentication authentication) {
-        if (refreshCookie != null && !refreshCookie.isBlank()) {
-            authService.logout(refreshCookie, authentication.getName());
+                                @CookieValue(name = "${hr.security.refresh-cookie-name:bemo_refresh}", required = false) String refreshCookie) {
+        try {
+            if (refreshCookie != null && !refreshCookie.isBlank()) {
+                authService.logout(refreshCookie);
+            }
+        } finally {
+            clearRefreshCookie(servletResponse);
         }
-        clearRefreshCookie(servletResponse);
         return ResponseEntity.noContent().build();
     }
 
@@ -138,11 +140,11 @@ public class AuthController {
     }
 
     @GetMapping("/admin/app-settings")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     AuthApi.AppSettingsResponse appSettings() { return authService.currentAppSettings(); }
 
     @PutMapping("/admin/app-settings")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     AuthApi.AppSettingsResponse updateAppSettings(@Valid @RequestBody AuthApi.AppSettingsRequest request,
                                                   Authentication authentication) {
         return authService.updateAppSettings(request, authentication.getName());
@@ -152,16 +154,16 @@ public class AuthController {
     List<AuthApi.UserCategoryResponse> userCategories() { return authService.listCategories(); }
 
     @GetMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     List<AuthApi.UserResponse> users() { return authService.listUsers(); }
 
     @PostMapping("/users")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     AuthApi.UserResponse create(@Valid @RequestBody AuthApi.UserUpsertRequest request) { return authService.create(request); }
 
     @PutMapping("/users/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     AuthApi.UserResponse update(@PathVariable String id, @Valid @RequestBody AuthApi.UserUpsertRequest request,
                                 Authentication authentication) {
         return authService.update(id, request, authentication.getName());

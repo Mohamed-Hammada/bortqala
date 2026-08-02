@@ -1,6 +1,7 @@
 package com.bemo.hr.trade.procurement.application;
 
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.finance.domain.FiscalPeriodGuard;
 import com.bemo.hr.operations.PartnerLedgerEntry;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
 import com.bemo.hr.operations.OperationsService;
@@ -57,6 +58,7 @@ public class ProcurementService {
     private final TenantApplicationRepository tenantApplicationRepository;
     private final CurrencyRepository currencyRepository;
     private final IdempotencyService idempotencyService;
+    private final FiscalPeriodGuard fiscalPeriodGuard;
 
     public ProcurementService(PurchaseOrderRepository purchaseOrderRepository,
                               PurchaseOrderLineRepository purchaseOrderLineRepository,
@@ -71,7 +73,8 @@ public class ProcurementService {
                               OperationsService operationsService,
                               TenantApplicationRepository tenantApplicationRepository,
                               CurrencyRepository currencyRepository,
-                              IdempotencyService idempotencyService) {
+                              IdempotencyService idempotencyService,
+                              FiscalPeriodGuard fiscalPeriodGuard) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.purchaseOrderLineRepository = purchaseOrderLineRepository;
         this.procurementDocumentSequenceRepository = procurementDocumentSequenceRepository;
@@ -86,6 +89,7 @@ public class ProcurementService {
         this.tenantApplicationRepository = tenantApplicationRepository;
         this.currencyRepository = currencyRepository;
         this.idempotencyService = idempotencyService;
+        this.fiscalPeriodGuard = fiscalPeriodGuard;
     }
 
     public ProcurementApi.NumberingSettings numberingSettings() {
@@ -289,6 +293,7 @@ public class ProcurementService {
         }
 
         LocalDate invoiceDate = Instant.ofEpochMilli(payload.invoiceDate()).atZone(ZoneOffset.UTC).toLocalDate();
+        fiscalPeriodGuard.requireOpen(invoiceDate);
         ExchangeRateSnapshot rate = resolveExchangeRate(currencyCode, invoiceDate, payload.exchangeRate(),
                 payload.exchangeRateOverrideReason());
         LocalDate dueDate = payload.dueDate() != null
@@ -364,6 +369,7 @@ public class ProcurementService {
             throw new BusinessRuleException("مبلغ الدفعة يتجاوز الرصيد المتبقي للفاتورة وهو " + outstanding + " " + inv.getCurrencyCode() + ".");
 
         LocalDate paymentDate = Instant.ofEpochMilli(payload.paymentDate()).atZone(ZoneOffset.UTC).toLocalDate();
+        fiscalPeriodGuard.requireOpen(paymentDate);
         SupplierPayment pmt = new SupplierPayment(payload.paymentNumber(), paymentDate, payload.supplierId(),
                 payload.supplierInvoiceId(), payload.operationId(), payload.amount(), payload.paymentMethod(), payload.notes());
         SupplierPayment saved = supplierPaymentRepository.save(pmt);

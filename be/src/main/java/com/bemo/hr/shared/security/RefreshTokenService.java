@@ -12,7 +12,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
@@ -21,18 +20,21 @@ import java.util.UUID;
 @Service
 @Transactional
 public class RefreshTokenService {
-    private static final int CLEANUP_BATCH_SIZE = 500;
+    private static final Duration REUSE_DETECTION_GRACE = Duration.ofDays(7);
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final TenantApplicationRepository tenantApplicationRepository;
+    private final AppUserRepository appUserRepository;
     private final JwtProperties jwtProperties;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public RefreshTokenService(RefreshTokenRepository refreshTokenRepository,
                                TenantApplicationRepository tenantApplicationRepository,
+                               AppUserRepository appUserRepository,
                                JwtProperties jwtProperties) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.tenantApplicationRepository = tenantApplicationRepository;
+        this.appUserRepository = appUserRepository;
         this.jwtProperties = jwtProperties;
     }
 
@@ -81,6 +83,14 @@ public class RefreshTokenService {
         return requireActive(appId, rawToken).getUserId();
     }
 
+    public String usernameFor(String appId, String rawToken) {
+        return refreshTokenRepository.findByAppIdAndTokenHash(appId, hash(rawToken))
+                .map(RefreshToken::getUserId)
+                .flatMap(userId -> appUserRepository.findById(userId))
+                .map(AppUser::getUsername)
+                .orElse("logout");
+    }
+
     public void revoke(String appId, String rawToken, String by) {
         refreshTokenRepository.findByAppIdAndTokenHash(appId, hash(rawToken))
                 .ifPresent(token -> token.revoke(by));
@@ -98,24 +108,14 @@ public class RefreshTokenService {
     @Scheduled(initialDelayString = "${hr.security.refresh-cleanup-initial-delay-ms:3600000}",
             fixedDelayString = "${hr.security.refresh-cleanup-interval-ms:3600000}")
     public void cleanupExpiredAndRevoked() {
+        Instant cutoff = Instant.now().minus(REUSE_DETECTION_GRACE);
         for (TenantApplication app : tenantApplicationRepository.findAll()) {
             TenantContext.set(app.getId());
             try {
-                List<String> toDelete = new ArrayList<>();
-                refreshTokenRepository.findAll().stream()
-                        .filter(token -> token.getRevokedAt() != null || !token.getExpiresAt().isAfter(Instant.now()))
-                        .forEach(token -> toDelete.add(token.getId()));
-                deleteBatches(toDelete);
+                refreshTokenRepository.deleteExpiredBefore(app.getId(), cutoff);
             } finally {
                 TenantContext.clear();
             }
-        }
-    }
-
-    private void deleteBatches(List<String> ids) {
-        for (int from = 0; from < ids.size(); from += CLEANUP_BATCH_SIZE) {
-            int to = Math.min(from + CLEANUP_BATCH_SIZE, ids.size());
-            refreshTokenRepository.deleteByIds(ids.subList(from, to));
         }
     }
 

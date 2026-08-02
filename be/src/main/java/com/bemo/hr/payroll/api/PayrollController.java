@@ -21,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 @RestController
 @RequestMapping("/api/v1/payroll")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER')")
 public class PayrollController {
 
     private final PayrollService payrollService;
@@ -35,7 +36,7 @@ public class PayrollController {
     }
 
     @PostMapping("/pay")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
     public PayrollApi.SheetResponse recordPayment(
             @Valid @RequestBody PayrollApi.PaymentRequest request,
             Authentication authentication) {
@@ -43,7 +44,7 @@ public class PayrollController {
     }
 
     @PostMapping("/pay-bulk")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
     public PayrollApi.SheetResponse payBulk(
             @Valid @RequestBody PayrollApi.BulkPaymentRequest request,
             Authentication authentication) {
@@ -51,7 +52,7 @@ public class PayrollController {
     }
 
     @PostMapping("/transition")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
     public PayrollApi.SheetResponse transitionStatus(
             @Valid @RequestBody PayrollApi.StatusTransitionRequest request,
             Authentication authentication) {
@@ -59,7 +60,7 @@ public class PayrollController {
     }
 
     @PostMapping("/reverse")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
     public PayrollApi.SheetResponse reversePayment(
             @Valid @RequestBody PayrollApi.ReversePaymentRequest request,
             Authentication authentication) {

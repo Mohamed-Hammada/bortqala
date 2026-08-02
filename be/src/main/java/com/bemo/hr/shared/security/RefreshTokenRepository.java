@@ -21,10 +21,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Stri
     List<RefreshToken> findAllByAppIdAndRevokedAtIsNull(String appId);
     List<RefreshToken> findAllByAppIdAndFamilyIdAndRevokedAtIsNull(String appId, String familyId);
 
-    List<RefreshToken> findAllByAppIdAndExpiresAtBefore(String appId, Instant now);
-    List<RefreshToken> findAllByAppIdAndRevokedAtIsNotNull(String appId);
-
     @Modifying
-    @Query("delete from RefreshToken t where t.id in :ids")
-    int deleteByIds(@Param("ids") List<String> ids);
+    @Query("delete from RefreshToken token where token.appId = :appId and token.expiresAt < :cutoff")
+    int deleteExpiredBefore(@Param("appId") String appId, @Param("cutoff") Instant cutoff);
 }

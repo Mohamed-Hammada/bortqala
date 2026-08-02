@@ -1,6 +1,7 @@
 package com.bemo.hr.trade.procurement;
 
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.finance.domain.FiscalPeriodGuard;
 import com.bemo.hr.finance.infrastructure.CurrencyRepository;
 import com.bemo.hr.operations.OperationsService;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
@@ -52,7 +53,7 @@ class SupplierPaymentValidationTests {
                 mock(BusinessPartyRepository.class), mock(PartnerLedgerEntryRepository.class),
                 mock(AuditService.class), mock(ProcurementExcelExporter.class), mock(OperationsService.class),
                 mock(TenantApplicationRepository.class), mock(CurrencyRepository.class),
-                new IdempotencyService(idempotencyKeyRepository));
+                new IdempotencyService(idempotencyKeyRepository), mock(FiscalPeriodGuard.class));
         invoice = new SupplierInvoice("INV-100", "INV-100", null, "EGP", "supplier-a", null,
                 null, null, LocalDate.of(2026, 7, 29), new BigDecimal("100.00"),
                 BigDecimal.ZERO, BigDecimal.ZERO, null, null);

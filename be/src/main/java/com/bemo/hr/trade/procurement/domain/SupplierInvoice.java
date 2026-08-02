@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -44,6 +45,9 @@ public class SupplierInvoice {
     @Column(nullable = false, length = 20) private String status;
     @Column(name = "created_at", nullable = false) private long createdAt;
     @Column(name = "updated_at", nullable = false) private long updatedAt;
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
 
     protected SupplierInvoice() {}
 
@@ -132,4 +136,5 @@ public class SupplierInvoice {
     public String getStatus() { return status; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
+    public long getVersion() { return version; }
 }

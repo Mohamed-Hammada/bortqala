@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -33,6 +34,9 @@ public class ManualAttendanceEntry {
     @Column(length = 500) private String notes;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
 
     protected ManualAttendanceEntry() { }
 
@@ -89,4 +93,6 @@ public class ManualAttendanceEntry {
 
     @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
     @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
+
+    public long getVersion() { return version; }
 }

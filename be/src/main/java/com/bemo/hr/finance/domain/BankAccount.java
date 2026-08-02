@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -46,6 +47,10 @@ public class BankAccount {
     @Column(name = "updated_at", nullable = false)
     private long updatedAt;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
+
     protected BankAccount() {}
 
     public BankAccount(String bankName, String accountNumber, String iban, String swiftCode, String accountId, boolean active) {
@@ -77,4 +82,5 @@ public class BankAccount {
     public boolean isActive() { return active; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
+    public long getVersion() { return version; }
 }

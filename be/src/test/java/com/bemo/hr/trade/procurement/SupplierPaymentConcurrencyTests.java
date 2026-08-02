@@ -1,6 +1,8 @@
 package com.bemo.hr.trade.procurement;
 
 import com.bemo.hr.PostgresIntegrationTest;
+import com.bemo.hr.finance.domain.FiscalPeriod;
+import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
 import com.bemo.hr.operations.PartnerLedgerEntry;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
 import com.bemo.hr.party.BusinessParty;
@@ -42,10 +44,12 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
     private final IdempotencyKeyRepository idempotencyKeyRepository;
     private final TenantApplicationRepository tenantApplicationRepository;
     private final BusinessPartyRepository businessPartyRepository;
+    private final FiscalPeriodRepository fiscalPeriodRepository;
 
     private final List<String> createdAppIds = new ArrayList<>();
     private final List<String> createdPartyIds = new ArrayList<>();
     private final List<String> createdInvoiceIds = new ArrayList<>();
+    private final List<String> createdFiscalPeriodIds = new ArrayList<>();
     private final List<String> createdOperationIds = new CopyOnWriteArrayList<>();
 
     @Autowired
@@ -55,7 +59,8 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
                                     PartnerLedgerEntryRepository partnerLedgerEntryRepository,
                                     IdempotencyKeyRepository idempotencyKeyRepository,
                                     TenantApplicationRepository tenantApplicationRepository,
-                                    BusinessPartyRepository businessPartyRepository) {
+                                    BusinessPartyRepository businessPartyRepository,
+                                    FiscalPeriodRepository fiscalPeriodRepository) {
         this.procurementService = procurementService;
         this.supplierInvoiceRepository = supplierInvoiceRepository;
         this.supplierPaymentRepository = supplierPaymentRepository;
@@ -63,6 +68,7 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
         this.idempotencyKeyRepository = idempotencyKeyRepository;
         this.tenantApplicationRepository = tenantApplicationRepository;
         this.businessPartyRepository = businessPartyRepository;
+        this.fiscalPeriodRepository = fiscalPeriodRepository;
     }
 
     @AfterEach
@@ -83,11 +89,13 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
                 });
             }
             businessPartyRepository.deleteAllById(createdPartyIds);
+            createdFiscalPeriodIds.forEach(fiscalPeriodRepository::deleteById);
             tenantApplicationRepository.deleteAllById(createdAppIds);
         } finally {
             createdAppIds.clear();
             createdPartyIds.clear();
             createdInvoiceIds.clear();
+            createdFiscalPeriodIds.clear();
             createdOperationIds.clear();
             TenantContext.clear();
         }
@@ -112,6 +120,11 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
                 null, null, LocalDate.of(2026, 8, 1), new BigDecimal("100.00"),
                 BigDecimal.ZERO, BigDecimal.ZERO, null, null));
         createdInvoiceIds.add(invoice.getId());
+
+        FiscalPeriod period = fiscalPeriodRepository.save(new FiscalPeriod(
+                2026, 8, "August 2026",
+                LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), FiscalPeriod.Status.OPEN));
+        createdFiscalPeriodIds.add(period.getId());
 
         CountDownLatch ready = new CountDownLatch(2);
         CountDownLatch start = new CountDownLatch(1);

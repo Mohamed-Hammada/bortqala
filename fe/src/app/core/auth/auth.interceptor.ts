@@ -1,8 +1,15 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
+import { catchError, from, mergeMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
+
+const PUBLIC_PATHS = [
+  '/api/v1/auth/login',
+  '/api/v1/auth/refresh',
+  '/api/v1/auth/logout',
+  '/api/v1/i18n/',
+];
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const authService = inject(AuthService);
@@ -18,19 +25,30 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
     'X-Correlation-Id': createRequestId(),
     'X-Device-Id': deviceId,
   };
-  const publicRequest =
-    request.url.includes('/api/v1/auth/login') || request.url.includes('/api/v1/i18n/');
+  const publicRequest = PUBLIC_PATHS.some((path) => request.url.includes(path));
   if (token && !publicRequest) headers['Authorization'] = `Bearer ${token}`;
-  return next(request.clone({ setHeaders: headers })).pipe(
+  const augmented = request.clone({ setHeaders: headers });
+  return next(augmented).pipe(
     catchError((error: unknown) => {
       if (
         error instanceof HttpErrorResponse &&
         error.status === 401 &&
         !publicRequest &&
-        authService.token()
+        (authService.sessionRestorable() || authService.user() !== null)
       ) {
-        authService.expireSession();
-        void router.navigate(['/login'], { queryParams: { reason: 'session-expired' } });
+        return from(authService.tryRefresh()).pipe(
+          mergeMap((refreshed) => {
+            if (refreshed && authService.token()) {
+              const retryHeaders: Record<string, string> = {
+                Authorization: `Bearer ${authService.token()}`,
+              };
+              return next(request.clone({ setHeaders: retryHeaders }));
+            }
+            authService.expireSession();
+            void router.navigate(['/login'], { queryParams: { reason: 'session-expired' } });
+            return throwError(() => error);
+          }),
+        );
       }
       return throwError(() => error);
     }),

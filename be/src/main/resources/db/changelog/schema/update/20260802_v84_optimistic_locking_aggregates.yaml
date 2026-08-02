@@ -1,0 +1,175 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260802-v84-optimistic-locking-aggregates
+      author: Mohamed-Hammada
+      comment: Adds the optimistic-lock version column to the mutable trade, manufacturing, workforce and treasury aggregates so concurrent state transitions are detected with 409 conflicts.
+      changes:
+        - addColumn:
+            tableName: purchase_orders
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: goods_receipts
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: supplier_invoices
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: supplier_payments
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: sales_orders
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: production_orders
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: quality_inspections
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: workforce_settlement_periods
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: workforce_advances
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: manual_attendance_entries
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: labor_requests
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: bank_accounts
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: currencies
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: tax_rates
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: purchase_orders
+            columnName: version
+        - dropColumn:
+            tableName: goods_receipts
+            columnName: version
+        - dropColumn:
+            tableName: supplier_invoices
+            columnName: version
+        - dropColumn:
+            tableName: supplier_payments
+            columnName: version
+        - dropColumn:
+            tableName: sales_orders
+            columnName: version
+        - dropColumn:
+            tableName: production_orders
+            columnName: version
+        - dropColumn:
+            tableName: quality_inspections
+            columnName: version
+        - dropColumn:
+            tableName: workforce_settlement_periods
+            columnName: version
+        - dropColumn:
+            tableName: workforce_advances
+            columnName: version
+        - dropColumn:
+            tableName: manual_attendance_entries
+            columnName: version
+        - dropColumn:
+            tableName: labor_requests
+            columnName: version
+        - dropColumn:
+            tableName: bank_accounts
+            columnName: version
+        - dropColumn:
+            tableName: currencies
+            columnName: version
+        - dropColumn:
+            tableName: tax_rates
+            columnName: version
