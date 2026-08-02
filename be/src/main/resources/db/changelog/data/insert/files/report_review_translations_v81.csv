@@ -130,7 +130,7 @@ v81-064-en;imports.previewInvalid;en-US;Invalid
 v81-065-ar;imports.previewPunches;ar-EG;بصمات
 v81-065-en;imports.previewPunches;en-US;Punches
 v81-066-ar;imports.previewNote;ar-EG;تأكَّد من المعاينة ثم اضغط «استيراد»؛ إعادة استيراد نفس الملف لن تنشئ بصمات مكررة.
-v81-066-en;imports.previewNote;en-US;Review the preview then press «Import»; re-importing the same file will not create duplicate punches.
+v81-066-en;imports.previewNote;en-US;"Review the preview then press «Import»; re-importing the same file will not create duplicate punches."
 v81-067-ar;imports.reversingBatch;ar-EG;جارٍ التراجع…
 v81-067-en;imports.reversingBatch;en-US;Reversing…
 v81-068-ar;imports.reverseBatch;ar-EG;تراجع

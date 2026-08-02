@@ -43,27 +43,60 @@ jobs:
         run: npm run build
 
   compose:
-    name: Compose validation
+    name: Compose validation & backend image
     runs-on: ubuntu-latest
+    env:
+      POSTGRES_DB: bemo_erp
+      POSTGRES_USER: bemo
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      HR_JWT_SECRET: ${{ secrets.HR_JWT_SECRET }}
+      HR_JWT_ISSUER: bemo-erp-prod
+      HR_CORS_ALLOWED_ORIGINS: https://erp.example.com
+      HR_DEVICE_CREDENTIALS_SECRET: ${{ secrets.HR_DEVICE_CREDENTIALS_SECRET }}
+      HR_BOOTSTRAP_APP_CODE: PROD
+      HR_BOOTSTRAP_APP_NAME: Bemo ERP
+      HR_BOOTSTRAP_ADMIN_USERNAME: admin
+      HR_BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.HR_BOOTSTRAP_ADMIN_PASSWORD }}
+      HR_BOOTSTRAP_SUPER_ADMIN_USERNAME: superadmin
+      HR_BOOTSTRAP_SUPER_ADMIN_PASSWORD: ${{ secrets.HR_BOOTSTRAP_SUPER_ADMIN_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - name: Compose config (dev)
         run: docker compose -f docker-compose.yml config --quiet
       - name: Compose config (prod)
         run: docker compose -f docker-compose.yml -f docker-compose.prod.yml config --quiet
-        env:
-          POSTGRES_DB: bemo_erp
-          POSTGRES_USER: bemo
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          HR_JWT_SECRET: ${{ secrets.HR_JWT_SECRET }}
-          HR_JWT_ISSUER: bemo-erp-prod
-          HR_CORS_ALLOWED_ORIGINS: https://erp.example.com
-          HR_DEVICE_CREDENTIALS_SECRET: ${{ secrets.HR_DEVICE_CREDENTIALS_SECRET }}
-          HR_BOOTSTRAP_APP_CODE: PROD
-          HR_BOOTSTRAP_APP_NAME: Bemo ERP
-          HR_BOOTSTRAP_ADMIN_USERNAME: admin
-          HR_BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.HR_BOOTSTRAP_ADMIN_PASSWORD }}
-          HR_BOOTSTRAP_SUPER_ADMIN_USERNAME: superadmin
-          HR_BOOTSTRAP_SUPER_ADMIN_PASSWORD: ${{ secrets.HR_BOOTSTRAP_SUPER_ADMIN_PASSWORD }}
+      - name: Render production Compose
+        run: |
+          docker compose \
+            -f docker-compose.yml \
+            -f docker-compose.prod.yml \
+            config --format json > production-compose.json
+      - name: Verify private services are not published
+        run: |
+          python3 - <<'PY'
+          import json
+
+          with open("production-compose.json", encoding="utf-8") as file:
+              compose = json.load(file)
+
+          services = compose["services"]
+
+          assert not services["db"].get("ports"), \
+              "Production PostgreSQL must not publish host ports"
+
+          assert not services["backend"].get("ports"), \
+              "Production backend must not publish host ports"
+
+          assert services["frontend"].get("ports"), \
+              "Production frontend must remain publicly accessible"
+          PY
+      - name: Build backend Docker image
+        run: docker build -t bemo-erp-backend:test ./be
+      - name: Verify container Java version
+        run: |
+          docker run --rm \
+            --entrypoint java \
+            bemo-erp-backend:test \
+            -version
       - name: Compose build
         run: docker compose build

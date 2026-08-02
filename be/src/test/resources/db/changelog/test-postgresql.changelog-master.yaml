@@ -1,0 +1,8 @@
+databaseChangeLog:
+  # PostgreSQL integration tests apply the exact production changelog so that
+  # Hibernate `ddl-auto=validate` proves the entity mapping matches the real
+  # production schema. The H2 test changelog cannot prove this: it substitutes
+  # H2 SQL for PostgreSQL-only changesets and skips the production schema drift
+  # guards (V57, V58, V61, V75, V77, ...).
+  - include:
+      file: db/changelog/db.changelog-master.yaml

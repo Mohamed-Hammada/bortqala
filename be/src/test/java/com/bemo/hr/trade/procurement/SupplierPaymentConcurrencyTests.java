@@ -1,5 +1,6 @@
 package com.bemo.hr.trade.procurement;
 
+import com.bemo.hr.PostgresIntegrationTest;
 import com.bemo.hr.operations.PartnerLedgerEntry;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
 import com.bemo.hr.party.BusinessParty;
@@ -16,9 +17,8 @@ import com.bemo.hr.trade.procurement.domain.SupplierPayment;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.RepeatedTest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -26,14 +26,14 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-class SupplierPaymentConcurrencyTests {
+class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
 
     private final ProcurementService procurementService;
     private final SupplierInvoiceRepository supplierInvoiceRepository;
@@ -46,7 +46,7 @@ class SupplierPaymentConcurrencyTests {
     private final List<String> createdAppIds = new ArrayList<>();
     private final List<String> createdPartyIds = new ArrayList<>();
     private final List<String> createdInvoiceIds = new ArrayList<>();
-    private final List<String> createdOperationIds = new ArrayList<>();
+    private final List<String> createdOperationIds = new CopyOnWriteArrayList<>();
 
     @Autowired
     SupplierPaymentConcurrencyTests(ProcurementService procurementService,
@@ -93,7 +93,7 @@ class SupplierPaymentConcurrencyTests {
         }
     }
 
-    @Test
+    @RepeatedTest(10)
     void concurrentPaymentsWithDifferentOperationIdsCannotOverpayTheInvoice() throws Exception {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         TenantApplication app = tenantApplicationRepository.save(
@@ -130,16 +130,34 @@ class SupplierPaymentConcurrencyTests {
             assertThat(worker.isAlive()).as("payment worker must finish").isFalse();
         }
 
-        assertThat(succeeded.get()).isEqualTo(1);
-        assertThat(rejected.get()).isEqualTo(1);
+        assertThat(succeeded.get()).as("exactly one request succeeds").isEqualTo(1);
+        assertThat(rejected.get()).as("exactly one request receives a business rejection").isEqualTo(1);
 
-        BigDecimal totalPaid = supplierPaymentRepository.findBySupplierInvoiceId(invoice.getId()).stream()
+        List<SupplierPayment> payments = supplierPaymentRepository.findBySupplierInvoiceId(invoice.getId());
+        BigDecimal totalPaid = payments.stream()
                 .filter(payment -> "POSTED".equals(payment.getStatus()))
                 .map(SupplierPayment::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        assertThat(totalPaid).isEqualByComparingTo("60.00");
-        assertThat(supplierInvoiceRepository.findById(invoice.getId()).orElseThrow().getStatus())
-                .isEqualTo("PARTIALLY_PAID");
+        assertThat(totalPaid).as("total posted amount").isEqualByComparingTo("60.00");
+
+        SupplierInvoice reloaded = supplierInvoiceRepository.findById(invoice.getId()).orElseThrow();
+        assertThat(reloaded.getStatus()).as("invoice status").isEqualTo("PARTIALLY_PAID");
+        assertThat(reloaded.getNetAmount().subtract(totalPaid)).as("outstanding balance").isEqualByComparingTo("40.00");
+
+        assertThat(payments).as("the rejected transaction creates no payment").hasSize(1);
+        assertThat(partnerLedgerEntryRepository.findByPartyIdOrderByOccurredAtDesc(supplier.getId()))
+                .as("one supplier ledger entry from the successful payment")
+                .hasSize(1);
+
+        long completedIdempotencyKeys = createdOperationIds.stream()
+                .filter(operationId -> idempotencyKeyRepository
+                        .findByOperationTypeAndOperationId("SUPPLIER_PAYMENT", operationId)
+                        .map(key -> "COMPLETED".equals(key.getStatus()))
+                        .orElse(false))
+                .count();
+        assertThat(completedIdempotencyKeys)
+                .as("one completed idempotency record for the successful operation only")
+                .isEqualTo(1);
     }
 
     private Thread worker(String appId, String invoiceId, String supplierId, String operationId, String amount,

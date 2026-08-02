@@ -45,9 +45,7 @@ databaseChangeLog:
         - addUniqueConstraint:
             tableName: attendance_report_decisions
             constraintName: uq_report_decisions_operation
-            columnNames:
-              - app_id
-              - operation_id
+            columnNames: app_id, operation_id
       rollback:
         - dropTable:
             tableName: attendance_report_decisions

@@ -5,18 +5,20 @@ name: bemo-erp
 # Every secret is required (`:?`) and has no fallback; the command fails fast
 # when any is missing. Database and backend are not published to the host: only
 # the frontend reverse proxy is public; db and backend stay on the internal
-# network only.
+# network only. `!reset []` is required because Compose merges sequence values:
+# a plain `ports: []` would leave the development host ports from the base file
+# published.
 
 services:
   db:
-    ports: []
+    ports: !reset []
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set}
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
 
   backend:
-    ports: []
+    ports: !reset []
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:?POSTGRES_DB must be set}
