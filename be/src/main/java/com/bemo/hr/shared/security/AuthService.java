@@ -5,7 +5,9 @@ import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.i18n.TranslationService;
 import com.bemo.hr.workforce.WorkerCategoryRepository;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -26,6 +28,9 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 public class AuthService {
+    static final int MAX_LOGIN_ATTEMPTS = 5;
+    static final Duration LOCKOUT_DURATION = Duration.ofMinutes(15);
+
     private final AuthenticationManager authenticationManager;
     private final JwtEncoder jwtEncoder;
     private final JwtProperties jwtProperties;
@@ -34,6 +39,8 @@ public class AuthService {
     private final TenantApplicationRepository tenantApplicationRepository;
     private final UserPreferenceService userPreferenceService;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
+    private final LoginRateLimiter loginRateLimiter;
     private final com.bemo.hr.audit.application.AuditService auditService;
     private final TranslationService translationService;
     private final WorkerCategoryRepository workerCategoryRepository;
@@ -43,6 +50,7 @@ public class AuthService {
                        AppUserRepository appUserRepository, RoleRepository roleRepository,
                        TenantApplicationRepository tenantApplicationRepository,
                        UserPreferenceService userPreferenceService, PasswordEncoder passwordEncoder,
+                       RefreshTokenService refreshTokenService, LoginRateLimiter loginRateLimiter,
                        com.bemo.hr.audit.application.AuditService auditService,
                        TranslationService translationService,
                        WorkerCategoryRepository workerCategoryRepository,
@@ -55,6 +63,8 @@ public class AuthService {
         this.tenantApplicationRepository = tenantApplicationRepository;
         this.userPreferenceService = userPreferenceService;
         this.passwordEncoder = passwordEncoder;
+        this.refreshTokenService = refreshTokenService;
+        this.loginRateLimiter = loginRateLimiter;
         this.auditService = auditService;
         this.translationService = translationService;
         this.workerCategoryRepository = workerCategoryRepository;
@@ -62,37 +72,129 @@ public class AuthService {
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public AuthApi.LoginResponse login(AuthApi.LoginRequest request) {
+    public LoginResult login(AuthApi.LoginRequest request, String deviceId, String ip) {
         var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue(request.appCode())
-                .orElseThrow(() -> new org.springframework.security.authentication.BadCredentialsException("Invalid credentials."));
+                .orElseThrow(() -> new BadCredentialsException("Invalid credentials."));
         TenantContext.set(app.getId());
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                    app.getId() + "|" + request.username(), request.password()));
-            var user = requireByUsername(app.getId(), request.username());
+            if (!loginRateLimiter.allow(app.getId(), request.username(), deviceId, ip)) {
+                throw new BadCredentialsException("Invalid credentials.");
+            }
+            var userOpt = appUserRepository.findByAppIdAndUsernameIgnoreCase(app.getId(), request.username());
+            if (userOpt.isEmpty()) {
+                throw new BadCredentialsException("Invalid credentials.");
+            }
+            var user = userOpt.get();
             Instant now = Instant.now();
-            Instant expiresAt = now.plus(Duration.ofMinutes(app.getSessionTimeoutMinutes()));
-            var claims = JwtClaimsSet.builder()
-                    .issuer(jwtProperties.issuer())
-                    .issuedAt(now)
-                    .expiresAt(expiresAt)
-                    .subject(user.getUsername())
-                    .claim("userId", user.getId())
-                    .claim("appId", app.getId())
-                    .claim("appCode", app.getCode())
-                    .claim("name", user.getDisplayName())
-                    .claim("roles", user.getRoles().stream().map(role -> role.getCode().name()).sorted().toList())
-                    .build();
-            String token = jwtEncoder.encode(JwtEncoderParameters.from(
-                    JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
+            if (user.isLocked(now)) {
+                throw new BusinessRuleException("الحساب مقفل مؤقتاً بسبب محاولات تسجيل دخول خاطئة متكررة.",
+                        "ACCOUNT_TEMPORARILY_LOCKED", HttpStatus.UNAUTHORIZED);
+            }
+            try {
+                authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                        app.getId() + "|" + request.username(), request.password()));
+            } catch (BadCredentialsException exception) {
+                recordFailedLogin(app.getId(), request.username(), now);
+                throw exception;
+            }
+            user.recordSuccessfulLogin(now);
+            loginRateLimiter.reset(app.getId(), request.username());
+            Instant accessExpiresAt = issueAccessToken(app, user, now);
+            var refresh = refreshTokenService.issue(app.getId(), user.getId(), deviceId);
             auditService.record("USER_LOGIN", "USER", user.getId(), user.getUsername(), "Successful login", null);
-            return new AuthApi.LoginResponse(token, "Bearer", expiresAt,
-                    new AuthApi.AppResponse(app.getId(), app.getCode(), app.getName(),
-                            app.isAdminDashboardCustomizationEnabled()), toResponse(user),
-                    toPreferenceResponse(preferenceFor(user), user, app));
+            return new LoginResult(
+                    new AuthApi.LoginResponse(accessToken(app.getId(), user, now, accessExpiresAt), "Bearer", accessExpiresAt,
+                            user.isMustChangePassword(),
+                            new AuthApi.AppResponse(app.getId(), app.getCode(), app.getName(),
+                                    app.isAdminDashboardCustomizationEnabled()), toResponse(user),
+                            toPreferenceResponse(preferenceFor(user), user, app)),
+                    refresh.rawValue(), refresh.expiresAt());
         } finally {
             TenantContext.clear();
         }
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public RefreshResult refresh(String cookieValue, String deviceId) {
+        if (cookieValue == null || cookieValue.isBlank()) {
+            throw new BusinessRuleException("Session is invalid or expired.",
+                    "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED);
+        }
+        String appId = cookieAppId(cookieValue);
+        String rawToken = cookieRawToken(cookieValue);
+        TenantContext.set(appId);
+        try {
+            var refreshToken = refreshTokenService.requireActive(appId, rawToken);
+            var user = appUserRepository.findByAppIdAndId(appId, refreshToken.getUserId())
+                    .orElseThrow(() -> new BusinessRuleException("Session is invalid or expired.",
+                            "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED));
+            if (!user.isActive() || user.isMustChangePassword()) {
+                throw new BusinessRuleException("Session is invalid or expired.",
+                        "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED);
+            }
+            Instant now = Instant.now();
+            Instant accessExpiresAt = issueAccessToken(appId, user, now);
+            String nextRaw = refreshTokenService.rotate(appId, rawToken, deviceId);
+            var next = refreshTokenService.requireActive(appId, nextRaw);
+            auditService.record("TOKEN_REFRESH", "USER", user.getId(), user.getUsername(), "Refreshed session token", null);
+            return new RefreshResult(
+                    new AuthApi.RefreshResponse(accessToken(appId, user, now, accessExpiresAt), "Bearer", accessExpiresAt),
+                    nextRaw, next.getExpiresAt());
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void logout(String cookieValue, String username) {
+        if (cookieValue == null || cookieValue.isBlank()) return;
+        String appId = cookieAppId(cookieValue);
+        String rawToken = cookieRawToken(cookieValue);
+        TenantContext.set(appId);
+        try {
+            refreshTokenService.revoke(appId, rawToken, username);
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Transactional
+    public void changePassword(String username, AuthApi.ChangePasswordRequest request) {
+        var app = requireCurrentApp();
+        var user = requireByUsername(app.getId(), username);
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new BusinessRuleException("كلمة المرور الحالية غير صحيحة.", "PASSWORD_MISMATCH", HttpStatus.BAD_REQUEST);
+        }
+        if (request.currentPassword().equals(request.newPassword())) {
+            throw new BusinessRuleException("كلمة المرور الجديدة يجب أن تختلف عن كلمة المرور الحالية.",
+                    "PASSWORD_REUSE", HttpStatus.BAD_REQUEST);
+        }
+        validatePasswordStrength(request.newPassword(), app);
+        user.changePassword(passwordEncoder.encode(request.newPassword()));
+        user.markPasswordChanged(Instant.now());
+        refreshTokenService.revokeAllForUser(app.getId(), user.getId(), username);
+        auditService.record("PASSWORD_CHANGE", "USER", user.getId(), username, "Changed password and revoked all sessions", null);
+    }
+
+    @Transactional
+    public void revokeSessions(String id, String currentUsername) {
+        String appId = TenantContext.require();
+        var user = appUserRepository.findById(id).filter(item -> item.getAppId().equals(appId))
+                .orElseThrow(() -> new NotFoundException("User not found."));
+        user.bumpTokenVersion();
+        refreshTokenService.revokeAllForUser(appId, user.getId(), currentUsername);
+        auditService.record("SESSIONS_REVOKED", "USER", user.getId(), currentUsername,
+                "Revoked all sessions for user " + user.getUsername(), null);
+    }
+
+    @Transactional
+    public void unlock(String id, String currentUsername) {
+        String appId = TenantContext.require();
+        var user = appUserRepository.findById(id).filter(item -> item.getAppId().equals(appId))
+                .orElseThrow(() -> new NotFoundException("User not found."));
+        user.unlock();
+        auditService.record("USER_UNLOCKED", "USER", user.getId(), currentUsername,
+                "Unlocked account for user " + user.getUsername(), null);
     }
 
     public AuthApi.UserResponse current(String username) {
@@ -207,6 +309,7 @@ public class AuthService {
         var user = new AppUser(appId, request.username(), request.displayName(), passwordEncoder.encode(request.password()),
                 requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary(),
                 request.dashboardCustomizationEnabled());
+        user.requirePasswordChangeOnNextLogin();
         validateCategory(request.categoryId());
         user.assignCategory(request.categoryId());
         appUserRepository.save(user);
@@ -222,7 +325,7 @@ public class AuthService {
         if (request.version() == null || request.version() != user.getVersion()) {
             throw new BusinessRuleException("This user changed since it was loaded. Refresh and try again.");
         }
-        
+
         var actorOpt = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, currentUsername);
         boolean actorIsSuperAdmin = actorOpt.map(u -> u.getRoles().stream().anyMatch(r -> r.getCode() == RoleCode.SUPER_ADMIN)).orElse(true);
         boolean targetIsSuperAdmin = user.getRoles().stream().anyMatch(r -> r.getCode() == RoleCode.SUPER_ADMIN);
@@ -236,6 +339,14 @@ public class AuthService {
             }
         }
 
+        boolean currentlyAdmin = isAdminUser(user);
+        boolean willBeAdmin = isAdminRoles(request.roles());
+        boolean disablingFinalAdmin = user.isActive() && request.active() == false && currentlyAdmin
+                && !willBeAdmin && activeAdminCount(appId) <= 1;
+        if (disablingFinalAdmin) {
+            throw new BusinessRuleException("لا يمكن تعطيل آخر مسؤول نشط في النظام.", "FINAL_ADMIN_PROTECTION", HttpStatus.BAD_REQUEST);
+        }
+
         validate(request, appId, id, false);
         if (user.getUsername().equalsIgnoreCase(currentUsername) && !request.active()) {
             throw new BusinessRuleException("You cannot deactivate your own account.");
@@ -245,6 +356,10 @@ public class AuthService {
         user.update(request.username(), request.displayName(), passwordHash, request.active(),
                 requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary(),
                 request.dashboardCustomizationEnabled());
+        if (passwordHash != null) {
+            user.markPasswordChanged(Instant.now());
+            refreshTokenService.revokeAllForUser(appId, user.getId(), currentUsername);
+        }
         validateCategory(request.categoryId());
         user.assignCategory(request.categoryId());
         auditService.record("USER_UPDATE", "USER", user.getId(), currentUsername, "Updated user " + user.getUsername() + " active=" + user.isActive(), null);
@@ -262,9 +377,83 @@ public class AuthService {
                 .orElseGet(() -> tenantApplicationRepository.save(new TenantApplication(appCode, appName)));
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(app.getId(), username).orElseGet(() -> {
             var roles = requireRoles(roleCodes);
-            return appUserRepository.save(new AppUser(app.getId(), username, displayName,
+            var created = appUserRepository.save(new AppUser(app.getId(), username, displayName,
                     passwordEncoder.encode(password), roles, Set.of("dashboard","categories","employees","imports","parties","reports","operations","payroll","users","settings","workforce-dashboard","workforce-contractors","workforce-workers","workforce-categories","workforce-requests","workforce-attendance","workforce-settlements","workforce-advances","workforce-accounts","workforce-reports"), true, true));
+            created.requirePasswordChangeOnNextLogin();
+            return created;
         });
+    }
+
+    private void recordFailedLogin(String appId, String username, Instant now) {
+        appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, username).ifPresent(user -> {
+            user.recordFailedLogin(now, MAX_LOGIN_ATTEMPTS, LOCKOUT_DURATION);
+            appUserRepository.save(user);
+        });
+    }
+
+    private Instant issueAccessToken(TenantApplication app, AppUser user, Instant now) {
+        return issueAccessToken(app.getId(), user, now);
+    }
+
+    private Instant issueAccessToken(String appId, AppUser user, Instant now) {
+        var app = tenantApplicationRepository.findById(appId)
+                .orElseThrow(() -> new NotFoundException("Application not found."));
+        Duration ttl = jwtProperties.ttl();
+        if (app.isSessionTimeoutEnabled() && app.getSessionTimeoutMinutes() > 0) {
+            ttl = Duration.ofMinutes(app.getSessionTimeoutMinutes());
+        }
+        return now.plus(ttl);
+    }
+
+    private String accessToken(String appId, AppUser user, Instant now, Instant expiresAt) {
+        var app = tenantApplicationRepository.findById(appId)
+                .orElseThrow(() -> new NotFoundException("Application not found."));
+        var claims = JwtClaimsSet.builder()
+                .issuer(jwtProperties.issuer())
+                .issuedAt(now)
+                .expiresAt(expiresAt)
+                .subject(user.getUsername())
+                .claim("userId", user.getId())
+                .claim("appId", app.getId())
+                .claim("appCode", app.getCode())
+                .claim("name", user.getDisplayName())
+                .claim("tv", user.getTokenVersion())
+                .claim("roles", user.getRoles().stream().map(role -> role.getCode().name()).sorted().toList())
+                .build();
+        return jwtEncoder.encode(JwtEncoderParameters.from(
+                JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
+    }
+
+    private boolean isAdminUser(AppUser user) {
+        return user.getRoles().stream().anyMatch(role -> role.getCode() == RoleCode.ADMIN
+                || role.getCode() == RoleCode.SUPER_ADMIN);
+    }
+
+    private boolean isAdminRoles(Set<RoleCode> roles) {
+        return roles.contains(RoleCode.ADMIN) || roles.contains(RoleCode.SUPER_ADMIN);
+    }
+
+    private long activeAdminCount(String appId) {
+        return appUserRepository.findAllByAppIdOrderByDisplayNameAsc(appId).stream()
+                .filter(AppUser::isActive)
+                .filter(this::isAdminUser)
+                .count();
+    }
+
+    private String cookieAppId(String cookieValue) {
+        int separator = cookieValue.indexOf(':');
+        if (separator <= 0) {
+            throw new BusinessRuleException("Session is invalid or expired.", "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED);
+        }
+        return cookieValue.substring(0, separator);
+    }
+
+    private String cookieRawToken(String cookieValue) {
+        int separator = cookieValue.indexOf(':');
+        if (separator <= 0 || separator == cookieValue.length() - 1) {
+            throw new BusinessRuleException("Session is invalid or expired.", "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED);
+        }
+        return cookieValue.substring(separator + 1);
     }
 
     private void validate(AuthApi.UserUpsertRequest request, String appId, String currentId, boolean passwordRequired) {
@@ -391,4 +580,8 @@ public class AuthService {
                 app.getUpdatedAt()
         );
     }
+
+    public record LoginResult(AuthApi.LoginResponse response, String refreshToken, Instant refreshExpiresAt) { }
+
+    public record RefreshResult(AuthApi.RefreshResponse response, String refreshToken, Instant refreshExpiresAt) { }
 }

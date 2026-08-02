@@ -15,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/workforce/attendance")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE', 'HR_MANAGER', 'HR_REVIEWER')")
 public class WorkforceAttendanceController {
     private final WorkforceAttendanceService attendanceService;
 
@@ -24,13 +25,13 @@ public class WorkforceAttendanceController {
     }
 
     @PostMapping("/batch")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER', 'HR_REVIEWER')")
     public WorkforceApi.BatchAttendanceResponse saveBatch(@Valid @RequestBody WorkforceApi.BatchAttendanceRequest request) {
         return attendanceService.saveBatch(request);
     }
 
     @PostMapping("/bulk-update")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER', 'HR_REVIEWER')")
     public WorkforceApi.BulkUpdateAttendanceResponse bulkUpdate(
             @Valid @RequestBody WorkforceApi.BulkUpdateAttendanceRequest request) {
         return attendanceService.bulkUpdate(request);

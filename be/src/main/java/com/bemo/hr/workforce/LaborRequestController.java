@@ -20,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/workforce/labor-requests")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE', 'HR_MANAGER', 'HR_REVIEWER')")
 public class LaborRequestController {
     private final LaborRequestService requestService;
 
@@ -29,7 +30,7 @@ public class LaborRequestController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER', 'HR_REVIEWER')")
     @ResponseStatus(HttpStatus.CREATED)
     public WorkforceApi.LaborRequestResponse create(@Valid @RequestBody WorkforceApi.LaborRequestCreate request, Authentication auth) {
         String username = auth != null ? auth.getName() : "system";
@@ -37,7 +38,7 @@ public class LaborRequestController {
     }
 
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER')")
     public WorkforceApi.LaborRequestResponse updateStatus(@PathVariable String id, @RequestParam String status, Authentication auth) {
         String username = auth != null ? auth.getName() : "system";
         return requestService.updateStatus(id, status, username);

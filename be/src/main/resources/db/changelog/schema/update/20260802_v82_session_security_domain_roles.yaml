@@ -1,0 +1,138 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260802-v82-session-security-domain-roles
+      author: Mohamed-Hammada
+      comment: Adds login-failure lockout, must-change-password, last-login/last-failure and token-version columns to app_users; creates the rotated hashed refresh-token store; introduces domain-specific roles and grants them to existing users so no current user loses access.
+      changes:
+        - addColumn:
+            tableName: app_users
+            columns:
+              - column:
+                  name: failed_login_attempts
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: locked_until
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: must_change_password
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_login_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: last_failed_login_at
+                  type: TIMESTAMP WITH TIME ZONE
+              - column:
+                  name: token_version
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: refresh_tokens
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: user_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: token_hash, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: expires_at, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }
+              - column: { name: device_id, type: VARCHAR(100) }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }
+              - column: { name: revoked_at, type: TIMESTAMP WITH TIME ZONE }
+              - column: { name: revoked_by, type: VARCHAR(100) }
+              - column: { name: replaced_by_token_id, type: VARCHAR(36) }
+        - createIndex:
+            tableName: refresh_tokens
+            indexName: idx_refresh_tokens_app_user
+            columns:
+              - column: { name: app_id }
+              - column: { name: user_id }
+        - createIndex:
+            tableName: refresh_tokens
+            indexName: idx_refresh_tokens_app_hash
+            columns:
+              - column: { name: app_id }
+              - column: { name: token_hash }
+      rollback:
+        - dropTable:
+            tableName: refresh_tokens
+        - dropColumn:
+            tableName: app_users
+            columnName: failed_login_attempts
+        - dropColumn:
+            tableName: app_users
+            columnName: locked_until
+        - dropColumn:
+            tableName: app_users
+            columnName: must_change_password
+        - dropColumn:
+            tableName: app_users
+            columnName: last_login_at
+        - dropColumn:
+            tableName: app_users
+            columnName: last_failed_login_at
+        - dropColumn:
+            tableName: app_users
+            columnName: token_version
+  - changeSet:
+      id: seed_v82_domain_roles
+      author: Mohamed-Hammada
+      comment: Inserts the domain-specific roles used by the finance, trade, manufacturing, payroll and workforce modules.
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO roles (code, name_ar) SELECT 'FINANCE_MANAGER', 'مدير المالية' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'FINANCE_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'ACCOUNTANT', 'محاسب' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'ACCOUNTANT');
+              INSERT INTO roles (code, name_ar) SELECT 'TREASURY_USER', 'أمين خزينة' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'TREASURY_USER');
+              INSERT INTO roles (code, name_ar) SELECT 'PROCUREMENT_MANAGER', 'مدير المشتريات' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'PROCUREMENT_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'PROCUREMENT_USER', 'موظف مشتريات' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'PROCUREMENT_USER');
+              INSERT INTO roles (code, name_ar) SELECT 'SALES_MANAGER', 'مدير المبيعات' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'SALES_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'INVENTORY_MANAGER', 'مدير المخزون' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'INVENTORY_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'MANUFACTURING_MANAGER', 'مدير الإنتاج' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'MANUFACTURING_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'QUALITY_MANAGER', 'مدير الجودة' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'QUALITY_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'PAYROLL_MANAGER', 'مدير الرواتب' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'PAYROLL_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'WORKFORCE_MANAGER', 'مدير العمالة' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'WORKFORCE_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'WORKFORCE_REVIEWER', 'مراجع العمالة' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'WORKFORCE_REVIEWER');
+              INSERT INTO roles (code, name_ar) SELECT 'WORKFORCE_FINANCE', 'مالية العمالة' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'WORKFORCE_FINANCE');
+              INSERT INTO roles (code, name_ar) SELECT 'AUDITOR', 'مراجع حسابات' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'AUDITOR');
+      rollback:
+        - sql:
+            sql: |
+              DELETE FROM user_roles WHERE role_code IN ('FINANCE_MANAGER','ACCOUNTANT','TREASURY_USER','PROCUREMENT_MANAGER','PROCUREMENT_USER','SALES_MANAGER','INVENTORY_MANAGER','MANUFACTURING_MANAGER','QUALITY_MANAGER','PAYROLL_MANAGER','WORKFORCE_MANAGER','WORKFORCE_REVIEWER','WORKFORCE_FINANCE','AUDITOR');
+              DELETE FROM roles WHERE code IN ('FINANCE_MANAGER','ACCOUNTANT','TREASURY_USER','PROCUREMENT_MANAGER','PROCUREMENT_USER','SALES_MANAGER','INVENTORY_MANAGER','MANUFACTURING_MANAGER','QUALITY_MANAGER','PAYROLL_MANAGER','WORKFORCE_MANAGER','WORKFORCE_REVIEWER','WORKFORCE_FINANCE','AUDITOR');
+  - changeSet:
+      id: seed_v82_domain_role_grants
+      author: Mohamed-Hammada
+      comment: Grants the new domain roles to existing ADMIN, SUPER_ADMIN and HR_MANAGER users (and WORKFORCE_REVIEWER to HR_REVIEWER users) so the pre-existing access is preserved under the new role model.
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO user_roles (user_id, role_code)
+              SELECT ur.user_id, r.code
+              FROM user_roles ur
+              CROSS JOIN (VALUES
+                  ('FINANCE_MANAGER'),('ACCOUNTANT'),('TREASURY_USER'),('PROCUREMENT_MANAGER'),
+                  ('PROCUREMENT_USER'),('SALES_MANAGER'),('INVENTORY_MANAGER'),('MANUFACTURING_MANAGER'),
+                  ('QUALITY_MANAGER'),('PAYROLL_MANAGER'),('WORKFORCE_MANAGER'),('WORKFORCE_REVIEWER'),
+                  ('WORKFORCE_FINANCE'),('AUDITOR')
+              ) AS r(code)
+              WHERE ur.role_code IN ('ADMIN','SUPER_ADMIN','HR_MANAGER')
+                AND NOT EXISTS (SELECT 1 FROM user_roles x WHERE x.user_id = ur.user_id AND x.role_code = r.code)
+              UNION
+              INSERT INTO user_roles (user_id, role_code)
+              SELECT ur.user_id, 'WORKFORCE_REVIEWER'
+              FROM user_roles ur
+              WHERE ur.role_code = 'HR_REVIEWER'
+                AND NOT EXISTS (SELECT 1 FROM user_roles x WHERE x.user_id = ur.user_id AND x.role_code = 'WORKFORCE_REVIEWER')
+      rollback:
+        - sql:
+            sql: |
+              DELETE FROM user_roles
+              WHERE role_code IN ('FINANCE_MANAGER','ACCOUNTANT','TREASURY_USER','PROCUREMENT_MANAGER','PROCUREMENT_USER','SALES_MANAGER','INVENTORY_MANAGER','MANUFACTURING_MANAGER','QUALITY_MANAGER','PAYROLL_MANAGER','WORKFORCE_MANAGER','WORKFORCE_REVIEWER','WORKFORCE_FINANCE','AUDITOR')
+                AND user_id IN (SELECT user_id FROM user_roles WHERE role_code IN ('ADMIN','SUPER_ADMIN','HR_MANAGER','HR_REVIEWER'))

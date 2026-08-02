@@ -23,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/workforce/imports")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE', 'HR_MANAGER', 'HR_REVIEWER')")
 public class WorkforceImportController {
     private final WorkforceExcelImportService workforceExcelImportService;
 

@@ -22,7 +22,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
@@ -40,21 +39,38 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http,
                                             com.bemo.hr.shared.observability.RequestAuditFilter requestAuditFilter,
-                                            CorsConfigurationSource corsConfigurationSource) throws Exception {
+                                            CorsConfigurationSource corsConfigurationSource,
+                                            AppUserRepository appUserRepository) throws Exception {
         return http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/v1/auth/login", "/api/v1/i18n/**", "/api/v1/system/status",
-                                "/actuator/health", "/actuator/health/**").permitAll()
-                        .requestMatchers("/", "/index.html", "/favicon.ico", "/*.js", "/*.css", "/*.json",
-                                "/*.webmanifest", "/*.svg", "/*.png", "/assets/**", "/icons/**",
-                                "/login", "/dashboard", "/categories", "/employees", "/imports", "/parties",
-                                "/reports", "/reports/*", "/settings", "/users").permitAll()
-                        .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+                        .requestMatchers(
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/refresh",
+                                "/api/v1/i18n/**",
+                                "/api/v1/system/status",
+                                "/actuator/health",
+                                "/actuator/health/**"
+                        ).permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/favicon.ico",
+                                "/assets/**",
+                                "/icons/**",
+                                "/*.js",
+                                "/*.css",
+                                "/*.json",
+                                "/*.webmanifest",
+                                "/*.svg",
+                                "/*.png"
+                        ).permitAll()
+                        .anyRequest().permitAll())
+                .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter(appUserRepository))))
                 .addFilterAfter(requestAuditFilter, BearerTokenAuthenticationFilter.class)
                 .build();
     }
@@ -102,13 +118,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter() {
-        var authoritiesConverter = new org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthoritiesClaimName("roles");
-        authoritiesConverter.setAuthorityPrefix("ROLE_");
-        var converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-        return converter;
+    org.springframework.core.convert.converter.Converter<org.springframework.security.oauth2.jwt.Jwt,
+            org.springframework.security.authentication.AbstractAuthenticationToken> jwtAuthenticationConverter(AppUserRepository appUserRepository) {
+        return new RevocableJwtAuthenticationConverter(appUserRepository);
     }
 
     @Bean

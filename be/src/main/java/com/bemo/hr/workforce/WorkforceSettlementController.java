@@ -18,6 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/workforce/settlements")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE', 'HR_MANAGER', 'HR_REVIEWER')")
 public class WorkforceSettlementController {
     private final WorkforceSettlementService settlementService;
 
@@ -37,26 +38,26 @@ public class WorkforceSettlementController {
     }
 
     @PostMapping("/periods")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     public WorkforceApi.SettlementPeriodResponse createPeriod(@Valid @RequestBody WorkforceApi.SettlementPeriodRequest request) {
         return settlementService.createPeriod(request);
     }
 
     @PostMapping("/periods/{id}/calculate")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER')")
     public WorkforceApi.SettlementCalculationSummary calculatePeriod(@PathVariable String id) {
         return settlementService.calculatePeriod(id);
     }
 
     @PostMapping("/periods/{id}/review")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER')")
     public TransitionResponse reviewPeriod(@PathVariable String id) {
         return settlementService.reviewPeriod(id);
     }
 
     @PostMapping("/periods/{id}/approve")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_FINANCE', 'HR_MANAGER')")
     public TransitionResponse approvePeriod(@PathVariable String id) {
         return settlementService.approvePeriod(id);
     }

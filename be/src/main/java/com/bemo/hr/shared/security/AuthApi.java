@@ -20,7 +20,11 @@ public final class AuthApi {
     public record AppResponse(String id, String code, String name,
                               boolean adminDashboardCustomizationEnabled) { }
     public record LoginResponse(String accessToken, String tokenType, Instant expiresAt,
+                                boolean mustChangePassword,
                                 AppResponse app, UserResponse user, PreferenceResponse preferences) { }
+    public record RefreshResponse(String accessToken, String tokenType, Instant expiresAt) { }
+    public record ChangePasswordRequest(@NotBlank @Size(max = 72) String currentPassword,
+                                        @NotBlank @Size(max = 72) String newPassword) { }
     public record UserResponse(String id, String username, String displayName, Set<RoleCode> roles,
                                Set<String> allowedMenus, boolean canViewSalary, String categoryId,
                                boolean dashboardCustomizationEnabled, boolean active, long version) { }

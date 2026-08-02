@@ -23,6 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/workforce/categories")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE', 'HR_MANAGER', 'HR_REVIEWER')")
 public class WorkerCategoryController {
     private final WorkerCategoryService categoryService;
     private final WorkforceMasterDataExcelExporter excelExporter;
@@ -41,14 +42,14 @@ public class WorkerCategoryController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     public WorkforceApi.CategoryResponse create(@Valid @RequestBody WorkforceApi.CategoryRequest request) {
         return categoryService.create(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER')")
     public WorkforceApi.CategoryResponse update(@PathVariable String id, @Valid @RequestBody WorkforceApi.CategoryRequest request) {
         return categoryService.update(id, request);
     }

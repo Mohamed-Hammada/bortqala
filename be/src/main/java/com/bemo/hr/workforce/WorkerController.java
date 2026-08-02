@@ -24,6 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/workforce/workers")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE', 'HR_MANAGER', 'HR_REVIEWER')")
 public class WorkerController {
     private final WorkerService workerService;
     private final WorkforceMasterDataExcelExporter excelExporter;
@@ -45,14 +46,14 @@ public class WorkerController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     public WorkforceApi.WorkerResponse create(@Valid @RequestBody WorkforceApi.WorkerRequest request) {
         return workerService.create(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER')")
     public WorkforceApi.WorkerResponse update(@PathVariable String id, @Valid @RequestBody WorkforceApi.WorkerRequest request) {
         return workerService.update(id, request);
     }
