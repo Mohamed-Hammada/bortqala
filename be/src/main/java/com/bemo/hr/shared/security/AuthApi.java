@@ -27,7 +27,7 @@ public final class AuthApi {
                                         @NotBlank @Size(max = 72) String newPassword) { }
     public record UserResponse(String id, String username, String displayName, Set<RoleCode> roles,
                                Set<String> allowedMenus, boolean canViewSalary, String categoryId,
-                               boolean dashboardCustomizationEnabled, boolean active, long version) { }
+                               boolean dashboardCustomizationEnabled, boolean active, long version, Set<String> activeFeatures) { }
     public record TenantInfo(String id, String code, String name) { }
     public record SessionInfo(Instant expiresAt, int timeoutMinutes, boolean timeoutEnabled) { }
     public record MeResponse(String id, String username, String displayName,

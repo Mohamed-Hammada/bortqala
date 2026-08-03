@@ -31,6 +31,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -94,7 +96,7 @@ public class WorkforceExcelImportService {
         } catch (BusinessRuleException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new BusinessRuleException("تعذر قراءة ملف Excel: " + exception.getMessage());
+            throw new BusinessRuleException("تعذر قراءة ملف البصمة.", "EXCEL_READ_FAILED", org.springframework.http.HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -126,10 +128,25 @@ public class WorkforceExcelImportService {
             Sheet sheet = workbook.getSheetAt(0);
             Map<String, Integer> indexes = headerIndexes(sheet.getRow(sheet.getFirstRowNum()));
             Map<String, String> mapping = decodeMapping(batch.getColumnMapping());
-            Map<String, Worker> workers = new HashMap<>();
-            workerRepository.findAll().forEach(worker -> workers.put(worker.getCode().strip().toUpperCase(Locale.ROOT), worker));
-            List<WorkforceImportRow> rows = new ArrayList<>();
             DataFormatter formatter = new DataFormatter(Locale.forLanguageTag("ar-EG"));
+
+            Set<String> workerCodesToFetch = new java.util.HashSet<>();
+            for (int index = sheet.getFirstRowNum() + 1; index <= sheet.getLastRowNum(); index++) {
+                Row row = sheet.getRow(index);
+                if (row == null) continue;
+                String rawCode = text(row, (mapping.get("workerCode") == null ? null : Integer.parseInt(mapping.get("workerCode"))), formatter);
+                if (rawCode != null && !rawCode.isBlank()) {
+                    workerCodesToFetch.add(rawCode.strip().toUpperCase(Locale.ROOT));
+                }
+            }
+
+            Map<String, Worker> workers = new HashMap<>();
+            if (!workerCodesToFetch.isEmpty()) {
+                workerRepository.findByCodeIn(workerCodesToFetch).forEach(worker ->
+                    workers.put(worker.getCode().strip().toUpperCase(Locale.ROOT), worker));
+            }
+
+            List<WorkforceImportRow> rows = new ArrayList<>();
             int valid = 0;
             int invalid = 0;
             for (int index = sheet.getFirstRowNum() + 1; index <= sheet.getLastRowNum(); index++) {
@@ -162,7 +179,7 @@ public class WorkforceExcelImportService {
         } catch (BusinessRuleException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new BusinessRuleException("تعذر التحقق من الملف: " + exception.getMessage());
+            throw new BusinessRuleException("تعذر قراءة ملف البصمة.", "EXCEL_VALIDATION_FAILED", org.springframework.http.HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -294,9 +311,18 @@ public class WorkforceExcelImportService {
     }
 
     private ValidationResponse validationResponse(WorkforceImportBatch batch, List<WorkforceImportRow> rows) {
+        List<WorkforceImportRow> limitedRows = rows.stream().limit(100).toList();
+        Set<String> workerIdsToFetch = limitedRows.stream()
+            .map(WorkforceImportRow::getWorkerId)
+            .filter(java.util.Objects::nonNull)
+            .collect(Collectors.toSet());
+
         Map<String, String> workerNames = new HashMap<>();
-        workerRepository.findAll().forEach(worker -> workerNames.put(worker.getId(), worker.getFullName()));
-        List<ImportRowResponse> preview = rows.stream().limit(100).map(row -> new ImportRowResponse(row.getRowNumber(),
+        if (!workerIdsToFetch.isEmpty()) {
+            workerRepository.findByIdIn(workerIdsToFetch).forEach(worker -> workerNames.put(worker.getId(), worker.getFullName()));
+        }
+
+        List<ImportRowResponse> preview = limitedRows.stream().map(row -> new ImportRowResponse(row.getRowNumber(),
                 row.getWorkerCode(), workerNames.get(row.getWorkerId()), row.getWorkDate(), row.getAttendanceValue(),
                 row.getValidationStatus(), row.getErrorCode(), row.getErrorMessage())).toList();
         return new ValidationResponse(mapBatch(batch), preview, batch.getInvalidRows(), batch.getInvalidRows() == 0,

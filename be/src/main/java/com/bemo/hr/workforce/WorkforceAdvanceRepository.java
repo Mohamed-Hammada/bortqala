@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface WorkforceAdvanceRepository extends JpaRepository<WorkforceAdvance, String> {
+    List<WorkforceAdvance> findByWorkerIdIn(java.util.Collection<String> workerIds);
     List<WorkforceAdvance> findByWorkerId(String workerId);
     List<WorkforceAdvance> findByContractorId(String contractorId);
     List<WorkforceAdvance> findByEmployeeIdOrderByCreatedAtAsc(String employeeId);

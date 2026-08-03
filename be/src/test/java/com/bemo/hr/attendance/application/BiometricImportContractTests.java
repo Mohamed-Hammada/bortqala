@@ -29,6 +29,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 class BiometricImportContractTests {
+
+
+
     private final BiometricImportService biometricImportService;
     private final BiometricDeviceSyncService biometricDeviceSyncService;
     private final ImportBatchRepository importBatchRepository;

@@ -17,7 +17,7 @@ class CorsConfigurationSourceTests {
         var cors = configuration.getCorsConfiguration(request);
 
         assertThat(cors).isNotNull();
-        assertThat(cors.getAllowedOriginPatterns())
+        assertThat(cors.getAllowedOrigins())
                 .containsExactlyInAnyOrder("https://erp.example.com", "https://erp.example.co");
         assertThat(cors.checkOrigin("https://erp.example.com")).isEqualTo("https://erp.example.com");
         assertThat(cors.checkOrigin("http://localhost:4200")).isNull();

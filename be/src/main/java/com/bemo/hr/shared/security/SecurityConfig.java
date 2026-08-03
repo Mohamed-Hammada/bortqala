@@ -159,10 +159,15 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource(
             @Value("${hr.cors.allowed-origins:http://localhost:4200,http://127.0.0.1:4200}") List<String> allowedOrigins) {
+        for (String origin : allowedOrigins) {
+            if (origin.equals("*") || origin.contains("*") || (!origin.startsWith("http://") && !origin.startsWith("https://"))) {
+                throw new IllegalStateException("CORS origins must not contain wildcards and must have a valid scheme.");
+            }
+        }
         var configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(allowedOrigins);
+        configuration.setAllowedOrigins(allowedOrigins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Device-Id", "X-Correlation-Id", "Cache-Control"));
         configuration.setExposedHeaders(List.of("Content-Disposition", "X-Correlation-Id", "X-Server-Correlation-Id"));
         configuration.setAllowCredentials(true);
         var source = new UrlBasedCorsConfigurationSource();

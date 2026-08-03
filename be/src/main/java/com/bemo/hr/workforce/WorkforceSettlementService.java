@@ -104,8 +104,10 @@ public class WorkforceSettlementService {
         List<ManualAttendanceEntry> entries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
         Map<String, List<ManualAttendanceEntry>> workerEntries = entries.stream()
                 .collect(Collectors.groupingBy(ManualAttendanceEntry::getWorkerId));
-        List<Worker> allWorkers = workerRepository.findAll();
-        List<Contractor> contractors = contractorRepository.findAll();
+        var workerIds = entries.stream().map(ManualAttendanceEntry::getWorkerId).collect(Collectors.toSet());
+        List<Worker> allWorkers = workerIds.isEmpty() ? java.util.Collections.emptyList() : workerRepository.findByIdIn(workerIds);
+        var contractorIds = allWorkers.stream().map(Worker::getContractorId).filter(java.util.Objects::nonNull).collect(Collectors.toSet());
+        List<Contractor> contractors = contractorIds.isEmpty() ? java.util.Collections.emptyList() : contractorRepository.findAllById(contractorIds);
         String fingerprint = inputFingerprint(entries, allWorkers);
         int nextVersion = period.getCalculationVersion() + 1;
         List<WorkforceSettlementIssue> issues = new ArrayList<>();
@@ -299,8 +301,10 @@ public class WorkforceSettlementService {
 
     private boolean needsRecalculation(WorkforceSettlementPeriod period) {
         if (period.getCalculationVersion() == 0 || period.getInputFingerprint() == null) return true;
-        return !period.getInputFingerprint().equals(inputFingerprint(
-                attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate()), workerRepository.findAll()));
+        var entries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
+        var workerIds = entries.stream().map(ManualAttendanceEntry::getWorkerId).collect(java.util.stream.Collectors.toSet());
+        var workers = workerIds.isEmpty() ? java.util.Collections.<Worker>emptyList() : workerRepository.findByIdIn(workerIds);
+        return !period.getInputFingerprint().equals(inputFingerprint(entries, workers));
     }
 
     private String inputFingerprint(List<ManualAttendanceEntry> entries, List<Worker> workers) {

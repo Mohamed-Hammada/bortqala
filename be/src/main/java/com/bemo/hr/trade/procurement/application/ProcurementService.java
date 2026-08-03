@@ -504,8 +504,9 @@ public class ProcurementService {
         if (!matcher.find()) return 0;
         try {
             return Long.parseLong(matcher.group(1));
-        } catch (NumberFormatException ignored) {
-            return 0;
+        } catch (NumberFormatException exception) {
+            // Fix V-07: Log and block unsafe initialization on overflow
+            throw new com.bemo.hr.shared.domain.BusinessRuleException("Invalid document number format or overflow: " + value, "DOCUMENT_NUMBER_OVERFLOW", org.springframework.http.HttpStatus.BAD_REQUEST);
         }
     }
 

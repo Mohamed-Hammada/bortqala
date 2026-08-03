@@ -81,6 +81,7 @@ export interface AuthUser {
   dashboardCustomizationEnabled?: boolean;
   active: boolean;
   version: number;
+  activeFeatures?: string[];
 }
 
 export interface MeSessionInfo {
@@ -102,6 +103,7 @@ export interface MeResponse {
   active: boolean;
   session: MeSessionInfo;
   version: number;
+  activeFeatures?: string[];
 }
 
 export interface LoginResponse {

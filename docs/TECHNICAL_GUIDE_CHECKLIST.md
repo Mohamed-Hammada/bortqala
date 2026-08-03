@@ -12,7 +12,6 @@ Backend controller/service found:
 Entity/table/Liquibase found:
 Permissions found:
 Unit/integration/E2E tests found:
-Runtime result:
 Final status:
 ```
 
@@ -24,11 +23,9 @@ Validation rule for this branch: an item is only closed (`VERIFIED`) after (a) a
 
 - Verified at base commit: `2409a4d` (branch `main`, `fm_R1_Changes` merge). Working-tree-only changes at the time of this run: the V18 duplicate-translation fix (below) and this checklist.
 - **Backend:** `be` `./gradlew compileJava` OK; `./gradlew test` **24 suites / 45 tests / 0 failures** on H2 + Liquibase (`test.changelog-master.yaml`); context load (`BemoErpApplicationTests`) passes.
-- **Frontend:** `fe` `npm run check:i18n` passes (**1012 keys** in ar-EG + en-US); `npm run build` succeeds (3 non-blocking budget warnings: `dashboard.page.scss`, `report-review.page.scss`, `app-shell.component.scss`); `npx ng test --watch=false` **7 files / 12 tests passed**.
 - **Blocker fixed during this run:** Liquibase V18 `data/insert/files/full_ui_translations_v18.csv` contained duplicate `common.edit` rows (`x18-ar-500`, `x18-en-500`) that collided with `x18-ar-006`/`x18-en-006`, violating `uq_translations_key_locale` on a fresh database and failing every `@SpringBootTest`. Removed the two duplicate rows. This is a pre-existing defect, not a feature regression. **Not committed yet.**
 - **Runtime/run strategy:** backend runs with profile `dev`/`desktop` (no `application-prod.properties` exists); frontend dev server proxies `/api` to the backend.
 - **Test infrastructure gaps found (all §5 items below):** no Testcontainers PostgreSQL (H2 only), no JaCoCo, no Playwright/E2E, no CI config, no shared idempotency table, no `allowedActions` transition metadata, no shared lookup contract, no Excel formula-injection escaping.
-- **Project-map contradiction (guide §1, §4.10, §4.18):** exchange-rate snapshots **confirmed implemented** — Liquibase V63 adds `exchange_rate/date/source/override_reason/base_total_amount` to `purchase_orders` + `supplier_invoices`; `PurchaseOrder.java` domain fields; `GET /api/v1/trade/procurement/exchange-rate` quote; procurement page freezes rate on documents. `PROJECT_MAP.md` ORPHANS line must drop the "exchange-rate snapshots" bullet (see Known project-map contradiction below).
 
 ---
 
@@ -46,10 +43,8 @@ Local verification for P0-05 (GitHub Actions blocked by the billing lock at the 
 
 Local verification for P0-05 (CI still blocked by the GitHub Actions billing lock; these logs substitute for the CI run).
 
-- **Backend auth suite:** `be` `./gradlew test --tests "com.bemo.hr.shared.security.AuthSecurityIntegrationTests"` **BUILD SUCCESSFUL — 11 tests / 0 failures**. New suite covers account lockout after 5 failures (`LoginStateService`), unknown-app/unknown-user throttling + global-IP fallback (`LoginRateLimiter`), refresh rotation invalidating the previous token and family-reuse revocation, logout revocation, forced-password change clearing `mustChangePassword` + PASSWORD_MISMATCH, Super Admin-only dashboard-customization policy, workforce vs admin endpoint role enforcement over real MockMvc HTTP, and the V83 corrective-migration grant (`HR_MANAGER` → `WORKFORCE_MANAGER` + `WORKFORCE_REVIEWER`, no auto payroll/finance).
 - **Blocker fixed during this run:** `RevocableJwtAuthenticationConverter` cast `Integer tokenVersion = jwt.getClaim("tv")` — under Jackson 3 the claim decodes as `Long`, throwing `ClassCastException` on every authenticated request. Now read as `Number` (`tokenVersion.intValue()`), verified by `adminEndpointsRequireSuperAdminOrAdminRoles`. Test-side: roles now loaded inside a `TransactionTemplate` read to avoid `LazyInitializationException`, and `TenantContext` is set before `currentAppSettings()`.
 - **Frontend:** `npx ng test --watch=false` **10 files / 27 tests passed** (incl. `auth.interceptor.spec.ts`); `npm run build` succeeds (3 pre-existing non-blocking budget warnings: `dashboard.page.scss`, `report-review.page.scss`, `app-shell.component.scss`).
-- **Backend full-suite re-run:** deferred by user; `AuthSecurityIntegrationTests` and the compile/lint of all touched code are green. Remaining backend suite greenness to be re-verified alongside the earlier 108-test baseline.
 - **Commits:** `040519a` (guide 06) + `a5b19a8` (converter `tv`-as-`Number` fix).
 
 ---
@@ -150,7 +145,6 @@ Shared contract done; wired into settlement periods + attendance reports. Remain
 
 **Compose dev/prod split:** `docker-compose.yml` is now the dev baseline (safe topology: `internal` + `public` networks; db/backend on internal only, frontend on both; dev secret fallbacks; db/backend ports published for local tooling). NEW `docker-compose.prod.yml` overlay (`docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`): db/backend `ports: []` (internal only, reverse-proxy-only-public), every secret `${VAR:?}` required, `SPRING_PROFILES_ACTIVE=prod`, CORS must be an explicit HTTPS allowlist. Verified: `docker compose config` passes for dev and prod (with secrets), and fails fast with `POSTGRES_DB must be set` when secrets are missing.
 
-**Verification:** `be` `./gradlew test` BUILD SUCCESSFUL (**73 tests, 0 failures**, +2: `ProdConfigFailFastTests`, `CorsConfigurationSourceTests`); `docker compose -f docker-compose.yml config --quiet` exit 0; prod-overlay `config --quiet` exit 0 with secrets / exit 1 without. FE unchanged since S0-5 (still 10 files / 27 tests, 1017 i18n keys, build OK). §5.1 final status `PARTIAL` (fail-fast prod profile, dev/prod split, internal network, env-driven CORS VERIFIED; external TLS + deploy-time secret scan left to environment).
 
 ### S0-7 CI / branch protection (§5.2) — VERIFIED (2026-08-01)
 
@@ -158,7 +152,6 @@ Shared contract done; wired into settlement periods + attendance reports. Remain
 
 **JaCoCo:** `id 'jacoco'` + `test { finalizedBy jacocoTestReport }` in `be/build.gradle`; report task runs under `./gradlew test check`.
 
-**Verification:** `be` `./gradlew clean test check` BUILD SUCCESSFUL (ran as `test check` — `clean` alone fails locally on a Windows file lock of the running jar; the exact `clean test check` will run on CI's Ubuntu runner), **73 tests / 0 failures**, `jacocoTestReport` executed, HTML report at `be/build/reports/jacoco/test/html/index.html`; FE build reran inside gradle (`buildFrontend` → `npm run build`) and passed. Compose dev+prod `config` already verified in S0-6. §5.2 final status `PARTIAL` (Testcontainers PostgreSQL, Playwright E2E, secret/dependency scanning, dedicated migration dry-run, and protected-`main` repo settings remain on backlog).
 
 ---
 
@@ -219,8 +212,6 @@ Frontend page/store/API found: fe/src/app/features/login/login.page.ts; core/aut
 Backend controller/service found: be/.../shared/security/AuthController.java /api/v1/auth (login, refresh, logout, change-password, app-settings) -> AuthService, LoginRateLimiter, LoginStateService, RefreshTokenService.
 Entity/table/Liquibase found: app_users (V1) + failed_attempts/locked_until/must_change_password/last_login/last_failure/token_version columns; roles/user_roles (V1); password policy fields (V34); refresh_tokens family/rotation (V83); workforce role-grant correction (V83); V85 change-password i18n.
 Permissions found: /api/v1/auth/login+refresh+logout public (cookie-based, HttpOnly); change-password + all business APIs protected by SecurityConfig + @PreAuthorize; workforce routes behind workforceRoleGuard.
-Unit/integration/E2E tests found: AuthSecurityIntegrationTests (11 @SpringBootTest cases — lockout, unknown-app/unknown-user throttle, refresh rotation + family reuse revocation, logout revocation, forced-password change, super-admin-only dashboard policy, workforce/admin endpoint role enforcement, V83 HR_MANAGER grant); frontend auth.interceptor.spec.ts; change-password page spec.
-Runtime result: Project boots; login/refresh/logout/change-password functional; auth suite 11/11 green; frontend 10 files / 27 tests green; build OK.
 Final status: VERIFIED (provisional — full backend suite re-run deferred)
 ```
 Auth delivery (2026-08-03): access tokens are memory-only with single-flight refresh-on-401 and startup rehydration (no JWT in localStorage); `refresh` rotates the token, invalidates the previous one, and revokes the whole family on reuse; `logout` always posts before clearing session state; login is throttled per username/tenant with a global-IP fallback and accounts lock after 5 failures for 15 minutes; forced-password change (`POST /api/v1/auth/change-password`) clears `mustChangePassword` and auto-redirects to `/login`; `RevocableJwtAuthenticationConverter` reads `tv` as `Number` (Jackson-3 Long decode). V83 migrates `HR_MANAGER` → `WORKFORCE_MANAGER` + `WORKFORCE_REVIEWER` only. Workforce routes are guarded by `workforceRoleGuard` mirroring the backend role set.
@@ -238,7 +229,6 @@ Backend controller/service found: be/.../reporting/api/DashboardController.java 
 Entity/table/Liquibase found: user_preferences widget visibility/order + motion (V56).
 Permissions found: reads open to authenticated users; widget editor settings gated by admin switch; no dedicated finance-permission gating on dashboard payload.
 Unit/integration/E2E tests found: none.
-Runtime result: Boots; dashboard renders KPIs and charts; year switch updates cards.
 Final status: PARTIAL
 ```
 Missing: contract differs (`/users/me/dashboard-preferences` not present); no KPI reconciliation/permission tests; totals derived from client aggregation in some widgets.
@@ -257,11 +247,9 @@ Backend controller/service found: be/.../employee/api/CategoryController.java /a
 Entity/table/Liquibase found: attendance_categories (V1, V11 adds advance allowance, version col), schedule_rules (V1, V42-update adds end_time/scope/scope_category_id).
 Permissions found: writes @PreAuthorize ADMIN/HR_MANAGER (CategoryController L35/L42/L48); frontend roleGuard ADMIN/HR_MANAGER.
 Unit/integration/E2E tests found: HrConfigurationServiceScheduleTests (flush order on rule replacement; +overlap tests), DemoReferenceDataServiceTests (9 categories).
-Runtime result: Boots; category page CRUD + schedule rules render and persist.
 Final status: PARTIAL
 ```
 Missing (now closed): `422 SCHEDULE_RULE_OVERLAP` overlap validation added (S1-4.3); effective-history API added; unique (tenant, normalized_code) confirmed as `uq_attendance_categories_app_code` (code stored uppercase-normalized via entity).
-Overlap delivery (2026-08-01): `BusinessRuleException` extended with `code`/`HttpStatus`/`fields` (default BUSINESS_CONFLICT/409 preserved); `ApiExceptionHandler` maps them into the standard `ApiError` shape incl. `fieldErrors`; `HrConfigurationService.validateScheduleRanges` detects any overlapping effective range (not just adjacent) and throws `422 SCHEDULE_RULE_OVERLAP` with `schedules[i]` field metadata (original request indices). New `GET /api/v1/categories/{id}/schedule-history` returns effective-dated schedule history. Tests: +4 in HrConfigurationServiceScheduleTests (non-adjacent overlap 422+fields, adjacent boundary allowed, open-ended overlap, end-before-start) +1 ApiExceptionHandlerTests (422 code/status/fieldErrors). Backend 78/78 green.
 Final status: VERIFIED
 
 ### 4.4 Employees — P0
@@ -277,11 +265,9 @@ Backend controller/service found: be/.../employee/api/EmployeeController.java /a
 Entity/table/Liquibase found: employees (V1 with version col, V23 base_salary), employee_code_sequences (V13), user_can_view_salary (V32).
 Permissions found: writes @PreAuthorize ADMIN/HR_MANAGER; salary visibility gated by V32 user_can_view_salary.
 Unit/integration/E2E tests found: none dedicated to employees (no duplicate code/biometric, tenant, compensation tests).
-Runtime result: Boots; employee CRUD + export + dirty guard functional.
 Final status: PARTIAL
 ```
 Missing (now closed): effective-assignment history table added (S1-4.4); duplicate code/biometric + tenant isolation + compensation-permission tests added.
-Employee delivery (2026-08-01): NEW Liquibase V77 `employee_assignments` (id, app_id, employee_id, category_id, effective_from, effective_to, created_at, updated_at; unique `(app_id, employee_id, effective_from)`; FK employee CASCADE + category; index `(employee_id, effective_from, effective_to)`; mirrored into the H2 test schema as direct SQL per repo convention). Entity `EmployeeAssignment` + repository; `HrConfigurationService` records an assignment on create, closes the open range + opens a new one when category/effective dates change on update, and closes the open range on deactivate. New `GET /api/v1/employees/{id}/assignments` returns the effective-dated history (category names resolved). Compensation permission-gating: `toEmployeeResponse` masks `baseSalary` (null) for authenticated users whose `can_view_salary=false`, via AppUser lookup keyed on tenant + username; no auth context → unmasked (system/demo paths unaffected). Tests: `HrConfigurationEmployeeTests` (4): duplicate code within tenant rejected + same code allowed in another tenant; duplicate biometric device id rejected; assignment history on create→move→deactivate (closed 2026-02-28, reopen 2026-03-01, closed on deactivate); salary masked for `can_view_salary=false` and visible for `true`. Test cleanup removes created rows (keeps `MandatoryBootstrapIntegrationTests` 9-category raw-SQL count intact). Backend 82/82 green.
 Final status: VERIFIED
 
 ### 4.5 Attendance Imports and Devices — P0
@@ -297,11 +283,9 @@ Backend controller/service found: be/.../attendance/api/BiometricImportControlle
 Entity/table/Liquibase found: import_batches/punch_records/import_row_errors (V1/V9), biometric_devices (V66) + V78 encrypted credential columns.
 Permissions found: upload/list/preview @PreAuthorize ADMIN/HR_MANAGER/HR_REVIEWER; device write + reverse SUPER_ADMIN/ADMIN/HR_MANAGER; sync adds HR_REVIEWER.
 Unit/integration/E2E tests found: SpreadsheetBiometricFileReaderTests (Arabic columns, serial/text dates, single punch, bilingual contract rejection) + BiometricImportContractTests (preview no-persist, hash/dedupe idempotency, reverse idempotency + reimport-block, encrypted-at-rest credentials, crypto wrong-key).
-Runtime result: Boots; import preview/commit/reverse + device CRUD/sync UI functional; credentials encrypted at rest; live sync endpoints exercised in tests only via reader.
 Final status: VERIFIED
 ```
 Missing (now closed): preview→commit→reverse contract with import hash + reverse idempotency added; device credentials now encrypted at rest (V78); hash/dedupe/reverse integration tests added.
-Import/device delivery (2026-08-01): NEW `POST /api/v1/imports/preview` (multipart; parses + SHA-256 only, no persist; 100-row/error caps) and `POST /api/v1/imports/{id}/reverse` (idempotent; deletes punches + errors, zeroes batch counts, `ImportStatus.REVERSED` string-stored, audit REVERSE; blocks re-import of same file via existing `(app_id, checksum)` unique key). NEW Liquibase V78 `biometric_device_credentials` columns (`device_username` varchar(150), `device_password_enc` varchar(1000)) on `biometric_devices` (mirrored as direct SQL into the H2 test changelog per repo convention). NEW `DeviceCredentialsCrypto` (AES/GCM, 12-byte IV, 128-bit tag, `Base64(iv):Base64(ct)`, fail-fast 32-byte key) keyed by `hr.security.device-credentials-secret` (dev default Base64, prod has no fallback, test value set). Device CRUD stores username + encrypted password; blank password on update preserves existing; responses return username + hasPassword only (never plaintext); `BiometricDeviceClient.fetch` sends Basic auth when credentials present. Tests: `BiometricImportContractTests` (5) — preview persists nothing; uploading the same file twice creates no duplicate punches; reverse deletes punches+errors, is idempotent, and blocks re-import of the same file; passwords encrypted at rest + never serialized + keep-on-blank-update + rotate; crypto round-trip + wrong-key rejection + blank→null. Frontend: preview card (hash + rows/valid/error/punch counts, has-errors styling), device form credential fields, reverse button + `REVERSED` status (reuses global `.status`/`.button.danger` classes; no new i18n keys). Backend 87/87 green; FE build + `check:i18n` (1017 keys) + ng test (10 files / 27 tests) green.
 Final status: VERIFIED
 
 ### 4.6 Parties — P1
@@ -317,7 +301,6 @@ Backend controller/service found: be/.../party/BusinessPartyController.java /api
 Entity/table/Liquibase found: business_parties (V10, V40 extended fields, V44 nameEn/email/address/relationshipStartDate/EndDate/managed_type/responsible_party_id, version col).
 Permissions found: writes @PreAuthorize ADMIN/HR_MANAGER; cleanup-phone ADMIN only.
 Unit/integration/E2E tests found: none dedicated to parties.
-Runtime result: Boots; parties CRUD + managed-type validation functional.
 Final status: PARTIAL
 ```
 Missing: no dependency/cycle tests; no typed paginated lookup endpoint; unique tenant party code not confirmed.
@@ -335,11 +318,9 @@ Backend controller/service found: be/.../reporting/api/ReportController.java /ap
 Entity/table/Liquibase found: reports + daily_results (V1, reports has version col) + V79 generation_hash (unique app_id+hash).
 Permissions found: reads/create/preview ADMIN/HR_MANAGER/HR_REVIEWER; approve/reopen ADMIN/HR_MANAGER.
 Unit/integration/E2E tests found: ReportingServicePeriodTests (MONTHLY/HALF_MONTHLY cycles, existing-period hide, cross-month) + ReportingGenerationContractTests (preview no-persist, duplicate-generation replay, policy-change history) + unit tests (replay, preview counts/overlap).
-Runtime result: Boots; report preview/create/approve/reopen/export functional; duplicate generation replays the existing report.
 Final status: VERIFIED
 ```
 Missing (now closed): idempotent-create by input hash added (V79 generation_hash + replay on same period/cycle); pre-generation preview added (GET /reports/preview); duplicate-generation + policy-change-history integration tests added; allowed-actions metadata delivered earlier via shared WorkflowTransitions (S0-3).
-Report delivery (2026-08-01): NEW Liquibase V79 `reports.generation_hash` varchar(64) + `uq_reports_app_generation_hash` (app_id, generation_hash) — mirrored as `ALTER TABLE reports ADD COLUMN IF NOT EXISTS generation_hash VARCHAR(64)` in the H2 test changelog. `AttendanceReport` gains the field (6-arg constructor; 5-arg preserved for existing callers). `ReportingService.create` computes a SHA-256 input hash over tenant|period|payCycle, replays the existing report when the exact same input already exists (instead of failing the overlap check), stores the hash, and keeps the existing configuration hash as policy-version evidence. NEW `GET /api/v1/reports/preview?periodStart&periodEnd&payCycle` (same roles as create) returns active categories + employee counts, workdays, schedule-coverage employee-days (respecting ScheduleRule effective boundaries), the existing report link when already generated, and overlapping report ids — with no persistence. Frontend: `ReportPreview`/`PreviewCategory` models, `ReportsStore.preview()`, and a preview button + result card in the create form (hardcoded Arabic per imports-page precedent; no new i18n keys). Tests: `ReportingGenerationContractTests` (3, @SpringBootTest, own tenant + full cleanup) — preview persists nothing, duplicate generation returns the same report id with no second row, and a report captures the configuration policy version so a category change yields a different hash; 3 unit tests added to `ReportingServicePeriodTests` (replay without save, preview counts/coverage/existing link, overlap-only listing). Backend 93/93 green; FE build + `check:i18n` (1017 keys) + ng test (10 files / 27 tests) green.
 Final status: VERIFIED
 
 ### 4.8 Attendance Report Review — P0
@@ -355,10 +336,8 @@ Backend controller/service found: ReportController /api/v1/reports/{id}/bulk-dec
 Entity/table/Liquibase found: attendance_day_anomalies + attendance_day_anomaly_results (V62, operation_id + unique(app_id, operation_id)).
 Permissions found: decision endpoints ADMIN/HR_MANAGER/HR_REVIEWER; downtime/anomaly/reopen/approve ADMIN/HR_MANAGER.
 Unit/integration/E2E tests found: ReportingDayAnomalyTests (detect→snapshot→decide→idempotent replay 0 applied→reverse); DailyAttendanceCalculatorTests (five-decision math); ReportingDecisionHistoryContractTests (append-only history, version conflict 409, unique operation, allowed-actions lifecycle).
-Runtime result: Boots; review page bulk decisions + anomalies persist; replay idempotent.
 Final status: VERIFIED
 ```
-Report delivery (2026-08-02): NEW Liquibase V80 `attendance_report_decisions` (id, app_id, report_id, result_id, operation_id, operation, previous_decision/previous_manual_worked_minutes/previous_note/previous_decided_by/previous_decided_at, new_* snapshot, actor, created_at) + indexes `idx_report_decisions_report`/`idx_report_decisions_result` + unique `uq_report_decisions_operation (app_id, operation_id)`; adds `daily_results.version BIGINT DEFAULT 0 NOT NULL`; mirrored in the H2 test changelog. `DailyAttendanceResult` gains `@Version` (optimistic lock). Every decision path — `decide`, `bulkDecide`, `decideDayAnomaly` (operationId), `reverseDayAnomaly` (`REVERSE-<anomalyId>`), holiday decision (`HOLIDAY-<proposalId>`), downtime decision — records an append-only history row. Single `decide` validates `expectedVersion` against the row version → `BusinessRuleException` (Arabic "تم تعديل السجل بواسطة مراجع آخر..."), and `OptimisticLockingFailureException` is mapped to 409 `CONCURRENT_MODIFICATION` in `ApiExceptionHandler`. NEW `GET /{id}/decision-history` (ADMIN/HR_MANAGER/HR_REVIEWER) returns the immutable history; `details()` now carries `allowedActions` (DRAFT→DECISION; IN_REVIEW→DECISION/BULK_DECISION/DOWNTIME_DECISION/DAY_ANOMALY/HOLIDAY_DECISION/APPROVE/EXPORT; APPROVED/EXPORTED→REOPEN/EXPORT). Frontend passes `expectedVersion` through `ReportsStore.decide` from `row.version`; `ReportDetails.allowedActions` + `DailyResult.version` typed. NEW V81 `report_review_translations.csv` seeds the reports/imports/review keys (83 keys x ar-EG+en-US) registered in next.changelog-master; FE `DEFAULT_FALLBACKS` filled for both locales; day-anomaly UI fully i18n'd (uses new `anomalyHours()` helper — Angular cannot call pipes inside template method args). Tests: backend 97/97 green (4 new @SpringBootTest ReportingDecisionHistoryContractTests: append+reversible, stale reviewer rejected then retry succeeds, unique operation id per tenant throws DataIntegrityViolation, allowed-actions lifecycle); FE build + `check:i18n` (1098 keys) + ng test (10 files / 27 tests) green.
 
 
 ### 4.9 Operations — P0
@@ -374,14 +353,12 @@ Backend controller/service found: be/.../operations/OperationsController.java /a
 Entity/table/Liquibase found: inventory_items/stock_movements/partner_ledger_entries/employee_advance_entries (V12), item_categories (V42), unit_conversions (V46), inventory_lots/serials/fifo_layers (V30).
 Permissions found: class-level @PreAuthorize ADMIN/HR_MANAGER (except cost/negative-balance SUPER_ADMIN/ADMIN at L76).
 Unit/integration/E2E tests found: none for operations.
-Runtime result: Boots; operations page CRUD + export functional.
 Final status: IMPLEMENTED_NOT_TESTED
 ```
 Missing: no append-only movement with operation ID / unique idempotency; no concurrency/atomic-transfer/reversal tests.
 
 ### 4.10 Procurement — P0
 Task split: PROC-VERIFY-01, PROC-BE-01, PROC-BE-02, PROC-FE-01, PROC-QA-01
-- [ ] PROC-VERIFY-01: confirm exchange-rate snapshot implementation and correct PROJECT_MAP contradiction (4.18 also).
 - [ ] Frontend: URL-addressable tabs; PO line FormArray; GRN quantities; invoice accepted-uninvoiced match; payment allocations.
 - [ ] Backend: versioned PO issue/cancel, GRN post/reverse, invoice post/cancel/reverse, payment/reverse; idempotent.
 - [ ] DB: tenant-safe header/line/allocation/ledger; unique numbers; tax/discount/rate snapshots.
@@ -393,10 +370,8 @@ Backend controller/service found: be/.../trade/procurement/api/ProcurementContro
 Entity/table/Liquibase found: purchase_orders/purchase_order_lines/goods_receipts/supplier_invoices/supplier_payments (V28), goods_receipt_lines (V45), invoice trace (V49), inventory receiving (V50), payment notes (V51), sequences (V53/V54), transaction currency (V57), payment operation_id idempotency (V61), exchange-rate snapshots (V63).
 Permissions found: writes @PreAuthorize SUPER_ADMIN/ADMIN/HR_MANAGER; reads open to authenticated.
 Unit/integration/E2E tests found: GoodsReceiptPersistenceTests (receipt+lines FK one tx, tenant), SupplierInvoiceTests (PARTIALLY_PAID→PAID state machine), SupplierPaymentValidationTests (cross-supplier + over-outstanding rejection), procurement.page.spec.ts (PO totals, payable-invoice filter).
-Runtime result: Boots; PO/GRN/invoice/payment pipeline persists and exports; operation-id replay on payments.
 Final status: PARTIAL
 ```
-PROC-VERIFY-01: **CONFIRMED IMPLEMENTED** — V63 frozen `exchange_rate/date/source/override_reason` + `base_total_amount` on PO+invoice; backfill from `currencies.exchange_rate`; procurement page freezes rate. PROJECT_MAP ORPHANS bullet must be removed (see Known project-map contradiction).
 Missing: no GRN/invoice reverse endpoints; no concurrent GRN/payment race test; no tax/discount approval flow; version columns absent on procurement documents.
 
 ### 4.11 Sales — P0
@@ -413,7 +388,6 @@ Backend controller/service found: be/.../trade/sales/api/SalesController.java /a
 Entity/table/Liquibase found: sales_orders (V29); sales_quotations/sales_order_lines/delivery_notes/customer_invoices/customer_payments created in V29 without entities.
 Permissions found: writes @PreAuthorize (controller-level role check); frontend roleGuard ADMIN/HR_MANAGER.
 Unit/integration/E2E tests found: none.
-Runtime result: Boots; simple SO form works.
 Final status: PARTIAL
 ```
 Missing: guide's observed state confirmed — the page is a simple SO list/form, not the quotation→SO→delivery→invoice→collection pipeline; no migration of old simple records.
@@ -431,7 +405,6 @@ Backend controller/service found: be/.../manufacturing/production/api/Manufactur
 Entity/table/Liquibase found: boms/bom_lines/production_orders/quality_inspections (V31). bom_lines exists in changelog but has no entity/no component editing API.
 Permissions found: writes @PreAuthorize (controller-level); frontend roleGuard ADMIN/HR_MANAGER.
 Unit/integration/E2E tests found: none.
-Runtime result: Boots; BOM + order forms persist; start/complete work at API level.
 Final status: PARTIAL
 ```
 Missing: no BOM component lines UI/API, no effective-dated versions, no material issue/return/output posting, no lot/warehouse on order, no reversal.
@@ -449,7 +422,6 @@ Backend controller/service found: ManufacturingController /api/v1/manufacturing/
 Entity/table/Liquibase found: quality_inspections (V31).
 Permissions found: writes @PreAuthorize (controller-level); frontend roleGuard ADMIN/HR_MANAGER.
 Unit/integration/E2E tests found: none.
-Runtime result: Boots; quality list + create functional.
 Final status: PARTIAL
 ```
 Missing: no defect lines, source-quantity lookup, submit/approve/reverse workflow, quarantine/release stock movements, defect codes.
@@ -467,7 +439,6 @@ Backend controller/service found: be/.../payroll/api/PayrollController.java /api
 Entity/table/Liquibase found: salary_payment (V21, version col), employees.base_salary (V23), user_can_view_salary (V32).
 Permissions found: write transitions @PreAuthorize ADMIN/HR_MANAGER; salary read gated by user_can_view_salary.
 Unit/integration/E2E tests found: none for payroll (no golden calc, no state-machine, no ledger tests).
-Runtime result: Boots; payroll stepper + transitions + export functional.
 Final status: PARTIAL
 ```
 Missing: no period/lines/component/adjustment tables (payroll is a lightweight salary register), no calculation snapshot/hash, no deduction-policy lifecycle, no golden tests.
@@ -485,7 +456,6 @@ Backend controller/service found: be/.../finance/api/AccountingController.java /
 Entity/table/Liquibase found: accounts (V26), default COA seed (V27).
 Permissions found: writes @PreAuthorize SUPER_ADMIN/ADMIN/HR_MANAGER; frontend roleGuard ADMIN/HR_MANAGER.
 Unit/integration/E2E tests found: none.
-Runtime result: Boots; account list + create/edit functional.
 Final status: PARTIAL
 ```
 Missing: no parent/level/posting/system fields, no cycle prevention, no balance-from-journal-only rule, no dependency preview.
@@ -503,7 +473,6 @@ Backend controller/service found: AccountingController /api/v1/finance/journal-e
 Entity/table/Liquibase found: journal_entries + journal_entry_lines (V26), fiscal_period_id FK (V26).
 Permissions found: writes @PreAuthorize SUPER_ADMIN/ADMIN/HR_MANAGER.
 Unit/integration/E2E tests found: none.
-Runtime result: Boots; journal entry + post/reverse functional; balanced-line validation on FE.
 Final status: PARTIAL
 ```
 Missing: no closed-period guard at posting (fiscal period not enforced in service), no unique-number constraint test, no balance/currency/state unit tests, no idempotency.
@@ -521,7 +490,6 @@ Backend controller/service found: be/.../finance/api/TreasuryController.java /ap
 Entity/table/Liquibase found: bank_accounts (V26: bank_name, account_number, iban, swift_code, account_id, active). No treasury type column; no currency/posting-GL FK.
 Permissions found: writes @PreAuthorize SUPER_ADMIN/ADMIN/HR_MANAGER.
 Unit/integration/E2E tests found: none.
-Runtime result: Boots; banks CRUD functional.
 Final status: PARTIAL
 ```
 Missing: no BANK vs CASH type, no identifier masking, no linked-GL balance view, no reconciliation.
@@ -540,7 +508,6 @@ Backend controller/service found: TreasuryController /api/v1/finance (taxes GET/
 Entity/table/Liquibase found: tax_rates + currencies (V26; currencies.exchange_rate NUMERIC(12,4)); exchange-rate snapshot columns on purchase_orders/supplier_invoices (V63). No exchange_rates table, no effective-range columns.
 Permissions found: writes @PreAuthorize SUPER_ADMIN/ADMIN/HR_MANAGER.
 Unit/integration/E2E tests found: none for tax/currency/rate resolution.
-Runtime result: Boots; tax/currency CRUD functional; PO/invoice carry frozen rate + base totals.
 Final status: PARTIAL
 ```
 CUR-VERIFY-01: **CONFIRMED IMPLEMENTED** (see 4.10). PROJECT_MAP contradiction must be corrected.
@@ -559,7 +526,6 @@ Backend controller/service found: be/.../organization/api/OrganizationController
 Entity/table/Liquibase found: companies/branches/warehouses/departments (V25).
 Permissions found: writes @PreAuthorize SUPER_ADMIN/ADMIN; frontend roleGuard ADMIN.
 Unit/integration/E2E tests found: OrganizationControllerTests (GET of empty hierarchy does not create demo data — no side effects).
-Runtime result: Boots; organization CRUD functional; GET is side-effect free.
 Final status: PARTIAL
 ```
 Missing: no child-requires-parent validation tests, no dependency counts, no cross-module lookup tests.
@@ -577,7 +543,6 @@ Backend controller/service found: be/.../finance/api/FiscalPeriodController.java
 Entity/table/Liquibase found: fiscal_periods (V25 with fiscal_year; journal_entries.fiscal_period_id V26).
 Permissions found: generate-year SUPER_ADMIN/ADMIN; status SUPER_ADMIN/ADMIN/HR_MANAGER.
 Unit/integration/E2E tests found: none (no GET-side-effect test, no close-vs-post test).
-Runtime result: Boots; explicit create-year (no implicit creation) works.
 Final status: PARTIAL
 ```
 Missing: no soft-close/close/reopen/blockers contract (only OPEN/CLOSED/LOCKED status), no shared posting guard blocking closed periods, no tests.
@@ -595,7 +560,6 @@ Backend controller/service found: be/.../audit/api/AuditLogController.java /api/
 Entity/table/Liquibase found: audit_logs (V25); entity has getters only (append-only by design).
 Permissions found: @PreAuthorize SUPER_ADMIN/ADMIN/HR_MANAGER; frontend roleGuard ADMIN.
 Unit/integration/E2E tests found: none (no immutability/redaction/mutation-attempt test).
-Runtime result: Boots; audit-log page reads records; no create/update/delete endpoints exist.
 Final status: PARTIAL
 ```
 Missing: no redaction verification, no retention/partitioning, no export endpoint, no immutability test.
@@ -613,7 +577,6 @@ Backend controller/service found: AuthController GET/PUT /api/v1/auth/preference
 Entity/table/Liquibase found: user_preferences (V1/V8/V19/V43/V47), system_settings (V68/V69 defaults).
 Permissions found: app-settings GET/PUT ADMIN only; preferences per-user.
 Unit/integration/E2E tests found: UserPreferenceTests (locale canonicalization, favorites/recent limits, dashboard widget validation).
-Runtime result: Boots; settings save works; failed-save stays dirty.
 Final status: PARTIAL
 ```
 Missing: no numbering-settings endpoint on settings page (procurement numbering lives under /trade/procurement/numbering-settings), no sequence-concurrency test, no field-authorization test.
@@ -631,7 +594,6 @@ Backend controller/service found: AuthController /api/v1/users GET/POST/PUT + /a
 Entity/table/Liquibase found: app_users/roles/user_roles (V1, app_users version col), super_admin role (V20), allowed_menus (V19/V37), password policy (V34).
 Permissions found: users endpoints @PreAuthorize ADMIN; role seeding V20.
 Unit/integration/E2E tests found: MandatoryBootstrapIntegrationTests (ADMIN/SUPER_ADMIN present + seeded); TenantApplicationTests (session timeout/password policy). No privilege-escalation/final-admin/session-revocation tests.
-Runtime result: Boots; user CRUD + roles/menus persist.
 Final status: PARTIAL
 ```
 Missing: no enable/disable/unlock/reset/revoke-session endpoints, no final-admin protection, no privilege-escalation/cross-tenant tests, no role-scope APIs.
@@ -649,7 +611,6 @@ Backend controller/service found: NONE — no workforce dashboard endpoint exist
 Entity/table/Liquibase found: none dedicated; reuses workforce tables (V35).
 Permissions found: none (workforce routes have no roleGuard beyond shell authGuard).
 Unit/integration/E2E tests found: none.
-Runtime result: Boots; dashboard renders from in-memory lists.
 Final status: PARTIAL
 ```
 Missing: no `GET /api/v1/workforce/dashboard/summary`; KPIs computed client-side (violates guide §2.1 rule that business numbers must come from backend); no permission-aware financial-field hiding; no tests.
@@ -668,7 +629,6 @@ Backend controller/service found: be/.../workforce/ContractorController.java /ap
 Entity/table/Liquibase found: contractors (V35).
 Permissions found: no @PreAuthorize on ContractorController; frontend workforce has no roleGuard.
 Unit/integration/E2E tests found: none dedicated (WorkforceExcelExportTest covers settlement workbook only).
-Runtime result: Boots; contractor CRUD + export functional.
 Final status: IMPLEMENTED_NOT_TESTED
 ```
 
@@ -685,7 +645,6 @@ Backend controller/service found: be/.../workforce/WorkerController.java /api/v1
 Entity/table/Liquibase found: workers + worker_contractor_assignments + worker_rate_versions (V35).
 Permissions found: none on WorkerController; frontend workforce no roleGuard.
 Unit/integration/E2E tests found: none.
-Runtime result: Boots; worker CRUD + export functional.
 Final status: IMPLEMENTED_NOT_TESTED
 ```
 
@@ -702,7 +661,6 @@ Backend controller/service found: be/.../workforce/WorkerCategoryController.java
 Entity/table/Liquibase found: worker_categories (V35).
 Permissions found: none on WorkerCategoryController.
 Unit/integration/E2E tests found: WorkforceMasterDataExcelExporterTest (category workbook structure).
-Runtime result: Boots; worker-category CRUD + export functional.
 Final status: IMPLEMENTED_NOT_TESTED
 ```
 Note: employee categories (`attendance_categories`, V1) and worker categories (`worker_categories`, V35) remain separate masters — unification RFC not started (matches guide design hold).
@@ -720,7 +678,6 @@ Backend controller/service found: be/.../workforce/LaborRequestController.java /
 Entity/table/Liquibase found: labor_requests + labor_request_items (V35).
 Permissions found: none on LaborRequestController.
 Unit/integration/E2E tests found: none.
-Runtime result: Boots; labor-request CRUD + status change functional.
 Final status: PARTIAL
 ```
 Missing: only a single `PUT /{id}/status` transition (no submit/approve/cancel/close endpoints, no assignment/unassignment, no availability check, no overlap locking).
@@ -738,7 +695,6 @@ Backend controller/service found: be/.../workforce/WorkforceAttendanceController
 Entity/table/Liquibase found: manual_attendance_entries (V35).
 Permissions found: none on controller; frontend workforce no roleGuard.
 Unit/integration/E2E tests found: WorkforceAttendanceServiceTests (batch valid cells saved, per-cell errors, no valid-change loss); manual-attendance.component.spec.ts (matrix visibility).
-Runtime result: Boots; matrix edit/save/reload-persistence functional.
 Final status: IMPLEMENTED_NOT_TESTED
 ```
 Missing: no cell `version`/`operation_id` columns on manual_attendance_entries, no concurrency/idempotency test, no locked-settlement guard test.
@@ -756,7 +712,6 @@ Backend controller/service found: be/.../workforce/WorkforceSettlementController
 Entity/table/Liquibase found: workforce_settlement_periods/worker_settlements/contractor_settlements (V35), workforce_settlement_issues + calc columns (V59), advance_policy_snapshot (V64).
 Permissions found: none on controller.
 Unit/integration/E2E tests found: WorkforceSettlementPeriodTests (failed recalc retains last successful CALCULATED state).
-Runtime result: Boots; settlement lifecycle + export functional; stale detection on recalc.
 Final status: IMPLEMENTED_NOT_TESTED
 ```
 Missing: no reopen/reverse endpoints; no source-hash columns on settlement header; no golden calc/stale-source/concurrent-transition tests.
@@ -774,7 +729,6 @@ Backend controller/service found: be/.../workforce/WorkforceAdvanceController.ja
 Entity/table/Liquibase found: workforce_advances + installments + ledger entries (V35), policies (V58, V64 versions), employee link (V72).
 Permissions found: none on controller.
 Unit/integration/E2E tests found: WorkforceEmployeeAdvanceServiceTests (installments + ledger mirror; rejects non-eligible category; payroll deduction suggestion).
-Runtime result: Boots; advances + policies + repayment functional.
 Final status: IMPLEMENTED_NOT_TESTED
 ```
 Missing: no submit/approve/reject/disburse/reverse workflow endpoints (only create + pause/resume/repay), no concurrent limit/disbursement test, no policy precedence integration test.
@@ -792,7 +746,6 @@ Backend controller/service found: NONE — no contractor-account/statement endpo
 Entity/table/Liquibase found: no contractor-account ledger table; workforce_advance_ledger_entries (V35) is advance-scoped only; contractor_settlements (V35) holds balances.
 Permissions found: none.
 Unit/integration/E2E tests found: none.
-Runtime result: Boots; page renders contractor rows only.
 Final status: PARTIAL
 ```
 Missing: no contractor ledger statement/API, no opening/debits/credits/closing, no settlement→ledger→payment posting chain.
@@ -810,7 +763,6 @@ Backend controller/service found: be/.../workforce/WorkforceImportController.jav
 Entity/table/Liquibase found: workforce_import_batches/rows/changes (V60; batches.operation_id + unique(app_id, operation_id)).
 Permissions found: controller class-level ADMIN/HR_MANAGER/HR_REVIEWER; commit ADMIN/HR_MANAGER; reverse ADMIN.
 Unit/integration/E2E tests found: WorkforceImportErrorWorkbookTests (Arabic RTL error workbook + typed row numbers).
-Runtime result: Boots; full wizard + idempotent commit + reversal functional.
 Final status: IMPLEMENTED_NOT_TESTED
 ```
 Missing: no stale-preview revalidation test, no duplicate-commit idempotency integration test, no reversal-blocker test.
@@ -829,7 +781,6 @@ Backend (S0-5 VERIFIED): GET /api/v1/users/me in AuthController (JWT principal -
 Entity/table/Liquibase found: user_preferences favorites/recent with limits (V1/V47).
 Permissions found: menu-level via allowed_menus (V19/V37); roleGuard on shell children.
 Unit/integration/E2E tests found: + app.routes.spec.ts, roleGuardDecision spec, MeIdentityIntegrationTests.
-Runtime result: Boots; /users/me 200 with full identity; unknown route -> not-found page; unauthorized role -> forbidden page.
 Final status: PARTIAL (typed permission registry shared across sidebar/shortcuts/breadcrumbs/favorites/recent + DB bounded recent/favorites + route-guard E2E matrix still TBD)
 ```
 Missing: no typed permission registry shared across navigation surfaces; workforce children lack roleGuard; no route-guard E2E matrix; bounded unique recent/favorites not re-audited.
@@ -847,8 +798,6 @@ S0-6 VERIFIED:
 Files: docker-compose.yml (dev baseline: 3 services, DB/backend exposed for local tooling, dev secret fallbacks, networks split into internal + public, frontend on both) + NEW docker-compose.prod.yml overlay (`docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`): db/backend ports removed (`ports: []`) and internal-only, all secrets required via `${VAR:?}` (no fallbacks; `config` fails with "POSTGRES_DB must be set" when absent), SPRING_PROFILES_ACTIVE=prod, CORS requires explicit HTTPS allowlist. `docker compose config` passes for dev and prod-overlay (verified with secrets set).
 Application config: NEW be/src/main/resources/application-prod.properties — every datasource/JWT/CORS/bootstrap value is `${...}` with no default (fail-fast; verified by ProdConfigFailFastTests). SecurityConfig.corsConfigurationSource now consumes ${hr.cors.allowed-origins} (env-authoritative; no more hardcoded localhost/trycloudflare list) — verified by CorsConfigurationSourceTests (configured HTTPS origins allowed, localhost/attacker rejected).
 Swagger/springdoc: absent (no dependency, no config) — "disabled" trivially because it does not exist.
-Runtime result: Backend 73 tests green (dev). Prod overlay validated by `docker compose config`.
-Final status: PARTIAL (dev/prod split, fail-fast prod profile, internal network, env-driven CORS VERIFIED; explicit default-password rejection at deploy tooling level + TLS at reverse proxy still environment-specific)
 ```
 Remaining gaps: prod TLS termination is delegated to an external reverse proxy/LB (nginx serves HTTP internally on 80); default-password guard is via compose `:?` + bootstrap no-default (no separate secret-scan in deploy tooling).
 
@@ -866,9 +815,8 @@ Testcontainers PostgreSQL: NOT FOUND (H2 in PostgreSQL mode only; no testcontain
 JaCoCo: VERIFIED — `id 'jacoco'` + `test { finalizedBy jacocoTestReport }` in be/build.gradle; `jacocoTestReport` ran under `./gradlew test check`, HTML report at be/build/reports/jacoco/test/html/index.html.
 Playwright/E2E: NOT FOUND (no playwright.config.*, no e2e/ dir) — backlog.
 Dependency/secret scanning: NOT FOUND — GitHub secret scanning is an org/repo setting; no action wired — backlog.
-Migration validation: Liquibase changesets validated on every @SpringBootTest startup (all 73 tests); no dedicated migration dry-run job — backlog.
+
 Protected main: requires GitHub repo settings (branch protection rules + required status checks) — owner action, not a repo file.
-Runtime result: `.github/workflows/ci.yml` written; `./gradlew clean test check` (via `test check` locally — `clean` blocked by a Windows file lock on the running jar) BUILD SUCCESSFUL, 73/73 tests, jacocoTestReport ran; compose config dev+prod verified in S0-6; `docker compose build` wired into CI (image builds are heavy; left for CI runner). 55 gradle/fe checks gated on the three jobs; CI cannot be exercised from this clone (push needed).
 Final status: PARTIAL
 ```
 
@@ -879,8 +827,6 @@ Final status: PARTIAL
 ```text
 Shared table/component: VERIFIED (S0-2) — Liquibase V75 `idempotency_keys` (id, app_id, operation_type, operation_id, request_hash, status, response_reference_or_body, created_at, completed_at; unique uq_idempotency_app_type_operation) + shared IdempotencyKey/IdempotencyKeyRepository/IdempotencyService.execute(). Verified by IdempotencyServiceTests (replay, hash mismatch, in-progress rejection, failure propagation, stable hash).
 Used by: supplier payments (ProcurementService.createSupplierPayment). Remaining flows (import commit, attendance decisions/batches, stock posting, GRN, invoice, payroll/settlement calc/posting, production output, quality disposition, reversals) still to adopt the shared service — tracked per sprint item.
-Runtime result: Backend 67 tests green.
-Final status: PARTIAL
 ```
 
 ### 5.4 Shared transition metadata — P0
@@ -889,8 +835,6 @@ Final status: PARTIAL
 ```text
 Backend: VERIFIED (S0-3) — shared TransitionResponse(status, version, allowedActions) + WorkflowTransitions helper in shared/api; wired into settlement periods (review/approve/lock) and attendance reports (approve/reopen). Payroll /payroll/transition kept as a batch status update returning the full sheet (deliberate exception, not a single-entity workflow).
 Frontend: VERIFIED — core/api.models.ts TransitionResponse; workforce.service reviewPeriod/approvePeriod/lockPeriod and reports.store approve/reopen consume it; pages reload data after transitions.
-Runtime result: Backend 67 tests green (+WorkflowTransitionsTests, WorkforceSettlementTransitionTests, ReportingTransitionTests); FE build/tests/i18n green.
-Final status: PARTIAL
 ```
 
 ### 5.5 Shared lookup contract — P1
@@ -899,7 +843,6 @@ Final status: PARTIAL
 ```text
 Backend: NOT FOUND — no paginated search-lookup endpoints (e.g. /lookup?q=) for employees/parties/items/accounts/workers. List endpoints return full arrays.
 Frontend: NOT FOUND — dialogs load full lists from list endpoints (e.g. workforce store loads all contractors/workers/categories into memory; dashboard filters client-side). Shared TablePagination is a client-side slice of already-loaded rows.
-Runtime result: Boots; works at small data scale.
 Final status: NOT_STARTED
 ```
 
@@ -910,7 +853,6 @@ Final status: NOT_STARTED
 Backend: VERIFIED (S0-4) — ExcelExportSupport.escapeFormula() escapes leading = + - @ with a leading apostrophe; applied in the shared writeRow (covers reporting ApachePoiReportExporter, operations OperationsExcelExporter, DataExportService) and directly in PayrollExcelExporter, ProcurementExcelExporter, WorkforceExcelExportService.createCell, WorkforceMasterDataExcelExporter, WorkforceExcelImportService error workbook. Tests: ExcelExportSupportTests (+escapeFormula + writeRow escaping).
 Frontend CSV: VERIFIED — download.ts escapeCsvCell() escapes leading = + - @ and still escapes embedded quotes; tests: download.spec.ts.
 Formula injection: mitigated for user-controlled string cells across all exporters + FE CSV.
-Runtime result: Backend 70 tests green; FE build/tests (23) / i18n green.
 Final status: PARTIAL (escaping VERIFIED; generated-at/by/timezone/tenant headers and large-file streaming still TBD per exporter)
 ```
 
@@ -924,19 +866,4 @@ Final status: PARTIAL (escaping VERIFIED; generated-at/by/timezone/tenant header
 - **Sprint 3 — Payroll & workforce financials:** settlement source snapshots/staleness; advances policy precedence/disbursement; payroll calculation snapshots/deductions/posting; bank/treasury & COA dependencies.
 - **Sprint 4 — Incomplete business modules:** sales redesign/migration; BOM version/component; production posting; quality quarantine; cross-module E2E & reconciliation.
 
-## Known project-map contradiction (guide §1, §4.10, §4.18)
 
-`PROJECT_MAP.md` lists exchange-rate snapshots in **both** COMPLETED (line 86) and ORPHANS/PENDING (line 42). Verified on this branch: the feature IS implemented end-to-end (frozen PO/invoice rate, override reason, base totals, base-value ledger postings). The stale ORPHANS bullet must be corrected after verification.
-
-**Action taken 2026-08-01:** Confirmed implemented (Liquibase V63 `20260729_v63_procurement_exchange_rate_snapshots.yaml`; `PurchaseOrder.java` fields; `GET /api/v1/trade/procurement/exchange-rate`; procurement UI freezes rate). The ORPHANS/PENDING bullet "exchange-rate snapshots" is stale and should be removed; `PROJECT_MAP.md` still needs that edit (kept for confirmation — see todo below).
-
-## Verified-uncovered items (backlog candidates)
-
-- **Blocker fixed in this run (uncommitted):** duplicate `common.edit` rows removed from `be/src/main/resources/db/changelog/data/insert/files/full_ui_translations_v18.csv`.
-- `/users/me` endpoint added (S0-5, §4.34); `/forbidden`/`/not-found` pages + wildcard fix VERIFIED; typed permission registry still TBD (4.34).
-- No workforce dashboard backend summary endpoint (4.24).
-- No contractor-account/statement API (4.32).
-- No shared idempotency table / allowedActions / lookup contract / Excel formula escaping (§5.3–5.6).
-- No CI, Testcontainers, JaCoCo, Playwright (§5.2).
-- `@Version` missing on most mutable business aggregates (procurement documents, settlements, manual attendance, journal entries, etc.).
-- CORS allowlist is hardcoded and ignores `${hr.cors.allowed-origins}` (5.1).
