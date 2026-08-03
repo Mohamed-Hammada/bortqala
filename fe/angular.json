@@ -66,6 +66,8 @@
             "allowedHosts": [
               "sending-huntington-actions-gen.trycloudflare.com",
               ".trycloudflare.com",
+              "borqala.eysawy.dpdns.org",
+              "eysawy.dpdns.org",
               "localhost",
               "127.0.0.1",
               "0.0.0.0",
@@ -81,6 +83,8 @@
               "allowedHosts": [
                 "sending-huntington-actions-gen.trycloudflare.com",
                 ".trycloudflare.com",
+                "borqala.eysawy.dpdns.org",
+                "eysawy.dpdns.org",
                 "localhost",
                 "127.0.0.1",
                 "0.0.0.0",
