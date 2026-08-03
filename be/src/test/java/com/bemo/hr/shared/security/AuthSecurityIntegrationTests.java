@@ -16,6 +16,8 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -44,6 +46,7 @@ class AuthSecurityIntegrationTests {
     private final PasswordEncoder passwordEncoder;
     private final MockMvc mockMvc;
     private final JdbcTemplate jdbcTemplate;
+    private final TransactionTemplate tx;
 
     private final List<String> createdUserIds = new ArrayList<>();
     private String appId;
@@ -60,7 +63,8 @@ class AuthSecurityIntegrationTests {
                                  JwtProperties jwtProperties,
                                  PasswordEncoder passwordEncoder,
                                  MockMvc mockMvc,
-                                 JdbcTemplate jdbcTemplate) {
+                                 JdbcTemplate jdbcTemplate,
+                                 PlatformTransactionManager transactionManager) {
         this.authService = authService;
         this.refreshCookieCodec = refreshCookieCodec;
         this.loginRateLimiter = loginRateLimiter;
@@ -72,6 +76,7 @@ class AuthSecurityIntegrationTests {
         this.passwordEncoder = passwordEncoder;
         this.mockMvc = mockMvc;
         this.jdbcTemplate = jdbcTemplate;
+        this.tx = new TransactionTemplate(transactionManager);
     }
 
     @BeforeEach
@@ -91,6 +96,14 @@ class AuthSecurityIntegrationTests {
         }
     }
 
+    private AppUser loadWithRoles(String userId) {
+        return tx.execute(status -> {
+            AppUser user = appUserRepository.findById(userId).orElseThrow();
+            user.getRoles().size();
+            return user;
+        });
+    }
+
     private AppUser createUser(String prefix, Set<RoleCode> roles) {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         String username = prefix + "-" + suffix;
@@ -99,7 +112,7 @@ class AuthSecurityIntegrationTests {
         TenantContext.set(appId);
         var created = authService.create(request);
         createdUserIds.add(created.id());
-        return appUserRepository.findById(created.id()).orElseThrow();
+        return loadWithRoles(created.id());
     }
 
     private AuthApi.LoginRequest loginRequest(String username, String password) {
@@ -257,6 +270,7 @@ class AuthSecurityIntegrationTests {
     void onlySuperAdminCanChangeDashboardCustomizationPolicyForAdmins() {
         TenantApplication app = tenantApplicationRepository.findById(appId).orElseThrow();
         boolean original = app.isAdminDashboardCustomizationEnabled();
+        TenantContext.set(appId);
         var admin = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, "admin").orElseThrow();
         var superAdmin = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, "superadmin").orElseThrow();
         var current = authService.currentAppSettings();
@@ -303,7 +317,8 @@ class AuthSecurityIntegrationTests {
     @Test
     void adminEndpointsRequireSuperAdminOrAdminRoles() throws Exception {
         AppUser finance = createUser("finuser2", Set.of(RoleCode.FINANCE_MANAGER));
-        var superAdmin = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, "superadmin").orElseThrow();
+        AppUser superAdmin = loadWithRoles(
+                appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, "superadmin").orElseThrow().getId());
 
         mockMvc.perform(get("/api/v1/users")
                         .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
@@ -328,7 +343,7 @@ class AuthSecurityIntegrationTests {
                   AND NOT EXISTS (SELECT 1 FROM user_roles x WHERE x.user_id = ur.user_id AND x.role_code = r.code)
                 """);
 
-        AppUser reloaded = appUserRepository.findById(hrManager.getId()).orElseThrow();
+        AppUser reloaded = loadWithRoles(hrManager.getId());
         Set<RoleCode> roles = reloaded.getRoles().stream().map(Role::getCode).collect(java.util.stream.Collectors.toSet());
         assertThat(roles).contains(RoleCode.WORKFORCE_MANAGER, RoleCode.WORKFORCE_REVIEWER);
         assertThat(roles).doesNotContain(RoleCode.PAYROLL_MANAGER, RoleCode.WORKFORCE_FINANCE);

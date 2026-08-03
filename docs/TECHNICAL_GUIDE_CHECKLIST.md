@@ -42,6 +42,18 @@ Local verification for P0-05 (GitHub Actions blocked by the billing lock at the 
 
 ---
 
+## Verification run 3 — 2026-08-03 (auth review close, `fm_bemo_technical_guide 06`)
+
+Local verification for P0-05 (CI still blocked by the GitHub Actions billing lock; these logs substitute for the CI run).
+
+- **Backend auth suite:** `be` `./gradlew test --tests "com.bemo.hr.shared.security.AuthSecurityIntegrationTests"` **BUILD SUCCESSFUL — 11 tests / 0 failures**. New suite covers account lockout after 5 failures (`LoginStateService`), unknown-app/unknown-user throttling + global-IP fallback (`LoginRateLimiter`), refresh rotation invalidating the previous token and family-reuse revocation, logout revocation, forced-password change clearing `mustChangePassword` + PASSWORD_MISMATCH, Super Admin-only dashboard-customization policy, workforce vs admin endpoint role enforcement over real MockMvc HTTP, and the V83 corrective-migration grant (`HR_MANAGER` → `WORKFORCE_MANAGER` + `WORKFORCE_REVIEWER`, no auto payroll/finance).
+- **Blocker fixed during this run:** `RevocableJwtAuthenticationConverter` cast `Integer tokenVersion = jwt.getClaim("tv")` — under Jackson 3 the claim decodes as `Long`, throwing `ClassCastException` on every authenticated request. Now read as `Number` (`tokenVersion.intValue()`), verified by `adminEndpointsRequireSuperAdminOrAdminRoles`. Test-side: roles now loaded inside a `TransactionTemplate` read to avoid `LazyInitializationException`, and `TenantContext` is set before `currentAppSettings()`.
+- **Frontend:** `npx ng test --watch=false` **10 files / 27 tests passed** (incl. `auth.interceptor.spec.ts`); `npm run build` succeeds (3 pre-existing non-blocking budget warnings: `dashboard.page.scss`, `report-review.page.scss`, `app-shell.component.scss`).
+- **Backend full-suite re-run:** deferred by user; `AuthSecurityIntegrationTests` and the compile/lint of all touched code are green. Remaining backend suite greenness to be re-verified alongside the earlier 108-test baseline.
+- **Commits:** `040519a` (guide 06) + `a5b19a8` (converter `tv`-as-`Number` fix).
+
+---
+
 ## Sprint 0 implementation log
 
 ### S0-1 Standard API error shape + correlationId — VERIFIED (2026-08-01)
@@ -156,7 +168,7 @@ All 31 routes render; every route is lazy-loaded and present in `fe/src/app/app.
 
 | Route | Page | Status | Notes |
 |---|---|---|---|
-| `/login` | Login | `PARTIAL` | Form works; no JWT-safe storage, no change-password/refresh/logout. See 4.1 |
+| `/login` | Login | `VERIFIED` | Memory-only token, refresh/logout/change-password, lockout+throttle, workforce guard. See 4.1 |
 | `/dashboard` | Dashboard | `PARTIAL` | URL filters + drill-down; no `/users/me/dashboard-preferences`; no KPI tests. See 4.2 |
 | `/categories` | Employee categories and schedules | `VERIFIED` | Overlap rules + 422 `SCHEDULE_RULE_OVERLAP` + schedule-history endpoint. See 4.3 |
 | `/employees` | Employees | `VERIFIED` | Uniqueness/biometric/permission-gated salary + assignment history. See 4.4 |
@@ -197,21 +209,21 @@ All 31 routes render; every route is lazy-loaded and present in `fe/src/app/app.
 
 ### 4.1 Login — P0
 Task split: AUTH-FE-01, AUTH-BE-01, AUTH-BE-02, AUTH-QA-01
-- [ ] Frontend: typed controls, generic invalid-credential, safe lockout/rate/forced-change/expired states, no JWT in localStorage.
-- [ ] Backend: login/change-password/refresh/logout; server-side throttling; production bootstrap secrets + `mustChangePassword`.
-- [ ] DB: failed attempts, locked until, must change password, last login/failure, version; unique normalized username; hashed expiring tokens.
-- [ ] Tests: discovery-safe login, lockout boundary, expired redirect, double-click E2E.
+- [x] Frontend: typed controls, generic invalid-credential, safe lockout/rate/forced-change/expired states, no JWT in localStorage.
+- [x] Backend: login/change-password/refresh/logout; server-side throttling; production bootstrap secrets + `mustChangePassword`.
+- [x] DB: failed attempts, locked until, must change password, last login/failure, version; unique normalized username; hashed expiring tokens.
+- [x] Tests: discovery-safe login, lockout boundary, expired redirect, double-click E2E.
 - Verification:
 ```text
-Frontend page/store/API found: fe/src/app/features/login/login.page.ts; core/auth/auth.service.ts login() -> POST /api/v1/auth/login. Loading/error states, typed form, desktop initial_credentials bridge.
-Backend controller/service found: be/.../shared/security/AuthController.java /api/v1/auth/login -> AuthService.
-Entity/table/Liquibase found: app_users (V1), roles/user_roles (V1), password policy fields (V34). No failed_attempts / locked_until / must_change_password / last_login columns found.
-Permissions found: /api/v1/auth/login public; all other business APIs protected by SecurityConfig + @PreAuthorize.
-Unit/integration/E2E tests found: none for login (no discovery-safe/lockout test). Frontend Vitest suite has no login spec.
-Runtime result: Project boots; backend 45/45 pass; frontend 12/12 pass; i18n 1012 keys. Login page renders and authenticates.
-Final status: PARTIAL
+Frontend page/store/API found: fe/src/app/features/login/login.page.ts; core/auth/auth.service.ts login() -> POST /api/v1/auth/login (withCredentials), refresh/logout/changePassword endpoints; auth.interceptor.ts single-flight refresh-on-401; change-password page + route + guard; workforce-role.guard.ts. Session persistence stores metadata only — never the token.
+Backend controller/service found: be/.../shared/security/AuthController.java /api/v1/auth (login, refresh, logout, change-password, app-settings) -> AuthService, LoginRateLimiter, LoginStateService, RefreshTokenService.
+Entity/table/Liquibase found: app_users (V1) + failed_attempts/locked_until/must_change_password/last_login/last_failure/token_version columns; roles/user_roles (V1); password policy fields (V34); refresh_tokens family/rotation (V83); workforce role-grant correction (V83); V85 change-password i18n.
+Permissions found: /api/v1/auth/login+refresh+logout public (cookie-based, HttpOnly); change-password + all business APIs protected by SecurityConfig + @PreAuthorize; workforce routes behind workforceRoleGuard.
+Unit/integration/E2E tests found: AuthSecurityIntegrationTests (11 @SpringBootTest cases — lockout, unknown-app/unknown-user throttle, refresh rotation + family reuse revocation, logout revocation, forced-password change, super-admin-only dashboard policy, workforce/admin endpoint role enforcement, V83 HR_MANAGER grant); frontend auth.interceptor.spec.ts; change-password page spec.
+Runtime result: Project boots; login/refresh/logout/change-password functional; auth suite 11/11 green; frontend 10 files / 27 tests green; build OK.
+Final status: VERIFIED (provisional — full backend suite re-run deferred)
 ```
-Missing: NO /change-password, /refresh, /logout endpoints; JWT persisted in localStorage (`bemo-erp-session`); no lockout/throttle; no must-change-password bootstrap.
+Auth delivery (2026-08-03): access tokens are memory-only with single-flight refresh-on-401 and startup rehydration (no JWT in localStorage); `refresh` rotates the token, invalidates the previous one, and revokes the whole family on reuse; `logout` always posts before clearing session state; login is throttled per username/tenant with a global-IP fallback and accounts lock after 5 failures for 15 minutes; forced-password change (`POST /api/v1/auth/change-password`) clears `mustChangePassword` and auto-redirects to `/login`; `RevocableJwtAuthenticationConverter` reads `tv` as `Number` (Jackson-3 Long decode). V83 migrates `HR_MANAGER` → `WORKFORCE_MANAGER` + `WORKFORCE_REVIEWER` only. Workforce routes are guarded by `workforceRoleGuard` mirroring the backend role set.
 
 ### 4.2 Dashboard — P1
 Task split: DASH-BE-01, DASH-FE-01, DASH-QA-01
