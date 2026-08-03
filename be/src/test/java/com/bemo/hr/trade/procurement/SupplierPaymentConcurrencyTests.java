@@ -75,7 +75,7 @@ class SupplierPaymentConcurrencyTests extends PostgresIntegrationTest {
     void cleanup() {
         try {
             if (!createdAppIds.isEmpty()) {
-                TenantContext.set(createdAppIds.getLast());
+                TenantContext.set(createdAppIds.get(createdAppIds.size() - 1));
                 createdOperationIds.forEach(operationId ->
                         idempotencyKeyRepository.findByOperationTypeAndOperationId("SUPPLIER_PAYMENT", operationId)
                                 .ifPresent(key -> idempotencyKeyRepository.deleteById(key.getId())));

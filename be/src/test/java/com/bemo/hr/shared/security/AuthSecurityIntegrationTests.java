@@ -41,6 +41,7 @@ class AuthSecurityIntegrationTests {
     private final LoginStateService loginStateService;
     private final AppUserRepository appUserRepository;
     private final TenantApplicationRepository tenantApplicationRepository;
+    private final TenantFeatureRepository tenantFeatureRepository;
     private final JwtEncoder jwtEncoder;
     private final JwtProperties jwtProperties;
     private final PasswordEncoder passwordEncoder;
@@ -59,6 +60,7 @@ class AuthSecurityIntegrationTests {
                                  LoginStateService loginStateService,
                                  AppUserRepository appUserRepository,
                                  TenantApplicationRepository tenantApplicationRepository,
+                                 TenantFeatureRepository tenantFeatureRepository,
                                  JwtEncoder jwtEncoder,
                                  JwtProperties jwtProperties,
                                  PasswordEncoder passwordEncoder,
@@ -71,6 +73,7 @@ class AuthSecurityIntegrationTests {
         this.loginStateService = loginStateService;
         this.appUserRepository = appUserRepository;
         this.tenantApplicationRepository = tenantApplicationRepository;
+        this.tenantFeatureRepository = tenantFeatureRepository;
         this.jwtEncoder = jwtEncoder;
         this.jwtProperties = jwtProperties;
         this.passwordEncoder = passwordEncoder;
@@ -84,6 +87,15 @@ class AuthSecurityIntegrationTests {
         var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue("TEST").orElseThrow();
         appId = app.getId();
         appCode = app.getCode();
+        enableContractorAccountsFeature();
+    }
+
+    private void enableContractorAccountsFeature() {
+        var featureId = new TenantFeatureId(appId, "workforce.contractorAccounts.enabled");
+        var feature = tenantFeatureRepository.findById(featureId)
+                .orElseGet(() -> new TenantFeature(appId, "workforce.contractorAccounts.enabled", true, null, "auth-security-tests"));
+        feature.setEnabled(true);
+        tenantFeatureRepository.save(feature);
     }
 
     @AfterEach

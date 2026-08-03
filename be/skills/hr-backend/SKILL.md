@@ -67,10 +67,12 @@ Inside a feature, add only the layers the slice needs: `api`, `application`, `do
 - Generate Excel on the backend from an approved or selected report snapshot. Include filters, generation time, report version, and configuration version.
 - Localize every exported title/header/status to the authenticated user's locale, apply their chosen native Excel table style, preserve typed cells, and use a feature plus timestamp filename.
 - Model biometric uploads as import batches with checksum, device, actor, status, row counts, and row errors. Re-importing a checksum must be safe.
+- Enforce upload guards at the service boundary: max file bytes and max rows are configurable via `hr.workforce-import.max-file-bytes` / `hr.workforce-import.max-rows` (defaults 20 MB / 20 000, env `HR_WORKFORCE_IMPORT_*`); preview endpoints must be bounded (`hr.workforce-import.preview-limit`, default 100). All reverse/validate/preview work must stay bounded to the target batch's own rows, never scan unrelated data.
+- Throw `BusinessRuleException` with a stable machine key (e.g. `WORKFORCE_IMPORT_*`, `EXCEL_*`); do not hard-code Arabic message strings. `ApiExceptionHandler` resolves the key through the DB translation tables (falling back to the constructor message), so new keys must ship with a Liquibase V+ translation CSV/loadData changeset for ar-EG and en-US.
 
 ## Current state
 
-- Runtime: Spring Boot `4.1.0`, Java `26`, Gradle `9.3.1`, PostgreSQL for production and H2 only for dev/tests.
+- Runtime: Spring Boot `4.1.0`, Gradle `9.3.1`, PostgreSQL for production and H2 only for dev/tests. The Gradle build targets Java 17 (`options.release = 17`) for source compatibility; the Docker images still run Temurin Java 26. Avoid Java 21+ collection APIs (`getFirst()`/`getLast()`) in main and test sources.
 - Persistence: Liquibase creates SaaS apps/users/preferences, global translation rows, categories/schedules, employees/code sequences, holidays, immutable imports/punches/errors, reports, business parties, inventory, signed ledgers, advances, daily snapshots, and proposals. PostgreSQL 18.4 startup and Hibernate schema validation were exercised locally.
 - Security: login requires app code, username, and password. HS256 JWTs carry `appId`/`appCode`; tenant discrimination is automatic for JPA entities. Users hold one or more of `ADMIN`, `HR_MANAGER`, `HR_REVIEWER`, `VIEWER`. Each app has an ADMIN-controlled 5–10,080 minute timeout used for newly issued tokens.
 - Observability: every response contains client and server correlation headers. Logstash JSON records correlation ids, IP, browser device id, JWT user id/name/roles, method/path/status/duration, and bounded user-agent without tokens, bodies, passwords, or queries.

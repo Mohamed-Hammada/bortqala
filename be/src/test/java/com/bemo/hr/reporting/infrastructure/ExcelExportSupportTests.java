@@ -22,8 +22,8 @@ class ExcelExportSupportTests {
 
             assertThat(sheet.isRightToLeft()).isTrue();
             assertThat(sheet.getTables()).hasSize(1);
-            assertThat(sheet.getTables().getFirst().getName()).isEqualTo("EmployeesTable");
-            assertThat(sheet.getTables().getFirst().getStyle().getName()).isEqualTo("TableStyleMedium4");
+            assertThat(sheet.getTables().get(0).getName()).isEqualTo("EmployeesTable");
+            assertThat(sheet.getTables().get(0).getStyle().getName()).isEqualTo("TableStyleMedium4");
         }
     }
 

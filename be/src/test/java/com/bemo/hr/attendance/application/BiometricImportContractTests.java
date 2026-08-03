@@ -76,7 +76,7 @@ class BiometricImportContractTests {
     @AfterEach
     void cleanup() {
         try {
-            String app = createdApps.isEmpty() ? null : createdApps.getLast();
+            String app = createdApps.isEmpty() ? null : createdApps.get(createdApps.size() - 1);
             if (app != null) {
                 TenantContext.set(app);
                 tx.executeWithoutResult(status -> {

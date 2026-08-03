@@ -92,7 +92,7 @@ class ReportingDecisionHistoryContractTests {
     @AfterEach
     void cleanup() {
         try {
-            String app = createdApps.isEmpty() ? null : createdApps.getLast();
+            String app = createdApps.isEmpty() ? null : createdApps.get(createdApps.size() - 1);
             if (app != null) {
                 TenantContext.set(app);
                 tx.executeWithoutResult(status -> {
@@ -165,10 +165,10 @@ class ReportingDecisionHistoryContractTests {
 
         var historyAfterFirst = reportingService.decisionHistory(reportId);
         assertThat(historyAfterFirst).hasSize(1);
-        assertThat(historyAfterFirst.getFirst().operation()).isEqualTo("DECIDE");
-        assertThat(historyAfterFirst.getFirst().previousDecision()).isNull();
-        assertThat(historyAfterFirst.getFirst().newDecision()).isEqualTo(AttendanceDecision.ABSENCE);
-        assertThat(historyAfterFirst.getFirst().actor()).isEqualTo("reviewer1");
+        assertThat(historyAfterFirst.get(0).operation()).isEqualTo("DECIDE");
+        assertThat(historyAfterFirst.get(0).previousDecision()).isNull();
+        assertThat(historyAfterFirst.get(0).newDecision()).isEqualTo(AttendanceDecision.ABSENCE);
+        assertThat(historyAfterFirst.get(0).actor()).isEqualTo("reviewer1");
 
         var updated = reportingService.get(reportId).dailyResults().stream()
                 .filter(item -> item.id().equals(row.id())).findFirst().orElseThrow();

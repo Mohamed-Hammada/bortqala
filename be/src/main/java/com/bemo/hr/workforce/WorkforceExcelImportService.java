@@ -3,6 +3,8 @@ package com.bemo.hr.workforce;
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -38,6 +40,14 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class WorkforceExcelImportService {
     private static final List<String> REQUIRED_FIELDS = List.of("workerCode", "workDate", "attendanceValue");
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(WorkforceExcelImportService.class);
+
+    @Value("${hr.workforce-import.max-file-bytes:20971520}")
+    private long maxImportFileBytes = 20L * 1024 * 1024;
+    @Value("${hr.workforce-import.max-rows:20000}")
+    private int maxImportRows = 20_000;
+    @Value("${hr.workforce-import.preview-limit:100}")
+    private int previewLimit = 100;
 
     private final WorkforceImportBatchRepository batchRepository;
     private final WorkforceImportRowRepository rowRepository;
@@ -75,10 +85,15 @@ public class WorkforceExcelImportService {
 
     @Transactional
     public ImportBatchResponse upload(MultipartFile file) {
-        if (file == null || file.isEmpty()) throw new BusinessRuleException("اختر ملف Excel غير فارغ.");
+        if (file == null || file.isEmpty()) {
+            throw new BusinessRuleException("اختر ملف Excel غير فارغ.", "WORKFORCE_IMPORT_EMPTY_FILE", HttpStatus.CONFLICT);
+        }
         String fileName = file.getOriginalFilename() == null ? "workforce-import.xlsx" : file.getOriginalFilename();
         if (!fileName.toLowerCase(Locale.ROOT).endsWith(".xlsx")) {
-            throw new BusinessRuleException("صيغة الملف المدعومة هي XLSX فقط.");
+            throw new BusinessRuleException("صيغة الملف المدعومة هي XLSX فقط.", "WORKFORCE_IMPORT_UNSUPPORTED_FORMAT", HttpStatus.CONFLICT);
+        }
+        if (file.getSize() > maxImportFileBytes) {
+            throw new BusinessRuleException("workforce.import.fileTooLarge", "EXCEL_FILE_TOO_LARGE", HttpStatus.BAD_REQUEST);
         }
         try {
             byte[] bytes = file.getBytes();
@@ -96,7 +111,8 @@ public class WorkforceExcelImportService {
         } catch (BusinessRuleException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new BusinessRuleException("تعذر قراءة ملف البصمة.", "EXCEL_READ_FAILED", org.springframework.http.HttpStatus.BAD_REQUEST);
+            LOGGER.warn("Workforce import upload failed for file {}", fileName, exception);
+            throw new BusinessRuleException("تعذر قراءة ملف البصمة.", "EXCEL_READ_FAILED", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -120,12 +136,16 @@ public class WorkforceExcelImportService {
     @Transactional
     public ValidationResponse validate(String batchId) {
         WorkforceImportBatch batch = batchRepository.findById(batchId)
-                .orElseThrow(() -> new BusinessRuleException("عملية الاستيراد غير موجودة."));
+                .orElseThrow(() -> new BusinessRuleException("عملية الاستيراد غير موجودة.", "WORKFORCE_IMPORT_NOT_FOUND", HttpStatus.CONFLICT));
         if (!"MAPPED".equals(batch.getStatus())) {
-            throw new BusinessRuleException("يجب حفظ مطابقة الأعمدة قبل التحقق، ولا يمكن إعادة كتابة نتيجة تحقق محفوظة.");
+            throw new BusinessRuleException("يجب حفظ مطابقة الأعمدة قبل التحقق، ولا يمكن إعادة كتابة نتيجة تحقق محفوظة.",
+                    "WORKFORCE_IMPORT_MAPPING_NOT_SAVED", HttpStatus.CONFLICT);
         }
         try (var workbook = WorkbookFactory.create(new ByteArrayInputStream(batch.getOriginalFile()))) {
             Sheet sheet = workbook.getSheetAt(0);
+            if (sheet.getLastRowNum() - sheet.getFirstRowNum() > maxImportRows) {
+                throw new BusinessRuleException("workforce.import.tooManyRows", "EXCEL_TOO_MANY_ROWS", HttpStatus.BAD_REQUEST);
+            }
             Map<String, Integer> indexes = headerIndexes(sheet.getRow(sheet.getFirstRowNum()));
             Map<String, String> mapping = decodeMapping(batch.getColumnMapping());
             DataFormatter formatter = new DataFormatter(Locale.forLanguageTag("ar-EG"));
@@ -143,8 +163,13 @@ public class WorkforceExcelImportService {
 
             Map<String, Worker> workers = new HashMap<>();
             if (!workerCodesToFetch.isEmpty()) {
-                workerRepository.findByCodeIn(workerCodesToFetch).forEach(worker -> 
-                    workers.put(worker.getCode().strip().toUpperCase(Locale.ROOT), worker));
+                for (Worker worker : workerRepository.findByCodeIn(workerCodesToFetch)) {
+                    String key = worker.getCode().strip().toUpperCase(Locale.ROOT);
+                    Worker previous = workers.putIfAbsent(key, worker);
+                    if (previous != null && !previous.getId().equals(worker.getId())) {
+                        throw new BusinessRuleException("workforce.import.duplicateWorkerCode", "WORKFORCE_DUPLICATE_WORKER_CODE", HttpStatus.CONFLICT);
+                    }
+                }
             }
 
             List<WorkforceImportRow> rows = new ArrayList<>();
@@ -180,7 +205,8 @@ public class WorkforceExcelImportService {
         } catch (BusinessRuleException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new BusinessRuleException("تعذر قراءة ملف البصمة.", "EXCEL_VALIDATION_FAILED", org.springframework.http.HttpStatus.BAD_REQUEST);
+            LOGGER.warn("Workforce import validation failed for batch {}", batchId, exception);
+            throw new BusinessRuleException("تعذر قراءة ملف البصمة.", "EXCEL_VALIDATION_FAILED", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -194,15 +220,15 @@ public class WorkforceExcelImportService {
     public CommitResponse commit(String batchId, CommitRequest request) {
         WorkforceImportBatch batch = requireBatch(batchId);
         if (request == null || request.operationId() == null || request.operationId().isBlank()) {
-            throw new BusinessRuleException("معرّف العملية مطلوب لمنع تكرار الاستيراد.");
+            throw new BusinessRuleException("معرّف العملية مطلوب لمنع تكرار الاستيراد.", "WORKFORCE_IMPORT_OPERATION_ID_REQUIRED", HttpStatus.CONFLICT);
         }
         if ("IMPORTED".equals(batch.getStatus())) {
             if (request.operationId().equals(batch.getOperationId())) {
                 return new CommitResponse(mapBatch(batch), 0, 0, batch.getInvalidRows(), true);
             }
-            throw new BusinessRuleException("تم تنفيذ هذا الاستيراد بالفعل بمعرّف عملية مختلف.");
+            throw new BusinessRuleException("تم تنفيذ هذا الاستيراد بالفعل بمعرّف عملية مختلف.", "WORKFORCE_IMPORT_ALREADY_EXECUTED", HttpStatus.CONFLICT);
         }
-        if (!List.of("READY", "VALIDATED").contains(batch.getStatus())) throw new BusinessRuleException("الملف غير جاهز للتنفيذ.");
+        if (!List.of("READY", "VALIDATED").contains(batch.getStatus())) throw new BusinessRuleException("الملف غير جاهز للتنفيذ.", "WORKFORCE_IMPORT_NOT_READY", HttpStatus.CONFLICT);
         if (batch.getInvalidRows() > 0 && !request.importValidRowsOnly()) {
             throw new BusinessRuleException("يوجد " + batch.getInvalidRows() + " صف غير صالح. صحح الملف أو اختر استيراد الصفوف الصحيحة فقط.");
         }
@@ -243,7 +269,7 @@ public class WorkforceExcelImportService {
     public ImportBatchResponse reverse(String batchId) {
         WorkforceImportBatch batch = requireBatch(batchId);
         if ("REVERSED".equals(batch.getStatus())) return mapBatch(batch);
-        if (!"IMPORTED".equals(batch.getStatus())) throw new BusinessRuleException("يمكن التراجع عن عملية منفذة فقط.");
+        if (!"IMPORTED".equals(batch.getStatus())) throw new BusinessRuleException("يمكن التراجع عن عملية منفذة فقط.", "WORKFORCE_IMPORT_REVERSE_NOT_EXECUTED", HttpStatus.CONFLICT);
 
         List<WorkforceImportChange> changes = changeRepository.findByBatchIdOrderByCreatedAtDesc(batchId);
         Set<String> entryIdsToFetch = changes.stream()
@@ -310,7 +336,7 @@ public class WorkforceExcelImportService {
             }
             workbook.write(output); return output.toByteArray();
         } catch (Exception exception) {
-            throw new BusinessRuleException("تعذر إنشاء ملف أخطاء الاستيراد.");
+            throw new BusinessRuleException("تعذر إنشاء ملف أخطاء الاستيراد.", "WORKFORCE_IMPORT_ERRORS_EXPORT_FAILED", HttpStatus.CONFLICT);
         }
     }
 
@@ -323,7 +349,7 @@ public class WorkforceExcelImportService {
     }
 
     private ValidationResponse validationResponse(WorkforceImportBatch batch, List<WorkforceImportRow> rows) {
-        List<WorkforceImportRow> limitedRows = rows.stream().limit(100).toList();
+        List<WorkforceImportRow> limitedRows = rows.stream().limit(previewLimit).toList();
         Set<String> workerIdsToFetch = limitedRows.stream()
             .map(WorkforceImportRow::getWorkerId)
             .filter(java.util.Objects::nonNull)
@@ -342,11 +368,12 @@ public class WorkforceExcelImportService {
     }
 
     private WorkforceImportBatch requireBatch(String id) {
-        return batchRepository.findById(id).orElseThrow(() -> new BusinessRuleException("عملية الاستيراد غير موجودة."));
+        return batchRepository.findById(id)
+                .orElseThrow(() -> new BusinessRuleException("عملية الاستيراد غير موجودة.", "WORKFORCE_IMPORT_NOT_FOUND", HttpStatus.CONFLICT));
     }
     private WorkforceImportBatch requireEditableBatch(String id) {
         WorkforceImportBatch batch = requireBatch(id);
-        if (!List.of("UPLOADED", "MAPPED").contains(batch.getStatus())) throw new BusinessRuleException("لا يمكن تعديل المطابقة بعد التحقق أو التنفيذ.");
+        if (!List.of("UPLOADED", "MAPPED").contains(batch.getStatus())) throw new BusinessRuleException("لا يمكن تعديل المطابقة بعد التحقق أو التنفيذ.", "WORKFORCE_IMPORT_MAPPING_LOCKED", HttpStatus.CONFLICT);
         return batch;
     }
     private ImportBatchResponse mapBatch(WorkforceImportBatch batch) {
@@ -361,9 +388,9 @@ public class WorkforceExcelImportService {
     }
     private List<String> readHeaders(byte[] bytes) throws Exception {
         try (var workbook = WorkbookFactory.create(new ByteArrayInputStream(bytes))) {
-            if (workbook.getNumberOfSheets() == 0) throw new BusinessRuleException("ملف Excel لا يحتوي على أوراق.");
+            if (workbook.getNumberOfSheets() == 0) throw new BusinessRuleException("ملف Excel لا يحتوي على أوراق.", "WORKFORCE_IMPORT_NO_SHEETS", HttpStatus.CONFLICT);
             Row row = workbook.getSheetAt(0).getRow(workbook.getSheetAt(0).getFirstRowNum());
-            if (row == null) throw new BusinessRuleException("صف العناوين غير موجود.");
+            if (row == null) throw new BusinessRuleException("صف العناوين غير موجود.", "WORKFORCE_IMPORT_NO_HEADER_ROW", HttpStatus.CONFLICT);
             DataFormatter formatter = new DataFormatter(); List<String> headers = new ArrayList<>();
             for (int index = 0; index < row.getLastCellNum(); index++) headers.add(formatter.formatCellValue(row.getCell(index)).strip());
             return headers;

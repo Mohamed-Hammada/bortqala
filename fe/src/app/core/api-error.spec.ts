@@ -20,8 +20,8 @@ describe('apiErrorMessage', () => {
 
     const message = apiErrorMessage(error);
 
-    expect(message).toContain('كود الموظف مستخدم بالفعل.');
-    expect(message).toContain('هذا الحقل مطلوب ولا يمكن أن يكون فارغاً');
+    expect(message).toContain('Employee code already exists.');
+    expect(message).toContain('must not be blank');
   });
 
   it('prefers localizedMessage over message', () => {
@@ -44,7 +44,7 @@ describe('apiErrorMessage', () => {
       error: { code: 'BUSINESS_CONFLICT', message: 'Employee code already exists.', status: 409 },
     });
 
-    expect(apiErrorMessage(error)).toBe('كود الموظف مستخدم بالفعل.');
+    expect(apiErrorMessage(error)).toBe('Employee code already exists.');
   });
 
   it('reports connection failures for status 0', () => {
@@ -59,13 +59,13 @@ describe('apiErrorMessage', () => {
 });
 
 describe('apiErrorDetail', () => {
-  it('extracts the localized message and honours the fallback', () => {
+  it('extracts the message and honours the fallback', () => {
     const error = new HttpErrorResponse({
       status: 409,
       error: { code: 'BUSINESS_CONFLICT', message: 'Employee code already exists.', status: 409 },
     });
 
-    expect(apiErrorDetail(error, 'تعذر التنفيذ.')).toBe('كود الموظف مستخدم بالفعل.');
+    expect(apiErrorDetail(error, 'تعذر التنفيذ.')).toBe('Employee code already exists.');
   });
 
   it('uses the fallback when no server body is present', () => {

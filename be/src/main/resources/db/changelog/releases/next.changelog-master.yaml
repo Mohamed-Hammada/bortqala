@@ -39,3 +39,5 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260802_v86_finance_journal_locking.yaml
   - include:
       file: db/changelog/schema/create/20260803_v87_tenant_features.yaml
+  - include:
+      file: db/changelog/data/insert/20260803_v88_workforce_import_error_translations.yaml

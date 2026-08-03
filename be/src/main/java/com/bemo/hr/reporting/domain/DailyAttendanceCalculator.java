@@ -42,8 +42,8 @@ public final class DailyAttendanceCalculator {
             return result(reportId, employee, category, date, null, null, 0, expected, 0, 0, 0, 0,
                     status, warning, ruleVersion);
         }
-        Instant first = sorted.getFirst();
-        Instant last = sorted.getLast();
+        Instant first = sorted.get(0);
+        Instant last = sorted.get(sorted.size() - 1);
         int worked = sorted.size() < 2 ? 0 : safeMinutes(Duration.between(first, last));
         ZonedDateTime scheduledStart = date.atTime(schedule.getStartTime()).atZone(companyZone);
         int late = Math.max(0, safeMinutes(Duration.between(scheduledStart.plusMinutes(schedule.getGraceMinutes()), first.atZone(companyZone))));

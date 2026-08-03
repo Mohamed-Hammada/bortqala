@@ -38,6 +38,8 @@ class ApiExceptionHandlerTests {
 
     @Test
     void businessConflictReturnsStandardShapeWithCorrelationId() {
+        when(translationService.translateOrDefault(anyString(), anyString(), anyString()))
+                .thenAnswer(invocation -> invocation.getArgument(2));
         var response = handler().businessConflict(new BusinessRuleException("Employee code already exists."), request());
 
         assertThat(response.getStatusCode().value()).isEqualTo(409);

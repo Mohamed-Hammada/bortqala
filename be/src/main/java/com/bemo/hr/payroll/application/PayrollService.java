@@ -78,7 +78,7 @@ public class PayrollService {
 
         PaymentStatus overallPeriodStatus = PaymentStatus.DRAFT;
         if (!payments.isEmpty()) {
-            overallPeriodStatus = payments.getFirst().getPaymentStatus();
+            overallPeriodStatus = payments.get(0).getPaymentStatus();
         }
 
         for (var emp : employees) {

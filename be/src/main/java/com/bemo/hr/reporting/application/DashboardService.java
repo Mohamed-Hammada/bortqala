@@ -72,7 +72,7 @@ public class DashboardService {
                     var arrivals = values.stream().map(com.bemo.hr.reporting.domain.DailyAttendanceResult::getFirstPunch)
                             .filter(java.util.Objects::nonNull).map(value -> value.atZone(companyZone).toLocalTime().toSecondOfDay()).toList();
                     var typical = arrivals.isEmpty() ? null : java.time.LocalTime.ofSecondOfDay((long) arrivals.stream().mapToInt(Integer::intValue).average().orElse(0));
-                    return new DashboardApi.CategoryMetric(entry.getKey(), values.getFirst().getCategoryName(), values.size(),
+                    return new DashboardApi.CategoryMetric(entry.getKey(), values.get(0).getCategoryName(), values.size(),
                             values.stream().filter(value -> value.getStatus() == DailyStatus.PRESENT || value.getDecision() == AttendanceDecision.NORMAL_DAY).count(),
                             values.stream().filter(com.bemo.hr.reporting.domain.DailyAttendanceResult::isBlocking).count(), typical,
                             values.stream().mapToLong(com.bemo.hr.reporting.domain.DailyAttendanceResult::getOvertimeMinutes).sum());
@@ -183,7 +183,7 @@ public class DashboardService {
                 .entrySet().stream()
                 .map(entry -> {
                     var catRows = entry.getValue();
-                    var catName = catRows.getFirst().getCategoryName();
+                    var catName = catRows.get(0).getCategoryName();
                     long scheduled = catRows.stream().filter(r -> r.getStatus() != DailyStatus.NON_WORKDAY && r.getStatus() != DailyStatus.HOLIDAY).count();
                     long present = catRows.stream().filter(r -> r.getStatus() == DailyStatus.PRESENT || r.getDecision() == AttendanceDecision.NORMAL_DAY).count();
                     double rate = scheduled == 0 ? 0 : Math.round((present * 10_000.0 / scheduled)) / 100.0;

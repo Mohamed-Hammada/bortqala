@@ -529,7 +529,7 @@ public class ReportingService {
         var grouped = results.stream().collect(Collectors.groupingBy(item -> item.getCategoryId() + "|" + item.getWorkDate()));
         var proposals = new ArrayList<HolidayProposal>();
         for (var entry : grouped.entrySet()) {
-            var group = entry.getValue(); var first = group.getFirst(); var category = categories.get(first.getCategoryId());
+            var group = entry.getValue(); var first = group.get(0); var category = categories.get(first.getCategoryId());
             if (category == null || category.getAttendanceMode() != AttendanceMode.BIOMETRIC) continue;
             long noPunchCount = group.stream().filter(item -> item.getStatus() == DailyStatus.NO_PUNCH).count();
             if (!group.isEmpty() && noPunchCount * 2 >= group.size()) {
@@ -617,7 +617,7 @@ public class ReportingService {
         var arrivals = items.stream().map(DailyAttendanceResult::getFirstPunch).filter(java.util.Objects::nonNull)
                 .map(instant -> instant.atZone(companyZone).toLocalTime().toSecondOfDay()).toList();
         LocalTime typical = arrivals.isEmpty() ? null : LocalTime.ofSecondOfDay((long) arrivals.stream().mapToInt(Integer::intValue).average().orElse(0));
-        return new ReportingApi.CategorySummary(categoryId, items.getFirst().getCategoryName(), items.size(),
+        return new ReportingApi.CategorySummary(categoryId, items.get(0).getCategoryName(), items.size(),
                 items.stream().filter(item -> item.getStatus() == DailyStatus.PRESENT).count(),
                 items.stream().filter(DailyAttendanceResult::isBlocking).count(), typical,
                 items.stream().mapToLong(DailyAttendanceResult::getOvertimeMinutes).sum());
