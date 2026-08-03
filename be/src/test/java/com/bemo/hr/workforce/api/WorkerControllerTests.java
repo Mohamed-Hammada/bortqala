@@ -36,9 +36,9 @@ class WorkerControllerTests {
 
     @Mock private com.bemo.hr.workforce.ContractorRepository contractorRepository;
     @Mock private com.bemo.hr.workforce.WorkerCategoryRepository workerCategoryRepository;
-
+    
     @Mock private com.bemo.hr.workforce.WorkerService workerService;
-
+    
     @InjectMocks
     private com.bemo.hr.workforce.WorkerController controller;
 

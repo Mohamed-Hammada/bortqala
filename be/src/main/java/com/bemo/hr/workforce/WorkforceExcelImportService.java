@@ -129,12 +129,13 @@ public class WorkforceExcelImportService {
             Map<String, Integer> indexes = headerIndexes(sheet.getRow(sheet.getFirstRowNum()));
             Map<String, String> mapping = decodeMapping(batch.getColumnMapping());
             DataFormatter formatter = new DataFormatter(Locale.forLanguageTag("ar-EG"));
-
+            
             Set<String> workerCodesToFetch = new java.util.HashSet<>();
+            Integer workerCodeIndex = indexes.get(mapping.get("workerCode"));
             for (int index = sheet.getFirstRowNum() + 1; index <= sheet.getLastRowNum(); index++) {
                 Row row = sheet.getRow(index);
                 if (row == null) continue;
-                String rawCode = text(row, (mapping.get("workerCode") == null ? null : Integer.parseInt(mapping.get("workerCode"))), formatter);
+                String rawCode = text(row, workerCodeIndex, formatter);
                 if (rawCode != null && !rawCode.isBlank()) {
                     workerCodesToFetch.add(rawCode.strip().toUpperCase(Locale.ROOT));
                 }
@@ -142,7 +143,7 @@ public class WorkforceExcelImportService {
 
             Map<String, Worker> workers = new HashMap<>();
             if (!workerCodesToFetch.isEmpty()) {
-                workerRepository.findByCodeIn(workerCodesToFetch).forEach(worker ->
+                workerRepository.findByCodeIn(workerCodesToFetch).forEach(worker -> 
                     workers.put(worker.getCode().strip().toUpperCase(Locale.ROOT), worker));
             }
 
@@ -243,8 +244,19 @@ public class WorkforceExcelImportService {
         WorkforceImportBatch batch = requireBatch(batchId);
         if ("REVERSED".equals(batch.getStatus())) return mapBatch(batch);
         if (!"IMPORTED".equals(batch.getStatus())) throw new BusinessRuleException("يمكن التراجع عن عملية منفذة فقط.");
-        for (WorkforceImportChange change : changeRepository.findByBatchIdOrderByCreatedAtDesc(batchId)) {
-            ManualAttendanceEntry entry = attendanceRepository.findById(change.getAttendanceEntryId()).orElse(null);
+
+        List<WorkforceImportChange> changes = changeRepository.findByBatchIdOrderByCreatedAtDesc(batchId);
+        Set<String> entryIdsToFetch = changes.stream()
+                .filter(c -> c.getReversedAt() == null)
+                .map(WorkforceImportChange::getAttendanceEntryId)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Map<String, ManualAttendanceEntry> entriesMap = attendanceRepository.findAllById(entryIdsToFetch).stream()
+                .collect(Collectors.toMap(ManualAttendanceEntry::getId, java.util.function.Function.identity()));
+
+        for (WorkforceImportChange change : changes) {
+            ManualAttendanceEntry entry = entriesMap.get(change.getAttendanceEntryId());
             if (entry == null || change.getReversedAt() != null) continue;
             if (change.isCreatedNew()) {
                 entry.update(entry.getWorkerId(), entry.getWorkDate(), BigDecimal.ZERO, entry.getCheckIn(), entry.getCheckOut(),
@@ -259,7 +271,7 @@ public class WorkforceExcelImportService {
         }
         batch.reversed(actor());
         auditService.record("REVERSE", "WORKFORCE_IMPORT", batchId, actor(),
-                "{\"changes\":" + changeRepository.findByBatchIdOrderByCreatedAtDesc(batchId).size() + "}", null);
+                "{\"changes\":" + changes.size() + "}", null);
         return mapBatch(batchRepository.save(batch));
     }
 
@@ -316,7 +328,7 @@ public class WorkforceExcelImportService {
             .map(WorkforceImportRow::getWorkerId)
             .filter(java.util.Objects::nonNull)
             .collect(Collectors.toSet());
-
+            
         Map<String, String> workerNames = new HashMap<>();
         if (!workerIdsToFetch.isEmpty()) {
             workerRepository.findByIdIn(workerIdsToFetch).forEach(worker -> workerNames.put(worker.getId(), worker.getFullName()));

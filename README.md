@@ -75,8 +75,8 @@ The repository contains `be/` (Spring Boot 4.1 backend with bundled Angular UI),
 ## 🛠️ Local Development & Quick Start
 
 ### Prerequisites
-- Java 26
-- Node 24.18+ / npm 11+
+- Java 21
+- Node 22.18+ / npm 11+
 - PostgreSQL 18.4 (`jdbc:postgresql://localhost:5432/bemo_erp`, user `root`, password `root`)
 
 ### Run Backend & Frontend

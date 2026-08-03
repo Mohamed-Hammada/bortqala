@@ -58,9 +58,9 @@ public class ApiExceptionHandler {
     @ExceptionHandler(BusinessRuleException.class)
     ResponseEntity<ApiError> businessConflict(BusinessRuleException exception, HttpServletRequest request) {
         List<ApiError.FieldError> fieldErrors = exception.getFields().stream()
-                .map(field -> new ApiError.FieldError(field, exception.getCode(), exception.getMessage()))
+                .map(field -> new ApiError.FieldError(field, exception.getCode(), translationService.translateOrDefault(exception.getCode(), resolveLocale(request), exception.getMessage())))
                 .toList();
-        return respond(exception.getCode(), exception.getStatus(), raw(exception.getMessage()), request, fieldErrors);
+        return respond(exception.getCode(), exception.getStatus(), translated(exception.getCode(), resolveLocale(request), exception.getMessage()), request, fieldErrors);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -120,6 +120,12 @@ public class ApiExceptionHandler {
         return new ErrorText(
                 translationService.translateOrDefault(key, "en-US", key),
                 translationService.translateOrDefault(key, locale, key));
+    }
+
+    private ErrorText translated(String key, String locale, String defaultMsg) {
+        return new ErrorText(
+                translationService.translateOrDefault(key, "en-US", defaultMsg),
+                translationService.translateOrDefault(key, locale, defaultMsg));
     }
 
     private ErrorText raw(String message) {

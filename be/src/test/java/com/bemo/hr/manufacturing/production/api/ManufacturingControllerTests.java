@@ -42,13 +42,13 @@ class ManufacturingControllerTests {
         org.mockito.Mockito.when(bomHeaderRepository.findAllByOrderByBomCodeAsc()).thenReturn(java.util.Collections.emptyList());
         assertThat(controller.listBoms()).isEmpty();
     }
-
+    
     @Test
     void createBom_savesAndReturnsBom() {
         ManufacturingApi.BomPayload payload = new ManufacturingApi.BomPayload("BOM1", "FG", java.math.BigDecimal.ONE, "Notes", true);
         com.bemo.hr.manufacturing.production.domain.BomHeader saved = new com.bemo.hr.manufacturing.production.domain.BomHeader("BOM1", "FG", java.math.BigDecimal.ONE, "Notes", true);
         org.mockito.Mockito.when(bomHeaderRepository.save(org.mockito.ArgumentMatchers.any())).thenReturn(saved);
-
+        
         ManufacturingApi.BomResponse response = controller.createBom(payload);
         assertThat(response.bomCode()).isEqualTo("BOM1");
     }

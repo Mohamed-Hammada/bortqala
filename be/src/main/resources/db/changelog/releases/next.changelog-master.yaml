@@ -37,3 +37,5 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260802_v85_change_password_translations.yaml
   - include:
       file: db/changelog/schema/update/20260802_v86_finance_journal_locking.yaml
+  - include:
+      file: db/changelog/schema/create/20260803_v87_tenant_features.yaml

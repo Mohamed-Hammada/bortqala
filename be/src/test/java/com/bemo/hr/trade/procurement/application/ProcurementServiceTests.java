@@ -30,9 +30,9 @@ class ProcurementServiceTests {
     @Mock private com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderRepository purchaseOrderRepository;
     @Mock private com.bemo.hr.trade.procurement.infrastructure.GoodsReceiptRepository goodsReceiptRepository;
     @Mock private com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository supplierInvoiceRepository;
-
+    
     @Mock private com.bemo.hr.finance.infrastructure.TaxRateRepository taxRateRepository;
-
+    
 
     @InjectMocks
     private ProcurementService service;

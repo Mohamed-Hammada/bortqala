@@ -43,7 +43,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-root}
       HR_JWT_SECRET: ${HR_JWT_SECRET:-dev-only-jwt-secret-key-32bytes-minimum}
       HR_JWT_ISSUER: ${HR_JWT_ISSUER:-bemo-erp}
-      HR_CORS_ALLOWED_ORIGINS: ${HR_CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200,http://localhost:80,https://*.trycloudflare.com,http://*.trycloudflare.com}
+      HR_CORS_ALLOWED_ORIGINS: ${HR_CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200,http://localhost:80}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     networks:

@@ -5,7 +5,7 @@ description: Continue and review the Bemo Spring Boot backend in be/. Use for em
 
 # Continue the HR backend
 
-Build the backend as a modular monolith on Spring Boot 4.1, Java 26, Gradle, PostgreSQL, JPA, Liquibase, Bean Validation, and Actuator. Preserve calculation evidence and manual decisions so an approved report is reproducible.
+Build the backend as a modular monolith on Spring Boot 4.1, Java 21, Gradle, PostgreSQL, JPA, Liquibase, Bean Validation, and Actuator. Preserve calculation evidence and manual decisions so an approved report is reproducible.
 
 ## Start every task
 

@@ -25,7 +25,7 @@ class WorkforceAttendanceServiceTests {
         var req = new WorkforceApi.BatchAttendanceRequest(java.util.List.of(
             new WorkforceApi.AttendanceCell("w1", "bad-date", java.math.BigDecimal.ONE, null, null, null, null, null, null, null)
         ));
-
+        
         var resp = service.saveBatch(req);
         org.assertj.core.api.Assertions.assertThat(resp.errors()).hasSize(1);
         org.assertj.core.api.Assertions.assertThat(resp.errors().get(0).field()).isEqualTo("workDate");

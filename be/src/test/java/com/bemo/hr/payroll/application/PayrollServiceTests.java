@@ -73,8 +73,8 @@ class PayrollServiceTests {
     @Test
     void reversePayment_throwsWhenPaymentNotFound() {
         var req = new PayrollApi.ReversePaymentRequest("missing-id", "reason");
-
-
+        
+        
         assertThatThrownBy(() -> payrollService.reversePayment(req, "admin"))
                 .isInstanceOf(com.bemo.hr.shared.domain.NotFoundException.class)
                 .hasMessageContaining("قيد الراتب غير موجود.");

@@ -44,3 +44,17 @@ databaseChangeLog:
             tableName: tenant_features
             columnNames: app_id, feature_key
             constraintName: pk_tenant_features
+        - addForeignKeyConstraint:
+            constraintName: fk_tenant_features_app
+            baseTableName: tenant_features
+            baseColumnNames: app_id
+            referencedTableName: apps
+            referencedColumnNames: id
+            onDelete: CASCADE
+            onUpdate: NO ACTION
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: tenant_features
+            constraintName: fk_tenant_features_app
+        - dropTable:
+            tableName: tenant_features

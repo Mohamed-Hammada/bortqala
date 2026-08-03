@@ -28,11 +28,11 @@ describe('AuthService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should login and set session', (done) => {
+  it('should login and set session', () => {
     service.login('TEST', 'admin', 'password').subscribe(response => {
       expect(response.accessToken).toBe('test-token');
-      expect(service.authenticated()).toBeTrue();
-      done();
+      expect(service.authenticated()).toBe(true);
+      
     });
 
     const req = httpTestingController.expectOne('/api/v1/auth/login');
@@ -49,6 +49,6 @@ describe('AuthService', () => {
 
   it('hasMenuAccess uses activeFeatures', () => {
     // Basic test
-    expect(service.hasMenuAccess('payroll')).toBeFalse();
+    expect(service.hasMenuAccess('payroll')).toBe(false);
   });
 });

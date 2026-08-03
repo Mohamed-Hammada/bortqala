@@ -45,7 +45,7 @@ class WorkforceExcelImportServiceTests {
     @Test
     void upload_throwsBusinessRuleException_onCorruptedFile() {
         byte[] badFile = new byte[] { 0, 1, 2, 3, 4, 5 };
-
+        
         assertThatThrownBy(() -> importService.upload(new org.springframework.mock.web.MockMultipartFile("file", "file.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", badFile)))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("تعذر قراءة ملف البصمة.")

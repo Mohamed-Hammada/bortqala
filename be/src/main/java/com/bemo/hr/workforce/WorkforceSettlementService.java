@@ -104,8 +104,12 @@ public class WorkforceSettlementService {
         List<ManualAttendanceEntry> entries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
         Map<String, List<ManualAttendanceEntry>> workerEntries = entries.stream()
                 .collect(Collectors.groupingBy(ManualAttendanceEntry::getWorkerId));
-        var workerIds = entries.stream().map(ManualAttendanceEntry::getWorkerId).collect(Collectors.toSet());
-        List<Worker> allWorkers = workerIds.isEmpty() ? java.util.Collections.emptyList() : workerRepository.findByIdIn(workerIds);
+        
+        // Fix P1-9: Load all ACTIVE workers (or ones with entries)
+        List<Worker> allWorkers = workerRepository.findAll().stream()
+                .filter(w -> "ACTIVE".equalsIgnoreCase(w.getStatus()) || workerEntries.containsKey(w.getId()))
+                .toList();
+
         var contractorIds = allWorkers.stream().map(Worker::getContractorId).filter(java.util.Objects::nonNull).collect(Collectors.toSet());
         List<Contractor> contractors = contractorIds.isEmpty() ? java.util.Collections.emptyList() : contractorRepository.findAllById(contractorIds);
         String fingerprint = inputFingerprint(entries, allWorkers);
@@ -302,8 +306,13 @@ public class WorkforceSettlementService {
     private boolean needsRecalculation(WorkforceSettlementPeriod period) {
         if (period.getCalculationVersion() == 0 || period.getInputFingerprint() == null) return true;
         var entries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
-        var workerIds = entries.stream().map(ManualAttendanceEntry::getWorkerId).collect(java.util.stream.Collectors.toSet());
-        var workers = workerIds.isEmpty() ? java.util.Collections.<Worker>emptyList() : workerRepository.findByIdIn(workerIds);
+        var entriesByWorker = entries.stream().collect(Collectors.groupingBy(ManualAttendanceEntry::getWorkerId));
+        
+        // P1-9: Same worker loading logic for the fingerprint check
+        List<Worker> workers = workerRepository.findAll().stream()
+                .filter(w -> "ACTIVE".equalsIgnoreCase(w.getStatus()) || entriesByWorker.containsKey(w.getId()))
+                .toList();
+
         return !period.getInputFingerprint().equals(inputFingerprint(entries, workers));
     }
 

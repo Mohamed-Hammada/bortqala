@@ -365,5 +365,6 @@ databaseChangeLog:
                 version BIGINT DEFAULT 0 NOT NULL,
                 updated_by VARCHAR(160),
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-                PRIMARY KEY (app_id, feature_key)
+                PRIMARY KEY (app_id, feature_key),
+                CONSTRAINT fk_tenant_features_app FOREIGN KEY (app_id) REFERENCES apps (id) ON DELETE CASCADE ON UPDATE NO ACTION
               );
