@@ -20,7 +20,7 @@ v88-en-009;WORKFORCE_IMPORT_NO_HEADER_ROW;en-US;The header row is missing.
 v88-ar-010;WORKFORCE_IMPORT_NOT_FOUND;ar-EG;عملية الاستيراد غير موجودة.
 v88-en-010;WORKFORCE_IMPORT_NOT_FOUND;en-US;Import operation not found.
 v88-ar-011;WORKFORCE_IMPORT_MAPPING_NOT_SAVED;ar-EG;يجب حفظ مطابقة الأعمدة قبل التحقق، ولا يمكن إعادة كتابة نتيجة تحقق محفوظة.
-v88-en-011;WORKFORCE_IMPORT_MAPPING_NOT_SAVED;en-US;Save the column mapping before validating; a saved validation result cannot be rewritten.
+v88-en-011;WORKFORCE_IMPORT_MAPPING_NOT_SAVED;en-US;"Save the column mapping before validating; a saved validation result cannot be rewritten."
 v88-ar-012;WORKFORCE_IMPORT_MAPPING_LOCKED;ar-EG;لا يمكن تعديل المطابقة بعد التحقق أو التنفيذ.
 v88-en-012;WORKFORCE_IMPORT_MAPPING_LOCKED;en-US;Mapping cannot be edited after validation or import.
 v88-ar-013;WORKFORCE_IMPORT_OPERATION_ID_REQUIRED;ar-EG;معرّف العملية مطلوب لمنع تكرار الاستيراد.
