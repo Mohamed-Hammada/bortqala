@@ -269,7 +269,8 @@ public class ReportingService {
         try {
             targetStatus = DailyStatus.valueOf(request.statusFilter());
         } catch (IllegalArgumentException e) {
-            throw new BusinessRuleException("حالة التصفية غير صالحة: " + request.statusFilter());
+            // Fix V-09: Invalid reporting status uses backend keys and localized messages
+            throw new com.bemo.hr.shared.domain.BusinessRuleException("Invalid status filter.", "INVALID_STATUS_FILTER", org.springframework.http.HttpStatus.BAD_REQUEST);
         }
         var allResults = dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(reportId);
         var matching = allResults.stream().filter(r -> r.getStatus() == targetStatus).toList();

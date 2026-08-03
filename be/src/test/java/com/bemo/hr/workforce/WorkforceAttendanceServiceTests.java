@@ -18,6 +18,19 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class WorkforceAttendanceServiceTests {
+
+    @Test
+    void validatesCellsThoroughlyIncludingDates() {
+        // Fix V-02 and V-18 baseline
+        var req = new WorkforceApi.BatchAttendanceRequest(java.util.List.of(
+            new WorkforceApi.AttendanceCell("w1", "bad-date", java.math.BigDecimal.ONE, null, null, null, null, null, null, null)
+        ));
+
+        var resp = service.saveBatch(req);
+        org.assertj.core.api.Assertions.assertThat(resp.errors()).hasSize(1);
+        org.assertj.core.api.Assertions.assertThat(resp.errors().get(0).field()).isEqualTo("workDate");
+    }
+
     @Mock private ManualAttendanceEntryRepository attendanceRepository;
     @Mock private WorkerRepository workerRepository;
     @Mock private AuditService auditService;

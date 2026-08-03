@@ -44,6 +44,7 @@ public class AuthService {
     private final TranslationService translationService;
     private final WorkerCategoryRepository workerCategoryRepository;
     private final AttendanceCategoryRepository attendanceCategoryRepository;
+    private final TenantFeatureService tenantFeatureService;
 
     public AuthService(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, JwtProperties jwtProperties,
                        AppUserRepository appUserRepository, RoleRepository roleRepository,
@@ -55,7 +56,8 @@ public class AuthService {
                        com.bemo.hr.audit.application.AuditService auditService,
                        TranslationService translationService,
                        WorkerCategoryRepository workerCategoryRepository,
-                       AttendanceCategoryRepository attendanceCategoryRepository) {
+                       AttendanceCategoryRepository attendanceCategoryRepository,
+                       TenantFeatureService tenantFeatureService) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
         this.jwtProperties = jwtProperties;
@@ -72,6 +74,7 @@ public class AuthService {
         this.translationService = translationService;
         this.workerCategoryRepository = workerCategoryRepository;
         this.attendanceCategoryRepository = attendanceCategoryRepository;
+        this.tenantFeatureService = tenantFeatureService;
     }
 
     private static final String DUMMY_PASSWORD_HASH =
@@ -516,10 +519,11 @@ public class AuthService {
     }
 
     private AuthApi.UserResponse toResponse(AppUser user) {
+        var activeFeatures = tenantFeatureService.getAllEnabled(user.getAppId());
         return new AuthApi.UserResponse(user.getId(), user.getUsername(), user.getDisplayName(),
                 user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
                 user.getAllowedMenus(), user.isCanViewSalary(), user.getCategoryId(),
-                user.isDashboardCustomizationEnabled(), user.isActive(), user.getVersion());
+                user.isDashboardCustomizationEnabled(), user.isActive(), user.getVersion(), activeFeatures);
     }
 
     private boolean hasRole(AppUser user, RoleCode roleCode) {

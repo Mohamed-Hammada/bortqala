@@ -54,7 +54,7 @@ public class BiometricImportService {
                     parsed.errors().stream().limit(PREVIEW_LIMIT).map(error -> new ImportApi.RowErrorResponse(
                             error.rowNumber(), error.message(), error.rawLine())).toList());
         } catch (IOException exception) {
-            throw new BusinessRuleException("Could not read the uploaded file.");
+            throw new BusinessRuleException("Could not read the uploaded file.", "EXCEL_READ_FAILED", org.springframework.http.HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -101,7 +101,7 @@ public class BiometricImportService {
                     .toList());
             return toResponse(batch, false);
         } catch (IOException exception) {
-            throw new BusinessRuleException("Could not read the uploaded file.");
+            throw new BusinessRuleException("Could not read the uploaded file.", "EXCEL_READ_FAILED", org.springframework.http.HttpStatus.BAD_REQUEST);
         }
     }
 

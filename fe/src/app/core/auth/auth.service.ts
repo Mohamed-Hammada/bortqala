@@ -202,6 +202,17 @@ export class AuthService {
   hasMenuAccess(menuId: string): boolean {
     const user = this.user();
     if (!user) return false;
+
+    // Feature toggles
+    const activeFeatures = user.activeFeatures ?? [];
+    if (menuId === 'payroll' && !activeFeatures.includes('payroll.enabled')) return false;
+    if (menuId === 'sales' && !activeFeatures.includes('sales.enabled')) return false;
+    if (menuId === 'production' && !activeFeatures.includes('manufacturing.enabled')) return false;
+    if (menuId === 'quality' && !activeFeatures.includes('quality.enabled')) return false;
+
+    if (!activeFeatures.includes('finance.enabled') && (menuId === 'accounts' || menuId === 'journal-entries' || menuId === 'banks' || menuId === 'tax-currency' || menuId === 'fiscal-periods')) return false;
+    if (!activeFeatures.includes('workforce.contractorAccounts.enabled') && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements')) return false;
+
     if (user.roles.includes('SUPER_ADMIN') || user.roles.includes('ADMIN')) return true;
     if (!user.allowedMenus || user.allowedMenus.length === 0) return true;
     return user.allowedMenus.includes(menuId);
