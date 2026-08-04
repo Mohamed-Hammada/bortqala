@@ -162,7 +162,7 @@ Shared contract done; wired into settlement periods + attendance reports. Remain
 
 ### S0-7 CI / branch protection (§5.2) — VERIFIED (2026-08-01)
 
-**CI config:** NEW `.github/workflows/ci.yml` (GitHub Actions; repo remote is `github.com/Mohamed-Hammada/bortqala`) with three jobs: **backend** (temurin 26 + gradle cache, `./gradlew clean test check`), **frontend** (node 24 + npm cache, `npm ci` → `npm run check:i18n` → `npx ng test --watch=false` → `npm run build`), **compose** (dev `config --quiet`, prod-overlay `config --quiet` with secrets via env, then `docker compose build`). The guide's literal `npm test -- --run` was rejected by Angular's vitest builder (`Unknown argument: run`) and replaced with the repo-proven `npx ng test --watch=false`.
+**CI config:** NEW `.github/workflows/ci.yml` (GitHub Actions; repo remote is `github.com/Mohamed-Hammada/bortqala`) with three jobs: **backend** (temurin 21 LTS + gradle cache, `./gradlew clean test check`), **frontend** (node 24 + npm cache, `npm ci` → `npm run check:i18n` → `npx ng test --watch=false` → `npm run build`), **compose** (dev `config --quiet`, prod-overlay `config --quiet` with secrets via env, then `docker compose build`). The guide's literal `npm test -- --run` was rejected by Angular's vitest builder (`Unknown argument: run`) and replaced with the repo-proven `npx ng test --watch=false`.
 
 **JaCoCo:** `id 'jacoco'` + `test { finalizedBy jacocoTestReport }` in `be/build.gradle`; report task runs under `./gradlew test check`.
 
@@ -822,7 +822,7 @@ Remaining gaps: prod TLS termination is delegated to an external reverse proxy/L
 - Verification:
 ```text
 CI config: VERIFIED (S0-7) — .github/workflows/ci.yml (GitHub Actions, repo remote github.com/Mohamed-Hammada/bortqala): three jobs.
-  - backend: setup-java temurin 26 + gradle cache -> `./gradlew clean test check`.
+  - backend: setup-java temurin 21 LTS + gradle cache -> `./gradlew clean test check`.
   - frontend: setup-node 24 + npm cache -> `npm ci` -> `npm run check:i18n` -> `npx ng test --watch=false` -> `npm run build`.
   - compose: `docker compose -f docker-compose.yml config --quiet` (dev), prod-overlay `config --quiet` with env secrets, then `docker compose build`.
   Deviation: guide's `npm test -- --run` rejected by Angular's vitest builder ("Unknown argument: run"); CI uses the repo-proven `npx ng test --watch=false` (same vitest run, non-watch).

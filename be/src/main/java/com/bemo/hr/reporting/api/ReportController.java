@@ -36,9 +36,18 @@ import java.util.List;
 public class ReportController {
     private final ReportingService reportingService;
     private final AuthService authService;
-    @GetMapping List<ReportingApi.Summary> list() { return reportingService.list(); }
-    @GetMapping("/{id}") ReportingApi.Details get(@PathVariable String id) { return reportingService.get(id); }
-    @GetMapping("/available-periods") List<ReportingApi.PeriodOption> available(@RequestParam int year) { return reportingService.availablePeriods(year); }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    List<ReportingApi.Summary> list() { return reportingService.list(); }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    ReportingApi.Details get(@PathVariable String id) { return reportingService.get(id); }
+
+    @GetMapping("/available-periods")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    List<ReportingApi.PeriodOption> available(@RequestParam int year) { return reportingService.availablePeriods(year); }
 
     @GetMapping("/preview")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
@@ -124,9 +133,12 @@ public class ReportController {
 
     @PostMapping("/{id}/reopen")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
-    TransitionResponse reopen(@PathVariable String id) { return reportingService.reopen(id); }
+    TransitionResponse reopen(@PathVariable String id, Authentication authentication) {
+        return reportingService.reopen(id, authentication.getName());
+    }
 
     @GetMapping("/{id}/export")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     ResponseEntity<byte[]> export(@PathVariable String id, Authentication authentication) {
         var preference = authService.currentPreferences(authentication.getName());
         var options = new ExcelExportOptions(preference.locale(), preference.excelTableStyle());

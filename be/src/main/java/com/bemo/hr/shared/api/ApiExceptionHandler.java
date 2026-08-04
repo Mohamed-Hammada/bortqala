@@ -113,11 +113,7 @@ public class ApiExceptionHandler {
     }
 
     private String resolveLocale(HttpServletRequest request) {
-        String acceptLang = request.getHeader("Accept-Language");
-        if (acceptLang != null && translationService.isSupported(acceptLang)) {
-            return acceptLang;
-        }
-        return "ar-EG";
+        return translationService.resolveLocale(request.getHeader("Accept-Language"));
     }
 
     private ErrorText translated(String key, String locale) {

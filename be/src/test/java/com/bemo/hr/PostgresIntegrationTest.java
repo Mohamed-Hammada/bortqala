@@ -4,24 +4,31 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Base class for integration tests that must exercise real PostgreSQL row
  * locking, transaction waiting, and isolation. Runs the exact production
  * Liquibase changelog and validates the entity mapping like production does.
+ *
+ * The container is started exactly once per JVM and kept alive until the
+ * process exits. It is intentionally NOT a JUnit {@code @Container}: a
+ * per-class lifecycle would restart Postgres between test classes while the
+ * Spring TestContext cache keeps the first class's datasource URL, so later
+ * classes would connect to a port where no Postgres is listening.
  */
-@Testcontainers
 @SpringBootTest
 public abstract class PostgresIntegrationTest {
 
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:17-alpine")
-                    .withDatabaseName("bemo_test")
-                    .withUsername("test")
-                    .withPassword("test");
+    static final PostgreSQLContainer<?> POSTGRES;
+
+    static {
+        POSTGRES = new PostgreSQLContainer<>("postgres:17-alpine")
+                .withDatabaseName("bemo_test")
+                .withUsername("test")
+                .withPassword("test");
+        POSTGRES.start();
+        Runtime.getRuntime().addShutdownHook(new Thread(POSTGRES::stop));
+    }
 
     @DynamicPropertySource
     static void configureDatabase(DynamicPropertyRegistry registry) {

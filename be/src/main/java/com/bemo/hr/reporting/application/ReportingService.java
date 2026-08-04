@@ -535,11 +535,11 @@ public class ReportingService {
     }
 
     @Transactional
-    public TransitionResponse reopen(String id) {
+    public TransitionResponse reopen(String id, String actor) {
         var report = requireReport(id);
         report.reopen();
         refreshUnresolved(report);
-        auditService.record("REPORT_REOPEN", "ATTENDANCE_REPORT", report.getId(), "ADMIN", "Reopened approved attendance report", null);
+        auditService.record("REPORT_REOPEN", "ATTENDANCE_REPORT", report.getId(), actor, "Reopened approved attendance report", null);
         return WorkflowTransitions.response(report.getStatus().name(), report.getVersion(), ATTENDANCE_REPORT_WORKFLOW);
     }
 

@@ -47,11 +47,11 @@ public class TenantFeatureService {
     }
 
     public Set<String> getAllEnabled(String appId) {
-        var dbFeatures = repository.findByAppId(appId).stream()
-                .collect(Collectors.toMap(TenantFeature::getFeatureKey, TenantFeature::isEnabled));
+        Map<String, Boolean> effective = new HashMap<>(DEFAULTS);
+        repository.findByAppId(appId).forEach(feature -> effective.put(feature.getFeatureKey(), feature.isEnabled()));
 
-        return DEFAULTS.entrySet().stream()
-                .filter(entry -> dbFeatures.getOrDefault(entry.getKey(), entry.getValue()))
+        return effective.entrySet().stream()
+                .filter(Map.Entry::getValue)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
     }

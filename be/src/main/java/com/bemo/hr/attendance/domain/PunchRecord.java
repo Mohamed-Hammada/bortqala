@@ -21,6 +21,8 @@ public class PunchRecord {
     private String batchId;
     @Column(name = "device_id", length = 36)
     private String deviceId;
+    @Column(name = "source_key", nullable = false, length = 200)
+    private String sourceKey;
     @Column(name = "employee_id")
     private String employeeId;
     @Column(name = "device_user_id", nullable = false, length = 100)
@@ -37,11 +39,12 @@ public class PunchRecord {
     protected PunchRecord() {
     }
 
-    public PunchRecord(String batchId, String deviceId, String employeeId, String deviceUserId, String rawName,
-                       Instant punchedAt, String rawLine, int rowNumber) {
+    public PunchRecord(String batchId, String deviceId, String sourceKey, String employeeId, String deviceUserId,
+                       String rawName, Instant punchedAt, String rawLine, int rowNumber) {
         this.id = UUID.randomUUID().toString();
         this.batchId = batchId;
         this.deviceId = deviceId;
+        this.sourceKey = sourceKey;
         this.employeeId = employeeId;
         this.deviceUserId = deviceUserId;
         this.rawName = rawName;
@@ -53,6 +56,7 @@ public class PunchRecord {
     public String getId() { return id; }
     public String getBatchId() { return batchId; }
     public String getDeviceId() { return deviceId; }
+    public String getSourceKey() { return sourceKey; }
     public String getEmployeeId() { return employeeId; }
     public String getDeviceUserId() { return deviceUserId; }
     public String getRawName() { return rawName; }

@@ -17,8 +17,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +40,7 @@ class ApiExceptionHandlerTests {
 
     @Test
     void businessConflictReturnsStandardShapeWithCorrelationId() {
+        when(translationService.resolveLocale(any())).thenReturn("ar-EG");
         when(translationService.translateOrDefault(anyString(), anyString(), anyString()))
                 .thenAnswer(invocation -> invocation.getArgument(2));
         var response = handler().businessConflict(new BusinessRuleException("Employee code already exists."), request());
@@ -65,6 +68,7 @@ class ApiExceptionHandlerTests {
 
     @Test
     void businessConflictWithCodeAndStatusReturnsMetadata() {
+        when(translationService.resolveLocale(any())).thenReturn("ar-EG");
         var exception = new BusinessRuleException("Schedule effective date ranges cannot overlap.",
                 "SCHEDULE_RULE_OVERLAP", org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY,
                 List.of("schedules[0]", "schedules[2]"));
@@ -83,6 +87,7 @@ class ApiExceptionHandlerTests {
 
     @Test
     void authenticationReturnsLocalizedMessages() {
+        when(translationService.resolveLocale(any())).thenReturn("ar-EG");
         when(translationService.translateOrDefault(eq("error.invalidCredentials"), eq("en-US"), anyString()))
                 .thenReturn("The username or password is incorrect.");
         when(translationService.translateOrDefault(eq("error.invalidCredentials"), eq("ar-EG"), anyString()))
@@ -98,6 +103,7 @@ class ApiExceptionHandlerTests {
 
     @Test
     void validationReturnsFieldErrorsArray() {
+        when(translationService.resolveLocale(any())).thenReturn("ar-EG");
         var target = new Object();
         var bindingResult = new BeanPropertyBindingResult(target, "target");
         bindingResult.addError(new FieldError("target", "employeeCode", "must not be blank"));
@@ -111,5 +117,20 @@ class ApiExceptionHandlerTests {
         assertThat(response.getBody().fieldErrors().get(0).field()).isEqualTo("employeeCode");
         assertThat(response.getBody().fieldErrors().get(0).code()).isEqualTo("INVALID_VALUE");
         assertThat(response.getBody().fieldErrors().get(0).message()).isEqualTo("must not be blank");
+    }
+
+    @Test
+    void acceptLanguageHeaderIsDelegatedToLocaleResolver() {
+        when(translationService.resolveLocale("en-US, en;q=0.9")).thenReturn("en-US");
+        when(translationService.translateOrDefault(eq("error.invalidCredentials"), eq("en-US"), anyString()))
+                .thenReturn("Invalid credentials.");
+        var request = request();
+        request.addHeader("Accept-Language", "en-US, en;q=0.9");
+
+        var response = handler().authentication(new BadCredentialsException("bad"), request);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(401);
+        assertThat(response.getBody().localizedMessage()).isEqualTo("Invalid credentials.");
+        verify(translationService).resolveLocale("en-US, en;q=0.9");
     }
 }

@@ -44,6 +44,9 @@ services:
       HR_JWT_SECRET: ${HR_JWT_SECRET:-dev-only-jwt-secret-key-32bytes-minimum}
       HR_JWT_ISSUER: ${HR_JWT_ISSUER:-bemo-erp}
       HR_CORS_ALLOWED_ORIGINS: ${HR_CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200,http://localhost:80}
+      # Only the frontend proxy (on the internal network) may supply X-Forwarded-For.
+      # Never use 0.0.0.0/0 here: it would let any client spoof its IP address.
+      HR_SECURITY_TRUSTED_PROXIES: ${HR_SECURITY_TRUSTED_PROXIES:-10.42.0.0/24}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     networks:
@@ -70,5 +73,8 @@ volumes:
 networks:
   internal:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 10.42.0.0/24
   public:
     driver: bridge

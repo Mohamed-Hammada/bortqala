@@ -9,12 +9,17 @@ import java.util.List;
 @Component
 public class ClientIpResolver {
 
+    private static final List<String> FORBIDDEN_TRUSTS = List.of("0.0.0.0/0", "::/0");
+
     private final List<String> trustedProxies;
 
     public ClientIpResolver(@Value("${hr.security.trusted-proxies:}") List<String> trustedProxies) {
         this.trustedProxies = trustedProxies == null
                 ? List.of()
-                : trustedProxies.stream().filter(candidate -> candidate != null && !candidate.isBlank()).toList();
+                : trustedProxies.stream()
+                        .filter(candidate -> candidate != null && !candidate.isBlank())
+                        .filter(candidate -> !FORBIDDEN_TRUSTS.contains(candidate.trim()))
+                        .toList();
     }
 
     public String resolve(HttpServletRequest request) {

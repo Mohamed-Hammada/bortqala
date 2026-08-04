@@ -29,6 +29,7 @@ public class BiometricImportController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     List<ImportApi.BatchResponse> list() { return biometricImportService.listBatches(); }
 
     @PostMapping(path = "/preview", consumes = "multipart/form-data")
@@ -49,14 +50,16 @@ public class BiometricImportController {
     @ResponseStatus(HttpStatus.CREATED)
     ImportApi.BatchResponse upload(@RequestParam MultipartFile file,
                                    @RequestParam String deviceName,
-                                   @RequestParam(defaultValue = "HR User") String actor) {
-        return biometricImportService.importFile(file, deviceName, actor);
+                                   Authentication authentication) {
+        return biometricImportService.importFile(file, deviceName, authentication.getName());
     }
 
     @GetMapping("/unmatched")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     List<ImportApi.UnmatchedIdentityResponse> unmatched() { return biometricImportService.unmatchedIdentities(); }
 
     @GetMapping("/devices")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     List<ImportApi.DeviceResponse> devices() {
         return biometricDeviceSyncService.listDevices();
     }

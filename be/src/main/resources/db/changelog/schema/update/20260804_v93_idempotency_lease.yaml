@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260804-v93-idempotency-lease
+      author: Mohamed-Hammada
+      comment: Adds a lease expiry so an IN_PROGRESS idempotency reservation that was never completed (for example after a process crash) is treated as available again and can be re-reserved by a retry.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: idempotency_keys
+              columnName: lease_expires_at
+      changes:
+        - addColumn:
+            tableName: idempotency_keys
+            columns:
+              - column:
+                  name: lease_expires_at
+                  type: timestamp
+      rollback:
+        - dropColumn:
+            tableName: idempotency_keys
+            columnName: lease_expires_at

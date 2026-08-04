@@ -38,6 +38,8 @@ public class IdempotencyKey implements Persistable<String> {
     private Instant createdAt;
     @Column(name = "completed_at")
     private Instant completedAt;
+    @Column(name = "lease_expires_at")
+    private Instant leaseExpiresAt;
 
     protected IdempotencyKey() {
     }
@@ -61,6 +63,8 @@ public class IdempotencyKey implements Persistable<String> {
         this.completedAt = Instant.now();
     }
 
+    public void setLeaseExpiresAt(Instant leaseExpiresAt) { this.leaseExpiresAt = leaseExpiresAt; }
+
     public String getId() { return id; }
     @Override public boolean isNew() { return createdAt == null; }
     public String getOperationType() { return operationType; }
@@ -70,6 +74,7 @@ public class IdempotencyKey implements Persistable<String> {
     public String getResponseReferenceOrBody() { return responseReferenceOrBody; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getCompletedAt() { return completedAt; }
+    public Instant getLeaseExpiresAt() { return leaseExpiresAt; }
 
     @PrePersist
     void prePersist() { createdAt = Instant.now(); }

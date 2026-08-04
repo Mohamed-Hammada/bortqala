@@ -27,6 +27,10 @@ services:
       HR_JWT_SECRET: ${HR_JWT_SECRET:?HR_JWT_SECRET must be set}
       HR_JWT_ISSUER: ${HR_JWT_ISSUER:?HR_JWT_ISSUER must be set}
       HR_CORS_ALLOWED_ORIGINS: ${HR_CORS_ALLOWED_ORIGINS:?HR_CORS_ALLOWED_ORIGINS must be an explicit HTTPS allowlist}
+      # Must be the internal compose network CIDR only (matches networks.internal
+      # ipam below). Never set to 0.0.0.0/0: that would let any client spoof its
+      # IP through X-Forwarded-For and defeat login rate limiting.
+      HR_SECURITY_TRUSTED_PROXIES: ${HR_SECURITY_TRUSTED_PROXIES:?HR_SECURITY_TRUSTED_PROXIES must be the internal network CIDR}
       HR_DEVICE_CREDENTIALS_SECRET: ${HR_DEVICE_CREDENTIALS_SECRET:?HR_DEVICE_CREDENTIALS_SECRET must be a Base64-encoded 32-byte key}
       HR_BOOTSTRAP_APP_CODE: ${HR_BOOTSTRAP_APP_CODE:?HR_BOOTSTRAP_APP_CODE must be set}
       HR_BOOTSTRAP_APP_NAME: ${HR_BOOTSTRAP_APP_NAME:?HR_BOOTSTRAP_APP_NAME must be set}

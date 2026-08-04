@@ -3,20 +3,24 @@ package com.bemo.hr.shared.idempotency.application;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.idempotency.domain.IdempotencyKey;
 import com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository;
-import org.springframework.dao.DataIntegrityViolationException;
+import com.bemo.hr.shared.security.TenantContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HexFormat;
-import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 @Service
 public class IdempotencyService {
+
+    static final Duration IN_PROGRESS_LEASE = Duration.ofSeconds(60);
 
     private final IdempotencyKeyRepository idempotencyKeyRepository;
 
@@ -24,46 +28,75 @@ public class IdempotencyService {
         this.idempotencyKeyRepository = idempotencyKeyRepository;
     }
 
+    /**
+     * Reservation-based idempotency. The key is claimed with an atomic
+     * {@code INSERT ... ON CONFLICT DO NOTHING} so concurrent duplicates never
+     * depend on a post-failure re-read. A reservation that was never completed
+     * (for example after a process crash) expires after {@value #IN_PROGRESS_LEASE}
+     * and can be claimed by the next retry.
+     */
     public <T> T execute(String operationType, String operationId, String requestHash,
                          Supplier<T> operation, Function<T, String> referenceWriter, Function<String, T> replayMapper) {
-        Optional<IdempotencyKey> existing = idempotencyKeyRepository
-                .findByOperationTypeAndOperationId(operationType, operationId);
-        if (existing.isPresent()) {
-            return replayOrReject(existing.get(), requestHash, replayMapper);
+        Instant now = Instant.now();
+        if (reserve(operationType, operationId, requestHash, now.plus(IN_PROGRESS_LEASE))) {
+            return runAndRecord(operationType, operationId, requestHash, operation, referenceWriter);
         }
-        IdempotencyKey key = new IdempotencyKey(operationType, operationId, requestHash);
-        try {
-            idempotencyKeyRepository.saveAndFlush(key);
-        } catch (DataIntegrityViolationException exception) {
-            IdempotencyKey concurrent = idempotencyKeyRepository
-                    .findByOperationTypeAndOperationId(operationType, operationId)
-                    .orElse(null);
-            if (concurrent != null) {
-                return replayOrReject(concurrent, requestHash, replayMapper);
-            }
-            throw new BusinessRuleException("The operation is already being processed.", "IDEMPOTENCY_IN_PROGRESS", HttpStatus.CONFLICT);
+        IdempotencyKey existing = idempotencyKeyRepository
+                .findByOperationTypeAndOperationId(operationType, operationId)
+                .orElseThrow(() -> inProgress());
+        if (IdempotencyKey.STATUS_COMPLETED.equals(existing.getStatus())) {
+            return replay(existing, requestHash, replayMapper);
         }
+        if (isAvailableForRetry(existing, now)
+                && steal(operationType, operationId, requestHash, now.plus(IN_PROGRESS_LEASE), now)) {
+            return runAndRecord(operationType, operationId, requestHash, operation, referenceWriter);
+        }
+        throw inProgress();
+    }
+
+    private <T> T runAndRecord(String operationType, String operationId, String requestHash,
+                               Supplier<T> operation, Function<T, String> referenceWriter) {
         try {
             T result = operation.get();
-            key.complete(referenceWriter.apply(result));
-            idempotencyKeyRepository.saveAndFlush(key);
+            idempotencyKeyRepository.complete(TenantContext.currentOrSystem(), operationType, operationId,
+                    referenceWriter.apply(result));
             return result;
         } catch (RuntimeException exception) {
-            key.fail();
-            idempotencyKeyRepository.saveAndFlush(key);
+            idempotencyKeyRepository.fail(TenantContext.currentOrSystem(), operationType, operationId);
             throw exception;
         }
     }
 
-    private <T> T replayOrReject(IdempotencyKey key, String requestHash, Function<String, T> replayMapper) {
-        if (IdempotencyKey.STATUS_COMPLETED.equals(key.getStatus())) {
-            if (!key.getRequestHash().equals(requestHash)) {
-                throw new BusinessRuleException("The same operation key was already used with a different request.",
-                        "IDEMPOTENCY_HASH_MISMATCH", HttpStatus.CONFLICT);
-            }
-            return replayMapper.apply(key.getResponseReferenceOrBody());
+    private boolean reserve(String operationType, String operationId, String requestHash, Instant leaseExpiresAt) {
+        return idempotencyKeyRepository.reserve(UUID.randomUUID().toString(), TenantContext.currentOrSystem(),
+                operationType, operationId, requestHash, leaseExpiresAt) == 1;
+    }
+
+    private boolean steal(String operationType, String operationId, String requestHash,
+                          Instant leaseExpiresAt, Instant now) {
+        return idempotencyKeyRepository.steal(TenantContext.currentOrSystem(), operationType, operationId,
+                requestHash, leaseExpiresAt, now) == 1;
+    }
+
+    private boolean isAvailableForRetry(IdempotencyKey key, Instant now) {
+        if (IdempotencyKey.STATUS_FAILED.equals(key.getStatus())) {
+            return true;
         }
-        throw new BusinessRuleException("The operation is already being processed.", "IDEMPOTENCY_IN_PROGRESS", HttpStatus.CONFLICT);
+        return IdempotencyKey.STATUS_IN_PROGRESS.equals(key.getStatus())
+                && (key.getLeaseExpiresAt() == null || key.getLeaseExpiresAt().isBefore(now));
+    }
+
+    private <T> T replay(IdempotencyKey key, String requestHash, Function<String, T> replayMapper) {
+        if (!key.getRequestHash().equals(requestHash)) {
+            throw new BusinessRuleException("The same operation key was already used with a different request.",
+                    "IDEMPOTENCY_HASH_MISMATCH", HttpStatus.CONFLICT);
+        }
+        return replayMapper.apply(key.getResponseReferenceOrBody());
+    }
+
+    private BusinessRuleException inProgress() {
+        return new BusinessRuleException("The operation is already being processed.",
+                "IDEMPOTENCY_IN_PROGRESS", HttpStatus.CONFLICT);
     }
 
     public static String hash(String content) {

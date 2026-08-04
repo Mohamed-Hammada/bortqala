@@ -8,7 +8,19 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import java.util.Map;
+
 public class TenantFeatureInterceptor implements HandlerInterceptor {
+
+    private static final Map<String, String> GATED_PREFIXES = Map.ofEntries(
+            Map.entry("/api/v1/payroll", "payroll.enabled"),
+            Map.entry("/api/v1/trade/sales", "sales.enabled"),
+            Map.entry("/api/v1/trade/procurement", "procurement.enabled"),
+            Map.entry("/api/v1/manufacturing", "manufacturing.enabled"),
+            Map.entry("/api/v1/finance", "finance.enabled"),
+            Map.entry("/api/v1/fiscal-periods", "finance.enabled"),
+            Map.entry("/api/v1/workforce/contractors", "workforce.contractorAccounts.enabled"),
+            Map.entry("/api/v1/workforce/settlements", "workforce.contractorAccounts.enabled"));
 
     private final TenantFeatureService featureService;
 
@@ -20,31 +32,16 @@ public class TenantFeatureInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String uri = request.getRequestURI();
         String appId = TenantContext.currentOrSystem();
-        
+
         if ("SYSTEM".equals(appId) || appId == null) {
             return true;
         }
 
-        if (uri.startsWith("/api/v1/payroll") && !featureService.isEnabled(appId, "payroll.enabled")) {
-            throw new BusinessRuleException("Feature is disabled", "FEATURE_DISABLED", HttpStatus.FORBIDDEN);
-        }
-        if (uri.startsWith("/api/v1/trade/sales") && !featureService.isEnabled(appId, "sales.enabled")) {
-            throw new BusinessRuleException("Feature is disabled", "FEATURE_DISABLED", HttpStatus.FORBIDDEN);
-        }
-        if (uri.startsWith("/api/v1/manufacturing") && !featureService.isEnabled(appId, "manufacturing.enabled")) {
-            throw new BusinessRuleException("Feature is disabled", "FEATURE_DISABLED", HttpStatus.FORBIDDEN);
-        }
-        if (uri.startsWith("/api/v1/finance") && !featureService.isEnabled(appId, "finance.enabled")) {
-            throw new BusinessRuleException("Feature is disabled", "FEATURE_DISABLED", HttpStatus.FORBIDDEN);
-        }
-        if (uri.startsWith("/api/v1/fiscal-periods") && !featureService.isEnabled(appId, "finance.enabled")) {
-            throw new BusinessRuleException("Feature is disabled", "FEATURE_DISABLED", HttpStatus.FORBIDDEN);
-        }
-        if (uri.startsWith("/api/v1/workforce/contractors") && !featureService.isEnabled(appId, "workforce.contractorAccounts.enabled")) {
-            throw new BusinessRuleException("Feature is disabled", "FEATURE_DISABLED", HttpStatus.FORBIDDEN);
-        }
-        if (uri.startsWith("/api/v1/workforce/settlements") && !featureService.isEnabled(appId, "workforce.contractorAccounts.enabled")) {
-            throw new BusinessRuleException("Feature is disabled", "FEATURE_DISABLED", HttpStatus.FORBIDDEN);
+        for (Map.Entry<String, String> gate : GATED_PREFIXES.entrySet()) {
+            if (uri.startsWith(gate.getKey())
+                    && !featureService.isEnabled(appId, gate.getValue())) {
+                throw new BusinessRuleException("Feature is disabled", "FEATURE_DISABLED", HttpStatus.FORBIDDEN);
+            }
         }
 
         return true;

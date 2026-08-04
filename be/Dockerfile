@@ -1,5 +1,5 @@
 # Stage 1: Build Spring Boot Application Jar
-FROM eclipse-temurin:26-jdk-alpine AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 
 WORKDIR /app
 
@@ -17,7 +17,7 @@ COPY src/ src/
 RUN ./gradlew bootJar -x test -x buildFrontend --no-daemon
 
 # Stage 2: Production Lightweight Runtime
-FROM eclipse-temurin:26-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 

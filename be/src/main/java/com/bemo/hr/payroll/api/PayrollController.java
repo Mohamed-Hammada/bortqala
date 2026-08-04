@@ -21,14 +21,22 @@ import java.time.format.DateTimeFormatter;
 @RestController
 @RequestMapping("/api/v1/payroll")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER')")
+@PreAuthorize("""
+        hasAnyRole(
+            'SUPER_ADMIN',
+            'ADMIN',
+            'HR_MANAGER',
+            'HR_REVIEWER',
+            'PAYROLL_MANAGER'
+        )
+        and @salaryAuthorization.canView(authentication)
+        """)
 public class PayrollController {
 
     private final PayrollService payrollService;
     private final AuthService authService;
 
     @GetMapping
-    @PreAuthorize("@salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse getSheet(
             @RequestParam int year,
             @RequestParam int month,
@@ -37,7 +45,8 @@ public class PayrollController {
     }
 
     @PostMapping("/pay")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER') "
+            + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse recordPayment(
             @Valid @RequestBody PayrollApi.PaymentRequest request,
             Authentication authentication) {
@@ -45,7 +54,8 @@ public class PayrollController {
     }
 
     @PostMapping("/pay-bulk")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER') "
+            + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse payBulk(
             @Valid @RequestBody PayrollApi.BulkPaymentRequest request,
             Authentication authentication) {
@@ -53,7 +63,8 @@ public class PayrollController {
     }
 
     @PostMapping("/transition")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER') "
+            + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse transitionStatus(
             @Valid @RequestBody PayrollApi.StatusTransitionRequest request,
             Authentication authentication) {
@@ -61,7 +72,8 @@ public class PayrollController {
     }
 
     @PostMapping("/reverse")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER') "
+            + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse reversePayment(
             @Valid @RequestBody PayrollApi.ReversePaymentRequest request,
             Authentication authentication) {
@@ -69,7 +81,6 @@ public class PayrollController {
     }
 
     @GetMapping("/export")
-    @PreAuthorize("@salaryAuthorization.canView(authentication)")
     public ResponseEntity<byte[]> export(
             @RequestParam int year,
             @RequestParam int month,

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -45,6 +46,8 @@ class SupplierPaymentValidationTests {
         supplierInvoiceRepository = mock(SupplierInvoiceRepository.class);
         supplierPaymentRepository = mock(SupplierPaymentRepository.class);
         IdempotencyKeyRepository idempotencyKeyRepository = mock(IdempotencyKeyRepository.class);
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+                .thenReturn(1);
         when(idempotencyKeyRepository.findByOperationTypeAndOperationId(anyString(), anyString()))
                 .thenReturn(Optional.empty());
         procurementService = new ProcurementService(mock(PurchaseOrderRepository.class),

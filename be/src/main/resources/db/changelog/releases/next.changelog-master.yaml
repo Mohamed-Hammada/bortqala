@@ -47,3 +47,7 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260804_v90_punch_device_scoped_dedup.yaml
   - include:
       file: db/changelog/data/insert/20260804_v91_backend_error_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260804_v92_punch_source_identity.yaml
+  - include:
+      file: db/changelog/schema/update/20260804_v93_idempotency_lease.yaml

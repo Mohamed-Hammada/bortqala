@@ -115,7 +115,7 @@ class ReportingTransitionTests {
         AttendanceReport report = approvedReport();
         when(attendanceReportRepository.findById(report.getId())).thenReturn(Optional.of(report));
 
-        TransitionResponse response = service().reopen(report.getId());
+        TransitionResponse response = service().reopen(report.getId(), "tester");
 
         assertThat(response.status()).isEqualTo("IN_REVIEW");
         assertThat(response.allowedActions()).containsExactly("APPROVE", "EXPORT");

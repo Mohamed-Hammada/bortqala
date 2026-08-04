@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -19,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -29,6 +32,8 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -414,6 +419,66 @@ class AuthSecurityIntegrationTests {
     }
 
     @Test
+    void viewerWithSalaryFlagCannotReadPayroll() throws Exception {
+        AppUser viewer = createUser("viewersal", Set.of(RoleCode.VIEWER), true);
+
+        mockMvc.perform(get("/api/v1/payroll")
+                        .param("year", "2026").param("month", "8")
+                        .header("Authorization", "Bearer " + mintAccessToken(viewer)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void financeManagerWithSalaryFlagCannotReadPayroll() throws Exception {
+        AppUser finance = createUser("finsal", Set.of(RoleCode.FINANCE_MANAGER), true);
+
+        mockMvc.perform(get("/api/v1/payroll")
+                        .param("year", "2026").param("month", "8")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void payrollManagerWithoutSalaryFlagCannotCallSalaryReturningEndpoints() throws Exception {
+        AppUser restricted = createUser("payrestrict2", Set.of(RoleCode.PAYROLL_MANAGER), false);
+        String token = mintAccessToken(restricted);
+
+        mockMvc.perform(get("/api/v1/payroll")
+                        .param("year", "2026").param("month", "8")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/payroll/export")
+                        .param("year", "2026").param("month", "8")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/payroll/pay")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"employeeId\":\"emp-1\",\"periodYear\":2026,\"periodMonth\":8}")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/payroll/pay-bulk")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"periodYear\":2026,\"periodMonth\":8}")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/payroll/transition")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"periodYear\":2026,\"periodMonth\":8,\"targetStatus\":\"PAID\"}")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/payroll/reverse")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"paymentId\":\"p-1\",\"reason\":\"test\"}")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void tokenWithForeignIssuerIsRejected() throws Exception {
         AppUser superAdmin = loadWithRoles(
                 appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, "superadmin").orElseThrow().getId());
@@ -442,6 +507,140 @@ class AuthSecurityIntegrationTests {
         mockMvc.perform(get("/api/v1/workforce/contractors")
                         .header("Authorization", "Bearer " + before))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void reportEndpointsRequireHrOrAdminRoles() throws Exception {
+        AppUser reviewer = createUser("rptreviewer", Set.of(RoleCode.HR_REVIEWER));
+        AppUser finance = createUser("rptfinance", Set.of(RoleCode.FINANCE_MANAGER));
+
+        mockMvc.perform(get("/api/v1/reports")
+                        .header("Authorization", "Bearer " + mintAccessToken(reviewer)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/reports")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/reports/does-not-exist/export")
+                        .header("Authorization", "Bearer " + mintAccessToken(reviewer)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void reportReopenRequiresAdminOrHrManagerRole() throws Exception {
+        AppUser reviewer = createUser("reopreviewer", Set.of(RoleCode.HR_REVIEWER));
+        AppUser admin = loadWithRoles(
+                appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, "admin").orElseThrow().getId());
+
+        mockMvc.perform(post("/api/v1/reports/does-not-exist/reopen")
+                        .header("Authorization", "Bearer " + mintAccessToken(reviewer)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/reports/does-not-exist/reopen")
+                        .header("Authorization", "Bearer " + mintAccessToken(admin)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void importEndpointsRequireHrOrAdminRoles() throws Exception {
+        AppUser reviewer = createUser("impviewer", Set.of(RoleCode.HR_REVIEWER));
+        AppUser finance = createUser("impfinance", Set.of(RoleCode.FINANCE_MANAGER));
+
+        mockMvc.perform(get("/api/v1/imports")
+                        .header("Authorization", "Bearer " + mintAccessToken(reviewer)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/imports")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/imports/unmatched")
+                        .header("Authorization", "Bearer " + mintAccessToken(reviewer)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/imports/unmatched")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void biometricDeviceListRequiresManagementRoles() throws Exception {
+        AppUser reviewer = createUser("devreviewer", Set.of(RoleCode.HR_REVIEWER));
+        AppUser manager = createUser("devmanager", Set.of(RoleCode.HR_MANAGER));
+        AppUser finance = createUser("devfinance", Set.of(RoleCode.FINANCE_MANAGER));
+
+        mockMvc.perform(get("/api/v1/imports/devices")
+                        .header("Authorization", "Bearer " + mintAccessToken(manager)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/imports/devices")
+                        .header("Authorization", "Bearer " + mintAccessToken(reviewer)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/imports/devices")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void importUploadRequiresHrOrAdminRoles() throws Exception {
+        AppUser reviewer = createUser("upreviewer", Set.of(RoleCode.HR_REVIEWER));
+        AppUser finance = createUser("upfinance", Set.of(RoleCode.FINANCE_MANAGER));
+        byte[] csv = ("Employee code,Day,Official check-in,Official check-out,Actual check-in,Actual check-out\n"
+                + "EMP-101,2026-07-24,08:00,16:00,08:07,16:15\n").getBytes(StandardCharsets.UTF_8);
+        MockMultipartFile file = new MockMultipartFile("file", "attendance.csv", "text/csv", csv);
+
+        mockMvc.perform(multipart("/api/v1/imports")
+                        .file(file)
+                        .param("deviceName", "device-x")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(multipart("/api/v1/imports")
+                        .file(file)
+                        .param("deviceName", "device-x")
+                        .header("Authorization", "Bearer " + mintAccessToken(reviewer)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void disabledPayrollFeatureReturnsForbiddenForPayrollEndpoints() throws Exception {
+        AppUser payroll = createUser("featpay", Set.of(RoleCode.PAYROLL_MANAGER), true);
+        TenantFeature payrollFeature = enableFeatureRow("payroll.enabled", false);
+        try {
+            mockMvc.perform(get("/api/v1/payroll")
+                            .param("year", "2026").param("month", "8")
+                            .header("Authorization", "Bearer " + mintAccessToken(payroll)))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.code").value("FEATURE_DISABLED"));
+        } finally {
+            payrollFeature.setEnabled(true);
+            tenantFeatureRepository.save(payrollFeature);
+        }
+    }
+
+    @Test
+    void disabledProcurementFeatureReturnsForbiddenForProcurementEndpoints() throws Exception {
+        AppUser manager = createUser("featproc", Set.of(RoleCode.WORKFORCE_MANAGER));
+        TenantFeature procurementFeature = enableFeatureRow("procurement.enabled", false);
+        try {
+            mockMvc.perform(get("/api/v1/trade/procurement/orders")
+                            .header("Authorization", "Bearer " + mintAccessToken(manager)))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.code").value("FEATURE_DISABLED"));
+        } finally {
+            procurementFeature.setEnabled(true);
+            tenantFeatureRepository.save(procurementFeature);
+        }
+    }
+
+    private TenantFeature enableFeatureRow(String featureKey, boolean enabled) {
+        var featureId = new TenantFeatureId(appId, featureKey);
+        var feature = tenantFeatureRepository.findById(featureId)
+                .orElseGet(() -> new TenantFeature(appId, featureKey, enabled, null, "auth-security-tests"));
+        feature.setEnabled(enabled);
+        return tenantFeatureRepository.save(feature);
     }
 
     private int suffixIp() {

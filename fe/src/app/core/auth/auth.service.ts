@@ -239,10 +239,6 @@ export class AuthService {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
       const stored = JSON.parse(raw) as StoredSession;
-      if (new Date(stored.expiresAt).getTime() <= Date.now()) {
-        localStorage.removeItem(STORAGE_KEY);
-        return null;
-      }
       return {
         accessToken: '',
         tokenType: 'Bearer',

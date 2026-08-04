@@ -72,7 +72,8 @@ public class DemoScenarioDataService {
         // No security punches on day three: report generation proposes a category holiday.
         var batch = importBatchRepository.save(new ImportBatch(DEMO_CHECKSUM, "demo-attendance-cases.xlsx", "Demo biometric device", "demo-seed", rows.size(), rows.size(), 0));
         int row = 2; var zone = ZoneId.of(companyZone);
-        for (var seed : rows) punchRecordRepository.save(new PunchRecord(batch.getId(), null, seed.employee().getId(), seed.employee().getDeviceUserId(),
+        for (var seed : rows) punchRecordRepository.save(new PunchRecord(batch.getId(), null, "FILE_DEVICE:" + batch.getDeviceName(),
+                seed.employee().getId(), seed.employee().getDeviceUserId(),
                 seed.employee().getFullName(), seed.date().atTime(seed.time()).atZone(zone).toInstant(), "demo", row++));
     }
     private List<LocalDate> firstWorkDays(YearMonth month, int count) {

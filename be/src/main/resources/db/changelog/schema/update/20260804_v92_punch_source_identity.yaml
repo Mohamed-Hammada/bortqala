@@ -1,0 +1,140 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260804-v92-punch-source-identity
+      author: Mohamed-Hammada
+      comment: Adds a non-null source identity to punch_records so file imports and live syncs dedupe against the same source key even when device_id is null.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: punch_records
+              columnName: source_key
+      changes:
+        - addColumn:
+            tableName: punch_records
+            columns:
+              - column:
+                  name: source_key
+                  type: VARCHAR(200)
+      rollback:
+        - dropColumn:
+            tableName: punch_records
+            columnName: source_key
+  - changeSet:
+      id: 20260804-v92-punch-source-backfill-device
+      author: Mohamed-Hammada
+      comment: Backfill live-sync punches with their device-scoped source identity.
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 1
+            sql: SELECT COUNT(*) FROM punch_records WHERE device_id IS NOT NULL AND source_key IS NULL
+      changes:
+        - sql:
+            sql: UPDATE punch_records SET source_key = 'DEVICE:' || device_id WHERE source_key IS NULL AND device_id IS NOT NULL
+      rollback:
+        - sql:
+            sql: UPDATE punch_records SET source_key = NULL WHERE source_key LIKE 'DEVICE:%'
+  - changeSet:
+      id: 20260804-v92-punch-source-backfill-file
+      author: Mohamed-Hammada
+      comment: Backfill file-import punches with the stable source identity derived from the importing batch device name.
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 1
+            sql: SELECT COUNT(*) FROM punch_records p JOIN import_batches b ON b.id = p.batch_id WHERE p.source_key IS NULL
+      changes:
+        - sql:
+            sql: UPDATE punch_records p SET source_key = 'FILE_DEVICE:' || (SELECT b.device_name FROM import_batches b WHERE b.id = p.batch_id) WHERE p.source_key IS NULL
+      rollback:
+        - sql:
+            sql: UPDATE punch_records SET source_key = NULL WHERE source_key LIKE 'FILE_DEVICE:%'
+  - changeSet:
+      id: 20260804-v92-punch-source-dedupe
+      author: Mohamed-Hammada
+      comment: Resolves pre-existing duplicates so the source-scoped unique index can be created; the lexicographically smallest punch id wins.
+      changes:
+        - sql:
+            sql: |
+              DELETE FROM punch_records p
+              WHERE EXISTS (
+                  SELECT 1 FROM punch_records q
+                  WHERE q.app_id = p.app_id
+                    AND q.source_key = p.source_key
+                    AND q.device_user_id = p.device_user_id
+                    AND q.punched_at = p.punched_at
+                    AND q.id < p.id
+              )
+  - changeSet:
+      id: 20260804-v92-punch-source-not-null
+      author: Mohamed-Hammada
+      comment: Every punch now carries a source identity.
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM information_schema.columns WHERE table_name = 'punch_records' AND column_name = 'source_key' AND is_nullable = 'NO'
+      changes:
+        - addNotNullConstraint:
+            tableName: punch_records
+            columnName: source_key
+            columnDataType: VARCHAR(200)
+      rollback:
+        - dropNotNullConstraint:
+            tableName: punch_records
+            columnName: source_key
+            columnDataType: VARCHAR(200)
+  - changeSet:
+      id: 20260804-v92-punch-source-dedup-index
+      author: Mohamed-Hammada
+      comment: Unique per (app, source, device user, punch time) so duplicate file-import and concurrent sync paths are conflict-safe.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: uq_punch_records_source_user_time
+      changes:
+        - createIndex:
+            indexName: uq_punch_records_source_user_time
+            tableName: punch_records
+            unique: true
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: source_key
+              - column:
+                  name: device_user_id
+              - column:
+                  name: punched_at
+      rollback:
+        - dropIndex:
+            indexName: uq_punch_records_source_user_time
+            tableName: punch_records
+  - changeSet:
+      id: 20260804-v92-punch-drop-legacy-device-dedup-index
+      author: Mohamed-Hammada
+      comment: The V90 device-scoped index is fully superseded by the source-scoped index.
+      preConditions:
+        - onFail: MARK_RAN
+        - indexExists:
+            indexName: uq_punch_records_app_device_user_time
+      changes:
+        - dropIndex:
+            indexName: uq_punch_records_app_device_user_time
+            tableName: punch_records
+      rollback:
+        - createIndex:
+            indexName: uq_punch_records_app_device_user_time
+            tableName: punch_records
+            unique: true
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: device_id
+              - column:
+                  name: device_user_id
+              - column:
+                  name: punched_at

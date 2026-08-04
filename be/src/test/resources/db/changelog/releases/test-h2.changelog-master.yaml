@@ -378,5 +378,29 @@ databaseChangeLog:
             sql: |
               ALTER TABLE punch_records ADD COLUMN IF NOT EXISTS device_id VARCHAR(36);
               CREATE UNIQUE INDEX IF NOT EXISTS uq_punch_records_app_device_user_time ON punch_records (app_id, device_id, device_user_id, punched_at);
+  - changeSet:
+      id: 20260804-v92-punch-source-identity-h2
+      author: Mohamed-Hammada
+      comment: H2 mirror for punch source identity and conflict-safe dedup.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              ALTER TABLE punch_records ADD COLUMN IF NOT EXISTS source_key VARCHAR(200);
+              UPDATE punch_records SET source_key = 'DEVICE:' || device_id WHERE source_key IS NULL AND device_id IS NOT NULL;
+              UPDATE punch_records p SET source_key = 'FILE_DEVICE:' || (SELECT b.device_name FROM import_batches b WHERE b.id = p.batch_id) WHERE p.source_key IS NULL;
+              DELETE FROM punch_records p WHERE EXISTS (SELECT 1 FROM punch_records q WHERE q.app_id = p.app_id AND q.source_key = p.source_key AND q.device_user_id = p.device_user_id AND q.punched_at = p.punched_at AND q.id < p.id);
+              ALTER TABLE punch_records ALTER COLUMN source_key SET NOT NULL;
+              CREATE UNIQUE INDEX IF NOT EXISTS uq_punch_records_source_user_time ON punch_records (app_id, source_key, device_user_id, punched_at);
+              DROP INDEX IF EXISTS uq_punch_records_app_device_user_time;
+  - changeSet:
+      id: 20260804-v93-idempotency-lease-h2
+      author: Mohamed-Hammada
+      comment: H2 mirror for the idempotency reservation lease column.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              ALTER TABLE idempotency_keys ADD COLUMN IF NOT EXISTS lease_expires_at TIMESTAMP;
   - include:
       file: db/changelog/data/insert/20260804_v91_backend_error_translations.yaml

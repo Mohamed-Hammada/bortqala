@@ -12,6 +12,7 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
+import com.bemo.hr.shared.security.TenantContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -89,14 +91,27 @@ public class BiometricImportService {
                     file.getOriginalFilename() == null ? "biometric-file" : file.getOriginalFilename(),
                     deviceName, actor, parsed.totalRows(), parsed.importedRows(), parsed.errors().size()));
 
-            var punches = parsed.rows().stream().map(row -> {
+            String appId = TenantContext.require();
+            String sourceKey = "FILE_DEVICE:" + deviceName.strip();
+            int imported = 0;
+            int duplicates = 0;
+            for (var row : parsed.rows()) {
                 String employeeId = employeeRepository.findByEmployeeCodeIgnoreCase(row.deviceUserId())
                         .or(() -> employeeRepository.findByDeviceUserId(row.deviceUserId()))
                         .map(employee -> employee.getId()).orElse(null);
-                return new PunchRecord(batch.getId(), null, employeeId, row.deviceUserId(), row.employeeName(),
+                int inserted = punchRecordRepository.insertIfAbsent(UUID.randomUUID().toString(), appId,
+                        batch.getId(), sourceKey, null, employeeId, row.deviceUserId(), row.employeeName(),
                         row.punchedAt(), row.rawLine(), row.rowNumber());
-            }).toList();
-            punchRecordRepository.saveAll(punches);
+                if (inserted == 1) {
+                    imported++;
+                } else {
+                    duplicates++;
+                }
+            }
+            if (duplicates > 0) {
+                batch.updateCounts(parsed.totalRows(), imported, parsed.errors().size());
+                importBatchRepository.save(batch);
+            }
             importRowErrorRepository.saveAll(parsed.errors().stream()
                     .map(error -> new ImportRowError(batch.getId(), error.rowNumber(), error.message(), error.rawLine()))
                     .toList());

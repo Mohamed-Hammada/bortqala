@@ -12,6 +12,7 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
+import com.bemo.hr.shared.security.TenantContext;
 import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -92,21 +94,23 @@ public class BiometricDeviceSyncService {
             ImportBatch batch = importBatchRepository.save(new ImportBatch(checksum,
                     "device-sync-" + device.getId() + "-" + Instant.now().toEpochMilli() + ".json",
                     device.getName(), actor, remote.punches().size(), 0, 0));
+            String appId = TenantContext.require();
+            String sourceKey = "DEVICE:" + device.getId();
             int rowNumber = 0;
             for (var punch : remote.punches()) {
                 rowNumber++;
-                if (punchRecordRepository.existsByDeviceIdAndDeviceUserIdAndPunchedAt(
-                        device.getId(), punch.deviceUserId(), punch.punchedAt())) {
-                    duplicates++;
-                    continue;
-                }
                 String employeeId = employeeRepository.findByEmployeeCodeIgnoreCase(punch.deviceUserId())
                         .or(() -> employeeRepository.findByDeviceUserId(punch.deviceUserId()))
                         .map(employee -> employee.getId()).orElse(null);
-                punchRecordRepository.save(new PunchRecord(batch.getId(), device.getId(), employeeId, punch.deviceUserId(),
-                        punch.employeeName(), punch.punchedAt(), punch.rawLine(), rowNumber));
-                imported++;
-                if (latest == null || punch.punchedAt().isAfter(latest)) latest = punch.punchedAt();
+                int inserted = punchRecordRepository.insertIfAbsent(UUID.randomUUID().toString(), appId,
+                        batch.getId(), sourceKey, device.getId(), employeeId, punch.deviceUserId(),
+                        punch.employeeName(), punch.punchedAt(), punch.rawLine(), rowNumber);
+                if (inserted == 1) {
+                    imported++;
+                    if (latest == null || punch.punchedAt().isAfter(latest)) latest = punch.punchedAt();
+                } else {
+                    duplicates++;
+                }
             }
             batch.updateCounts(remote.punches().size(), imported, 0);
             importBatchRepository.save(batch);
