@@ -3,6 +3,7 @@ package com.bemo.hr.party;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +43,7 @@ class BusinessPartyService {
     BusinessPartyApi.Response update(String id, BusinessPartyApi.Request request) {
         var party = require(id);
         if (request.version() == null || request.version() != party.getVersion()) {
-            throw new BusinessRuleException("This business party changed since it was loaded. Refresh and try again.");
+            throw new BusinessRuleException("This business party changed since it was loaded. Refresh and try again.", "PTY_VERSION_CONFLICT", HttpStatus.CONFLICT);
         }
         validateUniqueCode(request.code(), id);
         validateManagedType(request.managedType());
@@ -87,34 +88,34 @@ class BusinessPartyService {
     }
 
     private BusinessParty require(String id) {
-        return businessPartyRepository.findById(id).orElseThrow(() -> new NotFoundException("Business party not found."));
+        return businessPartyRepository.findById(id).orElseThrow(() -> new NotFoundException("Business party not found.", "PTY_NOT_FOUND"));
     }
 
     private void validateUniqueCode(String code, String currentId) {
         boolean duplicate = currentId == null ? businessPartyRepository.existsByCodeIgnoreCase(code)
                 : businessPartyRepository.existsByCodeIgnoreCaseAndIdNot(code, currentId);
-        if (duplicate) throw new BusinessRuleException("Business party code already exists.");
+        if (duplicate) throw new BusinessRuleException("Business party code already exists.", "PTY_CODE_EXISTS", HttpStatus.CONFLICT);
     }
 
     private void validateManagedType(String managedType) {
         if (managedType != null && !managedType.isBlank()
                 && !java.util.Set.of("DIRECT", "MANAGED").contains(managedType)) {
-            throw new BusinessRuleException("Invalid relationship type. Allowed: DIRECT, MANAGED.");
+            throw new BusinessRuleException("Invalid relationship type. Allowed: DIRECT, MANAGED.", "PTY_INVALID_RELATIONSHIP_TYPE", HttpStatus.CONFLICT);
         }
     }
 
     private void validateFields(BusinessPartyApi.Request r) {
         if (r.email() != null && !r.email().isBlank()
                 && !r.email().matches("^[\\w.%+-]+@[\\w.-]+\\.[a-zA-Z]{2,}$")) {
-            throw new BusinessRuleException("Invalid email format.");
+            throw new BusinessRuleException("Invalid email format.", "PTY_INVALID_EMAIL", HttpStatus.CONFLICT);
         }
         if (r.taxId() != null && !r.taxId().isBlank()
                 && !r.taxId().matches("^[A-Za-z0-9\\-]{6,50}$")) {
-            throw new BusinessRuleException("Invalid tax ID format.");
+            throw new BusinessRuleException("Invalid tax ID format.", "PTY_INVALID_TAX_ID", HttpStatus.CONFLICT);
         }
         if (r.managedType() != null && r.managedType().equals("MANAGED")
                 && (r.responsiblePartyId() == null || r.responsiblePartyId().isBlank())) {
-            throw new BusinessRuleException("Responsible partner is required for managed suppliers.");
+            throw new BusinessRuleException("Responsible partner is required for managed suppliers.", "PTY_RESPONSIBLE_PARTY_REQUIRED", HttpStatus.CONFLICT);
         }
     }
 

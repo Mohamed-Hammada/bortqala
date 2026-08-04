@@ -218,7 +218,8 @@ public class WorkforceExcelImportService {
 
     @Transactional
     public CommitResponse commit(String batchId, CommitRequest request) {
-        WorkforceImportBatch batch = requireBatch(batchId);
+        WorkforceImportBatch batch = batchRepository.findByIdForUpdate(batchId)
+                .orElseThrow(() -> new BusinessRuleException("عملية الاستيراد غير موجودة.", "WORKFORCE_IMPORT_NOT_FOUND", HttpStatus.CONFLICT));
         if (request == null || request.operationId() == null || request.operationId().isBlank()) {
             throw new BusinessRuleException("معرّف العملية مطلوب لمنع تكرار الاستيراد.", "WORKFORCE_IMPORT_OPERATION_ID_REQUIRED", HttpStatus.CONFLICT);
         }

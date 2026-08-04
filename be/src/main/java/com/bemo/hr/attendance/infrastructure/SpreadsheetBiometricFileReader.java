@@ -9,6 +9,7 @@ import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -50,17 +51,17 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
             return switch (extension) {
                 case "csv", "txt" -> readCsv(inputStream);
                 case "xlsx", "xls" -> readWorkbook(inputStream);
-                default -> throw new BusinessRuleException("Supported biometric files are CSV, XLSX, and XLS.");
+                default -> throw new BusinessRuleException("Supported biometric files are CSV, XLSX, and XLS.", "BIO_UNSUPPORTED_FORMAT", HttpStatus.CONFLICT);
             };
         } catch (IOException exception) {
-            throw new BusinessRuleException("Could not read the biometric file.");
+            throw new BusinessRuleException("Could not read the biometric file.", "BIO_FILE_READ_FAILED", HttpStatus.CONFLICT);
         }
     }
 
     private ParsedFile readCsv(InputStream inputStream) throws IOException {
         try (var reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             var headerLine = reader.readLine();
-            if (headerLine == null) throw new BusinessRuleException("The biometric file is empty.");
+            if (headerLine == null) throw new BusinessRuleException("The biometric file is empty.", "BIO_FILE_MISSING", HttpStatus.CONFLICT);
             headerLine = headerLine.replace("\uFEFF", "");
             char delimiter = detectDelimiter(headerLine);
             var headers = indexHeaders(parseCsvLine(headerLine, delimiter));
@@ -84,7 +85,7 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
         try (var workbook = WorkbookFactory.create(inputStream)) {
             var sheet = workbook.getSheetAt(0);
             var headerRow = sheet.getRow(sheet.getFirstRowNum());
-            if (headerRow == null) throw new BusinessRuleException("The biometric sheet is empty.");
+            if (headerRow == null) throw new BusinessRuleException("The biometric sheet is empty.", "BIO_SHEET_MISSING", HttpStatus.CONFLICT);
             var formatter = new DataFormatter(Locale.ROOT);
             var headerValues = new ArrayList<String>();
             for (int index = 0; index < headerRow.getLastCellNum(); index++) {
@@ -142,7 +143,8 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
         if (!result.keySet().containsAll(structuredKeys)) {
             throw new BusinessRuleException(
                     "Required columns: Employee code, Day, Official check-in, Official check-out, Actual check-in, Actual check-out. "
-                            + "/ الأعمدة المطلوبة: كود الموظف، اليوم، الحضور الرسمي، الانصراف الرسمي، الحضور الفعلي، الانصراف الفعلي.");
+                            + "/ الأعمدة المطلوبة: كود الموظف، اليوم، الحضور الرسمي، الانصراف الرسمي، الحضور الفعلي، الانصراف الفعلي.",
+                    "BIO_REQUIRED_COLUMNS_MISSING", HttpStatus.CONFLICT);
         }
         return result;
     }

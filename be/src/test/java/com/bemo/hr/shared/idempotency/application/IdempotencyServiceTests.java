@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.Optional;
 
@@ -35,7 +36,7 @@ class IdempotencyServiceTests {
                 () -> "payment-id", value -> value, reference -> reference);
 
         assertThat(result).isEqualTo("payment-id");
-        verify(idempotencyKeyRepository, atLeastOnce()).save(any(IdempotencyKey.class));
+        verify(idempotencyKeyRepository, atLeastOnce()).saveAndFlush(any(IdempotencyKey.class));
     }
 
     @Test
@@ -74,7 +75,7 @@ class IdempotencyServiceTests {
         assertThatThrownBy(() -> service().execute("PAYMENT", "op-1", "hash-a",
                 () -> "ignored", value -> value, reference -> reference))
                 .isInstanceOf(BusinessRuleException.class);
-        verify(idempotencyKeyRepository, never()).save(any(IdempotencyKey.class));
+        verify(idempotencyKeyRepository, never()).saveAndFlush(any(IdempotencyKey.class));
     }
 
     @Test
@@ -84,7 +85,56 @@ class IdempotencyServiceTests {
         assertThatThrownBy(() -> service().execute("PAYMENT", "op-1", "hash-a",
                 () -> { throw new IllegalStateException("boom"); }, value -> value, reference -> reference))
                 .isInstanceOf(IllegalStateException.class);
-        verify(idempotencyKeyRepository, atLeastOnce()).save(any(IdempotencyKey.class));
+        verify(idempotencyKeyRepository, atLeastOnce()).saveAndFlush(any(IdempotencyKey.class));
+    }
+
+    @Test
+    void concurrentDuplicateInsertIsResolvedByReloadingAndReplaying() {
+        when(idempotencyKeyRepository.findByOperationTypeAndOperationId("PAYMENT", "op-1"))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(completedKey()));
+        when(idempotencyKeyRepository.saveAndFlush(any(IdempotencyKey.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key"));
+
+        String result = service().execute("PAYMENT", "op-1", "hash-a",
+                () -> { throw new AssertionError("operation must not run after the race"); },
+                value -> value, reference -> "replayed:" + reference);
+
+        assertThat(result).isEqualTo("replayed:payment-id");
+    }
+
+    @Test
+    void concurrentDuplicateInsertOfADifferentRequestIsRejected() {
+        when(idempotencyKeyRepository.findByOperationTypeAndOperationId("PAYMENT", "op-1"))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(completedKey()));
+        when(idempotencyKeyRepository.saveAndFlush(any(IdempotencyKey.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key"));
+
+        assertThatThrownBy(() -> service().execute("PAYMENT", "op-1", "hash-b",
+                () -> "ignored", value -> value, reference -> reference))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("different request");
+    }
+
+    @Test
+    void concurrentDuplicateInsertStillInProgressIsRejected() {
+        when(idempotencyKeyRepository.findByOperationTypeAndOperationId("PAYMENT", "op-1"))
+                .thenReturn(Optional.empty())
+                .thenReturn(Optional.of(new IdempotencyKey("PAYMENT", "op-1", "hash-a")));
+        when(idempotencyKeyRepository.saveAndFlush(any(IdempotencyKey.class)))
+                .thenThrow(new DataIntegrityViolationException("duplicate key"));
+
+        assertThatThrownBy(() -> service().execute("PAYMENT", "op-1", "hash-a",
+                () -> "ignored", value -> value, reference -> reference))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("already being processed");
+    }
+
+    private IdempotencyKey completedKey() {
+        var key = new IdempotencyKey("PAYMENT", "op-1", "hash-a");
+        key.complete("payment-id");
+        return key;
     }
 
     @Test

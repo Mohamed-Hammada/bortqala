@@ -8,6 +8,7 @@ import com.bemo.hr.manufacturing.production.infrastructure.ProductionOrderReposi
 import com.bemo.hr.manufacturing.production.infrastructure.QualityInspectionRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -68,7 +69,7 @@ public class ManufacturingController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'HR_MANAGER')")
     public ManufacturingApi.ProductionOrderResponse startProductionOrder(@PathVariable String id) {
         ProductionOrder order = productionOrderRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("أمر الإنتاج غير موجود"));
+                .orElseThrow(() -> new BusinessRuleException("أمر الإنتاج غير موجود", "MFG_PRODUCTION_ORDER_NOT_FOUND", HttpStatus.CONFLICT));
         order.updateStatus(ProductionOrder.Status.IN_PROGRESS);
         return toOrderResponse(productionOrderRepository.save(order));
     }
@@ -78,7 +79,7 @@ public class ManufacturingController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'HR_MANAGER')")
     public ManufacturingApi.ProductionOrderResponse completeProductionOrder(@PathVariable String id) {
         ProductionOrder order = productionOrderRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("أمر الإنتاج غير موجود"));
+                .orElseThrow(() -> new BusinessRuleException("أمر الإنتاج غير موجود", "MFG_PRODUCTION_ORDER_NOT_FOUND", HttpStatus.CONFLICT));
         order.updateStatus(ProductionOrder.Status.COMPLETED);
         return toOrderResponse(productionOrderRepository.save(order));
     }

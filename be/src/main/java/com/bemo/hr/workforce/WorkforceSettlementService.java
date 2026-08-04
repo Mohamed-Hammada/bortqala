@@ -4,6 +4,7 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.api.TransitionResponse;
 import com.bemo.hr.shared.api.WorkflowTransitions;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -70,7 +71,7 @@ public class WorkforceSettlementService {
     @Transactional
     public WorkforceApi.SettlementPeriodResponse createPeriod(WorkforceApi.SettlementPeriodRequest request) {
         if (request.startDate().compareTo(request.endDate()) > 0) {
-            throw new BusinessRuleException("تاريخ بداية فترة التسوية يجب ألا يتجاوز تاريخ النهاية.");
+            throw new BusinessRuleException("تاريخ بداية فترة التسوية يجب ألا يتجاوز تاريخ النهاية.", "SETTL_START_AFTER_END", HttpStatus.CONFLICT);
         }
         WorkforceSettlementPeriod period = new WorkforceSettlementPeriod(
                 request.periodCode(), request.startDate(), request.endDate(), request.cycleType(), "DRAFT");
@@ -98,7 +99,7 @@ public class WorkforceSettlementService {
     private WorkforceApi.SettlementCalculationSummary calculateInTransaction(String periodId) {
         WorkforceSettlementPeriod period = requirePeriod(periodId);
         if ("LOCKED".equals(period.getStatus()) || "APPROVED".equals(period.getStatus())) {
-            throw new BusinessRuleException("لا يمكن إعادة احتساب فترة معتمدة أو مقفلة.");
+            throw new BusinessRuleException("لا يمكن إعادة احتساب فترة معتمدة أو مقفلة.", "SETTL_RECALCULATE_APPROVED_LOCKED", HttpStatus.CONFLICT);
         }
 
         List<ManualAttendanceEntry> entries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
@@ -244,7 +245,7 @@ public class WorkforceSettlementService {
     @Transactional
     public TransitionResponse approvePeriod(String periodId) {
         WorkforceSettlementPeriod period = requireFreshCalculated(periodId, "REVIEWED");
-        if (period.getResultErrorCount() > 0) throw new BusinessRuleException("يجب معالجة أخطاء التسوية قبل الاعتماد.");
+        if (period.getResultErrorCount() > 0) throw new BusinessRuleException("يجب معالجة أخطاء التسوية قبل الاعتماد.", "SETTL_ERRORS_MUST_BE_RESOLVED", HttpStatus.CONFLICT);
         period.setStatus("APPROVED");
         auditService.record("APPROVE", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
@@ -255,7 +256,7 @@ public class WorkforceSettlementService {
     @Transactional
     public TransitionResponse lockPeriod(String periodId) {
         WorkforceSettlementPeriod period = requirePeriod(periodId);
-        if (!"APPROVED".equals(period.getStatus())) throw new BusinessRuleException("لا يمكن قفل الفترة قبل اعتمادها.");
+        if (!"APPROVED".equals(period.getStatus())) throw new BusinessRuleException("لا يمكن قفل الفترة قبل اعتمادها.", "SETTL_LOCK_BEFORE_APPROVAL", HttpStatus.CONFLICT);
         period.setStatus("LOCKED");
         auditService.record("LOCK", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
@@ -279,7 +280,7 @@ public class WorkforceSettlementService {
         if (!requiredStatus.equals(period.getStatus())) {
             throw new BusinessRuleException("الحالة الحالية لا تسمح بهذا الإجراء. الحالة المطلوبة: " + requiredStatus);
         }
-        if (needsRecalculation(period)) throw new BusinessRuleException("تغيرت بيانات الحضور أو الأسعار أو السياسات؛ أعد الاحتساب أولاً.");
+        if (needsRecalculation(period)) throw new BusinessRuleException("تغيرت بيانات الحضور أو الأسعار أو السياسات؛ أعد الاحتساب أولاً.", "SETTL_STALE_RECALCULATION_REQUIRED", HttpStatus.CONFLICT);
         return period;
     }
 

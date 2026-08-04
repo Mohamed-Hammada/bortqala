@@ -4,6 +4,7 @@ import com.bemo.hr.trade.sales.domain.SalesOrder;
 import com.bemo.hr.trade.sales.infrastructure.SalesOrderRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -43,7 +44,7 @@ public class SalesController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'HR_MANAGER')")
     public SalesApi.SalesOrderResponse confirmSalesOrder(@PathVariable String id) {
         SalesOrder so = salesOrderRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("أمر البيع غير موجود"));
+                .orElseThrow(() -> new BusinessRuleException("أمر البيع غير موجود", "SALE_ORDER_NOT_FOUND", HttpStatus.CONFLICT));
         so.updateStatus(SalesOrder.Status.CONFIRMED);
         return toResponse(salesOrderRepository.save(so));
     }

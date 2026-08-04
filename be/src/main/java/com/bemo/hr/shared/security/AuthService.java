@@ -200,7 +200,7 @@ public class AuthService {
     public void revokeSessions(String id, String currentUsername) {
         String appId = TenantContext.require();
         var user = appUserRepository.findById(id).filter(item -> item.getAppId().equals(appId))
-                .orElseThrow(() -> new NotFoundException("User not found."));
+                .orElseThrow(() -> new NotFoundException("User not found.", "AUTH_USER_NOT_FOUND"));
         user.bumpTokenVersion();
         refreshTokenService.revokeAllForUser(appId, user.getId(), currentUsername);
         auditService.record("SESSIONS_REVOKED", "USER", user.getId(), currentUsername,
@@ -211,7 +211,7 @@ public class AuthService {
     public void unlock(String id, String currentUsername) {
         String appId = TenantContext.require();
         var user = appUserRepository.findById(id).filter(item -> item.getAppId().equals(appId))
-                .orElseThrow(() -> new NotFoundException("User not found."));
+                .orElseThrow(() -> new NotFoundException("User not found.", "AUTH_USER_NOT_FOUND"));
         user.unlock();
         auditService.record("USER_UNLOCKED", "USER", user.getId(), currentUsername,
                 "Unlocked account for user " + user.getUsername(), null);
@@ -294,7 +294,8 @@ public class AuthService {
         var actor = requireByUsername(app.getId(), currentUsername);
         if (request.adminDashboardCustomizationEnabled() != app.isAdminDashboardCustomizationEnabled()
                 && !hasRole(actor, RoleCode.SUPER_ADMIN)) {
-            throw new BusinessRuleException("Only a Super Admin can change dashboard customization access for admins.");
+            throw new BusinessRuleException("Only a Super Admin can change dashboard customization access for admins.",
+                    "AUTH_DASHBOARD_CUSTOMIZATION_SUPER_ADMIN_ONLY", HttpStatus.CONFLICT);
         }
         int minPass = request.minPasswordLength() == null || request.minPasswordLength() <= 0 ? 8 : request.minPasswordLength();
         app.updateSettings(request.sessionTimeoutMinutes(), request.sessionTimeoutEnabled(), request.showReportPresets(), minPass);
@@ -341,9 +342,10 @@ public class AuthService {
     public AuthApi.UserResponse update(String id, AuthApi.UserUpsertRequest request, String currentUsername) {
         String appId = TenantContext.require();
         var user = appUserRepository.findById(id).filter(item -> item.getAppId().equals(appId))
-                .orElseThrow(() -> new NotFoundException("User not found."));
+                .orElseThrow(() -> new NotFoundException("User not found.", "AUTH_USER_NOT_FOUND"));
         if (request.version() == null || request.version() != user.getVersion()) {
-            throw new BusinessRuleException("This user changed since it was loaded. Refresh and try again.");
+            throw new BusinessRuleException("This user changed since it was loaded. Refresh and try again.",
+                    "AUTH_USER_VERSION_CONFLICT", HttpStatus.CONFLICT);
         }
 
         var actor = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, currentUsername)
@@ -354,10 +356,12 @@ public class AuthService {
 
         if (!actorIsSuperAdmin) {
             if (targetIsSuperAdmin) {
-                throw new BusinessRuleException("Only a Super Admin can modify or deactivate Super Admin accounts.");
+                throw new BusinessRuleException("Only a Super Admin can modify or deactivate Super Admin accounts.",
+                        "AUTH_SUPER_ADMIN_ACCOUNT_PROTECTED", HttpStatus.CONFLICT);
             }
             if (request.roles().contains(RoleCode.SUPER_ADMIN)) {
-                throw new BusinessRuleException("Only a Super Admin can assign the Super Admin role.");
+                throw new BusinessRuleException("Only a Super Admin can assign the Super Admin role.",
+                        "AUTH_SUPER_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN", HttpStatus.CONFLICT);
             }
         }
 
@@ -370,7 +374,8 @@ public class AuthService {
 
         validate(request, appId, id, false);
         if (user.getUsername().equalsIgnoreCase(currentUsername) && !request.active()) {
-            throw new BusinessRuleException("You cannot deactivate your own account.");
+            throw new BusinessRuleException("You cannot deactivate your own account.",
+                    "AUTH_SELF_DEACTIVATE_FORBIDDEN", HttpStatus.CONFLICT);
         }
         String passwordHash = request.password() == null || request.password().isBlank()
                 ? null : passwordEncoder.encode(request.password());
@@ -412,7 +417,7 @@ public class AuthService {
 
     private Instant issueAccessToken(String appId, AppUser user, Instant now) {
         var app = tenantApplicationRepository.findById(appId)
-                .orElseThrow(() -> new NotFoundException("Application not found."));
+                .orElseThrow(() -> new NotFoundException("Application not found.", "APP_NOT_FOUND"));
         Duration ttl = jwtProperties.ttl();
         if (app.isSessionTimeoutEnabled() && app.getSessionTimeoutMinutes() > 0) {
             ttl = Duration.ofMinutes(app.getSessionTimeoutMinutes());
@@ -422,7 +427,7 @@ public class AuthService {
 
     private String accessToken(String appId, AppUser user, Instant now, Instant expiresAt) {
         var app = tenantApplicationRepository.findById(appId)
-                .orElseThrow(() -> new NotFoundException("Application not found."));
+                .orElseThrow(() -> new NotFoundException("Application not found.", "APP_NOT_FOUND"));
         boolean passwordChangeRequired = user.isMustChangePassword();
         var builder = JwtClaimsSet.builder()
                 .issuer(jwtProperties.issuer())
@@ -459,10 +464,12 @@ public class AuthService {
     }
 
     private void validate(AuthApi.UserUpsertRequest request, String appId, String currentId, boolean passwordRequired) {
-        if (request.roles() == null || request.roles().isEmpty()) throw new BusinessRuleException("Select at least one role.");
+        if (request.roles() == null || request.roles().isEmpty()) throw new BusinessRuleException("Select at least one role.",
+                "AUTH_ROLE_REQUIRED", HttpStatus.CONFLICT);
         var app = requireCurrentApp();
         if (passwordRequired && (request.password() == null || request.password().isBlank())) {
-            throw new BusinessRuleException("Password is required for a new user.");
+            throw new BusinessRuleException("Password is required for a new user.",
+                    "AUTH_PASSWORD_REQUIRED", HttpStatus.CONFLICT);
         }
         if (request.password() != null && !request.password().isBlank()) {
             validatePasswordStrength(request.password(), app);
@@ -470,7 +477,8 @@ public class AuthService {
         boolean duplicate = currentId == null
                 ? appUserRepository.existsByAppIdAndUsernameIgnoreCase(appId, request.username())
                 : appUserRepository.existsByAppIdAndUsernameIgnoreCaseAndIdNot(appId, request.username(), currentId);
-        if (duplicate) throw new BusinessRuleException("Username already exists.");
+        if (duplicate) throw new BusinessRuleException("Username already exists.",
+                "AUTH_USERNAME_EXISTS", HttpStatus.CONFLICT);
     }
 
     private void validatePasswordStrength(String password, TenantApplication app) {
@@ -484,19 +492,24 @@ public class AuthService {
             throw new BusinessRuleException("يجب أن لا تتجاوز كلمة المرور " + maxLen + " حرفاً.");
         }
         if (app.isDisallowSpaces() && password.contains(" ")) {
-            throw new BusinessRuleException("كلمة المرور يجب أن لا تحتوي على مسافات.");
+            throw new BusinessRuleException("كلمة المرور يجب أن لا تحتوي على مسافات.",
+                    "PASSWORD_NO_SPACES", HttpStatus.CONFLICT);
         }
         if (app.isRequireUppercase() && !password.chars().anyMatch(Character::isUpperCase)) {
-            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على حرف كبير على الأقل.");
+            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على حرف كبير على الأقل.",
+                    "PASSWORD_REQUIRES_UPPERCASE", HttpStatus.CONFLICT);
         }
         if (app.isRequireLowercase() && !password.chars().anyMatch(Character::isLowerCase)) {
-            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على حرف صغير على الأقل.");
+            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على حرف صغير على الأقل.",
+                    "PASSWORD_REQUIRES_LOWERCASE", HttpStatus.CONFLICT);
         }
         if (app.isRequireNumbers() && !password.chars().anyMatch(Character::isDigit)) {
-            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.");
+            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.",
+                    "PASSWORD_REQUIRES_DIGIT", HttpStatus.CONFLICT);
         }
         if (app.isRequireSpecialChars() && !password.matches(".*[^A-Za-z0-9].*")) {
-            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل.");
+            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل.",
+                    "PASSWORD_REQUIRES_SPECIAL", HttpStatus.CONFLICT);
         }
     }
 
@@ -515,7 +528,7 @@ public class AuthService {
 
     private AppUser requireByUsername(String appId, String username) {
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, username)
-                .orElseThrow(() -> new NotFoundException("User not found."));
+                .orElseThrow(() -> new NotFoundException("User not found.", "AUTH_USER_NOT_FOUND"));
     }
 
     private AuthApi.UserResponse toResponse(AppUser user) {
@@ -534,7 +547,8 @@ public class AuthService {
         if (categoryId == null || categoryId.isBlank()) return;
         boolean exists = attendanceCategoryRepository.findById(categoryId).filter(c -> c.isActive()).isPresent()
                 || workerCategoryRepository.findById(categoryId).filter(c -> "ACTIVE".equals(c.getStatus())).isPresent();
-        if (!exists) throw new BusinessRuleException("Select an active category.");
+        if (!exists) throw new BusinessRuleException("Select an active category.",
+                "AUTH_ACTIVE_CATEGORY_REQUIRED", HttpStatus.CONFLICT);
     }
 
     private UserPreference preferenceFor(AppUser user) {
@@ -560,7 +574,7 @@ public class AuthService {
     private TenantApplication requireCurrentApp() {
         String appId = TenantContext.require();
         return tenantApplicationRepository.findById(appId)
-                .orElseThrow(() -> new NotFoundException("Application not found."));
+                .orElseThrow(() -> new NotFoundException("Application not found.", "APP_NOT_FOUND"));
     }
 
     private AuthApi.AppSettingsResponse toSettingsResponse(TenantApplication app) {

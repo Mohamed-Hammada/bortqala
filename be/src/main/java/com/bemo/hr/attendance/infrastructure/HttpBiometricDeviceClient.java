@@ -5,6 +5,7 @@ import com.bemo.hr.attendance.domain.BiometricDevice;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -49,10 +50,10 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
             JsonNode root = objectMapper.readTree(response.body());
             JsonNode rows = root.isArray() ? root : root.path("punches");
             if (!rows.isArray()) {
-                throw new BusinessRuleException("استجابة الجهاز غير صالحة: يجب إرسال مصفوفة punches.");
+                throw new BusinessRuleException("استجابة الجهاز غير صالحة: يجب إرسال مصفوفة punches.", "BIO_DEVICE_RESPONSE_INVALID", HttpStatus.CONFLICT);
             }
             if (rows.size() > 10_000) {
-                throw new BusinessRuleException("استجابة الجهاز تتجاوز الحد الأقصى وهو 10000 بصمة لكل مزامنة.");
+                throw new BusinessRuleException("استجابة الجهاز تتجاوز الحد الأقصى وهو 10000 بصمة لكل مزامنة.", "BIO_DEVICE_RESPONSE_TOO_LARGE", HttpStatus.CONFLICT);
             }
             List<DevicePunch> punches = new ArrayList<>();
             for (JsonNode row : rows) {
@@ -74,9 +75,9 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
     private URI endpoint(BiometricDevice device) {
         URI base = URI.create(device.getEndpointUrl());
         if (!"http".equalsIgnoreCase(base.getScheme()) && !"https".equalsIgnoreCase(base.getScheme())) {
-            throw new BusinessRuleException("رابط جهاز البصمة يجب أن يبدأ بـ http أو https.");
+            throw new BusinessRuleException("رابط جهاز البصمة يجب أن يبدأ بـ http أو https.", "BIO_DEVICE_ENDPOINT_SCHEME_REQUIRED", HttpStatus.CONFLICT);
         }
-        if (base.getHost() == null) throw new BusinessRuleException("رابط جهاز البصمة غير صالح.");
+        if (base.getHost() == null) throw new BusinessRuleException("رابط جهاز البصمة غير صالح.", "BIO_DEVICE_ENDPOINT_MALFORMED", HttpStatus.CONFLICT);
         if (device.getLastSuccessfulPunchAt() == null) return base;
         String separator = base.getQuery() == null ? "?" : "&";
         return URI.create(base + separator + "since=" + URLEncoder.encode(

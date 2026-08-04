@@ -28,6 +28,7 @@ public class PayrollController {
     private final AuthService authService;
 
     @GetMapping
+    @PreAuthorize("@salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse getSheet(
             @RequestParam int year,
             @RequestParam int month,
@@ -68,6 +69,7 @@ public class PayrollController {
     }
 
     @GetMapping("/export")
+    @PreAuthorize("@salaryAuthorization.canView(authentication)")
     public ResponseEntity<byte[]> export(
             @RequestParam int year,
             @RequestParam int month,

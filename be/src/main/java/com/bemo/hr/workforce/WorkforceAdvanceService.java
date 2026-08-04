@@ -17,6 +17,7 @@ import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.operations.OperationsService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
+import org.springframework.http.HttpStatus;
 
 @Service
 @RequiredArgsConstructor
@@ -42,12 +43,12 @@ public class WorkforceAdvanceService {
     public WorkforceApi.AdvanceResponse create(WorkforceApi.AdvanceCreateRequest request, String createdBy) {
         String recipientType = normalizeAndValidateRecipient(request);
         if (request.amount() == null || request.amount().signum() <= 0) {
-            throw new BusinessRuleException("يجب أن يكون مبلغ السلفة أكبر من صفر.");
+            throw new BusinessRuleException("يجب أن يكون مبلغ السلفة أكبر من صفر.", "ADVANCE_AMOUNT_POSITIVE_REQUIRED", HttpStatus.CONFLICT);
         }
         LocalDate policyDate;
         try { policyDate = request.firstInstallmentDate() == null || request.firstInstallmentDate().isBlank()
                 ? LocalDate.now() : LocalDate.parse(request.firstInstallmentDate()); }
-        catch (Exception exception) { throw new BusinessRuleException("تاريخ أول قسط غير صالح."); }
+        catch (Exception exception) { throw new BusinessRuleException("تاريخ أول قسط غير صالح.", "ADVANCE_FIRST_INSTALLMENT_DATE_INVALID", HttpStatus.CONFLICT); }
         WorkforceAdvancePolicy policy = effectivePolicy(recipientType, request.workerId(), request.employeeId(), policyDate);
         String deductionMode = valueOrDefault(request.deductionMode(), policy != null ? policy.getDeductionMode() : "AUTO");
         String deductionFrequency = valueOrDefault(request.deductionFrequency(), policy != null ? policy.getDeductionFrequency() : "HALF_MONTH");
@@ -124,19 +125,19 @@ public class WorkforceAdvanceService {
     public WorkforceApi.AdvancePolicyResponse savePolicy(WorkforceApi.AdvancePolicyRequest request, String actor) {
         String scopeType = request.scopeType().strip().toUpperCase(java.util.Locale.ROOT);
         if (!List.of("GLOBAL", "CATEGORY", "WORKER", "EMPLOYEE_CATEGORY", "EMPLOYEE").contains(scopeType)) {
-            throw new BusinessRuleException("نطاق سياسة السلف غير صالح.");
+            throw new BusinessRuleException("نطاق سياسة السلف غير صالح.", "ADVANCE_POLICY_SCOPE_INVALID", HttpStatus.CONFLICT);
         }
         if (!"GLOBAL".equals(scopeType) && (request.scopeId() == null || request.scopeId().isBlank())) {
-            throw new BusinessRuleException("اختر الفئة أو العامل أو الموظف للاستثناء.");
+            throw new BusinessRuleException("اختر الفئة أو العامل أو الموظف للاستثناء.", "ADVANCE_POLICY_EXCEPTION_TARGET_REQUIRED", HttpStatus.CONFLICT);
         }
-        if (request.maxDeductionPercent().signum() <= 0 || request.maxDeductionPercent().compareTo(new BigDecimal("100")) > 0) throw new BusinessRuleException("نسبة الخصم يجب أن تكون بين 1 و100.");
+        if (request.maxDeductionPercent().signum() <= 0 || request.maxDeductionPercent().compareTo(new BigDecimal("100")) > 0) throw new BusinessRuleException("نسبة الخصم يجب أن تكون بين 1 و100.", "ADVANCE_POLICY_DEDUCTION_PERCENT_RANGE", HttpStatus.CONFLICT);
         LocalDate effectiveFrom;
         LocalDate effectiveTo = null;
         try {
             effectiveFrom = LocalDate.parse(request.effectiveFrom());
             if (request.effectiveTo() != null && !request.effectiveTo().isBlank()) effectiveTo = LocalDate.parse(request.effectiveTo());
-        } catch (Exception exception) { throw new BusinessRuleException("تاريخ بداية أو نهاية السياسة غير صالح."); }
-        if (effectiveTo != null && effectiveTo.isBefore(effectiveFrom)) throw new BusinessRuleException("نهاية السياسة لا يمكن أن تسبق بدايتها.");
+        } catch (Exception exception) { throw new BusinessRuleException("تاريخ بداية أو نهاية السياسة غير صالح.", "ADVANCE_POLICY_DATE_INVALID", HttpStatus.CONFLICT); }
+        if (effectiveTo != null && effectiveTo.isBefore(effectiveFrom)) throw new BusinessRuleException("نهاية السياسة لا يمكن أن تسبق بدايتها.", "ADVANCE_POLICY_END_BEFORE_START", HttpStatus.CONFLICT);
         String scopeId = "GLOBAL".equals(scopeType) ? null : request.scopeId();
         List<WorkforceAdvancePolicy> versions = policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc().stream()
                 .filter(item -> item.getScopeType().equals(scopeType) && java.util.Objects.equals(item.getScopeId(), scopeId))
@@ -187,11 +188,11 @@ public class WorkforceAdvanceService {
                                                                String employeeId, String date) {
         LocalDate effectiveDate;
         try { effectiveDate = LocalDate.parse(date); }
-        catch (Exception exception) { throw new BusinessRuleException("تاريخ السياسة غير صالح."); }
+        catch (Exception exception) { throw new BusinessRuleException("تاريخ السياسة غير صالح.", "ADVANCE_POLICY_EFFECTIVE_DATE_INVALID", HttpStatus.CONFLICT); }
         WorkforceAdvancePolicy policy = effectivePolicy(
                 valueOrDefault(recipientType, employeeId == null ? "WORKER" : "EMPLOYEE").toUpperCase(),
                 workerId, employeeId, effectiveDate);
-        if (policy == null) throw new BusinessRuleException("لا توجد سياسة سلف فعالة للمستفيد في التاريخ المحدد.");
+        if (policy == null) throw new BusinessRuleException("لا توجد سياسة سلف فعالة للمستفيد في التاريخ المحدد.", "ADVANCE_POLICY_NOT_FOUND", HttpStatus.CONFLICT);
         return mapPolicy(policy);
     }
 
@@ -217,33 +218,33 @@ public class WorkforceAdvanceService {
         String type = valueOrDefault(request.recipientType(), "WORKER").strip().toUpperCase();
         switch (type) {
             case "WORKER" -> workerRepository.findById(requiredRecipientId(request.workerId()))
-                    .orElseThrow(() -> new NotFoundException("العامل غير موجود."));
+                    .orElseThrow(() -> new NotFoundException("العامل غير موجود.", "WORKER_NOT_FOUND"));
             case "CONTRACTOR" -> contractorRepository.findById(requiredRecipientId(request.contractorId()))
-                    .orElseThrow(() -> new NotFoundException("المقاول غير موجود."));
+                    .orElseThrow(() -> new NotFoundException("المقاول غير موجود.", "CONTRACTOR_NOT_FOUND"));
             case "EMPLOYEE" -> {
                 Employee employee = employeeRepository.findById(requiredRecipientId(request.employeeId()))
-                        .orElseThrow(() -> new NotFoundException("الموظف غير موجود."));
-                if (!employee.isActive()) throw new BusinessRuleException("لا يمكن صرف سلفة لموظف غير نشط.");
+                        .orElseThrow(() -> new NotFoundException("الموظف غير موجود.", "EMPLOYEE_NOT_FOUND"));
+                if (!employee.isActive()) throw new BusinessRuleException("لا يمكن صرف سلفة لموظف غير نشط.", "ADVANCE_INACTIVE_EMPLOYEE", HttpStatus.CONFLICT);
                 var category = attendanceCategoryRepository.findById(employee.getCategoryId())
-                        .orElseThrow(() -> new NotFoundException("فئة الموظف غير موجودة."));
+                        .orElseThrow(() -> new NotFoundException("فئة الموظف غير موجودة.", "HRCFG_EMPLOYEE_CATEGORY_NOT_FOUND"));
                 if (!category.isAllowsEmployeeAdvances()) {
-                    throw new BusinessRuleException("فئة هذا الموظف لا تسمح بصرف السلف.");
+                    throw new BusinessRuleException("فئة هذا الموظف لا تسمح بصرف السلف.", "ADVANCE_CATEGORY_NOT_ALLOWED", HttpStatus.CONFLICT);
                 }
             }
-            default -> throw new BusinessRuleException("نوع المستفيد غير صالح.");
+            default -> throw new BusinessRuleException("نوع المستفيد غير صالح.", "ADVANCE_BENEFICIARY_TYPE_INVALID", HttpStatus.CONFLICT);
         }
         return type;
     }
 
     private String requiredRecipientId(String id) {
-        if (id == null || id.isBlank()) throw new BusinessRuleException("اختر المستفيد من السلفة.");
+        if (id == null || id.isBlank()) throw new BusinessRuleException("اختر المستفيد من السلفة.", "ADVANCE_BENEFICIARY_REQUIRED", HttpStatus.CONFLICT);
         return id;
     }
 
     @Transactional
     public WorkforceApi.AdvanceResponse pause(String id, String user) {
         WorkforceAdvance adv = advanceRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة"));
+                .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة", "ADVANCE_NOT_FOUND", HttpStatus.CONFLICT));
         adv.pause();
         auditService.record("PAUSE", "ADVANCE", adv.getId(), user, "Paused advance deductions", null);
         return mapToResponse(advanceRepository.save(adv));
@@ -252,7 +253,7 @@ public class WorkforceAdvanceService {
     @Transactional
     public WorkforceApi.AdvanceResponse resume(String id, String user) {
         WorkforceAdvance adv = advanceRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة"));
+                .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة", "ADVANCE_NOT_FOUND", HttpStatus.CONFLICT));
         adv.resume();
         auditService.record("RESUME", "ADVANCE", adv.getId(), user, "Resumed advance deductions", null);
         return mapToResponse(advanceRepository.save(adv));
@@ -261,11 +262,11 @@ public class WorkforceAdvanceService {
     @Transactional
     public WorkforceApi.AdvanceResponse repay(String id, WorkforceApi.AdvanceRepayRequest request, String user) {
         WorkforceAdvance adv = advanceRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة"));
+                .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة", "ADVANCE_NOT_FOUND", HttpStatus.CONFLICT));
 
         BigDecimal amount = request.amount();
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessRuleException("يجب أن يكون مبلغ السداد أكبر من صفر");
+            throw new BusinessRuleException("يجب أن يكون مبلغ السداد أكبر من صفر", "ADVANCE_REPAYMENT_AMOUNT_POSITIVE", HttpStatus.CONFLICT);
         }
         if (amount.compareTo(adv.getRemainingBalance()) > 0) {
             throw new BusinessRuleException("مبلغ السداد لا يمكن أن يتجاوز الرصيد المتبقي (" + adv.getRemainingBalance() + " ج.م)");

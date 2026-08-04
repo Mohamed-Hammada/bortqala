@@ -1,6 +1,7 @@
 package com.bemo.hr.shared.i18n;
 
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +21,8 @@ public class TranslationService {
 
     public TranslationBundle bundle(String locale) {
         String normalized = SUPPORTED_LOCALES.stream().filter(item -> item.equalsIgnoreCase(locale))
-                .findFirst().orElseThrow(() -> new BusinessRuleException("Unsupported locale."));
+                .findFirst().orElseThrow(() -> new BusinessRuleException("Unsupported locale.",
+                        "I18N_UNSUPPORTED_LOCALE", HttpStatus.CONFLICT));
         Map<String, String> messages = new LinkedHashMap<>();
         translationRepository.findAllByLocaleIgnoreCaseOrderByTranslationKeyAsc(normalized)
                 .forEach(entry -> messages.put(entry.getTranslationKey(), entry.getTextValue()));

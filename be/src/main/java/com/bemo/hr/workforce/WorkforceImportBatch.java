@@ -7,6 +7,7 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -18,6 +19,7 @@ import java.util.UUID;
 @Getter
 public class WorkforceImportBatch {
     @Id private String id;
+    @Version private long version;
     @TenantId @Column(name = "app_id", nullable = false) private String appId;
     @Column(name = "file_name", nullable = false, length = 255) private String fileName;
     @Column(name = "content_type", length = 100) private String contentType;

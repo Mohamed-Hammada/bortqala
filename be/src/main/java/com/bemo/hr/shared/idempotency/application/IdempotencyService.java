@@ -3,6 +3,8 @@ package com.bemo.hr.shared.idempotency.application;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.idempotency.domain.IdempotencyKey;
 import com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -27,27 +29,41 @@ public class IdempotencyService {
         Optional<IdempotencyKey> existing = idempotencyKeyRepository
                 .findByOperationTypeAndOperationId(operationType, operationId);
         if (existing.isPresent()) {
-            IdempotencyKey key = existing.get();
-            if (IdempotencyKey.STATUS_COMPLETED.equals(key.getStatus())) {
-                if (!key.getRequestHash().equals(requestHash)) {
-                    throw new BusinessRuleException("The same operation key was already used with a different request.");
-                }
-                return replayMapper.apply(key.getResponseReferenceOrBody());
-            }
-            throw new BusinessRuleException("The operation is already being processed.");
+            return replayOrReject(existing.get(), requestHash, replayMapper);
         }
         IdempotencyKey key = new IdempotencyKey(operationType, operationId, requestHash);
-        idempotencyKeyRepository.save(key);
+        try {
+            idempotencyKeyRepository.saveAndFlush(key);
+        } catch (DataIntegrityViolationException exception) {
+            IdempotencyKey concurrent = idempotencyKeyRepository
+                    .findByOperationTypeAndOperationId(operationType, operationId)
+                    .orElse(null);
+            if (concurrent != null) {
+                return replayOrReject(concurrent, requestHash, replayMapper);
+            }
+            throw new BusinessRuleException("The operation is already being processed.", "IDEMPOTENCY_IN_PROGRESS", HttpStatus.CONFLICT);
+        }
         try {
             T result = operation.get();
             key.complete(referenceWriter.apply(result));
-            idempotencyKeyRepository.save(key);
+            idempotencyKeyRepository.saveAndFlush(key);
             return result;
         } catch (RuntimeException exception) {
             key.fail();
-            idempotencyKeyRepository.save(key);
+            idempotencyKeyRepository.saveAndFlush(key);
             throw exception;
         }
+    }
+
+    private <T> T replayOrReject(IdempotencyKey key, String requestHash, Function<String, T> replayMapper) {
+        if (IdempotencyKey.STATUS_COMPLETED.equals(key.getStatus())) {
+            if (!key.getRequestHash().equals(requestHash)) {
+                throw new BusinessRuleException("The same operation key was already used with a different request.",
+                        "IDEMPOTENCY_HASH_MISMATCH", HttpStatus.CONFLICT);
+            }
+            return replayMapper.apply(key.getResponseReferenceOrBody());
+        }
+        throw new BusinessRuleException("The operation is already being processed.", "IDEMPOTENCY_IN_PROGRESS", HttpStatus.CONFLICT);
     }
 
     public static String hash(String content) {

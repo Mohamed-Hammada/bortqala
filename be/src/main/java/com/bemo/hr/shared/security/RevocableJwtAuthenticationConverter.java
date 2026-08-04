@@ -25,16 +25,23 @@ public class RevocableJwtAuthenticationConverter implements Converter<Jwt, Abstr
 
     @Override
     public AbstractAuthenticationToken convert(Jwt jwt) {
+        String username = jwt.getSubject();
+        String appId = jwt.getClaim("appId");
         Object rawTokenVersion = jwt.getClaim("tv");
-        if (rawTokenVersion instanceof Number tokenVersion) {
-            String appId = jwt.getClaim("appId");
-            String username = jwt.getSubject();
-            boolean revoked = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, username)
-                    .map(user -> !user.isActive() || user.getTokenVersion() != tokenVersion.intValue())
-                    .orElse(true);
-            if (revoked) {
-                throw new BadCredentialsException("Session has been revoked.");
-            }
+        if (username == null || username.isBlank()) {
+            throw new BadCredentialsException("Missing subject claim.");
+        }
+        if (appId == null || appId.isBlank()) {
+            throw new BadCredentialsException("Missing appId claim.");
+        }
+        if (!(rawTokenVersion instanceof Number tokenVersion)) {
+            throw new BadCredentialsException("Missing or invalid token version claim.");
+        }
+        boolean revoked = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, username)
+                .map(user -> !user.isActive() || user.getTokenVersion() != tokenVersion.intValue())
+                .orElse(true);
+        if (revoked) {
+            throw new BadCredentialsException("Session has been revoked.");
         }
         Collection<GrantedAuthority> authorities = authoritiesConverter.convert(jwt);
         if (Boolean.TRUE.equals(jwt.getClaim("pwc"))) {

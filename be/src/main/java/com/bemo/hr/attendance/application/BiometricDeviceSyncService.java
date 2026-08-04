@@ -12,6 +12,7 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
+import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,15 +95,15 @@ public class BiometricDeviceSyncService {
             int rowNumber = 0;
             for (var punch : remote.punches()) {
                 rowNumber++;
-                if (punchRecordRepository.existsByDeviceUserIdAndPunchedAt(
-                        punch.deviceUserId(), punch.punchedAt())) {
+                if (punchRecordRepository.existsByDeviceIdAndDeviceUserIdAndPunchedAt(
+                        device.getId(), punch.deviceUserId(), punch.punchedAt())) {
                     duplicates++;
                     continue;
                 }
                 String employeeId = employeeRepository.findByEmployeeCodeIgnoreCase(punch.deviceUserId())
                         .or(() -> employeeRepository.findByDeviceUserId(punch.deviceUserId()))
                         .map(employee -> employee.getId()).orElse(null);
-                punchRecordRepository.save(new PunchRecord(batch.getId(), employeeId, punch.deviceUserId(),
+                punchRecordRepository.save(new PunchRecord(batch.getId(), device.getId(), employeeId, punch.deviceUserId(),
                         punch.employeeName(), punch.punchedAt(), punch.rawLine(), rowNumber));
                 imported++;
                 if (latest == null || punch.punchedAt().isAfter(latest)) latest = punch.punchedAt();
@@ -131,7 +132,7 @@ public class BiometricDeviceSyncService {
 
     private BiometricDevice requireDevice(String id) {
         return biometricDeviceRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("جهاز البصمة غير موجود."));
+                .orElseThrow(() -> new NotFoundException("جهاز البصمة غير موجود.", "BIO_DEVICE_NOT_FOUND"));
     }
 
     private void validateEndpoint(String value) {
@@ -143,7 +144,7 @@ public class BiometricDeviceSyncService {
                 throw new IllegalArgumentException();
             }
         } catch (Exception exception) {
-            throw new BusinessRuleException("رابط جهاز البصمة غير صالح ويجب أن يبدأ بـ http أو https.");
+            throw new BusinessRuleException("رابط جهاز البصمة غير صالح ويجب أن يبدأ بـ http أو https.", "BIO_DEVICE_ENDPOINT_INVALID", HttpStatus.CONFLICT);
         }
     }
 

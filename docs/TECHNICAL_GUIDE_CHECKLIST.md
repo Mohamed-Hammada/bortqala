@@ -49,6 +49,20 @@ Local verification for P0-05 (CI still blocked by the GitHub Actions billing loc
 
 ---
 
+## Verification run 4 — 2026-08-04 (release hardening: import concurrency, punch dedup, error i18n sweep)
+
+Local verification for P0-05 (CI still blocked by the GitHub Actions billing lock; H2 substitutes for PostgreSQL where noted).
+
+- **Workforce import commit concurrency (V89):** `WorkforceImportBatch.version` + `WorkforceImportBatchRepository.findByIdForUpdate` (pessimistic write lock) so two concurrent `commit` calls sharing one `operationId` apply exactly once and replay once. Liquibase V89 adds `version BIGINT NOT NULL DEFAULT 0` to `workforce_import_batches`; no H2 mirror (table absent in the H2 changelog; H2 suite covers the service with mocked repos). `WorkforceImportCommitConcurrencyTests` (`@PostgresIntegrationTest`, `@RepeatedTest(10)`) asserts `applied==1`, `replayed==1`, one attendance row + one `WorkforceImportChange`, status `IMPORTED` — **runs only under Testcontainers in CI** (no Docker locally).
+- **Punch device-scoped dedup (V90):** `punch_records.device_id` + unique index `uq_punch_records_app_device_user_time` on `(app_id, device_id, device_user_id, punched_at)`; syncs pass the device id, file imports pass `null`. Mirrored into the H2 test changelog (`20260804-v89-v90-h2`). `attendance.*` + demo-data H2 tests green.
+- **Backend error i18n sweep (V91):** every static `BusinessRuleException`/`NotFoundException` across 20+ services now carries a stable machine key; `NotFoundException` gained an optional `(message, code)` constructor resolved by `ApiExceptionHandler` like business rules; concatenated/dynamic messages stay single-arg so their runtime fallback survives. Liquibase V91 loads **188 keys × ar-EG/en-US (376 rows)** from `20260804_v91_backend_error_translations.csv`, registered in `next.changelog-master.yaml` and mirrored in the H2 suite. Audit: all 186 exception codes referenced by `be/src/main/java` resolve to a translation row (0 missing); CSV has no duplicate `(translation_key, locale)` and each key carries both locales.
+- **Backend suite:** `./gradlew compileJava compileTestJava` OK; `./gradlew test` **145 H2 tests pass, 2 fail only at Testcontainers `initializationError`** (`SupplierPaymentConcurrencyTests`, `WorkforceImportCommitConcurrencyTests`) because Docker is unavailable locally.
+- **Frontend:** no Node toolchain locally in this environment — `check:i18n`, `ng test`, `npm run build` run in CI (frontend job of `.github/workflows/ci.yml`). Session-hardening code (memory-only token, single-flight refresh-on-401, workforce guard) is present in the working tree and documented in `fe/skills/hr-frontend/SKILL.md`.
+- **Docs synced:** `be/skills/hr-backend/SKILL.md`, `fe/skills/hr-frontend/SKILL.md`, `PROJECT_MAP.md`.
+- **Status:** work items for V88–V91 are implementation-complete and locally verified on H2; PostgreSQL-only evidence (V89 concurrency + V90/`V91` Liquibase on a fresh PG) awaits CI.
+
+---
+
 ## Sprint 0 implementation log
 
 ### S0-1 Standard API error shape + correlationId — VERIFIED (2026-08-01)
@@ -285,7 +299,7 @@ Permissions found: upload/list/preview @PreAuthorize ADMIN/HR_MANAGER/HR_REVIEWE
 Unit/integration/E2E tests found: SpreadsheetBiometricFileReaderTests (Arabic columns, serial/text dates, single punch, bilingual contract rejection) + BiometricImportContractTests (preview no-persist, hash/dedupe idempotency, reverse idempotency + reimport-block, encrypted-at-rest credentials, crypto wrong-key).
 Final status: VERIFIED
 ```
-Missing (now closed): preview→commit→reverse contract with import hash + reverse idempotency added; device credentials now encrypted at rest (V78); hash/dedupe/reverse integration tests added.
+Missing (now closed): preview→commit→reverse contract with import hash + reverse idempotency added; device credentials now encrypted at rest (V78); hash/dedupe/reverse integration tests added. V90 further hardens punch dedup: `punch_records.device_id` + unique `(app_id, device_id, device_user_id, punched_at)` so concurrent device syncs store each punch once; mirrored into the H2 test changelog.
 Final status: VERIFIED
 
 ### 4.6 Parties — P1
@@ -762,10 +776,11 @@ Frontend page/store/API found: fe/src/app/features/workforce/pages/reports-impor
 Backend controller/service found: be/.../workforce/WorkforceImportController.java /api/v1/workforce/imports GET/upload/mapping/validate/preview/commit/reverse/original/errors.xlsx/analyze -> WorkforceExcelImportService.
 Entity/table/Liquibase found: workforce_import_batches/rows/changes (V60; batches.operation_id + unique(app_id, operation_id)).
 Permissions found: controller class-level ADMIN/HR_MANAGER/HR_REVIEWER; commit ADMIN/HR_MANAGER; reverse ADMIN.
-Unit/integration/E2E tests found: WorkforceImportErrorWorkbookTests (Arabic RTL error workbook + typed row numbers).
-Final status: IMPLEMENTED_NOT_TESTED
+Unit/integration/E2E tests found: WorkforceImportErrorWorkbookTests (Arabic RTL error workbook + typed row numbers); WorkforceExcelImportServiceTests (13-case suite: corrupt/unsupported/empty file, mapping lock, bounded preview, duplicate worker code, commit idempotency, reversal not-executed, no-sheets/no-header); WorkforceImportCommitConcurrencyTests (`@PostgresIntegrationTest`, `@RepeatedTest(10)`, pessimistic lock V89 — CI/Testcontainers only).
+Final status: PARTIAL
 ```
-Missing: no stale-preview revalidation test, no duplicate-commit idempotency integration test, no reversal-blocker test.
+Missing (closed): commit idempotency + reversal-blocker + malicious-file coverage added (V88 keys, bounded preview/limits); stale-preview revalidation integration test still TBD; V89 pessimistic-lock concurrency evidence awaits CI.
+Final status: PARTIAL
 
 ### 4.34 Shell, Forbidden and Not Found — P0
 Task split: SHELL-FE-01, SHELL-FE-02, SHELL-QA-01

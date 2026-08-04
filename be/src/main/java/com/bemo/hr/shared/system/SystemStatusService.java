@@ -4,6 +4,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.info.BuildProperties;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,7 +40,8 @@ class SystemStatusService {
     private SystemSetting requireCacheSetting() {
         return systemSettingRepository.findById(SystemSetting.CLIENT_CACHE_VERSION)
                 .orElseThrow(() -> new BusinessRuleException(
-                        "إعداد إصدار ذاكرة التخزين المؤقت غير موجود. راجع ترحيلات قاعدة البيانات."));
+                        "إعداد إصدار ذاكرة التخزين المؤقت غير موجود. راجع ترحيلات قاعدة البيانات.",
+                        "SYS_CACHE_VERSION_SETTING_MISSING", HttpStatus.CONFLICT));
     }
 
     private SystemStatusApi.StatusResponse response(SystemSetting setting) {

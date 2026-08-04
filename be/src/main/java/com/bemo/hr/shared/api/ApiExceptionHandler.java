@@ -47,7 +47,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     ResponseEntity<ApiError> notFound(NotFoundException exception, HttpServletRequest request) {
-        return respond("NOT_FOUND", HttpStatus.NOT_FOUND, raw(exception.getMessage()), request);
+        String code = exception.getCode() == null ? "NOT_FOUND" : exception.getCode();
+        ErrorText errorText = exception.getCode() == null
+                ? raw(exception.getMessage())
+                : translated(exception.getCode(), resolveLocale(request), exception.getMessage());
+        return respond(code, HttpStatus.NOT_FOUND, errorText, request);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

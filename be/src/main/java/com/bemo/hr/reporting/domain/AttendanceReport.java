@@ -12,6 +12,7 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
+import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -62,12 +63,12 @@ public class AttendanceReport {
     public void startReview(int unresolvedCount) { this.unresolvedCount = unresolvedCount; this.status = ReportStatus.IN_REVIEW; }
     public void updateUnresolvedCount(int value) { this.unresolvedCount = value; }
     public void approve(String actor) {
-        if (status != ReportStatus.IN_REVIEW || unresolvedCount != 0) throw new BusinessRuleException("Resolve every blocking item before approval.");
+        if (status != ReportStatus.IN_REVIEW || unresolvedCount != 0) throw new BusinessRuleException("Resolve every blocking item before approval.", "RPT_UNRESOLVED_BLOCKERS", HttpStatus.CONFLICT);
         status = ReportStatus.APPROVED; approvedBy = actor; approvedAt = Instant.now();
     }
     public void markExported() { if (status == ReportStatus.APPROVED || status == ReportStatus.EXPORTED) { status = ReportStatus.EXPORTED; exportedAt = Instant.now(); } }
     public void reopen() {
-        if (status != ReportStatus.APPROVED && status != ReportStatus.EXPORTED) throw new BusinessRuleException("Only approved or exported reports can be reopened.");
+        if (status != ReportStatus.APPROVED && status != ReportStatus.EXPORTED) throw new BusinessRuleException("Only approved or exported reports can be reopened.", "RPT_REOPEN_NOT_ALLOWED", HttpStatus.CONFLICT);
         status = ReportStatus.IN_REVIEW; approvedBy = null; approvedAt = null; exportedAt = null;
     }
 

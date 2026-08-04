@@ -29,6 +29,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -88,12 +89,21 @@ class AuthSecurityIntegrationTests {
         appId = app.getId();
         appCode = app.getCode();
         enableContractorAccountsFeature();
+        enablePayrollFeature();
     }
 
     private void enableContractorAccountsFeature() {
-        var featureId = new TenantFeatureId(appId, "workforce.contractorAccounts.enabled");
+        enableFeature("workforce.contractorAccounts.enabled");
+    }
+
+    private void enablePayrollFeature() {
+        enableFeature("payroll.enabled");
+    }
+
+    private void enableFeature(String featureKey) {
+        var featureId = new TenantFeatureId(appId, featureKey);
         var feature = tenantFeatureRepository.findById(featureId)
-                .orElseGet(() -> new TenantFeature(appId, "workforce.contractorAccounts.enabled", true, null, "auth-security-tests"));
+                .orElseGet(() -> new TenantFeature(appId, featureKey, true, null, "auth-security-tests"));
         feature.setEnabled(true);
         tenantFeatureRepository.save(feature);
     }
@@ -117,10 +127,14 @@ class AuthSecurityIntegrationTests {
     }
 
     private AppUser createUser(String prefix, Set<RoleCode> roles) {
+        return createUser(prefix, roles, true);
+    }
+
+    private AppUser createUser(String prefix, Set<RoleCode> roles, boolean canViewSalary) {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         String username = prefix + "-" + suffix;
         var request = new AuthApi.UserUpsertRequest(username, "Test " + prefix, "Auth#Test1!",
-                roles, null, true, null, true, true, null);
+                roles, null, canViewSalary, null, true, true, null);
         TenantContext.set(appId);
         var created = authService.create(request);
         createdUserIds.add(created.id());
@@ -132,8 +146,17 @@ class AuthSecurityIntegrationTests {
     }
 
     private String mintAccessToken(AppUser user) {
+        return mintToken(baseClaims(user));
+    }
+
+    private String mintToken(JwtClaimsSet.Builder claims) {
+        return jwtEncoder.encode(JwtEncoderParameters.from(
+                JwsHeader.with(MacAlgorithm.HS256).build(), claims.build())).getTokenValue();
+    }
+
+    private JwtClaimsSet.Builder baseClaims(AppUser user) {
         Instant now = Instant.now();
-        var claims = JwtClaimsSet.builder()
+        return JwtClaimsSet.builder()
                 .issuer(jwtProperties.issuer())
                 .issuedAt(now)
                 .expiresAt(now.plus(Duration.ofMinutes(30)))
@@ -144,10 +167,7 @@ class AuthSecurityIntegrationTests {
                 .claim("name", user.getDisplayName())
                 .claim("tv", user.getTokenVersion())
                 .claim("pwc", false)
-                .claim("roles", user.getRoles().stream().map(role -> role.getCode().name()).sorted().toList())
-                .build();
-        return jwtEncoder.encode(JwtEncoderParameters.from(
-                JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
+                .claim("roles", user.getRoles().stream().map(role -> role.getCode().name()).sorted().toList());
     }
 
     @Test
@@ -363,6 +383,65 @@ class AuthSecurityIntegrationTests {
         mockMvc.perform(get("/api/v1/workforce/contractors")
                         .header("Authorization", "Bearer " + mintAccessToken(reloaded)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void payrollManagerWithoutSalaryPermissionIsForbiddenFromPayrollSheet() throws Exception {
+        AppUser restricted = createUser("payrestrict", Set.of(RoleCode.PAYROLL_MANAGER), false);
+        AppUser allowed = createUser("payallowed", Set.of(RoleCode.PAYROLL_MANAGER), true);
+
+        mockMvc.perform(get("/api/v1/payroll")
+                        .param("year", "2026").param("month", "8")
+                        .header("Authorization", "Bearer " + mintAccessToken(restricted)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+
+        mockMvc.perform(get("/api/v1/payroll")
+                        .param("year", "2026").param("month", "8")
+                        .header("Authorization", "Bearer " + mintAccessToken(allowed)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void superAdminCanViewPayrollRegardlessOfSalaryPermissionFlag() throws Exception {
+        AppUser superAdmin = loadWithRoles(
+                appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, "superadmin").orElseThrow().getId());
+
+        mockMvc.perform(get("/api/v1/payroll")
+                        .param("year", "2026").param("month", "8")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void tokenWithForeignIssuerIsRejected() throws Exception {
+        AppUser superAdmin = loadWithRoles(
+                appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, "superadmin").orElseThrow().getId());
+
+        String token = mintToken(baseClaims(superAdmin).issuer("attacker-issuer"));
+
+        mockMvc.perform(get("/api/v1/users")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void accessTokenIsInvalidatedAfterPasswordChange() throws Exception {
+        AppUser user = createUser("pwrevoke", Set.of(RoleCode.WORKFORCE_MANAGER));
+        String before = mintAccessToken(user);
+
+        TenantContext.set(appId);
+        authService.changePassword(user.getUsername(),
+                new AuthApi.ChangePasswordRequest("Auth#Test1!", "Rotated#Auth1"));
+        AppUser after = loadWithRoles(user.getId());
+
+        mockMvc.perform(get("/api/v1/workforce/contractors")
+                        .header("Authorization", "Bearer " + mintAccessToken(after)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/workforce/contractors")
+                        .header("Authorization", "Bearer " + before))
+                .andExpect(status().isUnauthorized());
     }
 
     private int suffixIp() {

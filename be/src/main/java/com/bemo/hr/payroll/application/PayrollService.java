@@ -17,6 +17,7 @@ import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.workforce.WorkforceAdvanceService;
+import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -205,10 +206,10 @@ public class PayrollService {
     @Transactional
     public PayrollApi.SheetResponse recordPayment(PayrollApi.PaymentRequest request, String actor) {
         var emp = employeeRepository.findById(request.employeeId())
-                .orElseThrow(() -> new NotFoundException("Employee not found."));
+                .orElseThrow(() -> new NotFoundException("Employee not found.", "HRCFG_EMPLOYEE_NOT_FOUND"));
 
         if (!emp.isActive() || (emp.getBaseSalary() != null && emp.getBaseSalary().signum() <= 0 && emp.getCategoryId() == null)) {
-            throw new BusinessRuleException("الموظف غير كلي البيانات (الراتب الأساسي أو الفئة). يرجى استكمال بياناته من صفحة /employees أولاً.");
+            throw new BusinessRuleException("الموظف غير كلي البيانات (الراتب الأساسي أو الفئة). يرجى استكمال بياناته من صفحة /employees أولاً.", "PAYROLL_EMPLOYEE_INCOMPLETE", HttpStatus.CONFLICT);
         }
 
         var periodKind = request.periodKind() == null || request.periodKind().isBlank() ? "FULL_MONTH" : request.periodKind();
@@ -218,10 +219,10 @@ public class PayrollService {
         if (existingOpt.isPresent()) {
             var existing = existingOpt.get();
             if (existing.getPaymentStatus() == PaymentStatus.PAID || existing.getPaymentStatus() == PaymentStatus.POSTED) {
-                throw new BusinessRuleException("تم صرف وقيد راتب هذا الموظف لهذه الفترة بالفعل (منع الدفع المكرر).");
+                throw new BusinessRuleException("تم صرف وقيد راتب هذا الموظف لهذه الفترة بالفعل (منع الدفع المكرر).", "PAYROLL_DUPLICATE_PAYMENT", HttpStatus.CONFLICT);
             }
             if (existing.getPaymentStatus() == PaymentStatus.APPROVED) {
-                throw new BusinessRuleException("الفترة معتمدة ومقفولة ضد تعديل الرواتب.");
+                throw new BusinessRuleException("الفترة معتمدة ومقفولة ضد تعديل الرواتب.", "PAYROLL_PERIOD_LOCKED", HttpStatus.CONFLICT);
             }
         }
 
@@ -308,10 +309,10 @@ public class PayrollService {
     @Transactional
     public PayrollApi.SheetResponse reversePayment(PayrollApi.ReversePaymentRequest request, String actor) {
         var payment = salaryPaymentRepository.findById(request.paymentId())
-                .orElseThrow(() -> new NotFoundException("قيد الراتب غير موجود."));
+                .orElseThrow(() -> new NotFoundException("قيد الراتب غير موجود.", "PAYROLL_ENTRY_NOT_FOUND"));
 
         if (payment.getPaymentStatus() == PaymentStatus.REVERSED) {
-            throw new BusinessRuleException("هذا القيد متراجع عنه بالفعل.");
+            throw new BusinessRuleException("هذا القيد متراجع عنه بالفعل.", "PAYROLL_ENTRY_ALREADY_REVERSED", HttpStatus.CONFLICT);
         }
 
         BigDecimal deductedAdvances = payment.getAdvancesDeducted();

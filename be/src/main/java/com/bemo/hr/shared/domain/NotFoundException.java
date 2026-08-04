@@ -1,5 +1,18 @@
 package com.bemo.hr.shared.domain;
 
 public class NotFoundException extends RuntimeException {
-    public NotFoundException(String message) { super(message); }
+    private final String code;
+
+    public NotFoundException(String message) {
+        this(message, null);
+    }
+
+    public NotFoundException(String message, String code) {
+        super(message);
+        this.code = code;
+    }
+
+    public String getCode() {
+        return code;
+    }
 }

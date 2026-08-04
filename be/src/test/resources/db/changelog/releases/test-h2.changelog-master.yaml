@@ -368,3 +368,15 @@ databaseChangeLog:
                 PRIMARY KEY (app_id, feature_key),
                 CONSTRAINT fk_tenant_features_app FOREIGN KEY (app_id) REFERENCES apps (id) ON DELETE CASCADE ON UPDATE NO ACTION
               );
+  - changeSet:
+      id: 20260804-v89-v90-h2
+      author: codex
+      comment: H2 mirror for punch device-scoped dedup.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              ALTER TABLE punch_records ADD COLUMN IF NOT EXISTS device_id VARCHAR(36);
+              CREATE UNIQUE INDEX IF NOT EXISTS uq_punch_records_app_device_user_time ON punch_records (app_id, device_id, device_user_id, punched_at);
+  - include:
+      file: db/changelog/data/insert/20260804_v91_backend_error_translations.yaml

@@ -61,7 +61,9 @@ class ReportingDayAnomalyTests {
         service = new ReportingService(reportRepository, resultRepository, holidayRepository, anomalyRepository,
                 snapshotRepository, confirmedHolidayRepository, categoryRepository, scheduleRepository,
                 employeeRepository, punchRepository, exporter, "Africa/Cairo", auditService,
-                tenantApplicationRepository, attendanceReportDecisionRepository);
+                tenantApplicationRepository, attendanceReportDecisionRepository,
+                new com.bemo.hr.shared.idempotency.application.IdempotencyService(
+                        org.mockito.Mockito.mock(com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository.class)));
     }
 
     @Test

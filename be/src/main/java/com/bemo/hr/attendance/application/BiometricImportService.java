@@ -12,6 +12,7 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,7 +41,7 @@ public class BiometricImportService {
 
     @Transactional
     public ImportApi.PreviewResponse preview(MultipartFile file) {
-        if (file.isEmpty()) throw new BusinessRuleException("Select a non-empty biometric file.");
+        if (file.isEmpty()) throw new BusinessRuleException("Select a non-empty biometric file.", "BIO_FILE_EMPTY", HttpStatus.CONFLICT);
         try {
             byte[] content = file.getBytes();
             var parsed = biometricFileReader.read(file.getOriginalFilename() == null ? "biometric-file"
@@ -61,7 +62,7 @@ public class BiometricImportService {
     @Transactional
     public ImportApi.BatchResponse reverse(String batchId, String actor) {
         var batch = importBatchRepository.findById(batchId)
-                .orElseThrow(() -> new NotFoundException("سجل الاستيراد غير موجود."));
+                .orElseThrow(() -> new NotFoundException("سجل الاستيراد غير موجود.", "IMP_BATCH_NOT_FOUND"));
         if (batch.getStatus() == ImportStatus.REVERSED) return toResponse(batch, false);
         punchRecordRepository.deleteByBatchId(batchId);
         importRowErrorRepository.deleteByBatchId(batchId);
@@ -74,9 +75,9 @@ public class BiometricImportService {
 
     @Transactional
     public ImportApi.BatchResponse importFile(MultipartFile file, String deviceName, String actor) {
-        if (file.isEmpty()) throw new BusinessRuleException("Select a non-empty biometric file.");
-        if (deviceName == null || deviceName.isBlank()) throw new BusinessRuleException("Device name is required.");
-        if (actor == null || actor.isBlank()) throw new BusinessRuleException("Importer name is required.");
+        if (file.isEmpty()) throw new BusinessRuleException("Select a non-empty biometric file.", "BIO_FILE_EMPTY", HttpStatus.CONFLICT);
+        if (deviceName == null || deviceName.isBlank()) throw new BusinessRuleException("Device name is required.", "BIO_DEVICE_NAME_REQUIRED", HttpStatus.CONFLICT);
+        if (actor == null || actor.isBlank()) throw new BusinessRuleException("Importer name is required.", "BIO_IMPORTER_NAME_REQUIRED", HttpStatus.CONFLICT);
         try {
             byte[] content = file.getBytes();
             String checksum = sha256(content);
@@ -92,7 +93,7 @@ public class BiometricImportService {
                 String employeeId = employeeRepository.findByEmployeeCodeIgnoreCase(row.deviceUserId())
                         .or(() -> employeeRepository.findByDeviceUserId(row.deviceUserId()))
                         .map(employee -> employee.getId()).orElse(null);
-                return new PunchRecord(batch.getId(), employeeId, row.deviceUserId(), row.employeeName(),
+                return new PunchRecord(batch.getId(), null, employeeId, row.deviceUserId(), row.employeeName(),
                         row.punchedAt(), row.rawLine(), row.rowNumber());
             }).toList();
             punchRecordRepository.saveAll(punches);

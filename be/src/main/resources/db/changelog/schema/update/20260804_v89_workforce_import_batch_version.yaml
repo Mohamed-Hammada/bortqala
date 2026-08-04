@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260804-v89-workforce-import-batch-version
+      author: Mohamed-Hammada
+      comment: Adds the optimistic-lock version column to workforce_import_batches so concurrent commit requests cannot both apply the same batch.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: workforce_import_batches
+              columnName: version
+      changes:
+        - addColumn:
+            tableName: workforce_import_batches
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: workforce_import_batches
+            columnName: version

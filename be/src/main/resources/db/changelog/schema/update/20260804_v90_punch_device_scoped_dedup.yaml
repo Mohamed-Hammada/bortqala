@@ -1,0 +1,49 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260804-v90-punch-device-scoped-dedup
+      author: Mohamed-Hammada
+      comment: Adds device_id to punch_records and a unique (app_id, device_id, device_user_id, punched_at) constraint so the same punch from one device is stored exactly once even when different devices report identical user/time.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: punch_records
+              columnName: device_id
+      changes:
+        - addColumn:
+            tableName: punch_records
+            columns:
+              - column:
+                  name: device_id
+                  type: VARCHAR(36)
+      rollback:
+        - dropColumn:
+            tableName: punch_records
+            columnName: device_id
+  - changeSet:
+      id: 20260804-v90-punch-device-dedup-constraint
+      author: Mohamed-Hammada
+      comment: Unique per (app, device, device user, punch time) so concurrent device syncs cannot store duplicate punches.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: uq_punch_records_app_device_user_time
+      changes:
+        - createIndex:
+            indexName: uq_punch_records_app_device_user_time
+            tableName: punch_records
+            unique: true
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: device_id
+              - column:
+                  name: device_user_id
+              - column:
+                  name: punched_at
+      rollback:
+        - dropIndex:
+            indexName: uq_punch_records_app_device_user_time
+            tableName: punch_records

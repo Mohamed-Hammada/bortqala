@@ -41,3 +41,9 @@ databaseChangeLog:
       file: db/changelog/schema/create/20260803_v87_tenant_features.yaml
   - include:
       file: db/changelog/data/insert/20260803_v88_workforce_import_error_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260804_v89_workforce_import_batch_version.yaml
+  - include:
+      file: db/changelog/schema/update/20260804_v90_punch_device_scoped_dedup.yaml
+  - include:
+      file: db/changelog/data/insert/20260804_v91_backend_error_translations.yaml

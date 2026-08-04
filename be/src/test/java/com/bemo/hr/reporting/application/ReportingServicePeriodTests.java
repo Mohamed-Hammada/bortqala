@@ -63,7 +63,9 @@ class ReportingServicePeriodTests {
                 holidayProposalRepository, dayAnomalyRepository, dayAnomalyResultSnapshotRepository,
                 confirmedHolidayRepository, attendanceCategoryRepository, scheduleRuleRepository, employeeRepository,
                 punchRecordRepository, reportExporter, "Africa/Cairo", auditService, tenantApplicationRepository,
-                attendanceReportDecisionRepository);
+                attendanceReportDecisionRepository,
+                new com.bemo.hr.shared.idempotency.application.IdempotencyService(
+                        org.mockito.Mockito.mock(com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository.class)));
     }
 
     @Test

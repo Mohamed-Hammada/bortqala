@@ -4,6 +4,7 @@ import com.bemo.hr.finance.domain.FiscalPeriod;
 import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +62,7 @@ public class FiscalPeriodController {
                                                             @Valid @RequestBody FiscalPeriodApi.UpdateStatusPayload payload,
                                                             Authentication authentication) {
         FiscalPeriod period = repository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("الفترة المالية غير موجودة"));
+                .orElseThrow(() -> new BusinessRuleException("الفترة المالية غير موجودة", "FIN_FISCAL_PERIOD_NOT_FOUND", HttpStatus.CONFLICT));
         if (payload.expectedVersion() != null && payload.expectedVersion() != period.getVersion()) {
             throw new BusinessRuleException("تم تعديل الفترة المالية بواسطة مستخدم آخر.", "RECORD_ALREADY_MODIFIED",
                     org.springframework.http.HttpStatus.CONFLICT);

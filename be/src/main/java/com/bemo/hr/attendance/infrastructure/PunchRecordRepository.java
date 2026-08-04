@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.List;
 
 public interface PunchRecordRepository extends JpaRepository<PunchRecord, String> {
-    boolean existsByDeviceUserIdAndPunchedAt(String deviceUserId, Instant punchedAt);
+    boolean existsByDeviceIdAndDeviceUserIdAndPunchedAt(String deviceId, String deviceUserId, Instant punchedAt);
 
     void deleteByBatchId(String batchId);
 

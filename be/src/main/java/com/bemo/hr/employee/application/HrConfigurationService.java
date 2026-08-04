@@ -74,7 +74,8 @@ public class HrConfigurationService {
     public CategoryApi.Response createCategory(CategoryApi.UpsertRequest request) {
         validateCategoryRequest(request);
         if (attendanceCategoryRepository.existsByCodeIgnoreCase(request.code())) {
-            throw new BusinessRuleException("Category code already exists.");
+            throw new BusinessRuleException("Category code already exists.",
+                    "HRCFG_CATEGORY_CODE_EXISTS", HttpStatus.CONFLICT);
         }
         var category = new AttendanceCategory(request.code(), request.name(), request.expectedDailyMinutes(),
                 request.payCycle(), request.attendanceMode(), request.singlePunchCounts(), toMask(request.workDays()), request.active());
@@ -91,7 +92,8 @@ public class HrConfigurationService {
         var category = requireCategory(id);
         requireVersion(category.getVersion(), request.version());
         if (attendanceCategoryRepository.existsByCodeIgnoreCaseAndIdNot(request.code(), id)) {
-            throw new BusinessRuleException("Category code already exists.");
+            throw new BusinessRuleException("Category code already exists.",
+                    "HRCFG_CATEGORY_CODE_EXISTS", HttpStatus.CONFLICT);
         }
         category.update(request.code(), request.name(), request.expectedDailyMinutes(), request.payCycle(), request.attendanceMode(),
                 request.singlePunchCounts(), toMask(request.workDays()), request.active());
@@ -104,7 +106,8 @@ public class HrConfigurationService {
     public void deactivateCategory(String id) {
         var category = requireCategory(id);
         if (employeeRepository.existsByCategoryIdAndActiveTrue(id)) {
-            throw new BusinessRuleException("Deactivate or move active employees before deactivating this category.");
+            throw new BusinessRuleException("Deactivate or move active employees before deactivating this category.",
+                    "HRCFG_CATEGORY_HAS_ACTIVE_EMPLOYEES", HttpStatus.CONFLICT);
         }
         category.update(category.getCode(), category.getName(), category.getExpectedDailyMinutes(),
                 category.getPayCycle(), category.getAttendanceMode(), category.isSinglePunchCounts(), category.getWorkDaysMask(), false);
@@ -134,7 +137,7 @@ public class HrConfigurationService {
     @Transactional
     public EmployeeApi.Response updateEmployee(String id, EmployeeApi.UpsertRequest request) {
         var employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Employee not found."));
+                .orElseThrow(() -> new NotFoundException("Employee not found.", "HRCFG_EMPLOYEE_NOT_FOUND"));
         requireVersion(employee.getVersion(), request.version());
         validateEmployeeRequest(request, id);
         var category = requireCategory(request.categoryId());
@@ -153,7 +156,7 @@ public class HrConfigurationService {
     @Transactional
     public void deactivateEmployee(String id) {
         var employee = employeeRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Employee not found."));
+                .orElseThrow(() -> new NotFoundException("Employee not found.", "HRCFG_EMPLOYEE_NOT_FOUND"));
         employee.update(employee.getEmployeeCode(), employee.getFullName(), employee.getDeviceUserId(),
                 employee.getCategoryId(), employee.getEmploymentType(), employee.getBaseSalary(), employee.getActiveFrom(),
                 employee.getActiveTo(), false);
@@ -161,7 +164,7 @@ public class HrConfigurationService {
     }
 
     public List<EmployeeApi.AssignmentResponse> getEmployeeAssignments(String id) {
-        employeeRepository.findById(id).orElseThrow(() -> new NotFoundException("Employee not found."));
+        employeeRepository.findById(id).orElseThrow(() -> new NotFoundException("Employee not found.", "HRCFG_EMPLOYEE_NOT_FOUND"));
         var categories = attendanceCategoryRepository.findAll().stream()
                 .collect(Collectors.toMap(AttendanceCategory::getId, Function.identity()));
         return employeeAssignmentRepository.findByEmployeeIdOrderByEffectiveFromDesc(id).stream()
@@ -197,12 +200,13 @@ public class HrConfigurationService {
 
     private AttendanceCategory requireCategory(String id) {
         return attendanceCategoryRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Attendance category not found."));
+                .orElseThrow(() -> new NotFoundException("Attendance category not found.", "HRCFG_CATEGORY_NOT_FOUND"));
     }
 
     private void validateCategoryRequest(CategoryApi.UpsertRequest request) {
         if (request.workDays().stream().anyMatch(java.util.Objects::isNull)) {
-            throw new BusinessRuleException("Work days cannot contain an empty value.");
+            throw new BusinessRuleException("Work days cannot contain an empty value.",
+                    "HRCFG_WORK_DAYS_EMPTY", HttpStatus.CONFLICT);
         }
         validateScheduleRanges(request.schedules());
     }
@@ -215,7 +219,8 @@ public class HrConfigurationService {
         for (int originalIndex : order) {
             var current = schedules.get(originalIndex);
             if (current.effectiveTo() != null && current.effectiveTo().isBefore(current.effectiveFrom())) {
-                throw new BusinessRuleException("Schedule end date cannot be before its start date.");
+                throw new BusinessRuleException("Schedule end date cannot be before its start date.",
+                        "HRCFG_SCHEDULE_END_BEFORE_START", HttpStatus.CONFLICT);
             }
             if (covering != null && (covering.effectiveTo() == null
                     || !covering.effectiveTo().isBefore(current.effectiveFrom()))) {
@@ -233,12 +238,14 @@ public class HrConfigurationService {
 
     private void validateEmployeeRequest(EmployeeApi.UpsertRequest request, String currentId) {
         if (request.activeTo() != null && request.activeTo().isBefore(request.activeFrom())) {
-            throw new BusinessRuleException("Employee active-to date cannot be before active-from date.");
+            throw new BusinessRuleException("Employee active-to date cannot be before active-from date.",
+                    "HRCFG_EMPLOYEE_DATES_INVALID", HttpStatus.CONFLICT);
         }
         var category = attendanceCategoryRepository.findById(request.categoryId()).orElse(null);
         if (category != null && category.getAttendanceMode() == com.bemo.hr.employee.domain.AttendanceMode.BIOMETRIC) {
             if (request.active() && (request.deviceUserId() == null || request.deviceUserId().isBlank())) {
-                throw new BusinessRuleException("A unique biometric device ID is required for active employees in biometric categories.");
+                throw new BusinessRuleException("A unique biometric device ID is required for active employees in biometric categories.",
+                        "HRCFG_BIOMETRIC_ID_REQUIRED", HttpStatus.CONFLICT);
             }
         }
         if (request.deviceUserId() != null && !request.deviceUserId().isBlank()) {
@@ -246,7 +253,8 @@ public class HrConfigurationService {
                     ? employeeRepository.existsByDeviceUserId(request.deviceUserId().strip())
                     : employeeRepository.existsByDeviceUserIdAndIdNot(request.deviceUserId().strip(), currentId);
             if (duplicateDeviceId) {
-                throw new BusinessRuleException("Device user id is already mapped to another employee.");
+                throw new BusinessRuleException("Device user id is already mapped to another employee.",
+                        "HRCFG_DEVICE_USER_ALREADY_MAPPED", HttpStatus.CONFLICT);
             }
         }
     }
@@ -259,7 +267,8 @@ public class HrConfigurationService {
             String code = normalized.startsWith(prefix) ? normalized : prefix + normalized;
             boolean duplicate = creating ? employeeRepository.existsByEmployeeCodeIgnoreCase(code)
                     : employeeRepository.existsByEmployeeCodeIgnoreCaseAndIdNot(code, employeeRepository.findByEmployeeCodeIgnoreCase(currentCode).map(Employee::getId).orElse(""));
-            if (duplicate) throw new BusinessRuleException("Employee code already exists.");
+            if (duplicate) throw new BusinessRuleException("Employee code already exists.",
+                    "HRCFG_EMPLOYEE_CODE_EXISTS", HttpStatus.CONFLICT);
             return code;
         }
         var sequence = employeeCodeSequenceRepository.findForUpdate(category.getId())
@@ -326,7 +335,8 @@ public class HrConfigurationService {
 
     private void requireVersion(long actual, Long requested) {
         if (requested == null || requested != actual) {
-            throw new BusinessRuleException("This record changed since it was loaded. Refresh and try again.");
+            throw new BusinessRuleException("This record changed since it was loaded. Refresh and try again.",
+                    "HRCFG_VERSION_CONFLICT", HttpStatus.CONFLICT);
         }
     }
 }

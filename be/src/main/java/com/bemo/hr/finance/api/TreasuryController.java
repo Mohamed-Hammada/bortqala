@@ -8,6 +8,7 @@ import com.bemo.hr.finance.infrastructure.CurrencyRepository;
 import com.bemo.hr.finance.infrastructure.TaxRateRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -49,7 +50,7 @@ public class TreasuryController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER')")
     public TreasuryApi.BankAccountResponse updateBankAccount(@PathVariable String id, @Valid @RequestBody TreasuryApi.BankAccountPayload payload) {
         BankAccount bank = bankAccountRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("الحساب البنكي غير موجود"));
+                .orElseThrow(() -> new BusinessRuleException("الحساب البنكي غير موجود", "FIN_BANK_ACCOUNT_NOT_FOUND", HttpStatus.CONFLICT));
         bank.update(payload.bankName(), payload.accountNumber(), payload.iban(), payload.swiftCode(), payload.accountId(), payload.active());
         return toResponse(bankAccountRepository.save(bank));
     }
@@ -74,7 +75,7 @@ public class TreasuryController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER')")
     public TreasuryApi.TaxRateResponse updateTaxRate(@PathVariable String id, @Valid @RequestBody TreasuryApi.TaxRatePayload payload) {
         TaxRate tax = taxRateRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("ضريبة النظام غير موجودة"));
+                .orElseThrow(() -> new BusinessRuleException("ضريبة النظام غير موجودة", "FIN_SYSTEM_TAX_NOT_FOUND", HttpStatus.CONFLICT));
         TaxRate.Type type = TaxRate.Type.valueOf(payload.taxType().toUpperCase());
         tax.update(payload.code(), payload.name(), payload.ratePercentage(), type, payload.accountId(), payload.active());
         return toResponse(taxRateRepository.save(tax));
@@ -99,7 +100,7 @@ public class TreasuryController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER')")
     public TreasuryApi.CurrencyResponse updateCurrency(@PathVariable String id, @Valid @RequestBody TreasuryApi.CurrencyPayload payload) {
         Currency currency = currencyRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("العملة غير موجودة"));
+                .orElseThrow(() -> new BusinessRuleException("العملة غير موجودة", "FIN_CURRENCY_NOT_FOUND", HttpStatus.CONFLICT));
         currency.update(payload.code(), payload.name(), payload.symbol(), payload.isBase(), payload.exchangeRate(), payload.active());
         return toResponse(currencyRepository.save(currency));
     }

@@ -35,9 +35,11 @@ import com.bemo.hr.shared.api.TransitionResponse;
 import com.bemo.hr.shared.api.WorkflowTransitions;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
+import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -91,6 +93,7 @@ public class ReportingService {
     private final com.bemo.hr.audit.application.AuditService auditService;
     private final TenantApplicationRepository tenantApplicationRepository;
     private final AttendanceReportDecisionRepository attendanceReportDecisionRepository;
+    private final IdempotencyService idempotencyService;
 
     public ReportingService(AttendanceReportRepository attendanceReportRepository,
                             DailyAttendanceResultRepository dailyAttendanceResultRepository,
@@ -106,7 +109,8 @@ public class ReportingService {
                             @Value("${hr.company-zone:Africa/Cairo}") String companyZone,
                             com.bemo.hr.audit.application.AuditService auditService,
                             TenantApplicationRepository tenantApplicationRepository,
-                            AttendanceReportDecisionRepository attendanceReportDecisionRepository) {
+                            AttendanceReportDecisionRepository attendanceReportDecisionRepository,
+                            IdempotencyService idempotencyService) {
         this.attendanceReportRepository = attendanceReportRepository;
         this.dailyAttendanceResultRepository = dailyAttendanceResultRepository;
         this.holidayProposalRepository = holidayProposalRepository;
@@ -122,6 +126,7 @@ public class ReportingService {
         this.auditService = auditService;
         this.tenantApplicationRepository = tenantApplicationRepository;
         this.attendanceReportDecisionRepository = attendanceReportDecisionRepository;
+        this.idempotencyService = idempotencyService;
     }
 
     public List<ReportingApi.Summary> list() {
@@ -133,7 +138,7 @@ public class ReportingService {
     }
 
     public List<ReportingApi.PeriodOption> availablePeriods(int year) {
-        if (year < 2000 || year > 2200) throw new BusinessRuleException("Year is outside the supported range.");
+        if (year < 2000 || year > 2200) throw new BusinessRuleException("Year is outside the supported range.", "RPT_YEAR_OUT_OF_RANGE", HttpStatus.CONFLICT);
         var reports = attendanceReportRepository.findByPeriodStartBetween(LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
         var activeCategories = attendanceCategoryRepository.findAll().stream().filter(AttendanceCategory::isActive).toList();
         boolean hasMonthly = activeCategories.isEmpty()
@@ -202,13 +207,13 @@ public class ReportingService {
         }
         if (attendanceReportRepository.existsByPayCycleAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqual(
                 payCycle, request.periodEnd(), request.periodStart())) {
-            throw new BusinessRuleException("A report for this pay cycle already overlaps the selected period.");
+            throw new BusinessRuleException("A report for this pay cycle already overlaps the selected period.", "RPT_OVERLAPPING_REPORT", HttpStatus.CONFLICT);
         }
         var categories = attendanceCategoryRepository.findAll().stream()
                 .filter(AttendanceCategory::isActive)
                 .filter(category -> category.getPayCycle() == payCycle)
                 .collect(Collectors.toMap(AttendanceCategory::getId, Function.identity()));
-        if (categories.isEmpty()) throw new BusinessRuleException("No attendance categories use this pay cycle.");
+        if (categories.isEmpty()) throw new BusinessRuleException("No attendance categories use this pay cycle.", "RPT_NO_CATEGORIES_FOR_CYCLE", HttpStatus.CONFLICT);
         var schedules = scheduleRuleRepository.findAll().stream()
                 .filter(schedule -> categories.containsKey(schedule.getCategoryId()))
                 .collect(Collectors.groupingBy(ScheduleRule::getCategoryId));
@@ -257,20 +262,22 @@ public class ReportingService {
         return details(report);
     }
 
-    private final java.util.Set<String> processedOperations = java.util.concurrent.ConcurrentHashMap.newKeySet();
-
     @Transactional
     public ReportingApi.BulkDecisionResponse bulkDecide(String reportId, ReportingApi.BulkDecisionRequest request, String actor) {
-        if (!processedOperations.add(request.operationId())) {
-            throw new BusinessRuleException("هذه العملية تم تنفيذها بالفعل (معرف العملية مكرر)");
-        }
+        String requestHash = IdempotencyService.hash(TenantContext.currentOrSystem() + "|" + reportId + "|"
+                + request.statusFilter() + "|" + request.decision() + "|" + (request.note() == null ? "" : request.note()));
+        return idempotencyService.execute("ATTENDANCE_BULK_DECISION", request.operationId(), requestHash,
+                () -> applyBulkDecision(reportId, request, actor),
+                this::serializeBulkDecision, this::deserializeBulkDecision);
+    }
+
+    private ReportingApi.BulkDecisionResponse applyBulkDecision(String reportId, ReportingApi.BulkDecisionRequest request, String actor) {
         var report = requireEditable(reportId);
         DailyStatus targetStatus;
         try {
             targetStatus = DailyStatus.valueOf(request.statusFilter());
         } catch (IllegalArgumentException e) {
-            // Fix V-09: Invalid reporting status uses backend keys and localized messages
-            throw new com.bemo.hr.shared.domain.BusinessRuleException("Invalid status filter.", "INVALID_STATUS_FILTER", org.springframework.http.HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Invalid status filter.", "INVALID_STATUS_FILTER", org.springframework.http.HttpStatus.BAD_REQUEST);
         }
         var allResults = dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(reportId);
         var matching = allResults.stream().filter(r -> r.getStatus() == targetStatus).toList();
@@ -298,19 +305,36 @@ public class ReportingService {
             excluded.stream().map(DailyAttendanceResult::getId).toList());
     }
 
+    private String serializeBulkDecision(ReportingApi.BulkDecisionResponse response) {
+        return response.matchingCount() + ";" + response.editableCount() + ";" + response.excludedCount() + ";"
+                + response.successCount() + ";" + String.join(",", response.excludedRecordIds());
+    }
+
+    private ReportingApi.BulkDecisionResponse deserializeBulkDecision(String reference) {
+        String[] parts = reference.split(";", 5);
+        if (parts.length != 5) {
+            throw new BusinessRuleException("Corrupt idempotency replay reference.", "IDEMPOTENCY_CORRUPT_REPLAY",
+                    org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        List<String> excluded = parts[4].isBlank() ? List.of() : List.of(parts[4].split(","));
+        return new ReportingApi.BulkDecisionResponse(
+                Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]),
+                Integer.parseInt(parts[3]), excluded);
+    }
+
     @Transactional
     public ReportingApi.Details decideDaily(String reportId, String resultId, ReportingApi.DecisionRequest request, String actor) {
         var report = requireEditable(reportId);
         var result = dailyAttendanceResultRepository.findById(resultId)
                 .filter(item -> item.getReportId().equals(reportId))
-                .orElseThrow(() -> new NotFoundException("Daily result not found in this report."));
-        if (!result.isBlocking() && result.getDecision() == null) throw new BusinessRuleException("This row does not require an HR decision.");
+                .orElseThrow(() -> new NotFoundException("Daily result not found in this report.", "RPT_DAILY_RESULT_NOT_FOUND"));
+        if (!result.isBlocking() && result.getDecision() == null) throw new BusinessRuleException("This row does not require an HR decision.", "RPT_ROW_NO_DECISION_REQUIRED", HttpStatus.CONFLICT);
         Integer worked = request.workedMinutes();
         if (worked == null && request.decision() == AttendanceDecision.NORMAL_DAY &&
                 (result.getStatus() == DailyStatus.MANUAL_ENTRY || result.getStatus() == DailyStatus.SINGLE_PUNCH)) worked = result.getExpectedMinutes();
         if (worked == null && request.decision() != AttendanceDecision.NORMAL_DAY) worked = 0;
         if (request.expectedVersion() != null && result.getVersion() != request.expectedVersion()) {
-            throw new BusinessRuleException("تم تعديل السجل بواسطة مراجع آخر. أعد التحميل وحاول مجددًا.");
+            throw new BusinessRuleException("تم تعديل السجل بواسطة مراجع آخر. أعد التحميل وحاول مجددًا.", "RPT_VERSION_CONFLICT", HttpStatus.CONFLICT);
         }
         var before = result.decisionState();
         result.decide(request.decision(), worked, request.note(), actor);
@@ -375,7 +399,7 @@ public class ReportingService {
         var anomaly = requireAnomaly(reportId, anomalyId);
         if (anomaly.isReplay(request.operationId())) {
             if (anomaly.getDecision() != request.decision()) {
-                throw new BusinessRuleException("معرّف العملية مستخدم لقرار شذوذ مختلف.");
+                throw new BusinessRuleException("معرّف العملية مستخدم لقرار شذوذ مختلف.", "ANOM_OPERATION_ID_CONFLICT", HttpStatus.CONFLICT);
             }
             return new ReportingApi.DayAnomalyActionResponse(details(report), anomaly.getAffectedCount(), 0, 0);
         }
@@ -424,7 +448,7 @@ public class ReportingService {
         var report = requireEditable(reportId);
         var anomaly = requireAnomaly(reportId, anomalyId);
         if (anomaly.getStatus() != DayAnomalyStatus.RESOLVED) {
-            throw new BusinessRuleException("لا يمكن التراجع إلا عن حالة شذوذ معالجة.");
+            throw new BusinessRuleException("لا يمكن التراجع إلا عن حالة شذوذ معالجة.", "ANOM_REVERSE_RESOLVED_ONLY", HttpStatus.CONFLICT);
         }
         var snapshots = dayAnomalyResultSnapshotRepository.findByAnomalyId(anomalyId);
         var byId = dailyAttendanceResultRepository.findAllById(
@@ -471,12 +495,12 @@ public class ReportingService {
     public ReportingApi.Details decideHoliday(String reportId, String proposalId,
                                                ReportingApi.HolidayDecisionRequest request, String actor) {
         var report = requireEditable(reportId);
-        if (request.status() == HolidayProposalStatus.PENDING) throw new BusinessRuleException("Choose CONFIRMED or REJECTED.");
+        if (request.status() == HolidayProposalStatus.PENDING) throw new BusinessRuleException("Choose CONFIRMED or REJECTED.", "RPT_HOLIDAY_PROPOSAL_STATUS_REQUIRED", HttpStatus.CONFLICT);
         var proposal = holidayProposalRepository.findById(proposalId)
                 .filter(item -> item.getReportId().equals(reportId))
-                .orElseThrow(() -> new NotFoundException("Holiday proposal not found in this report."));
+                .orElseThrow(() -> new NotFoundException("Holiday proposal not found in this report.", "RPT_HOLIDAY_PROPOSAL_NOT_FOUND"));
         if (proposal.getStatus() != HolidayProposalStatus.PENDING && proposal.getStatus() != request.status()) {
-            throw new BusinessRuleException("This holiday proposal has already been decided.");
+            throw new BusinessRuleException("This holiday proposal has already been decided.", "RPT_HOLIDAY_PROPOSAL_ALREADY_DECIDED", HttpStatus.CONFLICT);
         }
         proposal.decide(request.status(), request.note(), actor);
         if (request.status() == HolidayProposalStatus.CONFIRMED) {
@@ -502,7 +526,7 @@ public class ReportingService {
         }
         long totalRecords = dailyAttendanceResultRepository.countByReportId(report.getId());
         if (totalRecords == 0) {
-            throw new BusinessRuleException("Cannot approve an empty report with 0 employee records.");
+            throw new BusinessRuleException("Cannot approve an empty report with 0 employee records.", "RPT_EMPTY_REPORT_APPROVAL", HttpStatus.CONFLICT);
         }
         refreshUnresolved(report);
         report.approve(actor);
@@ -633,11 +657,11 @@ public class ReportingService {
                 + proposals.stream().filter(proposal -> proposal.getStatus() == HolidayProposalStatus.PENDING).count());
     }
 
-    private AttendanceReport requireReport(String id) { return attendanceReportRepository.findById(id).orElseThrow(() -> new NotFoundException("Report not found.")); }
-    private AttendanceReport requireEditable(String id) { var report = requireReport(id); if (report.getStatus() != ReportStatus.IN_REVIEW) throw new BusinessRuleException("Only in-review reports can be changed."); return report; }
+    private AttendanceReport requireReport(String id) { return attendanceReportRepository.findById(id).orElseThrow(() -> new NotFoundException("Report not found.", "RPT_NOT_FOUND")); }
+    private AttendanceReport requireEditable(String id) { var report = requireReport(id); if (report.getStatus() != ReportStatus.IN_REVIEW) throw new BusinessRuleException("Only in-review reports can be changed.", "RPT_ONLY_IN_REVIEW", HttpStatus.CONFLICT); return report; }
     private DayAnomaly requireAnomaly(String reportId, String anomalyId) {
         return dayAnomalyRepository.findById(anomalyId).filter(item -> item.getReportId().equals(reportId))
-                .orElseThrow(() -> new NotFoundException("حالة الشذوذ غير موجودة داخل هذا التقرير."));
+                .orElseThrow(() -> new NotFoundException("حالة الشذوذ غير موجودة داخل هذا التقرير.", "ANOM_NOT_FOUND_IN_REPORT"));
     }
 
     private ReportingApi.Summary summary(AttendanceReport report) {
@@ -668,12 +692,12 @@ public class ReportingService {
     private record DayCategoryKey(LocalDate workDate, String categoryId, String categoryName) { }
 
     private void validatePeriod(LocalDate start, LocalDate end) {
-        if (end.isBefore(start)) throw new BusinessRuleException("Report end date cannot be before start date.");
+        if (end.isBefore(start)) throw new BusinessRuleException("Report end date cannot be before start date.", "RPT_END_BEFORE_START", HttpStatus.CONFLICT);
         if (start.isBefore(LocalDate.of(2000, 1, 1)) || end.isAfter(LocalDate.of(2200, 12, 31))) {
-            throw new BusinessRuleException("Report dates are outside the supported range.");
+            throw new BusinessRuleException("Report dates are outside the supported range.", "RPT_DATES_OUT_OF_RANGE", HttpStatus.CONFLICT);
         }
         if (java.time.temporal.ChronoUnit.DAYS.between(start, end) > 365) {
-            throw new BusinessRuleException("A report period cannot exceed 366 days.");
+            throw new BusinessRuleException("A report period cannot exceed 366 days.", "RPT_PERIOD_EXCEEDS_366_DAYS", HttpStatus.CONFLICT);
         }
     }
 

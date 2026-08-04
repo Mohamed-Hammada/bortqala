@@ -212,6 +212,29 @@ class ReportingDecisionHistoryContractTests {
     }
 
     @Test
+    void bulkDecisionIsIdempotentAcrossCallsAndRejectsKeyReuseWithDifferentPayload() {
+        String app = app();
+        TenantContext.set(app);
+        ReportingApi.Details generated = generatedReport();
+        String reportId = generated.report().id();
+        String statusFilter = blockingRow(generated).status().name();
+
+        var request = new ReportingApi.BulkDecisionRequest(AttendanceDecision.NORMAL_DAY, statusFilter, "bulk note", "BULK-OP-1");
+        ReportingApi.BulkDecisionResponse first = reportingService.bulkDecide(reportId, request, "reviewer1");
+        ReportingApi.BulkDecisionResponse replay = reportingService.bulkDecide(reportId, request, "reviewer1");
+
+        assertThat(replay).isEqualTo(first);
+        assertThat(first.editableCount()).isGreaterThan(0);
+        assertThat(reportingService.decisionHistory(reportId)).hasSize(first.editableCount());
+
+        var sameKeyDifferentRequest = new ReportingApi.BulkDecisionRequest(
+                AttendanceDecision.NORMAL_DAY, statusFilter, "a different note", "BULK-OP-1");
+        assertThatThrownBy(() -> reportingService.bulkDecide(reportId, sameKeyDifferentRequest, "reviewer1"))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("different request");
+    }
+
+    @Test
     void operationIdIsUniquePerTenantPerAction() {
         String app = app();
         TenantContext.set(app);

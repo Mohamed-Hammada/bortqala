@@ -10,6 +10,7 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.TenantId;
+import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -67,7 +68,7 @@ public class DayAnomaly {
     @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
 
     public void decide(DayAnomalyDecision decision, String reason, String operationId, String actor) {
-        if (status != DayAnomalyStatus.OPEN) throw new BusinessRuleException("حالة الشذوذ ليست مفتوحة لاتخاذ قرار.");
+        if (status != DayAnomalyStatus.OPEN) throw new BusinessRuleException("حالة الشذوذ ليست مفتوحة لاتخاذ قرار.", "ANOM_NOT_OPEN_FOR_DECISION", HttpStatus.CONFLICT);
         this.decision = decision;
         this.reason = reason;
         this.operationId = operationId;
@@ -77,7 +78,7 @@ public class DayAnomaly {
     }
 
     public void reverse(String actor) {
-        if (status != DayAnomalyStatus.RESOLVED) throw new BusinessRuleException("يمكن عكس حالة شذوذ معالجة فقط.");
+        if (status != DayAnomalyStatus.RESOLVED) throw new BusinessRuleException("يمكن عكس حالة شذوذ معالجة فقط.", "ANOM_REVERSE_RESOLVED_ONLY", HttpStatus.CONFLICT);
         status = DayAnomalyStatus.REVERSED;
         reversedBy = actor;
         reversedAt = Instant.now();
@@ -85,7 +86,7 @@ public class DayAnomaly {
 
     public void reopen(String actor) {
         if (status != DayAnomalyStatus.DEFERRED && status != DayAnomalyStatus.REVERSED) {
-            throw new BusinessRuleException("اعكس القرار المعالج أولاً، أو أعد فتح الحالة المؤجلة/المعكوسة.");
+            throw new BusinessRuleException("اعكس القرار المعالج أولاً، أو أعد فتح الحالة المؤجلة/المعكوسة.", "ANOM_REOPEN_BEFORE_DECISION", HttpStatus.CONFLICT);
         }
         status = DayAnomalyStatus.OPEN;
         reopenedBy = actor;
