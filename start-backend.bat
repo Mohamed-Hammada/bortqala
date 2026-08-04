@@ -10,6 +10,13 @@ set "PATH=%JAVA_HOME%\bin;%PATH%"
 
 rem ==== Dev environment (see be/src/main/resources/application-dev.properties) ====
 set "SPRING_PROFILES_ACTIVE=dev"
+
+rem Allow both local Angular and the Cloudflare domain
+set "HR_CORS_ALLOWED_ORIGINS=http://localhost:4200,http://127.0.0.1:4200,https://app.eysawy.dpdns.org"
+
+rem Respect X-Forwarded-Proto and other Cloudflare proxy headers
+set "SERVER_FORWARD_HEADERS_STRATEGY=framework"
+
 set "HR_BOOTSTRAP_APP_CODE=DEMO"
 set "HR_BOOTSTRAP_APP_NAME=Bemo ERP"
 set "HR_BOOTSTRAP_ADMIN_USERNAME=admin"
