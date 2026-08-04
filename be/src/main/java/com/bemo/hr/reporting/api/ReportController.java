@@ -50,27 +50,27 @@ public class ReportController {
     List<ReportingApi.PeriodOption> available(@RequestParam int year) { return reportingService.availablePeriods(year); }
 
     @GetMapping("/preview")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     ReportingApi.PreviewResponse preview(@RequestParam LocalDate periodStart, @RequestParam LocalDate periodEnd,
                                          @RequestParam PayCycle payCycle) {
         return reportingService.preview(periodStart, periodEnd, payCycle);
     }
 
     @GetMapping("/{id}/decision-history")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     List<ReportingApi.DecisionHistoryView> decisionHistory(@PathVariable String id) {
         return reportingService.decisionHistory(id);
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     @ResponseStatus(HttpStatus.CREATED)
     ReportingApi.Details create(@Valid @RequestBody ReportingApi.CreateRequest request, Authentication authentication) {
         return reportingService.create(request, authentication.getName());
     }
 
     @PostMapping("/{reportId}/bulk-decision")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     ReportingApi.BulkDecisionResponse bulkDecision(@PathVariable String reportId,
                                                    @Valid @RequestBody ReportingApi.BulkDecisionRequest request,
                                                    Authentication authentication) {
@@ -78,14 +78,14 @@ public class ReportController {
     }
 
     @PutMapping("/{reportId}/daily-results/{resultId}/decision")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     ReportingApi.Details decideDaily(@PathVariable String reportId, @PathVariable String resultId,
                                      @Valid @RequestBody ReportingApi.DecisionRequest request, Authentication authentication) {
         return reportingService.decideDaily(reportId, resultId, request, authentication.getName());
     }
 
     @PutMapping("/{reportId}/downtime-decision")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     ReportingApi.Details saveDowntimeDecision(@PathVariable String reportId,
                                               @Valid @RequestBody ReportingApi.DowntimeDecisionRequest request,
                                               Authentication authentication) {
@@ -93,13 +93,13 @@ public class ReportController {
     }
 
     @PostMapping("/{reportId}/day-anomalies/detect")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     ReportingApi.Details detectDayAnomalies(@PathVariable String reportId, Authentication authentication) {
         return reportingService.detectDayAnomalies(reportId, authentication.getName());
     }
 
     @PostMapping("/{reportId}/day-anomalies/{anomalyId}/decision")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     ReportingApi.DayAnomalyActionResponse decideDayAnomaly(@PathVariable String reportId,
             @PathVariable String anomalyId, @Valid @RequestBody ReportingApi.DayAnomalyDecisionRequest request,
             Authentication authentication) {
@@ -107,32 +107,32 @@ public class ReportController {
     }
 
     @PostMapping("/{reportId}/day-anomalies/{anomalyId}/reverse")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     ReportingApi.DayAnomalyActionResponse reverseDayAnomaly(@PathVariable String reportId,
             @PathVariable String anomalyId, Authentication authentication) {
         return reportingService.reverseDayAnomaly(reportId, anomalyId, authentication.getName());
     }
 
     @PostMapping("/{reportId}/day-anomalies/{anomalyId}/reopen")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     ReportingApi.Details reopenDayAnomaly(@PathVariable String reportId, @PathVariable String anomalyId,
                                           Authentication authentication) {
         return reportingService.reopenDayAnomaly(reportId, anomalyId, authentication.getName());
     }
 
     @PutMapping("/{reportId}/holiday-proposals/{proposalId}/decision")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     ReportingApi.Details decideHoliday(@PathVariable String reportId, @PathVariable String proposalId,
                                        @Valid @RequestBody ReportingApi.HolidayDecisionRequest request, Authentication authentication) {
         return reportingService.decideHoliday(reportId, proposalId, request, authentication.getName());
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     TransitionResponse approve(@PathVariable String id, Authentication authentication) { return reportingService.approve(id, authentication.getName()); }
 
     @PostMapping("/{id}/reopen")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     TransitionResponse reopen(@PathVariable String id, Authentication authentication) {
         return reportingService.reopen(id, authentication.getName());
     }

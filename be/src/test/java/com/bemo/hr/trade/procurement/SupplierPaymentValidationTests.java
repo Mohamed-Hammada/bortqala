@@ -46,7 +46,7 @@ class SupplierPaymentValidationTests {
         supplierInvoiceRepository = mock(SupplierInvoiceRepository.class);
         supplierPaymentRepository = mock(SupplierPaymentRepository.class);
         IdempotencyKeyRepository idempotencyKeyRepository = mock(IdempotencyKeyRepository.class);
-        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(1);
         when(idempotencyKeyRepository.findByOperationTypeAndOperationId(anyString(), anyString()))
                 .thenReturn(Optional.empty());

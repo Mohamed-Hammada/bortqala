@@ -40,6 +40,10 @@ public class IdempotencyKey implements Persistable<String> {
     private Instant completedAt;
     @Column(name = "lease_expires_at")
     private Instant leaseExpiresAt;
+    @Column(name = "owner_token", length = 36)
+    private String ownerToken;
+    @Column(name = "attempt_number", nullable = false)
+    private int attemptNumber = 1;
 
     protected IdempotencyKey() {
     }
@@ -50,6 +54,7 @@ public class IdempotencyKey implements Persistable<String> {
         this.operationId = operationId;
         this.requestHash = requestHash;
         this.status = STATUS_IN_PROGRESS;
+        this.attemptNumber = 1;
     }
 
     public void complete(String responseReferenceOrBody) {
@@ -64,6 +69,8 @@ public class IdempotencyKey implements Persistable<String> {
     }
 
     public void setLeaseExpiresAt(Instant leaseExpiresAt) { this.leaseExpiresAt = leaseExpiresAt; }
+    public void setOwnerToken(String ownerToken) { this.ownerToken = ownerToken; }
+    public void setAttemptNumber(int attemptNumber) { this.attemptNumber = attemptNumber; }
 
     public String getId() { return id; }
     @Override public boolean isNew() { return createdAt == null; }
@@ -75,6 +82,8 @@ public class IdempotencyKey implements Persistable<String> {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getCompletedAt() { return completedAt; }
     public Instant getLeaseExpiresAt() { return leaseExpiresAt; }
+    public String getOwnerToken() { return ownerToken; }
+    public int getAttemptNumber() { return attemptNumber; }
 
     @PrePersist
     void prePersist() { createdAt = Instant.now(); }

@@ -7,6 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ImportBatchRepository extends JpaRepository<ImportBatch, String> {
-    Optional<ImportBatch> findByChecksum(String checksum);
+    Optional<ImportBatch> findBySourceIdAndChecksum(String sourceId, String checksum);
     List<ImportBatch> findAllByOrderByImportedAtDesc();
 }

@@ -1,4 +1,10 @@
 databaseChangeLog:
+  # Builds the exact schema that ships in the released baseline plus the
+  # unreleased V68-V91 changesets, i.e. production BEFORE the V92 punch-source
+  # identity migration. Used by the migration tests to seed legacy data and
+  # then apply only V92, mirroring a real in-place upgrade.
+  - include:
+      file: db/changelog/releases/20260729_v1_v67.changelog-master.yaml
   - include:
       file: db/changelog/schema/create/20260729_v68_system_settings.yaml
   - include:
@@ -47,11 +53,3 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260804_v90_punch_device_scoped_dedup.yaml
   - include:
       file: db/changelog/data/insert/20260804_v91_backend_error_translations.yaml
-  - include:
-      file: db/changelog/schema/update/20260804_v92_punch_source_identity.yaml
-  - include:
-      file: db/changelog/schema/update/20260804_v93_idempotency_lease.yaml
-  - include:
-      file: db/changelog/schema/update/20260804_v94_idempotency_owner.yaml
-  - include:
-      file: db/changelog/data/insert/20260804_v95_biometric_sources_i18n.yaml

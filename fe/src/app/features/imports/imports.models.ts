@@ -23,6 +23,7 @@ export interface PreviewRow {
 export interface ImportBatch {
   id: string;
   fileName: string;
+  sourceId: string;
   deviceName: string;
   status: ImportStatus;
   totalRows: number;
@@ -69,4 +70,18 @@ export interface BiometricDeviceSyncResult {
   importedRows: number;
   duplicateRows: number;
   duplicateBatch: boolean;
+}
+export type BiometricSourceType = 'DEVICE' | 'FILE_DEVICE';
+export interface BiometricSource {
+  id: string;
+  name: string;
+  sourceType: BiometricSourceType;
+  normalizedCode: string;
+  active: boolean;
+  createdAt: number;
+}
+export interface BiometricSourceRequest {
+  name: string;
+  sourceType: BiometricSourceType;
+  active: boolean;
 }

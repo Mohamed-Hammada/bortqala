@@ -31,15 +31,19 @@ public class IdempotencyService {
     /**
      * Reservation-based idempotency. The key is claimed with an atomic
      * {@code INSERT ... ON CONFLICT DO NOTHING} so concurrent duplicates never
-     * depend on a post-failure re-read. A reservation that was never completed
-     * (for example after a process crash) expires after {@value #IN_PROGRESS_LEASE}
-     * and can be claimed by the next retry.
+     * depend on a post-failure re-read. The winning caller keeps an opaque owner
+     * token; only that owner can complete or fail the reservation, and a
+     * long-running owner can renew its lease with {@link #renewLease}. A
+     * reservation that was never completed (for example after a process crash)
+     * expires after {@value #IN_PROGRESS_LEASE} and can be claimed by the next
+     * retry, but only when the retry carries the exact same request hash.
      */
     public <T> T execute(String operationType, String operationId, String requestHash,
                          Supplier<T> operation, Function<T, String> referenceWriter, Function<String, T> replayMapper) {
         Instant now = Instant.now();
-        if (reserve(operationType, operationId, requestHash, now.plus(IN_PROGRESS_LEASE))) {
-            return runAndRecord(operationType, operationId, requestHash, operation, referenceWriter);
+        String ownerToken = UUID.randomUUID().toString();
+        if (reserve(operationType, operationId, requestHash, ownerToken, now.plus(IN_PROGRESS_LEASE))) {
+            return runAndRecord(operationType, operationId, requestHash, ownerToken, operation, referenceWriter);
         }
         IdempotencyKey existing = idempotencyKeyRepository
                 .findByOperationTypeAndOperationId(operationType, operationId)
@@ -47,35 +51,51 @@ public class IdempotencyService {
         if (IdempotencyKey.STATUS_COMPLETED.equals(existing.getStatus())) {
             return replay(existing, requestHash, replayMapper);
         }
+        if (!existing.getRequestHash().equals(requestHash)) {
+            throw hashMismatch();
+        }
         if (isAvailableForRetry(existing, now)
-                && steal(operationType, operationId, requestHash, now.plus(IN_PROGRESS_LEASE), now)) {
-            return runAndRecord(operationType, operationId, requestHash, operation, referenceWriter);
+                && steal(operationType, operationId, requestHash, ownerToken, now.plus(IN_PROGRESS_LEASE), now)) {
+            return runAndRecord(operationType, operationId, requestHash, ownerToken, operation, referenceWriter);
         }
         throw inProgress();
     }
 
+    /**
+     * Lets the owning attempt extend its IN_PROGRESS lease while the operation is
+     * still running, so a slow batch is not stolen mid-flight.
+     */
+    public void renewLease(String operationType, String operationId, String ownerToken) {
+        if (ownerToken == null) {
+            return;
+        }
+        idempotencyKeyRepository.renewLease(TenantContext.currentOrSystem(), operationType, operationId,
+                ownerToken, Instant.now().plus(IN_PROGRESS_LEASE));
+    }
+
     private <T> T runAndRecord(String operationType, String operationId, String requestHash,
-                               Supplier<T> operation, Function<T, String> referenceWriter) {
+                               String ownerToken, Supplier<T> operation, Function<T, String> referenceWriter) {
         try {
             T result = operation.get();
             idempotencyKeyRepository.complete(TenantContext.currentOrSystem(), operationType, operationId,
-                    referenceWriter.apply(result));
+                    ownerToken, referenceWriter.apply(result));
             return result;
         } catch (RuntimeException exception) {
-            idempotencyKeyRepository.fail(TenantContext.currentOrSystem(), operationType, operationId);
+            idempotencyKeyRepository.fail(TenantContext.currentOrSystem(), operationType, operationId, ownerToken);
             throw exception;
         }
     }
 
-    private boolean reserve(String operationType, String operationId, String requestHash, Instant leaseExpiresAt) {
+    private boolean reserve(String operationType, String operationId, String requestHash,
+                            String ownerToken, Instant leaseExpiresAt) {
         return idempotencyKeyRepository.reserve(UUID.randomUUID().toString(), TenantContext.currentOrSystem(),
-                operationType, operationId, requestHash, leaseExpiresAt) == 1;
+                operationType, operationId, requestHash, leaseExpiresAt, ownerToken) == 1;
     }
 
     private boolean steal(String operationType, String operationId, String requestHash,
-                          Instant leaseExpiresAt, Instant now) {
+                          String ownerToken, Instant leaseExpiresAt, Instant now) {
         return idempotencyKeyRepository.steal(TenantContext.currentOrSystem(), operationType, operationId,
-                requestHash, leaseExpiresAt, now) == 1;
+                requestHash, leaseExpiresAt, now, ownerToken) == 1;
     }
 
     private boolean isAvailableForRetry(IdempotencyKey key, Instant now) {
@@ -88,10 +108,14 @@ public class IdempotencyService {
 
     private <T> T replay(IdempotencyKey key, String requestHash, Function<String, T> replayMapper) {
         if (!key.getRequestHash().equals(requestHash)) {
-            throw new BusinessRuleException("The same operation key was already used with a different request.",
-                    "IDEMPOTENCY_HASH_MISMATCH", HttpStatus.CONFLICT);
+            throw hashMismatch();
         }
         return replayMapper.apply(key.getResponseReferenceOrBody());
+    }
+
+    private BusinessRuleException hashMismatch() {
+        return new BusinessRuleException("The same operation key was already used with a different request.",
+                "IDEMPOTENCY_HASH_MISMATCH", HttpStatus.CONFLICT);
     }
 
     private BusinessRuleException inProgress() {

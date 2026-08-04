@@ -1,0 +1,35 @@
+id;translation_key;locale;text_value
+v95-ar-001;imports.sourcesTitle;ar-EG;مصادر البصمات
+v95-en-001;imports.sourcesTitle;en-US;Biometric sources
+v95-ar-002;imports.sourcesHint;ar-EG;حدد مصدر البصمات لاستيراد الملفات؛ المزامنة التلقائية ورفع الملفات تُقيَّد بالمصدر.
+v95-en-002;imports.sourcesHint;en-US;Define biometric sources for file imports. Automatic sync and uploads are scoped to a source.
+v95-ar-003;imports.addSource;ar-EG;مصدر جديد
+v95-en-003;imports.addSource;en-US;Add source
+v95-ar-004;imports.editSource;ar-EG;تعديل المصدر
+v95-en-004;imports.editSource;en-US;Edit source
+v95-ar-005;imports.sourceLabel;ar-EG;مصدر البصمات
+v95-en-005;imports.sourceLabel;en-US;Biometric source
+v95-ar-006;imports.sourceNameLabel;ar-EG;اسم المصدر
+v95-en-006;imports.sourceNameLabel;en-US;Source name
+v95-ar-007;imports.sourceNamePlaceholder;ar-EG;مثال: بوابة المصنع الرئيسية
+v95-en-007;imports.sourceNamePlaceholder;en-US;e.g. Main factory gate
+v95-ar-008;imports.sourceTypeLabel;ar-EG;نوع المصدر
+v95-en-008;imports.sourceTypeLabel;en-US;Source type
+v95-ar-009;imports.sourceTypeDevice;ar-EG;جهاز
+v95-en-009;imports.sourceTypeDevice;en-US;Device
+v95-ar-010;imports.sourceTypeFile;ar-EG;ملف
+v95-en-010;imports.sourceTypeFile;en-US;File
+v95-ar-011;imports.sourceActiveLabel;ar-EG;مصدر نشط
+v95-en-011;imports.sourceActiveLabel;en-US;Active source
+v95-ar-012;imports.sourceNameInvalid;ar-EG;أدخل اسم المصدر.
+v95-en-012;imports.sourceNameInvalid;en-US;Enter the source name.
+v95-ar-013;imports.sourceRequired;ar-EG;اختر مصدر البصمات قبل الاستيراد.
+v95-en-013;imports.sourceRequired;en-US;Select a biometric source before importing.
+v95-ar-014;imports.sourceDeleted;ar-EG;تم حذف المصدر.
+v95-en-014;imports.sourceDeleted;en-US;Source deleted.
+v95-ar-015;imports.deleteSourceConfirm;ar-EG;هل تريد حذف هذا المصدر؟ لن تُحذف سجلات الاستيراد السابقة.
+v95-en-015;imports.deleteSourceConfirm;en-US;Delete this source? Past import history will be kept.
+v95-ar-016;imports.noSourcesYet;ar-EG;لا توجد مصادر بعد
+v95-en-016;imports.noSourcesYet;en-US;No sources yet
+v95-ar-017;imports.noSourcesHint;ar-EG;لا توجد مصادر بصمات. أنشئ مصدرًا أولاً.
+v95-en-017;imports.noSourcesHint;en-US;No biometric sources. Create one first.

@@ -24,6 +24,8 @@ public class ImportBatch {
     private String checksum;
     @Column(name = "file_name", nullable = false)
     private String fileName;
+    @Column(name = "source_id", nullable = false, length = 36)
+    private String sourceId;
     @Column(name = "device_name", nullable = false, length = 150)
     private String deviceName;
     @Enumerated(EnumType.STRING)
@@ -43,11 +45,12 @@ public class ImportBatch {
     protected ImportBatch() {
     }
 
-    public ImportBatch(String checksum, String fileName, String deviceName, String importedBy,
+    public ImportBatch(String checksum, String fileName, String sourceId, String deviceName, String importedBy,
                        int totalRows, int importedRows, int errorRows) {
         this.id = UUID.randomUUID().toString();
         this.checksum = checksum;
         this.fileName = fileName;
+        this.sourceId = sourceId;
         this.deviceName = deviceName.strip();
         this.importedBy = importedBy.strip();
         this.totalRows = totalRows;
@@ -75,6 +78,7 @@ public class ImportBatch {
     public String getId() { return id; }
     public String getChecksum() { return checksum; }
     public String getFileName() { return fileName; }
+    public String getSourceId() { return sourceId; }
     public String getDeviceName() { return deviceName; }
     public ImportStatus getStatus() { return status; }
     public int getTotalRows() { return totalRows; }

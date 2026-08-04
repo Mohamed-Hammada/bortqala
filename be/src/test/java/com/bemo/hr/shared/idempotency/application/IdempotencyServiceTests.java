@@ -31,20 +31,20 @@ class IdempotencyServiceTests {
 
     @Test
     void runsOperationOnceAndStoresTheReference() {
-        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(1);
-        when(idempotencyKeyRepository.complete(anyString(), anyString(), anyString(), anyString())).thenReturn(1);
+        when(idempotencyKeyRepository.complete(anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(1);
 
         String result = service().execute("PAYMENT", "op-1", "hash-a",
                 () -> "payment-id", value -> value, reference -> reference);
 
         assertThat(result).isEqualTo("payment-id");
-        verify(idempotencyKeyRepository).complete(anyString(), anyString(), anyString(), eq("payment-id"));
+        verify(idempotencyKeyRepository).complete(anyString(), anyString(), anyString(), anyString(), eq("payment-id"));
     }
 
     @Test
     void replaysTheOriginalResultWhenTheSameRequestIsRepeated() {
-        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(0);
         when(idempotencyKeyRepository.findByOperationTypeAndOperationId("PAYMENT", "op-1"))
                 .thenReturn(Optional.of(completedKey()));
@@ -58,7 +58,7 @@ class IdempotencyServiceTests {
 
     @Test
     void rejectsTheSameKeyUsedWithADifferentRequest() {
-        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(0);
         when(idempotencyKeyRepository.findByOperationTypeAndOperationId("PAYMENT", "op-1"))
                 .thenReturn(Optional.of(completedKey()));
@@ -71,7 +71,7 @@ class IdempotencyServiceTests {
 
     @Test
     void rejectsAKeyThatIsStillInProgress() {
-        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(0);
         var key = new IdempotencyKey("PAYMENT", "op-1", "hash-a");
         key.setLeaseExpiresAt(Instant.now().plusSeconds(300));
@@ -82,25 +82,25 @@ class IdempotencyServiceTests {
                 () -> "ignored", value -> value, reference -> reference))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("already being processed");
-        verify(idempotencyKeyRepository, never()).complete(anyString(), anyString(), anyString(), anyString());
-        verify(idempotencyKeyRepository, never()).fail(anyString(), anyString(), anyString());
+        verify(idempotencyKeyRepository, never()).complete(anyString(), anyString(), anyString(), anyString(), anyString());
+        verify(idempotencyKeyRepository, never()).fail(anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
     void propagatesOperationFailureWithoutStoringASuccessReference() {
-        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(1);
 
         assertThatThrownBy(() -> service().execute("PAYMENT", "op-1", "hash-a",
                 () -> { throw new IllegalStateException("boom"); }, value -> value, reference -> reference))
                 .isInstanceOf(IllegalStateException.class);
-        verify(idempotencyKeyRepository).fail(anyString(), anyString(), anyString());
-        verify(idempotencyKeyRepository, never()).complete(anyString(), anyString(), anyString(), anyString());
+        verify(idempotencyKeyRepository).fail(anyString(), anyString(), anyString(), anyString());
+        verify(idempotencyKeyRepository, never()).complete(anyString(), anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
     void concurrentDuplicateInsertIsResolvedByReloadingAndReplaying() {
-        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(0);
         when(idempotencyKeyRepository.findByOperationTypeAndOperationId("PAYMENT", "op-1"))
                 .thenReturn(Optional.of(completedKey()));
@@ -114,7 +114,7 @@ class IdempotencyServiceTests {
 
     @Test
     void concurrentDuplicateInsertOfADifferentRequestIsRejected() {
-        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(0);
         when(idempotencyKeyRepository.findByOperationTypeAndOperationId("PAYMENT", "op-1"))
                 .thenReturn(Optional.of(completedKey()));
@@ -127,7 +127,7 @@ class IdempotencyServiceTests {
 
     @Test
     void concurrentDuplicateInsertStillInProgressIsRejected() {
-        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(0);
         var key = new IdempotencyKey("PAYMENT", "op-1", "hash-a");
         key.setLeaseExpiresAt(Instant.now().plusSeconds(300));
@@ -142,55 +142,101 @@ class IdempotencyServiceTests {
 
     @Test
     void anExpiredInProgressReservationIsReclaimedAndTheOperationRuns() {
-        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(0);
         var key = new IdempotencyKey("PAYMENT", "op-1", "hash-a");
         key.setLeaseExpiresAt(Instant.now().minusSeconds(30));
         when(idempotencyKeyRepository.findByOperationTypeAndOperationId("PAYMENT", "op-1"))
                 .thenReturn(Optional.of(key));
-        when(idempotencyKeyRepository.steal(anyString(), anyString(), anyString(), anyString(), any(), any()))
+        when(idempotencyKeyRepository.steal(anyString(), anyString(), anyString(), anyString(), any(), any(), anyString()))
                 .thenReturn(1);
-        when(idempotencyKeyRepository.complete(anyString(), anyString(), anyString(), anyString())).thenReturn(1);
+        when(idempotencyKeyRepository.complete(anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(1);
 
         String result = service().execute("PAYMENT", "op-1", "hash-a",
                 () -> "payment-id", value -> value, reference -> reference);
 
         assertThat(result).isEqualTo("payment-id");
-        verify(idempotencyKeyRepository).complete(anyString(), anyString(), anyString(), eq("payment-id"));
+        verify(idempotencyKeyRepository).complete(anyString(), anyString(), anyString(), anyString(), eq("payment-id"));
     }
 
     @Test
     void aFailedAttemptCanBeRetried() {
-        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(0);
         var key = new IdempotencyKey("PAYMENT", "op-1", "hash-a");
         key.fail();
         when(idempotencyKeyRepository.findByOperationTypeAndOperationId("PAYMENT", "op-1"))
                 .thenReturn(Optional.of(key));
-        when(idempotencyKeyRepository.steal(anyString(), anyString(), anyString(), anyString(), any(), any()))
+        when(idempotencyKeyRepository.steal(anyString(), anyString(), anyString(), anyString(), any(), any(), anyString()))
                 .thenReturn(1);
 
         service().execute("PAYMENT", "op-1", "hash-a",
                 () -> "payment-id", value -> value, reference -> reference);
 
-        verify(idempotencyKeyRepository).complete(anyString(), anyString(), anyString(), anyString());
+        verify(idempotencyKeyRepository).complete(anyString(), anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
     void aLostStealRaceIsRejected() {
-        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
                 .thenReturn(0);
         var key = new IdempotencyKey("PAYMENT", "op-1", "hash-a");
         key.setLeaseExpiresAt(Instant.now().minusSeconds(30));
         when(idempotencyKeyRepository.findByOperationTypeAndOperationId("PAYMENT", "op-1"))
                 .thenReturn(Optional.of(key));
-        when(idempotencyKeyRepository.steal(anyString(), anyString(), anyString(), anyString(), any(), any()))
+        when(idempotencyKeyRepository.steal(anyString(), anyString(), anyString(), anyString(), any(), any(), anyString()))
                 .thenReturn(0);
 
         assertThatThrownBy(() -> service().execute("PAYMENT", "op-1", "hash-a",
                 () -> "ignored", value -> value, reference -> reference))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("already being processed");
+    }
+
+    @Test
+    void aFailedAttemptWithADifferentHashIsRejectedAndNeverReclaimed() {
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
+                .thenReturn(0);
+        var key = new IdempotencyKey("PAYMENT", "op-1", "hash-a");
+        key.fail();
+        when(idempotencyKeyRepository.findByOperationTypeAndOperationId("PAYMENT", "op-1"))
+                .thenReturn(Optional.of(key));
+
+        assertThatThrownBy(() -> service().execute("PAYMENT", "op-1", "hash-b",
+                () -> "ignored", value -> value, reference -> reference))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("different request");
+        verify(idempotencyKeyRepository, never()).steal(anyString(), anyString(), anyString(), anyString(), any(), any(), anyString());
+    }
+
+    @Test
+    void anExpiredReservationWithADifferentHashIsRejected() {
+        when(idempotencyKeyRepository.reserve(anyString(), anyString(), anyString(), anyString(), anyString(), any(), anyString()))
+                .thenReturn(0);
+        var key = new IdempotencyKey("PAYMENT", "op-1", "hash-a");
+        key.setLeaseExpiresAt(Instant.now().minusSeconds(30));
+        when(idempotencyKeyRepository.findByOperationTypeAndOperationId("PAYMENT", "op-1"))
+                .thenReturn(Optional.of(key));
+
+        assertThatThrownBy(() -> service().execute("PAYMENT", "op-1", "hash-b",
+                () -> "ignored", value -> value, reference -> reference))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("different request");
+        verify(idempotencyKeyRepository, never()).steal(anyString(), anyString(), anyString(), anyString(), any(), any(), anyString());
+    }
+
+    @Test
+    void renewLeasePushesTheOwnerLeaseOut() {
+        service().renewLease("PAYMENT", "op-1", "owner-token");
+
+        verify(idempotencyKeyRepository).renewLease(anyString(), eq("PAYMENT"), eq("op-1"), eq("owner-token"), any());
+    }
+
+    @Test
+    void renewLeaseWithNoOwnerIsASafeNoOp() {
+        service().renewLease("PAYMENT", "op-1", null);
+
+        verify(idempotencyKeyRepository, never()).renewLease(anyString(), anyString(), anyString(), anyString(), any());
     }
 
     private IdempotencyKey completedKey() {

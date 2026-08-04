@@ -8,6 +8,8 @@ import {
   BiometricDevice,
   BiometricDeviceRequest,
   BiometricDeviceSyncResult,
+  BiometricSource,
+  BiometricSourceRequest,
   ImportBatch,
   ImportPreview,
   UnmatchedIdentity,
@@ -19,6 +21,7 @@ export class ImportsStore {
   readonly batches = signal<ImportBatch[]>([]);
   readonly unmatched = signal<UnmatchedIdentity[]>([]);
   readonly devices = signal<BiometricDevice[]>([]);
+  readonly sources = signal<BiometricSource[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
@@ -26,14 +29,16 @@ export class ImportsStore {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const [batches, unmatched, devices] = await Promise.all([
+      const [batches, unmatched, devices, sources] = await Promise.all([
         firstValueFrom(this.http.get<ImportBatch[]>('/api/v1/imports')),
         firstValueFrom(this.http.get<UnmatchedIdentity[]>('/api/v1/imports/unmatched')),
         firstValueFrom(this.http.get<BiometricDevice[]>('/api/v1/imports/devices')),
+        firstValueFrom(this.http.get<BiometricSource[]>('/api/v1/imports/sources')),
       ]);
       this.batches.set(batches);
       this.unmatched.set(unmatched);
       this.devices.set(devices);
+      this.sources.set(sources);
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));
     } finally {
@@ -72,13 +77,43 @@ export class ImportsStore {
       this.loading.set(false);
     }
   }
-  async upload(file: File, deviceName: string) {
+  async saveSource(payload: BiometricSourceRequest, id?: string): Promise<boolean> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      await firstValueFrom(id
+        ? this.http.put<BiometricSource>(`/api/v1/imports/sources/${id}`, payload)
+        : this.http.post<BiometricSource>('/api/v1/imports/sources', payload));
+      await this.load();
+      return true;
+    } catch (error) {
+      this.error.set(apiErrorMessage(error, this.i18n));
+      return false;
+    } finally {
+      this.loading.set(false);
+    }
+  }
+  async deleteSource(id: string): Promise<boolean> {
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      await firstValueFrom(this.http.delete<void>(`/api/v1/imports/sources/${id}`));
+      await this.load();
+      return true;
+    } catch (error) {
+      this.error.set(apiErrorMessage(error, this.i18n));
+      return false;
+    } finally {
+      this.loading.set(false);
+    }
+  }
+  async upload(file: File, sourceId: string) {
     this.loading.set(true);
     this.error.set(null);
     this.success.set(null);
     const data = new FormData();
     data.append('file', file);
-    data.append('deviceName', deviceName);
+    data.append('sourceId', sourceId);
     try {
       const result = await firstValueFrom(this.http.post<ImportBatch>('/api/v1/imports', data));
       this.success.set(

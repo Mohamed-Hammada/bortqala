@@ -128,6 +128,44 @@
     </div>
   </section>
 
+  <section class="sources-card card" aria-labelledby="sources-title">
+    <div class="section-head">
+      <div>
+        <h2 id="sources-title">{{ i18n.t('imports.sourcesTitle', {}, 'مصادر البصمات') }}</h2>
+        <p>{{ i18n.t('imports.sourcesHint', {}, 'حدد مصدر البصمات لاستيراد الملفات؛ المزامنة التلقائية ورفع الملفات تُقيَّد بالمصدر.') }}</p>
+      </div>
+      <button class="button primary" (click)="showSourceModal.set(true)">＋ {{ i18n.t('imports.addSource', {}, 'مصدر جديد') }}</button>
+    </div>
+    <div class="sources-list">
+      @for (source of store.sources(); track source.id) {
+        <article class="source-row" [class.inactive]="!source.active">
+          <span class="source-icon" aria-hidden="true">◈</span>
+          <div class="source-details">
+            <div>
+              <strong>{{ source.name }}</strong>
+              <span class="connection-state" [class.online]="source.active" [class.failed]="!source.active">
+                {{ source.active ? i18n.t('imports.active') : i18n.t('imports.stopped') }}
+              </span>
+            </div>
+            <small>
+              <code class="ltr">{{ source.normalizedCode }}</code> ·
+              {{ source.sourceType === 'DEVICE' ? i18n.t('imports.sourceTypeDevice', {}, 'جهاز') : i18n.t('imports.sourceTypeFile', {}, 'ملف') }}
+            </small>
+          </div>
+          <div class="device-actions">
+            <button type="button" class="button secondary btn-sm" (click)="editSource(source)">{{ i18n.t('common.edit') }}</button>
+            <button type="button" class="button danger btn-sm" [disabled]="store.loading()" (click)="deleteSource(source)">{{ i18n.t('common.delete', {}, 'حذف') }}</button>
+          </div>
+        </article>
+      } @empty {
+        <div class="empty-state">
+          <strong>{{ i18n.t('imports.noSourcesYet', {}, 'لا توجد مصادر بعد') }}</strong>
+          {{ i18n.t('imports.noSourcesHint', {}, 'أنشئ مصدرًا ليتمكن الفريق من رفع ملفات البصمات.') }}
+        </div>
+      }
+    </div>
+  </section>
+
   <!-- Hero Drag & Drop Dropzone -->
   <div
     class="dropzone-hero card"
@@ -179,20 +217,27 @@
     <!-- Dropzone Footer Actions -->
     <div class="dropzone-footer">
       <div class="field device-field">
-        <label>{{ i18n.t('imports.deviceName') }}</label>
-        <input #deviceInput [value]="deviceName()" (input)="deviceName.set(deviceInput.value)" [placeholder]="i18n.t('imports.defaultDevicePlaceholder')" />
+        <label>{{ i18n.t('imports.sourceLabel', {}, 'مصدر البصمات') }}</label>
+        <select [(ngModel)]="selectedSourceId" name="importSource">
+          @for (source of store.sources(); track source.id) {
+            <option [ngValue]="source.id">{{ source.name }} · {{ source.sourceType === 'DEVICE' ? i18n.t('imports.sourceTypeDevice', {}, 'جهاز') : i18n.t('imports.sourceTypeFile', {}, 'ملف') }}</option>
+          }
+        </select>
+        @if (store.sources().length === 0) {
+          <small>{{ i18n.t('imports.noSourcesHint', {}, 'لا توجد مصادر بصمات. أنشئ مصدرًا أولاً من قسم «مصادر البصمات».') }}</small>
+        }
       </div>
       <button
         class="button secondary submit-import-btn"
         (click)="previewFile()"
-        [disabled]="!file() || store.loading()"
+        [disabled]="!file() || !selectedSourceId() || store.loading()"
       >
         {{ previewing() ? i18n.t('imports.previewing', {}, 'جارٍ المعاينة…') : i18n.t('imports.previewAction', {}, 'معاينة') }}
       </button>
       <button
         class="button primary submit-import-btn"
         (click)="upload()"
-        [disabled]="!file() || store.loading()"
+        [disabled]="!file() || !selectedSourceId() || store.loading()"
       >
         <span class="btn-icon">⚡</span> {{ i18n.t('imports.start') }}
       </button>
@@ -382,6 +427,38 @@
     <div modal-actions style="display:flex;justify-content:flex-end;gap:0.5rem;width:100%;">
       <button type="button" class="button primary" (click)="downloadTemplate()">{{ i18n.t('imports.downloadTemplate') }}</button>
       <button type="button" class="button secondary" (click)="showTemplateModal.set(false)">{{ i18n.t('common.close') }}</button>
+    </div>
+  </app-modal-dialog>
+
+  <app-modal-dialog
+    [isOpen]="showSourceModal()"
+    [title]="editingSourceId() ? i18n.t('imports.editSource', {}, 'تعديل المصدر') : i18n.t('imports.addSource', {}, 'مصدر جديد')"
+    size="normal"
+    [preventOutsideClose]="true"
+    (close)="resetSourceForm()">
+
+    <div style="display:grid;gap:1rem;">
+      <div class="field">
+        <label>{{ i18n.t('imports.sourceNameLabel', {}, 'اسم المصدر') }}</label>
+        <input [ngModel]="sourceName()" (ngModelChange)="sourceName.set($event)"
+          [placeholder]="i18n.t('imports.sourceNamePlaceholder', {}, 'مثال: بوابة المصنع الرئيسية')" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('imports.sourceTypeLabel', {}, 'نوع المصدر') }}</label>
+        <select [(ngModel)]="sourceType" name="sourceType">
+          <option value="FILE_DEVICE">{{ i18n.t('imports.sourceTypeFile', {}, 'ملف (رفع يدوي)') }}</option>
+          <option value="DEVICE">{{ i18n.t('imports.sourceTypeDevice', {}, 'جهاز (مزامنة تلقائية)') }}</option>
+        </select>
+      </div>
+      <label class="device-enabled-toggle">
+        <input type="checkbox" name="sourceActive" [ngModel]="sourceActive()" (ngModelChange)="sourceActive.set($event)" />
+        <span>{{ i18n.t('imports.sourceActiveLabel', {}, 'مصدر نشط') }}</span>
+      </label>
+    </div>
+
+    <div modal-actions style="display:flex;justify-content:flex-end;gap:0.5rem;width:100%;">
+      <button type="button" class="button primary" (click)="saveSource()">{{ i18n.t('common.save', {}, 'حفظ') }}</button>
+      <button type="button" class="button secondary" (click)="resetSourceForm()">{{ i18n.t('common.close') }}</button>
     </div>
   </app-modal-dialog>
 </section>

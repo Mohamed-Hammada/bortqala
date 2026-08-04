@@ -19,7 +19,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 @SpringBootTest
 public abstract class PostgresIntegrationTest {
 
-    static final PostgreSQLContainer<?> POSTGRES;
+    public static final PostgreSQLContainer<?> POSTGRES;
 
     static {
         POSTGRES = new PostgreSQLContainer<>("postgres:17-alpine")

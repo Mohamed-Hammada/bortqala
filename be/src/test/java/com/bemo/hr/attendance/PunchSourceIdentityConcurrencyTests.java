@@ -6,7 +6,9 @@ import com.bemo.hr.attendance.application.BiometricDeviceClient;
 import com.bemo.hr.attendance.application.BiometricDeviceSyncService;
 import com.bemo.hr.attendance.application.BiometricImportService;
 import com.bemo.hr.attendance.domain.BiometricDevice;
+import com.bemo.hr.attendance.domain.BiometricSource;
 import com.bemo.hr.attendance.infrastructure.BiometricDeviceRepository;
+import com.bemo.hr.attendance.infrastructure.BiometricSourceRepository;
 import com.bemo.hr.attendance.infrastructure.DeviceCredentialsCrypto;
 import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
 import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
@@ -43,10 +45,12 @@ class PunchSourceIdentityConcurrencyTests extends PostgresIntegrationTest {
     private final PunchRecordRepository punchRecordRepository;
     private final ImportBatchRepository importBatchRepository;
     private final BiometricDeviceRepository biometricDeviceRepository;
+    private final BiometricSourceRepository biometricSourceRepository;
     private final TenantApplicationRepository tenantApplicationRepository;
     private final DeviceCredentialsCrypto deviceCredentialsCrypto;
 
     private final List<String> createdDevices = new ArrayList<>();
+    private final List<String> createdSources = new ArrayList<>();
     private final List<String> createdApps = new ArrayList<>();
 
     @Autowired
@@ -55,6 +59,7 @@ class PunchSourceIdentityConcurrencyTests extends PostgresIntegrationTest {
                                         PunchRecordRepository punchRecordRepository,
                                         ImportBatchRepository importBatchRepository,
                                         BiometricDeviceRepository biometricDeviceRepository,
+                                        BiometricSourceRepository biometricSourceRepository,
                                         TenantApplicationRepository tenantApplicationRepository,
                                         DeviceCredentialsCrypto deviceCredentialsCrypto) {
         this.syncService = syncService;
@@ -62,6 +67,7 @@ class PunchSourceIdentityConcurrencyTests extends PostgresIntegrationTest {
         this.punchRecordRepository = punchRecordRepository;
         this.importBatchRepository = importBatchRepository;
         this.biometricDeviceRepository = biometricDeviceRepository;
+        this.biometricSourceRepository = biometricSourceRepository;
         this.tenantApplicationRepository = tenantApplicationRepository;
         this.deviceCredentialsCrypto = deviceCredentialsCrypto;
     }
@@ -77,11 +83,13 @@ class PunchSourceIdentityConcurrencyTests extends PostgresIntegrationTest {
                     importBatchRepository.deleteById(batch.getId());
                 });
                 biometricDeviceRepository.deleteAllById(createdDevices);
+                biometricSourceRepository.deleteAllById(createdSources);
             }
             tenantApplicationRepository.deleteAllById(createdApps);
         } finally {
             createdApps.clear();
             createdDevices.clear();
+            createdSources.clear();
             TenantContext.clear();
         }
     }
@@ -101,6 +109,16 @@ class PunchSourceIdentityConcurrencyTests extends PostgresIntegrationTest {
         biometricDeviceRepository.saveAndFlush(device);
         createdDevices.add(device.getId());
         return device;
+    }
+
+    private String fileSource(String appId, String name) {
+        var source = biometricSourceRepository.findBySourceTypeAndNormalizedCode(
+                        BiometricSource.SourceType.FILE_DEVICE, name.strip().toLowerCase().replaceAll("\\s+", "_"))
+                .orElseGet(() -> biometricSourceRepository.save(new BiometricSource(
+                        BiometricSource.SourceType.FILE_DEVICE, name,
+                        name.strip().toLowerCase().replaceAll("\\s+", "_"))));
+        createdSources.add(source.getId());
+        return source.getId();
     }
 
     @Test
@@ -135,8 +153,8 @@ class PunchSourceIdentityConcurrencyTests extends PostgresIntegrationTest {
                 .as("second sync completes successfully (%s)", second.get().device().lastMessage())
                 .isEqualTo("SUCCESS");
 
-        assertThat(punchRecordRepository.countBySourceKeyAndDeviceUserIdAndPunchedAt(
-                "DEVICE:" + device.getId(), "U-1", PUNCH_TIME))
+        assertThat(punchRecordRepository.countBySourceIdAndDeviceUserIdAndPunchedAt(
+                deviceSourceId(device.getId()), "U-1", PUNCH_TIME))
                 .as("exactly one punch row is stored for the device source")
                 .isEqualTo(1);
     }
@@ -157,18 +175,19 @@ class PunchSourceIdentityConcurrencyTests extends PostgresIntegrationTest {
         assertThat(syncB.device().lastStatus())
                 .as("device B sync status (%s)", syncB.device().lastMessage())
                 .isEqualTo("SUCCESS");
-        assertThat(punchRecordRepository.countBySourceKeyAndDeviceUserIdAndPunchedAt(
-                "DEVICE:" + deviceA.getId(), "U-1", PUNCH_TIME)).isEqualTo(1);
-        assertThat(punchRecordRepository.countBySourceKeyAndDeviceUserIdAndPunchedAt(
-                "DEVICE:" + deviceB.getId(), "U-1", PUNCH_TIME)).isEqualTo(1);
-        assertThat(punchRecordRepository.countBySourceKeyAndDeviceUserIdAndPunchedAt(
-                "DEVICE:missing", "U-1", PUNCH_TIME)).isZero();
+        assertThat(punchRecordRepository.countBySourceIdAndDeviceUserIdAndPunchedAt(
+                deviceSourceId(deviceA.getId()), "U-1", PUNCH_TIME)).isEqualTo(1);
+        assertThat(punchRecordRepository.countBySourceIdAndDeviceUserIdAndPunchedAt(
+                deviceSourceId(deviceB.getId()), "U-1", PUNCH_TIME)).isEqualTo(1);
+        assertThat(punchRecordRepository.countBySourceIdAndDeviceUserIdAndPunchedAt(
+                "missing", "U-1", PUNCH_TIME)).isZero();
     }
 
     @Test
     void overlappingFilesFromTheSameSourceDoNotDuplicatePunches() {
         String appId = app();
         TenantContext.set(appId);
+        String sourceId = fileSource(appId, "بوابة المصنع");
 
         String fileA = "Employee code,Day,Official check-in,Official check-out,Actual check-in,Actual check-out\n"
                 + "EMP-101,2026-08-04,08:00,16:00,08:07,16:15\n"
@@ -182,8 +201,8 @@ class PunchSourceIdentityConcurrencyTests extends PostgresIntegrationTest {
         previewA.rows().forEach(row -> distinct.add(row.deviceUserId() + "|" + row.punchedAt()));
         previewB.rows().forEach(row -> distinct.add(row.deviceUserId() + "|" + row.punchedAt()));
 
-        var first = importService.importFile(csv("a.csv", fileA), "بوابة المصنع", "tester");
-        var second = importService.importFile(csv("b.csv", fileB), "بوابة المصنع", "tester");
+        var first = importService.importFile(csv("a.csv", fileA), sourceId, "tester");
+        var second = importService.importFile(csv("b.csv", fileB), sourceId, "tester");
 
         assertThat(first.duplicate()).isFalse();
         assertThat(second.duplicate()).as("different files are separate batches").isFalse();
@@ -192,12 +211,18 @@ class PunchSourceIdentityConcurrencyTests extends PostgresIntegrationTest {
         long stored = punchRecordRepository.findInRange(
                         Instant.parse("2026-08-04T00:00:00Z"), Instant.parse("2026-08-05T00:00:00Z"))
                 .stream()
-                .filter(punch -> punch.getSourceKey().equals("FILE_DEVICE:بوابة المصنع"))
+                .filter(punch -> punch.getSourceId().equals(sourceId))
                 .map(punch -> punch.getDeviceUserId() + "|" + punch.getPunchedAt())
                 .distinct()
                 .count();
         assertThat(stored).as("overlapping punches across files are stored exactly once")
                 .isEqualTo(distinct.size());
+    }
+
+    private String deviceSourceId(String deviceId) {
+        return biometricSourceRepository.findBySourceTypeAndNormalizedCode(
+                        BiometricSource.SourceType.DEVICE, deviceId)
+                .orElseThrow().getId();
     }
 
     private Thread syncer(String appId, String deviceId, CountDownLatch ready, CountDownLatch start,

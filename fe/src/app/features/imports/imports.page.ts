@@ -10,7 +10,7 @@ import { ImportBatch, ImportStatus, ImportPreview } from './imports.models';
 import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { FormsModule } from '@angular/forms';
-import { BiometricDevice } from './imports.models';
+import { BiometricDevice, BiometricSource, BiometricSourceType } from './imports.models';
 import { exportCsv } from '../../core/download';
 
 @Component({
@@ -27,10 +27,11 @@ export class ImportsPage {
   readonly notification = inject(NotificationService);
   readonly file = signal<File | null>(null);
   readonly isDragging = signal(false);
-  readonly deviceName = signal(this.i18n.t('imports.defaultDevice'));
+  readonly selectedSourceId = signal('');
   readonly expanded = signal<string | null>(null);
   readonly pagination = new TablePagination();
   readonly pagedUnmatched = computed(() => this.pagination.slice(this.store.unmatched()));
+  readonly activeSources = computed(() => this.store.sources().filter((s) => s.active));
   readonly editingDeviceId = signal<string | null>(null);
   readonly connectionName = signal('');
   readonly endpointUrl = signal('');
@@ -43,6 +44,11 @@ export class ImportsPage {
   readonly previewResult = signal<ImportPreview | null>(null);
   readonly previewing = signal(false);
   readonly reversingBatchId = signal<string | null>(null);
+  readonly editingSourceId = signal<string | null>(null);
+  readonly sourceName = signal('');
+  readonly sourceType = signal<BiometricSourceType>('FILE_DEVICE');
+  readonly sourceActive = signal(true);
+  readonly showSourceModal = signal(false);
 
   downloadTemplate(): void {
     const columns = [
@@ -60,7 +66,11 @@ export class ImportsPage {
   }
 
   constructor() {
-    void this.store.load();
+    void this.store.load().then(() => {
+      if (!this.selectedSourceId() && this.activeSources().length > 0) {
+        this.selectedSourceId.set(this.activeSources()[0].id);
+      }
+    });
   }
 
   choose(event: Event) {
@@ -109,12 +119,14 @@ export class ImportsPage {
 
   async upload() {
     const file = this.file();
-    if (file && this.deviceName().trim()) {
-      if (await this.store.upload(file, this.deviceName())) {
+    if (file && this.selectedSourceId()) {
+      if (await this.store.upload(file, this.selectedSourceId())) {
         this.notification.success(this.i18n.t('imports.uploadSuccess') || 'تم استيراد ملف البصمة بنجاح ✓');
         this.file.set(null);
         this.previewResult.set(null);
       }
+    } else if (!this.selectedSourceId()) {
+      this.notification.warning(this.i18n.t('imports.sourceRequired', {}, 'اختر مصدر البصمات قبل الاستيراد.'));
     }
   }
 
@@ -209,6 +221,51 @@ export class ImportsPage {
       }
     } finally {
       this.syncingDeviceId.set(null);
+    }
+  }
+
+  editSource(source: BiometricSource): void {
+    this.editingSourceId.set(source.id);
+    this.sourceName.set(source.name);
+    this.sourceType.set(source.sourceType);
+    this.sourceActive.set(source.active);
+    this.showSourceModal.set(true);
+  }
+
+  resetSourceForm(): void {
+    this.editingSourceId.set(null);
+    this.sourceName.set('');
+    this.sourceType.set('FILE_DEVICE');
+    this.sourceActive.set(true);
+    this.showSourceModal.set(false);
+  }
+
+  async saveSource(): Promise<void> {
+    const name = this.sourceName().trim();
+    if (!name) {
+      this.notification.warning(this.i18n.t('imports.sourceNameInvalid', {}, 'أدخل اسم المصدر.'));
+      return;
+    }
+    const saved = await this.store.saveSource({
+      name,
+      sourceType: this.sourceType(),
+      active: this.sourceActive(),
+    }, this.editingSourceId() ?? undefined);
+    if (saved) {
+      this.notification.success(this.i18n.t(this.editingSourceId() ? 'imports.sourceUpdated' : 'imports.sourceCreated',
+        {}, this.editingSourceId() ? 'تم تحديث مصدر البصمات.' : 'تم إنشاء مصدر البصمات.'));
+      if (!this.selectedSourceId() && this.sourceActive()) {
+        this.selectedSourceId.set(this.store.sources().find((s) => s.name === name)?.id ?? '');
+      }
+      this.resetSourceForm();
+    }
+  }
+
+  async deleteSource(source: BiometricSource): Promise<void> {
+    if (!window.confirm(this.i18n.t('imports.deleteSourceConfirm', {}, 'هل تريد حذف هذا المصدر؟ لن تُحذف سجلات الاستيراد السابقة.'))) return;
+    if (await this.store.deleteSource(source.id)) {
+      this.notification.success(this.i18n.t('imports.sourceDeleted', {}, 'تم حذف المصدر.'));
+      if (this.selectedSourceId() === source.id) this.selectedSourceId.set('');
     }
   }
 }

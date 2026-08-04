@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface PunchRecordRepository extends JpaRepository<PunchRecord, String> {
     @Transactional
@@ -16,7 +17,19 @@ public interface PunchRecordRepository extends JpaRepository<PunchRecord, String
 
     long countByBatchId(String batchId);
 
-    long countBySourceKeyAndDeviceUserIdAndPunchedAt(String sourceKey, String deviceUserId, Instant punchedAt);
+    long countBySourceIdAndDeviceUserIdAndPunchedAt(String sourceId, String deviceUserId, Instant punchedAt);
+
+    Optional<PunchRecord> findBySourceIdAndDeviceUserIdAndPunchedAt(String sourceId, String deviceUserId, Instant punchedAt);
+
+    /**
+     * Removes punches created by a batch that no other batch still claims via
+     * punch_import_evidence, so reversing one import never deletes a punch a
+     * completed batch continues to report.
+     */
+    @Modifying
+    @Query("delete from PunchRecord p where p.batchId = :batchId and not exists " +
+           "(select 1 from PunchImportEvidence e where e.punchId = p.id)")
+    int deleteOrphanedByBatch(@Param("batchId") String batchId);
 
     @Query("select p from PunchRecord p where p.punchedAt >= :from and p.punchedAt < :to order by p.punchedAt")
     List<PunchRecord> findInRange(@Param("from") Instant from, @Param("to") Instant to);
@@ -34,16 +47,16 @@ public interface PunchRecordRepository extends JpaRepository<PunchRecord, String
     @Modifying
     @Query(value = """
             INSERT INTO punch_records (
-                id, app_id, batch_id, source_key, device_id, employee_id,
+                id, app_id, batch_id, source_id, device_id, employee_id,
                 device_user_id, raw_name, punched_at, raw_line, row_number
             ) VALUES (
-                :id, :appId, :batchId, :sourceKey, :deviceId, :employeeId,
+                :id, :appId, :batchId, :sourceId, :deviceId, :employeeId,
                 :deviceUserId, :rawName, :punchedAt, :rawLine, :rowNumber
             )
             ON CONFLICT DO NOTHING
             """, nativeQuery = true)
     int insertIfAbsent(@Param("id") String id, @Param("appId") String appId, @Param("batchId") String batchId,
-                       @Param("sourceKey") String sourceKey, @Param("deviceId") String deviceId,
+                       @Param("sourceId") String sourceId, @Param("deviceId") String deviceId,
                        @Param("employeeId") String employeeId, @Param("deviceUserId") String deviceUserId,
                        @Param("rawName") String rawName, @Param("punchedAt") Instant punchedAt,
                        @Param("rawLine") String rawLine, @Param("rowNumber") int rowNumber);

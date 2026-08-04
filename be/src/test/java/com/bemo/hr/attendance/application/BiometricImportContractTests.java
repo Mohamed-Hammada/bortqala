@@ -1,8 +1,10 @@
 package com.bemo.hr.attendance.application;
 
 import com.bemo.hr.attendance.api.ImportApi;
+import com.bemo.hr.attendance.domain.BiometricSource;
 import com.bemo.hr.attendance.domain.ImportStatus;
 import com.bemo.hr.attendance.infrastructure.BiometricDeviceRepository;
+import com.bemo.hr.attendance.infrastructure.BiometricSourceRepository;
 import com.bemo.hr.attendance.infrastructure.DeviceCredentialsCrypto;
 import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
 import com.bemo.hr.attendance.infrastructure.ImportRowErrorRepository;
@@ -38,6 +40,7 @@ class BiometricImportContractTests {
     private final PunchRecordRepository punchRecordRepository;
     private final ImportRowErrorRepository importRowErrorRepository;
     private final BiometricDeviceRepository biometricDeviceRepository;
+    private final BiometricSourceRepository biometricSourceRepository;
     private final TenantApplicationRepository tenantApplicationRepository;
     private final DeviceCredentialsCrypto deviceCredentialsCrypto;
     private final ObjectMapper objectMapper;
@@ -45,6 +48,7 @@ class BiometricImportContractTests {
 
     private final List<String> createdBatches = new ArrayList<>();
     private final List<String> createdDevices = new ArrayList<>();
+    private final List<String> createdSources = new ArrayList<>();
     private final List<String> createdApps = new ArrayList<>();
 
     private static final String CSV = "Employee code,Day,Official check-in,Official check-out,Actual check-in,Actual check-out\n"
@@ -57,6 +61,7 @@ class BiometricImportContractTests {
                                  PunchRecordRepository punchRecordRepository,
                                  ImportRowErrorRepository importRowErrorRepository,
                                  BiometricDeviceRepository biometricDeviceRepository,
+                                 BiometricSourceRepository biometricSourceRepository,
                                  TenantApplicationRepository tenantApplicationRepository,
                                  DeviceCredentialsCrypto deviceCredentialsCrypto,
                                  ObjectMapper objectMapper,
@@ -67,6 +72,7 @@ class BiometricImportContractTests {
         this.punchRecordRepository = punchRecordRepository;
         this.importRowErrorRepository = importRowErrorRepository;
         this.biometricDeviceRepository = biometricDeviceRepository;
+        this.biometricSourceRepository = biometricSourceRepository;
         this.tenantApplicationRepository = tenantApplicationRepository;
         this.deviceCredentialsCrypto = deviceCredentialsCrypto;
         this.objectMapper = objectMapper;
@@ -86,6 +92,7 @@ class BiometricImportContractTests {
                     }
                     importBatchRepository.deleteAllById(createdBatches);
                     biometricDeviceRepository.deleteAllById(createdDevices);
+                    biometricSourceRepository.deleteAllById(createdSources);
                 });
             }
             tenantApplicationRepository.deleteAllById(createdApps);
@@ -105,6 +112,16 @@ class BiometricImportContractTests {
     private MockMultipartFile csv(String fileName, String content) {
         return new MockMultipartFile("file", fileName, "text/csv",
                 content.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private String fileSource(String name) {
+        var source = biometricSourceRepository.findBySourceTypeAndNormalizedCode(
+                        BiometricSource.SourceType.FILE_DEVICE, name.strip().toLowerCase().replaceAll("\\s+", "_"))
+                .orElseGet(() -> biometricSourceRepository.save(new BiometricSource(
+                        BiometricSource.SourceType.FILE_DEVICE, name,
+                        name.strip().toLowerCase().replaceAll("\\s+", "_"))));
+        createdSources.add(source.getId());
+        return source.getId();
     }
 
     @Test
@@ -128,10 +145,11 @@ class BiometricImportContractTests {
     void uploadingTheSameFileTwiceCreatesNoDuplicatePunches() {
         var app = app();
         TenantContext.set(app.getId());
+        String sourceId = fileSource("بوابة المصنع");
 
-        var first = biometricImportService.importFile(csv("attendance.csv", CSV), "بوابة المصنع", "tester");
+        var first = biometricImportService.importFile(csv("attendance.csv", CSV), sourceId, "tester");
         createdBatches.add(first.id());
-        var second = biometricImportService.importFile(csv("attendance.csv", CSV), "بوابة المصنع", "tester");
+        var second = biometricImportService.importFile(csv("attendance.csv", CSV), sourceId, "tester");
 
         assertThat(first.duplicate()).isFalse();
         assertThat(first.importedRows()).isEqualTo(1);
@@ -146,8 +164,9 @@ class BiometricImportContractTests {
     void reverseDeletesPunchesAndErrorsIsIdempotentAndBlocksReimportOfSameFile() {
         var app = app();
         TenantContext.set(app.getId());
+        String sourceId = fileSource("بوابة المصنع");
 
-        var uploaded = biometricImportService.importFile(csv("attendance.csv", CSV), "بوابة المصنع", "tester");
+        var uploaded = biometricImportService.importFile(csv("attendance.csv", CSV), sourceId, "tester");
         createdBatches.add(uploaded.id());
         assertThat(punchRecordRepository.countByBatchId(uploaded.id())).isEqualTo(2);
 
@@ -160,7 +179,7 @@ class BiometricImportContractTests {
         assertThat(again.status()).isEqualTo(ImportStatus.REVERSED);
         assertThat(punchRecordRepository.countByBatchId(uploaded.id())).isZero();
 
-        var reimport = biometricImportService.importFile(csv("attendance.csv", CSV), "بوابة المصنع", "tester");
+        var reimport = biometricImportService.importFile(csv("attendance.csv", CSV), sourceId, "tester");
         assertThat(reimport.duplicate()).isTrue();
         assertThat(reimport.id()).isEqualTo(uploaded.id());
         assertThat(punchRecordRepository.countByBatchId(uploaded.id())).isZero();

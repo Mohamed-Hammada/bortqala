@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -590,16 +591,21 @@ class AuthSecurityIntegrationTests {
         byte[] csv = ("Employee code,Day,Official check-in,Official check-out,Actual check-in,Actual check-out\n"
                 + "EMP-101,2026-07-24,08:00,16:00,08:07,16:15\n").getBytes(StandardCharsets.UTF_8);
         MockMultipartFile file = new MockMultipartFile("file", "attendance.csv", "text/csv", csv);
+        String sourceId = "src-" + UUID.randomUUID().toString().substring(0, 8);
+        jdbcTemplate.update("""
+                INSERT INTO biometric_sources (id, app_id, source_type, name, normalized_code, active, created_at)
+                VALUES (?, ?, 'FILE_DEVICE', 'Test Source', 'test_source', TRUE, CURRENT_TIMESTAMP)
+                """, sourceId, appId);
 
         mockMvc.perform(multipart("/api/v1/imports")
                         .file(file)
-                        .param("deviceName", "device-x")
+                        .param("sourceId", "missing-source")
                         .header("Authorization", "Bearer " + mintAccessToken(finance)))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(multipart("/api/v1/imports")
                         .file(file)
-                        .param("deviceName", "device-x")
+                        .param("sourceId", sourceId)
                         .header("Authorization", "Bearer " + mintAccessToken(reviewer)))
                 .andExpect(status().isCreated());
     }
@@ -645,5 +651,158 @@ class AuthSecurityIntegrationTests {
 
     private int suffixIp() {
         return 1 + (int) (Math.random() * 250);
+    }
+
+    private AppUser loadAccount(String username) {
+        return loadWithRoles(appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, username).orElseThrow().getId());
+    }
+
+    private ResultMatcher notForbidden() {
+        return result -> {
+            int code = result.getResponse().getStatus();
+            if (code == 403) {
+                throw new AssertionError("Expected a status other than 403 for SUPER_ADMIN, but got 403");
+            }
+        };
+    }
+
+    @Test
+    void superAdminOnlyCanAccessEveryAdminEndpoint() throws Exception {
+        AppUser superAdmin = loadAccount("superadmin");
+        AppUser admin = loadAccount("admin");
+        AppUser finance = createUser("parityfin", Set.of(RoleCode.FINANCE_MANAGER));
+
+        mockMvc.perform(post("/api/v1/parties/cleanup-phone")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/parties/cleanup-phone")
+                        .header("Authorization", "Bearer " + mintAccessToken(admin)))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/parties/cleanup-phone")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+
+        for (String endpoint : List.of("/api/v1/employees", "/api/v1/categories", "/api/v1/parties", "/api/v1/operations/items")) {
+            mockMvc.perform(post(endpoint)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{}")
+                            .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                    .andExpect(notForbidden());
+        }
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/employees/does-not-exist")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/categories/does-not-exist")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void superAdminOnlyCanCreateAndReviewAttendanceReports() throws Exception {
+        AppUser superAdmin = loadAccount("superadmin");
+        AppUser finance = createUser("rptparityfin", Set.of(RoleCode.FINANCE_MANAGER));
+
+        mockMvc.perform(get("/api/v1/reports/preview")
+                        .param("periodStart", "2026-07-01")
+                        .param("periodEnd", "2026-07-31")
+                        .param("payCycle", "MONTHLY")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(notForbidden());
+
+        mockMvc.perform(get("/api/v1/reports/does-not-exist/decision-history")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(post("/api/v1/reports")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(notForbidden());
+
+        mockMvc.perform(post("/api/v1/reports/does-not-exist/approve")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(post("/api/v1/reports/does-not-exist/approve")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/reports/does-not-exist/reopen")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put("/api/v1/reports/does-not-exist/downtime-decision")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"date\":\"2026-07-01\",\"decision\":\"OK\"}")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(notForbidden());
+    }
+
+    @Test
+    void superAdminOnlyCanUploadAndManageBiometricImports() throws Exception {
+        AppUser superAdmin = loadAccount("superadmin");
+        AppUser finance = createUser("impparityfin", Set.of(RoleCode.FINANCE_MANAGER));
+        byte[] csv = ("Employee code,Day,Official check-in,Official check-out,Actual check-in,Actual check-out\n"
+                + "EMP-101,2026-07-24,08:00,16:00,08:07,16:15\n").getBytes(StandardCharsets.UTF_8);
+        MockMultipartFile file = new MockMultipartFile("file", "attendance.csv", "text/csv", csv);
+
+        mockMvc.perform(multipart("/api/v1/imports")
+                        .file(file)
+                        .param("sourceId", "missing-source")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(multipart("/api/v1/imports")
+                        .file(file)
+                        .param("sourceId", "missing-source")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(multipart("/api/v1/imports/preview")
+                        .file(file)
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(notForbidden());
+        mockMvc.perform(multipart("/api/v1/imports/preview")
+                        .file(file)
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/imports/sources")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Parity Source\",\"sourceType\":\"FILE_DEVICE\",\"active\":true}")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void unrelatedDomainRolesRemainForbidden() throws Exception {
+        AppUser finance = createUser("domfin", Set.of(RoleCode.FINANCE_MANAGER));
+        AppUser workforce = createUser("domwf", Set.of(RoleCode.WORKFORCE_MANAGER));
+        AppUser hrManager = createUser("domhr", Set.of(RoleCode.HR_MANAGER));
+        AppUser reviewer = createUser("domreviewer", Set.of(RoleCode.HR_REVIEWER));
+        byte[] csv = ("Employee code,Day,Official check-in,Official check-out,Actual check-in,Actual check-out\n"
+                + "EMP-101,2026-07-24,08:00,16:00,08:07,16:15\n").getBytes(StandardCharsets.UTF_8);
+        MockMultipartFile file = new MockMultipartFile("file", "attendance.csv", "text/csv", csv);
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/employees/does-not-exist")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(multipart("/api/v1/imports")
+                        .file(file)
+                        .param("sourceId", "missing-source")
+                        .header("Authorization", "Bearer " + mintAccessToken(workforce)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/parties/cleanup-phone")
+                        .header("Authorization", "Bearer " + mintAccessToken(hrManager)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/reports/does-not-exist/approve")
+                        .header("Authorization", "Bearer " + mintAccessToken(reviewer)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/categories/does-not-exist")
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isForbidden());
     }
 }

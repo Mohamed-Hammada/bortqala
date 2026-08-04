@@ -13,7 +13,7 @@ public final class ImportApi {
     }
 
     public record BatchResponse(
-            String id, String fileName, String deviceName, ImportStatus status,
+            String id, String fileName, String sourceId, String deviceName, ImportStatus status,
             int totalRows, int importedRows, int errorRows, String importedBy,
             Instant importedAt, boolean duplicate, List<RowErrorResponse> errors) { }
 
@@ -27,6 +27,16 @@ public final class ImportApi {
 
     public record UnmatchedIdentityResponse(
             String deviceUserId, String observedName, long punchCount, Instant firstPunch, Instant lastPunch) { }
+
+    public record SourceRequest(
+            @NotBlank String name,
+            String sourceType,
+            boolean active
+    ) { }
+
+    public record SourceResponse(
+            String id, String name, String sourceType, String normalizedCode, boolean active, Instant createdAt
+    ) { }
 
     public record DeviceRequest(
             @NotBlank String name,
