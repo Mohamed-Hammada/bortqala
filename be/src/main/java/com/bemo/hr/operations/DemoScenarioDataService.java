@@ -79,7 +79,7 @@ public class DemoScenarioDataService {
                 .orElseGet(() -> biometricSourceRepository.save(new BiometricSource(
                         BiometricSource.SourceType.FILE_DEVICE, "Demo biometric device", DEMO_SOURCE_NORMALIZED)));
         var batch = importBatchRepository.save(new ImportBatch(DEMO_CHECKSUM, "demo-attendance-cases.xlsx",
-                source.getId(), "Demo biometric device", "demo-seed", rows.size(), rows.size(), 0));
+                source.getId(), "Demo biometric device", "demo-seed", rows.size(), rows.size(), 0, rows.size(), 0));
         int row = 2; var zone = ZoneId.of(companyZone);
         for (var seed : rows) punchRecordRepository.save(new PunchRecord(batch.getId(), null, source.getId(),
                 seed.employee().getId(), seed.employee().getDeviceUserId(),

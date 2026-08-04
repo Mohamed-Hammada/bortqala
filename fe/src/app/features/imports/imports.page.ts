@@ -32,6 +32,7 @@ export class ImportsPage {
   readonly pagination = new TablePagination();
   readonly pagedUnmatched = computed(() => this.pagination.slice(this.store.unmatched()));
   readonly activeSources = computed(() => this.store.sources().filter((s) => s.active));
+  readonly uploadSources = computed(() => this.store.sources().filter((s) => s.active && s.sourceType === 'FILE_DEVICE'));
   readonly editingDeviceId = signal<string | null>(null);
   readonly connectionName = signal('');
   readonly endpointUrl = signal('');
@@ -67,8 +68,8 @@ export class ImportsPage {
 
   constructor() {
     void this.store.load().then(() => {
-      if (!this.selectedSourceId() && this.activeSources().length > 0) {
-        this.selectedSourceId.set(this.activeSources()[0].id);
+      if (!this.selectedSourceId() && this.uploadSources().length > 0) {
+        this.selectedSourceId.set(this.uploadSources()[0].id);
       }
     });
   }
@@ -222,6 +223,10 @@ export class ImportsPage {
     } finally {
       this.syncingDeviceId.set(null);
     }
+  }
+
+  isDeviceSource(source: BiometricSource): boolean {
+    return source.sourceType === 'DEVICE';
   }
 
   editSource(source: BiometricSource): void {

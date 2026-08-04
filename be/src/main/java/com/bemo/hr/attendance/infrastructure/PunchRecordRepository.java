@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,14 +23,26 @@ public interface PunchRecordRepository extends JpaRepository<PunchRecord, String
     Optional<PunchRecord> findBySourceIdAndDeviceUserIdAndPunchedAt(String sourceId, String deviceUserId, Instant punchedAt);
 
     /**
-     * Removes punches created by a batch that no other batch still claims via
-     * punch_import_evidence, so reversing one import never deletes a punch a
-     * completed batch continues to report.
+     * Removes only the punches this batch supplied that no other batch still
+     * claims via punch_import_evidence. The batch's own evidence is deleted
+     * before this runs, so a punch survives as long as at least one other
+     * batch keeps a claim on it. Order of the two deletes no longer matters
+     * because punch ownership is decided by the evidence table, not by row
+     * deletion order. Scoped to the app to protect against cross-tenant
+     * punch identifiers.
      */
     @Modifying
-    @Query("delete from PunchRecord p where p.batchId = :batchId and not exists " +
-           "(select 1 from PunchImportEvidence e where e.punchId = p.id)")
-    int deleteOrphanedByBatch(@Param("batchId") String batchId);
+    @Query(value = """
+            DELETE FROM punch_records p
+            WHERE p.id IN :punchIds
+              AND p.app_id = :appId
+              AND NOT EXISTS (
+                  SELECT 1 FROM punch_import_evidence e
+                  WHERE e.punch_id = p.id
+              )
+            """, nativeQuery = true)
+    int deleteUnclaimedPunches(@Param("appId") String appId,
+                               @Param("punchIds") Collection<String> punchIds);
 
     @Query("select p from PunchRecord p where p.punchedAt >= :from and p.punchedAt < :to order by p.punchedAt")
     List<PunchRecord> findInRange(@Param("from") Instant from, @Param("to") Instant to);

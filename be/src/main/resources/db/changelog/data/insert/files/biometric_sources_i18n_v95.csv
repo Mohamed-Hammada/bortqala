@@ -33,3 +33,11 @@ v95-ar-016;imports.noSourcesYet;ar-EG;لا توجد مصادر بعد
 v95-en-016;imports.noSourcesYet;en-US;No sources yet
 v95-ar-017;imports.noSourcesHint;ar-EG;لا توجد مصادر بصمات. أنشئ مصدرًا أولاً.
 v95-en-017;imports.noSourcesHint;en-US;No biometric sources. Create one first.
+v95-ar-018;imports.noUploadSourcesHint;ar-EG;لا توجد مصادر ملفات نشطة. أنشئ مصدر «ملف» وفعِّله أولاً من قسم «مصادر البصمات».
+v95-en-018;imports.noUploadSourcesHint;en-US;No active file sources. Create and enable a File source first in the Biometric sources section.
+v95-ar-019;imports.newPunches;ar-EG;جديدة
+v95-en-019;imports.newPunches;en-US;new
+v95-ar-020;imports.duplicatePunches;ar-EG;مكررة
+v95-en-020;imports.duplicatePunches;en-US;duplicates
+v95-ar-021;imports.deviceSourceLockedHint;ar-EG;مصدر الجهاز ثابت: لا يمكن تغيير نوعه أو تعطيله.
+v95-en-021;imports.deviceSourceLockedHint;en-US;Device sources are fixed: their type and active state cannot be changed.

@@ -153,6 +153,9 @@ class BiometricImportContractTests {
 
         assertThat(first.duplicate()).isFalse();
         assertThat(first.importedRows()).isEqualTo(1);
+        assertThat(first.validRows()).isEqualTo(1);
+        assertThat(first.newPunches()).isEqualTo(2);
+        assertThat(first.duplicatePunches()).isZero();
         assertThat(first.totalRows()).isEqualTo(1);
         assertThat(second.duplicate()).isTrue();
         assertThat(second.id()).isEqualTo(first.id());
@@ -172,6 +175,8 @@ class BiometricImportContractTests {
 
         var reversed = biometricImportService.reverse(uploaded.id(), "tester");
         assertThat(reversed.status()).isEqualTo(ImportStatus.REVERSED);
+        assertThat(reversed.newPunches()).isZero();
+        assertThat(reversed.duplicatePunches()).isZero();
         assertThat(punchRecordRepository.countByBatchId(uploaded.id())).isZero();
         assertThat(importRowErrorRepository.findByBatchIdOrderByRowNumber(uploaded.id())).isEmpty();
 

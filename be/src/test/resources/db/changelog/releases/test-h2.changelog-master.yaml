@@ -402,7 +402,7 @@ databaseChangeLog:
                 app_id VARCHAR(36) NOT NULL,
                 row_number INT NOT NULL,
                 raw_line TEXT NOT NULL,
-                PRIMARY KEY (punch_id, batch_id),
+                PRIMARY KEY (punch_id, batch_id, row_number),
                 CONSTRAINT fk_punch_evidence_punch FOREIGN KEY (punch_id) REFERENCES punch_records (id) ON DELETE CASCADE,
                 CONSTRAINT fk_punch_evidence_batch FOREIGN KEY (batch_id) REFERENCES import_batches (id) ON DELETE CASCADE
               );
@@ -414,20 +414,26 @@ databaseChangeLog:
               FROM biometric_devices d
               WHERE NOT EXISTS (SELECT 1 FROM biometric_sources s WHERE s.app_id = d.app_id AND s.source_type = 'DEVICE' AND s.normalized_code = d.id);
               INSERT INTO biometric_sources (id, app_id, source_type, name, normalized_code, active, created_at)
-              SELECT RANDOM_UUID(), b.app_id, 'FILE_DEVICE', MIN(b.device_name), LOWER(TRIM(b.device_name)), TRUE, CURRENT_TIMESTAMP
+              SELECT RANDOM_UUID(), b.app_id, 'FILE_DEVICE', MIN(b.device_name), LOWER(REGEXP_REPLACE(TRIM(b.device_name), '\s+', '_')), TRUE, CURRENT_TIMESTAMP
               FROM import_batches b
-              WHERE NOT EXISTS (SELECT 1 FROM biometric_sources s WHERE s.app_id = b.app_id AND s.source_type = 'FILE_DEVICE' AND s.normalized_code = LOWER(TRIM(b.device_name)))
-              GROUP BY b.app_id, LOWER(TRIM(b.device_name));
+              WHERE NOT EXISTS (SELECT 1 FROM biometric_sources s WHERE s.app_id = b.app_id AND s.source_type = 'FILE_DEVICE' AND s.normalized_code = LOWER(REGEXP_REPLACE(TRIM(b.device_name), '\s+', '_')))
+              GROUP BY b.app_id, LOWER(REGEXP_REPLACE(TRIM(b.device_name), '\s+', '_'));
               UPDATE punch_records p SET source_id = (SELECT s.id FROM biometric_sources s WHERE s.app_id = p.app_id AND s.source_type = 'DEVICE' AND s.normalized_code = p.device_id) WHERE p.device_id IS NOT NULL AND p.source_id IS NULL;
-              UPDATE punch_records p SET source_id = (SELECT s.id FROM biometric_sources s WHERE s.app_id = p.app_id AND s.source_type = 'FILE_DEVICE' AND s.normalized_code = LOWER(TRIM((SELECT b.device_name FROM import_batches b WHERE b.id = p.batch_id)))) WHERE p.source_id IS NULL;
-              UPDATE import_batches b SET source_id = (SELECT s.id FROM biometric_sources s WHERE s.app_id = b.app_id AND s.source_type = 'FILE_DEVICE' AND s.normalized_code = LOWER(TRIM(b.device_name))) WHERE b.source_id IS NULL;
+              UPDATE punch_records p SET source_id = (SELECT s.id FROM biometric_sources s WHERE s.app_id = p.app_id AND s.source_type = 'FILE_DEVICE' AND s.normalized_code = LOWER(REGEXP_REPLACE(TRIM((SELECT b.device_name FROM import_batches b WHERE b.id = p.batch_id)), '\s+', '_'))) WHERE p.source_id IS NULL;
+              UPDATE import_batches b SET source_id = (SELECT s.id FROM biometric_sources s WHERE s.app_id = b.app_id AND s.source_type = 'FILE_DEVICE' AND s.normalized_code = LOWER(REGEXP_REPLACE(TRIM(b.device_name), '\s+', '_'))) WHERE b.source_id IS NULL;
               INSERT INTO punch_import_evidence (punch_id, batch_id, app_id, row_number, raw_line)
               SELECT MIN(p.id) OVER (PARTITION BY p.app_id, p.source_id, p.device_user_id, p.punched_at), p.batch_id, p.app_id, p.row_number, p.raw_line
               FROM punch_records p;
               DELETE FROM punch_records p WHERE EXISTS (SELECT 1 FROM punch_records q WHERE q.app_id = p.app_id AND q.source_id = p.source_id AND q.device_user_id = p.device_user_id AND q.punched_at = p.punched_at AND q.id < p.id);
-              UPDATE import_batches b SET imported_rows = (SELECT COUNT(*) FROM punch_records p WHERE p.batch_id = b.id);
+              ALTER TABLE import_batches ADD COLUMN IF NOT EXISTS valid_rows INT DEFAULT 0 NOT NULL;
+              ALTER TABLE import_batches ADD COLUMN IF NOT EXISTS new_punches INT DEFAULT 0 NOT NULL;
+              ALTER TABLE import_batches ADD COLUMN IF NOT EXISTS duplicate_punches INT DEFAULT 0 NOT NULL;
+              UPDATE import_batches b SET valid_rows = b.total_rows - b.error_rows, imported_rows = b.total_rows - b.error_rows, new_punches = (SELECT COUNT(DISTINCT e.punch_id) FROM punch_import_evidence e WHERE e.batch_id = b.id);
+              UPDATE import_batches b SET duplicate_punches = CASE WHEN b.valid_rows - b.new_punches < 0 THEN 0 ELSE b.valid_rows - b.new_punches END;
               ALTER TABLE punch_records ALTER COLUMN source_id SET NOT NULL;
               ALTER TABLE import_batches ALTER COLUMN source_id SET NOT NULL;
+              ALTER TABLE punch_records ADD CONSTRAINT IF NOT EXISTS fk_punch_records_source FOREIGN KEY (source_id) REFERENCES biometric_sources (id) ON DELETE RESTRICT;
+              ALTER TABLE import_batches ADD CONSTRAINT IF NOT EXISTS fk_import_batches_source FOREIGN KEY (source_id) REFERENCES biometric_sources (id) ON DELETE RESTRICT;
               CREATE UNIQUE INDEX IF NOT EXISTS uq_punch_records_source_user_time ON punch_records (app_id, source_id, device_user_id, punched_at);
               DROP INDEX IF EXISTS uq_punch_records_app_device_user_time;
               ALTER TABLE import_batches DROP CONSTRAINT IF EXISTS uq_import_batches_app_checksum;

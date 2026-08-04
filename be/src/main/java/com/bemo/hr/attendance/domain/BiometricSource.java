@@ -46,11 +46,15 @@ public class BiometricSource {
     }
 
     public BiometricSource(SourceType sourceType, String name, String normalizedCode) {
+        this(sourceType, name, normalizedCode, true);
+    }
+
+    public BiometricSource(SourceType sourceType, String name, String normalizedCode, boolean active) {
         this.id = UUID.randomUUID().toString();
         this.sourceType = sourceType;
         this.name = name.strip();
         this.normalizedCode = normalizedCode.strip();
-        this.active = true;
+        this.active = active;
     }
 
     @PrePersist

@@ -4,6 +4,7 @@ import com.bemo.hr.attendance.api.ImportApi;
 import com.bemo.hr.attendance.domain.BiometricDevice;
 import com.bemo.hr.attendance.domain.BiometricSource;
 import com.bemo.hr.attendance.domain.ImportBatch;
+import com.bemo.hr.attendance.domain.ImportStatus;
 import com.bemo.hr.attendance.domain.PunchImportEvidence;
 import com.bemo.hr.attendance.domain.PunchRecord;
 import com.bemo.hr.attendance.infrastructure.BiometricDeviceRepository;
@@ -59,10 +60,17 @@ public class BiometricDeviceSyncService {
 
     @Transactional
     public ImportApi.SourceResponse createSource(ImportApi.SourceRequest request, String actor) {
+        if (request.name() == null || request.name().isBlank()) {
+            throw new BusinessRuleException("Source name is required.", "BIO_SOURCE_NAME_REQUIRED", HttpStatus.CONFLICT);
+        }
         BiometricSource.SourceType sourceType = parseSourceType(request.sourceType());
+        if (sourceType != BiometricSource.SourceType.FILE_DEVICE) {
+            throw new BusinessRuleException("Device sources are registered automatically from live devices and cannot be created manually.",
+                    "BIO_SOURCE_DEVICE_TYPE_RESTRICTED", HttpStatus.CONFLICT);
+        }
         String normalizedCode = normalizeCode(request.name());
         var source = biometricSourceRepository.findBySourceTypeAndNormalizedCode(sourceType, normalizedCode)
-                .orElseGet(() -> biometricSourceRepository.save(new BiometricSource(sourceType, request.name(), normalizedCode)));
+                .orElseGet(() -> biometricSourceRepository.save(new BiometricSource(sourceType, request.name(), normalizedCode, request.active())));
         auditService.record("CREATE", "BIOMETRIC_SOURCE", source.getId(), actor,
                 "{\"name\":\"" + safe(source.getName()) + "\",\"type\":\"" + sourceType + "\"}", null);
         return toSourceResponse(source);
@@ -72,7 +80,15 @@ public class BiometricDeviceSyncService {
     public ImportApi.SourceResponse updateSource(String id, ImportApi.SourceRequest request, String actor) {
         var source = biometricSourceRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("مصدر البصمة غير موجود.", "BIO_SOURCE_NOT_FOUND"));
+        if (source.getSourceType() == BiometricSource.SourceType.DEVICE) {
+            throw new BusinessRuleException("Device sources are immutable: their name, type and active state cannot be changed.",
+                    "BIO_SOURCE_DEVICE_IMMUTABLE", HttpStatus.CONFLICT);
+        }
         BiometricSource.SourceType sourceType = parseSourceType(request.sourceType());
+        if (sourceType != BiometricSource.SourceType.FILE_DEVICE) {
+            throw new BusinessRuleException("Device sources are registered automatically from live devices and cannot be created manually.",
+                    "BIO_SOURCE_DEVICE_TYPE_RESTRICTED", HttpStatus.CONFLICT);
+        }
         String normalizedCode = normalizeCode(request.name());
         var clash = biometricSourceRepository.findBySourceTypeAndNormalizedCode(sourceType, normalizedCode);
         if (clash.isPresent() && !clash.get().getId().equals(source.getId())) {
@@ -89,6 +105,10 @@ public class BiometricDeviceSyncService {
     public void deleteSource(String id, String actor) {
         var source = biometricSourceRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("مصدر البصمة غير موجود.", "BIO_SOURCE_NOT_FOUND"));
+        if (source.getSourceType() == BiometricSource.SourceType.DEVICE) {
+            throw new BusinessRuleException("Device sources are immutable and cannot be deleted while the device is registered.",
+                    "BIO_SOURCE_DEVICE_IMMUTABLE", HttpStatus.CONFLICT);
+        }
         biometricSourceRepository.delete(source);
         auditService.record("DELETE", "BIOMETRIC_SOURCE", id, actor, "{}", null);
     }
@@ -142,15 +162,28 @@ public class BiometricDeviceSyncService {
                         remote.punches().size(), true);
             }
 
+            String appId = TenantContext.require();
+            int size = remote.punches().size();
+            String batchId = UUID.randomUUID().toString();
+            String fileName = "device-sync-" + device.getId() + "-" + Instant.now().toEpochMilli() + ".json";
+            int reserved = importBatchRepository.insertIfAbsent(batchId, appId, checksum, fileName,
+                    source.getId(), device.getName(), ImportStatus.COMPLETED.name(), size, size, 0, actor);
+            ImportBatch batch;
+            if (reserved == 0) {
+                batch = importBatchRepository.findBySourceIdAndChecksum(source.getId(), checksum)
+                        .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + checksum));
+                device.syncSucceeded(0, device.getLastSuccessfulPunchAt());
+                biometricDeviceRepository.saveAndFlush(device);
+                return new ImportApi.DeviceSyncResponse(response(device), size, 0, size, true);
+            }
+            batch = importBatchRepository.findById(batchId)
+                    .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + batchId));
+
             int duplicates = 0;
             int imported = 0;
             Instant latest = device.getLastSuccessfulPunchAt();
-            ImportBatch batch = importBatchRepository.save(new ImportBatch(checksum,
-                    "device-sync-" + device.getId() + "-" + Instant.now().toEpochMilli() + ".json",
-                    source.getId(), device.getName(), actor, remote.punches().size(), 0, 0));
-            String appId = TenantContext.require();
             int rowNumber = 0;
-            List<PunchImportEvidence> evidence = new ArrayList<>(remote.punches().size());
+            List<PunchImportEvidence> evidence = new ArrayList<>(size);
             for (var punch : remote.punches()) {
                 rowNumber++;
                 String employeeId = employeeRepository.findByEmployeeCodeIgnoreCase(punch.deviceUserId())
@@ -176,7 +209,7 @@ public class BiometricDeviceSyncService {
                 }
             }
             punchImportEvidenceRepository.saveAll(evidence);
-            batch.updateCounts(remote.punches().size(), imported, 0);
+            batch.updateCounts(size, size, 0, imported, duplicates);
             importBatchRepository.save(batch);
             device.syncSucceeded(imported, latest);
             biometricDeviceRepository.saveAndFlush(device);
@@ -199,7 +232,7 @@ public class BiometricDeviceSyncService {
     }
 
     private BiometricSource ensureSource(String deviceId, String deviceName) {
-        return biometricSourceRepository.findBySourceTypeAndNormalizedCode(
+        BiometricSource source = biometricSourceRepository.findBySourceTypeAndNormalizedCode(
                         BiometricSource.SourceType.DEVICE, deviceId)
                 .orElseGet(() -> {
                     biometricSourceRepository.insertIfAbsent(UUID.randomUUID().toString(),
@@ -210,6 +243,10 @@ public class BiometricDeviceSyncService {
                             .orElseThrow(() -> new IllegalStateException(
                                     "Biometric source could not be created for device " + deviceId));
                 });
+        if (source.getSourceType() != BiometricSource.SourceType.DEVICE) {
+            throw new IllegalStateException("Device " + deviceId + " resolved to a non-device biometric source.");
+        }
+        return source;
     }
 
     private ImportApi.SourceResponse toSourceResponse(BiometricSource source) {
@@ -219,8 +256,11 @@ public class BiometricDeviceSyncService {
     }
 
     private BiometricSource.SourceType parseSourceType(String value) {
+        if (value == null || value.isBlank()) {
+            throw new BusinessRuleException("Source type is required.", "BIO_SOURCE_TYPE_REQUIRED", HttpStatus.CONFLICT);
+        }
         try {
-            return BiometricSource.SourceType.valueOf(value == null ? "FILE_DEVICE" : value.trim().toUpperCase());
+            return BiometricSource.SourceType.valueOf(value.trim().toUpperCase());
         } catch (IllegalArgumentException exception) {
             throw new BusinessRuleException("Unknown biometric source type.", "BIO_SOURCE_TYPE_INVALID", HttpStatus.CONFLICT);
         }

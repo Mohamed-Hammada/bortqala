@@ -73,8 +73,9 @@ public class BiometricImportService {
         var batch = importBatchRepository.findById(batchId)
                 .orElseThrow(() -> new NotFoundException("سجل الاستيراد غير موجود.", "IMP_BATCH_NOT_FOUND"));
         if (batch.getStatus() == ImportStatus.REVERSED) return toResponse(batch, false);
+        List<String> punchIds = punchImportEvidenceRepository.findPunchIdsByBatchId(batchId);
         punchImportEvidenceRepository.deleteByBatchId(batchId);
-        punchRecordRepository.deleteOrphanedByBatch(batchId);
+        punchRecordRepository.deleteUnclaimedPunches(TenantContext.require(), punchIds);
         importRowErrorRepository.deleteByBatchId(batchId);
         batch.reverse();
         importBatchRepository.saveAndFlush(batch);
@@ -103,11 +104,24 @@ public class BiometricImportService {
             if (existing.isPresent()) return toResponse(existing.get(), true);
 
             var parsed = biometricFileReader.read(file.getOriginalFilename(), new ByteArrayInputStream(content));
-            var batch = importBatchRepository.save(new ImportBatch(checksum,
-                    file.getOriginalFilename() == null ? "biometric-file" : file.getOriginalFilename(),
-                    sourceId, source.getName(), actor, parsed.totalRows(), parsed.importedRows(), parsed.errors().size()));
-
             String appId = TenantContext.require();
+            String fileName = file.getOriginalFilename() == null ? "biometric-file" : file.getOriginalFilename();
+            int totalRows = parsed.totalRows();
+            int validRows = parsed.importedRows();
+            int errorRows = parsed.errors().size();
+            String batchId = UUID.randomUUID().toString();
+            int reserved = importBatchRepository.insertIfAbsent(batchId, appId, checksum, fileName,
+                    sourceId, source.getName(), errorRows == 0 ? ImportStatus.COMPLETED.name() : ImportStatus.COMPLETED_WITH_ERRORS.name(),
+                    totalRows, validRows, errorRows, actor);
+            ImportBatch batch;
+            if (reserved == 0) {
+                batch = importBatchRepository.findBySourceIdAndChecksum(sourceId, checksum)
+                        .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + checksum));
+                return toResponse(batch, true);
+            }
+            batch = importBatchRepository.findById(batchId)
+                    .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + batchId));
+
             int imported = 0;
             int duplicates = 0;
             List<PunchImportEvidence> evidence = new ArrayList<>(parsed.rows().size());
@@ -134,10 +148,8 @@ public class BiometricImportService {
                 }
             }
             punchImportEvidenceRepository.saveAll(evidence);
-            if (duplicates > 0) {
-                batch.updateCounts(parsed.totalRows(), imported, parsed.errors().size());
-                importBatchRepository.save(batch);
-            }
+            batch.updateCounts(totalRows, validRows, errorRows, imported, duplicates);
+            importBatchRepository.save(batch);
             importRowErrorRepository.saveAll(parsed.errors().stream()
                     .map(error -> new ImportRowError(batch.getId(), error.rowNumber(), error.message(), error.rawLine()))
                     .toList());
@@ -166,7 +178,8 @@ public class BiometricImportService {
                 .toList();
         return new ImportApi.BatchResponse(batch.getId(), batch.getFileName(), batch.getSourceId(),
                 batch.getDeviceName(), batch.getStatus(),
-                batch.getTotalRows(), batch.getImportedRows(), batch.getErrorRows(), batch.getImportedBy(),
+                batch.getTotalRows(), batch.getImportedRows(), batch.getValidRows(),
+                batch.getNewPunches(), batch.getDuplicatePunches(), batch.getErrorRows(), batch.getImportedBy(),
                 batch.getImportedAt(), duplicate, errors);
     }
 

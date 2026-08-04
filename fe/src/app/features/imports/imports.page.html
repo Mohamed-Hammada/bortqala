@@ -154,7 +154,9 @@
           </div>
           <div class="device-actions">
             <button type="button" class="button secondary btn-sm" (click)="editSource(source)">{{ i18n.t('common.edit') }}</button>
-            <button type="button" class="button danger btn-sm" [disabled]="store.loading()" (click)="deleteSource(source)">{{ i18n.t('common.delete', {}, 'حذف') }}</button>
+            @if (!isDeviceSource(source)) {
+              <button type="button" class="button danger btn-sm" [disabled]="store.loading()" (click)="deleteSource(source)">{{ i18n.t('common.delete', {}, 'حذف') }}</button>
+            }
           </div>
         </article>
       } @empty {
@@ -219,12 +221,12 @@
       <div class="field device-field">
         <label>{{ i18n.t('imports.sourceLabel', {}, 'مصدر البصمات') }}</label>
         <select [(ngModel)]="selectedSourceId" name="importSource">
-          @for (source of store.sources(); track source.id) {
-            <option [ngValue]="source.id">{{ source.name }} · {{ source.sourceType === 'DEVICE' ? i18n.t('imports.sourceTypeDevice', {}, 'جهاز') : i18n.t('imports.sourceTypeFile', {}, 'ملف') }}</option>
+          @for (source of uploadSources(); track source.id) {
+            <option [ngValue]="source.id">{{ source.name }}</option>
           }
         </select>
-        @if (store.sources().length === 0) {
-          <small>{{ i18n.t('imports.noSourcesHint', {}, 'لا توجد مصادر بصمات. أنشئ مصدرًا أولاً من قسم «مصادر البصمات».') }}</small>
+        @if (uploadSources().length === 0) {
+          <small>{{ i18n.t('imports.noUploadSourcesHint', {}, 'لا توجد مصادر ملفات نشطة. أنشئ مصدر «ملف» وفعِّله أولاً من قسم «مصادر البصمات».') }}</small>
         }
       </div>
       <button
@@ -342,6 +344,11 @@
               <span class="counts">
                 {{ item.importedRows }}<small>{{ i18n.t('imports.punch') }}</small>
               </span>
+              @if (item.status !== 'REVERSED' && (item.newPunches > 0 || item.duplicatePunches > 0 || item.errorRows > 0)) {
+                <span class="counts-detail">
+                  <small>{{ i18n.t('imports.newPunches', {}, 'جديدة') }} {{ item.newPunches }} · {{ i18n.t('imports.duplicatePunches', {}, 'مكررة') }} {{ item.duplicatePunches }}</small>
+                </span>
+              }
               <span
                 class="status"
                 [class.success]="!item.errorRows && item.status !== 'REVERSED'"
@@ -443,17 +450,21 @@
         <input [ngModel]="sourceName()" (ngModelChange)="sourceName.set($event)"
           [placeholder]="i18n.t('imports.sourceNamePlaceholder', {}, 'مثال: بوابة المصنع الرئيسية')" autocomplete="off" />
       </div>
-      <div class="field">
-        <label>{{ i18n.t('imports.sourceTypeLabel', {}, 'نوع المصدر') }}</label>
-        <select [(ngModel)]="sourceType" name="sourceType">
-          <option value="FILE_DEVICE">{{ i18n.t('imports.sourceTypeFile', {}, 'ملف (رفع يدوي)') }}</option>
-          <option value="DEVICE">{{ i18n.t('imports.sourceTypeDevice', {}, 'جهاز (مزامنة تلقائية)') }}</option>
-        </select>
-      </div>
-      <label class="device-enabled-toggle">
-        <input type="checkbox" name="sourceActive" [ngModel]="sourceActive()" (ngModelChange)="sourceActive.set($event)" />
-        <span>{{ i18n.t('imports.sourceActiveLabel', {}, 'مصدر نشط') }}</span>
-      </label>
+      @if (sourceType() === 'DEVICE') {
+        <small>{{ i18n.t('imports.deviceSourceLockedHint', {}, 'مصدر الجهاز ثابت: لا يمكن تغيير نوعه أو تعطيله.') }}</small>
+      } @else {
+        <div class="field">
+          <label>{{ i18n.t('imports.sourceTypeLabel', {}, 'نوع المصدر') }}</label>
+          <select [(ngModel)]="sourceType" name="sourceType">
+            <option value="FILE_DEVICE">{{ i18n.t('imports.sourceTypeFile', {}, 'ملف (رفع يدوي)') }}</option>
+            <option value="DEVICE">{{ i18n.t('imports.sourceTypeDevice', {}, 'جهاز (مزامنة تلقائية)') }}</option>
+          </select>
+        </div>
+        <label class="device-enabled-toggle">
+          <input type="checkbox" name="sourceActive" [ngModel]="sourceActive()" (ngModelChange)="sourceActive.set($event)" />
+          <span>{{ i18n.t('imports.sourceActiveLabel', {}, 'مصدر نشط') }}</span>
+        </label>
+      }
     </div>
 
     <div modal-actions style="display:flex;justify-content:flex-end;gap:0.5rem;width:100%;">

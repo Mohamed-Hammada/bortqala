@@ -14,7 +14,8 @@ public final class ImportApi {
 
     public record BatchResponse(
             String id, String fileName, String sourceId, String deviceName, ImportStatus status,
-            int totalRows, int importedRows, int errorRows, String importedBy,
+            int totalRows, int importedRows, int validRows, int newPunches, int duplicatePunches,
+            int errorRows, String importedBy,
             Instant importedAt, boolean duplicate, List<RowErrorResponse> errors) { }
 
     public record RowErrorResponse(int rowNumber, String message, String rawLine) { }

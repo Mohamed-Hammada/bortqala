@@ -28,6 +28,9 @@ export interface ImportBatch {
   status: ImportStatus;
   totalRows: number;
   importedRows: number;
+  validRows: number;
+  newPunches: number;
+  duplicatePunches: number;
   errorRows: number;
   importedBy: string;
   importedAt: number;

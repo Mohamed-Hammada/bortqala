@@ -175,36 +175,50 @@ class PunchSourceIdentityMigrationTests {
                     .isZero();
         }
         try (ResultSet evidence = statement.executeQuery("""
-                SELECT punch_id, batch_id FROM punch_import_evidence
+                SELECT punch_id, batch_id, row_number FROM punch_import_evidence
                 ORDER BY punch_id, batch_id
                 """)) {
             assertThat(evidence.next()).isTrue();
             assertThat(evidence.getString(1)).isEqualTo("p-file");
             assertThat(evidence.getString(2)).isEqualTo("b-file");
+            assertThat(evidence.getInt(3)).isEqualTo(1);
             assertThat(evidence.next()).isTrue();
             assertThat(evidence.getString(1)).isEqualTo("p-file");
             assertThat(evidence.getString(2)).isEqualTo("b-file2");
+            assertThat(evidence.getInt(3)).isEqualTo(1);
             assertThat(evidence.next()).isTrue();
             assertThat(evidence.getString(1)).isEqualTo("p-file3");
             assertThat(evidence.getString(2)).isEqualTo("b-file");
+            assertThat(evidence.getInt(3)).isEqualTo(2);
             assertThat(evidence.next()).isTrue();
             assertThat(evidence.getString(1)).isEqualTo("p-live");
             assertThat(evidence.getString(2)).isEqualTo("b-live");
+            assertThat(evidence.getInt(3)).isEqualTo(1);
             assertThat(evidence.next()).isFalse();
         }
         try (ResultSet counts = statement.executeQuery("""
-                SELECT id, imported_rows FROM import_batches
+                SELECT id, valid_rows, imported_rows, new_punches, duplicate_punches
+                FROM import_batches
                 WHERE app_id = 'app1' ORDER BY id
                 """)) {
             assertThat(counts.next()).isTrue();
             assertThat(counts.getString(1)).isEqualTo("b-file");
-            assertThat(counts.getInt(2)).isEqualTo(2);
+            assertThat(counts.getInt(2)).as("valid rows never count punch_records").isEqualTo(3);
+            assertThat(counts.getInt(3)).isEqualTo(3);
+            assertThat(counts.getInt(4)).isEqualTo(2);
+            assertThat(counts.getInt(5)).isEqualTo(1);
             assertThat(counts.next()).isTrue();
             assertThat(counts.getString(1)).isEqualTo("b-file2");
-            assertThat(counts.getInt(2)).isZero();
+            assertThat(counts.getInt(2)).as("duplicate file still reports its valid rows").isEqualTo(2);
+            assertThat(counts.getInt(3)).isEqualTo(2);
+            assertThat(counts.getInt(4)).isEqualTo(1);
+            assertThat(counts.getInt(5)).isEqualTo(1);
             assertThat(counts.next()).isTrue();
             assertThat(counts.getString(1)).isEqualTo("b-live");
             assertThat(counts.getInt(2)).isEqualTo(1);
+            assertThat(counts.getInt(3)).isEqualTo(1);
+            assertThat(counts.getInt(4)).isEqualTo(1);
+            assertThat(counts.getInt(5)).isZero();
             assertThat(counts.next()).isFalse();
         }
     }
@@ -241,6 +255,92 @@ class PunchSourceIdentityMigrationTests {
                 WHERE tablename = 'import_batches' AND indexname = 'uq_import_batches_app_source_checksum'
                 """)) {
             assertThat(batchChecksum.next()).as("per-source batch checksum uniqueness exists").isTrue();
+        }
+        try (ResultSet evidencePk = statement.executeQuery("""
+                SELECT column_name, ordinal_position FROM information_schema.key_column_usage
+                WHERE constraint_name = 'pk_punch_import_evidence'
+                ORDER BY ordinal_position
+                """)) {
+            assertThat(evidencePk.next()).isTrue();
+            assertThat(evidencePk.getString(1)).isEqualTo("punch_id");
+            assertThat(evidencePk.next()).isTrue();
+            assertThat(evidencePk.getString(1)).isEqualTo("batch_id");
+            assertThat(evidencePk.next()).isTrue();
+            assertThat(evidencePk.getString(1)).isEqualTo("row_number");
+            assertThat(evidencePk.next()).isFalse();
+        }
+        try (ResultSet sourceFk = statement.executeQuery("""
+                SELECT constraint_name FROM information_schema.table_constraints
+                WHERE table_name = 'punch_records' AND constraint_type = 'FOREIGN KEY'
+                """)) {
+            assertThat(sourceFk.next()).isTrue();
+            assertThat(sourceFk.getString(1)).isEqualTo("fk_punch_records_source");
+        }
+        try (ResultSet batchFk = statement.executeQuery("""
+                SELECT constraint_name FROM information_schema.table_constraints
+                WHERE table_name = 'import_batches' AND constraint_type = 'FOREIGN KEY'
+                """)) {
+            assertThat(batchFk.next()).isTrue();
+            assertThat(batchFk.getString(1)).isEqualTo("fk_import_batches_source");
+        }
+    }
+
+    @Test
+    void deviceNamesThatDifferOnlyByInnerWhitespaceResolveToOneSource() throws Exception {
+        PostgreSQLContainer<?> postgres = com.bemo.hr.PostgresIntegrationTest.POSTGRES;
+        String baseUrl = postgres.getJdbcUrl();
+        String hostPart = baseUrl.substring(0, baseUrl.lastIndexOf('/'));
+        String migrationDb = "bemo_v92_normalization_test";
+
+        try (Connection admin = DriverManager.getConnection(
+                hostPart + "/postgres", postgres.getUsername(), postgres.getPassword())) {
+            try (Statement statement = admin.createStatement()) {
+                statement.execute("DROP DATABASE IF EXISTS " + migrationDb + " WITH (FORCE)");
+                statement.execute("CREATE DATABASE " + migrationDb);
+            }
+        }
+
+        try (Connection connection = DriverManager.getConnection(
+                hostPart + "/" + migrationDb, postgres.getUsername(), postgres.getPassword())) {
+            apply(connection, PRE_V92);
+            try (Statement statement = connection.createStatement()) {
+                statement.execute("""
+                        INSERT INTO apps (id, code, name) VALUES ('app2', 'APP-2', 'Normalization App')
+                        """);
+                statement.execute("""
+                        INSERT INTO import_batches
+                            (id, app_id, checksum, file_name, device_name, status, total_rows, imported_rows, error_rows, imported_by, imported_at)
+                        VALUES
+                            ('n1', 'app2', 'c1', 'a.csv', '  Gate  One  ', 'COMPLETED', 1, 1, 0, 'tester', CURRENT_TIMESTAMP),
+                            ('n2', 'app2', 'c2', 'b.csv', 'Gate_One', 'COMPLETED', 1, 1, 0, 'tester', CURRENT_TIMESTAMP)
+                        """);
+            }
+            apply(connection, V92);
+
+            try (Statement statement = connection.createStatement()) {
+                try (ResultSet fileSources = statement.executeQuery("""
+                        SELECT COUNT(*) FROM biometric_sources
+                        WHERE app_id = 'app2' AND source_type = 'FILE_DEVICE'
+                        """)) {
+                    fileSources.next();
+                    assertThat(fileSources.getInt(1)).as("inner whitespace and underscores are one identity").isEqualTo(1);
+                }
+                try (ResultSet bothBatches = statement.executeQuery("""
+                        SELECT COUNT(DISTINCT b.source_id)
+                        FROM import_batches b
+                        WHERE b.app_id = 'app2'
+                        """)) {
+                    bothBatches.next();
+                    assertThat(bothBatches.getInt(1)).as("both batches map to the same source").isEqualTo(1);
+                }
+            }
+        } finally {
+            try (Connection admin = DriverManager.getConnection(
+                    hostPart + "/postgres", postgres.getUsername(), postgres.getPassword())) {
+                try (Statement statement = admin.createStatement()) {
+                    statement.execute("DROP DATABASE IF EXISTS " + migrationDb + " WITH (FORCE)");
+                }
+            }
         }
     }
 }

@@ -26,11 +26,12 @@ public class PunchImportEvidence {
     @Id
     @Column(name = "batch_id", nullable = false)
     private String batchId;
+    @Id
+    @Column(name = "row_number", nullable = false)
+    private int rowNumber;
     @TenantId
     @Column(name = "app_id", nullable = false)
     private String appId;
-    @Column(name = "row_number", nullable = false)
-    private int rowNumber;
     @Column(name = "raw_line", nullable = false, columnDefinition = "TEXT")
     private String rawLine;
 
@@ -54,25 +55,28 @@ public class PunchImportEvidence {
     public static class Key implements Serializable {
         private String punchId;
         private String batchId;
+        private int rowNumber;
 
         protected Key() {
         }
 
-        public Key(String punchId, String batchId) {
+        public Key(String punchId, String batchId, int rowNumber) {
             this.punchId = punchId;
             this.batchId = batchId;
+            this.rowNumber = rowNumber;
         }
 
         @Override
         public boolean equals(Object other) {
             return other instanceof Key key
                     && Objects.equals(punchId, key.punchId)
-                    && Objects.equals(batchId, key.batchId);
+                    && Objects.equals(batchId, key.batchId)
+                    && rowNumber == key.rowNumber;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(punchId, batchId);
+            return Objects.hash(punchId, batchId, rowNumber);
         }
     }
 }

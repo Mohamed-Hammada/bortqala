@@ -2,6 +2,8 @@ package com.bemo.hr.attendance.infrastructure;
 
 import com.bemo.hr.attendance.domain.PunchImportEvidence;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -9,6 +11,9 @@ import java.util.List;
 public interface PunchImportEvidenceRepository extends JpaRepository<PunchImportEvidence, PunchImportEvidence.Key> {
     List<PunchImportEvidence> findByBatchIdOrderByRowNumber(String batchId);
     List<PunchImportEvidence> findByPunchId(String punchId);
+
+    @Query("select distinct e.punchId from PunchImportEvidence e where e.batchId = :batchId")
+    List<String> findPunchIdsByBatchId(@Param("batchId") String batchId);
 
     @Transactional
     void deleteByBatchId(String batchId);
