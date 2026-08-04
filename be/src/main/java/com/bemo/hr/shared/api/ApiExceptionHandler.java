@@ -42,7 +42,8 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     ResponseEntity<ApiError> forbidden(AccessDeniedException exception, HttpServletRequest request) {
-        return respond("FORBIDDEN", HttpStatus.FORBIDDEN, raw("Access denied."), request);
+        return respond("FORBIDDEN", HttpStatus.FORBIDDEN,
+                translated("error.accessDenied", resolveLocale(request)), request);
     }
 
     @ExceptionHandler(NotFoundException.class)
@@ -56,7 +57,8 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(NoResourceFoundException.class)
     ResponseEntity<ApiError> resourceNotFound(NoResourceFoundException exception, HttpServletRequest request) {
-        return respond("NOT_FOUND", HttpStatus.NOT_FOUND, raw("Resource not found."), request);
+        return respond("NOT_FOUND", HttpStatus.NOT_FOUND,
+                translated("error.resourceNotFound", resolveLocale(request)), request);
     }
 
     @ExceptionHandler(BusinessRuleException.class)
@@ -76,7 +78,7 @@ public class ApiExceptionHandler {
     @ExceptionHandler(OptimisticLockingFailureException.class)
     ResponseEntity<ApiError> optimisticLock(OptimisticLockingFailureException exception, HttpServletRequest request) {
         return respond("CONCURRENT_MODIFICATION", HttpStatus.CONFLICT,
-                raw("The record was modified by another reviewer. Reload and retry."), request);
+                translated("error.concurrentModification", resolveLocale(request)), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -90,12 +92,14 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     ResponseEntity<ApiError> malformed(HttpMessageNotReadableException exception, HttpServletRequest request) {
-        return respond("MALFORMED_REQUEST", HttpStatus.BAD_REQUEST, raw("Malformed request body."), request);
+        return respond("MALFORMED_REQUEST", HttpStatus.BAD_REQUEST,
+                translated("error.malformedRequest", resolveLocale(request)), request);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     ResponseEntity<ApiError> methodNotAllowed(HttpRequestMethodNotSupportedException exception, HttpServletRequest request) {
-        return respond("METHOD_NOT_ALLOWED", HttpStatus.METHOD_NOT_ALLOWED, raw("HTTP method not supported."), request);
+        return respond("METHOD_NOT_ALLOWED", HttpStatus.METHOD_NOT_ALLOWED,
+                translated("error.methodNotAllowed", resolveLocale(request)), request);
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -109,7 +113,8 @@ public class ApiExceptionHandler {
     @ExceptionHandler(Exception.class)
     ResponseEntity<ApiError> unexpected(Exception exception, HttpServletRequest request) {
         LOGGER.error("Unexpected error on {} {}", request.getMethod(), request.getRequestURI(), exception);
-        return respond("INTERNAL_ERROR", HttpStatus.INTERNAL_SERVER_ERROR, raw("An unexpected error occurred."), request);
+        return respond("INTERNAL_ERROR", HttpStatus.INTERNAL_SERVER_ERROR,
+                translated("error.unexpectedError", resolveLocale(request)), request);
     }
 
     private String resolveLocale(HttpServletRequest request) {

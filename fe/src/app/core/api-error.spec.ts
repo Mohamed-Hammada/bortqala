@@ -47,6 +47,34 @@ describe('apiErrorMessage', () => {
     expect(apiErrorMessage(error)).toBe('Employee code already exists.');
   });
 
+  it('translates the backend error code from the i18n bundle when present', () => {
+    const error = new HttpErrorResponse({
+      status: 400,
+      error: {
+        code: 'PASSWORD_REUSE',
+        message: 'The new password must differ from the current password.',
+        localizedMessage: 'The new password must differ from the current password.',
+        status: 400,
+      },
+    });
+    const i18n = {
+      t: (key: string) =>
+        key === 'PASSWORD_REUSE' ? 'كلمة المرور الجديدة يجب أن تختلف عن كلمة المرور الحالية.' : key,
+    };
+
+    expect(apiErrorMessage(error, i18n)).toBe('كلمة المرور الجديدة يجب أن تختلف عن كلمة المرور الحالية.');
+  });
+
+  it('prefers the backend localized message when the code is not a bundle key', () => {
+    const error = new HttpErrorResponse({
+      status: 400,
+      error: { code: 'UNKNOWN_CODE', localizedMessage: 'رسالة مترجمة.', status: 400 },
+    });
+    const i18n = { t: (key: string) => key };
+
+    expect(apiErrorMessage(error, i18n)).toBe('رسالة مترجمة.');
+  });
+
   it('reports connection failures for status 0', () => {
     const error = new HttpErrorResponse({ status: 0 });
 

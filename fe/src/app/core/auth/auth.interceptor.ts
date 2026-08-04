@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, from, mergeMap, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
+import { I18nService } from '../i18n.service';
 
 const PUBLIC_PATHS = [
   '/api/v1/auth/login',
@@ -13,6 +14,7 @@ const PUBLIC_PATHS = [
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const authService = inject(AuthService);
+  const i18n = inject(I18nService);
   const router = inject(Router);
   const token = authService.token();
   const deviceKey = 'bemo-erp-device-id';
@@ -22,6 +24,7 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
     localStorage.setItem(deviceKey, deviceId);
   }
   const headers: Record<string, string> = {
+    'Accept-Language': i18n.locale(),
     'X-Correlation-Id': createRequestId(),
     'X-Device-Id': deviceId,
   };
