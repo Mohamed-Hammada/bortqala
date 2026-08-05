@@ -23,6 +23,7 @@ public final class AuthApi {
                                 boolean mustChangePassword,
                                 AppResponse app, UserResponse user, PreferenceResponse preferences) { }
     public record RefreshResponse(String accessToken, String tokenType, Instant expiresAt) { }
+    public record DemoLoginRequest(@NotBlank @Size(max = 128) String secret) { }
     public record ChangePasswordRequest(@NotBlank @Size(max = 72) String currentPassword,
                                         @NotBlank @Size(max = 72) String newPassword) { }
     public record UserResponse(String id, String username, String displayName, Set<RoleCode> roles,

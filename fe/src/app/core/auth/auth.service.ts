@@ -79,6 +79,17 @@ export class AuthService {
       );
   }
 
+  demoLogin(secret: string) {
+    return this.httpClient
+      .post<LoginResponse>('/api/v1/auth/demo-login', { secret }, { withCredentials: true })
+      .pipe(
+        tap((session) => {
+          this.session.set(session);
+          this.persistStoredSession(session);
+        }),
+      );
+  }
+
   tryRefresh(): Promise<boolean> {
     if (!this.sessionRestorable()) return Promise.resolve(false);
     if (this.refreshPromise) return this.refreshPromise;

@@ -45,6 +45,7 @@ public class AuthService {
     private final WorkerCategoryRepository workerCategoryRepository;
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final TenantFeatureService tenantFeatureService;
+    private final DemoNoLoginProperties demoNoLoginProperties;
 
     public AuthService(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, JwtProperties jwtProperties,
                        AppUserRepository appUserRepository, RoleRepository roleRepository,
@@ -57,7 +58,8 @@ public class AuthService {
                        TranslationService translationService,
                        WorkerCategoryRepository workerCategoryRepository,
                        AttendanceCategoryRepository attendanceCategoryRepository,
-                       TenantFeatureService tenantFeatureService) {
+                       TenantFeatureService tenantFeatureService,
+                       DemoNoLoginProperties demoNoLoginProperties) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
         this.jwtProperties = jwtProperties;
@@ -75,10 +77,55 @@ public class AuthService {
         this.workerCategoryRepository = workerCategoryRepository;
         this.attendanceCategoryRepository = attendanceCategoryRepository;
         this.tenantFeatureService = tenantFeatureService;
+        this.demoNoLoginProperties = demoNoLoginProperties;
     }
 
     private static final String DUMMY_PASSWORD_HASH =
             "$2a$12$XnjwgsuR3b/qd7/gd5SNmeewo2ZHV5Hw1Citn8vLnTcT9OaPckNYG";
+
+    private static final String DEMO_SUPERADMIN_USERNAME = "demo_superadmin";
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public LoginResult demoSuperadminLogin(String deviceId) {
+        var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue(demoNoLoginProperties.appCode())
+                .orElseThrow(() -> new NotFoundException("The demo application is not configured.",
+                        "DEMO_NO_LOGIN_APP_NOT_CONFIGURED"));
+        String appId = app.getId();
+        TenantContext.set(appId);
+        try {
+            AppUser user = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, DEMO_SUPERADMIN_USERNAME)
+                    .orElseGet(() -> createDemoSuperadmin(appId));
+            if (!user.isActive()) {
+                throw new NotFoundException("The demo superadmin link is invalid or has expired.",
+                        "DEMO_NO_LOGIN_LINK_INVALID");
+            }
+            Instant now = Instant.now();
+            Instant accessExpiresAt = issueAccessToken(app, user, now);
+            var refresh = refreshTokenService.issue(appId, user.getId(), deviceId);
+            auditService.record("DEMO_SUPERADMIN_LOGIN", "USER", user.getId(), user.getUsername(),
+                    "Entered the dashboard through the demo no-login link", null);
+            return new LoginResult(appId,
+                    new AuthApi.LoginResponse(accessToken(appId, user, now, accessExpiresAt), "Bearer", accessExpiresAt,
+                            false,
+                            new AuthApi.AppResponse(appId, app.getCode(), app.getName(),
+                                    app.isAdminDashboardCustomizationEnabled()), toResponse(user),
+                            toPreferenceResponse(preferenceFor(user), user, app)),
+                    refresh.rawValue(), refresh.expiresAt());
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    private AppUser createDemoSuperadmin(String appId) {
+        byte[] bytes = new byte[32];
+        new java.security.SecureRandom().nextBytes(bytes);
+        String randomPassword = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        var roles = requireRoles(Set.of(RoleCode.SUPER_ADMIN));
+        var created = new AppUser(appId, DEMO_SUPERADMIN_USERNAME, "Demo Super Admin",
+                passwordEncoder.encode(randomPassword), roles, Set.of(), true, true);
+        created.markPasswordChanged(Instant.now());
+        return appUserRepository.save(created);
+    }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public LoginResult login(AuthApi.LoginRequest request, String deviceId, String ip) {

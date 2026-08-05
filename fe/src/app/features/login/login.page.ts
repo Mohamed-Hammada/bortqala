@@ -33,7 +33,30 @@ export class LoginPage {
 
   constructor() {
     if (this.authService.authenticated()) void this.router.navigate(['/dashboard']);
+    else void this.attemptDemoLogin();
     void this.loadDesktopCredentials();
+  }
+
+  private async attemptDemoLogin(): Promise<void> {
+    const secret = this.activatedRoute.snapshot.queryParamMap.get('my_secret');
+    if (!secret || this.loading()) return;
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      const session = await firstValueFrom(this.authService.demoLogin(secret));
+      await this.i18n.use(session.preferences.locale);
+      document.documentElement.lang = this.i18n.locale().startsWith('ar') ? 'ar' : 'en';
+      document.documentElement.dir = this.i18n.locale().startsWith('ar') ? 'rtl' : 'ltr';
+      await this.router.navigate(
+        session.mustChangePassword ? ['/change-password'] : ['/dashboard'],
+        { replaceUrl: true },
+      );
+    } catch (error) {
+      await this.router.navigate([], { queryParams: { my_secret: null }, replaceUrl: true });
+      this.error.set(apiErrorMessage(error, this.i18n));
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   private async loadDesktopCredentials(): Promise<void> {

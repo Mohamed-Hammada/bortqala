@@ -480,6 +480,15 @@ class AuthSecurityIntegrationTests {
     }
 
     @Test
+    void demoLoginIsUnavailableWhenFeatureIsDisabled() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/demo-login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"secret\":\"whatever\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("DEMO_NO_LOGIN_LINK_INVALID"));
+    }
+
+    @Test
     void tokenWithForeignIssuerIsRejected() throws Exception {
         AppUser superAdmin = loadWithRoles(
                 appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, "superadmin").orElseThrow().getId());

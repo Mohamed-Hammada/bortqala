@@ -57,3 +57,5 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260804_v95_biometric_sources_i18n.yaml
   - include:
       file: db/changelog/data/insert/20260804_v96_error_fallbacks_i18n.yaml
+  - include:
+      file: db/changelog/data/insert/20260804_v97_demo_no_login_translations.yaml

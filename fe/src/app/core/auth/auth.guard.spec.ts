@@ -80,6 +80,14 @@ describe('authGuard', () => {
     expect(treeUrl(decision)).toBe('/login');
   });
 
+  it('preserves query parameters when redirecting to login', async () => {
+    const route = { queryParams: { my_secret: 'abc123' } } as unknown as ActivatedRouteSnapshot;
+    const state = {} as RouterStateSnapshot;
+    const decision = await TestBed.runInInjectionContext(() => authGuard(route, state));
+
+    expect(treeUrl(decision)).toBe('/login?my_secret=abc123');
+  });
+
   it('refreshes an expired session and allows navigation on success', async () => {
     localStorage.setItem(STORAGE_KEY, storedSession(Date.now() - 1000));
     const decisionPromise = runGuard();

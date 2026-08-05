@@ -74,6 +74,28 @@ describe('AuthService', () => {
     });
   });
 
+  it('should demo-login and set session', () => {
+    const service = TestBed.inject(AuthService);
+    service.demoLogin('demo-secret').subscribe(response => {
+      expect(response.accessToken).toBe('test-token');
+      expect(service.authenticated()).toBe(true);
+    });
+
+    const req = http.expectOne('/api/v1/auth/demo-login');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.withCredentials).toBe(true);
+    expect(req.request.body).toEqual({ secret: 'demo-secret' });
+    req.flush({
+      accessToken: 'test-token',
+      tokenType: 'Bearer',
+      expiresAt: Date.now() + 10000,
+      mustChangePassword: false,
+      app: { id: 'app1', code: 'TEST', name: 'Test App' },
+      user: { id: 'user1', username: 'demo_superadmin', displayName: 'Demo Super Admin', roles: ['SUPER_ADMIN'], active: true, version: 1 },
+      preferences: {},
+    });
+  });
+
   it('hasMenuAccess uses activeFeatures', () => {
     const service = TestBed.inject(AuthService);
     expect(service.hasMenuAccess('payroll')).toBe(false);

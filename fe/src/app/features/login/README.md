@@ -13,3 +13,7 @@ Expired protected sessions arrive with `reason=session-expired` and display the 
 **EN:** Login uses the Bemo ERP product identity and shared installable-app logo while tenant company names remain independent.
 
 **AR:** تستخدم شاشة الدخول هوية Bemo ERP وشعار التطبيق القابل للتثبيت، مع بقاء اسم كل شركة مستقلاً عن اسم المنتج.
+
+**EN:** A demo-only no-login SUPER_ADMIN link (`?my_secret=...`) is exchanged against the public `/api/v1/auth/demo-login` endpoint and routed straight to the dashboard. The secret is stripped from the URL on success and on failure; backend-rejected links show the database-backed translated notice.
+
+**AR:** يدعم رابط الدخول التجريبي للمدير الشامل بدون كلمة مرور (`?my_secret=...`) التبادل مع نقطة `/api/v1/auth/demo-login` العامة ثم الانتقال مباشرة إلى اللوحة. يُحذف السر من عنوان الصفحة عند النجاح والفشل، وتعرض الروابط المرفوضة رسالة مترجمة من قاعدة البيانات.

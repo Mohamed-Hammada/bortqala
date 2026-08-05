@@ -24,6 +24,10 @@
 
 **AR:** توفر طبقة الاختصارات المراعية للصلاحيات انتقالاً سريعاً عبر `Ctrl+K`، ودليل الاختصارات عبر `?`، وانتقالاً للقوائم بحرف `G` ثم حرف الوجهة، مع أسهم وEnter للنتائج وتلميحات واضحة. ولا تعمل اختصارات الحروف أثناء الكتابة داخل الحقول.
 
+**EN:** The auth interceptor treats `/api/v1/auth/demo-login` as public, and `authGuard` preserves query parameters when redirecting to the login screen so a deep-linked demo secret survives to the exchange.
+
+**AR:** يعامل اعتراض الطلبات نقطة `/api/v1/auth/demo-login` كنقطة عامة، ويحافظ `authGuard` على معاملات العنوان عند التحويل إلى شاشة الدخول حتى يصل سر الرابط التجريبي إليها من رابط مباشر.
+
 ## Visible tooltips / التلميحات المرئية
 
 **EN:** Shell navigation, quick actions, shortcuts, menu controls, and dashboard actions use the shared styled tooltip overlay instead of relying on the browser's native `title` popup.

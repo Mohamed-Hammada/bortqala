@@ -13,7 +13,8 @@ public final class SystemStatusApi {
             String cacheVersion,
             long serverTime,
             Long cacheUpdatedAt,
-            String cacheUpdatedBy) {
+            String cacheUpdatedBy,
+            boolean demoNoLoginEnabled) {
     }
 
     public record RotateCacheRequest(@Size(max = 500) String reason) {

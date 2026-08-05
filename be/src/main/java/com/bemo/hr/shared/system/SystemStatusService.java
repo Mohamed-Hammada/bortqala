@@ -1,6 +1,7 @@
 package com.bemo.hr.shared.system;
 
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.security.DemoNoLoginService;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.info.BuildProperties;
@@ -14,14 +15,17 @@ import java.time.Instant;
 class SystemStatusService {
     private final SystemSettingRepository systemSettingRepository;
     private final ObjectProvider<BuildProperties> buildPropertiesProvider;
+    private final ObjectProvider<DemoNoLoginService> demoNoLoginServiceProvider;
     private final String serviceName;
 
     SystemStatusService(
             SystemSettingRepository systemSettingRepository,
             ObjectProvider<BuildProperties> buildPropertiesProvider,
+            ObjectProvider<DemoNoLoginService> demoNoLoginServiceProvider,
             @Value("${spring.application.name:bemo-erp}") String serviceName) {
         this.systemSettingRepository = systemSettingRepository;
         this.buildPropertiesProvider = buildPropertiesProvider;
+        this.demoNoLoginServiceProvider = demoNoLoginServiceProvider;
         this.serviceName = serviceName;
     }
 
@@ -48,6 +52,7 @@ class SystemStatusService {
         BuildProperties buildProperties = buildPropertiesProvider.getIfAvailable();
         String version = buildProperties == null ? "development" : buildProperties.getVersion();
         Instant updatedAt = setting.getUpdatedAt();
+        DemoNoLoginService demoNoLoginService = demoNoLoginServiceProvider.getIfAvailable();
         return new SystemStatusApi.StatusResponse(
                 "UP",
                 serviceName,
@@ -55,6 +60,7 @@ class SystemStatusService {
                 setting.getValue(),
                 Instant.now().toEpochMilli(),
                 updatedAt == null ? null : updatedAt.toEpochMilli(),
-                setting.getUpdatedBy());
+                setting.getUpdatedBy(),
+                demoNoLoginService != null && demoNoLoginService.isAvailable());
     }
 }

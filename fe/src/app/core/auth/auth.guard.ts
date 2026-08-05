@@ -3,9 +3,10 @@ import { ActivatedRouteSnapshot, CanActivateFn, Router, UrlTree } from '@angular
 import { RoleCode } from './auth.models';
 import { AuthService } from './auth.service';
 
-export const authGuard: CanActivateFn = async () => {
+export const authGuard: CanActivateFn = async (route: ActivatedRouteSnapshot) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const queryParams = { ...route.queryParams };
   if (!authService.authenticated()) {
     if (authService.sessionRestorable()) {
       const refreshed = await authService.tryRefresh();
@@ -16,9 +17,9 @@ export const authGuard: CanActivateFn = async () => {
         return true;
       }
       authService.expireSession();
-      return router.createUrlTree(['/login'], { queryParams: { reason: 'session-expired' } });
+      return router.createUrlTree(['/login'], { queryParams: { ...queryParams, reason: 'session-expired' } });
     }
-    return router.createUrlTree(['/login']);
+    return router.createUrlTree(['/login'], { queryParams });
   }
   if (authService.mustChangePassword()) {
     return router.createUrlTree(['/change-password']);

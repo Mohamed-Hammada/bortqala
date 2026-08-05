@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260804-v97-demo-no-login-translations
+      author: codex
+      comment: Arabic/English translations for the demo no-login link error code so the 404 response is localized.
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260804_v97_demo_no_login_translations.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v97-%'" }
