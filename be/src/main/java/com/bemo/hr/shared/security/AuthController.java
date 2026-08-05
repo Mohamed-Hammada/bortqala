@@ -160,7 +160,10 @@ public class AuthController {
     @PostMapping("/users")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
-    AuthApi.UserResponse create(@Valid @RequestBody AuthApi.UserUpsertRequest request) { return authService.create(request); }
+    AuthApi.UserResponse create(@Valid @RequestBody AuthApi.UserUpsertRequest request,
+                                Authentication authentication) {
+        return authService.create(request, authentication.getName());
+    }
 
     @PutMapping("/users/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")

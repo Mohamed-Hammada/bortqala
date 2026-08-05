@@ -19,6 +19,8 @@ import { AuthService } from '../../core/auth/auth.service';
 import { exportCsv } from '../../core/download';
 
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+import { AccessRole, AccessValidateResult } from './access.models';
+import { AccessService } from './access.service';
 
 @Component({
   selector: 'app-users-page',
@@ -33,10 +35,23 @@ export class UsersPage {
   readonly store = inject(UsersStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
+  readonly access = inject(AccessService);
   readonly drawerOpen = signal(false);
   readonly submitted = signal(false);
   readonly showPassword = signal(false);
   readonly editingId = signal<string | null>(null);
+  readonly accessLoading = signal(false);
+  readonly roleSearch = signal('');
+  readonly pageSearch = signal('');
+  readonly needCodes = signal<string[]>([]);
+  readonly validationResult = signal<AccessValidateResult | null>(null);
+  readonly validationRunning = signal(false);
+  readonly validationError = signal<string | null>(null);
+  readonly acknowledgedWarnings = signal(false);
+  readonly baselineRoles = signal<RoleCode[]>([]);
+  readonly baselineMenus = signal<string[]>([]);
+  readonly selectedRoles = signal<RoleCode[]>([]);
+  readonly selectedMenus = signal<string[]>([]);
   readonly pagination = new TablePagination();
   readonly paged = computed(() => this.pagination.slice(this.store.items()));
   readonly roles: Array<{ code: RoleCode; labelKey: string; descriptionKey: string }> = [
@@ -128,6 +143,95 @@ export class UsersPage {
     }
   ];
 
+  readonly catalogRoles = computed(() => {
+    const catalog = this.access.catalog();
+    const q = this.roleSearch().trim().toLowerCase();
+    if (!catalog) return [];
+    if (!q) return catalog.roles;
+    return catalog.roles.filter((role) =>
+      role.code.toLowerCase().includes(q) ||
+      this.i18n.t(role.nameKey).toLowerCase().includes(q) ||
+      this.i18n.t(role.descriptionKey).toLowerCase().includes(q),
+    );
+  });
+
+  readonly needs = computed(() => this.access.catalog()?.needs ?? []);
+
+  readonly neededPermissions = computed(() => {
+    const catalog = this.access.catalog();
+    if (!catalog) return [] as string[];
+    const codes = new Set(this.needCodes());
+    return catalog.needs
+      .filter((need) => codes.has(need.code))
+      .flatMap((need) => need.permissions);
+  });
+
+  readonly suggestedRoles = computed(() => this.access.suggestRoles(this.neededPermissions()));
+
+  readonly broaderRoles = computed(() => this.access.broaderRoles(this.suggestedRoles()));
+
+  readonly preview = computed(() => this.access.preview(this.selectedRoles(), this.selectedMenus()));
+
+  readonly previewPageResults = computed(() => {
+    const q = this.pageSearch().trim().toLowerCase();
+    const pages = this.access.pages();
+    if (!q) return pages;
+    return pages.filter((page) =>
+      page.code.toLowerCase().includes(q) ||
+      this.i18n.t(page.titleKey).toLowerCase().includes(q) ||
+      page.module.toLowerCase().includes(q) ||
+      page.route.toLowerCase().includes(q),
+    );
+  });
+
+  readonly editMode = computed(() => this.editingId() !== null);
+
+  readonly rolesAdded = computed(() =>
+    this.selectedRoles().filter((role) => !this.baselineRoles().includes(role)).sort(),
+  );
+  readonly rolesRemoved = computed(() =>
+    this.baselineRoles().filter((role) => !this.selectedRoles().includes(role)).sort(),
+  );
+  readonly menusAdded = computed(() =>
+    this.selectedMenus().filter((menu) => !this.baselineMenus().includes(menu)).sort(),
+  );
+  readonly menusRemoved = computed(() =>
+    this.baselineMenus().filter((menu) => !this.selectedMenus().includes(menu)).sort(),
+  );
+
+  readonly changedPages = computed(() => {
+    if (!this.editMode()) return [];
+    const before = this.access.preview(this.baselineRoles(), this.baselineMenus());
+    return this.preview()
+      .pages
+      .map((page) => ({
+        page,
+        before: before.pages.find((item) => item.pageCode === page.pageCode)?.access ?? 'NONE',
+      }))
+      .filter((row) => row.before !== row.page.access);
+  });
+
+  readonly selectedSensitiveReasons = computed(() => {
+    const catalog = this.access.catalog();
+    if (!catalog) return [] as string[];
+    const selected = new Set(this.selectedRoles());
+    return catalog.roles
+      .filter((role) => selected.has(role.code) && role.sensitiveReasonKey)
+      .map((role) => role.sensitiveReasonKey as string);
+  });
+
+  readonly validationNeedsAck = computed(() => {
+    const result = this.validationResult();
+    return !!result && (result.warnings.length > 0 || result.conflicts.length > 0);
+  });
+
+  readonly validationOk = computed(() => {
+    const result = this.validationResult();
+    if (!result || result.valid !== true) return false;
+    if (this.validationNeedsAck() && !this.acknowledgedWarnings()) return false;
+    return true;
+  });
+
   isModuleAllSelected(ids: string[]): boolean {
     const current = this.form.controls.allowedMenus.value;
     return ids.every((id) => current.includes(id));
@@ -183,6 +287,14 @@ export class UsersPage {
     void this.store.load();
     void this.store.loadCategories();
     void this.loadPolicy();
+    void this.loadAccessCatalog();
+    this.form.valueChanges.subscribe(() => {
+      this.selectedRoles.set(this.form.controls.roles.value);
+      this.selectedMenus.set(this.form.controls.allowedMenus.value);
+      this.validationResult.set(null);
+      this.validationError.set(null);
+      this.acknowledgedWarnings.set(false);
+    });
   }
 
   private async loadPolicy(): Promise<void> {
@@ -190,6 +302,12 @@ export class UsersPage {
       const settings = await firstValueFrom(this.auth.appSettings());
       this.passwordPolicy.set(settings);
     } catch {}
+  }
+
+  async loadAccessCatalog(): Promise<void> {
+    this.accessLoading.set(true);
+    await this.access.loadCatalog();
+    this.accessLoading.set(false);
   }
 
   roleUserCount(code: RoleCode): number {
@@ -200,6 +318,9 @@ export class UsersPage {
     this.submitted.set(false);
     this.showPassword.set(false);
     this.editingId.set(null);
+    this.baselineRoles.set([]);
+    this.baselineMenus.set([]);
+    this.needCodes.set([]);
     this.form.reset({
       username: '',
       displayName: '',
@@ -219,6 +340,9 @@ export class UsersPage {
     this.submitted.set(false);
     this.showPassword.set(false);
     this.editingId.set(item.id);
+    this.baselineRoles.set(item.roles);
+    this.baselineMenus.set(item.allowedMenus ?? this.menuOptions.map((m) => m.id));
+    this.needCodes.set([]);
     this.form.reset({
       username: item.username,
       displayName: item.displayName,
@@ -265,6 +389,80 @@ export class UsersPage {
     return this.form.controls.allowedMenus.value.includes(id);
   }
 
+  toggleNeed(code: string): void {
+    const current = this.needCodes();
+    this.needCodes.set(
+      current.includes(code) ? current.filter((item) => item !== code) : [...current, code],
+    );
+  }
+
+  hasNeed(code: string): boolean {
+    return this.needCodes().includes(code);
+  }
+
+  applySuggestedRoles(): void {
+    const roles = this.suggestedRoles();
+    if (roles.length) {
+      this.form.controls.roles.setValue(roles as RoleCode[]);
+    }
+    this.needCodes.set([]);
+  }
+
+  roleLabelFor(code: string): string {
+    const role = this.access.roles().find((item) => item.code === code);
+    return role ? this.i18n.t(role.nameKey) : code;
+  }
+
+  pageMeta(pageCode: string) {
+    return this.access.pages().find((page) => page.code === pageCode);
+  }
+
+  moduleLabel(pageCode: string): string {
+    return this.pageMeta(pageCode)?.module ?? pageCode;
+  }
+
+  pageTitle(pageCode: string): string {
+    const page = this.pageMeta(pageCode);
+    return page ? this.i18n.t(page.titleKey) : pageCode;
+  }
+
+  levelLabel(level: string): string {
+    return this.i18n.t(`access.level.${level}`);
+  }
+
+  sensitivityLabel(sensitivity: string): string {
+    return this.i18n.t(`access.sensitivity.${sensitivity}`);
+  }
+
+  kindLabel(kind: string): string {
+    return this.i18n.t(`access.kind.${kind}`);
+  }
+
+  roleMeta(role: AccessRole): { pages: number; actions: number } {
+    const catalog = this.access.catalog();
+    if (!catalog) return { pages: 0, actions: 0 };
+    const granted = new Set(role.permissions);
+    let pages = 0;
+    let actions = 0;
+    for (const page of catalog.pages) {
+      if (page.viewPermissions.some((permission) => granted.has(permission))) pages++;
+      actions += page.actions.filter((action) => granted.has(action.permission)).length;
+    }
+    return { pages, actions };
+  }
+
+  requiredRolesForPage(viewPermissions: string[]): string[] {
+    const all = new Set<string>();
+    viewPermissions.forEach((permission) =>
+      this.access.rolesGranting(permission).forEach((role) => all.add(role)),
+    );
+    return [...all].sort();
+  }
+
+  actionLabel(action: string): string {
+    return this.i18n.t(`access.level.${action}`);
+  }
+
   validatePassword(pwd: string): string | null {
     const policy = this.passwordPolicy();
     const minLen = policy.minPasswordLength ?? 8;
@@ -294,6 +492,27 @@ export class UsersPage {
     return null;
   }
 
+  async runValidation(): Promise<AccessValidateResult | null> {
+    this.validationRunning.set(true);
+    this.validationError.set(null);
+    try {
+      const result = await this.access.validate(
+        this.form.controls.roles.value,
+        this.form.controls.allowedMenus.value,
+        this.editingId(),
+        null,
+      );
+      this.validationResult.set(result);
+      return result;
+    } catch (error) {
+      const message = (error as { error?: { message?: string } })?.error?.message;
+      this.validationError.set(message || this.i18n.t('access.validateFailed'));
+      return null;
+    } finally {
+      this.validationRunning.set(false);
+    }
+  }
+
   async submit() {
     this.submitted.set(true);
     const pwd = this.form.controls.password.value;
@@ -312,6 +531,21 @@ export class UsersPage {
       this.form.markAllAsTouched();
       return;
     }
+
+    let result = this.validationOk() ? this.validationResult() : await this.runValidation();
+    if (!result) {
+      this.form.markAllAsTouched();
+      return;
+    }
+    if (result.valid !== true) {
+      this.notification.error(this.i18n.t('access.saveBlocked'));
+      return;
+    }
+    if ((result.warnings.length > 0 || result.conflicts.length > 0) && !this.acknowledgedWarnings()) {
+      this.notification.error(this.i18n.t('access.saveWarningsUnacknowledged'));
+      return;
+    }
+
     const raw = this.form.getRawValue();
     const payload: UserPayload = { ...raw, password: raw.password || null };
     if (await this.store.save(this.editingId(), payload)) {

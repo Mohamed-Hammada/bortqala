@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260806-v101-legacy-missing-translations
+      author: codex
+      comment: Backfills Arabic/English translations for legacy UI keys that predated the database-backed translation tables (login, settings, reports and the sidebar expand-all action).
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260806_v101_legacy_missing_translations.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v101-%'" }

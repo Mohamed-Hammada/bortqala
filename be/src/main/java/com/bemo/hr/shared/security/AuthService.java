@@ -1,5 +1,6 @@
 package com.bemo.hr.shared.security;
 
+import com.bemo.hr.access.application.AccessCatalogService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.i18n.TranslationService;
@@ -46,6 +47,7 @@ public class AuthService {
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final TenantFeatureService tenantFeatureService;
     private final DemoNoLoginProperties demoNoLoginProperties;
+    private final AccessCatalogService accessCatalogService;
 
     public AuthService(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, JwtProperties jwtProperties,
                        AppUserRepository appUserRepository, RoleRepository roleRepository,
@@ -59,7 +61,8 @@ public class AuthService {
                        WorkerCategoryRepository workerCategoryRepository,
                        AttendanceCategoryRepository attendanceCategoryRepository,
                        TenantFeatureService tenantFeatureService,
-                       DemoNoLoginProperties demoNoLoginProperties) {
+                       DemoNoLoginProperties demoNoLoginProperties,
+                       AccessCatalogService accessCatalogService) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
         this.jwtProperties = jwtProperties;
@@ -78,6 +81,7 @@ public class AuthService {
         this.attendanceCategoryRepository = attendanceCategoryRepository;
         this.tenantFeatureService = tenantFeatureService;
         this.demoNoLoginProperties = demoNoLoginProperties;
+        this.accessCatalogService = accessCatalogService;
     }
 
     private static final String DUMMY_PASSWORD_HASH =
@@ -372,9 +376,15 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthApi.UserResponse create(AuthApi.UserUpsertRequest request) {
+    public AuthApi.UserResponse create(AuthApi.UserUpsertRequest request, String currentUsername) {
         String appId = TenantContext.require();
         validate(request, appId, null, true);
+        var actor = requireByUsername(appId, currentUsername);
+        var actorRoles = actor.getRoles().stream().map(Role::getCode).map(Enum::name)
+                .collect(Collectors.toUnmodifiableSet());
+        var menuCodes = request.allowedMenus() == null ? java.util.List.<String>of() : request.allowedMenus().stream().toList();
+        accessCatalogService.validateAssignment(actorRoles, actor.getId(), request.roles().stream().map(Enum::name).toList(),
+                menuCodes, null, null, null);
         var user = new AppUser(appId, request.username(), request.displayName(), passwordEncoder.encode(request.password()),
                 requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary(),
                 request.dashboardCustomizationEnabled());
@@ -382,14 +392,15 @@ public class AuthService {
         validateCategory(request.categoryId());
         user.assignCategory(request.categoryId());
         appUserRepository.save(user);
-        auditService.record("USER_CREATE", "USER", user.getId(), request.username(), "Created user " + user.getDisplayName(), null);
+        auditService.record("USER_CREATE", "USER", user.getId(), currentUsername,
+                "Created user " + user.getDisplayName() + " roles=" + request.roles(), null);
         return toResponse(user);
     }
 
     @Transactional
     public AuthApi.UserResponse update(String id, AuthApi.UserUpsertRequest request, String currentUsername) {
         String appId = TenantContext.require();
-        var user = appUserRepository.findById(id).filter(item -> item.getAppId().equals(appId))
+        var user = appUserRepository.findByAppIdAndId(appId, id)
                 .orElseThrow(() -> new NotFoundException("User not found.", "AUTH_USER_NOT_FOUND"));
         if (request.version() == null || request.version() != user.getVersion()) {
             throw new BusinessRuleException("This user changed since it was loaded. Refresh and try again.",
@@ -425,6 +436,14 @@ public class AuthService {
             throw new BusinessRuleException("You cannot deactivate your own account.",
                     "AUTH_SELF_DEACTIVATE_FORBIDDEN", HttpStatus.CONFLICT);
         }
+        var previousRoles = user.getRoles().stream().map(Role::getCode).map(Enum::name)
+                .collect(Collectors.toUnmodifiableSet());
+        var actorRoles = actor.getRoles().stream().map(Role::getCode).map(Enum::name)
+                .collect(Collectors.toUnmodifiableSet());
+        var menuCodes = request.allowedMenus() == null ? java.util.List.<String>of() : request.allowedMenus().stream().toList();
+        accessCatalogService.validateAssignment(actorRoles, actor.getId(),
+                request.roles().stream().map(Enum::name).toList(), menuCodes, id, previousRoles, null);
+
         String passwordHash = request.password() == null || request.password().isBlank()
                 ? null : passwordEncoder.encode(request.password());
         user.update(request.username(), request.displayName(), passwordHash, request.active(),
@@ -437,8 +456,20 @@ public class AuthService {
         }
         validateCategory(request.categoryId());
         user.assignCategory(request.categoryId());
-        auditService.record("USER_UPDATE", "USER", user.getId(), currentUsername, "Updated user " + user.getUsername() + " active=" + user.isActive(), null);
+        auditService.record("USER_UPDATE", "USER", user.getId(), currentUsername,
+                accessChangeDetails(user, request, previousRoles), null);
         return toResponse(user);
+    }
+
+    private String accessChangeDetails(AppUser user, AuthApi.UserUpsertRequest request, Set<String> previousRoles) {
+        var newRoles = request.roles().stream().map(Enum::name).collect(Collectors.toUnmodifiableSet());
+        var added = new java.util.TreeSet<>(newRoles);
+        added.removeAll(previousRoles);
+        var removed = new java.util.TreeSet<>(previousRoles);
+        removed.removeAll(newRoles);
+        return "Updated user " + user.getUsername() + " active=" + user.isActive()
+                + " previousRoles=" + previousRoles + " newRoles=" + newRoles
+                + " added=" + added + " removed=" + removed;
     }
 
     @Transactional

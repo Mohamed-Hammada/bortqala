@@ -63,3 +63,7 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260805_v98_qa_remediation_translations.yaml
   - include:
       file: db/changelog/data/insert/20260806_v99_employee_deactivation_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v100_access_guidance_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v101_legacy_missing_translations.yaml

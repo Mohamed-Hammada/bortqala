@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260806-v100-access-guidance-translations
+      author: codex
+      comment: Arabic/English translations for the role-to-page access guidance feature: role cards, access levels, sensitivity kinds, sensitive reasons, segregation-of-duties conflict reasons, guided-mode needs, effective-access preview and backend error codes.
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260806_v100_access_guidance_translations.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v100-%'" }
