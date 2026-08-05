@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
-import { authGuard, mustChangePasswordGuard, roleGuard } from './core/auth/auth.guard';
+import { authGuard, menuAccessGuard, mustChangePasswordGuard, roleGuard } from './core/auth/auth.guard';
 import { unsavedChangesGuard } from './core/unsaved-changes.guard';
+import { WORKFORCE_BASE_ROLES } from './core/auth/workforce-role.guard';
 
 export const routes: Routes = [
   {
@@ -21,54 +22,59 @@ export const routes: Routes = [
     children: [
       {
         path: 'dashboard',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'dashboard' },
         loadComponent: () =>
           import('./features/dashboard/dashboard.page').then((module) => module.DashboardPage),
       },
       {
         path: 'categories',
-        canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'categories' },
         loadComponent: () =>
           import('./features/categories/categories.page').then((module) => module.CategoriesPage),
       },
       {
         path: 'employees',
-        canActivate: [roleGuard],
+        canActivate: [roleGuard, menuAccessGuard],
         canDeactivate: [unsavedChangesGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'employees' },
         loadComponent: () =>
           import('./features/employees/employees.page').then((module) => module.EmployeesPage),
       },
       {
         path: 'imports',
-        canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'] },
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'imports' },
         loadComponent: () =>
           import('./features/imports/imports.page').then((module) => module.ImportsPage),
       },
       {
         path: 'parties',
-        canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'parties' },
         loadComponent: () =>
           import('./features/parties/parties.page').then((module) => module.PartiesPage),
       },
       {
         path: 'reports',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'reports' },
         loadComponent: () =>
           import('./features/reports/reports.page').then((module) => module.ReportsPage),
       },
       {
         path: 'operations',
-        canActivate: [roleGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER'] },
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN'], menuId: 'operations' },
         loadComponent: () =>
           import('./features/operations/operations.page').then((module) => module.OperationsPage),
       },
       {
         path: 'trade/procurement',
-        canActivate: [roleGuard],
+        canActivate: [roleGuard, menuAccessGuard],
         data: {
+          menuId: 'procurement',
           roles: [
             'PROCUREMENT_MANAGER',
             'PROCUREMENT_USER',
@@ -76,7 +82,6 @@ export const routes: Routes = [
             'FINANCE_MANAGER',
             'ACCOUNTANT',
             'TREASURY_USER',
-            'HR_MANAGER',
             'AUDITOR',
           ],
         },
@@ -85,106 +90,115 @@ export const routes: Routes = [
       },
       {
         path: 'trade/sales',
-        canActivate: [roleGuard],
-        data: { roles: ['SALES_MANAGER', 'HR_MANAGER'] },
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SALES_MANAGER'], menuId: 'sales' },
         loadComponent: () =>
           import('./features/trade/sales/sales.page').then((module) => module.SalesPage),
       },
       {
         path: 'manufacturing/production',
-        canActivate: [roleGuard],
-        data: { roles: ['MANUFACTURING_MANAGER', 'HR_MANAGER'] },
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['MANUFACTURING_MANAGER'], menuId: 'production' },
         loadComponent: () =>
           import('./features/manufacturing/production/production.page').then((module) => module.ProductionPage),
       },
       {
         path: 'manufacturing/quality',
-        canActivate: [roleGuard],
-        data: { roles: ['MANUFACTURING_MANAGER', 'QUALITY_MANAGER', 'HR_MANAGER'] },
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['MANUFACTURING_MANAGER', 'QUALITY_MANAGER'], menuId: 'quality' },
         loadComponent: () =>
           import('./features/manufacturing/quality/quality.page').then((module) => module.QualityPage),
       },
       {
         path: 'payroll',
-        canActivate: [roleGuard],
-        data: { roles: ['PAYROLL_MANAGER', 'HR_MANAGER', 'HR_REVIEWER'] },
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['PAYROLL_MANAGER', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'payroll' },
         loadComponent: () =>
           import('./features/payroll/payroll.page').then((module) => module.PayrollPage),
       },
       {
         path: 'finance/accounts',
-        canActivate: [roleGuard],
+        canActivate: [roleGuard, menuAccessGuard],
         data: {
-          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER', 'AUDITOR'],
+          menuId: 'accounts',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
         },
         loadComponent: () =>
           import('./features/finance/accounts/accounts.page').then((module) => module.AccountsPage),
       },
       {
         path: 'finance/journal-entries',
-        canActivate: [roleGuard],
+        canActivate: [roleGuard, menuAccessGuard],
         data: {
-          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER', 'AUDITOR'],
+          menuId: 'journal-entries',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
         },
         loadComponent: () =>
           import('./features/finance/journal-entries/journal-entries.page').then((module) => module.JournalEntriesPage),
       },
       {
         path: 'finance/banks',
-        canActivate: [roleGuard],
+        canActivate: [roleGuard, menuAccessGuard],
         data: {
-          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER', 'AUDITOR'],
+          menuId: 'banks',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
         },
         loadComponent: () =>
           import('./features/finance/banks/banks.page').then((module) => module.BanksPage),
       },
       {
         path: 'finance/tax-currency',
-        canActivate: [roleGuard],
+        canActivate: [roleGuard, menuAccessGuard],
         data: {
-          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER', 'AUDITOR'],
+          menuId: 'tax-currency',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
         },
         loadComponent: () =>
           import('./features/finance/tax-currency/tax-currency.page').then((module) => module.TaxCurrencyPage),
       },
       {
         path: 'organization',
-        canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] },
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN'], menuId: 'organization' },
         loadComponent: () =>
           import('./features/organization/organization.page').then((module) => module.OrganizationPage),
       },
       {
         path: 'fiscal-periods',
-        canActivate: [roleGuard],
+        canActivate: [roleGuard, menuAccessGuard],
         data: {
-          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER', 'AUDITOR'],
+          menuId: 'fiscal-periods',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
         },
         loadComponent: () =>
           import('./features/fiscal-periods/fiscal-periods.page').then((module) => module.FiscalPeriodsPage),
       },
       {
         path: 'audit-logs',
-        canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] },
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN'], menuId: 'audit-logs' },
         loadComponent: () =>
           import('./features/audit-logs/audit-logs.page').then((module) => module.AuditLogsPage),
       },
       {
         path: 'reports/:id',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'reports' },
         loadComponent: () =>
           import('./features/reports/report-review.page').then((module) => module.ReportReviewPage),
       },
       {
         path: 'settings',
+        canActivate: [menuAccessGuard],
         canDeactivate: [unsavedChangesGuard],
+        data: { menuId: 'settings' },
         loadComponent: () =>
           import('./features/settings/settings.page').then((module) => module.SettingsPage),
       },
       {
         path: 'users',
-        canActivate: [roleGuard],
-        data: { roles: ['ADMIN'] },
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN'], menuId: 'users' },
         loadComponent: () =>
           import('./features/users/users.page').then((module) => module.UsersPage),
       },
@@ -192,7 +206,7 @@ export const routes: Routes = [
         path: 'workforce',
         canActivate: [roleGuard],
         data: {
-          roles: ['WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE', 'HR_MANAGER', 'HR_REVIEWER'],
+          roles: [...WORKFORCE_BASE_ROLES],
         },
         loadChildren: () =>
           import('./features/workforce/workforce.routes').then((module) => module.WORKFORCE_ROUTES),

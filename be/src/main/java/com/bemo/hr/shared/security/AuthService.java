@@ -277,6 +277,7 @@ public class AuthService {
                 new AuthApi.TenantInfo(app.getId(), app.getCode(), app.getName()),
                 user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
                 user.getRoles().stream().map(role -> role.getCode().name()).sorted().collect(Collectors.toUnmodifiableSet()),
+                user.getAllowedMenus(), menuAccessMode(user),
                 user.isCanViewSalary(), user.getCategoryId(),
                 dashboardLayoutAllowed(user, app), user.isActive(),
                 new AuthApi.SessionInfo(sessionExpiresAt, app.getSessionTimeoutMinutes(), app.isSessionTimeoutEnabled()),
@@ -582,8 +583,12 @@ public class AuthService {
         var activeFeatures = tenantFeatureService.getAllEnabled(user.getAppId());
         return new AuthApi.UserResponse(user.getId(), user.getUsername(), user.getDisplayName(),
                 user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
-                user.getAllowedMenus(), user.isCanViewSalary(), user.getCategoryId(),
+                user.getAllowedMenus(), menuAccessMode(user), user.isCanViewSalary(), user.getCategoryId(),
                 user.isDashboardCustomizationEnabled(), user.isActive(), user.getVersion(), activeFeatures);
+    }
+
+    private String menuAccessMode(AppUser user) {
+        return user.isMenuAccessAll() ? "ALL" : "SELECTED";
     }
 
     private boolean hasRole(AppUser user, RoleCode roleCode) {

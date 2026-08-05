@@ -225,8 +225,9 @@ export class AuthService {
     if (!activeFeatures.includes('workforce.contractorAccounts.enabled') && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements')) return false;
 
     if (user.roles.includes('SUPER_ADMIN') || user.roles.includes('ADMIN')) return true;
-    if (!user.allowedMenus || user.allowedMenus.length === 0) return true;
-    return user.allowedMenus.includes(menuId);
+    if (user.menuAccessMode === 'ALL') return true;
+    // SELECTED mode (and legacy sessions without the field): fail closed on empty/missing menus.
+    return user.allowedMenus?.includes(menuId) ?? false;
   }
 
   private clearSession(): void {

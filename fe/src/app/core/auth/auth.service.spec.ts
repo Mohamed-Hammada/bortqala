@@ -2,11 +2,33 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { AuthService } from './auth.service';
-import { LoginResponse } from './auth.models';
+import { LoginResponse, MenuAccessMode } from './auth.models';
 import { ThemeService } from '../theme.service';
 import { I18nService } from '../i18n.service';
 
 const STORAGE_KEY = 'bemo-erp-session';
+
+function userSession(mode: MenuAccessMode, allowedMenus: string[] | undefined): string {
+  const session: LoginResponse = {
+    accessToken: 'stored-token',
+    tokenType: 'Bearer',
+    expiresAt: Date.now() + 60_000,
+    mustChangePassword: false,
+    app: { id: 'app1', code: 'TEST', name: 'Test App' },
+    user: {
+      id: 'user2',
+      username: 'viewer',
+      displayName: 'Viewer',
+      roles: ['VIEWER'],
+      allowedMenus,
+      menuAccessMode: mode,
+      active: true,
+      version: 1,
+    },
+    preferences: {} as LoginResponse['preferences'],
+  };
+  return JSON.stringify(session);
+}
 
 function storedSession(expiresAt = Date.now() + 60_000, mustChangePassword = false): string {
   const session: LoginResponse = {
@@ -99,6 +121,41 @@ describe('AuthService', () => {
   it('hasMenuAccess uses activeFeatures', () => {
     const service = TestBed.inject(AuthService);
     expect(service.hasMenuAccess('payroll')).toBe(false);
+  });
+
+  it('hasMenuAccess fails closed for SELECTED users with empty allowedMenus', () => {
+    localStorage.setItem(STORAGE_KEY, userSession('SELECTED', []));
+    const service = TestBed.inject(AuthService);
+    expect(service.hasMenuAccess('reports')).toBe(false);
+    expect(service.hasMenuAccess('employees')).toBe(false);
+  });
+
+  it('hasMenuAccess grants SELECTED users only their allowed menus', () => {
+    localStorage.setItem(STORAGE_KEY, userSession('SELECTED', ['reports', 'employees']));
+    const service = TestBed.inject(AuthService);
+    expect(service.hasMenuAccess('reports')).toBe(true);
+    expect(service.hasMenuAccess('employees')).toBe(true);
+    expect(service.hasMenuAccess('parties')).toBe(false);
+  });
+
+  it('hasMenuAccess grants ALL-mode users every menu even with empty allowedMenus', () => {
+    localStorage.setItem(STORAGE_KEY, userSession('ALL', []));
+    const service = TestBed.inject(AuthService);
+    expect(service.hasMenuAccess('reports')).toBe(true);
+    expect(service.hasMenuAccess('employees')).toBe(true);
+  });
+
+  it('hasMenuAccess treats missing allowedMenus as no access for non-admin users', () => {
+    localStorage.setItem(STORAGE_KEY, userSession('SELECTED', undefined));
+    const service = TestBed.inject(AuthService);
+    expect(service.hasMenuAccess('reports')).toBe(false);
+  });
+
+  it('hasMenuAccess still honors feature toggles before the mode check', () => {
+    localStorage.setItem(STORAGE_KEY, userSession('SELECTED', ['payroll']));
+    const service = TestBed.inject(AuthService);
+    expect(service.hasMenuAccess('payroll')).toBe(false);
+    expect(service.hasMenuAccess('reports')).toBe(false);
   });
 
   it('tryRefresh resolves false without a stored session and skips the refresh call', async () => {

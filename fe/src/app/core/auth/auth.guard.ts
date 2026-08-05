@@ -44,3 +44,11 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const roles = (route.data['roles'] as RoleCode[] | undefined) ?? [];
   return roleGuardDecision(authService.hasAnyRole(roles), inject(Router));
 };
+
+export const menuAccessGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
+  const authService = inject(AuthService);
+  const menuId = route.data['menuId'] as string | undefined;
+  const router = inject(Router);
+  if (!menuId) return roleGuardDecision(false, router);
+  return roleGuardDecision(authService.hasMenuAccess(menuId), router);
+};

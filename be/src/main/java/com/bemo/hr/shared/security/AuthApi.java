@@ -27,12 +27,13 @@ public final class AuthApi {
     public record ChangePasswordRequest(@NotBlank @Size(max = 72) String currentPassword,
                                         @NotBlank @Size(max = 72) String newPassword) { }
     public record UserResponse(String id, String username, String displayName, Set<RoleCode> roles,
-                               Set<String> allowedMenus, boolean canViewSalary, String categoryId,
+                               Set<String> allowedMenus, String menuAccessMode, boolean canViewSalary, String categoryId,
                                boolean dashboardCustomizationEnabled, boolean active, long version, Set<String> activeFeatures) { }
     public record TenantInfo(String id, String code, String name) { }
     public record SessionInfo(Instant expiresAt, int timeoutMinutes, boolean timeoutEnabled) { }
     public record MeResponse(String id, String username, String displayName,
                              TenantInfo tenant, Set<RoleCode> roles, Set<String> scopes,
+                             Set<String> allowedMenus, String menuAccessMode,
                              boolean canViewSalary, String categoryId,
                              boolean dashboardCustomizationEnabled, boolean active,
                              SessionInfo session, long version) { }

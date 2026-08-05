@@ -59,3 +59,7 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260804_v96_error_fallbacks_i18n.yaml
   - include:
       file: db/changelog/data/insert/20260804_v97_demo_no_login_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260805_v98_qa_remediation_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v99_employee_deactivation_translations.yaml

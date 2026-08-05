@@ -39,7 +39,7 @@ export interface WorkspaceSection {
   items: NavItem[];
 }
 
-const FINANCE_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER', 'AUDITOR'];
+const FINANCE_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'];
 const PROCUREMENT_ROLES: RoleCode[] = [
   'PROCUREMENT_MANAGER',
   'PROCUREMENT_USER',
@@ -47,20 +47,19 @@ const PROCUREMENT_ROLES: RoleCode[] = [
   'FINANCE_MANAGER',
   'ACCOUNTANT',
   'TREASURY_USER',
-  'HR_MANAGER',
   'AUDITOR',
 ];
-const SALES_ROLES: RoleCode[] = ['SALES_MANAGER', 'HR_MANAGER'];
-const PRODUCTION_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER', 'HR_MANAGER'];
-const QUALITY_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER', 'QUALITY_MANAGER', 'HR_MANAGER'];
+const SALES_ROLES: RoleCode[] = ['SALES_MANAGER'];
+const PRODUCTION_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER'];
+const QUALITY_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER', 'QUALITY_MANAGER'];
 const PAYROLL_ROLES: RoleCode[] = ['PAYROLL_MANAGER', 'HR_MANAGER', 'HR_REVIEWER'];
-const WORKFORCE_ROLES: RoleCode[] = [
+const WORKFORCE_BASE_ROLES: RoleCode[] = [
   'WORKFORCE_MANAGER',
   'WORKFORCE_REVIEWER',
   'WORKFORCE_FINANCE',
-  'HR_MANAGER',
-  'HR_REVIEWER',
 ];
+const WORKFORCE_IMPORT_ROLES: RoleCode[] = ['WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER'];
+const WORKFORCE_ACCOUNT_ROLES: RoleCode[] = ['WORKFORCE_MANAGER', 'WORKFORCE_FINANCE'];
 
 const COLLAPSED_GROUPS_KEY = 'hr-collapsed-groups';
 
@@ -145,7 +144,7 @@ export class AppShellComponent {
       path: '/workforce/dashboard',
       icon: 'dashboard',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-contractors',
@@ -154,7 +153,7 @@ export class AppShellComponent {
       path: '/workforce/contractors',
       icon: 'users',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-workers',
@@ -163,7 +162,7 @@ export class AppShellComponent {
       path: '/workforce/workers',
       icon: 'employees',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-categories',
@@ -172,7 +171,7 @@ export class AppShellComponent {
       path: '/workforce/categories',
       icon: 'categories',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-requests',
@@ -181,7 +180,7 @@ export class AppShellComponent {
       path: '/workforce/labor-requests',
       icon: 'imports',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-attendance',
@@ -190,7 +189,7 @@ export class AppShellComponent {
       path: '/workforce/attendance',
       icon: 'reports',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-settlements',
@@ -199,7 +198,7 @@ export class AppShellComponent {
       path: '/workforce/settlement-periods',
       icon: 'dashboard',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-advances',
@@ -208,7 +207,7 @@ export class AppShellComponent {
       path: '/workforce/advances',
       icon: 'categories',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-accounts',
@@ -217,7 +216,7 @@ export class AppShellComponent {
       path: '/workforce/contractor-accounts',
       icon: 'users',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_ACCOUNT_ROLES,
     },
     {
       menuId: 'workforce-reports',
@@ -226,7 +225,7 @@ export class AppShellComponent {
       path: '/workforce/reports-import',
       icon: 'reports',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_IMPORT_ROLES,
     },
     {
       menuId: 'operations',
@@ -235,7 +234,7 @@ export class AppShellComponent {
       path: '/operations',
       icon: 'categories',
       workspace: 'workspace.operations',
-      roles: ['ADMIN', 'HR_MANAGER'],
+      roles: ['ADMIN'],
     },
     {
       menuId: 'procurement',

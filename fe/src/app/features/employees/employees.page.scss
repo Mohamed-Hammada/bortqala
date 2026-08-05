@@ -47,15 +47,21 @@ code {
   gap: 4px;
 }
 .row-actions button {
-  width: 34px;
   height: 34px;
   border: 0;
   border-radius: 8px;
   background: var(--surface-muted);
   cursor: pointer;
+  padding: 0 10px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
 }
 .row-actions .danger-link {
   color: var(--danger);
+}
+.row-actions .success-link {
+  color: var(--success, #16a34a);
 }
 .active-check {
   display: flex;

@@ -19,6 +19,7 @@ import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { AuthService } from '../../core/auth/auth.service';
+import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -42,8 +43,8 @@ export class EmployeesPage {
   readonly store = inject(EmployeesStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
+  private readonly confirm = inject(ConfirmDialogService);
   private readonly router = inject(Router);
-  readonly confirmAction = signal<{ message: string; onConfirm: () => void } | null>(null);
   readonly drawerOpen = signal(false);
   readonly submitAttempted = signal(false);
   readonly pagination = new TablePagination();
@@ -168,15 +169,58 @@ export class EmployeesPage {
   }
 
   deactivate(item: Employee) {
-    this.confirmAction.set({
-      message: this.i18n.t('employees.deactivateConfirm', { name: item.fullName }),
-      onConfirm: () => {
-        this.confirmAction.set(null);
-        this.store.deactivate(item.id).then(() => {
-          this.notification.info(this.i18n.t('common.save') + ' ✓');
-        });
+    void this.confirm.confirmAndRun(
+      {
+        titleKey: 'employees.deactivateTitle',
+        messageKey: 'employees.deactivateConfirm',
+        params: { name: item.fullName },
+        confirmKey: 'employees.deactivate',
+        danger: true,
+        dangerMessageKey: 'employees.deactivateDanger',
+        details: [
+          { label: this.i18n.t('employees.employeeCode'), value: item.employeeCode },
+          { label: this.i18n.t('employees.category'), value: item.categoryName },
+        ],
       },
-    });
+      async () => {
+        await this.store.deactivate(item.id);
+        this.notification.success(this.i18n.t('employees.deactivateSuccess') + ' ✓');
+      },
+    );
+  }
+
+  reactivate(item: Employee) {
+    void this.confirm.confirmAndRun(
+      {
+        titleKey: 'employees.reactivateTitle',
+        messageKey: 'employees.reactivateConfirm',
+        params: { name: item.fullName },
+        confirmKey: 'employees.reactivate',
+        details: [
+          { label: this.i18n.t('employees.employeeCode'), value: item.employeeCode },
+          { label: this.i18n.t('employees.category'), value: item.categoryName },
+        ],
+      },
+      async () => {
+        await this.store.reactivate(item.id, this.payloadFrom(item));
+        this.notification.success(this.i18n.t('employees.reactivateSuccess') + ' ✓');
+      },
+    );
+  }
+
+  private payloadFrom(item: Employee): EmployeePayload {
+    return {
+      employeeCode: item.employeeCode,
+      fullName: item.fullName,
+      deviceUserId: item.deviceUserId,
+      categoryId: item.categoryId,
+      employmentType: item.employmentType,
+      baseSalary: item.baseSalary ?? 0,
+      activeFrom: item.activeFrom,
+      activeTo: item.activeTo,
+      active: true,
+      version: item.version,
+    };
   }
 
   closeDrawer(): void {
