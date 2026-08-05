@@ -1,21 +1,45 @@
 import { inject } from '@angular/core';
-import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivateFn, Router, UrlTree } from '@angular/router';
 import { RoleCode } from './auth.models';
 import { AuthService } from './auth.service';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
-  if (authService.authenticated()) return true;
   const router = inject(Router);
-  if (authService.token()) {
-    authService.expireSession();
-    return router.createUrlTree(['/login'], { queryParams: { reason: 'session-expired' } });
+  if (!authService.authenticated()) {
+    if (authService.sessionRestorable()) {
+      const refreshed = await authService.tryRefresh();
+      if (refreshed && authService.authenticated()) {
+        if (authService.mustChangePassword()) {
+          return router.createUrlTree(['/change-password']);
+        }
+        return true;
+      }
+      authService.expireSession();
+      return router.createUrlTree(['/login'], { queryParams: { reason: 'session-expired' } });
+    }
+    return router.createUrlTree(['/login']);
   }
-  return router.createUrlTree(['/login']);
+  if (authService.mustChangePassword()) {
+    return router.createUrlTree(['/change-password']);
+  }
+  return true;
 };
+
+export const mustChangePasswordGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+  if (!authService.authenticated()) return router.createUrlTree(['/login']);
+  if (authService.mustChangePassword()) return true;
+  return router.createUrlTree(['/dashboard']);
+};
+
+export function roleGuardDecision(allowed: boolean, router: Router): boolean | UrlTree {
+  return allowed ? true : router.createUrlTree(['/forbidden']);
+}
 
 export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const authService = inject(AuthService);
   const roles = (route.data['roles'] as RoleCode[] | undefined) ?? [];
-  return authService.hasAnyRole(roles) ? true : inject(Router).createUrlTree(['/dashboard']);
+  return roleGuardDecision(authService.hasAnyRole(roles), inject(Router));
 };

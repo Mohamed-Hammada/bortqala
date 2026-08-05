@@ -1,0 +1,35 @@
+id;translation_key;locale;text_value
+v88-ar-001;EXCEL_READ_FAILED;ar-EG;تعذر قراءة ملف البصمة.
+v88-en-001;EXCEL_READ_FAILED;en-US;Could not read the fingerprint file.
+v88-ar-002;EXCEL_VALIDATION_FAILED;ar-EG;تعذر قراءة ملف البصمة أثناء التحقق.
+v88-en-002;EXCEL_VALIDATION_FAILED;en-US;Could not read the import file during validation.
+v88-ar-003;EXCEL_FILE_TOO_LARGE;ar-EG;حجم الملف يتجاوز الحد الأقصى المسموح به.
+v88-en-003;EXCEL_FILE_TOO_LARGE;en-US;The file exceeds the maximum allowed size.
+v88-ar-004;EXCEL_TOO_MANY_ROWS;ar-EG;عدد صفوف الملف يتجاوز الحد الأقصى المسموح به.
+v88-en-004;EXCEL_TOO_MANY_ROWS;en-US;The file exceeds the maximum allowed number of rows.
+v88-ar-005;WORKFORCE_DUPLICATE_WORKER_CODE;ar-EG;توجد أكثر من عامل بنفس الكود بعد توحيد حالة الأحرف.
+v88-en-005;WORKFORCE_DUPLICATE_WORKER_CODE;en-US;Multiple workers share the same normalized code.
+v88-ar-006;WORKFORCE_IMPORT_EMPTY_FILE;ar-EG;اختر ملف Excel غير فارغ.
+v88-en-006;WORKFORCE_IMPORT_EMPTY_FILE;en-US;Choose a non-empty Excel file.
+v88-ar-007;WORKFORCE_IMPORT_UNSUPPORTED_FORMAT;ar-EG;صيغة الملف المدعومة هي XLSX فقط.
+v88-en-007;WORKFORCE_IMPORT_UNSUPPORTED_FORMAT;en-US;Only XLSX file format is supported.
+v88-ar-008;WORKFORCE_IMPORT_NO_SHEETS;ar-EG;ملف Excel لا يحتوي على أوراق.
+v88-en-008;WORKFORCE_IMPORT_NO_SHEETS;en-US;The Excel file contains no sheets.
+v88-ar-009;WORKFORCE_IMPORT_NO_HEADER_ROW;ar-EG;صف العناوين غير موجود.
+v88-en-009;WORKFORCE_IMPORT_NO_HEADER_ROW;en-US;The header row is missing.
+v88-ar-010;WORKFORCE_IMPORT_NOT_FOUND;ar-EG;عملية الاستيراد غير موجودة.
+v88-en-010;WORKFORCE_IMPORT_NOT_FOUND;en-US;Import operation not found.
+v88-ar-011;WORKFORCE_IMPORT_MAPPING_NOT_SAVED;ar-EG;يجب حفظ مطابقة الأعمدة قبل التحقق، ولا يمكن إعادة كتابة نتيجة تحقق محفوظة.
+v88-en-011;WORKFORCE_IMPORT_MAPPING_NOT_SAVED;en-US;"Save the column mapping before validating; a saved validation result cannot be rewritten."
+v88-ar-012;WORKFORCE_IMPORT_MAPPING_LOCKED;ar-EG;لا يمكن تعديل المطابقة بعد التحقق أو التنفيذ.
+v88-en-012;WORKFORCE_IMPORT_MAPPING_LOCKED;en-US;Mapping cannot be edited after validation or import.
+v88-ar-013;WORKFORCE_IMPORT_OPERATION_ID_REQUIRED;ar-EG;معرّف العملية مطلوب لمنع تكرار الاستيراد.
+v88-en-013;WORKFORCE_IMPORT_OPERATION_ID_REQUIRED;en-US;An operation id is required to prevent duplicate imports.
+v88-ar-014;WORKFORCE_IMPORT_ALREADY_EXECUTED;ar-EG;تم تنفيذ هذا الاستيراد بالفعل بمعرّف عملية مختلف.
+v88-en-014;WORKFORCE_IMPORT_ALREADY_EXECUTED;en-US;This import was already executed with a different operation id.
+v88-ar-015;WORKFORCE_IMPORT_NOT_READY;ar-EG;الملف غير جاهز للتنفيذ.
+v88-en-015;WORKFORCE_IMPORT_NOT_READY;en-US;The file is not ready to import.
+v88-ar-016;WORKFORCE_IMPORT_REVERSE_NOT_EXECUTED;ar-EG;يمكن التراجع عن عملية منفذة فقط.
+v88-en-016;WORKFORCE_IMPORT_REVERSE_NOT_EXECUTED;en-US;Only an executed import can be reversed.
+v88-ar-017;WORKFORCE_IMPORT_ERRORS_EXPORT_FAILED;ar-EG;تعذر إنشاء ملف أخطاء الاستيراد.
+v88-en-017;WORKFORCE_IMPORT_ERRORS_EXPORT_FAILED;en-US;Could not generate the import errors file.

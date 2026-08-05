@@ -6,8 +6,8 @@ echo ========================================================
 echo.
 
 if not exist ".env" (
-    echo [.env] file not found. Copying .env.example to .env ...
-    copy .env.example .env
+    echo [.env] file not found. Copying .env.development.example to .env ...
+    copy .env.development.example .env
 )
 
 echo Building and starting Docker containers (PostgreSQL, Backend, Frontend)...

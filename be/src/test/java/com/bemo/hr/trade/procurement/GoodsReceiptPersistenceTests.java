@@ -61,7 +61,7 @@ class GoodsReceiptPersistenceTests {
 
         SavedLine saved = transactionTemplate.execute(status -> {
             GoodsReceipt receipt = goodsReceiptRepository.findById(receiptId).orElseThrow();
-            GoodsReceiptLine line = receipt.getLines().getFirst();
+            GoodsReceiptLine line = receipt.getLines().get(0);
             return new SavedLine(receipt.getLines().size(), line.getGoodsReceiptId(), line.getQuantity());
         });
 

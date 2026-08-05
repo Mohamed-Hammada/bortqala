@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -83,6 +84,10 @@ public class PurchaseOrder {
     @Column(name = "updated_at", nullable = false)
     private long updatedAt;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
+
     protected PurchaseOrder() {}
 
     public PurchaseOrder(String poNumber, LocalDate poDate, String supplierId, String purchaseRequestId, String paymentTerms, BigDecimal totalAmount) {
@@ -156,4 +161,5 @@ public class PurchaseOrder {
     public BigDecimal getTotalAmount() { return totalAmount; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
+    public long getVersion() { return version; }
 }

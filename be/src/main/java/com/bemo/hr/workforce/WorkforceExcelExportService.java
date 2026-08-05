@@ -402,7 +402,7 @@ public class WorkforceExcelExportService {
 
     private void createCell(Row row, int col, String val, CellStyle style) {
         Cell cell = row.createCell(col);
-        cell.setCellValue(val);
+        cell.setCellValue(com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(val));
         cell.setCellStyle(style);
     }
 

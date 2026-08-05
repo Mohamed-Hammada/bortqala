@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../../core/auth/auth.service';
+import { apiErrorDetail } from '../../../../core/api-error';
 import { WorkforceService } from '../../data-access/workforce.service';
 
 @Component({
@@ -182,7 +183,7 @@ export class WorkforceDashboardComponent implements OnInit {
       advances: this.workforceService.loadAdvances(),
     }).subscribe({
       next: () => this.loading.set(false),
-      error: (error) => { this.loadError.set('تعذّر تحميل البيانات: ' + (error?.error?.detail ?? error?.message ?? 'خطأ غير متوقع')); this.loading.set(false); },
+      error: (error) => { this.loadError.set('تعذّر تحميل البيانات: ' + (apiErrorDetail(error, error?.message ?? 'خطأ غير متوقع'))); this.loading.set(false); },
     });
   }
 

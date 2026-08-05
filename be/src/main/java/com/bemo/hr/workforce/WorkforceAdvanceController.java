@@ -22,14 +22,17 @@ public class WorkforceAdvanceController {
     private final WorkforceAdvanceService advanceService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
     public List<WorkforceApi.AdvanceResponse> list() {
         return advanceService.list();
     }
 
     @GetMapping("/policies")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
     public List<WorkforceApi.AdvancePolicyResponse> policies() { return advanceService.listPolicies(); }
 
     @GetMapping("/policies/effective")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
     public WorkforceApi.AdvancePolicyResponse effectivePolicy(
             @org.springframework.web.bind.annotation.RequestParam(required = false) String recipientType,
             @org.springframework.web.bind.annotation.RequestParam(required = false) String workerId,
@@ -39,13 +42,13 @@ public class WorkforceAdvanceController {
     }
 
     @PutMapping("/policies")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
     public WorkforceApi.AdvancePolicyResponse savePolicy(@Valid @RequestBody WorkforceApi.AdvancePolicyRequest request, Authentication auth) {
         return advanceService.savePolicy(request, auth != null ? auth.getName() : "system");
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     public WorkforceApi.AdvanceResponse create(@Valid @RequestBody WorkforceApi.AdvanceCreateRequest request, Authentication auth) {
         String username = auth != null ? auth.getName() : "system";
@@ -53,21 +56,21 @@ public class WorkforceAdvanceController {
     }
 
     @PostMapping("/{id}/pause")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
     public WorkforceApi.AdvanceResponse pause(@org.springframework.web.bind.annotation.PathVariable String id, Authentication auth) {
         String username = auth != null ? auth.getName() : "system";
         return advanceService.pause(id, username);
     }
 
     @PostMapping("/{id}/resume")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
     public WorkforceApi.AdvanceResponse resume(@org.springframework.web.bind.annotation.PathVariable String id, Authentication auth) {
         String username = auth != null ? auth.getName() : "system";
         return advanceService.resume(id, username);
     }
 
     @PostMapping("/{id}/repay")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_FINANCE')")
     public WorkforceApi.AdvanceResponse repay(@org.springframework.web.bind.annotation.PathVariable String id, @Valid @RequestBody WorkforceApi.AdvanceRepayRequest request, Authentication auth) {
         String username = auth != null ? auth.getName() : "system";
         return advanceService.repay(id, request, username);

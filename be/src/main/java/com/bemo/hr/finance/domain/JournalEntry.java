@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -50,6 +51,27 @@ public class JournalEntry {
     @Column(name = "fiscal_period_id", length = 36)
     private String fiscalPeriodId;
 
+    @Column(length = 10)
+    private String currency;
+
+    @Column(name = "reversal_entry_id", length = 36)
+    private String reversalEntryId;
+
+    @Column(name = "reversed_entry_id", length = 36)
+    private String reversedEntryId;
+
+    @Column(name = "reversal_reason", length = 500)
+    private String reversalReason;
+
+    @Column(name = "reversed_by", length = 100)
+    private String reversedBy;
+
+    @Column(name = "reversed_at")
+    private Long reversedAt;
+
+    @Column(name = "operation_id", length = 80)
+    private String operationId;
+
     @Column(name = "posted_by", length = 100)
     private String postedBy;
 
@@ -61,6 +83,10 @@ public class JournalEntry {
 
     @Column(name = "updated_at", nullable = false)
     private long updatedAt;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
 
     protected JournalEntry() {}
 
@@ -75,13 +101,46 @@ public class JournalEntry {
     }
 
     public void post(String username) {
+        if (this.status != Status.DRAFT) {
+            throw new com.bemo.hr.shared.domain.BusinessRuleException(
+                    "لا يمكن ترحيل قيد في حالة " + this.status + ". الترحيل مسموح فقط من حالة مسودة.",
+                    "JOURNAL_STATE_INVALID", org.springframework.http.HttpStatus.CONFLICT);
+        }
         this.status = Status.POSTED;
         this.postedBy = username;
         this.postedAt = System.currentTimeMillis();
     }
 
-    public void reverse() {
+    public void setOperationId(String operationId) {
+        this.operationId = operationId;
+    }
+
+    public void attachFiscalPeriod(String fiscalPeriodId) {
+        this.fiscalPeriodId = fiscalPeriodId;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public void markReversed(String reversalEntryId, String reversalReason, String reversedBy, String operationId) {
+        if (this.status != Status.POSTED) {
+            throw new com.bemo.hr.shared.domain.BusinessRuleException(
+                    "لا يمكن عكس قيد في حالة " + this.status + ". العكس مسموح فقط للقيد المُرحَّل.",
+                    "JOURNAL_STATE_INVALID", org.springframework.http.HttpStatus.CONFLICT);
+        }
         this.status = Status.REVERSED;
+        this.reversalEntryId = reversalEntryId;
+        this.reversalReason = reversalReason;
+        this.reversedBy = reversedBy;
+        this.reversedAt = System.currentTimeMillis();
+        this.operationId = operationId;
+    }
+
+    public void linkReversalOf(String reversedEntryId, String operationId) {
+        this.reversedEntryId = reversedEntryId;
+        this.operationId = operationId;
+        this.status = Status.POSTED;
     }
 
     @PrePersist
@@ -91,14 +150,23 @@ public class JournalEntry {
     void preUpdate() { updatedAt = System.currentTimeMillis(); }
 
     public String getId() { return id; }
+    public String getAppId() { return appId; }
     public String getEntryNumber() { return entryNumber; }
     public LocalDate getEntryDate() { return entryDate; }
     public String getDescription() { return description; }
     public String getReference() { return reference; }
     public Status getStatus() { return status; }
     public String getFiscalPeriodId() { return fiscalPeriodId; }
+    public String getCurrency() { return currency; }
+    public String getReversalEntryId() { return reversalEntryId; }
+    public String getReversedEntryId() { return reversedEntryId; }
+    public String getReversalReason() { return reversalReason; }
+    public String getReversedBy() { return reversedBy; }
+    public Long getReversedAt() { return reversedAt; }
+    public String getOperationId() { return operationId; }
     public String getPostedBy() { return postedBy; }
     public Long getPostedAt() { return postedAt; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
+    public long getVersion() { return version; }
 }

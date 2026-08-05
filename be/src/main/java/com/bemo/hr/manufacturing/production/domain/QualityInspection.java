@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -59,6 +60,10 @@ public class QualityInspection {
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
+
     protected QualityInspection() {}
 
     public QualityInspection(String inspectionNumber, LocalDate inspectionDate, String sourceType, BigDecimal passedQuantity, BigDecimal failedQuantity, Status status, String inspectorName, String notes) {
@@ -87,4 +92,5 @@ public class QualityInspection {
     public String getInspectorName() { return inspectorName; }
     public String getNotes() { return notes; }
     public long getCreatedAt() { return createdAt; }
+    public long getVersion() { return version; }
 }

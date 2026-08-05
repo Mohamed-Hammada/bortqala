@@ -1,0 +1,73 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260802-v83-finance-journal-locking
+      author: Mohamed-Hammada
+      comment: Adds reversal linkage, currency, operation-id and optimistic-lock version columns to journal_entries; adds the version column to fiscal_periods and to the other mutable financial aggregates so concurrent edits are detected with 409 conflicts.
+      changes:
+        - addColumn:
+            tableName: journal_entries
+            columns:
+              - column:
+                  name: currency
+                  type: VARCHAR(10)
+              - column:
+                  name: reversal_entry_id
+                  type: VARCHAR(36)
+              - column:
+                  name: reversed_entry_id
+                  type: VARCHAR(36)
+              - column:
+                  name: reversal_reason
+                  type: VARCHAR(500)
+              - column:
+                  name: reversed_by
+                  type: VARCHAR(100)
+              - column:
+                  name: reversed_at
+                  type: BIGINT
+              - column:
+                  name: operation_id
+                  type: VARCHAR(80)
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: fiscal_periods
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: journal_entries
+            columnName: currency
+        - dropColumn:
+            tableName: journal_entries
+            columnName: reversal_entry_id
+        - dropColumn:
+            tableName: journal_entries
+            columnName: reversed_entry_id
+        - dropColumn:
+            tableName: journal_entries
+            columnName: reversal_reason
+        - dropColumn:
+            tableName: journal_entries
+            columnName: reversed_by
+        - dropColumn:
+            tableName: journal_entries
+            columnName: reversed_at
+        - dropColumn:
+            tableName: journal_entries
+            columnName: operation_id
+        - dropColumn:
+            tableName: journal_entries
+            columnName: version
+        - dropColumn:
+            tableName: fiscal_periods
+            columnName: version

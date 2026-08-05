@@ -90,9 +90,9 @@ public class ProcurementExcelExporter {
     }
     private void row(org.apache.poi.ss.usermodel.Sheet sheet, int rowIndex, CellStyle style, String[] values) {
         var row = sheet.createRow(rowIndex);
-        for (int i = 0; i < values.length; i++) { var cell = row.createCell(i); cell.setCellValue(values[i]); cell.setCellStyle(style); }
+        for (int i = 0; i < values.length; i++) { var cell = row.createCell(i); cell.setCellValue(com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(values[i])); cell.setCellStyle(style); }
     }
-    private void text(org.apache.poi.ss.usermodel.Row row, int column, String value) { row.createCell(column).setCellValue(value == null ? "" : value); }
+    private void text(org.apache.poi.ss.usermodel.Row row, int column, String value) { row.createCell(column).setCellValue(com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(value == null ? "" : value)); }
     private void number(org.apache.poi.ss.usermodel.Row row, int column, java.math.BigDecimal value) { if (value == null) text(row, column, ""); else row.createCell(column).setCellValue(value.doubleValue()); }
     private void date(org.apache.poi.ss.usermodel.Row row, int column, long epochMs) { row.createCell(column).setCellValue(java.util.Date.from(Instant.ofEpochMilli(epochMs))); }
     private void finish(org.apache.poi.ss.usermodel.Sheet sheet, int columns) { sheet.createFreezePane(0, 3); sheet.setAutoFilter(new org.apache.poi.ss.util.CellRangeAddress(2, Math.max(2, sheet.getLastRowNum()), 0, columns - 1)); for (int i = 0; i < columns; i++) sheet.autoSizeColumn(i); }

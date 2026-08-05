@@ -73,6 +73,6 @@ public class WorkforceMasterDataExcelExporter {
     private void write(Row row, int column, Object value) {
         var cell = row.createCell(column);
         if (value instanceof Number number) cell.setCellValue(number.doubleValue());
-        else cell.setCellValue(value == null ? "" : value.toString());
+        else cell.setCellValue(com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(value == null ? "" : value.toString()));
     }
 }

@@ -75,8 +75,8 @@ The repository contains `be/` (Spring Boot 4.1 backend with bundled Angular UI),
 ## 🛠️ Local Development & Quick Start
 
 ### Prerequisites
-- Java 26
-- Node 24.18+ / npm 11+
+- Java 21
+- Node 22.18+ / npm 11+
 - PostgreSQL 18.4 (`jdbc:postgresql://localhost:5432/bemo_erp`, user `root`, password `root`)
 
 ### Run Backend & Frontend
@@ -131,14 +131,21 @@ The application includes full multi-container Docker support with **PostgreSQL 1
 ### 2. Manual Docker Compose Execution
 
 ```bash
-# 1. Copy environment template
-cp .env.example .env
+# 1. Copy the development environment template
+cp .env.development.example .env
 
 # 2. Build and start containers in background
 docker compose up --build -d
 
 # 3. View container logs
 docker compose logs -f
+```
+
+For production, copy `.env.production.example` to `.env`, replace every
+`CHANGE_ME` placeholder with a real secret, and start the overlay:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
 ### 3. Service Access & Endpoints

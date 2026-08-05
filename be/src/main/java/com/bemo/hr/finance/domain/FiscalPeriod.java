@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -20,6 +21,7 @@ public class FiscalPeriod {
 
     public enum Status {
         OPEN,
+        SOFT_CLOSED,
         CLOSED,
         LOCKED
     }
@@ -62,6 +64,10 @@ public class FiscalPeriod {
     @Column(name = "updated_at", nullable = false)
     private long updatedAt;
 
+    @Version
+    @Column(nullable = false)
+    private long version;
+
     protected FiscalPeriod() {}
 
     public FiscalPeriod(int fiscalYear, int periodNumber, String periodName, LocalDate startDate, LocalDate endDate, Status status) {
@@ -75,6 +81,10 @@ public class FiscalPeriod {
     }
 
     public void updateStatus(Status newStatus, String username) {
+        if (this.status == Status.LOCKED && newStatus != Status.LOCKED) {
+            throw new com.bemo.hr.shared.domain.BusinessRuleException(
+                    "الفترة المالية مقفلة ولا يمكن تغيير حالتها إلا بإجراء إداري خاص.", "FISCAL_PERIOD_LOCKED", org.springframework.http.HttpStatus.CONFLICT);
+        }
         this.status = newStatus;
         if (newStatus == Status.CLOSED || newStatus == Status.LOCKED) {
             this.closedBy = username;
@@ -83,6 +93,14 @@ public class FiscalPeriod {
             this.closedBy = null;
             this.closedAt = null;
         }
+    }
+
+    public boolean allowsPosting() {
+        return this.status == Status.OPEN || this.status == Status.SOFT_CLOSED;
+    }
+
+    public boolean allowsStandardPosting() {
+        return this.status == Status.OPEN;
     }
 
     @PrePersist
@@ -102,4 +120,5 @@ public class FiscalPeriod {
     public Long getClosedAt() { return closedAt; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
+    public long getVersion() { return version; }
 }

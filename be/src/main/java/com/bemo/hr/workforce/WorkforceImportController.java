@@ -23,60 +23,67 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/workforce/imports")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
 public class WorkforceImportController {
     private final WorkforceExcelImportService workforceExcelImportService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
     public List<WorkforceExcelImportService.ImportBatchResponse> list() { return workforceExcelImportService.listBatches(); }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER')")
     public WorkforceExcelImportService.ImportBatchResponse upload(@RequestPart("file") MultipartFile file) {
         return workforceExcelImportService.upload(file);
     }
 
     @PostMapping("/{id}/mapping")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER')")
     public WorkforceExcelImportService.ImportBatchResponse map(@PathVariable String id,
             @RequestBody WorkforceExcelImportService.MappingRequest request) {
         return workforceExcelImportService.saveMapping(id, request);
     }
 
     @PostMapping("/{id}/validate")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER')")
     public WorkforceExcelImportService.ValidationResponse validate(@PathVariable String id) {
         return workforceExcelImportService.validate(id);
     }
 
     @GetMapping("/{id}/preview")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER')")
     public WorkforceExcelImportService.ValidationResponse preview(@PathVariable String id) {
         return workforceExcelImportService.preview(id);
     }
 
     @PostMapping("/{id}/commit")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
     public WorkforceExcelImportService.CommitResponse commit(@PathVariable String id,
             @RequestBody WorkforceExcelImportService.CommitRequest request) {
         return workforceExcelImportService.commit(id, request);
     }
 
     @PostMapping("/{id}/reverse")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public WorkforceExcelImportService.ImportBatchResponse reverse(@PathVariable String id) {
         return workforceExcelImportService.reverse(id);
     }
 
     @GetMapping("/{id}/original")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER')")
     public ResponseEntity<byte[]> original(@PathVariable String id) {
         WorkforceExcelImportService.ImportBatchResponse batch = workforceExcelImportService.getBatch(id);
         return attachment(workforceExcelImportService.originalFile(id), batch.fileName(), MediaType.APPLICATION_OCTET_STREAM);
     }
 
     @GetMapping("/{id}/errors.xlsx")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER')")
     public ResponseEntity<byte[]> errors(@PathVariable String id) {
         return attachment(workforceExcelImportService.errorWorkbook(id), "workforce-import-errors-" + id + ".xlsx",
                 MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
     }
 
     @PostMapping("/analyze")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER')")
     public WorkforceExcelImportService.ImportDiagnosticResult analyzeImport(
             @RequestParam(required = false) BigDecimal summaryDays,
             @RequestParam(required = false) BigDecimal settlementDays) {

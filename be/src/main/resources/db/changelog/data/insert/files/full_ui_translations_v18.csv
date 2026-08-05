@@ -995,7 +995,5 @@ x18-ar-498;imports.templateFormatRule2;ar-EG;صيغة التاريخ والوق�
 x18-en-498;imports.templateFormatRule2;en-US;Required date & time format: YYYY-MM-DD HH:mm:ss.
 x18-ar-499;imports.templateFormatRule3;ar-EG;كود البصمة يجب أن يطابق كود العامل المعرّف في النظام.
 x18-en-499;imports.templateFormatRule3;en-US;Punch code must match defined worker code in the system.
-x18-ar-500;common.edit;ar-EG;تعديل
-x18-en-500;common.edit;en-US;Edit
 
 

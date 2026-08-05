@@ -4,6 +4,7 @@ import com.bemo.hr.trade.sales.domain.SalesOrder;
 import com.bemo.hr.trade.sales.infrastructure.SalesOrderRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/trade/sales")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'HR_MANAGER')")
 public class SalesController {
 
     private final SalesOrderRepository salesOrderRepository;
@@ -30,7 +32,7 @@ public class SalesController {
 
     @PostMapping("/orders")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'HR_MANAGER')")
     public SalesApi.SalesOrderResponse createSalesOrder(@Valid @RequestBody SalesApi.SalesOrderPayload payload) {
         LocalDate soDate = Instant.ofEpochMilli(payload.soDate()).atZone(ZoneOffset.UTC).toLocalDate();
         SalesOrder so = new SalesOrder(payload.soNumber(), soDate, payload.customerId(), payload.quotationId(), payload.totalAmount());
@@ -39,10 +41,10 @@ public class SalesController {
 
     @PostMapping("/orders/{id}/confirm")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'HR_MANAGER')")
     public SalesApi.SalesOrderResponse confirmSalesOrder(@PathVariable String id) {
         SalesOrder so = salesOrderRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("أمر البيع غير موجود"));
+                .orElseThrow(() -> new BusinessRuleException("أمر البيع غير موجود", "SALE_ORDER_NOT_FOUND", HttpStatus.CONFLICT));
         so.updateStatus(SalesOrder.Status.CONFIRMED);
         return toResponse(salesOrderRepository.save(so));
     }

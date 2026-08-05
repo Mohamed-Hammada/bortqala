@@ -9,6 +9,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { isDevMode } from '@angular/core';
 import { provideServiceWorker } from '@angular/service-worker';
 import { authInterceptor } from './core/auth/auth.interceptor';
+import { AuthService } from './core/auth/auth.service';
 import { I18nService } from './core/i18n.service';
 import { SystemStatusService } from './core/system-status.service';
 
@@ -28,5 +29,6 @@ export const appConfig: ApplicationConfig = {
       const i18nService = inject(I18nService);
       return i18nService.use(i18nService.locale());
     }),
+    provideAppInitializer(() => inject(AuthService).tryRefresh()),
   ],
 };

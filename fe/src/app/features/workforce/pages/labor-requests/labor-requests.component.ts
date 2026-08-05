@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { WorkforceService } from '../../data-access/workforce.service';
 import { NotificationService } from '../../../../core/notification.service';
+import { apiErrorDetail } from '../../../../core/api-error';
 import { LaborRequest, LaborRequestItem } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-tooltip.directive';
@@ -330,7 +331,7 @@ export class LaborRequestsComponent implements OnInit {
       },
       error: (e) => {
         this.saving.set(false);
-        const msg = e?.error?.detail ?? e?.error?.message ?? e?.message ?? 'خطأ غير متوقع';
+        const msg = apiErrorDetail(e, e?.error?.message ?? e?.message ?? 'خطأ غير متوقع');
         this.notificationService.error('فشل إنشاء الطلب: ' + msg);
       }
     });

@@ -89,10 +89,24 @@ public final class ExcelExportSupport {
                 cell.setBlank();
                 cell.setCellStyle(styles.text());
             } else {
-                cell.setCellValue(String.valueOf(value));
+                cell.setCellValue(escapeFormula(String.valueOf(value)));
                 cell.setCellStyle(styles.text());
             }
         }
+    }
+
+    /**
+     * Prevents spreadsheet formula injection (guide §5.6): user-controlled text cells
+     * beginning with {@code =}, {@code +}, {@code -}, or {@code @} are prefixed with an
+     * apostrophe so they are treated as literal text by Excel/Sheets instead of formulas.
+     */
+    public static String escapeFormula(String value) {
+        if (value == null || value.isEmpty()) return value;
+        char first = value.charAt(0);
+        if (first == '=' || first == '+' || first == '-' || first == '@') {
+            return "'" + value;
+        }
+        return value;
     }
 
     public static void finishTable(XSSFSheet sheet, int lastDataRow, int columnCount, String tableName,

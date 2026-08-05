@@ -57,6 +57,14 @@
         </select>
       </div>
       <button
+        class="button secondary"
+        type="button"
+        [disabled]="store.loading() || periodForm.invalid || previewing()"
+        (click)="previewCustom()"
+      >
+        {{ previewing() ? '…' : 'معاينة' }}
+      </button>
+      <button
         class="button primary"
         type="submit"
         [disabled]="store.loading() || periodForm.invalid"
@@ -66,6 +74,44 @@
     </form>
     @if (customError()) {
       <div class="alert error period-error">{{ customError() }}</div>
+    }
+    @if (previewResult(); as preview) {
+      <div class="preview-card">
+        <div class="preview-head">
+          <strong>{{ i18n.t('reports.previewHead', {}, 'معاينة التوليد') }}</strong>
+          <span class="ltr">{{ date(preview.periodStart) }} → {{ date(preview.periodEnd) }}</span>
+        </div>
+        <div class="preview-stats">
+          <span><small>{{ i18n.t('reports.previewCategories', {}, 'الفئات') }}</small> {{ preview.categories.length }}</span>
+          <span><small>{{ i18n.t('reports.previewEmployees', {}, 'الموظفين') }}</small> {{ preview.employeeCount }}</span>
+          <span><small>{{ i18n.t('reports.previewWorkdays', {}, 'أيام العمل') }}</small> {{ preview.workdays }}</span>
+          <span><small>{{ i18n.t('reports.previewCoverage', {}, 'تغطية الجداول') }}</small> {{ preview.scheduleCoverageCount }}</span>
+          <span
+            ><small>{{ i18n.t('reports.previewTotalRecords', {}, 'إجمالي السجلات') }}</small>
+            {{ preview.employeeCount * preview.workdays }}</span
+          >
+        </div>
+        @if (preview.categories.length === 0) {
+          <p class="preview-note warn">{{ i18n.t('reports.previewNoActiveCategories', {}, 'لا توجد فئات نشطة تستخدم دورة الدفع المحددة — لن يمكن توليد التقرير.') }}</p>
+        } @else if (preview.scheduleCoverageCount < preview.employeeCount * preview.workdays) {
+          <p class="preview-note warn">
+            {{ i18n.t('reports.previewCoverageWarning', { count: preview.employeeCount * preview.workdays - preview.scheduleCoverageCount }, 'سجل يومي لا تغطيه جداول المواعيد ضمن الفترة (حالة «بدون جدول»).') }}
+          </p>
+        } @else {
+          <p class="preview-note">{{ i18n.t('reports.previewCoverageOk', {}, 'المواعيد تغطي كامل الفترة المحددة لجميع الفئات.') }}</p>
+        }
+        @if (preview.existingReportId) {
+          <div class="preview-actions">
+            <span class="preview-note">{{ i18n.t('reports.previewExistingReport', {}, 'تقرير مولد مسبقًا لهذه الفترة — إعادة التوليد ستفتح نفس التقرير.') }}</span>
+            <a class="button secondary" [routerLink]="['/reports', preview.existingReportId]">{{
+              i18n.t('reports.open')
+            }}</a>
+          </div>
+        }
+        @if (preview.overlappingReportIds.length > 0) {
+          <p class="preview-note warn">{{ i18n.t('reports.previewOverlapWarning', {}, 'الفترة تتداخل مع تقرير موجود — التوليد سيفشل.') }}</p>
+        }
+      </div>
     }
     @if (showReportPresets()) {
       <div class="preset-head">

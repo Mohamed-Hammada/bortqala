@@ -24,7 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/operations")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
 public class OperationsController {
     private final OperationsService operationsService;
     private final AuthService authService;

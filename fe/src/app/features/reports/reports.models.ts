@@ -23,6 +23,7 @@ export interface ReportSummary {
   approvedAt: number | null;
   exportedAt: number | null;
   version: number;
+  generationHash: string | null;
 }
 export interface ReportPeriodSelection {
   periodStart: number;
@@ -35,6 +36,22 @@ export interface PeriodOption {
   kind: 'MONTHLY' | 'FIRST_HALF' | 'SECOND_HALF';
   start: number;
   end: number;
+}
+export interface PreviewCategory {
+  categoryId: string;
+  categoryName: string;
+  employeeCount: number;
+}
+export interface ReportPreview {
+  periodStart: number;
+  periodEnd: number;
+  payCycle: ReportPayCycle;
+  categories: PreviewCategory[];
+  employeeCount: number;
+  workdays: number;
+  scheduleCoverageCount: number;
+  existingReportId: string | null;
+  overlappingReportIds: string[];
 }
 export interface CategorySummary {
   categoryId: string;
@@ -70,6 +87,7 @@ export interface DailyResult {
   decidedBy: string | null;
   decidedAt: number | null;
   ruleVersion: string;
+  version: number;
 }
 export interface HolidayProposal {
   id: string;
@@ -88,6 +106,7 @@ export interface ReportDetails {
   dailyResults: DailyResult[];
   holidayProposals: HolidayProposal[];
   dayAnomalies: DayAnomaly[];
+  allowedActions: string[];
 }
 export interface BulkDecisionRequest {
   decision: AttendanceDecision;

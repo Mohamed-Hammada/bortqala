@@ -596,3 +596,60 @@ td small {
     flex-wrap: wrap;
   }
 }
+
+.preview-card {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--success-border, rgba(16, 185, 129, 0.3));
+  background: var(--success-soft);
+  border-radius: 10px;
+}
+
+.preview-card.has-errors {
+  border-color: var(--warning-border);
+  background: var(--warning-soft);
+}
+
+.preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.preview-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.preview-stats span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.preview-stats small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.preview-stats .stat-error {
+  color: #F87171;
+  font-weight: 700;
+}
+
+.preview-note {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.batch-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--line);
+}

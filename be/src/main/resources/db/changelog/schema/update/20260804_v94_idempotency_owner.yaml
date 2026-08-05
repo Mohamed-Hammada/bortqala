@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260804-v94-idempotency-owner
+      author: Mohamed-Hammada
+      comment: Adds an owner token and attempt number so only the reservation owner can complete or fail an idempotency key, and a lease can be renewed by a heartbeat without handing the operation to a different worker.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: idempotency_keys
+              columnName: owner_token
+      changes:
+        - addColumn:
+            tableName: idempotency_keys
+            columns:
+              - column:
+                  name: owner_token
+                  type: VARCHAR(36)
+        - addColumn:
+            tableName: idempotency_keys
+            columns:
+              - column:
+                  name: attempt_number
+                  type: INT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: idempotency_keys
+            columnName: owner_token
+        - dropColumn:
+            tableName: idempotency_keys
+            columnName: attempt_number

@@ -39,7 +39,7 @@ databaseChangeLog:
         onFail: HALT
         sqlCheck:
           expectedResult: 1
-          sql: SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'inventory_items'
+          sql: SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'INVENTORY_ITEMS'
       changes:
         - sql:
             sql: ALTER TABLE inventory_items DROP CONSTRAINT uk_inventory_items_app_code
@@ -140,6 +140,8 @@ databaseChangeLog:
             sql: |
               ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS currency_code VARCHAR(10) DEFAULT 'EGP' NOT NULL;
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS currency_code VARCHAR(10) DEFAULT 'EGP' NOT NULL;
+              ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS internal_reference VARCHAR(50);
+              ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS missing_invoice_reason VARCHAR(255);
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(15,2) DEFAULT 0;
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS tax_amount NUMERIC(15,2) DEFAULT 0;
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS net_amount NUMERIC(15,2) DEFAULT 0;
@@ -162,6 +164,33 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260729_v65_user_dialog_translations.yaml
   - include:
       file: db/changelog/schema/create/20260729_v66_live_biometric_devices.yaml
+  # Liquibase 5 cannot reliably resolve lowercase H2 tables in tableExists
+  # preconditions. Apply the production V77 changeset directly as H2 SQL.
+  - changeSet:
+      id: test-v77-employee-assignments
+      author: Mohamed-Hammada
+      dbms: h2
+      preConditions:
+        onFail: MARK_RAN
+        sqlCheck:
+          expectedResult: 0
+          sql: SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'employee_assignments'
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              CREATE TABLE employee_assignments (
+                id VARCHAR(36) PRIMARY KEY,
+                app_id VARCHAR(36) NOT NULL,
+                employee_id VARCHAR(36) NOT NULL,
+                category_id VARCHAR(36) NOT NULL,
+                effective_from DATE NOT NULL,
+                effective_to DATE,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                CONSTRAINT uq_employee_assignments_app_employee_from UNIQUE (app_id, employee_id, effective_from)
+              );
+              CREATE INDEX idx_employee_assignments_employee_dates ON employee_assignments (employee_id, effective_from, effective_to);
   # Liquibase 5 cannot reliably resolve lowercase H2 tables in tableExists
   # preconditions. Apply the skipped production column additions directly.
   - changeSet:
@@ -197,3 +226,240 @@ databaseChangeLog:
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS net_amount NUMERIC(15,2);
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS due_date DATE;
               ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS notes VARCHAR(500);
+              ALTER TABLE supplier_payments ADD COLUMN IF NOT EXISTS operation_id VARCHAR(80) DEFAULT 'legacy' NOT NULL;
+              ALTER TABLE biometric_devices ADD COLUMN IF NOT EXISTS device_username VARCHAR(150);
+              ALTER TABLE biometric_devices ADD COLUMN IF NOT EXISTS device_password_enc VARCHAR(1000);
+              ALTER TABLE reports ADD COLUMN IF NOT EXISTS generation_hash VARCHAR(64);
+              ALTER TABLE daily_results ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              CREATE TABLE IF NOT EXISTS attendance_report_decisions (
+                id VARCHAR(36) NOT NULL PRIMARY KEY,
+                app_id VARCHAR(36) NOT NULL,
+                report_id VARCHAR(36) NOT NULL,
+                result_id VARCHAR(36) NOT NULL,
+                operation_id VARCHAR(64) NOT NULL,
+                operation VARCHAR(30) NOT NULL,
+                previous_decision VARCHAR(30),
+                previous_manual_minutes INT,
+                previous_note VARCHAR(500),
+                previous_decided_by VARCHAR(100),
+                previous_decided_at TIMESTAMP WITH TIME ZONE,
+                new_decision VARCHAR(30) NOT NULL,
+                new_manual_minutes INT,
+                new_note VARCHAR(500),
+                actor VARCHAR(100) NOT NULL,
+                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                CONSTRAINT uq_report_decisions_operation UNIQUE (app_id, operation_id)
+              );
+              CREATE INDEX IF NOT EXISTS idx_report_decisions_report ON attendance_report_decisions (report_id);
+              CREATE INDEX IF NOT EXISTS idx_report_decisions_result ON attendance_report_decisions (result_id);
+              CREATE TABLE IF NOT EXISTS idempotency_keys (
+                id VARCHAR(36) NOT NULL PRIMARY KEY,
+                app_id VARCHAR(36) NOT NULL,
+                operation_type VARCHAR(60) NOT NULL,
+                operation_id VARCHAR(80) NOT NULL,
+                request_hash VARCHAR(64) NOT NULL,
+                status VARCHAR(20) NOT NULL,
+                response_reference_or_body VARCHAR(4000),
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                completed_at TIMESTAMP,
+                CONSTRAINT uq_idempotency_app_type_operation UNIQUE (app_id, operation_type, operation_id)
+              );
+              ALTER TABLE app_users ADD COLUMN IF NOT EXISTS failed_login_attempts INT DEFAULT 0 NOT NULL;
+              ALTER TABLE app_users ADD COLUMN IF NOT EXISTS locked_until TIMESTAMP WITH TIME ZONE;
+              ALTER TABLE app_users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN DEFAULT FALSE NOT NULL;
+              ALTER TABLE app_users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMP WITH TIME ZONE;
+              ALTER TABLE app_users ADD COLUMN IF NOT EXISTS last_failed_login_at TIMESTAMP WITH TIME ZONE;
+              ALTER TABLE app_users ADD COLUMN IF NOT EXISTS token_version INT DEFAULT 0 NOT NULL;
+              CREATE TABLE IF NOT EXISTS refresh_tokens (
+                id VARCHAR(36) NOT NULL PRIMARY KEY,
+                app_id VARCHAR(36) NOT NULL,
+                user_id VARCHAR(36) NOT NULL,
+                family_id VARCHAR(36) NOT NULL,
+                token_hash VARCHAR(64) NOT NULL,
+                expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                device_id VARCHAR(100),
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                revoked_at TIMESTAMP WITH TIME ZONE,
+                revoked_by VARCHAR(100),
+                replaced_by_token_id VARCHAR(36)
+              );
+              ALTER TABLE refresh_tokens ADD CONSTRAINT IF NOT EXISTS uq_refresh_tokens_app_hash UNIQUE (app_id, token_hash);
+              ALTER TABLE refresh_tokens ADD CONSTRAINT IF NOT EXISTS fk_refresh_tokens_app FOREIGN KEY (app_id) REFERENCES apps(id) ON DELETE CASCADE;
+              ALTER TABLE refresh_tokens ADD CONSTRAINT IF NOT EXISTS fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE CASCADE;
+              ALTER TABLE refresh_tokens ADD CONSTRAINT IF NOT EXISTS fk_refresh_tokens_replaced_by FOREIGN KEY (replaced_by_token_id) REFERENCES refresh_tokens(id) ON DELETE SET NULL;
+              CREATE INDEX IF NOT EXISTS idx_refresh_tokens_app_user ON refresh_tokens (app_id, user_id);
+              CREATE INDEX IF NOT EXISTS idx_refresh_tokens_app_family ON refresh_tokens (app_id, family_id);
+              INSERT INTO roles (code, name_ar) SELECT 'FINANCE_MANAGER', 'مدير المالية' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'FINANCE_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'ACCOUNTANT', 'محاسب' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'ACCOUNTANT');
+              INSERT INTO roles (code, name_ar) SELECT 'TREASURY_USER', 'أمين خزينة' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'TREASURY_USER');
+              INSERT INTO roles (code, name_ar) SELECT 'PROCUREMENT_MANAGER', 'مدير المشتريات' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'PROCUREMENT_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'PROCUREMENT_USER', 'موظف مشتريات' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'PROCUREMENT_USER');
+              INSERT INTO roles (code, name_ar) SELECT 'SALES_MANAGER', 'مدير المبيعات' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'SALES_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'INVENTORY_MANAGER', 'مدير المخزون' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'INVENTORY_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'MANUFACTURING_MANAGER', 'مدير الإنتاج' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'MANUFACTURING_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'QUALITY_MANAGER', 'مدير الجودة' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'QUALITY_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'PAYROLL_MANAGER', 'مدير الرواتب' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'PAYROLL_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'WORKFORCE_MANAGER', 'مدير العمالة' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'WORKFORCE_MANAGER');
+              INSERT INTO roles (code, name_ar) SELECT 'WORKFORCE_REVIEWER', 'مراجع العمالة' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'WORKFORCE_REVIEWER');
+              INSERT INTO roles (code, name_ar) SELECT 'WORKFORCE_FINANCE', 'مالية العمالة' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'WORKFORCE_FINANCE');
+              INSERT INTO roles (code, name_ar) SELECT 'AUDITOR', 'مراجع حسابات' WHERE NOT EXISTS (SELECT 1 FROM roles WHERE code = 'AUDITOR');
+              INSERT INTO user_roles (user_id, role_code)
+              SELECT ur.user_id, r.code
+              FROM user_roles ur
+              CROSS JOIN (VALUES
+                  ('FINANCE_MANAGER'),('ACCOUNTANT'),('TREASURY_USER'),('PROCUREMENT_MANAGER'),
+                  ('PROCUREMENT_USER'),('SALES_MANAGER'),('INVENTORY_MANAGER'),('MANUFACTURING_MANAGER'),
+                  ('QUALITY_MANAGER'),('PAYROLL_MANAGER'),('WORKFORCE_MANAGER'),('WORKFORCE_REVIEWER'),
+                  ('WORKFORCE_FINANCE'),('AUDITOR')
+              ) AS r(code)
+              WHERE ur.role_code IN ('ADMIN','SUPER_ADMIN')
+                AND NOT EXISTS (SELECT 1 FROM user_roles x WHERE x.user_id = ur.user_id AND x.role_code = r.code);
+              INSERT INTO user_roles (user_id, role_code)
+              SELECT ur.user_id, r.code
+              FROM user_roles ur
+              CROSS JOIN (VALUES
+                  ('WORKFORCE_MANAGER'),('WORKFORCE_REVIEWER')
+              ) AS r(code)
+              WHERE ur.role_code = 'HR_MANAGER'
+                AND NOT EXISTS (SELECT 1 FROM user_roles x WHERE x.user_id = ur.user_id AND x.role_code = r.code);
+              INSERT INTO user_roles (user_id, role_code)
+              SELECT ur.user_id, 'WORKFORCE_REVIEWER'
+              FROM user_roles ur
+              WHERE ur.role_code = 'HR_REVIEWER'
+                AND NOT EXISTS (SELECT 1 FROM user_roles x WHERE x.user_id = ur.user_id AND x.role_code = 'WORKFORCE_REVIEWER');
+              ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS currency VARCHAR(10);
+              ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS reversal_entry_id VARCHAR(36);
+              ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS reversed_entry_id VARCHAR(36);
+              ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS reversal_reason VARCHAR(500);
+              ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS reversed_by VARCHAR(100);
+              ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS reversed_at BIGINT;
+              ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS operation_id VARCHAR(80);
+              ALTER TABLE journal_entries ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE fiscal_periods ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE purchase_orders ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE goods_receipts ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE supplier_invoices ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE supplier_payments ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE sales_orders ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE production_orders ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE quality_inspections ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE workforce_settlement_periods ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE workforce_advances ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE manual_attendance_entries ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE labor_requests ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE bank_accounts ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE currencies ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+              ALTER TABLE tax_rates ADD COLUMN IF NOT EXISTS version BIGINT DEFAULT 0 NOT NULL;
+  - changeSet:
+      id: 20260803-v87-tenant-features-h2
+      author: jules
+      comment: H2 mirror for tenant_features table.
+      changes:
+        - sql:
+            sql: |
+              CREATE TABLE IF NOT EXISTS tenant_features (
+                app_id VARCHAR(36) NOT NULL,
+                feature_key VARCHAR(100) NOT NULL,
+                enabled BOOLEAN NOT NULL,
+                config_json VARCHAR(2000),
+                version BIGINT DEFAULT 0 NOT NULL,
+                updated_by VARCHAR(160),
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                PRIMARY KEY (app_id, feature_key),
+                CONSTRAINT fk_tenant_features_app FOREIGN KEY (app_id) REFERENCES apps (id) ON DELETE CASCADE ON UPDATE NO ACTION
+              );
+  - changeSet:
+      id: 20260804-v89-v90-h2
+      author: codex
+      comment: H2 mirror for punch device-scoped dedup.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              ALTER TABLE punch_records ADD COLUMN IF NOT EXISTS device_id VARCHAR(36);
+              CREATE UNIQUE INDEX IF NOT EXISTS uq_punch_records_app_device_user_time ON punch_records (app_id, device_id, device_user_id, punched_at);
+  - changeSet:
+      id: 20260804-v92-punch-source-identity-h2
+      author: Mohamed-Hammada
+      comment: H2 mirror for stable biometric source identity, punch import evidence, and conflict-safe dedup.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              CREATE TABLE IF NOT EXISTS biometric_sources (
+                id VARCHAR(36) PRIMARY KEY,
+                app_id VARCHAR(36) NOT NULL,
+                source_type VARCHAR(20) NOT NULL,
+                name VARCHAR(150) NOT NULL,
+                normalized_code VARCHAR(150) NOT NULL,
+                active BOOLEAN DEFAULT TRUE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+              );
+              CREATE UNIQUE INDEX IF NOT EXISTS uq_biometric_sources_app_type_code ON biometric_sources (app_id, source_type, normalized_code);
+              CREATE TABLE IF NOT EXISTS punch_import_evidence (
+                punch_id VARCHAR(36) NOT NULL,
+                batch_id VARCHAR(36) NOT NULL,
+                app_id VARCHAR(36) NOT NULL,
+                row_number INT NOT NULL,
+                raw_line TEXT NOT NULL,
+                PRIMARY KEY (punch_id, batch_id, row_number),
+                CONSTRAINT fk_punch_evidence_punch FOREIGN KEY (punch_id) REFERENCES punch_records (id) ON DELETE CASCADE,
+                CONSTRAINT fk_punch_evidence_batch FOREIGN KEY (batch_id) REFERENCES import_batches (id) ON DELETE CASCADE
+              );
+              CREATE INDEX IF NOT EXISTS idx_punch_evidence_batch ON punch_import_evidence (batch_id);
+              ALTER TABLE punch_records ADD COLUMN IF NOT EXISTS source_id VARCHAR(36);
+              ALTER TABLE import_batches ADD COLUMN IF NOT EXISTS source_id VARCHAR(36);
+              INSERT INTO biometric_sources (id, app_id, source_type, name, normalized_code, active, created_at)
+              SELECT d.id, d.app_id, 'DEVICE', d.name, d.id, TRUE, CURRENT_TIMESTAMP
+              FROM biometric_devices d
+              WHERE NOT EXISTS (SELECT 1 FROM biometric_sources s WHERE s.app_id = d.app_id AND s.source_type = 'DEVICE' AND s.normalized_code = d.id);
+              INSERT INTO biometric_sources (id, app_id, source_type, name, normalized_code, active, created_at)
+              SELECT RANDOM_UUID(), b.app_id, 'FILE_DEVICE', MIN(b.device_name), LOWER(REGEXP_REPLACE(TRIM(b.device_name), '\s+', '_')), TRUE, CURRENT_TIMESTAMP
+              FROM import_batches b
+              WHERE NOT EXISTS (SELECT 1 FROM biometric_sources s WHERE s.app_id = b.app_id AND s.source_type = 'FILE_DEVICE' AND s.normalized_code = LOWER(REGEXP_REPLACE(TRIM(b.device_name), '\s+', '_')))
+              GROUP BY b.app_id, LOWER(REGEXP_REPLACE(TRIM(b.device_name), '\s+', '_'));
+              UPDATE punch_records p SET source_id = (SELECT s.id FROM biometric_sources s WHERE s.app_id = p.app_id AND s.source_type = 'DEVICE' AND s.normalized_code = p.device_id) WHERE p.device_id IS NOT NULL AND p.source_id IS NULL;
+              UPDATE punch_records p SET source_id = (SELECT s.id FROM biometric_sources s WHERE s.app_id = p.app_id AND s.source_type = 'FILE_DEVICE' AND s.normalized_code = LOWER(REGEXP_REPLACE(TRIM((SELECT b.device_name FROM import_batches b WHERE b.id = p.batch_id)), '\s+', '_'))) WHERE p.source_id IS NULL;
+              UPDATE import_batches b SET source_id = (SELECT s.id FROM biometric_sources s WHERE s.app_id = b.app_id AND s.source_type = 'FILE_DEVICE' AND s.normalized_code = LOWER(REGEXP_REPLACE(TRIM(b.device_name), '\s+', '_'))) WHERE b.source_id IS NULL;
+              INSERT INTO punch_import_evidence (punch_id, batch_id, app_id, row_number, raw_line)
+              SELECT MIN(p.id) OVER (PARTITION BY p.app_id, p.source_id, p.device_user_id, p.punched_at), p.batch_id, p.app_id, p.row_number, p.raw_line
+              FROM punch_records p;
+              DELETE FROM punch_records p WHERE EXISTS (SELECT 1 FROM punch_records q WHERE q.app_id = p.app_id AND q.source_id = p.source_id AND q.device_user_id = p.device_user_id AND q.punched_at = p.punched_at AND q.id < p.id);
+              ALTER TABLE import_batches ADD COLUMN IF NOT EXISTS valid_rows INT DEFAULT 0 NOT NULL;
+              ALTER TABLE import_batches ADD COLUMN IF NOT EXISTS new_punches INT DEFAULT 0 NOT NULL;
+              ALTER TABLE import_batches ADD COLUMN IF NOT EXISTS duplicate_punches INT DEFAULT 0 NOT NULL;
+              UPDATE import_batches b SET valid_rows = b.total_rows - b.error_rows, imported_rows = b.total_rows - b.error_rows, new_punches = (SELECT COUNT(DISTINCT e.punch_id) FROM punch_import_evidence e WHERE e.batch_id = b.id);
+              UPDATE import_batches b SET duplicate_punches = CASE WHEN b.valid_rows - b.new_punches < 0 THEN 0 ELSE b.valid_rows - b.new_punches END;
+              ALTER TABLE punch_records ALTER COLUMN source_id SET NOT NULL;
+              ALTER TABLE import_batches ALTER COLUMN source_id SET NOT NULL;
+              ALTER TABLE punch_records ADD CONSTRAINT IF NOT EXISTS fk_punch_records_source FOREIGN KEY (source_id) REFERENCES biometric_sources (id) ON DELETE RESTRICT;
+              ALTER TABLE import_batches ADD CONSTRAINT IF NOT EXISTS fk_import_batches_source FOREIGN KEY (source_id) REFERENCES biometric_sources (id) ON DELETE RESTRICT;
+              CREATE UNIQUE INDEX IF NOT EXISTS uq_punch_records_source_user_time ON punch_records (app_id, source_id, device_user_id, punched_at);
+              DROP INDEX IF EXISTS uq_punch_records_app_device_user_time;
+              ALTER TABLE import_batches DROP CONSTRAINT IF EXISTS uq_import_batches_app_checksum;
+              ALTER TABLE import_batches ADD CONSTRAINT IF NOT EXISTS uq_import_batches_app_source_checksum UNIQUE (app_id, source_id, checksum);
+  - changeSet:
+      id: 20260804-v93-idempotency-lease-h2
+      author: Mohamed-Hammada
+      comment: H2 mirror for the idempotency reservation lease column.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              ALTER TABLE idempotency_keys ADD COLUMN IF NOT EXISTS lease_expires_at TIMESTAMP;
+  - changeSet:
+      id: 20260804-v94-idempotency-owner-h2
+      author: Mohamed-Hammada
+      comment: H2 mirror for the idempotency reservation owner token and attempt number.
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              ALTER TABLE idempotency_keys ADD COLUMN IF NOT EXISTS owner_token VARCHAR(36);
+              ALTER TABLE idempotency_keys ADD COLUMN IF NOT EXISTS attempt_number INT DEFAULT 1 NOT NULL;
+  - include:
+      file: db/changelog/data/insert/20260804_v91_backend_error_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260804_v95_biometric_sources_i18n.yaml
+  - include:
+      file: db/changelog/data/insert/20260804_v96_error_fallbacks_i18n.yaml

@@ -1,0 +1,167 @@
+id;translation_key;locale;text_value
+v81-001-ar;reports.previewHead;ar-EG;معاينة التوليد
+v81-001-en;reports.previewHead;en-US;Generation preview
+v81-002-ar;reports.previewCategories;ar-EG;الفئات
+v81-002-en;reports.previewCategories;en-US;Categories
+v81-003-ar;reports.previewEmployees;ar-EG;الموظفين
+v81-003-en;reports.previewEmployees;en-US;Employees
+v81-004-ar;reports.previewWorkdays;ar-EG;أيام العمل
+v81-004-en;reports.previewWorkdays;en-US;Workdays
+v81-005-ar;reports.previewCoverage;ar-EG;تغطية الجداول
+v81-005-en;reports.previewCoverage;en-US;Schedule coverage
+v81-006-ar;reports.previewTotalRecords;ar-EG;إجمالي السجلات
+v81-006-en;reports.previewTotalRecords;en-US;Total records
+v81-007-ar;reports.previewNoActiveCategories;ar-EG;لا توجد فئات نشطة تستخدم دورة الدفع المحددة — لن يمكن توليد التقرير.
+v81-007-en;reports.previewNoActiveCategories;en-US;No active categories use the selected pay cycle — the report cannot be generated.
+v81-008-ar;reports.previewCoverageWarning;ar-EG;{count} سجل يومي لا تغطيه جداول المواعيد ضمن الفترة (حالة «بدون جدول»).
+v81-008-en;reports.previewCoverageWarning;en-US;{count} daily records are not covered by schedule rules in the period (status «Missing schedule»).
+v81-009-ar;reports.previewCoverageOk;ar-EG;المواعيد تغطي كامل الفترة المحددة لجميع الفئات.
+v81-009-en;reports.previewCoverageOk;en-US;Schedules cover the entire selected period for all categories.
+v81-010-ar;reports.previewExistingReport;ar-EG;تقرير مولد مسبقًا لهذه الفترة — إعادة التوليد ستفتح نفس التقرير.
+v81-010-en;reports.previewExistingReport;en-US;A report already exists for this period — regenerating opens the same report.
+v81-011-ar;reports.previewOverlapWarning;ar-EG;الفترة تتداخل مع تقرير موجود — التوليد سيفشل.
+v81-011-en;reports.previewOverlapWarning;en-US;The period overlaps an existing report — generation will fail.
+v81-012-ar;review.anomalyHeading;ar-EG;حالات شذوذ البصمة اليومية
+v81-012-en;review.anomalyHeading;en-US;Daily punch anomalies
+v81-013-ar;review.anomalyHint;ar-EG;يكشف الخادم الأيام التي تتجاوز نسبة الغياب عن البصمة المضبوطة، ولا يطبق أي قرار تلقائياً.
+v81-013-en;review.anomalyHint;en-US;The server detects days whose punch absence ratio exceeds the configured threshold, and never applies a decision automatically.
+v81-014-ar;review.anomalyDetect;ar-EG;فحص الأيام غير الطبيعية
+v81-014-en;review.anomalyDetect;en-US;Detect abnormal days
+v81-015-ar;review.anomalyDetectRunning;ar-EG;جارٍ الفحص...
+v81-015-en;review.anomalyDetectRunning;en-US;Scanning...
+v81-016-ar;review.anomalyAffectedOf;ar-EG;{affected} من {total} موظف
+v81-016-en;review.anomalyAffectedOf;en-US;{affected} of {total} employees
+v81-017-ar;review.anomalyAbsenceRate;ar-EG;{rate}% بلا بصمة · الحد {threshold}%
+v81-017-en;review.anomalyAbsenceRate;en-US;{rate}% no punch · {threshold}% threshold
+v81-018-ar;review.anomalyExplain;ar-EG;سيشمل القرار {count} سجلاً في هذا التاريخ والفئة فقط. إجمالي وقت الأجر المتوقع المتأثر
+v81-018-en;review.anomalyExplain;en-US;The decision will cover {count} records on this date and category only. The total expected paid time affected is
+v81-019-ar;review.anomalyExplainTail;ar-EG;قبل التنفيذ.
+v81-019-en;review.anomalyExplainTail;en-US;before applying.
+v81-020-ar;review.anomalyDeviceOutage;ar-EG;تعطل جهاز / انقطاع كهرباء
+v81-020-en;review.anomalyDeviceOutage;en-US;Device outage / power failure
+v81-021-ar;review.anomalyOfficialHoliday;ar-EG;إجازة رسمية
+v81-021-en;review.anomalyOfficialHoliday;en-US;Official holiday
+v81-022-ar;review.anomalyAbsence;ar-EG;غياب
+v81-022-en;review.anomalyAbsence;en-US;Absence
+v81-023-ar;review.anomalyPresent;ar-EG;اعتبار اليوم حضورًا
+v81-023-en;review.anomalyPresent;en-US;Consider present
+v81-024-ar;review.anomalyDefer;ar-EG;تأجيل القرار
+v81-024-en;review.anomalyDefer;en-US;Defer decision
+v81-025-ar;review.anomalyEmptyTitle;ar-EG;لا توجد حالات شذوذ مفتوحة.
+v81-025-en;review.anomalyEmptyTitle;en-US;No open anomalies.
+v81-026-ar;review.anomalyEmptyHint;ar-EG;الحالات المعالجة لا تعود كتذكير إلا بعد إعادة فتحها صراحةً.
+v81-026-en;review.anomalyEmptyHint;en-US;Processed anomalies only return as reminders after being explicitly reopened.
+v81-027-ar;review.anomalyHistorySummary;ar-EG;سجل الحالات المعالجة والمؤجلة ({count})
+v81-027-en;review.anomalyHistorySummary;en-US;Processed and deferred anomaly log ({count})
+v81-028-ar;review.anomalyResolved;ar-EG;معالجة
+v81-028-en;review.anomalyResolved;en-US;Resolved
+v81-029-ar;review.anomalyDeferred;ar-EG;مؤجلة
+v81-029-en;review.anomalyDeferred;en-US;Deferred
+v81-030-ar;review.anomalyReversed;ar-EG;تم التراجع
+v81-030-en;review.anomalyReversed;en-US;Reversed
+v81-031-ar;review.anomalyNoReason;ar-EG;بدون سبب
+v81-031-en;review.anomalyNoReason;en-US;No reason
+v81-032-ar;review.anomalyReverse;ar-EG;إنشاء قيد عكسي
+v81-032-en;review.anomalyReverse;en-US;Create reversing entry
+v81-033-ar;review.anomalyReopen;ar-EG;إعادة فتح الحالة
+v81-033-en;review.anomalyReopen;en-US;Reopen anomaly
+v81-034-ar;review.anomalyModalTitle;ar-EG;معاينة قرار شذوذ البصمة
+v81-034-en;review.anomalyModalTitle;en-US;Punch anomaly decision preview
+v81-035-ar;review.anomalyAffectedEmployees;ar-EG;الموظفون المتأثرون
+v81-035-en;review.anomalyAffectedEmployees;en-US;Affected employees
+v81-036-ar;review.anomalyExpectedHoursLabel;ar-EG;وقت الأجر المتوقع
+v81-036-en;review.anomalyExpectedHoursLabel;en-US;Expected paid time
+v81-037-ar;review.anomalyImpactLabel;ar-EG;تأثير القرار
+v81-037-en;review.anomalyImpactLabel;en-US;Decision impact
+v81-038-ar;review.anomalyImpactAbsence;ar-EG;خصم الوقت المتوقع بالكامل
+v81-038-en;review.anomalyImpactAbsence;en-US;Deduct the full expected time
+v81-039-ar;review.anomalyImpactDefer;ar-EG;لا تغيير في الرواتب الآن
+v81-039-en;review.anomalyImpactDefer;en-US;No payroll change for now
+v81-040-ar;review.anomalyImpactNormal;ar-EG;احتساب الوقت المتوقع كوقت مدفوع
+v81-040-en;review.anomalyImpactNormal;en-US;Count expected time as paid
+v81-041-ar;review.anomalyReasonLabel;ar-EG;سبب القرار *
+v81-041-en;review.anomalyReasonLabel;en-US;Decision reason *
+v81-042-ar;review.anomalyReasonPlaceholder;ar-EG;مثال: انقطاع كهرباء مؤكد من مسؤول الموقع
+v81-042-en;review.anomalyReasonPlaceholder;en-US;e.g. power outage confirmed by the site supervisor
+v81-043-ar;review.anomalyApplyButton;ar-EG;تأكيد التطبيق على {count}
+v81-043-en;review.anomalyApplyButton;en-US;Apply to {count}
+v81-044-ar;review.anomalyCancel;ar-EG;إلغاء
+v81-044-en;review.anomalyCancel;en-US;Cancel
+v81-045-ar;review.hourShort;ar-EG;ساعة
+v81-045-en;review.hourShort;en-US;hr
+v81-046-ar;review.anomalyDetectSuccess;ar-EG;اكتمل فحص الأيام غير الطبيعية وفق النسبة المضبوطة.
+v81-046-en;review.anomalyDetectSuccess;en-US;Day anomaly scan completed with the configured ratio.
+v81-047-ar;review.anomalyDetectFailed;ar-EG;تعذر فحص شذوذ البصمة.
+v81-047-en;review.anomalyDetectFailed;en-US;Could not scan punch anomalies.
+v81-048-ar;review.anomalyReasonRequired;ar-EG;اكتب سبب القرار قبل التنفيذ.
+v81-048-en;review.anomalyReasonRequired;en-US;Write the decision reason before applying.
+v81-049-ar;review.anomalyAppliedCount;ar-EG;تم تطبيق القرار على {applied} سجل، وتجاوز {skipped}.
+v81-049-en;review.anomalyAppliedCount;en-US;Applied the decision to {applied} records, skipped {skipped}.
+v81-050-ar;review.anomalyApplyFailed;ar-EG;تعذر تنفيذ قرار الشذوذ.
+v81-050-en;review.anomalyApplyFailed;en-US;Could not apply the anomaly decision.
+v81-051-ar;review.anomalyReversedCount;ar-EG;تم إنشاء القيد العكسي واستعادة {applied} سجل.
+v81-051-en;review.anomalyReversedCount;en-US;Created the reversing entry and restored {applied} records.
+v81-052-ar;review.anomalyReverseFailed;ar-EG;تعذر التراجع عن القرار.
+v81-052-en;review.anomalyReverseFailed;en-US;Could not reverse the decision.
+v81-053-ar;review.anomalyReopened;ar-EG;أعيد فتح حالة الشذوذ لاتخاذ قرار جديد.
+v81-053-en;review.anomalyReopened;en-US;Reopened the anomaly for a new decision.
+v81-054-ar;review.anomalyReopenFailed;ar-EG;تعذر إعادة فتح الحالة.
+v81-054-en;review.anomalyReopenFailed;en-US;Could not reopen the anomaly.
+v81-055-ar;imports.biometricUsernameLabel;ar-EG;اسم المستخدم (اختياري)
+v81-055-en;imports.biometricUsernameLabel;en-US;Username (optional)
+v81-056-ar;imports.biometricPasswordLabel;ar-EG;كلمة المرور (اختياري)
+v81-056-en;imports.biometricPasswordLabel;en-US;Password (optional)
+v81-057-ar;imports.biometricPasswordKeepHint;ar-EG;اتركها فارغة للإبقاء على الحالية
+v81-057-en;imports.biometricPasswordKeepHint;en-US;Leave blank to keep the current one
+v81-058-ar;imports.previewing;ar-EG;جارٍ المعاينة…
+v81-058-en;imports.previewing;en-US;Previewing…
+v81-059-ar;imports.previewAction;ar-EG;معاينة
+v81-059-en;imports.previewAction;en-US;Preview
+v81-060-ar;imports.previewHead;ar-EG;معاينة الملف
+v81-060-en;imports.previewHead;en-US;File preview
+v81-061-ar;imports.previewFileName;ar-EG;الملف
+v81-061-en;imports.previewFileName;en-US;File
+v81-062-ar;imports.previewLines;ar-EG;الأسطر
+v81-062-en;imports.previewLines;en-US;Lines
+v81-063-ar;imports.previewValid;ar-EG;سليمة
+v81-063-en;imports.previewValid;en-US;Valid
+v81-064-ar;imports.previewInvalid;ar-EG;خاطئة
+v81-064-en;imports.previewInvalid;en-US;Invalid
+v81-065-ar;imports.previewPunches;ar-EG;بصمات
+v81-065-en;imports.previewPunches;en-US;Punches
+v81-066-ar;imports.previewNote;ar-EG;تأكَّد من المعاينة ثم اضغط «استيراد»؛ إعادة استيراد نفس الملف لن تنشئ بصمات مكررة.
+v81-066-en;imports.previewNote;en-US;"Review the preview then press «Import»; re-importing the same file will not create duplicate punches."
+v81-067-ar;imports.reversingBatch;ar-EG;جارٍ التراجع…
+v81-067-en;imports.reversingBatch;en-US;Reversing…
+v81-068-ar;imports.reverseBatch;ar-EG;تراجع
+v81-068-en;imports.reverseBatch;en-US;Reverse
+v81-069-ar;imports.reversedStatus;ar-EG;ملغي
+v81-069-en;imports.reversedStatus;en-US;Reversed
+v81-070-ar;imports.sampleColumnCode;ar-EG;كود البصمة / العامل
+v81-070-en;imports.sampleColumnCode;en-US;Punch / employee code
+v81-071-ar;imports.sampleColumnTime;ar-EG;تاريخ ووقت البصمة
+v81-071-en;imports.sampleColumnTime;en-US;Punch date and time
+v81-072-ar;imports.sampleColumnDevice;ar-EG;اسم الجهاز
+v81-072-en;imports.sampleColumnDevice;en-US;Device name
+v81-073-ar;imports.sampleDeviceGate;ar-EG;بوابة المصنع
+v81-073-en;imports.sampleDeviceGate;en-US;Factory gate
+v81-074-ar;imports.sampleDeviceMain;ar-EG;البوابة الرئيسية
+v81-074-en;imports.sampleDeviceMain;en-US;Main gate
+v81-075-ar;imports.templateFileName;ar-EG;قالب_استيراد_البصمات.csv
+v81-075-en;imports.templateFileName;en-US;punch_import_template.csv
+v81-076-ar;imports.templateDownloadSuccess;ar-EG;تم تنزيل قالب استيراد البصمة بنجاح.
+v81-076-en;imports.templateDownloadSuccess;en-US;Punch import template downloaded successfully.
+v81-077-ar;imports.reverseBatchConfirm;ar-EG;هل تريد تراجع سجل الاستيراد وحذف كل البصمات المستوردة منه؟
+v81-077-en;imports.reverseBatchConfirm;en-US;Reverse this batch import and remove all imported punches?
+v81-078-ar;imports.batchReversedSuccess;ar-EG;تم تراجع سجل الاستيراد وحذف البصمات المرتبطة به.
+v81-078-en;imports.batchReversedSuccess;en-US;Batch import reversed and associated punches removed.
+v81-079-ar;imports.deviceFormInvalid;ar-EG;أدخل اسم الجهاز ورابط API وفترة مزامنة صحيحة.
+v81-079-en;imports.deviceFormInvalid;en-US;Enter a valid device name, API URL, and sync interval.
+v81-080-ar;imports.deviceUpdated;ar-EG;تم تحديث إعدادات جهاز البصمة.
+v81-080-en;imports.deviceUpdated;en-US;Biometric device settings updated.
+v81-081-ar;imports.deviceConnected;ar-EG;تم إضافة جهاز البصمة للربط المباشر.
+v81-081-en;imports.deviceConnected;en-US;Biometric device added for live sync.
+v81-082-ar;imports.syncFailed;ar-EG;فشلت مزامنة جهاز البصمة.
+v81-082-en;imports.syncFailed;en-US;Biometric device sync failed.
+v81-083-ar;imports.syncResult;ar-EG;اكتملت المزامنة: {imported} بصمة جديدة، {duplicates} مكررة.
+v81-083-en;imports.syncResult;en-US;Sync complete: {imported} new punches, {duplicates} duplicates.

@@ -25,7 +25,7 @@ public final class ReportingApi {
     public record CreateRequest(@NotNull LocalDate periodStart, @NotNull LocalDate periodEnd,
                                 @NotNull PayCycle payCycle) { }
     public record DecisionRequest(@NotNull AttendanceDecision decision, @Min(0) @Max(1_440) Integer workedMinutes,
-                                  @Size(max = 500) String note) { }
+                                  @Size(max = 500) String note, Long expectedVersion) { }
     public record HolidayDecisionRequest(@NotNull HolidayProposalStatus status, @Size(max = 150) String holidayName,
                                          @Size(max = 500) String note) { }
     public record BulkDecisionRequest(@NotNull AttendanceDecision decision, @NotNull String statusFilter,
@@ -51,9 +51,20 @@ public final class ReportingApi {
     public record PeriodOption(int year, int month, PeriodKind kind, LocalDate start, LocalDate end) { }
     public record Summary(String id, LocalDate periodStart, LocalDate periodEnd, PayCycle payCycle, ReportStatus status,
                           int unresolvedCount, String createdBy, Instant createdAt, String approvedBy,
-                          Instant approvedAt, Instant exportedAt, long version) { }
+                          Instant approvedAt, Instant exportedAt, long version, String generationHash) { }
+    public record PreviewCategory(String categoryId, String categoryName, int employeeCount) { }
+    public record PreviewResponse(LocalDate periodStart, LocalDate periodEnd, PayCycle payCycle,
+                                  List<PreviewCategory> categories, int employeeCount, int workdays,
+                                  int scheduleCoverageCount, String existingReportId,
+                                  List<String> overlappingReportIds) { }
     public record Details(Summary report, List<CategorySummary> categories, List<DailyResult> dailyResults,
-                          List<HolidayProposalView> holidayProposals, List<DayAnomalyView> dayAnomalies) { }
+                          List<HolidayProposalView> holidayProposals, List<DayAnomalyView> dayAnomalies,
+                          List<String> allowedActions) { }
+    public record DecisionHistoryView(String id, String reportId, String resultId, String operationId, String operation,
+                                      AttendanceDecision previousDecision, Integer previousManualMinutes, String previousNote,
+                                      String previousDecidedBy, Instant previousDecidedAt,
+                                      AttendanceDecision newDecision, Integer newManualMinutes, String newNote,
+                                      String actor, Instant createdAt) { }
     public record CategorySummary(String categoryId, String categoryName, long employeeDays, long presentDays,
                                   long exceptionDays, LocalTime typicalArrival, long overtimeMinutes) { }
     public record DailyResult(String id, String employeeId, String employeeCode, String employeeName,
@@ -62,7 +73,7 @@ public final class ReportingApi {
                               Integer manualWorkedMinutes, int effectiveWorkedMinutes, int lateMinutes,
                               int earlyLeaveMinutes, int overtimeMinutes, DailyStatus status, String warning,
                               AttendanceDecision decision, String decisionNote, String decidedBy, Instant decidedAt,
-                              String ruleVersion) { }
+                              String ruleVersion, long version) { }
     public record HolidayProposalView(String id, String categoryId, String categoryName, LocalDate workDate,
                                       int activeEmployeeCount, HolidayProposalStatus status, String note,
                                       String decidedBy, Instant decidedAt) { }

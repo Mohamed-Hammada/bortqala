@@ -5,6 +5,7 @@ import { WorkforceService } from '../../data-access/workforce.service';
 import { WorkforceAdvance, AdvanceRepayRequest, AdvancePolicy } from '../../models/workforce.models';
 import { NotificationService } from '../../../../core/notification.service';
 import { exportCsv } from '../../../../core/download';
+import { apiErrorDetail } from '../../../../core/api-error';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-tooltip.directive';
 import { ActivatedRoute } from '@angular/router';
@@ -609,7 +610,7 @@ export class AdvancesComponent implements OnInit {
     this.saving.set(true);
     this.workforceService.saveAdvancePolicy(this.policyForm).subscribe({
       next: () => { this.saving.set(false); this.policyModalOpen.set(false); this.notificationService.success('تم حفظ سياسة السلف بنجاح ✓'); },
-      error: error => { this.saving.set(false); this.notificationService.error(error?.error?.detail ?? 'تعذّر حفظ السياسة'); },
+      error: error => { this.saving.set(false); this.notificationService.error(apiErrorDetail(error, 'تعذّر حفظ السياسة')); },
     });
   }
 
@@ -674,7 +675,7 @@ export class AdvancesComponent implements OnInit {
       },
       error: (e) => {
         this.saving.set(false);
-        const msg = e?.error?.detail ?? e?.error?.message ?? e?.message ?? 'خطأ غير متوقع';
+        const msg = apiErrorDetail(e, e?.error?.message ?? e?.message ?? 'خطأ غير متوقع');
         this.notificationService.error('فشل حفظ السلفة: ' + msg);
       }
     });
@@ -771,7 +772,7 @@ export class AdvancesComponent implements OnInit {
       },
       error: (e) => {
         this.saving.set(false);
-        const msg = e?.error?.detail ?? e?.error?.message ?? e?.message ?? 'خطأ غير متوقع';
+        const msg = apiErrorDetail(e, e?.error?.message ?? e?.message ?? 'خطأ غير متوقع');
         this.notificationService.error('فشل السداد: ' + msg);
       }
     });

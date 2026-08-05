@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'jacoco'
     id 'org.springframework.boot' version '4.1.0'
     id 'io.spring.dependency-management' version '1.1.7'
 }
@@ -10,12 +11,6 @@ description = 'Bemo ERP business operations platform'
 
 springBoot {
     buildInfo()
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(26)
-    }
 }
 
 repositories {
@@ -38,18 +33,25 @@ dependencies {
     runtimeOnly 'com.h2database:h2'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
     testCompileOnly 'org.projectlombok:lombok:1.18.46'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.46'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    testImplementation platform('org.testcontainers:testcontainers-bom:1.21.3')
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    finalizedBy tasks.named('jacocoTestReport')
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.release = 21
     options.compilerArgs += ['-parameters']
 }
 
@@ -67,8 +69,12 @@ tasks.register('buildFrontend', Exec) {
     outputs.dir(frontendOutput)
 }
 
-tasks.named('processResources') {
+tasks.named('bootJar') {
     dependsOn tasks.named('buildFrontend')
+}
+
+tasks.named('processResources') {
+    mustRunAfter tasks.named('buildFrontend')
     from(frontendOutput.map { it.dir('browser') }) {
         into 'static'
     }

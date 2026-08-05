@@ -56,6 +56,24 @@ public class AppUser {
     @Column(name = "dashboard_customization_enabled", nullable = false)
     private boolean dashboardCustomizationEnabled = true;
 
+    @Column(name = "failed_login_attempts", nullable = false)
+    private int failedLoginAttempts;
+
+    @Column(name = "locked_until")
+    private Instant lockedUntil;
+
+    @Column(name = "must_change_password", nullable = false)
+    private boolean mustChangePassword = true;
+
+    @Column(name = "last_login_at")
+    private Instant lastLoginAt;
+
+    @Column(name = "last_failed_login_at")
+    private Instant lastFailedLoginAt;
+
+    @Column(name = "token_version", nullable = false)
+    private int tokenVersion;
+
     @Version
     private long version;
 
@@ -96,6 +114,54 @@ public class AppUser {
         this.categoryId = categoryId == null || categoryId.isBlank() ? null : categoryId;
     }
 
+    public void changePassword(String newPasswordHash) {
+        this.passwordHash = newPasswordHash;
+    }
+
+    public boolean isLocked(Instant now) {
+        return lockedUntil != null && lockedUntil.isAfter(now);
+    }
+
+    public void recordFailedLogin(Instant now, int maxAttempts, java.time.Duration lockoutDuration) {
+        this.lastFailedLoginAt = now;
+        this.failedLoginAttempts++;
+        if (this.failedLoginAttempts >= maxAttempts) {
+            this.lockedUntil = now.plus(lockoutDuration);
+        }
+    }
+
+    public void resetLoginFailures() {
+        this.failedLoginAttempts = 0;
+        this.lockedUntil = null;
+        this.lastFailedLoginAt = null;
+    }
+
+    public void recordSuccessfulLogin(Instant now) {
+        this.lastLoginAt = now;
+        this.failedLoginAttempts = 0;
+        this.lockedUntil = null;
+    }
+
+    public void unlock() {
+        this.failedLoginAttempts = 0;
+        this.lockedUntil = null;
+    }
+
+    public void markPasswordChanged(Instant now) {
+        this.mustChangePassword = false;
+        this.lockedUntil = null;
+        this.failedLoginAttempts = 0;
+        this.tokenVersion++;
+    }
+
+    public void requirePasswordChangeOnNextLogin() {
+        this.mustChangePassword = true;
+    }
+
+    public void bumpTokenVersion() {
+        this.tokenVersion++;
+    }
+
     @PrePersist
     void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
 
@@ -111,6 +177,12 @@ public class AppUser {
     public boolean isCanViewSalary() { return canViewSalary; }
     public String getCategoryId() { return categoryId; }
     public boolean isDashboardCustomizationEnabled() { return dashboardCustomizationEnabled; }
+    public int getFailedLoginAttempts() { return failedLoginAttempts; }
+    public Instant getLockedUntil() { return lockedUntil; }
+    public boolean isMustChangePassword() { return mustChangePassword; }
+    public Instant getLastLoginAt() { return lastLoginAt; }
+    public Instant getLastFailedLoginAt() { return lastFailedLoginAt; }
+    public int getTokenVersion() { return tokenVersion; }
     public Set<Role> getRoles() { return Set.copyOf(roles); }
     public Set<String> getAllowedMenus() {
         if (allowedMenus == null || allowedMenus.isBlank()) {

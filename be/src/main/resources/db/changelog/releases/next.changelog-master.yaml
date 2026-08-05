@@ -13,3 +13,47 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260801_v73_erp_pages_translations.yaml
   - include:
       file: db/changelog/data/insert/20260801_v74_erp_pages_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260801_v75_shared_idempotency.yaml
+  - include:
+      file: db/changelog/data/insert/20260801_v76_error_pages_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260801_v77_employee_assignments.yaml
+  - include:
+      file: db/changelog/schema/update/20260801_v78_biometric_device_credentials.yaml
+  - include:
+      file: db/changelog/schema/update/20260801_v79_report_generation_hash.yaml
+  - include:
+      file: db/changelog/schema/update/20260801_v80_report_decision_history.yaml
+  - include:
+      file: db/changelog/data/insert/20260801_v81_report_review_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260802_v82_session_security_domain_roles.yaml
+  - include:
+      file: db/changelog/schema/update/20260802_v83_refresh_token_family_and_role_grant_fix.yaml
+  - include:
+      file: db/changelog/schema/update/20260802_v84_optimistic_locking_aggregates.yaml
+  - include:
+      file: db/changelog/data/insert/20260802_v85_change_password_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260802_v86_finance_journal_locking.yaml
+  - include:
+      file: db/changelog/schema/create/20260803_v87_tenant_features.yaml
+  - include:
+      file: db/changelog/data/insert/20260803_v88_workforce_import_error_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260804_v89_workforce_import_batch_version.yaml
+  - include:
+      file: db/changelog/schema/update/20260804_v90_punch_device_scoped_dedup.yaml
+  - include:
+      file: db/changelog/data/insert/20260804_v91_backend_error_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260804_v92_punch_source_identity.yaml
+  - include:
+      file: db/changelog/schema/update/20260804_v93_idempotency_lease.yaml
+  - include:
+      file: db/changelog/schema/update/20260804_v94_idempotency_owner.yaml
+  - include:
+      file: db/changelog/data/insert/20260804_v95_biometric_sources_i18n.yaml
+  - include:
+      file: db/changelog/data/insert/20260804_v96_error_fallbacks_i18n.yaml

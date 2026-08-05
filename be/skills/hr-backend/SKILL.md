@@ -5,7 +5,7 @@ description: Continue and review the Bemo Spring Boot backend in be/. Use for em
 
 # Continue the HR backend
 
-Build the backend as a modular monolith on Spring Boot 4.1, Java 26, Gradle, PostgreSQL, JPA, Liquibase, Bean Validation, and Actuator. Preserve calculation evidence and manual decisions so an approved report is reproducible.
+Build the backend as a modular monolith on Spring Boot 4.1, Java 21, Gradle, PostgreSQL, JPA, Liquibase, Bean Validation, and Actuator. Preserve calculation evidence and manual decisions so an approved report is reproducible.
 
 ## Start every task
 
@@ -67,17 +67,21 @@ Inside a feature, add only the layers the slice needs: `api`, `application`, `do
 - Generate Excel on the backend from an approved or selected report snapshot. Include filters, generation time, report version, and configuration version.
 - Localize every exported title/header/status to the authenticated user's locale, apply their chosen native Excel table style, preserve typed cells, and use a feature plus timestamp filename.
 - Model biometric uploads as import batches with checksum, device, actor, status, row counts, and row errors. Re-importing a checksum must be safe.
+- Enforce upload guards at the service boundary: max file bytes and max rows are configurable via `hr.workforce-import.max-file-bytes` / `hr.workforce-import.max-rows` (defaults 20 MB / 20 000, env `HR_WORKFORCE_IMPORT_*`); preview endpoints must be bounded (`hr.workforce-import.preview-limit`, default 100). All reverse/validate/preview work must stay bounded to the target batch's own rows, never scan unrelated data.
+- Throw `BusinessRuleException` with a stable machine key (e.g. `WORKFORCE_IMPORT_*`, `EXCEL_*`); do not hard-code Arabic message strings. `ApiExceptionHandler` resolves the key through the DB translation tables (falling back to the constructor message), so new keys must ship with a Liquibase V+ translation CSV/loadData changeset for ar-EG and en-US. Static messages always get a code; only messages that embed runtime values (string concatenation such as balances, ids, counts) stay single-arg so their dynamic fallback survives — never give a concatenated message a translation key, because a DB row would replace the dynamic value.
+- `NotFoundException` supports an optional `(message, code)` constructor; the handler resolves the code the same way as business rules. Every backend exception code must exist exactly once per locale (`uq_translations_key_locale`); a new key colliding with an existing CSV row must be re-used or skipped, never inserted twice.
 
 ## Current state
 
-- Runtime: Spring Boot `4.1.0`, Java `26`, Gradle `9.3.1`, PostgreSQL for production and H2 only for dev/tests.
-- Persistence: Liquibase creates SaaS apps/users/preferences, global translation rows, categories/schedules, employees/code sequences, holidays, immutable imports/punches/errors, reports, business parties, inventory, signed ledgers, advances, daily snapshots, and proposals. PostgreSQL 18.4 startup and Hibernate schema validation were exercised locally.
+- Runtime: Spring Boot `4.1.0`, Gradle `9.3.1`, PostgreSQL for production and H2 only for dev/tests. The Gradle build targets Java 17 (`options.release = 17`) for source compatibility; the Docker images still run Temurin Java 26. Avoid Java 21+ collection APIs (`getFirst()`/`getLast()`) in main and test sources.
+- Persistence: Liquibase creates SaaS apps/users/preferences, global translation rows, categories/schedules, employees/code sequences, holidays, immutable imports/punches/errors, reports, business parties, inventory, signed ledgers, advances, daily snapshots, and proposals. PostgreSQL 18.4 startup and Hibernate schema validation were exercised locally. V89 adds `version` to `workforce_import_batches`; V90 adds `device_id` to `punch_records` plus a unique `(app_id, device_id, device_user_id, punched_at)` index; V91 loads ar-EG/en-US rows for every backend exception code.
+- Concurrency: workforce import commit takes a pessimistic write lock (`findByIdForUpdate`) on the batch so a repeated `operationId` from two concurrent requests yields exactly one applied import and one replay; punch dedup relies on the V90 unique index so concurrent device syncs store each device user/time pair once. PostgreSQL concurrency is covered by Testcontainers-only suites (`@PostgresIntegrationTest`, `@RepeatedTest`) that cannot run without Docker.
 - Security: login requires app code, username, and password. HS256 JWTs carry `appId`/`appCode`; tenant discrimination is automatic for JPA entities. Users hold one or more of `ADMIN`, `HR_MANAGER`, `HR_REVIEWER`, `VIEWER`. Each app has an ADMIN-controlled 5–10,080 minute timeout used for newly issued tokens.
 - Observability: every response contains client and server correlation headers. Logstash JSON records correlation ids, IP, browser device id, JWT user id/name/roles, method/path/status/duration, and bounded user-agent without tokens, bodies, passwords, or queries.
 - APIs: category/schedule and employee CRUD, biometric imports/unmatched identities, dashboard, preset discovery, custom-range reports, business parties, inventory/ledger/advance operations, user preferences, public translation bundles, multi-user management, and localized Excel exports.
 - Calculation: effective schedule minutes, configurable workdays/grace/one-punch policy, manual versus biometric modes, first/last punch, worked/late/early/overtime, persisted decisions, confirmed holidays, and frozen approval snapshots.
 - DEMO bootstrap: reference categories, seasonal rules, employees, attendance edge cases, business parties, inventory movements, partner balances, and an eligible advance are created idempotently; existing codes are never overwritten.
-- Verification: 17 backend tests pass with Liquibase plus focused policy tests. PostgreSQL 18.4 startup performs Hibernate schema validation; H2 uses a test-only V16 equivalent because Liquibase 5 cannot snapshot that H2 unique constraint reliably. The API is smoke-tested with a real JWT.
+
 - Next safe extensions: pagination for large installations, audited device-identity mapping UI, bulk exception decisions, configurable rounding/overtime policies, refresh-token/session revocation, and vendor device adapters through the existing file-reader boundary.
 
 Do not add payment execution or a vendor-specific device SDK until the user selects those integrations. Do not invent packing/carton or payroll formulas from partially legible notes; signed ledgers preserve the known facts while later policies remain configurable. Design adapters so integrations do not change calculation rules.

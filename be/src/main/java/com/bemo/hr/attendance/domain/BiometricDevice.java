@@ -18,6 +18,8 @@ public class BiometricDevice {
     @TenantId @Column(name = "app_id", nullable = false) private String appId;
     @Column(nullable = false, length = 150) private String name;
     @Column(name = "endpoint_url", nullable = false, length = 1000) private String endpointUrl;
+    @Column(name = "device_username", length = 150) private String username;
+    @Column(name = "device_password_enc", length = 1000) private String passwordEncrypted;
     @Column(nullable = false) private boolean enabled;
     @Column(name = "sync_interval_minutes", nullable = false) private int syncIntervalMinutes;
     @Column(name = "last_sync_at") private Instant lastSyncAt;
@@ -42,6 +44,15 @@ public class BiometricDevice {
         this.enabled = enabled;
         this.syncIntervalMinutes = Math.max(1, syncIntervalMinutes);
         this.nextSyncAt = enabled ? Instant.now() : null;
+    }
+
+    public void setCredentials(String username, String passwordEncrypted) {
+        this.username = username == null || username.isBlank() ? null : username.strip();
+        this.passwordEncrypted = passwordEncrypted == null || passwordEncrypted.isBlank() ? null : passwordEncrypted;
+    }
+
+    public boolean hasPassword() {
+        return passwordEncrypted != null && !passwordEncrypted.isBlank();
     }
 
     public void syncSucceeded(int importedRows, Instant latestPunchAt) {
@@ -73,6 +84,8 @@ public class BiometricDevice {
     public String getId() { return id; }
     public String getName() { return name; }
     public String getEndpointUrl() { return endpointUrl; }
+    public String getUsername() { return username; }
+    public String getPasswordEncrypted() { return passwordEncrypted; }
     public boolean isEnabled() { return enabled; }
     public int getSyncIntervalMinutes() { return syncIntervalMinutes; }
     public Instant getLastSyncAt() { return lastSyncAt; }

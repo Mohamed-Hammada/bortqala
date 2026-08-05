@@ -5,6 +5,7 @@ import com.bemo.hr.attendance.domain.BiometricDevice;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @Component
@@ -29,24 +31,29 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
     }
 
     @Override
-    public DeviceResponse fetch(BiometricDevice device) {
+    public DeviceResponse fetch(BiometricDevice device, BiometricDeviceClient.DeviceCredentials credentials) {
         try {
             URI endpoint = endpoint(device);
-            HttpRequest request = HttpRequest.newBuilder(endpoint)
+            HttpRequest.Builder builder = HttpRequest.newBuilder(endpoint)
                     .timeout(Duration.ofSeconds(20))
-                    .header("Accept", "application/json")
-                    .GET().build();
-            HttpResponse<byte[]> response = httpClient.send(request, HttpResponse.BodyHandlers.ofByteArray());
+                    .header("Accept", "application/json");
+            if (credentials != null && credentials.password() != null && !credentials.password().isBlank()) {
+                String user = credentials.username() == null ? "" : credentials.username();
+                String basic = Base64.getEncoder().encodeToString(
+                        (user + ":" + credentials.password()).getBytes(StandardCharsets.UTF_8));
+                builder.header("Authorization", "Basic " + basic);
+            }
+            HttpResponse<byte[]> response = httpClient.send(builder.GET().build(), HttpResponse.BodyHandlers.ofByteArray());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new BusinessRuleException("فشل الاتصال بجهاز البصمة. رمز الاستجابة: " + response.statusCode());
             }
             JsonNode root = objectMapper.readTree(response.body());
             JsonNode rows = root.isArray() ? root : root.path("punches");
             if (!rows.isArray()) {
-                throw new BusinessRuleException("استجابة الجهاز غير صالحة: يجب إرسال مصفوفة punches.");
+                throw new BusinessRuleException("استجابة الجهاز غير صالحة: يجب إرسال مصفوفة punches.", "BIO_DEVICE_RESPONSE_INVALID", HttpStatus.CONFLICT);
             }
             if (rows.size() > 10_000) {
-                throw new BusinessRuleException("استجابة الجهاز تتجاوز الحد الأقصى وهو 10000 بصمة لكل مزامنة.");
+                throw new BusinessRuleException("استجابة الجهاز تتجاوز الحد الأقصى وهو 10000 بصمة لكل مزامنة.", "BIO_DEVICE_RESPONSE_TOO_LARGE", HttpStatus.CONFLICT);
             }
             List<DevicePunch> punches = new ArrayList<>();
             for (JsonNode row : rows) {
@@ -68,9 +75,9 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
     private URI endpoint(BiometricDevice device) {
         URI base = URI.create(device.getEndpointUrl());
         if (!"http".equalsIgnoreCase(base.getScheme()) && !"https".equalsIgnoreCase(base.getScheme())) {
-            throw new BusinessRuleException("رابط جهاز البصمة يجب أن يبدأ بـ http أو https.");
+            throw new BusinessRuleException("رابط جهاز البصمة يجب أن يبدأ بـ http أو https.", "BIO_DEVICE_ENDPOINT_SCHEME_REQUIRED", HttpStatus.CONFLICT);
         }
-        if (base.getHost() == null) throw new BusinessRuleException("رابط جهاز البصمة غير صالح.");
+        if (base.getHost() == null) throw new BusinessRuleException("رابط جهاز البصمة غير صالح.", "BIO_DEVICE_ENDPOINT_MALFORMED", HttpStatus.CONFLICT);
         if (device.getLastSuccessfulPunchAt() == null) return base;
         String separator = base.getQuery() == null ? "?" : "&";
         return URI.create(base + separator + "since=" + URLEncoder.encode(

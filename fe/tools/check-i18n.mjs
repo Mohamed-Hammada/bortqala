@@ -43,9 +43,29 @@ for (const path of filesUnder(changelogRoot, '.yaml')) {
     byLocale.get(match[2]).add(match[1]);
   }
 }
+let failed = false;
+
+const walkForBlocks = (directory) => {
+  for (const name of readdirSync(directory)) {
+    const path = join(directory, name);
+    if (statSync(path).isDirectory()) walkForBlocks(path);
+    else if (/\.(ts|html)$/.test(name)) {
+      const source = readFileSync(path, 'utf8');
+      if (source.includes('DEFAULT_FALLBACKS') || source.includes('KNOWN_MESSAGES')) {
+        console.error(`Static dictionary found in ${path}`);
+        failed = true;
+      }
+    }
+  }
+};
+walkForBlocks(sourceRoot);
+
 const missing = [...required].sort().flatMap((key) => [...byLocale].filter(([, keys]) => !keys.has(key)).map(([locale]) => `${locale}: ${key}`));
 if (missing.length) {
   console.error(`Missing database translations (${missing.length}):\n${missing.join('\n')}`);
+  failed = true;
+}
+if (failed) {
   process.exit(1);
 }
-console.log(`i18n check passed: ${required.size} literal keys exist in ar-EG and en-US.`);
+console.log(`i18n check passed: ${required.size} literal keys exist in ar-EG and en-US. No static dictionaries found.`);

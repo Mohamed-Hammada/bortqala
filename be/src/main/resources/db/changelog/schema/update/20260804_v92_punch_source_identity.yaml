@@ -1,0 +1,396 @@
+databaseChangeLog:
+  # Stable punch source identity.
+  #
+  # A punch's source is a registered biometric_sources row (a physical device
+  # or a file-import source), never free text. punch_records and import_batches
+  # carry source_id, and deduplication is scoped to (app, source, device user,
+  # punch time). The backfill changesets are idempotent and never use a
+  # count-based precondition (a MARK_RAN skip on "COUNT(*) = 1" would silently
+  # bypass real production data), and the NOT NULL step HALTs if any row could
+  # not be mapped so no import is ever left without an identity.
+  - changeSet:
+      id: 20260804-v92-punch-import-evidence-table
+      author: Mohamed-Hammada
+      comment: Records which batch supplied each punch so a punch can stay deduplicated while every batch that contributed evidence for it remains auditable and reversible.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: punch_import_evidence
+      changes:
+        - createTable:
+            tableName: punch_import_evidence
+            columns:
+              - column: { name: punch_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: batch_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: row_number, type: INT, constraints: { nullable: false } }
+              - column: { name: raw_line, type: TEXT, constraints: { nullable: false } }
+        - addPrimaryKey:
+            tableName: punch_import_evidence
+            constraintName: pk_punch_import_evidence
+            columnNames: punch_id, batch_id, row_number
+        - addForeignKeyConstraint:
+            baseTableName: punch_import_evidence
+            baseColumnNames: punch_id
+            constraintName: fk_punch_evidence_punch
+            referencedTableName: punch_records
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: punch_import_evidence
+            baseColumnNames: batch_id
+            constraintName: fk_punch_evidence_batch
+            referencedTableName: import_batches
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - createIndex:
+            tableName: punch_import_evidence
+            indexName: idx_punch_evidence_batch
+            columns:
+              - column: { name: batch_id }
+      rollback:
+        - dropTable: { tableName: punch_import_evidence }
+  - changeSet:
+      id: 20260804-v92-biometric-sources-table
+      author: Mohamed-Hammada
+      comment: Creates the registered biometric source catalog that both live-sync and file-import punches reference.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: biometric_sources
+      changes:
+        - createTable:
+            tableName: biometric_sources
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: source_type, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(150), constraints: { nullable: false } }
+              - column: { name: normalized_code, type: VARCHAR(150), constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: biometric_sources
+            columnNames: app_id, source_type, normalized_code
+            constraintName: uq_biometric_sources_app_type_code
+        - createIndex:
+            tableName: biometric_sources
+            indexName: idx_biometric_sources_app
+            columns:
+              - column: { name: app_id }
+      rollback:
+        - dropTable: { tableName: biometric_sources }
+  - changeSet:
+      id: 20260804-v92-punch-source-add-columns
+      author: Mohamed-Hammada
+      comment: Adds the stable source reference to punches and batches.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: punch_records
+              columnName: source_id
+      changes:
+        - addColumn:
+            tableName: punch_records
+            columns:
+              - column:
+                  name: source_id
+                  type: VARCHAR(36)
+        - addColumn:
+            tableName: import_batches
+            columns:
+              - column:
+                  name: source_id
+                  type: VARCHAR(36)
+      rollback:
+        - dropColumn:
+            tableName: punch_records
+            columnName: source_id
+        - dropColumn:
+            tableName: import_batches
+            columnName: source_id
+  - changeSet:
+      id: 20260804-v92-punch-source-backfill
+      author: Mohamed-Hammada
+      comment: Idempotent backfill. Registers one DEVICE source per biometric device and one FILE_DEVICE source per distinct file device name, then links every historical punch and batch to its source.
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO biometric_sources (id, app_id, source_type, name, normalized_code, active, created_at)
+              SELECT d.id, d.app_id, 'DEVICE', d.name, d.id, TRUE, CURRENT_TIMESTAMP
+              FROM biometric_devices d
+              WHERE NOT EXISTS (
+                  SELECT 1 FROM biometric_sources s
+                  WHERE s.app_id = d.app_id AND s.source_type = 'DEVICE' AND s.normalized_code = d.id
+              );
+
+              INSERT INTO biometric_sources (id, app_id, source_type, name, normalized_code, active, created_at)
+              SELECT md5('FILE_DEVICE:' || b.app_id || ':' || LOWER(REGEXP_REPLACE(BTRIM(b.device_name), '\s+', '_'))),
+                     b.app_id, 'FILE_DEVICE', MIN(b.device_name), LOWER(REGEXP_REPLACE(BTRIM(b.device_name), '\s+', '_')), TRUE, CURRENT_TIMESTAMP
+              FROM import_batches b
+              WHERE NOT EXISTS (
+                  SELECT 1 FROM biometric_sources s
+                  WHERE s.app_id = b.app_id AND s.source_type = 'FILE_DEVICE'
+                    AND s.normalized_code = LOWER(REGEXP_REPLACE(BTRIM(b.device_name), '\s+', '_'))
+              )
+              GROUP BY b.app_id, LOWER(REGEXP_REPLACE(BTRIM(b.device_name), '\s+', '_'));
+
+              UPDATE punch_records p
+              SET source_id = s.id
+              FROM biometric_sources s
+              WHERE s.app_id = p.app_id
+                AND s.source_type = 'DEVICE'
+                AND s.normalized_code = p.device_id
+                AND p.device_id IS NOT NULL
+                AND p.source_id IS NULL;
+
+              UPDATE punch_records p
+              SET source_id = s.id
+              FROM import_batches b, biometric_sources s
+              WHERE b.id = p.batch_id
+                AND s.app_id = p.app_id
+                AND s.source_type = 'FILE_DEVICE'
+                AND s.normalized_code = LOWER(REGEXP_REPLACE(BTRIM(b.device_name), '\s+', '_'))
+                AND p.source_id IS NULL;
+
+              UPDATE import_batches b
+              SET source_id = s.id
+              FROM biometric_sources s
+              WHERE s.app_id = b.app_id
+                AND s.source_type = 'DEVICE'
+                AND s.normalized_code = SUBSTRING(b.file_name FROM 13 FOR 36)
+                AND b.file_name LIKE 'device-sync-%'
+                AND b.source_id IS NULL;
+
+              UPDATE import_batches b
+              SET source_id = s.id
+              FROM biometric_sources s
+              WHERE s.app_id = b.app_id
+                AND s.source_type = 'FILE_DEVICE'
+                AND s.normalized_code = LOWER(REGEXP_REPLACE(BTRIM(b.device_name), '\s+', '_'))
+                AND b.source_id IS NULL;
+      rollback:
+        - sql:
+            sql: |
+              UPDATE punch_records SET source_id = NULL;
+              UPDATE import_batches SET source_id = NULL;
+              DELETE FROM biometric_sources;
+  - changeSet:
+      id: 20260804-v92-punch-source-evidence-backfill
+      author: Mohamed-Hammada
+      comment: Records which batch supplied each historical punch row before deduplication so batch evidence survives when duplicate punches collapse onto one row.
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO punch_import_evidence (punch_id, batch_id, app_id, row_number, raw_line)
+              SELECT min_id, batch_id, app_id, row_number, raw_line
+              FROM (
+                  SELECT
+                      MIN(p.id) OVER (PARTITION BY p.app_id, p.source_id, p.device_user_id, p.punched_at) AS min_id,
+                      p.batch_id, p.app_id, p.row_number, p.raw_line
+                  FROM punch_records p
+              ) t
+              WHERE NOT EXISTS (
+                  SELECT 1 FROM punch_import_evidence e
+                  WHERE e.punch_id = t.min_id AND e.batch_id = t.batch_id AND e.row_number = t.row_number
+              );
+      rollback:
+        - sql:
+            sql: DELETE FROM punch_import_evidence;
+  - changeSet:
+      id: 20260804-v92-batch-metric-columns
+      author: Mohamed-Hammada
+      comment: Adds the distinct batch outcome metrics so total, valid, error, new-punch and duplicate-punch counts are never conflated with a punch_records count.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: import_batches
+              columnName: valid_rows
+      changes:
+        - addColumn:
+            tableName: import_batches
+            columns:
+              - column: { name: valid_rows, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: new_punches, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: duplicate_punches, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+      rollback:
+        - dropColumn:
+            tableName: import_batches
+            columnName: valid_rows
+        - dropColumn:
+            tableName: import_batches
+            columnName: new_punches
+        - dropColumn:
+            tableName: import_batches
+            columnName: duplicate_punches
+  - changeSet:
+      id: 20260804-v92-punch-source-dedupe
+      author: Mohamed-Hammada
+      comment: Resolves pre-existing duplicates (the lexicographically smallest punch id wins) and records each batch's distinct outcome metrics from its evidence, never by counting punch_records.
+      changes:
+        - sql:
+            sql: |
+              DELETE FROM punch_records p
+              WHERE EXISTS (
+                  SELECT 1 FROM punch_records q
+                  WHERE q.app_id = p.app_id
+                    AND q.source_id = p.source_id
+                    AND q.device_user_id = p.device_user_id
+                    AND q.punched_at = p.punched_at
+                    AND q.id < p.id
+              );
+
+              UPDATE import_batches b
+              SET valid_rows = b.total_rows - b.error_rows,
+                  imported_rows = b.total_rows - b.error_rows,
+                  new_punches = (
+                      SELECT COUNT(DISTINCT e.punch_id) FROM punch_import_evidence e WHERE e.batch_id = b.id
+                  );
+
+              UPDATE import_batches b
+              SET duplicate_punches = GREATEST(b.valid_rows - b.new_punches, 0);
+      rollback:
+        - sql:
+            sql: UPDATE import_batches b SET imported_rows = b.total_rows - b.error_rows;
+  - changeSet:
+      id: 20260804-v92-punch-source-not-null
+      author: Mohamed-Hammada
+      comment: Every punch and every batch must carry a mapped source identity before the NOT NULL constraints are applied; any unmapped row halts the upgrade.
+      preConditions:
+        - onFail: HALT
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM punch_records WHERE source_id IS NULL
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM import_batches WHERE source_id IS NULL
+      changes:
+        - addNotNullConstraint:
+            tableName: punch_records
+            columnName: source_id
+            columnDataType: VARCHAR(36)
+        - addNotNullConstraint:
+            tableName: import_batches
+            columnName: source_id
+            columnDataType: VARCHAR(36)
+      rollback:
+        - dropNotNullConstraint:
+            tableName: punch_records
+            columnName: source_id
+            columnDataType: VARCHAR(36)
+        - dropNotNullConstraint:
+            tableName: import_batches
+            columnName: source_id
+            columnDataType: VARCHAR(36)
+  - changeSet:
+      id: 20260804-v92-punch-source-foreign-keys
+      author: Mohamed-Hammada
+      comment: Source identity is a reference, never free text. RESTRICT deletion so a source with historical punches or batches cannot be removed out from under them.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            foreignKeyConstraintExists:
+              foreignKeyName: fk_punch_records_source
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: punch_records
+            baseColumnNames: source_id
+            constraintName: fk_punch_records_source
+            referencedTableName: biometric_sources
+            referencedColumnNames: id
+            onDelete: RESTRICT
+        - addForeignKeyConstraint:
+            baseTableName: import_batches
+            baseColumnNames: source_id
+            constraintName: fk_import_batches_source
+            referencedTableName: biometric_sources
+            referencedColumnNames: id
+            onDelete: RESTRICT
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: punch_records
+            constraintName: fk_punch_records_source
+        - dropForeignKeyConstraint:
+            baseTableName: import_batches
+            constraintName: fk_import_batches_source
+  - changeSet:
+      id: 20260804-v92-punch-source-dedup-index
+      author: Mohamed-Hammada
+      comment: Unique per (app, source, device user, punch time) so duplicate file imports and concurrent syncs are conflict-safe.
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            indexExists:
+              indexName: uq_punch_records_source_user_time
+      changes:
+        - createIndex:
+            indexName: uq_punch_records_source_user_time
+            tableName: punch_records
+            unique: true
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: source_id
+              - column:
+                  name: device_user_id
+              - column:
+                  name: punched_at
+      rollback:
+        - dropIndex:
+            indexName: uq_punch_records_source_user_time
+            tableName: punch_records
+  - changeSet:
+      id: 20260804-v92-batch-source-checksum
+      author: Mohamed-Hammada
+      comment: A checksum is only unique per source so identical bytes imported from two different sources remain two batches.
+      preConditions:
+        - onFail: MARK_RAN
+        - indexExists:
+            indexName: uq_import_batches_app_checksum
+      changes:
+        - dropUniqueConstraint:
+            tableName: import_batches
+            constraintName: uq_import_batches_app_checksum
+        - addUniqueConstraint:
+            tableName: import_batches
+            columnNames: app_id, source_id, checksum
+            constraintName: uq_import_batches_app_source_checksum
+      rollback:
+        - dropUniqueConstraint:
+            tableName: import_batches
+            constraintName: uq_import_batches_app_source_checksum
+        - addUniqueConstraint:
+            tableName: import_batches
+            columnNames: app_id, checksum
+            constraintName: uq_import_batches_app_checksum
+  - changeSet:
+      id: 20260804-v92-punch-drop-legacy-device-dedup-index
+      author: Mohamed-Hammada
+      comment: The V90 device-scoped index is fully superseded by the source-scoped index.
+      preConditions:
+        - onFail: MARK_RAN
+        - indexExists:
+            indexName: uq_punch_records_app_device_user_time
+      changes:
+        - dropIndex:
+            indexName: uq_punch_records_app_device_user_time
+            tableName: punch_records
+      rollback:
+        - createIndex:
+            indexName: uq_punch_records_app_device_user_time
+            tableName: punch_records
+            unique: true
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: device_id
+              - column:
+                  name: device_user_id
+              - column:
+                  name: punched_at

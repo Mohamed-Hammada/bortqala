@@ -1,7 +1,10 @@
 package com.bemo.hr.workforce;
 
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.shared.api.TransitionResponse;
+import com.bemo.hr.shared.api.WorkflowTransitions;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,6 +27,13 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class WorkforceSettlementService {
+    private static final Map<String, List<String>> SETTLEMENT_PERIOD_WORKFLOW = Map.of(
+            "DRAFT", List.of("CALCULATE", "DELETE"),
+            "CALCULATED", List.of("REVIEW", "RECALCULATE"),
+            "REVIEWED", List.of("APPROVE", "RECALCULATE"),
+            "APPROVED", List.of("LOCK", "EXPORT"),
+            "LOCKED", List.of("EXPORT"));
+
     private final WorkforceSettlementPeriodRepository periodRepository;
     private final WorkerSettlementRepository workerSettlementRepository;
     private final ContractorSettlementRepository contractorSettlementRepository;
@@ -61,7 +71,7 @@ public class WorkforceSettlementService {
     @Transactional
     public WorkforceApi.SettlementPeriodResponse createPeriod(WorkforceApi.SettlementPeriodRequest request) {
         if (request.startDate().compareTo(request.endDate()) > 0) {
-            throw new BusinessRuleException("تاريخ بداية فترة التسوية يجب ألا يتجاوز تاريخ النهاية.");
+            throw new BusinessRuleException("تاريخ بداية فترة التسوية يجب ألا يتجاوز تاريخ النهاية.", "SETTL_START_AFTER_END", HttpStatus.CONFLICT);
         }
         WorkforceSettlementPeriod period = new WorkforceSettlementPeriod(
                 request.periodCode(), request.startDate(), request.endDate(), request.cycleType(), "DRAFT");
@@ -89,14 +99,20 @@ public class WorkforceSettlementService {
     private WorkforceApi.SettlementCalculationSummary calculateInTransaction(String periodId) {
         WorkforceSettlementPeriod period = requirePeriod(periodId);
         if ("LOCKED".equals(period.getStatus()) || "APPROVED".equals(period.getStatus())) {
-            throw new BusinessRuleException("لا يمكن إعادة احتساب فترة معتمدة أو مقفلة.");
+            throw new BusinessRuleException("لا يمكن إعادة احتساب فترة معتمدة أو مقفلة.", "SETTL_RECALCULATE_APPROVED_LOCKED", HttpStatus.CONFLICT);
         }
 
         List<ManualAttendanceEntry> entries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
         Map<String, List<ManualAttendanceEntry>> workerEntries = entries.stream()
                 .collect(Collectors.groupingBy(ManualAttendanceEntry::getWorkerId));
-        List<Worker> allWorkers = workerRepository.findAll();
-        List<Contractor> contractors = contractorRepository.findAll();
+        
+        // Fix P1-9: Load all ACTIVE workers (or ones with entries)
+        List<Worker> allWorkers = workerRepository.findAll().stream()
+                .filter(w -> "ACTIVE".equalsIgnoreCase(w.getStatus()) || workerEntries.containsKey(w.getId()))
+                .toList();
+
+        var contractorIds = allWorkers.stream().map(Worker::getContractorId).filter(java.util.Objects::nonNull).collect(Collectors.toSet());
+        List<Contractor> contractors = contractorIds.isEmpty() ? java.util.Collections.emptyList() : contractorRepository.findAllById(contractorIds);
         String fingerprint = inputFingerprint(entries, allWorkers);
         int nextVersion = period.getCalculationVersion() + 1;
         List<WorkforceSettlementIssue> issues = new ArrayList<>();
@@ -217,32 +233,46 @@ public class WorkforceSettlementService {
     }
 
     @Transactional
-    public WorkforceApi.SettlementPeriodResponse reviewPeriod(String periodId) {
+    public TransitionResponse reviewPeriod(String periodId) {
         WorkforceSettlementPeriod period = requireFreshCalculated(periodId, "CALCULATED");
         period.setStatus("REVIEWED");
         auditService.record("REVIEW", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
-        return mapPeriodToResponse(periodRepository.save(period));
+        periodRepository.save(period);
+        return transition("REVIEWED", period);
     }
 
     @Transactional
-    public WorkforceApi.SettlementPeriodResponse approvePeriod(String periodId) {
+    public TransitionResponse approvePeriod(String periodId) {
         WorkforceSettlementPeriod period = requireFreshCalculated(periodId, "REVIEWED");
-        if (period.getResultErrorCount() > 0) throw new BusinessRuleException("يجب معالجة أخطاء التسوية قبل الاعتماد.");
+        if (period.getResultErrorCount() > 0) throw new BusinessRuleException("يجب معالجة أخطاء التسوية قبل الاعتماد.", "SETTL_ERRORS_MUST_BE_RESOLVED", HttpStatus.CONFLICT);
         period.setStatus("APPROVED");
         auditService.record("APPROVE", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
-        return mapPeriodToResponse(periodRepository.save(period));
+        periodRepository.save(period);
+        return transition("APPROVED", period);
     }
 
     @Transactional
-    public WorkforceApi.SettlementPeriodResponse lockPeriod(String periodId) {
+    public TransitionResponse lockPeriod(String periodId) {
         WorkforceSettlementPeriod period = requirePeriod(periodId);
-        if (!"APPROVED".equals(period.getStatus())) throw new BusinessRuleException("لا يمكن قفل الفترة قبل اعتمادها.");
+        if (!"APPROVED".equals(period.getStatus())) throw new BusinessRuleException("لا يمكن قفل الفترة قبل اعتمادها.", "SETTL_LOCK_BEFORE_APPROVAL", HttpStatus.CONFLICT);
         period.setStatus("LOCKED");
         auditService.record("LOCK", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
-        return mapPeriodToResponse(periodRepository.save(period));
+        periodRepository.save(period);
+        return transition("LOCKED", period);
+    }
+
+    private TransitionResponse transition(String targetStatus, WorkforceSettlementPeriod period) {
+        List<String> actions = new ArrayList<>(WorkflowTransitions.allowedActions(targetStatus, SETTLEMENT_PERIOD_WORKFLOW));
+        if ("REVIEWED".equals(targetStatus)) {
+            actions.add("EXPORT");
+        }
+        if ("APPROVED".equals(targetStatus) && period.getResultErrorCount() > 0) {
+            actions.remove("LOCK");
+        }
+        return new TransitionResponse(targetStatus, period.getCalculationVersion(), actions);
     }
 
     private WorkforceSettlementPeriod requireFreshCalculated(String periodId, String requiredStatus) {
@@ -250,7 +280,7 @@ public class WorkforceSettlementService {
         if (!requiredStatus.equals(period.getStatus())) {
             throw new BusinessRuleException("الحالة الحالية لا تسمح بهذا الإجراء. الحالة المطلوبة: " + requiredStatus);
         }
-        if (needsRecalculation(period)) throw new BusinessRuleException("تغيرت بيانات الحضور أو الأسعار أو السياسات؛ أعد الاحتساب أولاً.");
+        if (needsRecalculation(period)) throw new BusinessRuleException("تغيرت بيانات الحضور أو الأسعار أو السياسات؛ أعد الاحتساب أولاً.", "SETTL_STALE_RECALCULATION_REQUIRED", HttpStatus.CONFLICT);
         return period;
     }
 
@@ -276,8 +306,15 @@ public class WorkforceSettlementService {
 
     private boolean needsRecalculation(WorkforceSettlementPeriod period) {
         if (period.getCalculationVersion() == 0 || period.getInputFingerprint() == null) return true;
-        return !period.getInputFingerprint().equals(inputFingerprint(
-                attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate()), workerRepository.findAll()));
+        var entries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
+        var entriesByWorker = entries.stream().collect(Collectors.groupingBy(ManualAttendanceEntry::getWorkerId));
+        
+        // P1-9: Same worker loading logic for the fingerprint check
+        List<Worker> workers = workerRepository.findAll().stream()
+                .filter(w -> "ACTIVE".equalsIgnoreCase(w.getStatus()) || entriesByWorker.containsKey(w.getId()))
+                .toList();
+
+        return !period.getInputFingerprint().equals(inputFingerprint(entries, workers));
     }
 
     private String inputFingerprint(List<ManualAttendanceEntry> entries, List<Worker> workers) {

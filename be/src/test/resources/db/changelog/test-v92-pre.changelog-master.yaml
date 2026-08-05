@@ -1,0 +1,55 @@
+databaseChangeLog:
+  # Builds the exact schema that ships in the released baseline plus the
+  # unreleased V68-V91 changesets, i.e. production BEFORE the V92 punch-source
+  # identity migration. Used by the migration tests to seed legacy data and
+  # then apply only V92, mirroring a real in-place upgrade.
+  - include:
+      file: db/changelog/releases/20260729_v1_v67.changelog-master.yaml
+  - include:
+      file: db/changelog/schema/create/20260729_v68_system_settings.yaml
+  - include:
+      file: db/changelog/data/insert/20260729_v69_system_settings_defaults.yaml
+  - include:
+      file: db/changelog/data/insert/20260729_v70_system_status_translations.yaml
+  - include:
+      file: db/changelog/data/update/20260729_v71_bemo_erp_branding.yaml
+  - include:
+      file: db/changelog/schema/update/20260730_v72_add_employee_to_workforce_advances.yaml
+  - include:
+      file: db/changelog/data/insert/20260801_v73_erp_pages_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260801_v74_erp_pages_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260801_v75_shared_idempotency.yaml
+  - include:
+      file: db/changelog/data/insert/20260801_v76_error_pages_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260801_v77_employee_assignments.yaml
+  - include:
+      file: db/changelog/schema/update/20260801_v78_biometric_device_credentials.yaml
+  - include:
+      file: db/changelog/schema/update/20260801_v79_report_generation_hash.yaml
+  - include:
+      file: db/changelog/schema/update/20260801_v80_report_decision_history.yaml
+  - include:
+      file: db/changelog/data/insert/20260801_v81_report_review_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260802_v82_session_security_domain_roles.yaml
+  - include:
+      file: db/changelog/schema/update/20260802_v83_refresh_token_family_and_role_grant_fix.yaml
+  - include:
+      file: db/changelog/schema/update/20260802_v84_optimistic_locking_aggregates.yaml
+  - include:
+      file: db/changelog/data/insert/20260802_v85_change_password_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260802_v86_finance_journal_locking.yaml
+  - include:
+      file: db/changelog/schema/create/20260803_v87_tenant_features.yaml
+  - include:
+      file: db/changelog/data/insert/20260803_v88_workforce_import_error_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260804_v89_workforce_import_batch_version.yaml
+  - include:
+      file: db/changelog/schema/update/20260804_v90_punch_device_scoped_dedup.yaml
+  - include:
+      file: db/changelog/data/insert/20260804_v91_backend_error_translations.yaml

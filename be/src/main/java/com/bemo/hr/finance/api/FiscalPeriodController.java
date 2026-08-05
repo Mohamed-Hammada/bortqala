@@ -4,6 +4,7 @@ import com.bemo.hr.finance.domain.FiscalPeriod;
 import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +37,7 @@ public class FiscalPeriodController {
 
     @PostMapping("/generate-year")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'HR_MANAGER')")
     public List<FiscalPeriodApi.FiscalPeriodResponse> generateYear(@RequestParam int year) {
         // Auto generate 12 monthly periods for given year if none exist
         var existing = repository.findByFiscalYearOrderByPeriodNumberAsc(year);
@@ -56,12 +57,16 @@ public class FiscalPeriodController {
 
     @PutMapping("/{id}/status")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'HR_MANAGER')")
     public FiscalPeriodApi.FiscalPeriodResponse updateStatus(@PathVariable String id,
                                                             @Valid @RequestBody FiscalPeriodApi.UpdateStatusPayload payload,
                                                             Authentication authentication) {
         FiscalPeriod period = repository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("الفترة المالية غير موجودة"));
+                .orElseThrow(() -> new BusinessRuleException("الفترة المالية غير موجودة", "FIN_FISCAL_PERIOD_NOT_FOUND", HttpStatus.CONFLICT));
+        if (payload.expectedVersion() != null && payload.expectedVersion() != period.getVersion()) {
+            throw new BusinessRuleException("تم تعديل الفترة المالية بواسطة مستخدم آخر.", "RECORD_ALREADY_MODIFIED",
+                    org.springframework.http.HttpStatus.CONFLICT);
+        }
 
         FiscalPeriod.Status newStatus = FiscalPeriod.Status.valueOf(payload.status().toUpperCase());
         period.updateStatus(newStatus, authentication.getName());
@@ -79,6 +84,7 @@ public class FiscalPeriodController {
                 p.getStatus().name(),
                 p.getClosedBy(),
                 p.getClosedAt(),
+                p.getVersion(),
                 p.getCreatedAt(),
                 p.getUpdatedAt()
         );

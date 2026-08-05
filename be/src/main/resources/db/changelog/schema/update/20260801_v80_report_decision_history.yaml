@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260801-v80-report-decision-history
+      author: codex
+      comment: Appends one immutable row per daily-result decision/reversal so review history is never overwritten; adds optimistic-lock versioning to daily_results so concurrent reviewers cannot silently overwrite each other.
+      changes:
+        - addColumn:
+            tableName: daily_results
+            columns:
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: attendance_report_decisions
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: report_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: result_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: operation_id, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: operation, type: VARCHAR(30), constraints: { nullable: false } }
+              - column: { name: previous_decision, type: VARCHAR(30) }
+              - column: { name: previous_manual_minutes, type: INT }
+              - column: { name: previous_note, type: VARCHAR(500) }
+              - column: { name: previous_decided_by, type: VARCHAR(100) }
+              - column: { name: previous_decided_at, type: timestamp }
+              - column: { name: new_decision, type: VARCHAR(30), constraints: { nullable: false } }
+              - column: { name: new_manual_minutes, type: INT }
+              - column: { name: new_note, type: VARCHAR(500) }
+              - column: { name: actor, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - createIndex:
+            tableName: attendance_report_decisions
+            indexName: idx_report_decisions_report
+            columns:
+              - column: { name: report_id }
+        - createIndex:
+            tableName: attendance_report_decisions
+            indexName: idx_report_decisions_result
+            columns:
+              - column: { name: result_id }
+        - addUniqueConstraint:
+            tableName: attendance_report_decisions
+            constraintName: uq_report_decisions_operation
+            columnNames: app_id, operation_id
+      rollback:
+        - dropTable:
+            tableName: attendance_report_decisions
+        - dropColumn:
+            tableName: daily_results
+            columnName: version

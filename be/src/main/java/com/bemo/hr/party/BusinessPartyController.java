@@ -26,25 +26,25 @@ class BusinessPartyController {
     List<BusinessPartyApi.Response> list() { return businessPartyService.list(); }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     BusinessPartyApi.Response create(@Valid @RequestBody BusinessPartyApi.Request request) {
         return businessPartyService.create(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     BusinessPartyApi.Response update(@PathVariable String id, @Valid @RequestBody BusinessPartyApi.Request request) {
         return businessPartyService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deactivate(@PathVariable String id) { businessPartyService.deactivate(id); }
 
     @PostMapping("/cleanup-phone")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     java.util.Map<String, Integer> cleanupInvalidPhone() {
         return java.util.Map.of("cleaned", businessPartyService.cleanupInvalidPhone());
     }

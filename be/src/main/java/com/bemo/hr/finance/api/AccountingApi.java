@@ -2,6 +2,7 @@ package com.bemo.hr.finance.api;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -49,6 +50,16 @@ public class AccountingApi {
             String memo
     ) {}
 
+    public record JournalEntryPayload(
+            @NotBlank String entryNumber,
+            long entryDate,
+            @NotBlank String description,
+            String reference,
+            String fiscalPeriodId,
+            String currency,
+            @NotNull @Size(min = 2) List<JournalEntryLinePayload> lines
+    ) {}
+
     public record JournalEntryResponse(
             String id,
             String entryNumber,
@@ -57,8 +68,16 @@ public class AccountingApi {
             String reference,
             String status,
             String fiscalPeriodId,
+            String currency,
             String postedBy,
             Long postedAt,
+            String reversalEntryId,
+            String reversedEntryId,
+            String reversalReason,
+            String reversedBy,
+            Long reversedAt,
+            String operationId,
+            long version,
             List<JournalEntryLineResponse> lines,
             BigDecimal totalDebit,
             BigDecimal totalCredit,
@@ -66,13 +85,10 @@ public class AccountingApi {
             long updatedAt
     ) {}
 
-    public record JournalEntryPayload(
-            @NotBlank String entryNumber,
-            long entryDate,
-            @NotBlank String description,
-            String reference,
-            String fiscalPeriodId,
-            @NotNull List<JournalEntryLinePayload> lines
+    public record JournalActionRequest(
+            @NotBlank String operationId,
+            Long expectedVersion,
+            String reason
     ) {}
 
     public record JournalEntryPageResponse(

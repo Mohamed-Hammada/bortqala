@@ -29,20 +29,25 @@ public class EmployeeController {
     List<EmployeeApi.Response> list() { return hrConfigurationService.listEmployees(); }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     EmployeeApi.Response create(@Valid @RequestBody EmployeeApi.UpsertRequest request) {
         return hrConfigurationService.createEmployee(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     EmployeeApi.Response update(@PathVariable String id, @Valid @RequestBody EmployeeApi.UpsertRequest request) {
         return hrConfigurationService.updateEmployee(id, request);
     }
 
+    @GetMapping("/{id}/assignments")
+    List<EmployeeApi.AssignmentResponse> assignments(@PathVariable String id) {
+        return hrConfigurationService.getEmployeeAssignments(id);
+    }
+
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deactivate(@PathVariable String id) { hrConfigurationService.deactivateEmployee(id); }
 }

@@ -150,8 +150,8 @@ export class ReportReviewPage {
     this.detectingAnomalies.set(true);
     const success = await this.store.detectDayAnomalies(this.id);
     this.detectingAnomalies.set(false);
-    if (success) this.notification.success('اكتمل فحص الأيام غير الطبيعية وفق النسبة المضبوطة.');
-    else this.notification.error(this.store.error() ?? 'تعذر فحص شذوذ البصمة.');
+    if (success) this.notification.success(this.i18n.t('review.anomalyDetectSuccess', {}, 'اكتمل فحص الأيام غير الطبيعية وفق النسبة المضبوطة.'));
+    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyDetectFailed', {}, 'تعذر فحص شذوذ البصمة.'));
   }
 
   previewAnomalyDecision(anomaly: DayAnomaly, decision: DayAnomalyDecision): void {
@@ -166,7 +166,7 @@ export class ReportReviewPage {
     const preview = this.anomalyPreview();
     if (!preview) return;
     if (!preview.reason.trim()) {
-      this.notification.warning('اكتب سبب القرار قبل التنفيذ.');
+      this.notification.warning(this.i18n.t('review.anomalyReasonRequired', {}, 'اكتب سبب القرار قبل التنفيذ.'));
       return;
     }
     this.anomalySavingId.set(preview.anomaly.id);
@@ -177,30 +177,35 @@ export class ReportReviewPage {
     });
     this.anomalySavingId.set(null);
     if (response) {
-      this.notification.success(`تم تطبيق القرار على ${response.appliedCount} سجل، وتجاوز ${response.skippedCount}.`);
+      this.notification.success(this.i18n.t('review.anomalyAppliedCount', { applied: response.appliedCount, skipped: response.skippedCount }, 'تم تطبيق القرار على سجل، وتجاوز آخر.'));
       this.anomalyPreview.set(null);
-    } else this.notification.error(this.store.error() ?? 'تعذر تنفيذ قرار الشذوذ.');
+    } else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyApplyFailed', {}, 'تعذر تنفيذ قرار الشذوذ.'));
   }
 
   async reverseDayAnomaly(anomaly: DayAnomaly): Promise<void> {
     this.anomalySavingId.set(anomaly.id);
     const response = await this.store.reverseDayAnomaly(this.id, anomaly.id);
     this.anomalySavingId.set(null);
-    if (response) this.notification.success(`تم إنشاء القيد العكسي واستعادة ${response.appliedCount} سجل.`);
-    else this.notification.error(this.store.error() ?? 'تعذر التراجع عن القرار.');
+    if (response) this.notification.success(this.i18n.t('review.anomalyReversedCount', { applied: response.appliedCount }, 'تم إنشاء القيد العكسي واستعادة سجل.'));
+    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyReverseFailed', {}, 'تعذر التراجع عن القرار.'));
   }
 
   async reopenDayAnomaly(anomaly: DayAnomaly): Promise<void> {
     this.anomalySavingId.set(anomaly.id);
     const success = await this.store.reopenDayAnomaly(this.id, anomaly.id);
     this.anomalySavingId.set(null);
-    if (success) this.notification.success('أعيد فتح حالة الشذوذ لاتخاذ قرار جديد.');
-    else this.notification.error(this.store.error() ?? 'تعذر إعادة فتح الحالة.');
+    if (success) this.notification.success(this.i18n.t('review.anomalyReopened', {}, 'أعيد فتح حالة الشذوذ لاتخاذ قرار جديد.'));
+    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyReopenFailed', {}, 'تعذر إعادة فتح الحالة.'));
   }
 
   anomalyDecisionLabel(decision: DayAnomalyDecision | null): string {
-    return ({ DEVICE_OUTAGE: 'تعطل جهاز أو انقطاع كهرباء', OFFICIAL_HOLIDAY: 'إجازة رسمية',
-      ABSENCE: 'غياب', PRESENT: 'اعتبار اليوم حضوراً', DEFER: 'تأجيل القرار' } as Record<string, string>)[decision ?? ''] ?? '—';
+    const key = ({ DEVICE_OUTAGE: 'review.anomalyDeviceOutage', OFFICIAL_HOLIDAY: 'review.anomalyOfficialHoliday',
+      ABSENCE: 'review.anomalyAbsence', PRESENT: 'review.anomalyPresent', DEFER: 'review.anomalyDefer' } as Record<string, string>)[decision ?? ''];
+    return key ? this.i18n.t(key) : '—';
+  }
+
+  anomalyHours(minutes: number): string {
+    return (minutes / 60).toFixed(1);
   }
 
   toggleFilterPanel() {
@@ -401,7 +406,7 @@ export class ReportReviewPage {
             defaultValue: '',
             onConfirm: (note) => {
               this.promptState.set(null);
-              this.store.decide(this.id, row.id, decision, worked, note || null);
+              this.store.decide(this.id, row.id, decision, worked, note || null, row.version);
             },
             onCancel: () => this.promptState.set(null),
           });
@@ -414,7 +419,7 @@ export class ReportReviewPage {
         defaultValue: '',
         onConfirm: (note) => {
           this.promptState.set(null);
-          this.store.decide(this.id, row.id, decision, null, note || null);
+          this.store.decide(this.id, row.id, decision, null, note || null, row.version);
         },
         onCancel: () => this.promptState.set(null),
       });

@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -29,6 +30,9 @@ public class GoodsReceipt {
     @Column(name = "status", nullable = false, length = 20) private String status;
     @Column(length = 500) private String notes;
     @Column(name = "created_at", nullable = false) private long createdAt;
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
     @OneToMany(mappedBy = "goodsReceipt", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GoodsReceiptLine> lines = new ArrayList<>();
 
@@ -66,5 +70,6 @@ public class GoodsReceipt {
     public String getStatus() { return status; }
     public String getNotes() { return notes; }
     public long getCreatedAt() { return createdAt; }
+    public long getVersion() { return version; }
     public List<GoodsReceiptLine> getLines() { return lines; }
 }

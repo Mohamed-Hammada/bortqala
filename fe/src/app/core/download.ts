@@ -20,13 +20,23 @@ export function exportCsv(
         .map((c) => {
           const val = row[c.key];
           if (val === null || val === undefined) return '""';
-          return `"${String(val).replace(/"/g, '""')}"`;
+          return `"${escapeCsvCell(String(val))}"`;
         })
         .join(','),
     )
     .join('\n');
   const blob = new Blob([BOM + header + '\n' + body], { type: 'text/csv;charset=utf-8;' });
   downloadBlob(blob, fileName);
+}
+
+export function escapeCsvCell(value: string): string {
+  const escaped = value.replace(/"/g, '""');
+  if (value === '') return escaped;
+  const first = value[0];
+  if (first === '=' || first === '+' || first === '-' || first === '@') {
+    return `'${escaped}`;
+  }
+  return escaped;
 }
 
 export function timestampedExcelFileName(

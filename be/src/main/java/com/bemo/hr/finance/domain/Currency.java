@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -47,6 +48,10 @@ public class Currency {
     @Column(name = "updated_at", nullable = false)
     private long updatedAt;
 
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
+
     protected Currency() {}
 
     public Currency(String code, String name, String symbol, boolean isBase, BigDecimal exchangeRate, boolean active) {
@@ -78,4 +83,5 @@ public class Currency {
     public boolean isActive() { return active; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
+    public long getVersion() { return version; }
 }

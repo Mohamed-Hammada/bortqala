@@ -8,6 +8,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.security.TenantContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -121,7 +122,7 @@ public class OperationsService {
     @Transactional
     public OperationsApi.ItemCategoryView createItemCategory(OperationsApi.ItemCategoryRequest request) {
         if (itemCategoryRepository.findByNameAndAppId(request.name().strip(), getCurrentAppId()).isPresent()) {
-            throw new BusinessRuleException("Item category already exists.");
+            throw new BusinessRuleException("Item category already exists.", "OPS_ITEM_CATEGORY_EXISTS", HttpStatus.CONFLICT);
         }
         var entity = itemCategoryRepository.save(new ItemCategory(request.name(), request.description()));
         return categoryView(entity);
@@ -135,7 +136,7 @@ public class OperationsService {
     @Transactional
     public OperationsApi.UnitOfMeasureView createUnitOfMeasure(OperationsApi.UnitOfMeasureRequest request) {
         if (unitOfMeasureRepository.findByNameAndAppId(request.name().strip(), getCurrentAppId()).isPresent()) {
-            throw new BusinessRuleException("Unit of measure already exists.");
+            throw new BusinessRuleException("Unit of measure already exists.", "OPS_UOM_EXISTS", HttpStatus.CONFLICT);
         }
         var entity = unitOfMeasureRepository.save(new UnitOfMeasure(request.name(), request.abbreviation(), request.description()));
         return uomView(entity);
@@ -157,10 +158,10 @@ public class OperationsService {
     @Transactional
     public OperationsApi.UnitConversionView createUnitConversion(OperationsApi.UnitConversionRequest request, String actor) {
         if (unitConversionRepository.findByFromUomIdAndToUomId(request.fromUomId(), request.toUomId()).isPresent()) {
-            throw new BusinessRuleException("Conversion already exists between these units.");
+            throw new BusinessRuleException("Conversion already exists between these units.", "OPS_CONVERSION_EXISTS", HttpStatus.CONFLICT);
         }
         if (request.factor().signum() <= 0) {
-            throw new BusinessRuleException("Conversion factor must be positive.");
+            throw new BusinessRuleException("Conversion factor must be positive.", "OPS_CONVERSION_FACTOR_POSITIVE", HttpStatus.CONFLICT);
         }
         var entity = unitConversionRepository.save(new UnitConversion(request.fromUomId(), request.toUomId(), request.factor(), actor));
         var uoms = unitOfMeasureRepository.findAll().stream().collect(Collectors.toMap(UnitOfMeasure::getId, Function.identity()));
@@ -188,14 +189,14 @@ public class OperationsService {
     @Transactional
     public OperationsApi.Snapshot createStockAdjustment(OperationsApi.AdjustmentRequest request, String actor) {
         if (!request.approved()) {
-            throw new BusinessRuleException("An authorized approval is required for inventory adjustments.");
+            throw new BusinessRuleException("An authorized approval is required for inventory adjustments.", "OPS_ADJUSTMENT_APPROVAL_REQUIRED", HttpStatus.CONFLICT);
         }
         if (request.quantityDelta().signum() == 0) {
-            throw new BusinessRuleException("Adjustment quantity cannot be zero.");
+            throw new BusinessRuleException("Adjustment quantity cannot be zero.", "OPS_ADJUSTMENT_QTY_ZERO", HttpStatus.CONFLICT);
         }
         requireItem(request.itemId());
         if (stockMovementRepository.balance(request.itemId()).add(request.quantityDelta()).signum() < 0) {
-            throw new BusinessRuleException("Inventory adjustment cannot create a negative balance.");
+            throw new BusinessRuleException("Inventory adjustment cannot create a negative balance.", "OPS_ADJUSTMENT_NEGATIVE_BALANCE", HttpStatus.CONFLICT);
         }
         var sm = stockMovementRepository.save(new StockMovement(
                 request.itemId(), null, "ADJUSTMENT", request.quantityDelta(),
@@ -208,7 +209,7 @@ public class OperationsService {
 
     @Transactional
     public OperationsApi.ItemView createItem(OperationsApi.ItemRequest request) {
-        if (inventoryItemRepository.existsByCodeIgnoreCase(request.code())) throw new BusinessRuleException("Item code already exists.");
+        if (inventoryItemRepository.existsByCodeIgnoreCase(request.code())) throw new BusinessRuleException("Item code already exists.", "OPS_ITEM_CODE_EXISTS", HttpStatus.CONFLICT);
         var item = inventoryItemRepository.save(new InventoryItem(request.code(), request.name(), request.itemType(), request.unitCode()));
         if (request.categoryId() != null || request.uomId() != null) {
             item.assignMasterData(request.categoryId(), request.uomId());
@@ -219,8 +220,8 @@ public class OperationsService {
     @Transactional
     public OperationsApi.ItemView updateItem(String id, OperationsApi.ItemRequest request) {
         var item = requireItem(id);
-        if (request.version() == null || request.version() != item.getVersion()) throw new BusinessRuleException("This item changed. Refresh and retry.");
-        if (inventoryItemRepository.existsByCodeIgnoreCaseAndIdNot(request.code(), id)) throw new BusinessRuleException("Item code already exists.");
+        if (request.version() == null || request.version() != item.getVersion()) throw new BusinessRuleException("This item changed. Refresh and retry.", "OPS_ITEM_VERSION_CONFLICT", HttpStatus.CONFLICT);
+        if (inventoryItemRepository.existsByCodeIgnoreCaseAndIdNot(request.code(), id)) throw new BusinessRuleException("Item code already exists.", "OPS_ITEM_CODE_EXISTS", HttpStatus.CONFLICT);
         item.update(request.code(), request.name(), request.itemType(), request.unitCode(), request.active());
         if (request.categoryId() != null || request.uomId() != null) {
             item.assignMasterData(request.categoryId(), request.uomId());
@@ -231,17 +232,17 @@ public class OperationsService {
     @Transactional
     public OperationsApi.Snapshot recordTransaction(OperationsApi.TransactionRequest request, String actor) {
         if (request.quantityDelta().signum() == 0 && request.amountDelta().signum() == 0) {
-            throw new BusinessRuleException("Quantity and amount cannot both be zero.");
+            throw new BusinessRuleException("Quantity and amount cannot both be zero.", "OPS_MOVEMENT_QTY_AMOUNT_ZERO", HttpStatus.CONFLICT);
         }
         if (request.quantityDelta().signum() < 0) {
-            throw new BusinessRuleException("Quantity must be a positive number.");
+            throw new BusinessRuleException("Quantity must be a positive number.", "OPS_MOVEMENT_QTY_POSITIVE", HttpStatus.CONFLICT);
         }
         if (request.lossPercentage() != null && (request.lossPercentage().signum() < 0
                 || request.lossPercentage().compareTo(BigDecimal.valueOf(100)) > 0)) {
-            throw new BusinessRuleException("Loss percentage must be between 0 and 100.");
+            throw new BusinessRuleException("Loss percentage must be between 0 and 100.", "OPS_MOVEMENT_LOSS_PERCENT_RANGE", HttpStatus.CONFLICT);
         }
         if (request.quantityDelta().signum() != 0) {
-            if (request.itemId() == null || request.itemId().isBlank()) throw new BusinessRuleException("An inventory item is required for quantity movement.");
+            if (request.itemId() == null || request.itemId().isBlank()) throw new BusinessRuleException("An inventory item is required for quantity movement.", "OPS_MOVEMENT_ITEM_REQUIRED", HttpStatus.CONFLICT);
             requireItem(request.itemId());
             BigDecimal qty = request.quantityDelta().abs();
             String op = request.operationType() == null ? "" : request.operationType().toUpperCase();
@@ -255,7 +256,7 @@ public class OperationsService {
         }
         if (request.amountDelta().signum() != 0) {
             var partyId = normalizeId(request.partyId());
-            if (partyId == null) throw new BusinessRuleException("A business party is required for a financial movement.");
+            if (partyId == null) throw new BusinessRuleException("A business party is required for a financial movement.", "OPS_MOVEMENT_PARTY_REQUIRED", HttpStatus.CONFLICT);
             requireParty(partyId);
             partnerLedgerEntryRepository.save(new PartnerLedgerEntry(partyId, request.operationType(), request.amountDelta(),
                     request.referenceCode(), request.note(), request.occurredAt(), actor));
@@ -269,7 +270,7 @@ public class OperationsService {
                                    String grnNumber, String note, Instant occurredAt, String actor) {
         requireItem(itemId);
         if (acceptedQuantity == null || acceptedQuantity.signum() <= 0) {
-            throw new BusinessRuleException("Accepted goods-receipt quantity must be positive.");
+            throw new BusinessRuleException("Accepted goods-receipt quantity must be positive.", "OPS_GRN_ACCEPTED_POSITIVE", HttpStatus.CONFLICT);
         }
         var movement = stockMovementRepository.save(new StockMovement(itemId, normalizeId(supplierId),
                 "PURCHASE_RECEIPT", acceptedQuantity, null, grnNumber, note, occurredAt, actor));
@@ -280,13 +281,13 @@ public class OperationsService {
 
     @Transactional
     public OperationsApi.Snapshot recordAdvance(OperationsApi.AdvanceRequest request, String actor) {
-        if (request.amountDelta().signum() == 0) throw new BusinessRuleException("Advance amount cannot be zero.");
+        if (request.amountDelta().signum() == 0) throw new BusinessRuleException("Advance amount cannot be zero.", "OPS_ADVANCE_AMOUNT_ZERO", HttpStatus.CONFLICT);
         var employee = employeeRepository.findById(request.employeeId())
-                .orElseThrow(() -> new NotFoundException("Employee not found."));
+                .orElseThrow(() -> new NotFoundException("Employee not found.", "HRCFG_EMPLOYEE_NOT_FOUND"));
         var category = attendanceCategoryRepository.findById(employee.getCategoryId())
-                .orElseThrow(() -> new NotFoundException("Employee category not found."));
+                .orElseThrow(() -> new NotFoundException("Employee category not found.", "HRCFG_EMPLOYEE_CATEGORY_NOT_FOUND"));
         if (!category.isAllowsEmployeeAdvances()) {
-            throw new BusinessRuleException("This employee category does not allow advances.");
+            throw new BusinessRuleException("This employee category does not allow advances.", "OPS_ADVANCE_CATEGORY_NOT_ALLOWED", HttpStatus.CONFLICT);
         }
         employeeAdvanceEntryRepository.save(new EmployeeAdvanceEntry(employee.getId(), request.amountDelta(),
                 request.entryType(), request.note(), request.occurredAt(), actor));
@@ -299,15 +300,15 @@ public class OperationsService {
     public void recordAdvanceIssuance(String employeeId, BigDecimal amount, String entryType, String note,
                                       Instant occurredAt, String actor) {
         if (amount == null || amount.signum() <= 0) {
-            throw new BusinessRuleException("يجب أن يكون مبلغ السلفة أكبر من صفر.");
+            throw new BusinessRuleException("يجب أن يكون مبلغ السلفة أكبر من صفر.", "ADVANCE_AMOUNT_POSITIVE_REQUIRED", HttpStatus.CONFLICT);
         }
         var employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new NotFoundException("الموظف غير موجود."));
-        if (!employee.isActive()) throw new BusinessRuleException("لا يمكن صرف سلفة لموظف غير نشط.");
+                .orElseThrow(() -> new NotFoundException("الموظف غير موجود.", "EMPLOYEE_NOT_FOUND"));
+        if (!employee.isActive()) throw new BusinessRuleException("لا يمكن صرف سلفة لموظف غير نشط.", "ADVANCE_INACTIVE_EMPLOYEE", HttpStatus.CONFLICT);
         var category = attendanceCategoryRepository.findById(employee.getCategoryId())
-                .orElseThrow(() -> new NotFoundException("فئة الموظف غير موجودة."));
+                .orElseThrow(() -> new NotFoundException("فئة الموظف غير موجودة.", "HRCFG_EMPLOYEE_CATEGORY_NOT_FOUND"));
         if (!category.isAllowsEmployeeAdvances()) {
-            throw new BusinessRuleException("فئة هذا الموظف لا تسمح بصرف السلف.");
+            throw new BusinessRuleException("فئة هذا الموظف لا تسمح بصرف السلف.", "ADVANCE_CATEGORY_NOT_ALLOWED", HttpStatus.CONFLICT);
         }
         employeeAdvanceEntryRepository.save(new EmployeeAdvanceEntry(employee.getId(), amount,
                 entryType, note, occurredAt == null ? Instant.now() : occurredAt, actor));
@@ -325,10 +326,10 @@ public class OperationsService {
     }
 
     private InventoryItem requireItem(String id) {
-        return inventoryItemRepository.findById(id).orElseThrow(() -> new NotFoundException("Inventory item not found."));
+        return inventoryItemRepository.findById(id).orElseThrow(() -> new NotFoundException("Inventory item not found.", "OPS_ITEM_NOT_FOUND"));
     }
     private BusinessParty requireParty(String id) {
-        return businessPartyRepository.findById(id).orElseThrow(() -> new NotFoundException("Business party not found."));
+        return businessPartyRepository.findById(id).orElseThrow(() -> new NotFoundException("Business party not found.", "PTY_NOT_FOUND"));
     }
     private String normalizeId(String id) { return id == null || id.isBlank() ? null : id; }
     private OperationsApi.ItemView itemView(InventoryItem item, BigDecimal balance) {

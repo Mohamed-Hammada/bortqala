@@ -4,6 +4,7 @@ import { Observable, firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { downloadBlob, timestampedExcelFileName } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
+import { TransitionResponse } from '../../core/api.models';
 import {
   AttendanceDecision,
   BulkDecisionRequest,
@@ -14,7 +15,9 @@ import {
   HolidayProposalStatus,
   PeriodOption,
   ReportDetails,
+  ReportPayCycle,
   ReportPeriodSelection,
+  ReportPreview,
   ReportSummary,
 } from './reports.models';
 
@@ -68,6 +71,20 @@ export class ReportsStore {
     }
   }
 
+  async preview(periodStart: string, periodEnd: string, payCycle: ReportPayCycle): Promise<ReportPreview | null> {
+    this.error.set(null);
+    try {
+      return await firstValueFrom(
+        this.http.get<ReportPreview>('/api/v1/reports/preview', {
+          params: { periodStart, periodEnd, payCycle },
+        }),
+      );
+    } catch (error) {
+      this.error.set(apiErrorMessage(error, this.i18n));
+      return null;
+    }
+  }
+
   async load(id: string): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
@@ -86,12 +103,14 @@ export class ReportsStore {
     decision: AttendanceDecision,
     workedMinutes: number | null,
     note: string | null,
+    expectedVersion: number,
   ): Promise<boolean> {
     return this.mutate(
       this.http.put<ReportDetails>(`/api/v1/reports/${id}/daily-results/${rowId}/decision`, {
         decision,
         workedMinutes,
         note,
+        expectedVersion,
       }),
     );
   }
@@ -112,11 +131,25 @@ export class ReportsStore {
   }
 
   async approve(id: string): Promise<boolean> {
-    return this.mutate(this.http.post<ReportDetails>(`/api/v1/reports/${id}/approve`, {}));
+    try {
+      await firstValueFrom(this.http.post<TransitionResponse>(`/api/v1/reports/${id}/approve`, {}));
+      await this.load(id);
+      return true;
+    } catch (error) {
+      this.error.set(apiErrorMessage(error, this.i18n));
+      return false;
+    }
   }
 
   async reopen(id: string): Promise<boolean> {
-    return this.mutate(this.http.post<ReportDetails>(`/api/v1/reports/${id}/reopen`, {}));
+    try {
+      await firstValueFrom(this.http.post<TransitionResponse>(`/api/v1/reports/${id}/reopen`, {}));
+      await this.load(id);
+      return true;
+    } catch (error) {
+      this.error.set(apiErrorMessage(error, this.i18n));
+      return false;
+    }
   }
 
   async bulkDecision(reportId: string, request: BulkDecisionRequest): Promise<BulkDecisionResponse | null> {

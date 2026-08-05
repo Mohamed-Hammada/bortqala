@@ -13,26 +13,45 @@ public final class ImportApi {
     }
 
     public record BatchResponse(
-            String id, String fileName, String deviceName, ImportStatus status,
-            int totalRows, int importedRows, int errorRows, String importedBy,
+            String id, String fileName, String sourceId, String deviceName, ImportStatus status,
+            int totalRows, int importedRows, int validRows, int newPunches, int duplicatePunches,
+            int errorRows, String importedBy,
             Instant importedAt, boolean duplicate, List<RowErrorResponse> errors) { }
 
     public record RowErrorResponse(int rowNumber, String message, String rawLine) { }
 
+    public record PreviewRowResponse(int rowNumber, String deviceUserId, String employeeName, long punchedAt, String rawLine) { }
+
+    public record PreviewResponse(
+            String fileName, String checksum, int totalRows, int importedRows, int errorRows,
+            List<PreviewRowResponse> rows, List<RowErrorResponse> errors) { }
+
     public record UnmatchedIdentityResponse(
             String deviceUserId, String observedName, long punchCount, Instant firstPunch, Instant lastPunch) { }
+
+    public record SourceRequest(
+            @NotBlank String name,
+            String sourceType,
+            boolean active
+    ) { }
+
+    public record SourceResponse(
+            String id, String name, String sourceType, String normalizedCode, boolean active, Instant createdAt
+    ) { }
 
     public record DeviceRequest(
             @NotBlank String name,
             @NotBlank String endpointUrl,
             boolean enabled,
-            @Min(1) @Max(1440) int syncIntervalMinutes
+            @Min(1) @Max(1440) int syncIntervalMinutes,
+            String username,
+            String password
     ) { }
 
     public record DeviceResponse(
             String id, String name, String endpointUrl, boolean enabled, int syncIntervalMinutes,
             Instant lastSyncAt, Instant lastSuccessfulPunchAt, Instant nextSyncAt,
-            String lastStatus, String lastMessage, Instant createdAt
+            String lastStatus, String lastMessage, String username, boolean hasPassword, Instant createdAt
     ) { }
 
     public record DeviceSyncResponse(

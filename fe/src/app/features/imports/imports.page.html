@@ -60,6 +60,19 @@
             <small>{{ i18n.t('imports.endpointHint') }}</small>
           </div>
           <div class="field">
+            <label for="biometric-username">{{ i18n.t('imports.biometricUsernameLabel', {}, 'اسم المستخدم (اختياري)') }}</label>
+            <input id="biometric-username" name="biometricUsername" class="ltr" autocomplete="off"
+              [ngModel]="deviceUsername()" (ngModelChange)="deviceUsername.set($event)" />
+          </div>
+          <div class="field">
+            <label for="biometric-password">
+              {{ i18n.t('imports.biometricPasswordLabel', {}, 'كلمة المرور (اختياري)') }}
+              @if (editingDeviceId()) { <small>{{ i18n.t('imports.biometricPasswordKeepHint', {}, 'اتركها فارغة للإبقاء على الحالية') }}</small> }
+            </label>
+            <input id="biometric-password" name="biometricPassword" class="ltr" type="password" autocomplete="new-password"
+              [ngModel]="devicePassword()" (ngModelChange)="devicePassword.set($event)" />
+          </div>
+          <div class="field">
             <label for="biometric-interval">{{ i18n.t('imports.intervalLabel') }}</label>
             <input id="biometric-interval" name="biometricInterval" type="number" min="1" max="1440" step="1"
               [ngModel]="syncIntervalMinutes()" (ngModelChange)="syncIntervalMinutes.set(+$event)" />
@@ -90,6 +103,9 @@
               <small>
                 {{ i18n.t('imports.syncEveryMinutes', { minutes: device.syncIntervalMinutes }) }} ·
                 {{ i18n.t('imports.lastSyncAtLabel') }}: {{ device.lastSyncAt ? dateTime(device.lastSyncAt) : i18n.t('imports.notSyncedYet') }}
+                @if (device.username || device.hasPassword) { ·
+                  {{ device.username ?? '' }}{{ device.hasPassword ? ' ••••' : '' }}
+                }
                 @if (device.lastMessage) { · {{ device.lastMessage }} }
               </small>
             </div>
@@ -109,6 +125,46 @@
           </div>
         }
       </div>
+    </div>
+  </section>
+
+  <section class="sources-card card" aria-labelledby="sources-title">
+    <div class="section-head">
+      <div>
+        <h2 id="sources-title">{{ i18n.t('imports.sourcesTitle', {}, 'مصادر البصمات') }}</h2>
+        <p>{{ i18n.t('imports.sourcesHint', {}, 'حدد مصدر البصمات لاستيراد الملفات؛ المزامنة التلقائية ورفع الملفات تُقيَّد بالمصدر.') }}</p>
+      </div>
+      <button class="button primary" (click)="showSourceModal.set(true)">＋ {{ i18n.t('imports.addSource', {}, 'مصدر جديد') }}</button>
+    </div>
+    <div class="sources-list">
+      @for (source of store.sources(); track source.id) {
+        <article class="source-row" [class.inactive]="!source.active">
+          <span class="source-icon" aria-hidden="true">◈</span>
+          <div class="source-details">
+            <div>
+              <strong>{{ source.name }}</strong>
+              <span class="connection-state" [class.online]="source.active" [class.failed]="!source.active">
+                {{ source.active ? i18n.t('imports.active') : i18n.t('imports.stopped') }}
+              </span>
+            </div>
+            <small>
+              <code class="ltr">{{ source.normalizedCode }}</code> ·
+              {{ source.sourceType === 'DEVICE' ? i18n.t('imports.sourceTypeDevice', {}, 'جهاز') : i18n.t('imports.sourceTypeFile', {}, 'ملف') }}
+            </small>
+          </div>
+          <div class="device-actions">
+            <button type="button" class="button secondary btn-sm" (click)="editSource(source)">{{ i18n.t('common.edit') }}</button>
+            @if (!isDeviceSource(source)) {
+              <button type="button" class="button danger btn-sm" [disabled]="store.loading()" (click)="deleteSource(source)">{{ i18n.t('common.delete', {}, 'حذف') }}</button>
+            }
+          </div>
+        </article>
+      } @empty {
+        <div class="empty-state">
+          <strong>{{ i18n.t('imports.noSourcesYet', {}, 'لا توجد مصادر بعد') }}</strong>
+          {{ i18n.t('imports.noSourcesHint', {}, 'أنشئ مصدرًا ليتمكن الفريق من رفع ملفات البصمات.') }}
+        </div>
+      }
     </div>
   </section>
 
@@ -163,17 +219,49 @@
     <!-- Dropzone Footer Actions -->
     <div class="dropzone-footer">
       <div class="field device-field">
-        <label>{{ i18n.t('imports.deviceName') }}</label>
-        <input #deviceInput [value]="deviceName()" (input)="deviceName.set(deviceInput.value)" [placeholder]="i18n.t('imports.defaultDevicePlaceholder')" />
+        <label>{{ i18n.t('imports.sourceLabel', {}, 'مصدر البصمات') }}</label>
+        <select [(ngModel)]="selectedSourceId" name="importSource">
+          @for (source of uploadSources(); track source.id) {
+            <option [ngValue]="source.id">{{ source.name }}</option>
+          }
+        </select>
+        @if (uploadSources().length === 0) {
+          <small>{{ i18n.t('imports.noUploadSourcesHint', {}, 'لا توجد مصادر ملفات نشطة. أنشئ مصدر «ملف» وفعِّله أولاً من قسم «مصادر البصمات».') }}</small>
+        }
       </div>
+      <button
+        class="button secondary submit-import-btn"
+        (click)="previewFile()"
+        [disabled]="!file() || !selectedSourceId() || store.loading()"
+      >
+        {{ previewing() ? i18n.t('imports.previewing', {}, 'جارٍ المعاينة…') : i18n.t('imports.previewAction', {}, 'معاينة') }}
+      </button>
       <button
         class="button primary submit-import-btn"
         (click)="upload()"
-        [disabled]="!file() || store.loading()"
+        [disabled]="!file() || !selectedSourceId() || store.loading()"
       >
         <span class="btn-icon">⚡</span> {{ i18n.t('imports.start') }}
       </button>
     </div>
+
+    @if (previewResult()) {
+      <div class="preview-card" [class.has-errors]="previewResult()!.errorRows > 0">
+        <div class="preview-head">
+          <strong>{{ i18n.t('imports.previewHead', {}, 'معاينة الملف') }}</strong>
+          <button type="button" class="text-button" (click)="previewResult.set(null)">×</button>
+        </div>
+        <div class="preview-stats">
+          <span><small>{{ i18n.t('imports.previewFileName', {}, 'الملف') }}</small> {{ previewResult()!.fileName }}</span>
+          <span><small>SHA-256</small><code class="ltr" [appTooltip]="previewResult()!.checksum">{{ previewShortHash(previewResult()!.checksum) }}</code></span>
+          <span><small>{{ i18n.t('imports.previewLines', {}, 'الأسطر') }}</small> {{ previewResult()!.totalRows }}</span>
+          <span><small>{{ i18n.t('imports.previewValid', {}, 'سليمة') }}</small> {{ previewResult()!.importedRows }}</span>
+          <span class="stat-error"><small>{{ i18n.t('imports.previewInvalid', {}, 'خاطئة') }}</small> {{ previewResult()!.errorRows }}</span>
+          <span><small>{{ i18n.t('imports.previewPunches', {}, 'بصمات') }}</small> {{ previewResult()!.rows.length }}</span>
+        </div>
+        <p class="preview-note">{{ i18n.t('imports.previewNote', {}, 'تأكَّد من المعاينة ثم اضغط «استيراد»؛ إعادة استيراد نفس الملف لن تنشئ بصمات مكررة.') }}</p>
+      </div>
+    }
   </div>
 
   <!-- Side-by-Side Workflow Layout: Batches History & Unmatched Identities -->
@@ -256,15 +344,30 @@
               <span class="counts">
                 {{ item.importedRows }}<small>{{ i18n.t('imports.punch') }}</small>
               </span>
+              @if (item.status !== 'REVERSED' && (item.newPunches > 0 || item.duplicatePunches > 0 || item.errorRows > 0)) {
+                <span class="counts-detail">
+                  <small>{{ i18n.t('imports.newPunches', {}, 'جديدة') }} {{ item.newPunches }} · {{ i18n.t('imports.duplicatePunches', {}, 'مكررة') }} {{ item.duplicatePunches }}</small>
+                </span>
+              }
               <span
                 class="status"
-                [class.success]="!item.errorRows"
+                [class.success]="!item.errorRows && item.status !== 'REVERSED'"
                 [class.warning]="item.errorRows"
+                [class.neutral]="item.status === 'REVERSED'"
               >
                 {{ statusLabel(item.status) }}
-                @if (item.errorRows) { <small>{{ i18n.t('imports.errorCount', { count: item.errorRows }) }}</small> }
+                @if (item.errorRows && item.status !== 'REVERSED') { <small>{{ i18n.t('imports.errorCount', { count: item.errorRows }) }}</small> }
               </span>
             </button>
+            @if (item.status !== 'REVERSED') {
+              <div class="batch-actions">
+                <button type="button" class="button danger btn-sm"
+                  [disabled]="reversingBatchId() === item.id || store.loading()"
+                  (click)="reverseBatch(item)">
+                  {{ reversingBatchId() === item.id ? i18n.t('imports.reversingBatch', {}, 'جارٍ التراجع…') : i18n.t('imports.reverseBatch', {}, 'تراجع') }}
+                </button>
+              </div>
+            }
             @if (expanded() === item.id && item.errors.length) {
               <div class="error-list">
                 @for (error of item.errors; track error.rowNumber) {
@@ -331,6 +434,42 @@
     <div modal-actions style="display:flex;justify-content:flex-end;gap:0.5rem;width:100%;">
       <button type="button" class="button primary" (click)="downloadTemplate()">{{ i18n.t('imports.downloadTemplate') }}</button>
       <button type="button" class="button secondary" (click)="showTemplateModal.set(false)">{{ i18n.t('common.close') }}</button>
+    </div>
+  </app-modal-dialog>
+
+  <app-modal-dialog
+    [isOpen]="showSourceModal()"
+    [title]="editingSourceId() ? i18n.t('imports.editSource', {}, 'تعديل المصدر') : i18n.t('imports.addSource', {}, 'مصدر جديد')"
+    size="normal"
+    [preventOutsideClose]="true"
+    (close)="resetSourceForm()">
+
+    <div style="display:grid;gap:1rem;">
+      <div class="field">
+        <label>{{ i18n.t('imports.sourceNameLabel', {}, 'اسم المصدر') }}</label>
+        <input [ngModel]="sourceName()" (ngModelChange)="sourceName.set($event)"
+          [placeholder]="i18n.t('imports.sourceNamePlaceholder', {}, 'مثال: بوابة المصنع الرئيسية')" autocomplete="off" />
+      </div>
+      @if (sourceType() === 'DEVICE') {
+        <small>{{ i18n.t('imports.deviceSourceLockedHint', {}, 'مصدر الجهاز ثابت: لا يمكن تغيير نوعه أو تعطيله.') }}</small>
+      } @else {
+        <div class="field">
+          <label>{{ i18n.t('imports.sourceTypeLabel', {}, 'نوع المصدر') }}</label>
+          <select [(ngModel)]="sourceType" name="sourceType">
+            <option value="FILE_DEVICE">{{ i18n.t('imports.sourceTypeFile', {}, 'ملف (رفع يدوي)') }}</option>
+            <option value="DEVICE">{{ i18n.t('imports.sourceTypeDevice', {}, 'جهاز (مزامنة تلقائية)') }}</option>
+          </select>
+        </div>
+        <label class="device-enabled-toggle">
+          <input type="checkbox" name="sourceActive" [ngModel]="sourceActive()" (ngModelChange)="sourceActive.set($event)" />
+          <span>{{ i18n.t('imports.sourceActiveLabel', {}, 'مصدر نشط') }}</span>
+        </label>
+      }
+    </div>
+
+    <div modal-actions style="display:flex;justify-content:flex-end;gap:0.5rem;width:100%;">
+      <button type="button" class="button primary" (click)="saveSource()">{{ i18n.t('common.save', {}, 'حفظ') }}</button>
+      <button type="button" class="button secondary" (click)="resetSourceForm()">{{ i18n.t('common.close') }}</button>
     </div>
   </app-modal-dialog>
 </section>

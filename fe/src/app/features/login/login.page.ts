@@ -90,7 +90,7 @@ export class LoginPage {
       await this.i18n.use(session.preferences.locale);
       document.documentElement.lang = this.i18n.locale().startsWith('ar') ? 'ar' : 'en';
       document.documentElement.dir = this.i18n.locale().startsWith('ar') ? 'rtl' : 'ltr';
-      await this.router.navigate(['/dashboard']);
+      await this.router.navigate(session.mustChangePassword ? ['/change-password'] : ['/dashboard']);
     } catch (error) {
       this.error.set(
         error instanceof HttpErrorResponse && error.status === 401

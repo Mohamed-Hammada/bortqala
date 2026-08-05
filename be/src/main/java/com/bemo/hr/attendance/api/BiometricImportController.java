@@ -29,21 +29,66 @@ public class BiometricImportController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     List<ImportApi.BatchResponse> list() { return biometricImportService.listBatches(); }
 
+    @PostMapping(path = "/preview", consumes = "multipart/form-data")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    ImportApi.PreviewResponse preview(@RequestParam MultipartFile file) {
+        return biometricImportService.preview(file);
+    }
+
+    @PostMapping("/{id}/reverse")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    ImportApi.BatchResponse reverse(@org.springframework.web.bind.annotation.PathVariable String id,
+                                    Authentication authentication) {
+        return biometricImportService.reverse(id, authentication.getName());
+    }
+
     @PostMapping(consumes = "multipart/form-data")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     @ResponseStatus(HttpStatus.CREATED)
     ImportApi.BatchResponse upload(@RequestParam MultipartFile file,
-                                   @RequestParam String deviceName,
-                                   @RequestParam(defaultValue = "HR User") String actor) {
-        return biometricImportService.importFile(file, deviceName, actor);
+                                   @RequestParam String sourceId,
+                                   Authentication authentication) {
+        return biometricImportService.importFile(file, sourceId, authentication.getName());
+    }
+
+    @GetMapping("/sources")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    List<ImportApi.SourceResponse> sources() {
+        return biometricDeviceSyncService.listSources();
+    }
+
+    @PostMapping("/sources")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @ResponseStatus(HttpStatus.CREATED)
+    ImportApi.SourceResponse createSource(@Valid @org.springframework.web.bind.annotation.RequestBody ImportApi.SourceRequest request,
+                                          Authentication authentication) {
+        return biometricDeviceSyncService.createSource(request, authentication.getName());
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/sources/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    ImportApi.SourceResponse updateSource(@org.springframework.web.bind.annotation.PathVariable String id,
+                                          @Valid @org.springframework.web.bind.annotation.RequestBody ImportApi.SourceRequest request,
+                                          Authentication authentication) {
+        return biometricDeviceSyncService.updateSource(id, request, authentication.getName());
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/sources/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    void deleteSource(@org.springframework.web.bind.annotation.PathVariable String id,
+                      Authentication authentication) {
+        biometricDeviceSyncService.deleteSource(id, authentication.getName());
     }
 
     @GetMapping("/unmatched")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     List<ImportApi.UnmatchedIdentityResponse> unmatched() { return biometricImportService.unmatchedIdentities(); }
 
     @GetMapping("/devices")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     List<ImportApi.DeviceResponse> devices() {
         return biometricDeviceSyncService.listDevices();
     }

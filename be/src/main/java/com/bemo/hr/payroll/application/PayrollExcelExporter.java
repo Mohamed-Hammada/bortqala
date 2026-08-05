@@ -63,11 +63,11 @@ public class PayrollExcelExporter {
             int rowIndex = 5;
             for (var row : sheet.rows()) {
                 var r = sheetObj.createRow(rowIndex++);
-                r.createCell(0).setCellValue(row.employeeCode());
-                r.createCell(1).setCellValue(row.employeeName());
-                r.createCell(2).setCellValue(row.categoryName());
-                r.createCell(3).setCellValue(row.employmentType());
-                r.createCell(4).setCellValue(row.periodStart() + " -> " + row.periodEnd());
+                r.createCell(0).setCellValue(safe(row.employeeCode()));
+                r.createCell(1).setCellValue(safe(row.employeeName()));
+                r.createCell(2).setCellValue(safe(row.categoryName()));
+                r.createCell(3).setCellValue(safe(row.employmentType()));
+                r.createCell(4).setCellValue(safe(row.periodStart() + " -> " + row.periodEnd()));
                 r.createCell(5).setCellValue(row.grossAmount().doubleValue());
                 r.createCell(6).setCellValue(row.advancesDeducted().doubleValue());
                 r.createCell(7).setCellValue(row.otherDeductions().doubleValue());
@@ -76,7 +76,7 @@ public class PayrollExcelExporter {
                 r.createCell(10).setCellValue(row.paymentStatus().name());
                 r.createCell(11).setCellValue(row.paymentMethod() == null ? "—" : row.paymentMethod().name());
                 r.createCell(12).setCellValue(row.paidAt() == null ? "—" : row.paidAt().toString());
-                r.createCell(13).setCellValue(row.note() == null ? "—" : row.note());
+                r.createCell(13).setCellValue(safe(row.note()));
             }
 
             for (int i = 0; i < headers.length; i++) {
@@ -88,5 +88,9 @@ public class PayrollExcelExporter {
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate Payroll Excel export", e);
         }
+    }
+
+    private static String safe(String value) {
+        return com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(value);
     }
 }

@@ -20,10 +20,12 @@ public class ImportBatch {
     @TenantId
     @Column(name = "app_id", nullable = false)
     private String appId;
-    @Column(nullable = false, unique = true, length = 64)
+    @Column(nullable = false, length = 64)
     private String checksum;
     @Column(name = "file_name", nullable = false)
     private String fileName;
+    @Column(name = "source_id", nullable = false, length = 36)
+    private String sourceId;
     @Column(name = "device_name", nullable = false, length = 150)
     private String deviceName;
     @Enumerated(EnumType.STRING)
@@ -33,6 +35,12 @@ public class ImportBatch {
     private int totalRows;
     @Column(name = "imported_rows", nullable = false)
     private int importedRows;
+    @Column(name = "valid_rows", nullable = false)
+    private int validRows;
+    @Column(name = "new_punches", nullable = false)
+    private int newPunches;
+    @Column(name = "duplicate_punches", nullable = false)
+    private int duplicatePunches;
     @Column(name = "error_rows", nullable = false)
     private int errorRows;
     @Column(name = "imported_by", nullable = false, length = 100)
@@ -43,15 +51,19 @@ public class ImportBatch {
     protected ImportBatch() {
     }
 
-    public ImportBatch(String checksum, String fileName, String deviceName, String importedBy,
-                       int totalRows, int importedRows, int errorRows) {
+    public ImportBatch(String checksum, String fileName, String sourceId, String deviceName, String importedBy,
+                       int totalRows, int validRows, int errorRows, int newPunches, int duplicatePunches) {
         this.id = UUID.randomUUID().toString();
         this.checksum = checksum;
         this.fileName = fileName;
+        this.sourceId = sourceId;
         this.deviceName = deviceName.strip();
         this.importedBy = importedBy.strip();
         this.totalRows = totalRows;
-        this.importedRows = importedRows;
+        this.importedRows = validRows;
+        this.validRows = validRows;
+        this.newPunches = newPunches;
+        this.duplicatePunches = duplicatePunches;
         this.errorRows = errorRows;
         this.status = errorRows == 0 ? ImportStatus.COMPLETED : ImportStatus.COMPLETED_WITH_ERRORS;
     }
@@ -59,20 +71,35 @@ public class ImportBatch {
     @PrePersist
     void prePersist() { importedAt = Instant.now(); }
 
-    public void updateCounts(int totalRows, int importedRows, int errorRows) {
+    public void updateCounts(int totalRows, int validRows, int errorRows, int newPunches, int duplicatePunches) {
         this.totalRows = totalRows;
-        this.importedRows = importedRows;
+        this.importedRows = validRows;
+        this.validRows = validRows;
+        this.newPunches = newPunches;
+        this.duplicatePunches = duplicatePunches;
         this.errorRows = errorRows;
         this.status = errorRows == 0 ? ImportStatus.COMPLETED : ImportStatus.COMPLETED_WITH_ERRORS;
+    }
+
+    public void reverse() {
+        this.status = ImportStatus.REVERSED;
+        this.importedRows = 0;
+        this.newPunches = 0;
+        this.duplicatePunches = 0;
+        this.errorRows = 0;
     }
 
     public String getId() { return id; }
     public String getChecksum() { return checksum; }
     public String getFileName() { return fileName; }
+    public String getSourceId() { return sourceId; }
     public String getDeviceName() { return deviceName; }
     public ImportStatus getStatus() { return status; }
     public int getTotalRows() { return totalRows; }
     public int getImportedRows() { return importedRows; }
+    public int getValidRows() { return validRows; }
+    public int getNewPunches() { return newPunches; }
+    public int getDuplicatePunches() { return duplicatePunches; }
     public int getErrorRows() { return errorRows; }
     public String getImportedBy() { return importedBy; }
     public Instant getImportedAt() { return importedAt; }

@@ -8,6 +8,7 @@ import com.bemo.hr.manufacturing.production.infrastructure.ProductionOrderReposi
 import com.bemo.hr.manufacturing.production.infrastructure.QualityInspectionRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/manufacturing")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'QUALITY_MANAGER', 'HR_MANAGER')")
 public class ManufacturingController {
 
     private final BomHeaderRepository bomHeaderRepository;
@@ -41,7 +43,7 @@ public class ManufacturingController {
 
     @PostMapping("/boms")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'HR_MANAGER')")
     public ManufacturingApi.BomResponse createBom(@Valid @RequestBody ManufacturingApi.BomPayload payload) {
         BomHeader bom = new BomHeader(payload.bomCode(), payload.finishedGoodName(), payload.yieldQuantity(), payload.notes(), payload.active());
         return toBomResponse(bomHeaderRepository.save(bom));
@@ -55,7 +57,7 @@ public class ManufacturingController {
 
     @PostMapping("/orders")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'HR_MANAGER')")
     public ManufacturingApi.ProductionOrderResponse createProductionOrder(@Valid @RequestBody ManufacturingApi.ProductionOrderPayload payload) {
         LocalDate startDate = Instant.ofEpochMilli(payload.startDate()).atZone(ZoneOffset.UTC).toLocalDate();
         ProductionOrder order = new ProductionOrder(payload.orderNumber(), payload.bomId(), payload.targetQuantity(), startDate);
@@ -64,20 +66,20 @@ public class ManufacturingController {
 
     @PostMapping("/orders/{id}/start")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'HR_MANAGER')")
     public ManufacturingApi.ProductionOrderResponse startProductionOrder(@PathVariable String id) {
         ProductionOrder order = productionOrderRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("أمر الإنتاج غير موجود"));
+                .orElseThrow(() -> new BusinessRuleException("أمر الإنتاج غير موجود", "MFG_PRODUCTION_ORDER_NOT_FOUND", HttpStatus.CONFLICT));
         order.updateStatus(ProductionOrder.Status.IN_PROGRESS);
         return toOrderResponse(productionOrderRepository.save(order));
     }
 
     @PostMapping("/orders/{id}/complete")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'HR_MANAGER')")
     public ManufacturingApi.ProductionOrderResponse completeProductionOrder(@PathVariable String id) {
         ProductionOrder order = productionOrderRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("أمر الإنتاج غير موجود"));
+                .orElseThrow(() -> new BusinessRuleException("أمر الإنتاج غير موجود", "MFG_PRODUCTION_ORDER_NOT_FOUND", HttpStatus.CONFLICT));
         order.updateStatus(ProductionOrder.Status.COMPLETED);
         return toOrderResponse(productionOrderRepository.save(order));
     }
@@ -90,7 +92,7 @@ public class ManufacturingController {
 
     @PostMapping("/quality")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'HR_MANAGER')")
     public ManufacturingApi.QualityInspectionResponse createInspection(@Valid @RequestBody ManufacturingApi.QualityInspectionPayload payload) {
         LocalDate date = Instant.ofEpochMilli(payload.inspectionDate()).atZone(ZoneOffset.UTC).toLocalDate();
         QualityInspection.Status status = QualityInspection.Status.valueOf(payload.status());

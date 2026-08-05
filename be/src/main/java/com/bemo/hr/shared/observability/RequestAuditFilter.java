@@ -25,6 +25,7 @@ public class RequestAuditFilter extends OncePerRequestFilter {
     public static final String CLIENT_CORRELATION_HEADER = "X-Correlation-Id";
     public static final String SERVER_CORRELATION_HEADER = "X-Server-Correlation-Id";
     public static final String DEVICE_HEADER = "X-Device-Id";
+    public static final String REQUEST_ATTRIBUTE_CORRELATION_ID = "bemo.correlationId";
     private static final Pattern SAFE_IDENTIFIER = Pattern.compile("[A-Za-z0-9._-]{1,100}");
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestAuditFilter.class);
 
@@ -44,6 +45,7 @@ public class RequestAuditFilter extends OncePerRequestFilter {
         String serverCorrelationId = UUID.randomUUID().toString();
         String deviceId = safeOrUnknown(request.getHeader(DEVICE_HEADER));
         long started = System.nanoTime();
+        request.setAttribute(REQUEST_ATTRIBUTE_CORRELATION_ID, serverCorrelationId);
         response.setHeader(CLIENT_CORRELATION_HEADER, clientCorrelationId);
         response.setHeader(SERVER_CORRELATION_HEADER, serverCorrelationId);
         MDC.put("clientCorrelationId", clientCorrelationId);

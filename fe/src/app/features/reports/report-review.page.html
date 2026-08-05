@@ -468,11 +468,11 @@
     <div class="card downtimes-card">
       <div class="section-head anomaly-section-head">
         <div>
-          <h2>⚡ حالات شذوذ البصمة اليومية</h2>
-          <p>يكشف الخادم الأيام التي تتجاوز نسبة الغياب عن البصمة المضبوطة، ولا يطبق أي قرار تلقائياً.</p>
+          <h2>⚡ {{ i18n.t('review.anomalyHeading', {}, 'حالات شذوذ البصمة اليومية') }}</h2>
+          <p>{{ i18n.t('review.anomalyHint', {}, 'يكشف الخادم الأيام التي تتجاوز نسبة الغياب عن البصمة المضبوطة، ولا يطبق أي قرار تلقائياً.') }}</p>
         </div>
         <button class="button secondary" [disabled]="detectingAnomalies()" (click)="detectDayAnomalies()">
-          {{ detectingAnomalies() ? 'جارٍ الفحص...' : 'فحص الأيام غير الطبيعية' }}
+          {{ detectingAnomalies() ? i18n.t('review.anomalyDetectRunning', {}, 'جارٍ الفحص...') : i18n.t('review.anomalyDetect', {}, 'فحص الأيام غير الطبيعية') }}
         </button>
       </div>
 
@@ -483,46 +483,47 @@
               <div class="downtime-header">
                 <strong>{{ date(anomaly.workDate) }}</strong>
                 <span class="cat-pill">{{ anomaly.categoryName }}</span>
-                <span class="count-badge">{{ anomaly.affectedCount }} من {{ anomaly.totalEmployeeCount }} موظف</span>
-                <span class="status-pill warning">{{ anomaly.absencePercentage }}% بلا بصمة · الحد {{ anomaly.thresholdPercentage }}%</span>
+                <span class="count-badge">{{ i18n.t('review.anomalyAffectedOf', { affected: anomaly.affectedCount, total: anomaly.totalEmployeeCount }, 'موظف') }}</span>
+                <span class="status-pill warning">{{ i18n.t('review.anomalyAbsenceRate', { rate: anomaly.absencePercentage, threshold: anomaly.thresholdPercentage }, 'بلا بصمة') }}</span>
               </div>
               <p class="context-note">
-                سيشمل القرار {{ anomaly.affectedCount }} سجلاً في هذا التاريخ والفئة فقط. إجمالي وقت الأجر المتوقع المتأثر
-                <strong>{{ anomaly.affectedExpectedMinutes / 60 | number:'1.1-1' }} ساعة</strong> قبل التنفيذ.
+                {{ i18n.t('review.anomalyExplain', { count: anomaly.affectedCount, hours: anomalyHours(anomaly.affectedExpectedMinutes) }, 'سجلاً في هذا التاريخ والفئة فقط. إجمالي وقت الأجر المتوقع المتأثر') }}
+                <strong>{{ (anomaly.affectedExpectedMinutes / 60 | number:'1.1-1') }} {{ i18n.t('review.hourShort', {}, 'ساعة') }}</strong>
+                {{ i18n.t('review.anomalyExplainTail', {}, 'قبل التنفيذ.') }}
               </p>
               <div class="downtime-actions">
-                <button class="btn-decide normal" (click)="previewAnomalyDecision(anomaly, 'DEVICE_OUTAGE')">تعطل جهاز / انقطاع كهرباء</button>
-                <button class="btn-decide leave" (click)="previewAnomalyDecision(anomaly, 'OFFICIAL_HOLIDAY')">إجازة رسمية</button>
-                <button class="btn-decide deduct" (click)="previewAnomalyDecision(anomaly, 'ABSENCE')">غياب</button>
-                <button class="btn-decide normal" (click)="previewAnomalyDecision(anomaly, 'PRESENT')">اعتبار اليوم حضوراً</button>
-                <button class="btn-decide" (click)="previewAnomalyDecision(anomaly, 'DEFER')">تأجيل القرار</button>
+                <button class="btn-decide normal" (click)="previewAnomalyDecision(anomaly, 'DEVICE_OUTAGE')">{{ i18n.t('review.anomalyDeviceOutage', {}, 'تعطل جهاز / انقطاع كهرباء') }}</button>
+                <button class="btn-decide leave" (click)="previewAnomalyDecision(anomaly, 'OFFICIAL_HOLIDAY')">{{ i18n.t('review.anomalyOfficialHoliday', {}, 'إجازة رسمية') }}</button>
+                <button class="btn-decide deduct" (click)="previewAnomalyDecision(anomaly, 'ABSENCE')">{{ i18n.t('review.anomalyAbsence', {}, 'غياب') }}</button>
+                <button class="btn-decide normal" (click)="previewAnomalyDecision(anomaly, 'PRESENT')">{{ i18n.t('review.anomalyPresent', {}, 'اعتبار اليوم حضوراً') }}</button>
+                <button class="btn-decide" (click)="previewAnomalyDecision(anomaly, 'DEFER')">{{ i18n.t('review.anomalyDefer', {}, 'تأجيل القرار') }}</button>
               </div>
             </article>
           }
         </div>
       } @else {
-        <div class="empty-state"><strong>لا توجد حالات شذوذ مفتوحة.</strong><p>الحالات المعالجة لا تعود كتذكير إلا بعد إعادة فتحها صراحةً.</p></div>
+        <div class="empty-state"><strong>{{ i18n.t('review.anomalyEmptyTitle', {}, 'لا توجد حالات شذوذ مفتوحة.') }}</strong><p>{{ i18n.t('review.anomalyEmptyHint', {}, 'الحالات المعالجة لا تعود كتذكير إلا بعد إعادة فتحها صراحةً.') }}</p></div>
       }
 
       @if (dayAnomalyHistory().length) {
         <details class="anomaly-history">
-          <summary>سجل الحالات المعالجة والمؤجلة ({{ dayAnomalyHistory().length }})</summary>
+          <summary>{{ i18n.t('review.anomalyHistorySummary', { count: dayAnomalyHistory().length }, 'سجل الحالات المعالجة والمؤجلة') }}</summary>
           <div class="downtime-grid">
             @for (anomaly of dayAnomalyHistory(); track anomaly.id) {
               <article class="downtime-card resolved">
                 <div class="downtime-header">
                   <strong>{{ date(anomaly.workDate) }}</strong>
                   <span class="cat-pill">{{ anomaly.categoryName }}</span>
-                  <span class="status-pill success">{{ anomaly.status === 'RESOLVED' ? 'معالجة' : anomaly.status === 'DEFERRED' ? 'مؤجلة' : 'تم التراجع' }}</span>
+                  <span class="status-pill success">{{ anomaly.status === 'RESOLVED' ? i18n.t('review.anomalyResolved', {}, 'معالجة') : anomaly.status === 'DEFERRED' ? i18n.t('review.anomalyDeferred', {}, 'مؤجلة') : i18n.t('review.anomalyReversed', {}, 'تم التراجع') }}</span>
                 </div>
-                <p>{{ anomalyDecisionLabel(anomaly.decision) }} · {{ anomaly.reason || 'بدون سبب' }}</p>
+                <p>{{ anomalyDecisionLabel(anomaly.decision) }} · {{ anomaly.reason || i18n.t('review.anomalyNoReason', {}, 'بدون سبب') }}</p>
                 <small>{{ anomaly.decidedBy || '—' }} · {{ anomaly.decidedAt ? date(anomaly.decidedAt) : '—' }}</small>
                 <div class="downtime-actions">
                   @if (anomaly.status === 'RESOLVED') {
-                    <button class="button danger btn-sm" [disabled]="anomalySavingId() === anomaly.id" (click)="reverseDayAnomaly(anomaly)">إنشاء قيد عكسي</button>
+                    <button class="button danger btn-sm" [disabled]="anomalySavingId() === anomaly.id" (click)="reverseDayAnomaly(anomaly)">{{ i18n.t('review.anomalyReverse', {}, 'إنشاء قيد عكسي') }}</button>
                   }
                   @if (anomaly.status === 'DEFERRED' || anomaly.status === 'REVERSED') {
-                    <button class="button secondary btn-sm" [disabled]="anomalySavingId() === anomaly.id" (click)="reopenDayAnomaly(anomaly)">إعادة فتح الحالة</button>
+                    <button class="button secondary btn-sm" [disabled]="anomalySavingId() === anomaly.id" (click)="reopenDayAnomaly(anomaly)">{{ i18n.t('review.anomalyReopen', {}, 'إعادة فتح الحالة') }}</button>
                   }
                 </div>
               </article>
@@ -535,20 +536,20 @@
     @if (anomalyPreview(); as preview) {
       <div class="modal-overlay" (click)="anomalyPreview.set(null)">
         <div class="central-modal" (click)="$event.stopPropagation()">
-          <div class="modal-header"><h3>معاينة قرار شذوذ البصمة</h3></div>
+          <div class="modal-header"><h3>{{ i18n.t('review.anomalyModalTitle', {}, 'معاينة قرار شذوذ البصمة') }}</h3></div>
           <div class="modal-body">
             <p><strong>{{ anomalyDecisionLabel(preview.decision) }}</strong> — {{ date(preview.anomaly.workDate) }} · {{ preview.anomaly.categoryName }}</p>
             <div class="bulk-preview-summary">
-              <div class="preview-row"><span class="label">الموظفون المتأثرون</span><span class="value">{{ preview.anomaly.affectedCount }}</span></div>
-              <div class="preview-row"><span class="label">وقت الأجر المتوقع</span><span class="value">{{ preview.anomaly.affectedExpectedMinutes / 60 | number:'1.1-1' }} ساعة</span></div>
-              <div class="preview-row highlight-row"><span class="label">تأثير القرار</span><span class="value">{{ preview.decision === 'ABSENCE' ? 'خصم الوقت المتوقع بالكامل' : preview.decision === 'DEFER' ? 'لا تغيير في الرواتب الآن' : 'احتساب الوقت المتوقع كوقت مدفوع' }}</span></div>
+              <div class="preview-row"><span class="label">{{ i18n.t('review.anomalyAffectedEmployees', {}, 'الموظفون المتأثرون') }}</span><span class="value">{{ preview.anomaly.affectedCount }}</span></div>
+              <div class="preview-row"><span class="label">{{ i18n.t('review.anomalyExpectedHoursLabel', {}, 'وقت الأجر المتوقع') }}</span><span class="value">{{ preview.anomaly.affectedExpectedMinutes / 60 | number:'1.1-1' }} {{ i18n.t('review.hourShort', {}, 'ساعة') }}</span></div>
+              <div class="preview-row highlight-row"><span class="label">{{ i18n.t('review.anomalyImpactLabel', {}, 'تأثير القرار') }}</span><span class="value">{{ preview.decision === 'ABSENCE' ? i18n.t('review.anomalyImpactAbsence', {}, 'خصم الوقت المتوقع بالكامل') : preview.decision === 'DEFER' ? i18n.t('review.anomalyImpactDefer', {}, 'لا تغيير في الرواتب الآن') : i18n.t('review.anomalyImpactNormal', {}, 'احتساب الوقت المتوقع كوقت مدفوع') }}</span></div>
             </div>
-            <label for="anomaly-reason">سبب القرار *</label>
-            <textarea id="anomaly-reason" rows="3" [ngModel]="preview.reason" (ngModelChange)="updateAnomalyReason($event)" placeholder="مثال: انقطاع كهرباء مؤكد من مسؤول الموقع"></textarea>
+            <label for="anomaly-reason">{{ i18n.t('review.anomalyReasonLabel', {}, 'سبب القرار *') }}</label>
+            <textarea id="anomaly-reason" rows="3" [ngModel]="preview.reason" (ngModelChange)="updateAnomalyReason($event)" placeholder="{{ i18n.t('review.anomalyReasonPlaceholder', {}, 'مثال: انقطاع كهرباء مؤكد من مسؤول الموقع') }}"></textarea>
           </div>
           <div class="modal-footer">
-            <button class="button gold" [disabled]="anomalySavingId() === preview.anomaly.id" (click)="executeAnomalyDecision()">تأكيد التطبيق على {{ preview.anomaly.affectedCount }}</button>
-            <button class="button secondary" [disabled]="anomalySavingId() === preview.anomaly.id" (click)="anomalyPreview.set(null)">إلغاء</button>
+            <button class="button gold" [disabled]="anomalySavingId() === preview.anomaly.id" (click)="executeAnomalyDecision()">{{ i18n.t('review.anomalyApplyButton', { count: preview.anomaly.affectedCount }, 'تأكيد التطبيق على') }}</button>
+            <button class="button secondary" [disabled]="anomalySavingId() === preview.anomaly.id" (click)="anomalyPreview.set(null)">{{ i18n.t('review.anomalyCancel', {}, 'إلغاء') }}</button>
           </div>
         </div>
       </div>

@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -44,6 +45,7 @@ public class DailyAttendanceResult {
     @Column(name = "rule_version", nullable = false, length = 100) private String ruleVersion;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
+    @Version private long version;
 
     protected DailyAttendanceResult() { }
 
@@ -64,6 +66,9 @@ public class DailyAttendanceResult {
     @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
 
     public boolean isBlocking() { return decision == null && (status == DailyStatus.NO_PUNCH || status == DailyStatus.SINGLE_PUNCH || status == DailyStatus.MANUAL_ENTRY || status == DailyStatus.MISSING_SCHEDULE); }
+    public DecisionState decisionState() {
+        return new DecisionState(decision, manualWorkedMinutes, decisionNote, decidedBy, decidedAt);
+    }
     public void decide(AttendanceDecision decision, Integer manualWorkedMinutes, String note, String actor) { this.decision = decision; this.manualWorkedMinutes = manualWorkedMinutes; this.decisionNote = note; this.decidedBy = actor; this.decidedAt = Instant.now(); }
     public void restoreDecision(AttendanceDecision decision, Integer manualWorkedMinutes, String note,
                                 String actor, Instant decidedAt) {
@@ -88,4 +93,8 @@ public class DailyAttendanceResult {
     public String getWarning() { return warning; } public AttendanceDecision getDecision() { return decision; }
     public String getDecisionNote() { return decisionNote; } public String getDecidedBy() { return decidedBy; }
     public Instant getDecidedAt() { return decidedAt; } public String getRuleVersion() { return ruleVersion; }
+    public long getVersion() { return version; }
+
+    public record DecisionState(AttendanceDecision decision, Integer manualWorkedMinutes, String note,
+                                String decidedBy, Instant decidedAt) { }
 }

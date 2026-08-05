@@ -1,0 +1,12 @@
+<main class="page error-page">
+  <section class="error-card" role="alert">
+    <div class="error-code">403</div>
+    <h1>{{ i18n.t('errors.forbiddenTitle') }}</h1>
+    <p class="error-detail">{{ i18n.t('errors.forbiddenDetail') }}</p>
+    <div class="error-actions">
+      <button class="button primary" type="button" (click)="goHome()">
+        {{ i18n.t('errors.backHome') }}
+      </button>
+    </div>
+  </section>
+</main>

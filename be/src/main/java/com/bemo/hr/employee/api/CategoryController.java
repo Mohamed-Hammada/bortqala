@@ -31,21 +31,26 @@ public class CategoryController {
     @GetMapping("/{id}")
     CategoryApi.Response get(@PathVariable String id) { return hrConfigurationService.getCategory(id); }
 
+    @GetMapping("/{id}/schedule-history")
+    List<CategoryApi.ScheduleResponse> scheduleHistory(@PathVariable String id) {
+        return hrConfigurationService.getScheduleHistory(id);
+    }
+
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     CategoryApi.Response create(@Valid @RequestBody CategoryApi.UpsertRequest request) {
         return hrConfigurationService.createCategory(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     CategoryApi.Response update(@PathVariable String id, @Valid @RequestBody CategoryApi.UpsertRequest request) {
         return hrConfigurationService.updateCategory(id, request);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deactivate(@PathVariable String id) { hrConfigurationService.deactivateCategory(id); }
 }

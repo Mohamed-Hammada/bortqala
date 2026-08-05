@@ -52,7 +52,7 @@ class SpreadsheetBiometricFileReaderTests {
 
         assertThat(parsed.importedRows()).isEqualTo(1);
         assertThat(parsed.rows()).hasSize(1);
-        assertThat(parsed.rows().getFirst().punchedAt()).isEqualTo(Instant.parse("2026-07-24T05:03:00Z"));
+        assertThat(parsed.rows().get(0).punchedAt()).isEqualTo(Instant.parse("2026-07-24T05:03:00Z"));
     }
 
     @Test

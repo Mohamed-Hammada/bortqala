@@ -1,7 +1,9 @@
 package com.bemo.hr.operations;
 
+import com.bemo.hr.attendance.domain.BiometricSource;
 import com.bemo.hr.attendance.domain.ImportBatch;
 import com.bemo.hr.attendance.domain.PunchRecord;
+import com.bemo.hr.attendance.infrastructure.BiometricSourceRepository;
 import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
 import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
 import com.bemo.hr.employee.domain.Employee;
@@ -27,8 +29,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DemoScenarioDataService {
     private static final String DEMO_CHECKSUM = "4d07d64bf6a12b134ad0eaee56d79ee6a7283f61a86aee622f1ff1a5803b12e5";
+    private static final String DEMO_SOURCE_NORMALIZED = "demo_biometric_device";
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final EmployeeRepository employeeRepository;
+    private final BiometricSourceRepository biometricSourceRepository;
     private final ImportBatchRepository importBatchRepository;
     private final PunchRecordRepository punchRecordRepository;
     private final BusinessPartyRepository businessPartyRepository;
@@ -60,7 +64,7 @@ public class DemoScenarioDataService {
                 new Employee(code, name, device, categoryId, type, LocalDate.of(2026, 1, 1), null, true)));
     }
     private void seedPunches(Employee admin, Employee accountant, Employee guard) {
-        if (importBatchRepository.findByChecksum(DEMO_CHECKSUM).isPresent()) return;
+        if (importBatchRepository.findBySourceIdAndChecksum(DEMO_SOURCE_NORMALIZED, DEMO_CHECKSUM).isPresent()) return;
         var workDays = firstWorkDays(YearMonth.now(ZoneId.of(companyZone)), 4);
         var rows = new ArrayList<PunchSeed>();
         rows.add(new PunchSeed(admin, workDays.get(0), LocalTime.of(8, 4))); rows.add(new PunchSeed(admin, workDays.get(0), LocalTime.of(16, 12)));
@@ -70,9 +74,15 @@ public class DemoScenarioDataService {
         rows.add(new PunchSeed(accountant, workDays.get(1), LocalTime.of(8, 2)));
         rows.add(new PunchSeed(guard, workDays.get(1), LocalTime.of(8, 0))); rows.add(new PunchSeed(guard, workDays.get(1), LocalTime.of(20, 5)));
         // No security punches on day three: report generation proposes a category holiday.
-        var batch = importBatchRepository.save(new ImportBatch(DEMO_CHECKSUM, "demo-attendance-cases.xlsx", "Demo biometric device", "demo-seed", rows.size(), rows.size(), 0));
+        BiometricSource source = biometricSourceRepository.findBySourceTypeAndNormalizedCode(
+                        BiometricSource.SourceType.FILE_DEVICE, DEMO_SOURCE_NORMALIZED)
+                .orElseGet(() -> biometricSourceRepository.save(new BiometricSource(
+                        BiometricSource.SourceType.FILE_DEVICE, "Demo biometric device", DEMO_SOURCE_NORMALIZED)));
+        var batch = importBatchRepository.save(new ImportBatch(DEMO_CHECKSUM, "demo-attendance-cases.xlsx",
+                source.getId(), "Demo biometric device", "demo-seed", rows.size(), rows.size(), 0, rows.size(), 0));
         int row = 2; var zone = ZoneId.of(companyZone);
-        for (var seed : rows) punchRecordRepository.save(new PunchRecord(batch.getId(), seed.employee().getId(), seed.employee().getDeviceUserId(),
+        for (var seed : rows) punchRecordRepository.save(new PunchRecord(batch.getId(), null, source.getId(),
+                seed.employee().getId(), seed.employee().getDeviceUserId(),
                 seed.employee().getFullName(), seed.date().atTime(seed.time()).atZone(zone).toInstant(), "demo", row++));
     }
     private List<LocalDate> firstWorkDays(YearMonth month, int count) {

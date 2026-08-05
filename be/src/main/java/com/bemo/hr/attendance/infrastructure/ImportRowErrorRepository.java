@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface ImportRowErrorRepository extends JpaRepository<ImportRowError, String> {
     List<ImportRowError> findByBatchIdOrderByRowNumber(String batchId);
+
+    void deleteByBatchId(String batchId);
 }

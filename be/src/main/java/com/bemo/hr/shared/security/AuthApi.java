@@ -20,10 +20,21 @@ public final class AuthApi {
     public record AppResponse(String id, String code, String name,
                               boolean adminDashboardCustomizationEnabled) { }
     public record LoginResponse(String accessToken, String tokenType, Instant expiresAt,
+                                boolean mustChangePassword,
                                 AppResponse app, UserResponse user, PreferenceResponse preferences) { }
+    public record RefreshResponse(String accessToken, String tokenType, Instant expiresAt) { }
+    public record ChangePasswordRequest(@NotBlank @Size(max = 72) String currentPassword,
+                                        @NotBlank @Size(max = 72) String newPassword) { }
     public record UserResponse(String id, String username, String displayName, Set<RoleCode> roles,
                                Set<String> allowedMenus, boolean canViewSalary, String categoryId,
-                               boolean dashboardCustomizationEnabled, boolean active, long version) { }
+                               boolean dashboardCustomizationEnabled, boolean active, long version, Set<String> activeFeatures) { }
+    public record TenantInfo(String id, String code, String name) { }
+    public record SessionInfo(Instant expiresAt, int timeoutMinutes, boolean timeoutEnabled) { }
+    public record MeResponse(String id, String username, String displayName,
+                             TenantInfo tenant, Set<RoleCode> roles, Set<String> scopes,
+                             boolean canViewSalary, String categoryId,
+                             boolean dashboardCustomizationEnabled, boolean active,
+                             SessionInfo session, long version) { }
     public record UserUpsertRequest(
             @NotBlank @Size(max = 100) String username,
             @NotBlank @Size(max = 150) String displayName,
