@@ -71,3 +71,27 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260806_v102_access_guidance_extensions_translations.yaml
   - include:
       file: db/changelog/data/insert/20260806_v103_procurement_i18n_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260806_v104_contractor_settlement_lifecycle.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v105_contractor_settlement_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260806_v106_approval_workflow_engine.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v107_approval_engine_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260806_v108_payroll_automation_explanations.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v109_payroll_explanation_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260806_v110_procurement_three_way_matching.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v111_three_way_matching_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260806_v112_action_center_notifications.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v113_action_center_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260806_v114_screen_shortcut_profiles.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v115_screen_shortcut_translations.yaml

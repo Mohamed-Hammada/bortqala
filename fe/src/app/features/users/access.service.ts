@@ -102,10 +102,6 @@ export class AccessService {
     const viewPermission = page.viewPermissions[0];
     const viewGranted = granted.has(viewPermission);
     const grantedActions = page.actions.filter((a) => granted.has(a.permission)).map((a) => a.code);
-    const missingPermissions = [
-      ...(viewGranted ? [] : [viewPermission]),
-      ...page.actions.filter((a) => !granted.has(a.permission)).map((a) => a.permission),
-    ];
     const catalog = this.catalog();
     const grantingRoles = roleCodes
       .filter((role) => catalog?.roles.find((r) => r.code === role)?.permissions.includes(viewPermission))
@@ -114,11 +110,23 @@ export class AccessService {
     const featureUnavailable =
       page.requiredFeature !== null && page.requiredFeature !== undefined &&
       !this.activeFeatures().includes(page.requiredFeature);
+    const adminSelected = roleCodes.some((role) => role === 'ADMIN' || role === 'SUPER_ADMIN');
+    const routeRoleDenied =
+      page.roles.length > 0 && !page.roles.some((role) => roleCodes.includes(role));
+    const missingPermissions = [
+      ...(viewGranted ? [] : [viewPermission]),
+      ...page.actions.filter((a) => !granted.has(a.permission)).map((a) => a.permission),
+      ...(routeRoleDenied ? page.roles : []),
+    ];
     let access: AccessLevel;
     if (featureUnavailable) {
       access = 'MODULE_UNAVAILABLE';
+    } else if (adminSelected) {
+      access = 'REVIEW';
     } else if (!menus.has(page.menuId)) {
       access = 'HIDDEN';
+    } else if (routeRoleDenied) {
+      access = 'RESTRICTED';
     } else if (!viewGranted) {
       access = 'RESTRICTED';
     } else {

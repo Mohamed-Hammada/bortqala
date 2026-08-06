@@ -1,0 +1,11 @@
+id;translation_key;locale;text_value
+v111-001;THREE_WAY_MATCH_NOT_FOUND;ar-EG;"لم يتم العثور على سجل المطابقة الثلاثية للفاتورة المحسوبة."
+v111-001;THREE_WAY_MATCH_NOT_FOUND;en-US;"No three-way match record found for the specified invoice."
+v111-002;THREE_WAY_MATCH_VARIANCE_EXCEEDED;ar-EG;"تتجاوز فروق الكمية أو السعر نسبة التسامح المسموح بها."
+v111-002;THREE_WAY_MATCH_VARIANCE_EXCEEDED;en-US;"Price or quantity variance exceeds the allowed tolerance threshold."
+v111-003;procurement.threeWayMatch;ar-EG;"المطابقة الثلاثية"
+v111-003;procurement.threeWayMatch;en-US;"Three-Way Matching"
+v111-004;procurement.matchStatus;ar-EG;"حالة المطابقة"
+v111-004;procurement.matchStatus;en-US;"Match Status"
+v111-005;procurement.resolveMatch;ar-EG;"تسوية تفاوت المطابقة"
+v111-005;procurement.resolveMatch;en-US;"Resolve Match Variance"

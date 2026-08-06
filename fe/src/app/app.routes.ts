@@ -64,6 +64,24 @@ export const routes: Routes = [
           import('./features/reports/reports.page').then((module) => module.ReportsPage),
       },
       {
+        path: 'approvals/my-tasks',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'approvals-my-tasks' },
+        loadComponent: () =>
+          import('./features/approvals/pages/pending-approvals/pending-approvals.component').then(
+            (m) => m.PendingApprovalsComponent,
+          ),
+      },
+      {
+        path: 'approvals/definitions',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN'], menuId: 'approvals-workflows' },
+        loadComponent: () =>
+          import('./features/approvals/pages/workflow-definitions/workflow-definitions.component').then(
+            (m) => m.WorkflowDefinitionsComponent,
+          ),
+      },
+      {
         path: 'operations',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN'], menuId: 'operations' },

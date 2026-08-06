@@ -43,6 +43,21 @@ public class ProcurementApi {
             long rateDate, String source
     ) {}
 
+    public record ThreeWayMatchResponse(
+        String id, String purchaseOrderId, String goodsReceiptId, String supplierInvoiceId,
+        String matchStatus, BigDecimal priceVarianceAmount, BigDecimal quantityVarianceAmount,
+        BigDecimal tolerancePercentage, String varianceReason, String resolvedBy,
+        Long resolvedAt, long createdAt
+    ) {}
+
+    public record PerformMatchPayload(
+        BigDecimal tolerancePercentage
+    ) {}
+
+    public record ResolveMatchPayload(
+        @NotBlank String resolutionNotes
+    ) {}
+
     // ─── Goods Receipt ────────────────────────────────────────────────
 
     public record GoodsReceiptLineResponse(

@@ -17,7 +17,8 @@ import { TablePaginationComponent } from '../../shared/ui/table-pagination/table
 import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { PayrollStepperComponent } from './ui/payroll-stepper.component';
-import { PaymentMethod, PayrollRow } from './payroll.models';
+import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+import { PaymentMethod, PayrollRow, SalaryPaymentExplanation } from './payroll.models';
 import { PayrollStore } from './payroll.store';
 
 @Component({
@@ -30,6 +31,7 @@ import { PayrollStore } from './payroll.store';
     SkeletonComponent,
     EmptyStateComponent,
     PayrollStepperComponent,
+    ModalDialogComponent,
   ],
   providers: [PayrollStore],
   templateUrl: './payroll.page.html',
@@ -50,6 +52,19 @@ export class PayrollPage {
   readonly promptState = signal<{ title: string; onConfirm: (value: string) => void; onCancel: () => void } | null>(null);
   readonly drawerOpen = signal(false);
   readonly selectedRow = signal<PayrollRow | null>(null);
+  readonly explanationOpen = signal(false);
+  readonly explanations = signal<SalaryPaymentExplanation[]>([]);
+
+  async openExplanationModal(row: PayrollRow): Promise<void> {
+    if (!row.id) {
+      this.notification.error('سجل الراتب غير محفوظ بعد في النظام.');
+      return;
+    }
+    this.selectedRow.set(row);
+    const data = await this.store.getExplanation(row.id);
+    this.explanations.set(data);
+    this.explanationOpen.set(true);
+  }
 
   readonly pagination = new TablePagination();
   readonly rows = computed(() => this.store.data()?.rows ?? []);

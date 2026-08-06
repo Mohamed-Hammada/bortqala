@@ -507,39 +507,7 @@
   }
 
   @if (activeTab() === 'shortcuts') {
-    <section class="card settings-card shortcuts-settings-card">
-      <header class="shortcuts-settings-header">
-        <div>
-          <h2>{{ i18n.t('shortcuts.title') }}</h2>
-          <p>{{ i18n.t('shortcuts.subtitle') }}</p>
-        </div>
-        <kbd>?</kbd>
-      </header>
-
-      <div class="shortcuts-settings-grid">
-        <section>
-          <h3>{{ i18n.t('shortcuts.globalTitle') }}</h3>
-          @for (shortcut of globalShortcuts; track shortcut.labelKey) {
-            <div class="settings-shortcut-row">
-              <span>{{ i18n.t(shortcut.labelKey) }}</span>
-              <kbd>{{ shortcut.keys }}</kbd>
-            </div>
-          }
-        </section>
-
-        <section>
-          <h3>{{ i18n.t('shortcuts.navigationTitle') }}</h3>
-          @for (shortcut of menuShortcuts; track shortcut.menuId) {
-            <div class="settings-shortcut-row">
-              <span>{{ i18n.t(shortcut.labelKey) }}</span>
-              <kbd>{{ shortcut.keys }}</kbd>
-            </div>
-          }
-        </section>
-      </div>
-
-      <p class="shortcuts-settings-note">{{ i18n.t('shortcuts.availableByPermission') }}</p>
-    </section>
+    <app-shortcut-settings />
   }
 </section>
 

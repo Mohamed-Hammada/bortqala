@@ -56,7 +56,8 @@ class SupplierPaymentValidationTests {
                 mock(BusinessPartyRepository.class), mock(PartnerLedgerEntryRepository.class),
                 mock(AuditService.class), mock(ProcurementExcelExporter.class), mock(OperationsService.class),
                 mock(TenantApplicationRepository.class), mock(CurrencyRepository.class),
-                new IdempotencyService(idempotencyKeyRepository), mock(FiscalPeriodGuard.class));
+                new IdempotencyService(idempotencyKeyRepository), mock(FiscalPeriodGuard.class),
+                mock(com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository.class));
         invoice = new SupplierInvoice("INV-100", "INV-100", null, "EGP", "supplier-a", null,
                 null, null, LocalDate.of(2026, 7, 29), new BigDecimal("100.00"),
                 BigDecimal.ZERO, BigDecimal.ZERO, null, null);

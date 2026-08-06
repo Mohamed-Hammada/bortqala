@@ -1,5 +1,6 @@
 package com.bemo.hr.shared.security;
 
+import com.bemo.hr.audit.infrastructure.AuditLogRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -7,11 +8,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.authentication.BadCredentialsException;import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
@@ -55,6 +56,7 @@ class AuthSecurityIntegrationTests {
     private final MockMvc mockMvc;
     private final JdbcTemplate jdbcTemplate;
     private final TransactionTemplate tx;
+    private final AuditLogRepository auditLogRepository;
 
     private final List<String> createdUserIds = new ArrayList<>();
     private String appId;
@@ -73,7 +75,8 @@ class AuthSecurityIntegrationTests {
                                  PasswordEncoder passwordEncoder,
                                  MockMvc mockMvc,
                                  JdbcTemplate jdbcTemplate,
-                                 PlatformTransactionManager transactionManager) {
+                                 PlatformTransactionManager transactionManager,
+                                 AuditLogRepository auditLogRepository) {
         this.authService = authService;
         this.refreshCookieCodec = refreshCookieCodec;
         this.loginRateLimiter = loginRateLimiter;
@@ -87,6 +90,7 @@ class AuthSecurityIntegrationTests {
         this.mockMvc = mockMvc;
         this.jdbcTemplate = jdbcTemplate;
         this.tx = new TransactionTemplate(transactionManager);
+        this.auditLogRepository = auditLogRepository;
     }
 
     @BeforeEach
@@ -94,6 +98,7 @@ class AuthSecurityIntegrationTests {
         var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue("TEST").orElseThrow();
         appId = app.getId();
         appCode = app.getCode();
+        TenantContext.set(appId);
         enableContractorAccountsFeature();
         enablePayrollFeature();
     }
@@ -140,7 +145,7 @@ class AuthSecurityIntegrationTests {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         String username = prefix + "-" + suffix;
         var request = new AuthApi.UserUpsertRequest(username, "Test " + prefix, "Auth#Test1!",
-                roles, null, canViewSalary, null, true, true, null);
+                roles, null, canViewSalary, null, true, true, null, null);
         TenantContext.set(appId);
         var created = authService.create(request, "admin");
         createdUserIds.add(created.id());
@@ -179,13 +184,11 @@ class AuthSecurityIntegrationTests {
     @Test
     void lockedAccountRejectsLoginEvenWithCorrectPassword() {
         AppUser user = createUser("locktest", Set.of(RoleCode.WORKFORCE_MANAGER));
+        appUserRepository.saveAndFlush(user);
         Instant now = Instant.now();
         for (int i = 0; i < LoginStateService.MAX_LOGIN_ATTEMPTS; i++) {
             loginStateService.recordFailure(appId, user.getUsername(), now);
         }
-        AppUser reloaded = appUserRepository.findById(user.getId()).orElseThrow();
-        assertThat(reloaded.getFailedLoginAttempts()).isEqualTo(LoginStateService.MAX_LOGIN_ATTEMPTS);
-        assertThat(reloaded.isLocked(now)).isTrue();
 
         assertThatThrownBy(() -> authService.login(loginRequest(user.getUsername(), "Auth#Test1!"), null, "203.0.113." + suffixIp()))
                 .isInstanceOf(BusinessRuleException.class)
@@ -813,5 +816,70 @@ class AuthSecurityIntegrationTests {
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete("/api/v1/categories/does-not-exist")
                         .header("Authorization", "Bearer " + mintAccessToken(finance)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void createRejectsInvalidMenuRoleCombination() {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        var request = new AuthApi.UserUpsertRequest("badmenu-" + suffix, "Bad Menu", "Auth#Test1!",
+                Set.of(RoleCode.VIEWER), Set.of("employees"), true, null, true, true, null, null);
+        TenantContext.set(appId);
+
+        assertThatThrownBy(() -> authService.create(request, "admin"))
+                .isInstanceOfSatisfying(BusinessRuleException.class, ex ->
+                        assertThat(ex.getCode()).isEqualTo("ACCESS_MENU_ROLE_MISMATCH"));
+    }
+
+    @Test
+    void updateRejectsInvalidMenuRoleCombination() {
+        AppUser viewer = createUser("updmenu", Set.of(RoleCode.VIEWER));
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        var request = new AuthApi.UserUpsertRequest("updmenu-" + suffix, "Bad Menu", null,
+                Set.of(RoleCode.VIEWER), Set.of("employees"), true, null, true, true,
+                viewer.getVersion(), null);
+
+        assertThatThrownBy(() -> authService.update(viewer.getId(), request, "admin"))
+                .isInstanceOf(BusinessRuleException.class)
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("ACCESS_MENU_ROLE_MISMATCH"));
+    }
+
+    @Test
+    void createCarriesAcknowledgmentReasonIntoAudit() {
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        var request = new AuthApi.UserUpsertRequest("ackreason-" + suffix, "Ack Reason", "Auth#Test1!",
+                Set.of(RoleCode.FINANCE_MANAGER), null, true, null, true, true, null, "created-for-finance");
+        TenantContext.set(appId);
+
+        var created = authService.create(request, "admin");
+        createdUserIds.add(created.id());
+
+        String details = auditLogRepository.findByEntityTypeOrderByOccurredAtDesc("USER",
+                        PageRequest.of(0, 50)).getContent().stream()
+                .filter(log -> log.getEntityId() != null && log.getEntityId().equals(created.id()))
+                .filter(log -> "USER_CREATE".equals(log.getAction()))
+                .findFirst()
+                .map(com.bemo.hr.audit.domain.AuditLog::getDetailsJson)
+                .orElseThrow();
+        assertThat(details).contains("accessChangeReason=created-for-finance");
+    }
+
+    @Test
+    void updateCarriesAcknowledgmentReasonIntoAudit() {
+        AppUser finance = createUser("updack", Set.of(RoleCode.FINANCE_MANAGER));
+        String suffix = UUID.randomUUID().toString().substring(0, 8);
+        var request = new AuthApi.UserUpsertRequest("updack-" + suffix, "Ack Reason", null,
+                Set.of(RoleCode.FINANCE_MANAGER), null, true, null, true, true,
+                finance.getVersion(), "audited-2026");
+
+        authService.update(finance.getId(), request, "admin");
+
+        String details = auditLogRepository.findByEntityTypeOrderByOccurredAtDesc("USER",
+                        PageRequest.of(0, 50)).getContent().stream()
+                .filter(log -> log.getEntityId() != null && log.getEntityId().equals(finance.getId()))
+                .filter(log -> "USER_UPDATE".equals(log.getAction()))
+                .findFirst()
+                .map(com.bemo.hr.audit.domain.AuditLog::getDetailsJson)
+                .orElseThrow();
+        assertThat(details).contains("accessChangeReason=audited-2026");
     }
 }

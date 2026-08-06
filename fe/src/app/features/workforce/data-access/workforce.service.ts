@@ -18,7 +18,11 @@ import {
   WorkforceImportBatch,
   WorkforceImportValidation,
   WorkforceImportCommit,
-  AdvanceEmployeeOption
+  AdvanceEmployeeOption,
+  ContractorSettlementDetail,
+  LinkInvoicePayload,
+  SettlementPostingPayload,
+  RecordSettlementPaymentPayload
 } from '../models/workforce.models';
 
 @Injectable({ providedIn: 'root' })
@@ -169,6 +173,26 @@ export class WorkforceService {
     return this.http.get(`/api/v1/workforce/settlements/periods/${id}/export-excel`, {
       responseType: 'blob'
     });
+  }
+
+  loadContractorSettlementsForPeriod(periodId: string): Observable<ContractorSettlementDetail[]> {
+    return this.http.get<ContractorSettlementDetail[]>(`/api/v1/workforce/settlements/periods/${periodId}/contractor-settlements`);
+  }
+
+  getContractorSettlementDetail(id: string): Observable<ContractorSettlementDetail> {
+    return this.http.get<ContractorSettlementDetail>(`/api/v1/workforce/settlements/contractor-settlements/${id}`);
+  }
+
+  postSettlementToFinance(id: string, payload: SettlementPostingPayload): Observable<ContractorSettlementDetail> {
+    return this.http.post<ContractorSettlementDetail>(`/api/v1/workforce/settlements/contractor-settlements/${id}/post`, payload);
+  }
+
+  linkSettlementInvoice(id: string, payload: LinkInvoicePayload): Observable<ContractorSettlementDetail> {
+    return this.http.post<ContractorSettlementDetail>(`/api/v1/workforce/settlements/contractor-settlements/${id}/link-invoice`, payload);
+  }
+
+  recordSettlementPayment(id: string, payload: RecordSettlementPaymentPayload): Observable<ContractorSettlementDetail> {
+    return this.http.post<ContractorSettlementDetail>(`/api/v1/workforce/settlements/contractor-settlements/${id}/mark-paid`, payload);
   }
 
   // Advances

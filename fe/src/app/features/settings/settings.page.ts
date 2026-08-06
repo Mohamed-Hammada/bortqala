@@ -6,7 +6,8 @@ import { AuthService } from '../../core/auth/auth.service';
 import { ExcelTableStyle, NotificationPreferences, TableDensity, ThemePreference } from '../../core/auth/auth.models';
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
-import { GLOBAL_SHORTCUTS, MENU_SHORTCUTS } from '../../core/app-shortcuts';
+import { ActivatedRoute } from '@angular/router';
+import { ShortcutSettingsComponent } from './shortcuts/shortcut-settings.component';
 
 export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports' | 'shortcuts';
 
@@ -27,7 +28,7 @@ function saveNotificationPrefs(prefs: NotificationPreferences): void {
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ShortcutSettingsComponent],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,6 +38,7 @@ export class SettingsPage {
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
 
   readonly activeTab = signal<SettingsTab>('appearance');
 
@@ -55,8 +57,6 @@ export class SettingsPage {
   readonly showRecentlyUsed = signal(this.authService.preferences().showRecentlyUsed);
   readonly maxRecentlyUsed = signal(this.authService.preferences().maxRecentlyUsed);
   readonly notificationPrefs = signal<NotificationPreferences>(loadNotificationPrefs());
-  readonly globalShortcuts = GLOBAL_SHORTCUTS;
-  readonly menuShortcuts = MENU_SHORTCUTS;
 
   readonly availablePages = [
     { path: '/dashboard', labelKey: 'nav.dashboard' },
@@ -132,6 +132,10 @@ export class SettingsPage {
   });
 
   constructor() {
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam && ['appearance', 'session', 'security', 'reports', 'shortcuts'].includes(tabParam)) {
+      this.activeTab.set(tabParam as SettingsTab);
+    }
     if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) void this.loadAppSettings();
   }
 

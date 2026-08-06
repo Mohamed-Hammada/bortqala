@@ -4,12 +4,22 @@ import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { downloadBlob } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
-import { BulkPaymentRequest, PaymentRequest, SheetResponse } from './payroll.models';
+import { BulkPaymentRequest, PaymentRequest, SheetResponse, SalaryPaymentExplanation } from './payroll.models';
 
 @Injectable()
 export class PayrollStore {
   private readonly httpClient = inject(HttpClient);
   private readonly i18n = inject(I18nService);
+
+  async getExplanation(paymentId: string): Promise<SalaryPaymentExplanation[]> {
+    try {
+      return await firstValueFrom(
+        this.httpClient.get<SalaryPaymentExplanation[]>(`/api/v1/payroll/payments/${paymentId}/explanation`),
+      );
+    } catch {
+      return [];
+    }
+  }
 
   readonly data = signal<SheetResponse | null>(null);
   readonly loading = signal(true);

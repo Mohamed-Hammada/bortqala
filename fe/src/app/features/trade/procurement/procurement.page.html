@@ -108,7 +108,10 @@
             <td class="ltr">{{ (inv.taxAmount ?? 0) | number:'1.2-2' }}</td>
             <td class="ltr"><strong>{{ inv.netAmount | number:'1.2-2' }}</strong><small> / {{ i18n.t('procurement.invOutstanding') }} {{ inv.outstandingAmount | number:'1.2-2' }}</small></td>
             <td><span class="status" [class.warning]="inv.status !== 'PAID'" [class.success]="inv.status === 'PAID'">{{ inv.status === 'PAID' ? i18n.t('procurement.invStatusPaid') : inv.status === 'PARTIALLY_PAID' ? i18n.t('procurement.invStatusPartiallyPaid') : i18n.t('procurement.invStatusUnpaid') }}</span></td>
-            <td>@if (inv.status !== 'PAID') {<button class="button primary btn-sm" (click)="openNewPayment(inv)">💰 {{ i18n.t('procurement.invPay') }}</button>}</td>
+            <td>
+              <button class="button secondary btn-sm" type="button" (click)="performThreeWayMatch(inv)">🔍 {{ i18n.t('procurement.threeWayMatch', undefined, 'المطابقة الثلاثية') }}</button>
+              @if (inv.status !== 'PAID') {<button class="button primary btn-sm" type="button" (click)="openNewPayment(inv)">💰 {{ i18n.t('procurement.invPay') }}</button>}
+            </td>
           </tr>
           } @empty { <tr><td colspan="10"><div class="empty-state">{{ i18n.t('procurement.invEmpty') }}</div></td></tr> }
         </tbody>
@@ -373,6 +376,52 @@
         <button class="button secondary" type="button" (click)="pmtModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
       </div>
     </form>
+  </app-modal-dialog>
+  }
+
+  <!-- ══════════════ 3-WAY MATCH MODAL ══════════════ -->
+  @if (matchModalOpen() && activeMatch(); as match) {
+  <app-modal-dialog [isOpen]="true" title="🔍 تقرير ووحدة المطابقة الثلاثية (Three-Way Matching)" (close)="matchModalOpen.set(false)">
+    <div dir="rtl" style="display:grid;gap:1.2rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem;background:#f8fafc;border-radius:8px;">
+        <div>
+          <strong style="font-size:1.1rem;display:block;">حالة المطابقة: {{ match.matchStatus }}</strong>
+          <span style="color:#64748b;font-size:0.9rem;">نسبة التسامح المسموح بها: {{ match.tolerancePercentage }}%</span>
+        </div>
+        <span class="status" [class.success]="match.matchStatus === 'MATCHED' || match.matchStatus === 'RESOLVED'" [class.warning]="match.matchStatus === 'VARIANCE_EXCEEDED'">
+          {{ match.matchStatus === 'MATCHED' ? '✔ متطابق' : match.matchStatus === 'RESOLVED' ? '✔ تم تسوية التفاوت' : '⚠️ تجاوز التسامح المسموح' }}
+        </span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div style="padding:1rem;background:#fff;border:1px solid #e2e8f0;border-radius:8px;">
+          <small style="color:#64748b;display:block;">فرق السعر الحسابي</small>
+          <strong style="font-size:1.2rem;color:#1e293b;">{{ match.priceVarianceAmount | number:'1.2-2' }} ج.م</strong>
+        </div>
+        <div style="padding:1rem;background:#fff;border:1px solid #e2e8f0;border-radius:8px;">
+          <small style="color:#64748b;display:block;">فرق الكميات المستلمة</small>
+          <strong style="font-size:1.2rem;color:#1e293b;">{{ match.quantityVarianceAmount | number:'1.2-2' }} ج.م</strong>
+        </div>
+      </div>
+
+      @if (match.varianceReason) {
+        <div style="padding:1rem;background:#fffbe6;border:1px solid #ffe58f;border-radius:8px;">
+          <strong>سبب التفاوت والتحليل:</strong>
+          <p style="margin:.4rem 0 0 0;">{{ match.varianceReason }}</p>
+        </div>
+      }
+
+      @if (match.matchStatus === 'VARIANCE_EXCEEDED') {
+        <div style="display:grid;gap:.5rem;">
+          <label for="resolution-notes"><strong>ملاحظات التسوية والموافقة الاستثنائية:</strong></label>
+          <input #resNotes id="resolution-notes" class="form-input" placeholder="ادخل ملاحظات ومبررات التسوية للموافقة..." />
+          <button type="button" class="button primary" (click)="resolveMatch(resNotes.value)">⚡ اعتماد وتعديل التفاوت</button>
+        </div>
+      }
+    </div>
+    <div modal-actions class="modal-actions-bar">
+      <button class="button secondary" type="button" (click)="matchModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
+    </div>
   </app-modal-dialog>
   }
 </section>

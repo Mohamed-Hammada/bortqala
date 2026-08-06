@@ -1,0 +1,146 @@
+<div class="shortcut-settings">
+  <div class="shortcut-intro">
+    <div class="header-badge">
+      @if (profile()?.profileMode === 'CUSTOM') {
+        <span class="custom-badge">{{ i18n.t('shortcuts.customBadge') }}</span>
+      } @else {
+        <span class="default-badge">{{ i18n.t('shortcuts.defaultBadge') }}</span>
+      }
+    </div>
+    <h2>{{ i18n.t('shortcuts.settingsTitle') }}</h2>
+    <p>{{ i18n.t('shortcuts.settingsDescription') }}</p>
+    <p class="only-available-note">{{ i18n.t('shortcuts.onlyAvailableScreens') }}</p>
+  </div>
+
+  <div class="shortcut-toolbar">
+    <div class="toolbar-actions">
+      <button
+        type="button"
+        class="button secondary"
+        (click)="addShortcut()"
+        [disabled]="loading() || saving() || drafts().length >= 20"
+      >
+        + {{ i18n.t('shortcuts.add') }}
+      </button>
+
+      <button
+        type="button"
+        class="button primary"
+        (click)="save()"
+        [disabled]="loading() || saving()"
+      >
+        {{ i18n.t('shortcuts.save') }}
+      </button>
+
+      <button
+        type="button"
+        class="button secondary danger"
+        (click)="reset()"
+        [disabled]="loading() || saving()"
+      >
+        {{ i18n.t('shortcuts.reset') }}
+      </button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">{{ i18n.t('common.loading') }}</div>
+  } @else {
+    <section class="shortcut-section">
+      <h3>{{ i18n.t('shortcuts.personalTitle') }}</h3>
+
+      @if (drafts().length === 0) {
+        <div class="empty-state">{{ i18n.t('shortcuts.noAssignment') }}</div>
+      } @else {
+        <div class="shortcut-table-wrapper">
+          <table class="shortcut-table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('shortcuts.key') }}</th>
+                <th>{{ i18n.t('shortcuts.destination') }}</th>
+                <th>{{ i18n.t('shortcuts.status') }}</th>
+                <th>{{ i18n.t('shortcuts.enabled') }}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (draft of drafts(); track $index) {
+                <tr [class.capturing]="captureIndex() === $index">
+                  <td class="shortcut-key-cell">
+                    <div class="shortcut-key-builder">
+                      <kbd class="prefix-kbd">G</kbd>
+                      <span class="arrow">→</span>
+                      <button
+                        type="button"
+                        class="capture-btn"
+                        data-shortcut-capture="true"
+                        (click)="captureIndex.set($index)"
+                        (keydown)="captureKey($index, $event)"
+                        [attr.aria-pressed]="captureIndex() === $index"
+                        [attr.aria-label]="i18n.t('shortcuts.captureAria', { key: displayKey(draft.secondKeyCode) })"
+                      >
+                        @if (captureIndex() === $index) {
+                          <span class="press-hint">{{ i18n.t('shortcuts.pressKey') }}</span>
+                        } @else {
+                          <kbd class="key-kbd">{{ displayKey(draft.secondKeyCode) }}</kbd>
+                        }
+                      </button>
+                    </div>
+                  </td>
+
+                  <td class="shortcut-dest-cell">
+                    <select
+                      class="form-control"
+                      [value]="draft.pageCode"
+                      (change)="changeDestination($index, $any($event.target).value)"
+                    >
+                      @for (dest of availableDestinations(); track dest.pageCode) {
+                        <option [value]="dest.pageCode">
+                          {{ i18n.t(dest.titleKey) }}
+                        </option>
+                      }
+                    </select>
+                  </td>
+
+                  <td class="shortcut-status-cell">
+                    @let statusInfo = getAvailabilityStatus(draft.pageCode);
+                    <span class="status-badge" [ngClass]="statusInfo.cssClass">
+                      {{ i18n.t(statusInfo.statusKey) }}
+                    </span>
+                  </td>
+
+                  <td class="shortcut-enabled-cell">
+                    <label class="switch-label">
+                      <input
+                        type="checkbox"
+                        [checked]="draft.enabled"
+                        (change)="toggleEnabled($index, $any($event.target).checked)"
+                      />
+                      <span>{{ i18n.t('shortcuts.enabled') }}</span>
+                    </label>
+                  </td>
+
+                  <td class="shortcut-action-cell">
+                    <button
+                      type="button"
+                      class="icon-button danger"
+                      (click)="remove($index)"
+                      [attr.aria-label]="i18n.t('shortcuts.remove')"
+                      [appTooltip]="i18n.t('shortcuts.remove')"
+                    >
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <div class="aria-live-region" aria-live="polite" aria-atomic="true">
+      {{ liveAnnouncement() }}
+    </div>
+  }
+</div>

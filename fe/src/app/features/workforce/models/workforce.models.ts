@@ -1,7 +1,7 @@
 export type ContractorAccountingModel = 'worker_net_total' | 'contractor_daily_rate' | 'worker_cost_plus_fee' | 'fixed_period_amount';
 export type PaymentRouting = 'contractor_full' | 'worker_direct' | 'mixed';
 export type LaborRequestStatus = 'DRAFT' | 'SENT' | 'PARTIAL' | 'APPROVED' | 'COMPLETED' | 'CLOSED' | 'CANCELLED' | 'REJECTED';
-export type SettlementStatus = 'DRAFT' | 'CALCULATED' | 'REVIEWED' | 'APPROVED' | 'LOCKED';
+export type SettlementStatus = 'DRAFT' | 'CALCULATED' | 'REVIEWED' | 'APPROVED' | 'LOCKED' | 'POSTED' | 'PAID';
 export type TermType = 'SHORT_TERM' | 'LONG_TERM';
 
 export interface Contractor {
@@ -183,6 +183,78 @@ export interface SettlementIssue {
   severity: 'WARNING' | 'ERROR';
   code: string;
   message: string;
+}
+
+export interface ContractorSettlementLine {
+  id: string;
+  settlementId: string;
+  workerId: string;
+  workerName: string;
+  attendanceDays: number;
+  dailyWage: number;
+  grossWage: number;
+  overtimeAmount: number;
+  deductionsAmount: number;
+  advanceInstallments: number;
+  netWage: number;
+}
+
+export interface ContractorSettlementAdjustment {
+  id: string;
+  settlementId: string;
+  adjustmentType: string;
+  description: string;
+  amount: number;
+  reason?: string;
+  createdBy?: string;
+  createdAt: number;
+}
+
+export interface ContractorSettlementDetail {
+  id: string;
+  periodId: string;
+  contractorId: string;
+  contractorName: string;
+  accountingModel: ContractorAccountingModel;
+  workersNetTotal: number;
+  contractorRatesTotal: number;
+  commissionAmount: number;
+  fixedAmount: number;
+  additionsAmount: number;
+  deductionsAmount: number;
+  grossAmount: number;
+  netPayable: number;
+  paidAmount: number;
+  invoiceNumber?: string;
+  invoiceDate?: number;
+  postedJournalEntryId?: string;
+  status: string;
+  version: number;
+  lines: ContractorSettlementLine[];
+  adjustments: ContractorSettlementAdjustment[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface LinkInvoicePayload {
+  invoiceNumber: string;
+  invoiceDate: number;
+  invoiceAmount?: number;
+  notes?: string;
+}
+
+export interface SettlementPostingPayload {
+  operationId: string;
+  expectedVersion: number;
+  reason?: string;
+}
+
+export interface RecordSettlementPaymentPayload {
+  operationId: string;
+  amount: number;
+  paymentDate?: number;
+  paymentReference?: string;
+  notes?: string;
 }
 
 export type WorkforceImportStatus = 'UPLOADED' | 'MAPPED' | 'VALIDATED' | 'READY' | 'IMPORTED' | 'REVERSED';

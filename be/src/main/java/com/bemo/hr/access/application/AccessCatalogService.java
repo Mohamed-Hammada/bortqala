@@ -128,6 +128,26 @@ public class AccessCatalogService {
                 granted.stream().filter(catalog.sensitivePermissions()::contains).sorted().toList());
     }
 
+    /**
+     * Runs {@link #validateAssignment} and throws when the assignment is not
+     * valid, so user saves can never persist an assignment the catalog rejects.
+     * The error carries the first machine key so the UI and the database-localized
+     * exception handler can surface the precise problem.
+     */
+    public void validateAssignmentOrThrow(
+            Set<String> actorRoles, String actorUserId,
+            List<String> roleCodes, List<String> menuCodes,
+            String targetUserId, Set<String> currentUserRoles, String reason) {
+        AccessApi.AccessValidateResponse result = validateAssignment(
+                actorRoles, actorUserId, roleCodes, menuCodes, targetUserId, currentUserRoles, reason);
+        if (!result.valid()) {
+            String firstErrorCode = result.errors().isEmpty() ? "ACCESS_ASSIGNMENT_INVALID"
+                    : result.errors().get(0).code();
+            throw new BusinessRuleException("The selected user access configuration is invalid.",
+                    firstErrorCode, HttpStatus.CONFLICT);
+        }
+    }
+
     /** Suggested minimal roles covering a set of business needs. */
     public List<String> suggestRoles(Set<String> permissions) {
         Set<String> uncovered = new HashSet<>(permissions);
@@ -201,7 +221,8 @@ public class AccessCatalogService {
                 errors.add(new AccessApi.AccessValidateErrorResponse(
                         ERR_FEATURE_DISABLED, "access.validate.featureDisabled", menuId, page.code()));
             }
-            if (!page.requiredRoles().isEmpty() && Collections.disjoint(selected, page.requiredRoles())) {
+            if (!page.requiredRoles().isEmpty() && Collections.disjoint(selected, page.requiredRoles())
+                    && selected.stream().noneMatch(role -> "ADMIN".equals(role) || "SUPER_ADMIN".equals(role))) {
                 errors.add(new AccessApi.AccessValidateErrorResponse(
                         ERR_MENU_ROLE_MISMATCH, "access.validate.menuRoleMismatch", menuId, page.code()));
             }
@@ -272,11 +293,22 @@ public class AccessCatalogService {
         boolean featureUnavailable = page.requiredFeature() != null
                 && !enabledFeatures.contains(page.requiredFeature());
         boolean menuVisible = menus.contains(page.menuId());
+        boolean adminSelected = selectedRoles.stream()
+                .anyMatch(role -> "ADMIN".equals(role) || "SUPER_ADMIN".equals(role));
+        boolean routeRoleDenied = !page.requiredRoles().isEmpty()
+                && Collections.disjoint(selectedRoles, page.requiredRoles());
         String access;
         if (featureUnavailable) {
             access = AccessLevel.MODULE_UNAVAILABLE.name();
+        } else if (adminSelected) {
+            // Admin-level roles bypass menu selection and route-role checks but
+            // remain subject to tenant feature flags above.
+            access = AccessLevel.REVIEW.name();
         } else if (!menuVisible) {
             access = AccessLevel.HIDDEN.name();
+        } else if (routeRoleDenied) {
+            access = AccessLevel.RESTRICTED.name();
+            missing.addAll(page.requiredRoles());
         } else if (!viewGranted) {
             access = AccessLevel.RESTRICTED.name();
         } else {
@@ -323,6 +355,25 @@ public class AccessCatalogService {
                     List.of(permission), false));
         }
         return warnings;
+    }
+
+    public List<AccessApi.AccessPageResponse> availablePagesForUser(
+            Set<String> roleCodes,
+            Set<String> menuCodes) {
+        AccessApi.AccessPreviewResponse preview = preview(
+                roleCodes != null ? new ArrayList<>(roleCodes) : List.of(),
+                menuCodes != null ? new ArrayList<>(menuCodes) : List.of());
+
+        Set<String> allowedPageCodes = preview.pages().stream()
+                .filter(page -> !"HIDDEN".equals(page.access()))
+                .filter(page -> !"RESTRICTED".equals(page.access()))
+                .filter(page -> !"MODULE_UNAVAILABLE".equals(page.access()))
+                .map(AccessApi.EffectivePageAccessResponse::pageCode)
+                .collect(Collectors.toSet());
+
+        return catalog().pages().stream()
+                .filter(page -> allowedPageCodes.contains(page.code()))
+                .toList();
     }
 
     private AccessApi.AccessRoleResponse toRole(AccessRoleDef role) {

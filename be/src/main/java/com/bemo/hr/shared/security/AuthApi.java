@@ -47,7 +47,8 @@ public final class AuthApi {
             String categoryId,
             Boolean dashboardCustomizationEnabled,
             boolean active,
-            Long version) { }
+            Long version,
+            @Size(max = 1000) String accessChangeReason) { }
     public record PreferenceResponse(ThemePreference theme, TableDensity tableDensity,
                                      String locale, ExcelTableStyle excelTableStyle, int defaultPageSize,
                                      String defaultPage, boolean showFavorites, boolean showRecentlyUsed,

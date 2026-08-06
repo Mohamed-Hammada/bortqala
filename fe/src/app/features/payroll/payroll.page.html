@@ -194,7 +194,13 @@
                 </span>
               </td>
               <td>
-                <div class="table-row-actions">
+                  <button
+                    class="button secondary"
+                    type="button"
+                    (click)="openExplanationModal(row)"
+                  >
+                    💡 {{ i18n.t('payroll.explanationTitle', undefined, 'تفاصيل الحساب') }}
+                  </button>
                   @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'])) {
                     @if (row.paymentStatus !== 'PAID' && row.paymentStatus !== 'POSTED' && row.paymentStatus !== 'REVERSED') {
                       <button
@@ -215,9 +221,8 @@
                       </button>
                     }
                   }
-                </div>
-              </td>
-            </tr>
+                </td>
+              </tr>
           } @empty {
             <tr>
               <td colspan="9">
@@ -389,3 +394,37 @@
     </div>
   </div>
 }
+
+<!-- Salary Calculation Explanation Modal -->
+<app-modal-dialog [isOpen]="explanationOpen()" title="💡 تفاصيل ومعدلات حساب راتب الموظف" size="wide" (close)="explanationOpen.set(false)">
+  @if (selectedRow(); as row) {
+    <div dir="rtl" style="display:grid;gap:1rem;">
+      <p style="font-weight:700;margin:0;">الموظف: {{ row.employeeName }} ({{ row.employeeCode }}) - {{ row.categoryName }}</p>
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#f8fafc;text-align:right;">
+            <th style="padding:.6rem;border-bottom:1px solid #e2e8f0;">بند الراتب</th>
+            <th style="padding:.6rem;border-bottom:1px solid #e2e8f0;">المعادلة التطبيقية</th>
+            <th style="padding:.6rem;border-bottom:1px solid #e2e8f0;">الشرح التفصيلي</th>
+            <th style="padding:.6rem;border-bottom:1px solid #e2e8f0;">القيمة (ج.م)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of explanations(); track item.id) {
+            <tr>
+              <td style="padding:.6rem;border-bottom:1px solid #edf2f7;"><strong>{{ item.componentType }}</strong></td>
+              <td style="padding:.6rem;border-bottom:1px solid #edf2f7;"><code>{{ item.formula }}</code></td>
+              <td style="padding:.6rem;border-bottom:1px solid #edf2f7;">{{ i18n.locale() === 'en-US' ? item.explanationTextEn : item.explanationTextAr }}</td>
+              <td style="padding:.6rem;border-bottom:1px solid #edf2f7;font-weight:800;color:#166534;">{{ item.calculatedAmount | number:'1.2-2' }}</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" style="text-align:center;padding:1rem;color:#64748b;">لا توجد معادلات مسجلة لهذا الموظف.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <div modal-actions>
+    <button type="button" class="button secondary" (click)="explanationOpen.set(false)">إغلاق</button>
+  </div>
+</app-modal-dialog>

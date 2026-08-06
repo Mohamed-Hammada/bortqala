@@ -9,6 +9,7 @@ import com.bemo.hr.finance.infrastructure.CurrencyRepository;
 import com.bemo.hr.finance.domain.Currency;
 import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
@@ -60,6 +61,7 @@ public class ProcurementService {
     private final CurrencyRepository currencyRepository;
     private final IdempotencyService idempotencyService;
     private final FiscalPeriodGuard fiscalPeriodGuard;
+    private final com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository threeWayMatchRepository;
 
     public ProcurementService(PurchaseOrderRepository purchaseOrderRepository,
                               PurchaseOrderLineRepository purchaseOrderLineRepository,
@@ -75,7 +77,8 @@ public class ProcurementService {
                               TenantApplicationRepository tenantApplicationRepository,
                               CurrencyRepository currencyRepository,
                               IdempotencyService idempotencyService,
-                              FiscalPeriodGuard fiscalPeriodGuard) {
+                              FiscalPeriodGuard fiscalPeriodGuard,
+                              com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository threeWayMatchRepository) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.purchaseOrderLineRepository = purchaseOrderLineRepository;
         this.procurementDocumentSequenceRepository = procurementDocumentSequenceRepository;
@@ -91,6 +94,7 @@ public class ProcurementService {
         this.currencyRepository = currencyRepository;
         this.idempotencyService = idempotencyService;
         this.fiscalPeriodGuard = fiscalPeriodGuard;
+        this.threeWayMatchRepository = threeWayMatchRepository;
     }
 
     public ProcurementApi.NumberingSettings numberingSettings() {
@@ -648,5 +652,69 @@ public class ProcurementService {
     private String getCurrentUser() {
         var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         return (auth != null && auth.getName() != null && !auth.getName().isBlank()) ? auth.getName() : "system";
+    }
+
+    @Transactional
+    public ProcurementApi.ThreeWayMatchResponse performThreeWayMatch(String supplierInvoiceId, BigDecimal tolerancePercentage) {
+        SupplierInvoice invoice = supplierInvoiceRepository.findById(supplierInvoiceId)
+                .orElseThrow(() -> new NotFoundException("Invoice not found: " + supplierInvoiceId, "SUPPLIER_INVOICE_NOT_FOUND"));
+
+        PurchaseOrder po = purchaseOrderRepository.findById(invoice.getPurchaseOrderId())
+                .orElseThrow(() -> new NotFoundException("PO not found for invoice", "PO_NOT_FOUND"));
+
+        BigDecimal poAmount = po.getTotalAmount() != null ? po.getTotalAmount() : BigDecimal.ZERO;
+        BigDecimal invoiceAmount = invoice.getNetAmount() != null ? invoice.getNetAmount() : BigDecimal.ZERO;
+        BigDecimal priceVariance = invoiceAmount.subtract(poAmount).abs();
+
+        BigDecimal tolerance = tolerancePercentage != null ? tolerancePercentage : BigDecimal.ZERO;
+        BigDecimal maxAllowedVariance = poAmount.multiply(tolerance).divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
+
+        String matchStatus;
+        String reason;
+        if (priceVariance.compareTo(maxAllowedVariance) <= 0) {
+            matchStatus = "MATCHED";
+            reason = "Invoice 3-way match passed within " + tolerance + "% tolerance.";
+        } else {
+            matchStatus = "VARIANCE_EXCEEDED";
+            reason = "Price variance (" + priceVariance + ") exceeds allowed tolerance threshold (" + maxAllowedVariance + ").";
+        }
+
+        var existingMatch = threeWayMatchRepository.findBySupplierInvoiceId(supplierInvoiceId);
+        com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatch match;
+        if (existingMatch.isPresent()) {
+            match = existingMatch.get();
+        } else {
+            match = new com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatch(po.getId(), null, invoice.getId(), matchStatus, priceVariance, BigDecimal.ZERO, tolerance, reason);
+        }
+        match = threeWayMatchRepository.save(match);
+        auditService.record("THREE_WAY_MATCH", "SUPPLIER_INVOICE", invoice.getId(), getCurrentUser(), "{\"status\":\"" + matchStatus + "\"}", null);
+
+        return toThreeWayMatchResponse(match);
+    }
+
+    public ProcurementApi.ThreeWayMatchResponse getThreeWayMatch(String supplierInvoiceId) {
+        var match = threeWayMatchRepository.findBySupplierInvoiceId(supplierInvoiceId)
+                .orElseThrow(() -> new NotFoundException("No 3-way match record found for invoice", "THREE_WAY_MATCH_NOT_FOUND"));
+        return toThreeWayMatchResponse(match);
+    }
+
+    @Transactional
+    public ProcurementApi.ThreeWayMatchResponse resolveMatchVariance(String matchId, String resolutionNotes) {
+        var match = threeWayMatchRepository.findById(matchId)
+                .orElseThrow(() -> new NotFoundException("Match record not found: " + matchId, "THREE_WAY_MATCH_NOT_FOUND"));
+        match.resolve(getCurrentUser(), resolutionNotes);
+        match = threeWayMatchRepository.save(match);
+        auditService.record("RESOLVE_THREE_WAY_MATCH", "PROCUREMENT_MATCH", matchId, getCurrentUser(), "{\"notes\":\"" + resolutionNotes + "\"}", null);
+        return toThreeWayMatchResponse(match);
+    }
+
+    private ProcurementApi.ThreeWayMatchResponse toThreeWayMatchResponse(com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatch match) {
+        return new ProcurementApi.ThreeWayMatchResponse(
+                match.getId(), match.getPurchaseOrderId(), match.getGoodsReceiptId(),
+                match.getSupplierInvoiceId(), match.getMatchStatus(), match.getPriceVarianceAmount(),
+                match.getQuantityVarianceAmount(), match.getTolerancePercentage(), match.getVarianceReason(),
+                match.getResolvedBy(), match.getResolvedAt() != null ? match.getResolvedAt().toEpochMilli() : null,
+                match.getCreatedAt().toEpochMilli()
+        );
     }
 }

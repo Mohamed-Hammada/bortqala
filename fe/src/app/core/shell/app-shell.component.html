@@ -244,6 +244,21 @@
         [appTooltip]="i18n.t('shortcuts.openHelpTooltip')"
       >?</button>
       <button
+        class="icon-button notification-bell-btn"
+        type="button"
+        (click)="notificationCenter.togglePanel()"
+        [attr.aria-label]="i18n.t('actionCenter.title', undefined, 'مركز الإشعارات')"
+        [appTooltip]="i18n.t('actionCenter.title', undefined, 'مركز الإشعارات')"
+        style="position:relative;"
+      >
+        🔔
+        @if (notificationCenter.unreadCount() > 0) {
+          <span style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:0.75rem;font-weight:700;padding:2px 6px;border-radius:10px;line-height:1;">
+            {{ notificationCenter.unreadCount() }}
+          </span>
+        }
+      </button>
+      <button
         class="icon-button"
         type="button"
         (click)="logout()"
@@ -259,6 +274,40 @@
     </div>
   </main>
 </div>
+
+<!-- Action Center Notifications Dropdown Panel -->
+@if (notificationCenter.panelOpen()) {
+  <div class="shortcut-overlay" (click)="notificationCenter.closePanel()">
+    <section class="shortcut-dialog" (click)="$event.stopPropagation()" dir="rtl" style="max-width:480px;width:100%;padding:1.2rem;">
+      <header class="shortcut-dialog-header" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h2 style="margin:0;font-size:1.1rem;">🔔 {{ i18n.t('actionCenter.title', undefined, 'مركز الإشعارات والتنبيهات') }}</h2>
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <button type="button" class="button secondary btn-sm" (click)="notificationCenter.markAllAsRead()">{{ i18n.t('actionCenter.markAllRead', undefined, 'تحديد الكل كمقروء') }}</button>
+          <button type="button" class="shortcut-close" (click)="notificationCenter.closePanel()">✕</button>
+        </div>
+      </header>
+      <div style="display:grid;gap:.8rem;max-height:400px;overflow-y:auto;">
+        @for (item of notificationCenter.notifications(); track item.id) {
+          <article
+            style="padding:.8rem;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;"
+            [style.background-color]="item.isRead ? '#f8fafc' : '#eff6ff'"
+            (click)="notificationCenter.markAsRead(item.id)"
+          >
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;">
+              <strong style="font-size:0.95rem;color:#1e293b;">{{ i18n.locale() === 'en-US' ? item.titleEn : item.titleAr }}</strong>
+              <span style="font-size:0.75rem;padding:2px 8px;border-radius:4px;font-weight:700;background:#e2e8f0;color:#334155;">{{ item.priority }}</span>
+            </div>
+            <p style="margin:0;font-size:0.85rem;color:#64748b;">{{ i18n.locale() === 'en-US' ? item.messageEn : item.messageAr }}</p>
+          </article>
+        } @empty {
+          <div style="text-align:center;padding:2rem;color:#64748b;font-size:0.9rem;">{{ i18n.t('actionCenter.noNotifications', undefined, 'لا توجد إشعارات جديدة.') }}</div>
+        }
+      </div>
+    </section>
+  </div>
+}
 
 @if (chordWaiting()) {
   <div class="shortcut-chord-hint" role="status">
@@ -312,7 +361,7 @@
               <small>{{ i18n.t(item.descriptionKey) }}</small>
             </span>
             @if (shortcut(item); as menuShortcut) {
-              <kbd>{{ menuShortcut.keys }}</kbd>
+              <kbd>G → {{ menuShortcut.displayKey }}</kbd>
             }
           </button>
         } @empty {
@@ -356,15 +405,20 @@
         </section>
         <section>
           <h3>{{ i18n.t('shortcuts.navigationTitle') }}</h3>
-          @for (shortcutItem of menuShortcuts; track shortcutItem.menuId) {
+          @for (shortcutItem of screenShortcuts.runtimeShortcuts(); track shortcutItem.pageCode) {
             <div class="shortcut-row">
-              <span>{{ i18n.t(shortcutItem.labelKey) }}</span>
-              <kbd>{{ shortcutItem.keys }}</kbd>
+              <span>{{ i18n.t(shortcutItem.titleKey) }}</span>
+              <kbd>G → {{ shortcutItem.displayKey }}</kbd>
             </div>
           }
         </section>
       </div>
-      <p class="shortcut-permission-note">{{ i18n.t('shortcuts.availableByPermission') }}</p>
+      <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <p class="shortcut-permission-note" style="margin: 0;">{{ i18n.t('shortcuts.availableByPermission') }}</p>
+        <a routerLink="/settings" [queryParams]="{ tab: 'shortcuts' }" (click)="closeShortcutPanels()" class="link-btn">
+          {{ i18n.t('shortcuts.manage') }}
+        </a>
+      </div>
     </section>
   </div>
 }

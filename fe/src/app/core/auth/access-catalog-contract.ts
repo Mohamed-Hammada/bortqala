@@ -133,4 +133,16 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     roles: ['ADMIN', 'SUPER_ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER'],
     requiredFeature: null,
   },
+  {
+    menuId: 'approvals-my-tasks',
+    route: '/approvals/my-tasks',
+    roles: [],
+    requiredFeature: null,
+  },
+  {
+    menuId: 'approvals-workflows',
+    route: '/approvals/definitions',
+    roles: ['ADMIN', 'SUPER_ADMIN'],
+    requiredFeature: null,
+  },
 ];

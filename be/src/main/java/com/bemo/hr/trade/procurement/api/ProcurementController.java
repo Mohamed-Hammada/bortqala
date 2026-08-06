@@ -137,4 +137,29 @@ public class ProcurementController {
             @Valid @RequestBody ProcurementApi.SupplierPaymentPayload payload) {
         return procurementService.createSupplierPayment(payload);
     }
+
+    // ─── Three-Way Matching ─────────────────────────────────────────
+
+    @PostMapping("/invoices/{id}/three-way-match")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER')")
+    public ProcurementApi.ThreeWayMatchResponse performThreeWayMatch(
+            @PathVariable String id,
+            @RequestBody(required = false) ProcurementApi.PerformMatchPayload payload) {
+        java.math.BigDecimal tolerance = payload != null ? payload.tolerancePercentage() : java.math.BigDecimal.ZERO;
+        return procurementService.performThreeWayMatch(id, tolerance);
+    }
+
+    @GetMapping("/invoices/{id}/three-way-match")
+    @PreAuthorize("isAuthenticated()")
+    public ProcurementApi.ThreeWayMatchResponse getThreeWayMatch(@PathVariable String id) {
+        return procurementService.getThreeWayMatch(id);
+    }
+
+    @PostMapping("/three-way-matches/{id}/resolve")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
+    public ProcurementApi.ThreeWayMatchResponse resolveMatchVariance(
+            @PathVariable String id,
+            @Valid @RequestBody ProcurementApi.ResolveMatchPayload payload) {
+        return procurementService.resolveMatchVariance(id, payload.resolutionNotes());
+    }
 }

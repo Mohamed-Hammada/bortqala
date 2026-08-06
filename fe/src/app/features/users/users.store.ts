@@ -23,6 +23,7 @@ export interface UserPayload {
   active: boolean;
   version: number | null;
   categoryId?: string | null;
+  accessChangeReason?: string;
 }
 
 @Injectable()

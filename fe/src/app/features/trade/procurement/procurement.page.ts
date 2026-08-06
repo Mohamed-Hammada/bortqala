@@ -20,6 +20,7 @@ interface GoodsReceiptLineResponse { id: string; purchaseOrderLineId: string; it
 interface GoodsReceipt { id: string; grnNumber: string; receiptDate: number; purchaseOrderId: string; supplierId: string; supplierName?: string; warehouseId?: string; status: string; currencyCode: string; notes?: string; lines: GoodsReceiptLineResponse[]; createdAt: number; }
 interface SupplierInvoice { id: string; invoiceNumber?: string; internalReference: string; missingInvoiceReason?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseNetAmount: number; supplierId: string; supplierName?: string; purchaseOrderId?: string; goodsReceiptId?: string; responsiblePartyId?: string; invoiceDate: number; totalAmount: number; discountAmount?: number; taxAmount?: number; netAmount: number; paidAmount: number; outstandingAmount: number; dueDate?: number; notes?: string; status: string; createdAt: number; updatedAt: number; }
 interface SupplierPayment { id: string; paymentNumber: string; paymentDate: number; supplierId: string; supplierName?: string; supplierInvoiceId: string; amount: number; currencyCode: string; paymentMethod: string; notes?: string; operationId: string; status: string; createdAt: number; }
+interface ProcurementThreeWayMatch { id: string; purchaseOrderId: string; goodsReceiptId?: string; supplierInvoiceId: string; matchStatus: string; priceVarianceAmount: number; quantityVarianceAmount: number; tolerancePercentage: number; varianceReason?: string; resolvedBy?: string; resolvedAt?: number; createdAt: number; }
 interface Party { id: string; code: string; name: string; partyType: string; active: boolean; managedType?: 'DIRECT' | 'MANAGED'; responsiblePartyId?: string; currencyCode?: string; paymentTerms?: string; }
 interface InventoryItem { id: string; code: string; name: string; categoryName?: string; uomName?: string; unitCode?: string; active: boolean; }
 interface NumberingSettings { automaticNumbering: boolean; }
@@ -79,6 +80,39 @@ export class ProcurementPage {
   readonly currencies = signal<Currency[]>([]);
   readonly activeTab = signal<'po' | 'grn' | 'invoice' | 'payment'>('po');
   readonly automaticNumbering = signal(true);
+
+  readonly matchModalOpen = signal(false);
+  readonly activeMatch = signal<ProcurementThreeWayMatch | null>(null);
+
+  async performThreeWayMatch(invoice: SupplierInvoice): Promise<void> {
+    try {
+      const match = await firstValueFrom(
+        this.http.post<ProcurementThreeWayMatch>(`/api/v1/trade/procurement/invoices/${invoice.id}/three-way-match`, { tolerancePercentage: 0 })
+      );
+      this.activeMatch.set(match);
+      this.matchModalOpen.set(true);
+    } catch (err) {
+      this.notification.error(apiErrorMessage(err, this.i18n));
+    }
+  }
+
+  async resolveMatch(resolutionNotes: string): Promise<void> {
+    const match = this.activeMatch();
+    if (!match || !resolutionNotes || !resolutionNotes.trim()) {
+      this.notification.error('ملاحظات التسوية مطلوبة.');
+      return;
+    }
+    try {
+      const updated = await firstValueFrom(
+        this.http.post<ProcurementThreeWayMatch>(`/api/v1/trade/procurement/three-way-matches/${match.id}/resolve`, { resolutionNotes })
+      );
+      this.activeMatch.set(updated);
+      this.notification.success('تمت تسوية تفاوت المطابقة بنجاح.');
+      await this.loadAll();
+    } catch (err) {
+      this.notification.error(apiErrorMessage(err, this.i18n));
+    }
+  }
 
   // ─── PO Form ──────────────────────────────────────────────────────
 

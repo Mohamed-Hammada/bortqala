@@ -1,0 +1,11 @@
+id;translation_key;locale;text_value
+v109-001;PAYROLL_EXPLANATION_NOT_FOUND;ar-EG;"لم يتم العثور على سجل تفاصيل وحساب الراتب للموظف المحدد."
+v109-001;PAYROLL_EXPLANATION_NOT_FOUND;en-US;"Salary calculation explanation breakdown not found for the specified payment."
+v109-002;payroll.explanationTitle;ar-EG;"تفاصيل ومعادلات حساب الراتب"
+v109-002;payroll.explanationTitle;en-US;"Salary Calculation & Formula Breakdown"
+v109-003;payroll.componentType;ar-EG;"بند الراتب"
+v109-003;payroll.componentType;en-US;"Component"
+v109-004;payroll.formula;ar-EG;"المعادلة التطبيقية"
+v109-004;payroll.formula;en-US;"Applied Formula"
+v109-005;payroll.calculatedAmount;ar-EG;"القيمة المحسوبة"
+v109-005;payroll.calculatedAmount;en-US;"Calculated Amount"

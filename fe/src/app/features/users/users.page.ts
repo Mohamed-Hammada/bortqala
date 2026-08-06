@@ -55,6 +55,8 @@ export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = [
     { id: 'audit-logs', labelKey: 'nav.auditLogs' },
     { id: 'users', labelKey: 'nav.users' },
     { id: 'settings', labelKey: 'settings.title' },
+    { id: 'approvals-my-tasks', labelKey: 'approvals.myTasks' },
+    { id: 'approvals-workflows', labelKey: 'approvals.workflows' },
   ];
 
 @Component({
@@ -144,6 +146,10 @@ export class UsersPage {
     {
       titleKey: 'users.groupFinance',
       ids: ['accounts', 'journal-entries', 'banks', 'tax-currency', 'fiscal-periods']
+    },
+    {
+      titleKey: 'workspace.approvals',
+      ids: ['approvals-my-tasks', 'approvals-workflows']
     },
     {
       titleKey: 'users.groupAdministration',
@@ -267,6 +273,7 @@ export class UsersPage {
 
   /** True when none of the selected roles can open the page behind this menu. */
   menuRoleMismatch(menuId: string): boolean {
+    if (this.adminOverrideActive()) return false;
     const page = this.access.pages().find((item) => item.menuId === menuId);
     if (!page || page.roles.length === 0) return false;
     return this.selectedRoles().every((role) => !page.roles.includes(role));
@@ -281,13 +288,15 @@ export class UsersPage {
     const granted = new Set(role.permissions);
     const menus = new Set(this.menuOptions.map((menu) => menu.id));
     const activeFeatures = this.auth.user()?.activeFeatures ?? [];
+    const isAdmin = roleCode === 'ADMIN' || roleCode === 'SUPER_ADMIN';
     const result: Array<{ code: string; titleKey: string; level: string }> = [];
     for (const page of catalog.pages) {
       if (!page.viewPermissions.some((permission) => granted.has(permission))) continue;
       if (!menus.has(page.menuId)) continue;
       if (page.requiredFeature && !activeFeatures.includes(page.requiredFeature)) continue;
+      if (!isAdmin && page.roles.length > 0 && !page.roles.includes(roleCode)) continue;
       const grantedActions = page.actions.filter((action) => granted.has(action.permission)).map((action) => action.code);
-      const level = ACCESS_LEVEL_PRECEDENCE.find((item) => grantedActions.includes(item)) ?? 'VIEW';
+      const level = isAdmin ? 'REVIEW' : ACCESS_LEVEL_PRECEDENCE.find((item) => grantedActions.includes(item)) ?? 'VIEW';
       result.push({ code: page.code, titleKey: page.titleKey, level });
     }
     return result;
@@ -629,7 +638,11 @@ export class UsersPage {
     }
 
     const raw = this.form.getRawValue();
-    const payload: UserPayload = { ...raw, password: raw.password || null };
+    const payload: UserPayload = {
+      ...raw,
+      password: raw.password || null,
+      accessChangeReason: this.ackReason().trim() || undefined,
+    };
     if (await this.store.save(this.editingId(), payload)) {
       this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.closeDrawer();

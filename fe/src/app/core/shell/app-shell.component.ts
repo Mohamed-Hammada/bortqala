@@ -9,12 +9,9 @@ import { IconComponent, IconName } from '../../shared/ui/icon/icon.component';
 import { ToastContainerComponent } from '../../shared/ui/toast/toast-container.component';
 import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
 import { NetworkService } from '../network.service';
-import {
-  GLOBAL_SHORTCUTS,
-  MENU_SHORTCUTS,
-  MenuShortcut,
-  shortcutForMenu,
-} from '../app-shortcuts';
+import { GLOBAL_SHORTCUTS } from '../app-shortcuts';
+import { ScreenShortcutService } from '../shortcuts/screen-shortcut.service';
+import { ScreenShortcut } from '../shortcuts/screen-shortcut.models';
 
 export type WorkspaceGroup =
   | 'workspace.people'
@@ -22,7 +19,8 @@ export type WorkspaceGroup =
   | 'workspace.workforce'
   | 'workspace.operations'
   | 'workspace.finance'
-  | 'workspace.admin';
+  | 'workspace.admin'
+  | 'workspace.approvals';
 
 export interface NavItem {
   menuId: string;
@@ -198,6 +196,23 @@ export const NAV_ITEMS: NavItem[] = [
       roles: WORKFORCE_IMPORT_ROLES,
     },
     {
+      menuId: 'approvals-my-tasks',
+      labelKey: 'approvals.myTasks',
+      descriptionKey: 'nav.approvalsHint',
+      path: '/approvals/my-tasks',
+      icon: 'reports',
+      workspace: 'workspace.approvals',
+    },
+    {
+      menuId: 'approvals-workflows',
+      labelKey: 'approvals.workflows',
+      descriptionKey: 'nav.approvalsHint',
+      path: '/approvals/definitions',
+      icon: 'categories',
+      workspace: 'workspace.approvals',
+      roles: ['SUPER_ADMIN', 'ADMIN'],
+    },
+    {
       menuId: 'operations',
       labelKey: 'nav.operations',
       descriptionKey: 'nav.operationsHint',
@@ -347,6 +362,8 @@ export const SHELL_MENU_ROLES: Record<string, RoleCode[]> = Object.fromEntries(
   NAV_ITEMS.map((item) => [item.menuId, item.roles ?? []]),
 );
 
+import { NotificationCenterService } from '../notification-center/notification-center.service';
+
 @Component({
   selector: 'app-shell',
   standalone: true,
@@ -361,6 +378,8 @@ export class AppShellComponent {
   readonly confirmDialog = inject(ConfirmDialogService);
   readonly network = inject(NetworkService);
   readonly router = inject(Router);
+  readonly notificationCenter = inject(NotificationCenterService);
+  readonly screenShortcuts = inject(ScreenShortcutService);
 
   readonly searchQuery = signal('');
   readonly menuOpen = signal(false);
@@ -370,7 +389,6 @@ export class AppShellComponent {
   readonly selectedQuickNavIndex = signal(0);
   readonly chordWaiting = signal(false);
   readonly globalShortcuts = GLOBAL_SHORTCUTS;
-  readonly menuShortcuts = MENU_SHORTCUTS;
   private chordTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly favorites = signal<string[]>(this.authService.preferences().favoriteMenuIds);
@@ -455,6 +473,8 @@ export class AppShellComponent {
   });
 
   constructor() {
+    this.notificationCenter.loadUnreadCount();
+    void this.screenShortcuts.load();
     effect(() => {
       const preferences = this.authService.preferences();
       this.favorites.set([...preferences.favoriteMenuIds]);
@@ -579,56 +599,96 @@ export class AppShellComponent {
     void this.router.navigateByUrl(item.path);
   }
 
-  shortcut(item: NavItem): MenuShortcut | undefined {
-    return shortcutForMenu(item.menuId);
+  shortcut(item: NavItem): ScreenShortcut | undefined {
+    return this.screenShortcuts.runtimeShortcuts().find(
+      (shortcut) => shortcut.menuId === item.menuId
+    );
   }
 
   navTooltip(item: NavItem): string {
     const shortcut = this.shortcut(item);
     const details = `${this.i18n.t(item.labelKey)} — ${this.i18n.t(item.descriptionKey)}`;
-    return shortcut ? `${details} · ${shortcut.keys}` : details;
+    return shortcut ? `${details} · G → ${shortcut.displayKey}` : details;
   }
 
   @HostListener('document:keydown', ['$event'])
   onGlobalShortcut(event: KeyboardEvent): void {
-    if (event.isComposing) return;
-    const key = event.key.toLocaleLowerCase();
+    if (event.isComposing || event.repeat) return;
+
     const target = event.target;
     const typing = target instanceof HTMLElement
-      && target.matches('input, textarea, select, [contenteditable="true"]');
+      && target.matches('input, textarea, select, [contenteditable="true"], [data-shortcut-capture="true"]');
 
-    if (((event.ctrlKey || event.metaKey) && !event.altKey && (key === 'k' || key === '/')) || (!typing && !event.ctrlKey && !event.metaKey && !event.altKey && event.key === '/')) {
+    const lowerKey = event.key.toLocaleLowerCase();
+
+    if (
+      ((event.ctrlKey || event.metaKey)
+        && !event.altKey
+        && (lowerKey === 'k' || lowerKey === '/'))
+      || (!typing
+        && !event.ctrlKey
+        && !event.metaKey
+        && !event.altKey
+        && event.key === '/')
+    ) {
       event.preventDefault();
       this.openQuickNav();
       return;
     }
 
-    if (event.key === 'Escape' && (this.quickNavOpen() || this.shortcutHelpOpen() || this.chordWaiting())) {
+    if (
+      event.key === 'Escape'
+      && (this.quickNavOpen() || this.shortcutHelpOpen() || this.chordWaiting())
+    ) {
       event.preventDefault();
       this.closeShortcutPanels();
       return;
     }
 
-    if (!typing && !event.ctrlKey && !event.metaKey && !event.altKey && event.key === '?') {
+    if (
+      !typing
+      && !event.ctrlKey
+      && !event.metaKey
+      && !event.altKey
+      && event.key === '?'
+    ) {
       event.preventDefault();
       this.openShortcutHelp();
       return;
     }
 
-    if (typing || event.ctrlKey || event.metaKey || event.altKey || this.quickNavOpen() || this.shortcutHelpOpen()) return;
+    if (
+      typing
+      || event.ctrlKey
+      || event.metaKey
+      || event.altKey
+      || this.quickNavOpen()
+      || this.shortcutHelpOpen()
+    ) return;
 
     if (this.chordWaiting()) {
       event.preventDefault();
-      const shortcut = this.menuShortcuts.find((item) => item.chordKey === key);
+
+      const shortcut = this.screenShortcuts.findByCode(event.code);
       this.clearChord();
-      if (shortcut) {
-        const item = this.items.find((candidate) => candidate.menuId === shortcut.menuId);
-        if (item && this.visible(item)) this.navigateToItem(item);
+
+      if (!shortcut) return;
+
+      const item = this.items.find(
+        (candidate) => candidate.menuId === shortcut.menuId
+      );
+
+      if (
+        item
+        && this.visible(item)
+        && item.path === shortcut.route
+      ) {
+        this.navigateToItem(item);
       }
       return;
     }
 
-    if (key === 'g') {
+    if (event.code === 'KeyG') {
       event.preventDefault();
       this.chordWaiting.set(true);
       this.chordTimer = setTimeout(() => this.clearChord(), 1800);

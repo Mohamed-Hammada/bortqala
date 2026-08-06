@@ -279,6 +279,76 @@ class AccessCatalogServiceTests {
         assertThat(acknowledged.valid()).isTrue();
     }
 
+    @Test
+    void previewReportsRestrictedWhenRouteRoleIsMissing() {
+        // HR_REVIEWER grants employees.read but is not part of the employees
+        // route-guard matrix, so the page must be reported RESTRICTED with the
+        // missing role names listed as missing permissions.
+        var preview = service.preview(List.of("HR_REVIEWER"), List.of("employees"));
+
+        var employees = page(preview, "EMPLOYEES");
+        assertThat(employees.access()).isEqualTo("RESTRICTED");
+        assertThat(employees.missingPermissions()).contains("ADMIN", "HR_MANAGER");
+    }
+
+    @Test
+    void adminPreviewGrantsFullReviewAccessRegardlessOfMenus() {
+        enableAllFeatures();
+        var preview = service.preview(List.of("ADMIN"), List.of());
+
+        assertThat(page(preview, "EMPLOYEES").access()).isEqualTo("REVIEW");
+        assertThat(page(preview, "PAYROLL").access()).isEqualTo("REVIEW");
+        assertThat(page(preview, "USERS").access()).isEqualTo("REVIEW");
+        assertThat(preview.pages()).allMatch(item -> "REVIEW".equals(item.access()));
+    }
+
+    @Test
+    void adminPreviewStillHonorsTenantFeatureFlags() {
+        var preview = service.preview(List.of("ADMIN"), List.of("payroll"));
+
+        assertThat(page(preview, "PAYROLL").access()).isEqualTo("MODULE_UNAVAILABLE");
+    }
+
+    @Test
+    void validateAssignmentOrThrowRejectsInvalidAssignment() {
+        enableAllFeatures();
+        assertThatThrownBy(() -> service.validateAssignmentOrThrow(
+                Set.of("ADMIN"), "actor-1", List.of("VIEWER"), List.of("payroll"),
+                null, null, null))
+                .isInstanceOf(BusinessRuleException.class)
+                .extracting("code")
+                .isEqualTo("ACCESS_MENU_ROLE_MISMATCH");
+    }
+
+    @Test
+    void validateAssignmentOrThrowAcceptsValidAssignment() {
+        service.validateAssignmentOrThrow(
+                Set.of("ADMIN"), "actor-1", List.of("VIEWER"), List.of("dashboard"),
+                null, null, null);
+    }
+
+    @Test
+    void adminValidateBypassesMenuRoleMismatch() {
+        enableAllFeatures();
+        var result = service.validateAssignment(
+                Set.of("ADMIN"), "actor-1", List.of("ADMIN"), List.of("payroll"),
+                null, null, null);
+        assertThat(result.valid()).isTrue();
+        assertThat(result.errors()).extracting(AccessApi.AccessValidateErrorResponse::code)
+                .doesNotContain("ACCESS_MENU_ROLE_MISMATCH");
+    }
+
+    @Test
+    void hrManagerDoesNotReceiveOperationsOrAuditPages() {
+        assertThat(catalog.permissionsOf("HR_MANAGER")).doesNotContain("operations.read", "audit.read");
+
+        var preview = service.preview(List.of("HR_MANAGER"),
+                List.of("operations", "audit-logs", "employees"));
+        assertThat(page(preview, "OPERATIONS").access()).isEqualTo("RESTRICTED");
+        assertThat(page(preview, "AUDIT_LOGS").access()).isEqualTo("RESTRICTED");
+        assertThat(page(preview, "EMPLOYEES").access()).isEqualTo("EDIT");
+    }
+
     private AccessApi.EffectivePageAccessResponse page(AccessApi.AccessPreviewResponse preview, String code) {
         return preview.pages().stream()
                 .filter(item -> item.pageCode().equals(code))

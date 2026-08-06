@@ -355,10 +355,22 @@
             </span>
           </span>
           <div class="quick-actions">
-            <button type="button" class="permission-action" (click)="selectAllMenus()">
+            <button
+              type="button"
+              class="permission-action"
+              (click)="selectAllMenus()"
+              [disabled]="adminOverrideActive()"
+              [attr.title]="adminOverrideActive() ? i18n.t('access.adminOverrideNotice') : ''"
+            >
               {{ i18n.t('users.selectAllMenus') }}
             </button>
-            <button type="button" class="permission-action" (click)="clearAllMenus()">
+            <button
+              type="button"
+              class="permission-action"
+              (click)="clearAllMenus()"
+              [disabled]="adminOverrideActive()"
+              [attr.title]="adminOverrideActive() ? i18n.t('access.adminOverrideNotice') : ''"
+            >
               {{ i18n.t('users.clearAllMenus') }}
             </button>
           </div>

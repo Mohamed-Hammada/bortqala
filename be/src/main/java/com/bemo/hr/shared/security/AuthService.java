@@ -383,8 +383,8 @@ public class AuthService {
         var actorRoles = actor.getRoles().stream().map(Role::getCode).map(Enum::name)
                 .collect(Collectors.toUnmodifiableSet());
         var menuCodes = request.allowedMenus() == null ? java.util.List.<String>of() : request.allowedMenus().stream().toList();
-        accessCatalogService.validateAssignment(actorRoles, actor.getId(), request.roles().stream().map(Enum::name).toList(),
-                menuCodes, null, null, null);
+        accessCatalogService.validateAssignmentOrThrow(actorRoles, actor.getId(), request.roles().stream().map(Enum::name).toList(),
+                menuCodes, null, null, request.accessChangeReason());
         var user = new AppUser(appId, request.username(), request.displayName(), passwordEncoder.encode(request.password()),
                 requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary(),
                 request.dashboardCustomizationEnabled());
@@ -393,7 +393,9 @@ public class AuthService {
         user.assignCategory(request.categoryId());
         appUserRepository.save(user);
         auditService.record("USER_CREATE", "USER", user.getId(), currentUsername,
-                "Created user " + user.getDisplayName() + " roles=" + request.roles(), null);
+                "Created user " + user.getDisplayName() + " roles=" + request.roles()
+                        + (request.accessChangeReason() == null || request.accessChangeReason().isBlank()
+                        ? "" : " accessChangeReason=" + request.accessChangeReason().strip()), null);
         return toResponse(user);
     }
 
@@ -441,8 +443,9 @@ public class AuthService {
         var actorRoles = actor.getRoles().stream().map(Role::getCode).map(Enum::name)
                 .collect(Collectors.toUnmodifiableSet());
         var menuCodes = request.allowedMenus() == null ? java.util.List.<String>of() : request.allowedMenus().stream().toList();
-        accessCatalogService.validateAssignment(actorRoles, actor.getId(),
-                request.roles().stream().map(Enum::name).toList(), menuCodes, id, previousRoles, null);
+        accessCatalogService.validateAssignmentOrThrow(actorRoles, actor.getId(),
+                request.roles().stream().map(Enum::name).toList(), menuCodes, id, previousRoles,
+                request.accessChangeReason());
 
         String passwordHash = request.password() == null || request.password().isBlank()
                 ? null : passwordEncoder.encode(request.password());
@@ -469,7 +472,9 @@ public class AuthService {
         removed.removeAll(newRoles);
         return "Updated user " + user.getUsername() + " active=" + user.isActive()
                 + " previousRoles=" + previousRoles + " newRoles=" + newRoles
-                + " added=" + added + " removed=" + removed;
+                + " added=" + added + " removed=" + removed
+                + (request.accessChangeReason() == null || request.accessChangeReason().isBlank()
+                ? "" : " accessChangeReason=" + request.accessChangeReason().strip());
     }
 
     @Transactional
