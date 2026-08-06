@@ -27,3 +27,6 @@ artifacts/
 *.log
 install-secrets.json
 license-installation.json
+
+# Cloudflare tunnel client binaries
+cloudflared-*

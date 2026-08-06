@@ -2,7 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260806-v100-access-guidance-translations
       author: codex
-      comment: Arabic/English translations for the role-to-page access guidance feature: role cards, access levels, sensitivity kinds, sensitive reasons, segregation-of-duties conflict reasons, guided-mode needs, effective-access preview and backend error codes.
+      comment: "Arabic/English translations for the role-to-page access guidance feature: role cards, access levels, sensitivity kinds, sensitive reasons, segregation-of-duties conflict reasons, guided-mode needs, effective-access preview and backend error codes."
       changes:
         - loadData:
             tableName: translations

@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { AuthService } from '../../core/auth/auth.service';
 import {
   ACCESS_LEVEL_PRECEDENCE,
   AccessCatalog,
@@ -22,6 +23,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class AccessService {
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
   readonly catalog = signal<AccessCatalog | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -109,8 +111,13 @@ export class AccessService {
       .filter((role) => catalog?.roles.find((r) => r.code === role)?.permissions.includes(viewPermission))
       .sort();
 
+    const featureUnavailable =
+      page.requiredFeature !== null && page.requiredFeature !== undefined &&
+      !this.activeFeatures().includes(page.requiredFeature);
     let access: AccessLevel;
-    if (!menus.has(page.menuId)) {
+    if (featureUnavailable) {
+      access = 'MODULE_UNAVAILABLE';
+    } else if (!menus.has(page.menuId)) {
       access = 'HIDDEN';
     } else if (!viewGranted) {
       access = 'RESTRICTED';
@@ -124,6 +131,10 @@ export class AccessService {
       grantedActions: [...grantedActions].sort(),
       missingPermissions: [...missingPermissions].sort(),
     };
+  }
+
+  private activeFeatures(): string[] {
+    return this.auth.user()?.activeFeatures ?? [];
   }
 
   private deriveLevel(grantedActions: string[]): AccessLevel {

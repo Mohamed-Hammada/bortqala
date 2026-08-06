@@ -1,5 +1,10 @@
 package com.bemo.hr.access.domain;
 
+import com.bemo.hr.access.domain.AccessDefs.AccessActionDef;
+import com.bemo.hr.access.domain.AccessDefs.AccessConflictRuleDef;
+import com.bemo.hr.access.domain.AccessDefs.AccessNeedDef;
+import com.bemo.hr.access.domain.AccessDefs.AccessPageDef;
+import com.bemo.hr.access.domain.AccessDefs.AccessRoleDef;
 import com.bemo.hr.access.domain.AccessEnums.AccessSensitivity;
 import com.bemo.hr.access.domain.AccessEnums.ConflictSeverity;
 import com.bemo.hr.access.domain.AccessEnums.RoleKind;
@@ -122,17 +127,11 @@ public final class AccessCatalog {
 
     private static final Set<String> HR_READ = Set.of(
             P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_CATEGORIES_READ, P_IMPORTS_READ, P_PARTIES_READ,
-            P_REPORTS_READ, P_PAYROLL_READ, P_WORKFORCE_DASHBOARD, P_WORKERS_READ, P_CONTRACTORS_READ,
-            P_LABOR_REQUESTS_READ, P_ATTENDANCE_READ, P_SETTLEMENTS_READ, P_ADVANCES_READ,
-            P_CONTRACTOR_ACCOUNTS_READ, P_WORKFORCE_REPORTS_READ);
+            P_REPORTS_READ, P_PAYROLL_READ);
 
     private static final Set<String> HR_WRITE = Set.of(
             P_EMPLOYEES_EDIT, P_EMPLOYEES_DEACTIVATE, P_CATEGORIES_MANAGE, P_IMPORTS_MANAGE,
-            P_PARTIES_MANAGE, P_REPORTS_DECIDE, P_REPORTS_APPROVE,
-            P_WORKERS_CREATE, P_WORKERS_EDIT, P_WORKERS_DEACTIVATE, P_CONTRACTORS_MANAGE,
-            P_LABOR_REQUESTS_MANAGE, P_ATTENDANCE_ENTER, P_ATTENDANCE_REVIEW, P_ATTENDANCE_IMPORT,
-            P_SETTLEMENTS_PREPARE, P_SETTLEMENTS_FINALIZE, P_ADVANCES_MANAGE,
-            P_CONTRACTOR_ACCOUNTS_MANAGE);
+            P_PARTIES_MANAGE, P_REPORTS_DECIDE, P_REPORTS_APPROVE);
 
     private static final Set<String> WORKFORCE_READ = Set.of(
             P_WORKFORCE_DASHBOARD, P_WORKERS_READ, P_CONTRACTORS_READ, P_LABOR_REQUESTS_READ,
@@ -141,6 +140,38 @@ public final class AccessCatalog {
 
     private static final Set<String> FINANCE_READ = Set.of(P_FINANCE_READ, P_JOURNAL_READ);
     private static final Set<String> FINANCE_WRITE = Set.of(P_FINANCE_MANAGE, P_JOURNAL_CREATE, P_JOURNAL_POST);
+
+    // ------------------------------------------------------------------
+    // Page route-guard role matrices (mirrors the frontend route guards,
+    // including ADMIN/SUPER_ADMIN which bypass every role guard) and the
+    // tenant feature keys that gate each module's menu.
+    // ------------------------------------------------------------------
+    private static final Set<String> NO_ROLE_GUARD = Set.of();
+    private static final Set<String> ADMIN_ONLY = Set.of("ADMIN", "SUPER_ADMIN");
+    private static final Set<String> HR_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "HR_MANAGER");
+    private static final Set<String> HR_REVIEW_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "HR_MANAGER", "HR_REVIEWER");
+    private static final Set<String> PROCUREMENT_ROLES = Set.of(
+            "ADMIN", "SUPER_ADMIN", "PROCUREMENT_MANAGER", "PROCUREMENT_USER",
+            "INVENTORY_MANAGER", "FINANCE_MANAGER", "ACCOUNTANT", "TREASURY_USER", "AUDITOR");
+    private static final Set<String> SALES_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "SALES_MANAGER");
+    private static final Set<String> PRODUCTION_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "MANUFACTURING_MANAGER");
+    private static final Set<String> QUALITY_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "MANUFACTURING_MANAGER", "QUALITY_MANAGER");
+    private static final Set<String> PAYROLL_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "PAYROLL_MANAGER", "HR_MANAGER", "HR_REVIEWER");
+    private static final Set<String> FINANCE_ROLES = Set.of(
+            "ADMIN", "SUPER_ADMIN", "FINANCE_MANAGER", "ACCOUNTANT", "TREASURY_USER", "AUDITOR");
+    private static final Set<String> WORKFORCE_BASE_ROLES = Set.of(
+            "ADMIN", "SUPER_ADMIN", "WORKFORCE_MANAGER", "WORKFORCE_REVIEWER", "WORKFORCE_FINANCE");
+    private static final Set<String> WORKFORCE_IMPORT_ROLES = Set.of(
+            "ADMIN", "SUPER_ADMIN", "WORKFORCE_MANAGER", "WORKFORCE_REVIEWER");
+    private static final Set<String> WORKFORCE_ACCOUNT_ROLES = Set.of(
+            "ADMIN", "SUPER_ADMIN", "WORKFORCE_MANAGER", "WORKFORCE_FINANCE");
+
+    private static final String FEATURE_PAYROLL = "payroll.enabled";
+    private static final String FEATURE_SALES = "sales.enabled";
+    private static final String FEATURE_MANUFACTURING = "manufacturing.enabled";
+    private static final String FEATURE_QUALITY = "quality.enabled";
+    private static final String FEATURE_FINANCE = "finance.enabled";
+    private static final String FEATURE_CONTRACTOR_ACCOUNTS = "workforce.contractorAccounts.enabled";
 
     private static final String KEY_ROLE_PREFIX = "roles.access.";
     private static final String KEY_PAGE_PREFIX = "access.pages.";
@@ -164,13 +195,7 @@ public final class AccessCatalog {
                     Set.of(), "access.sensitive.hrReviewer"),
             new AccessRoleDef("VIEWER", key("viewer"), AccessSensitivity.LOW,
                     RoleKind.READ_ONLY,
-                    Set.of(P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_CATEGORIES_READ, P_IMPORTS_READ,
-                            P_PARTIES_READ, P_REPORTS_READ, P_PAYROLL_READ, P_OPERATIONS_READ,
-                            P_PROCUREMENT_READ, P_FINANCE_READ, P_JOURNAL_READ, P_SALES_READ,
-                            P_MANUFACTURING_READ, P_QUALITY_READ, P_AUDIT_READ,
-                            P_WORKFORCE_DASHBOARD, P_WORKERS_READ, P_CONTRACTORS_READ,
-                            P_LABOR_REQUESTS_READ, P_ATTENDANCE_READ, P_SETTLEMENTS_READ,
-                            P_ADVANCES_READ, P_CONTRACTOR_ACCOUNTS_READ, P_WORKFORCE_REPORTS_READ),
+                    Set.of(P_DASHBOARD_VIEW, P_REPORTS_READ, P_SETTINGS_READ),
                     Set.of(), null),
             new AccessRoleDef("FINANCE_MANAGER", key("financeManager"), AccessSensitivity.HIGH,
                     RoleKind.FINANCE,
@@ -183,7 +208,7 @@ public final class AccessCatalog {
                     Set.of(), "access.sensitive.accountant"),
             new AccessRoleDef("TREASURY_USER", key("treasuryUser"), AccessSensitivity.MEDIUM,
                     RoleKind.FINANCE,
-                    union(FINANCE_READ, FINANCE_WRITE, Set.of(P_PROCUREMENT_READ)),
+                    union(FINANCE_READ, Set.of(P_PROCUREMENT_READ)),
                     Set.of(), "access.sensitive.treasuryUser"),
             new AccessRoleDef("PROCUREMENT_MANAGER", key("procurementManager"), AccessSensitivity.MEDIUM,
                     RoleKind.OPERATIONAL,
@@ -225,11 +250,12 @@ public final class AccessCatalog {
                     Set.of(), "access.sensitive.workforceManager"),
             new AccessRoleDef("WORKFORCE_REVIEWER", key("workforceReviewer"), AccessSensitivity.MEDIUM,
                     RoleKind.APPROVAL,
-                    union(WORKFORCE_READ, Set.of(P_ATTENDANCE_REVIEW, P_ATTENDANCE_IMPORT)),
+                    union(without(WORKFORCE_READ, Set.of(P_CONTRACTOR_ACCOUNTS_READ)),
+                            Set.of(P_ATTENDANCE_REVIEW, P_ATTENDANCE_IMPORT)),
                     Set.of(), "access.sensitive.workforceReviewer"),
             new AccessRoleDef("WORKFORCE_FINANCE", key("workforceFinance"), AccessSensitivity.MEDIUM,
                     RoleKind.FINANCE,
-                    union(WORKFORCE_READ,
+                    union(without(WORKFORCE_READ, Set.of(P_WORKFORCE_REPORTS_READ)),
                             Set.of(P_SETTLEMENTS_PREPARE, P_ADVANCES_MANAGE, P_CONTRACTOR_ACCOUNTS_MANAGE)),
                     Set.of(), "access.sensitive.workforceFinance"),
             new AccessRoleDef("AUDITOR", key("auditor"), AccessSensitivity.LOW,
@@ -243,85 +269,107 @@ public final class AccessCatalog {
     // Page definitions (menuId matches the shell navigation and users.page).
     // ------------------------------------------------------------------
     private final List<AccessPageDef> pages = List.of(
-            page("DASHBOARD", "DASHBOARD", "/dashboard", "dashboard", "nav.dashboard", P_DASHBOARD_VIEW),
+            page("DASHBOARD", "DASHBOARD", "/dashboard", "dashboard", "nav.dashboard", P_DASHBOARD_VIEW,
+                    NO_ROLE_GUARD, null),
             page("EMPLOYEES", "HR", "/employees", "employees", "nav.employees", P_EMPLOYEES_READ,
+                    HR_ROLES, null,
                     action("EDIT", P_EMPLOYEES_EDIT, false),
                     action("DEACTIVATE", P_EMPLOYEES_DEACTIVATE, false)),
             page("CATEGORIES", "HR", "/categories", "categories", "nav.categories", P_CATEGORIES_READ,
+                    HR_ROLES, null,
                     action("MANAGE", P_CATEGORIES_MANAGE, false)),
             page("IMPORTS", "HR", "/imports", "imports", "nav.imports", P_IMPORTS_READ,
+                    HR_REVIEW_ROLES, null,
                     action("MANAGE", P_IMPORTS_MANAGE, false)),
             page("PARTIES", "HR", "/parties", "parties", "nav.parties", P_PARTIES_READ,
+                    HR_ROLES, null,
                     action("MANAGE", P_PARTIES_MANAGE, false)),
             page("REPORTS", "HR", "/reports", "reports", "nav.reports", P_REPORTS_READ,
+                    NO_ROLE_GUARD, null,
                     action("DECIDE", P_REPORTS_DECIDE, false),
                     action("APPROVE", P_REPORTS_APPROVE, true)),
             page("OPERATIONS", "OPERATIONS", "/operations", "operations", "nav.operations", P_OPERATIONS_READ,
+                    ADMIN_ONLY, null,
                     action("MANAGE", P_OPERATIONS_MANAGE, false)),
             page("PROCUREMENT", "TRADE", "/trade/procurement", "procurement", "nav.procurement", P_PROCUREMENT_READ,
+                    PROCUREMENT_ROLES, null,
                     action("MANAGE", P_PROCUREMENT_MANAGE, false)),
             page("SALES", "TRADE", "/trade/sales", "sales", "nav.sales", P_SALES_READ,
+                    SALES_ROLES, FEATURE_SALES,
                     action("MANAGE", P_SALES_MANAGE, false)),
             page("PRODUCTION", "MANUFACTURING", "/manufacturing/production", "production", "nav.production",
-                    P_MANUFACTURING_READ, action("MANAGE", P_MANUFACTURING_MANAGE, false)),
+                    P_MANUFACTURING_READ, PRODUCTION_ROLES, FEATURE_MANUFACTURING,
+                    action("MANAGE", P_MANUFACTURING_MANAGE, false)),
             page("QUALITY", "MANUFACTURING", "/manufacturing/quality", "quality", "nav.quality", P_QUALITY_READ,
+                    QUALITY_ROLES, FEATURE_QUALITY,
                     action("MANAGE", P_QUALITY_MANAGE, false)),
             page("PAYROLL", "PAYROLL", "/payroll", "payroll", "nav.payroll", P_PAYROLL_READ,
+                    PAYROLL_ROLES, FEATURE_PAYROLL,
                     action("PREPARE", P_PAYROLL_PREPARE, false),
                     action("APPROVE", P_PAYROLL_APPROVE, true)),
             page("ACCOUNTS", "FINANCE", "/finance/accounts", "accounts", "nav.accounts", P_FINANCE_READ,
+                    FINANCE_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_FINANCE_MANAGE, false)),
             page("JOURNAL_ENTRIES", "FINANCE", "/finance/journal-entries", "journal-entries", "nav.journalEntries",
-                    P_JOURNAL_READ,
+                    P_JOURNAL_READ, FINANCE_ROLES, FEATURE_FINANCE,
                     action("CREATE", P_JOURNAL_CREATE, false),
                     action("POST", P_JOURNAL_POST, true),
                     action("REVERSE", P_JOURNAL_REVERSE, true)),
             page("BANKS", "FINANCE", "/finance/banks", "banks", "nav.banks", P_FINANCE_READ,
+                    FINANCE_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_FINANCE_MANAGE, false)),
             page("TAX_CURRENCY", "FINANCE", "/finance/tax-currency", "tax-currency", "nav.taxCurrency", P_FINANCE_READ,
+                    FINANCE_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_FINANCE_MANAGE, false)),
             page("FISCAL_PERIODS", "FINANCE", "/fiscal-periods", "fiscal-periods", "nav.fiscalPeriods", P_FINANCE_READ,
+                    FINANCE_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_FINANCE_MANAGE, false)),
             page("ORGANIZATION", "ADMINISTRATION", "/organization", "organization", "nav.organization",
-                    P_ORGANIZATION_READ, action("MANAGE", P_ORGANIZATION_MANAGE, false)),
-            page("AUDIT_LOGS", "ADMINISTRATION", "/audit-logs", "audit-logs", "nav.auditLogs", P_AUDIT_READ),
+                    P_ORGANIZATION_READ, ADMIN_ONLY, null,
+                    action("MANAGE", P_ORGANIZATION_MANAGE, false)),
+            page("AUDIT_LOGS", "ADMINISTRATION", "/audit-logs", "audit-logs", "nav.auditLogs", P_AUDIT_READ,
+                    ADMIN_ONLY, null),
             page("USERS", "ADMINISTRATION", "/users", "users", "nav.users", P_USERS_READ,
+                    ADMIN_ONLY, null,
                     action("MANAGE", P_USERS_MANAGE, true),
                     action("ASSIGN_ROLES", P_ROLES_ASSIGN, true)),
             page("SETTINGS", "ADMINISTRATION", "/settings", "settings", "settings.title", P_SETTINGS_READ,
+                    NO_ROLE_GUARD, null,
                     action("MANAGE", P_SETTINGS_MANAGE, true)),
             page("WORKFORCE_DASHBOARD", "WORKFORCE", "/workforce/dashboard", "workforce-dashboard",
-                    "workforce.dashboard.title", P_WORKFORCE_DASHBOARD),
+                    "workforce.dashboard.title", P_WORKFORCE_DASHBOARD, WORKFORCE_BASE_ROLES, null),
             page("WORKFORCE_CONTRACTORS", "WORKFORCE", "/workforce/contractors", "workforce-contractors",
-                    "workforce.contractors.title", P_CONTRACTORS_READ,
+                    "workforce.contractors.title", P_CONTRACTORS_READ, WORKFORCE_BASE_ROLES, null,
                     action("MANAGE", P_CONTRACTORS_MANAGE, false)),
             page("WORKFORCE_WORKERS", "WORKFORCE", "/workforce/workers", "workforce-workers",
-                    "workforce.workers.title", P_WORKERS_READ,
+                    "workforce.workers.title", P_WORKERS_READ, WORKFORCE_BASE_ROLES, null,
                     action("CREATE", P_WORKERS_CREATE, false),
                     action("EDIT", P_WORKERS_EDIT, false),
                     action("DEACTIVATE", P_WORKERS_DEACTIVATE, false)),
             page("WORKFORCE_CATEGORIES", "WORKFORCE", "/workforce/categories", "workforce-categories",
-                    "workforce.categories.title", P_CATEGORIES_READ,
+                    "workforce.categories.title", P_CATEGORIES_READ, WORKFORCE_BASE_ROLES, null,
                     action("MANAGE", P_CATEGORIES_MANAGE, false)),
             page("WORKFORCE_REQUESTS", "WORKFORCE", "/workforce/labor-requests", "workforce-requests",
-                    "workforce.laborRequests.title", P_LABOR_REQUESTS_READ,
+                    "workforce.laborRequests.title", P_LABOR_REQUESTS_READ, WORKFORCE_BASE_ROLES, null,
                     action("MANAGE", P_LABOR_REQUESTS_MANAGE, false)),
             page("WORKFORCE_ATTENDANCE", "WORKFORCE", "/workforce/attendance", "workforce-attendance",
-                    "workforce.attendance.title", P_ATTENDANCE_READ,
+                    "workforce.attendance.title", P_ATTENDANCE_READ, WORKFORCE_BASE_ROLES, null,
                     action("ENTER", P_ATTENDANCE_ENTER, false),
                     action("REVIEW", P_ATTENDANCE_REVIEW, true)),
             page("WORKFORCE_SETTLEMENTS", "WORKFORCE", "/workforce/settlement-periods", "workforce-settlements",
-                    "workforce.settlements.title", P_SETTLEMENTS_READ,
+                    "workforce.settlements.title", P_SETTLEMENTS_READ, WORKFORCE_BASE_ROLES,
+                    FEATURE_CONTRACTOR_ACCOUNTS,
                     action("PREPARE", P_SETTLEMENTS_PREPARE, false),
                     action("FINALIZE", P_SETTLEMENTS_FINALIZE, true)),
             page("WORKFORCE_ADVANCES", "WORKFORCE", "/workforce/advances", "workforce-advances",
-                    "workforce.advances.title", P_ADVANCES_READ,
+                    "workforce.advances.title", P_ADVANCES_READ, WORKFORCE_BASE_ROLES, null,
                     action("MANAGE", P_ADVANCES_MANAGE, false)),
             page("WORKFORCE_ACCOUNTS", "WORKFORCE", "/workforce/contractor-accounts", "workforce-accounts",
-                    "workforce.accounts.title", P_CONTRACTOR_ACCOUNTS_READ,
+                    "workforce.accounts.title", P_CONTRACTOR_ACCOUNTS_READ, WORKFORCE_ACCOUNT_ROLES,
+                    FEATURE_CONTRACTOR_ACCOUNTS,
                     action("MANAGE", P_CONTRACTOR_ACCOUNTS_MANAGE, false)),
             page("WORKFORCE_REPORTS", "WORKFORCE", "/workforce/reports-import", "workforce-reports",
-                    "workforce.reports.title", P_WORKFORCE_REPORTS_READ,
+                    "workforce.reports.title", P_WORKFORCE_REPORTS_READ, WORKFORCE_IMPORT_ROLES, null,
                     action("IMPORT", P_ATTENDANCE_IMPORT, false)));
 
     // ------------------------------------------------------------------
@@ -456,8 +504,10 @@ public final class AccessCatalog {
     }
 
     private static AccessPageDef page(String code, String module, String route, String menuId, String titleKey,
-                                      String viewPermission, AccessActionDef... actions) {
-        return new AccessPageDef(code, module, route, menuId, titleKey, viewPermission, List.of(actions));
+                                      String viewPermission, Set<String> requiredRoles, String requiredFeature,
+                                      AccessActionDef... actions) {
+        return new AccessPageDef(code, module, route, menuId, titleKey, viewPermission,
+                requiredRoles, requiredFeature, List.of(actions));
     }
 
     private static AccessConflictRuleDef rule(String code, List<String> permissions,
@@ -480,6 +530,12 @@ public final class AccessCatalog {
         Set<String> result = new HashSet<>(first);
         result.addAll(second);
         result.addAll(third);
+        return Set.copyOf(result);
+    }
+
+    private static Set<String> without(Set<String> base, Set<String> excluded) {
+        Set<String> result = new HashSet<>(base);
+        result.removeAll(excluded);
         return Set.copyOf(result);
     }
 }

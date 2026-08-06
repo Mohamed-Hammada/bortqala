@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -86,6 +86,7 @@ export class JournalEntriesPage {
   readonly pagination = new TablePagination();
 
   readonly drawerOpen = signal(false);
+  readonly submitAttempted = signal(false);
 
   readonly entryForm = new FormGroup({
     entryNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -98,6 +99,20 @@ export class JournalEntriesPage {
     { accountId: '', debit: 0, credit: 0, memo: '' },
     { accountId: '', debit: 0, credit: 0, memo: '' },
   ]);
+
+  readonly lineErrors = computed(() => {
+    const errors = new Map<number, string>();
+    this.lines().forEach((line, index) => {
+      if (!line.accountId) {
+        errors.set(index, this.i18n.t('journal.lineAccountRequired'));
+      } else if (line.debit < 0 || line.credit < 0) {
+        errors.set(index, this.i18n.t('journal.lineNegativeAmount'));
+      } else if (!(line.debit > 0 || line.credit > 0)) {
+        errors.set(index, this.i18n.t('journal.lineEmptyAmount'));
+      }
+    });
+    return errors;
+  });
 
   constructor() {
     void this.load(0);
@@ -151,12 +166,14 @@ export class JournalEntriesPage {
       { accountId: this.accounts()[1]?.id ?? '', debit: 0, credit: 0, memo: '' },
     ]);
     this.dialogError.set(null);
+    this.submitAttempted.set(false);
     this.drawerOpen.set(true);
   }
 
   closeDrawer() {
     this.drawerOpen.set(false);
     this.dialogError.set(null);
+    this.submitAttempted.set(false);
   }
 
   addLine() {
@@ -186,6 +203,11 @@ export class JournalEntriesPage {
 
   async submitEntry() {
     if (this.entryForm.invalid || this.savingDraft()) return;
+    this.submitAttempted.set(true);
+    if (this.lineErrors().size > 0) {
+      this.dialogError.set(this.i18n.t('journal.lineValidationError'));
+      return;
+    }
     const sumDebit = this.calculateSumDebit();
     const sumCredit = this.calculateSumCredit();
 

@@ -8,14 +8,20 @@ import com.bemo.hr.access.domain.AccessDefs.AccessPageDef;
 import com.bemo.hr.access.domain.AccessDefs.AccessRoleDef;
 import com.bemo.hr.access.domain.AccessEnums.AccessLevel;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.security.TenantContext;
+import com.bemo.hr.shared.security.TenantFeatureService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Serves the canonical access catalog and computes the effective access preview.
@@ -23,7 +29,8 @@ import java.util.Set;
  * <p>All preview and validation logic is derived from {@link AccessCatalog}; no
  * frontend copy of the role/permission mapping exists, so the UI and the backend
  * can never drift apart. The backend remains authoritative: assignment validation
- * is re-run on every user save.
+ * is re-run on every user save, including route-guard role parity, tenant feature
+ * availability and acknowledgement of newly introduced risk.
  */
 @Service
 public class AccessCatalogService {
@@ -31,10 +38,17 @@ public class AccessCatalogService {
     private static final List<String> LEVEL_PRECEDENCE = List.of(
             "REVERSE", "POST", "APPROVE", "REVIEW", "MANAGE", "EDIT", "CREATE");
 
-    private final AccessCatalog catalog;
+    private static final String ERR_UNKNOWN_MENU = "ACCESS_UNKNOWN_MENU";
+    private static final String ERR_MENU_ROLE_MISMATCH = "ACCESS_MENU_ROLE_MISMATCH";
+    private static final String ERR_FEATURE_DISABLED = "ACCESS_FEATURE_DISABLED";
+    private static final String ERR_ACK_REASON_REQUIRED = "ACCESS_ACK_REASON_REQUIRED";
 
-    public AccessCatalogService(AccessCatalog catalog) {
+    private final AccessCatalog catalog;
+    private final TenantFeatureService tenantFeatureService;
+
+    public AccessCatalogService(AccessCatalog catalog, TenantFeatureService tenantFeatureService) {
         this.catalog = catalog;
+        this.tenantFeatureService = tenantFeatureService;
     }
 
     public AccessApi.AccessCatalogResponse catalog() {
@@ -57,10 +71,11 @@ public class AccessCatalogService {
         Set<String> selected = new LinkedHashSet<>(roleCodes);
         Set<String> granted = catalog.permissionsOfRoles(selected);
         Set<String> menus = menuCodes == null ? Set.of() : new LinkedHashSet<>(menuCodes);
+        Set<String> enabledFeatures = enabledFeatures();
 
         List<AccessApi.EffectivePageAccessResponse> pageAccess = new ArrayList<>();
         for (AccessPageDef page : catalog.pages()) {
-            pageAccess.add(effectiveAccess(page, selected, granted, menus));
+            pageAccess.add(effectiveAccess(page, selected, granted, menus, enabledFeatures));
         }
 
         List<AccessApi.AccessConflictResponse> conflicts = evaluateConflicts(granted, selected);
@@ -70,10 +85,12 @@ public class AccessCatalogService {
     }
 
     /**
-     * Enforces delegation and segregation-of-duties rules for an assignment.
+     * Enforces delegation, segregation-of-duties and route/feature parity rules
+     * for an assignment.
      *
-     * <p>Blocking violations throw; warning-only violations are returned so the
-     * administrator can acknowledge them before saving.
+     * <p>Blocking violations throw; recoverable issues are returned as
+     * {@code valid=false} with a structured {@code errors} list so the UI can
+     * surface each problem and collect the required acknowledgement reason.
      */
     public AccessApi.AccessValidateResponse validateAssignment(
             Set<String> actorRoles, String actorUserId,
@@ -82,6 +99,7 @@ public class AccessCatalogService {
         validateRoleCodes(roleCodes);
         Set<String> selected = new LinkedHashSet<>(roleCodes);
         Set<String> granted = catalog.permissionsOfRoles(selected);
+        Set<String> menus = menuCodes == null ? Set.of() : new LinkedHashSet<>(menuCodes);
 
         if (!actorRoles.contains("SUPER_ADMIN") && selected.contains("SUPER_ADMIN")) {
             throw new BusinessRuleException("Only a Super Admin can assign the Super Admin role.",
@@ -102,7 +120,11 @@ public class AccessCatalogService {
         }
 
         List<AccessApi.AccessWarningResponse> warnings = sensitiveWarnings(granted);
-        return new AccessApi.AccessValidateResponse(true, conflicts, warnings,
+        List<AccessApi.AccessValidateErrorResponse> errors =
+                new ArrayList<>(menuAndFeatureErrors(menus, selected));
+        errors.addAll(reasonErrors(conflicts, warnings, currentUserRoles, reason));
+
+        return new AccessApi.AccessValidateResponse(errors.isEmpty(), conflicts, warnings, errors,
                 granted.stream().filter(catalog.sensitivePermissions()::contains).sorted().toList());
     }
 
@@ -151,10 +173,80 @@ public class AccessCatalogService {
         }
     }
 
+    private Set<String> enabledFeatures() {
+        return tenantFeatureService.getAllEnabled(TenantContext.require());
+    }
+
+    /**
+     * Verifies every selected menu against the catalog: it must exist, its tenant
+     * feature must be enabled, and at least one selected role must be able to open
+     * the page's route.
+     */
+    private List<AccessApi.AccessValidateErrorResponse> menuAndFeatureErrors(Set<String> menus, Set<String> selected) {
+        if (menus.isEmpty()) return List.of();
+        Map<String, AccessPageDef> pageByMenuId = new HashMap<>();
+        for (AccessPageDef page : catalog.pages()) {
+            pageByMenuId.put(page.menuId(), page);
+        }
+        Set<String> enabledFeatures = enabledFeatures();
+        List<AccessApi.AccessValidateErrorResponse> errors = new ArrayList<>();
+        for (String menuId : menus) {
+            AccessPageDef page = pageByMenuId.get(menuId);
+            if (page == null) {
+                errors.add(new AccessApi.AccessValidateErrorResponse(
+                        ERR_UNKNOWN_MENU, "access.validate.unknownMenu", menuId, null));
+                continue;
+            }
+            if (page.requiredFeature() != null && !enabledFeatures.contains(page.requiredFeature())) {
+                errors.add(new AccessApi.AccessValidateErrorResponse(
+                        ERR_FEATURE_DISABLED, "access.validate.featureDisabled", menuId, page.code()));
+            }
+            if (!page.requiredRoles().isEmpty() && Collections.disjoint(selected, page.requiredRoles())) {
+                errors.add(new AccessApi.AccessValidateErrorResponse(
+                        ERR_MENU_ROLE_MISMATCH, "access.validate.menuRoleMismatch", menuId, page.code()));
+            }
+        }
+        return errors;
+    }
+
+    /**
+     * An acknowledgement reason is mandatory only when the new assignment
+     * introduces warnings/conflicts the target user did not already carry, so
+     * routine edits of admins are not blocked.
+     */
+    private List<AccessApi.AccessValidateErrorResponse> reasonErrors(
+            List<AccessApi.AccessConflictResponse> conflicts,
+            List<AccessApi.AccessWarningResponse> warnings,
+            Set<String> currentUserRoles, String reason) {
+        if (currentUserRoles == null || currentUserRoles.isEmpty()) {
+            return List.of();
+        }
+        Set<String> baselineGranted = catalog.permissionsOfRoles(currentUserRoles);
+        Set<String> baselineConflictCodes = evaluateConflicts(baselineGranted, currentUserRoles).stream()
+                .map(AccessApi.AccessConflictResponse::code)
+                .collect(Collectors.toSet());
+        Set<String> baselineWarningCodes = sensitiveWarnings(baselineGranted).stream()
+                .map(AccessApi.AccessWarningResponse::code)
+                .collect(Collectors.toSet());
+
+        boolean newConflict = conflicts.stream()
+                .map(AccessApi.AccessConflictResponse::code)
+                .anyMatch(code -> !baselineConflictCodes.contains(code));
+        boolean newWarning = warnings.stream()
+                .map(AccessApi.AccessWarningResponse::code)
+                .anyMatch(code -> !baselineWarningCodes.contains(code));
+        if ((newConflict || newWarning) && (reason == null || reason.isBlank())) {
+            return List.of(new AccessApi.AccessValidateErrorResponse(
+                    ERR_ACK_REASON_REQUIRED, "access.validate.ackReason", null, null));
+        }
+        return List.of();
+    }
+
     private AccessApi.EffectivePageAccessResponse effectiveAccess(AccessPageDef page,
                                                                   Set<String> selectedRoles,
                                                                   Set<String> granted,
-                                                                  Set<String> menus) {
+                                                                  Set<String> menus,
+                                                                  Set<String> enabledFeatures) {
         boolean viewGranted = granted.contains(page.viewPermission());
         Set<String> grantedActions = new LinkedHashSet<>();
         for (AccessActionDef action : page.actions()) {
@@ -177,9 +269,13 @@ public class AccessCatalogService {
                 .sorted()
                 .toList();
 
+        boolean featureUnavailable = page.requiredFeature() != null
+                && !enabledFeatures.contains(page.requiredFeature());
         boolean menuVisible = menus.contains(page.menuId());
         String access;
-        if (!menuVisible) {
+        if (featureUnavailable) {
+            access = AccessLevel.MODULE_UNAVAILABLE.name();
+        } else if (!menuVisible) {
             access = AccessLevel.HIDDEN.name();
         } else if (!viewGranted) {
             access = AccessLevel.RESTRICTED.name();
@@ -240,6 +336,7 @@ public class AccessCatalogService {
     private AccessApi.AccessPageResponse toPage(AccessPageDef page) {
         return new AccessApi.AccessPageResponse(page.code(), page.module(), page.route(), page.menuId(),
                 page.titleKey(), List.of(page.viewPermission()),
+                page.requiredRoles().stream().sorted().toList(), page.requiredFeature(),
                 page.actions().stream()
                         .map(action -> new AccessApi.AccessActionResponse(action.code(), action.permission(),
                                 action.sensitive()))

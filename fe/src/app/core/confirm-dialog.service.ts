@@ -67,6 +67,8 @@ export class ConfirmDialogService {
   }
 
   cancel(): void {
+    const state = this.confirmState();
+    if (!state || state.busy) return;
     this.close(false);
   }
 
@@ -76,7 +78,7 @@ export class ConfirmDialogService {
 
   private close(value: boolean): void {
     const state = this.confirmState();
-    if (!state || state.busy) return;
+    if (!state) return;
     this.confirmState.set(null);
     state.resolver(value);
   }

@@ -3,13 +3,23 @@ package com.bemo.hr.access.application;
 import com.bemo.hr.access.api.AccessApi;
 import com.bemo.hr.access.domain.AccessCatalog;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.security.TenantContext;
+import com.bemo.hr.shared.security.TenantFeatureRepository;
+import com.bemo.hr.shared.security.TenantFeatureService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for the role-to-page access guidance: catalog integrity, effective
@@ -19,7 +29,29 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class AccessCatalogServiceTests {
 
     private final AccessCatalog catalog = new AccessCatalog();
-    private final AccessCatalogService service = new AccessCatalogService(catalog);
+    private final TenantFeatureRepository featureRepository = mock(TenantFeatureRepository.class);
+    private final TenantFeatureService tenantFeatureService = new TenantFeatureService(featureRepository);
+    private final AccessCatalogService service = new AccessCatalogService(catalog, tenantFeatureService);
+
+    @BeforeEach
+    void setUp() {
+        TenantContext.set("test-app");
+        when(featureRepository.findByAppId(anyString())).thenReturn(List.of());
+        when(featureRepository.findById(any())).thenReturn(java.util.Optional.empty());
+    }
+
+    private void enableAllFeatures() {
+        Map<String, Boolean> features = new HashMap<>();
+        for (String key : List.of("payroll.enabled", "sales.enabled", "manufacturing.enabled",
+                "quality.enabled", "finance.enabled", "workforce.contractorAccounts.enabled")) {
+            features.put(key, true);
+        }
+        when(featureRepository.findByAppId(anyString())).thenAnswer(
+                invocation -> features.entrySet().stream()
+                        .map(entry -> new com.bemo.hr.shared.security.TenantFeature(
+                                "test-app", entry.getKey(), entry.getValue(), null, "test"))
+                        .toList());
+    }
 
     @Test
     void catalogExposesEveryRolePageAndRule() {
@@ -29,8 +61,10 @@ class AccessCatalogServiceTests {
         assertThat(response.roles()).extracting(AccessApi.AccessRoleResponse::code)
                 .contains("SUPER_ADMIN", "ADMIN", "HR_MANAGER", "WORKFORCE_MANAGER", "AUDITOR");
         assertThat(response.pages()).isNotEmpty();
-        assertThat(response.pages()).allSatisfy(page ->
-                assertThat(page.menuId()).isNotBlank());
+        assertThat(response.pages()).allSatisfy(page -> {
+            assertThat(page.menuId()).isNotBlank();
+            assertThat(page.roles()).isNotNull();
+        });
         assertThat(response.conflictRules()).hasSize(5);
         assertThat(response.conflictRules()).allSatisfy(rule ->
                 assertThat(rule.permissions()).isNotEmpty());
@@ -63,6 +97,7 @@ class AccessCatalogServiceTests {
 
     @Test
     void actionsDeriveAccessLevelByPrecedence() {
+        enableAllFeatures();
         var preview = service.preview(List.of("HR_MANAGER"), List.of("payroll"));
 
         var payroll = page(preview, "PAYROLL");
@@ -134,6 +169,7 @@ class AccessCatalogServiceTests {
 
     @Test
     void warningConflictsDoNotBlockValidation() {
+        enableAllFeatures();
         var result = service.validateAssignment(
                 Set.of("ADMIN"), "actor-1", List.of("PAYROLL_MANAGER"), List.of("payroll"),
                 null, null, null);
@@ -151,6 +187,96 @@ class AccessCatalogServiceTests {
 
         var empty = service.suggestRoles(Set.of());
         assertThat(empty).isEmpty();
+    }
+
+    @Test
+    void viewerGrantsOnlyDashboardReportsAndSettings() {
+        assertThat(catalog.permissionsOf("VIEWER"))
+                .containsExactlyInAnyOrder("dashboard.view", "reports.read", "settings.read");
+    }
+
+    @Test
+    void hrRolesNoLongerGrantWorkforcePermissions() {
+        assertThat(catalog.permissionsOf("HR_MANAGER")).noneMatch(permission -> permission.startsWith("workers."));
+        assertThat(catalog.permissionsOf("HR_MANAGER")).doesNotContain("attendance.review", "attendance.import");
+        assertThat(catalog.permissionsOf("HR_REVIEWER")).noneMatch(permission -> permission.startsWith("workers."));
+    }
+
+    @Test
+    void workforceReviewerLosesContractorAccountRead() {
+        assertThat(catalog.permissionsOf("WORKFORCE_REVIEWER"))
+                .doesNotContain("contractorAccounts.read", "contractorAccounts.manage");
+    }
+
+    @Test
+    void workforceFinanceLosesWorkforceReportsRead() {
+        assertThat(catalog.permissionsOf("WORKFORCE_FINANCE")).doesNotContain("workforceReports.read");
+    }
+
+    @Test
+    void treasuryUserCannotCreateOrPostJournals() {
+        assertThat(catalog.permissionsOf("TREASURY_USER"))
+                .doesNotContain("journal.create", "journal.post")
+                .contains("procurement.read");
+    }
+
+    @Test
+    void disabledFeatureYieldsModuleUnavailable() {
+        var preview = service.preview(List.of("PAYROLL_MANAGER"), List.of("payroll"));
+
+        var payroll = page(preview, "PAYROLL");
+        assertThat(payroll.access()).isEqualTo("MODULE_UNAVAILABLE");
+    }
+
+    @Test
+    void validateReportsUnknownMenu() {
+        var result = service.validateAssignment(
+                Set.of("ADMIN"), "actor-1", List.of("VIEWER"), List.of("no-such-menu"),
+                null, null, null);
+        assertThat(result.valid()).isFalse();
+        assertThat(result.errors()).extracting(AccessApi.AccessValidateErrorResponse::code)
+                .contains("ACCESS_UNKNOWN_MENU");
+    }
+
+    @Test
+    void validateReportsMenuRoleMismatch() {
+        enableAllFeatures();
+        var result = service.validateAssignment(
+                Set.of("ADMIN"), "actor-1", List.of("VIEWER"), List.of("payroll"),
+                null, null, null);
+        assertThat(result.valid()).isFalse();
+        assertThat(result.errors()).extracting(AccessApi.AccessValidateErrorResponse::code)
+                .contains("ACCESS_MENU_ROLE_MISMATCH");
+    }
+
+    @Test
+    void validateReportsFeatureDisabled() {
+        var result = service.validateAssignment(
+                Set.of("ADMIN"), "actor-1", List.of("PAYROLL_MANAGER"), List.of("payroll"),
+                null, null, null);
+        assertThat(result.valid()).isFalse();
+        assertThat(result.errors()).extracting(AccessApi.AccessValidateErrorResponse::code)
+                .contains("ACCESS_FEATURE_DISABLED");
+    }
+
+    @Test
+    void validateRequiresAckReasonWhenNewRisksAreIntroduced() {
+        var withoutBaseline = service.validateAssignment(
+                Set.of("ADMIN"), "actor-1", List.of("PAYROLL_MANAGER"), List.of(),
+                null, null, null);
+        assertThat(withoutBaseline.valid()).isTrue();
+
+        var withBaseline = service.validateAssignment(
+                Set.of("ADMIN"), "actor-1", List.of("PAYROLL_MANAGER"), List.of(),
+                "target-1", Set.of("VIEWER"), null);
+        assertThat(withBaseline.valid()).isFalse();
+        assertThat(withBaseline.errors()).extracting(AccessApi.AccessValidateErrorResponse::code)
+                .contains("ACCESS_ACK_REASON_REQUIRED");
+
+        var acknowledged = service.validateAssignment(
+                Set.of("ADMIN"), "actor-1", List.of("PAYROLL_MANAGER"), List.of(),
+                "target-1", Set.of("VIEWER"), "Manager needs prepare and approve for month-end");
+        assertThat(acknowledged.valid()).isTrue();
     }
 
     private AccessApi.EffectivePageAccessResponse page(AccessApi.AccessPreviewResponse preview, String code) {

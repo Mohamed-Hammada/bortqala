@@ -67,3 +67,7 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260806_v100_access_guidance_translations.yaml
   - include:
       file: db/changelog/data/insert/20260806_v101_legacy_missing_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v102_access_guidance_extensions_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v103_procurement_i18n_translations.yaml

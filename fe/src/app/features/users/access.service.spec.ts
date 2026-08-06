@@ -69,6 +69,8 @@ const CATALOG: AccessCatalog = {
       menuId: 'dashboard',
       titleKey: 'nav.dashboard',
       viewPermissions: ['dashboard.view'],
+      roles: ['ADMIN', 'SUPER_ADMIN'],
+      requiredFeature: null,
       actions: [],
     },
     {
@@ -78,6 +80,8 @@ const CATALOG: AccessCatalog = {
       menuId: 'reports',
       titleKey: 'nav.reports',
       viewPermissions: ['reports.read'],
+      roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
+      requiredFeature: null,
       actions: [{ code: 'DECIDE', permission: 'reports.decide', sensitive: false }],
     },
     {
@@ -87,6 +91,8 @@ const CATALOG: AccessCatalog = {
       menuId: 'workforce-workers',
       titleKey: 'workforce.workers.title',
       viewPermissions: ['workers.read'],
+      roles: ['ADMIN', 'SUPER_ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE'],
+      requiredFeature: null,
       actions: [
         { code: 'CREATE', permission: 'workers.create', sensitive: false },
         { code: 'EDIT', permission: 'workers.edit', sensitive: false },
@@ -99,6 +105,8 @@ const CATALOG: AccessCatalog = {
       menuId: 'journal-entries',
       titleKey: 'nav.journalEntries',
       viewPermissions: ['journal.read'],
+      roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+      requiredFeature: 'finance.enabled',
       actions: [
         { code: 'CREATE', permission: 'journal.create', sensitive: false },
         { code: 'POST', permission: 'journal.post', sensitive: true },
@@ -120,6 +128,23 @@ describe('AccessService', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
+    localStorage.clear();
+    localStorage.setItem(
+      'bemo-erp-session',
+      JSON.stringify({
+        expiresAt: Date.now() + 3_600_000,
+        mustChangePassword: false,
+        app: { id: 'test-app', name: 'Test', code: 'test' },
+        user: {
+          id: 'u1',
+          username: 'tester',
+          roles: ['FINANCE_MANAGER'],
+          allowedMenus: [],
+          activeFeatures: ['finance.enabled'],
+        },
+        preferences: {},
+      }),
+    );
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
@@ -180,6 +205,18 @@ describe('AccessService', () => {
     const dashboard = preview.pages.find((p) => p.pageCode === 'DASHBOARD')!;
     expect(dashboard.access).toBe('RESTRICTED');
     expect(dashboard.missingPermissions).toContain('dashboard.view');
+  });
+
+  it('preview marks MODULE_UNAVAILABLE when the tenant lacks the required feature', () => {
+    localStorage.clear();
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    const freshService = TestBed.inject(AccessService);
+    freshService.catalog.set(CATALOG);
+
+    const preview = freshService.preview(['FINANCE_MANAGER'], ['journal-entries']);
+    const journal = preview.pages.find((p) => p.pageCode === 'JOURNAL')!;
+    expect(journal.access).toBe('MODULE_UNAVAILABLE');
   });
 
   it('preview derives action levels and reports conflicts and warnings', () => {

@@ -1,16 +1,16 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">دورة المشتريات (Procurement Cycle)</p>
-      <h1>المشتريات والفواتير والمدفوعات</h1>
-      <p>طلبات الشراء ← أوامر الشراء ← إذن الاستلام ← فواتير الموردين ← السداد والقيود المحاسبية</p>
+      <p class="eyebrow">{{ i18n.t('procurement.eyebrow') }}</p>
+      <h1>{{ i18n.t('procurement.title') }}</h1>
+      <p>{{ i18n.t('procurement.subtitle') }}</p>
     </div>
     <div class="header-actions">
       <button class="button secondary" (click)="exportExcel()">⇩ Excel</button>
-      @if (activeTab() === 'po') {<button class="button primary" (click)="openNewPo()">＋ أمر شراء جديد</button>}
-      @if (activeTab() === 'grn') {<button class="button primary" (click)="openNewGrn()">＋ إذن استلام جديد</button>}
-      @if (activeTab() === 'invoice') {<button class="button primary" (click)="openNewInvoice()">＋ فاتورة مورد</button>}
-      @if (activeTab() === 'payment') {<button class="button primary" (click)="openNewPayment()">＋ دفعة مورد</button>}
+      @if (activeTab() === 'po') {<button class="button primary" (click)="openNewPo()">＋ {{ i18n.t('procurement.poNew') }}</button>}
+      @if (activeTab() === 'grn') {<button class="button primary" (click)="openNewGrn()">＋ {{ i18n.t('procurement.grnNew') }}</button>}
+      @if (activeTab() === 'invoice') {<button class="button primary" (click)="openNewInvoice()">＋ {{ i18n.t('procurement.invoiceNew') }}</button>}
+      @if (activeTab() === 'payment') {<button class="button primary" (click)="openNewPayment()">＋ {{ i18n.t('procurement.paymentNew') }}</button>}
     </div>
   </header>
 
@@ -19,23 +19,23 @@
 
   <!-- Tabs -->
   <nav class="tabs">
-    <button class="tab" [class.active]="activeTab() === 'po'" (click)="activeTab.set('po')">📋 أوامر الشراء</button>
-    <button class="tab" [class.active]="activeTab() === 'grn'" (click)="activeTab.set('grn')">📦 إذن الاستلام</button>
-    <button class="tab" [class.active]="activeTab() === 'invoice'" (click)="activeTab.set('invoice')">🧾 فواتير الموردين</button>
-    <button class="tab" [class.active]="activeTab() === 'payment'" (click)="activeTab.set('payment')">💰 المدفوعات</button>
+    <button class="tab" [class.active]="activeTab() === 'po'" (click)="activeTab.set('po')">📋 {{ i18n.t('procurement.tabPo') }}</button>
+    <button class="tab" [class.active]="activeTab() === 'grn'" (click)="activeTab.set('grn')">📦 {{ i18n.t('procurement.tabGrn') }}</button>
+    <button class="tab" [class.active]="activeTab() === 'invoice'" (click)="activeTab.set('invoice')">🧾 {{ i18n.t('procurement.tabInvoice') }}</button>
+    <button class="tab" [class.active]="activeTab() === 'payment'" (click)="activeTab.set('payment')">💰 {{ i18n.t('procurement.tabPayment') }}</button>
   </nav>
 
   <!-- Workflow Pipeline -->
   <div class="workflow-steps">
-    <div class="step-card active"><span class="step-num">1</span><strong>طلب شراء</strong><small>احتياج القسم</small></div>
+    <div class="step-card active"><span class="step-num">1</span><strong>{{ i18n.t('procurement.stepPr') }}</strong><small>{{ i18n.t('procurement.stepPrHint') }}</small></div>
     <div class="step-arrow">→</div>
-    <div class="step-card active"><span class="step-num">2</span><strong>عرض سعر</strong><small>أسعار الموردين</small></div>
+    <div class="step-card active"><span class="step-num">2</span><strong>{{ i18n.t('procurement.stepRfq') }}</strong><small>{{ i18n.t('procurement.stepRfqHint') }}</small></div>
     <div class="step-arrow">→</div>
-    <div class="step-card active"><span class="step-num">3</span><strong>أمر شراء</strong><small>التعاقد مع المورد</small></div>
+    <div class="step-card active"><span class="step-num">3</span><strong>{{ i18n.t('procurement.stepPo') }}</strong><small>{{ i18n.t('procurement.stepPoHint') }}</small></div>
     <div class="step-arrow">→</div>
-    <div class="step-card active"><span class="step-num">4</span><strong>إذن استلام</strong><small>إضافة للمخزن</small></div>
+    <div class="step-card active"><span class="step-num">4</span><strong>{{ i18n.t('procurement.stepGrn') }}</strong><small>{{ i18n.t('procurement.stepGrnHint') }}</small></div>
     <div class="step-arrow">→</div>
-    <div class="step-card active"><span class="step-num">5</span><strong>فاتورة وسداد</strong><small>الاستحقاق المالي</small></div>
+    <div class="step-card active"><span class="step-num">5</span><strong>{{ i18n.t('procurement.stepInvoice') }}</strong><small>{{ i18n.t('procurement.stepInvoiceHint') }}</small></div>
   </div>
 
   @if (!loading()) {
@@ -43,7 +43,7 @@
     @if (activeTab() === 'po') {
     <div class="table-card">
       <table>
-        <thead><tr><th>رقم الأمر</th><th>التاريخ</th><th>المورد</th><th>شروط الدفع</th><th>العملة</th><th>الإجمالي</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+        <thead><tr><th>{{ i18n.t('procurement.poColNumber') }}</th><th>{{ i18n.t('procurement.poColDate') }}</th><th>{{ i18n.t('procurement.poColSupplier') }}</th><th>{{ i18n.t('procurement.poColPaymentTerms') }}</th><th>{{ i18n.t('procurement.poColCurrency') }}</th><th>{{ i18n.t('procurement.poColTotal') }}</th><th>{{ i18n.t('procurement.poColStatus') }}</th><th>{{ i18n.t('procurement.poColActions') }}</th></tr></thead>
         <tbody>
           @for (po of orders(); track po.id) {
           <tr>
@@ -57,15 +57,15 @@
             <td>
               <div class="table-row-actions">
                 @if (po.status === 'DRAFT') {
-                  <button class="button secondary btn-sm" (click)="openEditPo(po)">✏️ تعديل</button>
-                  <button class="button primary btn-sm" (click)="issuePo(po)">📨 إصدار</button>
+                  <button class="button secondary btn-sm" (click)="openEditPo(po)">✏️ {{ i18n.t('procurement.poEdit') }}</button>
+                  <button class="button primary btn-sm" (click)="issuePo(po)">📨 {{ i18n.t('procurement.poIssue') }}</button>
                 }
-                @if (po.status === 'ISSUED' || po.status === 'PARTIALLY_RECEIVED') {<button class="button success btn-sm" (click)="openNewGrn(po)">📦 إنشاء إذن استلام</button>}
-                @if (po.status !== 'CANCELLED' && po.status !== 'RECEIVED') {<button class="button danger btn-sm" (click)="cancelPo(po)">❌ إلغاء</button>}
+                @if (po.status === 'ISSUED' || po.status === 'PARTIALLY_RECEIVED') {<button class="button success btn-sm" (click)="openNewGrn(po)">📦 {{ i18n.t('procurement.poCreateGrn') }}</button>}
+                @if (po.status !== 'CANCELLED' && po.status !== 'RECEIVED') {<button class="button danger btn-sm" (click)="cancelPo(po)">❌ {{ i18n.t('procurement.cancel') }}</button>}
               </div>
             </td>
           </tr>
-          } @empty { <tr><td colspan="8"><div class="empty-state">لا توجد أوامر شراء. اضغط "أمر شراء جديد" للبدء.</div></td></tr> }
+          } @empty { <tr><td colspan="8"><div class="empty-state">{{ i18n.t('procurement.poEmpty') }}</div></td></tr> }
         </tbody>
       </table>
     </div>
@@ -75,7 +75,7 @@
     @if (activeTab() === 'grn') {
     <div class="table-card">
       <table>
-        <thead><tr><th>رقم الإذن</th><th>تاريخ الاستلام</th><th>المورد</th><th>ملاحظات</th><th>الحالة</th></tr></thead>
+        <thead><tr><th>{{ i18n.t('procurement.grnColNumber') }}</th><th>{{ i18n.t('procurement.grnColReceiptDate') }}</th><th>{{ i18n.t('procurement.grnColSupplier') }}</th><th>{{ i18n.t('procurement.colNotes') }}</th><th>{{ i18n.t('procurement.grnColStatus') }}</th></tr></thead>
         <tbody>
           @for (g of goodsReceipts(); track g.id) {
           <tr>
@@ -83,9 +83,9 @@
             <td class="ltr">{{ date(g.receiptDate) }}</td>
             <td>{{ g.supplierName || g.supplierId }}</td>
             <td>{{ g.notes || '—' }}</td>
-            <td><span class="status success">{{ g.status === 'POSTED' ? 'مُرحّل' : g.status }}</span></td>
+            <td><span class="status success">{{ g.status === 'POSTED' ? i18n.t('procurement.grnStatusPosted') : g.status }}</span></td>
           </tr>
-          } @empty { <tr><td colspan="5"><div class="empty-state">لا توجد إذون استلام مسجلة. اضغط "إذن استلام جديد".</div></td></tr> }
+          } @empty { <tr><td colspan="5"><div class="empty-state">{{ i18n.t('procurement.grnEmpty') }}</div></td></tr> }
         </tbody>
       </table>
     </div>
@@ -95,22 +95,22 @@
     @if (activeTab() === 'invoice') {
     <div class="table-card">
       <table>
-        <thead><tr><th>فاتورة المورد / المرجع</th><th>التاريخ</th><th>المورد</th><th>العملة</th><th>الإجمالي</th><th>الخصم</th><th>الضريبة</th><th>الصافي</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+        <thead><tr><th>{{ i18n.t('procurement.invColReference') }}</th><th>{{ i18n.t('procurement.invColDate') }}</th><th>{{ i18n.t('procurement.invColSupplier') }}</th><th>{{ i18n.t('procurement.invColCurrency') }}</th><th>{{ i18n.t('procurement.invColTotal') }}</th><th>{{ i18n.t('procurement.invColDiscount') }}</th><th>{{ i18n.t('procurement.invColTax') }}</th><th>{{ i18n.t('procurement.invColNet') }}</th><th>{{ i18n.t('procurement.invColStatus') }}</th><th>{{ i18n.t('procurement.invColActions') }}</th></tr></thead>
         <tbody>
           @for (inv of invoices(); track inv.id) {
           <tr>
-            <td><strong class="ltr">{{ invoiceReference(inv) }}</strong><small>{{ inv.invoiceNumber ? 'فاتورة مورد' : 'بدون فاتورة — مرجع داخلي' }}</small></td>
+            <td><strong class="ltr">{{ invoiceReference(inv) }}</strong><small>{{ inv.invoiceNumber ? i18n.t('procurement.invBadgeSupplier') : i18n.t('procurement.invBadgeNoInvoice') }}</small></td>
             <td class="ltr">{{ date(inv.invoiceDate) }}</td>
             <td>{{ inv.supplierName || inv.supplierId }}</td>
             <td class="ltr">{{ inv.currencyCode }}</td>
             <td class="ltr">{{ inv.totalAmount | number:'1.2-2' }}</td>
             <td class="ltr">{{ (inv.discountAmount ?? 0) | number:'1.2-2' }}</td>
             <td class="ltr">{{ (inv.taxAmount ?? 0) | number:'1.2-2' }}</td>
-            <td class="ltr"><strong>{{ inv.netAmount | number:'1.2-2' }}</strong><small> / متبقي {{ inv.outstandingAmount | number:'1.2-2' }}</small></td>
-            <td><span class="status" [class.warning]="inv.status !== 'PAID'" [class.success]="inv.status === 'PAID'">{{ inv.status === 'PAID' ? 'مدفوعة' : inv.status === 'PARTIALLY_PAID' ? 'مدفوعة جزئياً' : 'غير مدفوعة' }}</span></td>
-            <td>@if (inv.status !== 'PAID') {<button class="button primary btn-sm" (click)="openNewPayment(inv)">💰 سداد</button>}</td>
+            <td class="ltr"><strong>{{ inv.netAmount | number:'1.2-2' }}</strong><small> / {{ i18n.t('procurement.invOutstanding') }} {{ inv.outstandingAmount | number:'1.2-2' }}</small></td>
+            <td><span class="status" [class.warning]="inv.status !== 'PAID'" [class.success]="inv.status === 'PAID'">{{ inv.status === 'PAID' ? i18n.t('procurement.invStatusPaid') : inv.status === 'PARTIALLY_PAID' ? i18n.t('procurement.invStatusPartiallyPaid') : i18n.t('procurement.invStatusUnpaid') }}</span></td>
+            <td>@if (inv.status !== 'PAID') {<button class="button primary btn-sm" (click)="openNewPayment(inv)">💰 {{ i18n.t('procurement.invPay') }}</button>}</td>
           </tr>
-          } @empty { <tr><td colspan="10"><div class="empty-state">لا توجد فواتير موردين مسجلة.</div></td></tr> }
+          } @empty { <tr><td colspan="10"><div class="empty-state">{{ i18n.t('procurement.invEmpty') }}</div></td></tr> }
         </tbody>
       </table>
     </div>
@@ -120,7 +120,7 @@
     @if (activeTab() === 'payment') {
     <div class="table-card">
       <table>
-        <thead><tr><th>رقم الدفعة</th><th>تاريخ الدفع</th><th>المورد</th><th>الفاتورة</th><th>المبلغ</th><th>العملة</th><th>طريقة الدفع</th><th>الحالة</th></tr></thead>
+        <thead><tr><th>{{ i18n.t('procurement.pmtColNumber') }}</th><th>{{ i18n.t('procurement.pmtColDate') }}</th><th>{{ i18n.t('procurement.pmtColSupplier') }}</th><th>{{ i18n.t('procurement.pmtColInvoice') }}</th><th>{{ i18n.t('procurement.pmtColAmount') }}</th><th>{{ i18n.t('procurement.pmtColCurrency') }}</th><th>{{ i18n.t('procurement.pmtColMethod') }}</th><th>{{ i18n.t('procurement.pmtColStatus') }}</th></tr></thead>
         <tbody>
           @for (pmt of payments(); track pmt.id) {
           <tr>
@@ -130,10 +130,10 @@
             <td class="ltr">{{ pmt.supplierInvoiceId }}</td>
             <td class="ltr"><strong>{{ pmt.amount | number:'1.2-2' }}</strong></td>
             <td class="ltr">{{ pmt.currencyCode }}</td>
-            <td>{{ pmt.paymentMethod === 'BANK_TRANSFER' ? 'تحويل بنكي' : pmt.paymentMethod === 'CASH' ? 'نقدي' : pmt.paymentMethod === 'CHEQUE' ? 'شيك' : pmt.paymentMethod }}</td>
-            <td><span class="status success">{{ pmt.status === 'POSTED' ? 'مُرحّلة' : pmt.status }}</span></td>
+            <td>{{ pmt.paymentMethod === 'BANK_TRANSFER' ? i18n.t('procurement.pmtMethodBankTransfer') : pmt.paymentMethod === 'CASH' ? i18n.t('procurement.pmtMethodCash') : pmt.paymentMethod === 'CHEQUE' ? i18n.t('procurement.pmtMethodCheque') : pmt.paymentMethod }}</td>
+            <td><span class="status success">{{ pmt.status === 'POSTED' ? i18n.t('procurement.pmtStatusPosted') : pmt.status }}</span></td>
           </tr>
-          } @empty { <tr><td colspan="8"><div class="empty-state">لا توجد مدفوعات مسجلة.</div></td></tr> }
+          } @empty { <tr><td colspan="8"><div class="empty-state">{{ i18n.t('procurement.pmtEmpty') }}</div></td></tr> }
         </tbody>
       </table>
     </div>
@@ -142,41 +142,41 @@
 
   <!-- ══════════════ PO MODAL ══════════════ -->
   @if (modalOpen()) {
-  <app-modal-dialog [isOpen]="true" [title]="editingPoId() ? 'تعديل أمر الشراء' : 'أمر شراء جديد'" (close)="modalOpen.set(false)">
+  <app-modal-dialog [isOpen]="true" [title]="editingPoId() ? i18n.t('procurement.poEditTitle') : i18n.t('procurement.poNewTitle')" (close)="modalOpen.set(false)">
     <form [formGroup]="poForm" (ngSubmit)="submitPo()">
       <div class="form-grid">
         @if (automaticNumbering()) {
-          <div class="field"><label>رقم أمر الشراء</label><span class="readonly-value">{{ editingPoId() ? poForm.controls.poNumber.value : 'تلقائي — يولد عند الحفظ' }}</span></div>
+          <div class="field"><label>{{ i18n.t('procurement.poNumber') }}</label><span class="readonly-value">{{ editingPoId() ? poForm.controls.poNumber.value : i18n.t('procurement.autoGenerated') }}</span></div>
         } @else {
-          <div class="field"><label>رقم أمر الشراء *</label><input class="ltr" formControlName="poNumber" /></div>
+          <div class="field"><label>{{ i18n.t('procurement.poNumber') }} *</label><input class="ltr" formControlName="poNumber" /></div>
         }
-        <div class="field"><label>تاريخ الأمر *</label><input type="date" class="ltr" formControlName="poDate" [readOnly]="!!editingPoId()" /><small>{{ editingPoId() ? 'ثابت بعد الحفظ لارتباطه بلقطة سعر الصرف.' : 'يمكن اختيار تاريخ سابق أو حالي أو مستقبلي.' }}</small></div>
-        <div class="field"><label>المورد *</label><select formControlName="supplierId" (change)="onPoSupplierSelected()"><option value="">— اختر مورداً مسجلاً —</option>@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select><small>المورد يُختار من دليل الموردين. <a routerLink="/parties">إضافة مورد جديد</a></small></div>
-        <div class="field"><label>عملة العملية *</label><select formControlName="currencyCode" (change)="onPoCurrencyChanged()">@for (currency of currencies(); track currency.code) {<option [value]="currency.code">{{ currency.code }} — {{ currency.name }}</option>}</select><small>{{ editingPoId() ? 'عملة مثبتة مع المستند.' : 'تبدأ بعملة المورد الافتراضية ويمكن تغييرها لهذه العملية.' }}</small></div>
-        <div class="field"><label>سعر الصرف إلى {{ baseCurrencyCode() }} *</label><input type="number" min="0.000001" step="0.000001" class="ltr" formControlName="exchangeRate" [readOnly]="!!editingPoId()" /><small>لقطة بتاريخ المستند؛ لن تتغير بعد الحفظ.</small></div>
-        @if (!editingPoId() && poRateOverridden()) { <div class="field span-2"><label>سبب تعديل سعر الصرف *</label><input formControlName="exchangeRateOverrideReason" placeholder="سبب الاعتماد اليدوي ومصدر السعر" /></div> }
-        @if (editingPoSnapshot(); as snapshot) { <div class="field span-2"><label>بيانات لقطة سعر الصرف</label><span class="readonly-value">{{ snapshot.exchangeRateSource }} · {{ date(snapshot.exchangeRateDate) }}@if (snapshot.exchangeRateOverrideReason) { · {{ snapshot.exchangeRateOverrideReason }}}</span></div> }
-        <div class="field"><label>شروط السداد</label><input formControlName="paymentTerms" /></div>
+        <div class="field"><label>{{ i18n.t('procurement.colPoDate') }} *</label><input type="date" class="ltr" formControlName="poDate" [readOnly]="!!editingPoId()" /><small>{{ editingPoId() ? i18n.t('procurement.poDateFixed') : i18n.t('procurement.poDateHint') }}</small></div>
+        <div class="field"><label>{{ i18n.t('procurement.poSupplier') }} *</label><select formControlName="supplierId" (change)="onPoSupplierSelected()"><option value="">{{ i18n.t('procurement.poSelectSupplierPlaceholder') }}</option>@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select><small>{{ i18n.t('procurement.poSupplierHint') }} <a routerLink="/parties">{{ i18n.t('procurement.poAddSupplier') }}</a></small></div>
+        <div class="field"><label>{{ i18n.t('procurement.currencyLabel') }} *</label><select formControlName="currencyCode" (change)="onPoCurrencyChanged()">@for (currency of currencies(); track currency.code) {<option [value]="currency.code">{{ currency.code }} — {{ currency.name }}</option>}</select><small>{{ editingPoId() ? i18n.t('procurement.currencyFixed') : i18n.t('procurement.currencyHint') }}</small></div>
+        <div class="field"><label>{{ i18n.t('procurement.exchangeRateLabel') }} {{ baseCurrencyCode() }} *</label><input type="number" min="0.000001" step="0.000001" class="ltr" formControlName="exchangeRate" [readOnly]="!!editingPoId()" /><small>{{ i18n.t('procurement.exchangeRateHint') }}</small></div>
+        @if (!editingPoId() && poRateOverridden()) { <div class="field span-2"><label>{{ i18n.t('procurement.rateOverrideLabel') }} *</label><input formControlName="exchangeRateOverrideReason" [placeholder]="i18n.t('procurement.rateOverridePlaceholder')" /></div> }
+        @if (editingPoSnapshot(); as snapshot) { <div class="field span-2"><label>{{ i18n.t('procurement.exchangeSnapshotLabel') }}</label><span class="readonly-value">{{ snapshot.exchangeRateSource }} · {{ date(snapshot.exchangeRateDate) }}@if (snapshot.exchangeRateOverrideReason) { · {{ snapshot.exchangeRateOverrideReason }}}</span></div> }
+        <div class="field"><label>{{ i18n.t('procurement.paymentTermsLabel') }}</label><input formControlName="paymentTerms" /></div>
       </div>
       <div class="po-items-section">
-        <div class="po-items-header"><h4>بنود أمر الشراء</h4><button type="button" class="button secondary btn-sm" (click)="addItemLine()">＋ إضافة بند</button></div>
+        <div class="po-items-header"><h4>{{ i18n.t('procurement.poItemsTitle') }}</h4><button type="button" class="button secondary btn-sm" (click)="addItemLine()">＋ {{ i18n.t('procurement.poAddLine') }}</button></div>
         <div class="po-items-list">
           @for (item of poItems(); track $index) {
           <div class="po-item-row">
-            <div><label>صنف المخزون</label><select [(ngModel)]="item.itemId" [ngModelOptions]="{standalone: true}" (change)="onPoItemSelected($index)"><option value="">— اختر —</option>@for (stockItem of inventoryItems(); track stockItem.id) {<option [value]="stockItem.id">{{ stockItem.code }} — {{ stockItem.name }}</option>}</select></div>
-            <div><label>الوحدة</label><span class="readonly-value">{{ item.unitOfMeasure || 'تُحدد من الصنف' }}</span></div>
-            <div><label>الكمية</label><input type="number" min="1" [(ngModel)]="item.quantity" [ngModelOptions]="{standalone: true}" /></div>
-            <div><label>سعر الوحدة</label><input type="number" min="0" [(ngModel)]="item.unitPrice" [ngModelOptions]="{standalone: true}" /></div>
-            <div><label>الإجمالي</label><strong>{{ (item.quantity * item.unitPrice) | number:'1.2-2' }} {{ poForm.controls.currencyCode.value }}</strong></div>
-            <app-icon-button icon="×" label="حذف البند" description="إزالة الصنف من أمر الشراء" [itemName]="item.itemName" variant="danger" (pressed)="removeItemLine($index)" />
+            <div><label>{{ i18n.t('procurement.poItemLabel') }}</label><select [(ngModel)]="item.itemId" [ngModelOptions]="{standalone: true}" (change)="onPoItemSelected($index)"><option value="">{{ i18n.t('procurement.poSelectPlaceholder') }}</option>@for (stockItem of inventoryItems(); track stockItem.id) {<option [value]="stockItem.id">{{ stockItem.code }} — {{ stockItem.name }}</option>}</select></div>
+            <div><label>{{ i18n.t('procurement.poUnitLabel') }}</label><span class="readonly-value">{{ item.unitOfMeasure || i18n.t('procurement.poUnitFromItem') }}</span></div>
+            <div><label>{{ i18n.t('procurement.poQtyLabel') }}</label><input type="number" min="1" [(ngModel)]="item.quantity" [ngModelOptions]="{standalone: true}" /></div>
+            <div><label>{{ i18n.t('procurement.poPriceLabel') }}</label><input type="number" min="0" [(ngModel)]="item.unitPrice" [ngModelOptions]="{standalone: true}" /></div>
+            <div><label>{{ i18n.t('procurement.poColTotal') }}</label><strong>{{ (item.quantity * item.unitPrice) | number:'1.2-2' }} {{ poForm.controls.currencyCode.value }}</strong></div>
+            <app-icon-button icon="×" [label]="i18n.t('procurement.poDeleteLine')" [description]="i18n.t('procurement.poDeleteLineDesc')" [itemName]="item.itemName" variant="danger" (pressed)="removeItemLine($index)" />
           </div>
           }
         </div>
-        <div class="total-bar"><span>إجمالي أمر الشراء:</span><strong>{{ totalCalculated() | number:'1.2-2' }} {{ poForm.controls.currencyCode.value }} · {{ poBaseTotal() | number:'1.2-2' }} {{ baseCurrencyCode() }}</strong></div>
+        <div class="total-bar"><span>{{ i18n.t('procurement.poTotalBar') }}</span><strong>{{ totalCalculated() | number:'1.2-2' }} {{ poForm.controls.currencyCode.value }} · {{ poBaseTotal() | number:'1.2-2' }} {{ baseCurrencyCode() }}</strong></div>
       </div>
       <div modal-actions class="modal-actions-bar">
-        <button class="button primary" type="submit" [disabled]="submitting() || poForm.invalid || totalCalculated() <= 0">{{ editingPoId() ? 'حفظ التعديلات' : 'حفظ أمر الشراء' }}</button>
-        <button class="button secondary" type="button" (click)="modalOpen.set(false)">إلغاء</button>
+        <button class="button primary" type="submit" [disabled]="submitting() || poForm.invalid || totalCalculated() <= 0">{{ editingPoId() ? i18n.t('procurement.poSaveEdits') : i18n.t('procurement.poSaveOrder') }}</button>
+        <button class="button secondary" type="button" (click)="modalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
       </div>
     </form>
   </app-modal-dialog>
@@ -184,45 +184,45 @@
 
   <!-- ══════════════ GRN MODAL ══════════════ -->
   @if (grnModalOpen()) {
-  <app-modal-dialog [isOpen]="true" title="إذن استلام جديد (GRN)" size="large"
+  <app-modal-dialog [isOpen]="true" [title]="i18n.t('procurement.grnTitle') + ' (GRN)'" size="large"
     [preventOutsideClose]="submitting()" (close)="grnModalOpen.set(false)">
     <form class="grn-form" [formGroup]="grnForm" (ngSubmit)="submitGrn()">
-      <section class="grn-document-card" aria-label="بيانات إذن الاستلام">
+      <section class="grn-document-card" [attr.aria-label]="i18n.t('procurement.grnAriaDoc')">
         <div class="grn-section-heading">
           <div>
             <span class="section-icon" aria-hidden="true">📦</span>
             <div>
-              <h3>بيانات المستند</h3>
-              <p>اختر أمر الشراء وتاريخ الاستلام، ثم راجع الكميات قبل التسجيل.</p>
+              <h3>{{ i18n.t('procurement.grnDocHeading') }}</h3>
+              <p>{{ i18n.t('procurement.grnDocSubtitle') }}</p>
             </div>
           </div>
-          <span class="grn-status-badge">مسودة جديدة</span>
+          <span class="grn-status-badge">{{ i18n.t('procurement.grnDraftBadge') }}</span>
         </div>
         <div class="form-grid grn-document-grid">
         @if (automaticNumbering()) {
-          <div class="field"><label>رقم الإذن</label><span class="readonly-value">تلقائي — يولد عند الحفظ</span></div>
+          <div class="field"><label>{{ i18n.t('procurement.grnColNumber') }}</label><span class="readonly-value">{{ i18n.t('procurement.autoGenerated') }}</span></div>
         } @else {
-          <div class="field"><label for="grn-number">رقم الإذن *</label><input id="grn-number" class="ltr" formControlName="grnNumber" /></div>
+          <div class="field"><label for="grn-number">{{ i18n.t('procurement.grnColNumber') }} *</label><input id="grn-number" class="ltr" formControlName="grnNumber" /></div>
         }
-        <div class="field"><label for="grn-receipt-date">تاريخ الاستلام *</label><input id="grn-receipt-date" type="date" class="ltr" formControlName="receiptDate" /></div>
-        <div class="field span-2"><label for="grn-purchase-order">أمر الشراء *</label><select id="grn-purchase-order" formControlName="purchaseOrderId" (change)="onGrnPoSelected()"><option value="">— اختر أمر شراء مُصدراً —</option>@for (po of receivableOrders(); track po.id) {<option [value]="po.id">{{ po.poNumber }} — {{ po.supplierName }} — {{ poStatusLabel(po.status) }}</option>}</select></div>
-        <div class="field"><label>المورد</label><span class="readonly-value">{{ selectedGrnSupplierName() }}</span></div>
-        <div class="field"><label for="grn-warehouse">المستودع</label><input id="grn-warehouse" formControlName="warehouseId" placeholder="المستودع الرئيسي" /></div>
-        <div class="field span-2"><label for="grn-notes">ملاحظات</label><input id="grn-notes" formControlName="notes" placeholder="ملاحظات اختيارية على الاستلام" /></div>
+        <div class="field"><label for="grn-receipt-date">{{ i18n.t('procurement.grnColReceiptDate') }} *</label><input id="grn-receipt-date" type="date" class="ltr" formControlName="receiptDate" /></div>
+        <div class="field span-2"><label for="grn-purchase-order">{{ i18n.t('procurement.poRefLabel') }} *</label><select id="grn-purchase-order" formControlName="purchaseOrderId" (change)="onGrnPoSelected()"><option value="">{{ i18n.t('procurement.grnSelectPoPlaceholder') }}</option>@for (po of receivableOrders(); track po.id) {<option [value]="po.id">{{ po.poNumber }} — {{ po.supplierName }} — {{ poStatusLabel(po.status) }}</option>}</select></div>
+        <div class="field"><label>{{ i18n.t('procurement.poSupplier') }}</label><span class="readonly-value">{{ selectedGrnSupplierName() }}</span></div>
+        <div class="field"><label for="grn-warehouse">{{ i18n.t('procurement.grnWarehouseLabel') }}</label><input id="grn-warehouse" formControlName="warehouseId" [placeholder]="i18n.t('procurement.warehouse.default')" /></div>
+        <div class="field span-2"><label for="grn-notes">{{ i18n.t('procurement.colNotes') }}</label><input id="grn-notes" formControlName="notes" [placeholder]="i18n.t('procurement.grnNotesPlaceholder')" /></div>
         </div>
       </section>
 
       @if (grnForm.controls.purchaseOrderId.value && grnItems().length === 0) {
-        <div class="grn-empty-message" role="status">تم استلام جميع بنود أمر الشراء المحدد، ولا توجد كمية متبقية لإنشاء إذن جديد.</div>
+        <div class="grn-empty-message" role="status">{{ i18n.t('procurement.grnAllReceived') }}</div>
       }
       @if (grnItems().length > 0) {
-      <section class="grn-lines-section" aria-label="بنود إذن الاستلام">
+      <section class="grn-lines-section" [attr.aria-label]="i18n.t('procurement.grnAriaLines')">
         <div class="grn-section-heading">
           <div>
             <span class="section-icon" aria-hidden="true">🧾</span>
             <div>
-              <h3>بنود الاستلام</h3>
-              <p>{{ grnItems().length }} بند · الكمية المقبولة فقط هي التي ستضاف إلى رصيد المخزون.</p>
+              <h3>{{ i18n.t('procurement.grnLinesTitle') }}</h3>
+              <p>{{ i18n.t('procurement.grnLinesSubtitle', { count: grnItems().length }) }}</p>
             </div>
           </div>
         </div>
@@ -233,18 +233,18 @@
               <div class="line-number">{{ index + 1 }}</div>
               <div class="line-identity">
                 <strong>{{ item.itemName }}</strong>
-                <span>{{ item.itemCategory || 'بدون تصنيف' }} · {{ item.unitOfMeasure }}</span>
+                <span>{{ item.itemCategory || i18n.t('procurement.grnNoCategory') }} · {{ item.unitOfMeasure }}</span>
               </div>
               <div class="line-order-summary">
-                <span>المطلوب <b>{{ item.orderedQuantity | number:'1.0-2' }}</b></span>
-                <span>مستلم سابقاً <b>{{ item.previouslyReceivedQuantity | number:'1.0-2' }}</b></span>
-                <span class="remaining">المتبقي <b>{{ item.remainingQuantity | number:'1.0-2' }}</b></span>
+                <span>{{ i18n.t('procurement.grnOrdered') }} <b>{{ item.orderedQuantity | number:'1.0-2' }}</b></span>
+                <span>{{ i18n.t('procurement.grnPreviouslyReceived') }} <b>{{ item.previouslyReceivedQuantity | number:'1.0-2' }}</b></span>
+                <span class="remaining">{{ i18n.t('procurement.grnRemaining') }} <b>{{ item.remainingQuantity | number:'1.0-2' }}</b></span>
               </div>
             </header>
 
             <div class="grn-quantity-grid">
               <div class="field quantity-field">
-                <label [for]="'grn-delivered-' + index">الكمية المستلمة *</label>
+                <label [for]="'grn-delivered-' + index">{{ i18n.t('procurement.grnDeliveredLabel') }} *</label>
                 <div class="input-with-unit">
                   <input [id]="'grn-delivered-' + index" type="number" min="0.000001" step="any"
                     [(ngModel)]="item.deliveredQuantity" [ngModelOptions]="{standalone: true}"
@@ -258,7 +258,7 @@
                 }
               </div>
               <div class="field quantity-field">
-                <label [for]="'grn-rejected-' + index">الكمية المرفوضة</label>
+                <label [for]="'grn-rejected-' + index">{{ i18n.t('procurement.grnRejectedLabel') }}</label>
                 <div class="input-with-unit">
                   <input [id]="'grn-rejected-' + index" type="number" min="0" step="any"
                     [(ngModel)]="item.rejectedQuantity" [ngModelOptions]="{standalone: true}"
@@ -272,7 +272,7 @@
                 }
               </div>
               <div class="field quantity-field">
-                <label [for]="'grn-deducted-' + index">خصم الجودة</label>
+                <label [for]="'grn-deducted-' + index">{{ i18n.t('procurement.grnDeductedLabel') }}</label>
                 <div class="input-with-unit">
                   <input [id]="'grn-deducted-' + index" type="number" min="0" step="any"
                     [(ngModel)]="item.deductedQuantity" [ngModelOptions]="{standalone: true}"
@@ -286,21 +286,21 @@
                 }
               </div>
               <div class="accepted-quantity" [class.invalid]="acceptedGrnQuantity(item) === null || grnLineError(item, 'accepted')">
-                <span>صافي المقبول</span>
+                <span>{{ i18n.t('procurement.grnAcceptedLabel') }}</span>
                 @if (acceptedGrnQuantity(item) !== null) {
                   <strong>{{ acceptedGrnQuantity(item) | number:'1.0-2' }} <small>{{ item.unitOfMeasure }}</small></strong>
                   <small>{{ (acceptedGrnQuantity(item)! * item.unitPrice) | number:'1.2-2' }} {{ selectedGrnCurrencyCode() }}</small>
                 } @else {
                   <strong>—</strong>
-                  <small>صحح الكميات أولاً</small>
+                  <small>{{ i18n.t('procurement.grnFixQuantities') }}</small>
                 }
               </div>
             </div>
 
             <div class="grn-line-meta">
-              <div class="field"><label [for]="'grn-location-' + index">الموقع</label><input [id]="'grn-location-' + index" [(ngModel)]="item.locationId" [ngModelOptions]="{standalone: true}" placeholder="مثال: A-01" /></div>
-              <div class="field"><label [for]="'grn-lot-' + index">رقم التشغيلة</label><input [id]="'grn-lot-' + index" [(ngModel)]="item.lotNumber" [ngModelOptions]="{standalone: true}" placeholder="اختياري" /></div>
-              <div class="field span-2"><label [for]="'grn-quality-reason-' + index">سبب الرفض أو الخصم</label><input [id]="'grn-quality-reason-' + index" [(ngModel)]="item.qualityReason" [ngModelOptions]="{standalone: true}" placeholder="اكتب السبب عند وجود كمية مرفوضة أو مخصومة" /></div>
+              <div class="field"><label [for]="'grn-location-' + index">{{ i18n.t('procurement.grnLocationLabel') }}</label><input [id]="'grn-location-' + index" [(ngModel)]="item.locationId" [ngModelOptions]="{standalone: true}" [placeholder]="i18n.t('procurement.grnLocationPlaceholder')" /></div>
+              <div class="field"><label [for]="'grn-lot-' + index">{{ i18n.t('procurement.grnLotLabel') }}</label><input [id]="'grn-lot-' + index" [(ngModel)]="item.lotNumber" [ngModelOptions]="{standalone: true}" [placeholder]="i18n.t('procurement.grnOptional')" /></div>
+              <div class="field span-2"><label [for]="'grn-quality-reason-' + index">{{ i18n.t('procurement.grnQualityReasonLabel') }}</label><input [id]="'grn-quality-reason-' + index" [(ngModel)]="item.qualityReason" [ngModelOptions]="{standalone: true}" [placeholder]="i18n.t('procurement.grnQualityReasonPlaceholder')" /></div>
             </div>
           </article>
           }
@@ -309,12 +309,12 @@
       }
       <div modal-actions class="modal-actions-bar">
         <div class="grn-action-hint" aria-live="polite">
-          @if (grnHasErrors()) { <span class="invalid-hint">راجع الحقول المعلّمة قبل التسجيل</span> }
-          @else { <span class="valid-hint">جاهز للتسجيل وإضافة الكمية المقبولة للمخزون</span> }
+          @if (grnHasErrors()) { <span class="invalid-hint">{{ i18n.t('procurement.grnErrorsHint') }}</span> }
+          @else { <span class="valid-hint">{{ i18n.t('procurement.grnReadyHint') }}</span> }
         </div>
-        <button class="button secondary" type="button" [disabled]="submitting()" (click)="grnModalOpen.set(false)">إلغاء</button>
+        <button class="button secondary" type="button" [disabled]="submitting()" (click)="grnModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
         <button class="button primary" type="submit" [disabled]="submitting() || grnHasErrors()">
-          {{ submitting() ? 'جارٍ التسجيل…' : 'تسجيل إذن الاستلام' }}
+          {{ submitting() ? i18n.t('procurement.grnSubmitting') : i18n.t('procurement.grnSubmit') }}
         </button>
       </div>
     </form>
@@ -323,33 +323,33 @@
 
   <!-- ══════════════ INVOICE MODAL ══════════════ -->
   @if (invModalOpen()) {
-  <app-modal-dialog [isOpen]="true" title="فاتورة مورد جديدة" (close)="invModalOpen.set(false)">
+  <app-modal-dialog [isOpen]="true" [title]="i18n.t('procurement.invTitle')" (close)="invModalOpen.set(false)">
     <form [formGroup]="invForm" (ngSubmit)="submitInvoice()">
       <div class="form-grid">
-        <div class="field"><label>هل توجد فاتورة شراء من المورد؟</label><select formControlName="hasSupplierInvoice" (change)="onInvoiceAvailabilityChanged()"><option [ngValue]="true">نعم — توجد فاتورة مورد</option><option [ngValue]="false">لا — مورد بدون فاتورة شراء</option></select></div>
+        <div class="field"><label>{{ i18n.t('procurement.invHasSupplierLabel') }}</label><select formControlName="hasSupplierInvoice" (change)="onInvoiceAvailabilityChanged()"><option [ngValue]="true">{{ i18n.t('procurement.invHasYes') }}</option><option [ngValue]="false">{{ i18n.t('procurement.invHasNo') }}</option></select></div>
         @if (invForm.controls.hasSupplierInvoice.value) {
-          <div class="field"><label>رقم فاتورة المورد *</label><input class="ltr" formControlName="invoiceNumber" autocomplete="off" /><small>يُدخل كما هو في مستند المورد ولا يولده النظام.</small></div>
+          <div class="field"><label>{{ i18n.t('procurement.invNumberLabel') }} *</label><input class="ltr" formControlName="invoiceNumber" autocomplete="off" /><small>{{ i18n.t('procurement.invNumberHint') }}</small></div>
         } @else {
-          <div class="field"><label>مرجع داخلي *</label><input class="ltr" formControlName="internalReference" autocomplete="off" /></div>
-          <div class="field"><label>سبب عدم وجود فاتورة *</label><input formControlName="missingInvoiceReason" /></div>
+          <div class="field"><label>{{ i18n.t('procurement.invInternalRefLabel') }} *</label><input class="ltr" formControlName="internalReference" autocomplete="off" /></div>
+          <div class="field"><label>{{ i18n.t('procurement.invMissingReasonLabel') }} *</label><input formControlName="missingInvoiceReason" /></div>
         }
-        <div class="field"><label>تاريخ الفاتورة *</label><input type="date" class="ltr" formControlName="invoiceDate" /></div>
-        <div class="field"><label>المورد *</label><select formControlName="supplierId" (change)="onInvoiceSupplierSelected()">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
-        <div class="field"><label>عملة العملية *</label><select formControlName="currencyCode" (change)="onInvoiceCurrencyChanged()">@for (currency of currencies(); track currency.code) {<option [value]="currency.code">{{ currency.code }} — {{ currency.name }}</option>}</select></div>
-        <div class="field"><label>سعر الصرف إلى {{ baseCurrencyCode() }} *</label><input type="number" min="0.000001" step="0.000001" class="ltr" formControlName="exchangeRate" /><small>يُثبت مع الفاتورة ويُستخدم في القيد المالي.</small></div>
-        @if (invoiceRateOverridden()) { <div class="field span-2"><label>سبب تعديل سعر الصرف *</label><input formControlName="exchangeRateOverrideReason" placeholder="سبب الاعتماد اليدوي ومصدر السعر" /></div> }
-        <div class="field"><label>أمر الشراء</label><select formControlName="purchaseOrderId"><option value="">— بدون —</option>@for (po of orders(); track po.id) {<option [value]="po.id">{{ po.poNumber }}</option>}</select></div>
-        <div class="field"><label>إذن الاستلام</label><select formControlName="goodsReceiptId"><option value="">— بدون —</option>@for (grn of goodsReceipts(); track grn.id) {<option [value]="grn.id">{{ grn.grnNumber }}</option>}</select></div>
-        <div class="field"><label>المبلغ الأصلي * <span tabindex="0" aria-label="شرح المبلغ الأصلي" appTooltip="المبلغ الأصلي — قيمة الفاتورة قبل الخصم والضريبة">ⓘ</span></label><input type="number" min="0" formControlName="totalAmount" /></div>
-        <div class="field"><label>قيمة الخصم <span tabindex="0" aria-label="شرح قيمة الخصم" appTooltip="قيمة الخصم — مبلغ يُطرح من المبلغ الأصلي">ⓘ</span></label><input type="number" min="0" formControlName="discountAmount" /></div>
-        <div class="field"><label>الضريبة</label><input type="number" min="0" formControlName="taxAmount" /></div>
-        <div class="field"><label>تاريخ الاستحقاق</label><input type="date" class="ltr" formControlName="dueDate" /></div>
-        <div class="field span-2"><label>ملاحظات</label><input formControlName="notes" /></div>
+        <div class="field"><label>{{ i18n.t('procurement.invDateLabel') }} *</label><input type="date" class="ltr" formControlName="invoiceDate" /></div>
+        <div class="field"><label>{{ i18n.t('procurement.poSupplier') }} *</label><select formControlName="supplierId" (change)="onInvoiceSupplierSelected()">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
+        <div class="field"><label>{{ i18n.t('procurement.currencyLabel') }} *</label><select formControlName="currencyCode" (change)="onInvoiceCurrencyChanged()">@for (currency of currencies(); track currency.code) {<option [value]="currency.code">{{ currency.code }} — {{ currency.name }}</option>}</select></div>
+        <div class="field"><label>{{ i18n.t('procurement.exchangeRateLabel') }} {{ baseCurrencyCode() }} *</label><input type="number" min="0.000001" step="0.000001" class="ltr" formControlName="exchangeRate" /><small>{{ i18n.t('procurement.invExchangeRateHint') }}</small></div>
+        @if (invoiceRateOverridden()) { <div class="field span-2"><label>{{ i18n.t('procurement.rateOverrideLabel') }} *</label><input formControlName="exchangeRateOverrideReason" [placeholder]="i18n.t('procurement.rateOverridePlaceholder')" /></div> }
+        <div class="field"><label>{{ i18n.t('procurement.poRefLabel') }}</label><select formControlName="purchaseOrderId"><option value="">{{ i18n.t('procurement.withoutOption') }}</option>@for (po of orders(); track po.id) {<option [value]="po.id">{{ po.poNumber }}</option>}</select></div>
+        <div class="field"><label>{{ i18n.t('procurement.grnRefLabel') }}</label><select formControlName="goodsReceiptId"><option value="">{{ i18n.t('procurement.withoutOption') }}</option>@for (grn of goodsReceipts(); track grn.id) {<option [value]="grn.id">{{ grn.grnNumber }}</option>}</select></div>
+        <div class="field"><label>{{ i18n.t('procurement.invTotalLabel') }} * <span tabindex="0" [attr.aria-label]="i18n.t('procurement.invTotalAria')" [appTooltip]="i18n.t('procurement.invTotalTooltip')">ⓘ</span></label><input type="number" min="0" formControlName="totalAmount" /></div>
+        <div class="field"><label>{{ i18n.t('procurement.invDiscountLabel') }} <span tabindex="0" [attr.aria-label]="i18n.t('procurement.invDiscountAria')" [appTooltip]="i18n.t('procurement.invDiscountTooltip')">ⓘ</span></label><input type="number" min="0" formControlName="discountAmount" /></div>
+        <div class="field"><label>{{ i18n.t('procurement.invTaxLabel') }}</label><input type="number" min="0" formControlName="taxAmount" /></div>
+        <div class="field"><label>{{ i18n.t('procurement.invDueDateLabel') }}</label><input type="date" class="ltr" formControlName="dueDate" /></div>
+        <div class="field span-2"><label>{{ i18n.t('procurement.colNotes') }}</label><input formControlName="notes" /></div>
       </div>
-      <div class="total-bar"><span>صافي المبلغ <span tabindex="0" aria-label="شرح صافي المبلغ" appTooltip="صافي المبلغ — الأصلي ناقص الخصم زائد الضريبة">ⓘ</span>:</span><strong>{{ invNetAmount() | number:'1.2-2' }} {{ invForm.controls.currencyCode.value }} · {{ invBaseNetAmount() | number:'1.2-2' }} {{ baseCurrencyCode() }}</strong></div>
+      <div class="total-bar"><span>{{ i18n.t('procurement.invNetLabel') }} <span tabindex="0" [attr.aria-label]="i18n.t('procurement.invNetAria')" [appTooltip]="i18n.t('procurement.invNetTooltip')">ⓘ</span>:</span><strong>{{ invNetAmount() | number:'1.2-2' }} {{ invForm.controls.currencyCode.value }} · {{ invBaseNetAmount() | number:'1.2-2' }} {{ baseCurrencyCode() }}</strong></div>
       <div modal-actions class="modal-actions-bar">
-        <button class="button primary" type="submit" [disabled]="submitting() || invForm.invalid">تسجيل الفاتورة</button>
-        <button class="button secondary" type="button" (click)="invModalOpen.set(false)">إلغاء</button>
+        <button class="button primary" type="submit" [disabled]="submitting() || invForm.invalid">{{ i18n.t('procurement.invSubmit') }}</button>
+        <button class="button secondary" type="button" (click)="invModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
       </div>
     </form>
   </app-modal-dialog>
@@ -357,20 +357,20 @@
 
   <!-- ══════════════ PAYMENT MODAL ══════════════ -->
   @if (pmtModalOpen()) {
-  <app-modal-dialog [isOpen]="true" title="دفعة مورد جديدة" (close)="pmtModalOpen.set(false)">
+  <app-modal-dialog [isOpen]="true" [title]="i18n.t('procurement.pmtTitle')" (close)="pmtModalOpen.set(false)">
     <form [formGroup]="pmtForm" (ngSubmit)="submitPayment()">
       <div class="form-grid">
-        <div class="field"><label>رقم الدفعة *</label><input class="ltr" formControlName="paymentNumber" /></div>
-        <div class="field"><label>تاريخ الدفع *</label><input type="date" class="ltr" formControlName="paymentDate" /></div>
-        <div class="field"><label>المورد *</label><select formControlName="supplierId" (change)="onPaymentSupplierChanged()">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
-        <div class="field"><label>الفاتورة / المرجع *</label><select formControlName="supplierInvoiceId" (change)="onPaymentInvoiceChanged()"><option value="">— اختر فاتورة مفتوحة لهذا المورد —</option>@for (inv of payableInvoices(); track inv.id) {<option [value]="inv.id">{{ invoiceReference(inv) }} · {{ date(inv.invoiceDate) }} · {{ inv.currencyCode }} · إجمالي {{ inv.netAmount | number:'1.2-2' }} · متبقي {{ inv.outstandingAmount | number:'1.2-2' }}</option>}</select><small>تظهر فقط الفواتير المفتوحة الخاصة بالمورد المحدد.</small></div>
-        <div class="field"><label>المبلغ *</label><input type="number" min="0.01" formControlName="amount" /></div>
-        <div class="field"><label>طريقة الدفع *</label><select formControlName="paymentMethod"><option value="BANK_TRANSFER">تحويل بنكي</option><option value="CASH">نقدي</option><option value="CHEQUE">شيك</option></select></div>
-        <div class="field span-2"><label>ملاحظات</label><input formControlName="notes" /></div>
+        <div class="field"><label>{{ i18n.t('procurement.pmtColNumber') }} *</label><input class="ltr" formControlName="paymentNumber" /></div>
+        <div class="field"><label>{{ i18n.t('procurement.pmtColDate') }} *</label><input type="date" class="ltr" formControlName="paymentDate" /></div>
+        <div class="field"><label>{{ i18n.t('procurement.poSupplier') }} *</label><select formControlName="supplierId" (change)="onPaymentSupplierChanged()">@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select></div>
+        <div class="field"><label>{{ i18n.t('procurement.pmtInvoiceLabel') }} *</label><select formControlName="supplierInvoiceId" (change)="onPaymentInvoiceChanged()"><option value="">{{ i18n.t('procurement.pmtSelectInvoicePlaceholder') }}</option>@for (inv of payableInvoices(); track inv.id) {<option [value]="inv.id">{{ invoiceReference(inv) }} · {{ date(inv.invoiceDate) }} · {{ inv.currencyCode }} · {{ i18n.t('procurement.pmtTotal') }} {{ inv.netAmount | number:'1.2-2' }} · {{ i18n.t('procurement.invOutstanding') }} {{ inv.outstandingAmount | number:'1.2-2' }}</option>}</select><small>{{ i18n.t('procurement.pmtInvoiceHint') }}</small></div>
+        <div class="field"><label>{{ i18n.t('procurement.pmtColAmount') }} *</label><input type="number" min="0.01" formControlName="amount" /></div>
+        <div class="field"><label>{{ i18n.t('procurement.pmtColMethod') }} *</label><select formControlName="paymentMethod"><option value="BANK_TRANSFER">{{ i18n.t('procurement.pmtMethodBankTransfer') }}</option><option value="CASH">{{ i18n.t('procurement.pmtMethodCash') }}</option><option value="CHEQUE">{{ i18n.t('procurement.pmtMethodCheque') }}</option></select></div>
+        <div class="field span-2"><label>{{ i18n.t('procurement.colNotes') }}</label><input formControlName="notes" /></div>
       </div>
       <div modal-actions class="modal-actions-bar">
-        <button class="button primary" type="submit" [disabled]="submitting() || pmtForm.invalid">تسجيل الدفعة</button>
-        <button class="button secondary" type="button" (click)="pmtModalOpen.set(false)">إلغاء</button>
+        <button class="button primary" type="submit" [disabled]="submitting() || pmtForm.invalid">{{ i18n.t('procurement.pmtSubmit') }}</button>
+        <button class="button secondary" type="button" (click)="pmtModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
       </div>
     </form>
   </app-modal-dialog>

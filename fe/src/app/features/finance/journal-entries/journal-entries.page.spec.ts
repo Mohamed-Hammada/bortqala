@@ -136,4 +136,78 @@ describe('JournalEntriesPage', () => {
 
     expect(page.pendingPostOperations()['entry-1']).toBeUndefined();
   });
+
+  describe('journal line validators', () => {
+    it('flags a missing account on a line', () => {
+      page.lines.set([
+        { accountId: '', debit: 100, credit: 0, memo: '' },
+        { accountId: 'acc-1', debit: 0, credit: 100, memo: '' },
+      ]);
+      expect(page.lineErrors().has(0)).toBe(true);
+      expect(page.lineErrors().get(0)).toBe('journal.lineAccountRequired');
+      expect(page.lineErrors().has(1)).toBe(false);
+    });
+
+    it('flags a negative debit or credit amount', () => {
+      page.lines.set([
+        { accountId: 'acc-1', debit: -50, credit: 0, memo: '' },
+        { accountId: 'acc-2', debit: 0, credit: -10, memo: '' },
+      ]);
+      expect(page.lineErrors().get(0)).toBe('journal.lineNegativeAmount');
+      expect(page.lineErrors().get(1)).toBe('journal.lineNegativeAmount');
+    });
+
+    it('flags a line with no amount on either side', () => {
+      page.lines.set([
+        { accountId: 'acc-1', debit: 0, credit: 0, memo: '' },
+        { accountId: 'acc-2', debit: 100, credit: 0, memo: '' },
+      ]);
+      expect(page.lineErrors().get(0)).toBe('journal.lineEmptyAmount');
+      expect(page.lineErrors().has(1)).toBe(false);
+    });
+
+    it('does not flag a balanced valid pair of lines', () => {
+      page.lines.set([
+        { accountId: 'acc-1', debit: 100, credit: 0, memo: '' },
+        { accountId: 'acc-2', debit: 0, credit: 100, memo: '' },
+      ]);
+      expect(page.lineErrors().size).toBe(0);
+    });
+
+    it('blocks submit while any line is invalid', async () => {
+      page.entryForm.patchValue({
+        entryNumber: 'JV-2000',
+        entryDate: '2026-08-06',
+        description: 'blocked',
+        reference: '',
+      });
+      page.lines.set([
+        { accountId: '', debit: 100, credit: 0, memo: '' },
+        { accountId: 'acc-2', debit: 0, credit: 100, memo: '' },
+      ]);
+      const submit = page.submitEntry();
+      await yieldMicrotasks();
+      await submit;
+      expect(page.savingDraft()).toBe(false);
+      expect(page.dialogError()).toBe('journal.lineValidationError');
+      httpMock.expectNone((req) => req.url === '/api/v1/finance/journal-entries' && req.method === 'POST');
+    });
+
+    it('marks submit attempted so line errors become visible', async () => {
+      page.entryForm.patchValue({
+        entryNumber: 'JV-2001',
+        entryDate: '2026-08-06',
+        description: 'attempted',
+        reference: '',
+      });
+      page.lines.set([
+        { accountId: '', debit: 100, credit: 0, memo: '' },
+        { accountId: 'acc-2', debit: 0, credit: 100, memo: '' },
+      ]);
+      const submit = page.submitEntry();
+      await yieldMicrotasks();
+      await submit;
+      expect(page.submitAttempted()).toBe(true);
+    });
+  });
 });

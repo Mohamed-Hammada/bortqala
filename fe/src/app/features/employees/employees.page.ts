@@ -50,6 +50,7 @@ export class EmployeesPage {
   readonly pagination = new TablePagination();
   readonly editingId = signal<string | null>(null);
   readonly search = signal('');
+  private closing = false;
 
   openEmployeeAdvances(): void {
     void this.router.navigate(['/workforce/advances'], {
@@ -154,6 +155,10 @@ export class EmployeesPage {
       return;
     }
     const raw = this.form.getRawValue();
+    if (raw.activeTo && dateInputToEpoch(raw.activeTo) < dateInputToEpoch(raw.activeFrom)) {
+      this.notification.warning(this.i18n.t('employees.activeToBeforeActiveFrom'));
+      return;
+    }
     const payload: EmployeePayload = {
       ...raw,
       deviceUserId: raw.deviceUserId.trim() || null,
@@ -164,6 +169,12 @@ export class EmployeesPage {
     if (await this.store.save(this.editingId(), payload)) {
       this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.submitAttempted.set(false);
+      this.form.reset({
+        ...payload,
+        deviceUserId: payload.deviceUserId ?? '',
+        activeFrom: epochToDateInput(payload.activeFrom),
+        activeTo: payload.activeTo ? epochToDateInput(payload.activeTo) : '',
+      });
       this.drawerOpen.set(false);
     }
   }
@@ -223,7 +234,25 @@ export class EmployeesPage {
     };
   }
 
-  closeDrawer(): void {
+  async closeDrawer(): Promise<void> {
+    if (this.closing) return;
+    if (this.hasUnsavedChanges()) {
+      this.closing = true;
+      await this.confirm.confirmAndRun(
+        {
+          titleKey: 'common.unsavedTitle',
+          messageKey: 'common.unsavedMessage',
+          confirmKey: 'common.discard',
+          danger: true,
+        },
+        async () => {
+          this.drawerOpen.set(false);
+          this.submitAttempted.set(false);
+        },
+      );
+      this.closing = false;
+      return;
+    }
     this.drawerOpen.set(false);
     this.submitAttempted.set(false);
   }
@@ -234,7 +263,8 @@ export class EmployeesPage {
 
   @HostListener('document:keydown', ['$event']) onKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Escape' && this.drawerOpen()) {
-      this.closeDrawer();
+      event.preventDefault();
+      void this.closeDrawer();
     } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
       if (this.drawerOpen()) {
         event.preventDefault();

@@ -63,37 +63,7 @@ const WORKFORCE_ACCOUNT_ROLES: RoleCode[] = ['WORKFORCE_MANAGER', 'WORKFORCE_FIN
 
 const COLLAPSED_GROUPS_KEY = 'hr-collapsed-groups';
 
-@Component({
-  selector: 'app-shell',
-  standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ToastContainerComponent, AppTooltipDirective],
-  templateUrl: './app-shell.component.html',
-  styleUrl: './app-shell.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class AppShellComponent {
-  readonly authService = inject(AuthService);
-  readonly i18n = inject(I18nService);
-  readonly confirmDialog = inject(ConfirmDialogService);
-  readonly network = inject(NetworkService);
-  readonly router = inject(Router);
-
-  readonly searchQuery = signal('');
-  readonly menuOpen = signal(false);
-  readonly collapsed = signal(false);
-  readonly quickNavOpen = signal(false);
-  readonly shortcutHelpOpen = signal(false);
-  readonly selectedQuickNavIndex = signal(0);
-  readonly chordWaiting = signal(false);
-  readonly globalShortcuts = GLOBAL_SHORTCUTS;
-  readonly menuShortcuts = MENU_SHORTCUTS;
-  private chordTimer: ReturnType<typeof setTimeout> | null = null;
-
-  readonly favorites = signal<string[]>(this.authService.preferences().favoriteMenuIds);
-  readonly recentIds = signal<string[]>(this.authService.preferences().recentMenuIds);
-  readonly collapsedGroups = signal<string[]>(this.loadStoredCollapsedGroups());
-
-  readonly items: NavItem[] = [
+export const NAV_ITEMS: NavItem[] = [
     {
       menuId: 'employees',
       labelKey: 'nav.employees',
@@ -371,6 +341,43 @@ export class AppShellComponent {
       workspace: 'workspace.admin',
     },
   ];
+
+/** Route-guard roles per shell menu id; empty array means no role guard. */
+export const SHELL_MENU_ROLES: Record<string, RoleCode[]> = Object.fromEntries(
+  NAV_ITEMS.map((item) => [item.menuId, item.roles ?? []]),
+);
+
+@Component({
+  selector: 'app-shell',
+  standalone: true,
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ToastContainerComponent, AppTooltipDirective],
+  templateUrl: './app-shell.component.html',
+  styleUrl: './app-shell.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AppShellComponent {
+  readonly authService = inject(AuthService);
+  readonly i18n = inject(I18nService);
+  readonly confirmDialog = inject(ConfirmDialogService);
+  readonly network = inject(NetworkService);
+  readonly router = inject(Router);
+
+  readonly searchQuery = signal('');
+  readonly menuOpen = signal(false);
+  readonly collapsed = signal(false);
+  readonly quickNavOpen = signal(false);
+  readonly shortcutHelpOpen = signal(false);
+  readonly selectedQuickNavIndex = signal(0);
+  readonly chordWaiting = signal(false);
+  readonly globalShortcuts = GLOBAL_SHORTCUTS;
+  readonly menuShortcuts = MENU_SHORTCUTS;
+  private chordTimer: ReturnType<typeof setTimeout> | null = null;
+
+  readonly favorites = signal<string[]>(this.authService.preferences().favoriteMenuIds);
+  readonly recentIds = signal<string[]>(this.authService.preferences().recentMenuIds);
+  readonly collapsedGroups = signal<string[]>(this.loadStoredCollapsedGroups());
+
+  readonly items = NAV_ITEMS;
 
   readonly quickNavItems = computed<NavItem[]>(() => {
     const query = this.searchQuery().trim().toLocaleLowerCase();

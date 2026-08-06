@@ -22,6 +22,7 @@ public final class AccessApi {
 
     public record AccessPageResponse(String code, String module, String route, String menuId,
                                      String titleKey, List<String> viewPermissions,
+                                     List<String> roles, String requiredFeature,
                                      List<AccessActionResponse> actions) { }
 
     public record AccessConflictRuleResponse(String code, List<String> permissions,
@@ -62,8 +63,12 @@ public final class AccessApi {
             @Size(max = 36) String targetUserId,
             @Size(max = 500) String reason) { }
 
+    public record AccessValidateErrorResponse(String code, String messageKey,
+                                              String menuId, String pageCode) { }
+
     public record AccessValidateResponse(boolean valid,
                                          List<AccessConflictResponse> conflicts,
                                          List<AccessWarningResponse> warnings,
+                                         List<AccessValidateErrorResponse> errors,
                                          List<String> sensitivePermissions) { }
 }

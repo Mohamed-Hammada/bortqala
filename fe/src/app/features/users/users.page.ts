@@ -19,63 +19,11 @@ import { AuthService } from '../../core/auth/auth.service';
 import { exportCsv } from '../../core/download';
 
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
-import { AccessRole, AccessValidateResult } from './access.models';
+import { AccessRole, AccessValidateResult, ACCESS_LEVEL_PRECEDENCE } from './access.models';
 import { AccessService } from './access.service';
 
-@Component({
-  selector: 'app-users-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent],
-  providers: [UsersStore],
-  templateUrl: './users.page.html',
-  styleUrl: './users.page.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class UsersPage {
-  readonly auth = inject(AuthService);
-  readonly store = inject(UsersStore);
-  readonly i18n = inject(I18nService);
-  readonly notification = inject(NotificationService);
-  readonly access = inject(AccessService);
-  readonly drawerOpen = signal(false);
-  readonly submitted = signal(false);
-  readonly showPassword = signal(false);
-  readonly editingId = signal<string | null>(null);
-  readonly accessLoading = signal(false);
-  readonly roleSearch = signal('');
-  readonly pageSearch = signal('');
-  readonly needCodes = signal<string[]>([]);
-  readonly validationResult = signal<AccessValidateResult | null>(null);
-  readonly validationRunning = signal(false);
-  readonly validationError = signal<string | null>(null);
-  readonly acknowledgedWarnings = signal(false);
-  readonly baselineRoles = signal<RoleCode[]>([]);
-  readonly baselineMenus = signal<string[]>([]);
-  readonly selectedRoles = signal<RoleCode[]>([]);
-  readonly selectedMenus = signal<string[]>([]);
-  readonly pagination = new TablePagination();
-  readonly paged = computed(() => this.pagination.slice(this.store.items()));
-  readonly roles: Array<{ code: RoleCode; labelKey: string; descriptionKey: string }> = [
-    { code: 'SUPER_ADMIN', labelKey: 'role.superAdmin', descriptionKey: 'role.superAdminHint' },
-    { code: 'ADMIN', labelKey: 'role.admin', descriptionKey: 'role.adminHint' },
-    { code: 'HR_MANAGER', labelKey: 'role.hrManager', descriptionKey: 'role.hrManagerHint' },
-    { code: 'HR_REVIEWER', labelKey: 'role.hrReviewer', descriptionKey: 'role.hrReviewerHint' },
-    { code: 'VIEWER', labelKey: 'role.viewer', descriptionKey: 'role.viewerHint' },
-    { code: 'FINANCE_MANAGER', labelKey: 'role.financeManager', descriptionKey: 'role.financeManagerHint' },
-    { code: 'ACCOUNTANT', labelKey: 'role.accountant', descriptionKey: 'role.accountantHint' },
-    { code: 'TREASURY_USER', labelKey: 'role.treasuryUser', descriptionKey: 'role.treasuryUserHint' },
-    { code: 'PROCUREMENT_MANAGER', labelKey: 'role.procurementManager', descriptionKey: 'role.procurementManagerHint' },
-    { code: 'PROCUREMENT_USER', labelKey: 'role.procurementUser', descriptionKey: 'role.procurementUserHint' },
-    { code: 'SALES_MANAGER', labelKey: 'role.salesManager', descriptionKey: 'role.salesManagerHint' },
-    { code: 'INVENTORY_MANAGER', labelKey: 'role.inventoryManager', descriptionKey: 'role.inventoryManagerHint' },
-    { code: 'MANUFACTURING_MANAGER', labelKey: 'role.manufacturingManager', descriptionKey: 'role.manufacturingManagerHint' },
-    { code: 'QUALITY_MANAGER', labelKey: 'role.qualityManager', descriptionKey: 'role.qualityManagerHint' },
-    { code: 'PAYROLL_MANAGER', labelKey: 'role.payrollManager', descriptionKey: 'role.payrollManagerHint' },
-    { code: 'WORKFORCE_MANAGER', labelKey: 'role.workforceManager', descriptionKey: 'role.workforceManagerHint' },
-    { code: 'WORKFORCE_REVIEWER', labelKey: 'role.workforceReviewer', descriptionKey: 'role.workforceReviewerHint' },
-    { code: 'WORKFORCE_FINANCE', labelKey: 'role.workforceFinance', descriptionKey: 'role.workforceFinanceHint' },
-    { code: 'AUDITOR', labelKey: 'role.auditor', descriptionKey: 'role.auditorHint' },
-  ];
-  readonly menuOptions: Array<{ id: string; labelKey: string }> = [
+
+export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = [
     { id: 'dashboard', labelKey: 'nav.dashboard' },
     { id: 'categories', labelKey: 'nav.categories' },
     { id: 'employees', labelKey: 'nav.employees' },
@@ -108,6 +56,66 @@ export class UsersPage {
     { id: 'users', labelKey: 'nav.users' },
     { id: 'settings', labelKey: 'settings.title' },
   ];
+
+@Component({
+  selector: 'app-users-page',
+  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent],
+  providers: [UsersStore],
+  templateUrl: './users.page.html',
+  styleUrl: './users.page.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+
+
+export class UsersPage {
+  readonly auth = inject(AuthService);
+  readonly store = inject(UsersStore);
+  readonly i18n = inject(I18nService);
+  readonly notification = inject(NotificationService);
+  readonly access = inject(AccessService);
+  readonly menuOptions = USER_MENU_OPTIONS;
+  readonly drawerOpen = signal(false);
+  readonly submitted = signal(false);
+  readonly showPassword = signal(false);
+  readonly editingId = signal<string | null>(null);
+  readonly accessLoading = signal(false);
+  readonly roleSearch = signal('');
+  readonly pageSearch = signal('');
+  readonly needCodes = signal<string[]>([]);
+  readonly validationResult = signal<AccessValidateResult | null>(null);
+  readonly validationRunning = signal(false);
+  readonly validationError = signal<string | null>(null);
+  readonly acknowledgedWarnings = signal(false);
+  readonly ackReason = signal('');
+  readonly expandedRole = signal<string | null>(null);
+  readonly baselineRoles = signal<RoleCode[]>([]);
+  readonly baselineMenus = signal<string[]>([]);
+  readonly selectedRoles = signal<RoleCode[]>([]);
+  readonly selectedMenus = signal<string[]>([]);
+  readonly pagination = new TablePagination();
+  readonly paged = computed(() => this.pagination.slice(this.store.items()));
+  readonly roles: Array<{ code: RoleCode; labelKey: string; descriptionKey: string }> = [
+    { code: 'SUPER_ADMIN', labelKey: 'role.superAdmin', descriptionKey: 'role.superAdminHint' },
+    { code: 'ADMIN', labelKey: 'role.admin', descriptionKey: 'role.adminHint' },
+    { code: 'HR_MANAGER', labelKey: 'role.hrManager', descriptionKey: 'role.hrManagerHint' },
+    { code: 'HR_REVIEWER', labelKey: 'role.hrReviewer', descriptionKey: 'role.hrReviewerHint' },
+    { code: 'VIEWER', labelKey: 'role.viewer', descriptionKey: 'role.viewerHint' },
+    { code: 'FINANCE_MANAGER', labelKey: 'role.financeManager', descriptionKey: 'role.financeManagerHint' },
+    { code: 'ACCOUNTANT', labelKey: 'role.accountant', descriptionKey: 'role.accountantHint' },
+    { code: 'TREASURY_USER', labelKey: 'role.treasuryUser', descriptionKey: 'role.treasuryUserHint' },
+    { code: 'PROCUREMENT_MANAGER', labelKey: 'role.procurementManager', descriptionKey: 'role.procurementManagerHint' },
+    { code: 'PROCUREMENT_USER', labelKey: 'role.procurementUser', descriptionKey: 'role.procurementUserHint' },
+    { code: 'SALES_MANAGER', labelKey: 'role.salesManager', descriptionKey: 'role.salesManagerHint' },
+    { code: 'INVENTORY_MANAGER', labelKey: 'role.inventoryManager', descriptionKey: 'role.inventoryManagerHint' },
+    { code: 'MANUFACTURING_MANAGER', labelKey: 'role.manufacturingManager', descriptionKey: 'role.manufacturingManagerHint' },
+    { code: 'QUALITY_MANAGER', labelKey: 'role.qualityManager', descriptionKey: 'role.qualityManagerHint' },
+    { code: 'PAYROLL_MANAGER', labelKey: 'role.payrollManager', descriptionKey: 'role.payrollManagerHint' },
+    { code: 'WORKFORCE_MANAGER', labelKey: 'role.workforceManager', descriptionKey: 'role.workforceManagerHint' },
+    { code: 'WORKFORCE_REVIEWER', labelKey: 'role.workforceReviewer', descriptionKey: 'role.workforceReviewerHint' },
+    { code: 'WORKFORCE_FINANCE', labelKey: 'role.workforceFinance', descriptionKey: 'role.workforceFinanceHint' },
+    { code: 'AUDITOR', labelKey: 'role.auditor', descriptionKey: 'role.auditorHint' },
+  ];
+
   readonly menuGroups = [
     {
       titleKey: 'users.groupPeople',
@@ -202,10 +210,12 @@ export class UsersPage {
   readonly changedPages = computed(() => {
     if (!this.editMode()) return [];
     const before = this.access.preview(this.baselineRoles(), this.baselineMenus());
+    const byCode = new Map(this.access.pages().map((page) => [page.code, page.titleKey]));
     return this.preview()
       .pages
       .map((page) => ({
         page,
+        titleKey: byCode.get(page.pageCode) ?? page.pageCode,
         before: before.pages.find((item) => item.pageCode === page.pageCode)?.access ?? 'NONE',
       }))
       .filter((row) => row.before !== row.page.access);
@@ -222,15 +232,70 @@ export class UsersPage {
 
   readonly validationNeedsAck = computed(() => {
     const result = this.validationResult();
-    return !!result && (result.warnings.length > 0 || result.conflicts.length > 0);
+    if (!result) return false;
+    if (result.errors.some((error) => error.code === 'ACCESS_ACK_REASON_REQUIRED')) return true;
+    return result.warnings.length > 0 || result.conflicts.length > 0;
   });
+
+  readonly validationAckSatisfied = computed(
+    () => !this.validationNeedsAck() || this.ackReason().trim().length > 0,
+  );
 
   readonly validationOk = computed(() => {
     const result = this.validationResult();
     if (!result || result.valid !== true) return false;
-    if (this.validationNeedsAck() && !this.acknowledgedWarnings()) return false;
+    if (!this.validationAckSatisfied()) return false;
     return true;
   });
+
+  readonly adminOverrideActive = computed(() =>
+    this.selectedRoles().some((role) => role === 'SUPER_ADMIN' || role === 'ADMIN'),
+  );
+
+  readonly catalogUnavailable = computed(() => {
+    const catalog = this.access.catalog();
+    return !this.accessLoading() && (catalog === null || this.access.error() !== null);
+  });
+
+  /** Feature gate state for a menu: which feature disables it, if any. */
+  menuFeature(menuId: string): string | null {
+    const page = this.access.pages().find((item) => item.menuId === menuId);
+    if (!page || page.requiredFeature === null || page.requiredFeature === undefined) return null;
+    const activeFeatures = this.auth.user()?.activeFeatures ?? [];
+    return activeFeatures.includes(page.requiredFeature) ? null : page.requiredFeature;
+  }
+
+  /** True when none of the selected roles can open the page behind this menu. */
+  menuRoleMismatch(menuId: string): boolean {
+    const page = this.access.pages().find((item) => item.menuId === menuId);
+    if (!page || page.roles.length === 0) return false;
+    return this.selectedRoles().every((role) => !page.roles.includes(role));
+  }
+
+  /** Pages the given role can actually open, for the expandable role cards. */
+  roleAccessiblePages(roleCode: string): Array<{ code: string; titleKey: string; level: string }> {
+    const catalog = this.access.catalog();
+    if (!catalog) return [];
+    const role = catalog.roles.find((item) => item.code === roleCode);
+    if (!role) return [];
+    const granted = new Set(role.permissions);
+    const menus = new Set(this.menuOptions.map((menu) => menu.id));
+    const activeFeatures = this.auth.user()?.activeFeatures ?? [];
+    const result: Array<{ code: string; titleKey: string; level: string }> = [];
+    for (const page of catalog.pages) {
+      if (!page.viewPermissions.some((permission) => granted.has(permission))) continue;
+      if (!menus.has(page.menuId)) continue;
+      if (page.requiredFeature && !activeFeatures.includes(page.requiredFeature)) continue;
+      const grantedActions = page.actions.filter((action) => granted.has(action.permission)).map((action) => action.code);
+      const level = ACCESS_LEVEL_PRECEDENCE.find((item) => grantedActions.includes(item)) ?? 'VIEW';
+      result.push({ code: page.code, titleKey: page.titleKey, level });
+    }
+    return result;
+  }
+
+  toggleRoleDetails(code: string): void {
+    this.expandedRole.set(this.expandedRole() === code ? null : code);
+  }
 
   isModuleAllSelected(ids: string[]): boolean {
     const current = this.form.controls.allowedMenus.value;
@@ -294,6 +359,7 @@ export class UsersPage {
       this.validationResult.set(null);
       this.validationError.set(null);
       this.acknowledgedWarnings.set(false);
+      this.ackReason.set('');
     });
   }
 
@@ -401,9 +467,11 @@ export class UsersPage {
   }
 
   applySuggestedRoles(): void {
-    const roles = this.suggestedRoles();
-    if (roles.length) {
-      this.form.controls.roles.setValue(roles as RoleCode[]);
+    const suggested = this.suggestedRoles();
+    if (suggested.length) {
+      const merged = new Set(this.form.controls.roles.value);
+      suggested.forEach((role) => merged.add(role as RoleCode));
+      this.form.controls.roles.setValue(Array.from(merged) as RoleCode[]);
     }
     this.needCodes.set([]);
   }
@@ -500,7 +568,7 @@ export class UsersPage {
         this.form.controls.roles.value,
         this.form.controls.allowedMenus.value,
         this.editingId(),
-        null,
+        this.ackReason().trim() || undefined,
       );
       this.validationResult.set(result);
       return result;
@@ -513,8 +581,17 @@ export class UsersPage {
     }
   }
 
+  validateErrorLabel(code: string): string {
+    return this.i18n.t(`access.validateError.${code}`);
+  }
+
   async submit() {
     this.submitted.set(true);
+    if (this.catalogUnavailable()) {
+      this.notification.error(this.i18n.t('access.saveBlockedCatalog'));
+      this.form.markAllAsTouched();
+      return;
+    }
     const pwd = this.form.controls.password.value;
     if (!this.editingId() && !pwd) {
       this.notification.error(this.i18n.t('users.passwordHint', { min: this.passwordPolicy().minPasswordLength ?? 8 }));
@@ -538,10 +615,15 @@ export class UsersPage {
       return;
     }
     if (result.valid !== true) {
-      this.notification.error(this.i18n.t('access.saveBlocked'));
+      if (result.errors.length > 0) {
+        const first = result.errors[0];
+        this.notification.error(this.validateErrorLabel(first.code));
+      } else {
+        this.notification.error(this.i18n.t('access.saveBlocked'));
+      }
       return;
     }
-    if ((result.warnings.length > 0 || result.conflicts.length > 0) && !this.acknowledgedWarnings()) {
+    if ((result.warnings.length > 0 || result.conflicts.length > 0) && !this.validationAckSatisfied()) {
       this.notification.error(this.i18n.t('access.saveWarningsUnacknowledged'));
       return;
     }

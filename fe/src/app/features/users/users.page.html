@@ -29,6 +29,25 @@
         </div>
         <strong>{{ i18n.t(role.labelKey) }}</strong>
         <small>{{ i18n.t(role.descriptionKey) }}</small>
+        <button
+          type="button"
+          class="permission-action role-card-details-toggle"
+          (click)="toggleRoleDetails(role.code)"
+        >
+          {{ i18n.t(expandedRole() === role.code ? 'access.hideRoleDetails' : 'access.showRoleDetails') }}
+        </button>
+        @if (expandedRole() === role.code) {
+          <div class="role-card-pages">
+            @for (page of roleAccessiblePages(role.code); track page.code) {
+              <div class="role-card-page-row">
+                <span>{{ i18n.t(page.titleKey) }}</span>
+                <code class="ltr access-badge" [class]="page.level.toLowerCase()">{{ page.level }}</code>
+              </div>
+            } @empty {
+              <small class="hint">{{ i18n.t('access.roleNoPages') }}</small>
+            }
+          </div>
+        }
       </article>
     }
   </div>
@@ -347,6 +366,11 @@
 
         <div class="field span-2">
           <div class="module-groups-grid">
+            @if (adminOverrideActive()) {
+              <div class="alert info admin-override-notice">
+                {{ i18n.t('access.adminOverrideNotice') }}
+              </div>
+            }
             @for (group of menuGroups; track group.titleKey) {
               <div class="module-group-card">
                 <label class="module-group-header">
@@ -354,6 +378,7 @@
                     type="checkbox"
                     [checked]="isModuleAllSelected(group.ids)"
                     [indeterminate]="isModulePartiallySelected(group.ids)"
+                    [disabled]="adminOverrideActive()"
                     (change)="toggleModule(group.ids)"
                   />
                   <strong>{{ i18n.t(group.titleKey) }}</strong>
@@ -363,13 +388,19 @@
                 </label>
                 <div class="module-group-items">
                   @for (id of group.ids; track id) {
-                    <label class="menu-item-check">
+                    <label class="menu-item-check" [class.menu-disabled]="adminOverrideActive()">
                       <input
                         type="checkbox"
                         [checked]="hasMenu(id)"
+                        [disabled]="adminOverrideActive()"
                         (change)="toggleMenu(id, $event)"
                       />
                       <span>{{ getMenuLabel(id) }}</span>
+                      @if (menuFeature(id)) {
+                        <span class="chip chip-warn" [attr.title]="menuFeature(id)">{{ i18n.t('access.menuFeatureDisabled') }}</span>
+                      } @else if (menuRoleMismatch(id)) {
+                        <span class="chip chip-warn">{{ i18n.t('access.menuRoleMismatch') }}</span>
+                      }
                     </label>
                   }
                 </div>
@@ -412,7 +443,7 @@
                   <div class="changed-pages">
                     @for (row of changedPages(); track row.page.pageCode) {
                       <div class="changed-page-row">
-                        <span>{{ i18n.t(row.page.titleKey) }}</span>
+                        <span>{{ i18n.t(row.titleKey) }}</span>
                         <code class="ltr diff-before">{{ row.before }}</code>
                         <span class="diff-arrow">→</span>
                         <code class="ltr diff-after">{{ row.page.access }}</code>
@@ -542,6 +573,13 @@
               <p class="validation-ok">✅ {{ i18n.t('access.validateOk') }}</p>
             } @else {
               <p class="validation-failed">❌ {{ i18n.t('access.validateFailed') }}</p>
+              @if (validationResult()!.errors.length) {
+                <div class="warnings-box">
+                  @for (error of validationResult()!.errors; track error.code) {
+                    <p class="hint conflict-text">{{ validateErrorLabel(error.code) }}</p>
+                  }
+                </div>
+              }
               @if (validationResult()!.conflicts.length) {
                 <div class="warnings-box">
                   @for (conflict of validationResult()!.conflicts; track conflict.code) {
@@ -557,14 +595,22 @@
                 </div>
               }
               @if (validationNeedsAck()) {
-                <label class="selectable-card compact-card ack-card">
+                <div class="ack-reason-box">
+                  <label for="ack-reason" class="ack-reason-label">
+                    {{ i18n.t('access.ackReasonLabel') }}
+                  </label>
                   <input
-                    type="checkbox"
-                    [checked]="acknowledgedWarnings()"
-                    (change)="acknowledgedWarnings.set($any($event.target).checked)"
+                    id="ack-reason"
+                    type="text"
+                    class="ltr"
+                    [value]="ackReason()"
+                    (input)="ackReason.set($any($event.target).value)"
+                    [placeholder]="i18n.t('access.ackReasonPlaceholder')"
                   />
-                  <span>{{ i18n.t('access.acknowledgeWarnings') }}</span>
-                </label>
+                  @if (!validationAckSatisfied()) {
+                    <small class="hint warning-text">{{ i18n.t('access.ackReasonRequired') }}</small>
+                  }
+                </div>
               }
             }
           }
@@ -585,7 +631,7 @@
         class="button primary"
         type="button"
         (click)="submit()"
-        [disabled]="store.loading() || validationRunning()"
+        [disabled]="store.loading() || validationRunning() || catalogUnavailable()"
       >
         {{ i18n.t('users.save') }}
       </button>

@@ -364,6 +364,8 @@ public class ProcurementService {
             throw new BusinessRuleException("الفاتورة المحددة لا تخص المورد المختار. اختر فاتورة مفتوحة لنفس المورد.", "PROC_INVOICE_SUPPLIER_MISMATCH", HttpStatus.CONFLICT);
         if (payload.amount().signum() <= 0)
             throw new BusinessRuleException("يجب أن يكون مبلغ الدفعة أكبر من صفر.", "PROC_PAYMENT_AMOUNT_POSITIVE", HttpStatus.CONFLICT);
+        if (payload.paymentNumber() == null || payload.paymentNumber().isBlank())
+            throw new BusinessRuleException("رقم الدفعة مطلوب.", "PROC_PAYMENT_NUMBER_REQUIRED", HttpStatus.CONFLICT);
         BigDecimal paidBefore = paidAmount(inv.getId());
         BigDecimal outstanding = inv.getNetAmount().subtract(paidBefore);
         if (payload.amount().compareTo(outstanding) > 0)

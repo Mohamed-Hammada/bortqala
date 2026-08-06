@@ -49,6 +49,10 @@ export interface AccessPage {
   menuId: string;
   titleKey: string;
   viewPermissions: string[];
+  /** Route-guard role matrix from the backend catalog (includes ADMIN/SUPER_ADMIN). */
+  roles: string[];
+  /** Tenant feature key gating this page's menu; null means not feature-gated. */
+  requiredFeature: string | null;
   actions: AccessAction[];
 }
 
@@ -103,10 +107,22 @@ export interface AccessPreview {
   sensitivePermissions: string[];
 }
 
+export interface AccessValidateError {
+  code:
+    | 'ACCESS_UNKNOWN_MENU'
+    | 'ACCESS_MENU_ROLE_MISMATCH'
+    | 'ACCESS_FEATURE_DISABLED'
+    | 'ACCESS_ACK_REASON_REQUIRED';
+  messageKey: string;
+  menuId: string | null;
+  pageCode: string | null;
+}
+
 export interface AccessValidateResult {
   valid: boolean;
   conflicts: AccessConflict[];
   warnings: AccessWarning[];
+  errors: AccessValidateError[];
   sensitivePermissions: string[];
 }
 

@@ -26,11 +26,20 @@ public final class AccessDefs {
     }
 
     /**
-     * A protected page: its module, route, shell menu id, title key and the
-     * permission that unlocks viewing it plus per-action permissions.
+     * A protected page: its module, route, shell menu id, title key, the
+     * permission that unlocks viewing it, the route-guard role list that can
+     * actually open it, the optional tenant feature that gates its menu, plus
+     * per-action permissions.
+     *
+     * <p>{@code requiredRoles} mirrors the frontend route-guard matrices
+     * (including ADMIN/SUPER_ADMIN, which bypass all guards). An empty set means
+     * the route has no role guard (any authenticated user with the menu can open
+     * it). {@code requiredFeature} is the tenant-feature key that must be enabled
+     * for the menu to be usable; {@code null} means the page is not feature-gated.
      */
     public record AccessPageDef(String code, String module, String route, String menuId, String titleKey,
-                                String viewPermission, List<AccessActionDef> actions) {
+                                String viewPermission, Set<String> requiredRoles, String requiredFeature,
+                                List<AccessActionDef> actions) {
     }
 
     /**

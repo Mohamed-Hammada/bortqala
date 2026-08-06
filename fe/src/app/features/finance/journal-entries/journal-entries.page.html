@@ -140,25 +140,31 @@
               @for (line of lines(); track $index) {
                 <tr>
                   <td>
-                    <select [value]="line.accountId" (change)="updateLine($index, 'accountId', $any($event.target).value)">
+                    <select [value]="line.accountId" (change)="updateLine($index, 'accountId', $any($event.target).value)" [class.invalid]="submitAttempted() && lineErrors().has($index)">
+                      <option [value]="''" disabled>{{ i18n.t('journal.selectAccount') }}</option>
                       @for (acc of accounts(); track acc.id) {
                         <option [value]="acc.id">{{ acc.code }} - {{ acc.name }}</option>
                       }
                     </select>
                   </td>
                   <td>
-                    <input type="number" class="ltr" [value]="line.debit" (input)="updateLine($index, 'debit', +$any($event.target).value)" />
+                    <input type="number" class="ltr" [value]="line.debit" (input)="updateLine($index, 'debit', +$any($event.target).value)" [class.invalid]="submitAttempted() && lineErrors().has($index)" />
                   </td>
                   <td>
-                    <input type="number" class="ltr" [value]="line.credit" (input)="updateLine($index, 'credit', +$any($event.target).value)" />
+                    <input type="number" class="ltr" [value]="line.credit" (input)="updateLine($index, 'credit', +$any($event.target).value)" [class.invalid]="submitAttempted() && lineErrors().has($index)" />
                   </td>
                   <td>
                     <input type="text" [value]="line.memo" (input)="updateLine($index, 'memo', $any($event.target).value)" [placeholder]="i18n.t('journal.lineNotesPlaceholder')" />
                   </td>
                   <td>
-                    <button class="button secondary btn-sm danger-btn" type="button" (click)="removeLine($index)" [attr.aria-label]="i18n.t('journal.removeLineAria')" [appTooltip]="i18n.t('journal.removeLineTooltip')">×</button>
+                    <button class="button secondary btn-sm danger-btn" type="button" (click)="removeLine($index)" [disabled]="lines().length <= 2" [attr.aria-label]="i18n.t('journal.removeLineAria')" [appTooltip]="i18n.t('journal.removeLineTooltip')">×</button>
                   </td>
                 </tr>
+                @if (submitAttempted() && lineErrors().has($index)) {
+                  <tr>
+                    <td colspan="5" class="line-error" role="alert">{{ lineErrors().get($index) }}</td>
+                  </tr>
+                }
               }
             </tbody>
             <tfoot>
@@ -189,7 +195,7 @@
 
     <div modal-actions>
       <button class="button secondary" type="button" (click)="closeDrawer()" [disabled]="savingDraft()">{{ i18n.t('common.cancel') }}</button>
-      <button class="button primary" type="button" (click)="submitEntry()" [disabled]="entryForm.invalid || calculateSumDebit() !== calculateSumCredit() || calculateSumDebit() === 0 || savingDraft()">
+      <button class="button primary" type="button" (click)="submitEntry()" [disabled]="entryForm.invalid || lineErrors().size > 0 || calculateSumDebit() !== calculateSumCredit() || calculateSumDebit() === 0 || savingDraft()">
         {{ savingDraft() ? i18n.t('journal.saveDraft.progress') : i18n.t('journal.saveDraft') }}
       </button>
     </div>

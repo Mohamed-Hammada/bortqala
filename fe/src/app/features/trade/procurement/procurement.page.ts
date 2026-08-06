@@ -8,6 +8,7 @@ import { apiErrorMessage } from '../../../core/api-error';
 import { DecimalPipe } from '@angular/common';
 import { dateInputToEpoch, epochToDateInput, formatDate } from '../../../core/date';
 import { downloadBlob, exportCsv } from '../../../core/download';
+import { ConfirmDialogService } from '../../../core/confirm-dialog.service';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 import { RouterLink } from '@angular/router';
 import { AppTooltipDirective } from '../../../shared/ui/app-tooltip/app-tooltip.directive';
@@ -64,6 +65,7 @@ export class ProcurementPage {
   readonly http = inject(HttpClient);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
+  private readonly confirm = inject(ConfirmDialogService);
 
   readonly loading = signal(true);
   readonly submitting = signal(false);
@@ -135,8 +137,8 @@ export class ProcurementPage {
     missingInvoiceReason: new FormControl('', { nonNullable: true }),
     invoiceDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
     totalAmount: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0.01)] }),
-    discountAmount: new FormControl(0, { nonNullable: true }),
-    taxAmount: new FormControl(0, { nonNullable: true }),
+    discountAmount: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    taxAmount: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     dueDate: new FormControl('', { nonNullable: true }),
     notes: new FormControl('', { nonNullable: true }),
     currencyCode: new FormControl('EGP', { nonNullable: true, validators: [Validators.required] }),
@@ -145,7 +147,7 @@ export class ProcurementPage {
   });
   invNetAmount(): number {
     const v = this.invForm.getRawValue();
-    return Math.max(0, v.totalAmount - v.discountAmount + v.taxAmount);
+    return v.totalAmount - v.discountAmount + v.taxAmount;
   }
   invBaseNetAmount(): number { return this.invNetAmount() * this.invForm.controls.exchangeRate.value; }
 
@@ -167,7 +169,19 @@ export class ProcurementPage {
   readonly unpaidInvoices = computed(() => this.invoices().filter(i => i.status === 'UNPAID' || i.status === 'PARTIALLY_PAID'));
   readonly payableInvoices = computed(() => filterPayableInvoices(this.invoices(), this.selectedPaymentSupplierId()));
 
-  constructor() { void this.loadAll(); }
+  constructor() {
+    void this.loadAll();
+  }
+
+  applyNumberingValidators(): void {
+    const auto = this.automaticNumbering();
+    const poNumber = this.poForm.controls.poNumber;
+    poNumber.setValidators(auto ? [] : [Validators.required]);
+    poNumber.updateValueAndValidity();
+    const grnNumber = this.grnForm.controls.grnNumber;
+    grnNumber.setValidators(auto ? [] : [Validators.required]);
+    grnNumber.updateValueAndValidity();
+  }
 
   async loadAll() {
     this.loading.set(true);
@@ -184,6 +198,7 @@ export class ProcurementPage {
   async loadNumberingSettings() {
     const settings = await firstValueFrom(this.http.get<NumberingSettings>('/api/v1/trade/procurement/numbering-settings'));
     this.automaticNumbering.set(settings?.automaticNumbering ?? true);
+    this.applyNumberingValidators();
   }
   async loadSuppliers() {
     const parties = await firstValueFrom(this.http.get<Party[]>('/api/v1/parties')) ?? [];
@@ -254,14 +269,14 @@ export class ProcurementPage {
     if (this.editingPoId()) return;
     this.poForm.patchValue({ exchangeRate: this.configuredRate(this.poForm.controls.currencyCode.value), exchangeRateOverrideReason: '' });
   }
-  removeItemLine(idx: number) { if (this.poItems().length > 1) this.poItems.update(i => i.filter((_, n) => n !== idx)); else this.notification.warning('يجب وجود بند شراء واحد على الأقل'); }
+  removeItemLine(idx: number) { if (this.poItems().length > 1) this.poItems.update(i => i.filter((_, n) => n !== idx)); else this.notification.warning(this.i18n.t('procurement.poAtLeastOneLine')); }
 
   async submitPo() {
     if (this.submitting()) return;
     if (this.poForm.invalid) { this.poForm.markAllAsTouched(); return; }
     if (!this.automaticNumbering() && !this.poForm.controls.poNumber.value.trim()) { this.poForm.controls.poNumber.markAsTouched(); return; }
-    if (this.poItems().length === 0 || this.poItems().some(item => !item.itemId || item.quantity <= 0 || item.unitPrice < 0)) { this.notification.warning('اختر صنف مخزون وأدخل كمية وسعراً صحيحين لكل بند'); return; }
-    if (!this.editingPoId() && this.poRateOverridden() && !this.poForm.controls.exchangeRateOverrideReason.value.trim()) { this.notification.warning('اكتب سبب تعديل سعر الصرف يدوياً.'); return; }
+    if (this.poItems().length === 0 || this.poItems().some(item => !item.itemId || item.quantity <= 0 || item.unitPrice < 0)) { this.notification.warning(this.i18n.t('procurement.poInvalidLineWarning')); return; }
+    if (!this.editingPoId() && this.poRateOverridden() && !this.poForm.controls.exchangeRateOverrideReason.value.trim()) { this.notification.warning(this.i18n.t('procurement.rateOverrideReasonRequired')); return; }
     this.submitting.set(true);
     try {
       const v = this.poForm.getRawValue();
@@ -270,15 +285,59 @@ export class ProcurementPage {
       await firstValueFrom(editingId
         ? this.http.put(`/api/v1/trade/procurement/orders/${editingId}`, payload)
         : this.http.post('/api/v1/trade/procurement/orders', payload));
-      this.notification.success(editingId ? 'تم تعديل أمر الشراء بنجاح ✓' : 'تم إنشاء أمر الشراء بنجاح ✓');
+      this.notification.success(editingId ? this.i18n.t('procurement.poUpdateSuccess') : this.i18n.t('procurement.poCreateSuccess'));
       this.modalOpen.set(false);
       await this.loadAll();
-    } catch (e) { this.notification.error('فشل إنشاء أمر الشراء: ' + apiErrorMessage(e, this.i18n)); }
+    } catch (e) { this.notification.error(this.i18n.t('procurement.poCreateFail') + apiErrorMessage(e, this.i18n)); }
     finally { this.submitting.set(false); }
   }
 
-  async issuePo(po: PurchaseOrder) { try { await firstValueFrom(this.http.post(`/api/v1/trade/procurement/orders/${po.id}/issue`, {})); this.notification.success('تم إصدار أمر الشراء للمورد ✓'); await this.loadAll(); } catch (e) { this.error.set(apiErrorMessage(e, this.i18n)); } }
-  async cancelPo(po: PurchaseOrder) { try { await firstValueFrom(this.http.post(`/api/v1/trade/procurement/orders/${po.id}/cancel`, {})); this.notification.success('تم إلغاء أمر الشراء ✓'); await this.loadAll(); } catch (e) { this.error.set(apiErrorMessage(e, this.i18n)); } }
+  issuePo(po: PurchaseOrder) {
+    void this.confirm.confirmAndRun(
+      {
+        titleKey: 'procurement.issuePo.confirmTitle',
+        messageKey: 'procurement.issuePo.confirmMessage',
+        params: { number: po.poNumber },
+        confirmKey: 'procurement.issuePo.confirm',
+        details: [
+          { label: this.i18n.t('procurement.poNumber'), value: po.poNumber },
+          { label: this.i18n.t('procurement.poSupplier'), value: po.supplierName ?? po.supplierId },
+          { label: this.i18n.t('procurement.poTotal'), value: `${po.totalAmount} ${po.currencyCode}` },
+        ],
+      },
+      async () => {
+        try {
+          await firstValueFrom(this.http.post(`/api/v1/trade/procurement/orders/${po.id}/issue`, {}));
+          this.notification.success(this.i18n.t('procurement.issuePo.success') + ' ✓');
+          await this.loadAll();
+        } catch (e) { this.error.set(apiErrorMessage(e, this.i18n)); throw e; }
+      },
+    );
+  }
+
+  cancelPo(po: PurchaseOrder) {
+    void this.confirm.confirmAndRun(
+      {
+        titleKey: 'procurement.cancelPo.confirmTitle',
+        messageKey: 'procurement.cancelPo.confirmMessage',
+        params: { number: po.poNumber },
+        confirmKey: 'procurement.cancelPo.confirm',
+        danger: true,
+        dangerMessageKey: 'procurement.cancelPo.dangerMessage',
+        details: [
+          { label: this.i18n.t('procurement.poNumber'), value: po.poNumber },
+          { label: this.i18n.t('procurement.poSupplier'), value: po.supplierName ?? po.supplierId },
+        ],
+      },
+      async () => {
+        try {
+          await firstValueFrom(this.http.post(`/api/v1/trade/procurement/orders/${po.id}/cancel`, {}));
+          this.notification.success(this.i18n.t('procurement.cancelPo.success') + ' ✓');
+          await this.loadAll();
+        } catch (e) { this.error.set(apiErrorMessage(e, this.i18n)); throw e; }
+      },
+    );
+  }
 
   // ─── GRN Methods ──────────────────────────────────────────────────
 
@@ -341,21 +400,21 @@ export class ProcurementPage {
     const rejected = Number(item.rejectedQuantity);
     const deducted = Number(item.deductedQuantity);
     if (field === 'delivered' && (!Number.isFinite(delivered) || delivered <= 0)) {
-      return 'أدخل كمية مستلمة أكبر من صفر.';
+      return this.i18n.t('procurement.grnLineDeliveredPositive');
     }
     if (field === 'rejected' && (!Number.isFinite(rejected) || rejected < 0)) {
-      return 'الكمية المرفوضة لا يمكن أن تكون سالبة.';
+      return this.i18n.t('procurement.grnLineRejectedNonNegative');
     }
     if (field === 'deducted' && (!Number.isFinite(deducted) || deducted < 0)) {
-      return 'الكمية المخصومة لا يمكن أن تكون سالبة.';
+      return this.i18n.t('procurement.grnLineDeductedNonNegative');
     }
     if (Number.isFinite(delivered) && Number.isFinite(rejected) && Number.isFinite(deducted)
       && rejected >= 0 && deducted >= 0 && rejected + deducted > delivered) {
-      return 'المرفوض والمخصوم أكبر من الكمية المستلمة.';
+      return this.i18n.t('procurement.grnLineRejectedDeductedExceed');
     }
     const accepted = this.acceptedGrnQuantity(item);
     if (field === 'accepted' && accepted !== null && accepted > item.remainingQuantity) {
-      return `الكمية المقبولة تتجاوز المتبقي (${item.remainingQuantity} ${item.unitOfMeasure}).`;
+      return this.i18n.t('procurement.grnLineAcceptedExceedsRemaining', { remaining: item.remainingQuantity, uom: item.unitOfMeasure });
     }
     return null;
   }
@@ -375,12 +434,12 @@ export class ProcurementPage {
     if (this.submitting()) return;
     if (this.grnForm.invalid) {
       this.grnForm.markAllAsTouched();
-      this.notification.warning('أكمل الحقول المطلوبة قبل تسجيل إذن الاستلام.');
+      this.notification.warning(this.i18n.t('procurement.grnRequiredFields'));
       return;
     }
     if (!this.automaticNumbering() && !this.grnForm.controls.grnNumber.value.trim()) { this.grnForm.controls.grnNumber.markAsTouched(); return; }
     if (this.grnHasErrors()) {
-      this.notification.warning('راجع أخطاء الكميات الموضحة أسفل الحقول قبل التسجيل.');
+      this.notification.warning(this.i18n.t('procurement.grnQuantityErrors'));
       return;
     }
     this.submitting.set(true);
@@ -402,12 +461,12 @@ export class ProcurementPage {
         notes: v.notes.trim() || null,
         lines,
       }));
-      this.notification.success(`تم تسجيل إذن الاستلام رقم ${saved.grnNumber} وإضافة الكمية المقبولة للمخزن بنجاح.`);
+      this.notification.success(this.i18n.t('procurement.grnSuccess', { number: saved.grnNumber }));
       this.grnModalOpen.set(false);
       await this.loadAll();
       this.activeTab.set('grn');
     } catch (e) {
-      this.notification.error('تعذر تسجيل إذن الاستلام. ' + apiErrorMessage(e, this.i18n));
+      this.notification.error(this.i18n.t('procurement.grnFail') + apiErrorMessage(e, this.i18n));
     }
     finally { this.submitting.set(false); }
   }
@@ -441,9 +500,11 @@ export class ProcurementPage {
     if (this.submitting()) return;
     if (this.invForm.invalid) { this.invForm.markAllAsTouched(); return; }
     const invoiceValue = this.invForm.getRawValue();
-    if (invoiceValue.hasSupplierInvoice && !invoiceValue.invoiceNumber.trim()) { this.notification.warning('أدخل رقم فاتورة المورد، أو اختر «لا توجد فاتورة من المورد».'); return; }
-    if (!invoiceValue.hasSupplierInvoice && (!invoiceValue.internalReference.trim() || !invoiceValue.missingInvoiceReason.trim())) { this.notification.warning('أدخل المرجع الداخلي وسبب عدم وجود فاتورة المورد.'); return; }
-    if (this.invoiceRateOverridden() && !invoiceValue.exchangeRateOverrideReason.trim()) { this.notification.warning('اكتب سبب تعديل سعر الصرف يدوياً.'); return; }
+    if (invoiceValue.hasSupplierInvoice && !invoiceValue.invoiceNumber.trim()) { this.notification.warning(this.i18n.t('procurement.invoiceMissingNumber')); return; }
+    if (!invoiceValue.hasSupplierInvoice && (!invoiceValue.internalReference.trim() || !invoiceValue.missingInvoiceReason.trim())) { this.notification.warning(this.i18n.t('procurement.invoiceMissingReference')); return; }
+    if (this.invoiceRateOverridden() && !invoiceValue.exchangeRateOverrideReason.trim()) { this.notification.warning(this.i18n.t('procurement.rateOverrideReasonRequired')); return; }
+    if (invoiceValue.dueDate && new Date(invoiceValue.dueDate) < new Date(invoiceValue.invoiceDate)) { this.notification.warning(this.i18n.t('procurement.invoiceDueDateBeforeInvoiceDate')); return; }
+    if (invoiceValue.discountAmount > invoiceValue.totalAmount) { this.notification.warning(this.i18n.t('procurement.invoiceDiscountExceedsTotal')); return; }
     this.submitting.set(true);
     try {
       const v = this.invForm.getRawValue();
@@ -456,10 +517,10 @@ export class ProcurementPage {
         discountAmount: v.discountAmount > 0 ? v.discountAmount : null, taxAmount: v.taxAmount > 0 ? v.taxAmount : null,
         dueDate: v.dueDate ? new Date(v.dueDate).getTime() : null, notes: v.notes || null,
       }));
-      this.notification.success('تم تسجيل فاتورة المورد بنجاح ✓');
+      this.notification.success(this.i18n.t('procurement.invoiceSaveSuccess'));
       this.invModalOpen.set(false);
       await this.loadAll();
-    } catch (e) { this.notification.error('فشل تسجيل الفاتورة: ' + apiErrorMessage(e, this.i18n)); }
+    } catch (e) { this.notification.error(this.i18n.t('procurement.invoiceSaveFail') + apiErrorMessage(e, this.i18n)); }
     finally { this.submitting.set(false); }
   }
 
@@ -480,7 +541,7 @@ export class ProcurementPage {
     const selected = this.invoices().find(invoice => invoice.id === this.pmtForm.controls.supplierInvoiceId.value);
     if (selected && selected.supplierId !== supplierId) {
       this.pmtForm.patchValue({ supplierInvoiceId: '', amount: 0 });
-      this.notification.warning('تم إلغاء اختيار الفاتورة السابقة لأنها لا تخص المورد المحدد.');
+      this.notification.warning(this.i18n.t('procurement.paymentInvoiceChanged'));
     }
   }
 
@@ -496,13 +557,13 @@ export class ProcurementPage {
     try {
       const v = this.pmtForm.getRawValue();
       const invoice = this.payableInvoices().find(item => item.id === v.supplierInvoiceId);
-      if (!invoice) { this.notification.error('اختر فاتورة مفتوحة تخص المورد المحدد.'); return; }
-      if (v.amount > invoice.outstandingAmount) { this.notification.error(`المبلغ يتجاوز الرصيد المتبقي ${invoice.outstandingAmount} ${invoice.currencyCode}.`); return; }
+      if (!invoice) { this.notification.error(this.i18n.t('procurement.paymentSelectOpenInvoice')); return; }
+      if (v.amount > invoice.outstandingAmount) { this.notification.error(this.i18n.t('procurement.paymentExceedsOutstanding', { outstanding: invoice.outstandingAmount, currency: invoice.currencyCode })); return; }
       await firstValueFrom(this.http.post('/api/v1/trade/procurement/payments', { paymentNumber: v.paymentNumber, paymentDate: new Date(v.paymentDate).getTime(), supplierId: v.supplierId, supplierInvoiceId: v.supplierInvoiceId, amount: v.amount, paymentMethod: v.paymentMethod, notes: v.notes || null, operationId: this.paymentOperationId() }));
-      this.notification.success('تم تسجيل دفعة المورد بنجاح ✓');
+      this.notification.success(this.i18n.t('procurement.paymentSaveSuccess'));
       this.pmtModalOpen.set(false);
       await this.loadAll();
-    } catch (e) { this.notification.error('فشل تسجيل الدفعة: ' + apiErrorMessage(e, this.i18n)); }
+    } catch (e) { this.notification.error(this.i18n.t('procurement.paymentSaveFail') + apiErrorMessage(e, this.i18n)); }
     finally { this.submitting.set(false); }
   }
 
@@ -510,7 +571,8 @@ export class ProcurementPage {
 
   date(ms: number) { return formatDate(ms); }
   poStatusLabel(status: string): string {
-    return ({ DRAFT: 'مسودة', ISSUED: 'صادر', PARTIALLY_RECEIVED: 'استلام جزئي', RECEIVED: 'مستلم بالكامل', CANCELLED: 'ملغي' } as Record<string, string>)[status] ?? status;
+    const key = ({ DRAFT: 'procurement.poStatus.draft', ISSUED: 'procurement.poStatus.issued', PARTIALLY_RECEIVED: 'procurement.poStatus.partiallyReceived', RECEIVED: 'procurement.poStatus.received', CANCELLED: 'procurement.poStatus.cancelled' } as Record<string, string>)[status];
+    return key ? this.i18n.t(key) : status;
   }
   invoiceReference(invoice: SupplierInvoice): string { return invoice.invoiceNumber || invoice.internalReference; }
   baseCurrencyCode(): string { return this.currencies().find(currency => currency.isBase)?.code ?? 'EGP'; }
@@ -535,10 +597,10 @@ export class ProcurementPage {
       : this.activeTab() === 'grn' ? this.goodsReceipts().map(g => ({ grnNumber: g.grnNumber, receiptDate: this.date(g.receiptDate), supplier: g.supplierName || g.supplierId, notes: g.notes || '', status: g.status }))
       : this.activeTab() === 'invoice' ? this.invoices().map(i => ({ invoiceNumber: i.invoiceNumber, supplier: i.supplierName || i.supplierId, totalAmount: i.totalAmount, netAmount: i.netAmount, paidAmount: i.paidAmount, outstandingAmount: i.outstandingAmount, status: i.status }))
       : this.payments().map(p => ({ paymentNumber: p.paymentNumber, paymentDate: this.date(p.paymentDate), supplier: p.supplierName || p.supplierId, amount: p.amount, method: p.paymentMethod }));
-    const cols = this.activeTab() === 'po' ? [{ key: 'poNumber', label: 'رقم أمر الشراء' }, { key: 'poDate', label: 'تاريخ الأمر' }, { key: 'supplier', label: 'المورد' }, { key: 'paymentTerms', label: 'شروط الدفع' }, { key: 'totalAmount', label: 'الإجمالي' }, { key: 'status', label: 'الحالة' }]
-      : this.activeTab() === 'grn' ? [{ key: 'grnNumber', label: 'رقم الإذن' }, { key: 'receiptDate', label: 'تاريخ الاستلام' }, { key: 'supplier', label: 'المورد' }, { key: 'notes', label: 'ملاحظات' }, { key: 'status', label: 'الحالة' }]
-      : this.activeTab() === 'invoice' ? [{ key: 'invoiceNumber', label: 'رقم الفاتورة' }, { key: 'supplier', label: 'المورد' }, { key: 'totalAmount', label: 'الإجمالي' }, { key: 'netAmount', label: 'الصافي' }, { key: 'status', label: 'الحالة' }]
-      : [{ key: 'paymentNumber', label: 'رقم الدفعة' }, { key: 'paymentDate', label: 'تاريخ الدفع' }, { key: 'supplier', label: 'المورد' }, { key: 'amount', label: 'المبلغ' }, { key: 'method', label: 'طريقة الدفع' }];
+    const cols = this.activeTab() === 'po' ? [{ key: 'poNumber', label: this.i18n.t('procurement.colPoNumber') }, { key: 'poDate', label: this.i18n.t('procurement.colPoDate') }, { key: 'supplier', label: this.i18n.t('procurement.colSupplier') }, { key: 'paymentTerms', label: this.i18n.t('procurement.colPaymentTerms') }, { key: 'totalAmount', label: this.i18n.t('procurement.colTotal') }, { key: 'status', label: this.i18n.t('procurement.colStatus') }]
+      : this.activeTab() === 'grn' ? [{ key: 'grnNumber', label: this.i18n.t('procurement.colGrnNumber') }, { key: 'receiptDate', label: this.i18n.t('procurement.colReceiptDate') }, { key: 'supplier', label: this.i18n.t('procurement.colSupplier') }, { key: 'notes', label: this.i18n.t('procurement.colNotes') }, { key: 'status', label: this.i18n.t('procurement.colStatus') }]
+      : this.activeTab() === 'invoice' ? [{ key: 'invoiceNumber', label: this.i18n.t('procurement.colInvoiceNumber') }, { key: 'supplier', label: this.i18n.t('procurement.colSupplier') }, { key: 'totalAmount', label: this.i18n.t('procurement.colTotal') }, { key: 'netAmount', label: this.i18n.t('procurement.colNetAmount') }, { key: 'status', label: this.i18n.t('procurement.colStatus') }]
+      : [{ key: 'paymentNumber', label: this.i18n.t('procurement.colPaymentNumber') }, { key: 'paymentDate', label: this.i18n.t('procurement.colPaymentDate') }, { key: 'supplier', label: this.i18n.t('procurement.colSupplier') }, { key: 'amount', label: this.i18n.t('procurement.colAmount') }, { key: 'method', label: this.i18n.t('procurement.colPaymentMethod') }];
     exportCsv(rows, cols, `procurement-${this.activeTab()}-${new Date().toISOString().slice(0, 10)}.csv`);
   }
 }

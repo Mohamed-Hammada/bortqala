@@ -142,7 +142,7 @@ class AuthSecurityIntegrationTests {
         var request = new AuthApi.UserUpsertRequest(username, "Test " + prefix, "Auth#Test1!",
                 roles, null, canViewSalary, null, true, true, null);
         TenantContext.set(appId);
-        var created = authService.create(request);
+        var created = authService.create(request, "admin");
         createdUserIds.add(created.id());
         return loadWithRoles(created.id());
     }

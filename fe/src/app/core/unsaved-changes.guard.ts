@@ -9,7 +9,12 @@ export interface ComponentWithUnsavedChanges {
 export const unsavedChangesGuard: CanDeactivateFn<ComponentWithUnsavedChanges> = async (component) => {
   if (component.hasUnsavedChanges && component.hasUnsavedChanges()) {
     const confirmService = inject(ConfirmDialogService);
-    return confirmService.confirm('⚠️ تنبيه: لديك تغييرات غير محفوظة! هل أنت متأكد من رغبتك في الخروج دون حفظ البيانات؟');
+    return confirmService.confirmOptions({
+      titleKey: 'common.unsavedTitle',
+      messageKey: 'common.unsavedMessage',
+      confirmKey: 'common.discard',
+      danger: true,
+    });
   }
   return true;
 };
