@@ -1,0 +1,53 @@
+id;translation_key;locale;text_value
+v120-001;APPROVAL_ALREADY_APPROVED;ar-EG;تم اعتماد المستند سابقاً بالكامل.
+v120-002;APPROVAL_ALREADY_APPROVED;en-US;The document was already fully approved.
+v120-003;APPROVAL_CLOSED;ar-EG;تم حسم طلب الاعتماد سابقاً ولا يمكن تعديله.
+v120-004;APPROVAL_CLOSED;en-US;The approval request was already decided and cannot be modified.
+v120-005;APPROVAL_STEP_NOT_FOUND;ar-EG;الخطوة الحالية في مسار الاعتماد غير موجودة.
+v120-006;APPROVAL_STEP_NOT_FOUND;en-US;The current step in the approval path was not found.
+v120-007;APP_SETTINGS_NOT_FOUND;ar-EG;إعدادات التطبيق غير موجودة.
+v120-008;APP_SETTINGS_NOT_FOUND;en-US;Application settings were not found.
+v120-009;BIO_SOURCE_DEVICE_IMMUTABLE;ar-EG;مصادر الأجهزة غير قابلة للتعديل ولا يمكن حذفها أثناء تسجيل الجهاز.
+v120-010;BIO_SOURCE_DEVICE_IMMUTABLE;en-US;Device sources are immutable and cannot be deleted while the device is registered.
+v120-011;BIO_SOURCE_DEVICE_TYPE_RESTRICTED;ar-EG;يتم تسجيل مصادر الأجهزة تلقائياً من الأجهزة الحية ولا يمكن إنشاؤها يدوياً.
+v120-012;BIO_SOURCE_DEVICE_TYPE_RESTRICTED;en-US;Device sources are registered automatically from live devices and cannot be created manually.
+v120-013;BIO_SOURCE_INACTIVE;ar-EG;المصدر المحدد غير نشط.
+v120-014;BIO_SOURCE_INACTIVE;en-US;Selected source is inactive.
+v120-015;BIO_SOURCE_NAME_CLASH;ar-EG;يوجد مصدر بنفس الاسم بالفعل.
+v120-016;BIO_SOURCE_NAME_CLASH;en-US;A source with this name already exists.
+v120-017;BIO_SOURCE_NAME_REQUIRED;ar-EG;اسم المصدر مطلوب.
+v120-018;BIO_SOURCE_NAME_REQUIRED;en-US;Source name is required.
+v120-019;BIO_SOURCE_NOT_FOUND;ar-EG;مصدر البصمة غير موجود.
+v120-020;BIO_SOURCE_NOT_FOUND;en-US;Biometric source not found.
+v120-021;BIO_SOURCE_REQUIRED;ar-EG;المصدر مطلوب.
+v120-022;BIO_SOURCE_REQUIRED;en-US;Source is required.
+v120-023;BIO_SOURCE_TYPE_INVALID;ar-EG;نوع مصدر البصمة غير معروف.
+v120-024;BIO_SOURCE_TYPE_INVALID;en-US;Unknown biometric source type.
+v120-025;BIO_SOURCE_TYPE_REQUIRED;ar-EG;نوع المصدر مطلوب.
+v120-026;BIO_SOURCE_TYPE_REQUIRED;en-US;Source type is required.
+v120-027;BIO_SOURCE_WRONG_TYPE;ar-EG;المصدر المحدد ليس مصدر استيراد ملفات.
+v120-028;BIO_SOURCE_WRONG_TYPE;en-US;Selected source is not a file-import source.
+v120-029;DEMO_NO_LOGIN_APP_NOT_CONFIGURED;ar-EG;تطبيق الدخول التجريبي غير مهيأ.
+v120-030;DEMO_NO_LOGIN_APP_NOT_CONFIGURED;en-US;The demo application is not configured.
+v120-031;FISCAL_PERIOD_LOCKED;ar-EG;الفترة المالية مقفلة ولا يمكن تغيير حالتها إلا بإجراء إداري خاص.
+v120-032;FISCAL_PERIOD_LOCKED;en-US;The fiscal period is locked and its state can only be changed through a special administrative action.
+v120-033;JOURNAL_NUMBER_REQUIRED;ar-EG;رقم القيد مطلوب عند اختيار الترقيم اليدوي.
+v120-034;JOURNAL_NUMBER_REQUIRED;en-US;Journal entry number is required when manual numbering is selected.
+v120-035;NOTIFICATION_NOT_FOUND;ar-EG;الإشعار غير موجود.
+v120-036;NOTIFICATION_NOT_FOUND;en-US;Notification not found.
+v120-037;PO_NOT_FOUND;ar-EG;أمر الشراء غير موجود.
+v120-038;PO_NOT_FOUND;en-US;Purchase order not found.
+v120-039;PROC_PAYMENT_AMOUNT_EXCEEDED;ar-EG;مبلغ الصرف يجاوز رصيد التسوية المستحق.
+v120-040;PROC_PAYMENT_AMOUNT_EXCEEDED;en-US;Payment amount exceeds the outstanding settlement balance.
+v120-041;PROC_PAYMENT_NUMBER_EXISTS;ar-EG;رقم الدفعة مستخدم بالفعل.
+v120-042;PROC_PAYMENT_NUMBER_EXISTS;en-US;Payment number already in use.
+v120-043;SETTL_PERIOD_NOT_FOUND;ar-EG;فترة التسوية غير موجودة.
+v120-044;SETTL_PERIOD_NOT_FOUND;en-US;Settlement period not found.
+v120-045;SHORTCUT_LIMIT_EXCEEDED;ar-EG;تم تجاوز الحد الأقصى للاختصارات (20 اختصاراً).
+v120-046;SHORTCUT_LIMIT_EXCEEDED;en-US;Shortcut limit exceeded (max 20).
+v120-047;SHORTCUT_PROFILE_VERSION_CONFLICT;ar-EG;تغيّرت إعدادات الاختصارات في جلسة أخرى. يُرجى إعادة التحميل.
+v120-048;SHORTCUT_PROFILE_VERSION_CONFLICT;en-US;Your shortcut settings changed in another session. Please reload.
+v120-049;SUPPLIER_INVOICE_NOT_FOUND;ar-EG;فاتورة المورد غير موجودة.
+v120-050;SUPPLIER_INVOICE_NOT_FOUND;en-US;Supplier invoice not found.
+v120-051;USER_NOT_FOUND;ar-EG;المستخدم غير موجود.
+v120-052;USER_NOT_FOUND;en-US;User not found.

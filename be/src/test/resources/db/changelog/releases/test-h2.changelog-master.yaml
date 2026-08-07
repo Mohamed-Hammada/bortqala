@@ -475,3 +475,42 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260806_v102_access_guidance_extensions_translations.yaml
   - include:
       file: db/changelog/data/insert/20260806_v103_procurement_i18n_translations.yaml
+  - changeSet:
+      id: test-v116-unified-document-numbering
+      author: codex
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              ALTER TABLE apps ADD COLUMN IF NOT EXISTS automatic_document_numbering BOOLEAN DEFAULT TRUE NOT NULL;
+              CREATE TABLE IF NOT EXISTS document_number_sequences (
+                id VARCHAR(36) NOT NULL,
+                app_id VARCHAR(36) NOT NULL,
+                document_type VARCHAR(40) NOT NULL,
+                "year" INT NOT NULL,
+                next_value BIGINT DEFAULT 1 NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+                PRIMARY KEY (id)
+              );
+              ALTER TABLE document_number_sequences ADD CONSTRAINT IF NOT EXISTS uk_document_number_sequence_app_type_year UNIQUE (app_id, document_type, "year");
+  - include:
+      file: db/changelog/data/update/20260806_v117_approval_menu_allowed_menus.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v117_approval_menu_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v118_numbering_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260807_v119_hardcoded_ui_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260807_v120_exception_i18n_fix.yaml
+  - include:
+      file: db/changelog/data/insert/20260807_v121_trends_export_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260807_v122_budget_encumbrance_schema.yaml
+  - include:
+      file: db/changelog/data/insert/20260807_v123_budget_translations.yaml
+  - include:
+      file: db/changelog/data/update/20260807_v124_budget_menu_allowed_menus.yaml
+  - include:
+      file: db/changelog/data/insert/20260807_v125_budget_menu_translations.yaml

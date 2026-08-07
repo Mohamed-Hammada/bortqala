@@ -195,6 +195,22 @@
   border: 1px solid var(--line);
 }
 
+.trend-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.trend-months-select {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+}
+
 .insights-grid {
   display: grid;
   grid-template-columns: minmax(180px, .8fr) minmax(220px, 1fr) minmax(300px, 1.6fr);

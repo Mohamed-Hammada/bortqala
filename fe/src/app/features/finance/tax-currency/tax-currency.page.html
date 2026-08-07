@@ -1,12 +1,12 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">إعدادات الضرائب والعملات (Tax & Currency Settings)</p>
-      <h1>إدارة الضرائب وأسعار الصرف والعملات</h1>
-      <p>توصيف قواعد القيمة المضافة وضرائب الخصم وأسعار صرف العملات المختلفة.</p>
+      <p class="eyebrow">{{ i18n.t('taxCurrency.eyebrow') }}</p>
+      <h1>{{ i18n.t('taxCurrency.title') }}</h1>
+      <p>{{ i18n.t('taxCurrency.description') }}</p>
     </div>
     <button class="button primary" (click)="openNew()">
-      ＋ {{ activeTab() === 'taxes' ? 'إضافة ضريبة جديدة' : 'إضافة عملة جديدة' }}
+      ＋ {{ activeTab() === 'taxes' ? i18n.t('taxCurrency.addTax') : i18n.t('taxCurrency.addCurrency') }}
     </button>
   </header>
 
@@ -21,10 +21,10 @@
   <div class="filter-pills-bar">
     <div class="pills-group">
       <button class="pill-tab" [class.active]="activeTab() === 'taxes'" (click)="activeTab.set('taxes')">
-        🏷️ الضرائب والقواعد الضريبية ({{ taxes().length }})
+        🏷️ {{ i18n.t('taxCurrency.tabTaxes', { count: taxes().length }) }}
       </button>
       <button class="pill-tab" [class.active]="activeTab() === 'currencies'" (click)="activeTab.set('currencies')">
-        💱 العملات وأسعار الصرف ({{ currencies().length }})
+        💱 {{ i18n.t('taxCurrency.tabCurrencies', { count: currencies().length }) }}
       </button>
     </div>
   </div>
@@ -36,11 +36,11 @@
         <table>
           <thead>
             <tr>
-              <th>كود الضريبة</th>
-              <th>اسم الضريبة</th>
-              <th>النسبة المئوية (%)</th>
-              <th>نوع الضريبة</th>
-              <th>الحالة</th>
+              <th>{{ i18n.t('taxCurrency.colTaxCode') }}</th>
+              <th>{{ i18n.t('taxCurrency.colTaxName') }}</th>
+              <th>{{ i18n.t('taxCurrency.colRate') }}</th>
+              <th>{{ i18n.t('taxCurrency.colTaxType') }}</th>
+              <th>{{ i18n.t('taxCurrency.colStatus') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -51,15 +51,15 @@
                 <td class="ltr"><strong>{{ t.ratePercentage }}%</strong></td>
                 <td>
                   <span class="status info">
-                    {{ t.taxType === 'OUTPUT_VAT' ? 'ضريبة مبيعات (Output VAT)' : t.taxType === 'INPUT_VAT' ? 'ضريبة مدخلات (Input VAT)' : 'خصم وإضافة (Withholding)' }}
+                    {{ t.taxType === 'OUTPUT_VAT' ? i18n.t('taxCurrency.typeOutput') : t.taxType === 'INPUT_VAT' ? i18n.t('taxCurrency.typeInput') : i18n.t('taxCurrency.typeWithholding') }}
                   </span>
                 </td>
-                <td><span class="status" [class.success]="t.active">{{ t.active ? 'نشط' : 'معطل' }}</span></td>
+                <td><span class="status" [class.success]="t.active">{{ t.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
               </tr>
             } @empty {
               <tr>
                 <td colspan="5">
-                  <div class="empty-state">لا توجد ضرائب مسجلة بعد</div>
+                  <div class="empty-state">{{ i18n.t('taxCurrency.taxEmpty') }}</div>
                 </td>
               </tr>
             }
@@ -74,12 +74,12 @@
         <table>
           <thead>
             <tr>
-              <th>كود العملة</th>
-              <th>اسم العملة</th>
-              <th>الرمز</th>
-              <th>العملة الأساسية</th>
-              <th>سعر الصرف (مقابل الأساسية)</th>
-              <th>الحالة</th>
+              <th>{{ i18n.t('taxCurrency.colCurrencyCode') }}</th>
+              <th>{{ i18n.t('taxCurrency.colCurrencyName') }}</th>
+              <th>{{ i18n.t('taxCurrency.colSymbol') }}</th>
+              <th>{{ i18n.t('taxCurrency.colBase') }}</th>
+              <th>{{ i18n.t('taxCurrency.colExchangeRate') }}</th>
+              <th>{{ i18n.t('taxCurrency.colStatus') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -88,14 +88,14 @@
                 <td><strong class="ltr">{{ c.code }}</strong></td>
                 <td><strong>{{ c.name }}</strong></td>
                 <td><strong>{{ c.symbol }}</strong></td>
-                <td><span class="status" [class.success]="c.isBase">{{ c.isBase ? 'العملة الأساسية ✓' : 'عملة أجنبية' }}</span></td>
+                <td><span class="status" [class.success]="c.isBase">{{ c.isBase ? i18n.t('taxCurrency.baseCurrency') : i18n.t('taxCurrency.foreignCurrency') }}</span></td>
                 <td class="ltr"><code>1 {{ c.code }} = {{ c.exchangeRate }} EGP</code></td>
-                <td><span class="status" [class.success]="c.active">{{ c.active ? 'نشط' : 'معطل' }}</span></td>
+                <td><span class="status" [class.success]="c.active">{{ c.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
               </tr>
             } @empty {
               <tr>
                 <td colspan="6">
-                  <div class="empty-state">لا توجد عملات مسجلة بعد</div>
+                  <div class="empty-state">{{ i18n.t('taxCurrency.currencyEmpty') }}</div>
                 </td>
               </tr>
             }
@@ -111,39 +111,39 @@
     <aside class="drawer">
       <div class="drawer-header">
         <div>
-          <p class="eyebrow">إعدادات المالية</p>
-          <h2>{{ activeTab() === 'taxes' ? 'ضريبة جديدة' : 'عملة جديدة' }}</h2>
+          <p class="eyebrow">{{ i18n.t('taxCurrency.drawerEyebrow') }}</p>
+          <h2>{{ activeTab() === 'taxes' ? i18n.t('taxCurrency.newTax') : i18n.t('taxCurrency.newCurrency') }}</h2>
         </div>
-        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
+        <button class="button secondary" type="button" (click)="closeDrawer()">× {{ i18n.t('common.close') }}</button>
       </div>
 
       @if (activeTab() === 'taxes') {
         <form [formGroup]="taxForm" (ngSubmit)="submitTax()">
           <div class="form-grid">
             <div class="field">
-              <label>كود الضريبة *</label>
+              <label>{{ i18n.t('taxCurrency.taxCodeLabel') }} *</label>
               <input class="ltr" formControlName="code" placeholder="VAT-14" />
             </div>
             <div class="field">
-              <label>اسم الضريبة *</label>
-              <input formControlName="name" placeholder="ضريبة القيمة المضافة 14%" />
+              <label>{{ i18n.t('taxCurrency.taxNameLabel') }} *</label>
+              <input formControlName="name" [placeholder]="i18n.t('taxCurrency.taxNamePlaceholder')" />
             </div>
             <div class="field">
-              <label>النسبة المئوية (%) *</label>
+              <label>{{ i18n.t('taxCurrency.taxRateLabel') }} *</label>
               <input type="number" class="ltr" formControlName="ratePercentage" placeholder="14" />
             </div>
             <div class="field">
-              <label>نوع الضريبة *</label>
+              <label>{{ i18n.t('taxCurrency.taxTypeLabel') }} *</label>
               <select formControlName="taxType">
-                <option value="OUTPUT_VAT">ضريبة مخرجات/مبيعات (Output VAT)</option>
-                <option value="INPUT_VAT">ضريبة مدخلات/مشتريات (Input VAT)</option>
-                <option value="WITHHOLDING">خصم وأرباح تجارية (Withholding Tax)</option>
+                <option value="OUTPUT_VAT">{{ i18n.t('taxCurrency.typeOutput') }}</option>
+                <option value="INPUT_VAT">{{ i18n.t('taxCurrency.typeInput') }}</option>
+                <option value="WITHHOLDING">{{ i18n.t('taxCurrency.typeWithholding') }}</option>
               </select>
             </div>
           </div>
           <div class="drawer-actions">
-            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-            <button class="button primary" type="submit" [disabled]="taxForm.invalid">حفظ الضريبة</button>
+            <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+            <button class="button primary" type="submit" [disabled]="taxForm.invalid">{{ i18n.t('taxCurrency.saveTax') }}</button>
           </div>
         </form>
       }
@@ -152,31 +152,31 @@
         <form [formGroup]="currencyForm" (ngSubmit)="submitCurrency()">
           <div class="form-grid">
             <div class="field">
-              <label>كود العملة (ISO) *</label>
+              <label>{{ i18n.t('taxCurrency.currencyCodeLabel') }} *</label>
               <input class="ltr" formControlName="code" placeholder="USD" />
             </div>
             <div class="field">
-              <label>اسم العملة *</label>
-              <input formControlName="name" placeholder="دولار أمريكي" />
+              <label>{{ i18n.t('taxCurrency.currencyNameLabel') }} *</label>
+              <input formControlName="name" [placeholder]="i18n.t('taxCurrency.currencyNamePlaceholder')" />
             </div>
             <div class="field">
-              <label>الرمز (Symbol) *</label>
+              <label>{{ i18n.t('taxCurrency.symbolLabel') }} *</label>
               <input class="ltr" formControlName="symbol" placeholder="$" />
             </div>
             <div class="field">
-              <label>سعر الصرف *</label>
+              <label>{{ i18n.t('taxCurrency.exchangeRateLabel') }} *</label>
               <input type="number" class="ltr" formControlName="exchangeRate" placeholder="48.50" />
             </div>
             <div class="field span-2">
               <label class="checkbox-label">
                 <input type="checkbox" formControlName="isBase" />
-                <span>تعيين كـ عملة أساسية للنظام (Base Currency)</span>
+                <span>{{ i18n.t('taxCurrency.setBaseCurrency') }}</span>
               </label>
             </div>
           </div>
           <div class="drawer-actions">
-            <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-            <button class="button primary" type="submit" [disabled]="currencyForm.invalid">حفظ العملة</button>
+            <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+            <button class="button primary" type="submit" [disabled]="currencyForm.invalid">{{ i18n.t('taxCurrency.saveCurrency') }}</button>
           </div>
         </form>
       }

@@ -11,6 +11,8 @@ import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.idempotency.application.IdempotencyService;
+import com.bemo.hr.shared.numbering.DocumentNumberService;
+import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,17 +34,23 @@ public class JournalEntryService {
     private final AccountRepository accountRepository;
     private final FiscalPeriodGuard fiscalPeriodGuard;
     private final IdempotencyService idempotencyService;
+    private final DocumentNumberService documentNumberService;
+    private final TenantApplicationRepository tenantApplicationRepository;
 
     public JournalEntryService(JournalEntryRepository journalEntryRepository,
                                JournalEntryLineRepository journalEntryLineRepository,
                                AccountRepository accountRepository,
                                FiscalPeriodGuard fiscalPeriodGuard,
-                               IdempotencyService idempotencyService) {
+                               IdempotencyService idempotencyService,
+                               DocumentNumberService documentNumberService,
+                               TenantApplicationRepository tenantApplicationRepository) {
         this.journalEntryRepository = journalEntryRepository;
         this.journalEntryLineRepository = journalEntryLineRepository;
         this.accountRepository = accountRepository;
         this.fiscalPeriodGuard = fiscalPeriodGuard;
         this.idempotencyService = idempotencyService;
+        this.documentNumberService = documentNumberService;
+        this.tenantApplicationRepository = tenantApplicationRepository;
     }
 
     @Transactional
@@ -50,9 +58,10 @@ public class JournalEntryService {
         String appId = TenantContext.require();
         LocalDate entryDate = Instant.ofEpochMilli(payload.entryDate()).atZone(ZoneOffset.UTC).toLocalDate();
         fiscalPeriodGuard.requireAdjustment(entryDate);
-        validateStructure(payload, appId, null);
+        String entryNumber = resolveEntryNumber(appId, entryDate, payload.entryNumber());
+        validateStructure(payload, appId, entryNumber);
 
-        JournalEntry entry = new JournalEntry(payload.entryNumber(), entryDate, payload.description(),
+        JournalEntry entry = new JournalEntry(entryNumber, entryDate, payload.description(),
                 payload.reference(), payload.fiscalPeriodId());
         entry.setCurrency(normalizeCurrency(payload.currency()));
         entry = journalEntryRepository.save(entry);
@@ -63,6 +72,34 @@ public class JournalEntryService {
             journalEntryLineRepository.save(line);
         }
         return toResponse(entry);
+    }
+
+    public AccountingApi.NumberingSettings numberingSettings() {
+        return new AccountingApi.NumberingSettings(automaticNumbering());
+    }
+
+    private String resolveEntryNumber(String appId, LocalDate entryDate, String requested) {
+        if (automaticNumbering()) {
+            return documentNumberService.next("JOURNAL_ENTRY", "JV", entryDate);
+        }
+        String value = requireManualEntryNumber(requested);
+        if (journalEntryRepository.existsByAppIdAndEntryNumber(appId, value)) {
+            throw new BusinessRuleException("رقم القيد مستخدم بالفعل في هذه الشركة.", "JOURNAL_NUMBER_DUPLICATE", HttpStatus.CONFLICT);
+        }
+        return value;
+    }
+
+    private String requireManualEntryNumber(String requested) {
+        if (requested == null || requested.isBlank()) {
+            throw new BusinessRuleException("رقم القيد مطلوب عند اختيار الترقيم اليدوي.", "JOURNAL_NUMBER_REQUIRED", HttpStatus.BAD_REQUEST);
+        }
+        return requested.strip();
+    }
+
+    private boolean automaticNumbering() {
+        return tenantApplicationRepository.findById(TenantContext.require())
+                .orElseThrow(() -> new BusinessRuleException("Application settings were not found.", "APP_SETTINGS_NOT_FOUND", HttpStatus.CONFLICT))
+                .isAutomaticDocumentNumbering();
     }
 
     @Transactional
@@ -128,14 +165,9 @@ public class JournalEntryService {
         return toResponse(reversal);
     }
 
-    private void validateStructure(AccountingApi.JournalEntryPayload payload, String appId, String currentId) {
+    private void validateStructure(AccountingApi.JournalEntryPayload payload, String appId, String entryNumber) {
         if (payload.lines() == null || payload.lines().size() < 2) {
             throw new BusinessRuleException("يجب أن يحتوي القيد على سطرين على الأقل.", "JOURNAL_INVALID", HttpStatus.BAD_REQUEST);
-        }
-        if (currentId == null
-                ? journalEntryRepository.existsByAppIdAndEntryNumber(appId, payload.entryNumber().strip())
-                : journalEntryRepository.existsByAppIdAndEntryNumberAndIdNot(appId, payload.entryNumber().strip(), currentId)) {
-            throw new BusinessRuleException("رقم القيد مستخدم بالفعل في هذه الشركة.", "JOURNAL_NUMBER_DUPLICATE", HttpStatus.CONFLICT);
         }
         Set<String> accountIds = payload.lines().stream().map(AccountingApi.JournalEntryLinePayload::accountId).collect(java.util.stream.Collectors.toSet());
         List<Account> accounts = accountRepository.findAllById(accountIds);

@@ -318,6 +318,7 @@ class AuthSecurityIntegrationTests {
         var request = new AuthApi.AppSettingsRequest(
                 current.sessionTimeoutMinutes(), current.sessionTimeoutEnabled(), current.showReportPresets(),
                 current.attendanceAnomalyThresholdPercent(), current.automaticProcurementNumbering(),
+                current.automaticDocumentNumbering(),
                 !current.adminDashboardCustomizationEnabled(),
                 current.minPasswordLength(), current.requireUppercase(), current.requireLowercase(),
                 current.requireNumbers(), current.requireSpecialChars(), current.disallowSpaces(),
@@ -335,6 +336,7 @@ class AuthSecurityIntegrationTests {
         authService.updateAppSettings(new AuthApi.AppSettingsRequest(
                 current.sessionTimeoutMinutes(), current.sessionTimeoutEnabled(), current.showReportPresets(),
                 current.attendanceAnomalyThresholdPercent(), current.automaticProcurementNumbering(),
+                current.automaticDocumentNumbering(),
                 original, current.minPasswordLength(), current.requireUppercase(), current.requireLowercase(),
                 current.requireNumbers(), current.requireSpecialChars(), current.disallowSpaces(),
                 current.maxPasswordLength(), current.passwordExpiryDays(), current.passwordHistoryCount()),

@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class AccessCatalogService {
 
     private static final List<String> LEVEL_PRECEDENCE = List.of(
-            "REVERSE", "POST", "APPROVE", "REVIEW", "MANAGE", "EDIT", "CREATE");
+            "REVERSE", "POST", "DECIDE", "APPROVE", "REVIEW", "MANAGE", "EDIT", "CREATE");
 
     private static final String ERR_UNKNOWN_MENU = "ACCESS_UNKNOWN_MENU";
     private static final String ERR_MENU_ROLE_MISMATCH = "ACCESS_MENU_ROLE_MISMATCH";

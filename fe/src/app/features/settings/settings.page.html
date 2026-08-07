@@ -72,7 +72,7 @@
               <div class="card-icon">☀</div>
               <div class="card-info">
                 <strong>{{ i18n.t('settings.light') }}</strong>
-                <small>Clean white workspace</small>
+                <small>{{ i18n.t('settings.themeLightHint') }}</small>
               </div>
             </label>
 
@@ -81,7 +81,7 @@
               <div class="card-icon">🌙</div>
               <div class="card-info">
                 <strong>{{ i18n.t('settings.dark') }}</strong>
-                <small>Sleek high-contrast dark</small>
+                <small>{{ i18n.t('settings.themeDarkHint') }}</small>
               </div>
             </label>
 
@@ -90,7 +90,7 @@
               <div class="card-icon">💻</div>
               <div class="card-info">
                 <strong>{{ i18n.t('settings.system') }}</strong>
-                <small>Match OS preferences</small>
+                <small>{{ i18n.t('settings.themeSystemHint') }}</small>
               </div>
             </label>
           </div>
@@ -272,10 +272,10 @@
       </fieldset>
 
       <fieldset class="settings-group">
-        <legend class="group-title">اكتشاف انقطاع أجهزة البصمة</legend>
-        <p class="group-hint">ينشئ النظام حالة شذوذ يومي عندما تبلغ نسبة الموظفين بلا بصمة هذا الحد داخل الفئة.</p>
+        <legend class="group-title">{{ i18n.t('settings.attendanceAnomalyTitle') }}</legend>
+        <p class="group-hint">{{ i18n.t('settings.attendanceAnomalyHint') }}</p>
         <div class="field session-timeout-field">
-          <label for="attendance-anomaly-threshold">نسبة الاكتشاف (%)</label>
+          <label for="attendance-anomaly-threshold">{{ i18n.t('settings.attendanceAnomalyPercentLabel') }}</label>
           <input
             id="attendance-anomaly-threshold"
             class="ltr"
@@ -284,7 +284,7 @@
             max="100"
             formControlName="attendanceAnomalyThresholdPercent"
           />
-          <small class="field-hint session-hint">القيمة الافتراضية 70%. لا يطبق النظام قراراً تلقائياً.</small>
+          <small class="field-hint session-hint">{{ i18n.t('settings.attendanceAnomalyDefaultHint') }}</small>
         </div>
       </fieldset>
 
@@ -308,6 +308,17 @@
           <span>
             <strong>{{ i18n.t('settings.procurementNumberingAutomatic') }}</strong>
             <small>{{ i18n.t('settings.procurementNumberingHint') }}</small>
+          </span>
+        </label>
+      </fieldset>
+
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.documentNumberingTitle') }}</legend>
+        <label class="selectable-card">
+          <input type="checkbox" formControlName="automaticDocumentNumbering" />
+          <span>
+            <strong>{{ i18n.t('settings.documentNumberingAutomatic') }}</strong>
+            <small>{{ i18n.t('settings.documentNumberingHint') }}</small>
           </span>
         </label>
       </fieldset>
@@ -449,7 +460,7 @@
               <input type="radio" formControlName="excelTableStyle" value="GOLD" />
               <div class="mini-excel-table gold-tbl">
                 <div class="tbl-head">🟨 {{ i18n.t('settings.excelGold') }}</div>
-                <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+                <div class="tbl-row"><span>{{ i18n.t('settings.excelRowPreview') }}</span><span>100</span></div>
               </div>
             </label>
 
@@ -457,7 +468,7 @@
               <input type="radio" formControlName="excelTableStyle" value="BLUE" />
               <div class="mini-excel-table blue-tbl">
                 <div class="tbl-head">🟦 {{ i18n.t('settings.excelBlue') }}</div>
-                <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+                <div class="tbl-row"><span>{{ i18n.t('settings.excelRowPreview') }}</span><span>100</span></div>
               </div>
             </label>
 
@@ -465,7 +476,7 @@
               <input type="radio" formControlName="excelTableStyle" value="GREEN" />
               <div class="mini-excel-table green-tbl">
                 <div class="tbl-head">🟩 {{ i18n.t('settings.excelGreen') }}</div>
-                <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+                <div class="tbl-row"><span>{{ i18n.t('settings.excelRowPreview') }}</span><span>100</span></div>
               </div>
             </label>
 
@@ -473,7 +484,7 @@
               <input type="radio" formControlName="excelTableStyle" value="GRAY" />
               <div class="mini-excel-table gray-tbl">
                 <div class="tbl-head">⬜ {{ i18n.t('settings.excelGray') }}</div>
-                <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+                <div class="tbl-row"><span>{{ i18n.t('settings.excelRowPreview') }}</span><span>100</span></div>
               </div>
             </label>
           </div>
@@ -517,8 +528,8 @@
       <div class="confirm-icon">&#9888;&#65039;</div>
       <div class="confirm-message">{{ action.message }}</div>
       <div class="confirm-actions">
-        <button type="button" class="button primary" (click)="action.onConfirm()">تأكيد</button>
-        <button type="button" class="button secondary" (click)="confirmAction.set(null)">إلغاء</button>
+        <button type="button" class="button primary" (click)="action.onConfirm()">{{ i18n.t('common.confirm') }}</button>
+        <button type="button" class="button secondary" (click)="confirmAction.set(null)">{{ i18n.t('common.cancel') }}</button>
       </div>
     </div>
   </div>

@@ -1,11 +1,11 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">الجودة والرقابة (Quality Assurance & Control)</p>
-      <h1>فحص ومراقبة الجودة (Quality Control Inspections)</h1>
-      <p>محاضر فحص الشحنات الواردة ومنتجات خطوط الإنتاج والقبول/الرفض مع أسباب العيوب.</p>
+      <p class="eyebrow">{{ i18n.t('quality.eyebrow') }}</p>
+      <h1>{{ i18n.t('quality.title') }}</h1>
+      <p>{{ i18n.t('quality.description') }}</p>
     </div>
-    <button class="button primary" (click)="openNew()">＋ محضر فحص جديد (QC)</button>
+    <button class="button primary" (click)="openNew()">＋ {{ i18n.t('quality.add') }}</button>
   </header>
 
   @if (loading()) {
@@ -20,14 +20,14 @@
       <table>
         <thead>
           <tr>
-            <th>رقم محضر الفحص</th>
-            <th>تاريخ الفحص</th>
-            <th>مصدر الفحص</th>
-            <th>الكمية المقبولة</th>
-            <th>الكمية المرفوضة</th>
-            <th>نتيجة الفحص</th>
-            <th>اسم الفاحص</th>
-            <th>ملاحظات</th>
+            <th>{{ i18n.t('quality.colNumber') }}</th>
+            <th>{{ i18n.t('quality.colDate') }}</th>
+            <th>{{ i18n.t('quality.colSource') }}</th>
+            <th>{{ i18n.t('quality.colPassed') }}</th>
+            <th>{{ i18n.t('quality.colFailed') }}</th>
+            <th>{{ i18n.t('quality.colResult') }}</th>
+            <th>{{ i18n.t('quality.colInspector') }}</th>
+            <th>{{ i18n.t('quality.colNotes') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -37,7 +37,7 @@
               <td class="ltr">{{ date(q.inspectionDate) }}</td>
               <td>
                 <span class="status info">
-                  {{ q.sourceType === 'INCOMING_GRN' ? 'استلام شحنة موارد' : 'إنتاج تجميعي تصنيع' }}
+                  {{ q.sourceType === 'INCOMING_GRN' ? i18n.t('quality.sourceIncoming') : i18n.t('quality.sourceProduction') }}
                 </span>
               </td>
               <td class="ltr"><strong class="success-text">{{ q.passedQuantity | number:'1.0-2' }}</strong></td>
@@ -48,7 +48,7 @@
                   [class.success]="q.status === 'PASSED'"
                   [class.error]="q.status === 'FAILED' || q.status === 'REJECTED'"
                 >
-                  {{ q.status === 'PASSED' ? 'مقبول (Passed ✓)' : 'مرفوض (Failed ✗)' }}
+                  {{ q.status === 'PASSED' ? i18n.t('quality.resultPassed') : i18n.t('quality.resultFailed') }}
                 </span>
               </td>
               <td><strong>{{ q.inspectorName }}</strong></td>
@@ -57,7 +57,7 @@
           } @empty {
             <tr>
               <td colspan="8">
-                <div class="empty-state">لا توجد محاضر فحص جودة مسجلة بعد. اضغط <strong>"محضر فحص جديد"</strong> للبدء.</div>
+                <div class="empty-state">{{ i18n.t('quality.empty') }}</div>
               </td>
             </tr>
           }
@@ -71,56 +71,56 @@
     <aside class="drawer">
       <div class="drawer-header">
         <div>
-          <p class="eyebrow">إدارة الجودة</p>
-          <h2>محضر فحص جودة جديد</h2>
+          <p class="eyebrow">{{ i18n.t('quality.drawerEyebrow') }}</p>
+          <h2>{{ i18n.t('quality.drawerTitle') }}</h2>
         </div>
-        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
+        <button class="button secondary" type="button" (click)="closeDrawer()">× {{ i18n.t('common.close') }}</button>
       </div>
 
       <form [formGroup]="qiForm" (ngSubmit)="submitQi()">
         <div class="form-grid">
           <div class="field">
-            <label>رقم المحضر *</label>
+            <label>{{ i18n.t('quality.numberLabel') }} *</label>
             <input class="ltr" formControlName="inspectionNumber" />
           </div>
           <div class="field">
-            <label>تاريخ الفحص *</label>
+            <label>{{ i18n.t('quality.dateLabel') }} *</label>
             <input type="date" class="ltr" formControlName="inspectionDate" />
           </div>
           <div class="field">
-            <label>مصدر الفحص *</label>
+            <label>{{ i18n.t('quality.sourceLabel') }} *</label>
             <select formControlName="sourceType">
-              <option value="INCOMING_GRN">استلام بضائع من مورد (GRN)</option>
-              <option value="PRODUCTION_OUTPUT">منتجات من خطوط الإنتاج</option>
+              <option value="INCOMING_GRN">{{ i18n.t('quality.optionIncomingGrn') }}</option>
+              <option value="PRODUCTION_OUTPUT">{{ i18n.t('quality.optionProductionOutput') }}</option>
             </select>
           </div>
           <div class="field">
-            <label>نتيجة الفحص *</label>
+            <label>{{ i18n.t('quality.resultLabel') }} *</label>
             <select formControlName="status">
-              <option value="PASSED">مقبول (Passed)</option>
-              <option value="FAILED">مرفوض (Failed)</option>
+              <option value="PASSED">{{ i18n.t('quality.optionPassed') }}</option>
+              <option value="FAILED">{{ i18n.t('quality.optionFailed') }}</option>
             </select>
           </div>
           <div class="field">
-            <label>الكمية المقبولة *</label>
+            <label>{{ i18n.t('quality.passedLabel') }} *</label>
             <input type="number" class="ltr" formControlName="passedQuantity" />
           </div>
           <div class="field">
-            <label>الكمية المرفوضة *</label>
+            <label>{{ i18n.t('quality.failedLabel') }} *</label>
             <input type="number" class="ltr" formControlName="failedQuantity" />
           </div>
           <div class="field span-2">
-            <label>اسم المهندس الفاحص *</label>
+            <label>{{ i18n.t('quality.inspectorLabel') }} *</label>
             <input formControlName="inspectorName" />
           </div>
           <div class="field span-2">
-            <label>ملاحظات وتقرير عيوب الجودة</label>
+            <label>{{ i18n.t('quality.notesLabel') }}</label>
             <input formControlName="notes" />
           </div>
         </div>
         <div class="drawer-actions">
-          <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-          <button class="button primary" type="submit" [disabled]="qiForm.invalid">حفظ محضر الفحص</button>
+          <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+          <button class="button primary" type="submit" [disabled]="qiForm.invalid">{{ i18n.t('quality.save') }}</button>
         </div>
       </form>
     </aside>

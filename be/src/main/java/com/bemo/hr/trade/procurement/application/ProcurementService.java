@@ -1,6 +1,7 @@
 package com.bemo.hr.trade.procurement.application;
 
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.budget.application.BudgetService;
 import com.bemo.hr.finance.domain.FiscalPeriodGuard;
 import com.bemo.hr.operations.PartnerLedgerEntry;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
@@ -11,6 +12,7 @@ import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.idempotency.application.IdempotencyService;
+import com.bemo.hr.shared.numbering.DocumentNumberService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.trade.procurement.api.ProcurementApi;
@@ -61,7 +63,9 @@ public class ProcurementService {
     private final CurrencyRepository currencyRepository;
     private final IdempotencyService idempotencyService;
     private final FiscalPeriodGuard fiscalPeriodGuard;
+    private final DocumentNumberService documentNumberService;
     private final com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository threeWayMatchRepository;
+    private final BudgetService budgetService;
 
     public ProcurementService(PurchaseOrderRepository purchaseOrderRepository,
                               PurchaseOrderLineRepository purchaseOrderLineRepository,
@@ -78,7 +82,9 @@ public class ProcurementService {
                               CurrencyRepository currencyRepository,
                               IdempotencyService idempotencyService,
                               FiscalPeriodGuard fiscalPeriodGuard,
-                              com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository threeWayMatchRepository) {
+                              DocumentNumberService documentNumberService,
+                              com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository threeWayMatchRepository,
+                              BudgetService budgetService) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.purchaseOrderLineRepository = purchaseOrderLineRepository;
         this.procurementDocumentSequenceRepository = procurementDocumentSequenceRepository;
@@ -94,7 +100,9 @@ public class ProcurementService {
         this.currencyRepository = currencyRepository;
         this.idempotencyService = idempotencyService;
         this.fiscalPeriodGuard = fiscalPeriodGuard;
+        this.documentNumberService = documentNumberService;
         this.threeWayMatchRepository = threeWayMatchRepository;
+        this.budgetService = budgetService;
     }
 
     public ProcurementApi.NumberingSettings numberingSettings() {
@@ -126,6 +134,7 @@ public class ProcurementService {
                 payload.exchangeRateOverrideReason());
         PurchaseOrder po = new PurchaseOrder(resolvePoNumber(payload.poNumber(), null), poDate, payload.supplierId(),
                 payload.purchaseRequestId(), payload.paymentTerms(), currencyCode, calculatedTotal);
+        po.assignDepartment(payload.departmentId());
         po.applyExchangeRate(rate.baseCurrencyCode(), rate.rate(), rate.rateDate(), rate.source(), rate.overrideReason());
         PurchaseOrder saved = purchaseOrderRepository.save(po);
         List<PurchaseOrderLine> lines = buildLines(saved.getId(), payload.items());
@@ -151,6 +160,7 @@ public class ProcurementService {
         validateFrozenPurchaseOrderExchangeSnapshot(po, payload, poDate);
         po.updateDraft(resolvePoNumber(payload.poNumber(), po.getId()), poDate, payload.supplierId(),
                 payload.purchaseRequestId(), payload.paymentTerms(), currencyCode, calculatedTotal);
+        po.assignDepartment(payload.departmentId());
         po.applyExchangeRate(po.getBaseCurrencyCode(), po.getExchangeRate(), po.getExchangeRateDate(),
                 po.getExchangeRateSource(), po.getExchangeRateOverrideReason());
         purchaseOrderLineRepository.deleteByPurchaseOrderId(po.getId());
@@ -167,6 +177,8 @@ public class ProcurementService {
         if (po.getStatus() != PurchaseOrder.Status.DRAFT)
             throw new BusinessRuleException("يمكن إصدار أمر الشراء من حالة مسودة فقط", "PROC_ORDER_ISSUE_FROM_DRAFT", HttpStatus.CONFLICT);
         po.updateStatus(PurchaseOrder.Status.ISSUED);
+        budgetService.encumberForOrder(po.getId(), po.getPoNumber(), po.getDepartmentId(),
+                po.getBaseTotalAmount(), po.getPoDate(), getCurrentUser());
         auditService.record("ISSUE", "PURCHASE_ORDER", po.getId(), getCurrentUser(),
                 "{\"poNumber\":\"" + po.getPoNumber() + "\"}", null);
         return toPoResponse(po, loadLines(po.getId()), resolveSupplierNames(List.of(po)));
@@ -178,6 +190,7 @@ public class ProcurementService {
         if (po.getStatus() != PurchaseOrder.Status.ISSUED)
             throw new BusinessRuleException("يمكن استلام أمر الشراء من حالة صادر فقط", "PROC_ORDER_RECEIVE_FROM_ISSUED", HttpStatus.CONFLICT);
         po.updateStatus(PurchaseOrder.Status.RECEIVED);
+        budgetService.releaseForReceive(po.getId(), getCurrentUser());
         auditService.record("RECEIVE", "PURCHASE_ORDER", po.getId(), getCurrentUser(),
                 "{\"poNumber\":\"" + po.getPoNumber() + "\"}", null);
         return toPoResponse(po, loadLines(po.getId()), resolveSupplierNames(List.of(po)));
@@ -189,6 +202,7 @@ public class ProcurementService {
         if (po.getStatus() == PurchaseOrder.Status.CANCELLED)
             throw new BusinessRuleException("أمر الشراء ملغي بالفعل", "PROC_ORDER_ALREADY_CANCELLED", HttpStatus.CONFLICT);
         po.updateStatus(PurchaseOrder.Status.CANCELLED);
+        budgetService.releaseForCancel(po.getId(), getCurrentUser());
         auditService.record("CANCEL", "PURCHASE_ORDER", po.getId(), getCurrentUser(),
                 "{\"poNumber\":\"" + po.getPoNumber() + "\"}", null);
         return toPoResponse(po, loadLines(po.getId()), resolveSupplierNames(List.of(po)));
@@ -259,6 +273,7 @@ public class ProcurementService {
         boolean fullyReceived = orderedLines.values().stream().allMatch(line ->
                 previouslyAccepted.getOrDefault(line.getId(), BigDecimal.ZERO).compareTo(line.getQuantity()) >= 0);
         po.updateStatus(fullyReceived ? PurchaseOrder.Status.RECEIVED : PurchaseOrder.Status.PARTIALLY_RECEIVED);
+        if (fullyReceived) budgetService.releaseForReceive(po.getId(), actor);
 
         auditService.record("CREATE", "GOODS_RECEIPT", saved.getId(), getCurrentUser(),
                 "{\"grnNumber\":\"" + saved.getGrnNumber() + "\",\"po\":\"" + po.getPoNumber() + "\"}", null);
@@ -319,6 +334,7 @@ public class ProcurementService {
                 saved.getDocumentReference(), "فاتورة مشتريات: " + saved.getDocumentReference(),
                 saved.getInvoiceDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
 
+        budgetService.liquidateForInvoice(saved.getPurchaseOrderId(), saved.getBaseNetAmount(), getCurrentUser());
         auditService.record("CREATE", "SUPPLIER_INVOICE", saved.getId(), getCurrentUser(),
                 "{\"invoiceNumber\":\"" + saved.getDocumentReference() + "\",\"amount\":" + saved.getNetAmount() + "}", null);
         return toInvoiceResponse(saved, resolveNames(List.of(saved.getSupplierId())));
@@ -368,8 +384,6 @@ public class ProcurementService {
             throw new BusinessRuleException("الفاتورة المحددة لا تخص المورد المختار. اختر فاتورة مفتوحة لنفس المورد.", "PROC_INVOICE_SUPPLIER_MISMATCH", HttpStatus.CONFLICT);
         if (payload.amount().signum() <= 0)
             throw new BusinessRuleException("يجب أن يكون مبلغ الدفعة أكبر من صفر.", "PROC_PAYMENT_AMOUNT_POSITIVE", HttpStatus.CONFLICT);
-        if (payload.paymentNumber() == null || payload.paymentNumber().isBlank())
-            throw new BusinessRuleException("رقم الدفعة مطلوب.", "PROC_PAYMENT_NUMBER_REQUIRED", HttpStatus.CONFLICT);
         BigDecimal paidBefore = paidAmount(inv.getId());
         BigDecimal outstanding = inv.getNetAmount().subtract(paidBefore);
         if (payload.amount().compareTo(outstanding) > 0)
@@ -377,7 +391,7 @@ public class ProcurementService {
 
         LocalDate paymentDate = Instant.ofEpochMilli(payload.paymentDate()).atZone(ZoneOffset.UTC).toLocalDate();
         fiscalPeriodGuard.requireOpen(paymentDate);
-        SupplierPayment pmt = new SupplierPayment(payload.paymentNumber(), paymentDate, payload.supplierId(),
+        SupplierPayment pmt = new SupplierPayment(resolvePaymentNumber(payload, paymentDate), paymentDate, payload.supplierId(),
                 payload.supplierInvoiceId(), payload.operationId(), payload.amount(), payload.paymentMethod(), payload.notes());
         SupplierPayment saved = supplierPaymentRepository.save(pmt);
 
@@ -540,10 +554,26 @@ public class ProcurementService {
         return value.strip().toUpperCase(java.util.Locale.ROOT);
     }
 
+    private String resolvePaymentNumber(ProcurementApi.SupplierPaymentPayload payload, LocalDate paymentDate) {
+        if (automaticDocumentNumbering()) {
+            return documentNumberService.next("SUPPLIER_PAYMENT", "PMT", paymentDate);
+        }
+        String value = requireManualNumber(payload.paymentNumber(), "رقم الدفعة مطلوب عند اختيار الترقيم اليدوي.");
+        if (supplierPaymentRepository.existsByPaymentNumberIgnoreCase(value))
+            throw new BusinessRuleException("رقم الدفعة مستخدم بالفعل.", "PROC_PAYMENT_NUMBER_EXISTS", HttpStatus.CONFLICT);
+        return value;
+    }
+
     private boolean automaticNumbering() {
         return tenantApplicationRepository.findById(TenantContext.require())
                 .orElseThrow(() -> new BusinessRuleException("Application settings were not found.", "PROC_APP_SETTINGS_NOT_FOUND", HttpStatus.CONFLICT))
                 .isAutomaticProcurementNumbering();
+    }
+
+    private boolean automaticDocumentNumbering() {
+        return tenantApplicationRepository.findById(TenantContext.require())
+                .orElseThrow(() -> new BusinessRuleException("Application settings were not found.", "PROC_APP_SETTINGS_NOT_FOUND", HttpStatus.CONFLICT))
+                .isAutomaticDocumentNumbering();
     }
 
     private String resolveSupplierName(String id) {
@@ -574,7 +604,7 @@ public class ProcurementService {
         Map<String, BigDecimal> received = acceptedQuantities(po.getId());
         return new ProcurementApi.PurchaseOrderResponse(po.getId(), po.getPoNumber(), toEpochMs(po.getPoDate()),
                 po.getSupplierId(), supplierNames.get(po.getSupplierId()), po.getPurchaseRequestId(),
-                po.getPaymentTerms(), po.getCurrencyCode(), po.getBaseCurrencyCode(), po.getExchangeRate(),
+                po.getDepartmentId(), po.getPaymentTerms(), po.getCurrencyCode(), po.getBaseCurrencyCode(), po.getExchangeRate(),
                 toEpochMs(po.getExchangeRateDate()), po.getExchangeRateSource(), po.getExchangeRateOverrideReason(),
                 po.getBaseTotalAmount(), po.getStatus().name(), po.getTotalAmount(),
                 lines.stream().map(line -> toLineResponse(line, received)).toList(), po.getCreatedAt(), po.getUpdatedAt());

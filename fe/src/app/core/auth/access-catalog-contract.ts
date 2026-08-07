@@ -69,6 +69,12 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
     requiredFeature: 'finance.enabled',
   },
+  {
+    menuId: 'budgets',
+    route: '/finance/budgets',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+    requiredFeature: 'finance.enabled',
+  },
   { menuId: 'organization', route: '/organization', roles: ['ADMIN', 'SUPER_ADMIN'], requiredFeature: null },
   { menuId: 'audit-logs', route: '/audit-logs', roles: ['ADMIN', 'SUPER_ADMIN'], requiredFeature: null },
   { menuId: 'users', route: '/users', roles: ['ADMIN', 'SUPER_ADMIN'], requiredFeature: null },

@@ -1,11 +1,11 @@
 <section class="page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">النظام المالي المحاسبي (General Ledger COA)</p>
-      <h1>دليل الحسابات الشامل (Chart of Accounts)</h1>
-      <p>شجرة واستعراض الأصول والخصوم وحقوق الملكية والإيرادات والمصروفات.</p>
+      <p class="eyebrow">{{ i18n.t('accounts.eyebrow') }}</p>
+      <h1>{{ i18n.t('accounts.title') }}</h1>
+      <p>{{ i18n.t('accounts.description') }}</p>
     </div>
-    <button class="button primary" (click)="openNew()">＋ إضافة حساب جديد</button>
+    <button class="button primary" (click)="openNew()">＋ {{ i18n.t('accounts.add') }}</button>
   </header>
 
   @if (loading()) {
@@ -20,12 +20,12 @@
       <table>
         <thead>
           <tr>
-            <th>كود الحساب</th>
-            <th>اسم الحساب</th>
-            <th>نوع الحساب</th>
-            <th>تصنيف الحساب</th>
-            <th>العملة</th>
-            <th>الحالة</th>
+            <th>{{ i18n.t('accounts.colCode') }}</th>
+            <th>{{ i18n.t('accounts.colName') }}</th>
+            <th>{{ i18n.t('accounts.colType') }}</th>
+            <th>{{ i18n.t('accounts.colCategory') }}</th>
+            <th>{{ i18n.t('accounts.colCurrency') }}</th>
+            <th>{{ i18n.t('accounts.colStatus') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -37,19 +37,19 @@
               </td>
               <td>
                 <span class="status neutral">
-                  {{ acc.type === 'ASSET' ? 'أصول' : acc.type === 'LIABILITY' ? 'خصوم' : acc.type === 'EQUITY' ? 'حقوق ملكية' : acc.type === 'REVENUE' ? 'إيرادات' : 'مصروفات' }}
+                  {{ acc.type === 'ASSET' ? i18n.t('accounts.typeAsset') : acc.type === 'LIABILITY' ? i18n.t('accounts.typeLiability') : acc.type === 'EQUITY' ? i18n.t('accounts.typeEquity') : acc.type === 'REVENUE' ? i18n.t('accounts.typeRevenue') : i18n.t('accounts.typeExpense') }}
                 </span>
               </td>
               <td>
-                <span class="status" [class.info]="acc.isHeader">{{ acc.isHeader ? 'حساب رئيسي (Header)' : 'حساب فرعي (Posting)' }}</span>
+                <span class="status" [class.info]="acc.isHeader">{{ acc.isHeader ? i18n.t('accounts.headerAccount') : i18n.t('accounts.postingAccount') }}</span>
               </td>
               <td class="ltr"><code>{{ acc.currency }}</code></td>
-              <td><span class="status" [class.success]="acc.active">{{ acc.active ? 'نشط' : 'معطل' }}</span></td>
+              <td><span class="status" [class.success]="acc.active">{{ acc.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
             </tr>
           } @empty {
             <tr>
               <td colspan="6">
-                <div class="empty-state">لا توجد حسابات مسجلة في دليل الحسابات بعد</div>
+                <div class="empty-state">{{ i18n.t('accounts.empty') }}</div>
               </td>
             </tr>
           }
@@ -63,36 +63,36 @@
     <aside class="drawer">
       <div class="drawer-header">
         <div>
-          <p class="eyebrow">دليل الحسابات</p>
-          <h2>حساب جديد</h2>
+          <p class="eyebrow">{{ i18n.t('accounts.drawerEyebrow') }}</p>
+          <h2>{{ i18n.t('accounts.newTitle') }}</h2>
         </div>
-        <button class="button secondary" type="button" (click)="closeDrawer()">× إغلاق</button>
+        <button class="button secondary" type="button" (click)="closeDrawer()">× {{ i18n.t('common.close') }}</button>
       </div>
 
       <form [formGroup]="form" (ngSubmit)="submit()">
         <div class="form-grid">
           <div class="field">
-            <label>كود الحساب *</label>
-            <input class="ltr" formControlName="code" placeholder="مثال: 10103" />
+            <label>{{ i18n.t('accounts.codeLabel') }} *</label>
+            <input class="ltr" formControlName="code" [placeholder]="i18n.t('accounts.codePlaceholder')" />
           </div>
           <div class="field">
-            <label>اسم الحساب *</label>
-            <input formControlName="name" placeholder="مثال: بنك مصر - حساب الجاري" />
+            <label>{{ i18n.t('accounts.nameLabel') }} *</label>
+            <input formControlName="name" [placeholder]="i18n.t('accounts.namePlaceholder')" />
           </div>
           <div class="field">
-            <label>نوع الحساب *</label>
+            <label>{{ i18n.t('accounts.typeLabel') }} *</label>
             <select formControlName="type">
-              <option value="ASSET">أصول (Assets)</option>
-              <option value="LIABILITY">خصوم والتزامات (Liabilities)</option>
-              <option value="EQUITY">حقوق ملكية (Equity)</option>
-              <option value="REVENUE">إيرادات (Revenue)</option>
-              <option value="EXPENSE">مصروفات (Expenses)</option>
+              <option value="ASSET">{{ i18n.t('accounts.typeAssetFull') }}</option>
+              <option value="LIABILITY">{{ i18n.t('accounts.typeLiabilityFull') }}</option>
+              <option value="EQUITY">{{ i18n.t('accounts.typeEquityFull') }}</option>
+              <option value="REVENUE">{{ i18n.t('accounts.typeRevenueFull') }}</option>
+              <option value="EXPENSE">{{ i18n.t('accounts.typeExpenseFull') }}</option>
             </select>
           </div>
           <div class="field">
-            <label>الحساب الأب (Parent)</label>
+            <label>{{ i18n.t('accounts.parentLabel') }}</label>
             <select formControlName="parentId">
-              <option value="">(بدون حساب أب - رئيسي)</option>
+              <option value="">{{ i18n.t('accounts.noParent') }}</option>
               @for (a of accounts(); track a.id) {
                 @if (a.isHeader) {
                   <option [value]="a.id">{{ a.code }} - {{ a.name }}</option>
@@ -101,19 +101,19 @@
             </select>
           </div>
           <div class="field">
-            <label>العملة</label>
+            <label>{{ i18n.t('accounts.currencyLabel') }}</label>
             <input class="ltr" formControlName="currency" placeholder="EGP" />
           </div>
           <div class="field">
             <label class="checkbox-label">
               <input type="checkbox" formControlName="isHeader" />
-              <span>حساب رئيسي (Header Account - لا يقبل قيود مباشرة)</span>
+              <span>{{ i18n.t('accounts.isHeaderLabel') }}</span>
             </label>
           </div>
         </div>
         <div class="drawer-actions">
-          <button class="button secondary" type="button" (click)="closeDrawer()">إلغاء</button>
-          <button class="button primary" type="submit" [disabled]="form.invalid">حفظ الحساب</button>
+          <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+          <button class="button primary" type="submit" [disabled]="form.invalid">{{ i18n.t('accounts.save') }}</button>
         </div>
       </form>
     </aside>

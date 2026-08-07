@@ -47,6 +47,9 @@ public class PurchaseOrder {
     @Column(name = "purchase_request_id", length = 36)
     private String purchaseRequestId;
 
+    @Column(name = "department_id", length = 36)
+    private String departmentId;
+
     @Column(name = "payment_terms", length = 255)
     private String paymentTerms;
 
@@ -109,6 +112,10 @@ public class PurchaseOrder {
         this.baseTotalAmount = this.totalAmount;
     }
 
+    public void assignDepartment(String departmentId) {
+        this.departmentId = departmentId == null || departmentId.isBlank() ? null : departmentId.strip();
+    }
+
     public void updateStatus(Status status) {
         this.status = status;
     }
@@ -149,6 +156,7 @@ public class PurchaseOrder {
     public LocalDate getPoDate() { return poDate; }
     public String getSupplierId() { return supplierId; }
     public String getPurchaseRequestId() { return purchaseRequestId; }
+    public String getDepartmentId() { return departmentId; }
     public String getPaymentTerms() { return paymentTerms; }
     public String getCurrencyCode() { return currencyCode; }
     public String getBaseCurrencyCode() { return baseCurrencyCode; }

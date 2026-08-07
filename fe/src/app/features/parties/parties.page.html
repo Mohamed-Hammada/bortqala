@@ -6,7 +6,7 @@
       <p>{{ i18n.t('parties.description') }}</p>
     </div>
     <div class="toolbar">
-      <button class="button secondary" (click)="store.export()">⇩ Excel</button
+      <button class="button secondary" (click)="store.export()">{{ i18n.t('common.export') }}</button
       ><button class="button primary" (click)="openNew()">＋ {{ i18n.t('parties.add') }}</button>
     </div>
   </header>
@@ -103,62 +103,62 @@
             </select>
           </div>
           <div class="field">
-            <label>نوع التعامل</label>
+            <label>{{ i18n.t('parties.managedType') }}</label>
             <select formControlName="managedType">
-              <option value="DIRECT">مباشر (Direct Supplier)</option>
-              <option value="MANAGED">بالوساطة (Managed Supplier)</option>
+              <option value="DIRECT">{{ i18n.t('parties.managedDirect') }}</option>
+              <option value="MANAGED">{{ i18n.t('parties.managedBrokered') }}</option>
             </select>
           </div>
           @if (form.controls.managedType.value === 'MANAGED') {
             <div class="field">
-              <label>المسؤول / الشريك الإداري *</label>
+              <label>{{ i18n.t('parties.responsibleParty') }} *</label>
               <select formControlName="responsiblePartyId">
-                <option value="">-- اختر المسئول --</option>
+                <option value="">{{ i18n.t('parties.responsibleSelectPlaceholder') }}</option>
                 @for (p of store.items(); track p.id) {
                   <option [value]="p.id">{{ p.name }} ({{ p.code }})</option>
                 }
               </select>
             </div>
             <div class="field">
-              <label>تاريخ بدء العلاقة</label>
+              <label>{{ i18n.t('parties.relationshipStart') }}</label>
               <input class="ltr" formControlName="relationshipStartDate" type="date" />
             </div>
             <div class="field">
-              <label>تاريخ انتهاء العلاقة</label>
+              <label>{{ i18n.t('parties.relationshipEnd') }}</label>
               <input class="ltr" formControlName="relationshipEndDate" type="date" />
             </div>
           }
           <div class="field">
-            <label>العملة الأساسية</label>
+            <label>{{ i18n.t('parties.baseCurrency') }}</label>
             <select formControlName="currencyCode">
-              <option value="EGP">الجنيه المصري (ج.م)</option>
-              <option value="USD">الدولار الأمريكي ($)</option>
-              <option value="EUR">اليورو (€)</option>
+              <option value="EGP">{{ i18n.t('parties.currencyEgp') }}</option>
+              <option value="USD">{{ i18n.t('parties.currencyUsd') }}</option>
+              <option value="EUR">{{ i18n.t('parties.currencyEur') }}</option>
             </select>
           </div>
           <div class="field">
-            <label>شروط الدفع والتسوية</label>
+            <label>{{ i18n.t('parties.paymentTerms') }}</label>
             <select formControlName="paymentTerms">
-              <option value="CASH">نقدي (Cash on Delivery)</option>
-              <option value="NET_15">آجل 15 يوماً</option>
-              <option value="NET_30">آجل 30 يوماً</option>
-              <option value="NET_60">آجل 60 يوماً</option>
+              <option value="CASH">{{ i18n.t('parties.termsCash') }}</option>
+              <option value="NET_15">{{ i18n.t('parties.termsNet15') }}</option>
+              <option value="NET_30">{{ i18n.t('parties.termsNet30') }}</option>
+              <option value="NET_60">{{ i18n.t('parties.termsNet60') }}</option>
             </select>
           </div>
           <div class="field">
-            <label>سياسة الفاتورة والضرائب</label>
+            <label>{{ i18n.t('parties.invoicePolicy') }}</label>
             <select formControlName="invoicePolicy">
-              <option value="E_INVOICE">فاتورة إلكترونية ضريبية</option>
-              <option value="RECEIPT">إيصال استلام رسمي</option>
-              <option value="EXEMPT">معفى ضريبياً</option>
+              <option value="E_INVOICE">{{ i18n.t('parties.policyEInvoice') }}</option>
+              <option value="RECEIPT">{{ i18n.t('parties.policyReceipt') }}</option>
+              <option value="EXEMPT">{{ i18n.t('parties.policyExempt') }}</option>
             </select>
           </div>
           <div class="field">
-            <label>رقم التسجيل الضريبي</label>
+            <label>{{ i18n.t('parties.taxId') }}</label>
             <input class="ltr" formControlName="taxId" placeholder="123-456-789" />
           </div>
           <div class="field">
-            <label>تفاصيل الحساب البنكي / IBAN</label>
+            <label>{{ i18n.t('parties.bankAccount') }}</label>
             <input class="ltr" formControlName="bankAccount" placeholder="EG123456789012345678901234" />
           </div>
           <div class="field">

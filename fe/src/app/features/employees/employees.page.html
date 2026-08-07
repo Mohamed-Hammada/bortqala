@@ -73,7 +73,7 @@
                 @if (item.deviceUserId) {
                   <code>{{ item.deviceUserId }}</code>
                 } @else {
-                  <span class="status warning">⚠️ لم يتم ربط رقم البصمة</span>
+                  <span class="status warning">⚠️ {{ i18n.t('employees.fingerprintNotLinked') }}</span>
                 }
               </td>
               <td>

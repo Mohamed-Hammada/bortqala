@@ -63,6 +63,8 @@ public final class AccessCatalog {
     public static final String P_PAYROLL_APPROVE = "payroll.approve";
     public static final String P_FINANCE_READ = "finance.read";
     public static final String P_FINANCE_MANAGE = "finance.manage";
+    public static final String P_BUDGET_READ = "budget.read";
+    public static final String P_BUDGET_MANAGE = "budget.manage";
     public static final String P_JOURNAL_READ = "journal.read";
     public static final String P_JOURNAL_CREATE = "journal.create";
     public static final String P_JOURNAL_POST = "journal.post";
@@ -100,6 +102,10 @@ public final class AccessCatalog {
     public static final String P_CONTRACTOR_ACCOUNTS_READ = "contractorAccounts.read";
     public static final String P_CONTRACTOR_ACCOUNTS_MANAGE = "contractorAccounts.manage";
     public static final String P_WORKFORCE_REPORTS_READ = "workforceReports.read";
+    public static final String P_APPROVALS_READ = "approvals.read";
+    public static final String P_APPROVALS_DECIDE = "approvals.decide";
+    public static final String P_WORKFLOW_DEFINITIONS_READ = "workflowDefinitions.read";
+    public static final String P_WORKFLOW_DEFINITIONS_MANAGE = "workflowDefinitions.manage";
 
     /** Every permission a super user can act on. */
     public static final Set<String> ALL_PERMISSIONS = Set.of(
@@ -113,7 +119,7 @@ public final class AccessCatalog {
             P_QUALITY_READ, P_QUALITY_MANAGE,
             P_PAYROLL_READ, P_PAYROLL_PREPARE, P_PAYROLL_APPROVE,
             P_FINANCE_READ, P_FINANCE_MANAGE, P_JOURNAL_READ, P_JOURNAL_CREATE, P_JOURNAL_POST, P_JOURNAL_REVERSE,
-            P_PAYMENTS_EXECUTE, P_PAYMENTS_APPROVE,
+            P_PAYMENTS_EXECUTE, P_PAYMENTS_APPROVE, P_BUDGET_READ, P_BUDGET_MANAGE,
             P_INVENTORY_READ, P_INVENTORY_MANAGE,
             P_ORGANIZATION_READ, P_ORGANIZATION_MANAGE, P_AUDIT_READ,
             P_USERS_READ, P_USERS_MANAGE, P_ROLES_ASSIGN, P_SETTINGS_READ, P_SETTINGS_MANAGE,
@@ -123,7 +129,9 @@ public final class AccessCatalog {
             P_ATTENDANCE_READ, P_ATTENDANCE_ENTER, P_ATTENDANCE_REVIEW, P_ATTENDANCE_IMPORT,
             P_SETTLEMENTS_READ, P_SETTLEMENTS_PREPARE, P_SETTLEMENTS_FINALIZE,
             P_ADVANCES_READ, P_ADVANCES_MANAGE,
-            P_CONTRACTOR_ACCOUNTS_READ, P_CONTRACTOR_ACCOUNTS_MANAGE, P_WORKFORCE_REPORTS_READ);
+            P_CONTRACTOR_ACCOUNTS_READ, P_CONTRACTOR_ACCOUNTS_MANAGE, P_WORKFORCE_REPORTS_READ,
+            P_APPROVALS_READ, P_APPROVALS_DECIDE,
+            P_WORKFLOW_DEFINITIONS_READ, P_WORKFLOW_DEFINITIONS_MANAGE);
 
     private static final Set<String> HR_READ = Set.of(
             P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_CATEGORIES_READ, P_IMPORTS_READ, P_PARTIES_READ,
@@ -165,6 +173,10 @@ public final class AccessCatalog {
             "ADMIN", "SUPER_ADMIN", "WORKFORCE_MANAGER", "WORKFORCE_REVIEWER");
     private static final Set<String> WORKFORCE_ACCOUNT_ROLES = Set.of(
             "ADMIN", "SUPER_ADMIN", "WORKFORCE_MANAGER", "WORKFORCE_FINANCE");
+    private static final Set<String> APPROVAL_ROLES = Set.of(
+            "ADMIN", "SUPER_ADMIN", "WORKFORCE_MANAGER", "FINANCE_MANAGER", "PROCUREMENT_MANAGER",
+            "HR_MANAGER", "WORKFORCE_REVIEWER", "ACCOUNTANT", "PROCUREMENT_USER");
+    private static final Set<String> APPROVAL_PERMS = Set.of(P_APPROVALS_READ, P_APPROVALS_DECIDE);
 
     private static final String FEATURE_PAYROLL = "payroll.enabled";
     private static final String FEATURE_SALES = "sales.enabled";
@@ -186,7 +198,8 @@ public final class AccessCatalog {
                     RoleKind.ADMINISTRATION, ALL_PERMISSIONS, Set.of(), "access.sensitive.admin"),
             new AccessRoleDef("HR_MANAGER", key("hrManager"), AccessSensitivity.HIGH,
                     RoleKind.OPERATIONAL,
-                    union(HR_READ, HR_WRITE, Set.of(P_PAYROLL_PREPARE, P_PAYROLL_APPROVE)),
+                    union(HR_READ, HR_WRITE, APPROVAL_PERMS,
+                            Set.of(P_PAYROLL_PREPARE, P_PAYROLL_APPROVE)),
                     Set.of(), "access.sensitive.hrManager"),
             new AccessRoleDef("HR_REVIEWER", key("hrReviewer"), AccessSensitivity.MEDIUM,
                     RoleKind.APPROVAL,
@@ -198,25 +211,27 @@ public final class AccessCatalog {
                     Set.of(), null),
             new AccessRoleDef("FINANCE_MANAGER", key("financeManager"), AccessSensitivity.HIGH,
                     RoleKind.FINANCE,
-                    union(FINANCE_READ, FINANCE_WRITE,
-                            Set.of(P_JOURNAL_REVERSE, P_PROCUREMENT_READ, P_PAYMENTS_EXECUTE, P_AUDIT_READ)),
+                    union(FINANCE_READ, FINANCE_WRITE, APPROVAL_PERMS,
+                            Set.of(P_JOURNAL_REVERSE, P_PROCUREMENT_READ, P_PAYMENTS_EXECUTE, P_AUDIT_READ,
+                                    P_BUDGET_READ, P_BUDGET_MANAGE)),
                     Set.of(), "access.sensitive.financeManager"),
             new AccessRoleDef("ACCOUNTANT", key("accountant"), AccessSensitivity.MEDIUM,
                     RoleKind.FINANCE,
-                    union(FINANCE_READ, FINANCE_WRITE, Set.of(P_PROCUREMENT_READ, P_PAYMENTS_EXECUTE)),
+                    union(FINANCE_READ, FINANCE_WRITE, APPROVAL_PERMS,
+                            Set.of(P_PROCUREMENT_READ, P_PAYMENTS_EXECUTE, P_BUDGET_READ)),
                     Set.of(), "access.sensitive.accountant"),
             new AccessRoleDef("TREASURY_USER", key("treasuryUser"), AccessSensitivity.MEDIUM,
                     RoleKind.FINANCE,
-                    union(FINANCE_READ, Set.of(P_PROCUREMENT_READ)),
+                    union(FINANCE_READ, Set.of(P_PROCUREMENT_READ, P_BUDGET_READ)),
                     Set.of(), "access.sensitive.treasuryUser"),
             new AccessRoleDef("PROCUREMENT_MANAGER", key("procurementManager"), AccessSensitivity.MEDIUM,
                     RoleKind.OPERATIONAL,
-                    Set.of(P_PROCUREMENT_READ, P_PROCUREMENT_MANAGE, P_INVENTORY_READ,
-                            P_PAYMENTS_EXECUTE, P_PAYMENTS_APPROVE),
+                    union(Set.of(P_PROCUREMENT_READ, P_PROCUREMENT_MANAGE, P_INVENTORY_READ,
+                            P_PAYMENTS_EXECUTE, P_PAYMENTS_APPROVE), APPROVAL_PERMS),
                     Set.of(), "access.sensitive.procurementManager"),
             new AccessRoleDef("PROCUREMENT_USER", key("procurementUser"), AccessSensitivity.LOW,
                     RoleKind.OPERATIONAL,
-                    Set.of(P_PROCUREMENT_READ, P_INVENTORY_READ),
+                    union(Set.of(P_PROCUREMENT_READ, P_INVENTORY_READ), APPROVAL_PERMS),
                     Set.of(), null),
             new AccessRoleDef("SALES_MANAGER", key("salesManager"), AccessSensitivity.MEDIUM,
                     RoleKind.OPERATIONAL,
@@ -240,7 +255,7 @@ public final class AccessCatalog {
                     Set.of(), "access.sensitive.payrollManager"),
             new AccessRoleDef("WORKFORCE_MANAGER", key("workforceManager"), AccessSensitivity.MEDIUM,
                     RoleKind.OPERATIONAL,
-                    union(WORKFORCE_READ,
+                    union(WORKFORCE_READ, APPROVAL_PERMS,
                             Set.of(P_WORKERS_CREATE, P_WORKERS_EDIT, P_WORKERS_DEACTIVATE,
                                     P_CONTRACTORS_MANAGE, P_LABOR_REQUESTS_MANAGE,
                                     P_ATTENDANCE_ENTER, P_ATTENDANCE_REVIEW, P_ATTENDANCE_IMPORT,
@@ -249,7 +264,7 @@ public final class AccessCatalog {
                     Set.of(), "access.sensitive.workforceManager"),
             new AccessRoleDef("WORKFORCE_REVIEWER", key("workforceReviewer"), AccessSensitivity.MEDIUM,
                     RoleKind.APPROVAL,
-                    union(without(WORKFORCE_READ, Set.of(P_CONTRACTOR_ACCOUNTS_READ)),
+                    union(without(WORKFORCE_READ, Set.of(P_CONTRACTOR_ACCOUNTS_READ)), APPROVAL_PERMS,
                             Set.of(P_ATTENDANCE_REVIEW, P_ATTENDANCE_IMPORT)),
                     Set.of(), "access.sensitive.workforceReviewer"),
             new AccessRoleDef("WORKFORCE_FINANCE", key("workforceFinance"), AccessSensitivity.MEDIUM,
@@ -261,7 +276,7 @@ public final class AccessCatalog {
                     RoleKind.READ_ONLY,
                     Set.of(P_AUDIT_READ, P_FINANCE_READ, P_JOURNAL_READ, P_PROCUREMENT_READ,
                             P_SALES_READ, P_MANUFACTURING_READ, P_QUALITY_READ, P_OPERATIONS_READ,
-                            P_INVENTORY_READ),
+                            P_INVENTORY_READ, P_BUDGET_READ),
                     Set.of(), null));
 
     // ------------------------------------------------------------------
@@ -323,6 +338,9 @@ public final class AccessCatalog {
             page("FISCAL_PERIODS", "FINANCE", "/fiscal-periods", "fiscal-periods", "nav.fiscalPeriods", P_FINANCE_READ,
                     FINANCE_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_FINANCE_MANAGE, false)),
+            page("BUDGETS", "FINANCE", "/finance/budgets", "budgets", "nav.budgets", P_BUDGET_READ,
+                    FINANCE_ROLES, FEATURE_FINANCE,
+                    action("MANAGE", P_BUDGET_MANAGE, false)),
             page("ORGANIZATION", "ADMINISTRATION", "/organization", "organization", "nav.organization",
                     P_ORGANIZATION_READ, ADMIN_ONLY, null,
                     action("MANAGE", P_ORGANIZATION_MANAGE, false)),
@@ -369,7 +387,13 @@ public final class AccessCatalog {
                     action("MANAGE", P_CONTRACTOR_ACCOUNTS_MANAGE, false)),
             page("WORKFORCE_REPORTS", "WORKFORCE", "/workforce/reports-import", "workforce-reports",
                     "workforce.reports.title", P_WORKFORCE_REPORTS_READ, WORKFORCE_IMPORT_ROLES, null,
-                    action("IMPORT", P_ATTENDANCE_IMPORT, false)));
+                    action("IMPORT", P_ATTENDANCE_IMPORT, false)),
+            page("PENDING_APPROVALS", "APPROVALS", "/approvals/my-tasks", "approvals-my-tasks",
+                    "approvals.myTasks", P_APPROVALS_READ, NO_ROLE_GUARD, null,
+                    action("DECIDE", P_APPROVALS_DECIDE, false)),
+            page("WORKFLOW_DEFINITIONS", "APPROVALS", "/approvals/definitions", "approvals-workflows",
+                    "approvals.workflows", P_WORKFLOW_DEFINITIONS_READ, ADMIN_ONLY, null,
+                    action("MANAGE", P_WORKFLOW_DEFINITIONS_MANAGE, false)));
 
     // ------------------------------------------------------------------
     // Segregation-of-duties rules.
@@ -415,6 +439,7 @@ public final class AccessCatalog {
             need("REVERSE_JOURNAL", Set.of(P_JOURNAL_READ, P_JOURNAL_REVERSE)),
             need("VIEW_FINANCE", Set.of(P_FINANCE_READ, P_JOURNAL_READ)),
             need("MANAGE_PROCUREMENT", Set.of(P_PROCUREMENT_READ, P_PROCUREMENT_MANAGE)),
+            need("MANAGE_APPROVALS", Set.of(P_APPROVALS_READ, P_APPROVALS_DECIDE)),
             need("MANAGE_USERS", Set.of(P_USERS_READ, P_USERS_MANAGE, P_ROLES_ASSIGN)),
             need("VIEW_AUDIT", Set.of(P_AUDIT_READ)));
 
@@ -529,6 +554,15 @@ public final class AccessCatalog {
         Set<String> result = new HashSet<>(first);
         result.addAll(second);
         result.addAll(third);
+        return Set.copyOf(result);
+    }
+
+    private static Set<String> union(Set<String> first, Set<String> second,
+                                     Set<String> third, Set<String> fourth) {
+        Set<String> result = new HashSet<>(first);
+        result.addAll(second);
+        result.addAll(third);
+        result.addAll(fourth);
         return Set.copyOf(result);
     }
 

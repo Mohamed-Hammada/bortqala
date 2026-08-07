@@ -353,6 +353,7 @@ public class AuthService {
         app.updateSettings(request.sessionTimeoutMinutes(), request.sessionTimeoutEnabled(), request.showReportPresets(), minPass);
         app.updateAttendanceAnomalyThreshold(request.attendanceAnomalyThresholdPercent());
         app.updateProcurementNumbering(request.automaticProcurementNumbering());
+        app.updateDocumentNumbering(request.automaticDocumentNumbering());
         if (hasRole(actor, RoleCode.SUPER_ADMIN)) {
             app.updateDashboardPolicy(request.adminDashboardCustomizationEnabled());
         }
@@ -489,7 +490,7 @@ public class AuthService {
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(app.getId(), username).orElseGet(() -> {
             var roles = requireRoles(roleCodes);
             var created = appUserRepository.save(new AppUser(app.getId(), username, displayName,
-                    passwordEncoder.encode(password), roles, Set.of("dashboard","categories","employees","imports","parties","reports","operations","payroll","users","settings","workforce-dashboard","workforce-contractors","workforce-workers","workforce-categories","workforce-requests","workforce-attendance","workforce-settlements","workforce-advances","workforce-accounts","workforce-reports"), true, true));
+                    passwordEncoder.encode(password), roles, Set.of("dashboard","categories","employees","imports","parties","reports","operations","payroll","users","settings","workforce-dashboard","workforce-contractors","workforce-workers","workforce-categories","workforce-requests","workforce-attendance","workforce-settlements","workforce-advances","workforce-accounts","workforce-reports","approvals-my-tasks","approvals-workflows","budgets"), true, true));
             created.requirePasswordChangeOnNextLogin();
             return created;
         });
@@ -672,6 +673,7 @@ public class AuthService {
                 app.isShowReportPresets(),
                 app.getAttendanceAnomalyThresholdPercent(),
                 app.isAutomaticProcurementNumbering(),
+                app.isAutomaticDocumentNumbering(),
                 app.isAdminDashboardCustomizationEnabled(),
                 app.getMinPasswordLength(),
                 app.isRequireUppercase(),

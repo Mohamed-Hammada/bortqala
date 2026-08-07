@@ -349,6 +349,71 @@ class AccessCatalogServiceTests {
         assertThat(page(preview, "EMPLOYEES").access()).isEqualTo("EDIT");
     }
 
+    @Test
+    void catalogExposesApprovalPagesWithMenuIds() {
+        var response = service.catalog();
+
+        assertThat(response.pages())
+                .extracting(AccessApi.AccessPageResponse::menuId)
+                .contains("approvals-my-tasks", "approvals-workflows");
+        assertThat(response.pages()).anySatisfy(page -> {
+            if ("approvals-my-tasks".equals(page.menuId())) {
+                assertThat(page.code()).isEqualTo("PENDING_APPROVALS");
+                assertThat(page.route()).isEqualTo("/approvals/my-tasks");
+                assertThat(page.titleKey()).isEqualTo("approvals.myTasks");
+            }
+        });
+        assertThat(response.pages()).anySatisfy(page -> {
+            if ("approvals-workflows".equals(page.menuId())) {
+                assertThat(page.code()).isEqualTo("WORKFLOW_DEFINITIONS");
+                assertThat(page.route()).isEqualTo("/approvals/definitions");
+                assertThat(page.titleKey()).isEqualTo("approvals.workflows");
+                assertThat(page.roles()).contains("ADMIN", "SUPER_ADMIN");
+            }
+        });
+    }
+
+    @Test
+    void validateAcceptsApprovalMenusForApprovalRoles() {
+        var result = service.validateAssignment(
+                Set.of("ADMIN"), "actor-1", List.of("WORKFORCE_MANAGER"),
+                List.of("approvals-my-tasks", "approvals-workflows"), null, null, null);
+        assertThat(result.errors()).extracting(AccessApi.AccessValidateErrorResponse::code)
+                .doesNotContain("ACCESS_UNKNOWN_MENU");
+        assertThat(result.errors()).extracting(AccessApi.AccessValidateErrorResponse::code)
+                .contains("ACCESS_MENU_ROLE_MISMATCH");
+    }
+
+    @Test
+    void workflowDefinitionsMenuRequiresAdminRole() {
+        var result = service.validateAssignment(
+                Set.of("ADMIN"), "actor-1", List.of("VIEWER"), List.of("approvals-workflows"),
+                null, null, null);
+        assertThat(result.errors()).extracting(AccessApi.AccessValidateErrorResponse::code)
+                .contains("ACCESS_MENU_ROLE_MISMATCH");
+    }
+
+    @Test
+    void approvalRolesPreviewPendingApprovalsAsDecide() {
+        var preview = service.preview(List.of("WORKFORCE_MANAGER"),
+                List.of("approvals-my-tasks", "approvals-workflows"));
+
+        var pending = page(preview, "PENDING_APPROVALS");
+        assertThat(pending.access()).isEqualTo("DECIDE");
+        assertThat(pending.grantedActions()).contains("DECIDE");
+
+        var definitions = page(preview, "WORKFLOW_DEFINITIONS");
+        assertThat(definitions.access()).isEqualTo("RESTRICTED");
+    }
+
+    @Test
+    void adminPreviewIncludesApprovalPagesAsReview() {
+        var preview = service.preview(List.of("ADMIN"), List.of());
+
+        assertThat(page(preview, "PENDING_APPROVALS").access()).isEqualTo("REVIEW");
+        assertThat(page(preview, "WORKFLOW_DEFINITIONS").access()).isEqualTo("REVIEW");
+    }
+
     private AccessApi.EffectivePageAccessResponse page(AccessApi.AccessPreviewResponse preview, String code) {
         return preview.pages().stream()
                 .filter(item -> item.pageCode().equals(code))

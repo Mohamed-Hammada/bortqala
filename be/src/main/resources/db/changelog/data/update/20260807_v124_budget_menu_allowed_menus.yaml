@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260807-v124-budget-menu-allowed-menus
+      author: bemo-erp
+      comment: "Grant the budgets screen to existing users (B-1 budget control & encumbrance menu)."
+      changes:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = CONCAT(COALESCE(allowed_menus, ''), ',budgets')
+              WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%budgets%';
+      rollback:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = REPLACE(allowed_menus, ',budgets', '')
+              WHERE allowed_menus IS NOT NULL;

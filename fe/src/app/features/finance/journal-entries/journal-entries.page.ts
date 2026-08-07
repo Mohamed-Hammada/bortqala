@@ -58,6 +58,10 @@ export interface JournalEntryPage {
   totalPages: number;
 }
 
+interface NumberingSettings {
+  automaticNumbering: boolean;
+}
+
 @Component({
   selector: 'app-journal-entries-page',
   imports: [ReactiveFormsModule, TablePaginationComponent, DecimalPipe, AppTooltipDirective, ModalDialogComponent],
@@ -87,9 +91,10 @@ export class JournalEntriesPage {
 
   readonly drawerOpen = signal(false);
   readonly submitAttempted = signal(false);
+  readonly automaticNumbering = signal(true);
 
   readonly entryForm = new FormGroup({
-    entryNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    entryNumber: new FormControl('', { nonNullable: true }),
     entryDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
     description: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     reference: new FormControl('', { nonNullable: true }),
@@ -107,6 +112,8 @@ export class JournalEntriesPage {
         errors.set(index, this.i18n.t('journal.lineAccountRequired'));
       } else if (line.debit < 0 || line.credit < 0) {
         errors.set(index, this.i18n.t('journal.lineNegativeAmount'));
+      } else if (line.debit > 0 && line.credit > 0) {
+        errors.set(index, this.i18n.t('journal.lineOneSideOnly'));
       } else if (!(line.debit > 0 || line.credit > 0)) {
         errors.set(index, this.i18n.t('journal.lineEmptyAmount'));
       }
@@ -117,6 +124,26 @@ export class JournalEntriesPage {
   constructor() {
     void this.load(0);
     void this.loadAccounts();
+    void this.loadNumberingSettings();
+  }
+
+  async loadNumberingSettings() {
+    try {
+      const settings = await firstValueFrom(
+        this.http.get<NumberingSettings>('/api/v1/finance/numbering-settings'),
+      );
+      this.automaticNumbering.set(settings?.automaticNumbering ?? true);
+    } catch {
+      this.automaticNumbering.set(true);
+    }
+    this.applyNumberingValidators();
+  }
+
+  applyNumberingValidators(): void {
+    const auto = this.automaticNumbering();
+    const entryNumber = this.entryForm.controls.entryNumber;
+    entryNumber.setValidators(auto ? [] : [Validators.required]);
+    entryNumber.updateValueAndValidity();
   }
 
   async load(pageIndex: number = 0) {
@@ -156,11 +183,12 @@ export class JournalEntriesPage {
 
   openNew() {
     this.entryForm.reset({
-      entryNumber: 'JV-' + Math.floor(1000 + Math.random() * 9000),
+      entryNumber: '',
       entryDate: new Date().toISOString().substring(0, 10),
       description: '',
       reference: '',
     });
+    this.applyNumberingValidators();
     this.lines.set([
       { accountId: this.accounts()[0]?.id ?? '', debit: 0, credit: 0, memo: '' },
       { accountId: this.accounts()[1]?.id ?? '', debit: 0, credit: 0, memo: '' },
@@ -222,7 +250,7 @@ export class JournalEntriesPage {
       const formVal = this.entryForm.getRawValue();
       const dateMs = new Date(formVal.entryDate).getTime();
       const payload = {
-        entryNumber: formVal.entryNumber,
+        entryNumber: formVal.entryNumber.trim() || null,
         entryDate: dateMs,
         description: formVal.description,
         reference: formVal.reference,

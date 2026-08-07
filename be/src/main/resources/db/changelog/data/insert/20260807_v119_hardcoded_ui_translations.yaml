@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260807-v119-hardcoded-ui-translations
+      author: bemo-erp
+      comment: "Bilingual translations for E-1 hardcoded-UI elimination: accounts, tax-currency, quality, parties, payroll, operations, settings, procurement, employees, users, reports and skeleton keys."
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260807_v119_hardcoded_ui_translations.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v119-%'" }

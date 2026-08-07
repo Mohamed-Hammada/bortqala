@@ -24,7 +24,7 @@ public class ProcurementApi {
 
     public record PurchaseOrderResponse(
             String id, String poNumber, long poDate, String supplierId, String supplierName,
-            String purchaseRequestId, String paymentTerms, String currencyCode,
+            String purchaseRequestId, String departmentId, String paymentTerms, String currencyCode,
             String baseCurrencyCode, BigDecimal exchangeRate, long exchangeRateDate,
             String exchangeRateSource, String exchangeRateOverrideReason, BigDecimal baseTotalAmount,
             String status, BigDecimal totalAmount,
@@ -33,7 +33,7 @@ public class ProcurementApi {
 
     public record PurchaseOrderPayload(
             String poNumber, long poDate, @NotBlank String supplierId,
-            String purchaseRequestId, String paymentTerms, String currencyCode,
+            String purchaseRequestId, String departmentId, String paymentTerms, String currencyCode,
             BigDecimal exchangeRate, String exchangeRateOverrideReason,
             List<PurchaseOrderLinePayload> items
     ) {}

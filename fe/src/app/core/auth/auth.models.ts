@@ -137,6 +137,7 @@ export interface AppSettings {
   showReportPresets: boolean;
   attendanceAnomalyThresholdPercent: number;
   automaticProcurementNumbering: boolean;
+  automaticDocumentNumbering?: boolean;
   adminDashboardCustomizationEnabled: boolean;
   minPasswordLength?: number;
   requireUppercase?: boolean;

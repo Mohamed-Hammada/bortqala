@@ -51,6 +51,7 @@ export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = [
     { id: 'banks', labelKey: 'nav.banks' },
     { id: 'tax-currency', labelKey: 'nav.taxCurrency' },
     { id: 'fiscal-periods', labelKey: 'nav.fiscalPeriods' },
+    { id: 'budgets', labelKey: 'nav.budgets' },
     { id: 'organization', labelKey: 'nav.organization' },
     { id: 'audit-logs', labelKey: 'nav.auditLogs' },
     { id: 'users', labelKey: 'nav.users' },
@@ -145,7 +146,7 @@ export class UsersPage {
     },
     {
       titleKey: 'users.groupFinance',
-      ids: ['accounts', 'journal-entries', 'banks', 'tax-currency', 'fiscal-periods']
+      ids: ['accounts', 'journal-entries', 'banks', 'tax-currency', 'fiscal-periods', 'budgets']
     },
     {
       titleKey: 'workspace.approvals',

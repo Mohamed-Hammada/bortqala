@@ -54,6 +54,7 @@ class ProcurementThreeWayMatchServiceTests {
     @Mock private IdempotencyService idempotencyService;
     @Mock private FiscalPeriodGuard fiscalPeriodGuard;
     @Mock private ProcurementThreeWayMatchRepository threeWayMatchRepository;
+    @Mock private com.bemo.hr.budget.application.BudgetService budgetService;
 
     private ProcurementService procurementService;
 
@@ -64,7 +65,10 @@ class ProcurementThreeWayMatchServiceTests {
                 goodsReceiptRepository, supplierInvoiceRepository, supplierPaymentRepository,
                 businessPartyRepository, partnerLedgerEntryRepository, auditService,
                 procurementExcelExporter, operationsService, tenantApplicationRepository,
-                currencyRepository, idempotencyService, fiscalPeriodGuard, threeWayMatchRepository
+                currencyRepository, idempotencyService, fiscalPeriodGuard,
+                new com.bemo.hr.shared.numbering.DocumentNumberService(
+                        mock(com.bemo.hr.shared.numbering.DocumentNumberSequenceRepository.class)),
+                threeWayMatchRepository, budgetService
         );
     }
 

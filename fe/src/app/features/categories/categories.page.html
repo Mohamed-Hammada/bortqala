@@ -255,8 +255,8 @@
         <div class="confirm-icon">&#9888;&#65039;</div>
         <div class="confirm-message">{{ action.message }}</div>
         <div class="confirm-actions">
-          <button type="button" class="button primary" (click)="action.onConfirm()">تأكيد</button>
-          <button type="button" class="button secondary" (click)="confirmAction.set(null)">إلغاء</button>
+          <button type="button" class="button primary" (click)="action.onConfirm()">{{ i18n.t('common.confirm') }}</button>
+          <button type="button" class="button secondary" (click)="confirmAction.set(null)">{{ i18n.t('common.cancel') }}</button>
         </div>
       </div>
     </div>

@@ -60,4 +60,9 @@ public class DashboardController {
         int m = (month != null && month >= 1 && month <= 12) ? month : current.getMonthValue();
         return dashboardService.departmentMetrics(y, m);
     }
+
+    @GetMapping("/trends")
+    java.util.List<DashboardApi.TrendPoint> trends(@RequestParam(defaultValue = "6") int months) {
+        return dashboardService.trends(months);
+    }
 }

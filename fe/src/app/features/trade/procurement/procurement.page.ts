@@ -15,7 +15,7 @@ import { AppTooltipDirective } from '../../../shared/ui/app-tooltip/app-tooltip.
 import { IconButtonComponent } from '../../../shared/ui/icon-button/icon-button.component';
 
 interface PurchaseOrderLineResponse { id: string; itemId: string; itemName: string; itemCategory: string; quantity: number; receivedQuantity: number; remainingQuantity: number; unitOfMeasure: string; unitPrice: number; lineTotal: number; }
-interface PurchaseOrder { id: string; poNumber: string; poDate: number; supplierId: string; supplierName?: string; paymentTerms?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseTotalAmount: number; status: string; totalAmount: number; items: PurchaseOrderLineResponse[]; createdAt: number; updatedAt: number; }
+interface PurchaseOrder { id: string; poNumber: string; poDate: number; supplierId: string; supplierName?: string; paymentTerms?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseTotalAmount: number; status: string; departmentId?: string; departmentName?: string; totalAmount: number; items: PurchaseOrderLineResponse[]; createdAt: number; updatedAt: number; }
 interface GoodsReceiptLineResponse { id: string; purchaseOrderLineId: string; itemId: string; itemName: string; itemCategory: string; deliveredQuantity: number; rejectedQuantity: number; deductedQuantity: number; quantity: number; unitOfMeasure: string; unitPrice: number; locationId?: string; lotNumber?: string; qualityReason?: string; }
 interface GoodsReceipt { id: string; grnNumber: string; receiptDate: number; purchaseOrderId: string; supplierId: string; supplierName?: string; warehouseId?: string; status: string; currencyCode: string; notes?: string; lines: GoodsReceiptLineResponse[]; createdAt: number; }
 interface SupplierInvoice { id: string; invoiceNumber?: string; internalReference: string; missingInvoiceReason?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseNetAmount: number; supplierId: string; supplierName?: string; purchaseOrderId?: string; goodsReceiptId?: string; responsiblePartyId?: string; invoiceDate: number; totalAmount: number; discountAmount?: number; taxAmount?: number; netAmount: number; paidAmount: number; outstandingAmount: number; dueDate?: number; notes?: string; status: string; createdAt: number; updatedAt: number; }
@@ -23,6 +23,7 @@ interface SupplierPayment { id: string; paymentNumber: string; paymentDate: numb
 interface ProcurementThreeWayMatch { id: string; purchaseOrderId: string; goodsReceiptId?: string; supplierInvoiceId: string; matchStatus: string; priceVarianceAmount: number; quantityVarianceAmount: number; tolerancePercentage: number; varianceReason?: string; resolvedBy?: string; resolvedAt?: number; createdAt: number; }
 interface Party { id: string; code: string; name: string; partyType: string; active: boolean; managedType?: 'DIRECT' | 'MANAGED'; responsiblePartyId?: string; currencyCode?: string; paymentTerms?: string; }
 interface InventoryItem { id: string; code: string; name: string; categoryName?: string; uomName?: string; unitCode?: string; active: boolean; }
+interface Department { id: string; companyId: string; code: string; name: string; managerId?: string; active: boolean; }
 interface NumberingSettings { automaticNumbering: boolean; }
 interface Currency { code: string; name: string; symbol: string; isBase: boolean; exchangeRate: number; active: boolean; }
 interface GoodsReceiptDraftLine {
@@ -78,8 +79,10 @@ export class ProcurementPage {
   readonly suppliers = signal<Party[]>([]);
   readonly inventoryItems = signal<InventoryItem[]>([]);
   readonly currencies = signal<Currency[]>([]);
+  readonly departments = signal<Department[]>([]);
   readonly activeTab = signal<'po' | 'grn' | 'invoice' | 'payment'>('po');
   readonly automaticNumbering = signal(true);
+  readonly documentAutomaticNumbering = signal(true);
 
   readonly matchModalOpen = signal(false);
   readonly activeMatch = signal<ProcurementThreeWayMatch | null>(null);
@@ -125,6 +128,7 @@ export class ProcurementPage {
     poNumber: new FormControl('', { nonNullable: true }),
     poDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
     supplierId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    departmentId: new FormControl('', { nonNullable: true }),
     paymentTerms: new FormControl('Net 30 Days', { nonNullable: true }),
     currencyCode: new FormControl('EGP', { nonNullable: true, validators: [Validators.required] }),
     exchangeRate: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0.000001)] }),
@@ -191,7 +195,7 @@ export class ProcurementPage {
   readonly paymentOperationId = signal('');
   readonly selectedPaymentSupplierId = signal('');
   readonly pmtForm = new FormGroup({
-    paymentNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    paymentNumber: new FormControl('', { nonNullable: true }),
     paymentDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
     supplierId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     supplierInvoiceId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -217,10 +221,17 @@ export class ProcurementPage {
     grnNumber.updateValueAndValidity();
   }
 
+  applyPaymentNumberingValidators(): void {
+    const auto = this.documentAutomaticNumbering();
+    const paymentNumber = this.pmtForm.controls.paymentNumber;
+    paymentNumber.setValidators(auto ? [] : [Validators.required]);
+    paymentNumber.updateValueAndValidity();
+  }
+
   async loadAll() {
     this.loading.set(true);
     this.error.set(null);
-    try { await Promise.all([this.loadNumberingSettings(), this.loadOrders(), this.loadSuppliers(), this.loadCurrencies(), this.loadInventoryItems(), this.loadGoodsReceipts(), this.loadInvoices(), this.loadPayments()]); }
+    try { await Promise.all([this.loadNumberingSettings(), this.loadDocumentNumberingSettings(), this.loadOrders(), this.loadSuppliers(), this.loadCurrencies(), this.loadInventoryItems(), this.loadDepartments(), this.loadGoodsReceipts(), this.loadInvoices(), this.loadPayments()]); }
     catch (e) { this.error.set(apiErrorMessage(e, this.i18n)); }
     finally { this.loading.set(false); }
   }
@@ -234,6 +245,11 @@ export class ProcurementPage {
     this.automaticNumbering.set(settings?.automaticNumbering ?? true);
     this.applyNumberingValidators();
   }
+  async loadDocumentNumberingSettings() {
+    const settings = await firstValueFrom(this.http.get<NumberingSettings>('/api/v1/finance/numbering-settings'));
+    this.documentAutomaticNumbering.set(settings?.automaticNumbering ?? true);
+    this.applyPaymentNumberingValidators();
+  }
   async loadSuppliers() {
     const parties = await firstValueFrom(this.http.get<Party[]>('/api/v1/parties')) ?? [];
     this.suppliers.set(parties.filter(party => party.active && party.partyType === 'SUPPLIER'));
@@ -245,6 +261,10 @@ export class ProcurementPage {
   async loadInventoryItems() {
     const snapshot = await firstValueFrom(this.http.get<{ items: InventoryItem[] }>('/api/v1/operations'));
     this.inventoryItems.set((snapshot?.items ?? []).filter(item => item.active));
+  }
+  async loadDepartments() {
+    const departments = await firstValueFrom(this.http.get<Department[]>('/api/v1/organization/departments')) ?? [];
+    this.departments.set(departments.filter(department => department.active));
   }
 
   // ─── PO Methods ───────────────────────────────────────────────────
@@ -259,7 +279,7 @@ export class ProcurementPage {
     this.poForm.controls.exchangeRateOverrideReason.enable({ emitEvent: false });
     const supplier = s[0];
     const currencyCode = supplier?.currencyCode ?? 'EGP';
-    this.poForm.reset({ poNumber: '', poDate: new Date().toISOString().substring(0, 10), supplierId: supplier?.id ?? '', paymentTerms: supplier?.paymentTerms ?? 'Net 30 Days', currencyCode, exchangeRate: this.configuredRate(currencyCode), exchangeRateOverrideReason: '' });
+    this.poForm.reset({ poNumber: '', poDate: new Date().toISOString().substring(0, 10), supplierId: supplier?.id ?? '', departmentId: this.departments()[0]?.id ?? '', paymentTerms: supplier?.paymentTerms ?? 'Net 30 Days', currencyCode, exchangeRate: this.configuredRate(currencyCode), exchangeRateOverrideReason: '' });
     const firstItem = this.inventoryItems()[0];
     this.poItems.set([{ itemId: firstItem?.id ?? '', itemName: firstItem?.name ?? '', itemCategory: firstItem?.categoryName ?? '', quantity: 1, unitOfMeasure: firstItem?.uomName ?? firstItem?.unitCode ?? '', unitPrice: 0, currency: 'EGP', warehouse: 'المستودع الرئيسي', deliveryDate: new Date().toISOString().substring(0, 10) }]);
     this.modalOpen.set(true);
@@ -269,7 +289,7 @@ export class ProcurementPage {
     if (po.status !== 'DRAFT') return;
     this.editingPoId.set(po.id);
     this.editingPoSnapshot.set(po);
-    this.poForm.reset({ poNumber: po.poNumber, poDate: epochToDateInput(po.poDate), supplierId: po.supplierId, paymentTerms: po.paymentTerms ?? '', currencyCode: po.currencyCode ?? 'EGP', exchangeRate: po.exchangeRate ?? 1, exchangeRateOverrideReason: po.exchangeRateOverrideReason ?? '' });
+    this.poForm.reset({ poNumber: po.poNumber, poDate: epochToDateInput(po.poDate), supplierId: po.supplierId, departmentId: po.departmentId ?? '', paymentTerms: po.paymentTerms ?? '', currencyCode: po.currencyCode ?? 'EGP', exchangeRate: po.exchangeRate ?? 1, exchangeRateOverrideReason: po.exchangeRateOverrideReason ?? '' });
     this.poForm.controls.poDate.disable({ emitEvent: false });
     this.poForm.controls.currencyCode.disable({ emitEvent: false });
     this.poForm.controls.exchangeRate.disable({ emitEvent: false });
@@ -314,7 +334,7 @@ export class ProcurementPage {
     this.submitting.set(true);
     try {
       const v = this.poForm.getRawValue();
-      const payload = { poNumber: this.automaticNumbering() ? null : v.poNumber.trim(), poDate: dateInputToEpoch(v.poDate), supplierId: v.supplierId, paymentTerms: v.paymentTerms, currencyCode: v.currencyCode, exchangeRate: v.exchangeRate, exchangeRateOverrideReason: v.exchangeRateOverrideReason || null, items: this.poItems() };
+      const payload = { poNumber: this.automaticNumbering() ? null : v.poNumber.trim(), poDate: dateInputToEpoch(v.poDate), supplierId: v.supplierId, departmentId: v.departmentId || null, paymentTerms: v.paymentTerms, currencyCode: v.currencyCode, exchangeRate: v.exchangeRate, exchangeRateOverrideReason: v.exchangeRateOverrideReason || null, items: this.poItems() };
       const editingId = this.editingPoId();
       await firstValueFrom(editingId
         ? this.http.put(`/api/v1/trade/procurement/orders/${editingId}`, payload)
@@ -565,7 +585,8 @@ export class ProcurementPage {
     const supplierId = inv ? inv.supplierId : (s.length > 0 ? s[0].id : '');
     this.paymentOperationId.set(crypto.randomUUID());
     this.selectedPaymentSupplierId.set(supplierId);
-    this.pmtForm.reset({ paymentNumber: 'PMT-' + Math.floor(1000 + Math.random() * 9000), paymentDate: new Date().toISOString().substring(0, 10), supplierId, supplierInvoiceId: inv ? inv.id : '', amount: inv ? inv.outstandingAmount : 0, paymentMethod: 'BANK_TRANSFER', notes: '' });
+    this.pmtForm.reset({ paymentNumber: '', paymentDate: new Date().toISOString().substring(0, 10), supplierId, supplierInvoiceId: inv ? inv.id : '', amount: inv ? inv.outstandingAmount : 0, paymentMethod: 'BANK_TRANSFER', notes: '' });
+    this.applyPaymentNumberingValidators();
     this.pmtModalOpen.set(true);
   }
 
@@ -593,7 +614,7 @@ export class ProcurementPage {
       const invoice = this.payableInvoices().find(item => item.id === v.supplierInvoiceId);
       if (!invoice) { this.notification.error(this.i18n.t('procurement.paymentSelectOpenInvoice')); return; }
       if (v.amount > invoice.outstandingAmount) { this.notification.error(this.i18n.t('procurement.paymentExceedsOutstanding', { outstanding: invoice.outstandingAmount, currency: invoice.currencyCode })); return; }
-      await firstValueFrom(this.http.post('/api/v1/trade/procurement/payments', { paymentNumber: v.paymentNumber, paymentDate: new Date(v.paymentDate).getTime(), supplierId: v.supplierId, supplierInvoiceId: v.supplierInvoiceId, amount: v.amount, paymentMethod: v.paymentMethod, notes: v.notes || null, operationId: this.paymentOperationId() }));
+      await firstValueFrom(this.http.post('/api/v1/trade/procurement/payments', { paymentNumber: v.paymentNumber.trim() || null, paymentDate: new Date(v.paymentDate).getTime(), supplierId: v.supplierId, supplierInvoiceId: v.supplierInvoiceId, amount: v.amount, paymentMethod: v.paymentMethod, notes: v.notes || null, operationId: this.paymentOperationId() }));
       this.notification.success(this.i18n.t('procurement.paymentSaveSuccess'));
       this.pmtModalOpen.set(false);
       await this.loadAll();
@@ -604,6 +625,10 @@ export class ProcurementPage {
   // ─── Shared ────────────────────────────────────────────────────────
 
   date(ms: number) { return formatDate(ms); }
+  poDepartmentName(po: PurchaseOrder): string {
+    if (po.departmentName) return po.departmentName;
+    return this.departments().find(department => department.id === po.departmentId)?.name ?? '—';
+  }
   poStatusLabel(status: string): string {
     const key = ({ DRAFT: 'procurement.poStatus.draft', ISSUED: 'procurement.poStatus.issued', PARTIALLY_RECEIVED: 'procurement.poStatus.partiallyReceived', RECEIVED: 'procurement.poStatus.received', CANCELLED: 'procurement.poStatus.cancelled' } as Record<string, string>)[status];
     return key ? this.i18n.t(key) : status;

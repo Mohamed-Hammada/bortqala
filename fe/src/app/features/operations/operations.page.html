@@ -6,7 +6,7 @@
       <p>{{ i18n.t('operations.description') }}</p>
     </div>
     <div class="toolbar">
-      <button class="button secondary" (click)="store.export()">⇩ Excel</button
+      <button class="button secondary" (click)="store.export()">{{ i18n.t('common.export') }}</button
       ><button class="button secondary" (click)="open('category')">+ {{ i18n.t('operations.newCategory') || 'تصنيف' }}</button
       ><button class="button secondary" (click)="open('uom')">+ {{ i18n.t('operations.newUom') || 'وحدة قياس' }}</button
       ><button class="button secondary" (click)="open('advance')">
@@ -263,7 +263,7 @@
 @if (drawer() === 'item') {
   <app-modal-dialog
     [isOpen]="true"
-    title="إنشاء صنف مخزون جديد"
+    title="{{ i18n.t('operations.newItem') }}"
     (close)="close()"
   >
     <form [formGroup]="itemForm" (ngSubmit)="saveItem()">
@@ -334,7 +334,7 @@
 @if (drawer() === 'category') {
   <app-modal-dialog
     [isOpen]="true"
-    title="تصنيف مخزون جديد"
+    title="{{ i18n.t('operations.newCategory') }}"
     (close)="close()"
   >
     <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
@@ -360,7 +360,7 @@
 @if (drawer() === 'uom') {
   <app-modal-dialog
     [isOpen]="true"
-    title="وحدة قياس جديدة"
+    title="{{ i18n.t('operations.newUom') }}"
     (close)="close()"
   >
     <form [formGroup]="uomForm" (ngSubmit)="saveUom()">
@@ -390,7 +390,7 @@
 @if (drawer() === 'adjustment') {
   <app-modal-dialog
     [isOpen]="true"
-    title="تسوية مخزون"
+    title="{{ i18n.t('operations.newAdjustment') }}"
     (close)="close()"
   >
     <form [formGroup]="adjustmentForm" (ngSubmit)="saveAdjustment()">
@@ -423,7 +423,7 @@
         </div>
         <label class="selectable-card span-2">
           <input type="checkbox" formControlName="approved" />
-          <span>أؤكد أن هذه التسوية راجعها واعتمدها مستخدم مخول، وأن السبب والمستند المرجعي صحيحان.</span>
+          <span>{{ i18n.t('operations.approvalStatement') }}</span>
         </label>
       </div>
       <div modal-actions class="modal-actions-bar">

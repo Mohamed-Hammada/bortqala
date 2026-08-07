@@ -74,7 +74,7 @@ public final class AuthApi {
     public record AppSettingsResponse(
             int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets,
             int attendanceAnomalyThresholdPercent,
-            boolean automaticProcurementNumbering, boolean adminDashboardCustomizationEnabled,
+            boolean automaticProcurementNumbering, boolean automaticDocumentNumbering, boolean adminDashboardCustomizationEnabled,
             int minPasswordLength, boolean requireUppercase, boolean requireLowercase,
             boolean requireNumbers, boolean requireSpecialChars, boolean disallowSpaces,
             int maxPasswordLength, int passwordExpiryDays, int passwordHistoryCount,
@@ -87,6 +87,7 @@ public final class AuthApi {
             boolean showReportPresets,
             @Min(1) @Max(100) int attendanceAnomalyThresholdPercent,
             boolean automaticProcurementNumbering,
+            boolean automaticDocumentNumbering,
             boolean adminDashboardCustomizationEnabled,
             @Min(6) @Max(128) Integer minPasswordLength,
             boolean requireUppercase,

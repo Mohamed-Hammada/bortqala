@@ -95,3 +95,25 @@ databaseChangeLog:
       file: db/changelog/schema/create/20260806_v114_screen_shortcut_profiles.yaml
   - include:
       file: db/changelog/data/insert/20260806_v115_screen_shortcut_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260806_v116_unified_document_numbering.yaml
+  - include:
+      file: db/changelog/data/update/20260806_v117_approval_menu_allowed_menus.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v117_approval_menu_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v118_numbering_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260807_v119_hardcoded_ui_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260807_v120_exception_i18n_fix.yaml
+  - include:
+      file: db/changelog/data/insert/20260807_v121_trends_export_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260807_v122_budget_encumbrance_schema.yaml
+  - include:
+      file: db/changelog/data/insert/20260807_v123_budget_translations.yaml
+  - include:
+      file: db/changelog/data/update/20260807_v124_budget_menu_allowed_menus.yaml
+  - include:
+      file: db/changelog/data/insert/20260807_v125_budget_menu_translations.yaml

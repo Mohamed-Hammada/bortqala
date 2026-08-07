@@ -52,6 +52,11 @@ public class AccountingController {
     }
 
     // --- Journal Entries ---
+    @GetMapping("/numbering-settings")
+    public AccountingApi.NumberingSettings numberingSettings() {
+        return journalEntryService.numberingSettings();
+    }
+
     @GetMapping("/journal-entries")
     public AccountingApi.JournalEntryPageResponse listJournalEntries(
             @RequestParam(defaultValue = "0") int page,

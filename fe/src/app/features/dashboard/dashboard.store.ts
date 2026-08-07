@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
-import { Dashboard, AttendanceChartPoint, PayrollSummary, DepartmentMetric } from './dashboard.models';
+import { Dashboard, AttendanceChartPoint, PayrollSummary, DepartmentMetric, TrendPoint } from './dashboard.models';
 import { I18nService } from '../../core/i18n.service';
 
 @Injectable()
@@ -13,6 +13,8 @@ export class DashboardStore {
   readonly chartData = signal<AttendanceChartPoint[]>([]);
   readonly payrollSummary = signal<PayrollSummary | null>(null);
   readonly departmentMetrics = signal<DepartmentMetric[]>([]);
+  readonly trends = signal<TrendPoint[]>([]);
+  readonly trendsLoading = signal(false);
   readonly loading = signal(true);
   readonly chartLoading = signal(false);
   readonly error = signal<string | null>(null);
@@ -78,12 +80,33 @@ export class DashboardStore {
     }
   }
 
-  async loadAll(year: number, month: number, period = 'MONTH', departmentId: string | null = null): Promise<void> {
+  async loadTrends(months: number): Promise<void> {
+    this.trendsLoading.set(true);
+    try {
+      const res = await firstValueFrom(
+        this.httpClient.get<TrendPoint[]>('/api/v1/dashboard/trends', { params: { months } }),
+      );
+      this.trends.set(res);
+    } catch {
+      this.trends.set([]);
+    } finally {
+      this.trendsLoading.set(false);
+    }
+  }
+
+  downloadTrends(months: number): Promise<Blob> {
+    return firstValueFrom(
+      this.httpClient.get('/api/v1/exports/trends.xlsx', { params: { months }, responseType: 'blob' }),
+    );
+  }
+
+  async loadAll(year: number, month: number, period = 'MONTH', departmentId: string | null = null, trendMonths = 6): Promise<void> {
     await Promise.all([
       this.load(year, month),
       this.loadChartData(period, departmentId, year, month),
       this.loadPayrollSummary(year, month),
       this.loadDepartmentMetrics(year, month),
+      this.loadTrends(trendMonths),
     ]);
   }
 }

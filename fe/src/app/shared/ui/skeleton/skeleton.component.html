@@ -5,7 +5,7 @@
       <span class="logo-subtitle">ERP Platform</span>
     </div>
     <div class="error-content">
-      <h3>⚠️ حدث خطأ أثناء التحميل</h3>
+      <h3>⚠️ {{ i18n.t('skeleton.loadErrorTitle') }}</h3>
       <p>{{ err || errorMessage() }}</p>
       <button type="button" class="button primary retry-btn" (click)="onRetry()">
         🔄 {{ retryText() }}
@@ -13,7 +13,7 @@
     </div>
   </div>
 } @else if (loading()) {
-  <div class="skeleton-container" aria-busy="true" aria-label="جاري التحميل">
+  <div class="skeleton-container" aria-busy="true" [attr.aria-label]="i18n.t('skeleton.loadingAria')">
     <div class="skeleton-header">
       <div class="skeleton-brand">
         <div class="brand-logo-pulse">BEMO</div>

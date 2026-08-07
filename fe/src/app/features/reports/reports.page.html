@@ -62,7 +62,7 @@
         [disabled]="store.loading() || periodForm.invalid || previewing()"
         (click)="previewCustom()"
       >
-        {{ previewing() ? '…' : 'معاينة' }}
+        {{ previewing() ? '…' : i18n.t('reports.previewButton') }}
       </button>
       <button
         class="button primary"

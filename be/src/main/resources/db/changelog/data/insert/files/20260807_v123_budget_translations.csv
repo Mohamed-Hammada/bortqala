@@ -1,0 +1,123 @@
+id;translation_key;locale;text_value
+v123-001;BUDGET_AVAILABILITY_BLOCKED;ar-EG;يتجاوز مبلغ أمر الشراء الميزانية المتاحة للقسم.
+v123-002;BUDGET_AVAILABILITY_BLOCKED;en-US;The purchase order amount exceeds the department's available budget.
+v123-003;BUDGET_HAS_ACTIVE_ENCUMBRANCES;ar-EG;لا يمكن حذف ميزانية عليها التزامات نشطة.
+v123-004;BUDGET_HAS_ACTIVE_ENCUMBRANCES;en-US;Cannot delete a budget with active commitments.
+v123-005;BUDGET_HAS_ENCUMBRANCES;ar-EG;لا يمكن حذف ميزانية لها سجل اعتمادات؛ يمكن إلغاء تفعيلها بدلاً من الحذف.
+v123-006;BUDGET_HAS_ENCUMBRANCES;en-US;Cannot delete a budget with commitment history. Deactivate it instead.
+v123-007;BUDGET_PERIOD_MONTH_INVALID;ar-EG;شهر الميزانية يجب أن يكون بين 1 و12 للميزانية الشهرية.
+v123-008;BUDGET_PERIOD_MONTH_INVALID;en-US;Budget month must be between 1 and 12 for a monthly budget.
+v123-009;BUDGET_DEPARTMENT_REQUIRED;ar-EG;يجب اختيار القسم المرتبط بالميزانية.
+v123-010;BUDGET_DEPARTMENT_REQUIRED;en-US;A department must be selected for the budget.
+v123-011;BUDGET_DEPARTMENT_NOT_FOUND;ar-EG;القسم المحدد غير موجود في التنظيم الإداري.
+v123-012;BUDGET_DEPARTMENT_NOT_FOUND;en-US;The selected department does not exist in the organization.
+v123-013;BUDGET_NOT_FOUND;ar-EG;الميزانية غير موجودة.
+v123-014;BUDGET_NOT_FOUND;en-US;Budget not found.
+v123-015;nav.budgets;ar-EG;الميزانيات
+v123-016;nav.budgets;en-US;Budgets
+v123-017;budget.title;ar-EG;التحكم في الميزانيات والالتزامات
+v123-018;budget.title;en-US;Budget Control & Encumbrances
+v123-019;budget.listTitle;ar-EG;الميزانيات
+v123-020;budget.listTitle;en-US;Budgets
+v123-021;budget.create;ar-EG;ميزانية جديدة
+v123-022;budget.create;en-US;New Budget
+v123-023;budget.edit;ar-EG;تعديل الميزانية
+v123-024;budget.edit;en-US;Edit Budget
+v123-025;budget.delete;ar-EG;حذف الميزانية
+v123-026;budget.delete;en-US;Delete Budget
+v123-027;budget.fiscalYear;ar-EG;السنة المالية
+v123-028;budget.fiscalYear;en-US;Fiscal Year
+v123-029;budget.periodType;ar-EG;نوع الفترة
+v123-030;budget.periodType;en-US;Period Type
+v123-031;budget.periodAnnual;ar-EG;سنوية
+v123-032;budget.periodAnnual;en-US;Annual
+v123-033;budget.periodMonthly;ar-EG;شهرية
+v123-034;budget.periodMonthly;en-US;Monthly
+v123-035;budget.periodMonth;ar-EG;الشهر
+v123-036;budget.periodMonth;en-US;Month
+v123-037;budget.department;ar-EG;القسم
+v123-038;budget.department;en-US;Department
+v123-039;budget.plannedAmount;ar-EG;المبلغ المخطط
+v123-040;budget.plannedAmount;en-US;Planned Amount
+v123-041;budget.currencyCode;ar-EG;العملة
+v123-042;budget.currencyCode;en-US;Currency
+v123-043;budget.blocking;ar-EG;حجب تجاوز الميزانية
+v123-044;budget.blocking;en-US;Blocking
+v123-045;budget.blockingHint;ar-EG;يمنع إصدار أوامر شراء تتجاوز الميزانية المتاحة للقسم
+v123-046;budget.blockingHint;en-US;Prevents issuing purchase orders that exceed the department's available budget
+v123-047;budget.active;ar-EG;نشطة
+v123-048;budget.active;en-US;Active
+v123-049;budget.statusTitle;ar-EG;تقرير حالة الميزانية
+v123-050;budget.statusTitle;en-US;Budget Status Report
+v123-051;budget.encumbrancesTitle;ar-EG;سجل الالتزامات
+v123-052;budget.encumbrancesTitle;en-US;Encumbrance Register
+v123-053;budget.committed;ar-EG;التزامات (اعتماد)
+v123-054;budget.committed;en-US;Committed
+v123-055;budget.actual;ar-EG;منصرف فعلي
+v123-056;budget.actual;en-US;Actual
+v123-057;budget.available;ar-EG;متاح
+v123-058;budget.available;en-US;Available
+v123-059;budget.utilization;ar-EG;نسبة الاستخدام
+v123-060;budget.utilization;en-US;Utilization
+v123-061;budget.export;ar-EG;تصدير Excel
+v123-062;budget.export;en-US;Export Excel
+v123-063;budget.empty;ar-EG;لا توجد ميزانيات بعد. أنشئ ميزانية للبدء.
+v123-064;budget.empty;en-US;No budgets yet. Create one to get started.
+v123-065;budget.encumbranceEmpty;ar-EG;لا توجد التزامات مسجلة.
+v123-066;budget.encumbranceEmpty;en-US;No encumbrances recorded yet.
+v123-067;budget.poNumber;ar-EG;أمر الشراء
+v123-068;budget.poNumber;en-US;Purchase Order
+v123-069;budget.encumbranceStatus;ar-EG;الحالة
+v123-070;budget.encumbranceStatus;en-US;Status
+v123-071;budget.encumbranceCommittedAt;ar-EG;تاريخ الاعتماد
+v123-072;budget.encumbranceCommittedAt;en-US;Committed At
+v123-073;budget.encumbranceLiquidated;ar-EG;منصرف
+v123-074;budget.encumbranceLiquidated;en-US;Liquidated
+v123-075;budget.encumbranceReleased;ar-EG;محرر
+v123-076;budget.encumbranceReleased;en-US;Released
+v123-077;budget.encumbranceActive;ar-EG;نشط
+v123-078;budget.encumbranceActive;en-US;Active
+v123-079;budget.encumbranceReleasedStatus;ar-EG;محرر
+v123-080;budget.encumbranceReleasedStatus;en-US;Released
+v123-081;budget.save;ar-EG;حفظ
+v123-082;budget.save;en-US;Save
+v123-083;budget.cancel;ar-EG;إلغاء
+v123-084;budget.cancel;en-US;Cancel
+v123-085;budget.confirmDelete;ar-EG;هل تريد حذف هذه الميزانية؟
+v123-086;budget.confirmDelete;en-US;Delete this budget?
+v123-087;budget.yearFilter;ar-EG;السنة
+v123-088;budget.yearFilter;en-US;Year
+v123-089;budget.allYears;ar-EG;كل السنوات
+v123-090;budget.allYears;en-US;All Years
+v123-091;budget.months;ar-EG;الشهور
+v123-092;budget.months;en-US;Months
+v123-093;budget.createSuccess;ar-EG;تم إنشاء الميزانية بنجاح.
+v123-094;budget.createSuccess;en-US;Budget created successfully.
+v123-095;budget.updateSuccess;ar-EG;تم تحديث الميزانية بنجاح.
+v123-096;budget.updateSuccess;en-US;Budget updated successfully.
+v123-097;budget.deleteSuccess;ar-EG;تم حذف الميزانية بنجاح.
+v123-098;budget.deleteSuccess;en-US;Budget deleted successfully.
+v123-099;procurement.department;ar-EG;القسم (لأغراض الميزانية)
+v123-100;procurement.department;en-US;Department (budget)
+v123-101;export.sheet.budgets;ar-EG;الميزانيات
+v123-102;export.sheet.budgets;en-US;Budgets
+v123-103;export.column.department;ar-EG;القسم
+v123-104;export.column.department;en-US;Department
+v123-105;export.column.year;ar-EG;السنة
+v123-106;export.column.year;en-US;Year
+v123-107;export.column.period;ar-EG;الفترة
+v123-108;export.column.period;en-US;Period
+v123-109;export.column.planned;ar-EG;المخطط
+v123-110;export.column.planned;en-US;Planned
+v123-111;export.column.committed;ar-EG;التزامات
+v123-112;export.column.committed;en-US;Committed
+v123-113;export.column.actual;ar-EG;منصرف
+v123-114;export.column.actual;en-US;Actual
+v123-115;export.column.available;ar-EG;متاح
+v123-116;export.column.available;en-US;Available
+v123-117;export.column.utilization;ar-EG;نسبة الاستخدام
+v123-118;export.column.utilization;en-US;Utilization
+v123-119;export.column.currency;ar-EG;العملة
+v123-120;export.column.currency;en-US;Currency
+v123-121;export.column.blocking;ar-EG;حجب
+v123-122;export.column.blocking;en-US;Blocking

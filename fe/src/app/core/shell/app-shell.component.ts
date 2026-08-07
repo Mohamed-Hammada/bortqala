@@ -321,6 +321,15 @@ export const NAV_ITEMS: NavItem[] = [
       roles: FINANCE_ROLES,
     },
     {
+      menuId: 'budgets',
+      labelKey: 'nav.budgets',
+      descriptionKey: 'nav.budgetsHint',
+      path: '/finance/budgets',
+      icon: 'reports',
+      workspace: 'workspace.finance',
+      roles: FINANCE_ROLES,
+    },
+    {
       menuId: 'organization',
       labelKey: 'nav.organization',
       descriptionKey: 'nav.organizationHint',

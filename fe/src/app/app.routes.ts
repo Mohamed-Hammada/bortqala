@@ -175,6 +175,16 @@ export const routes: Routes = [
           import('./features/finance/tax-currency/tax-currency.page').then((module) => module.TaxCurrencyPage),
       },
       {
+        path: 'finance/budgets',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'budgets',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+        },
+        loadComponent: () =>
+          import('./features/finance/budgets/budgets.page').then((module) => module.BudgetsPage),
+      },
+      {
         path: 'organization',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN'], menuId: 'organization' },

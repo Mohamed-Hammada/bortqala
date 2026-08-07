@@ -45,4 +45,7 @@ public final class DashboardApi {
                                        BigDecimal totalGross, BigDecimal totalPaid, BigDecimal totalPending) { }
     public record DepartmentMetric(String departmentId, String departmentName, int employeeCount,
                                    long presentDays, long scheduledDays, double rate) { }
+    public record TrendPoint(String label, int year, int month, long scheduledEmployeeDays, long presentEmployeeDays,
+                             double attendanceRate, long exceptionDays, long overtimeMinutes,
+                             int paidCount, int pendingCount, BigDecimal totalGross, BigDecimal totalPaid) { }
 }

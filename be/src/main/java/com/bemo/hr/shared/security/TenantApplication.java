@@ -41,6 +41,9 @@ public class TenantApplication {
     @Column(name = "automatic_procurement_numbering", nullable = false)
     private boolean automaticProcurementNumbering = true;
 
+    @Column(name = "automatic_document_numbering", nullable = false)
+    private boolean automaticDocumentNumbering = true;
+
     @Column(name = "admin_dashboard_customization_enabled", nullable = false)
     private boolean adminDashboardCustomizationEnabled = true;
 
@@ -89,6 +92,7 @@ public class TenantApplication {
         this.showReportPresets = true;
         this.attendanceAnomalyThresholdPercent = 70;
         this.automaticProcurementNumbering = true;
+        this.automaticDocumentNumbering = true;
         this.adminDashboardCustomizationEnabled = true;
         this.minPasswordLength = 8;
         this.maxPasswordLength = 128;
@@ -107,6 +111,10 @@ public class TenantApplication {
 
     public void updateProcurementNumbering(boolean automaticProcurementNumbering) {
         this.automaticProcurementNumbering = automaticProcurementNumbering;
+    }
+
+    public void updateDocumentNumbering(boolean automaticDocumentNumbering) {
+        this.automaticDocumentNumbering = automaticDocumentNumbering;
     }
 
     public void updateAttendanceAnomalyThreshold(int attendanceAnomalyThresholdPercent) {
@@ -149,6 +157,7 @@ public class TenantApplication {
     public boolean isShowReportPresets() { return showReportPresets; }
     public int getAttendanceAnomalyThresholdPercent() { return attendanceAnomalyThresholdPercent; }
     public boolean isAutomaticProcurementNumbering() { return automaticProcurementNumbering; }
+    public boolean isAutomaticDocumentNumbering() { return automaticDocumentNumbering; }
     public boolean isAdminDashboardCustomizationEnabled() { return adminDashboardCustomizationEnabled; }
     public int getMinPasswordLength() { return minPasswordLength; }
     public boolean isRequireUppercase() { return requireUppercase; }

@@ -221,7 +221,7 @@ export class AuthService {
     if (menuId === 'production' && !activeFeatures.includes('manufacturing.enabled')) return false;
     if (menuId === 'quality' && !activeFeatures.includes('quality.enabled')) return false;
     
-    if (!activeFeatures.includes('finance.enabled') && (menuId === 'accounts' || menuId === 'journal-entries' || menuId === 'banks' || menuId === 'tax-currency' || menuId === 'fiscal-periods')) return false;
+    if (!activeFeatures.includes('finance.enabled') && (menuId === 'accounts' || menuId === 'journal-entries' || menuId === 'banks' || menuId === 'tax-currency' || menuId === 'fiscal-periods' || menuId === 'budgets')) return false;
     if (!activeFeatures.includes('workforce.contractorAccounts.enabled') && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements')) return false;
 
     if (user.roles.includes('SUPER_ADMIN') || user.roles.includes('ADMIN')) return true;
