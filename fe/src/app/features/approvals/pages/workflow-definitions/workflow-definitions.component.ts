@@ -5,6 +5,7 @@ import { ApprovalService } from '../../data-access/approval.service';
 import { ApprovalWorkflowDefinition, ApprovalWorkflowStep } from '../../models/approval.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 import { NotificationService } from '../../../../core/notification.service';
+import { I18nService } from '../../../../core/i18n.service';
 import { apiErrorDetail } from '../../../../core/api-error';
 
 @Component({
@@ -132,6 +133,7 @@ import { apiErrorDetail } from '../../../../core/api-error';
 })
 export class WorkflowDefinitionsComponent implements OnInit {
   readonly approvalService = inject(ApprovalService);
+  readonly i18n = inject(I18nService);
   private readonly notification = inject(NotificationService);
 
   readonly formModalOpen = signal(false);
@@ -199,7 +201,7 @@ export class WorkflowDefinitionsComponent implements OnInit {
 
   saveWorkflow(): void {
     if (!this.form.name || !this.form.steps.length) {
-      this.notification.error('يرجى كتابة اسم المسار وإضافة خطوة واحدة على الأقل.');
+      this.notification.error(this.i18n.t('approvals.workflowNameRequired'));
       return;
     }
 
@@ -212,7 +214,7 @@ export class WorkflowDefinitionsComponent implements OnInit {
       next: () => {
         this.submitting.set(false);
         this.formModalOpen.set(false);
-        this.notification.success('تم حفظ مسار الاعتماد بنجاح.');
+        this.notification.success(this.i18n.t('approvals.workflowSavedSuccess'));
         this.reload();
       },
       error: err => {

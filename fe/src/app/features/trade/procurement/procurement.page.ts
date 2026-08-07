@@ -70,7 +70,19 @@ export class ProcurementPage {
   private readonly confirm = inject(ConfirmDialogService);
 
   readonly loading = signal(true);
-  readonly submitting = signal(false);
+  readonly savingPo = signal(false);
+  readonly savingGrn = signal(false);
+  readonly savingInvoice = signal(false);
+  readonly savingPayment = signal(false);
+  readonly resolvingMatch = signal(false);
+  readonly submitting = computed(
+    () =>
+      this.savingPo() ||
+      this.savingGrn() ||
+      this.savingInvoice() ||
+      this.savingPayment() ||
+      this.resolvingMatch(),
+  );
   readonly error = signal<string | null>(null);
   readonly orders = signal<PurchaseOrder[]>([]);
   readonly goodsReceipts = signal<GoodsReceipt[]>([]);
@@ -100,20 +112,24 @@ export class ProcurementPage {
   }
 
   async resolveMatch(resolutionNotes: string): Promise<void> {
+    if (this.resolvingMatch()) return;
     const match = this.activeMatch();
     if (!match || !resolutionNotes || !resolutionNotes.trim()) {
-      this.notification.error('ملاحظات التسوية مطلوبة.');
+      this.notification.error(this.i18n.t('procurement.matchResolutionNotesRequired'));
       return;
     }
+    this.resolvingMatch.set(true);
     try {
       const updated = await firstValueFrom(
         this.http.post<ProcurementThreeWayMatch>(`/api/v1/trade/procurement/three-way-matches/${match.id}/resolve`, { resolutionNotes })
       );
       this.activeMatch.set(updated);
-      this.notification.success('تمت تسوية تفاوت المطابقة بنجاح.');
+      this.notification.success(this.i18n.t('procurement.matchResolvedSuccess'));
       await this.loadAll();
     } catch (err) {
       this.notification.error(apiErrorMessage(err, this.i18n));
+    } finally {
+      this.resolvingMatch.set(false);
     }
   }
 
@@ -326,12 +342,12 @@ export class ProcurementPage {
   removeItemLine(idx: number) { if (this.poItems().length > 1) this.poItems.update(i => i.filter((_, n) => n !== idx)); else this.notification.warning(this.i18n.t('procurement.poAtLeastOneLine')); }
 
   async submitPo() {
-    if (this.submitting()) return;
+    if (this.savingPo()) return;
     if (this.poForm.invalid) { this.poForm.markAllAsTouched(); return; }
     if (!this.automaticNumbering() && !this.poForm.controls.poNumber.value.trim()) { this.poForm.controls.poNumber.markAsTouched(); return; }
     if (this.poItems().length === 0 || this.poItems().some(item => !item.itemId || item.quantity <= 0 || item.unitPrice < 0)) { this.notification.warning(this.i18n.t('procurement.poInvalidLineWarning')); return; }
     if (!this.editingPoId() && this.poRateOverridden() && !this.poForm.controls.exchangeRateOverrideReason.value.trim()) { this.notification.warning(this.i18n.t('procurement.rateOverrideReasonRequired')); return; }
-    this.submitting.set(true);
+    this.savingPo.set(true);
     try {
       const v = this.poForm.getRawValue();
       const payload = { poNumber: this.automaticNumbering() ? null : v.poNumber.trim(), poDate: dateInputToEpoch(v.poDate), supplierId: v.supplierId, departmentId: v.departmentId || null, paymentTerms: v.paymentTerms, currencyCode: v.currencyCode, exchangeRate: v.exchangeRate, exchangeRateOverrideReason: v.exchangeRateOverrideReason || null, items: this.poItems() };
@@ -343,7 +359,7 @@ export class ProcurementPage {
       this.modalOpen.set(false);
       await this.loadAll();
     } catch (e) { this.notification.error(this.i18n.t('procurement.poCreateFail') + apiErrorMessage(e, this.i18n)); }
-    finally { this.submitting.set(false); }
+    finally { this.savingPo.set(false); }
   }
 
   issuePo(po: PurchaseOrder) {
@@ -485,7 +501,7 @@ export class ProcurementPage {
   }
 
   async submitGrn() {
-    if (this.submitting()) return;
+    if (this.savingGrn()) return;
     if (this.grnForm.invalid) {
       this.grnForm.markAllAsTouched();
       this.notification.warning(this.i18n.t('procurement.grnRequiredFields'));
@@ -496,7 +512,7 @@ export class ProcurementPage {
       this.notification.warning(this.i18n.t('procurement.grnQuantityErrors'));
       return;
     }
-    this.submitting.set(true);
+    this.savingGrn.set(true);
     try {
       const v = this.grnForm.getRawValue();
       const lines = this.grnItems().map(item => ({
@@ -522,7 +538,7 @@ export class ProcurementPage {
     } catch (e) {
       this.notification.error(this.i18n.t('procurement.grnFail') + apiErrorMessage(e, this.i18n));
     }
-    finally { this.submitting.set(false); }
+    finally { this.savingGrn.set(false); }
   }
 
   // ─── Invoice Methods ──────────────────────────────────────────────
@@ -551,7 +567,7 @@ export class ProcurementPage {
   }
 
   async submitInvoice() {
-    if (this.submitting()) return;
+    if (this.savingInvoice()) return;
     if (this.invForm.invalid) { this.invForm.markAllAsTouched(); return; }
     const invoiceValue = this.invForm.getRawValue();
     if (invoiceValue.hasSupplierInvoice && !invoiceValue.invoiceNumber.trim()) { this.notification.warning(this.i18n.t('procurement.invoiceMissingNumber')); return; }
@@ -559,7 +575,7 @@ export class ProcurementPage {
     if (this.invoiceRateOverridden() && !invoiceValue.exchangeRateOverrideReason.trim()) { this.notification.warning(this.i18n.t('procurement.rateOverrideReasonRequired')); return; }
     if (invoiceValue.dueDate && new Date(invoiceValue.dueDate) < new Date(invoiceValue.invoiceDate)) { this.notification.warning(this.i18n.t('procurement.invoiceDueDateBeforeInvoiceDate')); return; }
     if (invoiceValue.discountAmount > invoiceValue.totalAmount) { this.notification.warning(this.i18n.t('procurement.invoiceDiscountExceedsTotal')); return; }
-    this.submitting.set(true);
+    this.savingInvoice.set(true);
     try {
       const v = this.invForm.getRawValue();
       await firstValueFrom(this.http.post('/api/v1/trade/procurement/invoices', {
@@ -575,7 +591,7 @@ export class ProcurementPage {
       this.invModalOpen.set(false);
       await this.loadAll();
     } catch (e) { this.notification.error(this.i18n.t('procurement.invoiceSaveFail') + apiErrorMessage(e, this.i18n)); }
-    finally { this.submitting.set(false); }
+    finally { this.savingInvoice.set(false); }
   }
 
   // ─── Payment Methods ──────────────────────────────────────────────
@@ -606,9 +622,9 @@ export class ProcurementPage {
   }
 
   async submitPayment() {
-    if (this.submitting()) return;
+    if (this.savingPayment()) return;
     if (this.pmtForm.invalid) { this.pmtForm.markAllAsTouched(); return; }
-    this.submitting.set(true);
+    this.savingPayment.set(true);
     try {
       const v = this.pmtForm.getRawValue();
       const invoice = this.payableInvoices().find(item => item.id === v.supplierInvoiceId);
@@ -619,7 +635,7 @@ export class ProcurementPage {
       this.pmtModalOpen.set(false);
       await this.loadAll();
     } catch (e) { this.notification.error(this.i18n.t('procurement.paymentSaveFail') + apiErrorMessage(e, this.i18n)); }
-    finally { this.submitting.set(false); }
+    finally { this.savingPayment.set(false); }
   }
 
   // ─── Shared ────────────────────────────────────────────────────────

@@ -221,7 +221,7 @@ export class SettingsPage {
         passwordHistoryCount: saved.passwordHistoryCount ?? 0,
       });
       this.appSettingsForm.markAsPristine();
-      this.notification.success(this.i18n.t('settings.saveAllSystemSettings', undefined, 'تم حفظ جميع الإعدادات بنجاح.'));
+      this.notification.success(this.i18n.t('settings.saveAllSystemSettings', undefined));
     } catch (error) {
       const msg = apiErrorMessage(error, this.i18n);
       this.notification.error(msg);

@@ -81,8 +81,8 @@ export class ReportsImportComponent implements OnInit {
   upload(): void { const file = this.selectedFile(); if (!file) return; this.run(() => this.service.uploadImport(file), value => { this.batch.set(value); this.mapping = this.inferMapping(value.headers); this.step.set(2); this.resetResults(); }); }
   saveMapping(): void { const current = this.batch(); if (!current) return; this.run(() => this.service.saveImportMapping(current.id, this.mapping), value => { this.batch.set(value); this.step.set(3); }); }
   validate(): void { const current = this.batch(); if (!current) return; this.run(() => this.service.validateImport(current.id), value => { this.validation.set(value); this.batch.set(value.batch); this.step.set(4); this.refreshHistory(); }); }
-  commit(): void { const current = this.batch(); if (!current) return; this.run(() => this.service.commitImport(current.id, this.operationId, this.importValidRowsOnly), value => { this.commitResult.set(value); this.batch.set(value.batch); this.step.set(6); this.notification.success('تم تنفيذ الاستيراد وحفظ سجل التغييرات.'); this.refreshHistory(); }); }
-  reverse(item: WorkforceImportBatch): void { this.run(() => this.service.reverseImport(item.id), value => { this.batch.set(value); this.commitResult.set(null); this.notification.success('تم إنشاء قيد عكسي دون حذف الملف أو سجل العملية.'); this.refreshHistory(); }); }
+  commit(): void { const current = this.batch(); if (!current) return; this.run(() => this.service.commitImport(current.id, this.operationId, this.importValidRowsOnly), value => { this.commitResult.set(value); this.batch.set(value.batch); this.step.set(6); this.notification.success(this.i18n.t('reportsImport.commitSuccess')); this.refreshHistory(); }); }
+  reverse(item: WorkforceImportBatch): void { this.run(() => this.service.reverseImport(item.id), value => { this.batch.set(value); this.commitResult.set(null); this.notification.success(this.i18n.t('reportsImport.reverseSuccess')); this.refreshHistory(); }); }
   openBatch(item: WorkforceImportBatch): void { this.batch.set(item); this.mapping = { workerCode: item.columnMapping['workerCode'] ?? '', workDate: item.columnMapping['workDate'] ?? '', attendanceValue: item.columnMapping['attendanceValue'] ?? '' }; this.commitResult.set(null); this.error.set(null); if (['VALIDATED','READY','IMPORTED','REVERSED'].includes(item.status)) { this.run(() => this.service.previewImport(item.id), value => { this.validation.set(value); this.step.set(item.status === 'IMPORTED' || item.status === 'REVERSED' ? 6 : 4); }); } else { this.validation.set(null); this.step.set(item.status === 'MAPPED' ? 3 : 2); } }
   downloadErrors(item: WorkforceImportBatch): void { this.service.downloadImportErrors(item.id).subscribe({ next: blob => downloadBlob(blob, `workforce-import-errors-${item.id}.xlsx`), error: e => this.fail(e) }); }
   downloadOriginal(item: WorkforceImportBatch): void { this.service.downloadImportOriginal(item.id).subscribe({ next: blob => downloadBlob(blob, item.fileName), error: e => this.fail(e) }); }
@@ -98,7 +98,7 @@ export class ReportsImportComponent implements OnInit {
       { workerCode: 'EMP-003', workDate: '2026-07-31', attendanceValue: '0' }
     ];
     exportCsv(sampleRows, columns, 'قالب_استيراد_تقارير_العمالة.csv');
-    this.notification.success('تم تنزيل نموذج استيراد تقارير العمالة بنجاح.');
+    this.notification.success(this.i18n.t('reportsImport.templateDownloadSuccess'));
   }
   mappingComplete(): boolean { return Boolean(this.mapping.workerCode && this.mapping.workDate && this.mapping.attendanceValue); }
   statusLabel(status: string): string { return ({UPLOADED:'مرفوع',MAPPED:'تمت المطابقة',VALIDATED:'تم التحقق مع أخطاء',READY:'جاهز',IMPORTED:'تم الاستيراد',REVERSED:'تم التراجع'} as Record<string,string>)[status] ?? status; }

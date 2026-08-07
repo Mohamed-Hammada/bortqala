@@ -292,7 +292,7 @@ export class UsersPage {
     const isAdmin = roleCode === 'ADMIN' || roleCode === 'SUPER_ADMIN';
     const result: Array<{ code: string; titleKey: string; level: string }> = [];
     for (const page of catalog.pages) {
-      if (!page.viewPermissions.some((permission) => granted.has(permission))) continue;
+      if (!isAdmin && !page.viewPermissions.some((permission) => granted.has(permission))) continue;
       if (!menus.has(page.menuId)) continue;
       if (page.requiredFeature && !activeFeatures.includes(page.requiredFeature)) continue;
       if (!isAdmin && page.roles.length > 0 && !page.roles.includes(roleCode)) continue;
@@ -435,7 +435,7 @@ export class UsersPage {
   }
 
   allowedMenuCount(item: AuthUser): number {
-    if (item.roles.includes('SUPER_ADMIN')) {
+    if (item.roles.some((role) => role === 'SUPER_ADMIN' || role === 'ADMIN')) {
       return this.menuOptions.length;
     }
     return item.allowedMenus ? item.allowedMenus.length : this.menuOptions.length;
@@ -519,17 +519,36 @@ export class UsersPage {
   roleMeta(role: AccessRole): { pages: number; actions: number } {
     const catalog = this.access.catalog();
     if (!catalog) return { pages: 0, actions: 0 };
+
+    const accessiblePages = this.roleAccessiblePages(role.code);
+    const accessibleCodes = new Set(accessiblePages.map((page) => page.code));
     const granted = new Set(role.permissions);
-    let pages = 0;
     let actions = 0;
+
     for (const page of catalog.pages) {
-      if (page.viewPermissions.some((permission) => granted.has(permission))) pages++;
+      if (!accessibleCodes.has(page.code)) continue;
       actions += page.actions.filter((action) => granted.has(action.permission)).length;
     }
-    return { pages, actions };
+
+    return { pages: accessiblePages.length, actions };
   }
 
   requiredRolesForPage(viewPermissions: string[]): string[] {
+    const pages = this.access.pages();
+    const page =
+      pages.find((item) => item.viewPermissions === viewPermissions) ??
+      pages.find(
+        (item) =>
+          item.viewPermissions.length === viewPermissions.length &&
+          item.viewPermissions.every(
+            (permission, index) => permission === viewPermissions[index],
+          ),
+      );
+
+    if (page?.roles?.length) {
+      return [...page.roles].sort();
+    }
+
     const all = new Set<string>();
     viewPermissions.forEach((permission) =>
       this.access.rolesGranting(permission).forEach((role) => all.add(role)),
@@ -666,16 +685,16 @@ export class UsersPage {
       displayName: user.displayName,
       roles: user.roles.join(', '),
       allowedMenus: user.allowedMenus?.length ?? 0,
-      active: user.active ? 'نشط' : 'غير نشط',
+      active: user.active ? this.i18n.t('common.active') : this.i18n.t('common.inactive'),
     }));
     exportCsv(
       rows,
       [
-        { key: 'username', label: 'اسم المستخدم' },
-        { key: 'displayName', label: 'الاسم المعروض' },
-        { key: 'roles', label: 'الأدوار' },
-        { key: 'allowedMenus', label: 'عدد الصلاحيات' },
-        { key: 'active', label: 'الحالة' },
+        { key: 'username', label: this.i18n.t('users.username') },
+        { key: 'displayName', label: this.i18n.t('users.displayName') },
+        { key: 'roles', label: this.i18n.t('users.roles') },
+        { key: 'allowedMenus', label: this.i18n.t('users.allowedMenus') },
+        { key: 'active', label: this.i18n.t('users.status') },
       ],
       `users-${new Date().toISOString().slice(0, 10)}.csv`,
     );

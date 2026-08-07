@@ -58,8 +58,8 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
             {{ i18n.t('manualAttendance.exportExcel') }}
           </button>
           <button type="button" class="btn btn-secondary" (click)="applyFullDayAll()"
-            [appTooltip]="i18n.t('manualAttendance.setFullDayAll', undefined, 'يوم كامل للكل — يغيّر كل الخلايا الظاهرة إلى دوام كامل')">
-            {{ i18n.t('manualAttendance.setFullDayAllLabel', undefined, 'تعيين يوم كامل للكل') }}
+            [appTooltip]="i18n.t('manualAttendance.setFullDayAll', undefined)">
+            {{ i18n.t('manualAttendance.setFullDayAllLabel', undefined) }}
           </button>
           <button type="button" class="btn btn-primary" [disabled]="saving() || dirtyCellKeys().size === 0" (click)="saveAttendance()"
             [appTooltip]="i18n.t('manualAttendance.saveAttendance')">
@@ -1139,7 +1139,7 @@ export class ManualAttendanceComponent implements OnInit {
   }
 
   private confirmDiscardChanges(): boolean {
-    return !this.hasUnsavedChanges() || window.confirm('لديك تعديلات حضور غير محفوظة. هل تريد تجاهلها والمتابعة؟');
+    return !this.hasUnsavedChanges() || window.confirm(this.i18n.t('manualAttendance.discardUnsavedConfirm'));
   }
 
   // --- Calculation helpers ---

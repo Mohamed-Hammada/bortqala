@@ -5,6 +5,7 @@ import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dial
 import { WorkforceService } from '../data-access/workforce.service';
 import { ContractorSettlementDetail } from '../models/workforce.models';
 import { NotificationService } from '../../../core/notification.service';
+import { I18nService } from '../../../core/i18n.service';
 import { apiErrorDetail } from '../../../core/api-error';
 
 @Component({
@@ -145,6 +146,7 @@ export class ContractorSettlementDetailModalComponent {
   @Output() updated = new EventEmitter<ContractorSettlementDetail>();
 
   private readonly workforceService = inject(WorkforceService);
+  readonly i18n = inject(I18nService);
   private readonly notification = inject(NotificationService);
 
   readonly submitting = signal(false);
@@ -188,7 +190,7 @@ export class ContractorSettlementDetailModalComponent {
     }).subscribe({
       next: updatedItem => {
         this.submitting.set(false);
-        this.notification.success('تم ترحيل التسوية للمالية بنجاح وسداد القيد.');
+        this.notification.success(this.i18n.t('workforce.settlements.postSuccess'));
         this.updated.emit(updatedItem);
       },
       error: error => {
@@ -209,7 +211,7 @@ export class ContractorSettlementDetailModalComponent {
       next: updatedItem => {
         this.submitting.set(false);
         this.showInvoiceForm.set(false);
-        this.notification.success('تم ربط الفاتورة بنجاح.');
+        this.notification.success(this.i18n.t('workforce.settlements.invoiceLinkedSuccess'));
         this.updated.emit(updatedItem);
       },
       error: error => {
@@ -232,7 +234,7 @@ export class ContractorSettlementDetailModalComponent {
       next: updatedItem => {
         this.submitting.set(false);
         this.showPaymentForm.set(false);
-        this.notification.success('تم تسجيل الصرف بنجاح.');
+        this.notification.success(this.i18n.t('workforce.settlements.paymentRecordedSuccess'));
         this.updated.emit(updatedItem);
       },
       error: error => {

@@ -56,7 +56,7 @@ export class FiscalPeriodsPage {
         this.http.post<FiscalPeriod[]>(`/api/v1/fiscal-periods/generate-year?year=${this.year()}`, {}),
       );
       this.periods.set(data);
-      this.notification.success('تم إنشاء الفترات المالية للسنة بنجاح ✓');
+      this.notification.success(this.i18n.t('fiscalPeriods.generatedSuccess'));
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));
     } finally {

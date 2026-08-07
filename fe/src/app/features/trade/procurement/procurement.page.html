@@ -180,7 +180,7 @@
         <div class="total-bar"><span>{{ i18n.t('procurement.poTotalBar') }}</span><strong>{{ totalCalculated() | number:'1.2-2' }} {{ poForm.controls.currencyCode.value }} · {{ poBaseTotal() | number:'1.2-2' }} {{ baseCurrencyCode() }}</strong></div>
       </div>
       <div modal-actions class="modal-actions-bar">
-        <button class="button primary" type="submit" [disabled]="submitting() || poForm.invalid || totalCalculated() <= 0">{{ editingPoId() ? i18n.t('procurement.poSaveEdits') : i18n.t('procurement.poSaveOrder') }}</button>
+        <button class="button primary" type="submit" [disabled]="savingPo() || poForm.invalid || totalCalculated() <= 0">{{ editingPoId() ? i18n.t('procurement.poSaveEdits') : i18n.t('procurement.poSaveOrder') }}</button>
         <button class="button secondary" type="button" (click)="modalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
       </div>
     </form>
@@ -190,7 +190,7 @@
   <!-- ══════════════ GRN MODAL ══════════════ -->
   @if (grnModalOpen()) {
   <app-modal-dialog [isOpen]="true" [title]="i18n.t('procurement.grnTitle') + ' (GRN)'" size="large"
-    [preventOutsideClose]="submitting()" (close)="grnModalOpen.set(false)">
+    [preventOutsideClose]="savingGrn()" (close)="grnModalOpen.set(false)">
     <form class="grn-form" [formGroup]="grnForm" (ngSubmit)="submitGrn()">
       <section class="grn-document-card" [attr.aria-label]="i18n.t('procurement.grnAriaDoc')">
         <div class="grn-section-heading">
@@ -317,9 +317,9 @@
           @if (grnHasErrors()) { <span class="invalid-hint">{{ i18n.t('procurement.grnErrorsHint') }}</span> }
           @else { <span class="valid-hint">{{ i18n.t('procurement.grnReadyHint') }}</span> }
         </div>
-        <button class="button secondary" type="button" [disabled]="submitting()" (click)="grnModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
-        <button class="button primary" type="submit" [disabled]="submitting() || grnHasErrors()">
-          {{ submitting() ? i18n.t('procurement.grnSubmitting') : i18n.t('procurement.grnSubmit') }}
+        <button class="button secondary" type="button" [disabled]="savingGrn()" (click)="grnModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
+        <button class="button primary" type="submit" [disabled]="savingGrn() || grnHasErrors()">
+          {{ savingGrn() ? i18n.t('procurement.grnSubmitting') : i18n.t('procurement.grnSubmit') }}
         </button>
       </div>
     </form>
@@ -353,7 +353,7 @@
       </div>
       <div class="total-bar"><span>{{ i18n.t('procurement.invNetLabel') }} <span tabindex="0" [attr.aria-label]="i18n.t('procurement.invNetAria')" [appTooltip]="i18n.t('procurement.invNetTooltip')">ⓘ</span>:</span><strong>{{ invNetAmount() | number:'1.2-2' }} {{ invForm.controls.currencyCode.value }} · {{ invBaseNetAmount() | number:'1.2-2' }} {{ baseCurrencyCode() }}</strong></div>
       <div modal-actions class="modal-actions-bar">
-        <button class="button primary" type="submit" [disabled]="submitting() || invForm.invalid">{{ i18n.t('procurement.invSubmit') }}</button>
+        <button class="button primary" type="submit" [disabled]="savingInvoice() || invForm.invalid">{{ i18n.t('procurement.invSubmit') }}</button>
         <button class="button secondary" type="button" (click)="invModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
       </div>
     </form>
@@ -378,7 +378,7 @@
         <div class="field span-2"><label>{{ i18n.t('procurement.colNotes') }}</label><input formControlName="notes" /></div>
       </div>
       <div modal-actions class="modal-actions-bar">
-        <button class="button primary" type="submit" [disabled]="submitting() || pmtForm.invalid">{{ i18n.t('procurement.pmtSubmit') }}</button>
+        <button class="button primary" type="submit" [disabled]="savingPayment() || pmtForm.invalid">{{ i18n.t('procurement.pmtSubmit') }}</button>
         <button class="button secondary" type="button" (click)="pmtModalOpen.set(false)">{{ i18n.t('procurement.cancel') }}</button>
       </div>
     </form>
@@ -421,7 +421,7 @@
         <div style="display:grid;gap:.5rem;">
           <label for="resolution-notes"><strong>{{ i18n.t('procurement.resolutionNotesLabel') }}:</strong></label>
           <input #resNotes id="resolution-notes" class="form-input" [placeholder]="i18n.t('procurement.resolutionNotesPlaceholder')" />
-          <button type="button" class="button primary" (click)="resolveMatch(resNotes.value)">⚡ {{ i18n.t('procurement.resolveButton') }}</button>
+          <button type="button" class="button primary" [disabled]="resolvingMatch()" (click)="resolveMatch(resNotes.value)">⚡ {{ resolvingMatch() ? i18n.t('procurement.resolvingMatch') : i18n.t('procurement.resolveButton') }}</button>
         </div>
       }
     </div>

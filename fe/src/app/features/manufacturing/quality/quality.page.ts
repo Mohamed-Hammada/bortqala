@@ -97,7 +97,7 @@ export class QualityPage {
         inspectionDate: dateMs,
       };
       await firstValueFrom(this.http.post('/api/v1/manufacturing/quality', payload));
-      this.notification.success('تم تسجيل محضر فحص الجودة بنجاح ✓');
+      this.notification.success(this.i18n.t('quality.recordSavedSuccess'));
       this.drawerOpen.set(false);
       await this.load();
     } catch (e) {

@@ -150,8 +150,8 @@ export class ReportReviewPage {
     this.detectingAnomalies.set(true);
     const success = await this.store.detectDayAnomalies(this.id);
     this.detectingAnomalies.set(false);
-    if (success) this.notification.success(this.i18n.t('review.anomalyDetectSuccess', {}, 'اكتمل فحص الأيام غير الطبيعية وفق النسبة المضبوطة.'));
-    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyDetectFailed', {}, 'تعذر فحص شذوذ البصمة.'));
+    if (success) this.notification.success(this.i18n.t('review.anomalyDetectSuccess', {}));
+    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyDetectFailed', {}));
   }
 
   previewAnomalyDecision(anomaly: DayAnomaly, decision: DayAnomalyDecision): void {
@@ -166,7 +166,7 @@ export class ReportReviewPage {
     const preview = this.anomalyPreview();
     if (!preview) return;
     if (!preview.reason.trim()) {
-      this.notification.warning(this.i18n.t('review.anomalyReasonRequired', {}, 'اكتب سبب القرار قبل التنفيذ.'));
+      this.notification.warning(this.i18n.t('review.anomalyReasonRequired', {}));
       return;
     }
     this.anomalySavingId.set(preview.anomaly.id);
@@ -177,25 +177,25 @@ export class ReportReviewPage {
     });
     this.anomalySavingId.set(null);
     if (response) {
-      this.notification.success(this.i18n.t('review.anomalyAppliedCount', { applied: response.appliedCount, skipped: response.skippedCount }, 'تم تطبيق القرار على سجل، وتجاوز آخر.'));
+      this.notification.success(this.i18n.t('review.anomalyAppliedCount', { applied: response.appliedCount, skipped: response.skippedCount }));
       this.anomalyPreview.set(null);
-    } else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyApplyFailed', {}, 'تعذر تنفيذ قرار الشذوذ.'));
+    } else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyApplyFailed', {}));
   }
 
   async reverseDayAnomaly(anomaly: DayAnomaly): Promise<void> {
     this.anomalySavingId.set(anomaly.id);
     const response = await this.store.reverseDayAnomaly(this.id, anomaly.id);
     this.anomalySavingId.set(null);
-    if (response) this.notification.success(this.i18n.t('review.anomalyReversedCount', { applied: response.appliedCount }, 'تم إنشاء القيد العكسي واستعادة سجل.'));
-    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyReverseFailed', {}, 'تعذر التراجع عن القرار.'));
+    if (response) this.notification.success(this.i18n.t('review.anomalyReversedCount', { applied: response.appliedCount }));
+    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyReverseFailed', {}));
   }
 
   async reopenDayAnomaly(anomaly: DayAnomaly): Promise<void> {
     this.anomalySavingId.set(anomaly.id);
     const success = await this.store.reopenDayAnomaly(this.id, anomaly.id);
     this.anomalySavingId.set(null);
-    if (success) this.notification.success(this.i18n.t('review.anomalyReopened', {}, 'أعيد فتح حالة الشذوذ لاتخاذ قرار جديد.'));
-    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyReopenFailed', {}, 'تعذر إعادة فتح الحالة.'));
+    if (success) this.notification.success(this.i18n.t('review.anomalyReopened', {}));
+    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyReopenFailed', {}));
   }
 
   anomalyDecisionLabel(decision: DayAnomalyDecision | null): string {
@@ -270,11 +270,11 @@ export class ReportReviewPage {
       : decision === 'DEDUCT'
         ? this.i18n.t('review.decisionDeduct')
         : decision === 'ABSENCE'
-          ? this.i18n.t('review.absence', undefined, 'غياب')
+          ? this.i18n.t('review.absence', undefined)
           : decision === 'OFFICIAL_HOLIDAY'
-            ? this.i18n.t('review.officialHoliday', undefined, 'إجازة رسمية')
+            ? this.i18n.t('review.officialHoliday', undefined)
             : decision === 'INDIVIDUAL_REVIEW'
-              ? this.i18n.t('review.individualReview', undefined, 'مراجعة فردية')
+              ? this.i18n.t('review.individualReview', undefined)
               : this.i18n.t('review.approvedLeave');
 
     this.bulkPreview.set({
@@ -364,11 +364,11 @@ export class ReportReviewPage {
       case 'APPROVED_LEAVE':
         return this.i18n.t('decision.approvedLeave');
       case 'ABSENCE':
-        return this.i18n.t('review.absence', undefined, 'غياب');
+        return this.i18n.t('review.absence', undefined);
       case 'OFFICIAL_HOLIDAY':
-        return this.i18n.t('review.officialHoliday', undefined, 'إجازة رسمية');
+        return this.i18n.t('review.officialHoliday', undefined);
       case 'INDIVIDUAL_REVIEW':
-        return this.i18n.t('review.individualReview', undefined, 'مراجعة فردية');
+        return this.i18n.t('review.individualReview', undefined);
       default:
         return value;
     }

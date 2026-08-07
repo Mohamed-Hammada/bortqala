@@ -121,9 +121,9 @@
               <td colspan="8">
                 <app-empty-state
                   icon="👥"
-                  [title]="i18n.t('employees.noResults', undefined, 'لا يوجد موظفون مضافون حتى الآن')"
-                  [description]="i18n.t('employees.noResultsHint', undefined, 'ابدأ بإضافة موظف جديد لتحديد الفئة والراتب ورقم البصمة.')"
-                  [actionLabel]="i18n.t('employees.add', undefined, 'إضافة موظف جديد')"
+                  [title]="i18n.t('employees.noResults')"
+                  [description]="i18n.t('employees.noResultsHint')"
+                  [actionLabel]="i18n.t('employees.add')"
                   (action)="openNew()"
                 />
               </td>
@@ -155,24 +155,18 @@
       }
       <div class="form-grid">
         <div class="field">
-          <label><span class="required">*</span> {{ i18n.t('employees.employeeCode') }}</label>
+          <label>{{ i18n.t('employees.employeeCode') }}</label>
           <input class="ltr" formControlName="employeeCode" placeholder="EMP-001" />
-          @if (
-            form.controls.employeeCode.touched &&
-            form.controls.employeeCode.hasError('required')
-          ) {
-            <small class="field-error">{{ i18n.t('employees.employeeCodeRequired') }}</small>
-          }
         </div>
         <div class="field">
-          <label>{{ i18n.t('employees.fullName') }}</label>
+          <label><span class="required">*</span> {{ i18n.t('employees.fullName') }}</label>
           <input formControlName="fullName" />
           @if (form.controls.fullName.touched && form.controls.fullName.hasError('required')) {
             <small class="field-error">{{ i18n.t('employees.fullNameRequired') }}</small>
           }
         </div>
         <div class="field">
-          <label>{{ i18n.t('employees.category') }}</label>
+          <label><span class="required">*</span> {{ i18n.t('employees.category') }}</label>
           <select formControlName="categoryId">
             @for (category of store.categories(); track category.id) {
               <option [value]="category.id">
@@ -226,7 +220,7 @@
           }
         </div>
         <div class="field">
-          <label>{{ i18n.t('employees.activeFrom') }}</label>
+          <label><span class="required">*</span> {{ i18n.t('employees.activeFrom') }}</label>
           <input type="date" formControlName="activeFrom" />
           @if (
             form.controls.activeFrom.touched && form.controls.activeFrom.hasError('required')

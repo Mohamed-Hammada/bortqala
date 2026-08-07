@@ -11,9 +11,17 @@ below a recorded baseline or reports failures fails the release gate.
 |-------|----------|---------|----------------|
 | Backend (non-Docker, H2) | **268 tests / 56 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 268 AND failures = 0 |
 | Backend (full, incl. Testcontainers) | **308 tests** expected when Docker available | `./gradlew test` | failures = 0 |
-| Frontend (Angular + Vitest) | **150 tests / 28 files / 0 failures** | `npx ng test --watch=false` | count ≥ 150 AND failures = 0 |
+| Frontend (Angular + Vitest) | **155 tests / 28 files / 0 failures** | `npx ng test --watch=false` | count ≥ 155 AND failures = 0 |
 
 ## Evidence log
+
+### 2026-08-07 — working tree (procurement hardening + TS hardcoded-UI pass)
+- Applied the "Bortqala cumulative patch" (operation-specific procurement busy states, three-way-match i18n, TS hardcoded-UI scanner, users/employees localization). Fixed a bug in the delivered V126 CSV: `translations.id` is the primary key, but V126 reused `v126-001/002/003` for both locales (would violate the PK on the H2/PostgreSQL Liquibase load); rewrote to distinct per-locale ids (`v126-001`…`v126-006`, matching the V119/V125 convention).
+- The new TS scan then surfaced **119 hardcoded notification/confirm/fallback strings** in 13 files that the patch did not address. Finished the pass: removed 35 third-argument `i18n.t(key, …, 'fallback')` fallbacks (all keys already present in the DB store — verified `imports.*`, `review.*`, `payroll.*`, `manualAttendance.*`, `settings.*`, `operations.invalidNegativeQuantity`), wrapped 21 `notification.success/error(...)` + `window.confirm(...)` literals with `i18n.t(...)` keys, and injected `I18nService` into 4 components that lacked it (settlement-periods, contractor-settlement-detail-modal, workflow-definitions, pending-approvals).
+- New **Liquibase V127** `20260807_v127_hardcoded_notification_translations.{yaml,csv}` (21 keys × 2 locales, ids `v127-001`…`v127-042`) registered in `next` + `test-h2` changelogs.
+- Backend: `./gradlew test -PskipDockerTests` in `be/` → **BUILD SUCCESSFUL**; JUnit XML summary: **268 tests, 56 suites, 0 failures, 0 errors, 0 skipped**. V126 + V127 both load cleanly on H2.
+- Frontend: `npx ng test --watch=false` under node `v24.18.1` → **28 files passed, 155 tests passed, 0 failed** (+5 from the patch: 3 users-page role-summary tests + 2 procurement operation-state tests). Baseline refreshed to 155/28 in `fe/tools/check-test-count.mjs`.
+- Related: `npm run check:i18n` = 1668 keys (ar-EG + en-US; +21 from V126/V127); `npm run check:hardcoded` = 0 findings across 36 HTML templates and 109 TypeScript source files (was 119 candidates before this pass); `npm run build` green (pre-existing SCSS budget warnings only).
 
 ### 2026-08-07 — HEAD `498227e` (working tree, B-1 budget & encumbrance landed)
 - Backend: `./gradlew test -PskipDockerTests` in `be/` → **BUILD SUCCESSFUL in 14m 26s**; JUnit XML summary: **268 tests, 56 suites, 0 failures, 0 errors, 0 skipped** (`be/build/test-results/test/*.xml`). New suites: `com.bemo.hr.budget.*` (BudgetService + encumbrance lifecycle + controller), plus the BUDGETS `AccessCatalog` page. Fixed a broken V125 CSV (stray `;` in `procurement.departmentHint` en-US text split the row into 5 columns and failed the H2 Liquibase migration — all 53 failing context-load tests were one root cause).

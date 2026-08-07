@@ -149,7 +149,6 @@ export class OperationsPage {
           this.i18n.t(
             'operations.invalidNegativeQuantity',
             undefined,
-            'كمية الحركة يجب أن تكون رقماً موجباً أكبر من الصفر.',
           ),
         );
       }
@@ -163,7 +162,6 @@ export class OperationsPage {
         this.i18n.t(
           'operations.invalidNegativeQuantity',
           undefined,
-          'كمية الحركة يجب أن تكون رقماً موجباً أكبر من الصفر.',
         ),
       );
       return;
@@ -192,7 +190,7 @@ export class OperationsPage {
     if (this.adjustmentForm.invalid) return this.adjustmentForm.markAllAsTouched();
     const value = this.adjustmentForm.getRawValue();
     if (value.quantityDelta === 0) {
-      this.notification.error('كمية التسوية يجب ألا تكون صفراً');
+      this.notification.error(this.i18n.t('operations.adjustmentQuantityZero'));
       return;
     }
     if (await this.store.adjustment({
@@ -203,7 +201,7 @@ export class OperationsPage {
       approved: value.approved,
       occurredAt: new Date(value.occurredAt).getTime(),
     })) {
-      this.notification.success('تم إجراء تسوية المخزون بنجاح ✓');
+      this.notification.success(this.i18n.t('operations.adjustmentSuccess'));
       this.close();
     }
   }
@@ -211,7 +209,7 @@ export class OperationsPage {
     if (this.categoryForm.invalid) return this.categoryForm.markAllAsTouched();
     const value = this.categoryForm.getRawValue();
     if (await this.store.createCategory({ name: value.name, description: value.description || null })) {
-      this.notification.success('تم إنشاء تصنيف المخزون بنجاح ✓');
+      this.notification.success(this.i18n.t('operations.categoryCreatedSuccess'));
       this.close();
     }
   }
@@ -223,7 +221,7 @@ export class OperationsPage {
       abbreviation: value.abbreviation || null,
       description: value.description || null,
     })) {
-      this.notification.success('تم إنشاء وحدة القياس بنجاح ✓');
+      this.notification.success(this.i18n.t('operations.uomCreatedSuccess'));
       this.close();
     }
   }

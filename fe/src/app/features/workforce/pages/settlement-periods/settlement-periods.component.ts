@@ -6,6 +6,7 @@ import { SettlementIssue, SettlementPeriod, SettlementCalculationSummary, Contra
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 import { ContractorSettlementDetailModalComponent } from '../../ui/contractor-settlement-detail-modal.component';
 import { NotificationService } from '../../../../core/notification.service';
+import { I18nService } from '../../../../core/i18n.service';
 import { downloadBlob } from '../../../../core/download';
 import { apiErrorDetail } from '../../../../core/api-error';
 
@@ -227,6 +228,7 @@ import { apiErrorDetail } from '../../../../core/api-error';
 })
 export class SettlementPeriodsComponent implements OnInit {
   readonly workforceService = inject(WorkforceService);
+  readonly i18n = inject(I18nService);
   private readonly notification = inject(NotificationService);
 
   readonly createOpen = signal(false);
@@ -261,7 +263,7 @@ export class SettlementPeriodsComponent implements OnInit {
 
   savePeriod(): void {
     this.workforceService.createSettlementPeriod(this.createForm).subscribe({
-      next: () => { this.createOpen.set(false); this.notification.success('تم إنشاء فترة التسوية.'); },
+      next: () => { this.createOpen.set(false); this.notification.success(this.i18n.t('workforce.settlementPeriodCreated')); },
       error: error => this.notification.error(apiErrorDetail(error, 'تعذر إنشاء الفترة.'))
     });
   }
@@ -317,21 +319,21 @@ export class SettlementPeriodsComponent implements OnInit {
 
   reviewPeriod(period: SettlementPeriod): void {
     this.workforceService.reviewPeriod(period.id).subscribe({
-      next: () => { this.reload(); this.notification.success('تم تسجيل مراجعة الفترة.'); },
+      next: () => { this.reload(); this.notification.success(this.i18n.t('workforce.settlementPeriodReviewed')); },
       error: error => this.notification.error(apiErrorDetail(error, 'تعذر مراجعة الفترة.'))
     });
   }
 
   approvePeriod(period: SettlementPeriod): void {
     this.workforceService.approvePeriod(period.id).subscribe({
-      next: () => { this.reload(); this.notification.success('تم اعتماد الفترة.'); },
+      next: () => { this.reload(); this.notification.success(this.i18n.t('workforce.settlementPeriodApproved')); },
       error: error => this.notification.error(apiErrorDetail(error, 'تعذر اعتماد الفترة.'))
     });
   }
 
   lockPeriod(period: SettlementPeriod): void {
     this.workforceService.lockPeriod(period.id).subscribe({
-      next: () => { this.reload(); this.notification.success('تم قفل الفترة نهائياً.'); },
+      next: () => { this.reload(); this.notification.success(this.i18n.t('workforce.settlementPeriodLocked')); },
       error: error => this.notification.error(apiErrorDetail(error, 'تعذر قفل الفترة.'))
     });
   }

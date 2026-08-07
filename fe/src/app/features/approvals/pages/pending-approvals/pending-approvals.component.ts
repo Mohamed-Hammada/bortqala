@@ -5,6 +5,7 @@ import { ApprovalService } from '../../data-access/approval.service';
 import { ApprovalTask, ApprovalInstanceDetail } from '../../models/approval.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 import { NotificationService } from '../../../../core/notification.service';
+import { I18nService } from '../../../../core/i18n.service';
 import { apiErrorDetail } from '../../../../core/api-error';
 
 @Component({
@@ -115,6 +116,7 @@ import { apiErrorDetail } from '../../../../core/api-error';
 })
 export class PendingApprovalsComponent implements OnInit {
   readonly approvalService = inject(ApprovalService);
+  readonly i18n = inject(I18nService);
   private readonly notification = inject(NotificationService);
 
   readonly decisionModalOpen = signal(false);
@@ -159,7 +161,7 @@ export class PendingApprovalsComponent implements OnInit {
     if (!task) return;
 
     if (this.decisionAction() === 'REJECT' && (!this.decisionComment || !this.decisionComment.trim())) {
-      this.notification.error('سبب الرفض إجباري.');
+      this.notification.error(this.i18n.t('approvals.rejectionReasonRequired'));
       return;
     }
 

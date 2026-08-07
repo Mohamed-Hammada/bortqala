@@ -57,7 +57,7 @@ export class PayrollPage {
 
   async openExplanationModal(row: PayrollRow): Promise<void> {
     if (!row.id) {
-      this.notification.error('سجل الراتب غير محفوظ بعد في النظام.');
+      this.notification.error(this.i18n.t('payroll.recordNotSaved'));
       return;
     }
     this.selectedRow.set(row);
@@ -184,7 +184,7 @@ export class PayrollPage {
     });
 
     if (ok) {
-      this.notification.success(this.i18n.t('payroll.paymentSaved', undefined, 'تم تسجيل صرف المرتب وقيد المستند بنجاح.'));
+      this.notification.success(this.i18n.t('payroll.paymentSaved', undefined));
       this.closeDrawer();
     }
   }
@@ -264,7 +264,7 @@ export class PayrollPage {
       categoryId: this.selectedCategory(),
     });
     if (ok) {
-      this.notification.success(this.i18n.t('payroll.bulkSaved', undefined, 'تم الصرف الجماعي وقيد المعاملات بنجاح.'));
+      this.notification.success(this.i18n.t('payroll.bulkSaved', undefined));
     }
   }
 

@@ -44,6 +44,36 @@ describe('ProcurementPage invoice adjustments', () => {
     return fixture.componentInstance;
   }
 
+  it('keeps procurement save states independent', () => {
+    const page = createPage();
+
+    expect(page.submitting()).toBe(false);
+
+    page.savingPo.set(true);
+    expect(page.submitting()).toBe(true);
+    expect(page.savingGrn()).toBe(false);
+    expect(page.savingInvoice()).toBe(false);
+    expect(page.savingPayment()).toBe(false);
+
+    page.savingPo.set(false);
+    page.savingInvoice.set(true);
+    expect(page.submitting()).toBe(true);
+    expect(page.savingPo()).toBe(false);
+    expect(page.savingGrn()).toBe(false);
+    expect(page.savingPayment()).toBe(false);
+
+    page.savingInvoice.set(false);
+    expect(page.submitting()).toBe(false);
+  });
+
+  it('includes three-way-match resolution in the aggregate busy state', () => {
+    const page = createPage();
+    page.resolvingMatch.set(true);
+    expect(page.submitting()).toBe(true);
+    page.resolvingMatch.set(false);
+    expect(page.submitting()).toBe(false);
+  });
+
   it('rejects a negative discount amount via the form validator', () => {
     const page = createPage();
     page.invForm.controls.discountAmount.setValue(-100);
@@ -83,7 +113,7 @@ describe('ProcurementPage invoice adjustments', () => {
     });
     const notification = page.notification;
     vi.spyOn(notification, 'warning');
-    page.submitting.set(false);
+    page.savingInvoice.set(false);
     await page.submitInvoice();
     expect(notification.warning).toHaveBeenCalledWith('procurement.invoiceDiscountExceedsTotal');
   });
@@ -103,7 +133,7 @@ describe('ProcurementPage invoice adjustments', () => {
     });
     const notification = page.notification;
     vi.spyOn(notification, 'warning');
-    page.submitting.set(false);
+    page.savingInvoice.set(false);
     await page.submitInvoice();
     expect(notification.warning).toHaveBeenCalledWith('procurement.invoiceDueDateBeforeInvoiceDate');
   });

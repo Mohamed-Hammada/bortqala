@@ -514,3 +514,7 @@ databaseChangeLog:
       file: db/changelog/data/update/20260807_v124_budget_menu_allowed_menus.yaml
   - include:
       file: db/changelog/data/insert/20260807_v125_budget_menu_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260807_v126_procurement_hardening_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260807_v127_hardcoded_notification_translations.yaml

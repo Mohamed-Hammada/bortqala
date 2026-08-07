@@ -5,6 +5,7 @@ import { of } from 'rxjs';
 import { vi } from 'vitest';
 import { UsersPage } from './users.page';
 import { AuthService } from '../../core/auth/auth.service';
+import { AuthUser } from '../../core/auth/auth.models';
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
 import { AccessCatalog, AccessRole } from './access.models';
@@ -170,9 +171,31 @@ describe('UsersPage', () => {
     expect(pages.some((item) => item.code === 'WORKERS')).toBe(false);
   });
 
+  it('uses route-accessible pages when calculating role summary counts', () => {
+    expect(page.roleMeta(ROLE_HR_REVIEWER)).toEqual({ pages: 0, actions: 0 });
+    expect(page.roleMeta(ROLE_WORKFORCE_MANAGER)).toEqual({ pages: 1, actions: 2 });
+  });
+
+  it('returns the route roles declared by the page instead of inferring them from permissions', () => {
+    const workersPage = CATALOG.pages.find((item) => item.code === 'WORKERS');
+    expect(workersPage).toBeDefined();
+    expect(page.requiredRolesForPage(workersPage!.viewPermissions)).toEqual(
+      [...workersPage!.roles].sort(),
+    );
+  });
+
   it('shows every guarded page as REVIEW for an admin role', () => {
     const pages = page.roleAccessiblePages('ADMIN');
     expect(pages.map((item) => item.level)).toEqual(['REVIEW', 'REVIEW']);
+  });
+
+  it('counts all menus for ADMIN because runtime admin access bypasses menu selection', () => {
+    const user = {
+      roles: ['ADMIN'],
+      allowedMenus: ['dashboard'],
+    } as unknown as AuthUser;
+
+    expect(page.allowedMenuCount(user)).toBe(page.menuOptions.length);
   });
 
   it('carries the acknowledgment reason into the save payload', async () => {

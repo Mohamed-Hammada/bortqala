@@ -53,17 +53,17 @@ export class ImportsPage {
 
   downloadTemplate(): void {
     const columns = [
-      { key: 'deviceUserId', label: this.i18n.t('imports.sampleColumnCode', {}, 'كود البصمة / العامل') },
-      { key: 'punchedAt', label: this.i18n.t('imports.sampleColumnTime', {}, 'تاريخ ووقت البصمة') },
-      { key: 'deviceName', label: this.i18n.t('imports.sampleColumnDevice', {}, 'اسم الجهاز') }
+      { key: 'deviceUserId', label: this.i18n.t('imports.sampleColumnCode', {}) },
+      { key: 'punchedAt', label: this.i18n.t('imports.sampleColumnTime', {}) },
+      { key: 'deviceName', label: this.i18n.t('imports.sampleColumnDevice', {}) }
     ];
     const sampleRows = [
-      { deviceUserId: '101', punchedAt: '2026-07-31 08:30:00', deviceName: this.i18n.t('imports.sampleDeviceGate', {}, 'بوابة المصنع') },
-      { deviceUserId: '101', punchedAt: '2026-07-31 17:00:00', deviceName: this.i18n.t('imports.sampleDeviceGate', {}, 'بوابة المصنع') },
-      { deviceUserId: '102', punchedAt: '2026-07-31 08:45:00', deviceName: this.i18n.t('imports.sampleDeviceMain', {}, 'البوابة الرئيسية') }
+      { deviceUserId: '101', punchedAt: '2026-07-31 08:30:00', deviceName: this.i18n.t('imports.sampleDeviceGate', {}) },
+      { deviceUserId: '101', punchedAt: '2026-07-31 17:00:00', deviceName: this.i18n.t('imports.sampleDeviceGate', {}) },
+      { deviceUserId: '102', punchedAt: '2026-07-31 08:45:00', deviceName: this.i18n.t('imports.sampleDeviceMain', {}) }
     ];
-    exportCsv(sampleRows, columns, this.i18n.t('imports.templateFileName', {}, 'قالب_استيراد_البصمات.csv'));
-    this.notification.success(this.i18n.t('imports.templateDownloadSuccess', {}, 'تم تنزيل قالب استيراد البصمة بنجاح.'));
+    exportCsv(sampleRows, columns, this.i18n.t('imports.templateFileName', {}));
+    this.notification.success(this.i18n.t('imports.templateDownloadSuccess', {}));
   }
 
   constructor() {
@@ -127,7 +127,7 @@ export class ImportsPage {
         this.previewResult.set(null);
       }
     } else if (!this.selectedSourceId()) {
-      this.notification.warning(this.i18n.t('imports.sourceRequired', {}, 'اختر مصدر البصمات قبل الاستيراد.'));
+      this.notification.warning(this.i18n.t('imports.sourceRequired', {}));
     }
   }
 
@@ -144,11 +144,11 @@ export class ImportsPage {
   }
 
   async reverseBatch(item: ImportBatch): Promise<void> {
-    if (!window.confirm(this.i18n.t('imports.reverseBatchConfirm', {}, 'هل تريد تراجع سجل الاستيراد وحذف كل البصمات المستوردة منه؟'))) return;
+    if (!window.confirm(this.i18n.t('imports.reverseBatchConfirm', {}))) return;
     this.reversingBatchId.set(item.id);
     try {
       if (await this.store.reverseBatch(item.id)) {
-        this.notification.success(this.i18n.t('imports.batchReversedSuccess', {}, 'تم تراجع سجل الاستيراد وحذف البصمات المرتبطة به.'));
+        this.notification.success(this.i18n.t('imports.batchReversedSuccess', {}));
       }
     } finally {
       this.reversingBatchId.set(null);
@@ -160,7 +160,7 @@ export class ImportsPage {
   }
 
   statusLabel(status: ImportStatus): string {
-    if (status === 'REVERSED') return this.i18n.t('imports.reversedStatus', {}, 'ملغي');
+    if (status === 'REVERSED') return this.i18n.t('imports.reversedStatus', {});
     return this.i18n.t(status === 'COMPLETED' ? 'imports.completed' : 'imports.completedWithErrors');
   }
 
@@ -192,7 +192,7 @@ export class ImportsPage {
     const name = this.connectionName().trim();
     const endpointUrl = this.endpointUrl().trim();
     if (!name || !endpointUrl || this.syncIntervalMinutes() < 1) {
-      this.notification.warning(this.i18n.t('imports.deviceFormInvalid', {}, 'أدخل اسم الجهاز ورابط API وفترة مزامنة صحيحة.'));
+      this.notification.warning(this.i18n.t('imports.deviceFormInvalid', {}));
       return;
     }
     const saved = await this.store.saveDevice({
@@ -216,9 +216,9 @@ export class ImportsPage {
       const result = await this.store.syncDevice(device.id);
       if (!result) return;
       if (result.device.lastStatus === 'FAILED') {
-        this.notification.error(result.device.lastMessage || this.i18n.t('imports.syncFailed', {}, 'فشلت مزامنة جهاز البصمة.'));
+        this.notification.error(result.device.lastMessage || this.i18n.t('imports.syncFailed', {}));
       } else {
-        this.notification.success(this.i18n.t('imports.syncResult', { imported: result.importedRows, duplicates: result.duplicateRows }, 'اكتملت المزامنة: بصمة جديدة، مكررة.'));
+        this.notification.success(this.i18n.t('imports.syncResult', { imported: result.importedRows, duplicates: result.duplicateRows }));
       }
     } finally {
       this.syncingDeviceId.set(null);
@@ -248,7 +248,7 @@ export class ImportsPage {
   async saveSource(): Promise<void> {
     const name = this.sourceName().trim();
     if (!name) {
-      this.notification.warning(this.i18n.t('imports.sourceNameInvalid', {}, 'أدخل اسم المصدر.'));
+      this.notification.warning(this.i18n.t('imports.sourceNameInvalid', {}));
       return;
     }
     const saved = await this.store.saveSource({
@@ -267,9 +267,9 @@ export class ImportsPage {
   }
 
   async deleteSource(source: BiometricSource): Promise<void> {
-    if (!window.confirm(this.i18n.t('imports.deleteSourceConfirm', {}, 'هل تريد حذف هذا المصدر؟ لن تُحذف سجلات الاستيراد السابقة.'))) return;
+    if (!window.confirm(this.i18n.t('imports.deleteSourceConfirm', {}))) return;
     if (await this.store.deleteSource(source.id)) {
-      this.notification.success(this.i18n.t('imports.sourceDeleted', {}, 'تم حذف المصدر.'));
+      this.notification.success(this.i18n.t('imports.sourceDeleted', {}));
       if (this.selectedSourceId() === source.id) this.selectedSourceId.set('');
     }
   }
