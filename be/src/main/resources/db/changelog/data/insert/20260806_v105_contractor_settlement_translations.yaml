@@ -15,5 +15,15 @@ databaseChangeLog:
               - column: { header: translation_key, name: translation_key, type: STRING }
               - column: { header: locale, name: locale, type: STRING }
               - column: { header: text_value, name: text_value, type: STRING }
+        - update:
+            tableName: translations
+            where: translation_key = 'workforce.settlements.title' AND locale = 'ar-EG'
+            columns:
+              - column: { name: text_value, value: 'دورة تسويات المقاولين' }
+        - update:
+            tableName: translations
+            where: translation_key = 'workforce.settlements.title' AND locale = 'en-US'
+            columns:
+              - column: { name: text_value, value: 'Contractor Settlement Lifecycle' }
       rollback:
         - delete: { tableName: translations, where: "id LIKE 'v105-%'" }
