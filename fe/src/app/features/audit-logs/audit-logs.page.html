@@ -54,7 +54,7 @@
         [page]="pagination.currentPage(totalElements())"
         [pageSize]="pagination.pageSize()"
         (pageChange)="load($event)"
-        (pageSizeChange)="pagination.changePageSize($event); load(0)"
+        (pageSizeChange)="pagination.changePageSize($event); load(1)"
       />
     </div>
   }

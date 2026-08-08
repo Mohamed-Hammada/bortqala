@@ -38,19 +38,22 @@ public class HrConfigurationService {
     private final EmployeeCodeSequenceRepository employeeCodeSequenceRepository;
     private final EmployeeAssignmentRepository employeeAssignmentRepository;
     private final AppUserRepository appUserRepository;
+    private final com.bemo.hr.audit.application.AuditService auditService;
 
     public HrConfigurationService(AttendanceCategoryRepository attendanceCategoryRepository,
                                   ScheduleRuleRepository scheduleRuleRepository,
                                   EmployeeRepository employeeRepository,
                                   EmployeeCodeSequenceRepository employeeCodeSequenceRepository,
                                   EmployeeAssignmentRepository employeeAssignmentRepository,
-                                  AppUserRepository appUserRepository) {
+                                  AppUserRepository appUserRepository,
+                                  com.bemo.hr.audit.application.AuditService auditService) {
         this.attendanceCategoryRepository = attendanceCategoryRepository;
         this.scheduleRuleRepository = scheduleRuleRepository;
         this.employeeRepository = employeeRepository;
         this.employeeCodeSequenceRepository = employeeCodeSequenceRepository;
         this.employeeAssignmentRepository = employeeAssignmentRepository;
         this.appUserRepository = appUserRepository;
+        this.auditService = auditService;
     }
 
     public List<CategoryApi.Response> listCategories() {
@@ -129,6 +132,9 @@ public class HrConfigurationService {
         employeeRepository.save(employee);
         employeeAssignmentRepository.save(new EmployeeAssignment(employee.getId(), employee.getCategoryId(),
                 employee.getActiveFrom(), employee.getActiveTo()));
+        auditService.record("CREATE", "EMPLOYEE", employee.getId(), currentActor(),
+                "{\"employeeCode\":\"" + safeJson(employeeCode) + "\",\"fullName\":\"" + safeJson(employee.getFullName())
+                        + "\",\"categoryId\":\"" + category.getId() + "\"}", null);
         return toEmployeeResponse(employee, category);
     }
 
@@ -336,4 +342,11 @@ public class HrConfigurationService {
                     "HRCFG_VERSION_CONFLICT", HttpStatus.CONFLICT);
         }
     }
+
+    private String currentActor() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        return (auth != null && auth.getName() != null && !auth.getName().isBlank()) ? auth.getName() : "system";
+    }
+
+    private String safeJson(String value) { return value == null ? "" : value.replace("\"", "'"); }
 }

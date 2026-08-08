@@ -27,6 +27,7 @@ public final class OperationsApi {
                                      @NotNull @Digits(integer = 17, fraction = 2) BigDecimal amountDelta,
                                      @DecimalMin("0") @DecimalMax("100") BigDecimal lossPercentage,
                                      @Size(max = 100) String referenceCode, @Size(max = 1000) String note,
+                                     @Size(max = 30) String documentType, @Size(max = 1000) String reason,
                                      @NotNull Instant occurredAt) { }
     public record StockMovementView(String id, String itemId, String itemCode, String itemName, String partyId,
                                     String partyName, String operationType, String documentType,

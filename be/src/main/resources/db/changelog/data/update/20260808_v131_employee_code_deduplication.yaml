@@ -1,0 +1,50 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260808-v131-employee-code-deduplication
+      author: bemo-erp
+      comment: "REM-004: normalizes duplicated employee codes that stored the canonical code twice (e.g. QA-EMP-0807-QA-EMP-0807). The corrupted rows are updated to the canonical code; rows whose canonical code already belongs to another employee receive a short id-derived suffix. daily_results snapshots are normalized too so the employee keeps displaying one consistent code across existing reports. Idempotent - only rows still matching the duplicated pattern are touched."
+      changes:
+        - sql:
+            sql: |
+              UPDATE employees e
+              SET employee_code = LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2),
+                  updated_at = CURRENT_TIMESTAMP
+              WHERE e.employee_code LIKE '%-%-%'
+                AND MOD(LENGTH(e.employee_code), 2) = 1
+                AND LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2) = RIGHT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2)
+                AND NOT EXISTS (
+                    SELECT 1 FROM employees other
+                    WHERE other.employee_code = LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2)
+                      AND other.id <> e.id
+                );
+
+              UPDATE employees e
+              SET employee_code = LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2) || '-' || LEFT(e.id, 4),
+                  updated_at = CURRENT_TIMESTAMP
+              WHERE e.employee_code LIKE '%-%-%'
+                AND MOD(LENGTH(e.employee_code), 2) = 1
+                AND LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2) = RIGHT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2)
+                AND EXISTS (
+                    SELECT 1 FROM employees other
+                    WHERE other.employee_code = LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2)
+                      AND other.id <> e.id
+                );
+
+              UPDATE daily_results d
+              SET employee_code = LEFT(d.employee_code, (LENGTH(d.employee_code) - 1) / 2)
+              WHERE d.employee_code LIKE '%-%-%'
+                AND MOD(LENGTH(d.employee_code), 2) = 1
+                AND LEFT(d.employee_code, (LENGTH(d.employee_code) - 1) / 2) = RIGHT(d.employee_code, (LENGTH(d.employee_code) - 1) / 2);
+      rollback:
+        - sql:
+            sql: |
+              UPDATE employees e
+              SET employee_code = e.employee_code || '-' || e.employee_code,
+                  updated_at = CURRENT_TIMESTAMP
+              WHERE e.employee_code LIKE '%-%'
+                AND e.employee_code NOT LIKE '%-%-%';
+
+              UPDATE daily_results d
+              SET employee_code = d.employee_code || '-' || d.employee_code
+              WHERE d.employee_code LIKE '%-%'
+                AND d.employee_code NOT LIKE '%-%-%';

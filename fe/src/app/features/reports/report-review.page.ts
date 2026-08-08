@@ -73,9 +73,11 @@ export class ReportReviewPage {
   readonly promptState = signal<{
     titleKey: string;
     defaultValue: string;
+    error: string | null;
     onConfirm: (value: string) => void;
     onCancel: () => void;
   } | null>(null);
+  readonly savingRowId = signal<string | null>(null);
 
   readonly detectingAnomalies = signal(false);
   readonly anomalySavingId = signal<string | null>(null);
@@ -398,16 +400,15 @@ export class ReportReviewPage {
       this.promptState.set({
         titleKey: 'review.workedMinutesPrompt',
         defaultValue: String(row.expectedMinutes),
+        error: null,
         onConfirm: (input) => {
           const worked = Number(input);
           if (!Number.isFinite(worked) || worked < 0) return;
           this.promptState.set({
             titleKey: 'review.decisionNotePrompt',
             defaultValue: '',
-            onConfirm: (note) => {
-              this.promptState.set(null);
-              this.store.decide(this.id, row.id, decision, worked, note || null, row.version);
-            },
+            error: null,
+            onConfirm: (note) => void this.submitDecision(row, decision, worked, note || null),
             onCancel: () => this.promptState.set(null),
           });
         },
@@ -417,12 +418,23 @@ export class ReportReviewPage {
       this.promptState.set({
         titleKey: 'review.decisionNotePrompt',
         defaultValue: '',
-        onConfirm: (note) => {
-          this.promptState.set(null);
-          this.store.decide(this.id, row.id, decision, null, note || null, row.version);
-        },
+        error: null,
+        onConfirm: (note) => void this.submitDecision(row, decision, null, note || null),
         onCancel: () => this.promptState.set(null),
       });
+    }
+  }
+
+  private async submitDecision(row: DailyResult, decision: AttendanceDecision,
+                               workedMinutes: number | null, note: string | null): Promise<void> {
+    if (this.savingRowId() === row.id) return;
+    this.savingRowId.set(row.id);
+    const success = await this.store.decide(this.id, row.id, decision, workedMinutes, note, row.version);
+    this.savingRowId.set(null);
+    if (success) {
+      this.promptState.set(null);
+    } else {
+      this.promptState.update(ps => ps ? { ...ps, error: this.store.error() ?? this.i18n.t('review.decisionPersistenceFailed') } : ps);
     }
   }
   holiday(item: HolidayProposal, confirming: boolean) {
@@ -430,11 +442,13 @@ export class ReportReviewPage {
       this.promptState.set({
         titleKey: 'review.holidayNamePrompt',
         defaultValue: this.i18n.t('review.confirmedHoliday'),
+        error: null,
         onConfirm: (name) => {
           if (!name) return;
           this.promptState.set({
             titleKey: 'review.notePrompt',
             defaultValue: '',
+            error: null,
             onConfirm: (note) => {
               this.promptState.set(null);
               this.store.decideHoliday(this.id, item.id, 'CONFIRMED', name, note || null);
@@ -448,6 +462,7 @@ export class ReportReviewPage {
       this.promptState.set({
         titleKey: 'review.notePrompt',
         defaultValue: '',
+        error: null,
         onConfirm: (note) => {
           this.promptState.set(null);
           this.store.decideHoliday(this.id, item.id, 'REJECTED', null, note || null);

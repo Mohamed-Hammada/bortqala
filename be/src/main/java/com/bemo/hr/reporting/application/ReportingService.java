@@ -340,6 +340,9 @@ public class ReportingService {
         result.decide(request.decision(), worked, request.note(), actor);
         recordDecision(reportId, result, UUID.randomUUID().toString(), "DECIDE", before, actor);
         refreshUnresolved(report);
+        auditService.record("DECIDE", "ATTENDANCE_DAILY_RESULT", resultId, actor,
+                "{\"reportId\":\"" + reportId + "\",\"decision\":\"" + request.decision()
+                        + "\",\"workedMinutes\":" + (worked == null ? "null" : worked) + "}", null);
         return details(report);
     }
 
@@ -515,6 +518,8 @@ public class ReportingService {
                     });
         }
         refreshUnresolved(report);
+        auditService.record("HOLIDAY_DECISION", "ATTENDANCE_HOLIDAY_PROPOSAL", proposalId, actor,
+                "{\"reportId\":\"" + reportId + "\",\"status\":\"" + request.status() + "\"}", null);
         return details(report);
     }
 

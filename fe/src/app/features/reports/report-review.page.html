@@ -611,11 +611,15 @@
             <h3>{{ i18n.t(ps.titleKey) }}</h3>
           </div>
           <div class="modal-body">
-            <input #promptInput class="form-input ltr" type="text" [value]="ps.defaultValue" autofocus />
+            <input #promptInput class="form-input ltr" type="text" [value]="ps.defaultValue" autofocus
+              [disabled]="savingRowId() !== null" (keydown.enter)="savingRowId() === null && ps.onConfirm(promptInput.value)" />
+            @if (ps.error) {
+              <div class="save-error" role="alert">{{ ps.error }}</div>
+            }
           </div>
           <div class="modal-footer">
-            <button class="button gold" (click)="ps.onConfirm(promptInput.value)">{{ i18n.t('common.confirm', {}, 'تأكيد') }}</button>
-            <button class="button secondary" (click)="ps.onCancel()">{{ i18n.t('common.cancel', {}, 'إلغاء') }}</button>
+            <button class="button gold" (click)="ps.onConfirm(promptInput.value)" [disabled]="savingRowId() !== null">{{ savingRowId() !== null ? i18n.t('common.executing', {}, 'جارٍ الحفظ...') : i18n.t('common.confirm', {}, 'تأكيد') }}</button>
+            <button class="button secondary" (click)="ps.onCancel()" [disabled]="savingRowId() !== null">{{ i18n.t('common.cancel', {}, 'إلغاء') }}</button>
           </div>
         </div>
       </div>

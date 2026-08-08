@@ -26,15 +26,16 @@ export class AuditLogsPage {
   readonly pagination = new TablePagination();
 
   constructor() {
-    void this.load(0);
+    void this.load(1);
   }
 
-  async load(pageIndex: number = 0) {
+  async load(pageNumber: number = 1) {
     this.loading.set(true);
     this.error.set(null);
+    this.pagination.changePage(pageNumber, this.totalElements());
     try {
       const params = {
-        page: pageIndex,
+        page: pageNumber - 1,
         size: this.pagination.pageSize(),
       };
       const res = await firstValueFrom(
@@ -42,6 +43,7 @@ export class AuditLogsPage {
       );
       this.logs.set(res.content);
       this.totalElements.set(res.totalElements);
+      this.pagination.changePage(pageNumber, res.totalElements);
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));
     } finally {

@@ -718,6 +718,10 @@
 }
 .modal-header h3 { margin: 0; font-size: 1.125rem; font-weight: 700; color: var(--ink); }
 .modal-body { padding: 1.25rem; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
+.save-error {
+  margin-top: 0.875rem; padding: 0.75rem 1rem; border: 1px solid var(--danger-soft, #fecaca);
+  border-radius: 8px; background: var(--danger-bg, #fef2f2); color: var(--danger-text, #991b1b); font-size: 0.875rem;
+}
 .modal-footer {
   padding: 1rem 1.25rem; border-top: 1px solid var(--line);
   display: flex; gap: 0.75rem; justify-content: flex-end; flex-shrink: 0;

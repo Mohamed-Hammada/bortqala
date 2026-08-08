@@ -73,6 +73,8 @@ export class OperationsPage {
       validators: [Validators.min(0), Validators.max(100)],
     }),
     referenceCode: new FormControl('', { nonNullable: true }),
+    documentType: new FormControl('', { nonNullable: true }),
+    reason: new FormControl('', { nonNullable: true }),
     note: new FormControl('', { nonNullable: true }),
     occurredAt: new FormControl(this.nowInput(), {
       nonNullable: true,
@@ -171,6 +173,8 @@ export class OperationsPage {
         ...value,
         itemId: value.itemId || null,
         partyId: value.partyId || null,
+        documentType: value.documentType || null,
+        reason: value.reason?.trim() || null,
         occurredAt: new Date(value.occurredAt).getTime(),
       })
     ) {

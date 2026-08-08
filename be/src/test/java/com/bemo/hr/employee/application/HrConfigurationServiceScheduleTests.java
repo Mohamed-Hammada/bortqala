@@ -39,7 +39,7 @@ class HrConfigurationServiceScheduleTests {
         when(scheduleRepository.findByCategoryIdOrderByEffectiveFromAsc(category.getId())).thenReturn(List.of());
         var service = new HrConfigurationService(categoryRepository, scheduleRepository, employeeRepository,
                 mock(EmployeeCodeSequenceRepository.class), mock(EmployeeAssignmentRepository.class),
-                mock(AppUserRepository.class));
+                mock(AppUserRepository.class), mock(com.bemo.hr.audit.application.AuditService.class));
         var schedule = new CategoryApi.ScheduleRequest("الجدول الأساسي", LocalDate.of(2026, 1, 1),
                 null, LocalTime.of(8, 0), null, 0);
         var request = new CategoryApi.UpsertRequest("SECURITY", "الأمن", 720, PayCycle.THIRTY_DAYS,

@@ -252,6 +252,9 @@ public class OperationsService {
             }
             var sm = stockMovementRepository.save(new StockMovement(request.itemId(), normalizeId(request.partyId()), request.operationType(),
                     qty, request.lossPercentage(), request.referenceCode(), request.note(), request.occurredAt(), actor));
+            if (request.documentType() != null && !request.documentType().isBlank()) {
+                sm.assignDocument(request.documentType().strip().toUpperCase(), request.reason());
+            }
             auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", request.itemId(), actor, "Recorded stock movement " + op + " qty: " + qty, null);
         }
         if (request.amountDelta().signum() != 0) {

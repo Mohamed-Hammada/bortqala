@@ -490,6 +490,22 @@
           <input formControlName="referenceCode" />
         </div>
         <div class="field">
+          <label>{{ i18n.t('operations.documentType') || 'نوع المستند' }}</label>
+          <select formControlName="documentType">
+            <option value="">-- {{ i18n.t('operations.documentTypeNone') || 'بدون' }} --</option>
+            <option value="GOODS_RECEIPT">{{ i18n.t('operations.documentType.goodsReceipt') }}</option>
+            <option value="PURCHASE_ORDER">{{ i18n.t('operations.documentType.purchaseOrder') }}</option>
+            <option value="SUPPLIER_INVOICE">{{ i18n.t('operations.documentType.supplierInvoice') }}</option>
+            <option value="SUPPLIER_PAYMENT">{{ i18n.t('operations.documentType.supplierPayment') }}</option>
+            <option value="ADJUSTMENT">{{ i18n.t('operations.documentType.adjustment') }}</option>
+            <option value="VOUCHER">{{ i18n.t('operations.documentType.voucher') }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('operations.reason') || 'السبب' }}</label>
+          <textarea formControlName="reason" rows="2"></textarea>
+        </div>
+        <div class="field">
           <label>{{ i18n.t('operations.note') || 'ملاحظة' }}</label>
           <textarea formControlName="note" rows="3"></textarea>
         </div>
