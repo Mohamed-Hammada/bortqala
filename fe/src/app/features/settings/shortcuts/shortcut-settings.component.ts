@@ -9,19 +9,16 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ScreenShortcutService } from '../../../core/shortcuts/screen-shortcut.service';
-import {
-  ScreenShortcutDestination,
-  ShortcutAvailability,
-} from '../../../core/shortcuts/screen-shortcut.models';
+import { ScreenShortcutDestination } from '../../../core/shortcuts/screen-shortcut.models';
 import { displayShortcutKey } from '../../../core/shortcuts/shortcut-key.util';
 import { I18nService } from '../../../core/i18n.service';
 import { NotificationService } from '../../../core/notification.service';
 import { ConfirmDialogService } from '../../../core/confirm-dialog.service';
 import { apiErrorMessage } from '../../../core/api-error';
-import { IconComponent } from '../../../shared/ui/icon/icon.component';
 import { AppTooltipDirective } from '../../../shared/ui/app-tooltip/app-tooltip.directive';
 
 export interface ShortcutDraft {
+  clientId: string;
   pageCode: string;
   secondKeyCode: string;
   enabled: boolean;
@@ -41,6 +38,7 @@ export class ShortcutSettingsComponent implements OnInit {
   readonly notification = inject(NotificationService);
   readonly confirm = inject(ConfirmDialogService);
 
+  readonly maxShortcuts = 20;
   readonly drafts = signal<ShortcutDraft[]>([]);
   readonly captureIndex = signal<number | null>(null);
   readonly liveAnnouncement = signal<string>('');
@@ -54,29 +52,43 @@ export class ShortcutSettingsComponent implements OnInit {
     () => this.profile()?.availableDestinations ?? [],
   );
 
-  destinationOptions(): { pageCode: string; title: string; unavailable: boolean }[] {
+  private draftSequence = 0;
+
+  destinationOptions(index: number): {
+    pageCode: string;
+    title: string;
+    unavailable: boolean;
+  }[] {
+    const currentDraft = this.drafts()[index];
+    const assignedElsewhere = new Set(
+      this.drafts()
+        .filter((_, itemIndex) => itemIndex !== index)
+        .map((item) => item.pageCode),
+    );
+
     const options = this.availableDestinations().map((dest) => ({
       pageCode: dest.pageCode,
       title: this.i18n.t(dest.titleKey),
-      unavailable: false,
+      unavailable: assignedElsewhere.has(dest.pageCode),
     }));
+
+    if (!currentDraft) return options;
+
     const known = new Set(options.map((option) => option.pageCode));
-    for (const draft of this.drafts()) {
-      if (known.has(draft.pageCode)) continue;
-      const status = this.getAvailabilityStatus(draft.pageCode);
-      options.push({
-        pageCode: draft.pageCode,
-        title: `${this.getDestinationTitle(draft.pageCode)} (${this.i18n.t(status.statusKey)})`,
+    if (!known.has(currentDraft.pageCode)) {
+      const status = this.getAvailabilityStatus(currentDraft.pageCode);
+      options.unshift({
+        pageCode: currentDraft.pageCode,
+        title: `${this.getDestinationTitle(currentDraft.pageCode)} (${this.i18n.t(status.statusKey)})`,
         unavailable: true,
       });
-      known.add(draft.pageCode);
     }
+
     return options;
   }
 
   async ngOnInit(): Promise<void> {
-    const profile =
-      this.profile() ?? (await this.shortcutService.load());
+    const profile = this.profile() ?? (await this.shortcutService.load());
     if (profile) {
       this.loadDraftsFromProfile();
     }
@@ -85,8 +97,11 @@ export class ShortcutSettingsComponent implements OnInit {
   loadDraftsFromProfile(): void {
     const profile = this.profile();
     if (!profile) return;
+
+    this.captureIndex.set(null);
     this.drafts.set(
       profile.shortcuts.map((item) => ({
+        clientId: item.id ? `saved-${item.id}` : this.nextDraftId('saved'),
         pageCode: item.pageCode,
         secondKeyCode: item.secondKeyCode,
         enabled: item.enabled,
@@ -111,9 +126,7 @@ export class ShortcutSettingsComponent implements OnInit {
       /^Key[A-Z]$/.test(event.code) || /^Digit[0-9]$/.test(event.code);
 
     if (!valid) {
-      const msg = this.i18n.t('shortcuts.invalidKey');
-      this.notification.warning(msg);
-      this.liveAnnouncement.set(msg);
+      this.warn('shortcuts.invalidKey');
       return;
     }
 
@@ -123,9 +136,7 @@ export class ShortcutSettingsComponent implements OnInit {
     );
 
     if (duplicate) {
-      const msg = this.i18n.t('shortcuts.duplicateKey');
-      this.notification.warning(msg);
-      this.liveAnnouncement.set(msg);
+      this.warn('shortcuts.duplicateKey');
       return;
     }
 
@@ -149,15 +160,15 @@ export class ShortcutSettingsComponent implements OnInit {
     const newPageCode = select.value;
     const previousPageCode = this.drafts()[index]?.pageCode;
 
+    if (!previousPageCode || newPageCode === previousPageCode) return;
+
     const duplicate = this.drafts().some(
       (item, itemIndex) =>
         itemIndex !== index && item.pageCode === newPageCode,
     );
 
     if (duplicate) {
-      this.notification.warning(
-        this.i18n.t('shortcuts.duplicateDestination'),
-      );
+      this.warn('shortcuts.duplicateDestination');
       select.value = previousPageCode;
       return;
     }
@@ -179,12 +190,13 @@ export class ShortcutSettingsComponent implements OnInit {
 
   remove(index: number): void {
     this.drafts.update((items) => items.filter((_, i) => i !== index));
+    this.captureIndex.set(null);
   }
 
   addShortcut(): void {
     const currentDrafts = this.drafts();
-    if (currentDrafts.length >= 20) {
-      this.notification.warning(this.i18n.t('shortcuts.limitExceeded'));
+    if (currentDrafts.length >= this.maxShortcuts) {
+      this.warn('shortcuts.limitExceeded');
       return;
     }
 
@@ -194,9 +206,7 @@ export class ShortcutSettingsComponent implements OnInit {
     );
 
     if (!available) {
-      this.notification.warning(
-        this.i18n.t('shortcuts.noMoreDestinations'),
-      );
+      this.warn('shortcuts.noMoreDestinations');
       return;
     }
 
@@ -212,33 +222,37 @@ export class ShortcutSettingsComponent implements OnInit {
 
     this.drafts.update((items) => [
       ...items,
-      { pageCode: available.pageCode, secondKeyCode: nextKey, enabled: true },
+      {
+        clientId: this.nextDraftId('new'),
+        pageCode: available.pageCode,
+        secondKeyCode: nextKey,
+        enabled: true,
+      },
     ]);
   }
 
   async save(): Promise<void> {
     const profile = this.profile();
-    if (!profile) return;
+    if (!profile) {
+      this.errorMessage(this.i18n.t(this.error() ?? 'shortcuts.loadFailed'));
+      return;
+    }
 
     const currentDrafts = this.drafts();
 
-    // Check duplicate keys
     const keys = new Set<string>();
     for (const d of currentDrafts) {
       if (keys.has(d.secondKeyCode)) {
-        this.notification.error(this.i18n.t('shortcuts.duplicateKey'));
+        this.errorMessage(this.i18n.t('shortcuts.duplicateKey'));
         return;
       }
       keys.add(d.secondKeyCode);
     }
 
-    // Check duplicate destinations
     const pages = new Set<string>();
     for (const d of currentDrafts) {
       if (pages.has(d.pageCode)) {
-        this.notification.error(
-          this.i18n.t('shortcuts.duplicateDestination'),
-        );
+        this.errorMessage(this.i18n.t('shortcuts.duplicateDestination'));
         return;
       }
       pages.add(d.pageCode);
@@ -253,11 +267,12 @@ export class ShortcutSettingsComponent implements OnInit {
           enabled: item.enabled,
         })),
       });
+      this.loadDraftsFromProfile();
       const successMsg = this.i18n.t('shortcuts.saved');
       this.notification.success(successMsg);
       this.liveAnnouncement.set(successMsg);
     } catch (err) {
-      this.notification.error(apiErrorMessage(err, this.i18n));
+      this.errorMessage(apiErrorMessage(err, this.i18n));
     }
   }
 
@@ -278,7 +293,7 @@ export class ShortcutSettingsComponent implements OnInit {
       this.notification.success(successMsg);
       this.liveAnnouncement.set(successMsg);
     } catch (err) {
-      this.notification.error(apiErrorMessage(err, this.i18n));
+      this.errorMessage(apiErrorMessage(err, this.i18n));
     }
   }
 
@@ -311,5 +326,21 @@ export class ShortcutSettingsComponent implements OnInit {
   getDestinationTitle(pageCode: string): string {
     const dest = this.availableDestinations().find((d) => d.pageCode === pageCode);
     return dest ? this.i18n.t(dest.titleKey) : pageCode;
+  }
+
+  private nextDraftId(prefix: string): string {
+    this.draftSequence += 1;
+    return `${prefix}-${this.draftSequence}`;
+  }
+
+  private warn(key: string): void {
+    const message = this.i18n.t(key);
+    this.notification.warning(message);
+    this.liveAnnouncement.set(message);
+  }
+
+  private errorMessage(message: string): void {
+    this.notification.error(message);
+    this.liveAnnouncement.set(message);
   }
 }

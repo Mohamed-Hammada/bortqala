@@ -1,12 +1,18 @@
 <div class="shortcut-settings">
   <div class="shortcut-intro">
-    <div class="header-badge">
-      @if (profile()?.profileMode === 'CUSTOM') {
-        <span class="custom-badge">{{ i18n.t('shortcuts.customBadge') }}</span>
-      } @else {
-        <span class="default-badge">{{ i18n.t('shortcuts.defaultBadge') }}</span>
-      }
+    <div class="shortcut-intro__topline">
+      <div class="header-badge">
+        @if (profile()?.profileMode === 'CUSTOM') {
+          <span class="custom-badge">{{ i18n.t('shortcuts.customBadge') }}</span>
+        } @else {
+          <span class="default-badge">{{ i18n.t('shortcuts.defaultBadge') }}</span>
+        }
+      </div>
+      <span class="shortcut-count" aria-label="Shortcut count">
+        {{ drafts().length }} / {{ maxShortcuts }}
+      </span>
     </div>
+
     <h2>{{ i18n.t('shortcuts.settingsTitle') }}</h2>
     <p>{{ i18n.t('shortcuts.settingsDescription') }}</p>
     <p class="only-available-note">{{ i18n.t('shortcuts.onlyAvailableScreens') }}</p>
@@ -16,38 +22,62 @@
     <div class="toolbar-actions">
       <button
         type="button"
-        class="button secondary"
+        class="button secondary add-button"
+        data-testid="shortcut-add"
         (click)="addShortcut()"
-        [disabled]="loading() || saving() || drafts().length >= 20"
+        [disabled]="loading() || saving()"
       >
-        + {{ i18n.t('shortcuts.add') }}
+        <span class="button-icon" aria-hidden="true">＋</span>
+        <span>{{ i18n.t('shortcuts.add') }}</span>
       </button>
 
       <button
         type="button"
         class="button primary"
+        data-testid="shortcut-save"
         (click)="save()"
         [disabled]="loading() || saving()"
       >
-        {{ i18n.t('shortcuts.save') }}
+        <span class="button-icon" aria-hidden="true">✓</span>
+        <span>{{ i18n.t('shortcuts.save') }}</span>
       </button>
 
       <button
         type="button"
         class="button secondary danger"
+        data-testid="shortcut-reset"
         (click)="reset()"
         [disabled]="loading() || saving()"
       >
-        {{ i18n.t('shortcuts.reset') }}
+        <span class="button-icon" aria-hidden="true">↺</span>
+        <span>{{ i18n.t('shortcuts.reset') }}</span>
       </button>
     </div>
   </div>
 
+  @if (liveAnnouncement()) {
+    <div class="shortcut-feedback" role="status" aria-live="polite">
+      {{ liveAnnouncement() }}
+    </div>
+  }
+
+  @if (error(); as errorKey) {
+    <div class="shortcut-error" role="alert">
+      {{ i18n.t(errorKey) }}
+    </div>
+  }
+
   @if (loading()) {
-    <div class="loading-state">{{ i18n.t('common.loading') }}</div>
+    <div class="loading-state">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <span>{{ i18n.t('common.loading') }}</span>
+    </div>
   } @else {
     <section class="shortcut-section">
-      <h3>{{ i18n.t('shortcuts.personalTitle') }}</h3>
+      <div class="shortcut-section__header">
+        <h3>{{ i18n.t('shortcuts.personalTitle') }}</h3>
+        <span class="shortcut-section__count">{{ drafts().length }}</span>
+      </div>
 
       @if (drafts().length === 0) {
         <div class="empty-state">{{ i18n.t('shortcuts.noAssignment') }}</div>
@@ -60,22 +90,23 @@
                 <th>{{ i18n.t('shortcuts.destination') }}</th>
                 <th>{{ i18n.t('shortcuts.status') }}</th>
                 <th>{{ i18n.t('shortcuts.enabled') }}</th>
-                <th></th>
+                <th class="action-heading"></th>
               </tr>
             </thead>
             <tbody>
-              @for (draft of drafts(); track $index) {
+              @for (draft of drafts(); track draft.clientId) {
                 <tr [class.capturing]="captureIndex() === $index">
                   <td class="shortcut-key-cell">
                     <div class="shortcut-key-builder">
                       <kbd class="prefix-kbd">G</kbd>
-                      <span class="arrow">→</span>
+                      <span class="arrow" aria-hidden="true">→</span>
                       <button
                         type="button"
                         class="capture-btn"
                         data-shortcut-capture="true"
                         (click)="captureIndex.set($index)"
                         (keydown)="captureKey($index, $event)"
+                        [disabled]="saving()"
                         [attr.aria-pressed]="captureIndex() === $index"
                         [attr.aria-label]="i18n.t('shortcuts.captureAria', { key: displayKey(draft.secondKeyCode) })"
                       >
@@ -90,14 +121,16 @@
 
                   <td class="shortcut-dest-cell">
                     <select
-                      class="form-control"
+                      class="form-control shortcut-destination-select"
+                      [value]="draft.pageCode"
                       (change)="changeDestination($index, $event)"
+                      [disabled]="saving()"
+                      [attr.aria-label]="i18n.t('shortcuts.destination')"
                     >
-                      @for (dest of destinationOptions(); track dest.pageCode) {
+                      @for (dest of destinationOptions($index); track dest.pageCode) {
                         <option
                           [value]="dest.pageCode"
                           [disabled]="dest.unavailable"
-                          [selected]="dest.pageCode === draft.pageCode"
                         >
                           {{ dest.title }}
                         </option>
@@ -118,6 +151,7 @@
                         type="checkbox"
                         [checked]="draft.enabled"
                         (change)="toggleEnabled($index, $any($event.target).checked)"
+                        [disabled]="saving()"
                       />
                       <span>{{ i18n.t('shortcuts.enabled') }}</span>
                     </label>
@@ -127,11 +161,13 @@
                     <button
                       type="button"
                       class="icon-button danger"
+                      data-testid="shortcut-remove"
                       (click)="remove($index)"
+                      [disabled]="saving()"
                       [attr.aria-label]="i18n.t('shortcuts.remove')"
                       [appTooltip]="i18n.t('shortcuts.remove')"
                     >
-                      ✕
+                      <span aria-hidden="true">✕</span>
                     </button>
                   </td>
                 </tr>
@@ -141,9 +177,5 @@
         </div>
       }
     </section>
-
-    <div class="aria-live-region" aria-live="polite" aria-atomic="true">
-      {{ liveAnnouncement() }}
-    </div>
   }
 </div>
