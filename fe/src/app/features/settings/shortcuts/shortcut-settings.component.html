@@ -91,12 +91,15 @@
                   <td class="shortcut-dest-cell">
                     <select
                       class="form-control"
-                      [value]="draft.pageCode"
-                      (change)="changeDestination($index, $any($event.target).value)"
+                      (change)="changeDestination($index, $event)"
                     >
-                      @for (dest of availableDestinations(); track dest.pageCode) {
-                        <option [value]="dest.pageCode">
-                          {{ i18n.t(dest.titleKey) }}
+                      @for (dest of destinationOptions(); track dest.pageCode) {
+                        <option
+                          [value]="dest.pageCode"
+                          [disabled]="dest.unavailable"
+                          [selected]="dest.pageCode === draft.pageCode"
+                        >
+                          {{ dest.title }}
                         </option>
                       }
                     </select>

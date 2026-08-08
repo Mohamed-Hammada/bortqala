@@ -57,9 +57,7 @@ public class HrConfigurationService {
         return attendanceCategoryRepository.findAllByOrderByNameAsc().stream().map(this::toCategoryResponse).toList();
     }
 
-    public CategoryApi.Response getCategory(String id) {
-        return toCategoryResponse(requireCategory(id));
-    }
+    public CategoryApi.Response getCategory(String id) { return toCategoryResponse(requireCategory(id)); }
 
     public List<CategoryApi.ScheduleResponse> getScheduleHistory(String categoryId) {
         requireCategory(categoryId);
@@ -147,9 +145,7 @@ public class HrConfigurationService {
                 || !java.util.Objects.equals(request.activeTo(), employee.getActiveTo());
         employee.update(employeeCode, request.fullName(), request.deviceUserId(), request.categoryId(),
                 request.employmentType(), request.baseSalary(), request.activeFrom(), request.activeTo(), request.active());
-        if (assignmentChanged) {
-            recordAssignmentChange(employee, employee.getActiveFrom());
-        }
+        if (assignmentChanged) recordAssignmentChange(employee, employee.getActiveFrom());
         return toEmployeeResponse(employee, category);
     }
 
@@ -164,7 +160,8 @@ public class HrConfigurationService {
     }
 
     public List<EmployeeApi.AssignmentResponse> getEmployeeAssignments(String id) {
-        employeeRepository.findById(id).orElseThrow(() -> new NotFoundException("Employee not found.", "HRCFG_EMPLOYEE_NOT_FOUND"));
+        employeeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Employee not found.", "HRCFG_EMPLOYEE_NOT_FOUND"));
         var categories = attendanceCategoryRepository.findAll().stream()
                 .collect(Collectors.toMap(AttendanceCategory::getId, Function.identity()));
         return employeeAssignmentRepository.findByEmployeeIdOrderByEffectiveFromDesc(id).stream()
@@ -174,17 +171,13 @@ public class HrConfigurationService {
                 .toList();
     }
 
-    private String categoryName(AttendanceCategory category) {
-        return category == null ? "—" : category.getName();
-    }
+    private String categoryName(AttendanceCategory category) { return category == null ? "—" : category.getName(); }
 
     private void recordAssignmentChange(Employee employee, LocalDate newEffectiveFrom) {
         var open = employeeAssignmentRepository.findFirstByEmployeeIdAndEffectiveToIsNullOrderByEffectiveFromDesc(employee.getId());
         if (open != null) {
             var closeOn = newEffectiveFrom.minusDays(1);
-            if (closeOn.isBefore(open.getEffectiveFrom())) {
-                closeOn = open.getEffectiveFrom();
-            }
+            if (closeOn.isBefore(open.getEffectiveFrom())) closeOn = open.getEffectiveFrom();
             open.closeOn(closeOn);
         }
         employeeAssignmentRepository.save(new EmployeeAssignment(employee.getId(), employee.getCategoryId(),
@@ -193,9 +186,7 @@ public class HrConfigurationService {
 
     private void closeOpenAssignment(String employeeId, LocalDate effectiveTo) {
         var open = employeeAssignmentRepository.findFirstByEmployeeIdAndEffectiveToIsNullOrderByEffectiveFromDesc(employeeId);
-        if (open != null && effectiveTo != null && !effectiveTo.isBefore(open.getEffectiveFrom())) {
-            open.closeOn(effectiveTo);
-        }
+        if (open != null && effectiveTo != null && !effectiveTo.isBefore(open.getEffectiveFrom())) open.closeOn(effectiveTo);
     }
 
     private AttendanceCategory requireCategory(String id) {
@@ -263,16 +254,24 @@ public class HrConfigurationService {
         if (!creating && (requested == null || requested.isBlank())) return currentCode;
         String prefix = category.getCode() + "-";
         if (requested != null && !requested.isBlank()) {
-            String normalized = requested.strip().toUpperCase(java.util.Locale.ROOT);
-            String code = normalized.startsWith(prefix) ? normalized : prefix + normalized;
+            // A user-supplied code is a complete business identifier. Normalize it,
+            // but never prepend the category code again (BUG-006).
+            String code = requested.strip().toUpperCase(java.util.Locale.ROOT);
             boolean duplicate = creating ? employeeRepository.existsByEmployeeCodeIgnoreCase(code)
-                    : employeeRepository.existsByEmployeeCodeIgnoreCaseAndIdNot(code, employeeRepository.findByEmployeeCodeIgnoreCase(currentCode).map(Employee::getId).orElse(""));
-            if (duplicate) throw new BusinessRuleException("Employee code already exists.",
-                    "HRCFG_EMPLOYEE_CODE_EXISTS", HttpStatus.CONFLICT);
+                    : employeeRepository.existsByEmployeeCodeIgnoreCaseAndIdNot(
+                            code,
+                            employeeRepository.findByEmployeeCodeIgnoreCase(currentCode)
+                                    .map(Employee::getId).orElse(""));
+            if (duplicate) {
+                throw new BusinessRuleException("Employee code already exists.",
+                        "HRCFG_EMPLOYEE_CODE_EXISTS", HttpStatus.CONFLICT);
+            }
             return code;
         }
+
         var sequence = employeeCodeSequenceRepository.findForUpdate(category.getId())
-                .orElseGet(() -> employeeCodeSequenceRepository.save(new com.bemo.hr.employee.domain.EmployeeCodeSequence(category.getId())));
+                .orElseGet(() -> employeeCodeSequenceRepository.save(
+                        new com.bemo.hr.employee.domain.EmployeeCodeSequence(category.getId())));
         String generated;
         do { generated = prefix + "%04d".formatted(sequence.takeNext()); }
         while (employeeRepository.existsByEmployeeCodeIgnoreCase(generated));
@@ -314,9 +313,7 @@ public class HrConfigurationService {
     private boolean currentUserCanViewSalary() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getPrincipal())) {
-            return true;
-        }
+                || "anonymousUser".equals(authentication.getPrincipal())) return true;
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(TenantContext.require(), authentication.getName())
                 .map(com.bemo.hr.shared.security.AppUser::isCanViewSalary).orElse(true);
     }

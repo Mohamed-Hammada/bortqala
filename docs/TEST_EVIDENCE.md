@@ -11,9 +11,16 @@ below a recorded baseline or reports failures fails the release gate.
 |-------|----------|---------|----------------|
 | Backend (non-Docker, H2) | **268 tests / 56 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 268 AND failures = 0 |
 | Backend (full, incl. Testcontainers) | **308 tests** expected when Docker available | `./gradlew test` | failures = 0 |
-| Frontend (Angular + Vitest) | **155 tests / 28 files / 0 failures** | `npx ng test --watch=false` | count ≥ 155 AND failures = 0 |
+| Frontend (Angular + Vitest) | **159 tests / 28 files / 0 failures** | `npx ng test --watch=false` | count ≥ 159 AND failures = 0 |
 
 ## Evidence log
+
+### 2026-08-08 — working tree (settings QA: notification prefs + shortcuts UI fix)
+- Notification prefs no longer persist on toggle: `updateNotificationPrefs` in `settings.page.ts` only updates the `notificationPrefs` signal; `saveNotificationPrefs()` moved into `saveUserPreferences()` (the 💾 Save All System Settings handler, both appearance + reports tabs), and `cancel()` resets prefs to the last-persisted `loadNotificationPrefs()`.
+- Shortcut settings theme fix: `shortcut-settings.component.scss` and `settings.page.scss` replaced non-existent tokens (`--surface-card`, `--border-color`, `--text-muted`, `--surface-header`, `--surface-input`, `--primary`) with the app's real tokens (`--surface`, `--line`, `--muted`, `--surface-muted`, `--input-bg`, `--gold`, `--gold-glow`, `--success-soft`, `--warning-soft`, `--danger-soft`, `--warning-text`) — fixes white-cards-in-dark-mode.
+- Shortcut destination `<select>` desync fix: Angular skips DOM writes for property bindings when the bound value is unchanged, so a blocked change (duplicate destination) left the select showing the stale picked value. `changeDestination` now takes the `Event` and reverts `select.value` imperatively on the blocked branch.
+- Frontend: `npx ng test --watch=false` under node `v24.18.1` → **28 files passed, 159 tests passed, 0 failed** (+4 new DOM/interaction assertions in `shortcut-settings.component.spec.ts`: initial select render, async profile-load render, change sync, blocked-change revert). Baseline refreshed to 159/28 in `fe/tools/check-test-count.mjs`.
+- Related: `npm run check:i18n` = 1670 keys (ar-EG + en-US; -1 because `settings.notificationSaved` is no longer invoked after the save-deferral); `npm run check:hardcoded` = 0 findings across 36 HTML templates and 109 TypeScript source files; `npx ng build --configuration production` green (pre-existing SCSS budget warnings only).
 
 ### 2026-08-07 — working tree (procurement hardening + TS hardcoded-UI pass)
 - Applied the "Bortqala cumulative patch" (operation-specific procurement busy states, three-way-match i18n, TS hardcoded-UI scanner, users/employees localization). Fixed a bug in the delivered V126 CSV: `translations.id` is the primary key, but V126 reused `v126-001/002/003` for both locales (would violate the PK on the H2/PostgreSQL Liquibase load); rewrote to distinct per-locale ids (`v126-001`…`v126-006`, matching the V119/V125 convention).

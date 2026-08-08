@@ -4,10 +4,10 @@
   gap: 1.5rem;
 
   .shortcut-intro {
-    background: var(--surface-card, #ffffff);
+    background: var(--surface);
     padding: 1.5rem;
     border-radius: 12px;
-    border: 1px solid var(--border-color, #e2e8f0);
+    border: 1px solid var(--line);
 
     .header-badge {
       margin-bottom: 0.5rem;
@@ -37,7 +37,7 @@
 
     p {
       margin: 0 0 0.5rem 0;
-      color: var(--text-muted, #64748b);
+      color: var(--muted);
       font-size: 0.9rem;
     }
 
@@ -60,10 +60,10 @@
   }
 
   .shortcut-section {
-    background: var(--surface-card, #ffffff);
+    background: var(--surface);
     padding: 1.5rem;
     border-radius: 12px;
-    border: 1px solid var(--border-color, #e2e8f0);
+    border: 1px solid var(--line);
 
     h3 {
       margin: 0 0 1rem 0;
@@ -74,7 +74,7 @@
     .empty-state {
       padding: 2rem;
       text-align: center;
-      color: var(--text-muted, #64748b);
+      color: var(--muted);
     }
   }
 
@@ -90,7 +90,7 @@
     th, td {
       padding: 0.75rem 1rem;
       text-align: right;
-      border-bottom: 1px solid var(--border-color, #e2e8f0);
+      border-bottom: 1px solid var(--line);
       vertical-align: middle;
     }
 
@@ -102,12 +102,12 @@
 
     th {
       font-weight: 700;
-      color: var(--text-muted, #64748b);
-      background: var(--surface-header, #f8fafc);
+      color: var(--muted);
+      background: var(--surface-muted);
     }
 
     tr.capturing {
-      background: #eff6ff;
+      background: var(--gold-glow);
     }
 
     .shortcut-key-builder {
@@ -117,8 +117,8 @@
 
       kbd {
         font-family: inherit;
-        background: var(--surface-input, #f1f5f9);
-        border: 1px solid var(--border-color, #cbd5e1);
+        background: var(--input-bg);
+        border: 1px solid var(--line);
         padding: 4px 8px;
         border-radius: 6px;
         font-weight: 700;
@@ -127,24 +127,24 @@
       }
 
       .arrow {
-        color: var(--text-muted, #94a3b8);
+        color: var(--muted);
       }
 
       .capture-btn {
         background: transparent;
-        border: 1px dashed var(--primary-color, #2563eb);
+        border: 1px dashed var(--gold);
         border-radius: 6px;
         padding: 2px 6px;
         cursor: pointer;
         outline: none;
 
         &:focus, &[aria-pressed="true"] {
-          box-shadow: 0 0 0 2px rgba(37,99,235,0.4);
-          background: #dbeafe;
+          box-shadow: 0 0 0 2px var(--gold-glow);
+          background: var(--gold-glow);
         }
 
         .press-hint {
-          color: #1d4ed8;
+          color: var(--gold-hover);
           font-weight: 600;
           font-size: 0.8rem;
         }
@@ -159,16 +159,16 @@
       display: inline-block;
 
       &.status-available {
-        background: #dcfce7;
-        color: #15803d;
+        background: var(--success-soft);
+        color: var(--success);
       }
       &.status-warning {
-        background: #fef3c7;
-        color: #b45309;
+        background: var(--warning-soft);
+        color: var(--warning-text);
       }
       &.status-unavailable {
-        background: #fee2e2;
-        color: #b91c1c;
+        background: var(--danger-soft);
+        color: var(--danger);
       }
     }
 
@@ -179,7 +179,7 @@
       cursor: pointer;
 
       input[type="checkbox"] {
-        accent-color: var(--primary-color, #2563eb);
+        accent-color: var(--gold);
       }
     }
   }

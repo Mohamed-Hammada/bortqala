@@ -31,9 +31,10 @@ class TenantFeatureServiceTests {
         assertThat(enabled)
                 .contains("employeeAttendance.enabled", "biometric.fileImport.enabled",
                         "workforce.enabled", "procurement.enabled", "exports.enabled",
+                        "payroll.enabled", "sales.enabled", "manufacturing.enabled",
+                        "finance.enabled", "quality.enabled",
                         "navigation.favorites.enabled", "navigation.recents.enabled")
-                .doesNotContain("payroll.enabled", "sales.enabled", "manufacturing.enabled",
-                        "finance.enabled", "quality.enabled", "notifications.enabled");
+                .doesNotContain("biometric.liveSync.enabled", "notifications.enabled");
     }
 
     @Test
@@ -74,10 +75,12 @@ class TenantFeatureServiceTests {
     void isEnabledFallsBackToDefaultsAndUnknownKeysAreDisabled() {
         when(repository.findById(new TenantFeatureId("app-1", "payroll.enabled"))).thenReturn(Optional.empty());
         when(repository.findById(new TenantFeatureId("app-1", "exports.enabled"))).thenReturn(Optional.empty());
+        when(repository.findById(new TenantFeatureId("app-1", "notifications.enabled"))).thenReturn(Optional.empty());
         when(repository.findById(new TenantFeatureId("app-1", "unknown.key"))).thenReturn(Optional.empty());
 
-        assertThat(service.isEnabled("app-1", "payroll.enabled")).isFalse();
+        assertThat(service.isEnabled("app-1", "payroll.enabled")).isTrue();
         assertThat(service.isEnabled("app-1", "exports.enabled")).isTrue();
+        assertThat(service.isEnabled("app-1", "notifications.enabled")).isFalse();
         assertThat(service.isEnabled("app-1", "unknown.key")).isFalse();
     }
 

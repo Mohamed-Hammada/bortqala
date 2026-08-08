@@ -54,6 +54,26 @@ export class ShortcutSettingsComponent implements OnInit {
     () => this.profile()?.availableDestinations ?? [],
   );
 
+  destinationOptions(): { pageCode: string; title: string; unavailable: boolean }[] {
+    const options = this.availableDestinations().map((dest) => ({
+      pageCode: dest.pageCode,
+      title: this.i18n.t(dest.titleKey),
+      unavailable: false,
+    }));
+    const known = new Set(options.map((option) => option.pageCode));
+    for (const draft of this.drafts()) {
+      if (known.has(draft.pageCode)) continue;
+      const status = this.getAvailabilityStatus(draft.pageCode);
+      options.push({
+        pageCode: draft.pageCode,
+        title: `${this.getDestinationTitle(draft.pageCode)} (${this.i18n.t(status.statusKey)})`,
+        unavailable: true,
+      });
+      known.add(draft.pageCode);
+    }
+    return options;
+  }
+
   async ngOnInit(): Promise<void> {
     const profile =
       this.profile() ?? (await this.shortcutService.load());
@@ -124,7 +144,11 @@ export class ShortcutSettingsComponent implements OnInit {
     );
   }
 
-  changeDestination(index: number, newPageCode: string): void {
+  changeDestination(index: number, event: Event): void {
+    const select = event.target as HTMLSelectElement;
+    const newPageCode = select.value;
+    const previousPageCode = this.drafts()[index]?.pageCode;
+
     const duplicate = this.drafts().some(
       (item, itemIndex) =>
         itemIndex !== index && item.pageCode === newPageCode,
@@ -134,6 +158,7 @@ export class ShortcutSettingsComponent implements OnInit {
       this.notification.warning(
         this.i18n.t('shortcuts.duplicateDestination'),
       );
+      select.value = previousPageCode;
       return;
     }
 

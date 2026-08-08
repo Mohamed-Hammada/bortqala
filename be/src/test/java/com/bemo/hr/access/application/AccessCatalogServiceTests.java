@@ -53,6 +53,12 @@ class AccessCatalogServiceTests {
                         .toList());
     }
 
+    private void disableFeature(String key) {
+        when(featureRepository.findByAppId(anyString())).thenReturn(List.of(
+                new com.bemo.hr.shared.security.TenantFeature(
+                        "test-app", key, false, null, "test")));
+    }
+
     @Test
     void catalogExposesEveryRolePageAndRule() {
         var response = service.catalog();
@@ -222,6 +228,7 @@ class AccessCatalogServiceTests {
 
     @Test
     void disabledFeatureYieldsModuleUnavailable() {
+        disableFeature("payroll.enabled");
         var preview = service.preview(List.of("PAYROLL_MANAGER"), List.of("payroll"));
 
         var payroll = page(preview, "PAYROLL");
@@ -251,6 +258,7 @@ class AccessCatalogServiceTests {
 
     @Test
     void validateReportsFeatureDisabled() {
+        disableFeature("payroll.enabled");
         var result = service.validateAssignment(
                 Set.of("ADMIN"), "actor-1", List.of("PAYROLL_MANAGER"), List.of("payroll"),
                 null, null, null);
@@ -304,6 +312,7 @@ class AccessCatalogServiceTests {
 
     @Test
     void adminPreviewStillHonorsTenantFeatureFlags() {
+        disableFeature("payroll.enabled");
         var preview = service.preview(List.of("ADMIN"), List.of("payroll"));
 
         assertThat(page(preview, "PAYROLL").access()).isEqualTo("MODULE_UNAVAILABLE");

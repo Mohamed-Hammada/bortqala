@@ -655,6 +655,79 @@ class AuthSecurityIntegrationTests {
         }
     }
 
+    @Test
+    void accessValidateEndpointHandlesNewEditMissingAndSelfAssignments() throws Exception {
+        AppUser superAdmin = loadAccount("superadmin");
+        AppUser target = createUser("valtarget", Set.of(RoleCode.VIEWER));
+
+        mockMvc.perform(get("/api/v1/users/me")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(superAdmin.getId()));
+
+        mockMvc.perform(post("/api/v1/users/access/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"roleCodes\":[\"ADMIN\"],\"menuCodes\":[\"payroll\"]}")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/users/access/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"roleCodes":["ADMIN"],"menuCodes":["payroll"],"targetUserId":"%s"}
+                                """.formatted(target.getId()))
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/users/access/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"roleCodes":["ADMIN"],"menuCodes":["payroll"],"targetUserId":"does-not-exist"}
+                                """.formatted())
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(post("/api/v1/users/access/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"roleCodes":["FINANCE_MANAGER"],"menuCodes":[],"targetUserId":"%s"}
+                                """.formatted(target.getId()))
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void superAdminBypassesTenantFeatureGatesWhileOthersRespectThem() throws Exception {
+        AppUser superAdmin = loadAccount("superadmin");
+        AppUser admin = loadAccount("admin");
+        enableFeatureRow("payroll.enabled", false);
+
+        // SUPER_ADMIN must not be blocked by a tenant-disabled feature: the
+        // validate flow reports no FEATURE_DISABLED error.
+        mockMvc.perform(post("/api/v1/users/access/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"roleCodes\":[\"PAYROLL_MANAGER\"],\"menuCodes\":[\"payroll\"]}")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valid").value(true));
+
+        // Non-owner roles still respect the tenant feature configuration.
+        mockMvc.perform(post("/api/v1/users/access/validate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"roleCodes\":[\"PAYROLL_MANAGER\"],\"menuCodes\":[\"payroll\"]}")
+                        .header("Authorization", "Bearer " + mintAccessToken(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valid").value(false))
+                .andExpect(jsonPath("$.errors[?(@.code == 'ACCESS_FEATURE_DISABLED')]").exists());
+
+        // SUPER_ADMIN still reaches the interceptor-gated payroll endpoint.
+        mockMvc.perform(get("/api/v1/payroll")
+                        .param("year", "2026")
+                        .param("month", "1")
+                        .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
+                .andExpect(status().isOk());
+    }
+
     private TenantFeature enableFeatureRow(String featureKey, boolean enabled) {
         var featureId = new TenantFeatureId(appId, featureKey);
         var feature = tenantFeatureRepository.findById(featureId)

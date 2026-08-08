@@ -167,7 +167,7 @@ export class EmployeesPage {
       activeTo: raw.activeTo ? dateInputToEpoch(raw.activeTo) : null,
     };
     if (await this.store.save(this.editingId(), payload)) {
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t(this.editingId() ? 'employees.updateSuccess' : 'employees.createSuccess') + ' ✓');
       this.submitAttempted.set(false);
       this.form.reset({
         ...payload,

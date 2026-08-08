@@ -93,10 +93,7 @@ export class SettingsPage {
   }
 
   updateNotificationPrefs(key: keyof NotificationPreferences, value: boolean) {
-    const updated = { ...this.notificationPrefs(), [key]: value };
-    this.notificationPrefs.set(updated);
-    saveNotificationPrefs(updated);
-    this.notification.success(this.i18n.t('settings.notificationSaved'));
+    this.notificationPrefs.update((current) => ({ ...current, [key]: value }));
   }
 
   readonly form = this.formBuilder.nonNullable.group({
@@ -176,6 +173,7 @@ export class SettingsPage {
       excelTableStyle: prefs.excelTableStyle as ExcelTableStyle,
       defaultPage: prefs.defaultPage ?? '/dashboard',
     });
+    this.notificationPrefs.set(loadNotificationPrefs());
   }
 
   async saveUserPreferences(): Promise<void> {
@@ -183,6 +181,7 @@ export class SettingsPage {
     this.saving.set(true);
     try {
       await firstValueFrom(this.authService.updatePreferences(this.form.getRawValue()));
+      saveNotificationPrefs(this.notificationPrefs());
       this.form.markAsPristine();
       this.notification.success(this.i18n.t('settings.saved'));
     } catch (error) {

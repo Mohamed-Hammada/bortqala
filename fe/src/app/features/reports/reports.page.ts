@@ -47,17 +47,26 @@ export class ReportsPage {
     });
     this.periodForm.valueChanges.subscribe(() => this.previewResult.set(null));
   }
+
   changeYear(value: string): void {
     this.year.set(Number(value));
     void this.store.list(this.year());
   }
-  async create(period: PeriodOption): Promise<void> {
-    const id = await this.store.create({
-      periodStart: period.start,
-      periodEnd: period.end,
+
+  /**
+   * Preset cards are shortcuts for configuring the form, not an immediate
+   * create side effect. The user still has Preview and Create as explicit actions.
+   */
+  create(period: PeriodOption): void {
+    this.customError.set(null);
+    this.previewResult.set(null);
+    this.periodForm.setValue({
+      periodStart: epochToDateInput(period.start),
+      periodEnd: epochToDateInput(period.end),
       payCycle: period.kind === 'MONTHLY' ? 'MONTHLY' : 'HALF_MONTHLY',
     });
-    if (id) await this.router.navigate(['/reports', id]);
+    this.periodForm.markAsDirty();
+    document.querySelector<HTMLFormElement>('form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   async createCustom(): Promise<void> {
@@ -108,31 +117,21 @@ export class ReportsPage {
   cycleLabel(period: PeriodOption): string {
     return this.i18n.t(period.kind === 'MONTHLY' ? 'reports.cycleMonthly' : 'reports.cycleHalf');
   }
-  date(value: number): string {
-    return formatDate(value);
-  }
-  dateTime(value: number): string {
-    return formatDateTime(value);
-  }
+  date(value: number): string { return formatDate(value); }
+  dateTime(value: number): string { return formatDateTime(value); }
   label(status: ReportStatus): string {
-    return this.i18n.t(
-      {
-        DRAFT: 'status.draft',
-        IN_REVIEW: 'status.inReview',
-        APPROVED: 'status.approved',
-        EXPORTED: 'status.exported',
-      }[status],
-    );
+    return this.i18n.t({
+      DRAFT: 'status.draft', IN_REVIEW: 'status.inReview',
+      APPROVED: 'status.approved', EXPORTED: 'status.exported',
+    }[status]);
   }
 
   payCycleLabel(value: ReportPayCycle): string {
-    return this.i18n.t(
-      {
-        MONTHLY: 'reports.monthlyShort',
-        HALF_MONTHLY: 'reports.halfMonthly',
-        THIRTY_DAYS: 'reports.thirtyDays',
-      }[value],
-    );
+    return this.i18n.t({
+      MONTHLY: 'reports.monthlyShort',
+      HALF_MONTHLY: 'reports.halfMonthly',
+      THIRTY_DAYS: 'reports.thirtyDays',
+    }[value]);
   }
 
   private currentMonthRange(): { start: string; end: string } {
@@ -141,9 +140,6 @@ export class ReportsPage {
     const month = now.getMonth() + 1;
     const lastDay = new Date(year, month, 0).getDate();
     const mm = String(month).padStart(2, '0');
-    return {
-      start: `${year}-${mm}-01`,
-      end: `${year}-${mm}-${String(lastDay).padStart(2, '0')}`,
-    };
+    return { start: `${year}-${mm}-01`, end: `${year}-${mm}-${String(lastDay).padStart(2, '0')}` };
   }
 }

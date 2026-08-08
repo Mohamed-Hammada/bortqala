@@ -8,6 +8,7 @@ import com.bemo.hr.shared.security.Role;
 import com.bemo.hr.shared.security.TenantContext;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,7 +54,7 @@ public class AccessController {
     @PostMapping("/users/access/validate")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     AccessApi.AccessValidateResponse validate(@Valid @RequestBody AccessApi.AccessValidateRequest request,
-                                              Jwt jwt) {
+                                              @AuthenticationPrincipal Jwt jwt) {
         return accessCatalogService.validateAssignment(
                 rolesOf(jwt), jwt.getClaimAsString("userId"), request.roleCodes(),
                 request.menuCodes(), request.targetUserId(),

@@ -32,9 +32,9 @@
     }
 
     &.active {
-      color: var(--primary, #b8860b);
-      border-bottom-color: var(--primary, #b8860b);
-      background: var(--surface-card, #ffffff);
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+      background: var(--surface);
       font-weight: 700;
     }
   }

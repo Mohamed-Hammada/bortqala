@@ -185,7 +185,7 @@ export class CategoriesPage {
       })),
     };
     if (await this.store.save(this.editingId(), payload)) {
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t(this.editingId() ? 'categories.updateSuccess' : 'categories.createSuccess') + ' ✓');
       this.drawerOpen.set(false);
     }
   }

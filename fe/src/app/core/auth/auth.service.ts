@@ -71,31 +71,19 @@ export class AuthService {
   login(appCode: string, username: string, password: string) {
     return this.httpClient
       .post<LoginResponse>('/api/v1/auth/login', { appCode, username, password }, { withCredentials: true })
-      .pipe(
-        tap((session) => {
-          this.session.set(session);
-          this.persistStoredSession(session);
-        }),
-      );
+      .pipe(tap((session) => { this.session.set(session); this.persistStoredSession(session); }));
   }
 
   demoLogin(secret: string) {
     return this.httpClient
       .post<LoginResponse>('/api/v1/auth/demo-login', { secret }, { withCredentials: true })
-      .pipe(
-        tap((session) => {
-          this.session.set(session);
-          this.persistStoredSession(session);
-        }),
-      );
+      .pipe(tap((session) => { this.session.set(session); this.persistStoredSession(session); }));
   }
 
   tryRefresh(): Promise<boolean> {
     if (!this.sessionRestorable()) return Promise.resolve(false);
     if (this.refreshPromise) return this.refreshPromise;
-    this.refreshPromise = this.doRefresh().finally(() => {
-      this.refreshPromise = null;
-    });
+    this.refreshPromise = this.doRefresh().finally(() => { this.refreshPromise = null; });
     return this.refreshPromise;
   }
 
@@ -110,76 +98,44 @@ export class AuthService {
             this.persistStoredSession(next);
           }
         }),
-      ).subscribe({
-        next: () => resolve(true),
-        error: () => resolve(false),
-      });
+      ).subscribe({ next: () => resolve(true), error: () => resolve(false) });
     });
   }
 
   logout(): void {
-    this.httpClient.post('/api/v1/auth/logout', {}, { withCredentials: true }).subscribe({
-      error: () => undefined,
-    });
+    this.httpClient.post('/api/v1/auth/logout', {}, { withCredentials: true }).subscribe({ error: () => undefined });
     this.clearSession();
   }
-
-  expireSession(): void {
-    this.clearSession();
-  }
-
-  sessionRestorable(): boolean {
-    return localStorage.getItem(STORAGE_KEY) !== null;
-  }
+  expireSession(): void { this.clearSession(); }
+  sessionRestorable(): boolean { return localStorage.getItem(STORAGE_KEY) !== null; }
 
   changePassword(currentPassword: string, newPassword: string): Observable<void> {
     const payload: ChangePasswordRequest = { currentPassword, newPassword };
-    return this.httpClient
-      .post<void>('/api/v1/auth/change-password', payload, { withCredentials: true })
-      .pipe(
-        tap(() => this.clearSession()),
-        catchError((error) => throwError(() => error)),
-      );
+    return this.httpClient.post<void>('/api/v1/auth/change-password', payload, { withCredentials: true })
+      .pipe(tap(() => this.clearSession()), catchError((error) => throwError(() => error)));
   }
 
-  updatePreferences(
-    preferences: Pick<UserPreferences, 'theme' | 'tableDensity' | 'locale' | 'excelTableStyle' | 'defaultPage'>,
-  ) {
-    return this.httpClient.put<UserPreferences>('/api/v1/auth/preferences', preferences).pipe(
-      tap((updated) => this.replacePreferences(updated)),
-    );
+  updatePreferences(preferences: Pick<UserPreferences, 'theme' | 'tableDensity' | 'locale' | 'excelTableStyle' | 'defaultPage'>) {
+    return this.httpClient.put<UserPreferences>('/api/v1/auth/preferences', preferences)
+      .pipe(tap((updated) => this.replacePreferences(updated)));
   }
-
   updateNavigationPreferences(preferences: NavigationPreferences) {
-    return this.httpClient.put<UserPreferences>('/api/v1/auth/preferences/navigation', preferences).pipe(
-      tap((updated) => this.replacePreferences(updated)),
-    );
+    return this.httpClient.put<UserPreferences>('/api/v1/auth/preferences/navigation', preferences)
+      .pipe(tap((updated) => this.replacePreferences(updated)));
   }
-
   updateDashboardPreferences(preferences: DashboardPreferences) {
-    return this.httpClient.put<UserPreferences>('/api/v1/auth/preferences/dashboard', preferences).pipe(
-      tap((updated) => this.replacePreferences(updated)),
-    );
+    return this.httpClient.put<UserPreferences>('/api/v1/auth/preferences/dashboard', preferences)
+      .pipe(tap((updated) => this.replacePreferences(updated)));
   }
-
   refreshPreferences() {
-    return this.httpClient.get<UserPreferences>('/api/v1/auth/preferences').pipe(
-      tap((updated) => this.replacePreferences(updated)),
-    );
+    return this.httpClient.get<UserPreferences>('/api/v1/auth/preferences')
+      .pipe(tap((updated) => this.replacePreferences(updated)));
   }
-
-  appSettings() {
-    return this.httpClient.get<AppSettings>('/api/v1/admin/app-settings');
-  }
-
-  fetchMe() {
-    return this.httpClient.get<MeResponse>('/api/v1/users/me');
-  }
-
+  appSettings() { return this.httpClient.get<AppSettings>('/api/v1/admin/app-settings'); }
+  fetchMe() { return this.httpClient.get<MeResponse>('/api/v1/users/me'); }
   updateAppSettings(payload: Omit<AppSettings, 'updatedAt'>) {
-    return this.httpClient.put<AppSettings>('/api/v1/admin/app-settings', payload).pipe(
-      tap((settings) => this.replaceDashboardPolicy(settings.adminDashboardCustomizationEnabled)),
-    );
+    return this.httpClient.put<AppSettings>('/api/v1/admin/app-settings', payload)
+      .pipe(tap((settings) => this.replaceDashboardPolicy(settings.adminDashboardCustomizationEnabled)));
   }
 
   readonly canCustomizeDashboard = computed(() => {
@@ -200,9 +156,7 @@ export class AuthService {
     return u.canViewSalary ?? true;
   });
 
-  isSuperAdmin(): boolean {
-    return this.user()?.roles.includes('SUPER_ADMIN') ?? false;
-  }
+  isSuperAdmin(): boolean { return this.user()?.roles.includes('SUPER_ADMIN') ?? false; }
 
   hasAnyRole(roles: readonly RoleCode[]): boolean {
     const assigned = this.user()?.roles ?? [];
@@ -214,34 +168,37 @@ export class AuthService {
     const user = this.user();
     if (!user) return false;
 
-    // Feature toggles
+    // SUPER_ADMIN is the unrestricted system owner: it can see every implemented
+    // module regardless of tenant feature flags or per-user menu assignment.
+    if (user.roles.includes('SUPER_ADMIN')) return true;
+
+    // All other roles, including ADMIN, respect tenant feature availability.
     const activeFeatures = user.activeFeatures ?? [];
     if (menuId === 'payroll' && !activeFeatures.includes('payroll.enabled')) return false;
     if (menuId === 'sales' && !activeFeatures.includes('sales.enabled')) return false;
     if (menuId === 'production' && !activeFeatures.includes('manufacturing.enabled')) return false;
     if (menuId === 'quality' && !activeFeatures.includes('quality.enabled')) return false;
-    
-    if (!activeFeatures.includes('finance.enabled') && (menuId === 'accounts' || menuId === 'journal-entries' || menuId === 'banks' || menuId === 'tax-currency' || menuId === 'fiscal-periods' || menuId === 'budgets')) return false;
-    if (!activeFeatures.includes('workforce.contractorAccounts.enabled') && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements')) return false;
+    if (menuId === 'procurement'
+        && !activeFeatures.includes('procurement.enabled')
+        && !activeFeatures.includes('purchasing.enabled')) return false;
+    if (!activeFeatures.includes('finance.enabled')
+        && (menuId === 'accounts' || menuId === 'journal-entries' || menuId === 'banks'
+          || menuId === 'tax-currency' || menuId === 'fiscal-periods' || menuId === 'budgets')) return false;
+    if (!activeFeatures.includes('workforce.contractorAccounts.enabled')
+        && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements')) return false;
 
-    if (user.roles.includes('SUPER_ADMIN') || user.roles.includes('ADMIN')) return true;
+    // ADMIN bypasses per-user menu assignment only after feature availability checks.
+    if (user.roles.includes('ADMIN')) return true;
     if (user.menuAccessMode === 'ALL') return true;
-    // SELECTED mode (and legacy sessions without the field): fail closed on empty/missing menus.
     return user.allowedMenus?.includes(menuId) ?? false;
   }
 
-  private clearSession(): void {
-    localStorage.removeItem(STORAGE_KEY);
-    this.session.set(null);
-  }
+  private clearSession(): void { localStorage.removeItem(STORAGE_KEY); this.session.set(null); }
 
   private persistStoredSession(session: LoginResponse): void {
     const stored: StoredSession = {
-      expiresAt: session.expiresAt,
-      mustChangePassword: session.mustChangePassword,
-      app: session.app,
-      user: session.user,
-      preferences: session.preferences,
+      expiresAt: session.expiresAt, mustChangePassword: session.mustChangePassword,
+      app: session.app, user: session.user, preferences: session.preferences,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
   }
@@ -252,12 +209,8 @@ export class AuthService {
       if (!raw) return null;
       const stored = JSON.parse(raw) as StoredSession;
       return {
-        accessToken: '',
-        tokenType: 'Bearer',
-        expiresAt: stored.expiresAt,
-        mustChangePassword: stored.mustChangePassword,
-        app: stored.app,
-        user: stored.user,
+        accessToken: '', tokenType: 'Bearer', expiresAt: stored.expiresAt,
+        mustChangePassword: stored.mustChangePassword, app: stored.app, user: stored.user,
         preferences: { ...DEFAULT_PREFERENCES, ...(stored.preferences ?? {}) },
       };
     } catch {

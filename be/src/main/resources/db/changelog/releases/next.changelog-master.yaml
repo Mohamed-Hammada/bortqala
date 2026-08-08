@@ -121,3 +121,9 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260807_v126_procurement_hardening_translations.yaml
   - include:
       file: db/changelog/data/insert/20260807_v127_hardcoded_notification_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260808_v128_review_and_workforce_success_translations.yaml
+  - include:
+      file: db/changelog/data/update/20260808_v129_bilingual_arabic_cleanup.yaml
+  - include:
+      file: db/changelog/data/update/20260808_v130_access_role_detail_translations.yaml

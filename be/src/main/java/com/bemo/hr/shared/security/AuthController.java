@@ -10,6 +10,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -112,7 +113,7 @@ public class AuthController {
     AuthApi.UserResponse me(Authentication authentication) { return authService.current(authentication.getName()); }
 
     @GetMapping("/users/me")
-    AuthApi.MeResponse usersMe(Jwt jwt) {
+    AuthApi.MeResponse usersMe(@AuthenticationPrincipal Jwt jwt) {
         return authService.me(jwt.getSubject(), jwt.getExpiresAt());
     }
 
