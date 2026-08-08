@@ -122,7 +122,7 @@
                   <td class="shortcut-dest-cell">
                     <select
                       class="form-control shortcut-destination-select"
-                      [value]="draft.pageCode"
+                      [ngModel]="draft.pageCode"
                       (change)="changeDestination($index, $event)"
                       [disabled]="saving()"
                       [attr.aria-label]="i18n.t('shortcuts.destination')"
