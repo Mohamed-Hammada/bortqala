@@ -1,0 +1,96 @@
+diff --git a/fe/src/app/core/shell/app-shell.component.html b/fe/src/app/core/shell/app-shell.component.html
+--- a/fe/src/app/core/shell/app-shell.component.html
++++ b/fe/src/app/core/shell/app-shell.component.html
+@@
+               <span class="nav-text"
+                 ><strong>{{ i18n.t(item.labelKey) }}</strong
+                 ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+               >
++              @if (shortcut(item); as assignedShortcut) {
++                <kbd
++                  class="nav-shortcut-badge"
++                  [attr.aria-label]="'G + ' + assignedShortcut.displayKey"
++                >
++                  G + {{ assignedShortcut.displayKey }}
++                </kbd>
++              }
+               <button
+                 type="button"
+                 class="fav-star-btn active"
+@@
+               <span class="nav-text"
+                 ><strong>{{ i18n.t(item.labelKey) }}</strong
+                 ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+               >
++              @if (shortcut(item); as assignedShortcut) {
++                <kbd
++                  class="nav-shortcut-badge"
++                  [attr.aria-label]="'G + ' + assignedShortcut.displayKey"
++                >
++                  G + {{ assignedShortcut.displayKey }}
++                </kbd>
++              }
+               <button
+                 type="button"
+                 class="fav-star-btn"
+@@
+                   <span class="nav-text"
+                     ><strong>{{ i18n.t(item.labelKey) }}</strong
+                     ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+                   >
++                  @if (shortcut(item); as assignedShortcut) {
++                    <kbd
++                      class="nav-shortcut-badge"
++                      [attr.aria-label]="'G + ' + assignedShortcut.displayKey"
++                    >
++                      G + {{ assignedShortcut.displayKey }}
++                    </kbd>
++                  }
+                   <button
+                     type="button"
+                     class="fav-star-btn"
+diff --git a/fe/src/app/core/shell/app-shell.component.scss b/fe/src/app/core/shell/app-shell.component.scss
+--- a/fe/src/app/core/shell/app-shell.component.scss
++++ b/fe/src/app/core/shell/app-shell.component.scss
+@@
+ .nav-item {
+   position: relative;
+   display: flex;
+   gap: 8px;
+   align-items: center;
+   padding: 3px 6px;
+   min-height: 42px;
+   border-radius: 8px;
+   color: var(--sidebar-muted);
+   text-decoration: none;
+   transition: background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+ }
+
++.nav-text {
++  min-width: 0;
++  flex: 1 1 auto;
++}
++
++.nav-shortcut-badge {
++  min-height: 20px;
++  flex: 0 0 auto;
++  padding: 2px 5px;
++  border-color: rgba(212, 160, 23, 0.42);
++  border-bottom-width: 1px;
++  border-radius: 5px;
++  color: var(--gold);
++  background: rgba(212, 160, 23, 0.10);
++  font-size: 9.5px;
++  line-height: 1;
++  box-shadow: none;
++  pointer-events: none;
++}
++
++.sidebar.collapsed .nav-shortcut-badge {
++  display: none;
++}
++
+ .sidebar.collapsed .nav-item {
+   justify-content: center;
+   padding: 3px 0;
+ }

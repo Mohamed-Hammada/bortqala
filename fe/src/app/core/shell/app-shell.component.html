@@ -73,6 +73,13 @@
                 ><strong>{{ i18n.t(item.labelKey) }}</strong
                 ><small>{{ i18n.t(item.descriptionKey) }}</small></span
               >
+              @if (shortcut(item); as assignedShortcut) {
+                <kbd
+                  class="nav-menu-shortcut"
+                  [style.display]="collapsed() ? 'none' : null"
+                  [attr.aria-label]="'G → ' + assignedShortcut.displayKey"
+                >G → {{ assignedShortcut.displayKey }}</kbd>
+              }
               <button
                 type="button"
                 class="fav-star-btn active"
@@ -107,6 +114,13 @@
                 ><strong>{{ i18n.t(item.labelKey) }}</strong
                 ><small>{{ i18n.t(item.descriptionKey) }}</small></span
               >
+              @if (shortcut(item); as assignedShortcut) {
+                <kbd
+                  class="nav-menu-shortcut"
+                  [style.display]="collapsed() ? 'none' : null"
+                  [attr.aria-label]="'G → ' + assignedShortcut.displayKey"
+                >G → {{ assignedShortcut.displayKey }}</kbd>
+              }
               <button
                 type="button"
                 class="fav-star-btn"
@@ -164,6 +178,13 @@
                     ><strong>{{ i18n.t(item.labelKey) }}</strong
                     ><small>{{ i18n.t(item.descriptionKey) }}</small></span
                   >
+                  @if (shortcut(item); as assignedShortcut) {
+                    <kbd
+                      class="nav-menu-shortcut"
+                      [style.display]="collapsed() ? 'none' : null"
+                      [attr.aria-label]="'G → ' + assignedShortcut.displayKey"
+                    >G → {{ assignedShortcut.displayKey }}</kbd>
+                  }
                   <button
                     type="button"
                     class="fav-star-btn"
