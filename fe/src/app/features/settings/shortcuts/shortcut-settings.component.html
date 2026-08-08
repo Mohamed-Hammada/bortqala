@@ -25,7 +25,7 @@
         class="button secondary add-button"
         data-testid="shortcut-add"
         (click)="addShortcut()"
-        [disabled]="loading() || saving()"
+        [disabled]="!canAddShortcut()"
       >
         <span class="button-icon" aria-hidden="true">＋</span>
         <span>{{ i18n.t('shortcuts.add') }}</span>
@@ -95,7 +95,11 @@
             </thead>
             <tbody>
               @for (draft of drafts(); track draft.clientId) {
-                <tr [class.capturing]="captureIndex() === $index">
+                <tr
+                  [class.capturing]="captureIndex() === $index"
+                  [class.newly-added]="lastAddedClientId() === draft.clientId"
+                  [attr.data-shortcut-client-id]="draft.clientId"
+                >
                   <td class="shortcut-key-cell">
                     <div class="shortcut-key-builder">
                       <kbd class="prefix-kbd">G</kbd>

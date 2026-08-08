@@ -97,37 +97,155 @@ describe('ShortcutSettingsComponent', () => {
     expect(component.captureIndex()).toBeNull();
   });
 
-  it('addShortcut appends a draft row with first unassigned destination', () => {
+  it('addShortcut prepends a draft row with first unassigned destination', () => {
     component.addShortcut();
 
     expect(component.drafts()).toHaveLength(2);
-    expect(component.drafts()[1].pageCode).toBe('EMPLOYEES');
-    expect(component.drafts()[1].clientId).toContain('new-');
+    expect(component.drafts()[0].pageCode).toBe('EMPLOYEES');
+    expect(component.drafts()[0].clientId).toContain('new-');
+    expect(component.drafts()[1].pageCode).toBe('DASHBOARD');
+
+    fixture.detectChanges();
+    const firstRowSelect = fixture.nativeElement.querySelector(
+      'tbody tr:first-child .shortcut-destination-select',
+    ) as HTMLSelectElement;
+    expect(firstRowSelect.value).toBe('EMPLOYEES');
   });
 
-  it('wires the Add button and gives feedback instead of becoming a silent no-op', () => {
+  it('exposes only unused pages as remaining destinations for Add', () => {
+    expect(component.remainingDestinations().map((item) => item.pageCode)).toEqual([
+      'EMPLOYEES',
+    ]);
+
+    component.addShortcut();
+
+    expect(component.remainingDestinations()).toEqual([]);
+    expect(component.drafts().map((item) => item.pageCode)).toEqual([
+      'EMPLOYEES',
+      'DASHBOARD',
+    ]);
+  });
+
+  it('creates a new shortcut only from a remaining menu and remaining key', () => {
+    expect(component.remainingDestinations()[0]?.pageCode).toBe('EMPLOYEES');
+    expect(component.remainingShortcutKeys()[0]).toBe('KeyA');
+
+    component.addShortcut();
+
+    expect(component.drafts()[0].pageCode).toBe('EMPLOYEES');
+    expect(component.drafts()[0].secondKeyCode).toBe('KeyA');
+    expect(
+      component.drafts().filter((item) => item.pageCode === 'EMPLOYEES'),
+    ).toHaveLength(1);
+    expect(
+      component.drafts().filter((item) => item.secondKeyCode === 'KeyA'),
+    ).toHaveLength(1);
+  });
+
+  it('checks unsaved UI rows before adding the next shortcut', () => {
+    shortcutService.profile.set({
+      ...MOCK_PROFILE,
+      availableDestinations: [
+        ...MOCK_PROFILE.availableDestinations,
+        {
+          pageCode: 'SUPPLIERS',
+          menuId: 'suppliers',
+          route: '/suppliers',
+          titleKey: 'nav.suppliers',
+          module: 'PROCUREMENT',
+          requiredFeature: null,
+        },
+        {
+          pageCode: 'PAYROLL',
+          menuId: 'payroll',
+          route: '/payroll',
+          titleKey: 'nav.payroll',
+          module: 'PAYROLL',
+          requiredFeature: null,
+        },
+      ],
+    });
+
+    // First unsaved row uses EMPLOYEES + KeyA.
+    component.addShortcut();
+    expect(component.drafts()[0].pageCode).toBe('EMPLOYEES');
+    expect(component.drafts()[0].secondKeyCode).toBe('KeyA');
+
+    // Without saving, Add again. It must see the first unsaved UI row and
+    // choose different values.
+    component.addShortcut();
+
+    expect(component.drafts()[0].pageCode).toBe('SUPPLIERS');
+    expect(component.drafts()[0].secondKeyCode).toBe('KeyB');
+
+    const targetCodes = component.drafts().map((item) => item.pageCode);
+    const shortcutKeys = component.drafts().map((item) => item.secondKeyCode);
+
+    expect(new Set(targetCodes).size).toBe(targetCodes.length);
+    expect(new Set(shortcutKeys).size).toBe(shortcutKeys.length);
+
+    expect(component.usedTargetCodes()).toEqual(
+      new Set(['DASHBOARD', 'EMPLOYEES', 'SUPPLIERS']),
+    );
+    expect(component.usedShortcutKeys()).toEqual(
+      new Set(['KeyD', 'KeyA', 'KeyB']),
+    );
+  });
+
+  it('does not add a duplicate when there are no remaining menus', () => {
+    component.addShortcut();
+    const pagesAfterFirstAdd = component.drafts().map((item) => item.pageCode);
+
+    component.addShortcut();
+
+    expect(component.drafts().map((item) => item.pageCode)).toEqual(
+      pagesAfterFirstAdd,
+    );
+    expect(new Set(component.drafts().map((item) => item.pageCode)).size).toBe(
+      component.drafts().length,
+    );
+  });
+
+  it('makes a newly added shortcut visible and keeps its target selected', () => {
+    component.addShortcut();
+    fixture.detectChanges();
+
+    const addedClientId = component.lastAddedClientId();
+    expect(addedClientId).toBeTruthy();
+
+    const addedRow = fixture.nativeElement.querySelector(
+      `[data-shortcut-client-id="${addedClientId}"]`,
+    ) as HTMLTableRowElement;
+    expect(addedRow).toBeTruthy();
+    expect(addedRow.classList.contains('newly-added')).toBe(true);
+
+    const select = addedRow.querySelector(
+      '.shortcut-destination-select',
+    ) as HTMLSelectElement;
+    expect(select.value).toBe('EMPLOYEES');
+    expect(select.selectedOptions[0]?.value).toBe('EMPLOYEES');
+  });
+
+  it('disables Add before the user can attempt to create a duplicate destination', () => {
     const addButton = fixture.nativeElement.querySelector(
       '[data-testid="shortcut-add"]',
     ) as HTMLButtonElement;
 
+    expect(component.canAddShortcut()).toBe(true);
     expect(addButton.disabled).toBe(false);
+
     addButton.click();
     fixture.detectChanges();
-    expect(component.drafts()).toHaveLength(2);
 
-    const warningSpy = vi.spyOn(component.notification, 'warning').mockReturnValue(
-      'toast-test',
-    );
+    expect(component.drafts()).toHaveLength(2);
+    expect(component.remainingDestinations()).toEqual([]);
+    expect(component.canAddShortcut()).toBe(false);
+
     const addButtonAfterAllDestinationsUsed = fixture.nativeElement.querySelector(
       '[data-testid="shortcut-add"]',
     ) as HTMLButtonElement;
 
-    expect(addButtonAfterAllDestinationsUsed.disabled).toBe(false);
-    addButtonAfterAllDestinationsUsed.click();
-
-    expect(component.drafts()).toHaveLength(2);
-    expect(warningSpy).toHaveBeenCalled();
-    expect(component.liveAnnouncement()).not.toBe('');
+    expect(addButtonAfterAllDestinationsUsed.disabled).toBe(true);
   });
 
   it('remove deletes a draft row', () => {
@@ -232,13 +350,13 @@ describe('ShortcutSettingsComponent', () => {
     fixture.detectChanges();
 
     expect(component.drafts()).toHaveLength(1);
-    expect(component.drafts()[0].pageCode).toBe('EMPLOYEES');
+    expect(component.drafts()[0].pageCode).toBe('DASHBOARD');
 
     const select = fixture.nativeElement.querySelector(
       '.shortcut-destination-select',
     ) as HTMLSelectElement;
-    expect(select.value).toBe('EMPLOYEES');
-    expect(select.selectedOptions[0]?.value).toBe('EMPLOYEES');
+    expect(select.value).toBe('DASHBOARD');
+    expect(select.selectedOptions[0]?.value).toBe('DASHBOARD');
   });
 
   it('renders the current destination even when the page is not in the available list', () => {
@@ -283,22 +401,25 @@ describe('ShortcutSettingsComponent', () => {
     expect(removedOption?.disabled).toBe(true);
   });
 
-  it('disables destinations already assigned to another shortcut', () => {
+  it('shows only the current destination and destinations not assigned elsewhere', () => {
     component.addShortcut();
     fixture.detectChanges();
 
     const selects = fixture.nativeElement.querySelectorAll(
       '.shortcut-destination-select',
     ) as NodeListOf<HTMLSelectElement>;
-    const employeesInFirstRow = Array.from(selects[0].options).find(
-      (option) => option.value === 'EMPLOYEES',
-    );
-    const dashboardInSecondRow = Array.from(selects[1].options).find(
-      (option) => option.value === 'DASHBOARD',
-    );
 
-    expect(employeesInFirstRow?.disabled).toBe(true);
-    expect(dashboardInSecondRow?.disabled).toBe(true);
+    // The newly added shortcut is the first row and keeps EMPLOYEES selected.
+    expect(selects[0].value).toBe('EMPLOYEES');
+    expect(
+      Array.from(selects[0].options).some((option) => option.value === 'DASHBOARD'),
+    ).toBe(false);
+
+    // The existing shortcut keeps DASHBOARD selected and does not offer EMPLOYEES.
+    expect(selects[1].value).toBe('DASHBOARD');
+    expect(
+      Array.from(selects[1].options).some((option) => option.value === 'EMPLOYEES'),
+    ).toBe(false);
   });
 
   it('reverts the select when the new destination is already assigned elsewhere', () => {
@@ -308,11 +429,11 @@ describe('ShortcutSettingsComponent', () => {
     const selects = fixture.nativeElement.querySelectorAll(
       '.shortcut-destination-select',
     ) as NodeListOf<HTMLSelectElement>;
-    selects[0].value = 'EMPLOYEES';
+    selects[0].value = 'DASHBOARD';
     selects[0].dispatchEvent(new Event('change', { bubbles: true }));
 
-    expect(component.drafts()[0].pageCode).toBe('DASHBOARD');
-    expect(selects[0].value).toBe('DASHBOARD');
+    expect(component.drafts()[0].pageCode).toBe('EMPLOYEES');
+    expect(selects[0].value).toBe('EMPLOYEES');
   });
 
   it('reports an error instead of silently ignoring Save when no profile is loaded', async () => {

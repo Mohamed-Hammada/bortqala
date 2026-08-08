@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   OnInit,
   computed,
   inject,
@@ -37,10 +38,12 @@ export class ShortcutSettingsComponent implements OnInit {
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
   readonly confirm = inject(ConfirmDialogService);
+  private readonly host = inject(ElementRef<HTMLElement>);
 
   readonly maxShortcuts = 20;
   readonly drafts = signal<ShortcutDraft[]>([]);
   readonly captureIndex = signal<number | null>(null);
+  readonly lastAddedClientId = signal<string | null>(null);
   readonly liveAnnouncement = signal<string>('');
 
   readonly profile = computed(() => this.shortcutService.profile());
@@ -52,6 +55,37 @@ export class ShortcutSettingsComponent implements OnInit {
     () => this.profile()?.availableDestinations ?? [],
   );
 
+  // Source of truth for duplicate prevention is the CURRENT UI list.
+  // This includes saved rows, edited rows, and newly-added unsaved rows.
+  readonly usedTargetCodes = computed<Set<string>>(
+    () => new Set(this.drafts().map((draft) => draft.pageCode)),
+  );
+
+  readonly usedShortcutKeys = computed<Set<string>>(
+    () => new Set(this.drafts().map((draft) => draft.secondKeyCode)),
+  );
+
+  readonly remainingDestinations = computed<ScreenShortcutDestination[]>(() =>
+    this.availableDestinations().filter(
+      (destination) => !this.usedTargetCodes().has(destination.pageCode),
+    ),
+  );
+
+  readonly remainingShortcutKeys = computed<string[]>(() =>
+    Array.from({ length: 26 }, (_, index) =>
+      `Key${String.fromCharCode(65 + index)}`,
+    ).filter((keyCode) => !this.usedShortcutKeys().has(keyCode)),
+  );
+
+  readonly canAddShortcut = computed(
+    () =>
+      !this.loading() &&
+      !this.saving() &&
+      this.drafts().length < this.maxShortcuts &&
+      this.remainingDestinations().length > 0 &&
+      this.remainingShortcutKeys().length > 0,
+  );
+
   private draftSequence = 0;
 
   destinationOptions(index: number): {
@@ -60,17 +94,22 @@ export class ShortcutSettingsComponent implements OnInit {
     unavailable: boolean;
   }[] {
     const currentDraft = this.drafts()[index];
-    const assignedElsewhere = new Set(
-      this.drafts()
-        .filter((_, itemIndex) => itemIndex !== index)
-        .map((item) => item.pageCode),
+    // Keep the selector focused: show only this row's current page plus
+    // destinations that are not already assigned to another shortcut.
+    const remainingPageCodes = new Set(
+      this.remainingDestinations().map((destination) => destination.pageCode),
     );
-
-    const options = this.availableDestinations().map((dest) => ({
-      pageCode: dest.pageCode,
-      title: this.i18n.t(dest.titleKey),
-      unavailable: assignedElsewhere.has(dest.pageCode),
-    }));
+    const options = this.availableDestinations()
+      .filter(
+        (dest) =>
+          dest.pageCode === currentDraft?.pageCode ||
+          remainingPageCodes.has(dest.pageCode),
+      )
+      .map((dest) => ({
+        pageCode: dest.pageCode,
+        title: this.i18n.t(dest.titleKey),
+        unavailable: false,
+      }));
 
     if (!currentDraft) return options;
 
@@ -99,6 +138,7 @@ export class ShortcutSettingsComponent implements OnInit {
     if (!profile) return;
 
     this.captureIndex.set(null);
+    this.lastAddedClientId.set(null);
     this.drafts.set(
       profile.shortcuts.map((item) => ({
         clientId: item.id ? `saved-${item.id}` : this.nextDraftId('saved'),
@@ -189,46 +229,57 @@ export class ShortcutSettingsComponent implements OnInit {
   }
 
   remove(index: number): void {
+    const removedClientId = this.drafts()[index]?.clientId;
     this.drafts.update((items) => items.filter((_, i) => i !== index));
     this.captureIndex.set(null);
+
+    if (removedClientId && this.lastAddedClientId() === removedClientId) {
+      this.lastAddedClientId.set(null);
+    }
   }
 
   addShortcut(): void {
     const currentDrafts = this.drafts();
+
+    if (this.loading() || this.saving()) return;
+
     if (currentDrafts.length >= this.maxShortcuts) {
       this.warn('shortcuts.limitExceeded');
       return;
     }
 
-    const assignedPages = new Set(currentDrafts.map((d) => d.pageCode));
-    const available = this.availableDestinations().find(
-      (d) => !assignedPages.has(d.pageCode),
-    );
+    // Recalculate from the CURRENT UI rows on every click. This includes
+    // unsaved shortcuts added just before this one.
+    const available = this.remainingDestinations()[0];
+    const nextKey = this.remainingShortcutKeys()[0];
 
     if (!available) {
       this.warn('shortcuts.noMoreDestinations');
       return;
     }
 
-    const assignedKeys = new Set(currentDrafts.map((d) => d.secondKeyCode));
-    let nextKey = 'KeyA';
-    for (let c = 65; c <= 90; c++) {
-      const candidate = `Key${String.fromCharCode(c)}`;
-      if (!assignedKeys.has(candidate)) {
-        nextKey = candidate;
-        break;
-      }
+    if (!nextKey) {
+      this.warn('shortcuts.limitExceeded');
+      return;
     }
 
+    const clientId = this.nextDraftId('new');
     this.drafts.update((items) => [
-      ...items,
       {
-        clientId: this.nextDraftId('new'),
+        clientId,
         pageCode: available.pageCode,
         secondKeyCode: nextKey,
         enabled: true,
       },
+      ...items,
     ]);
+
+    this.captureIndex.set(null);
+    this.lastAddedClientId.set(clientId);
+    this.liveAnnouncement.set(
+      `${this.i18n.t('shortcuts.add')}: ${this.getDestinationTitle(available.pageCode)}`,
+    );
+    this.revealAddedShortcut(clientId);
   }
 
   async save(): Promise<void> {
@@ -326,6 +377,24 @@ export class ShortcutSettingsComponent implements OnInit {
   getDestinationTitle(pageCode: string): string {
     const dest = this.availableDestinations().find((d) => d.pageCode === pageCode);
     return dest ? this.i18n.t(dest.titleKey) : pageCode;
+  }
+
+  private revealAddedShortcut(clientId: string): void {
+    setTimeout(() => {
+      const row = this.host.nativeElement.querySelector(
+        `[data-shortcut-client-id="${clientId}"]`,
+      ) as HTMLElement | null;
+      if (!row) return;
+
+      if (typeof row.scrollIntoView === 'function') {
+        row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      const destinationSelect = row.querySelector(
+        '.shortcut-destination-select',
+      ) as HTMLSelectElement | null;
+      destinationSelect?.focus({ preventScroll: true });
+    });
   }
 
   private nextDraftId(prefix: string): string {
