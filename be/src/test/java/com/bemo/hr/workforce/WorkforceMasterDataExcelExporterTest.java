@@ -13,7 +13,8 @@ class WorkforceMasterDataExcelExporterTest {
     @Test
     void exportsWorkerCategoriesAsAnArabicRtlWorkbookWithNumericAmounts() throws Exception {
         var category = new WorkforceApi.CategoryResponse("1", "WELD", "لحام", "عمال اللحام",
-                new BigDecimal("275.50"), new BigDecimal("8"), "HALF_MONTH", "ACTIVE", 1L, 2L);
+                new BigDecimal("275.50"), new BigDecimal("8"), "HALF_MONTH", "ACTIVE",
+                "WORKER", true, 1L, 2L);
 
         byte[] content = new WorkforceMasterDataExcelExporter().categories(List.of(category));
 

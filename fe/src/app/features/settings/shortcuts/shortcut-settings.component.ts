@@ -1,4 +1,5 @@
 import {
+  AfterViewChecked,
   ChangeDetectionStrategy,
   Component,
   ElementRef,
@@ -33,7 +34,7 @@ export interface ShortcutDraft {
   styleUrl: './shortcut-settings.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ShortcutSettingsComponent implements OnInit {
+export class ShortcutSettingsComponent implements OnInit, AfterViewChecked {
   readonly shortcutService = inject(ScreenShortcutService);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
@@ -45,6 +46,9 @@ export class ShortcutSettingsComponent implements OnInit {
   readonly captureIndex = signal<number | null>(null);
   readonly lastAddedClientId = signal<string | null>(null);
   readonly liveAnnouncement = signal<string>('');
+  readonly searchQuery = signal('');
+  readonly editingClientId = signal<string | null>(null);
+  private readonly editingSnapshot = signal<ShortcutDraft | null>(null);
 
   readonly profile = computed(() => this.shortcutService.profile());
   readonly loading = computed(() => this.shortcutService.loading());
@@ -85,6 +89,23 @@ export class ShortcutSettingsComponent implements OnInit {
       this.remainingDestinations().length > 0 &&
       this.remainingShortcutKeys().length > 0,
   );
+
+  readonly filteredDrafts = computed<{ draft: ShortcutDraft; index: number }[]>(() => {
+    const query = this.searchQuery().trim().toLowerCase();
+    if (!query) {
+      return this.drafts().map((draft, index) => ({ draft, index }));
+    }
+    return this.drafts()
+      .map((draft, index) => ({ draft, index }))
+      .filter(({ draft }) => {
+        const target = this.getDestinationTitle(draft.pageCode).toLowerCase();
+        return (
+          target.includes(query) ||
+          draft.pageCode.toLowerCase().includes(query) ||
+          draft.secondKeyCode.toLowerCase().includes(query)
+        );
+      });
+  });
 
   private draftSequence = 0;
 
@@ -139,6 +160,9 @@ export class ShortcutSettingsComponent implements OnInit {
 
     this.captureIndex.set(null);
     this.lastAddedClientId.set(null);
+    this.editingClientId.set(null);
+    this.editingSnapshot.set(null);
+    this.searchQuery.set('');
     this.drafts.set(
       profile.shortcuts.map((item) => ({
         clientId: item.id ? `saved-${item.id}` : this.nextDraftId('saved'),
@@ -147,6 +171,77 @@ export class ShortcutSettingsComponent implements OnInit {
         enabled: item.enabled,
       })),
     );
+  }
+
+  onSearchChange(): void {
+    const editingId = this.editingClientId();
+    if (!editingId) return;
+    const stillVisible = this.filteredDrafts().some(
+      (entry) => entry.draft.clientId === editingId,
+    );
+    if (!stillVisible) {
+      this.cancelEdit();
+    }
+  }
+
+  beginEdit(index: number): void {
+    const draft = this.drafts()[index];
+    if (!draft || this.saving()) return;
+    this.editingSnapshot.set(draft);
+    this.editingClientId.set(draft.clientId);
+    this.captureIndex.set(null);
+    setTimeout(() => {
+      const row = this.host.nativeElement.querySelector(
+        `[data-edit-client-id="${draft.clientId}"]`,
+      ) as HTMLElement | null;
+      row?.focus({ preventScroll: true });
+    });
+  }
+
+  cancelEdit(): void {
+    const clientId = this.editingClientId();
+    if (!clientId) return;
+    const snapshot = this.editingSnapshot();
+    this.drafts.update((items) =>
+      items.map((item) =>
+        item.clientId === clientId && snapshot ? snapshot : item,
+      ),
+    );
+    this.editingClientId.set(null);
+    this.editingSnapshot.set(null);
+    this.captureIndex.set(null);
+  }
+
+  saveEdit(index: number): void {
+    const draft = this.drafts()[index];
+    if (!draft || draft.clientId !== this.editingClientId()) return;
+
+    if (!draft.secondKeyCode) {
+      this.warn('shortcuts.invalidKey');
+      return;
+    }
+    const duplicateKey = this.drafts().some(
+      (item, itemIndex) =>
+        itemIndex !== index && item.secondKeyCode === draft.secondKeyCode,
+    );
+    if (duplicateKey) {
+      this.warn('shortcuts.duplicateKey');
+      return;
+    }
+    const duplicateDestination = this.drafts().some(
+      (item, itemIndex) =>
+        itemIndex !== index && item.pageCode === draft.pageCode,
+    );
+    if (duplicateDestination) {
+      this.warn('shortcuts.duplicateDestination');
+      return;
+    }
+
+    this.editingClientId.set(null);
+    this.editingSnapshot.set(null);
+    this.captureIndex.set(null);
+    const savedMsg = this.i18n.t('shortcuts.rowSaved');
+    this.liveAnnouncement.set(savedMsg);
   }
 
   displayKey(code: string): string {
@@ -200,7 +295,18 @@ export class ShortcutSettingsComponent implements OnInit {
     const newPageCode = select.value;
     const previousPageCode = this.drafts()[index]?.pageCode;
 
-    if (!previousPageCode || newPageCode === previousPageCode) return;
+    if (!previousPageCode || !newPageCode || newPageCode === previousPageCode) {
+      if (previousPageCode) select.value = previousPageCode;
+      return;
+    }
+
+    const offered = this.destinationOptions(index).some(
+      (option) => option.pageCode === newPageCode,
+    );
+    if (!offered) {
+      select.value = previousPageCode;
+      return;
+    }
 
     const duplicate = this.drafts().some(
       (item, itemIndex) =>
@@ -220,6 +326,21 @@ export class ShortcutSettingsComponent implements OnInit {
     );
   }
 
+  ngAfterViewChecked(): void {
+    const selects = this.host.nativeElement.querySelectorAll?.(
+      'select.shortcut-destination-select',
+    );
+    if (!selects || selects.length === 0) return;
+
+    const drafts = this.drafts();
+    selects.forEach((element: Element) => {
+      const select = element as HTMLSelectElement;
+      const clientId = select.getAttribute('data-edit-client-id');
+      const wanted = drafts.find((draft) => draft.clientId === clientId)?.pageCode;
+      if (wanted && select.value !== wanted) select.value = wanted;
+    });
+  }
+
   toggleEnabled(index: number, enabled: boolean): void {
     this.drafts.update((items) =>
       items.map((item, itemIndex) =>
@@ -229,9 +350,15 @@ export class ShortcutSettingsComponent implements OnInit {
   }
 
   remove(index: number): void {
-    const removedClientId = this.drafts()[index]?.clientId;
+    const removed = this.drafts()[index];
+    const removedClientId = removed?.clientId;
     this.drafts.update((items) => items.filter((_, i) => i !== index));
     this.captureIndex.set(null);
+
+    if (removedClientId === this.editingClientId()) {
+      this.editingClientId.set(null);
+      this.editingSnapshot.set(null);
+    }
 
     if (removedClientId && this.lastAddedClientId() === removedClientId) {
       this.lastAddedClientId.set(null);
@@ -264,18 +391,18 @@ export class ShortcutSettingsComponent implements OnInit {
     }
 
     const clientId = this.nextDraftId('new');
-    this.drafts.update((items) => [
-      {
-        clientId,
-        pageCode: available.pageCode,
-        secondKeyCode: nextKey,
-        enabled: true,
-      },
-      ...items,
-    ]);
+    const newDraft: ShortcutDraft = {
+      clientId,
+      pageCode: available.pageCode,
+      secondKeyCode: nextKey,
+      enabled: true,
+    };
+    this.drafts.update((items) => [newDraft, ...items]);
 
     this.captureIndex.set(null);
     this.lastAddedClientId.set(clientId);
+    this.editingSnapshot.set(newDraft);
+    this.editingClientId.set(clientId);
     this.liveAnnouncement.set(
       `${this.i18n.t('shortcuts.add')}: ${this.getDestinationTitle(available.pageCode)}`,
     );

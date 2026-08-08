@@ -2,6 +2,7 @@ export type DayOfWeek =
   'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
 export type PayCycle = 'MONTHLY' | 'HALF_MONTHLY' | 'THIRTY_DAYS';
 export type AttendanceMode = 'BIOMETRIC' | 'MANUAL' | 'HYBRID';
+export type CategoryScope = 'EMPLOYEE' | 'WORKER' | 'BOTH';
 export interface ScheduleRule {
   id: string;
   name: string;
@@ -25,6 +26,7 @@ export interface AttendanceCategory {
   allowsEmployeeAdvances: boolean;
   workDays: DayOfWeek[];
   active: boolean;
+  scope: CategoryScope;
   version: number;
   createdAt: number;
   updatedAt: number;
@@ -40,6 +42,7 @@ export interface CategoryPayload {
   allowsEmployeeAdvances: boolean;
   workDays: DayOfWeek[];
   active: boolean;
+  scope: CategoryScope;
   version: number | null;
   schedules: Array<Omit<ScheduleRule, 'id'>>;
 }

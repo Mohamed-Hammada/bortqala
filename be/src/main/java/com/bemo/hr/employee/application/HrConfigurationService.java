@@ -3,6 +3,7 @@ package com.bemo.hr.employee.application;
 import com.bemo.hr.employee.api.CategoryApi;
 import com.bemo.hr.employee.api.EmployeeApi;
 import com.bemo.hr.employee.domain.AttendanceCategory;
+import com.bemo.hr.employee.domain.CategoryScope;
 import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.domain.EmployeeAssignment;
 import com.bemo.hr.employee.domain.ScheduleRule;
@@ -56,8 +57,11 @@ public class HrConfigurationService {
         this.auditService = auditService;
     }
 
+    private static final List<CategoryScope> EMPLOYEE_SCOPES = List.of(CategoryScope.EMPLOYEE, CategoryScope.BOTH);
+
     public List<CategoryApi.Response> listCategories() {
-        return attendanceCategoryRepository.findAllByOrderByNameAsc().stream().map(this::toCategoryResponse).toList();
+        return attendanceCategoryRepository.findByScopeInOrderByNameAsc(EMPLOYEE_SCOPES)
+                .stream().map(this::toCategoryResponse).toList();
     }
 
     public CategoryApi.Response getCategory(String id) { return toCategoryResponse(requireCategory(id)); }
@@ -79,7 +83,8 @@ public class HrConfigurationService {
                     "HRCFG_CATEGORY_CODE_EXISTS", HttpStatus.CONFLICT);
         }
         var category = new AttendanceCategory(request.code(), request.name(), request.expectedDailyMinutes(),
-                request.payCycle(), request.attendanceMode(), request.singlePunchCounts(), toMask(request.workDays()), request.active());
+                request.payCycle(), request.attendanceMode(), request.singlePunchCounts(), toMask(request.workDays()), request.active(),
+                request.scope() == null ? CategoryScope.EMPLOYEE : request.scope());
         category.configureAdvanceEligibility(request.allowsEmployeeAdvances());
         attendanceCategoryRepository.save(category);
         employeeCodeSequenceRepository.save(new com.bemo.hr.employee.domain.EmployeeCodeSequence(category.getId()));
@@ -98,6 +103,7 @@ public class HrConfigurationService {
         }
         category.update(request.code(), request.name(), request.expectedDailyMinutes(), request.payCycle(), request.attendanceMode(),
                 request.singlePunchCounts(), toMask(request.workDays()), request.active());
+        category.updateScope(request.scope());
         category.configureAdvanceEligibility(request.allowsEmployeeAdvances());
         replaceSchedules(id, request.schedules());
         return toCategoryResponse(category);
@@ -302,7 +308,7 @@ public class HrConfigurationService {
                         rule.getEndTime(), rule.getScope(), rule.getScopeCategoryId()))
                 .toList();
         return new CategoryApi.Response(category.getId(), category.getCode(), category.getName(),
-                category.getExpectedDailyMinutes(), category.getPayCycle(), category.getAttendanceMode(),
+                category.getScope(), category.getExpectedDailyMinutes(), category.getPayCycle(), category.getAttendanceMode(),
                 category.isSinglePunchCounts(), category.isAllowsEmployeeAdvances(),
                 fromMask(category.getWorkDaysMask()), category.isActive(), category.getVersion(),
                 category.getCreatedAt(), category.getUpdatedAt(), schedules);

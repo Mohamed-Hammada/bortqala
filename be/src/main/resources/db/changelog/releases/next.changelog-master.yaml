@@ -131,3 +131,21 @@ databaseChangeLog:
       file: db/changelog/data/update/20260808_v131_employee_code_deduplication.yaml
   - include:
       file: db/changelog/data/insert/20260808_v132_operations_document_type_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260808_v133_category_scope_unification.yaml
+  - include:
+      file: db/changelog/data/update/20260808_v134_category_scope_backfill.yaml
+  - include:
+      file: db/changelog/data/insert/20260808_v135_category_scope_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260808_v136_audit_filter_translations.yaml
+   - include:
+      file: db/changelog/schema/create/20260808_v137_audit_log_filters_indexes.yaml
+   - include:
+      file: db/changelog/data/insert/20260808_v138_reports_preset_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260808_v139_shortcut_edit_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260808_v140_stock_movement_document_references.yaml
+  - include:
+      file: db/changelog/data/insert/20260808_v141_movement_document_references_translations.yaml

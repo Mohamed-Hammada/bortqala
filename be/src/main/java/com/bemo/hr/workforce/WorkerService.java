@@ -1,7 +1,12 @@
 package com.bemo.hr.workforce;
 
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.employee.domain.AttendanceCategory;
+import com.bemo.hr.employee.domain.CategoryScope;
+import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
+import com.bemo.hr.shared.domain.BusinessRuleException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WorkerService {
     private final WorkerRepository workerRepository;
-    private final WorkerCategoryRepository categoryRepository;
+    private final AttendanceCategoryRepository categoryRepository;
     private final ContractorRepository contractorRepository;
     private final AuditService auditService;
 
@@ -28,6 +33,7 @@ public class WorkerService {
 
     @Transactional
     public WorkforceApi.WorkerResponse create(WorkforceApi.WorkerRequest request) {
+        requireWorkerCategory(request.categoryId());
         Worker worker = new Worker(
             request.code(), request.fullName(), request.contractorId(), request.categoryId(),
             request.defaultDailyRate(), request.standardDailyHours(), request.branchId(),
@@ -43,6 +49,7 @@ public class WorkerService {
     public WorkforceApi.WorkerResponse update(String id, WorkforceApi.WorkerRequest request) {
         Worker worker = workerRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Worker not found: " + id));
+        requireWorkerCategory(request.categoryId());
         worker.update(
             request.code(), request.fullName(), request.contractorId(), request.categoryId(),
             request.defaultDailyRate(), request.standardDailyHours(), request.branchId(),
@@ -52,6 +59,20 @@ public class WorkerService {
         auditService.record("UPDATE", "WORKER", saved.id(), currentActor(),
                 "{\"code\":\"" + safe(saved.code()) + "\",\"fullName\":\"" + safe(saved.fullName()) + "\"}", null);
         return saved;
+    }
+
+    private void requireWorkerCategory(String categoryId) {
+        if (categoryId == null || categoryId.isBlank()) {
+            throw new BusinessRuleException("A worker category is required.", "WORKER_CATEGORY_REQUIRED", HttpStatus.CONFLICT);
+        }
+        AttendanceCategory category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new BusinessRuleException("Category not found.", "WORKFORCE_CATEGORY_NOT_FOUND", HttpStatus.CONFLICT));
+        if (!category.isActive()) {
+            throw new BusinessRuleException("Select an active worker category.", "WORKFORCE_CATEGORY_INACTIVE", HttpStatus.CONFLICT);
+        }
+        if (category.getScope() == CategoryScope.EMPLOYEE) {
+            throw new BusinessRuleException("This category is reserved for employees.", "WORKFORCE_CATEGORY_EMPLOYEE_ONLY", HttpStatus.CONFLICT);
+        }
     }
 
     private String currentActor() {
@@ -65,7 +86,7 @@ public class WorkerService {
         String contractorName = contractorRepository.findById(w.getContractorId())
             .map(Contractor::getName).orElse("—");
         String categoryName = categoryRepository.findById(w.getCategoryId())
-            .map(WorkerCategory::getName).orElse("—");
+            .map(AttendanceCategory::getName).orElse("—");
         return new WorkforceApi.WorkerResponse(
             w.getId(), w.getCode(), w.getFullName(), w.getContractorId(), contractorName,
             w.getCategoryId(), categoryName, w.getDefaultDailyRate(), w.getStandardDailyHours(),

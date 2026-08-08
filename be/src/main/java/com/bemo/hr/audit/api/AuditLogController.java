@@ -23,21 +23,28 @@ public class AuditLogController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String entityType,
-            @RequestParam(required = false) String username
+            @RequestParam(required = false) String action,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long from,
+            @RequestParam(required = false) Long to
     ) {
-        var pageable = PageRequest.of(page, size);
-        Page<AuditLog> result;
-
-        if (entityType != null && !entityType.isBlank()) {
-            result = repository.findByEntityTypeOrderByOccurredAtDesc(entityType.strip(), pageable);
-        } else if (username != null && !username.isBlank()) {
-            result = repository.findByUsernameOrderByOccurredAtDesc(username.strip(), pageable);
-        } else {
-            result = repository.findAllByOrderByOccurredAtDesc(pageable);
-        }
+        var pageable = PageRequest.of(page, Math.min(size, 200));
+        Page<AuditLog> result = repository.search(
+                blankToNull(entityType),
+                blankToNull(action),
+                blankToNull(username),
+                blankToNull(search),
+                from,
+                to,
+                pageable);
 
         var content = result.getContent().stream().map(this::toResponse).toList();
         return new AuditLogApi.AuditLogPageResponse(content, result.getNumber(), result.getSize(), result.getTotalElements(), result.getTotalPages());
+    }
+
+    private String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
     }
 
     private AuditLogApi.AuditLogResponse toResponse(AuditLog log) {

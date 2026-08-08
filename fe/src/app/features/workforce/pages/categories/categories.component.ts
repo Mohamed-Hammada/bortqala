@@ -24,20 +24,20 @@ import { I18nService } from '../../../../core/i18n.service';
       </header>
 
       <div class="scope-note">
-        هذه الشاشة تخص <strong>فئات العمال (WORKER)</strong>. فئات الموظفين تُدار من شاشة الفئات الرئيسية لتجنب إنشاء فئة "Both" لا يدعمها عقد واجهة Workforce الحالي.
+        هذه الشاشة تخص <strong>فئات العمال (WORKER)</strong>. يمكن أيضًا إنشاء فئة <strong>مشتركة (BOTH)</strong> تظهر في شاشة فئات الموظفين وقوائم اختيار فئة العمال معًا. فئات الموظفين فقط (EMPLOYEE) تُدار من شاشة الفئات الرئيسية.
       </div>
 
       <div class="card">
         <table class="data-table">
           <thead><tr>
             <th>كود الفئة</th><th>اسم الفئة</th><th>الوصف</th><th>اليومية الافتراضية</th>
-            <th>ساعات اليوم القياسية</th><th>دورة التسوية الافتراضية</th><th>الحالة</th>
+            <th>ساعات اليوم القياسية</th><th>دورة التسوية الافتراضية</th><th>النطاق</th><th>الحالة</th>
           </tr></thead>
           <tbody>
             <tr *ngFor="let cat of workforceService.categories()">
               <td><strong>{{ cat.code }}</strong></td><td>{{ cat.name }}</td><td>{{ cat.description || '—' }}</td>
               <td>{{ cat.defaultDailyRate | number:'1.2-2' }} ج.م</td><td>{{ cat.standardDailyHours }} س</td>
-              <td>{{ getCycleLabel(cat.defaultSettlementCycle) }}</td><td><span class="badge active">{{ getStatusLabel(cat.status) }}</span></td>
+              <td>{{ getCycleLabel(cat.defaultSettlementCycle) }}</td><td>{{ getScopeLabel(cat.scope) }}</td><td><span class="badge active">{{ getStatusLabel(cat.status) }}</span></td>
             </tr>
           </tbody>
         </table>
@@ -67,6 +67,13 @@ import { I18nService } from '../../../../core/i18n.service';
           <div class="form-group"><label>الوصف</label><textarea [(ngModel)]="form.description" name="description" rows="2" class="form-input" [disabled]="saving()"></textarea></div>
           <div class="form-group"><label>اليومية الافتراضية (ج.م) *</label><input type="number" min="0" [(ngModel)]="form.defaultDailyRate" name="defaultDailyRate" required class="form-input" [disabled]="saving()" /></div>
           <div class="form-group"><label>ساعات العمل اليومية القياسية *</label><input type="number" min="0.5" step="0.5" [(ngModel)]="form.standardDailyHours" name="standardDailyHours" required class="form-input" [disabled]="saving()" /></div>
+          <div class="form-group">
+            <label>نطاق الفئة *</label>
+            <select [(ngModel)]="form.scope" name="scope" class="form-input" [disabled]="saving()">
+              <option value="WORKER">عمال فقط (WORKER)</option>
+              <option value="BOTH">مشتركة: عمال وموظفون (BOTH)</option>
+            </select>
+          </div>
           <div class="form-group">
             <label>دورة التسوية الافتراضية *</label>
             <select [(ngModel)]="form.defaultSettlementCycle" name="defaultSettlementCycle" class="form-input" [disabled]="saving()">
@@ -107,7 +114,7 @@ export class CategoriesComponent implements OnInit {
 
   form: Partial<WorkerCategory> = {
     code: '', name: '', description: '', defaultDailyRate: 0, standardDailyHours: 8,
-    defaultSettlementCycle: 'HALF_MONTH', status: 'ACTIVE'
+    defaultSettlementCycle: 'HALF_MONTH', status: 'ACTIVE', scope: 'WORKER'
   };
 
   ngOnInit() {
@@ -131,13 +138,18 @@ export class CategoriesComponent implements OnInit {
     return map[status] ?? status;
   }
 
+  getScopeLabel(scope?: string): string {
+    const map: Record<string, string> = { WORKER: 'عمال فقط', EMPLOYEE: 'موظفون فقط', BOTH: 'مشتركة (Both)' };
+    return scope ? (map[scope] ?? scope) : '—';
+  }
+
   openCreateModal() {
     this.saveError.set(null);
     this.submitted.set(false);
     this.form = {
       code: 'CAT-' + Math.floor(10 + Math.random() * 90),
       name: '', description: '', defaultDailyRate: 0, standardDailyHours: 8,
-      defaultSettlementCycle: 'HALF_MONTH', status: 'ACTIVE'
+      defaultSettlementCycle: 'HALF_MONTH', status: 'ACTIVE', scope: 'WORKER'
     };
     this.isModalOpen = true;
   }

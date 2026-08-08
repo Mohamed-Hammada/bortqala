@@ -118,6 +118,33 @@
   gap: 0.65rem;
 }
 
+.shortcut-search {
+  flex: 1 1 280px;
+  max-width: 400px;
+  margin-inline-end: auto;
+
+  input {
+    width: 100%;
+    min-height: 42px;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--input-bg);
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.86rem;
+
+    &:focus-visible {
+      outline: 3px solid var(--gold-glow);
+      outline-offset: 2px;
+    }
+
+    &::placeholder {
+      color: var(--muted);
+    }
+  }
+}
+
 .shortcut-settings .button {
   display: inline-flex;
   align-items: center;
@@ -326,7 +353,7 @@
 
   .action-heading,
   .shortcut-action-cell {
-    width: 54px;
+    width: 110px;
     text-align: center;
   }
 }
@@ -336,6 +363,10 @@
   align-items: center;
   gap: 0.45rem;
   white-space: nowrap;
+
+  &.compact {
+    gap: 0.35rem;
+  }
 
   kbd {
     display: inline-grid;
@@ -356,6 +387,29 @@
 
   .arrow {
     color: var(--muted);
+    font-size: 0.78rem;
+  }
+}
+
+.shortcut-dest-title {
+  display: inline-block;
+  padding: 0.35rem 0.6rem;
+  border-radius: 7px;
+  background: var(--surface-muted);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+
+  .button {
+    min-height: 34px;
+    padding: 0.35rem 0.7rem;
     font-size: 0.78rem;
   }
 }

@@ -82,6 +82,9 @@ describe('ShortcutSettingsComponent', () => {
   });
 
   it('wires the capture button and keyboard handler', () => {
+    component.beginEdit(0);
+    fixture.detectChanges();
+
     const captureButton = fixture.nativeElement.querySelector(
       '[data-shortcut-capture="true"]',
     ) as HTMLButtonElement;
@@ -292,6 +295,9 @@ describe('ShortcutSettingsComponent', () => {
   });
 
   it('renders the destination select with the draft page selected', () => {
+    component.beginEdit(0);
+    fixture.detectChanges();
+
     const select = fixture.nativeElement.querySelector(
       '.shortcut-destination-select',
     ) as HTMLSelectElement;
@@ -315,6 +321,9 @@ describe('ShortcutSettingsComponent', () => {
     fixture2.detectChanges();
 
     expect(component2.drafts()).toHaveLength(1);
+    component2.beginEdit(0);
+    fixture2.detectChanges();
+
     const selects = fixture2.nativeElement.querySelectorAll(
       '.shortcut-destination-select',
     ) as NodeListOf<HTMLSelectElement>;
@@ -326,6 +335,9 @@ describe('ShortcutSettingsComponent', () => {
   });
 
   it('keeps the select in sync when the user picks a different destination', () => {
+    component.beginEdit(0);
+    fixture.detectChanges();
+
     const select = fixture.nativeElement.querySelector(
       '.shortcut-destination-select',
     ) as HTMLSelectElement;
@@ -351,6 +363,9 @@ describe('ShortcutSettingsComponent', () => {
 
     expect(component.drafts()).toHaveLength(1);
     expect(component.drafts()[0].pageCode).toBe('DASHBOARD');
+
+    component.beginEdit(0);
+    fixture.detectChanges();
 
     const select = fixture.nativeElement.querySelector(
       '.shortcut-destination-select',
@@ -388,6 +403,9 @@ describe('ShortcutSettingsComponent', () => {
     component.loadDraftsFromProfile();
     fixture.detectChanges();
 
+    component.beginEdit(0);
+    fixture.detectChanges();
+
     const select = fixture.nativeElement.querySelector(
       '.shortcut-destination-select',
     ) as HTMLSelectElement;
@@ -405,20 +423,26 @@ describe('ShortcutSettingsComponent', () => {
     component.addShortcut();
     fixture.detectChanges();
 
-    const selects = fixture.nativeElement.querySelectorAll(
+    // The newly added shortcut is the only row in edit mode.
+    let selects = fixture.nativeElement.querySelectorAll(
       '.shortcut-destination-select',
     ) as NodeListOf<HTMLSelectElement>;
-
-    // The newly added shortcut is the first row and keeps EMPLOYEES selected.
+    expect(selects).toHaveLength(1);
     expect(selects[0].value).toBe('EMPLOYEES');
     expect(
       Array.from(selects[0].options).some((option) => option.value === 'DASHBOARD'),
     ).toBe(false);
 
-    // The existing shortcut keeps DASHBOARD selected and does not offer EMPLOYEES.
-    expect(selects[1].value).toBe('DASHBOARD');
+    // Edit the existing shortcut: the previous row collapses to compact view.
+    component.beginEdit(1);
+    fixture.detectChanges();
+    selects = fixture.nativeElement.querySelectorAll(
+      '.shortcut-destination-select',
+    ) as NodeListOf<HTMLSelectElement>;
+    expect(selects).toHaveLength(1);
+    expect(selects[0].value).toBe('DASHBOARD');
     expect(
-      Array.from(selects[1].options).some((option) => option.value === 'EMPLOYEES'),
+      Array.from(selects[0].options).some((option) => option.value === 'EMPLOYEES'),
     ).toBe(false);
   });
 
@@ -446,5 +470,117 @@ describe('ShortcutSettingsComponent', () => {
 
     expect(errorSpy).toHaveBeenCalled();
     expect(component.liveAnnouncement()).not.toBe('');
+  });
+
+  it('default view is compact: target title is visible without the selector', () => {
+    fixture.detectChanges();
+
+    expect(
+      fixture.nativeElement.querySelector('.shortcut-destination-select'),
+    ).toBeNull();
+    const title = fixture.nativeElement.querySelector(
+      '.shortcut-dest-title',
+    ) as HTMLElement;
+    expect(title.textContent).toContain('dashboard');
+    expect(
+      fixture.nativeElement.querySelector('[data-testid="shortcut-edit"]'),
+    ).toBeTruthy();
+  });
+
+  it('editing one row does not expand every other row', () => {
+    component.addShortcut();
+    fixture.detectChanges();
+
+    // Only the newly added row is in edit mode.
+    let selects = fixture.nativeElement.querySelectorAll(
+      '.shortcut-destination-select',
+    ) as NodeListOf<HTMLSelectElement>;
+    let compactTitles = fixture.nativeElement.querySelectorAll(
+      '.shortcut-dest-title',
+    ) as NodeListOf<HTMLElement>;
+    expect(selects).toHaveLength(1);
+    expect(compactTitles).toHaveLength(1);
+
+    // Switch editing to the other row: it expands while the first collapses.
+    component.beginEdit(1);
+    fixture.detectChanges();
+    selects = fixture.nativeElement.querySelectorAll(
+      '.shortcut-destination-select',
+    ) as NodeListOf<HTMLSelectElement>;
+    compactTitles = fixture.nativeElement.querySelectorAll(
+      '.shortcut-dest-title',
+    ) as NodeListOf<HTMLElement>;
+    expect(selects).toHaveLength(1);
+    expect(selects[0].value).toBe('DASHBOARD');
+    expect(compactTitles).toHaveLength(1);
+  });
+
+  it('row save exits edit mode only after validation passes', () => {
+    component.beginEdit(0);
+    fixture.detectChanges();
+
+    component.saveEdit(0);
+    expect(component.editingClientId()).toBeNull();
+    expect(component.liveAnnouncement()).not.toBe('');
+  });
+
+  it('row save rejects duplicate keys and stays in edit mode', () => {
+    component.addShortcut();
+    fixture.detectChanges();
+    // Row 0 is EMPLOYEES/KeyA in edit mode; Row 1 is DASHBOARD/KeyD.
+    component.drafts.update((items) => [
+      { ...items[0], secondKeyCode: 'KeyD' },
+      items[1],
+    ]);
+
+    component.saveEdit(0);
+
+    expect(component.editingClientId()).toBe(component.drafts()[0].clientId);
+    expect(component.drafts()[0].secondKeyCode).toBe('KeyD');
+  });
+
+  it('cancel reverts the row to its pre-edit snapshot', () => {
+    component.beginEdit(0);
+    fixture.detectChanges();
+
+    const select = fixture.nativeElement.querySelector(
+      '.shortcut-destination-select',
+    ) as HTMLSelectElement;
+    select.value = 'EMPLOYEES';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+
+    expect(component.drafts()[0].pageCode).toBe('EMPLOYEES');
+
+    component.cancelEdit();
+
+    expect(component.drafts()[0].pageCode).toBe('DASHBOARD');
+    expect(component.editingClientId()).toBeNull();
+  });
+
+  it('search filters rows by target and key', () => {
+    component.addShortcut();
+    fixture.detectChanges();
+
+    component.searchQuery.set('EMPLOYEES');
+    expect(component.filteredDrafts()).toHaveLength(1);
+    expect(component.filteredDrafts()[0].draft.pageCode).toBe('EMPLOYEES');
+
+    component.searchQuery.set('KeyD');
+    expect(component.filteredDrafts()).toHaveLength(1);
+    expect(component.filteredDrafts()[0].draft.pageCode).toBe('DASHBOARD');
+
+    component.searchQuery.set('zzz-no-match');
+    expect(component.filteredDrafts()).toHaveLength(0);
+  });
+
+  it('exits edit mode when the search no longer shows the edited row', () => {
+    component.addShortcut();
+    fixture.detectChanges();
+    component.beginEdit(1);
+
+    component.searchQuery.set('EMPLOYEES');
+    component.onSearchChange();
+
+    expect(component.editingClientId()).toBeNull();
   });
 });

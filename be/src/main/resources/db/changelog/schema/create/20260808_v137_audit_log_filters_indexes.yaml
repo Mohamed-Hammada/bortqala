@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260808-v137-audit-log-filters-indexes
+      author: bemo-erp
+      comment: "REM-003: query indexes backing the audit-log filter/search surface (entity type, action, username, business code/details search, date range)."
+      changes:
+        - createIndex:
+            tableName: audit_logs
+            indexName: ix_audit_logs_app_occurred
+            columns:
+              - column: { name: app_id }
+              - column: { name: occurred_at }
+        - createIndex:
+            tableName: audit_logs
+            indexName: ix_audit_logs_app_entity_occurred
+            columns:
+              - column: { name: app_id }
+              - column: { name: entity_type }
+              - column: { name: occurred_at }
+        - createIndex:
+            tableName: audit_logs
+            indexName: ix_audit_logs_app_action_occurred
+            columns:
+              - column: { name: app_id }
+              - column: { name: action }
+              - column: { name: occurred_at }
+        - createIndex:
+            tableName: audit_logs
+            indexName: ix_audit_logs_app_username_occurred
+            columns:
+              - column: { name: app_id }
+              - column: { name: username }
+              - column: { name: occurred_at }
+      rollback:
+        - dropIndex: { tableName: audit_logs, indexName: ix_audit_logs_app_username_occurred }
+        - dropIndex: { tableName: audit_logs, indexName: ix_audit_logs_app_action_occurred }
+        - dropIndex: { tableName: audit_logs, indexName: ix_audit_logs_app_entity_occurred }
+        - dropIndex: { tableName: audit_logs, indexName: ix_audit_logs_app_occurred }

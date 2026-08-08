@@ -127,8 +127,8 @@ ar-060;reports.presets;ar-EG;اختصارات جاهزة
 en-060;reports.presets;en-US;Quick presets
 ar-061;reports.year;ar-EG;السنة
 en-061;reports.year;en-US;Year
-ar-062;reports.presetHint;ar-EG;الشهر الكامل أو النصف الأول/الثاني
-en-062;reports.presetHint;en-US;Full month or first/second half
+ar-062;reports.presetHint;ar-EG;تُملأ الحقول فقط — ثم اختر معاينة أو إنشاء التقرير
+en-062;reports.presetHint;en-US;Only fills the form - then choose Preview or Create
 ar-063;reports.previous;ar-EG;التقارير السابقة
 en-063;reports.previous;en-US;Previous reports
 ar-064;reports.period;ar-EG;الفترة

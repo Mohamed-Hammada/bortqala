@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260808-v140-stock-movement-document-references
+      author: bemo-erp
+      comment: "REM-005: records separate PO, receipt, delivery-note, invoice, voucher, external and warehouse references on stock_movements instead of compressing them into a single generic reference field. New columns are nullable so existing movements remain readable without backfill."
+      changes:
+        - addColumn:
+            tableName: stock_movements
+            columns:
+              - column: { name: purchase_order_no, type: VARCHAR(100) }
+              - column: { name: receipt_no, type: VARCHAR(100) }
+              - column: { name: delivery_note_no, type: VARCHAR(100) }
+              - column: { name: invoice_no, type: VARCHAR(100) }
+              - column: { name: voucher_no, type: VARCHAR(100) }
+              - column: { name: external_ref, type: VARCHAR(100) }
+              - column: { name: warehouse, type: VARCHAR(50) }
+              - column: { name: attachment_name, type: VARCHAR(255) }
+              - column: { name: attachment_content_type, type: VARCHAR(100) }
+              - column: { name: attachment_size, type: BIGINT }
+        - createIndex:
+            tableName: stock_movements
+            indexName: ix_stock_movements_party_invoice
+            columns:
+              - column: { name: app_id }
+              - column: { name: party_id }
+              - column: { name: invoice_no }
+      rollback:
+        - dropIndex: { tableName: stock_movements, indexName: ix_stock_movements_party_invoice }
+        - dropColumn:
+            tableName: stock_movements
+            columns:
+              - column: { name: purchase_order_no }
+              - column: { name: receipt_no }
+              - column: { name: delivery_note_no }
+              - column: { name: invoice_no }
+              - column: { name: voucher_no }
+              - column: { name: external_ref }
+              - column: { name: warehouse }
+              - column: { name: attachment_name }
+              - column: { name: attachment_content_type }
+              - column: { name: attachment_size }

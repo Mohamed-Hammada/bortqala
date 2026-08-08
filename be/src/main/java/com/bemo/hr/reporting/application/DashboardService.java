@@ -88,7 +88,10 @@ public class DashboardService {
         return new DashboardApi.Response(
                 year, month, java.time.Instant.now(),
                 employeeRepository.findAll().stream().filter(com.bemo.hr.employee.domain.Employee::isActive).count(),
-                attendanceCategoryRepository.findAll().stream().filter(com.bemo.hr.employee.domain.AttendanceCategory::isActive).count(),
+                attendanceCategoryRepository.findByScopeIn(java.util.List.of(
+                        com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE,
+                        com.bemo.hr.employee.domain.CategoryScope.BOTH)).stream()
+                        .filter(com.bemo.hr.employee.domain.AttendanceCategory::isActive).count(),
                 report == null ? null : report.getStatus(),
                 report == null ? null : report.getId(),
                 report == null ? 0 : report.getUnresolvedCount(),

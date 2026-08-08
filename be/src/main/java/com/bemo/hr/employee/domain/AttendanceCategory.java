@@ -31,6 +31,10 @@ public class AttendanceCategory {
     @Column(nullable = false, length = 150)
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "scope", nullable = false, length = 20)
+    private CategoryScope scope = CategoryScope.EMPLOYEE;
+
     @Column(name = "expected_daily_minutes", nullable = false)
     private int expectedDailyMinutes;
 
@@ -68,12 +72,22 @@ public class AttendanceCategory {
 
     public AttendanceCategory(String code, String name, int expectedDailyMinutes, PayCycle payCycle, AttendanceMode attendanceMode,
                               boolean singlePunchCounts, int workDaysMask, boolean active) {
+        this(code, name, expectedDailyMinutes, payCycle, attendanceMode, singlePunchCounts, workDaysMask, active, CategoryScope.EMPLOYEE);
+    }
+
+    public AttendanceCategory(String code, String name, int expectedDailyMinutes, PayCycle payCycle, AttendanceMode attendanceMode,
+                              boolean singlePunchCounts, int workDaysMask, boolean active, CategoryScope scope) {
         this.id = UUID.randomUUID().toString();
+        this.scope = scope == null ? CategoryScope.EMPLOYEE : scope;
         update(code, name, expectedDailyMinutes, payCycle, attendanceMode, singlePunchCounts, workDaysMask, active);
     }
 
     public void configureAdvanceEligibility(boolean allowed) {
         this.allowsEmployeeAdvances = allowed;
+    }
+
+    public void updateScope(CategoryScope scope) {
+        if (scope != null) this.scope = scope;
     }
 
     public void update(String code, String name, int expectedDailyMinutes, PayCycle payCycle, AttendanceMode attendanceMode,
@@ -102,6 +116,7 @@ public class AttendanceCategory {
     public String getId() { return id; }
     public String getCode() { return code; }
     public String getName() { return name; }
+    public CategoryScope getScope() { return scope; }
     public int getExpectedDailyMinutes() { return expectedDailyMinutes; }
     public PayCycle getPayCycle() { return payCycle; }
     public AttendanceMode getAttendanceMode() { return attendanceMode; }

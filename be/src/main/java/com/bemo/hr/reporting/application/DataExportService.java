@@ -30,7 +30,9 @@ public class DataExportService {
 
     public byte[] categories(ExcelExportOptions options) {
         var messages = ExcelExportSupport.messages(translationService, options);
-        var rows = attendanceCategoryRepository.findAllByOrderByNameAsc().stream().<List<?>>map(item -> List.of(
+        var rows = attendanceCategoryRepository.findByScopeInOrderByNameAsc(java.util.List.of(
+                        com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE,
+                        com.bemo.hr.employee.domain.CategoryScope.BOTH)).stream().<List<?>>map(item -> List.of(
                 item.getCode(), item.getName(), item.getExpectedDailyMinutes(),
                 ExcelExportSupport.enumText(messages, item.getAttendanceMode()),
                 ExcelExportSupport.enumText(messages, item.getPayCycle()),

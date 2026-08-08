@@ -207,7 +207,6 @@ public class AuthService {
             }
             Instant now = Instant.now();
             Instant accessExpiresAt = issueAccessToken(appId, user, now);
-            auditService.record("TOKEN_REFRESH", "USER", user.getId(), user.getUsername(), "Refreshed session token", null);
             return new RefreshResult(appId,
                     new AuthApi.RefreshResponse(accessToken(appId, user, now, accessExpiresAt), "Bearer", accessExpiresAt),
                     rotation.rawValue(), rotation.expiresAt());
@@ -326,14 +325,23 @@ public class AuthService {
     }
 
     public List<AuthApi.UserCategoryResponse> listCategories() {
-        var categories = new java.util.ArrayList<AuthApi.UserCategoryResponse>();
-        attendanceCategoryRepository.findAllByOrderByNameAsc().stream().filter(c -> c.isActive())
-                .map(c -> new AuthApi.UserCategoryResponse(c.getId(), c.getCode(), c.getName(), "EMPLOYEE"))
-                .forEach(categories::add);
+        var employeeScopes = java.util.List.of(com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE,
+                com.bemo.hr.employee.domain.CategoryScope.BOTH);
+        var workerScopes = java.util.List.of(com.bemo.hr.employee.domain.CategoryScope.WORKER,
+                com.bemo.hr.employee.domain.CategoryScope.BOTH);
+        var canonicalById = new java.util.HashMap<String, com.bemo.hr.employee.domain.AttendanceCategory>();
+        attendanceCategoryRepository.findByScopeIn(employeeScopes).stream()
+                .filter(com.bemo.hr.employee.domain.AttendanceCategory::isActive)
+                .forEach(c -> canonicalById.putIfAbsent(c.getId(), c));
         workerCategoryRepository.findByStatus("ACTIVE").stream()
-                .map(c -> new AuthApi.UserCategoryResponse(c.getId(), c.getCode(), c.getName(), "WORKER"))
-                .forEach(categories::add);
-        return categories.stream().sorted(java.util.Comparator.comparing(AuthApi.UserCategoryResponse::name)).toList();
+                .map(com.bemo.hr.workforce.WorkerCategory::getCategoryId)
+                .filter(java.util.Objects::nonNull)
+                .forEach(categoryId -> attendanceCategoryRepository.findById(categoryId)
+                        .filter(c -> c.isActive() && workerScopes.contains(c.getScope()))
+                        .ifPresent(c -> canonicalById.putIfAbsent(c.getId(), c)));
+        return canonicalById.values().stream()
+                .map(c -> new AuthApi.UserCategoryResponse(c.getId(), c.getCode(), c.getName(), c.getScope().name()))
+                .sorted(java.util.Comparator.comparing(AuthApi.UserCategoryResponse::name)).toList();
     }
 
     public AuthApi.AppSettingsResponse currentAppSettings() {
@@ -634,8 +642,7 @@ public class AuthService {
 
     private void validateCategory(String categoryId) {
         if (categoryId == null || categoryId.isBlank()) return;
-        boolean exists = attendanceCategoryRepository.findById(categoryId).filter(c -> c.isActive()).isPresent()
-                || workerCategoryRepository.findById(categoryId).filter(c -> "ACTIVE".equals(c.getStatus())).isPresent();
+        boolean exists = attendanceCategoryRepository.findById(categoryId).filter(c -> c.isActive()).isPresent();
         if (!exists) throw new BusinessRuleException("Select an active category.",
                 "AUTH_ACTIVE_CATEGORY_REQUIRED", HttpStatus.CONFLICT);
     }

@@ -1,0 +1,5 @@
+id;translation_key;locale;text_value
+v138-001;reports.useThisPeriod;ar-EG;"استخدام هذه الفترة"
+v138-002;reports.useThisPeriod;en-US;"Use this period"
+v138-003;reports.usePeriodAria;ar-EG;"ملء حقول الفترة من {period}. لن يتم إنشاء تقرير تلقائيًا — اختر معاينة أو إنشاء التقرير بعد المراجعة."
+v138-004;reports.usePeriodAria;en-US;"Fill the period fields from {period}. No report will be created - choose Preview or Create after reviewing."

@@ -1,3 +1,76 @@
 .page { display: flex; flex-direction: column; gap: 20px; }
-.empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
+.empty-state { text-align: center; color: var(--muted); padding: 40px 20px; }
 code { font-family: monospace; font-size: 12px; color: var(--gold); }
+
+.filter-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px;
+}
+
+.filter-card h2 {
+  margin: 0;
+  font-size: 15px;
+  color: var(--gold);
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.filter-row .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 180px;
+}
+
+.filter-row .field-wide {
+  flex: 2;
+}
+
+.filter-row .field input {
+  background: var(--input-bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.filter-row .filter-actions {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.filter-row .btn.primary {
+  background: var(--gold);
+  border: none;
+  color: #1a1204;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.filter-row .btn.ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.filter-row .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

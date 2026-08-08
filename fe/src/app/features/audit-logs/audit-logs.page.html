@@ -15,6 +15,98 @@
   }
 
   @if (!loading()) {
+    <section class="card filter-card">
+      <h2>{{ i18n.t('audit.filterTitle') }}</h2>
+      <div class="filter-row">
+        <div class="field">
+          <label for="audit-filter-entity">{{ i18n.t('audit.filterEntityType') }}</label>
+          <input
+            id="audit-filter-entity"
+            class="ltr"
+            type="text"
+            [value]="entityTypeFilter()"
+            (input)="entityTypeFilter.set($any($event.target).value)"
+            (keydown.enter)="applyFilters()"
+          />
+        </div>
+        <div class="field">
+          <label for="audit-filter-action">{{ i18n.t('audit.filterAction') }}</label>
+          <input
+            id="audit-filter-action"
+            class="ltr"
+            type="text"
+            [value]="actionFilter()"
+            (input)="actionFilter.set($any($event.target).value)"
+            (keydown.enter)="applyFilters()"
+          />
+        </div>
+        <div class="field">
+          <label for="audit-filter-username">{{ i18n.t('audit.filterUsername') }}</label>
+          <input
+            id="audit-filter-username"
+            class="ltr"
+            type="text"
+            [value]="usernameFilter()"
+            (input)="usernameFilter.set($any($event.target).value)"
+            (keydown.enter)="applyFilters()"
+          />
+        </div>
+        <div class="field field-wide">
+          <label for="audit-filter-search">{{ i18n.t('audit.filterSearch') }}</label>
+          <input
+            id="audit-filter-search"
+            class="ltr"
+            type="text"
+            [value]="searchFilter()"
+            (input)="searchFilter.set($any($event.target).value)"
+            (keydown.enter)="applyFilters()"
+          />
+        </div>
+      </div>
+      <div class="filter-row">
+        <div class="field">
+          <label for="audit-filter-from">{{ i18n.t('audit.filterFrom') }}</label>
+          <input
+            id="audit-filter-from"
+            class="ltr"
+            type="date"
+            [value]="fromFilter()"
+            (input)="fromFilter.set($any($event.target).value)"
+            (keydown.enter)="applyFilters()"
+          />
+        </div>
+        <div class="field">
+          <label for="audit-filter-to">{{ i18n.t('audit.filterTo') }}</label>
+          <input
+            id="audit-filter-to"
+            class="ltr"
+            type="date"
+            [value]="toFilter()"
+            (input)="toFilter.set($any($event.target).value)"
+            (keydown.enter)="applyFilters()"
+          />
+        </div>
+        <div class="field filter-actions">
+          <button
+            type="button"
+            class="btn primary"
+            (click)="applyFilters()"
+            [disabled]="loading()"
+          >
+            {{ i18n.t('audit.applyFilters') }}
+          </button>
+          <button
+            type="button"
+            class="btn ghost"
+            (click)="resetFilters()"
+            [disabled]="loading()"
+          >
+            {{ i18n.t('audit.resetFilters') }}
+          </button>
+        </div>
+      </div>
+    </section>
+
     <div class="table-card">
       <table>
         <thead>
@@ -54,7 +146,7 @@
         [page]="pagination.currentPage(totalElements())"
         [pageSize]="pagination.pageSize()"
         (pageChange)="load($event)"
-        (pageSizeChange)="pagination.changePageSize($event); load(1)"
+        (pageSizeChange)="changePageSize($event)"
       />
     </div>
   }

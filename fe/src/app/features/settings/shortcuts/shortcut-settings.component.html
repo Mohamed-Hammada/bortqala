@@ -19,6 +19,16 @@
   </div>
 
   <div class="shortcut-toolbar">
+    <div class="shortcut-search">
+      <input
+        type="search"
+        class="form-control"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value); onSearchChange()"
+        [attr.aria-label]="i18n.t('shortcuts.searchLabel')"
+        [placeholder]="i18n.t('shortcuts.searchPlaceholder')"
+      />
+    </div>
     <div class="toolbar-actions">
       <button
         type="button"
@@ -79,8 +89,12 @@
         <span class="shortcut-section__count">{{ drafts().length }}</span>
       </div>
 
-      @if (drafts().length === 0) {
-        <div class="empty-state">{{ i18n.t('shortcuts.noAssignment') }}</div>
+      @if (filteredDrafts().length === 0) {
+        @if (drafts().length === 0) {
+          <div class="empty-state">{{ i18n.t('shortcuts.noAssignment') }}</div>
+        } @else {
+          <div class="empty-state">{{ i18n.t('shortcuts.noSearchResults') }}</div>
+        }
       } @else {
         <div class="shortcut-table-wrapper">
           <table class="shortcut-table">
@@ -94,56 +108,70 @@
               </tr>
             </thead>
             <tbody>
-              @for (draft of drafts(); track draft.clientId) {
+              @for (entry of filteredDrafts(); track entry.draft.clientId) {
                 <tr
-                  [class.capturing]="captureIndex() === $index"
-                  [class.newly-added]="lastAddedClientId() === draft.clientId"
-                  [attr.data-shortcut-client-id]="draft.clientId"
+                  [class.capturing]="captureIndex() === entry.index"
+                  [class.newly-added]="lastAddedClientId() === entry.draft.clientId"
+                  [class.editing]="editingClientId() === entry.draft.clientId"
+                  [attr.data-shortcut-client-id]="entry.draft.clientId"
                 >
                   <td class="shortcut-key-cell">
-                    <div class="shortcut-key-builder">
-                      <kbd class="prefix-kbd">G</kbd>
-                      <span class="arrow" aria-hidden="true">→</span>
-                      <button
-                        type="button"
-                        class="capture-btn"
-                        data-shortcut-capture="true"
-                        (click)="captureIndex.set($index)"
-                        (keydown)="captureKey($index, $event)"
-                        [disabled]="saving()"
-                        [attr.aria-pressed]="captureIndex() === $index"
-                        [attr.aria-label]="i18n.t('shortcuts.captureAria', { key: displayKey(draft.secondKeyCode) })"
-                      >
-                        @if (captureIndex() === $index) {
-                          <span class="press-hint">{{ i18n.t('shortcuts.pressKey') }}</span>
-                        } @else {
-                          <kbd class="key-kbd">{{ displayKey(draft.secondKeyCode) }}</kbd>
-                        }
-                      </button>
-                    </div>
+                    @if (editingClientId() === entry.draft.clientId) {
+                      <div class="shortcut-key-builder">
+                        <kbd class="prefix-kbd">G</kbd>
+                        <span class="arrow" aria-hidden="true">→</span>
+                        <button
+                          type="button"
+                          class="capture-btn"
+                          data-shortcut-capture="true"
+                          (click)="captureIndex.set(entry.index)"
+                          (keydown)="captureKey(entry.index, $event)"
+                          [disabled]="saving()"
+                          [attr.aria-pressed]="captureIndex() === entry.index"
+                          [attr.aria-label]="i18n.t('shortcuts.captureAria', { key: displayKey(entry.draft.secondKeyCode) })"
+                        >
+                          @if (captureIndex() === entry.index) {
+                            <span class="press-hint">{{ i18n.t('shortcuts.pressKey') }}</span>
+                          } @else {
+                            <kbd class="key-kbd">{{ displayKey(entry.draft.secondKeyCode) }}</kbd>
+                          }
+                        </button>
+                      </div>
+                    } @else {
+                      <div class="shortcut-key-builder compact">
+                        <kbd class="prefix-kbd">G</kbd>
+                        <span class="arrow" aria-hidden="true">→</span>
+                        <kbd class="key-kbd">{{ displayKey(entry.draft.secondKeyCode) }}</kbd>
+                      </div>
+                    }
                   </td>
 
                   <td class="shortcut-dest-cell">
-                    <select
-                      class="form-control shortcut-destination-select"
-                      [ngModel]="draft.pageCode"
-                      (change)="changeDestination($index, $event)"
-                      [disabled]="saving()"
-                      [attr.aria-label]="i18n.t('shortcuts.destination')"
-                    >
-                      @for (dest of destinationOptions($index); track dest.pageCode) {
-                        <option
-                          [value]="dest.pageCode"
-                          [disabled]="dest.unavailable"
-                        >
-                          {{ dest.title }}
-                        </option>
-                      }
-                    </select>
+                    @if (editingClientId() === entry.draft.clientId) {
+                      <select
+                        class="form-control shortcut-destination-select"
+                        [attr.data-edit-client-id]="entry.draft.clientId"
+                        [ngModel]="entry.draft.pageCode"
+                        (change)="changeDestination(entry.index, $event)"
+                        [disabled]="saving()"
+                        [attr.aria-label]="i18n.t('shortcuts.destination')"
+                      >
+                        @for (dest of destinationOptions(entry.index); track dest.pageCode) {
+                          <option
+                            [value]="dest.pageCode"
+                            [disabled]="dest.unavailable"
+                          >
+                            {{ dest.title }}
+                          </option>
+                        }
+                      </select>
+                    } @else {
+                      <span class="shortcut-dest-title">{{ getDestinationTitle(entry.draft.pageCode) }}</span>
+                    }
                   </td>
 
                   <td class="shortcut-status-cell">
-                    @let statusInfo = getAvailabilityStatus(draft.pageCode);
+                    @let statusInfo = getAvailabilityStatus(entry.draft.pageCode);
                     <span class="status-badge" [ngClass]="statusInfo.cssClass">
                       {{ i18n.t(statusInfo.statusKey) }}
                     </span>
@@ -153,8 +181,8 @@
                     <label class="switch-label">
                       <input
                         type="checkbox"
-                        [checked]="draft.enabled"
-                        (change)="toggleEnabled($index, $any($event.target).checked)"
+                        [checked]="entry.draft.enabled"
+                        (change)="toggleEnabled(entry.index, $any($event.target).checked)"
                         [disabled]="saving()"
                       />
                       <span>{{ i18n.t('shortcuts.enabled') }}</span>
@@ -162,17 +190,54 @@
                   </td>
 
                   <td class="shortcut-action-cell">
-                    <button
-                      type="button"
-                      class="icon-button danger"
-                      data-testid="shortcut-remove"
-                      (click)="remove($index)"
-                      [disabled]="saving()"
-                      [attr.aria-label]="i18n.t('shortcuts.remove')"
-                      [appTooltip]="i18n.t('shortcuts.remove')"
-                    >
-                      <span aria-hidden="true">✕</span>
-                    </button>
+                    @if (editingClientId() === entry.draft.clientId) {
+                      <div class="row-actions">
+                        <button
+                          type="button"
+                          class="button secondary row-save"
+                          data-testid="shortcut-save-row"
+                          (click)="saveEdit(entry.index)"
+                          [disabled]="saving()"
+                        >
+                          <span class="button-icon" aria-hidden="true">✓</span>
+                          <span>{{ i18n.t('shortcuts.save') }}</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="button ghost"
+                          data-testid="shortcut-cancel-row"
+                          (click)="cancelEdit()"
+                          [disabled]="saving()"
+                        >
+                          {{ i18n.t('common.cancel') }}
+                        </button>
+                      </div>
+                    } @else {
+                      <div class="row-actions">
+                        <button
+                          type="button"
+                          class="icon-button"
+                          data-testid="shortcut-edit"
+                          (click)="beginEdit(entry.index)"
+                          [disabled]="saving()"
+                          [attr.aria-label]="i18n.t('shortcuts.editAria', { key: displayKey(entry.draft.secondKeyCode) })"
+                          [appTooltip]="i18n.t('shortcuts.edit')"
+                        >
+                          <span aria-hidden="true">✎</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="icon-button danger"
+                          data-testid="shortcut-remove"
+                          (click)="remove(entry.index)"
+                          [disabled]="saving()"
+                          [attr.aria-label]="i18n.t('shortcuts.remove')"
+                          [appTooltip]="i18n.t('shortcuts.remove')"
+                        >
+                          <span aria-hidden="true">✕</span>
+                        </button>
+                      </div>
+                    }
                   </td>
                 </tr>
               }

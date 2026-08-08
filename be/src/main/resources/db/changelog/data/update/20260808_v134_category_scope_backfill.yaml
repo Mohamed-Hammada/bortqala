@@ -1,0 +1,136 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260808-v134-category-scope-backfill
+      author: bemo-erp
+      comment: "REM-002: backfills the unified category model. Links each worker_categories row to a canonical attendance_categories row by (app_id, code); promotes matching employee categories to scope=BOTH; materializes WORKER-only categories as canonical rows reusing the worker category id (guarded against id collision); re-points workers, labor_request_items, contractor_rate_versions and app_users references to the canonical ids; and writes an immutable CATEGORY_MERGE audit record per merged row. Idempotent - every step is guarded by category_id IS NULL."
+      changes:
+        - sql:
+            sql: |
+              UPDATE worker_categories w
+              SET category_id = (
+                  SELECT a.id FROM attendance_categories a
+                  WHERE a.app_id = w.app_id AND a.code = w.code
+              )
+              WHERE w.category_id IS NULL
+                AND w.id = (SELECT MIN(w2.id) FROM worker_categories w2 WHERE w2.app_id = w.app_id AND w2.code = w.code)
+                AND EXISTS (
+                    SELECT 1 FROM attendance_categories a
+                    WHERE a.app_id = w.app_id AND a.code = w.code
+                );
+
+              UPDATE attendance_categories a
+              SET scope = 'BOTH', updated_at = CURRENT_TIMESTAMP
+              WHERE a.scope = 'EMPLOYEE'
+                AND EXISTS (SELECT 1 FROM worker_categories w WHERE w.category_id = a.id);
+
+              INSERT INTO attendance_categories
+                  (id, app_id, code, name, scope, expected_daily_minutes, pay_cycle, attendance_mode,
+                   single_punch_counts, work_days_mask, active, version, created_at, updated_at,
+                   allows_employee_advances)
+              SELECT w.id, w.app_id, w.code, w.name, 'WORKER',
+                     CASE WHEN w.standard_daily_hours IS NULL OR w.standard_daily_hours <= 0 THEN 480
+                          ELSE LEAST(1440, GREATEST(1, CAST(w.standard_daily_hours * 60 AS INT))) END,
+                     CASE WHEN UPPER(w.default_settlement_cycle) LIKE '%HALF%' THEN 'HALF_MONTHLY' ELSE 'MONTHLY' END,
+                     'MANUAL', FALSE, 111,
+                     CASE WHEN w.status = 'ACTIVE' THEN TRUE ELSE FALSE END,
+                     0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, FALSE
+              FROM worker_categories w
+              WHERE w.category_id IS NULL
+                AND NOT EXISTS (SELECT 1 FROM attendance_categories a WHERE a.id = w.id)
+                AND NOT EXISTS (
+                    SELECT 1 FROM attendance_categories a
+                    WHERE a.app_id = w.app_id AND a.code = w.code
+                );
+
+              UPDATE worker_categories w
+              SET category_id = (
+                  SELECT a.id FROM attendance_categories a
+                  WHERE a.app_id = w.app_id AND a.code = w.code
+              )
+              WHERE w.category_id IS NULL
+                AND EXISTS (
+                    SELECT 1 FROM attendance_categories a
+                    WHERE a.app_id = w.app_id AND a.code = w.code
+                );
+
+              UPDATE worker_categories w
+              SET category_id = w.id
+              WHERE w.category_id IS NULL;
+
+              UPDATE workers SET category_id = (
+                  SELECT w2.category_id FROM worker_categories w2
+                  WHERE w2.id = workers.category_id AND w2.category_id IS NOT NULL
+              )
+              WHERE EXISTS (
+                  SELECT 1 FROM worker_categories w2
+                  WHERE w2.id = workers.category_id AND w2.category_id IS NOT NULL
+              );
+
+              UPDATE labor_request_items SET category_id = (
+                  SELECT w2.category_id FROM worker_categories w2
+                  WHERE w2.id = labor_request_items.category_id AND w2.category_id IS NOT NULL
+              )
+              WHERE EXISTS (
+                  SELECT 1 FROM worker_categories w2
+                  WHERE w2.id = labor_request_items.category_id AND w2.category_id IS NOT NULL
+              );
+
+              UPDATE contractor_rate_versions SET category_id = (
+                  SELECT w2.category_id FROM worker_categories w2
+                  WHERE w2.id = contractor_rate_versions.category_id AND w2.category_id IS NOT NULL
+              )
+              WHERE EXISTS (
+                  SELECT 1 FROM worker_categories w2
+                  WHERE w2.id = contractor_rate_versions.category_id AND w2.category_id IS NOT NULL
+              );
+
+              UPDATE app_users SET category_id = (
+                  SELECT w2.category_id FROM worker_categories w2
+                  WHERE w2.id = app_users.category_id AND w2.category_id IS NOT NULL
+              )
+              WHERE EXISTS (
+                  SELECT 1 FROM worker_categories w2
+                  WHERE w2.id = app_users.category_id AND w2.category_id IS NOT NULL
+              );
+
+              INSERT INTO audit_logs (id, app_id, action, entity_type, entity_id, username, details_json, ip_address, occurred_at)
+              SELECT 'CATEGORY_MERGE-' || w.id, w.app_id, 'CATEGORY_MERGE', 'ATTENDANCE_CATEGORY', w.category_id, 'SYSTEM',
+                     '{"sourceCategoryId":"' || w.id || '","targetCategoryId":"' || w.category_id || '","reason":"REM-002 scope unification"}',
+                     NULL, CAST(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000 AS BIGINT)
+              FROM worker_categories w
+              WHERE w.category_id IS NOT NULL AND w.category_id <> w.id;
+      rollback:
+        - sql:
+            sql: |
+              DELETE FROM audit_logs WHERE id LIKE 'CATEGORY_MERGE-%';
+
+              UPDATE workers SET category_id = (
+                  SELECT w2.id FROM worker_categories w2 WHERE w2.category_id = workers.category_id
+              )
+              WHERE EXISTS (SELECT 1 FROM worker_categories w2 WHERE w2.category_id = workers.category_id);
+
+              UPDATE labor_request_items SET category_id = (
+                  SELECT w2.id FROM worker_categories w2 WHERE w2.category_id = labor_request_items.category_id
+              )
+              WHERE EXISTS (SELECT 1 FROM worker_categories w2 WHERE w2.category_id = labor_request_items.category_id);
+
+              UPDATE contractor_rate_versions SET category_id = (
+                  SELECT w2.id FROM worker_categories w2 WHERE w2.category_id = contractor_rate_versions.category_id
+              )
+              WHERE EXISTS (SELECT 1 FROM worker_categories w2 WHERE w2.category_id = contractor_rate_versions.category_id);
+
+              UPDATE app_users SET category_id = (
+                  SELECT w2.id FROM worker_categories w2 WHERE w2.category_id = app_users.category_id
+              )
+              WHERE EXISTS (SELECT 1 FROM worker_categories w2 WHERE w2.category_id = app_users.category_id);
+
+              UPDATE attendance_categories a
+              SET scope = 'EMPLOYEE', updated_at = CURRENT_TIMESTAMP
+              WHERE a.scope = 'BOTH'
+                AND EXISTS (SELECT 1 FROM worker_categories w WHERE w.category_id = a.id);
+
+              DELETE FROM attendance_categories a
+              WHERE a.scope = 'WORKER'
+                AND EXISTS (SELECT 1 FROM worker_categories w WHERE w.category_id = a.id AND w.id = a.id);
+
+              UPDATE worker_categories SET category_id = NULL WHERE category_id IS NOT NULL;

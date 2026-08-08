@@ -137,10 +137,16 @@ public class ReportingService {
         return details(requireReport(id));
     }
 
+    private List<AttendanceCategory> employeeCategories() {
+        return attendanceCategoryRepository.findByScopeIn(
+                java.util.List.of(com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE,
+                        com.bemo.hr.employee.domain.CategoryScope.BOTH));
+    }
+
     public List<ReportingApi.PeriodOption> availablePeriods(int year) {
         if (year < 2000 || year > 2200) throw new BusinessRuleException("Year is outside the supported range.", "RPT_YEAR_OUT_OF_RANGE", HttpStatus.CONFLICT);
         var reports = attendanceReportRepository.findByPeriodStartBetween(LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
-        var activeCategories = attendanceCategoryRepository.findAll().stream().filter(AttendanceCategory::isActive).toList();
+        var activeCategories = employeeCategories().stream().filter(AttendanceCategory::isActive).toList();
         boolean hasMonthly = activeCategories.isEmpty()
                 || activeCategories.stream().anyMatch(category -> category.getPayCycle() == PayCycle.MONTHLY);
         boolean hasHalfMonthly = activeCategories.stream()
@@ -162,7 +168,7 @@ public class ReportingService {
 
     public ReportingApi.PreviewResponse preview(LocalDate periodStart, LocalDate periodEnd, PayCycle payCycle) {
         validatePeriod(periodStart, periodEnd);
-        var categories = attendanceCategoryRepository.findAll().stream()
+        var categories = employeeCategories().stream()
                 .filter(AttendanceCategory::isActive)
                 .filter(category -> category.getPayCycle() == payCycle)
                 .toList();
@@ -209,7 +215,7 @@ public class ReportingService {
                 payCycle, request.periodEnd(), request.periodStart())) {
             throw new BusinessRuleException("A report for this pay cycle already overlaps the selected period.", "RPT_OVERLAPPING_REPORT", HttpStatus.CONFLICT);
         }
-        var categories = attendanceCategoryRepository.findAll().stream()
+        var categories = employeeCategories().stream()
                 .filter(AttendanceCategory::isActive)
                 .filter(category -> category.getPayCycle() == payCycle)
                 .collect(Collectors.toMap(AttendanceCategory::getId, Function.identity()));

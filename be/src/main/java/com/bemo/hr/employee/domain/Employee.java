@@ -94,6 +94,11 @@ public class Employee {
         return active && !date.isBefore(activeFrom) && (activeTo == null || !date.isAfter(activeTo));
     }
 
+    public void applyEmployeeCode(String newCode, Instant updatedAt) {
+        this.employeeCode = newCode.strip().toUpperCase(Locale.ROOT);
+        this.updatedAt = updatedAt;
+    }
+
     @PrePersist
     void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
 

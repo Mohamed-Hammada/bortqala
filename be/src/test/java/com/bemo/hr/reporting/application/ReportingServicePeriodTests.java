@@ -74,7 +74,7 @@ class ReportingServicePeriodTests {
         var halfMonthly = category("DAILY", PayCycle.HALF_MONTHLY);
         var existingFirstHalf = new AttendanceReport(LocalDate.of(2026, 1, 1),
                 LocalDate.of(2026, 1, 15), PayCycle.HALF_MONTHLY, "config", "tester");
-        when(attendanceCategoryRepository.findAll()).thenReturn(List.of(monthly, halfMonthly));
+        when(attendanceCategoryRepository.findByScopeIn(any())).thenReturn(List.of(monthly, halfMonthly));
         when(attendanceReportRepository.findByPeriodStartBetween(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31)))
                 .thenReturn(List.of(existingFirstHalf));
 
@@ -93,7 +93,7 @@ class ReportingServicePeriodTests {
         var monthly = category("ADMIN", PayCycle.MONTHLY);
         when(attendanceReportRepository.existsByPayCycleAndPeriodStartLessThanEqualAndPeriodEndGreaterThanEqual(
                 PayCycle.MONTHLY, end, start)).thenReturn(false);
-        when(attendanceCategoryRepository.findAll()).thenReturn(List.of(monthly));
+        when(attendanceCategoryRepository.findByScopeIn(any())).thenReturn(List.of(monthly));
         when(scheduleRuleRepository.findAll()).thenReturn(List.of());
         when(employeeRepository.findAll()).thenReturn(List.of());
         when(confirmedHolidayRepository.findByWorkDateBetween(start, end)).thenReturn(List.of());
@@ -142,7 +142,7 @@ class ReportingServicePeriodTests {
         var schedule = new ScheduleRule(monthly.getId(), "Standard", LocalDate.of(2025, 1, 1), null,
                 LocalTime.of(8, 0), 480, 15);
         var existing = new AttendanceReport(start, end, PayCycle.MONTHLY, "config", "tester");
-        when(attendanceCategoryRepository.findAll()).thenReturn(List.of(monthly));
+        when(attendanceCategoryRepository.findByScopeIn(any())).thenReturn(List.of(monthly));
         when(employeeRepository.findAll()).thenReturn(List.of(employee));
         when(scheduleRuleRepository.findAll()).thenReturn(List.of(schedule));
         when(attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(PayCycle.MONTHLY, start, end))
@@ -166,7 +166,7 @@ class ReportingServicePeriodTests {
         var monthly = category("ADMIN", PayCycle.MONTHLY);
         var overlapping = new AttendanceReport(LocalDate.of(2026, 1, 15),
                 LocalDate.of(2026, 1, 31), PayCycle.MONTHLY, "config", "tester");
-        when(attendanceCategoryRepository.findAll()).thenReturn(List.of(monthly));
+        when(attendanceCategoryRepository.findByScopeIn(any())).thenReturn(List.of(monthly));
         when(employeeRepository.findAll()).thenReturn(List.of());
         when(scheduleRuleRepository.findAll()).thenReturn(List.of());
         when(attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(PayCycle.MONTHLY, start, end))

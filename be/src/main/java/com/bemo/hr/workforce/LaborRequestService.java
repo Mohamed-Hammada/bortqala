@@ -7,6 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.employee.domain.AttendanceCategory;
+import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -14,7 +16,7 @@ public class LaborRequestService {
     private final LaborRequestRepository requestRepository;
     private final LaborRequestItemRepository itemRepository;
     private final ContractorRepository contractorRepository;
-    private final WorkerCategoryRepository categoryRepository;
+    private final AttendanceCategoryRepository categoryRepository;
     private final AuditService auditService;
 
     @Transactional(readOnly = true)
@@ -59,7 +61,7 @@ public class LaborRequestService {
         List<WorkforceApi.LaborRequestItemDto> items = itemRepository.findByRequestId(req.getId())
             .stream().map(i -> new WorkforceApi.LaborRequestItemDto(
                 i.getId(), i.getCategoryId(),
-                categoryRepository.findById(i.getCategoryId()).map(WorkerCategory::getName).orElse("—"),
+                categoryRepository.findById(i.getCategoryId()).map(AttendanceCategory::getName).orElse("—"),
                 i.getRequestedCount(), i.getSentCount(), i.getAcceptedCount(), i.getVarianceCount()
             )).toList();
 

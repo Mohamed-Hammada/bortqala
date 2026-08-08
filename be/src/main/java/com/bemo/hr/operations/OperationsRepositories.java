@@ -19,6 +19,7 @@ interface StockMovementRepository extends JpaRepository<StockMovement, String> {
     BigDecimal balance(String itemId);
     @Query("select m.itemId, coalesce(sum(m.quantityDelta), 0) from StockMovement m group by m.itemId having coalesce(sum(m.quantityDelta), 0) < 0")
     List<Object[]> findNegativeBalanceItemIds();
+    boolean existsByPartyIdAndInvoiceNoIgnoreCase(String partyId, String invoiceNo);
 }
 
 interface EmployeeAdvanceEntryRepository extends JpaRepository<EmployeeAdvanceEntry, String> {

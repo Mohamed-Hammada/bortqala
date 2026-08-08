@@ -11,9 +11,14 @@ below a recorded baseline or reports failures fails the release gate.
 |-------|----------|---------|----------------|
 | Backend (non-Docker, H2) | **268 tests / 56 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 268 AND failures = 0 |
 | Backend (full, incl. Testcontainers) | **308 tests** expected when Docker available | `./gradlew test` | failures = 0 |
-| Frontend (Angular + Vitest) | **159 tests / 28 files / 0 failures** | `npx ng test --watch=false` | count ≥ 159 AND failures = 0 |
+| Frontend (Angular + Vitest) | **178 tests / 30 files / 0 failures** | `npx ng test --watch=false` | count ≥ 178 AND failures = 0 |
 
 ## Evidence log
+
+### 2026-08-08 — working tree (REM-002 category scope + REM-008 shortcut select sync)
+- Frontend: `npx ng test --watch=false` under node `v24.18.1` → **30 files passed, 178 tests passed, 0 failed**. New specs: `categories` scope columns, `WorkerCategoryService`-related FE fixtures. Removed the leftover always-failing diagnostic `fe/src/app/debug-shortcut.spec.ts` (`expect(out).toBe('__FAIL__')`). Fixed 5 pre-existing DOM failures in `shortcut-settings.component.spec.ts` (added after Session 11 in commit `1004b17 "ss"`): root cause was Angular's `SelectControlValueAccessor.writeValue` running *before* the nested `@for` rendered the `<option>` elements, so `select.value` was set with no matching option and never re-written (the model value never changed). Fix: `ngAfterViewChecked` re-syncs each `.shortcut-destination-select` to its draft's `pageCode` (real browsers auto-select the first appended option; jsdom does not), and `changeDestination` now rejects any value not offered by `destinationOptions(index)` (guards against stale/unknown select values — the same desync class as the blocked-duplicate revert).
+- Related: `npm run check:i18n` = 1677 keys (ar-EG + en-US; +7 from V135 category-scope translations); `npm run check:hardcoded` = 0 findings. Baseline refreshed to 178/30 in `fe/tools/check-test-count.mjs`.
+- Backend: full `./gradlew test -PskipDockerTests` run in progress at time of writing — see next entry for the verified result and refreshed backend baseline.
 
 ### 2026-08-08 — working tree (settings QA: notification prefs + shortcuts UI fix)
 - Notification prefs no longer persist on toggle: `updateNotificationPrefs` in `settings.page.ts` only updates the `notificationPrefs` signal; `saveNotificationPrefs()` moved into `saveUserPreferences()` (the 💾 Save All System Settings handler, both appearance + reports tabs), and `cancel()` resets prefs to the last-persisted `loadNotificationPrefs()`.

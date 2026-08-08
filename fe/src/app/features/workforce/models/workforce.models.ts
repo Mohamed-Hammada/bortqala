@@ -36,6 +36,8 @@ export interface WorkerCategory {
   standardDailyHours: number;
   defaultSettlementCycle: string;
   status: string;
+  scope?: 'EMPLOYEE' | 'WORKER' | 'BOTH';
+  active?: boolean;
   createdAt: number;
   updatedAt: number;
 }

@@ -35,7 +35,6 @@ class WorkforceEmployeeAdvanceServiceTests {
     @Mock private WorkforceAdvanceInstallmentRepository installmentRepository;
     @Mock private WorkforceAdvanceLedgerEntryRepository ledgerRepository;
     @Mock private WorkerRepository workerRepository;
-    @Mock private WorkerCategoryRepository workerCategoryRepository;
     @Mock private ContractorRepository contractorRepository;
     @Mock private AuditService auditService;
     @Mock private WorkforceAdvancePolicyRepository policyRepository;
@@ -47,7 +46,7 @@ class WorkforceEmployeeAdvanceServiceTests {
     @BeforeEach
     void setUp() {
         service = new WorkforceAdvanceService(advanceRepository, installmentRepository, ledgerRepository,
-                workerRepository, workerCategoryRepository, contractorRepository, auditService, policyRepository,
+                workerRepository, contractorRepository, auditService, policyRepository,
                 employeeRepository, attendanceCategoryRepository, operationsService);
     }
 

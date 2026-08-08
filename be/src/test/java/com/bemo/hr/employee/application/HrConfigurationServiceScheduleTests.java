@@ -3,6 +3,7 @@ package com.bemo.hr.employee.application;
 import com.bemo.hr.employee.api.CategoryApi;
 import com.bemo.hr.employee.domain.AttendanceCategory;
 import com.bemo.hr.employee.domain.AttendanceMode;
+import com.bemo.hr.employee.domain.CategoryScope;
 import com.bemo.hr.employee.domain.PayCycle;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeAssignmentRepository;
@@ -43,7 +44,7 @@ class HrConfigurationServiceScheduleTests {
         var schedule = new CategoryApi.ScheduleRequest("الجدول الأساسي", LocalDate.of(2026, 1, 1),
                 null, LocalTime.of(8, 0), null, 0);
         var request = new CategoryApi.UpsertRequest("SECURITY", "الأمن", 720, PayCycle.THIRTY_DAYS,
-                AttendanceMode.BIOMETRIC, false, false, Set.of(DayOfWeek.SATURDAY), true, List.of(schedule), 0L);
+                AttendanceMode.BIOMETRIC, false, false, Set.of(DayOfWeek.SATURDAY), true, CategoryScope.BOTH, List.of(schedule), 0L);
 
         service.updateCategory(category.getId(), request);
 
@@ -51,6 +52,28 @@ class HrConfigurationServiceScheduleTests {
         order.verify(scheduleRepository).deleteByCategoryId(category.getId());
         order.verify(scheduleRepository).flush();
         order.verify(scheduleRepository).saveAll(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    void listCategoriesReturnsOnlyEmployeeAndSharedScopeCanonicalCategories() {
+        var categoryRepository = mock(AttendanceCategoryRepository.class);
+        var employeeOnly = new AttendanceCategory("ADMIN", "إداري", 480, PayCycle.MONTHLY,
+                AttendanceMode.BIOMETRIC, false, 111, true, CategoryScope.EMPLOYEE);
+        var shared = new AttendanceCategory("SECURITY", "الأمن", 480, PayCycle.MONTHLY,
+                AttendanceMode.BIOMETRIC, false, 111, true, CategoryScope.BOTH);
+        when(categoryRepository.findByScopeInOrderByNameAsc(
+                List.of(CategoryScope.EMPLOYEE, CategoryScope.BOTH))).thenReturn(List.of(employeeOnly, shared));
+        var service = new HrConfigurationService(categoryRepository, mock(ScheduleRuleRepository.class),
+                mock(EmployeeRepository.class), mock(EmployeeCodeSequenceRepository.class),
+                mock(EmployeeAssignmentRepository.class), mock(AppUserRepository.class),
+                mock(com.bemo.hr.audit.application.AuditService.class));
+
+        var categories = service.listCategories();
+
+        assertThat(categories).extracting(CategoryApi.Response::scope)
+                .containsExactlyInAnyOrder(CategoryScope.EMPLOYEE, CategoryScope.BOTH);
+        assertThat(categories).extracting(CategoryApi.Response::code)
+                .containsExactlyInAnyOrder("ADMIN", "SECURITY");
     }
 
     private static CategoryApi.ScheduleRequest schedule(int fromMonth, Integer toMonth) {

@@ -1,0 +1,11 @@
+id;translation_key;locale;text_value
+v139-001;shortcuts.edit;ar-EG;"تعديل"
+v139-002;shortcuts.edit;en-US;"Edit"
+v139-003;shortcuts.editAria;ar-EG;"تعديل اختصار {key}"
+v139-004;shortcuts.editAria;en-US;"Edit shortcut {key}"
+v139-005;shortcuts.rowSaved;ar-EG;"تم حفظ الاختصار بنجاح."
+v139-006;shortcuts.rowSaved;en-US;"Shortcut saved successfully."
+v139-007;shortcuts.searchLabel;ar-EG;"بحث حسب الهدف أو المفتاح"
+v139-008;shortcuts.searchLabel;en-US;"Search by target or key"
+v139-009;shortcuts.noSearchResults;ar-EG;"لا توجد اختصارات مطابقة للبحث."
+v139-010;shortcuts.noSearchResults;en-US;"No shortcuts match your search."

@@ -28,11 +28,19 @@ public final class OperationsApi {
                                      @DecimalMin("0") @DecimalMax("100") BigDecimal lossPercentage,
                                      @Size(max = 100) String referenceCode, @Size(max = 1000) String note,
                                      @Size(max = 30) String documentType, @Size(max = 1000) String reason,
+                                     @Size(max = 100) String purchaseOrderNo, @Size(max = 100) String receiptNo,
+                                     @Size(max = 100) String deliveryNoteNo, @Size(max = 100) String invoiceNo,
+                                     @Size(max = 100) String voucherNo, @Size(max = 100) String externalRef,
+                                     @Size(max = 50) String warehouse, @Size(max = 255) String attachmentName,
+                                     @Size(max = 100) String attachmentContentType, Long attachmentSize,
                                      @NotNull Instant occurredAt) { }
     public record StockMovementView(String id, String itemId, String itemCode, String itemName, String partyId,
                                     String partyName, String operationType, String documentType,
                                     BigDecimal quantityDelta,
                                     BigDecimal lossPercentage, String referenceCode, String note, String reason,
+                                    String purchaseOrderNo, String receiptNo, String deliveryNoteNo, String invoiceNo,
+                                    String voucherNo, String externalRef, String warehouse,
+                                    String attachmentName, String attachmentContentType, Long attachmentSize,
                                     Instant occurredAt, String createdBy, Instant createdAt) { }
     public record LedgerView(String id, String partyId, String partyName, String entryType, BigDecimal amountDelta,
                              String referenceCode, String note, Instant occurredAt, String createdBy, Instant createdAt) { }

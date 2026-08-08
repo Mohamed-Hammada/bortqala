@@ -61,7 +61,8 @@ public final class WorkforceApi {
         BigDecimal defaultDailyRate,
         BigDecimal standardDailyHours,
         String defaultSettlementCycle,
-        String status
+        String status,
+        String scope
     ) { }
 
     public record CategoryResponse(
@@ -73,6 +74,8 @@ public final class WorkforceApi {
         BigDecimal standardDailyHours,
         String defaultSettlementCycle,
         String status,
+        String scope,
+        boolean active,
         long createdAt,
         long updatedAt
     ) { }
