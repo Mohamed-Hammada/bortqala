@@ -122,7 +122,7 @@
         @for (period of store.periods(); track period.start + period.end) {
           <button
             [disabled]="store.loading()"
-            (click)="create(period)"
+            (click)="applyPreset(period)"
             [attr.aria-label]="i18n.t('reports.usePeriodAria', { period: periodName(period) })"
           >
             <strong>{{ i18n.t('reports.useThisPeriod') }}</strong>

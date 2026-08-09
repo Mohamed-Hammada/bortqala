@@ -546,3 +546,9 @@ databaseChangeLog:
       file: db/changelog/schema/create/20260808_v140_stock_movement_document_references.yaml
   - include:
       file: db/changelog/data/insert/20260808_v141_movement_document_references_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260808_v142_employee_code_case_insensitive_unique.yaml
+  - include:
+      file: db/changelog/data/insert/20260808_v143_operations_references_ui_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260808_v144_workforce_category_error_translations.yaml

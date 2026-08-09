@@ -43,8 +43,42 @@ export interface StockMovement {
   referenceCode: string | null;
   note: string | null;
   reason: string | null;
+  purchaseOrderNo: string | null;
+  receiptNo: string | null;
+  deliveryNoteNo: string | null;
+  invoiceNo: string | null;
+  voucherNo: string | null;
+  externalRef: string | null;
+  warehouse: string | null;
+  attachmentName: string | null;
+  attachmentContentType: string | null;
+  attachmentSize: number | null;
   occurredAt: number;
   createdBy: string;
+  createdAt?: number;
+}
+export interface TransactionPayload {
+  itemId: string | null;
+  partyId: string | null;
+  operationType: string;
+  quantityDelta: number;
+  amountDelta: number;
+  lossPercentage: number | null;
+  referenceCode: string | null;
+  note: string | null;
+  reason: string | null;
+  documentType: string | null;
+  purchaseOrderNo: string | null;
+  receiptNo: string | null;
+  deliveryNoteNo: string | null;
+  invoiceNo: string | null;
+  voucherNo: string | null;
+  externalRef: string | null;
+  warehouse: string | null;
+  attachmentName: string | null;
+  attachmentContentType: string | null;
+  attachmentSize: number | null;
+  occurredAt: number;
 }
 export interface PartyBalance {
   partyId: string;

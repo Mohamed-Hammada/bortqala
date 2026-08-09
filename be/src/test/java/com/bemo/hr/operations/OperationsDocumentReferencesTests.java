@@ -26,23 +26,27 @@ class OperationsDocumentReferencesTests {
     private final OperationsService service;
     private final InventoryItemRepository inventoryItemRepository;
     private final StockMovementRepository stockMovementRepository;
+    private final PartnerLedgerEntryRepository partnerLedgerEntryRepository;
     private final BusinessPartyRepository businessPartyRepository;
     private final TenantApplicationRepository tenantApplicationRepository;
 
     private final List<String> createdItems = new ArrayList<>();
     private final List<String> createdParties = new ArrayList<>();
     private final List<String> createdMovements = new ArrayList<>();
+    private final List<String> createdLedgerEntries = new ArrayList<>();
     private final List<String> createdApps = new ArrayList<>();
 
     @Autowired
     OperationsDocumentReferencesTests(OperationsService service,
                                       InventoryItemRepository inventoryItemRepository,
                                       StockMovementRepository stockMovementRepository,
+                                      PartnerLedgerEntryRepository partnerLedgerEntryRepository,
                                       BusinessPartyRepository businessPartyRepository,
                                       TenantApplicationRepository tenantApplicationRepository) {
         this.service = service;
         this.inventoryItemRepository = inventoryItemRepository;
         this.stockMovementRepository = stockMovementRepository;
+        this.partnerLedgerEntryRepository = partnerLedgerEntryRepository;
         this.businessPartyRepository = businessPartyRepository;
         this.tenantApplicationRepository = tenantApplicationRepository;
     }
@@ -52,6 +56,7 @@ class OperationsDocumentReferencesTests {
         try {
             if (createdApps.isEmpty()) return;
             stockMovementRepository.deleteAllById(createdMovements);
+            partnerLedgerEntryRepository.deleteAllById(createdLedgerEntries);
             businessPartyRepository.deleteAllById(createdParties);
             inventoryItemRepository.deleteAllById(createdItems);
             tenantApplicationRepository.deleteAllById(createdApps);
@@ -162,6 +167,7 @@ class OperationsDocumentReferencesTests {
                 itemId, supplierId, "SUPPLY_RECEIPT", new BigDecimal("5"), new BigDecimal("0"), null,
                 null, "picked up from dock", null, null, "PO-100", "REC-100", "DN-100", "INV-100",
                 null, "EXT-REF", "Main Warehouse", "receipt.pdf", "application/pdf", 2048L, Instant.now()), "qa");
+        createdMovements.add(snapshot.movements().get(0).id());
 
         var saved = snapshot.movements().get(0);
         assertThat(saved.documentType()).isEqualTo("GOODS_RECEIPT");
@@ -185,8 +191,11 @@ class OperationsDocumentReferencesTests {
         var snapshot = service.recordTransaction(new OperationsApi.TransactionRequest(
                 itemId, supplierId, "PAYMENT", new BigDecimal("0"), new BigDecimal("100"), null,
                 null, null, null, null, null, null, null, null, null, null, null, null, null, null, Instant.now()), "qa");
+        createdLedgerEntries.add(snapshot.ledgerEntries().get(0).id());
 
-        assertThat(snapshot.movements().get(0).operationType()).isEqualTo("PAYMENT");
-        assertThat(snapshot.movements().get(0).documentType()).isEqualTo("SUPPLIER_PAYMENT");
+        assertThat(snapshot.movements()).isEmpty();
+        assertThat(snapshot.ledgerEntries()).hasSize(1);
+        assertThat(snapshot.ledgerEntries().get(0).entryType()).isEqualTo("PAYMENT");
+        assertThat(snapshot.ledgerEntries().get(0).amountDelta()).isEqualByComparingTo(new BigDecimal("100"));
     }
 }

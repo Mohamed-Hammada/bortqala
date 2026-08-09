@@ -136,14 +136,25 @@
           <tr>
             <td class="ltr">{{ date(row.occurredAt) }}</td>
             <td>{{ operationLabel(row.operationType) }}</td>
-            <td>{{ row.documentType ?? '—' }}</td>
+            <td>{{ documentTypeLabel(row.documentType) }}</td>
             <td>{{ row.itemName }}</td>
             <td>{{ row.partyName ?? '—' }}</td>
             <td>
               <strong [class.negative]="row.quantityDelta < 0">{{ row.quantityDelta }}</strong>
             </td>
             <td>{{ row.lossPercentage ?? '—' }}</td>
-            <td>{{ row.referenceCode ?? '—' }}</td>
+            <td>
+              <span class="ltr">{{ primaryReference(row) }}</span>
+              @if (row.externalRef && primaryReference(row) !== row.externalRef) {
+                <small class="ltr block">⟐ {{ row.externalRef }}</small>
+              }
+              @if (row.warehouse) {
+                <small class="block">{{ row.warehouse }}</small>
+              }
+              @if (row.attachmentName) {
+                <small class="block" [title]="row.attachmentName">📎 {{ row.attachmentName }}</small>
+              }
+            </td>
             <td>{{ row.reason ?? '—' }}</td>
           </tr>
         } @empty {
@@ -497,9 +508,54 @@
             <option value="PURCHASE_ORDER">{{ i18n.t('operations.documentType.purchaseOrder') }}</option>
             <option value="SUPPLIER_INVOICE">{{ i18n.t('operations.documentType.supplierInvoice') }}</option>
             <option value="SUPPLIER_PAYMENT">{{ i18n.t('operations.documentType.supplierPayment') }}</option>
+            <option value="DELIVERY_NOTE">{{ i18n.t('operations.documentType.deliveryNote') }}</option>
             <option value="ADJUSTMENT">{{ i18n.t('operations.documentType.adjustment') }}</option>
             <option value="VOUCHER">{{ i18n.t('operations.documentType.voucher') }}</option>
           </select>
+        </div>
+        <div class="field span-2 reference-section">
+          <h3 class="reference-title">{{ i18n.t('operations.documents') }}</h3>
+          <p class="reference-hint">{{ i18n.t('operations.referencesHint') }}</p>
+          <div class="reference-grid">
+            <div class="field" [class.required-flag]="requiredReferences().includes('purchaseOrderNo')">
+              <label>{{ i18n.t('operations.purchaseOrderNo') }}@if (requiredReferences().includes('purchaseOrderNo')) { * }</label>
+              <input class="ltr" formControlName="purchaseOrderNo" />
+            </div>
+            <div class="field" [class.required-flag]="requiredReferences().includes('receiptNo')">
+              <label>{{ i18n.t('operations.receiptNo') }}@if (requiredReferences().includes('receiptNo')) { * }</label>
+              <input class="ltr" formControlName="receiptNo" />
+            </div>
+            <div class="field" [class.required-flag]="requiredReferences().includes('deliveryNoteNo')">
+              <label>{{ i18n.t('operations.deliveryNoteNo') }}@if (requiredReferences().includes('deliveryNoteNo')) { * }</label>
+              <input class="ltr" formControlName="deliveryNoteNo" />
+            </div>
+            <div class="field" [class.required-flag]="requiredReferences().includes('invoiceNo')">
+              <label>{{ i18n.t('operations.invoiceNo') }}</label>
+              <input class="ltr" formControlName="invoiceNo" />
+            </div>
+            <div class="field" [class.required-flag]="requiredReferences().includes('voucherNo')">
+              <label>{{ i18n.t('operations.voucherNo') }}@if (requiredReferences().includes('voucherNo')) { * }</label>
+              <input class="ltr" formControlName="voucherNo" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.externalRef') }}</label>
+              <input class="ltr" formControlName="externalRef" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('operations.warehouse') }}</label>
+              <input formControlName="warehouse" />
+            </div>
+            <div class="field attachment-field">
+              <label>{{ i18n.t('operations.attachment') }}</label>
+              <input type="file" (change)="onAttachmentSelected($event)" />
+              @if (transactionForm.controls.attachmentFile.value) {
+                <div class="attachment-chip">
+                  <span class="ltr">{{ transactionForm.controls.attachmentFile.value.name }}</span>
+                  <button class="link-button" type="button" (click)="removeAttachment()">{{ i18n.t('operations.removeAttachment') }}</button>
+                </div>
+              }
+            </div>
+          </div>
         </div>
         <div class="field">
           <label>{{ i18n.t('operations.reason') || 'السبب' }}</label>

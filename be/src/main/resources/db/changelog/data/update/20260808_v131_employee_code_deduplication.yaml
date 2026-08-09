@@ -2,49 +2,59 @@ databaseChangeLog:
   - changeSet:
       id: 20260808-v131-employee-code-deduplication
       author: bemo-erp
-      comment: "REM-004: normalizes duplicated employee codes that stored the canonical code twice (e.g. QA-EMP-0807-QA-EMP-0807). The corrupted rows are updated to the canonical code; rows whose canonical code already belongs to another employee receive a short id-derived suffix. daily_results snapshots are normalized too so the employee keeps displaying one consistent code across existing reports. Idempotent - only rows still matching the duplicated pattern are touched."
+      comment: "REM-004: normalizes duplicated employee codes that stored the canonical code twice (e.g. QA-EMP-0807-QA-EMP-0807) in a production-safe way. Before touching any row it materializes an immutable correction mapping (employee_code_correction_20260808) holding employee_id/app_id/old_code/new_code/conflict/migrated_at. Forward updates and rollback both drive off that exact mapping by employee_id, so unrelated codes are never changed. The conflict path (canonical code already occupied by another employee) derives a deterministic <canonical>-<id-prefix> code and applies the SAME new_code to daily_results snapshots by employee_id, keeping employees and historical reports consistent. The mapping table doubles as the immutable audit/migration record (old and new code traceability). Idempotent - only rows still matching the duplicated pattern are inserted. Dry-run/review support is provided by the EmployeeCodeDedupService (POST /api/v1/employees/code-corrections with dryRun=true)."
       changes:
+        - createTable:
+            tableName: employee_code_correction_20260808
+            columns:
+              - column: { name: employee_id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: old_code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: new_code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: conflict, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: migrated_at, type: BIGINT, constraints: { nullable: false } }
+        - sql:
+            sql: |
+              INSERT INTO employee_code_correction_20260808 (employee_id, app_id, old_code, new_code, conflict, migrated_at)
+              SELECT e.id, e.app_id, e.employee_code,
+                     LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2)
+                       || CASE WHEN EXISTS (
+                            SELECT 1 FROM employees other
+                            WHERE other.app_id = e.app_id
+                              AND other.employee_code = LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2)
+                              AND other.id <> e.id
+                          ) THEN '-' || UPPER(LEFT(e.id, 4)) ELSE '' END,
+                     EXISTS (
+                       SELECT 1 FROM employees other
+                       WHERE other.app_id = e.app_id
+                         AND other.employee_code = LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2)
+                         AND other.id <> e.id
+                     ),
+                     CAST(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP) * 1000 AS BIGINT)
+              FROM employees e
+              WHERE e.employee_code LIKE '%-%-%'
+                AND MOD(LENGTH(e.employee_code), 2) = 1
+                AND LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2) = RIGHT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2);
         - sql:
             sql: |
               UPDATE employees e
-              SET employee_code = LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2),
+              SET employee_code = (SELECT m.new_code FROM employee_code_correction_20260808 m WHERE m.employee_id = e.id),
                   updated_at = CURRENT_TIMESTAMP
-              WHERE e.employee_code LIKE '%-%-%'
-                AND MOD(LENGTH(e.employee_code), 2) = 1
-                AND LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2) = RIGHT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2)
-                AND NOT EXISTS (
-                    SELECT 1 FROM employees other
-                    WHERE other.employee_code = LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2)
-                      AND other.id <> e.id
-                );
-
-              UPDATE employees e
-              SET employee_code = LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2) || '-' || LEFT(e.id, 4),
-                  updated_at = CURRENT_TIMESTAMP
-              WHERE e.employee_code LIKE '%-%-%'
-                AND MOD(LENGTH(e.employee_code), 2) = 1
-                AND LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2) = RIGHT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2)
-                AND EXISTS (
-                    SELECT 1 FROM employees other
-                    WHERE other.employee_code = LEFT(e.employee_code, (LENGTH(e.employee_code) - 1) / 2)
-                      AND other.id <> e.id
-                );
+              WHERE EXISTS (SELECT 1 FROM employee_code_correction_20260808 m WHERE m.employee_id = e.id);
 
               UPDATE daily_results d
-              SET employee_code = LEFT(d.employee_code, (LENGTH(d.employee_code) - 1) / 2)
-              WHERE d.employee_code LIKE '%-%-%'
-                AND MOD(LENGTH(d.employee_code), 2) = 1
-                AND LEFT(d.employee_code, (LENGTH(d.employee_code) - 1) / 2) = RIGHT(d.employee_code, (LENGTH(d.employee_code) - 1) / 2);
+              SET employee_code = (SELECT m.new_code FROM employee_code_correction_20260808 m WHERE m.employee_id = d.employee_id)
+              WHERE EXISTS (SELECT 1 FROM employee_code_correction_20260808 m WHERE m.employee_id = d.employee_id);
       rollback:
         - sql:
             sql: |
               UPDATE employees e
-              SET employee_code = e.employee_code || '-' || e.employee_code,
+              SET employee_code = (SELECT m.old_code FROM employee_code_correction_20260808 m WHERE m.employee_id = e.id),
                   updated_at = CURRENT_TIMESTAMP
-              WHERE e.employee_code LIKE '%-%'
-                AND e.employee_code NOT LIKE '%-%-%';
+              WHERE EXISTS (SELECT 1 FROM employee_code_correction_20260808 m WHERE m.employee_id = e.id);
 
               UPDATE daily_results d
-              SET employee_code = d.employee_code || '-' || d.employee_code
-              WHERE d.employee_code LIKE '%-%'
-                AND d.employee_code NOT LIKE '%-%-%';
+              SET employee_code = (SELECT m.old_code FROM employee_code_correction_20260808 m WHERE m.employee_id = d.employee_id)
+              WHERE EXISTS (SELECT 1 FROM employee_code_correction_20260808 m WHERE m.employee_id = d.employee_id);
+
+              DROP TABLE employee_code_correction_20260808;

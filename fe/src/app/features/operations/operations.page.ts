@@ -14,7 +14,14 @@ import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { OperationsStore } from './operations.store';
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
-import { ItemCategory, UnitOfMeasure } from './operations.models';
+import { ItemCategory, StockMovement, TransactionPayload, UnitOfMeasure } from './operations.models';
+
+type DocumentReferenceKey =
+  | 'purchaseOrderNo'
+  | 'receiptNo'
+  | 'deliveryNoteNo'
+  | 'invoiceNo'
+  | 'voucherNo';
 
 @Component({
   selector: 'app-operations-page',
@@ -76,6 +83,14 @@ export class OperationsPage {
     documentType: new FormControl('', { nonNullable: true }),
     reason: new FormControl('', { nonNullable: true }),
     note: new FormControl('', { nonNullable: true }),
+    purchaseOrderNo: new FormControl('', { nonNullable: true }),
+    receiptNo: new FormControl('', { nonNullable: true }),
+    deliveryNoteNo: new FormControl('', { nonNullable: true }),
+    invoiceNo: new FormControl('', { nonNullable: true }),
+    voucherNo: new FormControl('', { nonNullable: true }),
+    externalRef: new FormControl('', { nonNullable: true }),
+    warehouse: new FormControl('', { nonNullable: true }),
+    attachmentFile: new FormControl<File | null>(null),
     occurredAt: new FormControl(this.nowInput(), {
       nonNullable: true,
       validators: Validators.required,
@@ -168,16 +183,32 @@ export class OperationsPage {
       );
       return;
     }
-    if (
-      await this.store.transaction({
-        ...value,
-        itemId: value.itemId || null,
-        partyId: value.partyId || null,
-        documentType: value.documentType || null,
-        reason: value.reason?.trim() || null,
-        occurredAt: new Date(value.occurredAt).getTime(),
-      })
-    ) {
+    const missing = this.requiredReferences().find((key) => !(value[key] ?? '').trim());
+    if (missing) {
+      this.transactionForm.controls[missing].markAsTouched();
+      this.notification.error(this.i18n.t(this.referenceErrorKey(missing)));
+      return;
+    }
+    const { attachmentFile, ...rest } = value;
+    const payload: TransactionPayload = {
+      ...rest,
+      itemId: value.itemId || null,
+      partyId: value.partyId || null,
+      documentType: value.documentType || null,
+      reason: value.reason?.trim() || null,
+      purchaseOrderNo: value.purchaseOrderNo?.trim() || null,
+      receiptNo: value.receiptNo?.trim() || null,
+      deliveryNoteNo: value.deliveryNoteNo?.trim() || null,
+      invoiceNo: value.invoiceNo?.trim() || null,
+      voucherNo: value.voucherNo?.trim() || null,
+      externalRef: value.externalRef?.trim() || null,
+      warehouse: value.warehouse?.trim() || null,
+      attachmentName: attachmentFile?.name ?? null,
+      attachmentContentType: attachmentFile?.type ?? null,
+      attachmentSize: attachmentFile?.size ?? null,
+      occurredAt: new Date(value.occurredAt).getTime(),
+    };
+    if (await this.store.transaction(payload)) {
       this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.close();
     }
@@ -269,6 +300,87 @@ export class OperationsPage {
     return this.i18n.t(
       value === 'REPAYMENT' ? 'operations.advanceRepaid' : 'operations.advancePaid',
     );
+  }
+  requiredReferences(): DocumentReferenceKey[] {
+    switch (this.transactionForm.controls.operationType.value) {
+      case 'SUPPLY_RECEIPT':
+        return ['purchaseOrderNo', 'receiptNo'];
+      case 'PROCESSING_INTAKE':
+        return ['receiptNo'];
+      case 'PROCESSING_DELIVERY':
+      case 'EXPORT_SALE':
+      case 'SORTING_SALE':
+        return ['deliveryNoteNo'];
+      case 'ADJUSTMENT':
+        return ['voucherNo'];
+      default:
+        return [];
+    }
+  }
+  referenceErrorKey(key: DocumentReferenceKey): string {
+    const map: Record<string, string> = {
+      purchaseOrderNo: 'OPS_MOVEMENT_PURCHASE_ORDER_REQUIRED',
+      receiptNo: 'OPS_MOVEMENT_RECEIPT_REQUIRED',
+      deliveryNoteNo: 'OPS_MOVEMENT_DELIVERY_NOTE_REQUIRED',
+      voucherNo: 'OPS_MOVEMENT_VOUCHER_REQUIRED',
+    };
+    return map[key] ?? 'OPS_MOVEMENT_RECEIPT_REQUIRED';
+  }
+  documentTypeLabel(value: string | null): string {
+    if (!value) return '—';
+    const key = (
+      {
+        GOODS_RECEIPT: 'goodsReceipt',
+        PURCHASE_ORDER: 'purchaseOrder',
+        SUPPLIER_INVOICE: 'supplierInvoice',
+        SUPPLIER_PAYMENT: 'supplierPayment',
+        DELIVERY_NOTE: 'deliveryNote',
+        ADJUSTMENT: 'adjustment',
+        VOUCHER: 'voucher',
+      } as Record<string, string>
+    )[value];
+    return key ? this.i18n.t(`operations.documentType.${key}`) : value.replaceAll('_', ' ');
+  }
+  primaryReference(row: StockMovement): string {
+    return (
+      row.receiptNo ??
+      row.invoiceNo ??
+      row.deliveryNoteNo ??
+      row.purchaseOrderNo ??
+      row.voucherNo ??
+      row.externalRef ??
+      row.referenceCode ??
+      '—'
+    );
+  }
+  onAttachmentSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+    if (!file) {
+      this.transactionForm.controls.attachmentFile.setValue(null);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.transactionForm.controls.attachmentFile.setValue(null);
+      this.notification.error(this.i18n.t('operations.attachmentSizeError'));
+      return;
+    }
+    const type = file.type.toLowerCase();
+    const allowed =
+      type.startsWith('image/') ||
+      type === 'application/pdf' ||
+      type === 'application/vnd.ms-excel' ||
+      type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    if (!allowed) {
+      this.transactionForm.controls.attachmentFile.setValue(null);
+      this.notification.error(this.i18n.t('operations.attachmentTypeError'));
+      return;
+    }
+    this.transactionForm.controls.attachmentFile.setValue(file);
+  }
+  removeAttachment(): void {
+    this.transactionForm.controls.attachmentFile.setValue(null);
   }
   private nowInput(): string {
     const date = new Date();

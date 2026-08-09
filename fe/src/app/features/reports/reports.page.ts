@@ -57,7 +57,7 @@ export class ReportsPage {
    * Preset cards are shortcuts for configuring the form, not an immediate
    * create side effect. The user still has Preview and Create as explicit actions.
    */
-  create(period: PeriodOption): void {
+  applyPreset(period: PeriodOption): void {
     this.customError.set(null);
     this.previewResult.set(null);
     this.periodForm.setValue({

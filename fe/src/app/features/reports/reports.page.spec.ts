@@ -60,7 +60,7 @@ describe('ReportsPage REM-006 period presets', () => {
   }
 
   it('fills the period form on preset click and does not create a report', () => {
-    page.create(period);
+    page.applyPreset(period);
 
     expect(page.periodForm.getRawValue().periodStart).toBeDefined();
     expect(page.periodForm.getRawValue().payCycle).toBe('HALF_MONTHLY');
