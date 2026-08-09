@@ -1,0 +1,86 @@
+[
+  {
+    "model_pattern": "Pro-Watch 4.*|Pro-Watch 5.*|Pro-Watch 6.*",
+    "generation_or_version": "platform",
+    "routes": [
+      "prowatch-web-services",
+      "prowatch-hsdk"
+    ],
+    "preferred_route": "prowatch-web-services",
+    "fallback_routes": [
+      "prowatch-hsdk"
+    ],
+    "notes": "Web Services API for standard integration; HSDK for licensed deep integration.",
+    "official_documentation": [
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pro-watch-software",
+      "https://buildings.honeywell.com/us/en/products/by-category/video-systems/software/pro-watch-4-3-software",
+      "https://buildings.honeywell.com/us/en/products/by-category/software/security-control-software/access-control-software/pro-watch-integrated-security-suite",
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pwhsdk",
+      "https://buildings.honeywell.com/gb/en/brands/our-brands/security/services/his-integrator-training"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "PRO3200.*|PRO4200.*|Mercury.*",
+    "generation_or_version": "panel",
+    "routes": [
+      "panel-through-prowatch",
+      "prowatch-hsdk"
+    ],
+    "preferred_route": "panel-through-prowatch",
+    "fallback_routes": [
+      "prowatch-hsdk"
+    ],
+    "notes": "Integrate through Pro-Watch rather than assuming a public direct device API.",
+    "official_documentation": [
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pro-watch-software",
+      "https://buildings.honeywell.com/us/en/products/by-category/software/security-control-software/access-control-software/pro-watch-integrated-security-suite",
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pwhsdk",
+      "https://buildings.honeywell.com/gb/en/brands/our-brands/security/services/his-integrator-training"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "OmniProx.*|reader.*",
+    "generation_or_version": "reader",
+    "routes": [
+      "reader-bus"
+    ],
+    "preferred_route": "reader-bus",
+    "fallback_routes": [],
+    "notes": "Reader attaches to access panel; integration is at panel/platform layer.",
+    "official_documentation": [
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pro-watch-software"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "UNKNOWN",
+    "generation_or_version": "unknown",
+    "routes": [
+      "prowatch-web-services",
+      "prowatch-hsdk"
+    ],
+    "preferred_route": "prowatch-web-services",
+    "fallback_routes": [
+      "prowatch-hsdk"
+    ],
+    "notes": "Identify Pro-Watch version/licensing and panel type.",
+    "official_documentation": [
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pro-watch-software",
+      "https://buildings.honeywell.com/us/en/products/by-category/video-systems/software/pro-watch-4-3-software",
+      "https://buildings.honeywell.com/us/en/products/by-category/software/security-control-software/access-control-software/pro-watch-integrated-security-suite",
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pwhsdk",
+      "https://buildings.honeywell.com/gb/en/brands/our-brands/security/services/his-integrator-training"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  }
+]

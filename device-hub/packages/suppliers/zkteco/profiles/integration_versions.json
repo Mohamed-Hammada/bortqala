@@ -1,0 +1,283 @@
+[
+  {
+    "route": "ac-push",
+    "kind": "protocol",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/PUSHSDK",
+      "https://zkteco.com/en/FSeries/F18"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "adms-ta-push",
+    "kind": "protocol",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/PUSHSDK",
+      "https://www.zkteco.com/en/ZKBio_WDMS/ZKBio_WDMS"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "android-lcdp",
+    "kind": "sdk",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/SDK"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "plcommpro-pull",
+    "kind": "sdk",
+    "version_policy": "controller-firmware-sdk-matched",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/SDK"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "standalone-sdk",
+    "kind": "sdk",
+    "version_policy": "device-firmware-sdk-matched",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/SDK",
+      "https://zkteco.com/en/FSeries/F18"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "time-cloud-zlink",
+    "kind": "api",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/other_document"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "wdms-api",
+    "kind": "api",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/ZKBio_WDMS/ZKBio_WDMS"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "wiegand-rs485",
+    "kind": "protocol",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/SDK"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "zk-pull",
+    "kind": "protocol",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/SDK"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "zkbio-cvaccess-api",
+    "kind": "api",
+    "version_policy": "server-coupled",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/ZKBio_CVAccess/ZKBio_CVAccess"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "zkbio-cvsecurity-api",
+    "kind": "api",
+    "version_policy": "server-coupled",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/ZKBio_CVSecurity_API/ZKBioCVSecurity_API",
+      "https://www.zkteco.com/en/ZKBio_CVSecurity/ZKBio_CVSecurity"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory.",
+    "publicly_observed_current_version_as_of_2026_08_08": "6.8.0"
+  },
+  {
+    "route": "zkbio-time-api",
+    "kind": "api",
+    "version_policy": "server-coupled",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/ZKBioTime_API/ZKBioTime_API",
+      "https://www.zkteco.com/en/other_document"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory.",
+    "publicly_observed_current_version_as_of_2026_08_08": "9.0.6"
+  },
+  {
+    "route": "zkfinger-sdk",
+    "kind": "sdk",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://www.zkteco.com/en/SDK"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  }
+]

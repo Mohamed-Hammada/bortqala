@@ -1,0 +1,122 @@
+[
+  {
+    "model_pattern": "BioStation 3.*|BS3.*|BioStation 2.*|BS2.*|BioStation A2.*|BioLite N2.*|BioEntry W2.*|BioEntry P2.*|BioEntry R2.*|FaceStation 2.*|FaceStation F2.*|FaceLite.*|X-Station 2.*|XPass 2.*|XPass D2.*|CoreStation.*",
+    "generation_or_version": "biostar2-generation",
+    "routes": [
+      "g-sdk",
+      "biostar-device-sdk",
+      "biostar2-local-api"
+    ],
+    "preferred_route": "g-sdk",
+    "fallback_routes": [
+      "biostar-device-sdk",
+      "biostar2-local-api"
+    ],
+    "notes": "BioStar 2 devices: direct SDK/G-SDK or platform API.",
+    "official_documentation": [
+      "https://supremainc.github.io/g-sdk/overview/",
+      "https://supremainc.github.io/g-sdk/api/",
+      "https://support.supremainc.com/en/support/solutions/articles/24000054528-g-sdk-introduction",
+      "https://kb.supremainc.com/bs2sdk/doku.php?id=en:start",
+      "https://kb.supremainc.com/bs2sdk/doku.php?id=en:api_references",
+      "https://support.supremainc.com/en/support/solutions/articles/24000005839",
+      "https://download.supremainc.com/download-center/pages/login.asp",
+      "https://kb.supremainc.com/knowledge/doku.php?id=en:how_to_use_swagger_ui_and_postman_for_biostar_2_new_local_api"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "BioEntry Plus.*|BioEntry W v2.*|XPass v2.*|XPS2 v2.*|BLN v2.*",
+    "generation_or_version": "biostar1-generation",
+    "routes": [
+      "biostar1-legacy-sdk"
+    ],
+    "preferred_route": "biostar1-legacy-sdk",
+    "fallback_routes": [],
+    "notes": "G-SDK explicitly excludes BioStar 1 devices.",
+    "official_documentation": [
+      "https://support.supremainc.com/en/support/solutions/articles/24000054528-g-sdk-introduction"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "BioStar 2",
+    "generation_or_version": "platform >=2.7.10",
+    "routes": [
+      "biostar2-local-api"
+    ],
+    "preferred_route": "biostar2-local-api",
+    "fallback_routes": [],
+    "notes": "New Local API bundled with platform.",
+    "official_documentation": [
+      "https://support.supremainc.com/en/support/solutions/articles/24000005839",
+      "https://kb.supremainc.com/knowledge/doku.php?id=en:how_to_use_swagger_ui_and_postman_for_biostar_2_new_local_api"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": ">=2.7.10",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "BioStar 2 2.4-2.7.9",
+    "generation_or_version": "platform",
+    "routes": [
+      "biostar2-api-v2"
+    ],
+    "preferred_route": "biostar2-api-v2",
+    "fallback_routes": [],
+    "notes": "Legacy API v2.",
+    "official_documentation": [
+      "https://support.supremainc.com/en/support/solutions/articles/24000005839"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "BioStar 2 <=2.3",
+    "generation_or_version": "platform",
+    "routes": [
+      "biostar2-api-v1"
+    ],
+    "preferred_route": "biostar2-api-v1",
+    "fallback_routes": [],
+    "notes": "Legacy API v1.",
+    "official_documentation": [
+      "https://support.supremainc.com/en/support/solutions/articles/24000005839"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "UNKNOWN",
+    "generation_or_version": "unknown",
+    "routes": [
+      "g-sdk",
+      "biostar-device-sdk",
+      "biostar1-legacy-sdk"
+    ],
+    "preferred_route": "g-sdk",
+    "fallback_routes": [
+      "biostar-device-sdk",
+      "biostar1-legacy-sdk"
+    ],
+    "notes": "Read device generation/capability before choosing.",
+    "official_documentation": [
+      "https://supremainc.github.io/g-sdk/overview/",
+      "https://supremainc.github.io/g-sdk/api/",
+      "https://support.supremainc.com/en/support/solutions/articles/24000054528-g-sdk-introduction",
+      "https://kb.supremainc.com/bs2sdk/doku.php?id=en:start",
+      "https://kb.supremainc.com/bs2sdk/doku.php?id=en:api_references",
+      "https://support.supremainc.com/en/support/solutions/articles/24000005839",
+      "https://download.supremainc.com/download-center/pages/login.asp"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  }
+]

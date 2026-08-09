@@ -1,0 +1,21 @@
+{
+  "model": "REPLACE_WITH_DEVICE_MODEL",
+  "firmware": "REPLACE_WITH_DEVICE_FIRMWARE",
+  "platform_version": "",
+  "server_version": "",
+  "os_name": "windows",
+  "architecture": "x64",
+  "sdk_versions": {
+    "hcnet-sdk": "REPLACE_WITH_EXACT_VERSION",
+    "isup-sdk": "REPLACE_WITH_EXACT_VERSION",
+    "otap-sdk": "REPLACE_WITH_EXACT_VERSION",
+    "sadp-discovery": "REPLACE_WITH_EXACT_VERSION",
+    "usb-sdk": "REPLACE_WITH_EXACT_VERSION"
+  },
+  "api_versions": {
+    "device-gateway": "REPLACE_IF_API_HAS_EXPLICIT_VERSION",
+    "hikcentral-openapi": "REPLACE_IF_API_HAS_EXPLICIT_VERSION",
+    "isapi": "REPLACE_IF_API_HAS_EXPLICIT_VERSION"
+  },
+  "capability_hints": []
+}

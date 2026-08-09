@@ -1,0 +1,220 @@
+[
+  {
+    "route": "device-gateway",
+    "kind": "api",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://open.hikvision.com/osp"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "hcnet-sdk",
+    "kind": "sdk",
+    "version_policy": "device-firmware-sdk-matched",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://open.hikvision.com/osp",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3?id=6343bb4b03df46c39032d2ef825eb70d&type=10"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "hikcentral-openapi",
+    "kind": "api",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://open.hikvision.com/osp"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "isapi",
+    "kind": "api",
+    "version_policy": "capability-negotiated",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://open.hikvision.com/osp"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "isup-sdk",
+    "kind": "sdk",
+    "version_policy": "device-firmware-sdk-matched",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://open.hikvision.com/osp",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "otap-sdk",
+    "kind": "sdk",
+    "version_policy": "device-firmware-sdk-matched",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://open.hikvision.com/osp",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3?id=2bb0d993a2804277aa2974550732003f&type=10"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "sadp-discovery",
+    "kind": "sdk",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://open.hikvision.com/osp",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "usb-sdk",
+    "kind": "sdk",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://open.hikvision.com/osp",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "wiegand-osdp",
+    "kind": "protocol",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://open.hikvision.com/osp"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  }
+]

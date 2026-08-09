@@ -1,0 +1,106 @@
+[
+  {
+    "model_pattern": "UBio-X.*",
+    "generation_or_version": "modern",
+    "routes": [
+      "alpeta-api",
+      "ucs-sdk"
+    ],
+    "preferred_route": "alpeta-api",
+    "fallback_routes": [
+      "ucs-sdk"
+    ],
+    "notes": "Modern UBio family; typically Alpeta-managed, UCS SDK for lower-level integration.",
+    "official_documentation": [
+      "https://support.unionbiometrics.com/",
+      "https://support.unionbiometrics.com/TechHub/Faq"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "AC-5000.*|AC-5100.*|AC-2200.*|AC-2100.*",
+    "generation_or_version": "modern-legacy",
+    "routes": [
+      "ucs-sdk",
+      "alpeta-api",
+      "unis-server"
+    ],
+    "preferred_route": "ucs-sdk",
+    "fallback_routes": [
+      "alpeta-api",
+      "unis-server"
+    ],
+    "notes": "Generation/firmware and deployed server decide.",
+    "official_documentation": [
+      "https://support.unionbiometrics.com/",
+      "https://support.unionbiometrics.com/TechHub/Faq",
+      "https://support.unionbiometrics.com/TechHub/TechResource"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "AC-2000.*|AC-1100.*",
+    "generation_or_version": "legacy",
+    "routes": [
+      "unis-server",
+      "ucs-sdk"
+    ],
+    "preferred_route": "unis-server",
+    "fallback_routes": [
+      "ucs-sdk"
+    ],
+    "notes": "Legacy UNIS estates are common; UCS availability must be confirmed.",
+    "official_documentation": [
+      "https://support.unionbiometrics.com/TechHub/Faq",
+      "https://support.unionbiometrics.com/TechHub/TechResource",
+      "https://support.unionbiometrics.com/"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "FOH.*|NScan.*|VScan.*|Hamster.*",
+    "generation_or_version": "scanner",
+    "routes": [
+      "usb-scanner-sdk"
+    ],
+    "preferred_route": "usb-scanner-sdk",
+    "fallback_routes": [],
+    "notes": "USB scanner/module integration.",
+    "official_documentation": [
+      "https://support.unionbiometrics.com/",
+      "https://support.unionbiometrics.com/TechHub/TechResource"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "UNKNOWN",
+    "generation_or_version": "unknown",
+    "routes": [
+      "alpeta-api",
+      "ucs-sdk",
+      "unis-server"
+    ],
+    "preferred_route": "alpeta-api",
+    "fallback_routes": [
+      "ucs-sdk",
+      "unis-server"
+    ],
+    "notes": "Use deployed platform first, then licensed SDK.",
+    "official_documentation": [
+      "https://support.unionbiometrics.com/",
+      "https://support.unionbiometrics.com/TechHub/Faq",
+      "https://support.unionbiometrics.com/TechHub/TechResource"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  }
+]

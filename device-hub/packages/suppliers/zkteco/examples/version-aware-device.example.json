@@ -1,0 +1,22 @@
+{
+  "model": "REPLACE_WITH_DEVICE_MODEL",
+  "firmware": "REPLACE_WITH_DEVICE_FIRMWARE",
+  "platform_version": "",
+  "server_version": "",
+  "os_name": "windows",
+  "architecture": "x64",
+  "sdk_versions": {
+    "android-lcdp": "REPLACE_WITH_EXACT_VERSION",
+    "plcommpro-pull": "REPLACE_WITH_EXACT_VERSION",
+    "standalone-sdk": "REPLACE_WITH_EXACT_VERSION",
+    "zkfinger-sdk": "REPLACE_WITH_EXACT_VERSION"
+  },
+  "api_versions": {
+    "time-cloud-zlink": "REPLACE_IF_API_HAS_EXPLICIT_VERSION",
+    "wdms-api": "REPLACE_IF_API_HAS_EXPLICIT_VERSION",
+    "zkbio-cvaccess-api": "REPLACE_IF_API_HAS_EXPLICIT_VERSION",
+    "zkbio-cvsecurity-api": "REPLACE_IF_API_HAS_EXPLICIT_VERSION",
+    "zkbio-time-api": "REPLACE_IF_API_HAS_EXPLICIT_VERSION"
+  },
+  "capability_hints": []
+}

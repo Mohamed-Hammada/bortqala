@@ -1,0 +1,11 @@
+id;translation_key;locale;text_value
+v147-001;DEVICE_HUB_ID_INVALID;ar-EG;"معرّف غير صالح لمزوّد الأجهزة."
+v147-002;DEVICE_HUB_ID_INVALID;en-US;"Invalid device-hub identifier."
+v147-003;DEVICE_HUB_REGISTRATION_INVALID;ar-EG;"لم يُرجع مزوّد الأجهزة معرّف الجهاز."
+v147-004;DEVICE_HUB_REGISTRATION_INVALID;en-US;"Device hub did not return a device id."
+v147-005;DEVICE_INTEGRATION_CONFIG_INVALID;ar-EG;"تعذّر تسلسل إعداد التكامل."
+v147-006;DEVICE_INTEGRATION_CONFIG_INVALID;en-US;"Unable to serialize integration configuration."
+v147-007;DEVICE_INTEGRATION_NOT_FOUND;ar-EG;"لم يتم العثور على تكامل الجهاز."
+v147-008;DEVICE_INTEGRATION_NOT_FOUND;en-US;"Device integration was not found."
+v147-009;DEVICE_INTEGRATION_ROUTE_UNAVAILABLE;ar-EG;"مسار التكامل المحدد غير متاح لهذا المورد/الموديل."
+v147-010;DEVICE_INTEGRATION_ROUTE_UNAVAILABLE;en-US;"The selected integration route is not available for this supplier/model profile."

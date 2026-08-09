@@ -1,0 +1,133 @@
+[
+  {
+    "route": "dss-dip-bridge",
+    "kind": "api",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.dahuasecurity.com/products/software/ecosystem/integration-with-dss"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "dss-openapi",
+    "kind": "api",
+    "version_policy": "dss-server-coupled",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.dahuasecurity.com/products/software/ecosystem/integration-with-dss",
+      "https://www.dahuasecurity.com/products/software/software-products/dss-professional"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "dss-sdk",
+    "kind": "sdk",
+    "version_policy": "dss-server-sdk-matched",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://www.dahuasecurity.com/products/software/ecosystem/integration-with-dss",
+      "https://previous-depp.dahuasecurity.com/integration/guide/download/sdk"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "netsdk",
+    "kind": "sdk",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://www.dahuasecurity.com/download-center/softwares",
+      "https://previous-depp.dahuasecurity.com/integration/guide/download/sdk"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "onvif-discovery",
+    "kind": "protocol",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.dahuasecurity.com/products/software/ecosystem/integration-with-dss"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "wiegand-osdp-rs485",
+    "kind": "protocol",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://www.dahuasecurity.com/products/software/software-products/dss-professional"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  }
+]

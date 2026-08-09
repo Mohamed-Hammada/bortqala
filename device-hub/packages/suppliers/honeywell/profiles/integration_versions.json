@@ -1,0 +1,107 @@
+[
+  {
+    "route": "panel-through-prowatch",
+    "kind": "api",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pro-watch-software",
+      "https://buildings.honeywell.com/us/en/products/by-category/software/security-control-software/access-control-software/pro-watch-integrated-security-suite"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "prowatch-db-integration",
+    "kind": "api",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pro-watch-software"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "prowatch-hsdk",
+    "kind": "sdk",
+    "version_policy": "server-sdk-matched",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pro-watch-software",
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pwhsdk",
+      "https://buildings.honeywell.com/gb/en/brands/our-brands/security/services/his-integrator-training"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "prowatch-web-services",
+    "kind": "api",
+    "version_policy": "server-coupled",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pro-watch-software",
+      "https://buildings.honeywell.com/us/en/products/by-category/video-systems/software/pro-watch-4-3-software",
+      "https://buildings.honeywell.com/us/en/products/by-category/software/security-control-software/access-control-software/pro-watch-integrated-security-suite"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "reader-bus",
+    "kind": "protocol",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://buildings.honeywell.com/ae/en/products/by-category/access-control/software/pro-watch-software"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  }
+]

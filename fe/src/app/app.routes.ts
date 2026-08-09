@@ -50,6 +50,16 @@ export const routes: Routes = [
           import('./features/imports/imports.page').then((module) => module.ImportsPage),
       },
       {
+        // device-integrations-route: shares the Attendance Imports permission/menu scope.
+        path: 'imports/device-integrations',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'imports' },
+        loadComponent: () =>
+          import('./features/device-integrations/device-integrations.page').then(
+            (module) => module.DeviceIntegrationsPage,
+          ),
+      },
+      {
         path: 'parties',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'parties' },

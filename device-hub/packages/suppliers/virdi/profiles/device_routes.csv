@@ -1,0 +1,6 @@
+model_pattern,generation_or_version,preferred_route,fallback_routes,notes,official_documentation
+UBio-X.*,modern,alpeta-api,ucs-sdk,"Modern UBio family; typically Alpeta-managed, UCS SDK for lower-level integration.",https://support.unionbiometrics.com/|https://support.unionbiometrics.com/TechHub/Faq
+AC-5000.*|AC-5100.*|AC-2200.*|AC-2100.*,modern-legacy,ucs-sdk,alpeta-api|unis-server,Generation/firmware and deployed server decide.,https://support.unionbiometrics.com/|https://support.unionbiometrics.com/TechHub/Faq|https://support.unionbiometrics.com/TechHub/TechResource
+AC-2000.*|AC-1100.*,legacy,unis-server,ucs-sdk,Legacy UNIS estates are common; UCS availability must be confirmed.,https://support.unionbiometrics.com/TechHub/Faq|https://support.unionbiometrics.com/TechHub/TechResource|https://support.unionbiometrics.com/
+FOH.*|NScan.*|VScan.*|Hamster.*,scanner,usb-scanner-sdk,,USB scanner/module integration.,https://support.unionbiometrics.com/|https://support.unionbiometrics.com/TechHub/TechResource
+UNKNOWN,unknown,alpeta-api,ucs-sdk|unis-server,"Use deployed platform first, then licensed SDK.",https://support.unionbiometrics.com/|https://support.unionbiometrics.com/TechHub/Faq|https://support.unionbiometrics.com/TechHub/TechResource

@@ -1,0 +1,151 @@
+[
+  {
+    "model_pattern": "DS-K1T.*|MinMoe.*",
+    "generation_or_version": "access-terminal",
+    "routes": [
+      "isapi",
+      "hcnet-sdk",
+      "device-gateway",
+      "isup-sdk"
+    ],
+    "preferred_route": "isapi",
+    "fallback_routes": [
+      "hcnet-sdk",
+      "device-gateway",
+      "isup-sdk"
+    ],
+    "notes": "Prefer ISAPI on reachable fixed-IP terminals; use ISUP/Device Gateway when device registers to platform.",
+    "official_documentation": [
+      "https://open.hikvision.com/osp",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3?id=6343bb4b03df46c39032d2ef825eb70d&type=10"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "DS-K26.*|DS-K28.*|DS-K27.*",
+    "generation_or_version": "controller",
+    "routes": [
+      "isapi",
+      "hcnet-sdk",
+      "hikcentral-openapi"
+    ],
+    "preferred_route": "isapi",
+    "fallback_routes": [
+      "hcnet-sdk",
+      "hikcentral-openapi"
+    ],
+    "notes": "Access controllers; firmware capability decides direct API/SDK.",
+    "official_documentation": [
+      "https://open.hikvision.com/osp",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3?id=6343bb4b03df46c39032d2ef825eb70d&type=10"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "DS-K110.*|DS-K1F.*",
+    "generation_or_version": "reader-usb",
+    "routes": [
+      "usb-sdk",
+      "wiegand-osdp"
+    ],
+    "preferred_route": "usb-sdk",
+    "fallback_routes": [
+      "wiegand-osdp"
+    ],
+    "notes": "Reader/card issuer path.",
+    "official_documentation": [
+      "https://open.hikvision.com/osp",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "HikCentral.*",
+    "generation_or_version": "platform",
+    "routes": [
+      "hikcentral-openapi"
+    ],
+    "preferred_route": "hikcentral-openapi",
+    "fallback_routes": [],
+    "notes": "Platform integration.",
+    "official_documentation": [
+      "https://open.hikvision.com/osp"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "ISUP.*",
+    "generation_or_version": "registered-device",
+    "routes": [
+      "device-gateway",
+      "isup-sdk"
+    ],
+    "preferred_route": "device-gateway",
+    "fallback_routes": [
+      "isup-sdk"
+    ],
+    "notes": "No-fixed-IP registration topology.",
+    "official_documentation": [
+      "https://open.hikvision.com/osp",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "OTAP.*",
+    "generation_or_version": "new-platform",
+    "routes": [
+      "otap-sdk"
+    ],
+    "preferred_route": "otap-sdk",
+    "fallback_routes": [],
+    "notes": "Use when device/product documentation advertises OTAP.",
+    "official_documentation": [
+      "https://open.hikvision.com/osp",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3?id=2bb0d993a2804277aa2974550732003f&type=10"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "UNKNOWN",
+    "generation_or_version": "unknown",
+    "routes": [
+      "isapi",
+      "hcnet-sdk",
+      "device-gateway",
+      "isup-sdk",
+      "otap-sdk"
+    ],
+    "preferred_route": "isapi",
+    "fallback_routes": [
+      "hcnet-sdk",
+      "device-gateway",
+      "isup-sdk",
+      "otap-sdk"
+    ],
+    "notes": "Probe ISAPI safely, then select provisioned SDK/gateway path.",
+    "official_documentation": [
+      "https://open.hikvision.com/osp",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3?id=6343bb4b03df46c39032d2ef825eb70d&type=10",
+      "https://open.hikvision.com/download/5cda567cf47ae80dd41a54b3?id=2bb0d993a2804277aa2974550732003f&type=10"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  }
+]

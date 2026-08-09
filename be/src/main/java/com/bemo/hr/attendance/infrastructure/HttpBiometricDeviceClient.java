@@ -5,6 +5,7 @@ import com.bemo.hr.attendance.domain.BiometricDevice;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -25,9 +26,18 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(8)).build();
+    private final URI deviceHubBaseUri;
+    private final String deviceHubApiKey;
 
-    public HttpBiometricDeviceClient(ObjectMapper objectMapper) {
+    public HttpBiometricDeviceClient(
+            ObjectMapper objectMapper,
+            @Value("${BEMO_DEVICE_HUB_BASE_URL:http://localhost:8090}") String deviceHubBaseUrl,
+            @Value("${DEVICE_HUB_API_KEY:}") String deviceHubApiKey) {
         this.objectMapper = objectMapper;
+        this.deviceHubBaseUri = URI.create(deviceHubBaseUrl == null || deviceHubBaseUrl.isBlank()
+                ? "http://localhost:8090"
+                : deviceHubBaseUrl.strip());
+        this.deviceHubApiKey = deviceHubApiKey == null ? "" : deviceHubApiKey.strip();
     }
 
     @Override
@@ -37,6 +47,9 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
             HttpRequest.Builder builder = HttpRequest.newBuilder(endpoint)
                     .timeout(Duration.ofSeconds(20))
                     .header("Accept", "application/json");
+            if (isDeviceHubEndpoint(endpoint) && !deviceHubApiKey.isBlank()) {
+                builder.header("X-Device-Hub-Key", deviceHubApiKey);
+            }
             if (credentials != null && credentials.password() != null && !credentials.password().isBlank()) {
                 String user = credentials.username() == null ? "" : credentials.username();
                 String basic = Base64.getEncoder().encodeToString(
@@ -45,7 +58,11 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
             }
             HttpResponse<byte[]> response = httpClient.send(builder.GET().build(), HttpResponse.BodyHandlers.ofByteArray());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new BusinessRuleException("فشل الاتصال بجهاز البصمة. رمز الاستجابة: " + response.statusCode());
+                String message = "فشل الاتصال بجهاز البصمة. رمز الاستجابة: " + response.statusCode();
+                if (response.statusCode() == 501) {
+                    message = "مسار التكامل المحدد لا يحتوي بعد على قارئ سجلات حضور مكتمل لهذا الإصدار. راجع حالة التنفيذ والتوثيق الرسمي.";
+                }
+                throw new BusinessRuleException(message);
             }
             JsonNode root = objectMapper.readTree(response.body());
             JsonNode rows = root.isArray() ? root : root.path("punches");
@@ -82,6 +99,19 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
         String separator = base.getQuery() == null ? "?" : "&";
         return URI.create(base + separator + "since=" + URLEncoder.encode(
                 device.getLastSuccessfulPunchAt().toString(), StandardCharsets.UTF_8));
+    }
+
+    private boolean isDeviceHubEndpoint(URI endpoint) {
+        if (endpoint.getHost() == null || deviceHubBaseUri.getHost() == null) return false;
+        if (!endpoint.getHost().equalsIgnoreCase(deviceHubBaseUri.getHost())) return false;
+        return effectivePort(endpoint) == effectivePort(deviceHubBaseUri)
+                && endpoint.getPath() != null
+                && endpoint.getPath().startsWith("/v1/devices/");
+    }
+
+    private int effectivePort(URI uri) {
+        if (uri.getPort() >= 0) return uri.getPort();
+        return "https".equalsIgnoreCase(uri.getScheme()) ? 443 : 80;
     }
 
     private String firstText(JsonNode row, String... fields) {

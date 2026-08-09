@@ -1,0 +1,50 @@
+openapi: 3.0.3
+info:
+  title: Universal Biometric & Access Hub - Bortqala Edition
+  version: 0.5.0
+paths:
+  /health:
+    get:
+      responses: {'200': {description: Hub status}}
+  /v1/suppliers:
+    get:
+      responses: {'200': {description: Supplier packages and route inventories}}
+  /v1/suppliers/{vendor}/routes:
+    get:
+      parameters:
+        - {name: vendor, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: SDK/API version catalog for the supplier}}
+  /v1/resolve-route:
+    post:
+      responses: {'200': {description: Version-aware integration route resolution}}
+  /v1/devices:
+    get:
+      responses: {'200': {description: Registered devices}}
+    post:
+      responses: {'200': {description: Register device and pin a compatible supplier route}}
+  /v1/devices/{deviceId}:
+    get:
+      parameters:
+        - {name: deviceId, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Registered device}}
+    put:
+      parameters:
+        - {name: deviceId, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Updated device}}
+    delete:
+      parameters:
+        - {name: deviceId, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Device removed}}
+  /v1/devices/{deviceId}/probe:
+    post:
+      parameters:
+        - {name: deviceId, in: path, required: true, schema: {type: string}}
+      responses: {'200': {description: Supplier adapter connectivity/capability probe}}
+  /v1/devices/{deviceId}/punches:
+    get:
+      parameters:
+        - {name: deviceId, in: path, required: true, schema: {type: string}}
+        - {name: since, in: query, required: false, schema: {type: string}}
+      responses:
+        '200': {description: Normalized Bortqala attendance punches}
+        '501': {description: Route exists but event retrieval is not implemented/configured}

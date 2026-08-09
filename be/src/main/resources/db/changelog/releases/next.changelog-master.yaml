@@ -139,9 +139,9 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260808_v135_category_scope_translations.yaml
   - include:
       file: db/changelog/data/insert/20260808_v136_audit_filter_translations.yaml
-   - include:
+  - include:
       file: db/changelog/schema/create/20260808_v137_audit_log_filters_indexes.yaml
-   - include:
+  - include:
       file: db/changelog/data/insert/20260808_v138_reports_preset_translations.yaml
   - include:
       file: db/changelog/data/insert/20260808_v139_shortcut_edit_translations.yaml
@@ -155,3 +155,9 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260808_v143_operations_references_ui_translations.yaml
   - include:
       file: db/changelog/data/insert/20260808_v144_workforce_category_error_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260809_v145_biometric_device_integrations.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v146_device_integration_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v147_device_integration_error_translations.yaml
