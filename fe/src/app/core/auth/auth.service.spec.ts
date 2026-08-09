@@ -247,4 +247,107 @@ describe('AuthService', () => {
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull();
     expect(service.sessionRestorable()).toBe(false);
   });
+
+  describe('logout scope', () => {
+    it('logout() defaults to current-browser scope', () => {
+      localStorage.setItem(STORAGE_KEY, storedSession());
+      const service = TestBed.inject(AuthService);
+      expect(service.authenticated()).toBe(false);
+      expect(service.sessionRestorable()).toBe(true);
+
+      service.logout();
+
+      const req = http.expectOne('/api/v1/auth/logout');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.withCredentials).toBe(true);
+      req.flush(null);
+
+      expect(service.sessionRestorable()).toBe(false);
+      const broadcast = JSON.parse(localStorage.getItem('bemo-erp-logout-event')!) as { userId: string; scope: string };
+      expect(broadcast.userId).toBe('user1');
+      expect(broadcast.scope).toBe('CURRENT_BROWSER');
+    });
+
+    it('logoutCurrentBrowser posts, broadcasts, and clears the session', () => {
+      localStorage.setItem(STORAGE_KEY, storedSession());
+      const service = TestBed.inject(AuthService);
+
+      service.logoutCurrentBrowser();
+
+      http.expectOne('/api/v1/auth/logout').flush(null);
+      expect(service.sessionRestorable()).toBe(false);
+      expect(service.user()).toBeNull();
+    });
+
+    it('logoutAllDevices revokes every session and clears the local one', () => {
+      localStorage.setItem(STORAGE_KEY, storedSession());
+      const service = TestBed.inject(AuthService);
+
+      let done = false;
+      service.logoutAllDevices().subscribe({ next: () => { done = true; } });
+
+      const req = http.expectOne('/api/v1/auth/sessions/revoke-all');
+      expect(req.request.method).toBe('POST');
+      expect(req.request.withCredentials).toBe(true);
+      req.flush(null);
+
+      expect(done).toBe(true);
+      expect(service.sessionRestorable()).toBe(false);
+      const broadcast = JSON.parse(localStorage.getItem('bemo-erp-logout-event')!) as { scope: string };
+      expect(broadcast.scope).toBe('ALL_DEVICES');
+    });
+
+    it('logoutAllDevices does not clear the session when the revoke call fails', () => {
+      localStorage.setItem(STORAGE_KEY, storedSession());
+      const service = TestBed.inject(AuthService);
+
+      let failed = false;
+      service.logoutAllDevices().subscribe({ error: () => { failed = true; } });
+
+      http.expectOne('/api/v1/auth/sessions/revoke-all')
+        .error(new ProgressEvent('error'), { status: 500, statusText: 'Server Error' });
+
+      expect(failed).toBe(true);
+      expect(service.sessionRestorable()).toBe(true);
+      expect(localStorage.getItem('bemo-erp-logout-event')).toBeNull();
+    });
+  });
+
+  describe('cross-tab logout sync', () => {
+    it('clears the session when another tab logs out the same user', () => {
+      localStorage.setItem(STORAGE_KEY, storedSession());
+      const service = TestBed.inject(AuthService);
+      expect(service.sessionRestorable()).toBe(true);
+
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'bemo-erp-logout-event',
+        newValue: JSON.stringify({ userId: 'user1', scope: 'CURRENT_BROWSER', occurredAt: Date.now() }),
+      }));
+
+      expect(service.sessionRestorable()).toBe(false);
+      expect(service.user()).toBeNull();
+    });
+
+    it('ignores logout events for a different user', () => {
+      localStorage.setItem(STORAGE_KEY, storedSession());
+      const service = TestBed.inject(AuthService);
+
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'bemo-erp-logout-event',
+        newValue: JSON.stringify({ userId: 'someone-else', scope: 'CURRENT_BROWSER', occurredAt: Date.now() }),
+      }));
+
+      expect(service.sessionRestorable()).toBe(true);
+    });
+
+    it('ignores unrelated storage events and malformed payloads', () => {
+      localStorage.setItem(STORAGE_KEY, storedSession());
+      const service = TestBed.inject(AuthService);
+
+      window.dispatchEvent(new StorageEvent('storage', { key: 'unrelated-key', newValue: 'x' }));
+      window.dispatchEvent(new StorageEvent('storage', { key: 'bemo-erp-logout-event', newValue: '{not-json' }));
+
+      expect(service.sessionRestorable()).toBe(true);
+    });
+  });
 });

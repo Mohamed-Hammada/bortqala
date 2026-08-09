@@ -275,6 +275,70 @@
   </main>
 </div>
 
+@if (logoutOptionsOpen()) {
+  <div class="shortcut-overlay" (click)="closeLogoutOptions()">
+    <section
+      class="shortcut-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="i18n.t('auth.logoutTitle')"
+      [attr.aria-busy]="logoutAllDevicesBusy()"
+      (click)="$event.stopPropagation()"
+      style="max-width: 520px; width: min(520px, calc(100vw - 2rem));"
+    >
+      <header class="shortcut-dialog-header">
+        <div>
+          <h2>{{ i18n.t('auth.logoutTitle') }}</h2>
+          <p>{{ i18n.t('auth.logoutHint') }}</p>
+        </div>
+        <button
+          type="button"
+          class="shortcut-close"
+          (click)="closeLogoutOptions()"
+          [disabled]="logoutAllDevicesBusy()"
+          [attr.aria-label]="i18n.t('action.cancel')"
+        >✕</button>
+      </header>
+
+      <div style="display: grid; gap: 0.75rem;">
+        <button
+          type="button"
+          class="button secondary"
+          (click)="logoutCurrentBrowser()"
+          [disabled]="logoutAllDevicesBusy()"
+          style="display: grid; gap: 0.25rem; text-align: start; min-height: 64px;"
+        >
+          <strong>{{ i18n.t('auth.logoutCurrentBrowser') }}</strong>
+          <span>{{ i18n.t('auth.logoutCurrentBrowserHint') }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="button"
+          (click)="logoutAllDevices()"
+          [disabled]="logoutAllDevicesBusy()"
+          style="display: grid; gap: 0.25rem; text-align: start; min-height: 64px;"
+        >
+          <strong>
+            {{
+              logoutAllDevicesBusy()
+                ? i18n.t('auth.logoutAllDevicesWorking')
+                : i18n.t('auth.logoutAllDevices')
+            }}
+          </strong>
+          <span>{{ i18n.t('auth.logoutAllDevicesHint') }}</span>
+        </button>
+      </div>
+
+      @if (logoutError()) {
+        <p role="alert" style="margin: 0.75rem 0 0; color: var(--danger, #b91c1c);">
+          {{ logoutError() }}
+        </p>
+      }
+    </section>
+  </div>
+}
+
 <!-- Action Center Notifications Dropdown Panel -->
 @if (notificationCenter.panelOpen()) {
   <div class="shortcut-overlay" (click)="notificationCenter.closePanel()">

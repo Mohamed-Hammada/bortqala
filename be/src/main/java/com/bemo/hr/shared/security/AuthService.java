@@ -229,6 +229,16 @@ public class AuthService {
     }
 
     @Transactional
+    public void revokeOwnSessions(String username) {
+        String appId = TenantContext.require();
+        var user = requireByUsername(appId, username);
+        user.bumpTokenVersion();
+        refreshTokenService.revokeAllForUser(appId, user.getId(), username);
+        auditService.record("SESSIONS_REVOKED_SELF", "USER", user.getId(), username,
+                "User signed out from all devices", null);
+    }
+
+    @Transactional
     public void changePassword(String username, AuthApi.ChangePasswordRequest request) {
         var app = requireCurrentApp();
         var user = requireByUsername(app.getId(), username);

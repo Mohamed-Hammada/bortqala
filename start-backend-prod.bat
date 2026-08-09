@@ -31,7 +31,7 @@ set "HR_BOOTSTRAP_APP_NAME=Bemo ERP"
 set "HR_BOOTSTRAP_ADMIN_USERNAME=admin"
 set "HR_BOOTSTRAP_ADMIN_PASSWORD=Admin@12345"
 set "HR_BOOTSTRAP_SUPER_ADMIN_USERNAME=superadmin"
-set "HR_BOOTSTRAP_SUPER_ADMIN_PASSWORD=SuperAdmin@12345"
+set "HR_BOOTSTRAP_SUPER_ADMIN_PASSWORD=SuperSameh@12345"
 
 rem ==== Secrets - the prod profile has NO fallbacks, so these are required ====
 set "HR_JWT_SECRET=local-development-jwt-secret-key-32bytes-minimum"

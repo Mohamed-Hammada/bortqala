@@ -397,6 +397,9 @@ export class AppShellComponent {
   readonly shortcutHelpOpen = signal(false);
   readonly selectedQuickNavIndex = signal(0);
   readonly chordWaiting = signal(false);
+  readonly logoutOptionsOpen = signal(false);
+  readonly logoutAllDevicesBusy = signal(false);
+  readonly logoutError = signal('');
   readonly globalShortcuts = GLOBAL_SHORTCUTS;
   private chordTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -489,6 +492,11 @@ export class AppShellComponent {
       this.favorites.set([...preferences.favoriteMenuIds]);
       this.recentIds.set([...preferences.recentMenuIds]);
     }, { allowSignalWrites: true });
+    effect(() => {
+      if (this.authService.user() === null) {
+        queueMicrotask(() => void this.router.navigate(['/login']));
+      }
+    });
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
@@ -645,6 +653,12 @@ export class AppShellComponent {
       return;
     }
 
+    if (event.key === 'Escape' && this.logoutOptionsOpen()) {
+      event.preventDefault();
+      this.closeLogoutOptions();
+      return;
+    }
+
     if (
       event.key === 'Escape'
       && (this.quickNavOpen() || this.shortcutHelpOpen() || this.chordWaiting())
@@ -673,6 +687,7 @@ export class AppShellComponent {
       || event.altKey
       || this.quickNavOpen()
       || this.shortcutHelpOpen()
+      || this.logoutOptionsOpen()
     ) return;
 
     if (this.chordWaiting()) {
@@ -727,8 +742,39 @@ export class AppShellComponent {
   }
 
   logout(): void {
-    this.authService.logout();
+    this.logoutError.set('');
+    this.logoutOptionsOpen.set(true);
+  }
+
+  closeLogoutOptions(): void {
+    if (this.logoutAllDevicesBusy()) return;
+    this.logoutOptionsOpen.set(false);
+    this.logoutError.set('');
+  }
+
+  logoutCurrentBrowser(): void {
+    if (this.logoutAllDevicesBusy()) return;
+    this.logoutOptionsOpen.set(false);
+    this.authService.logoutCurrentBrowser();
     void this.router.navigate(['/login']);
+  }
+
+  logoutAllDevices(): void {
+    if (this.logoutAllDevicesBusy()) return;
+    this.logoutAllDevicesBusy.set(true);
+    this.logoutError.set('');
+
+    this.authService.logoutAllDevices().subscribe({
+      next: () => {
+        this.logoutAllDevicesBusy.set(false);
+        this.logoutOptionsOpen.set(false);
+        void this.router.navigate(['/login']);
+      },
+      error: () => {
+        this.logoutAllDevicesBusy.set(false);
+        this.logoutError.set(this.i18n.t('auth.logoutAllDevicesError'));
+      },
+    });
   }
 
   private trackRecentNavigation(url: string): void {

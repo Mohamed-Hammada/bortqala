@@ -129,4 +129,28 @@ describe('ReportReviewPage', () => {
     expect(page.promptState()).toBeNull();
     expect(notification.success).toHaveBeenCalled();
   });
+
+  it('renders a retry-labeled confirm button after the decision fails', async () => {
+    const fixture = TestBed.createComponent(ReportReviewPage);
+    const fixturePage = fixture.componentInstance;
+    httpMock.expectOne('/api/v1/reports/report-1').flush(details());
+    fixture.detectChanges();
+    fixturePage.decide(row, 'NORMAL_DAY');
+    fixturePage.promptState()!.onConfirm('480');
+    fixturePage.promptState()!.onConfirm('done');
+    fixture.detectChanges();
+
+    expect(fixturePage.savingRowId()).toBe('row-1');
+    const put = httpMock.expectOne('/api/v1/reports/report-1/daily-results/row-1/decision');
+    put.flush({ message: 'conflict' }, { status: 409, statusText: 'Conflict' });
+    await flushAsync();
+    fixture.detectChanges();
+
+    expect(fixturePage.promptState()).not.toBeNull();
+    expect(fixturePage.promptState()!.error).not.toBeNull();
+    const button = fixture.nativeElement.querySelector('.modal-footer .button.gold') as HTMLButtonElement;
+    expect(button).not.toBeNull();
+    expect(button.disabled).toBe(false);
+    expect(button.textContent?.trim()).toBe('common.retry');
+  });
 });

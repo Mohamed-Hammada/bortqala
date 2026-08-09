@@ -618,7 +618,7 @@
             }
           </div>
           <div class="modal-footer">
-            <button class="button gold" (click)="ps.onConfirm(promptInput.value)" [disabled]="savingRowId() !== null">{{ savingRowId() !== null ? i18n.t('common.executing', {}, 'جارٍ الحفظ...') : i18n.t('common.confirm', {}, 'تأكيد') }}</button>
+            <button class="button gold" (click)="ps.onConfirm(promptInput.value)" [disabled]="savingRowId() !== null">{{ savingRowId() !== null ? i18n.t('common.executing', {}, 'جارٍ الحفظ...') : (ps.error ? i18n.t('common.retry', {}, 'إعادة المحاولة') : i18n.t('common.confirm', {}, 'تأكيد')) }}</button>
             <button class="button secondary" (click)="ps.onCancel()" [disabled]="savingRowId() !== null">{{ i18n.t('common.cancel', {}, 'إلغاء') }}</button>
           </div>
         </div>

@@ -40,6 +40,10 @@ export class AuditLogsPage {
     this.load(1);
   }
 
+  retry(): void {
+    this.load(1);
+  }
+
   changePageSize(size: number): void {
     this.pagination.changePageSize(size);
     this.load(1);

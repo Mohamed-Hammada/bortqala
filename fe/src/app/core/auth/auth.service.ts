@@ -17,6 +17,17 @@ import {
 } from './auth.models';
 
 const STORAGE_KEY = 'bemo-erp-session';
+const LOGOUT_EVENT_KEY = 'bemo-erp-logout-event';
+
+type LogoutScope = 'CURRENT_BROWSER' | 'ALL_DEVICES';
+
+interface LogoutBroadcast {
+  userId: string;
+  scope: LogoutScope;
+  occurredAt: number;
+  eventId: string;
+}
+
 const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'SYSTEM',
   tableDensity: 'COMFORTABLE',
@@ -66,6 +77,10 @@ export class AuthService {
       this.themeService.apply(preferences);
       void this.i18nService.use(preferences.locale);
     });
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', this.handleStorageEvent);
+    }
   }
 
   login(appCode: string, username: string, password: string) {
@@ -102,10 +117,30 @@ export class AuthService {
     });
   }
 
+  /**
+   * Backwards-compatible default: logging out means logging this account out
+   * from every tab in the current browser, but not from other devices.
+   */
   logout(): void {
-    this.httpClient.post('/api/v1/auth/logout', {}, { withCredentials: true }).subscribe({ error: () => undefined });
-    this.clearSession();
+    this.logoutCurrentBrowser();
   }
+
+  logoutCurrentBrowser(): void {
+    const userId = this.user()?.id;
+    this.httpClient.post('/api/v1/auth/logout', {}, { withCredentials: true }).subscribe({ error: () => undefined });
+    this.completeLocalLogout(userId, 'CURRENT_BROWSER');
+  }
+
+  logoutAllDevices(): Observable<void> {
+    const userId = this.user()?.id;
+    return this.httpClient
+      .post<void>('/api/v1/auth/sessions/revoke-all', {}, { withCredentials: true })
+      .pipe(
+        tap(() => this.completeLocalLogout(userId, 'ALL_DEVICES')),
+        catchError((error) => throwError(() => error)),
+      );
+  }
+
   expireSession(): void { this.clearSession(); }
   sessionRestorable(): boolean { return localStorage.getItem(STORAGE_KEY) !== null; }
 
@@ -191,6 +226,40 @@ export class AuthService {
     if (user.roles.includes('ADMIN')) return true;
     if (user.menuAccessMode === 'ALL') return true;
     return user.allowedMenus?.includes(menuId) ?? false;
+  }
+
+  private readonly handleStorageEvent = (event: StorageEvent): void => {
+    if (event.key !== LOGOUT_EVENT_KEY || !event.newValue) return;
+
+    try {
+      const logout = JSON.parse(event.newValue) as Partial<LogoutBroadcast>;
+      const currentUserId = this.user()?.id;
+      if (!currentUserId || logout.userId !== currentUserId) return;
+
+      // A logout emitted by another tab must affect only tabs for the same user.
+      this.clearSession();
+    } catch {
+      // Ignore malformed/legacy localStorage values.
+    }
+  };
+
+  private completeLocalLogout(userId: string | undefined, scope: LogoutScope): void {
+    if (userId) this.broadcastLogout(userId, scope);
+    this.clearSession();
+  }
+
+  private broadcastLogout(userId: string, scope: LogoutScope): void {
+    const eventId =
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const logout: LogoutBroadcast = {
+      userId,
+      scope,
+      occurredAt: Date.now(),
+      eventId,
+    };
+    localStorage.setItem(LOGOUT_EVENT_KEY, JSON.stringify(logout));
   }
 
   private clearSession(): void { localStorage.removeItem(STORAGE_KEY); this.session.set(null); }

@@ -164,4 +164,48 @@ describe('AuditLogsPage', () => {
     expect(from).toBe(26);
     expect(to).toBe(50);
   });
+
+  it('shows the load-error state instead of the empty state when the API fails', async () => {
+    const fixture = TestBed.createComponent(AuditLogsPage);
+    const fixturePage = fixture.componentInstance;
+    httpMock.expectOne((request) => request.url === '/api/v1/audit-logs').flush(pageOf([]));
+    fixture.detectChanges();
+
+    fixturePage.applyFilters();
+    fixture.detectChanges();
+    const failing = httpMock.expectOne((request) => request.url === '/api/v1/audit-logs');
+    failing.flush({ message: 'boom' }, { status: 500, statusText: 'Server Error' });
+    await yieldMicrotasks();
+    fixture.detectChanges();
+
+    expect(fixturePage.error()).not.toBeNull();
+    expect(fixturePage.loading()).toBe(false);
+
+    const host: HTMLElement = fixture.nativeElement;
+    const loadError = host.querySelector('.load-error');
+    expect(loadError).not.toBeNull();
+    expect(loadError!.querySelector('strong')!.textContent?.trim()).toBe('audit.loadErrorTitle');
+    const retryButton = loadError!.querySelector('button') as HTMLButtonElement;
+    expect(retryButton).not.toBeNull();
+    expect(retryButton.textContent?.trim()).toBe('common.retry');
+    expect(host.querySelector('.table-card')).toBeNull();
+    expect(host.textContent).not.toContain('audit.empty');
+  });
+
+  it('retry refires the audit-logs GET and clears the error on success', async () => {
+    page.applyFilters();
+    const failing = httpMock.expectOne((request) => request.url === '/api/v1/audit-logs');
+    failing.flush({ message: 'boom' }, { status: 500, statusText: 'Server Error' });
+    await yieldMicrotasks();
+    expect(page.error()).not.toBeNull();
+
+    page.retry();
+    expect(page.error()).toBeNull();
+    const retryReq = httpMock.expectOne((request) => request.url === '/api/v1/audit-logs');
+    retryReq.flush(pageOf([log()]));
+    await yieldMicrotasks();
+
+    expect(page.error()).toBeNull();
+    expect(page.logs()).toHaveLength(1);
+  });
 });

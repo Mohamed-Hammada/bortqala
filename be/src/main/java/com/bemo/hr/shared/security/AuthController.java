@@ -85,6 +85,18 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/auth/sessions/revoke-all")
+    @PreAuthorize("isAuthenticated()")
+    ResponseEntity<Void> logoutAllDevices(HttpServletResponse servletResponse,
+                                          Authentication authentication) {
+        try {
+            authService.revokeOwnSessions(authentication.getName());
+        } finally {
+            clearRefreshCookie(servletResponse);
+        }
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/auth/change-password")
     @PreAuthorize("isAuthenticated()")
     ResponseEntity<Void> changePassword(@Valid @RequestBody AuthApi.ChangePasswordRequest request,

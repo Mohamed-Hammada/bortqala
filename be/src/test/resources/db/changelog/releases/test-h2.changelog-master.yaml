@@ -552,3 +552,7 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260808_v143_operations_references_ui_translations.yaml
   - include:
       file: db/changelog/data/insert/20260808_v144_workforce_category_error_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v148_logout_scope_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v149_audit_log_error_state_translations.yaml
