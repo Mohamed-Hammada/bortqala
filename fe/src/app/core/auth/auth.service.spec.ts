@@ -59,7 +59,7 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         { provide: ThemeService, useValue: { apply: () => undefined } },
-        { provide: I18nService, useValue: { use: () => Promise.resolve() } },
+        { provide: I18nService, useValue: { use: () => Promise.resolve(), invalidate: () => undefined } },
         provideHttpClient(),
         provideHttpClientTesting(),
       ],

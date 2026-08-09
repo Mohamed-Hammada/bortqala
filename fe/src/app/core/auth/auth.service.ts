@@ -75,7 +75,8 @@ export class AuthService {
     effect(() => {
       const preferences = this.preferences();
       this.themeService.apply(preferences);
-      void this.i18nService.use(preferences.locale);
+      const appId = this.token() ? this.app()?.id ?? null : null;
+      void this.i18nService.use(preferences.locale, appId);
     });
 
     if (typeof window !== 'undefined') {
@@ -262,7 +263,11 @@ export class AuthService {
     localStorage.setItem(LOGOUT_EVENT_KEY, JSON.stringify(logout));
   }
 
-  private clearSession(): void { localStorage.removeItem(STORAGE_KEY); this.session.set(null); }
+  private clearSession(): void {
+    localStorage.removeItem(STORAGE_KEY);
+    this.i18nService.invalidate();
+    this.session.set(null);
+  }
 
   private persistStoredSession(session: LoginResponse): void {
     const stored: StoredSession = {

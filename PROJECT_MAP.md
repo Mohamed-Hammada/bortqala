@@ -1,7 +1,7 @@
 # PROJECT_MAP.md - Bemo ERP
 
 ## System Flow & Architecture
-- **Backend (`be/`)**: Spring Boot, PostgreSQL, App-Scoped JWT Auth, Multi-Role Authorization, Multi-Tenant (`@TenantId`), i18n database backend (`/api/v1/i18n/{locale}`).
+- **Backend (`be/`)**: Spring Boot, PostgreSQL, App-Scoped JWT Auth, Multi-Role Authorization, Multi-Tenant (`@TenantId`), app-aware database i18n (`/api/v1/i18n/{locale}`) with NULL-app defaults, per-application overrides, and a Super Admin management API/view.
 - **Frontend (`fe/`)**: Angular 22 standalone, SCSS, Signals, Arabic RTL default (`ar-EG`/`en-US`), Excel exports.
 
 ---

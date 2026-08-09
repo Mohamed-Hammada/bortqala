@@ -6,6 +6,7 @@ public final class TenantContext {
     private TenantContext() { }
 
     public static void set(String appId) { CURRENT_APP.set(appId); }
+    public static String current() { return CURRENT_APP.get(); }
     public static String currentOrSystem() { return CURRENT_APP.get() == null ? "SYSTEM" : CURRENT_APP.get(); }
     public static String require() {
         String appId = CURRENT_APP.get();

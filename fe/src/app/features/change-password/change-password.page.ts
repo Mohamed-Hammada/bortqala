@@ -51,7 +51,7 @@ export class ChangePasswordPage {
   }
 
   changeLanguage(locale: 'ar-EG' | 'en-US'): void {
-    void this.i18n.use(locale);
+    void this.i18n.use(locale, this.authService.app()?.id ?? null);
     document.documentElement.lang = locale.startsWith('ar') ? 'ar' : 'en';
     document.documentElement.dir = locale.startsWith('ar') ? 'rtl' : 'ltr';
   }

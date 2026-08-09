@@ -8,8 +8,9 @@ import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
 import { ActivatedRoute } from '@angular/router';
 import { ShortcutSettingsComponent } from './shortcuts/shortcut-settings.component';
+import { TranslationManagementComponent } from './translation-management.component';
 
-export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports' | 'shortcuts';
+export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports' | 'shortcuts' | 'translations';
 
 const NOTIFICATION_KEY = 'bemo_notification_prefs';
 
@@ -28,7 +29,7 @@ function saveNotificationPrefs(prefs: NotificationPreferences): void {
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [ReactiveFormsModule, ShortcutSettingsComponent],
+  imports: [ReactiveFormsModule, ShortcutSettingsComponent, TranslationManagementComponent],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -131,7 +132,8 @@ export class SettingsPage {
 
   constructor() {
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
-    if (tabParam && ['appearance', 'session', 'security', 'reports', 'shortcuts'].includes(tabParam)) {
+    const allowedTab = tabParam !== 'translations' || this.authService.isSuperAdmin();
+    if (tabParam && allowedTab && ['appearance', 'session', 'security', 'reports', 'shortcuts', 'translations'].includes(tabParam)) {
       this.activeTab.set(tabParam as SettingsTab);
     }
     if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) void this.loadAppSettings();

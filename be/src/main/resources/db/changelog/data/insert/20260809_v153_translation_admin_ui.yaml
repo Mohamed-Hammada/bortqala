@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260809-v153-translation-admin-ui
+      author: bemo-erp
+      comment: Arabic and English copy for the Super Admin translation-management view and its API errors.
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260809_v153_translation_admin_ui.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v153-%'" }

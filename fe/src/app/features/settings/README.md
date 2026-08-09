@@ -23,6 +23,12 @@
 **AR:** تعرض تبويبة إعدادات الجلسة سياسة تخصيص لوحات المديرين للمدير الشامل فقط، بينما يحتفظ المدير العادي بالقيمة الحالية ولا يستطيع تغييرها.
 
 **AR:** تبويب الاختصارات متاح لكل مستخدم مسجل، ويعرض اختصارات العمليات العامة والانتقال المباشر للقوائم، مع استمرار تطبيق صلاحيات المستخدم على التنقل الفعلي.
+
+## Translation management / إدارة الترجمات
+
+**EN:** Super Admin sees the Arabic tab “إدارة الترجمات”. The view selects a language and either the platform default scope or one application. Save updates that scope; an application override takes priority, while “Restore default” deletes only the override and immediately exposes the platform text. Search covers keys and effective text, and new keys can be added from the same view.
+
+**AR:** يظهر للمدير الشامل فقط تبويب «إدارة الترجمات». يختار المدير اللغة ثم «الترجمة الافتراضية لكل التطبيقات» أو تطبيقًا محددًا. الحفظ يحدّث النطاق المختار، والنص الخاص بالتطبيق له الأولوية. زر «العودة للافتراضي» يحذف تخصيص التطبيق فقط ليظهر النص العام فورًا. يمكن البحث بالمفتاح أو النص وإضافة مفتاح جديد من الشاشة نفسها.
 # Attendance anomaly threshold / نسبة شذوذ الحضور
 
 **EN:** Tenant settings expose the percentage used by the backend to create daily biometric outage anomalies.

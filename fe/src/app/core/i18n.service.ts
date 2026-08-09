@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 export type SupportedLocale = 'ar-EG' | 'en-US';
 interface TranslationBundle {
   locale: SupportedLocale;
+  appId: string | null;
   messages: Record<string, string>;
 }
 
@@ -56,13 +57,14 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
 @Injectable({ providedIn: 'root' })
 export class I18nService {
   private readonly httpClient = inject(HttpClient);
-  private readonly cache = new Map<SupportedLocale, Record<string, string>>();
+  private readonly cache = new Map<string, Record<string, string>>();
+  private activeScope: string | null = null;
   readonly locale = signal<SupportedLocale>(this.storedLocale());
   readonly messages = signal<Record<string, string>>({});
 
   t(key: string, params?: Record<string, string | number>, fallback?: string): string {
     const locale = this.locale();
-    const message = REQUIRED_COPY[locale][key] ?? this.messages()[key] ?? fallback ?? key;
+    const message = this.messages()[key] ?? REQUIRED_COPY[locale][key] ?? fallback ?? key;
     if (!params) return message;
     return Object.entries(params).reduce(
       (resolved, [name, value]) => resolved.replaceAll(`{${name}}`, String(value)),
@@ -70,8 +72,10 @@ export class I18nService {
     );
   }
 
-  async use(locale: string): Promise<void> {
+  async use(locale: string, appId: string | null = null): Promise<void> {
     const supported: SupportedLocale = locale.toLowerCase().startsWith('en') ? 'en-US' : 'ar-EG';
+    const scopeKey = this.scopeKey(supported, appId);
+    this.activeScope = scopeKey;
     this.locale.set(supported);
     localStorage.setItem(LOCALE_STORAGE_KEY, supported);
 
@@ -80,18 +84,32 @@ export class I18nService {
       document.documentElement.setAttribute('dir', supported.startsWith('en') ? 'ltr' : 'rtl');
     }
 
-    const cached = this.cache.get(supported);
+    const cached = this.cache.get(scopeKey);
     if (cached) {
       this.messages.set(cached);
       return;
     }
     try {
       const bundle = await firstValueFrom(this.httpClient.get<TranslationBundle>(`/api/v1/i18n/${supported}`));
-      this.cache.set(supported, bundle.messages);
-      if (this.locale() === supported) this.messages.set(bundle.messages);
+      const responseScopeKey = this.scopeKey(supported, bundle.appId);
+      this.cache.set(responseScopeKey, bundle.messages);
+      if (bundle.appId === appId && this.activeScope === scopeKey) this.messages.set(bundle.messages);
     } catch {
-      this.messages.set({});
+      if (this.activeScope === scopeKey) this.messages.set({});
     }
+  }
+
+  invalidate(locale?: string, appId?: string | null): void {
+    if (locale) {
+      const supported: SupportedLocale = locale.toLowerCase().startsWith('en') ? 'en-US' : 'ar-EG';
+      this.cache.delete(this.scopeKey(supported, appId ?? null));
+      return;
+    }
+    this.cache.clear();
+  }
+
+  private scopeKey(locale: SupportedLocale, appId: string | null): string {
+    return `${appId ?? 'DEFAULT'}:${locale}`;
   }
 
   private storedLocale(): SupportedLocale {

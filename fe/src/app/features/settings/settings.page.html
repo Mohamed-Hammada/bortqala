@@ -56,6 +56,17 @@
     >
       ⌨ {{ i18n.t('settings.tabShortcuts') }}
     </button>
+
+    @if (authService.isSuperAdmin()) {
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'translations'"
+        (click)="setTab('translations')"
+      >
+        🌐 {{ i18n.t('translations.menu', undefined, 'إدارة الترجمات') }}
+      </button>
+    }
   </nav>
 
   <!-- Tab 1: Appearance & Language -->
@@ -230,6 +241,12 @@
         </button>
       </div>
     </form>
+  }
+
+  @if (activeTab() === 'translations' && authService.isSuperAdmin()) {
+    <div class="card settings-card">
+      <app-translation-management />
+    </div>
   }
 
   <!-- Tab 2: Session Settings (Admin only) -->

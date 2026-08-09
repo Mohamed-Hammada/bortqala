@@ -10,7 +10,6 @@ const PUBLIC_PATHS = [
   '/api/v1/auth/demo-login',
   '/api/v1/auth/refresh',
   '/api/v1/auth/logout',
-  '/api/v1/i18n/',
 ];
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {

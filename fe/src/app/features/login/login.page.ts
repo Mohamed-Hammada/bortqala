@@ -44,7 +44,7 @@ export class LoginPage {
     this.error.set(null);
     try {
       const session = await firstValueFrom(this.authService.demoLogin(secret));
-      await this.i18n.use(session.preferences.locale);
+      await this.i18n.use(session.preferences.locale, session.app.id);
       document.documentElement.lang = this.i18n.locale().startsWith('ar') ? 'ar' : 'en';
       document.documentElement.dir = this.i18n.locale().startsWith('ar') ? 'rtl' : 'ltr';
       await this.router.navigate(
@@ -110,7 +110,7 @@ export class LoginPage {
           this.form.controls.password.value,
         ),
       );
-      await this.i18n.use(session.preferences.locale);
+      await this.i18n.use(session.preferences.locale, session.app.id);
       document.documentElement.lang = this.i18n.locale().startsWith('ar') ? 'ar' : 'en';
       document.documentElement.dir = this.i18n.locale().startsWith('ar') ? 'rtl' : 'ltr';
       await this.router.navigate(session.mustChangePassword ? ['/change-password'] : ['/dashboard']);
