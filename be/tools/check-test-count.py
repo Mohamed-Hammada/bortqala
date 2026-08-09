@@ -12,8 +12,8 @@ import xml.etree.ElementTree as ET
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULT_DIR = os.path.join(BASE_DIR, "build", "test-results", "test")
 
-MIN_TESTS = 297
-MIN_SUITES = 62
+MIN_TESTS = 299
+MIN_SUITES = 63
 
 reports = glob.glob(os.path.join(RESULT_DIR, "*.xml"))
 if not reports:

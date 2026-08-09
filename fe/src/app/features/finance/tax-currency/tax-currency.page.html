@@ -17,7 +17,6 @@
     <div class="alert error">{{ error() }}</div>
   }
 
-  <!-- Tab selector pills -->
   <div class="filter-pills-bar">
     <div class="pills-group">
       <button class="pill-tab" [class.active]="activeTab() === 'taxes'" (click)="activeTab.set('taxes')">
@@ -30,7 +29,6 @@
   </div>
 
   @if (!loading()) {
-    <!-- Taxes Tab -->
     @if (activeTab() === 'taxes') {
       <div class="table-card">
         <table>
@@ -58,9 +56,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="5">
-                  <div class="empty-state">{{ i18n.t('taxCurrency.taxEmpty') }}</div>
-                </td>
+                <td colspan="5"><div class="empty-state">{{ i18n.t('taxCurrency.taxEmpty') }}</div></td>
               </tr>
             }
           </tbody>
@@ -68,8 +64,89 @@
       </div>
     }
 
-    <!-- Currencies Tab -->
     @if (activeTab() === 'currencies') {
+      <section class="rate-hint-card">
+        <div class="rate-hint-head">
+          <div>
+            <p class="eyebrow">{{ i18n.t('taxCurrency.onlineProvider') }} · {{ hintSettings()?.provider ?? '' }}</p>
+            <h2>{{ i18n.t('taxCurrency.onlineHintTitle') }}</h2>
+            <p>{{ i18n.t('taxCurrency.onlineHintDescription') }}</p>
+          </div>
+          @if (canRefreshHints()) {
+            <button
+              type="button"
+              class="button secondary"
+              [disabled]="hintsRefreshing() || hintSettings()?.enabled === false"
+              (click)="refreshHintsNow()"
+            >
+              {{ hintsRefreshing() ? i18n.t('taxCurrency.onlineRefreshing') : i18n.t('taxCurrency.onlineRefreshNow') }}
+            </button>
+          }
+        </div>
+
+        @if (hintError()) {
+          <div class="alert error">{{ hintError() }}</div>
+        }
+
+        @if (hintSettings(); as settings) {
+          <div class="rate-status-grid">
+            <div>
+              <span>{{ i18n.t('taxCurrency.onlineStatus') }}</span>
+              <strong>{{ settings.enabled ? i18n.t('common.active') : i18n.t('common.inactive') }}</strong>
+            </div>
+            <div>
+              <span>{{ i18n.t('taxCurrency.onlineLastSuccess') }}</span>
+              <strong>
+                {{ settings.lastSuccessAt ? (settings.lastSuccessAt | date:'medium') : i18n.t('taxCurrency.onlineNeverSynced') }}
+              </strong>
+            </div>
+            <div>
+              <span>{{ i18n.t('taxCurrency.onlineNextRefresh') }}</span>
+              <strong>{{ settings.nextRefreshAt ? (settings.nextRefreshAt | date:'medium') : '—' }}</strong>
+            </div>
+            <div>
+              <span>{{ i18n.t('taxCurrency.onlineRefreshInterval') }}</span>
+              <strong>{{ settings.refreshIntervalHours }} {{ i18n.t('taxCurrency.onlineHoursUnit') }}</strong>
+            </div>
+          </div>
+
+          @if (settings.lastErrorCode) {
+            <div class="alert warning">{{ onlineError(settings.lastErrorCode) }}</div>
+          }
+
+          @if (canConfigureHints()) {
+            <form class="rate-settings-form" [formGroup]="hintSettingsForm" (ngSubmit)="saveHintSettings()">
+              <label class="checkbox-label rate-enabled-toggle">
+                <input type="checkbox" formControlName="enabled" />
+                <span>
+                  <strong>{{ i18n.t('taxCurrency.onlineEnabled') }}</strong>
+                  <small>{{ i18n.t('taxCurrency.onlineEnabledHint') }}</small>
+                </span>
+              </label>
+              <div class="field">
+                <label for="online-rate-hours">{{ i18n.t('taxCurrency.onlineRefreshInterval') }}</label>
+                <input
+                  id="online-rate-hours"
+                  class="ltr"
+                  type="number"
+                  min="1"
+                  max="168"
+                  formControlName="refreshIntervalHours"
+                />
+                <small>{{ i18n.t('taxCurrency.onlineRefreshIntervalHint') }}</small>
+              </div>
+              <button
+                type="submit"
+                class="button primary"
+                [disabled]="hintSettingsSaving() || hintSettingsForm.invalid || !hintSettingsForm.dirty"
+              >
+                {{ i18n.t('taxCurrency.onlineSaveSettings') }}
+              </button>
+            </form>
+          }
+        }
+      </section>
+
       <div class="table-card">
         <table>
           <thead>
@@ -78,7 +155,9 @@
               <th>{{ i18n.t('taxCurrency.colCurrencyName') }}</th>
               <th>{{ i18n.t('taxCurrency.colSymbol') }}</th>
               <th>{{ i18n.t('taxCurrency.colBase') }}</th>
-              <th>{{ i18n.t('taxCurrency.colExchangeRate') }}</th>
+              <th>{{ i18n.t('taxCurrency.onlineConfiguredRate') }}</th>
+              <th>{{ i18n.t('taxCurrency.onlineReferenceRate') }}</th>
+              <th>{{ i18n.t('taxCurrency.onlineProviderDate') }}</th>
               <th>{{ i18n.t('taxCurrency.colStatus') }}</th>
             </tr>
           </thead>
@@ -88,15 +167,47 @@
                 <td><strong class="ltr">{{ c.code }}</strong></td>
                 <td><strong>{{ c.name }}</strong></td>
                 <td><strong>{{ c.symbol }}</strong></td>
-                <td><span class="status" [class.success]="c.isBase">{{ c.isBase ? i18n.t('taxCurrency.baseCurrency') : i18n.t('taxCurrency.foreignCurrency') }}</span></td>
-                <td class="ltr"><code>1 {{ c.code }} = {{ c.exchangeRate }} EGP</code></td>
-                <td><span class="status" [class.success]="c.active">{{ c.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
+                <td>
+                  <span class="status" [class.success]="c.isBase">
+                    {{ c.isBase ? i18n.t('taxCurrency.baseCurrency') : i18n.t('taxCurrency.foreignCurrency') }}
+                  </span>
+                </td>
+                <td class="ltr">
+                  <code>1 {{ c.code }} = {{ c.exchangeRate | number:'1.2-8' }} {{ baseCurrencyCode() }}</code>
+                </td>
+                <td class="ltr">
+                  @if (c.referenceRateSupported === false) {
+                    <span class="status warning">{{ i18n.t('taxCurrency.onlineUnsupported') }}</span>
+                  } @else if (c.referenceExchangeRate !== null && c.referenceRateBaseCode) {
+                    <div class="reference-rate">
+                      <code>1 {{ c.code }} = {{ c.referenceExchangeRate | number:'1.2-8' }} {{ c.referenceRateBaseCode }}</code>
+                      @if (rateDifferencePercent(c); as difference) {
+                        <small>
+                          {{ i18n.t('taxCurrency.onlineDifference') }}:
+                          {{ difference > 0 ? '+' : '' }}{{ difference | number:'1.1-2' }}%
+                        </small>
+                      }
+                    </div>
+                  } @else {
+                    <span class="muted">{{ i18n.t('taxCurrency.onlineNoRate') }}</span>
+                  }
+                </td>
+                <td>
+                  @if (c.referenceRateDate) {
+                    <span class="ltr">{{ c.referenceRateDate | date:'yyyy-MM-dd' }}</span>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td>
+                  <span class="status" [class.success]="c.active">
+                    {{ c.active ? i18n.t('common.active') : i18n.t('common.inactive') }}
+                  </span>
+                </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="6">
-                  <div class="empty-state">{{ i18n.t('taxCurrency.currencyEmpty') }}</div>
-                </td>
+                <td colspan="8"><div class="empty-state">{{ i18n.t('taxCurrency.currencyEmpty') }}</div></td>
               </tr>
             }
           </tbody>
@@ -105,7 +216,6 @@
     }
   }
 
-  <!-- Drawer Modal -->
   @if (drawerOpen()) {
     <div class="drawer-backdrop" (click)="closeDrawer()"></div>
     <aside class="drawer">

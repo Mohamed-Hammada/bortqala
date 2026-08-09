@@ -1,5 +1,6 @@
 package com.bemo.hr.finance.api;
 
+import com.bemo.hr.finance.application.ExchangeRateHintService;
 import com.bemo.hr.finance.domain.BankAccount;
 import com.bemo.hr.finance.domain.Currency;
 import com.bemo.hr.finance.domain.TaxRate;
@@ -13,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZoneOffset;
 import java.util.List;
 
 @RestController
@@ -22,13 +24,16 @@ public class TreasuryController {
     private final BankAccountRepository bankAccountRepository;
     private final TaxRateRepository taxRateRepository;
     private final CurrencyRepository currencyRepository;
+    private final ExchangeRateHintService exchangeRateHintService;
 
     public TreasuryController(BankAccountRepository bankAccountRepository,
                               TaxRateRepository taxRateRepository,
-                              CurrencyRepository currencyRepository) {
+                              CurrencyRepository currencyRepository,
+                              ExchangeRateHintService exchangeRateHintService) {
         this.bankAccountRepository = bankAccountRepository;
         this.taxRateRepository = taxRateRepository;
         this.currencyRepository = currencyRepository;
+        this.exchangeRateHintService = exchangeRateHintService;
     }
 
     // --- Bank Accounts ---
@@ -105,6 +110,26 @@ public class TreasuryController {
         return toResponse(currencyRepository.save(currency));
     }
 
+    // --- Online exchange-rate hints (Frankfurter) ---
+    @GetMapping("/exchange-rate-hints/settings")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR')")
+    public ExchangeRateHintApi.SettingsResponse exchangeRateHintSettings() {
+        return exchangeRateHintService.settings();
+    }
+
+    @PutMapping("/exchange-rate-hints/settings")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public ExchangeRateHintApi.SettingsResponse updateExchangeRateHintSettings(
+            @Valid @RequestBody ExchangeRateHintApi.SettingsRequest request) {
+        return exchangeRateHintService.updateSettings(request);
+    }
+
+    @PostMapping("/exchange-rate-hints/refresh")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    public ExchangeRateHintApi.RefreshResponse refreshExchangeRateHints() {
+        return exchangeRateHintService.refreshNow();
+    }
+
     private TreasuryApi.BankAccountResponse toResponse(BankAccount b) {
         return new TreasuryApi.BankAccountResponse(
                 b.getId(), b.getBankName(), b.getAccountNumber(), b.getIban(), b.getSwiftCode(),
@@ -120,9 +145,20 @@ public class TreasuryController {
     }
 
     private TreasuryApi.CurrencyResponse toResponse(Currency c) {
+        Long providerDate = c.getReferenceRateDate() == null
+                ? null
+                : c.getReferenceRateDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
+
         return new TreasuryApi.CurrencyResponse(
                 c.getId(), c.getCode(), c.getName(), c.getSymbol(), c.isBase(),
-                c.getExchangeRate(), c.isActive(), c.getCreatedAt(), c.getUpdatedAt()
+                c.getExchangeRate(),
+                c.getReferenceExchangeRate(),
+                c.getReferenceRateProvider(),
+                c.getReferenceRateBaseCode(),
+                providerDate,
+                c.getReferenceRateFetchedAt(),
+                c.getReferenceRateSupported(),
+                c.isActive(), c.getCreatedAt(), c.getUpdatedAt()
         );
     }
 }

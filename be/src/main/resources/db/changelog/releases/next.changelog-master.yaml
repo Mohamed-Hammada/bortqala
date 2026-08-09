@@ -165,3 +165,7 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260809_v148_logout_scope_translations.yaml
   - include:
       file: db/changelog/data/insert/20260809_v149_audit_log_error_state_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260809_v150_frankfurter_exchange_rate_hints.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v151_frankfurter_exchange_rate_translations.yaml
