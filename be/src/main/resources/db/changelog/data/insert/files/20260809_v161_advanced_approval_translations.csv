@@ -43,8 +43,6 @@ v161-041;approvals.age;en-US;Age and SLA
 v161-042;approvals.age;ar-EG;العمر ومستوى الخدمة
 v161-043;approvals.from;en-US;From
 v161-044;approvals.from;ar-EG;من
-v161-045;approvals.history;en-US;Approval history
-v161-046;approvals.history;ar-EG;سجل الاعتماد
 v161-047;approvals.noPending;en-US;No approval tasks match this filter
 v161-048;approvals.noPending;ar-EG;لا توجد مهام اعتماد تطابق هذا المرشح
 v161-049;approvals.confirmApprove;en-US;Confirm approval

@@ -108,7 +108,10 @@
 - **ADV-EPIC12-FOOD-DISTRIBUTION — Second Vertical Pack (DONE 2026-08-10)**: V184 makes roles/KPIs/templates/defaults/onboarding metadata-owned per pack and seeds `FOOD_DISTRIBUTION_EG` with dependency-closed modules, FEFO/credit/expiry policy, four roles, nine distribution KPIs, four imports and nine go-live steps; V185 localizes it. Existing non-destructive customization/upgrade behavior remains intact and the generic UI renders both packs. Evidence: backend **391/78**, frontend **269/49**, H2, **332/332** errors, i18n/hardcoded/build green.
 
 ## [ORPHANS & PENDING]
-*(None — All feature roadmap vertical slices through Epic 12 are completed, verified, and logged under COMPLETED & VERIFIED. Final full regression run passed 100% cleanly: Backend 391 tests / 78 suites / 0 failures; Frontend 269 tests / 49 files / 0 failures; Error codes parity 332/332; i18n 2240 keys; Hardcoded UI 0 findings; Production build green. External CI runner lock RELEASE-HEAD-001 is documented in A-2.)*
+- **EPIC-PROC-01 — Single Goods Receipt Receiving Path**: Enforce Goods Receipt as the single physical receiving command; remove direct status-only PO receive endpoint `POST /orders/{id}/receive`. (IN PROGRESS)
+- **EPIC-PROC-02 — Supplier Return & Cancellation Protection**: Block direct cancellation on POs with accepted receipts/invoices; add Supplier Return entity, service, inventory movement posting (`SUPPLIER_RETURN`), and UI. (IN PROGRESS)
+- **EPIC-MFG-01 — Transactional Manufacturing Engine**: Upgrade BOM with real component lines (`BomLine`) & versions; enforce Work Order lifecycle (`start`, `issue-materials`, `complete`) with material consumption posting (`PRODUCTION_ISSUE`), finished goods receipt posting (`PRODUCTION_RECEIPT`), actual cost roll-up, and completion atomicity. (IN PROGRESS)
+- **EPIC-SUB-01 — Atomic Trial Conversion**: Unify tenant commercial state, subscription status, plan activation, and plan entitlement sync in a single transaction under tenant lock with operation-id idempotency; ensure trial upgrade route is not blocked by read-only interceptor. (IN PROGRESS)
 
 ---
 
