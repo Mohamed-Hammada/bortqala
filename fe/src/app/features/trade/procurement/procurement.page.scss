@@ -365,3 +365,127 @@
     flex: 1;
   }
 }
+
+/* Phase 3: semantic-theme procurement overrides. */
+.workflow-steps {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+.step-card {
+  background: var(--surface-muted);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.step-card.active {
+  border-color: var(--gold);
+  background: var(--gold-glow);
+}
+
+.step-arrow {
+  color: var(--muted);
+  font-size: 0;
+}
+.step-arrow::before {
+  content: '←';
+  font-size: 14px;
+}
+:host-context([dir='ltr']) .step-arrow::before {
+  content: '→';
+}
+
+.po-items-section {
+  border-top-color: var(--line);
+}
+
+.po-items-header h4,
+.grn-section-heading h3,
+.line-identity strong {
+  color: var(--ink);
+}
+
+.po-item-row,
+.grn-line-card,
+.grn-document-card {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.po-item-row label,
+.grn-section-heading p,
+.line-identity span,
+.line-order-summary span,
+.input-with-unit > span {
+  color: var(--muted);
+}
+
+.po-item-row input,
+.po-item-row select,
+.po-item-row textarea {
+  border-color: var(--line);
+  background: var(--input-bg);
+  color: var(--ink);
+}
+
+.total-bar,
+.line-order-summary .remaining,
+.section-icon {
+  border-color: color-mix(in srgb, var(--gold) 40%, var(--line));
+  background: var(--gold-glow);
+  color: var(--ink);
+}
+
+.total-bar span,
+.total-bar strong {
+  color: var(--ink);
+}
+
+.grn-form {
+  --grn-border: var(--line);
+  --grn-muted: var(--muted);
+  --grn-gold: var(--gold);
+}
+
+.grn-document-card {
+  background: var(--surface);
+}
+
+.grn-lines-section {
+  border-color: var(--line);
+  background: var(--surface-muted);
+}
+
+.grn-line-header {
+  border-bottom-color: var(--line);
+}
+
+.line-number {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.line-order-summary span {
+  background: var(--surface-muted);
+}
+
+.grn-line-card:focus-within {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-glow);
+}
+
+.grn-form input.invalid {
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.field-error {
+  color: var(--danger);
+}
+
+.accepted-quantity {
+  border-color: color-mix(in srgb, var(--success) 45%, var(--line));
+  background: var(--success-soft);
+  color: var(--ink);
+}

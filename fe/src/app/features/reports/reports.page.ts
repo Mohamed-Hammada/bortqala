@@ -32,7 +32,7 @@ export class ReportsPage {
   readonly pagedReports = computed(() => this.pagination.slice(this.store.reports()));
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
-  private readonly initialRange = this.currentMonthRange();
+  private readonly initialRange = this.currentDayRange();
   readonly periodForm = this.formBuilder.nonNullable.group({
     periodStart: [this.initialRange.start, Validators.required],
     periodEnd: [this.initialRange.end, Validators.required],
@@ -51,6 +51,16 @@ export class ReportsPage {
   changeYear(value: string): void {
     this.year.set(Number(value));
     void this.store.list(this.year());
+  }
+
+  onPeriodStartChanged(): void {
+    const start = this.periodForm.controls.periodStart.value;
+    if (!start) return;
+    // A newly selected start date begins as a one-day range.
+    // The user can then deliberately extend the end date.
+    this.periodForm.controls.periodEnd.setValue(start);
+    this.previewResult.set(null);
+    this.customError.set(null);
   }
 
   /**
@@ -83,7 +93,11 @@ export class ReportsPage {
       return;
     }
     const id = await this.store.create({ periodStart, periodEnd, payCycle: value.payCycle });
-    if (id) await this.router.navigate(['/reports', id]);
+    if (id) {
+      await this.router.navigate(['/reports', id]);
+    } else if (this.store.error()) {
+      this.customError.set(this.store.error());
+    }
   }
 
   async previewCustom(): Promise<void> {
@@ -95,7 +109,9 @@ export class ReportsPage {
     const value = this.periodForm.getRawValue();
     this.previewing.set(true);
     try {
-      this.previewResult.set(await this.store.preview(value.periodStart, value.periodEnd, value.payCycle));
+      const preview = await this.store.preview(value.periodStart, value.periodEnd, value.payCycle);
+      this.previewResult.set(preview);
+      if (!preview && this.store.error()) this.customError.set(this.store.error());
     } finally {
       this.previewing.set(false);
     }
@@ -134,12 +150,12 @@ export class ReportsPage {
     }[value]);
   }
 
-  private currentMonthRange(): { start: string; end: string } {
+  private currentDayRange(): { start: string; end: string } {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const lastDay = new Date(year, month, 0).getDate();
-    const mm = String(month).padStart(2, '0');
-    return { start: `${year}-${mm}-01`, end: `${year}-${mm}-${String(lastDay).padStart(2, '0')}` };
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const today = `${yyyy}-${mm}-${dd}`;
+    return { start: today, end: today };
   }
 }

@@ -188,7 +188,7 @@
                 @if (!editingId()) { <span class="required">*</span> }
                 {{ i18n.t('users.password') }}
               </label>
-              <div class="password-input-wrap">
+              <div class="password-input-wrap password-control">
                 <input
                   id="user-password"
                   [type]="showPassword() ? 'text' : 'password'"
@@ -201,12 +201,12 @@
                 />
                 <button
                   type="button"
-                  class="toggle-pass-btn"
+                  class="password-visibility-toggle"
                   (click)="showPassword.set(!showPassword())"
                   [attr.aria-label]="i18n.t(showPassword() ? 'users.hidePassword' : 'users.showPassword')"
                   [attr.title]="i18n.t(showPassword() ? 'users.hidePassword' : 'users.showPassword')"
                 >
-                  {{ showPassword() ? '👁️' : '🙈' }}
+                  <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" />
                 </button>
               </div>
               @if (editingId()) {
@@ -253,6 +253,12 @@
                     </option>
                   }
                 </select>
+                @if (primaryRoleInfo(); as selectedRole) {
+                  <div class="role-selection-hint">
+                    <strong>{{ i18n.t(selectedRole.labelKey) }}</strong>
+                    <small>{{ i18n.t(selectedRole.descriptionKey) }}</small>
+                  </div>
+                }
               </div>
             }
 

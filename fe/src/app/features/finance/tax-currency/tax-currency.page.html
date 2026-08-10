@@ -17,16 +17,14 @@
     <div class="alert error">{{ error() }}</div>
   }
 
-  <div class="filter-pills-bar">
-    <div class="pills-group">
-      <button class="pill-tab" [class.active]="activeTab() === 'taxes'" (click)="activeTab.set('taxes')">
-        🏷️ {{ i18n.t('taxCurrency.tabTaxes', { count: taxes().length }) }}
-      </button>
-      <button class="pill-tab" [class.active]="activeTab() === 'currencies'" (click)="activeTab.set('currencies')">
-        💱 {{ i18n.t('taxCurrency.tabCurrencies', { count: currencies().length }) }}
-      </button>
-    </div>
-  </div>
+  <nav class="app-tabs" [attr.aria-label]="i18n.t('taxCurrency.title')">
+    <button class="app-tab" [class.active]="activeTab() === 'taxes'" (click)="activeTab.set('taxes')">
+      {{ i18n.t('taxCurrency.tabTaxes', { count: taxes().length }) }}
+    </button>
+    <button class="app-tab" [class.active]="activeTab() === 'currencies'" (click)="activeTab.set('currencies')">
+      {{ i18n.t('taxCurrency.tabCurrencies', { count: currencies().length }) }}
+    </button>
+  </nav>
 
   @if (!loading()) {
     @if (activeTab() === 'taxes') {
@@ -216,20 +214,19 @@
     }
   }
 
-  @if (drawerOpen()) {
-    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
-    <aside class="drawer">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">{{ i18n.t('taxCurrency.drawerEyebrow') }}</p>
-          <h2>{{ activeTab() === 'taxes' ? i18n.t('taxCurrency.newTax') : i18n.t('taxCurrency.newCurrency') }}</h2>
-        </div>
-        <button class="button secondary" type="button" (click)="closeDrawer()">× {{ i18n.t('common.close') }}</button>
-      </div>
+  <app-modal-dialog
+    class="tax-currency-dialog"
+    [isOpen]="drawerOpen()"
+    [title]="activeTab() === 'taxes' ? i18n.t('taxCurrency.newTax') : i18n.t('taxCurrency.newCurrency')"
+    size="wide"
+    [showFooter]="false"
+    [preventOutsideClose]="true"
+    (close)="closeDrawer()"
+  >
 
       @if (activeTab() === 'taxes') {
         <form [formGroup]="taxForm" (ngSubmit)="submitTax()">
-          <div class="form-grid">
+          <div class="form-grid dialog-form-grid">
             <div class="field">
               <label>{{ i18n.t('taxCurrency.taxCodeLabel') }} *</label>
               <input class="ltr" formControlName="code" placeholder="VAT-14" />
@@ -251,7 +248,7 @@
               </select>
             </div>
           </div>
-          <div class="drawer-actions">
+          <div class="modal-form-actions">
             <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
             <button class="button primary" type="submit" [disabled]="taxForm.invalid">{{ i18n.t('taxCurrency.saveTax') }}</button>
           </div>
@@ -260,7 +257,7 @@
 
       @if (activeTab() === 'currencies') {
         <form [formGroup]="currencyForm" (ngSubmit)="submitCurrency()">
-          <div class="form-grid">
+          <div class="form-grid dialog-form-grid">
             <div class="field">
               <label>{{ i18n.t('taxCurrency.currencyCodeLabel') }} *</label>
               <input class="ltr" formControlName="code" placeholder="USD" />
@@ -284,12 +281,11 @@
               </label>
             </div>
           </div>
-          <div class="drawer-actions">
+          <div class="modal-form-actions">
             <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
             <button class="button primary" type="submit" [disabled]="currencyForm.invalid">{{ i18n.t('taxCurrency.saveCurrency') }}</button>
           </div>
         </form>
       }
-    </aside>
-  }
+  </app-modal-dialog>
 </section>

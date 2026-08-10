@@ -111,3 +111,18 @@ code {
     flex-direction: column;
   }
 }
+
+/* Phase 3: product tab/modal consistency. */
+.tax-currency-dialog {
+  --modal-wide-max-width: 720px;
+  --modal-body-padding: 18px 20px 20px;
+}
+
+.tax-currency-dialog .field input,
+.tax-currency-dialog .field select {
+  width: 100%;
+}
+
+.tax-currency-dialog .modal-form-actions {
+  justify-content: flex-start;
+}

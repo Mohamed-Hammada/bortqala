@@ -1658,3 +1658,87 @@ td small {
     grid-template-columns: 1fr;
   }
 }
+
+/* Phase 3: preserve role explanation without role-card wall. */
+.users-list-tools {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.users-search {
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.users-search input {
+  width: min(100%, 680px);
+  max-width: none;
+}
+
+.role-directory {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  flex: 0 0 auto;
+}
+
+.role-directory-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 var(--space-4, 16px);
+  max-height: 360px;
+}
+
+.role-directory-item {
+  min-width: 0;
+}
+
+.role-selection-hint {
+  margin-top: var(--space-2, 8px);
+  padding: 9px 11px;
+  border-inline-start: 3px solid var(--gold);
+  border-radius: var(--radius-xs, 6px);
+  background: var(--surface-muted);
+}
+
+.role-selection-hint strong,
+.role-selection-hint small {
+  display: block;
+}
+
+.role-selection-hint strong {
+  color: var(--ink);
+  font-size: 12.5px;
+}
+
+.role-selection-hint small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.users-dialog {
+  --modal-large-max-width: 780px;
+}
+
+.password-input-wrap {
+  direction: inherit;
+  max-width: none;
+}
+
+.password-input-wrap input {
+  direction: ltr;
+  text-align: left;
+}
+
+@media (max-width: 1050px) {
+  .role-directory-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .role-directory-grid {
+    grid-template-columns: 1fr;
+  }
+}

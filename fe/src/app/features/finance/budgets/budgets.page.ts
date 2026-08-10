@@ -10,6 +10,7 @@ import { apiErrorMessage } from '../../../core/api-error';
 import { formatDate } from '../../../core/date';
 import { downloadBlob } from '../../../core/download';
 import { ConfirmDialogService } from '../../../core/confirm-dialog.service';
+import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 import { BudgetService } from './budget.service';
 import {
   BudgetPayload,
@@ -23,7 +24,7 @@ import {
 
 @Component({
   selector: 'app-budgets-page',
-  imports: [ReactiveFormsModule, DecimalPipe],
+  imports: [ReactiveFormsModule, DecimalPipe, ModalDialogComponent],
   templateUrl: './budgets.page.html',
   styleUrl: './budgets.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

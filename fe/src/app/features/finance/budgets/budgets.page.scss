@@ -67,3 +67,33 @@
 @media (max-width: 720px) {
   .filter-pills-bar .pills-group { grid-template-columns: 1fr; }
 }
+
+/* Phase 3: product tabs + organized modal. */
+.budget-dialog {
+  --modal-wide-max-width: 780px;
+  --modal-body-padding: 18px 20px 20px;
+}
+
+.budget-dialog-form .field {
+  min-width: 0;
+}
+
+.budget-dialog-form .field input,
+.budget-dialog-form .field select {
+  width: 100%;
+}
+
+.budget-dialog-form .modal-form-actions {
+  justify-content: flex-start;
+}
+
+/* Old pill rules are intentionally superseded by .app-tabs/.app-tab. */
+.filter-pills-bar .pills-group {
+  display: flex;
+}
+
+.filter-pills-bar .filter-select {
+  min-height: var(--control-height);
+  border-radius: var(--radius-sm);
+  background: var(--input-bg);
+}

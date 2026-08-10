@@ -19,19 +19,17 @@
   }
 
   @if (!loading()) {
-    <div class="filter-pills-bar">
-      <div class="pills-group">
-        <button class="pill-tab" [class.active]="activeTab() === 'budgets'" (click)="activeTab.set('budgets')">
-          📋 {{ i18n.t('budget.listTitle', { count: budgets().length }) }}
-        </button>
-        <button class="pill-tab" [class.active]="activeTab() === 'status'" (click)="activeTab.set('status')">
-          📊 {{ i18n.t('budget.statusTitle', { count: filteredStatus().length }) }}
-        </button>
-        <button class="pill-tab" [class.active]="activeTab() === 'encumbrances'" (click)="activeTab.set('encumbrances')">
-          🔒 {{ i18n.t('budget.encumbrancesTitle', { count: encumbrances().length }) }}
-        </button>
-      </div>
-    </div>
+    <nav class="app-tabs" [attr.aria-label]="i18n.t('nav.budgets')">
+      <button class="app-tab" [class.active]="activeTab() === 'budgets'" (click)="activeTab.set('budgets')">
+        {{ i18n.t('budget.listTitle', { count: budgets().length }) }}
+      </button>
+      <button class="app-tab" [class.active]="activeTab() === 'status'" (click)="activeTab.set('status')">
+        {{ i18n.t('budget.statusTitle', { count: filteredStatus().length }) }}
+      </button>
+      <button class="app-tab" [class.active]="activeTab() === 'encumbrances'" (click)="activeTab.set('encumbrances')">
+        {{ i18n.t('budget.encumbrancesTitle', { count: encumbrances().length }) }}
+      </button>
+    </nav>
 
     @if (activeTab() === 'budgets') {
       <div class="table-card">
@@ -166,19 +164,17 @@
     }
   }
 
-  @if (drawerOpen()) {
-    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
-    <aside class="drawer">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">{{ i18n.t('nav.budgets') }}</p>
-          <h2>{{ editingId() ? i18n.t('budget.edit') : i18n.t('budget.create') }}</h2>
-        </div>
-        <button class="button secondary" type="button" (click)="closeDrawer()">× {{ i18n.t('common.close') }}</button>
-      </div>
-
-      <form [formGroup]="budgetForm" (ngSubmit)="submitBudget()">
-        <div class="form-grid">
+  <app-modal-dialog
+    class="budget-dialog"
+    [isOpen]="drawerOpen()"
+    [title]="editingId() ? i18n.t('budget.edit') : i18n.t('budget.create')"
+    size="wide"
+    [showFooter]="false"
+    [preventOutsideClose]="true"
+    (close)="closeDrawer()"
+  >
+      <form class="budget-dialog-form" [formGroup]="budgetForm" (ngSubmit)="submitBudget()">
+        <div class="form-grid dialog-form-grid">
           <div class="field">
             <label>{{ i18n.t('budget.fiscalYear') }} *</label>
             <input type="number" class="ltr" formControlName="fiscalYear" />
@@ -221,26 +217,27 @@
             </select>
           </div>
           <div class="field span-2">
-            <label class="checkbox-label">
+            <label class="dialog-toggle">
               <input type="checkbox" formControlName="blocking" />
-              <span>{{ i18n.t('budget.blocking') }}</span>
+              <span>
+                <strong>{{ i18n.t('budget.blocking') }}</strong>
+                <small>{{ i18n.t('budget.blockingHint') }}</small>
+              </span>
             </label>
-            <small>{{ i18n.t('budget.blockingHint') }}</small>
           </div>
           <div class="field span-2">
-            <label class="checkbox-label">
+            <label class="dialog-toggle">
               <input type="checkbox" formControlName="active" />
-              <span>{{ i18n.t('budget.active') }}</span>
+              <span><strong>{{ i18n.t('budget.active') }}</strong></span>
             </label>
           </div>
         </div>
-        <div class="drawer-actions">
+        <div class="modal-form-actions">
           <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('budget.cancel') }}</button>
           <button class="button primary" type="submit" [disabled]="submitting() || budgetForm.invalid">
             {{ submitting() ? i18n.t('common.loading') : i18n.t('budget.save') }}
           </button>
         </div>
       </form>
-    </aside>
-  }
+  </app-modal-dialog>
 </section>

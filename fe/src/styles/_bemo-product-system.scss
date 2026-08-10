@@ -30,6 +30,9 @@
   /* Compatibility aliases used by older feature CSS */
   --border-color: var(--line);
   --text-color: var(--ink);
+  --text: var(--ink);
+  --text-muted: var(--muted);
+  --card: var(--surface);
   --gold-soft: var(--gold-glow);
   --warning-border: color-mix(in srgb, var(--warning) 45%, var(--line));
 
@@ -204,5 +207,202 @@ body:has(.modal-backdrop) .page > .alert {
   .header-actions > .button,
   .page-actions > .button {
     flex: 1 1 auto;
+  }
+}
+
+/* Product tabs: one visual pattern everywhere. */
+.app-tabs {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  scrollbar-width: thin;
+}
+
+.app-tab {
+  min-height: 36px;
+  flex: 0 0 auto;
+  padding-inline: 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--secondary-text);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.app-tab:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.app-tab.active {
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--shadow-xs);
+}
+
+.app-tab.active::after {
+  content: '';
+  display: block;
+  height: 2px;
+  margin: 4px 3px -5px;
+  border-radius: 999px;
+  background: var(--gold);
+}
+
+/* Product password control: same layout on Login / Add User / edit flows. */
+.password-control {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.password-control > input {
+  width: 100% !important;
+  max-width: none !important;
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
+}
+
+.password-visibility-toggle {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--secondary-text);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-visibility-toggle:hover,
+.password-visibility-toggle:focus-visible {
+  background: var(--surface-hover);
+  color: var(--gold);
+}
+
+.password-visibility-toggle app-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* The control follows the UI language while password text itself stays LTR. */
+[dir='rtl'] .password-control > input {
+  padding-left: 48px !important;
+  padding-right: 12px !important;
+}
+[dir='rtl'] .password-visibility-toggle {
+  left: 5px;
+  right: auto;
+}
+[dir='ltr'] .password-control > input {
+  padding-right: 48px !important;
+  padding-left: 12px !important;
+}
+[dir='ltr'] .password-visibility-toggle {
+  right: 5px;
+  left: auto;
+}
+
+/* Shared data-entry modal grids. */
+.dialog-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+  align-items: start;
+}
+
+.dialog-form-grid > .span-2 {
+  grid-column: 1 / -1;
+}
+
+.dialog-toggle {
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.dialog-toggle:hover {
+  border-color: var(--gold);
+  background: var(--surface-hover);
+}
+
+.dialog-toggle > input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  accent-color: var(--gold);
+}
+
+.dialog-toggle strong,
+.dialog-toggle small {
+  display: block;
+}
+
+.dialog-toggle small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11.5px;
+}
+
+.modal-form-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+.page-header > :first-child {
+  min-width: 0;
+}
+
+.page-header > .header-actions,
+.page-header > .field {
+  align-self: flex-start;
+  margin-block-start: 0;
+}
+
+@media (max-width: 700px) {
+  .dialog-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dialog-form-grid > .span-2 {
+    grid-column: auto;
+  }
+
+  .app-tabs {
+    display: flex;
+    width: 100%;
+  }
+
+  .app-tab {
+    flex: 1 0 auto;
   }
 }

@@ -35,6 +35,7 @@
           class="ltr"
           type="date"
           formControlName="periodStart"
+          (change)="onPeriodStartChanged()"
           onclick="this.showPicker && this.showPicker()"
         />
       </div>
@@ -45,6 +46,7 @@
           class="ltr"
           type="date"
           formControlName="periodEnd"
+          [min]="periodForm.controls.periodStart.value"
           onclick="this.showPicker && this.showPicker()"
         />
       </div>

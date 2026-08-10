@@ -18,11 +18,11 @@
   @if (error()) { <div class="alert error">{{ error() }}</div> }
 
   <!-- Tabs -->
-  <nav class="tabs">
-    <button class="tab" [class.active]="activeTab() === 'po'" (click)="activeTab.set('po')">📋 {{ i18n.t('procurement.tabPo') }}</button>
-    <button class="tab" [class.active]="activeTab() === 'grn'" (click)="activeTab.set('grn')">📦 {{ i18n.t('procurement.tabGrn') }}</button>
-    <button class="tab" [class.active]="activeTab() === 'invoice'" (click)="activeTab.set('invoice')">🧾 {{ i18n.t('procurement.tabInvoice') }}</button>
-    <button class="tab" [class.active]="activeTab() === 'payment'" (click)="activeTab.set('payment')">💰 {{ i18n.t('procurement.tabPayment') }}</button>
+  <nav class="app-tabs" [attr.aria-label]="i18n.t('procurement.title')">
+    <button class="app-tab" [class.active]="activeTab() === 'po'" (click)="activeTab.set('po')">{{ i18n.t('procurement.tabPo') }}</button>
+    <button class="app-tab" [class.active]="activeTab() === 'grn'" (click)="activeTab.set('grn')">{{ i18n.t('procurement.tabGrn') }}</button>
+    <button class="app-tab" [class.active]="activeTab() === 'invoice'" (click)="activeTab.set('invoice')">{{ i18n.t('procurement.tabInvoice') }}</button>
+    <button class="app-tab" [class.active]="activeTab() === 'payment'" (click)="activeTab.set('payment')">{{ i18n.t('procurement.tabPayment') }}</button>
   </nav>
 
   <!-- Workflow Pipeline -->

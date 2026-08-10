@@ -7,6 +7,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { I18nService } from '../../../core/i18n.service';
 import { NotificationService } from '../../../core/notification.service';
 import { apiErrorMessage } from '../../../core/api-error';
+import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 
 export interface TaxRate {
   id: string;
@@ -55,7 +56,7 @@ interface ExchangeRateRefreshResponse {
 @Component({
   selector: 'app-tax-currency-page',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, DecimalPipe],
+  imports: [ReactiveFormsModule, DatePipe, DecimalPipe, ModalDialogComponent],
   templateUrl: './tax-currency.page.html',
   styleUrl: './tax-currency.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

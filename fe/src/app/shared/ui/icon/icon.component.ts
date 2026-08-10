@@ -16,7 +16,9 @@ export type IconName =
   | 'expand-all'
   | 'collapse-all'
   | 'arrow-up'
-  | 'arrow-down';
+  | 'arrow-down'
+  | 'eye'
+  | 'eye-off';
 
 @Component({
   selector: 'app-icon',

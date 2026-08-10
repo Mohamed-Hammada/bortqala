@@ -249,33 +249,9 @@
   outline: none;
 }
 
-.password-field {
-  position: relative;
-}
-
-.password-field input {
-  direction: ltr;
-  text-align: left;
-  padding-right: 82px;
-}
-
-.toggle-password {
-  position: absolute;
-  right: 8px;
-  left: auto;
-  bottom: 5px;
-  height: 30px;
-  padding: 0 8px;
-  border: 0;
-  background: transparent;
-  color: #B8860B;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.toggle-password:hover {
-  color: #D4A017;
+.password-field,
+.password-control {
+  width: 100%;
 }
 
 /* Elevated Primary Button */
@@ -326,4 +302,20 @@
   .login-card {
     padding: 26px 20px;
   }
+}
+
+/* Keep browser autofill visually identical to the other login fields. */
+.login-card input:-webkit-autofill,
+.login-card input:-webkit-autofill:hover,
+.login-card input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #1C1C1C;
+  -webkit-box-shadow: 0 0 0 1000px #FFFFFF inset;
+  caret-color: #1C1C1C;
+  transition: background-color 9999s ease-out 0s;
+}
+
+.login-card .password-visibility-toggle:hover,
+.login-card .password-visibility-toggle:focus-visible {
+  background: #E8E4DA;
+  color: #B8860B;
 }

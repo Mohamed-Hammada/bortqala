@@ -19,6 +19,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { exportCsv } from '../../core/download';
 
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { AccessRole, AccessValidateResult, ACCESS_LEVEL_PRECEDENCE } from './access.models';
 import { AccessService } from './access.service';
 
@@ -62,7 +63,7 @@ export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = [
 
 @Component({
   selector: 'app-users-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent],
+  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent, IconComponent],
   providers: [UsersStore],
   templateUrl: './users.page.html',
   styleUrl: './users.page.scss',
@@ -474,6 +475,11 @@ export class UsersPage {
 
   primaryRole(): RoleCode | '' {
     return this.form.controls.roles.value[0] ?? '';
+  }
+
+  primaryRoleInfo(): { code: RoleCode; labelKey: string; descriptionKey: string } | null {
+    const code = this.primaryRole();
+    return this.roles.find((role) => role.code === code) ?? null;
   }
 
   setPrimaryRole(event: Event): void {

@@ -167,3 +167,54 @@ td small {
     grid-template-columns: 1fr;
   }
 }
+
+/* Phase 3: aligned report range controls and theme-safe states. */
+.year-field {
+  align-self: flex-start;
+  margin: 0;
+}
+
+.year-field input {
+  width: 100%;
+}
+
+.period-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr)) auto auto;
+  align-items: end;
+  gap: var(--space-3, 12px);
+}
+
+.period-form .field {
+  min-width: 0;
+}
+
+.periods button:disabled {
+  border-color: var(--line);
+  background: var(--surface-muted);
+  color: var(--muted);
+}
+
+.periods button:disabled small {
+  color: var(--muted);
+}
+
+.preview-note.warn {
+  color: var(--warning-text);
+}
+
+@media (max-width: 1100px) {
+  .period-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .period-form .button {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 620px) {
+  .period-form {
+    grid-template-columns: 1fr;
+  }
+}
