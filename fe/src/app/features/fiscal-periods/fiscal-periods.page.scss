@@ -1,3 +1,42 @@
 .page { display: flex; flex-direction: column; gap: 20px; }
 .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
 .btn-sm { font-size: 13px; padding: 4px 8px; }
+
+/* UI5-05: fiscal header controls alignment */
+.fiscal-toolbar {
+  align-items: flex-end;
+  gap: var(--space-3, 12px);
+}
+
+.fiscal-year-field {
+  width: 190px;
+  margin: 0;
+}
+
+.fiscal-year-field label {
+  min-height: 20px;
+}
+
+.fiscal-year-field input {
+  width: 100%;
+  min-height: var(--control-height, 40px);
+}
+
+.fiscal-generate-button {
+  align-self: flex-end;
+  min-height: var(--control-height, 40px);
+}
+
+@media (max-width: 760px) {
+  .page-header {
+    flex-direction: column;
+  }
+
+  .fiscal-toolbar {
+    width: 100%;
+  }
+
+  .fiscal-year-field {
+    flex: 1 1 180px;
+  }
+}

@@ -46,3 +46,9 @@
 **EN:** Appearance preferences no longer hard-code light-only `#f8fafc`, `#cbd5e1`, and `#64748b` surfaces for sidebar and notification options. Those controls now use the shared semantic theme tokens.
 
 **AR:** لم تعد خيارات المظهر الخاصة بالقائمة الجانبية والإشعارات تستخدم ألوان Light ثابتة داخل HTML، وأصبحت تعتمد على متغيرات الثيم المشتركة لتظهر بشكل صحيح في الوضع الداكن والفاتح.
+
+## 2026-08-10 — Categorized product tabs
+
+**EN:** Settings navigation now uses the BEMO product tab pattern in two wrapped groups: everyday/user settings and system/admin settings. This removes the long horizontal tab scrollbar on normal desktop widths.
+
+**AR:** أصبحت تبويبات الإعدادات تستخدم نمط BEMO الموحد ومقسمة إلى مجموعتين ملتفتين: إعدادات الاستخدام اليومية/المستخدم وإعدادات النظام/الإدارة، بدلاً من شريط أفقي طويل.

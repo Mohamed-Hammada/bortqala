@@ -7,82 +7,64 @@
     </div>
   </header>
 
-  <!-- Settings Tabs Header -->
-  <nav class="settings-nav-tabs" [attr.aria-label]="i18n.t('settings.tabsAriaLabel', undefined, 'تبويبات الإعدادات')">
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab() === 'appearance'"
-      (click)="setTab('appearance')"
-    >
-      🎨 {{ i18n.t('settings.tabAppearance', undefined, 'المظهر واللغة') }}
-    </button>
+  <!-- Settings tabs: categorized into daily/user settings and system/admin settings. -->
+  <div class="settings-tab-groups">
+    <nav class="app-tabs app-tabs-wrap settings-tab-group" [attr.aria-label]="i18n.t('settings.tabsAriaLabel', undefined, 'تبويبات الإعدادات')">
+      <button type="button" class="app-tab" [class.active]="activeTab() === 'appearance'" (click)="setTab('appearance')">
+        {{ i18n.t('settings.tabAppearance', undefined, 'المظهر واللغة') }}
+      </button>
 
-    @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
-      <button
-        type="button"
-        class="tab-btn"
-        [class.active]="activeTab() === 'session'"
-        (click)="setTab('session')"
-      >
-        ⏳ {{ i18n.t('settings.tabSession', undefined, 'الجلسة') }}
+      @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+        <button type="button" class="app-tab" [class.active]="activeTab() === 'session'" (click)="setTab('session')">
+          {{ i18n.t('settings.tabSession', undefined, 'الجلسة') }}
+        </button>
+        <button type="button" class="app-tab" [class.active]="activeTab() === 'security'" (click)="setTab('security')">
+          {{ i18n.t('settings.tabSecurity', undefined, 'الأمان') }}
+        </button>
+      }
+
+      <button type="button" class="app-tab" [class.active]="activeTab() === 'reports'" (click)="setTab('reports')">
+        {{ i18n.t('settings.tabReports', undefined, 'التقارير والتصدير') }}
       </button>
 
       <button
         type="button"
-        class="tab-btn"
-        [class.active]="activeTab() === 'security'"
-        (click)="setTab('security')"
+        class="app-tab"
+        [class.active]="activeTab() === 'shortcuts'"
+        (click)="setTab('shortcuts')"
+        [attr.title]="i18n.t('shortcuts.subtitle')"
       >
-        🛡️ {{ i18n.t('settings.tabSecurity', undefined, 'الأمان') }}
+        {{ i18n.t('settings.tabShortcuts') }}
       </button>
-    }
+    </nav>
 
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab() === 'reports'"
-      (click)="setTab('reports')"
-    >
-      📊 {{ i18n.t('settings.tabReports', undefined, 'التقارير والتصدير') }}
-    </button>
-
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab() === 'shortcuts'"
-      (click)="setTab('shortcuts')"
-      [attr.title]="i18n.t('shortcuts.subtitle')"
-    >
-      ⌨ {{ i18n.t('settings.tabShortcuts') }}
-    </button>
-
-    @if (authService.isSuperAdmin()) {
-      <button type="button" class="tab-btn" [class.active]="activeTab() === 'subscription'" (click)="setTab('subscription')">{{ i18n.t('subscription.tab') }}</button>
-      <button type="button" class="tab-btn" [class.active]="activeTab() === 'trial'" (click)="setTab('trial')">{{ i18n.t('trialDemo.tab') }}</button>
-      <button type="button" class="tab-btn" [class.active]="activeTab() === 'industry'" (click)="setTab('industry')">{{ i18n.t('industryPack.tab') }}</button>
-      <button type="button" class="tab-btn" [class.active]="activeTab() === 'entitlements'" (click)="setTab('entitlements')">{{ i18n.t('entitlements.tab') }}</button>
-      <button
-        type="button"
-        class="tab-btn"
-        [class.active]="activeTab() === 'translations'"
-        (click)="setTab('translations')"
-      >
-        🌐 {{ i18n.t('translations.menu', undefined, 'إدارة الترجمات') }}
-      </button>
-    }
-    @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
-      <button type="button" class="tab-btn" [class.active]="activeTab() === 'onboarding'" (click)="setTab('onboarding')">{{ i18n.t('onboarding.tab') }}</button>
-    }
     @if (authService.hasAnyRole(['SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER','WORKFORCE_MANAGER','FINANCE_MANAGER'])) {
-      <button type="button" class="tab-btn" [class.active]="activeTab() === 'risk'" (click)="setTab('risk')">{{ i18n.t('risk.tab') }}</button>
-    }
-    @if (authService.hasAnyRole(['SUPER_ADMIN','ADMIN'])) {
-      <button type="button" class="tab-btn" [class.active]="activeTab() === 'analytics'" (click)="setTab('analytics')">{{ i18n.t('analytics.tab') }}</button>
-    }
-  </nav>
+      <nav class="app-tabs app-tabs-wrap settings-tab-group settings-tab-group-admin" [attr.aria-label]="i18n.t('settings.tabsAriaLabel', undefined, 'تبويبات الإعدادات')">
+        @if (authService.isSuperAdmin()) {
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'subscription'" (click)="setTab('subscription')">{{ i18n.t('subscription.tab') }}</button>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'trial'" (click)="setTab('trial')">{{ i18n.t('trialDemo.tab') }}</button>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'industry'" (click)="setTab('industry')">{{ i18n.t('industryPack.tab') }}</button>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'entitlements'" (click)="setTab('entitlements')">{{ i18n.t('entitlements.tab') }}</button>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'translations'" (click)="setTab('translations')">
+            {{ i18n.t('translations.menu', undefined, 'إدارة الترجمات') }}
+          </button>
+        }
 
-  @if (activeTab() === 'entitlements' && authService.isSuperAdmin()) { <app-entitlement-settings /> }
+        @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'onboarding'" (click)="setTab('onboarding')">{{ i18n.t('onboarding.tab') }}</button>
+        }
+
+        @if (authService.hasAnyRole(['SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER','WORKFORCE_MANAGER','FINANCE_MANAGER'])) {
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'risk'" (click)="setTab('risk')">{{ i18n.t('risk.tab') }}</button>
+        }
+
+        @if (authService.hasAnyRole(['SUPER_ADMIN','ADMIN'])) {
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'analytics'" (click)="setTab('analytics')">{{ i18n.t('analytics.tab') }}</button>
+        }
+      </nav>
+    }
+  </div>
+@if (activeTab() === 'entitlements' && authService.isSuperAdmin()) { <app-entitlement-settings /> }
   @if (activeTab() === 'subscription' && authService.isSuperAdmin()) { <app-subscription-settings /> }
   @if (activeTab() === 'industry' && authService.isSuperAdmin()) { <app-industry-pack-settings /> }
   @if (activeTab() === 'trial' && authService.isSuperAdmin()) { <app-trial-demo-settings /> }

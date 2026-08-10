@@ -2,3 +2,29 @@
 .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
 .success-text { color: var(--accent-emerald, #10b981); }
 .danger-text { color: #ef4444; }
+
+/* UI5-03: organized quality modal */
+.quality-dialog {
+  --modal-wide-max-width: 760px;
+  --modal-body-padding: 18px 20px 20px;
+}
+
+.quality-dialog form {
+  min-width: 0;
+}
+
+.quality-dialog .field {
+  min-width: 0;
+}
+
+.quality-dialog .field input,
+.quality-dialog .field select,
+.quality-dialog .field textarea {
+  width: 100%;
+  max-width: none;
+}
+
+.quality-dialog-actions {
+  justify-content: flex-start;
+  margin-bottom: 0;
+}

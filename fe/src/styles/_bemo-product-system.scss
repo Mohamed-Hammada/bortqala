@@ -406,3 +406,69 @@ body:has(.modal-backdrop) .page > .alert {
     flex: 1 0 auto;
   }
 }
+
+/* UI5-01: locale-aligned form values
+   Character order may remain LTR for technical values, but the visual field
+   alignment follows the active application language. */
+:root[dir='rtl'] input:not([type='checkbox']):not([type='radio']):not([type='range']),
+:root[dir='rtl'] textarea,
+:root[dir='rtl'] select,
+[dir='rtl'] input:not([type='checkbox']):not([type='radio']):not([type='range']),
+[dir='rtl'] textarea,
+[dir='rtl'] select {
+  text-align: right;
+}
+
+:root[dir='ltr'] input:not([type='checkbox']):not([type='radio']):not([type='range']),
+:root[dir='ltr'] textarea,
+:root[dir='ltr'] select,
+[dir='ltr'] input:not([type='checkbox']):not([type='radio']):not([type='range']),
+[dir='ltr'] textarea,
+[dir='ltr'] select {
+  text-align: left;
+}
+
+/* Keep technical character order predictable without forcing it to the
+   physical left edge in Arabic. */
+:root[dir='rtl'] input.ltr,
+:root[dir='rtl'] input.technical-input,
+:root[dir='rtl'] input.username-input,
+:root[dir='rtl'] input[type='password'],
+:root[dir='rtl'] .password-control > input,
+[dir='rtl'] input.ltr,
+[dir='rtl'] input.technical-input,
+[dir='rtl'] input.username-input,
+[dir='rtl'] input[type='password'],
+[dir='rtl'] .password-control > input {
+  direction: ltr;
+  text-align: right;
+  unicode-bidi: isolate;
+}
+
+:root[dir='ltr'] input.ltr,
+:root[dir='ltr'] input.technical-input,
+:root[dir='ltr'] input.username-input,
+:root[dir='ltr'] input[type='password'],
+:root[dir='ltr'] .password-control > input,
+[dir='ltr'] input.ltr,
+[dir='ltr'] input.technical-input,
+[dir='ltr'] input.username-input,
+[dir='ltr'] input[type='password'],
+[dir='ltr'] .password-control > input {
+  direction: ltr;
+  text-align: left;
+}
+
+/* Product tabs may wrap when a page has many options. */
+.app-tabs-wrap {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  overflow: visible;
+  align-items: center;
+  align-content: flex-start;
+}
+
+.app-tabs-wrap .app-tab {
+  flex: 0 0 auto;
+}

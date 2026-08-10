@@ -23,3 +23,9 @@ Expired protected sessions arrive with `reason=session-expired` and display the 
 **EN:** App code, username, and password are explicitly LTR technical values while labels continue to follow the UI locale. The password reveal action is placed on the opposite edge from the LTR text with reserved input padding, preventing the reveal label from overlapping password dots.
 
 **AR:** أصبحت قيم كود التطبيق واسم المستخدم وكلمة المرور LTR بشكل صريح مع بقاء عناوين الحقول حسب اتجاه اللغة. كما تم فصل زر إظهار كلمة المرور عن نقاط كلمة المرور لمنع التداخل الظاهر في RTL.
+
+## 2026-08-10 — Locale-aligned input values
+
+**EN:** Input visual alignment now follows the active UI direction globally: Arabic/RTL fields align to the right and English/LTR fields align to the left. Technical identifiers still preserve LTR character order.
+
+**AR:** أصبحت محاذاة قيم الحقول تتبع اتجاه واجهة التطبيق: العربية إلى اليمين والإنجليزية إلى اليسار، مع الحفاظ على ترتيب الأحرف LTR للقيم التقنية مثل اسم المستخدم والأكواد.

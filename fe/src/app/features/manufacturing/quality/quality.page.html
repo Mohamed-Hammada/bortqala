@@ -66,19 +66,17 @@
     </div>
   }
 
-  @if (drawerOpen()) {
-    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
-    <aside class="drawer">
-      <div class="drawer-header">
-        <div>
-          <p class="eyebrow">{{ i18n.t('quality.drawerEyebrow') }}</p>
-          <h2>{{ i18n.t('quality.drawerTitle') }}</h2>
-        </div>
-        <button class="button secondary" type="button" (click)="closeDrawer()">× {{ i18n.t('common.close') }}</button>
-      </div>
-
-      <form [formGroup]="qiForm" (ngSubmit)="submitQi()">
-        <div class="form-grid">
+  <app-modal-dialog
+    class="quality-dialog"
+    [isOpen]="drawerOpen()"
+    [title]="i18n.t('quality.drawerTitle')"
+    size="wide"
+    [preventOutsideClose]="true"
+    [showFooter]="false"
+    (close)="closeDrawer()"
+  >
+      <form id="quality-inspection-form" [formGroup]="qiForm" (ngSubmit)="submitQi()">
+        <div class="dialog-form-grid">
           <div class="field">
             <label>{{ i18n.t('quality.numberLabel') }} *</label>
             <input class="ltr" formControlName="inspectionNumber" />
@@ -118,11 +116,16 @@
             <input formControlName="notes" />
           </div>
         </div>
-        <div class="drawer-actions">
-          <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
-          <button class="button primary" type="submit" [disabled]="qiForm.invalid">{{ i18n.t('quality.save') }}</button>
-        </div>
       </form>
-    </aside>
-  }
+
+      <div class="modal-form-actions quality-dialog-actions">
+        <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+        <button
+          class="button primary"
+          type="submit"
+          form="quality-inspection-form"
+          [disabled]="qiForm.invalid"
+        >{{ i18n.t('quality.save') }}</button>
+      </div>
+  </app-modal-dialog>
 </section>
