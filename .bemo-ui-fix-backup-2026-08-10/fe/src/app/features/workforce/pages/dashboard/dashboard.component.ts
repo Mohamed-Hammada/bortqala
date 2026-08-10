@@ -95,8 +95,7 @@ import { WorkforceService } from '../../data-access/workforce.service';
     .shared-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem; }
     .shared-filters div { display: flex; flex-direction: column; gap: .25rem; }
     .shared-filters label, .shared-filters small { font-size: .75rem; color: var(--muted); }
-    .shared-filters select, .shared-filters button { border: 1px solid var(--line); border-radius: 8px; padding: .5rem .65rem; background: var(--input-bg); color: var(--ink); }
-    .shared-filters select option, .shared-filters select optgroup { background: var(--surface); color: var(--ink); }
+    .shared-filters select, .shared-filters button { border: 1px solid var(--line); border-radius: 8px; padding: .5rem .65rem; background: white; }
     .shared-filters small { flex-basis: 100%; }
     .kpi-title, .chart-eyebrow { font-size: .8rem; color: var(--muted); font-weight: 700; }
     .kpi-value { font-size: 1.875rem; font-weight: 800; color: var(--ink); }

@@ -1,13 +1,21 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { I18nService } from '../../../core/i18n.service';
 
 export type PayrollStage = 'DRAFT' | 'REVIEW' | 'APPROVED' | 'POSTED' | 'DISBURSED';
 
 export interface PayrollStepInfo {
   key: PayrollStage;
-  labelAr: string;
-  labelEn: string;
+  labelKey: string;
   stepNumber: number;
 }
+
+const STAGE_LABEL_KEYS: Record<PayrollStage, string> = {
+  DRAFT: 'payroll.statusDraft',
+  REVIEW: 'payroll.statusReview',
+  APPROVED: 'payroll.statusApproved',
+  POSTED: 'payroll.statusPosted',
+  DISBURSED: 'payroll.statusDisbursed',
+};
 
 @Component({
   selector: 'app-payroll-stepper',
@@ -18,17 +26,21 @@ export interface PayrollStepInfo {
 })
 export class PayrollStepperComponent {
   readonly currentStatus = input<string>('DRAFT');
-  readonly isEn = input<boolean>(false);
+  readonly i18n = inject(I18nService);
 
   readonly stageChange = output<PayrollStage>();
 
   readonly steps: PayrollStepInfo[] = [
-    { key: 'DRAFT', labelAr: 'مسودة', labelEn: 'Draft', stepNumber: 1 },
-    { key: 'REVIEW', labelAr: 'مراجعة', labelEn: 'Review', stepNumber: 2 },
-    { key: 'APPROVED', labelAr: 'اعتماد وقفل', labelEn: 'Approved & Locked', stepNumber: 3 },
-    { key: 'POSTED', labelAr: 'ترحيل محاسبي', labelEn: 'Accounting Posting', stepNumber: 4 },
-    { key: 'DISBURSED', labelAr: 'صرف المرتبات', labelEn: 'Disbursement', stepNumber: 5 },
+    { key: 'DRAFT', labelKey: STAGE_LABEL_KEYS.DRAFT, stepNumber: 1 },
+    { key: 'REVIEW', labelKey: STAGE_LABEL_KEYS.REVIEW, stepNumber: 2 },
+    { key: 'APPROVED', labelKey: STAGE_LABEL_KEYS.APPROVED, stepNumber: 3 },
+    { key: 'POSTED', labelKey: STAGE_LABEL_KEYS.POSTED, stepNumber: 4 },
+    { key: 'DISBURSED', labelKey: STAGE_LABEL_KEYS.DISBURSED, stepNumber: 5 },
   ];
+
+  label(step: PayrollStepInfo): string {
+    return this.i18n.t(step.labelKey);
+  }
 
   getCurrentStepIndex(): number {
     const status = this.currentStatus().toUpperCase();

@@ -129,16 +129,3 @@
     grid-template-columns: 1fr;
   }
 }
-
-/* BEMO UI FIX 2026-08-10: compact category dialog */
-.compact-dialog-form .form-grid {
-  grid-template-columns: 1fr;
-  gap: 1rem;
-}
-
-.compact-dialog-form .field input,
-.compact-dialog-form .field textarea {
-  width: 100%;
-  max-width: none;
-}
-

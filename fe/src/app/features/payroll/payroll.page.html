@@ -42,7 +42,6 @@
   <!-- Payroll Visual Stepper -->
   <app-payroll-stepper
     [currentStatus]="store.data()?.periodStatus || 'DRAFT'"
-    [isEn]="i18n.locale() === 'en-US'"
   />
 
   <!-- Period & Year Selector & Status Filter -->
@@ -107,7 +106,7 @@
         <span class="metric-icon">✅</span>
         <div class="metric-info">
           <small>{{ i18n.t('payroll.paidAmount', undefined, 'إجمالي الصافي المدفوع') }}</small>
-          <strong>{{ data.summary.totalPaidAmount | number:'1.2-2' }} ج.م</strong>
+          <strong>{{ data.summary.totalPaidAmount | number:'1.2-2' }} {{ i18n.t('common.egp') }}</strong>
           <span class="sub-pill">{{ i18n.t('payroll.receivedCount', { count: data.summary.paidCount }) }}</span>
         </div>
       </div>
@@ -116,7 +115,7 @@
         <span class="metric-icon">⏳</span>
         <div class="metric-info">
           <small>{{ i18n.t('payroll.pendingAmount', undefined, 'المتبقي قيد الصرف') }}</small>
-          <strong>{{ data.summary.totalPendingAmount | number:'1.2-2' }} ج.م</strong>
+          <strong>{{ data.summary.totalPendingAmount | number:'1.2-2' }} {{ i18n.t('common.egp') }}</strong>
           <span class="sub-pill">{{ i18n.t('payroll.unpaidCount', { count: data.summary.pendingCount }) }}</span>
         </div>
       </div>
@@ -125,7 +124,7 @@
         <span class="metric-icon">📉</span>
         <div class="metric-info">
           <small>{{ i18n.t('payroll.advancesDeducted', undefined, 'تسوية السلف المستقطعة') }}</small>
-          <strong>{{ data.summary.totalAdvancesDeducted | number:'1.2-2' }} ج.م</strong>
+          <strong>{{ data.summary.totalAdvancesDeducted | number:'1.2-2' }} {{ i18n.t('common.egp') }}</strong>
         </div>
       </div>
     </div>
@@ -164,17 +163,17 @@
               </td>
               <td>
                 <span [class.text-warning]="row.activeAdvancesBalance > 0">
-                  {{ row.activeAdvancesBalance | number:'1.2-2' }} ج.م
+                  {{ row.activeAdvancesBalance | number:'1.2-2' }} {{ i18n.t('common.egp') }}
                 </span>
               </td>
-              <td>{{ row.grossAmount | number:'1.2-2' }} ج.م</td>
+              <td>{{ row.grossAmount | number:'1.2-2' }} {{ i18n.t('common.egp') }}</td>
               <td>
                 <span [class.text-danger]="row.advancesDeducted > 0">
-                  - {{ row.advancesDeducted | number:'1.2-2' }} ج.م
+                  - {{ row.advancesDeducted | number:'1.2-2' }} {{ i18n.t('common.egp') }}
                 </span>
               </td>
               <td>
-                <strong class="net-text">{{ row.netAmount | number:'1.2-2' }} ج.م</strong>
+                <strong class="net-text">{{ row.netAmount | number:'1.2-2' }} {{ i18n.t('common.egp') }}</strong>
               </td>
               <td>
                 <small class="ltr-text">{{ formatDateStr(row.paidAt) }}</small>
@@ -266,10 +265,10 @@
     <div class="traceability-card">
       <h4>🔍 {{ i18n.t('payroll.traceabilityTitle') }}</h4>
       <div class="trace-grid">
-        <div><span>{{ i18n.t('payroll.baseSalaryLabel') }}:</span> <strong>{{ row.baseSalary | number:'1.2-2' }} ج.م</strong></div>
-        <div><span>{{ i18n.t('payroll.bonusLabel') }}:</span> <strong class="text-success">+ {{ row.attendanceBonus | number:'1.2-2' }} ج.م</strong></div>
-        <div><span>{{ i18n.t('payroll.deductionLabel') }}:</span> <strong class="text-danger">- {{ row.attendanceDeduction | number:'1.2-2' }} ج.م</strong></div>
-        <div><span>{{ i18n.t('payroll.activeAdvance') }}:</span> <strong>{{ row.activeAdvancesBalance | number:'1.2-2' }} ج.م</strong></div>
+        <div><span>{{ i18n.t('payroll.baseSalaryLabel') }}:</span> <strong>{{ row.baseSalary | number:'1.2-2' }} {{ i18n.t('common.egp') }}</strong></div>
+        <div><span>{{ i18n.t('payroll.bonusLabel') }}:</span> <strong class="text-success">+ {{ row.attendanceBonus | number:'1.2-2' }} {{ i18n.t('common.egp') }}</strong></div>
+        <div><span>{{ i18n.t('payroll.deductionLabel') }}:</span> <strong class="text-danger">- {{ row.attendanceDeduction | number:'1.2-2' }} {{ i18n.t('common.egp') }}</strong></div>
+        <div><span>{{ i18n.t('payroll.activeAdvance') }}:</span> <strong>{{ row.activeAdvancesBalance | number:'1.2-2' }} {{ i18n.t('common.egp') }}</strong></div>
       </div>
     </div>
 
@@ -277,7 +276,7 @@
       <div class="form-grid">
         <div class="field span-2">
           <label>{{ i18n.t('payroll.payPeriodLabel') }}</label>
-          <input type="text" class="ltr" [value]="row.periodStart + '  إلى  ' + row.periodEnd" readonly disabled />
+          <input type="text" class="ltr" [value]="row.periodStart + '  ' + i18n.t('common.to') + '  ' + row.periodEnd" readonly disabled />
         </div>
 
         <div class="field">
@@ -349,12 +348,12 @@
 
         <div class="field">
           <label for="pay-ref">{{ i18n.t('payroll.referenceCodeLabel') }}</label>
-          <input id="pay-ref" class="ltr" type="text" formControlName="referenceCode" placeholder="مثال: REF-9908" />
+          <input id="pay-ref" class="ltr" type="text" formControlName="referenceCode" [placeholder]="i18n.t('payroll.referencePlaceholder')" />
         </div>
 
         <div class="field span-2">
           <label for="pay-note">{{ i18n.t('payroll.disbursementNote') }}</label>
-          <textarea id="pay-note" formControlName="note" placeholder="أي ملاحظات إضافية على الصرف..."></textarea>
+          <textarea id="pay-note" formControlName="note" [placeholder]="i18n.t('payroll.notePlaceholder')"></textarea>
         </div>
       </div>
 

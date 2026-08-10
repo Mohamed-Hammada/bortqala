@@ -247,3 +247,5 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260810_v189_manufacturing_translations.yaml
   - include:
       file: db/changelog/schema/update/20260810_v190_customer_invoice_schema_alignment.yaml
+  - include:
+      file: db/changelog/data/insert/20260810_v191_confirm_missing_ui_translations.yaml

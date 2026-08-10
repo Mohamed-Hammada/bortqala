@@ -1,0 +1,31 @@
+id;key;locale;text
+v191-001;confirm.approveTitle;ar-EG;اعتماد كشف المرتبات
+v191-002;confirm.approveTitle;en-US;Approve Payroll Period
+v191-003;confirm.approveMessage;ar-EG;سيؤدي الاعتماد إلى قفل الفترة ومنع أي تعديلات لاحقة على كشف المرتبات.
+v191-004;confirm.approveMessage;en-US;Approving will lock the period and prevent any further edits to the payroll sheet.
+v191-005;confirm.postTitle;ar-EG;ترحيل القيود المحاسبية
+v191-006;confirm.postTitle;en-US;Post GL Journal Entries
+v191-007;confirm.postMessage;ar-EG;سيؤدي الترحيل إلى إنشاء قيود محاسبية (GL) لكشف المرتبات الحالي. هل تريد المتابعة؟
+v191-008;confirm.postMessage;en-US;Posting will create GL journal entries for the current payroll period. Continue?
+v191-009;categories.createSuccess;ar-EG;تم إنشاء الفئة بنجاح.
+v191-010;categories.createSuccess;en-US;Category created successfully.
+v191-011;categories.updateSuccess;ar-EG;تم تحديث الفئة بنجاح.
+v191-012;categories.updateSuccess;en-US;Category updated successfully.
+v191-013;employees.createSuccess;ar-EG;تم إنشاء الموظف بنجاح.
+v191-014;employees.createSuccess;en-US;Employee created successfully.
+v191-015;employees.updateSuccess;ar-EG;تم تحديث بيانات الموظف بنجاح.
+v191-016;employees.updateSuccess;en-US;Employee updated successfully.
+v191-017;imports.sourceCreated;ar-EG;تم إنشاء مصدر البصمات.
+v191-018;imports.sourceCreated;en-US;Biometric source created.
+v191-019;imports.sourceUpdated;ar-EG;تم تحديث مصدر البصمات.
+v191-020;imports.sourceUpdated;en-US;Biometric source updated.
+v191-021;nav.approvalsHint;ar-EG;الاعتمادات المعلقة ومسارات الاعتماد
+v191-022;nav.approvalsHint;en-US;Pending approvals and approval workflows
+v191-023;nav.settingsHint;ar-EG;إعدادات النظام والتفضيلات
+v191-024;nav.settingsHint;en-US;System settings and preferences
+v191-025;payroll.referencePlaceholder;ar-EG;مثال: REF-9908
+v191-026;payroll.referencePlaceholder;en-US;e.g. REF-9908
+v191-027;payroll.notePlaceholder;ar-EG;أي ملاحظات إضافية على الصرف...
+v191-028;payroll.notePlaceholder;en-US;Any additional notes on the disbursement...
+v191-029;payroll.stepperAria;ar-EG;مسار حالة المرتبات
+v191-030;payroll.stepperAria;en-US;Payroll status steps

@@ -399,10 +399,9 @@
   <app-modal-dialog
     [isOpen]="true"
     title="{{ i18n.t('operations.newCategory') }}"
-    size="compact"
     (close)="close()"
   >
-    <form id="operations-category-form" class="compact-dialog-form" [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
+    <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
       <div class="form-grid">
         <div class="field">
           <label>{{ i18n.t('common.name') || 'الاسم' }} *</label>
@@ -413,11 +412,11 @@
           <textarea formControlName="description" rows="3"></textarea>
         </div>
       </div>
+      <div modal-actions class="modal-actions-bar">
+        <button class="button primary" type="submit">{{ i18n.t('common.save') || 'حفظ' }}</button>
+        <button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') || 'إلغاء' }}</button>
+      </div>
     </form>
-    <div modal-actions class="modal-actions-bar">
-      <button class="button primary" type="submit" form="operations-category-form">{{ i18n.t('common.save') || 'حفظ' }}</button>
-      <button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') || 'إلغاء' }}</button>
-    </div>
   </app-modal-dialog>
 }
 

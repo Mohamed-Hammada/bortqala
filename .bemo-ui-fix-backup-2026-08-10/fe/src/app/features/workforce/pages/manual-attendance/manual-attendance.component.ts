@@ -149,30 +149,6 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
         </div>
       </div>
 
-      <!-- Calculation Rules Banner -->
-      @if (rules(); as r) {
-        <div class="card rules-card">
-          <details>
-            <summary class="rules-summary">📊 قواعد احتساب الحضور والانصراف</summary>
-            <div class="rules-body">
-              <div class="rule-item">
-                <span class="rule-label">معدل الأوفرتايم:</span>
-                <span class="rule-value">{{ r.overtimeRate }}× بعد {{ r.overtimeThresholdHours }} ساعات</span>
-              </div>
-              <div class="rule-item">
-                <span class="rule-label">معدل خصم ساعة:</span>
-                <span class="rule-value">الأجر اليومي ÷ {{ r.standardDailyHours }}</span>
-              </div>
-              <div class="rule-item">
-                <span class="rule-label">معدل أجر العطلات:</span>
-                <span class="rule-value">{{ r.holidayPayRate }}× الأجر العادي</span>
-              </div>
-              <p class="rules-desc">{{ r.description }}</p>
-            </div>
-          </details>
-        </div>
-      }
-
       @if (saveSummary(); as summary) {
         <div class="card save-summary" role="status" aria-live="polite">
           <strong>ملخص آخر عملية حفظ</strong>
@@ -207,6 +183,30 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
         <div class="card empty-card">
           <div class="empty-icon">👷</div>
           <p>{{ selectedContractorId() || selectedCategoryId() ? 'لا يوجد عمال مطابقون للفلترة المحددة.' : 'لا يوجد عمال مسجلون. أضف عمالاً من قسم العمال أولاً.' }}</p>
+        </div>
+      }
+
+      <!-- Calculation Rules Banner -->
+      @if (rules(); as r) {
+        <div class="card rules-card">
+          <details>
+            <summary class="rules-summary">📊 قواعد احتساب الحضور والانصراف</summary>
+            <div class="rules-body">
+              <div class="rule-item">
+                <span class="rule-label">معدل الأوفرتايم:</span>
+                <span class="rule-value">{{ r.overtimeRate }}× بعد {{ r.overtimeThresholdHours }} ساعات</span>
+              </div>
+              <div class="rule-item">
+                <span class="rule-label">معدل خصم ساعة:</span>
+                <span class="rule-value">الأجر اليومي ÷ {{ r.standardDailyHours }}</span>
+              </div>
+              <div class="rule-item">
+                <span class="rule-label">معدل أجر العطلات:</span>
+                <span class="rule-value">{{ r.holidayPayRate }}× الأجر العادي</span>
+              </div>
+              <p class="rules-desc">{{ r.description }}</p>
+            </div>
+          </details>
         </div>
       }
 
