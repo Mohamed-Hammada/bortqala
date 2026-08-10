@@ -19,3 +19,9 @@
 **EN:** The advances screen also supports active employees, employee-category and employee policy overrides, employee-specific labels in tables/exports, and direct entry from the employee directory.
 
 **AR:** تدعم شاشة السلف أيضاً الموظفين النشطين واستثناءات سياسة فئة الموظفين والموظف، وتعرض أسماءهم ونوعهم بوضوح في الجدول والتصدير، ويمكن فتحها مباشرة من دليل الموظفين.
+
+## 2026-08-10 — Dark-theme semantic palette migration
+
+**EN:** Workforce page/component styles were migrated from fixed light palette values to BEMO semantic tokens. White/light cards, dark-only headings, neutral borders, muted text, success/warning/danger surfaces now resolve through `--surface`, `--surface-muted`, `--ink`, `--muted`, `--secondary-text`, `--line`, and semantic status tokens. This keeps the light appearance while making dark mode readable and consistent.
+
+**AR:** تم تحويل ألوان صفحات ووحدات Workforce من ألوان Light ثابتة إلى متغيرات BEMO الدلالية. وبذلك أصبحت البطاقات والعناوين والجداول والنصوص الثانوية وحالات النجاح/التحذير/الخطأ تتغير بشكل صحيح مع Dark وLight بدلاً من ظهور خلفيات بيضاء أو نصوص داكنة غير مقروءة.

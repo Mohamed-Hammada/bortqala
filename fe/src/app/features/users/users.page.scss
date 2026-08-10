@@ -1742,3 +1742,59 @@ td small {
     grid-template-columns: 1fr;
   }
 }
+
+/* Phase 4: compact per-role additional information. */
+.role-directory-item {
+  display: block;
+  min-width: 0;
+  padding-block: 9px;
+}
+
+.role-directory-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+}
+
+.role-directory-copy {
+  min-width: 0;
+}
+
+.role-directory-meta {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.role-directory-details-toggle {
+  min-height: 28px;
+  padding-inline: 8px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.role-directory-pages {
+  margin-top: var(--space-2, 8px);
+  padding: var(--space-2, 8px) 0 0;
+  max-height: 180px;
+  border-top: 1px dashed var(--line);
+}
+
+.role-directory-item.details-open {
+  padding-inline: var(--space-2, 8px);
+  border-radius: var(--radius-sm, 8px);
+  background: color-mix(in srgb, var(--gold) 5%, var(--surface));
+}
+
+@media (max-width: 560px) {
+  .role-directory-row {
+    flex-direction: column;
+  }
+
+  .role-directory-meta {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

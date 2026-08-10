@@ -57,12 +57,41 @@
       </summary>
       <div class="role-directory-grid">
         @for (role of roles; track role.code) {
-          <div class="role-directory-item">
-            <span>
-              <strong>{{ i18n.t(role.labelKey) }}</strong>
-              <small>{{ i18n.t(role.descriptionKey) }}</small>
-            </span>
-            <span class="user-count-pill">{{ i18n.t('users.roleUserCount', { count: roleUserCount(role.code) }) }}</span>
+          <div class="role-directory-item" [class.details-open]="expandedRole() === role.code">
+            <div class="role-directory-row">
+              <span class="role-directory-copy">
+                <strong>{{ i18n.t(role.labelKey) }}</strong>
+                <small>{{ i18n.t(role.descriptionKey) }}</small>
+              </span>
+              <div class="role-directory-meta">
+                <span class="user-count-pill">{{ i18n.t('users.roleUserCount', { count: roleUserCount(role.code) }) }}</span>
+                <button
+                  type="button"
+                  class="permission-action role-directory-details-toggle"
+                  (click)="toggleRoleDetails(role.code)"
+                  [attr.aria-expanded]="expandedRole() === role.code"
+                  [attr.aria-controls]="'role-directory-details-' + role.code"
+                >
+                  {{ i18n.t(expandedRole() === role.code ? 'access.hideRoleDetails' : 'access.showRoleDetails') }}
+                </button>
+              </div>
+            </div>
+
+            @if (expandedRole() === role.code) {
+              <div
+                class="role-card-pages role-directory-pages"
+                [id]="'role-directory-details-' + role.code"
+              >
+                @for (page of roleAccessiblePages(role.code); track page.code) {
+                  <div class="role-card-page-row">
+                    <span>{{ i18n.t(page.titleKey) }}</span>
+                    <code class="ltr access-badge" [class]="page.level.toLowerCase()">{{ page.level }}</code>
+                  </div>
+                } @empty {
+                  <small class="hint">{{ i18n.t('access.roleNoPages') }}</small>
+                }
+              </div>
+            }
           </div>
         }
       </div>

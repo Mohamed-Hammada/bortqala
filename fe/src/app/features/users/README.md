@@ -29,3 +29,9 @@
 **EN:** The Add/Edit dialog now uses the correct `--modal-large-max-width` variable because the component uses `size="large"`. The primary role moved into the main account grid beside category, account state became a compact row, and Advanced access uses simple dividers instead of nested raised cards.
 
 **AR:** تستخدم نافذة الإضافة والتعديل الآن متغير العرض الصحيح `--modal-large-max-width` لأن النافذة من النوع `large`. تم نقل الدور الأساسي إلى شبكة بيانات الحساب بجوار الفئة، وتبسيط حالة الحساب، وتقليل البطاقات المتداخلة داخل الصلاحيات المتقدمة.
+
+## 2026-08-10 — Compact role additional information
+
+**EN:** The compact Role Directory keeps the user-first design, but every role again has a Show/Hide additional information action. Expanding a role lists the actual accessible pages and access levels from the access catalog. Only one role is expanded at a time, using the existing `expandedRole`, `toggleRoleDetails`, and `roleAccessiblePages` implementation.
+
+**AR:** تم الإبقاء على تصميم صفحة المستخدمين المبسط، مع إعادة زر عرض/إخفاء معلومات إضافية لكل دور. عند فتح الدور يتم عرض الصفحات الفعلية ومستوى الوصول من Access Catalog، بدون إعادة جدار بطاقات الأدوار القديم.
