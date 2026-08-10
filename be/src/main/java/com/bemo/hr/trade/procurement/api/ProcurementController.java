@@ -106,6 +106,22 @@ public class ProcurementController {
         return procurementService.createGoodsReceipt(payload);
     }
 
+    // ─── Supplier Returns ───────────────────────────────────────────
+
+    @GetMapping("/returns")
+    public List<ProcurementApi.SupplierReturnResponse> listSupplierReturns() {
+        return procurementService.listSupplierReturns();
+    }
+
+    @PostMapping("/returns")
+    @Transactional
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ProcurementApi.SupplierReturnResponse createSupplierReturn(
+            @Valid @RequestBody ProcurementApi.SupplierReturnPayload payload) {
+        return procurementService.createSupplierReturn(payload);
+    }
+
     // ─── Supplier Invoices ──────────────────────────────────────────
 
     @GetMapping("/invoices")

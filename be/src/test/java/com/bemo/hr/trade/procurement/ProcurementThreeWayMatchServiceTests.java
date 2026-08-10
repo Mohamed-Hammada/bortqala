@@ -21,6 +21,7 @@ import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderLineRepository;
 import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository;
+import com.bemo.hr.trade.procurement.infrastructure.SupplierReturnRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,6 +53,7 @@ class ProcurementThreeWayMatchServiceTests {
     @Mock private TenantApplicationRepository tenantApplicationRepository;
     @Mock private CurrencyRepository currencyRepository;
     @Mock private IdempotencyService idempotencyService;
+    @Mock private SupplierReturnRepository supplierReturnRepository;
     @Mock private FiscalPeriodGuard fiscalPeriodGuard;
     @Mock private ProcurementThreeWayMatchRepository threeWayMatchRepository;
     @Mock private com.bemo.hr.budget.application.BudgetService budgetService;
@@ -63,7 +65,7 @@ class ProcurementThreeWayMatchServiceTests {
         procurementService = new ProcurementService(
                 purchaseOrderRepository, purchaseOrderLineRepository, procurementDocumentSequenceRepository,
                 goodsReceiptRepository, supplierInvoiceRepository, supplierPaymentRepository,
-                businessPartyRepository, partnerLedgerEntryRepository, auditService,
+                supplierReturnRepository, businessPartyRepository, partnerLedgerEntryRepository, auditService,
                 procurementExcelExporter, operationsService, tenantApplicationRepository,
                 currencyRepository, idempotencyService, fiscalPeriodGuard,
                 new com.bemo.hr.shared.numbering.DocumentNumberService(

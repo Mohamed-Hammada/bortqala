@@ -125,4 +125,31 @@ public class ProcurementApi {
             @NotBlank String supplierInvoiceId, @NotNull BigDecimal amount,
             @NotBlank String paymentMethod, String notes, @NotBlank String operationId
     ) {}
+
+    // ─── Supplier Return ──────────────────────────────────────────────
+
+    public record SupplierReturnLineResponse(
+            String id, String purchaseOrderLineId, String itemId, String itemName, String itemCategory,
+            BigDecimal quantity, String unitOfMeasure, BigDecimal unitPrice,
+            String locationId, String reason
+    ) {}
+
+    public record SupplierReturnLinePayload(
+            @NotBlank String purchaseOrderLineId, @NotBlank String itemId, @NotBlank String itemName, String itemCategory,
+            @NotNull @DecimalMin(value = "0.000001") BigDecimal quantity,
+            String unitOfMeasure, @NotNull BigDecimal unitPrice,
+            String locationId, String reason
+    ) {}
+
+    public record SupplierReturnResponse(
+            String id, String returnNumber, long returnDate, String purchaseOrderId,
+            String supplierId, String supplierName, String warehouseId, String status,
+            String notes, List<SupplierReturnLineResponse> lines, long createdAt
+    ) {}
+
+    public record SupplierReturnPayload(
+            String returnNumber, long returnDate, @NotBlank String purchaseOrderId,
+            @NotBlank String supplierId, String warehouseId, String notes,
+            @NotNull @Size(min = 1) List<@Valid SupplierReturnLinePayload> lines
+    ) {}
 }

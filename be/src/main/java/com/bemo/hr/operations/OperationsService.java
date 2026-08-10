@@ -294,6 +294,57 @@ public class OperationsService {
     }
 
     @Transactional
+    public void recordSupplierReturn(String itemId, String supplierId, BigDecimal returnQuantity,
+                                     BigDecimal unitCost, String returnNumber, String note, Instant occurredAt, String actor) {
+        requireItem(itemId);
+        if (returnQuantity == null || returnQuantity.signum() <= 0) {
+            throw new BusinessRuleException("Supplier return quantity must be positive.", "OPS_RETURN_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+        }
+        BigDecimal currentBalance = stockMovementRepository.balance(itemId);
+        if (currentBalance.subtract(returnQuantity).signum() < 0) {
+            throw new BusinessRuleException("Supplier return cannot create a negative stock balance.", "OPS_RETURN_NEGATIVE_BALANCE", HttpStatus.CONFLICT);
+        }
+        var movement = stockMovementRepository.save(new StockMovement(itemId, normalizeId(supplierId),
+                "SUPPLIER_RETURN", returnQuantity.negate(), null, returnNumber, note, occurredAt, actor));
+        movement.assignDocument("SUPPLIER_RETURN", "Returned stock to supplier");
+        inventoryValuationService.valueMovement(movement, unitCost, actor);
+        auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
+                "Supplier return " + returnNumber + " return qty: " + returnQuantity, null);
+    }
+
+    @Transactional
+    public void recordProductionIssue(String itemId, BigDecimal quantity, String orderNumber, String note, Instant occurredAt, String actor) {
+        requireItem(itemId);
+        if (quantity == null || quantity.signum() <= 0) {
+            throw new BusinessRuleException("Production issue quantity must be positive.", "OPS_PROD_ISSUE_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+        }
+        BigDecimal currentBalance = stockMovementRepository.balance(itemId);
+        if (currentBalance.subtract(quantity).signum() < 0) {
+            throw new BusinessRuleException("Production issue cannot exceed available inventory balance.", "OPS_PROD_ISSUE_NEGATIVE_BALANCE", HttpStatus.CONFLICT);
+        }
+        var movement = stockMovementRepository.save(new StockMovement(itemId, null,
+                "PRODUCTION_ISSUE", quantity.negate(), null, orderNumber, note, occurredAt, actor));
+        movement.assignDocument("PRODUCTION_ISSUE", "Issued raw materials for work order");
+        inventoryValuationService.valueMovement(movement, null, actor);
+        auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
+                "Production issue " + orderNumber + " qty: " + quantity, null);
+    }
+
+    @Transactional
+    public void recordProductionReceipt(String itemId, BigDecimal quantity, BigDecimal unitCost, String orderNumber, String note, Instant occurredAt, String actor) {
+        requireItem(itemId);
+        if (quantity == null || quantity.signum() <= 0) {
+            throw new BusinessRuleException("Production receipt quantity must be positive.", "OPS_PROD_RECEIPT_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+        }
+        var movement = stockMovementRepository.save(new StockMovement(itemId, null,
+                "PRODUCTION_RECEIPT", quantity, null, orderNumber, note, occurredAt, actor));
+        movement.assignDocument("PRODUCTION_RECEIPT", "Finished goods receipt from work order");
+        inventoryValuationService.valueMovement(movement, unitCost, actor);
+        auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
+                "Production receipt " + orderNumber + " qty: " + quantity, null);
+    }
+
+    @Transactional
     public OperationsApi.Snapshot recordAdvance(OperationsApi.AdvanceRequest request, String actor) {
         if (request.amountDelta().signum() == 0) throw new BusinessRuleException("Advance amount cannot be zero.", "OPS_ADVANCE_AMOUNT_ZERO", HttpStatus.CONFLICT);
         var employee = employeeRepository.findById(request.employeeId())
@@ -419,6 +470,14 @@ public class OperationsService {
                         "OPS_MOVEMENT_INVOICE_DUPLICATE", HttpStatus.CONFLICT);
             }
         }
+    }
+
+    public BigDecimal stockBalance(String itemId) {
+        return stockMovementRepository.balance(itemId);
+    }
+
+    public BigDecimal latestUnitCost(String itemId) {
+        return inventoryValuationService.getItemUnitCost(itemId);
     }
 
     private static boolean isBlank(String value) {

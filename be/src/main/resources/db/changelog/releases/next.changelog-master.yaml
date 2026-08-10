@@ -237,3 +237,11 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260810_v184_data_driven_industry_packs.yaml
   - include:
       file: db/changelog/data/insert/20260810_v185_food_distribution_pack_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260810_v186_supplier_returns.yaml
+  - include:
+      file: db/changelog/data/insert/20260810_v187_supplier_return_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260810_v188_manufacturing_transactional.yaml
+  - include:
+      file: db/changelog/data/insert/20260810_v189_manufacturing_translations.yaml

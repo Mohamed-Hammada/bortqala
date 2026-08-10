@@ -50,6 +50,7 @@ interface InventoryRevaluationRepository extends JpaRepository<InventoryRevaluat
 
 interface StockMovementRepository extends JpaRepository<StockMovement, String> {
     List<StockMovement> findAllByOrderByOccurredAtDesc();
+    Optional<StockMovement> findFirstByItemIdOrderByOccurredAtDesc(String itemId);
     @Query("select coalesce(sum(m.quantityDelta), 0) from StockMovement m where m.itemId = :itemId")
     BigDecimal balance(String itemId);
     @Query("select m.itemId, coalesce(sum(m.quantityDelta), 0) from StockMovement m group by m.itemId having coalesce(sum(m.quantityDelta), 0) < 0")

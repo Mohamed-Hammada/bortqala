@@ -48,6 +48,12 @@ public class InventoryValuationService {
     private final AuditService auditService;
     @Value("${hr.company-zone:Africa/Cairo}") private String companyZone;
 
+    public BigDecimal getItemUnitCost(String itemId) {
+        BigDecimal qty = stockMovementRepository.balance(itemId);
+        if (qty == null || qty.signum() <= 0) return BigDecimal.ZERO;
+        return inventoryValue(itemId).divide(qty, 4, RoundingMode.HALF_UP);
+    }
+
     public OperationsApi.ValuationPolicyView policy() {
         return toPolicy(inventoryValuationPolicyRepository.findByAppId(TenantContext.require()).orElse(null));
     }

@@ -21,6 +21,7 @@ import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderLineRepository;
 import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository;
+import com.bemo.hr.trade.procurement.infrastructure.SupplierReturnRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -64,7 +65,7 @@ class SupplierPaymentValidationTests {
         procurementService = new ProcurementService(mock(PurchaseOrderRepository.class),
                 mock(PurchaseOrderLineRepository.class), mock(ProcurementDocumentSequenceRepository.class),
                 mock(GoodsReceiptRepository.class), supplierInvoiceRepository, supplierPaymentRepository,
-                businessPartyRepository, mock(PartnerLedgerEntryRepository.class),
+                mock(SupplierReturnRepository.class), businessPartyRepository, mock(PartnerLedgerEntryRepository.class),
                 mock(AuditService.class), mock(ProcurementExcelExporter.class), mock(OperationsService.class),
                 tenantApplicationRepository, mock(CurrencyRepository.class),
                 new IdempotencyService(idempotencyKeyRepository), mock(FiscalPeriodGuard.class),

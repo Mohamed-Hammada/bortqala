@@ -22,12 +22,15 @@ import com.bemo.hr.trade.procurement.domain.PurchaseOrder;
 import com.bemo.hr.trade.procurement.domain.PurchaseOrderLine;
 import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
 import com.bemo.hr.trade.procurement.domain.SupplierPayment;
+import com.bemo.hr.trade.procurement.domain.SupplierReturn;
+import com.bemo.hr.trade.procurement.domain.SupplierReturnLine;
 import com.bemo.hr.trade.procurement.infrastructure.GoodsReceiptRepository;
 import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderLineRepository;
 import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderRepository;
 import com.bemo.hr.trade.procurement.infrastructure.ProcurementDocumentSequenceRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository;
+import com.bemo.hr.trade.procurement.infrastructure.SupplierReturnRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,6 +57,7 @@ public class ProcurementService {
     private final GoodsReceiptRepository goodsReceiptRepository;
     private final SupplierInvoiceRepository supplierInvoiceRepository;
     private final SupplierPaymentRepository supplierPaymentRepository;
+    private final SupplierReturnRepository supplierReturnRepository;
     private final BusinessPartyRepository businessPartyRepository;
     private final PartnerLedgerEntryRepository partnerLedgerEntryRepository;
     private final AuditService auditService;
@@ -73,6 +77,7 @@ public class ProcurementService {
                               GoodsReceiptRepository goodsReceiptRepository,
                               SupplierInvoiceRepository supplierInvoiceRepository,
                               SupplierPaymentRepository supplierPaymentRepository,
+                              SupplierReturnRepository supplierReturnRepository,
                               BusinessPartyRepository businessPartyRepository,
                               PartnerLedgerEntryRepository partnerLedgerEntryRepository,
                               AuditService auditService,
@@ -91,6 +96,7 @@ public class ProcurementService {
         this.goodsReceiptRepository = goodsReceiptRepository;
         this.supplierInvoiceRepository = supplierInvoiceRepository;
         this.supplierPaymentRepository = supplierPaymentRepository;
+        this.supplierReturnRepository = supplierReturnRepository;
         this.businessPartyRepository = businessPartyRepository;
         this.partnerLedgerEntryRepository = partnerLedgerEntryRepository;
         this.auditService = auditService;
@@ -186,14 +192,7 @@ public class ProcurementService {
 
     @Transactional
     public ProcurementApi.PurchaseOrderResponse receive(String id) {
-        PurchaseOrder po = requirePo(id);
-        if (po.getStatus() != PurchaseOrder.Status.ISSUED)
-            throw new BusinessRuleException("يمكن استلام أمر الشراء من حالة صادر فقط", "PROC_ORDER_RECEIVE_FROM_ISSUED", HttpStatus.CONFLICT);
-        po.updateStatus(PurchaseOrder.Status.RECEIVED);
-        budgetService.releaseForReceive(po.getId(), getCurrentUser());
-        auditService.record("RECEIVE", "PURCHASE_ORDER", po.getId(), getCurrentUser(),
-                "{\"poNumber\":\"" + po.getPoNumber() + "\"}", null);
-        return toPoResponse(po, loadLines(po.getId()), resolveSupplierNames(List.of(po)));
+        throw new BusinessRuleException("يجب تسجيل إذن استلام بضاعة (Goods Receipt) لاستلام أمر الشراء.", "PROC_DIRECT_RECEIVE_DEPRECATED", HttpStatus.BAD_REQUEST);
     }
 
     @Transactional
@@ -201,6 +200,21 @@ public class ProcurementService {
         PurchaseOrder po = requirePo(id);
         if (po.getStatus() == PurchaseOrder.Status.CANCELLED)
             throw new BusinessRuleException("أمر الشراء ملغي بالفعل", "PROC_ORDER_ALREADY_CANCELLED", HttpStatus.CONFLICT);
+
+        List<GoodsReceipt> grns = goodsReceiptRepository.findByPurchaseOrderId(po.getId());
+        BigDecimal totalAccepted = grns.stream()
+                .flatMap(g -> g.getLines().stream())
+                .map(GoodsReceiptLine::getQuantity)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (totalAccepted.compareTo(BigDecimal.ZERO) > 0) {
+            throw new BusinessRuleException("لا يمكن إلغاء أمر شراء تم استلام بضائع عليه. يجب استخدام إذن إرجاع للمورد.", "PO_HAS_RECEIPTS_CANNOT_CANCEL", HttpStatus.CONFLICT);
+        }
+
+        List<SupplierInvoice> invoices = supplierInvoiceRepository.findByPurchaseOrderId(po.getId());
+        if (!invoices.isEmpty()) {
+            throw new BusinessRuleException("لا يمكن إلغاء أمر شراء له فواتير مورّدين.", "PO_HAS_INVOICES_CANNOT_CANCEL", HttpStatus.CONFLICT);
+        }
+
         po.updateStatus(PurchaseOrder.Status.CANCELLED);
         budgetService.releaseForCancel(po.getId(), getCurrentUser());
         auditService.record("CANCEL", "PURCHASE_ORDER", po.getId(), getCurrentUser(),
@@ -587,9 +601,9 @@ public class ProcurementService {
     }
 
     private String resolveSupplierName(String id) {
-        return businessPartyRepository.findById(id)
-                .map(com.bemo.hr.party.BusinessParty::getName)
-                .orElse(null);
+        if (id == null) return "—";
+        var opt = businessPartyRepository.findById(id);
+        return (opt != null && opt.isPresent() && opt.get().getName() != null) ? opt.get().getName() : id;
     }
 
     private Map<String, String> resolveNames(List<String> ids) {
@@ -756,5 +770,110 @@ public class ProcurementService {
                 match.getResolvedBy(), match.getResolvedAt() != null ? match.getResolvedAt().toEpochMilli() : null,
                 match.getCreatedAt().toEpochMilli()
         );
+    }
+
+    // ─── Supplier Returns ──────────────────────────────────────────────
+
+    public List<ProcurementApi.SupplierReturnResponse> listSupplierReturns() {
+        List<SupplierReturn> returns = supplierReturnRepository.findAllByOrderByReturnDateDesc();
+        Map<String, String> supplierNames = resolveNames(returns.stream().map(SupplierReturn::getSupplierId).distinct().toList());
+        return returns.stream().map(ret -> toSupplierReturnResponse(ret, supplierNames)).toList();
+    }
+
+    @Transactional
+    public ProcurementApi.SupplierReturnResponse createSupplierReturn(ProcurementApi.SupplierReturnPayload payload) {
+        PurchaseOrder po = requirePo(payload.purchaseOrderId());
+        if (!po.getSupplierId().equals(payload.supplierId()))
+            throw new BusinessRuleException("Mismatched supplier for purchase order return", "PROC_RETURN_SUPPLIER_MISMATCH", HttpStatus.CONFLICT);
+        if (payload.lines() == null || payload.lines().isEmpty())
+            throw new BusinessRuleException("Supplier return requires at least one line.", "PROC_RETURN_LINE_REQUIRED", HttpStatus.CONFLICT);
+
+        List<GoodsReceipt> grns = goodsReceiptRepository.findByPurchaseOrderId(po.getId());
+        Map<String, BigDecimal> totalAcceptedPerPoLine = new HashMap<>();
+        grns.forEach(grn -> grn.getLines().forEach(line ->
+                totalAcceptedPerPoLine.merge(line.getPurchaseOrderLineId(), line.getQuantity(), BigDecimal::add)));
+
+        List<SupplierReturn> existingReturns = supplierReturnRepository.findByPurchaseOrderId(po.getId());
+        Map<String, BigDecimal> previouslyReturnedPerPoLine = new HashMap<>();
+        existingReturns.forEach(ret -> ret.getLines().forEach(line ->
+                previouslyReturnedPerPoLine.merge(line.getPurchaseOrderLineId(), line.getQuantity(), BigDecimal::add)));
+
+        Map<String, PurchaseOrderLine> poLines = loadLines(po.getId()).stream()
+                .collect(Collectors.toMap(PurchaseOrderLine::getId, line -> line));
+
+        LocalDate returnDate = Instant.ofEpochMilli(payload.returnDate()).atZone(ZoneOffset.UTC).toLocalDate();
+
+        List<SupplierReturnLine> lines = payload.lines().stream().map(line -> {
+            PurchaseOrderLine poLine = poLines.get(line.purchaseOrderLineId());
+            if (poLine == null)
+                throw new BusinessRuleException("Supplier return line does not belong to the selected purchase order.", "PROC_RETURN_LINE_WRONG_ORDER", HttpStatus.CONFLICT);
+            if (poLine.getItemId() == null || !poLine.getItemId().equals(line.itemId()))
+                throw new BusinessRuleException("Supplier return inventory item must match its purchase-order line.", "PROC_RETURN_ITEM_MISMATCH", HttpStatus.CONFLICT);
+            if (line.quantity() == null || line.quantity().signum() <= 0)
+                throw new BusinessRuleException("كمية الإرجاع يجب أن تكون أكبر من صفر.", "PROC_RETURN_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+
+            BigDecimal accepted = totalAcceptedPerPoLine.getOrDefault(poLine.getId(), BigDecimal.ZERO);
+            BigDecimal returned = previouslyReturnedPerPoLine.getOrDefault(poLine.getId(), BigDecimal.ZERO);
+            BigDecimal returnable = accepted.subtract(returned);
+            if (returnable.signum() <= 0)
+                throw new BusinessRuleException("لا توجد كمية قابلة للإرجاع للصنف: " + poLine.getItemName(), "PROC_RETURN_NO_RETURNABLE_QTY", HttpStatus.CONFLICT);
+            if (line.quantity().compareTo(returnable) > 0)
+                throw new BusinessRuleException("كمية الإرجاع تتجاوز المتاح للإرجاع للصنف: " + poLine.getItemName(), "PROC_RETURN_EXCEEDS_RETURNABLE", HttpStatus.CONFLICT);
+
+            previouslyReturnedPerPoLine.merge(poLine.getId(), line.quantity(), BigDecimal::add);
+            return new SupplierReturnLine(line.purchaseOrderLineId(), line.itemId(), poLine.getItemName(),
+                    poLine.getItemCategory(), line.quantity(), poLine.getUnitOfMeasure(),
+                    poLine.getUnitPrice(), normalizeOptional(line.locationId()), normalizeOptional(line.reason()));
+        }).toList();
+
+        SupplierReturn ret = new SupplierReturn(resolveReturnNumber(payload.returnNumber(), returnDate), returnDate,
+                payload.purchaseOrderId(), payload.supplierId(), payload.warehouseId(), payload.notes(), lines);
+        SupplierReturn saved = supplierReturnRepository.save(ret);
+
+        String actor = getCurrentUser();
+        lines.forEach(line ->
+                operationsService.recordSupplierReturn(line.getItemId(), po.getSupplierId(), line.getQuantity(),
+                        line.getUnitPrice(), saved.getReturnNumber(), line.getReason(),
+                        returnDate.atStartOfDay(ZoneOffset.UTC).toInstant(), actor));
+
+        BigDecimal totalNetAccepted = poLines.values().stream().map(poLine -> {
+            BigDecimal acc = totalAcceptedPerPoLine.getOrDefault(poLine.getId(), BigDecimal.ZERO);
+            BigDecimal retQty = previouslyReturnedPerPoLine.getOrDefault(poLine.getId(), BigDecimal.ZERO);
+            return acc.subtract(retQty).max(BigDecimal.ZERO);
+        }).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalOrdered = poLines.values().stream().map(PurchaseOrderLine::getQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (totalNetAccepted.compareTo(totalOrdered) >= 0) {
+            po.updateStatus(PurchaseOrder.Status.RECEIVED);
+        } else if (totalNetAccepted.signum() > 0) {
+            po.updateStatus(PurchaseOrder.Status.PARTIALLY_RECEIVED);
+        } else {
+            po.updateStatus(PurchaseOrder.Status.ISSUED);
+        }
+
+        auditService.record("CREATE", "SUPPLIER_RETURN", saved.getId(), getCurrentUser(),
+                "{\"returnNumber\":\"" + saved.getReturnNumber() + "\",\"po\":\"" + po.getPoNumber() + "\"}", null);
+        return toSupplierReturnResponse(saved, resolveSupplierNames(List.of(po)));
+    }
+
+    private String resolveReturnNumber(String requested, LocalDate returnDate) {
+        if (automaticDocumentNumbering()) {
+            return documentNumberService.next("SUPPLIER_RETURN", "RET", returnDate);
+        }
+        String value = requireManualNumber(requested, "رقم إذن الإرجاع مطلوب عند اختيار الترقيم اليدوي.");
+        if (supplierReturnRepository.existsByReturnNumberIgnoreCase(value))
+            throw new BusinessRuleException("رقم إذن الإرجاع مستخدم بالفعل.", "PROC_RETURN_NUMBER_EXISTS", HttpStatus.CONFLICT);
+        return value;
+    }
+
+    private ProcurementApi.SupplierReturnResponse toSupplierReturnResponse(SupplierReturn ret, Map<String, String> supplierNames) {
+        List<ProcurementApi.SupplierReturnLineResponse> lineResponses = ret.getLines().stream().map(l ->
+                new ProcurementApi.SupplierReturnLineResponse(l.getId(), l.getPurchaseOrderLineId(), l.getItemId(),
+                        l.getItemName(), l.getItemCategory(), l.getQuantity(), l.getUnitOfMeasure(),
+                        l.getUnitPrice(), l.getLocationId(), l.getReason())).toList();
+        return new ProcurementApi.SupplierReturnResponse(ret.getId(), ret.getReturnNumber(),
+                ret.getReturnDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
+                ret.getPurchaseOrderId(), ret.getSupplierId(), supplierNames.getOrDefault(ret.getSupplierId(), "—"),
+                ret.getWarehouseId(), ret.getStatus(), ret.getNotes(), lineResponses, ret.getCreatedAt());
     }
 }

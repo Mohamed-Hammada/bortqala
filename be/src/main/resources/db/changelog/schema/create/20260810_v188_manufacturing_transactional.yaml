@@ -1,0 +1,101 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260810-v188-manufacturing-transactional-schema
+      author: bemo-erps
+      changes:
+        - addColumn:
+            tableName: boms
+            columns:
+              - column:
+                  name: finished_item_id
+                  type: varchar(36)
+              - column:
+                  name: revision
+                  type: varchar(20)
+                  defaultValue: "v1.0"
+              - column:
+                  name: effective_from
+                  type: date
+              - column:
+                  name: effective_to
+                  type: date
+        - createTable:
+            tableName: bom_lines
+            columns:
+              - column:
+                  name: id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: app_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bom_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: component_item_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: component_item_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantity_per
+                  type: numeric(12, 4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit_of_measure
+                  type: varchar(50)
+              - column:
+                  name: waste_percent
+                  type: numeric(5, 2)
+                  defaultValueNumeric: 0
+              - column:
+                  name: line_number
+                  type: integer
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: bom_lines
+            baseColumnNames: bom_id
+            constraintName: fk_bom_lines_bom
+            referencedTableName: boms
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addColumn:
+            tableName: production_orders
+            columns:
+              - column:
+                  name: finished_item_id
+                  type: varchar(36)
+              - column:
+                  name: bom_revision
+                  type: varchar(20)
+              - column:
+                  name: actual_output_quantity
+                  type: numeric(12, 2)
+              - column:
+                  name: scrap_quantity
+                  type: numeric(12, 2)
+              - column:
+                  name: actual_material_cost
+                  type: numeric(15, 2)
+              - column:
+                  name: actual_unit_cost
+                  type: numeric(15, 2)
+              - column:
+                  name: completion_date
+                  type: date
+              - column:
+                  name: notes
+                  type: varchar(500)

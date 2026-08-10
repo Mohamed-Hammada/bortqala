@@ -1,0 +1,47 @@
+id;key;locale;text
+v187-001;PROC_DIRECT_RECEIVE_DEPRECATED;ar-EG;يجب تسجيل إذن استلام بضاعة (Goods Receipt) لاستلام أمر الشراء.
+v187-002;PROC_DIRECT_RECEIVE_DEPRECATED;en-US;Goods receipt must be registered to receive purchase order.
+v187-003;PO_HAS_RECEIPTS_CANNOT_CANCEL;ar-EG;لا يمكن إلغاء أمر شراء تم استلام بضائع عليه. يجب استخدام إذن إرجاع للمورد.
+v187-004;PO_HAS_RECEIPTS_CANNOT_CANCEL;en-US;Cannot cancel purchase order with received goods. Use supplier return instead.
+v187-005;PO_HAS_INVOICES_CANNOT_CANCEL;ar-EG;لا يمكن إلغاء أمر شراء له فواتير مورّدين.
+v187-006;PO_HAS_INVOICES_CANNOT_CANCEL;en-US;Cannot cancel purchase order with linked supplier invoices.
+v187-007;PROC_RETURN_SUPPLIER_MISMATCH;ar-EG;مورد إذن الإرجاع يجب أن يطابق مورد أمر الشراء.
+v187-008;PROC_RETURN_SUPPLIER_MISMATCH;en-US;Supplier return supplier must match purchase order supplier.
+v187-009;PROC_RETURN_LINE_REQUIRED;ar-EG;يتطلب إذن الإرجاع بنداً واحداً على الأقل.
+v187-010;PROC_RETURN_LINE_REQUIRED;en-US;Supplier return requires at least one line.
+v187-011;PROC_RETURN_LINE_WRONG_ORDER;ar-EG;بند الإرجاع لا ينتمي لأمر الشراء المSelected.
+v187-012;PROC_RETURN_LINE_WRONG_ORDER;en-US;Return line does not belong to selected purchase order.
+v187-013;PROC_RETURN_ITEM_MISMATCH;ar-EG;صنف الإرجاع يجب أن يطابق صنف بند أمر الشراء.
+v187-014;PROC_RETURN_ITEM_MISMATCH;en-US;Return inventory item must match purchase order line item.
+v187-015;PROC_RETURN_QUANTITY_POSITIVE;ar-EG;كمية الإرجاع يجب أن تكون أكبر من صفر.
+v187-016;PROC_RETURN_QUANTITY_POSITIVE;en-US;Return quantity must be positive.
+v187-017;PROC_RETURN_NO_RETURNABLE_QTY;ar-EG;لا توجد كمية قابلة للإرجاع لهذا الصنف.
+v187-018;PROC_RETURN_NO_RETURNABLE_QTY;en-US;No returnable quantity available for this item.
+v187-019;PROC_RETURN_EXCEEDS_RETURNABLE;ar-EG;كمية الإرجاع تتجاوز المتاح للإرجاع.
+v187-020;PROC_RETURN_EXCEEDS_RETURNABLE;en-US;Return quantity exceeds returnable quantity.
+v187-021;PROC_RETURN_NUMBER_EXISTS;ar-EG;رقم إذن الإرجاع مستخدم بالفعل.
+v187-022;PROC_RETURN_NUMBER_EXISTS;en-US;Supplier return number already exists.
+v187-023;OPS_RETURN_QUANTITY_POSITIVE;ar-EG;كمية الإرجاع للمورد يجب أن تكون أكبر من صفر.
+v187-024;OPS_RETURN_QUANTITY_POSITIVE;en-US;Supplier return quantity must be positive.
+v187-025;OPS_RETURN_NEGATIVE_BALANCE;ar-EG;إرجاع المورد لا يمكن أن ينشئ رصيداً سالباً في المخزون.
+v187-026;OPS_RETURN_NEGATIVE_BALANCE;en-US;Supplier return cannot create negative inventory balance.
+v187-027;OPS_PROD_ISSUE_QUANTITY_POSITIVE;ar-EG;كمية صرف الإنتاج يجب أن تكون أكبر من صفر.
+v187-028;OPS_PROD_ISSUE_QUANTITY_POSITIVE;en-US;Production issue quantity must be positive.
+v187-029;OPS_PROD_ISSUE_NEGATIVE_BALANCE;ar-EG;كمية صرف الإنتاج تتجاوز رصيد المخزون المتاح.
+v187-030;OPS_PROD_ISSUE_NEGATIVE_BALANCE;en-US;Production issue cannot exceed available inventory balance.
+v187-031;OPS_PROD_RECEIPT_QUANTITY_POSITIVE;ar-EG;كمية استلام الإنتاج يجب أن تكون أكبر من صفر.
+v187-032;OPS_PROD_RECEIPT_QUANTITY_POSITIVE;en-US;Production receipt quantity must be positive.
+v187-033;procurement.returns;ar-EG;أذون الإرجاع للمورد
+v187-034;procurement.returns;en-US;Supplier Returns
+v187-035;procurement.createReturn;ar-EG;إذن إرجاع جديد
+v187-036;procurement.createReturn;en-US;New Supplier Return
+v187-037;procurement.returnNumber;ar-EG;رقم الإرجاع
+v187-038;procurement.returnNumber;en-US;Return Number
+v187-039;procurement.returnDate;ar-EG;تاريخ الإرجاع
+v187-040;procurement.returnDate;en-US;Return Date
+v187-041;procurement.returnableQuantity;ar-EG;الكمية القابلة للإرجاع
+v187-042;procurement.returnableQuantity;en-US;Returnable Quantity
+v187-043;procurement.returnedQuantity;ar-EG;الكمية المرتجعة
+v187-044;procurement.returnedQuantity;en-US;Returned Quantity
+v187-045;procurement.returnSuccess;ar-EG;تم إنشاء إذن الإرجاع وصرف البضاعة بنجاح.
+v187-046;procurement.returnSuccess;en-US;Supplier return created and stock issued successfully.
