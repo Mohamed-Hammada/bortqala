@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260810-v190-align-customer-invoices
+      author: bemo-erps
+      preConditions:
+        - onFail: MARK_RAN
+        - and:
+            - tableExists:
+                tableName: customer_invoices
+            - columnExists:
+                tableName: customer_invoices
+                columnName: total_amount
+      changes:
+        - renameColumn:
+            tableName: customer_invoices
+            oldColumnName: total_amount
+            newColumnName: amount
+            columnDataType: decimal(19,2)
+        - addColumn:
+            tableName: customer_invoices
+            columns:
+              - column: { name: due_date, type: date, constraints: { nullable: false } }
+              - column: { name: currency_code, type: varchar(10), constraints: { nullable: false } }
+              - column: { name: outstanding_amount, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: issued_by, type: varchar(100) }
+              - column: { name: issued_at, type: timestamp with time zone }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - modifyDataType:
+            tableName: customer_invoices
+            columnName: created_at
+            newDataType: timestamp with time zone
+        - modifyDataType:
+            tableName: customer_invoices
+            columnName: updated_at
+            newDataType: timestamp with time zone
+        - dropDefaultValue:
+            tableName: customer_invoices
+            columnName: status
+        - addUniqueConstraint:
+            tableName: customer_invoices
+            columnNames: app_id,invoice_number
+            constraintName: uk_customer_invoice_number
+        - createIndex:
+            tableName: customer_invoices
+            indexName: ix_customer_invoice_aging
+            columns:
+              - column: { name: customer_id }
+              - column: { name: status }
+              - column: { name: due_date }
+      rollback:
+        - dropIndex: { tableName: customer_invoices, indexName: ix_customer_invoice_aging }
+        - dropUniqueConstraint: { tableName: customer_invoices, constraintName: uk_customer_invoice_number }
+        - renameColumn:
+            tableName: customer_invoices
+            oldColumnName: amount
+            newColumnName: total_amount
+            columnDataType: numeric(15,2)

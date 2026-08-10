@@ -5,9 +5,7 @@ v189-003;MFG_BOM_NOT_FOUND;ar-EG;قائمة المواد غير موجودة.
 v189-004;MFG_BOM_NOT_FOUND;en-US;BOM not found.
 v189-005;MFG_ORDER_NUMBER_EXISTS;ar-EG;رقم أمر الإنتاج مستخدم بالفعل.
 v189-006;MFG_ORDER_NUMBER_EXISTS;en-US;Production order number already exists.
-v189-007;MFG_PRODUCTION_ORDER_NOT_FOUND;ar-EG;أمر الإنتاج غير موجود.
-v189-008;MFG_PRODUCTION_ORDER_NOT_FOUND;en-US;Production order not found.
-v189-009;MFG_ORDER_START_FROM_PLANNED_ONLY;ar-EG;يمكن بدء أمر الإنتاج فقط من حالة مخطط.
+v189-007;MFG_ORDER_START_FROM_PLANNED_ONLY;ar-EG;يمكن بدء أمر الإنتاج فقط من حالة مخطط.
 v189-010;MFG_ORDER_START_FROM_PLANNED_ONLY;en-US;Production order can only be started from PLANNED status.
 v189-011;MFG_BOM_NO_LINES;ar-EG;لا يمكن بدء أمر إنتاج بقائمة مواد خالية من المكونات.
 v189-012;MFG_BOM_NO_LINES;en-US;Cannot start production order with an empty BOM.
