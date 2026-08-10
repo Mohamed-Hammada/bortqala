@@ -779,14 +779,14 @@ tbody tr:hover td {
 
 .app-tooltip-surface {
   position: fixed;
-  z-index: 5000;
+  z-index: var(--z-tooltip, 12000);
   width: max-content;
   max-width: min(320px, calc(100vw - 16px));
   padding: 8px 11px;
-  border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line));
-  border-radius: 8px;
-  background: var(--ink, #18202b);
-  color: #fff;
+  border: 1px solid var(--tooltip-border, rgba(212, 160, 23, .45));
+  border-radius: var(--radius-sm, 8px);
+  background: var(--tooltip-bg, #0B1118);
+  color: var(--tooltip-ink, #F8FAFC);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
   font-size: 12px;
   font-weight: 600;

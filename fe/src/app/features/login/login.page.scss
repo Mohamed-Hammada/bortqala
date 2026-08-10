@@ -253,9 +253,16 @@
   position: relative;
 }
 
+.password-field input {
+  direction: ltr;
+  text-align: left;
+  padding-right: 82px;
+}
+
 .toggle-password {
   position: absolute;
-  left: 8px;
+  right: 8px;
+  left: auto;
   bottom: 5px;
   height: 30px;
   padding: 0 8px;

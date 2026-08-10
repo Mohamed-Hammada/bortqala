@@ -19,3 +19,13 @@
 **EN:** Menu-by-menu permissions, effective-access preview, role/menu mismatch indicators, sensitive-access warnings, and access-change acknowledgment remain available inside a collapsed advanced-access section. Backend access validation still runs before save, so the UX is simpler without weakening authorization controls.
 
 **AR:** تظل صلاحيات القوائم التفصيلية ومعاينة الصلاحيات الفعلية وتنبيهات تعارض الدور مع القائمة وتحذيرات الصلاحيات الحساسة وسبب الإقرار بالتغيير متاحة داخل قسم صلاحيات متقدمة قابل للفتح. ويستمر التحقق من الصلاحيات في الخادم قبل الحفظ، لذلك تم تبسيط تجربة الاستخدام بدون إضعاف ضوابط الأمان.
+
+## 2026-08-10 user-first UI polish
+
+**EN:** The `/users` page is now user-first rather than role-card-first. The permanent 19-role card wall is replaced with four compact operational metrics, a user search box, the user table, and an optional collapsed role directory. Role technical codes no longer dominate the screen.
+
+**AR:** أصبحت شاشة `/users` موجهة لإدارة المستخدمين أولاً بدلاً من عرض جدار كبير من بطاقات الأدوار. تم استبدال بطاقات الأدوار الدائمة بملخص صغير، وبحث المستخدمين، وجدول المستخدمين، ودليل أدوار اختياري قابل للفتح.
+
+**EN:** The Add/Edit dialog now uses the correct `--modal-large-max-width` variable because the component uses `size="large"`. The primary role moved into the main account grid beside category, account state became a compact row, and Advanced access uses simple dividers instead of nested raised cards.
+
+**AR:** تستخدم نافذة الإضافة والتعديل الآن متغير العرض الصحيح `--modal-large-max-width` لأن النافذة من النوع `large`. تم نقل الدور الأساسي إلى شبكة بيانات الحساب بجوار الفئة، وتبسيط حالة الحساب، وتقليل البطاقات المتداخلة داخل الصلاحيات المتقدمة.

@@ -66,6 +66,8 @@
         <label for="appCode">{{ i18n.t('login.appCode') }}</label>
         <input
           id="appCode"
+          class="technical-input ltr"
+          dir="ltr"
           formControlName="appCode"
           autocomplete="organization"
           [placeholder]="i18n.t('login.appCodePlaceholder')"
@@ -76,6 +78,8 @@
         <label for="username">{{ i18n.t('login.username') }}</label>
         <input
           id="username"
+          class="technical-input ltr"
+          dir="ltr"
           formControlName="username"
           autocomplete="username"
           [placeholder]="i18n.t('login.usernamePlaceholder')"
@@ -86,6 +90,8 @@
         <label for="password">{{ i18n.t('login.password') }}</label>
         <input
           id="password"
+          class="technical-input ltr"
+          dir="ltr"
           formControlName="password"
           [type]="showPassword() ? 'text' : 'password'"
           autocomplete="current-password"

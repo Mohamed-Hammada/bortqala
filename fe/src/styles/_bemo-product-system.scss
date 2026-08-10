@@ -47,6 +47,11 @@
   --shadow-sm: 0 4px 14px rgba(0, 0, 0, .12);
   --shadow-md: 0 12px 30px rgba(0, 0, 0, .18);
   --shadow-modal: 0 24px 70px rgba(0, 0, 0, .38);
+
+  /* Tooltips deliberately use a stable dark neutral in every theme. */
+  --tooltip-bg: #0B1118;
+  --tooltip-ink: #F8FAFC;
+  --tooltip-border: rgba(212, 160, 23, .45);
 }
 
 /* One predictable page rhythm */

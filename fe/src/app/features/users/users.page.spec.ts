@@ -150,6 +150,38 @@ describe('UsersPage', () => {
     httpMock.verify();
   });
 
+  it('filters the user list by display name, username, and role without changing backend data', () => {
+    page.store.items.set([
+      {
+        id: 'u-search-1',
+        username: 'ali.account',
+        displayName: 'Ali Hassan',
+        roles: ['VIEWER'],
+        allowedMenus: ['dashboard'],
+        active: true,
+        version: 1,
+      },
+      {
+        id: 'u-search-2',
+        username: 'finance.user',
+        displayName: 'Mona',
+        roles: ['ACCOUNTANT'],
+        allowedMenus: ['accounts'],
+        active: true,
+        version: 1,
+      },
+    ] as AuthUser[]);
+
+    page.userSearch.set('ali');
+    expect(page.filteredUsers().map((user) => user.id)).toEqual(['u-search-1']);
+
+    page.userSearch.set('accountant');
+    expect(page.filteredUsers().map((user) => user.id)).toEqual(['u-search-2']);
+
+    page.userSearch.set('');
+    expect(page.filteredUsers()).toHaveLength(2);
+  });
+
   it('reports a menu role mismatch when no selected role can open the page', () => {
     page.form.controls.roles.setValue(['VIEWER']);
     expect(page.menuRoleMismatch('workforce-workers')).toBe(true);

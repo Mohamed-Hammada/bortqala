@@ -40,3 +40,9 @@
 **EN:** Successful user-preference and application-setting saves mark their reactive forms pristine. Navigation prompts only appear for changes made after the last successful save.
 
 **AR:** بعد نجاح حفظ تفضيلات المستخدم أو إعدادات الشركة تُعلّم النماذج كبيانات محفوظة، لذلك لا يظهر تحذير المغادرة إلا للتغييرات التي تمت بعد آخر حفظ ناجح.
+
+## 2026-08-10 theme-safe appearance controls
+
+**EN:** Appearance preferences no longer hard-code light-only `#f8fafc`, `#cbd5e1`, and `#64748b` surfaces for sidebar and notification options. Those controls now use the shared semantic theme tokens.
+
+**AR:** لم تعد خيارات المظهر الخاصة بالقائمة الجانبية والإشعارات تستخدم ألوان Light ثابتة داخل HTML، وأصبحت تعتمد على متغيرات الثيم المشتركة لتظهر بشكل صحيح في الوضع الداكن والفاتح.

@@ -97,8 +97,27 @@ export class UsersPage {
   readonly selectedMenus = signal<string[]>([]);
   // New users follow role-derived menu access until an admin manually customizes menus.
   readonly customMenuAccess = signal(false);
+  readonly userSearch = signal('');
   readonly pagination = new TablePagination();
-  readonly paged = computed(() => this.pagination.slice(this.store.items()));
+
+  readonly filteredUsers = computed(() => {
+    const query = this.userSearch().trim().toLowerCase();
+    const items = this.store.items();
+    if (!query) return items;
+
+    return items.filter((user) =>
+      user.displayName.toLowerCase().includes(query) ||
+      user.username.toLowerCase().includes(query) ||
+      user.roles.some((role) => role.toLowerCase().includes(query) || this.roleLabel(role).toLowerCase().includes(query)),
+    );
+  });
+
+  readonly paged = computed(() => this.pagination.slice(this.filteredUsers()));
+  readonly activeUserCount = computed(() => this.store.items().filter((user) => user.active).length);
+  readonly adminUserCount = computed(() =>
+    this.store.items().filter((user) => user.roles.some((role) => role === 'ADMIN' || role === 'SUPER_ADMIN')).length,
+  );
+  readonly usedRoleCount = computed(() => new Set(this.store.items().flatMap((user) => user.roles)).size);
   readonly roles: Array<{ code: RoleCode; labelKey: string; descriptionKey: string }> = [
     { code: 'SUPER_ADMIN', labelKey: 'role.superAdmin', descriptionKey: 'role.superAdminHint' },
     { code: 'ADMIN', labelKey: 'role.admin', descriptionKey: 'role.adminHint' },
