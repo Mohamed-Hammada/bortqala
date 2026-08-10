@@ -1,8 +1,8 @@
 .toast-container {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 9999;
+  inset-block-start: 20px;
+  inset-inline-end: 20px;
+  z-index: var(--z-toast, 11000);
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -11,10 +11,7 @@
   pointer-events: none;
 }
 
-:host-context([dir='rtl']) .toast-container {
-  right: auto;
-  left: 20px;
-}
+/* Logical inset-inline-end automatically follows RTL/LTR. */
 
 .toast-card {
   pointer-events: auto;

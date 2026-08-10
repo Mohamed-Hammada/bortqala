@@ -1,0 +1,203 @@
+/* ==========================================================================
+   BEMO ERP Product Design System
+   Global, product-level visual rules. Feature styles should consume these
+   tokens instead of inventing page-specific spacing, colors, shadows, or
+   action layouts.
+   ========================================================================== */
+
+:root {
+  /* Spacing: 4px base rhythm */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Shape */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Controls */
+  --control-height-sm: 34px;
+  --control-height: 40px;
+  --control-height-lg: 44px;
+
+  /* Compatibility aliases used by older feature CSS */
+  --border-color: var(--line);
+  --text-color: var(--ink);
+  --gold-soft: var(--gold-glow);
+  --warning-border: color-mix(in srgb, var(--warning) 45%, var(--line));
+
+  /* Layering contract */
+  --z-content: 1;
+  --z-sticky: 100;
+  --z-sidebar: 300;
+  --z-overlay: 9000;
+  --z-modal: 10000;
+  --z-toast: 11000;
+  --z-tooltip: 12000;
+
+  /* Product shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .08);
+  --shadow-sm: 0 4px 14px rgba(0, 0, 0, .12);
+  --shadow-md: 0 12px 30px rgba(0, 0, 0, .18);
+  --shadow-modal: 0 24px 70px rgba(0, 0, 0, .38);
+}
+
+/* One predictable page rhythm */
+.page {
+  gap: var(--space-5);
+}
+
+.page-header {
+  gap: var(--space-4);
+  margin-bottom: 0;
+}
+
+.header-actions,
+.page-actions,
+.toolbar,
+.form-actions,
+.modal-actions,
+.modal-actions-bar,
+.drawer-actions,
+.table-row-actions,
+.quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* One action vocabulary */
+.button {
+  min-height: var(--control-height);
+  padding-inline: 14px;
+  border-radius: var(--radius-sm);
+  gap: var(--space-2);
+  line-height: 1.2;
+}
+
+.button.primary {
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .15) inset;
+}
+
+.button.secondary,
+.button.ghost,
+.button.danger {
+  box-shadow: none;
+}
+
+.icon-button {
+  width: var(--control-height);
+  height: var(--control-height);
+  min-width: var(--control-height);
+  min-height: var(--control-height);
+  border-radius: var(--radius-sm);
+}
+
+/* One surface vocabulary */
+.card,
+.table-card {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-sm);
+}
+
+/* One form vocabulary */
+.field {
+  gap: var(--space-2);
+}
+
+.field label,
+.field-label {
+  font-weight: 700;
+}
+
+.field input,
+.field select,
+.field textarea,
+.search-input {
+  min-height: var(--control-height);
+  border-radius: var(--radius-sm);
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--muted);
+  opacity: .78;
+}
+
+/* Credentials/technical identifiers stay readable even in Arabic RTL pages. */
+input[type='password'],
+input[autocomplete='new-password'],
+input[autocomplete='current-password'],
+input.username-input,
+input.technical-input {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
+}
+
+/* Product-level dialog contract */
+.confirm-dialog {
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-modal);
+}
+
+.confirm-title,
+.confirm-detail-row dd {
+  color: var(--ink);
+}
+
+.confirm-message,
+.confirm-detail-row dt,
+.confirm-busy {
+  color: var(--secondary-text);
+}
+
+.confirm-details {
+  border-color: var(--line);
+  background: var(--surface-muted);
+}
+
+/* Never let a page error appear visually above a modal while a modal is open. */
+body:has(.modal-backdrop) .page > .alert {
+  visibility: hidden;
+}
+
+/* Consistent small status/chip geometry */
+.status,
+.chip,
+.count-badge {
+  border-radius: var(--radius-pill);
+}
+
+/* RTL/LTR-safe spacing: feature code should prefer logical properties. */
+[dir='rtl'] .button,
+[dir='ltr'] .button {
+  text-align: center;
+}
+
+@media (max-width: 700px) {
+  .header-actions,
+  .page-actions {
+    width: 100%;
+  }
+
+  .header-actions > .button,
+  .page-actions > .button {
+    flex: 1 1 auto;
+  }
+}

@@ -14,7 +14,7 @@
   @if (store.loading()) {
     <div class="loading"></div>
   }
-  @if (store.error()) {
+  @if (store.error() && !drawerOpen()) {
     <div class="alert error">{{ store.error() }}</div>
   }
 
@@ -130,6 +130,9 @@
     (close)="closeDrawer()">
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="modal-form simplified-user-form">
+      @if (store.error()) {
+        <div class="alert error dialog-error" role="alert">{{ store.error() }}</div>
+      }
       @if (submitted() && form.invalid) {
         <div class="alert error" role="alert">{{ i18n.t('users.validation') }}</div>
       }
@@ -176,8 +179,10 @@
                   id="user-password"
                   [type]="showPassword() ? 'text' : 'password'"
                   class="ltr"
+                  dir="ltr"
                   formControlName="password"
                   autocomplete="new-password"
+                  spellcheck="false"
                   placeholder="••••••••"
                 />
                 <button
@@ -222,36 +227,64 @@
           </div>
         </section>
 
-        <!-- 2. Role selection: human-readable, without technical access metadata -->
-        <section class="user-form-panel">
-          <header class="panel-heading panel-heading-with-count">
+        <!-- 2. One primary role in the normal flow. Extra roles belong to Advanced. -->
+        <section class="user-form-panel compact-role-panel">
+          <header class="panel-heading">
             <span class="panel-icon" aria-hidden="true">🔑</span>
             <div>
               <strong>{{ i18n.t('users.sectionRoles') }}</strong>
               <small>{{ i18n.t('access.sectionRolesHint') }}</small>
             </div>
-            <span class="selection-count">{{ form.controls.roles.value.length }}</span>
           </header>
 
-          <div class="access-catalog-wrap">
-            @if (accessLoading()) {
-              <div class="loading"></div>
-            } @else if (!access.catalog()) {
-              <div class="alert error">{{ i18n.t('access.catalogError') }}</div>
-              <button type="button" class="button secondary" (click)="loadAccessCatalog()">
-                {{ i18n.t('access.catalogRetry') }}
-              </button>
-            } @else {
-              <input
-                class="search-input"
-                [value]="roleSearch()"
-                (input)="roleSearch.set($any($event.target).value)"
-                type="search"
-                [placeholder]="i18n.t('access.roleSearchPlaceholder')"
-              />
+          @if (accessLoading()) {
+            <div class="loading"></div>
+          } @else if (!access.catalog()) {
+            <div class="alert error">{{ i18n.t('access.catalogError') }}</div>
+            <button type="button" class="button secondary" (click)="loadAccessCatalog()">
+              {{ i18n.t('access.catalogRetry') }}
+            </button>
+          } @else {
+            <div class="field primary-role-field">
+              <label for="user-primary-role">{{ i18n.t('users.roles') }}</label>
+              <select id="user-primary-role" [value]="primaryRole()" (change)="setPrimaryRole($event)">
+                @for (role of access.roles(); track role.code) {
+                  <option
+                    [value]="role.code"
+                    [disabled]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
+                  >
+                    {{ i18n.t(role.nameKey) }}
+                  </option>
+                }
+              </select>
+              @if (form.controls.roles.value.length > 1) {
+                <small class="hint">{{ i18n.t('users.permissionCount', { count: form.controls.roles.value.length }) }}</small>
+              }
+            </div>
+          }
+        </section>
 
-              <div class="access-role-grid simple-role-grid">
-                @for (role of catalogRoles(); track role.code) {
+        <!-- Advanced access is intentionally hidden in the normal Add User workflow. -->
+        <details class="advanced-access-panel">
+          <summary>
+            <span class="advanced-summary-icon" aria-hidden="true">⚙</span>
+            <span class="advanced-summary-copy">
+              <strong>{{ i18n.t('users.sectionSpecialPermissions') }}</strong>
+              <small>{{ i18n.t('users.menuGroupsHint') }}</small>
+            </span>
+            <span class="advanced-summary-meta ltr">
+              {{ form.controls.roles.value.length }} · {{ form.controls.allowedMenus.value.length }}
+            </span>
+          </summary>
+
+          <div class="advanced-access-content">
+            <section class="advanced-subsection">
+              <div class="advanced-subsection-head">
+                <strong>{{ i18n.t('users.sectionRoles') }}</strong>
+                <span class="selection-count">{{ form.controls.roles.value.length }}</span>
+              </div>
+              <div class="access-role-grid advanced-role-grid">
+                @for (role of access.roles(); track role.code) {
                   <label
                     class="access-role-card simple-role-card"
                     [class.role-selected]="hasRole(role.code)"
@@ -271,60 +304,35 @@
                         }
                       </span>
                       <small class="role-desc">{{ i18n.t(role.descriptionKey) }}</small>
-                      @if (hasRole(role.code) && role.sensitiveReasonKey) {
-                        <small class="role-sensitive-reason">{{ i18n.t(role.sensitiveReasonKey) }}</small>
-                      }
                     </span>
                   </label>
                 }
               </div>
+            </section>
 
-              @if (catalogRoles().length === 0) {
-                <p class="hint">{{ i18n.t('access.roleSearchNoResults') }}</p>
-              }
-            }
-          </div>
-        </section>
+            <section class="advanced-subsection">
+              <strong class="advanced-subsection-title">{{ i18n.t('users.sectionSpecialPermissions') }}</strong>
+              <div class="user-settings-grid">
+                <label class="selectable-card menu-card compact-setting-card">
+                  <input type="checkbox" formControlName="canViewSalary" />
+                  <span>{{ i18n.t('users.canViewSalary') }}</span>
+                </label>
 
-        <!-- 3. Small account-level switches -->
-        <section class="user-form-panel secondary-settings-panel">
-          <header class="panel-heading">
-            <span class="panel-icon" aria-hidden="true">🔒</span>
-            <div>
-              <strong>{{ i18n.t('users.sectionSpecialPermissions') }}</strong>
-            </div>
-          </header>
+                <label class="selectable-card menu-card compact-setting-card">
+                  <input type="checkbox" formControlName="dashboardCustomizationEnabled" />
+                  <span>
+                    <strong>{{ i18n.t('users.dashboardCustomization') }}</strong>
+                    <small>{{ i18n.t('users.dashboardCustomizationHint') }}</small>
+                  </span>
+                </label>
+              </div>
+            </section>
 
-          <div class="user-settings-grid">
-            <label class="selectable-card menu-card compact-setting-card">
-              <input type="checkbox" formControlName="canViewSalary" />
-              <span>💵 {{ i18n.t('users.canViewSalary') }}</span>
-            </label>
-
-            <label class="selectable-card menu-card compact-setting-card">
-              <input type="checkbox" formControlName="dashboardCustomizationEnabled" />
-              <span>
-                <strong>📊 {{ i18n.t('users.dashboardCustomization') }}</strong>
-                <small>{{ i18n.t('users.dashboardCustomizationHint') }}</small>
-              </span>
-            </label>
-          </div>
-        </section>
-
-        <!-- Advanced menu-level access remains available without blocking the normal flow. -->
-        <details class="advanced-access-panel">
-          <summary>
-            <span class="advanced-summary-icon" aria-hidden="true">🖥️</span>
-            <span class="advanced-summary-copy">
-              <strong>{{ i18n.t('users.sectionMenus') }}</strong>
-              <small>{{ i18n.t('users.menuGroupsHint') }}</small>
-            </span>
-            <span class="advanced-summary-meta ltr">
-              {{ form.controls.allowedMenus.value.length }} / {{ menuOptions.length }}
-            </span>
-          </summary>
-
-          <div class="advanced-access-content">
+            <section class="advanced-subsection">
+              <div class="advanced-subsection-head">
+                <strong>{{ i18n.t('users.sectionMenus') }}</strong>
+                <span class="selection-count">{{ form.controls.allowedMenus.value.length }}</span>
+              </div>
             <div class="quick-actions advanced-quick-actions">
               <button
                 type="button"
@@ -389,6 +397,8 @@
                 </div>
               }
             </div>
+
+            </section>
 
             <details class="effective-access-panel">
               <summary>

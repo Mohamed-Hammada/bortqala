@@ -572,10 +572,22 @@
             <span>{{ i18n.t(widget.labelKey) }}</span>
           </label>
           <div class="reorder-actions">
-            <button type="button" (click)="moveWidget(widget.id, -1)" [disabled]="!widgetVisible(widget.id)"
-              [appTooltip]="i18n.t('dashboard.moveUp')">↑</button>
-            <button type="button" (click)="moveWidget(widget.id, 1)" [disabled]="!widgetVisible(widget.id)"
-              [appTooltip]="i18n.t('dashboard.moveDown')">↓</button>
+            <button
+              type="button"
+              class="reorder-icon-button"
+              (click)="moveWidget(widget.id, -1)"
+              [disabled]="!canMoveWidget(widget.id, -1)"
+              [attr.aria-label]="i18n.t('dashboard.moveUp')"
+              [appTooltip]="i18n.t('dashboard.moveUp')"
+            ><app-icon name="arrow-up" /></button>
+            <button
+              type="button"
+              class="reorder-icon-button"
+              (click)="moveWidget(widget.id, 1)"
+              [disabled]="!canMoveWidget(widget.id, 1)"
+              [attr.aria-label]="i18n.t('dashboard.moveDown')"
+              [appTooltip]="i18n.t('dashboard.moveDown')"
+            ><app-icon name="arrow-down" /></button>
           </div>
         </div>
       }

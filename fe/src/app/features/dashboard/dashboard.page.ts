@@ -12,11 +12,12 @@ import { DashboardWidgetId } from '../../core/auth/auth.models';
 import { NotificationService } from '../../core/notification.service';
 import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { downloadBlob, timestampedExcelFileName } from '../../core/download';
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [RouterLink, TablePaginationComponent, FormsModule, DecimalPipe, AppTooltipDirective, ModalDialogComponent],
+  imports: [RouterLink, TablePaginationComponent, FormsModule, DecimalPipe, AppTooltipDirective, ModalDialogComponent, IconComponent],
   providers: [DashboardStore],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss',
@@ -126,11 +127,19 @@ export class DashboardPage {
     }
   }
 
+  canMoveWidget(id: DashboardWidgetId, direction: -1 | 1): boolean {
+    const current = this.draftWidgetIds();
+    const index = current.indexOf(id);
+    if (index < 0) return false;
+    const next = index + direction;
+    return next >= 0 && next < current.length;
+  }
+
   moveWidget(id: DashboardWidgetId, direction: -1 | 1): void {
+    if (!this.canMoveWidget(id, direction)) return;
     const current = [...this.draftWidgetIds()];
     const index = current.indexOf(id);
     const next = index + direction;
-    if (index < 0 || next < 0 || next >= current.length) return;
     [current[index], current[next]] = [current[next], current[index]];
     this.draftWidgetIds.set(current);
   }

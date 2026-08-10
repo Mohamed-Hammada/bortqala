@@ -1294,3 +1294,59 @@ td small {
   }
 }
 
+/* BEMO simplified default user flow */
+.password-input-wrap {
+  direction: ltr;
+}
+
+.password-input-wrap input {
+  direction: ltr;
+  text-align: left;
+}
+
+.compact-role-panel {
+  padding-block: 14px;
+}
+
+.primary-role-field {
+  max-width: 520px;
+}
+
+.primary-role-field select {
+  width: 100%;
+  max-width: 520px;
+}
+
+.advanced-subsection {
+  display: grid;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface);
+}
+
+.advanced-subsection-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2, 8px);
+}
+
+.advanced-subsection-title {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.dialog-error {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  box-shadow: var(--shadow-sm, 0 4px 14px rgba(0, 0, 0, .12));
+}
+
+@media (max-width: 700px) {
+  .advanced-role-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -453,6 +453,24 @@ export class UsersPage {
     return item.allowedMenus ? item.allowedMenus.length : this.menuOptions.length;
   }
 
+  primaryRole(): RoleCode | '' {
+    return this.form.controls.roles.value[0] ?? '';
+  }
+
+  setPrimaryRole(event: Event): void {
+    const code = (event.target as HTMLSelectElement).value as RoleCode;
+    if (!code) return;
+
+    const current = this.form.controls.roles.value;
+    const extras = current.slice(1).filter((role) => role !== code);
+    const next: RoleCode[] = [code, ...extras];
+    this.form.controls.roles.setValue(next);
+
+    if (!this.customMenuAccess()) {
+      this.syncMenusToRoles(next);
+    }
+  }
+
   toggleRole(code: RoleCode, event: Event) {
     const checked = (event.target as HTMLInputElement).checked;
     const current = this.form.controls.roles.value;
@@ -705,6 +723,8 @@ export class UsersPage {
     if (await this.store.save(this.editingId(), payload)) {
       this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.closeDrawer();
+    } else if (this.store.error()) {
+      this.notification.error(this.store.error()!);
     }
   }
 

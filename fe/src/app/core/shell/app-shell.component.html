@@ -17,7 +17,7 @@
           [attr.aria-label]="collapsed() ? i18n.t('action.openMenu') : i18n.t('action.closeMenu')"
           [appTooltip]="collapsed() ? i18n.t('action.openMenu') : i18n.t('action.closeMenu')"
         >
-          <app-icon name="menu" />
+          <app-icon [name]="collapsed() ? 'panel-expand' : 'panel-collapse'" />
         </button>
       </div>
       <button
@@ -124,12 +124,24 @@
       }
 
       <!-- Workspace Controls -->
-      <div class="workspace-section-tools">
-        <button type="button" class="expand-all-btn" (click)="expandAllGroups()" [appTooltip]="i18n.t('action.expandAll')">
-          📂 {{ i18n.t('action.expandAll') }}
+      <div class="workspace-section-tools" [attr.aria-label]="i18n.t('nav.main')">
+        <button
+          type="button"
+          class="workspace-tool-icon"
+          (click)="expandAllGroups()"
+          [attr.aria-label]="i18n.t('action.expandAll')"
+          [appTooltip]="i18n.t('action.expandAll')"
+        >
+          <app-icon name="expand-all" />
         </button>
-        <button type="button" class="expand-all-btn" (click)="collapseAllGroups()" [appTooltip]="i18n.t('action.collapseAll')">
-          📁 {{ i18n.t('action.collapseAll') }}
+        <button
+          type="button"
+          class="workspace-tool-icon"
+          (click)="collapseAllGroups()"
+          [attr.aria-label]="i18n.t('action.collapseAll')"
+          [appTooltip]="i18n.t('action.collapseAll')"
+        >
+          <app-icon name="collapse-all" />
         </button>
       </div>
 

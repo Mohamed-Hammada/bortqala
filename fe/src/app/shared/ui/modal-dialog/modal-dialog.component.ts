@@ -64,7 +64,7 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      z-index: 10000;
+      z-index: var(--z-modal, 10000);
 
       display: grid;
       place-items: center;
@@ -93,8 +93,9 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
 
       color: var(--ink, #0f172a);
       background: var(--surface, #ffffff);
-      border-radius: 14px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--line, #e2e8f0);
+      border-radius: var(--radius-lg, 16px);
+      box-shadow: var(--shadow-modal, 0 24px 70px rgba(0, 0, 0, 0.38));
       animation: zoomIn 0.2s ease-out;
     }
 
