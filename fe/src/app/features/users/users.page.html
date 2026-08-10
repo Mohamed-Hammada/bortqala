@@ -120,7 +120,7 @@
   </div>
   } <!-- end @if (!store.loading()) -->
 
-  <!-- User Form Central Modal Dialog -->
+  <!-- Simplified User Form: simple by default, detailed access on demand -->
   <app-modal-dialog
     class="users-dialog"
     [isOpen]="drawerOpen()"
@@ -129,512 +129,421 @@
     [preventOutsideClose]="true"
     (close)="closeDrawer()">
 
-    <form [formGroup]="form" (ngSubmit)="submit()" class="modal-form">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="modal-form simplified-user-form">
       @if (submitted() && form.invalid) {
         <div class="alert error" role="alert">{{ i18n.t('users.validation') }}</div>
       }
 
-      <div class="form-grid">
-        <!-- Section 1: Basic Information -->
-        <div class="form-section-head">
-          <span>👤</span> {{ i18n.t('users.sectionBasic') }}
-        </div>
+      <div class="user-form-stack">
+        <!-- 1. Identity and account basics -->
+        <section class="user-form-panel">
+          <header class="panel-heading">
+            <span class="panel-icon" aria-hidden="true">👤</span>
+            <div>
+              <strong>{{ i18n.t('users.sectionBasic') }}</strong>
+            </div>
+          </header>
 
-        <div class="field">
-          <label for="user-username"><span class="required">*</span> {{ i18n.t('users.username') }}</label>
-          <input id="user-username" class="ltr" formControlName="username" autocomplete="off" placeholder="admin" />
-        </div>
+          <div class="user-profile-grid">
+            <div class="field">
+              <label for="user-display-name"><span class="required">*</span> {{ i18n.t('users.displayName') }}</label>
+              <input
+                id="user-display-name"
+                formControlName="displayName"
+                autocomplete="name"
+                placeholder="محمد أحمد"
+              />
+            </div>
 
-        <div class="field">
-          <label for="user-display-name"><span class="required">*</span> {{ i18n.t('users.displayName') }}</label>
-          <input id="user-display-name" formControlName="displayName" placeholder="محمد أحمد" />
-        </div>
+            <div class="field">
+              <label for="user-username"><span class="required">*</span> {{ i18n.t('users.username') }}</label>
+              <input
+                id="user-username"
+                class="ltr"
+                formControlName="username"
+                autocomplete="off"
+                placeholder="admin"
+              />
+            </div>
 
-        <div class="field span-2 password-field">
-          <label for="user-password">
-            @if (!editingId()) { <span class="required">*</span> }
-            {{ i18n.t('users.password') }}
-          </label>
-          <div class="password-input-wrap">
-            <input
-              id="user-password"
-              [type]="showPassword() ? 'text' : 'password'"
-              class="ltr"
-              formControlName="password"
-              autocomplete="new-password"
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              class="toggle-pass-btn"
-              (click)="showPassword.set(!showPassword())"
-              [attr.aria-label]="i18n.t(showPassword() ? 'users.hidePassword' : 'users.showPassword')"
-              [attr.title]="i18n.t(showPassword() ? 'users.hidePassword' : 'users.showPassword')"
-            >
-              {{ showPassword() ? '👁️' : '🙈' }}
-            </button>
-          </div>
-          @if (editingId()) {
-            <small class="hint">{{ i18n.t('users.passwordEditHint') }}</small>
-          } @else {
-            <small class="hint">
-              {{ i18n.t('users.passwordMinLength', { min: passwordPolicy().minPasswordLength ?? 8 }) }}
-            </small>
-          }
-        </div>
-
-        <!-- Section 2: User Category -->
-        <div class="form-section-head">
-          <span>📂</span> {{ i18n.t('users.sectionCategory') }}
-        </div>
-
-        <div class="field span-2">
-          <label for="user-category">{{ i18n.t('users.category') }}</label>
-          <select id="user-category" formControlName="categoryId">
-            <option [ngValue]="null">— {{ i18n.t('common.none') }} —</option>
-            @for (cat of store.categories(); track cat.id) {
-              <option [ngValue]="cat.id">{{ cat.name }}</option>
-            }
-          </select>
-        </div>
-
-        <!-- Section 3: User Roles -->
-        <div class="form-section-head">
-          <span>🔑</span> {{ i18n.t('users.sectionRoles') }}
-          <small>{{ i18n.t('access.sectionRolesHint') }}</small>
-        </div>
-
-        <div class="field span-2 access-catalog-wrap">
-          @if (accessLoading()) {
-            <div class="loading"></div>
-          } @else if (!access.catalog()) {
-            <div class="alert error">{{ i18n.t('access.catalogError') }}</div>
-            <button type="button" class="button secondary" (click)="loadAccessCatalog()">
-              {{ i18n.t('access.catalogRetry') }}
-            </button>
-          } @else {
-            <input
-              class="ltr search-input"
-              [value]="roleSearch()"
-              (input)="roleSearch.set($any($event.target).value)"
-              type="search"
-              [placeholder]="i18n.t('access.roleSearchPlaceholder')"
-            />
-            <div class="access-role-grid">
-              @for (role of catalogRoles(); track role.code) {
-                <label
-                  class="access-role-card"
-                  [class.role-selected]="hasRole(role.code)"
-                  [class.disabled-card]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
+            <div class="field span-2 password-field">
+              <label for="user-password">
+                @if (!editingId()) { <span class="required">*</span> }
+                {{ i18n.t('users.password') }}
+              </label>
+              <div class="password-input-wrap">
+                <input
+                  id="user-password"
+                  [type]="showPassword() ? 'text' : 'password'"
+                  class="ltr"
+                  formControlName="password"
+                  autocomplete="new-password"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  class="toggle-pass-btn"
+                  (click)="showPassword.set(!showPassword())"
+                  [attr.aria-label]="i18n.t(showPassword() ? 'users.hidePassword' : 'users.showPassword')"
+                  [attr.title]="i18n.t(showPassword() ? 'users.hidePassword' : 'users.showPassword')"
                 >
-                  <input
-                    type="checkbox"
-                    [checked]="hasRole(role.code)"
-                    [disabled]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
-                    (change)="toggleRole(role.code, $event)"
-                  />
-                  <span class="access-role-card-body">
-                    <span class="access-role-card-head">
-                      <code class="ltr role-tech-code">{{ role.code }}</code>
-                      <span class="role-sensitivity" [class]="role.sensitivity.toLowerCase()">
-                        {{ sensitivityLabel(role.sensitivity) }}
-                      </span>
-                      <span class="role-kind">{{ kindLabel(role.kind) }}</span>
-                    </span>
-                    <strong>{{ i18n.t(role.nameKey) }}</strong>
-                    <small class="role-desc">{{ i18n.t(role.descriptionKey) }}</small>
-                    <span class="access-role-meta">
-                      {{ i18n.t('access.cardPages', { count: roleMeta(role).pages }) }} ·
-                      {{ i18n.t('access.cardActions', { count: roleMeta(role).actions }) }}
-                    </span>
-                    @if (hasRole(role.code) && role.sensitiveReasonKey) {
-                      <small class="role-sensitive-reason">{{ i18n.t(role.sensitiveReasonKey) }}</small>
-                    }
-                  </span>
-                </label>
+                  {{ showPassword() ? '👁️' : '🙈' }}
+                </button>
+              </div>
+              @if (editingId()) {
+                <small class="hint">{{ i18n.t('users.passwordEditHint') }}</small>
+              } @else {
+                <small class="hint">
+                  {{ i18n.t('users.passwordMinLength', { min: passwordPolicy().minPasswordLength ?? 8 }) }}
+                </small>
               }
             </div>
-            @if (catalogRoles().length === 0) {
-              <p class="hint">{{ i18n.t('access.roleSearchNoResults') }}</p>
-            }
-          }
-        </div>
 
-        <!-- Guided mode: what should this user be able to do? -->
-        <div class="form-section-head access-subsection">
-          <span>🧭</span> {{ i18n.t('access.sectionGuided') }}
-          <small>{{ i18n.t('access.guidedHint') }}</small>
-        </div>
+            <div class="field">
+              <label for="user-category">{{ i18n.t('users.category') }}</label>
+              <select id="user-category" formControlName="categoryId">
+                <option [ngValue]="null">— {{ i18n.t('common.none') }} —</option>
+                @for (cat of store.categories(); track cat.id) {
+                  <option [ngValue]="cat.id">{{ cat.name }}</option>
+                }
+              </select>
+            </div>
 
-        <div class="field span-2">
-          <div class="guided-grid">
-            @for (need of needs(); track need.code) {
-              <label class="selectable-card compact-card" [class.role-selected]="hasNeed(need.code)">
-                <input
-                  type="checkbox"
-                  [checked]="hasNeed(need.code)"
-                  (change)="toggleNeed(need.code)"
-                />
-                <span>{{ i18n.t(need.labelKey) }}</span>
+            <div class="field account-status-field">
+              <span class="field-label">{{ i18n.t('users.sectionStatus') }}</span>
+              <label class="selectable-card active-card compact-setting-card">
+                <input type="checkbox" formControlName="active" />
+                <span>
+                  <strong>{{ i18n.t('users.activeCheck') }}</strong>
+                  <small>{{ i18n.t('users.activeCheckHint') }}</small>
+                </span>
               </label>
-            }
+            </div>
           </div>
-          @if (needCodes().length) {
-            <div class="suggestion-box">
-              <strong>{{ i18n.t('access.guidedSuggestedRoles') }}</strong>
-              <div class="chip-row">
-                @for (role of suggestedRoles(); track role) {
-                  <span class="chip chip-role">{{ roleLabelFor(role) }}</span>
-                } @empty {
-                  <span class="hint">{{ i18n.t('access.guidedNoSuggestion') }}</span>
+        </section>
+
+        <!-- 2. Role selection: human-readable, without technical access metadata -->
+        <section class="user-form-panel">
+          <header class="panel-heading panel-heading-with-count">
+            <span class="panel-icon" aria-hidden="true">🔑</span>
+            <div>
+              <strong>{{ i18n.t('users.sectionRoles') }}</strong>
+              <small>{{ i18n.t('access.sectionRolesHint') }}</small>
+            </div>
+            <span class="selection-count">{{ form.controls.roles.value.length }}</span>
+          </header>
+
+          <div class="access-catalog-wrap">
+            @if (accessLoading()) {
+              <div class="loading"></div>
+            } @else if (!access.catalog()) {
+              <div class="alert error">{{ i18n.t('access.catalogError') }}</div>
+              <button type="button" class="button secondary" (click)="loadAccessCatalog()">
+                {{ i18n.t('access.catalogRetry') }}
+              </button>
+            } @else {
+              <input
+                class="search-input"
+                [value]="roleSearch()"
+                (input)="roleSearch.set($any($event.target).value)"
+                type="search"
+                [placeholder]="i18n.t('access.roleSearchPlaceholder')"
+              />
+
+              <div class="access-role-grid simple-role-grid">
+                @for (role of catalogRoles(); track role.code) {
+                  <label
+                    class="access-role-card simple-role-card"
+                    [class.role-selected]="hasRole(role.code)"
+                    [class.disabled-card]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
+                  >
+                    <input
+                      type="checkbox"
+                      [checked]="hasRole(role.code)"
+                      [disabled]="role.code === 'SUPER_ADMIN' && !auth.isSuperAdmin()"
+                      (change)="toggleRole(role.code, $event)"
+                    />
+                    <span class="role-choice-copy">
+                      <span class="role-choice-title">
+                        <strong>{{ i18n.t(role.nameKey) }}</strong>
+                        @if (hasRole(role.code)) {
+                          <span class="selected-check" aria-hidden="true">✓</span>
+                        }
+                      </span>
+                      <small class="role-desc">{{ i18n.t(role.descriptionKey) }}</small>
+                      @if (hasRole(role.code) && role.sensitiveReasonKey) {
+                        <small class="role-sensitive-reason">{{ i18n.t(role.sensitiveReasonKey) }}</small>
+                      }
+                    </span>
+                  </label>
                 }
               </div>
-              @if (broaderRoles().length) {
-                <p class="hint warning-text">
-                  {{ i18n.t('access.guidedBroaderWarning') }}
-                  <span class="chip-row inline">
-                    @for (role of broaderRoles(); track role) {
-                      <span class="chip">{{ roleLabelFor(role) }}</span>
-                    }
-                  </span>
-                </p>
+
+              @if (catalogRoles().length === 0) {
+                <p class="hint">{{ i18n.t('access.roleSearchNoResults') }}</p>
               }
+            }
+          </div>
+        </section>
+
+        <!-- 3. Small account-level switches -->
+        <section class="user-form-panel secondary-settings-panel">
+          <header class="panel-heading">
+            <span class="panel-icon" aria-hidden="true">🔒</span>
+            <div>
+              <strong>{{ i18n.t('users.sectionSpecialPermissions') }}</strong>
+            </div>
+          </header>
+
+          <div class="user-settings-grid">
+            <label class="selectable-card menu-card compact-setting-card">
+              <input type="checkbox" formControlName="canViewSalary" />
+              <span>💵 {{ i18n.t('users.canViewSalary') }}</span>
+            </label>
+
+            <label class="selectable-card menu-card compact-setting-card">
+              <input type="checkbox" formControlName="dashboardCustomizationEnabled" />
+              <span>
+                <strong>📊 {{ i18n.t('users.dashboardCustomization') }}</strong>
+                <small>{{ i18n.t('users.dashboardCustomizationHint') }}</small>
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Advanced menu-level access remains available without blocking the normal flow. -->
+        <details class="advanced-access-panel">
+          <summary>
+            <span class="advanced-summary-icon" aria-hidden="true">🖥️</span>
+            <span class="advanced-summary-copy">
+              <strong>{{ i18n.t('users.sectionMenus') }}</strong>
+              <small>{{ i18n.t('users.menuGroupsHint') }}</small>
+            </span>
+            <span class="advanced-summary-meta ltr">
+              {{ form.controls.allowedMenus.value.length }} / {{ menuOptions.length }}
+            </span>
+          </summary>
+
+          <div class="advanced-access-content">
+            <div class="quick-actions advanced-quick-actions">
               <button
                 type="button"
                 class="permission-action"
-                (click)="applySuggestedRoles()"
-                [disabled]="!suggestedRoles().length"
+                (click)="selectAllMenus()"
+                [disabled]="adminOverrideActive()"
+                [attr.title]="adminOverrideActive() ? i18n.t('access.adminOverrideNotice') : ''"
               >
-                {{ i18n.t('access.guidedApply') }}
+                {{ i18n.t('users.selectAllMenus') }}
+              </button>
+              <button
+                type="button"
+                class="permission-action"
+                (click)="clearAllMenus()"
+                [disabled]="adminOverrideActive()"
+                [attr.title]="adminOverrideActive() ? i18n.t('access.adminOverrideNotice') : ''"
+              >
+                {{ i18n.t('users.clearAllMenus') }}
               </button>
             </div>
-          }
-        </div>
 
-        <!-- Find access by page -->
-        <div class="form-section-head access-subsection">
-          <span>🔎</span> {{ i18n.t('access.sectionFind') }}
-          <small>{{ i18n.t('access.findHint') }}</small>
-        </div>
-
-        <div class="field span-2">
-          <input
-            class="ltr search-input"
-            [value]="pageSearch()"
-            (input)="pageSearch.set($any($event.target).value)"
-            type="search"
-            [placeholder]="i18n.t('access.pageSearchPlaceholder')"
-          />
-          <div class="find-page-list">
-            @for (page of previewPageResults(); track page.code) {
-              <div class="find-page-row">
-                <span class="find-page-title">
-                  <strong>{{ i18n.t(page.titleKey) }}</strong>
-                  <code class="ltr">{{ page.code }}</code>
-                  <small class="hint ltr">{{ page.route }}</small>
-                </span>
-                <div class="find-page-roles">
-                  @for (role of requiredRolesForPage(page.viewPermissions); track role) {
-                    <span class="chip chip-role">{{ roleLabelFor(role) }}</span>
-                  }
-                </div>
-              </div>
-            } @empty {
-              <p class="hint">{{ i18n.t('access.pageSearchNoResults') }}</p>
-            }
-          </div>
-        </div>
-
-        <!-- Section 4: Grouped Module Permissions -->
-        <div class="form-section-head permissions-section-head">
-          <span class="section-title-copy">
-            <span aria-hidden="true">🖥️</span>
-            <span>
-              {{ i18n.t('users.sectionMenus') }}
-              <small>{{ i18n.t('users.menuGroupsHint') }}</small>
-            </span>
-          </span>
-          <div class="quick-actions">
-            <button
-              type="button"
-              class="permission-action"
-              (click)="selectAllMenus()"
-              [disabled]="adminOverrideActive()"
-              [attr.title]="adminOverrideActive() ? i18n.t('access.adminOverrideNotice') : ''"
-            >
-              {{ i18n.t('users.selectAllMenus') }}
-            </button>
-            <button
-              type="button"
-              class="permission-action"
-              (click)="clearAllMenus()"
-              [disabled]="adminOverrideActive()"
-              [attr.title]="adminOverrideActive() ? i18n.t('access.adminOverrideNotice') : ''"
-            >
-              {{ i18n.t('users.clearAllMenus') }}
-            </button>
-          </div>
-        </div>
-
-        <div class="field span-2">
-          <div class="module-groups-grid">
             @if (adminOverrideActive()) {
               <div class="alert info admin-override-notice">
                 {{ i18n.t('access.adminOverrideNotice') }}
               </div>
             }
-            @for (group of menuGroups; track group.titleKey) {
-              <div class="module-group-card">
-                <label class="module-group-header">
-                  <input
-                    type="checkbox"
-                    [checked]="isModuleAllSelected(group.ids)"
-                    [indeterminate]="isModulePartiallySelected(group.ids)"
-                    [disabled]="adminOverrideActive()"
-                    (change)="toggleModule(group.ids)"
-                  />
-                  <strong>{{ i18n.t(group.titleKey) }}</strong>
-                  <span class="count-badge">
-                    {{ i18n.t(group.ids.length === 1 ? 'users.permissionOne' : 'users.permissionCount', { count: group.ids.length }) }}
-                  </span>
-                </label>
-                <div class="module-group-items">
-                  @for (id of group.ids; track id) {
-                    <label class="menu-item-check" [class.menu-disabled]="adminOverrideActive()">
-                      <input
-                        type="checkbox"
-                        [checked]="hasMenu(id)"
-                        [disabled]="adminOverrideActive()"
-                        (change)="toggleMenu(id, $event)"
-                      />
-                      <span>{{ getMenuLabel(id) }}</span>
-                      @if (menuFeature(id)) {
-                        <span class="chip chip-warn" [attr.title]="menuFeature(id)">{{ i18n.t('access.menuFeatureDisabled') }}</span>
-                      } @else if (menuRoleMismatch(id)) {
-                        <span class="chip chip-warn">{{ i18n.t('access.menuRoleMismatch') }}</span>
-                      }
-                    </label>
-                  }
-                </div>
-              </div>
-            }
-          </div>
-        </div>
 
-        <!-- Section 5: Effective Access Preview -->
-        <div class="form-section-head permissions-section-head">
-          <span class="section-title-copy">
-            <span aria-hidden="true">🧮</span>
-            <span>
-              {{ i18n.t('access.sectionEffective') }}
-              <small>{{ i18n.t('access.effectiveHint') }}</small>
-            </span>
-          </span>
-        </div>
-
-        <div class="field span-2">
-          @if (editMode()) {
-            <div class="diff-box">
-              <strong>{{ i18n.t('access.diffTitle') }}</strong>
-              @if (rolesAdded().length || rolesRemoved().length || menusAdded().length || menusRemoved().length) {
-                <div class="diff-chips">
-                  @for (role of rolesAdded(); track role) {
-                    <span class="chip chip-added">＋ {{ roleLabelFor(role) }}</span>
-                  }
-                  @for (role of rolesRemoved(); track role) {
-                    <span class="chip chip-removed">－ {{ roleLabelFor(role) }}</span>
-                  }
-                  @for (menu of menusAdded(); track menu) {
-                    <span class="chip chip-added">＋ {{ getMenuLabel(menu) }}</span>
-                  }
-                  @for (menu of menusRemoved(); track menu) {
-                    <span class="chip chip-removed">－ {{ getMenuLabel(menu) }}</span>
-                  }
+            <div class="module-groups-grid">
+              @for (group of menuGroups; track group.titleKey) {
+                <div class="module-group-card">
+                  <label class="module-group-header">
+                    <input
+                      type="checkbox"
+                      [checked]="isModuleAllSelected(group.ids)"
+                      [indeterminate]="isModulePartiallySelected(group.ids)"
+                      [disabled]="adminOverrideActive()"
+                      (change)="toggleModule(group.ids)"
+                    />
+                    <strong>{{ i18n.t(group.titleKey) }}</strong>
+                    <span class="count-badge">
+                      {{ i18n.t(group.ids.length === 1 ? 'users.permissionOne' : 'users.permissionCount', { count: group.ids.length }) }}
+                    </span>
+                  </label>
+                  <div class="module-group-items">
+                    @for (id of group.ids; track id) {
+                      <label class="menu-item-check" [class.menu-disabled]="adminOverrideActive()">
+                        <input
+                          type="checkbox"
+                          [checked]="hasMenu(id)"
+                          [disabled]="adminOverrideActive()"
+                          (change)="toggleMenu(id, $event)"
+                        />
+                        <span>{{ getMenuLabel(id) }}</span>
+                        @if (menuFeature(id)) {
+                          <span class="chip chip-warn" [attr.title]="menuFeature(id)">{{ i18n.t('access.menuFeatureDisabled') }}</span>
+                        } @else if (menuRoleMismatch(id)) {
+                          <span class="chip chip-warn">{{ i18n.t('access.menuRoleMismatch') }}</span>
+                        }
+                      </label>
+                    }
+                  </div>
                 </div>
-                @if (changedPages().length) {
-                  <div class="changed-pages">
-                    @for (row of changedPages(); track row.page.pageCode) {
-                      <div class="changed-page-row">
-                        <span>{{ i18n.t(row.titleKey) }}</span>
-                        <code class="ltr diff-before">{{ row.before }}</code>
-                        <span class="diff-arrow">→</span>
-                        <code class="ltr diff-after">{{ row.page.access }}</code>
+              }
+            </div>
+
+            <details class="effective-access-panel">
+              <summary>
+                <span>🧮 {{ i18n.t('access.sectionEffective') }}</span>
+                <small>{{ i18n.t('access.effectiveHint') }}</small>
+              </summary>
+
+              <div class="effective-access-content">
+                @if (editMode()) {
+                  <div class="diff-box">
+                    <strong>{{ i18n.t('access.diffTitle') }}</strong>
+                    @if (rolesAdded().length || rolesRemoved().length || menusAdded().length || menusRemoved().length) {
+                      <div class="diff-chips">
+                        @for (role of rolesAdded(); track role) {
+                          <span class="chip chip-added">＋ {{ roleLabelFor(role) }}</span>
+                        }
+                        @for (role of rolesRemoved(); track role) {
+                          <span class="chip chip-removed">－ {{ roleLabelFor(role) }}</span>
+                        }
+                        @for (menu of menusAdded(); track menu) {
+                          <span class="chip chip-added">＋ {{ getMenuLabel(menu) }}</span>
+                        }
+                        @for (menu of menusRemoved(); track menu) {
+                          <span class="chip chip-removed">－ {{ getMenuLabel(menu) }}</span>
+                        }
                       </div>
+                      @if (changedPages().length) {
+                        <div class="changed-pages">
+                          @for (row of changedPages(); track row.page.pageCode) {
+                            <div class="changed-page-row">
+                              <span>{{ i18n.t(row.titleKey) }}</span>
+                              <code class="ltr diff-before">{{ row.before }}</code>
+                              <span class="diff-arrow">→</span>
+                              <code class="ltr diff-after">{{ row.page.access }}</code>
+                            </div>
+                          }
+                        </div>
+                      }
+                    } @else {
+                      <p class="hint">{{ i18n.t('access.diffUnchanged') }}</p>
                     }
                   </div>
                 }
-              } @else {
-                <p class="hint">{{ i18n.t('access.diffUnchanged') }}</p>
-              }
-            </div>
-          }
 
-          <div class="preview-table-wrap">
-            <table class="preview-table">
-              <thead>
-                <tr>
-                  <th>{{ i18n.t('access.previewModule') }}</th>
-                  <th>{{ i18n.t('access.previewPage') }}</th>
-                  <th>{{ i18n.t('access.previewAccess') }}</th>
-                  <th>{{ i18n.t('access.previewGrantedBy') }}</th>
-                  <th>{{ i18n.t('access.previewActions') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of preview().pages; track row.pageCode) {
-                  <tr>
-                    <td class="ltr">{{ moduleLabel(row.pageCode) }}</td>
-                    <td>{{ pageTitle(row.pageCode) }}</td>
-                    <td>
-                      <span class="access-badge" [class]="row.access.toLowerCase()">{{ levelLabel(row.access) }}</span>
-                    </td>
-                    <td>
-                      <div class="chip-row inline">
-                        @for (role of row.grantedByRoles; track role) {
-                          <span class="chip">{{ roleLabelFor(role) }}</span>
-                        } @empty {
-                          <span class="hint">—</span>
-                        }
-                      </div>
-                    </td>
-                    <td>
-                      <div class="chip-row inline">
-                        @for (action of row.grantedActions; track action) {
-                          <span class="chip chip-action">{{ actionLabel(action) }}</span>
-                        } @empty {
-                          <span class="hint">—</span>
-                        }
-                      </div>
-                    </td>
-                  </tr>
+                <div class="preview-table-wrap">
+                  <table class="preview-table">
+                    <thead>
+                      <tr>
+                        <th>{{ i18n.t('access.previewModule') }}</th>
+                        <th>{{ i18n.t('access.previewPage') }}</th>
+                        <th>{{ i18n.t('access.previewAccess') }}</th>
+                        <th>{{ i18n.t('access.previewGrantedBy') }}</th>
+                        <th>{{ i18n.t('access.previewActions') }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (row of preview().pages; track row.pageCode) {
+                        <tr>
+                          <td class="ltr">{{ moduleLabel(row.pageCode) }}</td>
+                          <td>{{ pageTitle(row.pageCode) }}</td>
+                          <td>
+                            <span class="access-badge" [class]="row.access.toLowerCase()">{{ levelLabel(row.access) }}</span>
+                          </td>
+                          <td>
+                            <div class="chip-row inline">
+                              @for (role of row.grantedByRoles; track role) {
+                                <span class="chip">{{ roleLabelFor(role) }}</span>
+                              } @empty {
+                                <span class="hint">—</span>
+                              }
+                            </div>
+                          </td>
+                          <td>
+                            <div class="chip-row inline">
+                              @for (action of row.grantedActions; track action) {
+                                <span class="chip chip-action">{{ actionLabel(action) }}</span>
+                              } @empty {
+                                <span class="hint">—</span>
+                              }
+                            </div>
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+
+                @if (preview().warnings.length || preview().conflicts.length) {
+                  <div class="warnings-box">
+                    <strong>⚠️ {{ i18n.t('access.sectionWarnings') }}</strong>
+                    @for (warning of preview().warnings; track warning.code) {
+                      <p class="hint">{{ i18n.t(warning.messageKey) }}</p>
+                    }
+                    @for (conflict of preview().conflicts; track conflict.code) {
+                      <p class="hint conflict-text">{{ i18n.t(conflict.reasonKey) }}</p>
+                    }
+                  </div>
                 }
-              </tbody>
-            </table>
+              </div>
+            </details>
           </div>
+        </details>
 
-          @if (selectedSensitiveReasons().length) {
-            <div class="warnings-box">
-              <strong>⚠️ {{ i18n.t('access.sensitiveTitle') }}</strong>
-              @for (reason of selectedSensitiveReasons(); track reason) {
-                <p class="hint">{{ i18n.t(reason) }}</p>
-              }
-            </div>
-          }
-
-          @if (preview().warnings.length || preview().conflicts.length) {
-            <div class="warnings-box">
-              <strong>⚠️ {{ i18n.t('access.sectionWarnings') }}</strong>
-              @for (warning of preview().warnings; track warning.code) {
-                <p class="hint">{{ i18n.t(warning.messageKey) }}</p>
-              }
-              @for (conflict of preview().conflicts; track conflict.code) {
-                <p class="hint conflict-text">{{ i18n.t(conflict.reasonKey) }}</p>
-              }
-            </div>
-          }
-        </div>
-
-        <!-- Section 6: Special Financial Permissions -->
-        <div class="form-section-head">
-          <span>🔒</span> {{ i18n.t('users.sectionSpecialPermissions') }}
-        </div>
-
-        <div class="field span-2">
-          <label class="selectable-card menu-card">
-            <input
-              type="checkbox"
-              formControlName="canViewSalary"
-            />
-            <span>💵 {{ i18n.t('users.canViewSalary') }}</span>
-          </label>
-        </div>
-
-        <div class="field span-2">
-          <label class="selectable-card menu-card">
-            <input type="checkbox" formControlName="dashboardCustomizationEnabled" />
-            <span>
-              <strong>📊 {{ i18n.t('users.dashboardCustomization') }}</strong>
-              <small>{{ i18n.t('users.dashboardCustomizationHint') }}</small>
-            </span>
-          </label>
-        </div>
-
-        <!-- Section 7: Account Status -->
-        <div class="form-section-head">
-          <span>🛡️</span> {{ i18n.t('users.sectionStatus') }}
-        </div>
-
-        <div class="field span-2">
-          <label class="selectable-card active-card">
-            <input type="checkbox" formControlName="active" />
-            <span>
-              <strong>{{ i18n.t('users.activeCheck') }}</strong>
-              <small>{{ i18n.t('users.activeCheckHint') }}</small>
-            </span>
-          </label>
-        </div>
-
-        <!-- Validation status -->
-        <div class="field span-2 validation-box">
-          @if (validationRunning()) {
-            <p class="hint">{{ i18n.t('access.validateRunning') }}</p>
-          } @else if (validationError()) {
-            <div class="alert error">{{ validationError() }}</div>
-          } @else if (validationResult()) {
-            @if (validationOk()) {
-              <p class="validation-ok">✅ {{ i18n.t('access.validateOk') }}</p>
-            } @else {
-              <p class="validation-failed">❌ {{ i18n.t('access.validateFailed') }}</p>
-              @if (validationResult()!.errors.length) {
-                <div class="warnings-box">
-                  @for (error of validationResult()!.errors; track error.code) {
-                    <p class="hint conflict-text">{{ validateErrorLabel(error.code) }}</p>
-                  }
-                </div>
-              }
-              @if (validationResult()!.conflicts.length) {
-                <div class="warnings-box">
-                  @for (conflict of validationResult()!.conflicts; track conflict.code) {
-                    <p class="hint conflict-text">{{ i18n.t(conflict.reasonKey) }}</p>
-                  }
-                </div>
-              }
-              @if (validationResult()!.warnings.length) {
-                <div class="warnings-box">
-                  @for (warning of validationResult()!.warnings; track warning.code) {
-                    <p class="hint">{{ i18n.t(warning.messageKey) }}</p>
-                  }
-                </div>
-              }
-              @if (validationNeedsAck()) {
-                <div class="ack-reason-box">
-                  <label for="ack-reason" class="ack-reason-label">
-                    {{ i18n.t('access.ackReasonLabel') }}
-                  </label>
-                  <input
-                    id="ack-reason"
-                    type="text"
-                    class="ltr"
-                    [value]="ackReason()"
-                    (input)="ackReason.set($any($event.target).value)"
-                    [placeholder]="i18n.t('access.ackReasonPlaceholder')"
-                  />
-                  @if (!validationAckSatisfied()) {
-                    <small class="hint warning-text">{{ i18n.t('access.ackReasonRequired') }}</small>
-                  }
-                </div>
+        @if (validationRunning() || validationError() || validationResult()) {
+          <div class="validation-box compact-validation-box">
+            @if (validationRunning()) {
+              <p class="hint">{{ i18n.t('access.validateRunning') }}</p>
+            } @else if (validationError()) {
+              <div class="alert error">{{ validationError() }}</div>
+            } @else if (validationResult()) {
+              @if (validationOk()) {
+                <p class="validation-ok">✅ {{ i18n.t('access.validateOk') }}</p>
+              } @else {
+                @if (validationResult()!.errors.length) {
+                  <div class="warnings-box">
+                    @for (error of validationResult()!.errors; track error.code) {
+                      <p class="hint conflict-text">{{ validateErrorLabel(error.code) }}</p>
+                    }
+                  </div>
+                }
+                @if (validationResult()!.conflicts.length) {
+                  <div class="warnings-box">
+                    @for (conflict of validationResult()!.conflicts; track conflict.code) {
+                      <p class="hint conflict-text">{{ i18n.t(conflict.reasonKey) }}</p>
+                    }
+                  </div>
+                }
+                @if (validationResult()!.warnings.length) {
+                  <div class="warnings-box">
+                    @for (warning of validationResult()!.warnings; track warning.code) {
+                      <p class="hint">{{ i18n.t(warning.messageKey) }}</p>
+                    }
+                  </div>
+                }
+                @if (validationNeedsAck()) {
+                  <div class="ack-reason-box">
+                    <label for="ack-reason" class="ack-reason-label">
+                      {{ i18n.t('access.ackReasonLabel') }}
+                    </label>
+                    <input
+                      id="ack-reason"
+                      type="text"
+                      [value]="ackReason()"
+                      (input)="ackReason.set($any($event.target).value)"
+                      [placeholder]="i18n.t('access.ackReasonPlaceholder')"
+                    />
+                    @if (!validationAckSatisfied()) {
+                      <small class="hint warning-text">{{ i18n.t('access.ackReasonRequired') }}</small>
+                    }
+                  </div>
+                }
               }
             }
-          }
-          <button
-            type="button"
-            class="button secondary validate-btn"
-            (click)="runValidation()"
-            [disabled]="validationRunning()"
-          >
-            {{ i18n.t('access.validateButton') }}
-          </button>
-        </div>
+          </div>
+        }
       </div>
     </form>
 

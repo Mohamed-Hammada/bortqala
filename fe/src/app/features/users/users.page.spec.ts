@@ -198,6 +198,34 @@ describe('UsersPage', () => {
     expect(page.allowedMenuCount(user)).toBe(page.menuOptions.length);
   });
 
+  it('derives menu access from selected roles for a new user until menus are customized', () => {
+    page.openNew();
+    page.form.controls.roles.setValue([]);
+    page.form.controls.allowedMenus.setValue([]);
+
+    page.toggleRole(
+      'WORKFORCE_MANAGER',
+      { target: { checked: true } } as unknown as Event,
+    );
+
+    expect(page.form.controls.roles.value).toEqual(['WORKFORCE_MANAGER']);
+    expect(page.form.controls.allowedMenus.value).toEqual(['workforce-workers']);
+  });
+
+  it('preserves manual menu overrides when roles change', () => {
+    page.openNew();
+    page.toggleMenu('reports', { target: { checked: true } } as unknown as Event);
+
+    page.toggleRole(
+      'WORKFORCE_MANAGER',
+      { target: { checked: true } } as unknown as Event,
+    );
+
+    expect(page.customMenuAccess()).toBe(true);
+    expect(page.form.controls.allowedMenus.value).toContain('reports');
+    expect(page.form.controls.allowedMenus.value).not.toContain('workforce-workers');
+  });
+
   it('carries the acknowledgment reason into the save payload', async () => {
     page.form.patchValue({
       username: 'worker',

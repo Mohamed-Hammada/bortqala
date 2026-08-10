@@ -95,6 +95,8 @@ export class UsersPage {
   readonly baselineMenus = signal<string[]>([]);
   readonly selectedRoles = signal<RoleCode[]>([]);
   readonly selectedMenus = signal<string[]>([]);
+  // New users follow role-derived menu access until an admin manually customizes menus.
+  readonly customMenuAccess = signal(false);
   readonly pagination = new TablePagination();
   readonly paged = computed(() => this.pagination.slice(this.store.items()));
   readonly roles: Array<{ code: RoleCode; labelKey: string; descriptionKey: string }> = [
@@ -319,6 +321,7 @@ export class UsersPage {
   }
 
   toggleModule(ids: string[]): void {
+    this.customMenuAccess.set(true);
     const current = new Set(this.form.controls.allowedMenus.value);
     if (this.isModuleAllSelected(ids)) {
       ids.forEach((id) => current.delete(id));
@@ -334,11 +337,13 @@ export class UsersPage {
   }
 
   selectAllMenus(): void {
+    this.customMenuAccess.set(true);
     const allIds = this.menuOptions.map((o) => o.id);
     this.form.controls.allowedMenus.setValue(allIds);
   }
 
   clearAllMenus(): void {
+    this.customMenuAccess.set(true);
     this.form.controls.allowedMenus.setValue([]);
   }
   readonly passwordPolicy = signal<Partial<AppSettings>>({ minPasswordLength: 8 });
@@ -384,6 +389,9 @@ export class UsersPage {
     this.accessLoading.set(true);
     await this.access.loadCatalog();
     this.accessLoading.set(false);
+    if (this.drawerOpen() && !this.editMode() && !this.customMenuAccess()) {
+      this.syncMenusToRoles();
+    }
   }
 
   roleUserCount(code: RoleCode): number {
@@ -394,6 +402,7 @@ export class UsersPage {
     this.submitted.set(false);
     this.showPassword.set(false);
     this.editingId.set(null);
+    this.customMenuAccess.set(false);
     this.baselineRoles.set([]);
     this.baselineMenus.set([]);
     this.needCodes.set([]);
@@ -409,6 +418,7 @@ export class UsersPage {
       version: null,
       categoryId: null,
     });
+    this.syncMenusToRoles();
     this.drawerOpen.set(true);
   }
 
@@ -416,6 +426,8 @@ export class UsersPage {
     this.submitted.set(false);
     this.showPassword.set(false);
     this.editingId.set(item.id);
+    // Never overwrite an existing user's explicit menu configuration while editing.
+    this.customMenuAccess.set(true);
     this.baselineRoles.set(item.roles);
     this.baselineMenus.set(item.allowedMenus ?? this.menuOptions.map((m) => m.id));
     this.needCodes.set([]);
@@ -444,9 +456,11 @@ export class UsersPage {
   toggleRole(code: RoleCode, event: Event) {
     const checked = (event.target as HTMLInputElement).checked;
     const current = this.form.controls.roles.value;
-    this.form.controls.roles.setValue(
-      checked ? [...current, code] : current.filter((item) => item !== code),
-    );
+    const next = checked ? [...current, code] : current.filter((item) => item !== code);
+    this.form.controls.roles.setValue(next);
+    if (!this.customMenuAccess()) {
+      this.syncMenusToRoles(next);
+    }
   }
 
   hasRole(code: RoleCode) {
@@ -454,6 +468,7 @@ export class UsersPage {
   }
 
   toggleMenu(id: string, event: Event) {
+    this.customMenuAccess.set(true);
     const checked = (event.target as HTMLInputElement).checked;
     const current = this.form.controls.allowedMenus.value;
     this.form.controls.allowedMenus.setValue(
@@ -463,6 +478,30 @@ export class UsersPage {
 
   hasMenu(id: string) {
     return this.form.controls.allowedMenus.value.includes(id);
+  }
+
+  /**
+   * Keep creation simple: menu access follows the selected role catalog until the
+   * admin deliberately changes a menu. The backend catalog remains authoritative.
+   */
+  private syncMenusToRoles(roles: RoleCode[] = this.form.controls.roles.value): void {
+    if (this.customMenuAccess()) return;
+    const catalog = this.access.catalog();
+    if (!catalog) return;
+
+    const pageCodes = new Set<string>();
+    for (const role of roles) {
+      for (const page of this.roleAccessiblePages(role)) {
+        pageCodes.add(page.code);
+      }
+    }
+
+    const knownMenus = new Set(this.menuOptions.map((item) => item.id));
+    const recommended = catalog.pages
+      .filter((page) => pageCodes.has(page.code) && knownMenus.has(page.menuId))
+      .map((page) => page.menuId);
+
+    this.form.controls.allowedMenus.setValue([...new Set(recommended)]);
   }
 
   toggleNeed(code: string): void {
