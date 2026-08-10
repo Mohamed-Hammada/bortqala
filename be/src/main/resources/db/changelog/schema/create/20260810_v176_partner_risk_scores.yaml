@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_partner_risk_scores
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: HALT
+        - tableExists: { tableName: apps }
+        - not: { tableExists: { tableName: partner_risk_rules } }
+      changes:
+        - createTable:
+            tableName: partner_risk_rules
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_partner_risk_rule_app, references: apps(id), unique: true } }
+              - column: { name: low_risk_min, type: int, defaultValueNumeric: 80, constraints: { nullable: false } }
+              - column: { name: medium_risk_min, type: int, defaultValueNumeric: 60, constraints: { nullable: false } }
+              - column: { name: high_risk_min, type: int, defaultValueNumeric: 40, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: updated_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - createTable:
+            tableName: partner_risk_score_snapshots
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_partner_risk_score_app, references: apps(id) } }
+              - column: { name: subject_type, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: subject_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: subject_name, type: varchar(160), constraints: { nullable: false } }
+              - column: { name: score, type: int, constraints: { nullable: false } }
+              - column: { name: risk_band, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: components_json, type: varchar(4000), constraints: { nullable: false } }
+              - column: { name: operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: calculated_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: calculated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: partner_risk_score_snapshots, columnNames: app_id,operation_id,subject_type,subject_id, constraintName: uk_partner_risk_score_operation }
+        - createIndex: { tableName: partner_risk_score_snapshots, indexName: ix_partner_risk_score_subject, columns: [ { column: { name: app_id } }, { column: { name: subject_type } }, { column: { name: subject_id } }, { column: { name: calculated_at } } ] }
+      rollback:
+        - dropTable: { tableName: partner_risk_score_snapshots }
+        - dropTable: { tableName: partner_risk_rules }

@@ -1,0 +1,85 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260809-v154-inventory-valuation
+      author: codex
+      changes:
+        - createTable:
+            tableName: inventory_valuation_policies
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_inv_val_policy_app, references: apps(id) } }
+              - column: { name: valuation_method, type: varchar(30), defaultValue: WEIGHTED_AVERAGE, constraints: { nullable: false } }
+              - column: { name: inventory_account_id, type: varchar(36) }
+              - column: { name: receipt_offset_account_id, type: varchar(36) }
+              - column: { name: cogs_account_id, type: varchar(36) }
+              - column: { name: adjustment_account_id, type: varchar(36) }
+              - column: { name: gl_posting_enabled, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: allow_backdated_posting, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: inventory_valuation_policies, columnNames: app_id, constraintName: uk_inv_val_policy_app }
+        - addForeignKeyConstraint: { baseTableName: inventory_valuation_policies, baseColumnNames: inventory_account_id, referencedTableName: accounts, referencedColumnNames: id, constraintName: fk_inv_val_inventory_account }
+        - addForeignKeyConstraint: { baseTableName: inventory_valuation_policies, baseColumnNames: receipt_offset_account_id, referencedTableName: accounts, referencedColumnNames: id, constraintName: fk_inv_val_receipt_account }
+        - addForeignKeyConstraint: { baseTableName: inventory_valuation_policies, baseColumnNames: cogs_account_id, referencedTableName: accounts, referencedColumnNames: id, constraintName: fk_inv_val_cogs_account }
+        - addForeignKeyConstraint: { baseTableName: inventory_valuation_policies, baseColumnNames: adjustment_account_id, referencedTableName: accounts, referencedColumnNames: id, constraintName: fk_inv_val_adjustment_account }
+
+        - createTable:
+            tableName: inventory_cost_layers
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_inv_cost_layer_app, references: apps(id) } }
+              - column: { name: item_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_inv_cost_layer_item, references: inventory_items(id) } }
+              - column: { name: source_movement_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: received_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: initial_quantity, type: "decimal(19,4)", constraints: { nullable: false } }
+              - column: { name: remaining_quantity, type: "decimal(19,4)", constraints: { nullable: false } }
+              - column: { name: unit_cost, type: "decimal(19,6)", constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - createIndex: { tableName: inventory_cost_layers, indexName: ix_inv_cost_layers_item_open, columns: [{ column: { name: item_id } }, { column: { name: received_at } }, { column: { name: remaining_quantity } }] }
+        - addForeignKeyConstraint: { baseTableName: inventory_cost_layers, baseColumnNames: source_movement_id, referencedTableName: stock_movements, referencedColumnNames: id, constraintName: fk_inv_cost_layer_movement, onDelete: CASCADE }
+
+        - createTable:
+            tableName: inventory_movement_costs
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_inv_movement_cost_app, references: apps(id) } }
+              - column: { name: movement_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: item_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_inv_movement_cost_item, references: inventory_items(id) } }
+              - column: { name: valuation_method, type: varchar(30), constraints: { nullable: false } }
+              - column: { name: quantity_effect, type: "decimal(19,4)", constraints: { nullable: false } }
+              - column: { name: unit_cost, type: "decimal(19,6)", constraints: { nullable: false } }
+              - column: { name: value_effect, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: journal_entry_id, type: varchar(36) }
+              - column: { name: explanation, type: varchar(2000), constraints: { nullable: false } }
+              - column: { name: occurred_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: inventory_movement_costs, columnNames: app_id,movement_id, constraintName: uk_inv_movement_cost_app_movement }
+        - addForeignKeyConstraint: { baseTableName: inventory_movement_costs, baseColumnNames: movement_id, referencedTableName: stock_movements, referencedColumnNames: id, constraintName: fk_inv_movement_cost_movement, onDelete: CASCADE }
+        - addForeignKeyConstraint: { baseTableName: inventory_movement_costs, baseColumnNames: journal_entry_id, referencedTableName: journal_entries, referencedColumnNames: id, constraintName: fk_inv_movement_cost_journal }
+        - createIndex: { tableName: inventory_movement_costs, indexName: ix_inv_movement_cost_item_date, columns: [{ column: { name: item_id } }, { column: { name: occurred_at } }] }
+
+        - createTable:
+            tableName: inventory_revaluations
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_inv_revaluation_app, references: apps(id) } }
+              - column: { name: item_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_inv_revaluation_item, references: inventory_items(id) } }
+              - column: { name: operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: quantity_on_hand, type: "decimal(19,4)", constraints: { nullable: false } }
+              - column: { name: old_value, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: new_value, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: value_difference, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: reason, type: varchar(1000), constraints: { nullable: false } }
+              - column: { name: journal_entry_id, type: varchar(36) }
+              - column: { name: occurred_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: created_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: inventory_revaluations, columnNames: app_id,operation_id, constraintName: uk_inv_revaluation_operation }
+        - addForeignKeyConstraint: { baseTableName: inventory_revaluations, baseColumnNames: journal_entry_id, referencedTableName: journal_entries, referencedColumnNames: id, constraintName: fk_inv_revaluation_journal }
+      rollback:
+        - dropTable: { tableName: inventory_revaluations }
+        - dropTable: { tableName: inventory_movement_costs }
+        - dropTable: { tableName: inventory_cost_layers }
+        - dropTable: { tableName: inventory_valuation_policies }

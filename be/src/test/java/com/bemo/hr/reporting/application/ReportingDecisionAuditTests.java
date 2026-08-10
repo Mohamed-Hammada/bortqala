@@ -73,7 +73,8 @@ class ReportingDecisionAuditTests {
                 confirmedHolidayRepository, attendanceCategoryRepository, scheduleRuleRepository, employeeRepository,
                 punchRecordRepository, reportExporter, "Africa/Cairo", auditService, tenantApplicationRepository,
                 attendanceReportDecisionRepository,
-                new IdempotencyService(org.mockito.Mockito.mock(IdempotencyKeyRepository.class)));
+                new IdempotencyService(org.mockito.Mockito.mock(IdempotencyKeyRepository.class)),
+                org.mockito.Mockito.mock(AttendanceExceptionService.class));
     }
 
     @Test

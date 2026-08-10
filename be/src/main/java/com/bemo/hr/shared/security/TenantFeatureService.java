@@ -5,7 +5,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -15,36 +14,11 @@ import java.util.stream.Collectors;
 public class TenantFeatureService {
 
     private final TenantFeatureRepository repository;
-    private static final Map<String, Boolean> DEFAULTS = new HashMap<>();
+    private final EntitlementCatalog catalog;
 
-    static {
-        // Full-ERP branch defaults. Explicit tenant rows in tenant_features still override these values.
-        DEFAULTS.put("employeeAttendance.enabled", true);
-        DEFAULTS.put("biometric.fileImport.enabled", true);
-        DEFAULTS.put("biometric.liveSync.enabled", false);
-
-        DEFAULTS.put("workforce.enabled", true);
-        DEFAULTS.put("workforce.attendance.enabled", true);
-        DEFAULTS.put("workforce.dashboard.enabled", true);
-        DEFAULTS.put("workforce.contractorAccounts.enabled", true);
-
-        DEFAULTS.put("payroll.enabled", true);
-        DEFAULTS.put("procurement.enabled", true);
-        DEFAULTS.put("purchasing.enabled", true);
-        DEFAULTS.put("inventory.advanced.enabled", true);
-        DEFAULTS.put("sales.enabled", true);
-        DEFAULTS.put("manufacturing.enabled", true);
-        DEFAULTS.put("quality.enabled", true);
-        DEFAULTS.put("finance.enabled", true);
-
-        DEFAULTS.put("exports.enabled", true);
-        DEFAULTS.put("notifications.enabled", false);
-        DEFAULTS.put("navigation.favorites.enabled", true);
-        DEFAULTS.put("navigation.recents.enabled", true);
-    }
-
-    public TenantFeatureService(TenantFeatureRepository repository) {
+    public TenantFeatureService(TenantFeatureRepository repository,EntitlementCatalog catalog) {
         this.repository = repository;
+        this.catalog = catalog;
     }
 
     public boolean isEnabled(String appId, String featureKey) {
@@ -54,13 +28,17 @@ public class TenantFeatureService {
         if (currentUserIsSuperAdmin()) {
             return true;
         }
+        return isEnabledForTenant(appId, featureKey);
+    }
+
+    public boolean isEnabledForTenant(String appId, String featureKey) {
         return repository.findById(new TenantFeatureId(appId, featureKey))
                 .map(TenantFeature::isEnabled)
-                .orElseGet(() -> DEFAULTS.getOrDefault(featureKey, false));
+                .orElseGet(() -> catalog.defaultEnabled(featureKey));
     }
 
     public Set<String> getAllEnabled(String appId) {
-        Map<String, Boolean> effective = new HashMap<>(DEFAULTS);
+        Map<String, Boolean> effective = new java.util.HashMap<>(catalog.defaults());
         repository.findByAppId(appId).forEach(feature -> effective.put(feature.getFeatureKey(), feature.isEnabled()));
 
         if (currentUserIsSuperAdmin()) {

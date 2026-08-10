@@ -1,0 +1,123 @@
+id;key;locale;text
+v157-ar-001;parties.accountName;ar-EG;اسم صاحب الحساب
+v157-en-001;parties.accountName;en-US;Account name
+v157-ar-002;parties.activateSupplier;ar-EG;تفعيل المورد
+v157-en-002;parties.activateSupplier;en-US;Activate supplier
+v157-ar-003;parties.addBank;ar-EG;إضافة حساب بنكي
+v157-en-003;parties.addBank;en-US;Add bank account
+v157-ar-004;parties.addDocument;ar-EG;إضافة مستند
+v157-en-004;parties.addDocument;en-US;Add document
+v157-ar-005;parties.approveSupplier;ar-EG;اعتماد المورد
+v157-en-005;parties.approveSupplier;en-US;Approve supplier
+v157-ar-006;parties.bankName;ar-EG;اسم البنك
+v157-en-006;parties.bankName;en-US;Bank name
+v157-ar-007;parties.bankVerification;ar-EG;التحقق من الحسابات البنكية
+v157-en-007;parties.bankVerification;en-US;Bank verification
+v157-ar-008;parties.blacklistReasonPrompt;ar-EG;اكتب سبب إدراج المورد في القائمة السوداء
+v157-en-008;parties.blacklistReasonPrompt;en-US;Enter the reason for blacklisting this supplier
+v157-ar-009;parties.blacklistSupplier;ar-EG;إدراج في القائمة السوداء
+v157-en-009;parties.blacklistSupplier;en-US;Blacklist supplier
+v157-ar-010;parties.complianceChecklist;ar-EG;قائمة التحقق من الامتثال
+v157-en-010;parties.complianceChecklist;en-US;Compliance checklist
+v157-ar-011;parties.documentCommercialRegister;ar-EG;السجل التجاري
+v157-en-011;parties.documentCommercialRegister;en-US;Commercial register
+v157-ar-012;parties.documentNumber;ar-EG;رقم المستند
+v157-en-012;parties.documentNumber;en-US;Document number
+v157-ar-013;parties.documentTaxCard;ar-EG;البطاقة الضريبية
+v157-en-013;parties.documentTaxCard;en-US;Tax card
+v157-ar-014;parties.documents;ar-EG;المستندات
+v157-en-014;parties.documents;en-US;Documents
+v157-ar-015;parties.duplicateBankWarning;ar-EG;هذا الحساب البنكي مسجل للمورد {name}
+v157-en-015;parties.duplicateBankWarning;en-US;This bank account is already registered to {name}
+v157-ar-016;parties.duplicateTaxWarning;ar-EG;الرقم الضريبي مسجل بالفعل للمورد {name}
+v157-en-016;parties.duplicateTaxWarning;en-US;This tax ID is already registered to {name}
+v157-ar-017;parties.expiredDocuments;ar-EG;مستندات منتهية
+v157-en-017;parties.expiredDocuments;en-US;Expired documents
+v157-ar-018;parties.fileName;ar-EG;اسم الملف
+v157-en-018;parties.fileName;en-US;File name
+v157-ar-019;parties.mandatory;ar-EG;إلزامي
+v157-en-019;parties.mandatory;en-US;Mandatory
+v157-ar-020;parties.ownerUser;ar-EG;مسؤول المورد
+v157-en-020;parties.ownerUser;en-US;Supplier owner
+v157-ar-021;parties.riskHigh;ar-EG;مرتفع
+v157-en-021;parties.riskHigh;en-US;High
+v157-ar-022;parties.riskLevel;ar-EG;مستوى المخاطر
+v157-en-022;parties.riskLevel;en-US;Risk level
+v157-ar-023;parties.riskLow;ar-EG;منخفض
+v157-en-023;parties.riskLow;en-US;Low
+v157-ar-024;parties.riskMedium;ar-EG;متوسط
+v157-en-024;parties.riskMedium;en-US;Medium
+v157-ar-025;parties.submitReview;ar-EG;إرسال للمراجعة
+v157-en-025;parties.submitReview;en-US;Submit for review
+v157-ar-026;parties.supplier360Title;ar-EG;ملف المورد الشامل
+v157-en-026;parties.supplier360Title;en-US;Supplier 360
+v157-ar-027;parties.supplierCategory;ar-EG;تصنيف المورد
+v157-en-027;parties.supplierCategory;en-US;Supplier category
+v157-ar-028;parties.suspendSupplier;ar-EG;تعليق المورد
+v157-en-028;parties.suspendSupplier;en-US;Suspend supplier
+v157-ar-029;parties.verified;ar-EG;تم التحقق
+v157-en-029;parties.verified;en-US;Verified
+v157-ar-030;parties.verifiedBanks;ar-EG;حسابات بنكية متحققة
+v157-en-030;parties.verifiedBanks;en-US;Verified bank accounts
+v157-ar-031;parties.verify;ar-EG;تحقق
+v157-en-031;parties.verify;en-US;Verify
+v157-ar-032;parties.compliance.taxId;ar-EG;الرقم الضريبي مسجل
+v157-en-032;parties.compliance.taxId;en-US;Tax ID recorded
+v157-ar-033;parties.compliance.documents;ar-EG;المستندات الإلزامية سارية ومتحقق منها
+v157-en-033;parties.compliance.documents;en-US;Mandatory documents are current and verified
+v157-ar-034;parties.compliance.bank;ar-EG;الحساب البنكي الأساسي متحقق منه
+v157-en-034;parties.compliance.bank;en-US;Primary bank account is verified
+v157-ar-035;parties.status.REQUESTED;ar-EG;مطلوب
+v157-en-035;parties.status.REQUESTED;en-US;Requested
+v157-ar-036;parties.status.UNDER_REVIEW;ar-EG;قيد المراجعة
+v157-en-036;parties.status.UNDER_REVIEW;en-US;Under review
+v157-ar-037;parties.status.APPROVED;ar-EG;معتمد
+v157-en-037;parties.status.APPROVED;en-US;Approved
+v157-ar-038;parties.status.ACTIVE;ar-EG;نشط
+v157-en-038;parties.status.ACTIVE;en-US;Active
+v157-ar-039;parties.status.SUSPENDED;ar-EG;معلق
+v157-en-039;parties.status.SUSPENDED;en-US;Suspended
+v157-ar-040;parties.status.BLACKLISTED;ar-EG;قائمة سوداء
+v157-en-040;parties.status.BLACKLISTED;en-US;Blacklisted
+v157-ar-041;parties.status.CLOSED;ar-EG;مغلق
+v157-en-041;parties.status.CLOSED;en-US;Closed
+v157-ar-042;SUPPLIER_DUPLICATE_TAX_ID;ar-EG;يوجد مورد آخر بنفس الرقم الضريبي.
+v157-en-042;SUPPLIER_DUPLICATE_TAX_ID;en-US;Another supplier already uses this tax ID.
+v157-ar-043;SUPPLIER_DOCUMENT_DATE_INVALID;ar-EG;تاريخ انتهاء المستند لا يمكن أن يسبق تاريخ الإصدار.
+v157-en-043;SUPPLIER_DOCUMENT_DATE_INVALID;en-US;Document expiry cannot precede the issue date.
+v157-ar-044;SUPPLIER_DOCUMENT_NOT_FOUND;ar-EG;مستند المورد غير موجود.
+v157-en-044;SUPPLIER_DOCUMENT_NOT_FOUND;en-US;Supplier document was not found.
+v157-ar-045;SUPPLIER_DOCUMENT_EXPIRED;ar-EG;لا يمكن التحقق من مستند منتهي.
+v157-en-045;SUPPLIER_DOCUMENT_EXPIRED;en-US;Expired supplier documents cannot be verified.
+v157-ar-046;SUPPLIER_BANK_INVALID;ar-EG;رقم الحساب البنكي أو IBAN غير صحيح.
+v157-en-046;SUPPLIER_BANK_INVALID;en-US;The bank account or IBAN is invalid.
+v157-ar-047;SUPPLIER_DUPLICATE_BANK_ACCOUNT;ar-EG;هذا الحساب البنكي مسجل بالفعل.
+v157-en-047;SUPPLIER_DUPLICATE_BANK_ACCOUNT;en-US;This bank account is already registered.
+v157-ar-048;SUPPLIER_BANK_NOT_FOUND;ar-EG;حساب المورد البنكي غير موجود.
+v157-en-048;SUPPLIER_BANK_NOT_FOUND;en-US;Supplier bank account was not found.
+v157-ar-049;SUPPLIER_APPROVAL_PENDING;ar-EG;مسار اعتماد المورد لم يكتمل بعد.
+v157-en-049;SUPPLIER_APPROVAL_PENDING;en-US;The supplier approval workflow is not complete.
+v157-ar-050;SUPPLIER_BANK_VERIFICATION_REQUIRED;ar-EG;يلزم حساب بنكي أساسي متحقق منه.
+v157-en-050;SUPPLIER_BANK_VERIFICATION_REQUIRED;en-US;A verified primary bank account is required.
+v157-ar-051;SUPPLIER_BLACKLIST_REASON_REQUIRED;ar-EG;سبب الإدراج في القائمة السوداء مطلوب.
+v157-en-051;SUPPLIER_BLACKLIST_REASON_REQUIRED;en-US;A blacklist reason is required.
+v157-ar-052;SUPPLIER_MANDATORY_DOCUMENT_REQUIRED;ar-EG;يلزم مستند امتثال إلزامي واحد على الأقل.
+v157-en-052;SUPPLIER_MANDATORY_DOCUMENT_REQUIRED;en-US;At least one mandatory compliance document is required.
+v157-ar-053;SUPPLIER_MANDATORY_DOCUMENT_EXPIRED;ar-EG;يوجد مستند إلزامي منتهي.
+v157-en-053;SUPPLIER_MANDATORY_DOCUMENT_EXPIRED;en-US;A mandatory supplier document is expired.
+v157-ar-054;SUPPLIER_MANDATORY_DOCUMENT_UNVERIFIED;ar-EG;يجب التحقق من جميع المستندات الإلزامية.
+v157-en-054;SUPPLIER_MANDATORY_DOCUMENT_UNVERIFIED;en-US;All mandatory supplier documents must be verified.
+v157-ar-055;SUPPLIER_REQUIRED;ar-EG;الجهة المحددة ليست مورداً.
+v157-en-055;SUPPLIER_REQUIRED;en-US;The selected business party is not a supplier.
+v157-ar-056;SUPPLIER_STATUS_TRANSITION_INVALID;ar-EG;انتقال حالة المورد غير مسموح.
+v157-en-056;SUPPLIER_STATUS_TRANSITION_INVALID;en-US;The supplier status transition is not allowed.
+v157-ar-057;PROC_SUPPLIER_BANK_VERIFICATION_REQUIRED;ar-EG;يجب تفعيل المورد والتحقق من حسابه البنكي قبل الدفع.
+v157-en-057;PROC_SUPPLIER_BANK_VERIFICATION_REQUIRED;en-US;Supplier must be active with a verified bank account before payment.
+v157-ar-058;SUPPLIER_DOCUMENT_FILE_REQUIRED;ar-EG;ملف مستند المورد مطلوب.
+v157-en-058;SUPPLIER_DOCUMENT_FILE_REQUIRED;en-US;Supplier document file is required.
+v157-ar-059;SUPPLIER_DOCUMENT_FILE_TOO_LARGE;ar-EG;يجب ألا يتجاوز مستند المورد 5 ميجابايت.
+v157-en-059;SUPPLIER_DOCUMENT_FILE_TOO_LARGE;en-US;Supplier document cannot exceed 5 MB.
+v157-ar-060;SUPPLIER_DOCUMENT_FILE_TYPE_INVALID;ar-EG;نوع ملف مستند المورد غير مدعوم.
+v157-en-060;SUPPLIER_DOCUMENT_FILE_TYPE_INVALID;en-US;Unsupported supplier document type.
+v157-ar-061;SUPPLIER_DOCUMENT_FILE_READ_FAILED;ar-EG;تعذر قراءة ملف مستند المورد.
+v157-en-061;SUPPLIER_DOCUMENT_FILE_READ_FAILED;en-US;Supplier document could not be read.

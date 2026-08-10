@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -57,6 +58,11 @@ public final class DailyAttendanceCalculator {
                 : null;
         return result(reportId, employee, category, date, first, last, sorted.size(), expected, worked,
                 late, earlyLeave, overtime, status, warning, ruleVersion);
+    }
+
+    public static LocalDate workDateForPunch(ZonedDateTime punch, LocalTime previousStart, LocalTime previousEnd) {
+        boolean overnight = previousStart != null && previousEnd != null && !previousEnd.isAfter(previousStart);
+        return overnight && !punch.toLocalTime().isAfter(previousEnd) ? punch.toLocalDate().minusDays(1) : punch.toLocalDate();
     }
 
     private static boolean isWorkday(AttendanceCategory category, LocalDate date) {

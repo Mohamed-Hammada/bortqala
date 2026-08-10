@@ -33,6 +33,7 @@ class BusinessPartyService {
                 request.relationshipStartDate(), request.relationshipEndDate(),
                 request.currencyCode(), request.invoicePolicy(), request.paymentTerms(),
                 request.taxId(), request.bankAccount()));
+        party.updateSupplierProfile(request.supplierCategory(), request.riskLevel(), request.ownerUserId());
 
         auditService.record("CREATE", "BUSINESS_PARTY", party.getId(), getCurrentUser(),
                 "{\"code\":\"" + party.getCode() + "\",\"name\":\"" + party.getName() + "\"}", null);
@@ -55,6 +56,7 @@ class BusinessPartyService {
                 request.relationshipStartDate(), request.relationshipEndDate(),
                 request.currencyCode(), request.invoicePolicy(), request.paymentTerms(),
                 request.taxId(), request.bankAccount());
+        party.updateSupplierProfile(request.supplierCategory(), request.riskLevel(), request.ownerUserId());
 
         auditService.record("UPDATE", "BUSINESS_PARTY", party.getId(), getCurrentUser(),
                 "{\"code\":\"" + party.getCode() + "\",\"name\":\"" + party.getName() + "\"}", null);
@@ -91,6 +93,31 @@ class BusinessPartyService {
         return businessPartyRepository.findById(id).orElseThrow(() -> new NotFoundException("Business party not found.", "PTY_NOT_FOUND"));
     }
 
+    @Transactional
+    BusinessPartyApi.Response createSupplierRequest(SupplierOnboardingApi.SupplierRequest request) {
+        validateUniqueCode(request.code(), null);
+        if (!request.taxId().matches("^[A-Za-z0-9\\-]{6,50}$")) {
+            throw new BusinessRuleException("Invalid tax ID format.", "PTY_INVALID_TAX_ID", HttpStatus.CONFLICT);
+        }
+        if (!businessPartyRepository.findByTaxIdIgnoreCase(request.taxId()).isEmpty()) {
+            throw new BusinessRuleException("A supplier with this tax ID already exists.", "SUPPLIER_DUPLICATE_TAX_ID", HttpStatus.CONFLICT);
+        }
+        BusinessParty party = new BusinessParty(request.code(), request.name(), request.nameEn(), "SUPPLIER",
+                request.contactPerson(), request.phone(), request.email(), request.address(), request.notes(), false,
+                "DIRECT", null, null, null, request.currencyCode(), "E_INVOICE", request.paymentTerms(),
+                request.taxId(), null);
+        party.updateSupplierProfile(request.supplierCategory(), request.riskLevel(), request.ownerUserId());
+        party.beginSupplierRequest();
+        businessPartyRepository.save(party);
+        auditService.record("CREATE_REQUEST", "SUPPLIER_ONBOARDING", party.getId(), getCurrentUser(),
+                "{\"code\":\"" + party.getCode() + "\",\"taxId\":\"" + party.getTaxId() + "\"}", null);
+        return response(party);
+    }
+
+    BusinessParty requireParty(String id) { return require(id); }
+    BusinessPartyApi.Response toResponse(BusinessParty party) { return response(party); }
+    String currentUser() { return getCurrentUser(); }
+
     private void validateUniqueCode(String code, String currentId) {
         boolean duplicate = currentId == null ? businessPartyRepository.existsByCodeIgnoreCase(code)
                 : businessPartyRepository.existsByCodeIgnoreCaseAndIdNot(code, currentId);
@@ -126,6 +153,9 @@ class BusinessPartyService {
                 party.getRelationshipStartDate(), party.getRelationshipEndDate(),
                 party.getCurrencyCode(), party.getInvoicePolicy(), party.getPaymentTerms(),
                 party.getTaxId(), party.getBankAccount(),
+                party.getOnboardingStatus(), party.getSupplierCategory(), party.getRiskLevel(),
+                party.getOwnerUserId(), party.getApprovalInstanceId(), party.isBankVerified(),
+                party.getBankVerifiedAt() == null ? null : party.getBankVerifiedAt().toEpochMilli(), party.getBankVerifiedBy(),
                 party.isActive(), party.getVersion(), party.getCreatedAt(), party.getUpdatedAt());
     }
 }

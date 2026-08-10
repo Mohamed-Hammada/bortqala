@@ -9,14 +9,19 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebMvcConfig implements WebMvcConfigurer {
 
     private final TenantFeatureService tenantFeatureService;
+    private final com.bemo.hr.shared.security.EntitlementCatalog entitlementCatalog;
+    private final com.bemo.hr.product.trial.TrialDemoService trialDemoService;
 
-    public WebMvcConfig(TenantFeatureService tenantFeatureService) {
+    public WebMvcConfig(TenantFeatureService tenantFeatureService,com.bemo.hr.shared.security.EntitlementCatalog entitlementCatalog,com.bemo.hr.product.trial.TrialDemoService trialDemoService) {
         this.tenantFeatureService = tenantFeatureService;
+        this.entitlementCatalog = entitlementCatalog;
+        this.trialDemoService = trialDemoService;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new TenantFeatureInterceptor(tenantFeatureService))
+        registry.addInterceptor(new TenantFeatureInterceptor(tenantFeatureService,entitlementCatalog))
                 .addPathPatterns("/api/v1/**");
+        registry.addInterceptor(new TrialWriteInterceptor(trialDemoService)).addPathPatterns("/api/v1/**");
     }
 }

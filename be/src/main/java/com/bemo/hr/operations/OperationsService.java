@@ -35,9 +35,10 @@ public class OperationsService {
     private final UnitConversionRepository unitConversionRepository;
     private final OperationsExcelExporter operationsExcelExporter;
     private final com.bemo.hr.audit.application.AuditService auditService;
+    private final InventoryValuationService inventoryValuationService;
 
     public byte[] export(com.bemo.hr.reporting.application.ExcelExportOptions options) {
-        return operationsExcelExporter.export(snapshot(), options);
+        return operationsExcelExporter.export(snapshot(), inventoryValuationService.report(), options);
     }
 
     public long countStockMovements() {
@@ -205,6 +206,7 @@ public class OperationsService {
                 request.itemId(), null, "ADJUSTMENT", request.quantityDelta(),
                 null, request.referenceCode(), null, request.occurredAt(), actor));
         sm.assignDocument("ADJUSTMENT", request.reason());
+        inventoryValuationService.valueMovement(sm, null, actor);
         auditService.record("STOCK_ADJUSTMENT", "STOCK_ITEM", request.itemId(), actor,
                 "Stock adjustment qty: " + request.quantityDelta() + " reason: " + request.reason(), null);
         return snapshot();
@@ -262,6 +264,7 @@ public class OperationsService {
             sm.assignReferences(request.purchaseOrderNo(), request.receiptNo(), request.deliveryNoteNo(), request.invoiceNo(),
                     request.voucherNo(), request.externalRef(), request.warehouse(), request.attachmentName(),
                     request.attachmentContentType(), request.attachmentSize());
+            inventoryValuationService.valueMovement(sm, request.unitCost(), actor);
             auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", request.itemId(), actor, "Recorded stock movement " + op + " qty: " + qty, null);
         }
         if (request.amountDelta().signum() != 0) {
@@ -277,7 +280,7 @@ public class OperationsService {
 
     @Transactional
     public void recordGoodsReceipt(String itemId, String supplierId, BigDecimal acceptedQuantity,
-                                   String grnNumber, String note, Instant occurredAt, String actor) {
+                                   BigDecimal unitCost, String grnNumber, String note, Instant occurredAt, String actor) {
         requireItem(itemId);
         if (acceptedQuantity == null || acceptedQuantity.signum() <= 0) {
             throw new BusinessRuleException("Accepted goods-receipt quantity must be positive.", "OPS_GRN_ACCEPTED_POSITIVE", HttpStatus.CONFLICT);
@@ -285,6 +288,7 @@ public class OperationsService {
         var movement = stockMovementRepository.save(new StockMovement(itemId, normalizeId(supplierId),
                 "PURCHASE_RECEIPT", acceptedQuantity, null, grnNumber, note, occurredAt, actor));
         movement.assignDocument("GOODS_RECEIPT", "Accepted quantity posted from supplier receipt");
+        inventoryValuationService.valueMovement(movement, unitCost, actor);
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Goods receipt " + grnNumber + " accepted qty: " + acceptedQuantity, null);
     }

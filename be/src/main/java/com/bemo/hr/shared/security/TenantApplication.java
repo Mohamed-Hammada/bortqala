@@ -74,6 +74,21 @@ public class TenantApplication {
     @Column(name = "password_history_count", nullable = false)
     private int passwordHistoryCount;
 
+    @Column(name = "commercial_state", nullable = false, length = 20)
+    private String commercialState = "PAID";
+
+    @Column(name = "trial_started_at") private Instant trialStartedAt;
+    @Column(name = "trial_ends_at") private Instant trialEndsAt;
+    @Column(name = "converted_at") private Instant convertedAt;
+    @Column(name = "last_trial_operation_id", length = 80) private String lastTrialOperationId;
+    @Column(name = "last_conversion_operation_id", length = 80) private String lastConversionOperationId;
+    @Column(name = "demo_tenant", nullable = false) private boolean demoTenant;
+    @Column(name = "demo_template_code", length = 80) private String demoTemplateCode;
+    @Column(name = "demo_template_version") private Integer demoTemplateVersion;
+    @Column(name = "last_demo_reset_operation_id", length = 80) private String lastDemoResetOperationId;
+    @Column(name = "last_demo_reset_at") private Instant lastDemoResetAt;
+    @Column(name = "last_demo_reset_by", length = 100) private String lastDemoResetBy;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -142,6 +157,22 @@ public class TenantApplication {
         this.passwordHistoryCount = Math.max(passwordHistoryCount, 0);
     }
 
+    public void startTrial(Instant startedAt, Instant endsAt, boolean demo, String templateCode, Integer templateVersion, String operationId) {
+        if (!endsAt.isAfter(startedAt)) throw new IllegalArgumentException("Trial end must follow its start");
+        commercialState = "TRIAL"; trialStartedAt = startedAt; trialEndsAt = endsAt; convertedAt = null;
+        lastTrialOperationId = operationId;
+        demoTenant = demo; demoTemplateCode = demo ? templateCode : null; demoTemplateVersion = demo ? templateVersion : null;
+    }
+
+    public void convertTrial(Instant at, String operationId) { commercialState = "PAID"; convertedAt = at; lastConversionOperationId = operationId; }
+
+    public void recordDemoReset(String operationId, String actor, Instant at, String templateCode, int templateVersion) {
+        lastDemoResetOperationId = operationId; lastDemoResetBy = actor; lastDemoResetAt = at;
+        demoTemplateCode = templateCode; demoTemplateVersion = templateVersion;
+    }
+
+    public boolean isTrialExpired(Instant at) { return "TRIAL".equals(commercialState) && trialEndsAt != null && !at.isBefore(trialEndsAt); }
+
     @PrePersist
     void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
 
@@ -169,4 +200,16 @@ public class TenantApplication {
     public int getPasswordExpiryDays() { return passwordExpiryDays; }
     public int getPasswordHistoryCount() { return passwordHistoryCount; }
     public Instant getUpdatedAt() { return updatedAt; }
+    public String getCommercialState() { return commercialState; }
+    public Instant getTrialStartedAt() { return trialStartedAt; }
+    public Instant getTrialEndsAt() { return trialEndsAt; }
+    public Instant getConvertedAt() { return convertedAt; }
+    public String getLastTrialOperationId() { return lastTrialOperationId; }
+    public String getLastConversionOperationId() { return lastConversionOperationId; }
+    public boolean isDemoTenant() { return demoTenant; }
+    public String getDemoTemplateCode() { return demoTemplateCode; }
+    public Integer getDemoTemplateVersion() { return demoTemplateVersion; }
+    public String getLastDemoResetOperationId() { return lastDemoResetOperationId; }
+    public Instant getLastDemoResetAt() { return lastDemoResetAt; }
+    public String getLastDemoResetBy() { return lastDemoResetBy; }
 }

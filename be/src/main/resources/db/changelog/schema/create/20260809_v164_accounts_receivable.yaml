@@ -1,0 +1,121 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_ar_customer_credit_profiles
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not: { tableExists: { tableName: ar_customer_credit_profiles } }
+      changes:
+        - createTable:
+            tableName: ar_customer_credit_profiles
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_ar_credit_app, references: apps(id) } }
+              - column: { name: customer_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_ar_credit_customer, references: business_parties(id) } }
+              - column: { name: credit_limit, type: "decimal(19,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: payment_terms_days, type: int, defaultValueNumeric: 30, constraints: { nullable: false } }
+              - column: { name: credit_hold, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: ar_customer_credit_profiles, columnNames: app_id,customer_id, constraintName: uk_ar_credit_customer }
+      rollback:
+        - dropTable: { tableName: ar_customer_credit_profiles }
+  - changeSet:
+      id: create_customer_invoices
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not: { tableExists: { tableName: customer_invoices } }
+      changes:
+        - createTable:
+            tableName: customer_invoices
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_customer_invoice_app, references: apps(id) } }
+              - column: { name: invoice_number, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: customer_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_customer_invoice_party, references: business_parties(id) } }
+              - column: { name: sales_order_id, type: varchar(36), constraints: { foreignKeyName: fk_customer_invoice_order, references: sales_orders(id) } }
+              - column: { name: invoice_date, type: date, constraints: { nullable: false } }
+              - column: { name: due_date, type: date, constraints: { nullable: false } }
+              - column: { name: currency_code, type: varchar(10), constraints: { nullable: false } }
+              - column: { name: amount, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: outstanding_amount, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: issued_by, type: varchar(100) }
+              - column: { name: issued_at, type: timestamp with time zone }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: customer_invoices, columnNames: app_id,invoice_number, constraintName: uk_customer_invoice_number }
+        - createIndex: { tableName: customer_invoices, indexName: ix_customer_invoice_aging, columns: [{ column: { name: customer_id } }, { column: { name: status } }, { column: { name: due_date } }] }
+      rollback:
+        - dropTable: { tableName: customer_invoices }
+  - changeSet:
+      id: create_customer_receipts
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not: { tableExists: { tableName: customer_receipts } }
+      changes:
+        - createTable:
+            tableName: customer_receipts
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_customer_receipt_app, references: apps(id) } }
+              - column: { name: receipt_number, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: customer_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_customer_receipt_party, references: business_parties(id) } }
+              - column: { name: receipt_date, type: date, constraints: { nullable: false } }
+              - column: { name: currency_code, type: varchar(10), constraints: { nullable: false } }
+              - column: { name: amount, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: unallocated_amount, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: created_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: customer_receipts, columnNames: app_id,receipt_number, constraintName: uk_customer_receipt_number }
+        - addUniqueConstraint: { tableName: customer_receipts, columnNames: app_id,operation_id, constraintName: uk_customer_receipt_operation }
+      rollback:
+        - dropTable: { tableName: customer_receipts }
+  - changeSet:
+      id: create_customer_receipt_allocations
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not: { tableExists: { tableName: customer_receipt_allocations } }
+      changes:
+        - createTable:
+            tableName: customer_receipt_allocations
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_receipt_allocation_app, references: apps(id) } }
+              - column: { name: receipt_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_receipt_allocation_receipt, references: customer_receipts(id) } }
+              - column: { name: invoice_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_receipt_allocation_invoice, references: customer_invoices(id) } }
+              - column: { name: amount, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: customer_receipt_allocations, columnNames: app_id,receipt_id,invoice_id, constraintName: uk_receipt_allocation_invoice }
+      rollback:
+        - dropTable: { tableName: customer_receipt_allocations }
+  - changeSet:
+      id: create_ar_collection_tasks
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not: { tableExists: { tableName: ar_collection_tasks } }
+      changes:
+        - createTable:
+            tableName: ar_collection_tasks
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_collection_task_app, references: apps(id) } }
+              - column: { name: invoice_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_collection_task_invoice, references: customer_invoices(id) } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: owner_user_id, type: varchar(100) }
+              - column: { name: next_action_date, type: date }
+              - column: { name: note, type: varchar(500) }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: ar_collection_tasks, columnNames: app_id,invoice_id, constraintName: uk_collection_task_invoice }
+        - createIndex: { tableName: ar_collection_tasks, indexName: ix_collection_task_status_date, columns: [{ column: { name: status } }, { column: { name: next_action_date } }] }
+      rollback:
+        - dropTable: { tableName: ar_collection_tasks }

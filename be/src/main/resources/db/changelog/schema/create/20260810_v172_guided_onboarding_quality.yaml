@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_onboarding_assessments
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: HALT
+        - tableExists: { tableName: tenant_industry_packs }
+        - not: { tableExists: { tableName: onboarding_assessments } }
+      changes:
+        - createTable:
+            tableName: onboarding_assessments
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_onboarding_assessment_app, references: apps(id) } }
+              - column: { name: tenant_pack_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_onboarding_assessment_pack, references: tenant_industry_packs(id) } }
+              - column: { name: operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: setup_progress, type: int, constraints: { nullable: false } }
+              - column: { name: data_quality_score, type: int, constraints: { nullable: false } }
+              - column: { name: readiness, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: issues_json, type: varchar(4000), constraints: { nullable: false } }
+              - column: { name: assessed_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: assessed_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: onboarding_assessments, columnNames: app_id,tenant_pack_id,operation_id, constraintName: uk_onboarding_assessment_operation }
+        - createIndex: { tableName: onboarding_assessments, indexName: ix_onboarding_assessment_pack, columns: [ { column: { name: app_id } }, { column: { name: tenant_pack_id } }, { column: { name: assessed_at } } ] }
+      rollback:
+        - dropTable: { tableName: onboarding_assessments }

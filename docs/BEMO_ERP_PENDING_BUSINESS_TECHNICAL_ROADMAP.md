@@ -96,11 +96,13 @@ This roadmap consolidates every pending item from prior project status documents
 - [ ] Asset register reports + ledger linkage.
 
 ### B-5. Inventory — stock movements & valuation (Phase 1, business pending)
-**Status:** OPEN  
+**Status:** IN PROGRESS — P0.1 valuation/Inventory GL DONE 2026-08-09; reorder and cycle-count depth remains
 - [ ] Item master with categories, UoM, stockable flag.
-- [ ] Stock in/out/adjustment transactions; FIFO/weighted-average valuation.
+- [x] Stock in/out/adjustment transactions; FIFO/weighted-average valuation.
 - [ ] Stock levels, reorder alerts, cycle counts.
-- [ ] Inventory GL posting (inventory + COGS).
+- [x] Inventory GL posting (inventory + COGS).
+
+**P0.1 evidence:** Liquibase V154 adds tenant valuation policy, optimistic FIFO cost layers, immutable movement-cost evidence, and idempotent revaluations; V155 adds bilingual UI/error copy. `InventoryValuationService` locks the item, applies FIFO or weighted average, blocks unapproved backdating and closed periods, posts balanced inventory/receipt-offset/COGS/variance journals, audits commands, and exposes settings/report/drill-down/revaluation APIs. Procurement GRNs pass the PO line unit price. The Angular operations workspace provides method/account settings, valuation report, movement drill-down, revaluation, and workbook export. Verification: backend **312/65/0**, frontend **223/35/0**, error codes **267/267**, i18n **1875**.
 
 ### B-6. Manufacturing / Work orders (Phase 1, business pending)
 **Status:** OPEN  
@@ -127,10 +129,12 @@ This roadmap consolidates every pending item from prior project status documents
 - [ ] Cheque books / transfers / direct debits.
 
 ### C-3. Advanced receivables & collections
-**Status:** OPEN  
-- [ ] Customer aging buckets + collections task list.
-- [ ] Credit limits and dunning cycles.
-- [ ] Allocation of receipts to invoices/advances; write-off workflow.
+**Status:** IN PROGRESS — AR foundation DONE 2026-08-09; advanced dunning/write-off remains  
+- [x] Customer aging buckets + collections task list.
+- [ ] Credit limits and dunning cycles. *(credit limits/holds done; configurable dunning cycles remain)*
+- [ ] Allocation of receipts to invoices/advances; write-off workflow. *(locked partial/full/advance allocation done; controlled write-off remains)*
+
+**AR foundation evidence:** V164/V165, credit checks on sales-order confirmation/invoice issue, customer invoice/receipt partner-ledger evidence, retry-safe partial/full/advance allocations, aging and overdue tasks, Angular AR workbench. Verification: backend **343/69/0**, frontend **241/39/0**, error parity **300/300**, i18n **2067**.
 
 ### C-4. Project accounting
 **Status:** OPEN  

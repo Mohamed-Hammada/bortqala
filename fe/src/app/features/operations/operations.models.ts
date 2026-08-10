@@ -79,6 +79,7 @@ export interface TransactionPayload {
   attachmentContentType: string | null;
   attachmentSize: number | null;
   occurredAt: number;
+  unitCost: number | null;
 }
 export interface PartyBalance {
   partyId: string;
@@ -142,4 +143,57 @@ export interface UnitConversion {
   toUomName: string;
   factor: number;
   createdAt: number;
+}
+
+export type ValuationMethod = 'FIFO' | 'WEIGHTED_AVERAGE';
+export interface ValuationPolicy {
+  id: string | null;
+  valuationMethod: ValuationMethod;
+  inventoryAccountId: string | null;
+  receiptOffsetAccountId: string | null;
+  cogsAccountId: string | null;
+  adjustmentAccountId: string | null;
+  glPostingEnabled: boolean;
+  allowBackdatedPosting: boolean;
+  version: number;
+  createdAt: number | null;
+  updatedAt: number | null;
+}
+export interface MovementCost {
+  id: string;
+  movementId: string;
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  valuationMethod: ValuationMethod;
+  quantityEffect: number;
+  unitCost: number;
+  valueEffect: number;
+  journalEntryId: string | null;
+  explanation: string;
+  occurredAt: number;
+  createdAt: number;
+}
+export interface ItemValuation {
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  quantityOnHand: number;
+  valuedQuantity: number;
+  inventoryValue: number;
+  averageUnitCost: number;
+  openingQuantityGap: number;
+}
+export interface ValuationReport {
+  policy: ValuationPolicy;
+  totalInventoryValue: number;
+  items: ItemValuation[];
+  movementCosts: MovementCost[];
+}
+export interface AccountOption {
+  id: string;
+  code: string;
+  name: string;
+  isHeader: boolean;
+  active: boolean;
 }

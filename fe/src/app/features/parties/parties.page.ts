@@ -29,6 +29,9 @@ export class PartiesPage {
   readonly drawerOpen = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly submitted = signal(false);
+  readonly duplicateWarning = signal<string | null>(null);
+  readonly supplierModalOpen = signal(false);
+  readonly documentFile = signal<File | null>(null);
   readonly search = signal('');
   readonly pagination = new TablePagination();
   readonly knownTypes = [
@@ -66,6 +69,9 @@ export class PartiesPage {
     paymentTerms: new FormControl('CASH', { nonNullable: true }),
     taxId: new FormControl('', { nonNullable: true }),
     bankAccount: new FormControl('', { nonNullable: true }),
+    supplierCategory: new FormControl('', { nonNullable: true }),
+    riskLevel: new FormControl('LOW', { nonNullable: true }),
+    ownerUserId: new FormControl('', { nonNullable: true }),
     contactPerson: new FormControl('', { nonNullable: true }),
     phone: new FormControl('', {
       nonNullable: true,
@@ -79,6 +85,20 @@ export class PartiesPage {
     notes: new FormControl('', { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
     version: new FormControl<number | null>(null),
+  });
+  readonly documentForm = new FormGroup({
+    documentType: new FormControl('TAX_CARD', { nonNullable: true, validators: [Validators.required] }),
+    documentNumber: new FormControl('', { nonNullable: true }),
+    issueDate: new FormControl('', { nonNullable: true }),
+    expiryDate: new FormControl('', { nonNullable: true }),
+    mandatory: new FormControl(true, { nonNullable: true }),
+  });
+  readonly bankForm = new FormGroup({
+    accountName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    iban: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    bankName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    currencyCode: new FormControl('EGP', { nonNullable: true, validators: [Validators.required] }),
+    primary: new FormControl(true, { nonNullable: true }),
   });
 
   readonly phoneError = computed(() => {
@@ -104,6 +124,7 @@ export class PartiesPage {
   openNew(): void {
     this.editingId.set(null);
     this.submitted.set(false);
+    this.duplicateWarning.set(null);
     this.form.reset({
       code: '',
       name: '',
@@ -124,6 +145,9 @@ export class PartiesPage {
       paymentTerms: 'CASH',
       taxId: '',
       bankAccount: '',
+      supplierCategory: '',
+      riskLevel: 'LOW',
+      ownerUserId: '',
       version: null,
     });
     this.drawerOpen.set(true);
@@ -152,6 +176,9 @@ export class PartiesPage {
       paymentTerms: item.paymentTerms,
       taxId: item.taxId ?? '',
       bankAccount: item.bankAccount ?? '',
+      supplierCategory: item.supplierCategory ?? '',
+      riskLevel: item.riskLevel ?? 'LOW',
+      ownerUserId: item.ownerUserId ?? '',
       version: item.version,
     });
     this.drawerOpen.set(true);
@@ -164,6 +191,18 @@ export class PartiesPage {
       return;
     }
     const value = this.form.getRawValue();
+    if (!this.editingId() && value.partyType === 'SUPPLIER' && !value.taxId.trim()) {
+      this.form.controls.taxId.setErrors({ required: true });
+      this.form.controls.taxId.markAsTouched();
+      return;
+    }
+    if (!this.editingId() && value.partyType === 'SUPPLIER' && value.taxId.trim()) {
+      const duplicates = await this.store.checkDuplicates(value.taxId.trim(), null, null);
+      if (duplicates.duplicateFound) {
+        this.duplicateWarning.set(this.i18n.t('parties.duplicateTaxWarning', { name: duplicates.taxIdMatches[0]?.name ?? '' }));
+        return;
+      }
+    }
     const payload: BusinessPartyPayload = {
       ...value,
       contactPerson: value.contactPerson.trim() || null,
@@ -177,8 +216,72 @@ export class PartiesPage {
       relationshipEndDate: value.relationshipEndDate.trim() || null,
       taxId: value.taxId.trim() || null,
       bankAccount: value.bankAccount.trim() || null,
+      supplierCategory: value.supplierCategory.trim() || null,
+      riskLevel: value.riskLevel.trim() || null,
+      ownerUserId: value.ownerUserId.trim() || null,
     };
     if (await this.store.save(this.editingId(), payload)) this.closeDrawer();
+  }
+
+  async openSupplier360(item: BusinessParty): Promise<void> {
+    if (item.partyType !== 'SUPPLIER') { this.openEdit(item); return; }
+    if (await this.store.loadSupplier360(item.id)) this.supplierModalOpen.set(true);
+  }
+
+  closeSupplier360(): void { this.supplierModalOpen.set(false); this.store.supplier360.set(null); }
+
+  async addDocument(): Promise<void> {
+    const supplier = this.store.supplier360()?.supplier;
+    const file = this.documentFile();
+    if (!supplier || this.documentForm.invalid || !file) { this.documentForm.markAllAsTouched(); return; }
+    const v = this.documentForm.getRawValue();
+    if (await this.store.addDocument(supplier.id, {
+      ...v, documentNumber: v.documentNumber.trim() || null,
+      issueDate: v.issueDate || null, expiryDate: v.expiryDate || null,
+    }, file)) {
+      this.documentForm.reset({ documentType: 'TAX_CARD', documentNumber: '', issueDate: '', expiryDate: '', mandatory: true });
+      this.documentFile.set(null);
+    }
+  }
+
+  onDocumentFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.documentFile.set(input.files?.item(0) ?? null);
+  }
+
+  async addBankAccount(): Promise<void> {
+    const supplier = this.store.supplier360()?.supplier;
+    if (!supplier || this.bankForm.invalid) { this.bankForm.markAllAsTouched(); return; }
+    const duplicate = await this.store.checkDuplicates(null, this.bankForm.controls.iban.value, supplier.id);
+    if (duplicate.duplicateFound) {
+      this.store.error.set(this.i18n.t('parties.duplicateBankWarning', { name: duplicate.bankMatches[0]?.name ?? '' }));
+      return;
+    }
+    if (await this.store.addBankAccount(supplier.id, this.bankForm.getRawValue())) {
+      this.bankForm.reset({ accountName: '', iban: '', bankName: '', currencyCode: 'EGP', primary: true });
+    }
+  }
+
+  async supplierTransition(action: 'submit' | 'approve' | 'activate' | 'suspend' | 'blacklist'): Promise<void> {
+    const supplier = this.store.supplier360()?.supplier;
+    if (!supplier) return;
+    let reason = '';
+    if (action === 'blacklist') {
+      reason = window.prompt(this.i18n.t('parties.blacklistReasonPrompt'))?.trim() ?? '';
+      if (!reason) return;
+    }
+    await this.store.transition(supplier.id, action, reason);
+  }
+
+  statusLabel(status: string): string { return this.i18n.t(`parties.status.${status}`); }
+
+  complianceLabel(code: string): string {
+    switch (code) {
+      case 'TAX_ID': return this.i18n.t('parties.compliance.taxId');
+      case 'MANDATORY_DOCUMENTS': return this.i18n.t('parties.compliance.documents');
+      case 'BANK_VERIFICATION': return this.i18n.t('parties.compliance.bank');
+      default: return code;
+    }
   }
 
   closeDrawer(): void {

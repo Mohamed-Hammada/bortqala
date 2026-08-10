@@ -63,4 +63,25 @@ describe('ApprovalService', () => {
     expect(tasksReq.request.method).toBe('GET');
     tasksReq.flush([]);
   });
+
+  it('loads and creates dated delegations', () => {
+    service.loadDelegations().subscribe();
+    httpMock.expectOne('/api/v1/approvals/delegations').flush([]);
+    const payload = { delegatorUserId: 'owner', delegateUserId: 'backup', startsAt: 10, endsAt: 20, reason: 'leave' };
+    service.createDelegation(payload).subscribe();
+    const request = httpMock.expectOne('/api/v1/approvals/delegations');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(payload);
+    request.flush({ id: 'd-1', ...payload, active: true, createdBy: 'owner', createdAt: 1, version: 0 });
+    expect(service.delegations()[0].delegateUserId).toBe('backup');
+  });
+
+  it('deactivates a delegation in local state', () => {
+    service.delegations.set([{ id: 'd-1', delegatorUserId: 'owner', delegateUserId: 'backup', startsAt: 10, endsAt: 20, reason: 'leave', active: true, createdBy: 'owner', createdAt: 1, version: 0 }]);
+    service.deactivateDelegation('d-1').subscribe();
+    const request = httpMock.expectOne('/api/v1/approvals/delegations/d-1');
+    expect(request.request.method).toBe('DELETE');
+    request.flush(null);
+    expect(service.delegations()[0].active).toBe(false);
+  });
 });

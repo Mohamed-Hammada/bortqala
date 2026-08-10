@@ -1,0 +1,65 @@
+id;key;locale;text
+v171-001;trialDemo.tab;en-US;Trial and demo
+v171-002;trialDemo.tab;ar-EG;التجربة والعرض
+v171-003;trialDemo.title;en-US;Trial and demo control
+v171-004;trialDemo.title;ar-EG;التحكم في التجربة والعرض
+v171-005;trialDemo.description;en-US;Manage the commercial trial lifecycle and versioned sample data safely
+v171-006;trialDemo.description;ar-EG;إدارة دورة التجربة التجارية وبيانات العينة ذات الإصدار بأمان
+v171-007;trialDemo.state;en-US;Commercial state
+v171-008;trialDemo.state;ar-EG;الحالة التجارية
+v171-009;trialDemo.startedAt;en-US;Trial started
+v171-010;trialDemo.startedAt;ar-EG;بداية التجربة
+v171-011;trialDemo.endsAt;en-US;Trial ends
+v171-012;trialDemo.endsAt;ar-EG;نهاية التجربة
+v171-013;trialDemo.access;en-US;Write access
+v171-014;trialDemo.access;ar-EG;صلاحية الكتابة
+v171-015;trialDemo.writeEnabled;en-US;Enabled
+v171-016;trialDemo.writeEnabled;ar-EG;مفعلة
+v171-017;trialDemo.readOnly;en-US;Commercial read-only
+v171-018;trialDemo.readOnly;ar-EG;قراءة فقط تجاريًا
+v171-019;trialDemo.startTitle;en-US;Start or restart trial
+v171-020;trialDemo.startTitle;ar-EG;بدء التجربة أو إعادة بدئها
+v171-021;trialDemo.days;en-US;Trial days
+v171-022;trialDemo.days;ar-EG;أيام التجربة
+v171-023;trialDemo.demoTenant;en-US;Demo tenant with sample data
+v171-024;trialDemo.demoTenant;ar-EG;مستأجر عرض مع بيانات عينة
+v171-025;trialDemo.template;en-US;Versioned template
+v171-026;trialDemo.template;ar-EG;القالب ذو الإصدار
+v171-027;trialDemo.start;en-US;Start trial
+v171-028;trialDemo.start;ar-EG;بدء التجربة
+v171-029;trialDemo.convert;en-US;Convert to paid
+v171-030;trialDemo.convert;ar-EG;التحويل إلى مدفوع
+v171-031;trialDemo.resetTitle;en-US;Safe demo reset
+v171-032;trialDemo.resetTitle;ar-EG;إعادة ضبط العرض بأمان
+v171-033;trialDemo.resetSafety;en-US;Reset replaces only template-owned sample rows and never deletes ERP business records
+v171-034;trialDemo.resetSafety;ar-EG;تستبدل إعادة الضبط صفوف العينة المملوكة للقالب فقط ولا تحذف سجلات أعمال النظام
+v171-035;trialDemo.samples;en-US;Samples
+v171-036;trialDemo.samples;ar-EG;العينات
+v171-037;trialDemo.reset;en-US;Reset demo samples
+v171-038;trialDemo.reset;ar-EG;إعادة ضبط عينات العرض
+v171-039;trialDemo.started;en-US;Trial started successfully
+v171-040;trialDemo.started;ar-EG;بدأت التجربة بنجاح
+v171-041;trialDemo.converted;en-US;Tenant converted without changing its identity or business records
+v171-042;trialDemo.converted;ar-EG;تم تحويل المستأجر دون تغيير هويته أو سجلات أعماله
+v171-043;trialDemo.resetDone;en-US;Demo samples reset successfully
+v171-044;trialDemo.resetDone;ar-EG;تمت إعادة ضبط عينات العرض بنجاح
+v171-045;trialDemo.state.paid;en-US;Paid
+v171-046;trialDemo.state.paid;ar-EG;مدفوع
+v171-047;trialDemo.state.trial;en-US;Active trial
+v171-048;trialDemo.state.trial;ar-EG;تجربة نشطة
+v171-049;trialDemo.state.expired;en-US;Expired trial
+v171-050;trialDemo.state.expired;ar-EG;تجربة منتهية
+v171-051;trialDemo.template.contractorWorkforce;en-US;Egypt contractor workforce demo
+v171-052;trialDemo.template.contractorWorkforce;ar-EG;عرض عمالة المقاولين في مصر
+v171-053;TRIAL_EXPIRED_READ_ONLY;en-US;The trial has expired. Business data is available read-only until conversion.
+v171-054;TRIAL_EXPIRED_READ_ONLY;ar-EG;انتهت التجربة. بيانات الأعمال متاحة للقراءة فقط حتى التحويل.
+v171-055;DEMO_RESET_NOT_ALLOWED;en-US;Demo reset is allowed only for tenants explicitly marked as demo.
+v171-056;DEMO_RESET_NOT_ALLOWED;ar-EG;إعادة ضبط العرض مسموحة فقط للمستأجر المحدد كعرض تجريبي.
+v171-057;DEMO_TEMPLATE_INVALID;en-US;The demo template is invalid and cannot be applied.
+v171-058;DEMO_TEMPLATE_INVALID;ar-EG;قالب العرض غير صالح ولا يمكن تطبيقه.
+v171-059;DEMO_TEMPLATE_REQUIRED;en-US;Choose a demo template.
+v171-060;DEMO_TEMPLATE_REQUIRED;ar-EG;اختر قالب عرض تجريبي.
+v171-061;DEMO_TEMPLATE_NOT_FOUND;en-US;The requested demo template version was not found.
+v171-062;DEMO_TEMPLATE_NOT_FOUND;ar-EG;لم يتم العثور على إصدار قالب العرض المطلوب.
+v171-063;TENANT_NOT_FOUND;en-US;The current tenant was not found.
+v171-064;TENANT_NOT_FOUND;ar-EG;لم يتم العثور على المستأجر الحالي.

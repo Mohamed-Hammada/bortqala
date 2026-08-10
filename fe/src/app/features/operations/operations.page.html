@@ -56,7 +56,60 @@
       <span>{{ i18n.t('operations.advances') }}</span
       ><strong>{{ store.snapshot().employeeAdvances.length }}</strong>
     </article>
+    <article class="metric-card valuation-total">
+      <span>{{ i18n.t('operations.valuation.totalValue') }}</span>
+      <strong>{{ money(store.valuation()?.totalInventoryValue ?? 0) }}</strong>
+    </article>
   </div>
+
+  <div class="section-head valuation-head">
+    <div>
+      <h2>{{ i18n.t('operations.valuation.title') }}</h2>
+      <p>{{ i18n.t('operations.valuation.description') }}</p>
+    </div>
+    <div class="toolbar">
+      <span class="status neutral">{{ valuationMethodLabel() }}</span>
+      <button class="button secondary" type="button" (click)="open('valuation')">{{ i18n.t('operations.valuation.settings') }}</button>
+      <button class="button secondary" type="button" (click)="open('revaluation')">{{ i18n.t('operations.valuation.revalue') }}</button>
+    </div>
+  </div>
+  <div class="table-card">
+    <table>
+      <thead><tr>
+        <th>{{ i18n.t('common.code') }}</th>
+        <th>{{ i18n.t('common.name') }}</th>
+        <th>{{ i18n.t('operations.valuation.onHand') }}</th>
+        <th>{{ i18n.t('operations.valuation.averageCost') }}</th>
+        <th>{{ i18n.t('operations.valuation.inventoryValue') }}</th>
+        <th>{{ i18n.t('operations.valuation.openingGap') }}</th>
+      </tr></thead>
+      <tbody>
+        @for (row of store.valuation()?.items ?? []; track row.itemId) {
+          <tr>
+            <td class="ltr">{{ row.itemCode }}</td><td>{{ row.itemName }}</td>
+            <td>{{ row.quantityOnHand }}</td><td>{{ money(row.averageUnitCost) }}</td>
+            <td><strong>{{ money(row.inventoryValue) }}</strong></td>
+            <td [class.warning-text]="row.openingQuantityGap !== 0">{{ row.openingQuantityGap }}</td>
+          </tr>
+        } @empty {
+          <tr><td colspan="6"><div class="empty-state">{{ i18n.t('operations.valuation.empty') }}</div></td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <details class="card valuation-details">
+    <summary>{{ i18n.t('operations.valuation.movementCosts') }}</summary>
+    <div class="table-card">
+      <table>
+        <thead><tr><th>{{ i18n.t('operations.date') }}</th><th>{{ i18n.t('common.code') }}</th><th>{{ i18n.t('operations.quantity') }}</th><th>{{ i18n.t('operations.valuation.unitCost') }}</th><th>{{ i18n.t('operations.valuation.valueEffect') }}</th><th>{{ i18n.t('operations.valuation.journal') }}</th><th>{{ i18n.t('operations.valuation.explanation') }}</th></tr></thead>
+        <tbody>
+          @for (cost of (store.valuation()?.movementCosts ?? []).slice(0, 20); track cost.id) {
+            <tr><td>{{ date(cost.occurredAt) }}</td><td class="ltr">{{ cost.itemCode }}</td><td>{{ cost.quantityEffect }}</td><td>{{ money(cost.unitCost) }}</td><td>{{ money(cost.valueEffect) }}</td><td class="ltr">{{ cost.journalEntryId ?? '—' }}</td><td>{{ cost.explanation }}</td></tr>
+          } @empty { <tr><td colspan="7"><div class="empty-state">{{ i18n.t('operations.valuation.empty') }}</div></td></tr> }
+        </tbody>
+      </table>
+    </div>
+  </details>
 
   <div class="section-head">
     <div>
@@ -493,6 +546,11 @@
           <input type="number" formControlName="amountDelta" min="0" step="any" />
         </div>
         <div class="field">
+          <label>{{ i18n.t('operations.valuation.unitCost') }}</label>
+          <input type="number" formControlName="unitCost" min="0" step="0.000001" />
+          <small>{{ i18n.t('operations.valuation.unitCostHint') }}</small>
+        </div>
+        <div class="field">
           <label>{{ i18n.t('operations.loss') || 'نسبة الفقد' }}</label>
           <input type="number" formControlName="lossPercentage" min="0" max="100" />
         </div>
@@ -574,6 +632,43 @@
         <button class="button primary" type="submit">{{ i18n.t('common.save') || 'حفظ' }}</button>
         <button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') || 'إلغاء' }}</button>
       </div>
+    </form>
+  </app-modal-dialog>
+}
+
+@if (drawer() === 'valuation') {
+  <app-modal-dialog [isOpen]="true" title="{{ i18n.t('operations.valuation.settings') }}" (close)="close()">
+    <form [formGroup]="valuationForm" (ngSubmit)="saveValuationPolicy()">
+      <div class="form-grid">
+        <div class="field span-2">
+          <label>{{ i18n.t('operations.valuation.method') }}</label>
+          <select formControlName="valuationMethod">
+            <option value="WEIGHTED_AVERAGE">{{ i18n.t('operations.valuation.weightedAverage') }}</option>
+            <option value="FIFO">{{ i18n.t('operations.valuation.fifo') }}</option>
+          </select>
+        </div>
+        <label class="selectable-card span-2"><input type="checkbox" formControlName="glPostingEnabled" /><span>{{ i18n.t('operations.valuation.glPosting') }}</span></label>
+        <div class="field"><label>{{ i18n.t('operations.valuation.inventoryAccount') }}</label><select formControlName="inventoryAccountId"><option value="">—</option>@for (account of store.accounts(); track account.id) { <option [value]="account.id">{{ account.code }} · {{ account.name }}</option> }</select></div>
+        <div class="field"><label>{{ i18n.t('operations.valuation.receiptOffsetAccount') }}</label><select formControlName="receiptOffsetAccountId"><option value="">—</option>@for (account of store.accounts(); track account.id) { <option [value]="account.id">{{ account.code }} · {{ account.name }}</option> }</select></div>
+        <div class="field"><label>{{ i18n.t('operations.valuation.cogsAccount') }}</label><select formControlName="cogsAccountId"><option value="">—</option>@for (account of store.accounts(); track account.id) { <option [value]="account.id">{{ account.code }} · {{ account.name }}</option> }</select></div>
+        <div class="field"><label>{{ i18n.t('operations.valuation.adjustmentAccount') }}</label><select formControlName="adjustmentAccountId"><option value="">—</option>@for (account of store.accounts(); track account.id) { <option [value]="account.id">{{ account.code }} · {{ account.name }}</option> }</select></div>
+        <label class="selectable-card span-2"><input type="checkbox" formControlName="allowBackdatedPosting" /><span>{{ i18n.t('operations.valuation.allowBackdated') }}</span></label>
+      </div>
+      <div modal-actions class="modal-actions-bar"><button class="button primary" type="submit">{{ i18n.t('common.save') }}</button><button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') }}</button></div>
+    </form>
+  </app-modal-dialog>
+}
+
+@if (drawer() === 'revaluation') {
+  <app-modal-dialog [isOpen]="true" title="{{ i18n.t('operations.valuation.revalue') }}" (close)="close()">
+    <form [formGroup]="revaluationForm" (ngSubmit)="saveRevaluation()">
+      <div class="form-grid">
+        <div class="field"><label>{{ i18n.t('operations.item') }}</label><select formControlName="itemId"><option value="">—</option>@for (item of store.snapshot().items; track item.id) { <option [value]="item.id">{{ item.code }} · {{ item.name }}</option> }</select></div>
+        <div class="field"><label>{{ i18n.t('operations.valuation.newUnitCost') }}</label><input type="number" min="0.000001" step="0.000001" formControlName="newUnitCost" /></div>
+        <div class="field span-2"><label>{{ i18n.t('operations.reason') }}</label><textarea formControlName="reason"></textarea></div>
+        <div class="field"><label>{{ i18n.t('operations.date') }}</label><input type="datetime-local" formControlName="occurredAt" /></div>
+      </div>
+      <div modal-actions class="modal-actions-bar"><button class="button primary" type="submit">{{ i18n.t('operations.valuation.revalue') }}</button><button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') }}</button></div>
     </form>
   </app-modal-dialog>
 }

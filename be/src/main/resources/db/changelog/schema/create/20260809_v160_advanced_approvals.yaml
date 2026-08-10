@@ -1,0 +1,134 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260809-v160-advanced-approvals
+      author: codex
+      changes:
+        - addColumn:
+            tableName: approval_workflow_steps
+            columns:
+              - column: { name: decision_policy, type: varchar(20), defaultValue: ANY_N, constraints: { nullable: false } }
+        - addColumn:
+            tableName: approval_instances
+            columns:
+              - column: { name: workflow_definition_version, type: int, defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: document_snapshot_json, type: varchar(4000), defaultValue: '{}', constraints: { nullable: false } }
+              - column: { name: step_due_at, type: timestamp with time zone }
+              - column: { name: escalated_at, type: timestamp with time zone }
+              - column: { name: escalation_level, type: int, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: approval_instance_steps
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_approval_instance_step_app, references: apps(id) } }
+              - column: { name: instance_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_approval_instance_step_instance, references: approval_instances(id) } }
+              - column: { name: source_step_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: step_order, type: int, constraints: { nullable: false } }
+              - column: { name: step_code, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: name, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: required_role, type: varchar(50) }
+              - column: { name: required_user_id, type: varchar(100) }
+              - column: { name: minimum_approvals, type: int, defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: allow_self_approval, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: escalation_hours, type: int }
+              - column: { name: decision_policy, type: varchar(20), defaultValue: ANY_N, constraints: { nullable: false } }
+              - column: { name: reassigned_by, type: varchar(100) }
+              - column: { name: reassigned_at, type: timestamp with time zone }
+              - column: { name: reassignment_reason, type: varchar(500) }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: approval_instance_steps, columnNames: app_id,instance_id,step_order, constraintName: uk_approval_instance_step_order }
+        - createIndex: { tableName: approval_instance_steps, indexName: ix_approval_instance_steps_instance, columns: [{ column: { name: instance_id } }] }
+        - createTable:
+            tableName: approval_delegations
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_approval_delegation_app, references: apps(id) } }
+              - column: { name: delegator_user_id, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: delegate_user_id, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: document_type, type: varchar(50) }
+              - column: { name: starts_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: ends_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: reason, type: varchar(500), constraints: { nullable: false } }
+              - column: { name: active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createIndex: { tableName: approval_delegations, indexName: ix_approval_delegation_delegate_dates, columns: [{ column: { name: delegate_user_id } }, { column: { name: starts_at } }, { column: { name: ends_at } }, { column: { name: active } }] }
+        - createIndex: { tableName: approval_instances, indexName: ix_approval_instances_sla, columns: [{ column: { name: status } }, { column: { name: step_due_at } }] }
+        - addUniqueConstraint: { tableName: approval_instances, columnNames: app_id,document_type,document_id, constraintName: uk_approval_instance_document }
+      rollback:
+        - dropTable: { tableName: approval_delegations }
+        - dropTable: { tableName: approval_instance_steps }
+        - dropUniqueConstraint: { tableName: approval_instances, constraintName: uk_approval_instance_document }
+        - dropColumn: { tableName: approval_instances, columnName: escalation_level }
+        - dropColumn: { tableName: approval_instances, columnName: escalated_at }
+        - dropColumn: { tableName: approval_instances, columnName: step_due_at }
+        - dropColumn: { tableName: approval_instances, columnName: document_snapshot_json }
+        - dropColumn: { tableName: approval_instances, columnName: workflow_definition_version }
+        - dropColumn: { tableName: approval_workflow_steps, columnName: decision_policy }
+  - changeSet:
+      id: 20260809-v160-backfill-approval-snapshots-postgres
+      author: codex
+      dbms: postgresql
+      changes:
+        - sql:
+            sql: |
+              UPDATE approval_instances i
+                 SET workflow_definition_version = (SELECT d.version FROM approval_workflow_definitions d
+                                                    WHERE d.id = i.workflow_definition_id AND d.app_id = i.app_id);
+              UPDATE approval_instances i
+                 SET step_due_at = CURRENT_TIMESTAMP + ((SELECT s.escalation_hours FROM approval_workflow_steps s
+                                  WHERE s.workflow_definition_id = i.workflow_definition_id
+                                    AND s.app_id = i.app_id AND s.step_order = i.current_step_order) || ' hours')::interval
+               WHERE status IN ('SUBMITTED', 'UNDER_REVIEW')
+                 AND EXISTS (SELECT 1 FROM approval_workflow_steps s WHERE s.workflow_definition_id = i.workflow_definition_id
+                             AND s.app_id = i.app_id AND s.step_order = i.current_step_order AND s.escalation_hours > 0);
+              INSERT INTO approval_instance_steps
+                (id, app_id, instance_id, source_step_id, step_order, step_code, name, required_role,
+                 required_user_id, minimum_approvals, allow_self_approval, escalation_hours,
+                 decision_policy, version, created_at)
+              SELECT gen_random_uuid()::text, i.app_id, i.id, s.id, s.step_order, s.step_code, s.name,
+                     s.required_role, s.required_user_id, s.minimum_approvals, s.allow_self_approval,
+                     s.escalation_hours, s.decision_policy, 0, CURRENT_TIMESTAMP
+              FROM approval_instances i
+              JOIN approval_workflow_steps s ON s.app_id = i.app_id AND s.workflow_definition_id = i.workflow_definition_id;
+              UPDATE approval_decisions d
+                 SET step_id = (SELECT snap.id FROM approval_instance_steps snap
+                                 WHERE snap.instance_id = d.instance_id AND snap.source_step_id = d.step_id)
+               WHERE EXISTS (SELECT 1 FROM approval_instance_steps snap
+                             WHERE snap.instance_id = d.instance_id AND snap.source_step_id = d.step_id);
+      rollback:
+        - sql: { sql: "DELETE FROM approval_instance_steps" }
+  - changeSet:
+      id: 20260809-v160-backfill-approval-snapshots-h2
+      author: codex
+      dbms: h2
+      changes:
+        - sql:
+            sql: |
+              UPDATE approval_instances i
+                 SET workflow_definition_version = (SELECT d.version FROM approval_workflow_definitions d
+                                                    WHERE d.id = i.workflow_definition_id AND d.app_id = i.app_id);
+              UPDATE approval_instances i
+                 SET step_due_at = DATEADD('HOUR', (SELECT s.escalation_hours FROM approval_workflow_steps s
+                                  WHERE s.workflow_definition_id = i.workflow_definition_id
+                                    AND s.app_id = i.app_id AND s.step_order = i.current_step_order), CURRENT_TIMESTAMP)
+               WHERE status IN ('SUBMITTED', 'UNDER_REVIEW')
+                 AND EXISTS (SELECT 1 FROM approval_workflow_steps s WHERE s.workflow_definition_id = i.workflow_definition_id
+                             AND s.app_id = i.app_id AND s.step_order = i.current_step_order AND s.escalation_hours > 0);
+              INSERT INTO approval_instance_steps
+                (id, app_id, instance_id, source_step_id, step_order, step_code, name, required_role,
+                 required_user_id, minimum_approvals, allow_self_approval, escalation_hours,
+                 decision_policy, version, created_at)
+              SELECT CAST(RANDOM_UUID() AS VARCHAR), i.app_id, i.id, s.id, s.step_order, s.step_code, s.name,
+                     s.required_role, s.required_user_id, s.minimum_approvals, s.allow_self_approval,
+                     s.escalation_hours, s.decision_policy, 0, CURRENT_TIMESTAMP
+              FROM approval_instances i
+              JOIN approval_workflow_steps s ON s.app_id = i.app_id AND s.workflow_definition_id = i.workflow_definition_id;
+              UPDATE approval_decisions d
+                 SET step_id = (SELECT snap.id FROM approval_instance_steps snap
+                                 WHERE snap.instance_id = d.instance_id AND snap.source_step_id = d.step_id)
+               WHERE EXISTS (SELECT 1 FROM approval_instance_steps snap
+                             WHERE snap.instance_id = d.instance_id AND snap.source_step_id = d.step_id);
+      rollback:
+        - sql: { sql: "DELETE FROM approval_instance_steps" }

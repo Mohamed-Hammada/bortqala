@@ -14,6 +14,9 @@ import {
   BulkDecisionResponse,
   DayAnomaly,
   DayAnomalyDecision,
+  AttendanceExceptionView,
+  AttendanceExceptionResolution,
+  AttendanceExceptionBulkPreview,
 } from './reports.models';
 import { ReportsStore } from './reports.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
@@ -85,6 +88,19 @@ export class ReportReviewPage {
   readonly dayAnomalies = computed(() => this.store.details()?.dayAnomalies ?? []);
   readonly openDayAnomalies = computed(() => this.dayAnomalies().filter(item => item.status === 'OPEN'));
   readonly dayAnomalyHistory = computed(() => this.dayAnomalies().filter(item => item.status !== 'OPEN'));
+  readonly exceptionFilter = signal<'ALL' | 'OPEN' | 'CRITICAL'>('OPEN');
+  readonly selectedExceptionIds = signal<string[]>([]);
+  readonly exceptionResolution = signal<AttendanceExceptionResolution>('ACCEPT');
+  readonly exceptionReason = signal('');
+  readonly exceptionPreview = signal<AttendanceExceptionBulkPreview | null>(null);
+  readonly resolvingExceptions = signal(false);
+  readonly attendanceExceptions = computed(() => {
+    const items = this.store.exceptionWorkbench()?.exceptions ?? [];
+    if (this.exceptionFilter() === 'OPEN') return items.filter(item => item.status === 'OPEN');
+    if (this.exceptionFilter() === 'CRITICAL') return items.filter(item => item.status === 'OPEN' && item.payrollBlocking);
+    return items;
+  });
+  readonly exceptionSummary = computed(() => this.store.exceptionWorkbench()?.summary ?? { total: 0, open: 0, critical: 0, resolved: 0, affectedEmployees: 0 });
 
   // Filtered base data — all counts come from this to ensure consistency
   readonly filteredResults = computed(() => {
@@ -127,7 +143,8 @@ export class ReportReviewPage {
   readonly reviewedCount = computed(() => Math.max(0, this.totalCount() - this.unresolvedCount()));
   readonly reviewedPercent = computed(() => (this.totalCount() > 0 ? Math.round((this.reviewedCount() / this.totalCount()) * 100) : 0));
   readonly canReview = computed(() => this.auth.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER']));
-  readonly canApprove = computed(() => this.totalCount() > 0 && this.unresolvedCount() === 0 && this.auth.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER']));
+  readonly canApprove = computed(() => this.totalCount() > 0 && this.unresolvedCount() === 0
+    && this.exceptionSummary().critical === 0 && this.auth.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER']));
   readonly rows = computed(() => {
     const f = this.filter();
     const all = this.filteredResults();
@@ -209,6 +226,30 @@ export class ReportReviewPage {
   anomalyHours(minutes: number): string {
     return (minutes / 60).toFixed(1);
   }
+
+  exceptionSelected(id: string): boolean { return this.selectedExceptionIds().includes(id); }
+  toggleException(id: string): void { this.selectedExceptionIds.update(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]); }
+  selectVisibleExceptions(): void { this.selectedExceptionIds.set(this.attendanceExceptions().filter(x => x.status === 'OPEN').map(x => x.id)); }
+  exceptionTypeLabel(item: AttendanceExceptionView): string { return this.i18n.t(`attendance.exception.${({ NO_PUNCH: 'noPunch', SINGLE_PUNCH: 'singlePunch', MISSING_SCHEDULE: 'missingSchedule', LATE: 'late', EARLY_LEAVE: 'earlyLeave', EXCESS_SHIFT: 'excessShift' } as Record<string, string>)[item.exceptionType]}`); }
+  async detectAttendanceExceptions(): Promise<void> {
+    const ok = await this.store.detectAttendanceExceptions(this.id);
+    ok ? this.notification.success(this.i18n.t('review.exceptionDetectionComplete')) : this.notification.error(this.store.error() ?? this.i18n.t('review.exceptionActionFailed'));
+  }
+  async previewExceptionBulk(): Promise<void> {
+    if (!this.selectedExceptionIds().length || !this.exceptionReason().trim()) { this.notification.warning(this.i18n.t('review.exceptionSelectionReasonRequired')); return; }
+    this.pendingExceptionOperationId = crypto.randomUUID();
+    const preview = await this.store.previewAttendanceExceptions(this.id, { exceptionIds: this.selectedExceptionIds(), resolution: this.exceptionResolution(), reason: this.exceptionReason().trim(), operationId: this.pendingExceptionOperationId });
+    this.exceptionPreview.set(preview);
+  }
+  async applyExceptionBulk(): Promise<void> {
+    const preview = this.exceptionPreview(); if (!preview) return;
+    this.resolvingExceptions.set(true);
+    const response = await this.store.resolveAttendanceExceptions(this.id, { exceptionIds: this.selectedExceptionIds(), resolution: this.exceptionResolution(), reason: this.exceptionReason().trim(), operationId: this.pendingExceptionOperationId });
+    this.resolvingExceptions.set(false);
+    if (response) { this.notification.success(this.i18n.t('review.exceptionApplied', { count: response.applied })); this.exceptionPreview.set(null); this.selectedExceptionIds.set([]); this.exceptionReason.set(''); }
+    else this.notification.error(this.store.error() ?? this.i18n.t('review.exceptionActionFailed'));
+  }
+  private pendingExceptionOperationId = '';
 
   toggleFilterPanel() {
     this.showFilterPanel.update(v => !v);

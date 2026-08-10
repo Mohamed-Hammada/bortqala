@@ -14,6 +14,7 @@ public class TreasuryApi {
             String iban,
             String swiftCode,
             String accountId,
+            String currencyCode,
             boolean active,
             long createdAt,
             long updatedAt
@@ -25,6 +26,7 @@ public class TreasuryApi {
             String iban,
             String swiftCode,
             String accountId,
+            String currencyCode,
             boolean active
     ) {}
 

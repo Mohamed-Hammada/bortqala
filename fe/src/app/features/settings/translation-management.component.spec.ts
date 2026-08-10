@@ -59,7 +59,7 @@ describe('TranslationManagementComponent', () => {
     notification = TestBed.inject(NotificationService);
     i18n = TestBed.inject(I18nService);
 
-    flushInitialLoad();
+    await flushInitialLoad();
     fixture.detectChanges();
   });
 
@@ -67,9 +67,11 @@ describe('TranslationManagementComponent', () => {
     http.verify();
   });
 
-  function flushInitialLoad(): void {
+  async function flushInitialLoad(): Promise<void> {
     http.expectOne('/api/v1/i18n/admin/apps').flush(APPS);
+    await Promise.resolve();
     http.expectOne('/api/v1/i18n/admin/translations?locale=ar-EG').flush(DEFAULT_ROWS);
+    await Promise.resolve();
   }
 
   it('loads applications and rows for the current locale on init', () => {
@@ -87,10 +89,11 @@ describe('TranslationManagementComponent', () => {
     expect(component.locale()).toBe('en-US');
   });
 
-  it('reloads rows with the selected application scope', () => {
-    void component.changeScope('app-1');
+  it('reloads rows with the selected application scope', async () => {
+    const promise = component.changeScope('app-1');
 
     http.expectOne('/api/v1/i18n/admin/translations?locale=ar-EG&appId=app-1').flush(APP_ROWS);
+    await promise;
 
     expect(component.appId()).toBe('app-1');
     expect(component.rows().find((row) => row.key === 'nav.title')?.overridden).toBe(true);
@@ -145,13 +148,14 @@ describe('TranslationManagementComponent', () => {
     expect(notification.success).toHaveBeenCalled();
   });
 
-  it('surfaces load errors through the notification service', () => {
+  it('surfaces load errors through the notification service', async () => {
     component.search.set('');
     component.apps.set([]);
 
-    void component.changeLocale('en-US');
+    const promise = component.changeLocale('en-US');
     http.expectOne('/api/v1/i18n/admin/translations?locale=en-US')
       .error(new ProgressEvent('error'), { status: 500, statusText: 'Server Error' });
+    await promise;
 
     expect(notification.error).toHaveBeenCalled();
   });

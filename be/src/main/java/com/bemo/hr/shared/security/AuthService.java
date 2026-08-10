@@ -48,6 +48,7 @@ public class AuthService {
     private final TenantFeatureService tenantFeatureService;
     private final DemoNoLoginProperties demoNoLoginProperties;
     private final AccessCatalogService accessCatalogService;
+    private final com.bemo.hr.product.subscription.SubscriptionLimitService subscriptionLimitService;
 
     public AuthService(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, JwtProperties jwtProperties,
                        AppUserRepository appUserRepository, RoleRepository roleRepository,
@@ -62,7 +63,8 @@ public class AuthService {
                        AttendanceCategoryRepository attendanceCategoryRepository,
                        TenantFeatureService tenantFeatureService,
                        DemoNoLoginProperties demoNoLoginProperties,
-                       AccessCatalogService accessCatalogService) {
+                       AccessCatalogService accessCatalogService,
+                       com.bemo.hr.product.subscription.SubscriptionLimitService subscriptionLimitService) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
         this.jwtProperties = jwtProperties;
@@ -82,6 +84,7 @@ public class AuthService {
         this.tenantFeatureService = tenantFeatureService;
         this.demoNoLoginProperties = demoNoLoginProperties;
         this.accessCatalogService = accessCatalogService;
+        this.subscriptionLimitService = subscriptionLimitService;
     }
 
     private static final String DUMMY_PASSWORD_HASH =
@@ -397,6 +400,7 @@ public class AuthService {
     @Transactional
     public AuthApi.UserResponse create(AuthApi.UserUpsertRequest request, String currentUsername) {
         String appId = TenantContext.require();
+        subscriptionLimitService.assertCanAddUser(appUserRepository.countByAppId(appId));
         validate(request, appId, null, true);
         var actor = requireByUsername(appId, currentUsername);
         var actorRoles = actor.getRoles().stream().map(Role::getCode).map(Enum::name)

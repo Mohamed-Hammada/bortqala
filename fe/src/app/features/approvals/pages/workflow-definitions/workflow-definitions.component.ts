@@ -109,6 +109,8 @@ import { apiErrorDetail } from '../../../../core/api-error';
                     <option value="PAYROLL_MANAGER">PAYROLL_MANAGER</option>
                     <option value="HR_MANAGER">HR_MANAGER</option>
                   </select>
+                  <label>{{ i18n.t('approvals.minimumApprovals') }}<input type="number" min="1" [(ngModel)]="step.minimumApprovals" [name]="'minimum_' + $index" /></label>
+                  <label>{{ i18n.t('approvals.escalationHours') }}<input type="number" min="1" [(ngModel)]="step.escalationHours" [name]="'sla_' + $index" /></label>
                 </div>
                 <button type="button" class="btn danger" (click)="removeStep($index)">🗑</button>
               </div>
@@ -165,7 +167,7 @@ export class WorkflowDefinitionsComponent implements OnInit {
       name: '',
       active: true,
       steps: [
-        { stepOrder: 1, stepCode: 'STEP_1', name: 'الاعتماد الأول', requiredRole: 'PROCUREMENT_MANAGER', minimumApprovals: 1, allowSelfApproval: false }
+        { stepOrder: 1, stepCode: 'STEP_1', name: this.i18n.t('approvals.defaultFirstStep'), requiredRole: 'PROCUREMENT_MANAGER', minimumApprovals: 1, allowSelfApproval: false, decisionPolicy: 'ANY_N' }
       ]
     };
     this.formModalOpen.set(true);
@@ -190,7 +192,8 @@ export class WorkflowDefinitionsComponent implements OnInit {
       name: `الخطوة ${nextOrder}`,
       requiredRole: 'FINANCE_MANAGER',
       minimumApprovals: 1,
-      allowSelfApproval: false
+      allowSelfApproval: false,
+      decisionPolicy: 'ANY_N'
     });
   }
 

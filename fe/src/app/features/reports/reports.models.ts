@@ -168,4 +168,28 @@ export interface DayAnomalyActionResponse {
   skippedCount: number;
 }
 
+export type AttendanceExceptionType = 'NO_PUNCH' | 'SINGLE_PUNCH' | 'MISSING_SCHEDULE' | 'LATE' | 'EARLY_LEAVE' | 'EXCESS_SHIFT';
+export type AttendanceExceptionResolution = 'ACCEPT' | 'MARK_PRESENT' | 'MARK_ABSENT' | 'IGNORE';
+export interface AttendanceExceptionView {
+  id: string; reportId: string; dailyResultId: string; employeeId: string; employeeName: string;
+  categoryId: string; categoryName: string; workDate: number; exceptionType: AttendanceExceptionType;
+  score: number; metricMinutes: number; explanationKey: string; policyId?: string; policyName: string; policyVersion: number; policySnapshotJson: string;
+  policyScope: 'TENANT' | 'CATEGORY' | 'EMPLOYEE'; payrollBlocking: boolean;
+  status: 'OPEN' | 'RESOLVED' | 'OVERRIDDEN' | 'IGNORED'; resolution?: AttendanceExceptionResolution;
+  reason?: string; version: number;
+}
+export interface AttendanceExceptionWorkbench {
+  summary: { total: number; open: number; critical: number; resolved: number; affectedEmployees: number };
+  exceptions: AttendanceExceptionView[];
+}
+export interface AttendanceExceptionBulkRequest {
+  exceptionIds: string[]; resolution: AttendanceExceptionResolution; reason: string; operationId: string;
+}
+export interface AttendanceExceptionBulkPreview {
+  selected: number; editable: number; alreadyClosed: number; payrollBlockersCleared: number; excludedIds: string[];
+}
+export interface AttendanceExceptionBulkResult {
+  workbench: AttendanceExceptionWorkbench; applied: number; replayed: number; skipped: number;
+}
+
 export type { ReportStatus };

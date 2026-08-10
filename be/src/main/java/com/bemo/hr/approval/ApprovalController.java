@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -75,5 +76,38 @@ public class ApprovalController {
     @PreAuthorize("isAuthenticated()")
     public ApprovalApi.ApprovalInstanceDetailResponse getHistory(@PathVariable String documentType, @PathVariable String documentId) {
         return service.getHistory(documentType, documentId);
+    }
+
+    @GetMapping("/approvals/delegations")
+    @PreAuthorize("isAuthenticated()")
+    public List<ApprovalApi.DelegationResponse> listDelegations() {
+        return service.listDelegations();
+    }
+
+    @PostMapping("/approvals/delegations")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApprovalApi.DelegationResponse createDelegation(@Valid @RequestBody ApprovalApi.DelegationRequest request) {
+        return service.createDelegation(request);
+    }
+
+    @DeleteMapping("/approvals/delegations/{id}")
+    @PreAuthorize("isAuthenticated()")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deactivateDelegation(@PathVariable String id) {
+        service.deactivateDelegation(id);
+    }
+
+    @PutMapping("/approvals/{instanceId}/reassign")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public ApprovalApi.ApprovalInstanceDetailResponse reassign(@PathVariable String instanceId,
+                                                                @Valid @RequestBody ApprovalApi.ReassignRequest request) {
+        return service.reassign(instanceId, request);
+    }
+
+    @PostMapping("/approvals/escalate-overdue")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public int escalateOverdue() {
+        return service.escalateOverdue();
     }
 }

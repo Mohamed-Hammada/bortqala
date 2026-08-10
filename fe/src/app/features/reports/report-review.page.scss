@@ -764,6 +764,12 @@
   font-size: 12.5px;
   line-height: 1.65;
 }
+.exception-workbench{display:grid;gap:1rem;padding:1rem;background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-block:1rem}
+.exception-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}.exception-summary article{display:grid;padding:.8rem;background:var(--surface-muted);border-radius:10px}.exception-summary strong{font-size:1.4rem}.exception-summary span,.exception-table small{display:block;color:var(--muted)}
+.exception-toolbar,.bulk-exception-actions{display:flex;gap:.5rem;flex-wrap:wrap}.exception-toolbar button{border:1px solid var(--line);background:var(--surface-muted);padding:.45rem .7rem;border-radius:8px;cursor:pointer}.exception-toolbar button.active{background:var(--gold);color:#fff}.exception-table .critical-row{box-shadow:inset 3px 0 var(--danger-text)}.score{display:inline-grid;place-items:center;min-width:2rem;padding:.2rem;border-radius:999px;background:var(--warning-soft);color:var(--warning-text);font-weight:800}.score.critical{background:var(--danger-soft);color:var(--danger-text)}
+.bulk-exception-actions select,.bulk-exception-actions input{padding:.6rem;border:1px solid var(--line);border-radius:8px;background:var(--input-bg);color:inherit}.bulk-exception-actions input{flex:1;min-width:240px}.preview-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem}.preview-grid div{display:grid;padding:.7rem;background:var(--surface-muted);border-radius:8px}.preview-grid strong{font-size:1.3rem}
+@media(max-width:800px){.exception-summary,.preview-grid{grid-template-columns:repeat(2,1fr)}}
+
 .anomaly-history {
   margin-top: 14px;
   padding-top: 12px;

@@ -30,7 +30,7 @@ class AccessCatalogServiceTests {
 
     private final AccessCatalog catalog = new AccessCatalog();
     private final TenantFeatureRepository featureRepository = mock(TenantFeatureRepository.class);
-    private final TenantFeatureService tenantFeatureService = new TenantFeatureService(featureRepository);
+    private final TenantFeatureService tenantFeatureService = new TenantFeatureService(featureRepository, new com.bemo.hr.shared.security.EntitlementCatalog());
     private final AccessCatalogService service = new AccessCatalogService(catalog, tenantFeatureService);
 
     @BeforeEach

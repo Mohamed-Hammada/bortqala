@@ -9,11 +9,91 @@ below a recorded baseline or reports failures fails the release gate.
 
 | Suite | Baseline | Command | Threshold rule |
 |-------|----------|---------|----------------|
-| Backend (non-Docker, H2) | **299 tests / 63 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 299 AND failures = 0 |
+| Backend (non-Docker, H2) | **391 tests / 78 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 391 AND failures = 0 |
 | Backend (full, incl. Testcontainers) | **310 tests** expected when Docker available | `./gradlew test` | failures = 0 |
-| Frontend (Angular + Vitest) | **211 tests / 33 files / 0 failures** | `npx ng test --watch=false` | count ≥ 211 AND failures = 0 |
+| Frontend (Angular + Vitest) | **269 tests / 49 files / 0 failures** | `npx ng test --watch=false` | count ≥ 269 AND failures = 0 |
 
 ## Evidence log
+
+### 2026-08-10 — Product Epic 12 second vertical pack
+
+- Backend: **391 tests / 78 suites / 0 failures**. V184 removes contractor-specific constants from the pack engine and stores defaults, roles, KPIs, import templates and onboarding steps as versioned pack metadata. It seeds `FOOD_DISTRIBUTION_EG` with dependency-closed modules, FEFO/credit/expiry defaults, four roles, nine KPIs, four templates and nine ordered steps; V185 localizes the pack. Tests prove sector-specific metadata, install evidence and optional-step behavior while existing upgrade customization remains preserved. H2 and error parity **332/332** pass.
+- Frontend: **269 tests / 49 files / 0 failures**. The existing Super Admin pack workspace renders the second vertical wholly from the backend contract without sector-specific UI code. i18n/hardcoded gates remain green and production build succeeds with existing SCSS warnings only.
+
+### 2026-08-10 — Product Epic 11 support and customer health
+
+- Backend: **390 tests / 78 suites / 0 failures**. V182 creates tenant tickets, immutable ticket updates, privacy-limited feedback and immutable health snapshots; V183 supplies bilingual UI/errors. Ticket creation and health calculation lock the tenant and are operation-idempotent. Critical impact and deterministic SLA, versioned state transitions, feedback route sanitization and a seven-dimension explained 100-point score are covered. Every health dimension returns status and remediation route. H2 and error parity **332/332** pass.
+- Frontend: **268 tests / 49 files / 0 failures**. The global Help entry opens tickets, feedback/rating and an Admin health workspace with direct remediation actions. Tests cover loading, ticket contract/idempotency, safe feedback context and health recalculation. i18n **2240**, hardcoded-UI clean over 46 HTML/122 TypeScript files, production build green with existing SCSS warnings only.
+
+### 2026-08-10 — Product Epic 10 subscription and plan control plane
+
+- Backend: **385 tests / 77 suites / 0 failures**. V180 creates data-driven global plans, one versioned tenant subscription and immutable tenant/idempotent change evidence; V181 supplies bilingual UI/errors. Plan changes lock the tenant, validate dependency closure, synchronize entitlement order safely, preserve all ERP data on downgrade, disable features on cancellation, audit mutations and enforce the real user limit in account creation. Tests cover change/replay, cancellation, dependency validation, configuration preservation, limit/inactive enforcement and explicit Super Admin permission. H2 and error parity **326/326** pass.
+- Frontend: **264 tests / 48 files / 0 failures**. Super Admin settings expose current lifecycle, usage/limits, date/status changes, data-driven plan definitions, feature membership and immutable history. i18n **2197**, hardcoded-UI clean over 45 HTML/121 TypeScript files, production build green with existing SCSS warnings only.
+
+### 2026-08-10 — Product Epic 9 analytics and activation
+
+- Backend: **377 tests / 76 suites / 0 failures**. V178 adds tenant/idempotent raw events, durable daily aggregates and one-shot activation milestones; V179 supplies bilingual UI/errors. A strict scalar property allowlist rejects sensitive/structured payloads. A separate proxy-based safe sink prevents analytics failure from rolling back ERP work. Retention removes raw events while aggregates/milestones survive; tenant summaries remain isolated and platform SQL is explicitly Super Admin-only. Tests cover replay/aggregation/milestones, privacy, aggregate summary, failure isolation and permission contract. H2 and error parity **320/320** pass.
+- Frontend: **261 tests / 47 files / 0 failures**. Navigation telemetry strips query/fragment data and tolerates failure; Admin activation UI shows events/days/score/milestones/features, while Super Admin sees platform tenants and controls raw retention. i18n **2165**, hardcoded-UI clean over 44 HTML/120 TypeScript files, production build green with existing SCSS warnings only.
+
+### 2026-08-10 — Product Epic 7 supplier and contractor risk scores
+
+- Backend: **372 tests / 75 suites / 0 failures**. V176 adds tenant/versioned descending risk rules and immutable operation-idempotent subject snapshots under a tenant lock; V177 supplies bilingual score/risk/error copy. Supplier and contractor formulas consume existing lifecycle, compliance, bank, profile, worker, settlement and issue evidence; every weight and remediation route is returned. Tests prove complete supplier/contractor scores, transparent components, snapshot replay/audit and threshold validation. H2 and error parity **318/318** pass.
+- Frontend: **258 tests / 45 files / 0 failures**. Procurement/workforce/finance roles can inspect weighted scorecards and fix links; only Admin/Super Admin can edit optimistic-versioned thresholds. i18n **2147**, hardcoded-UI clean over 43 HTML/118 TypeScript files, production build green with existing SCSS warnings only.
+
+### 2026-08-10 — Product Epic 6 Action Center 2.0
+
+- Backend: **368 tests / 74 suites / 0 failures**. V174 extends tenant notifications with exception, localized impact/reason/recommendation, monetary impact, role targets and safe internal action metadata; V175 supplies bilingual card copy. Ranking is deterministic (severity + unread + decisive role match), old payloads remain source-compatible, external links are rejected, mark-read ownership remains enforced, and sends remain audited. Tests cover role ordering, full guidance contract and link safety. The H2 mirror now correctly includes historical V112/V113 before V174. Error parity **316/316**.
+- Frontend: **255 tests / 44 files / 0 failures**. The existing navbar Action Center renders Backend-ranked exception cards, localized priority, impact/reason/recommendation/amount, and direct internal action while preserving fields on mark-read. i18n **2137**, hardcoded-UI clean over 42 HTML/117 TypeScript files, production build green with existing SCSS warnings only.
+
+### 2026-08-10 — Product Epic 5 guided onboarding and data quality
+
+- Backend: **365 tests / 74 suites / 0 failures**. V172 stores immutable, operation-idempotent assessment evidence under a pessimistic pack lock; V173 supplies bilingual UI/errors. The evaluator reuses only the selected pack's dependency graph, auto-completes from tenant-scoped contractor/category/worker/import/settlement evidence, requires `IMPORTED`, preserves explicit optional `SKIPPED`, scores quality, and declares `READY` only at complete required setup plus ≥80 quality. Tests cover relevant-step selection, blockers/action routes, import auto-completion, optional skip/unlock, final readiness and replay. H2 and error parity **316/316** pass.
+- Frontend: **253 tests / 43 files / 0 failures**. Admin/Super Admin go-live settings expose progress, quality, readiness, localized steps, blockers and direct remediation routes. i18n **2132**, hardcoded-UI clean over 42 HTML/117 TypeScript files, production build green with existing SCSS warnings only.
+
+### 2026-08-10 — Product Epic 4 trial and demo template
+
+- Backend: **361 tests / 73 suites / 0 failures**. V170 adds the tenant commercial lifecycle, versioned demo templates and tenant-owned sample rows; V171 supplies bilingual UI and stable errors. The central write policy keeps expired trials readable while returning `TRIAL_EXPIRED_READ_ONLY` for ERP mutations. Tests cover exact 14-day dates, expired write blocking, tenant-preserving conversion, non-demo reset rejection, operation-idempotent start/conversion/reset, versioned sample replacement and audit evidence. H2 and error parity **314/314** pass.
+- Frontend: **250 tests / 42 files / 0 failures**. Super Admin settings expose commercial state, trial dates/access, versioned demo start, paid conversion, safe reset and sample evidence. i18n **2118**, hardcoded-UI clean over 41 HTML/116 TypeScript files, production build green with the four pre-existing SCSS budget warnings only.
+
+### 2026-08-10 — Product Epic 3 first industry pack
+
+- Backend: **352 tests / 71 suites / 0 failures**. V168 creates global pack metadata, tenant version/install evidence and dependency-aware onboarding steps; V169 seeds `CONTRACTOR_WORKFORCE_EG` plus bilingual copy. Installation is operation-idempotent, activates required entitlements through Epic 2, snapshots terminology/dashboard/KPIs/roles/templates, and audits. Tests cover install/replay, blocked prerequisites, optional steps, JSON customization, and v1→v2 replay-safe upgrade preserving customer settings. H2 and error parity **308/308** pass.
+- Frontend: **247 tests / 41 files / 0 failures**. Super Admin settings show pack version/modules/roles/KPIs/import templates, go-live steps, custom JSON and non-destructive upgrade. i18n **2101**, hardcoded-UI clean over 40 HTML/115 TypeScript files, production build green.
+
+### 2026-08-09 — Product Epic 2 module entitlement catalog
+
+- Backend: **347 tests / 70 suites / 0 failures**. `EntitlementCatalog` is now the canonical feature/default/dependency/API-prefix source used by both identity and backend interception. V166 adds mandatory change reason to versioned tenant rows; V167 adds bilingual administration/error copy. Tests prove dependency and dependent blocking, effective catalog grouping, and immutable audit. Error parity **302/302**.
+- Frontend: **244 tests / 40 files / 0 failures**. Super Admin settings expose effective modules, dependencies, current state, mandatory reason, versioned mutation, and reload. i18n **2079**, hardcoded-UI clean across 39 HTML/114 TypeScript sources, production build green.
+
+### 2026-08-09 — Product Epic 1 AR foundation
+
+- Backend: `./gradlew test -PskipDockerTests` → **343 tests / 69 suites / 0 failures**. V164 adds tenant credit profiles, customer invoices, retry-safe receipts, locked allocations, and collection tasks; V165 adds 43 bilingual UI keys plus stable errors. `SalesReceivablesServiceTests` covers credit-limit blocking, partial allocation and partner-ledger credit, operation replay, deterministic aging buckets, and overdue-task creation. H2 context and error parity **300/300** pass.
+- Frontend: `npm test -- --watch=false` → **241 tests / 39 files / 0 failures**. Sales workbench tests cover the five-source load, epoch-date invoice contract, and receipt allocation with generated operation ID. `check:i18n` passes **2067 literal keys**, hardcoded-UI is clean, and the production build is green with existing SCSS budget warnings only.
+
+### 2026-08-09 — P0.5 advanced attendance
+
+- Backend: `./gradlew test -PskipDockerTests` → **338 tests / 68 suites / 0 failures**. V162 creates effective-dated tenant/category/employee policies plus immutable scored exception evidence with optimistic locking and payroll indexes; V163 loads bilingual UI and stable errors. Tests cover policy precedence, cross-midnight assignment, outage/missing-punch scoring, manual override, locked-period rejection, payroll blocking, and H2 migration context. Error-code parity is **284/284**.
+- Frontend: `npm test -- --watch=false` → **238 tests / 38 files / 0 failures**. Review tests cover critical filtering, policy/explanation visibility, and a preview contract that leaves daily evidence unchanged until confirmation. `check:i18n` passes **2024 literal keys**, `check:hardcoded` scans 38 HTML + 113 TypeScript files with zero findings, and the production build is green with the existing SCSS budget warnings only.
+
+### 2026-08-09 — P0.4 advanced approvals
+
+- Backend: `./gradlew test -PskipDockerTests` → **332 tests / 67 suites / 0 failures**. V160 creates immutable instance-step snapshots, versioned dated delegations, SLA/escalation fields and locked document uniqueness; its PostgreSQL/H2 upgrade backfill preserves existing definitions and decision links. V161 loads bilingual UI/error copy. `ApprovalWorkflowServiceTests` covers ANY_N threshold behavior, delegation during original-user absence, invalid delegation windows, self-approval blocking, snapshot-only decisions, and escalation. Clean H2 context and error-code parity **263/263** pass.
+- Frontend: `npm test -- --watch=false` → **236 tests / 38 files / 0 failures**. Approval service and pending-workspace tests cover delegation contracts/state, overdue/delegated filters, summary counts, required date windows, and signed-in delegator payload. `check:i18n` **1994 literal keys**, `check:hardcoded` 0/38 HTML + 113 TypeScript, development build green.
+
+### 2026-08-09 — P0.3 bank reconciliation and cash position
+
+- Backend: `./gradlew test -PskipDockerTests` → **327 tests / 67 suites / 0 failures**. V158/V159 load cleanly on H2. `BankReconciliationServiceTests` covers exact matching, partial payment plus a balanced fee journal, closed-period rejection, controlled reversal, duplicate-file rejection, balance validation, and currency-separated cash totals. Statement and line aggregates are pessimistically serialized for writes.
+- Frontend: `npm test -- --watch=false --no-progress` → **231 tests / 37 files / 0 failures**. `banks.page.spec.ts` covers the four-source load, real multipart CSV import, idempotent auto-match contract, and backend-provided partial suggestion prefill. `check:i18n` **1949 literal keys**, `check:hardcoded` 0/38 HTML + 113 TypeScript, production build green with the four pre-existing SCSS budget warnings.
+
+### 2026-08-09 — P0.2 supplier onboarding and Supplier 360
+
+- Backend: `./gradlew test -PskipDockerTests` → **320 tests / 66 suites / 0 failures**. V156/V157 load cleanly on H2. `SupplierOnboardingServiceTests` covers duplicate tax/IBAN detection, expired and unverified mandatory documents, suspended procurement, and persisted document bytes; `SupplierPaymentValidationTests` proves unverified bank accounts cannot be paid. Error-code parity **271/271**.
+- Frontend: `npm test -- --watch=false --no-progress` → **227 tests / 36 files / 0 failures**. New store contract coverage verifies supplier-request routing, duplicate parameters, Supplier 360, and lifecycle refresh. `check:i18n` **1908 literal keys**, `check:hardcoded` 0 findings across 38 HTML + 113 TypeScript sources, production build green with only the four pre-existing SCSS budget warnings.
+
+### 2026-08-09 — P0.1 inventory valuation and Inventory GL
+
+- Backend: `./gradlew test -PskipDockerTests` → **312 tests / 65 suites / 0 failures**. `InventoryValuationServiceTests` covers weighted average, FIFO layer consumption, returns at pre-return average cost, backdated rejection, closed-period rejection, balanced Inventory GL posting, revaluation replay idempotency, and pessimistic item-lock configuration. V154/V155 load cleanly on H2; error-code parity **267/267**.
+- Frontend: `npm test -- --watch=false` under Node `v24.18.0` → **223 tests / 35 files / 0 failures**. Operations-store valuation contract coverage is green; translation-management async tests now await component promises. `check:i18n` **1875 keys**, `check:hardcoded` 0 findings across 38 HTML + 113 TypeScript sources, production build green with the four pre-existing SCSS budget warnings.
 
 ### 2026-08-09 — working tree (Frankfurter online exchange-rate hint integration)
 - Applied the Bortqala `BORTQALA_FRANKFURTER_INTEGRATION_2026-08-09` package (released against `da9374a`; repo HEAD `0f230db` is semantically identical, whitespace-only). Package files overlaid directly: new backend package `com.bemo.hr.finance` additions (`ExchangeRateHintApi`/`Service`/`Scheduler`/`Setting`/`Repository`/`FrankfurterExchangeRateClient` + unit test `ExchangeRateHintServiceTest`), `Currency` gains `reference_*` hint columns and `updateReferenceRate`/`markReferenceUnavailable`, `TreasuryApi`/`Controller` gain the three `/api/v1/finance/exchange-rate-hints/*` endpoints and reference-rate metadata in `GET /currencies`. Frontend `tax-currency.page.{ts,html,scss}` gains the online-reference panel (configured vs reference rate, provider date, last/next sync, difference %, refresh interval config + manual refresh for admins/Finance Managers). All `i18n.t(...)` (no third-arg fallbacks), no hardcoded UI strings.

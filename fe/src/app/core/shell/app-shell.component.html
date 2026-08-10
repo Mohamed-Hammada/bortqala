@@ -243,6 +243,7 @@
         [attr.aria-label]="i18n.t('shortcuts.showHelp')"
         [appTooltip]="i18n.t('shortcuts.openHelpTooltip')"
       >?</button>
+      <a class="icon-button" routerLink="/support" [attr.aria-label]="i18n.t('support.nav')" [appTooltip]="i18n.t('support.nav')">💬</a>
       <button
         class="icon-button notification-bell-btn"
         type="button"
@@ -342,8 +343,8 @@
 <!-- Action Center Notifications Dropdown Panel -->
 @if (notificationCenter.panelOpen()) {
   <div class="shortcut-overlay" (click)="notificationCenter.closePanel()">
-    <section class="shortcut-dialog" (click)="$event.stopPropagation()" dir="rtl" style="max-width:480px;width:100%;padding:1.2rem;">
-      <header class="shortcut-dialog-header" style="margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">
+    <section class="shortcut-dialog action-center-dialog" (click)="$event.stopPropagation()">
+      <header class="shortcut-dialog-header action-center-header">
         <div>
           <h2 style="margin:0;font-size:1.1rem;">🔔 {{ i18n.t('actionCenter.title', undefined, 'مركز الإشعارات والتنبيهات') }}</h2>
         </div>
@@ -352,21 +353,26 @@
           <button type="button" class="shortcut-close" (click)="notificationCenter.closePanel()">✕</button>
         </div>
       </header>
-      <div style="display:grid;gap:.8rem;max-height:400px;overflow-y:auto;">
+      <div class="action-center-list">
         @for (item of notificationCenter.notifications(); track item.id) {
           <article
-            style="padding:.8rem;border-radius:8px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;"
-            [style.background-color]="item.isRead ? '#f8fafc' : '#eff6ff'"
+            class="action-card"
+            [class.read]="item.isRead"
             (click)="notificationCenter.markAsRead(item.id)"
           >
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.3rem;">
-              <strong style="font-size:0.95rem;color:#1e293b;">{{ i18n.locale() === 'en-US' ? item.titleEn : item.titleAr }}</strong>
-              <span style="font-size:0.75rem;padding:2px 8px;border-radius:4px;font-weight:700;background:#e2e8f0;color:#334155;">{{ item.priority }}</span>
+            <div class="action-card-head">
+              <strong>{{ i18n.locale() === 'en-US' ? item.titleEn : item.titleAr }}</strong>
+              <span class="priority">{{ i18n.t(notificationPriorityKey(item.priority)) }}</span>
             </div>
-            <p style="margin:0;font-size:0.85rem;color:#64748b;">{{ i18n.locale() === 'en-US' ? item.messageEn : item.messageAr }}</p>
+            @if(item.exceptionKey){<small class="exception">{{ i18n.t('actionCenter.exception') }} · {{ item.exceptionKey }}</small>}
+            <p>{{ i18n.locale() === 'en-US' ? item.messageEn : item.messageAr }}</p>
+            @if(item.impactEn||item.impactAr){<div class="action-detail"><b>{{ i18n.t('actionCenter.impact') }}</b><span>{{ i18n.locale() === 'en-US' ? item.impactEn : item.impactAr }} @if(item.impactAmount){ · {{ item.impactAmount }} {{ item.impactCurrency }} }</span></div>}
+            @if(item.reasonEn||item.reasonAr){<div class="action-detail"><b>{{ i18n.t('actionCenter.reason') }}</b><span>{{ i18n.locale() === 'en-US' ? item.reasonEn : item.reasonAr }}</span></div>}
+            @if(item.recommendationEn||item.recommendationAr){<div class="action-detail"><b>{{ i18n.t('actionCenter.recommendation') }}</b><span>{{ i18n.locale() === 'en-US' ? item.recommendationEn : item.recommendationAr }}</span></div>}
+            @if(item.actionLink){<a class="button primary btn-sm action-link" [routerLink]="item.actionLink" (click)="$event.stopPropagation(); notificationCenter.markAsRead(item.id); notificationCenter.closePanel()">{{ item.actionLabelKey ? i18n.t(item.actionLabelKey) : i18n.t('actionCenter.openAction') }}</a>}
           </article>
         } @empty {
-          <div style="text-align:center;padding:2rem;color:#64748b;font-size:0.9rem;">{{ i18n.t('actionCenter.noNotifications', undefined, 'لا توجد إشعارات جديدة.') }}</div>
+          <div class="action-center-empty">{{ i18n.t('actionCenter.noNotifications', undefined, 'لا توجد إشعارات جديدة.') }}</div>
         }
       </div>
     </section>

@@ -9,8 +9,15 @@ import { NotificationService } from '../../core/notification.service';
 import { ActivatedRoute } from '@angular/router';
 import { ShortcutSettingsComponent } from './shortcuts/shortcut-settings.component';
 import { TranslationManagementComponent } from './translation-management.component';
+import { EntitlementSettingsComponent } from './entitlement-settings.component';
+import { IndustryPackSettingsComponent } from './industry-pack-settings.component';
+import { TrialDemoSettingsComponent } from './trial-demo-settings.component';
+import { GuidedOnboardingComponent } from './guided-onboarding.component';
+import { PartnerRiskSettingsComponent } from './partner-risk-settings.component';
+import { ProductAnalyticsSettingsComponent } from './product-analytics-settings.component';
+import { SubscriptionSettingsComponent } from './subscription-settings.component';
 
-export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports' | 'shortcuts' | 'translations';
+export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports' | 'shortcuts' | 'translations' | 'entitlements' | 'industry' | 'trial' | 'onboarding' | 'risk' | 'analytics' | 'subscription';
 
 const NOTIFICATION_KEY = 'bemo_notification_prefs';
 
@@ -29,7 +36,7 @@ function saveNotificationPrefs(prefs: NotificationPreferences): void {
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [ReactiveFormsModule, ShortcutSettingsComponent, TranslationManagementComponent],
+  imports: [ReactiveFormsModule, ShortcutSettingsComponent, TranslationManagementComponent, EntitlementSettingsComponent, IndustryPackSettingsComponent, TrialDemoSettingsComponent, GuidedOnboardingComponent, PartnerRiskSettingsComponent, ProductAnalyticsSettingsComponent, SubscriptionSettingsComponent],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -132,8 +139,8 @@ export class SettingsPage {
 
   constructor() {
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
-    const allowedTab = tabParam !== 'translations' || this.authService.isSuperAdmin();
-    if (tabParam && allowedTab && ['appearance', 'session', 'security', 'reports', 'shortcuts', 'translations'].includes(tabParam)) {
+    const allowedTab = !['translations','entitlements','industry','trial','subscription'].includes(tabParam ?? '') || this.authService.isSuperAdmin();
+    if (tabParam && allowedTab && ['appearance', 'session', 'security', 'reports', 'shortcuts', 'translations', 'entitlements', 'industry', 'trial', 'onboarding', 'risk', 'analytics','subscription'].includes(tabParam)) {
       this.activeTab.set(tabParam as SettingsTab);
     }
     if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) void this.loadAppSettings();

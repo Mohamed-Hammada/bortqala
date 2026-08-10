@@ -12,6 +12,7 @@ import { NetworkService } from '../network.service';
 import { GLOBAL_SHORTCUTS } from '../app-shortcuts';
 import { ScreenShortcutService } from '../shortcuts/screen-shortcut.service';
 import { ScreenShortcut } from '../shortcuts/screen-shortcut.models';
+import { ProductAnalyticsClient } from '../product-analytics-client.service';
 
 export type WorkspaceGroup =
   | 'workspace.people'
@@ -389,6 +390,7 @@ export class AppShellComponent {
   readonly router = inject(Router);
   readonly notificationCenter = inject(NotificationCenterService);
   readonly screenShortcuts = inject(ScreenShortcutService);
+  private readonly productAnalytics = inject(ProductAnalyticsClient);
 
   readonly searchQuery = signal('');
   readonly menuOpen = signal(false);
@@ -777,7 +779,18 @@ export class AppShellComponent {
     });
   }
 
+  notificationPriorityKey(priority: string): string {
+    const keys: Record<string, string> = {
+      CRITICAL: 'actionCenter.priority.critical',
+      HIGH: 'actionCenter.priority.high',
+      MEDIUM: 'actionCenter.priority.medium',
+      INFO: 'actionCenter.priority.info',
+    };
+    return keys[priority] ?? keys['INFO'];
+  }
+
   private trackRecentNavigation(url: string): void {
+    this.productAnalytics.captureNavigation(url);
     const matched = this.items.find((i) => url.startsWith(i.path));
     if (matched) {
       this.pushRecent(matched.menuId);

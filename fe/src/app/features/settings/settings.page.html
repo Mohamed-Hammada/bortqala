@@ -58,6 +58,10 @@
     </button>
 
     @if (authService.isSuperAdmin()) {
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'subscription'" (click)="setTab('subscription')">{{ i18n.t('subscription.tab') }}</button>
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'trial'" (click)="setTab('trial')">{{ i18n.t('trialDemo.tab') }}</button>
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'industry'" (click)="setTab('industry')">{{ i18n.t('industryPack.tab') }}</button>
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'entitlements'" (click)="setTab('entitlements')">{{ i18n.t('entitlements.tab') }}</button>
       <button
         type="button"
         class="tab-btn"
@@ -67,7 +71,24 @@
         🌐 {{ i18n.t('translations.menu', undefined, 'إدارة الترجمات') }}
       </button>
     }
+    @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'onboarding'" (click)="setTab('onboarding')">{{ i18n.t('onboarding.tab') }}</button>
+    }
+    @if (authService.hasAnyRole(['SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER','WORKFORCE_MANAGER','FINANCE_MANAGER'])) {
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'risk'" (click)="setTab('risk')">{{ i18n.t('risk.tab') }}</button>
+    }
+    @if (authService.hasAnyRole(['SUPER_ADMIN','ADMIN'])) {
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'analytics'" (click)="setTab('analytics')">{{ i18n.t('analytics.tab') }}</button>
+    }
   </nav>
+
+  @if (activeTab() === 'entitlements' && authService.isSuperAdmin()) { <app-entitlement-settings /> }
+  @if (activeTab() === 'subscription' && authService.isSuperAdmin()) { <app-subscription-settings /> }
+  @if (activeTab() === 'industry' && authService.isSuperAdmin()) { <app-industry-pack-settings /> }
+  @if (activeTab() === 'trial' && authService.isSuperAdmin()) { <app-trial-demo-settings /> }
+  @if (activeTab() === 'onboarding' && authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) { <app-guided-onboarding /> }
+  @if (activeTab() === 'risk' && authService.hasAnyRole(['SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER','WORKFORCE_MANAGER','FINANCE_MANAGER'])) { <app-partner-risk-settings /> }
+  @if (activeTab() === 'analytics' && authService.hasAnyRole(['SUPER_ADMIN','ADMIN'])) { <app-product-analytics-settings /> }
 
   <!-- Tab 1: Appearance & Language -->
   @if (activeTab() === 'appearance') {

@@ -16,6 +16,12 @@ Every stock movement may carry separate business document references: purchase-o
 
 Demo employees, punches, parties, inventory movements, ledger entries, and advances are opt-in development fixtures. Production startup never creates them.
 
+Inventory valuation is recorded separately from immutable quantity evidence. Each tenant selects FIFO or weighted-average costing, may enable controlled backdated posting, and maps inventory, receipt-offset, COGS, and variance accounts. Every new quantity movement receives an immutable cost explanation; FIFO layers and item locks prevent concurrent double consumption. When GL posting is enabled, the service validates the fiscal period and creates a balanced posted journal. Revaluation is idempotent by `operationId`, audited, and posts only the value difference. `GET /api/v1/operations/valuation/report` exposes item totals and movement drill-down, and the operations workbook includes valuation and movement-cost sheets.
+
+## العربية — تقييم المخزون
+
+يُسجَّل تقييم المخزون منفصلاً عن دليل الكمية غير القابل للتعديل. تختار كل شركة طريقة الوارد أولاً أو المتوسط المرجح، وتربط حسابات المخزون والاستلام وتكلفة المبيعات والفروق. تحصل كل حركة كمية جديدة على أثر تكلفة وشرح ثابت، وتمنع أقفال الصنف وطبقات FIFO استهلاك التكلفة مرتين عند التزامن. عند تفعيل الترحيل المالي يتحقق النظام من الفترة المالية وينشئ قيداً متوازناً ومرحلاً. إعادة التقييم متكررة بأمان بواسطة `operationId` وتسجل في التدقيق ولا ترحل إلا فرق القيمة. يعرض المسار `GET /api/v1/operations/valuation/report` إجماليات الأصناف وتفاصيل الحركات، ويضيف تصدير العمليات ورقتي التقييم وتكاليف الحركات.
+
 ## العربية
 
 هذه الحزمة مسؤولة عن أصناف المخزن، وحركات الكمية الموجبة والسالبة، ودفاتر الموردين والعملاء، وسُلف الموظفين. يمكن للعملية الواحدة أن تؤثر على المخزون والحساب المالي معًا داخل معاملة واحدة. الأرصدة ناتجة من جمع الحركات ولا يتم تعديلها مباشرة.

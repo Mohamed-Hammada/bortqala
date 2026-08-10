@@ -4456,6 +4456,8 @@ Only when commercially justified.
 
 ## P0.1 Inventory Valuation
 
+**Implementation status: DONE 2026-08-09.** V154/V155, `InventoryValuationService`, procurement-GRN unit-cost integration, FIFO/weighted-average movement evidence, fiscal/backdating controls, balanced Inventory GL journals, idempotent revaluation, Angular settings/report/drill-down, and Excel sheets are implemented. Evidence: backend 312 tests / 65 suites / 0 failures; frontend 223 tests / 35 files / 0 failures; bilingual/error-code gates green.
+
 Backend:
 
 - Valuation policy entity.
@@ -4486,6 +4488,8 @@ QA:
 
 ## P0.2 Supplier Onboarding
 
+**Implementation status: DONE 2026-08-09.** V156/V157 add the supplier lifecycle, real compliance-file evidence, duplicate tax/IBAN controls, bank verification, optional shared-approval integration, Supplier 360, and procurement/payment gates. Evidence: backend 320 tests / 66 suites / 0 failures; frontend 227 tests / 36 files / 0 failures; H2 migration, bilingual/error-code, hardcoded-string, and production-build gates green.
+
 Backend:
 
 - Lifecycle status.
@@ -4514,6 +4518,8 @@ QA:
 ---
 
 ## P0.3 Bank Reconciliation
+
+**Implementation status: DONE 2026-08-09.** V158/V159 add idempotent balance-validated CSV statements, versioned lines and reversible journal-linked match evidence. The engine supports exact/partial/manual matching, balanced bank-fee journals, suggestions, fiscal-period guards, aggregate locking, and currency-separated cash position. The banks UI provides import, workbench, reversal, and cash tabs. Evidence: backend 327/67 and frontend 231/37 with all migration, i18n, hardcoded-string, and production-build gates green.
 
 Backend:
 
@@ -4544,6 +4550,8 @@ QA:
 
 ## P0.4 Approval Advanced
 
+**Implementation status: DONE 2026-08-09.** V160/V161 add immutable versioned workflow/document snapshots, dated scoped delegation, audited administrator reassignment, locked ANY_N decisions, per-step SLA, tenant-aware one-shot escalation, and safe upgrade backfill for existing instances and decisions. The approval workspace adds total/overdue/delegated summaries, aging filters, signature progress, delegated history, and delegation settings. Evidence: backend 332/67, frontend 236/38, H2 migration, error-code, i18n, hardcoded-string, and build gates green.
+
 Backend:
 
 - Delegation.
@@ -4569,6 +4577,8 @@ QA:
 ---
 
 ## P0.5 Attendance Advanced
+
+**Implementation status: DONE 2026-08-09.** V162/V163 deliver effective-dated tenant/category/employee policy hierarchy, deterministic anomaly scoring, immutable policy snapshots, exception aggregation, idempotent bulk preview/apply, cross-midnight punch assignment, approval blocking, and employee/all-report payroll gates. The report-review workspace provides summary/filter/explanation, policy evidence, selection, preview-without-mutation, and controlled resolution. Evidence: backend 338 tests / 68 suites / 0 failures; frontend 238 tests / 38 files / 0 failures; H2 migration, 284/284 error-code parity, 2024-key i18n, hardcoded-UI and production-build gates green.
 
 Backend:
 

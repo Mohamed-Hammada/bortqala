@@ -33,7 +33,19 @@ public final class OperationsApi {
                                      @Size(max = 100) String voucherNo, @Size(max = 100) String externalRef,
                                      @Size(max = 50) String warehouse, @Size(max = 255) String attachmentName,
                                      @Size(max = 100) String attachmentContentType, Long attachmentSize,
-                                     @NotNull Instant occurredAt) { }
+                                     @NotNull Instant occurredAt,
+                                     @Digits(integer = 13, fraction = 6) BigDecimal unitCost) {
+        public TransactionRequest(String itemId, String partyId, String operationType, BigDecimal quantityDelta,
+                                  BigDecimal amountDelta, BigDecimal lossPercentage, String referenceCode, String note,
+                                  String documentType, String reason, String purchaseOrderNo, String receiptNo,
+                                  String deliveryNoteNo, String invoiceNo, String voucherNo, String externalRef,
+                                  String warehouse, String attachmentName, String attachmentContentType,
+                                  Long attachmentSize, Instant occurredAt) {
+            this(itemId, partyId, operationType, quantityDelta, amountDelta, lossPercentage, referenceCode, note,
+                    documentType, reason, purchaseOrderNo, receiptNo, deliveryNoteNo, invoiceNo, voucherNo,
+                    externalRef, warehouse, attachmentName, attachmentContentType, attachmentSize, occurredAt, null);
+        }
+    }
     public record StockMovementView(String id, String itemId, String itemCode, String itemName, String partyId,
                                     String partyName, String operationType, String documentType,
                                     BigDecimal quantityDelta,
@@ -82,4 +94,31 @@ public final class OperationsApi {
     public record UnitConversionView(String id, String fromUomId, String fromUomName,
                                      String toUomId, String toUomName,
                                      BigDecimal factor, Instant createdAt) { }
+
+    public record ValuationPolicyRequest(@NotNull InventoryValuationPolicy.Method valuationMethod,
+                                         String inventoryAccountId, String receiptOffsetAccountId,
+                                         String cogsAccountId, String adjustmentAccountId,
+                                         boolean glPostingEnabled, boolean allowBackdatedPosting,
+                                         Long version) { }
+    public record ValuationPolicyView(String id, InventoryValuationPolicy.Method valuationMethod,
+                                      String inventoryAccountId, String receiptOffsetAccountId,
+                                      String cogsAccountId, String adjustmentAccountId,
+                                      boolean glPostingEnabled, boolean allowBackdatedPosting,
+                                      long version, Instant createdAt, Instant updatedAt) { }
+    public record MovementCostView(String id, String movementId, String itemId, String itemCode, String itemName,
+                                   InventoryValuationPolicy.Method valuationMethod, BigDecimal quantityEffect,
+                                   BigDecimal unitCost, BigDecimal valueEffect, String journalEntryId,
+                                   String explanation, Instant occurredAt, Instant createdAt) { }
+    public record ItemValuationView(String itemId, String itemCode, String itemName, BigDecimal quantityOnHand,
+                                    BigDecimal valuedQuantity, BigDecimal inventoryValue, BigDecimal averageUnitCost,
+                                    BigDecimal openingQuantityGap) { }
+    public record ValuationReport(ValuationPolicyView policy, BigDecimal totalInventoryValue,
+                                  List<ItemValuationView> items, List<MovementCostView> movementCosts) { }
+    public record RevaluationRequest(@NotBlank String itemId, @NotNull @DecimalMin("0.000001") BigDecimal newUnitCost,
+                                     @NotBlank @Size(max = 1000) String reason, @NotBlank @Size(max = 80) String operationId,
+                                     @NotNull Instant occurredAt) { }
+    public record RevaluationView(String id, String itemId, String operationId, BigDecimal quantityOnHand,
+                                  BigDecimal oldValue, BigDecimal newValue, BigDecimal valueDifference,
+                                  String reason, String journalEntryId, Instant occurredAt,
+                                  String createdBy, Instant createdAt) { }
 }

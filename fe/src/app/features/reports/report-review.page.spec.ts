@@ -56,6 +56,7 @@ describe('ReportReviewPage', () => {
       allowedActions: ['DECIDE', 'BULK_DECISION'],
     };
   }
+  const emptyWorkbench = { summary: { total: 0, open: 0, critical: 0, resolved: 0, affectedEmployees: 0 }, exceptions: [] };
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -73,6 +74,7 @@ describe('ReportReviewPage', () => {
     notification = TestBed.inject(NotificationService);
     page = TestBed.runInInjectionContext(() => new ReportReviewPage());
     httpMock.expectOne('/api/v1/reports/report-1').flush(details());
+    httpMock.expectOne('/api/v1/reports/report-1/attendance-exceptions').flush(emptyWorkbench);
   });
 
   afterEach(() => {
@@ -123,6 +125,7 @@ describe('ReportReviewPage', () => {
     const persisted = details({ decision: 'NORMAL_DAY', manualWorkedMinutes: 480, decidedBy: 'reviewer' });
     persisted.report.unresolvedCount = 0;
     httpMock.expectOne('/api/v1/reports/report-1').flush(persisted);
+    httpMock.expectOne('/api/v1/reports/report-1/attendance-exceptions').flush(emptyWorkbench);
     await flushAsync();
 
     expect(page.savingRowId()).toBeNull();
@@ -134,6 +137,7 @@ describe('ReportReviewPage', () => {
     const fixture = TestBed.createComponent(ReportReviewPage);
     const fixturePage = fixture.componentInstance;
     httpMock.expectOne('/api/v1/reports/report-1').flush(details());
+    httpMock.expectOne('/api/v1/reports/report-1/attendance-exceptions').flush(emptyWorkbench);
     fixture.detectChanges();
     fixturePage.decide(row, 'NORMAL_DAY');
     fixturePage.promptState()!.onConfirm('480');
@@ -152,5 +156,30 @@ describe('ReportReviewPage', () => {
     expect(button).not.toBeNull();
     expect(button.disabled).toBe(false);
     expect(button.textContent?.trim()).toBe('common.retry');
+  });
+
+  it('filters critical exceptions and exposes their policy explanation', () => {
+    page.store.exceptionWorkbench.set({ summary: { total: 2, open: 2, critical: 1, resolved: 0, affectedEmployees: 1 }, exceptions: [
+      { id: 'ex-1', reportId: 'report-1', dailyResultId: 'row-1', employeeId: 'emp-1', employeeName: 'Employee', categoryId: 'cat-1', categoryName: 'Category', workDate: 1, exceptionType: 'NO_PUNCH', score: 100, metricMinutes: 480, explanationKey: 'attendance.exception.noPunch', policyName: 'Employee policy', policyVersion: 1, policySnapshotJson: '{}', policyScope: 'EMPLOYEE', payrollBlocking: true, status: 'OPEN', version: 0 },
+      { id: 'ex-2', reportId: 'report-1', dailyResultId: 'row-1', employeeId: 'emp-1', employeeName: 'Employee', categoryId: 'cat-1', categoryName: 'Category', workDate: 1, exceptionType: 'LATE', score: 35, metricMinutes: 20, explanationKey: 'attendance.exception.late', policyName: 'Tenant policy', policyVersion: 1, policySnapshotJson: '{}', policyScope: 'TENANT', payrollBlocking: false, status: 'OPEN', version: 0 },
+    ] });
+    page.exceptionFilter.set('CRITICAL');
+    expect(page.attendanceExceptions().map(item => item.id)).toEqual(['ex-1']);
+    expect(page.exceptionSummary().critical).toBe(1);
+    expect(page.exceptionTypeLabel(page.attendanceExceptions()[0])).toBe('attendance.exception.noPunch');
+  });
+
+  it('previews a bulk override without changing attendance data', async () => {
+    page.selectedExceptionIds.set(['ex-1']);
+    page.exceptionReason.set('device outage confirmed');
+    page.exceptionResolution.set('MARK_PRESENT');
+    const before = page.store.details()?.dailyResults[0].decision;
+    const promise = page.previewExceptionBulk();
+    const request = httpMock.expectOne('/api/v1/reports/report-1/attendance-exceptions/bulk-preview');
+    expect(request.request.body).toEqual(expect.objectContaining({ exceptionIds: ['ex-1'], resolution: 'MARK_PRESENT', reason: 'device outage confirmed' }));
+    request.flush({ selected: 1, editable: 1, alreadyClosed: 0, payrollBlockersCleared: 1, excludedIds: [] });
+    await promise;
+    expect(page.exceptionPreview()?.editable).toBe(1);
+    expect(page.store.details()?.dailyResults[0].decision).toBe(before);
   });
 });

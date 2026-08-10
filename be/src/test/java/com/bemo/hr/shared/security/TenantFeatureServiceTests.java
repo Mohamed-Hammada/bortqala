@@ -2,7 +2,6 @@ package com.bemo.hr.shared.security;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -19,8 +18,10 @@ class TenantFeatureServiceTests {
     @Mock
     private TenantFeatureRepository repository;
 
-    @InjectMocks
     private TenantFeatureService service;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() { service = new TenantFeatureService(repository, new EntitlementCatalog()); }
 
     @Test
     void defaultEnabledFeaturesAreReturnedWhenNoDbRows() {

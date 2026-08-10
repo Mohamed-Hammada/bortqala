@@ -1,0 +1,53 @@
+id;key;locale;text
+v179-001;analytics.tab;en-US;Activation
+v179-002;analytics.tab;ar-EG;التفعيل
+v179-003;analytics.title;en-US;Product activation and usage
+v179-004;analytics.title;ar-EG;تفعيل المنتج واستخدامه
+v179-005;analytics.description;en-US;Privacy-limited usage evidence and activation milestones
+v179-006;analytics.description;ar-EG;أدلة استخدام محدودة الخصوصية ومراحل التفعيل
+v179-007;analytics.events;en-US;Events
+v179-008;analytics.events;ar-EG;الأحداث
+v179-009;analytics.activeDays;en-US;Active days
+v179-010;analytics.activeDays;ar-EG;الأيام النشطة
+v179-011;analytics.activation;en-US;Activation score
+v179-012;analytics.activation;ar-EG;درجة التفعيل
+v179-013;analytics.milestones;en-US;Milestones
+v179-014;analytics.milestones;ar-EG;مراحل التفعيل
+v179-015;analytics.noMilestones;en-US;No activation milestone achieved yet
+v179-016;analytics.noMilestones;ar-EG;لم تتحقق مرحلة تفعيل بعد
+v179-017;analytics.featureUsage;en-US;Feature usage
+v179-018;analytics.featureUsage;ar-EG;استخدام الميزات
+v179-019;analytics.noUsage;en-US;No usage recorded yet
+v179-020;analytics.noUsage;ar-EG;لم يسجل استخدام بعد
+v179-021;analytics.retention;en-US;Raw event retention
+v179-022;analytics.retention;ar-EG;الاحتفاظ بالأحداث الخام
+v179-023;analytics.retentionHint;en-US;Daily aggregates and milestones remain after raw event cleanup
+v179-024;analytics.retentionHint;ar-EG;تبقى التجميعات اليومية ومراحل التفعيل بعد تنظيف الأحداث الخام
+v179-025;analytics.retainDays;en-US;Retain days
+v179-026;analytics.retainDays;ar-EG;أيام الاحتفاظ
+v179-027;analytics.applyRetention;en-US;Apply retention
+v179-028;analytics.applyRetention;ar-EG;تطبيق الاحتفاظ
+v179-029;analytics.retained;en-US;Raw event retention applied
+v179-030;analytics.retained;ar-EG;تم تطبيق الاحتفاظ بالأحداث الخام
+v179-031;analytics.platform;en-US;Platform tenant activation
+v179-032;analytics.platform;ar-EG;تفعيل مستأجري المنصة
+v179-033;analytics.tenant;en-US;Tenant
+v179-034;analytics.tenant;ar-EG;المستأجر
+v179-035;analytics.lastEvent;en-US;Last event
+v179-036;analytics.lastEvent;ar-EG;آخر حدث
+v179-037;analytics.milestone.first_login;en-US;First login
+v179-038;analytics.milestone.first_login;ar-EG;أول تسجيل دخول
+v179-039;analytics.milestone.first_import;en-US;First successful import
+v179-040;analytics.milestone.first_import;ar-EG;أول استيراد ناجح
+v179-041;analytics.milestone.first_report_approved;en-US;First approved report
+v179-042;analytics.milestone.first_report_approved;ar-EG;أول تقرير معتمد
+v179-043;analytics.milestone.first_payroll_posted;en-US;First posted payroll
+v179-044;analytics.milestone.first_payroll_posted;ar-EG;أول رواتب مرحلة
+v179-045;analytics.milestone.first_invoice;en-US;First issued invoice
+v179-046;analytics.milestone.first_invoice;ar-EG;أول فاتورة مصدرة
+v179-047;analytics.milestone.first_reconciliation;en-US;First bank reconciliation
+v179-048;analytics.milestone.first_reconciliation;ar-EG;أول تسوية بنكية
+v179-049;PRODUCT_EVENT_PROPERTY_NOT_ALLOWED;en-US;The analytics property is not on the privacy allowlist.
+v179-050;PRODUCT_EVENT_PROPERTY_NOT_ALLOWED;ar-EG;خاصية التحليلات ليست ضمن قائمة الخصوصية المسموحة.
+v179-051;PRODUCT_EVENT_PROPERTIES_INVALID;en-US;Analytics properties must be short scalar values.
+v179-052;PRODUCT_EVENT_PROPERTIES_INVALID;ar-EG;يجب أن تكون خصائص التحليلات قيمًا بسيطة وقصيرة.

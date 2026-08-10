@@ -952,3 +952,5 @@ kbd {
     animation: none;
   }
 }
+
+.action-center-dialog{max-width:560px;width:100%;padding:1.2rem}.action-center-header{margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center}.action-center-list{display:grid;gap:.8rem;max-height:70vh;overflow-y:auto}.action-card{padding:.9rem;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;gap:.45rem}.action-card.read{background:var(--surface-muted);opacity:.82}.action-card-head{display:flex;justify-content:space-between;align-items:center;gap:.5rem}.action-card-head strong{font-size:.95rem;color:var(--text)}.action-card p{margin:0;font-size:.85rem;color:var(--muted)}.priority,.exception{font-size:.75rem;padding:2px 8px;border-radius:4px;font-weight:700;background:var(--surface-muted);color:var(--text)}.exception{justify-self:start}.action-detail{display:grid;grid-template-columns:7rem 1fr;gap:.5rem;font-size:.82rem}.action-detail span{color:var(--muted)}.action-link{justify-self:start}.action-center-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.9rem}

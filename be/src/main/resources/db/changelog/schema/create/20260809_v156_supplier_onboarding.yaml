@@ -1,0 +1,85 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260809-v156-supplier-onboarding
+      author: codex
+      changes:
+        - addColumn:
+            tableName: business_parties
+            columns:
+              - column: { name: onboarding_status, type: varchar(30), defaultValue: ACTIVE, constraints: { nullable: false } }
+              - column: { name: supplier_category, type: varchar(50) }
+              - column: { name: risk_level, type: varchar(20) }
+              - column: { name: owner_user_id, type: varchar(100) }
+              - column: { name: approval_instance_id, type: varchar(36) }
+              - column: { name: bank_verified, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: bank_verified_at, type: timestamp with time zone }
+              - column: { name: bank_verified_by, type: varchar(100) }
+        - sql:
+            sql: >-
+              UPDATE business_parties
+              SET onboarding_status = CASE WHEN active THEN 'ACTIVE' ELSE 'CLOSED' END,
+                  bank_verified = CASE WHEN bank_account IS NOT NULL AND TRIM(bank_account) <> '' THEN TRUE ELSE FALSE END
+              WHERE party_type = 'SUPPLIER';
+        - createIndex:
+            tableName: business_parties
+            indexName: ix_business_parties_onboarding_status
+            columns: [{ column: { name: onboarding_status } }]
+        - createIndex:
+            tableName: business_parties
+            indexName: ix_business_parties_tax_id
+            columns: [{ column: { name: tax_id } }]
+        - createTable:
+            tableName: supplier_documents
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_supplier_documents_app, references: apps(id) } }
+              - column: { name: supplier_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_supplier_documents_party, references: business_parties(id) } }
+              - column: { name: document_type, type: varchar(50), constraints: { nullable: false } }
+              - column: { name: document_number, type: varchar(100) }
+              - column: { name: file_name, type: varchar(255), constraints: { nullable: false } }
+              - column: { name: content_type, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: file_size, type: bigint, constraints: { nullable: false } }
+              - column: { name: file_content, type: bytea, constraints: { nullable: false } }
+              - column: { name: issue_date, type: date }
+              - column: { name: expiry_date, type: date }
+              - column: { name: mandatory, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: verified, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: verified_by, type: varchar(100) }
+              - column: { name: verified_at, type: timestamp with time zone }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - createIndex:
+            tableName: supplier_documents
+            indexName: ix_supplier_documents_party_expiry
+            columns: [{ column: { name: supplier_id } }, { column: { name: expiry_date } }]
+        - createTable:
+            tableName: supplier_bank_accounts
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_supplier_bank_accounts_app, references: apps(id) } }
+              - column: { name: supplier_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_supplier_bank_accounts_party, references: business_parties(id) } }
+              - column: { name: account_name, type: varchar(160), constraints: { nullable: false } }
+              - column: { name: iban, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: normalized_iban, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: bank_name, type: varchar(160), constraints: { nullable: false } }
+              - column: { name: currency_code, type: varchar(10), constraints: { nullable: false } }
+              - column: { name: is_primary, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: verification_status, type: varchar(20), defaultValue: PENDING, constraints: { nullable: false } }
+              - column: { name: verified_by, type: varchar(100) }
+              - column: { name: verified_at, type: timestamp with time zone }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: supplier_bank_accounts, columnNames: app_id,normalized_iban, constraintName: uk_supplier_bank_account_iban }
+        - createIndex:
+            tableName: supplier_bank_accounts
+            indexName: ix_supplier_bank_accounts_party
+            columns: [{ column: { name: supplier_id } }]
+      rollback:
+        - dropTable: { tableName: supplier_bank_accounts }
+        - dropTable: { tableName: supplier_documents }
+        - dropColumn: { tableName: business_parties, columnName: bank_verified_by }
+        - dropColumn: { tableName: business_parties, columnName: bank_verified_at }
+        - dropColumn: { tableName: business_parties, columnName: bank_verified }
+        - dropColumn: { tableName: business_parties, columnName: approval_instance_id }
+        - dropColumn: { tableName: business_parties, columnName: owner_user_id }
+        - dropColumn: { tableName: business_parties, columnName: risk_level }
+        - dropColumn: { tableName: business_parties, columnName: supplier_category }
+        - dropColumn: { tableName: business_parties, columnName: onboarding_status }

@@ -1,0 +1,88 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_subscription_control_plane
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: HALT
+        - tableExists: { tableName: apps }
+        - tableExists: { tableName: tenant_features }
+        - not: { tableExists: { tableName: subscription_plans } }
+      changes:
+        - createTable:
+            tableName: subscription_plans
+            columns:
+              - column: { name: plan_code, type: varchar(40), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name_ar, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: name_en, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: feature_keys_json, type: varchar(4000), constraints: { nullable: false } }
+              - column: { name: limits_json, type: varchar(2000), constraints: { nullable: false } }
+              - column: { name: active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - createTable:
+            tableName: tenant_subscriptions
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_tenant_subscription_app, references: apps(id) } }
+              - column: { name: plan_code, type: varchar(40), constraints: { nullable: false, foreignKeyName: fk_tenant_subscription_plan, references: subscription_plans(plan_code) } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: starts_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: renews_at, type: timestamp with time zone }
+              - column: { name: ends_at, type: timestamp with time zone }
+              - column: { name: last_operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: updated_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: tenant_subscriptions, columnNames: app_id, constraintName: uk_tenant_subscription_app }
+        - createTable:
+            tableName: subscription_changes
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_subscription_change_app, references: apps(id) } }
+              - column: { name: from_plan, type: varchar(40) }
+              - column: { name: to_plan, type: varchar(40), constraints: { nullable: false } }
+              - column: { name: from_status, type: varchar(20) }
+              - column: { name: to_status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: reason, type: varchar(500), constraints: { nullable: false } }
+              - column: { name: operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: actor, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: changed_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: subscription_changes, columnNames: app_id,operation_id, constraintName: uk_subscription_change_operation }
+        - createIndex: { tableName: subscription_changes, indexName: ix_subscription_change_time, columns: [ { column: { name: app_id } }, { column: { name: changed_at } } ] }
+        - insert:
+            tableName: subscription_plans
+            columns:
+              - column: { name: plan_code, value: STARTER }
+              - column: { name: name_ar, value: البداية }
+              - column: { name: name_en, value: Starter }
+              - column: { name: feature_keys_json, value: '["employeeAttendance.enabled","biometric.fileImport.enabled","exports.enabled","navigation.favorites.enabled","navigation.recents.enabled"]' }
+              - column: { name: limits_json, value: '{"users":10}' }
+              - column: { name: active, valueBoolean: true }
+              - column: { name: version, valueNumeric: 0 }
+              - column: { name: updated_at, valueDate: now() }
+        - insert:
+            tableName: subscription_plans
+            columns:
+              - column: { name: plan_code, value: GROWTH }
+              - column: { name: name_ar, value: النمو }
+              - column: { name: name_en, value: Growth }
+              - column: { name: feature_keys_json, value: '["employeeAttendance.enabled","biometric.fileImport.enabled","workforce.enabled","workforce.attendance.enabled","workforce.dashboard.enabled","workforce.contractorAccounts.enabled","payroll.enabled","procurement.enabled","purchasing.enabled","inventory.advanced.enabled","sales.enabled","quality.enabled","finance.enabled","exports.enabled","notifications.enabled","navigation.favorites.enabled","navigation.recents.enabled"]' }
+              - column: { name: limits_json, value: '{"users":50}' }
+              - column: { name: active, valueBoolean: true }
+              - column: { name: version, valueNumeric: 0 }
+              - column: { name: updated_at, valueDate: now() }
+        - insert:
+            tableName: subscription_plans
+            columns:
+              - column: { name: plan_code, value: ENTERPRISE }
+              - column: { name: name_ar, value: المؤسسات }
+              - column: { name: name_en, value: Enterprise }
+              - column: { name: feature_keys_json, value: '["employeeAttendance.enabled","biometric.fileImport.enabled","biometric.liveSync.enabled","workforce.enabled","workforce.attendance.enabled","workforce.dashboard.enabled","workforce.contractorAccounts.enabled","payroll.enabled","procurement.enabled","purchasing.enabled","inventory.advanced.enabled","sales.enabled","manufacturing.enabled","quality.enabled","finance.enabled","exports.enabled","notifications.enabled","navigation.favorites.enabled","navigation.recents.enabled"]' }
+              - column: { name: limits_json, value: '{"users":0}' }
+              - column: { name: active, valueBoolean: true }
+              - column: { name: version, valueNumeric: 0 }
+              - column: { name: updated_at, valueDate: now() }
+      rollback:
+        - dropTable: { tableName: subscription_changes }
+        - dropTable: { tableName: tenant_subscriptions }
+        - dropTable: { tableName: subscription_plans }

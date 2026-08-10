@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import {
   EmployeeOption, ItemCategory, NegativeBalance, OperationsSnapshot,
-  PartyOption, StockMovement, UnitOfMeasure,
+  AccountOption, PartyOption, StockMovement, UnitOfMeasure, ValuationPolicy, ValuationReport,
 } from './operations.models';
 import { downloadBlob, timestampedExcelFileName } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
@@ -23,23 +23,28 @@ export class OperationsStore {
   readonly categories = signal<ItemCategory[]>([]);
   readonly uoms = signal<UnitOfMeasure[]>([]);
   readonly negativeBalances = signal<NegativeBalance[]>([]);
+  readonly accounts = signal<AccountOption[]>([]);
+  readonly valuation = signal<ValuationReport | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
   async load(): Promise<void> {
     this.loading.set(true); this.error.set(null);
     try {
-      const [snapshot, parties, employees, categories, uoms, negativeBalances] = await Promise.all([
+      const [snapshot, parties, employees, categories, uoms, negativeBalances, valuation, accounts] = await Promise.all([
         firstValueFrom(this.http.get<OperationsSnapshot>('/api/v1/operations')),
         firstValueFrom(this.http.get<PartyOption[]>('/api/v1/parties')),
         firstValueFrom(this.http.get<EmployeeOption[]>('/api/v1/employees')),
         firstValueFrom(this.http.get<ItemCategory[]>('/api/v1/operations/item-categories')),
         firstValueFrom(this.http.get<UnitOfMeasure[]>('/api/v1/operations/uoms')),
         firstValueFrom(this.http.get<NegativeBalance[]>('/api/v1/operations/negative-balances')),
+        firstValueFrom(this.http.get<ValuationReport>('/api/v1/operations/valuation/report')),
+        firstValueFrom(this.http.get<AccountOption[]>('/api/v1/finance/accounts')),
       ]);
       this.snapshot.set(this.normalizeSnapshot(snapshot));
       this.parties.set(parties); this.employees.set(employees); this.categories.set(categories);
       this.uoms.set(uoms); this.negativeBalances.set(negativeBalances);
+      this.valuation.set(valuation); this.accounts.set(accounts.filter((account) => account.active && !account.isHeader));
     } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
     finally { this.loading.set(false); }
   }
@@ -50,6 +55,18 @@ export class OperationsStore {
   async adjustment(payload: object): Promise<boolean> { return this.post('/api/v1/operations/adjustments', payload, true); }
   async createCategory(payload: object): Promise<boolean> { return this.post('/api/v1/operations/item-categories', payload, false); }
   async createUom(payload: object): Promise<boolean> { return this.post('/api/v1/operations/uoms', payload, false); }
+  async saveValuationPolicy(payload: object): Promise<boolean> {
+    this.loading.set(true); this.error.set(null);
+    try {
+      const policy = await firstValueFrom(this.http.put<ValuationPolicy>('/api/v1/operations/valuation/settings', payload));
+      const report = this.valuation();
+      if (report) this.valuation.set({ ...report, policy });
+      await this.load();
+      return true;
+    } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); return false; }
+    finally { this.loading.set(false); }
+  }
+  async revalue(payload: object): Promise<boolean> { return this.post('/api/v1/operations/valuation/revaluations', payload, false); }
 
   async export(): Promise<void> {
     try {

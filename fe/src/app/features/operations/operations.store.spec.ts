@@ -64,4 +64,31 @@ describe('OperationsStore', () => {
     await promise;
     expect(store.loading()).toBe(false);
   });
+
+  it('updates valuation settings and refreshes the valuation report', async () => {
+    store.valuation.set({
+      policy: { id: null, valuationMethod: 'WEIGHTED_AVERAGE', inventoryAccountId: null,
+        receiptOffsetAccountId: null, cogsAccountId: null, adjustmentAccountId: null,
+        glPostingEnabled: false, allowBackdatedPosting: false, version: 0, createdAt: null, updatedAt: null },
+      totalInventoryValue: 0, items: [], movementCosts: [],
+    });
+    const promise = store.saveValuationPolicy({ valuationMethod: 'FIFO', version: 0 });
+    httpMock.expectOne('/api/v1/operations/valuation/settings').flush({
+      ...store.valuation()!.policy, valuationMethod: 'FIFO', version: 1,
+    });
+    await Promise.resolve();
+    httpMock.expectOne('/api/v1/operations').flush(snapshot);
+    httpMock.expectOne('/api/v1/parties').flush([]);
+    httpMock.expectOne('/api/v1/employees').flush([]);
+    httpMock.expectOne('/api/v1/operations/item-categories').flush([]);
+    httpMock.expectOne('/api/v1/operations/uoms').flush([]);
+    httpMock.expectOne('/api/v1/operations/negative-balances').flush([]);
+    httpMock.expectOne('/api/v1/operations/valuation/report').flush({
+      ...store.valuation()!, policy: { ...store.valuation()!.policy, valuationMethod: 'FIFO', version: 1 },
+    });
+    httpMock.expectOne('/api/v1/finance/accounts').flush([]);
+
+    expect(await promise).toBe(true);
+    expect(store.valuation()?.policy.valuationMethod).toBe('FIFO');
+  });
 });

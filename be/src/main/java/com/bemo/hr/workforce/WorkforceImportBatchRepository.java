@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface WorkforceImportBatchRepository extends JpaRepository<WorkforceImportBatch, String> {
     Optional<WorkforceImportBatch> findByChecksum(String checksum);
     List<WorkforceImportBatch> findAllByOrderByCreatedAtDesc();
+    boolean existsByStatus(String status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select b from WorkforceImportBatch b where b.id = :id")

@@ -5,8 +5,16 @@
       <h1>{{ i18n.t('banks.title') }}</h1>
       <p>{{ i18n.t('banks.description') }}</p>
     </div>
-    <button class="button primary" (click)="openNew()">＋ {{ i18n.t('banks.add') }}</button>
+    <div class="toolbar">
+      @if (tab() === 'accounts') { <button class="button primary" (click)="openNew()">＋ {{ i18n.t('banks.add') }}</button> }
+      @if (tab() === 'reconciliation') { <button class="button primary" (click)="openImport()">＋ {{ i18n.t('banks.reconciliation.import') }}</button> }
+    </div>
   </header>
+  <nav class="tabs">
+    <button [class.active]="tab() === 'accounts'" (click)="tab.set('accounts')">{{ i18n.t('banks.reconciliation.accountsTab') }}</button>
+    <button [class.active]="tab() === 'reconciliation'" (click)="tab.set('reconciliation')">{{ i18n.t('banks.reconciliation.title') }}</button>
+    <button [class.active]="tab() === 'cash'" (click)="tab.set('cash')">{{ i18n.t('banks.reconciliation.cashPosition') }}</button>
+  </nav>
 
   @if (loading()) {
     <div class="loading"></div>
@@ -16,7 +24,7 @@
   }
 
   @if (!loading()) {
-    <div class="table-card">
+    <div class="table-card" [hidden]="tab() !== 'accounts'">
       <table>
         <thead>
           <tr>
@@ -48,6 +56,57 @@
     </div>
   }
 
+  @if (!loading() && tab() === 'reconciliation') {
+    <div class="reconciliation-layout">
+      <aside class="statement-list">
+        <h2>{{ i18n.t('banks.reconciliation.statements') }}</h2>
+        @for (statement of statements(); track statement.id) {
+          <button [class.active]="workbench()?.statement?.id === statement.id" (click)="openStatement(statement.id)">
+            <strong>{{ statement.statementReference }}</strong>
+            <span>{{ date(statement.periodEnd) }} · {{ money(statement.closingBalance, statement.currencyCode) }}</span>
+            <small>{{ statement.unmatchedCount }} {{ i18n.t('banks.reconciliation.unmatched') }}</small>
+          </button>
+        } @empty { <div class="empty-state">{{ i18n.t('banks.reconciliation.empty') }}</div> }
+      </aside>
+      <main class="workbench">
+        @if (workbench(); as view) {
+          <header class="workbench-header">
+            <div><h2>{{ view.statement.statementReference }}</h2><p>{{ money(view.statement.openingBalance, view.statement.currencyCode) }} → {{ money(view.statement.closingBalance, view.statement.currencyCode) }}</p></div>
+            <button class="button secondary" (click)="autoMatch()">{{ i18n.t('banks.reconciliation.autoMatch') }}</button>
+          </header>
+          <div class="metric-row">
+            <article><strong>{{ view.statement.lineCount }}</strong><span>{{ i18n.t('banks.reconciliation.lines') }}</span></article>
+            <article><strong>{{ view.statement.unmatchedCount }}</strong><span>{{ i18n.t('banks.reconciliation.unmatched') }}</span></article>
+            <article><strong>{{ reconciliationStatus(view.statement.status) }}</strong><span>{{ i18n.t('common.status') }}</span></article>
+          </div>
+          @for (line of view.lines; track line.id) {
+            <article class="statement-line" [class.matched]="line.status === 'MATCHED'">
+              <div class="line-main"><time>{{ date(line.transactionDate) }}</time><div><strong>{{ line.description }}</strong><small>{{ line.bankReference || '—' }}</small></div><b [class.negative]="line.amount < 0">{{ money(line.amount, view.statement.currencyCode) }}</b></div>
+              <div class="line-status"><span>{{ reconciliationStatus(line.status) }}</span><small>{{ i18n.t('banks.reconciliation.remaining') }}: {{ money(line.remainingAmount, view.statement.currencyCode) }}</small></div>
+              @if (line.status !== 'MATCHED') {
+                <div class="suggestions">
+                  @for (candidate of line.suggestions; track candidate.journalEntryId) {
+                    <button (click)="openMatch(line, candidate)"><strong>{{ candidate.entryNumber }}</strong><span>{{ candidate.description }}</span><small>{{ money(candidate.availableAmount, view.statement.currencyCode) }}</small></button>
+                  } @empty { <button class="button secondary" (click)="openMatch(line)">{{ i18n.t('banks.reconciliation.manualMatch') }}</button> }
+                </div>
+              }
+              @for (match of line.matches; track match.id) {
+                @if (match.status === 'ACTIVE') { <div class="match-row"><span>{{ match.matchType }} · {{ money(match.matchedAmount, view.statement.currencyCode) }}</span><button class="link-danger" (click)="reverseMatch(match)">{{ i18n.t('banks.reconciliation.reverse') }}</button></div> }
+              }
+            </article>
+          }
+        } @else { <div class="empty-state">{{ i18n.t('banks.reconciliation.selectStatement') }}</div> }
+      </main>
+    </div>
+  }
+
+  @if (!loading() && tab() === 'cash' && cashPosition(); as cash) {
+    <div class="cash-totals">@for (total of cashTotals(); track total.currency) { <div class="cash-summary"><span>{{ i18n.t('banks.reconciliation.totalCash') }} · {{ total.currency }}</span><strong>{{ money(total.amount, total.currency) }}</strong></div> }</div>
+    <div class="table-card"><table><thead><tr><th>{{ i18n.t('banks.colBank') }}</th><th>{{ i18n.t('banks.reconciliation.asOf') }}</th><th>{{ i18n.t('banks.reconciliation.balance') }}</th><th>{{ i18n.t('banks.reconciliation.unmatched') }}</th></tr></thead><tbody>
+      @for (row of cash.accounts; track row.bankAccountId) { <tr><td>{{ row.bankName }}</td><td>{{ date(row.asOfDate) }}</td><td>{{ money(row.latestStatementBalance, row.currencyCode) }}</td><td>{{ row.unmatchedLines }}</td></tr> }
+    </tbody></table></div>
+  }
+
   <app-modal-dialog
     [isOpen]="drawerOpen()"
     [title]="i18n.t('banks.newTitle')"
@@ -60,6 +119,8 @@
           <label>{{ i18n.t('banks.bankNameLabel') }} *</label>
           <input formControlName="bankName" [placeholder]="i18n.t('banks.bankNamePlaceholder')" />
         </div>
+        <div class="field span-2"><label>{{ i18n.t('banks.glAccount') }} *</label><select formControlName="accountId"><option value="">{{ i18n.t('banks.selectGlAccount') }}</option>@for (a of accounts(); track a.id) { @if (!a.isHeader && a.active) { <option [value]="a.id">{{ a.code }} — {{ a.name }}</option> } }</select></div>
+        <div class="field span-2"><label>{{ i18n.t('banks.currency') }}</label><select formControlName="currencyCode"><option value="EGP">{{ i18n.t('parties.currencyEgp') }}</option><option value="USD">{{ i18n.t('parties.currencyUsd') }}</option><option value="EUR">{{ i18n.t('parties.currencyEur') }}</option></select></div>
         <div class="field span-2">
           <label>{{ i18n.t('banks.accountNumberLabel') }} *</label>
           <input class="ltr" formControlName="accountNumber" [placeholder]="i18n.t('banks.accountNumberPlaceholder')" />
@@ -81,5 +142,26 @@
         {{ i18n.t('banks.save') }}
       </button>
     </div>
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="importOpen()" [title]="i18n.t('banks.reconciliation.importTitle')" (close)="importOpen.set(false)">
+    <form [formGroup]="importForm" class="modal-form" (ngSubmit)="importStatement()"><div class="form-grid">
+      <div class="field span-2"><label>{{ i18n.t('banks.reconciliation.bankAccount') }}</label><select formControlName="bankAccountId">@for (bank of banks(); track bank.id) { <option [value]="bank.id">{{ bank.bankName }} — {{ bank.accountNumber }}</option> }</select></div>
+      <div class="field"><label>{{ i18n.t('banks.reconciliation.reference') }}</label><input formControlName="statementReference" /></div>
+      <div class="field"><label>{{ i18n.t('banks.reconciliation.opening') }}</label><input type="number" formControlName="openingBalance" /></div>
+      <div class="field"><label>{{ i18n.t('banks.reconciliation.closing') }}</label><input type="number" formControlName="closingBalance" /></div>
+      <div class="field span-2"><label>{{ i18n.t('banks.reconciliation.csvFile') }}</label><input type="file" accept=".csv,text/csv" (change)="onImportFile($event)" /><small>{{ i18n.t('banks.reconciliation.csvHint') }}</small></div>
+    </div></form>
+    <div modal-actions><button class="button secondary" (click)="importOpen.set(false)">{{ i18n.t('common.cancel') }}</button><button class="button primary" (click)="importStatement()">{{ i18n.t('banks.reconciliation.import') }}</button></div>
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="matchOpen()" [title]="i18n.t('banks.reconciliation.matchTitle')" (close)="matchOpen.set(false)">
+    <form [formGroup]="matchForm" class="modal-form" (ngSubmit)="submitMatch()"><div class="form-grid">
+      <div class="field span-2"><label>{{ i18n.t('banks.reconciliation.journal') }}</label><select formControlName="journalEntryId"><option value="">{{ i18n.t('banks.reconciliation.feeOnly') }}</option>@for (candidate of selectedLine()?.suggestions ?? []; track candidate.journalEntryId) { <option [value]="candidate.journalEntryId">{{ candidate.entryNumber }} — {{ candidate.description }}</option> }</select></div>
+      <div class="field"><label>{{ i18n.t('banks.reconciliation.matchAmount') }}</label><input type="number" min="0.01" formControlName="amount" /></div>
+      <div class="field"><label>{{ i18n.t('banks.reconciliation.feeAmount') }}</label><input type="number" min="0" formControlName="feeAmount" /></div>
+      <div class="field span-2"><label>{{ i18n.t('banks.reconciliation.feeAccount') }}</label><select formControlName="feeExpenseAccountId"><option value="">{{ i18n.t('banks.selectGlAccount') }}</option>@for (a of accounts(); track a.id) { @if (!a.isHeader && a.active && a.type === 'EXPENSE') { <option [value]="a.id">{{ a.code }} — {{ a.name }}</option> } }</select></div>
+    </div></form>
+    <div modal-actions><button class="button secondary" (click)="matchOpen.set(false)">{{ i18n.t('common.cancel') }}</button><button class="button primary" (click)="submitMatch()">{{ i18n.t('banks.reconciliation.confirmMatch') }}</button></div>
   </app-modal-dialog>
 </section>

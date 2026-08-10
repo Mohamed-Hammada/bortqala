@@ -46,7 +46,7 @@ public class TreasuryController {
     @Transactional
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.BankAccountResponse createBankAccount(@Valid @RequestBody TreasuryApi.BankAccountPayload payload) {
-        BankAccount bank = new BankAccount(payload.bankName(), payload.accountNumber(), payload.iban(), payload.swiftCode(), payload.accountId(), payload.active());
+        BankAccount bank = new BankAccount(payload.bankName(), payload.accountNumber(), payload.iban(), payload.swiftCode(), payload.accountId(), payload.currencyCode(), payload.active());
         return toResponse(bankAccountRepository.save(bank));
     }
 
@@ -56,7 +56,7 @@ public class TreasuryController {
     public TreasuryApi.BankAccountResponse updateBankAccount(@PathVariable String id, @Valid @RequestBody TreasuryApi.BankAccountPayload payload) {
         BankAccount bank = bankAccountRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("الحساب البنكي غير موجود", "FIN_BANK_ACCOUNT_NOT_FOUND", HttpStatus.CONFLICT));
-        bank.update(payload.bankName(), payload.accountNumber(), payload.iban(), payload.swiftCode(), payload.accountId(), payload.active());
+        bank.update(payload.bankName(), payload.accountNumber(), payload.iban(), payload.swiftCode(), payload.accountId(), payload.currencyCode(), payload.active());
         return toResponse(bankAccountRepository.save(bank));
     }
 
@@ -133,7 +133,7 @@ public class TreasuryController {
     private TreasuryApi.BankAccountResponse toResponse(BankAccount b) {
         return new TreasuryApi.BankAccountResponse(
                 b.getId(), b.getBankName(), b.getAccountNumber(), b.getIban(), b.getSwiftCode(),
-                b.getAccountId(), b.isActive(), b.getCreatedAt(), b.getUpdatedAt()
+                b.getAccountId(), b.getCurrencyCode(), b.isActive(), b.getCreatedAt(), b.getUpdatedAt()
         );
     }
 

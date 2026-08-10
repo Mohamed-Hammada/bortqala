@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface ApprovalDecisionRepository extends JpaRepository<ApprovalDecision, String> {
     List<ApprovalDecision> findByInstanceIdOrderByDecidedAtAsc(String instanceId);
+    boolean existsByInstanceIdAndStepIdAndDecidedByIgnoreCaseAndDecision(String instanceId, String stepId, String decidedBy, String decision);
+    long countByInstanceIdAndStepIdAndDecision(String instanceId, String stepId, String decision);
 }

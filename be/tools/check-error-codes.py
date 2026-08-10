@@ -21,6 +21,7 @@ CODE_RE = re.compile(
     r'(?:BusinessRuleException|NotFoundException)\(\s*"[^"]*"\s*,\s*"([A-Z][A-Z0-9_]{3,})"'
 )
 NOT_FOUND_RE = re.compile(r'new NotFoundException\([^;]{0,300}?"([A-Z][A-Z0-9_]{3,})"')
+HELPER_RE = re.compile(r'\berror\(\s*"([A-Z][A-Z0-9_]{3,})"\s*,')
 
 codes = set()
 for path in glob.glob(os.path.join(MAIN_SRC, "**", "*.java"), recursive=True):
@@ -29,6 +30,8 @@ for path in glob.glob(os.path.join(MAIN_SRC, "**", "*.java"), recursive=True):
     for match in CODE_RE.finditer(src):
         codes.add(match.group(1))
     for match in NOT_FOUND_RE.finditer(src):
+        codes.add(match.group(1))
+    for match in HELPER_RE.finditer(src):
         codes.add(match.group(1))
 
 known = set()

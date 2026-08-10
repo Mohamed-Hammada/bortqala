@@ -9,6 +9,8 @@ import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -25,6 +27,12 @@ public class BusinessNotification {
     @Column(name = "notification_type", nullable = false, length = 50) private String notificationType;
     @Column(name = "priority", nullable = false, length = 20) private String priority;
     @Column(name = "action_link", length = 500) private String actionLink;
+    @Column(name="exception_key",length=100)private String exceptionKey;
+    @Column(name="impact_ar",length=500)private String impactAr;@Column(name="impact_en",length=500)private String impactEn;
+    @Column(name="reason_ar",length=500)private String reasonAr;@Column(name="reason_en",length=500)private String reasonEn;
+    @Column(name="recommendation_ar",length=500)private String recommendationAr;@Column(name="recommendation_en",length=500)private String recommendationEn;
+    @Column(name="impact_amount",precision=19,scale=4)private BigDecimal impactAmount;@Column(name="impact_currency",length=3)private String impactCurrency;
+    @Column(name="action_label_key",length=120)private String actionLabelKey;@Column(name="role_targets",length=500)private String roleTargets;
     @Column(name = "is_read", nullable = false) private boolean isRead;
     @Column(name = "read_at") private Instant readAt;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
@@ -46,6 +54,9 @@ public class BusinessNotification {
         this.isRead = false;
         this.createdAt = Instant.now();
     }
+
+    public void enrich(String exceptionKey,String impactAr,String impactEn,String reasonAr,String reasonEn,String recommendationAr,String recommendationEn,BigDecimal impactAmount,String impactCurrency,String actionLabelKey,List<String> roleTargets){this.exceptionKey=blank(exceptionKey);this.impactAr=blank(impactAr);this.impactEn=blank(impactEn);this.reasonAr=blank(reasonAr);this.reasonEn=blank(reasonEn);this.recommendationAr=blank(recommendationAr);this.recommendationEn=blank(recommendationEn);this.impactAmount=impactAmount;this.impactCurrency=impactCurrency==null?null:impactCurrency.strip().toUpperCase();this.actionLabelKey=blank(actionLabelKey);this.roleTargets=roleTargets==null?null:roleTargets.stream().filter(java.util.Objects::nonNull).map(v->v.replace("ROLE_","").strip().toUpperCase()).filter(v->!v.isBlank()).distinct().sorted().collect(java.util.stream.Collectors.joining(","));if(this.roleTargets!=null&&this.roleTargets.isBlank())this.roleTargets=null;if(actionLink!=null&&!actionLink.startsWith("/"))actionLink=null;}
+    public List<String> targetRoles(){return roleTargets==null||roleTargets.isBlank()?List.of():List.of(roleTargets.split(","));}private static String blank(String value){return value==null||value.isBlank()?null:value.strip();}
 
     public void markRead() {
         this.isRead = true;

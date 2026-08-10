@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: seed_guided_onboarding_translations
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck: { expectedResult: 0, sql: "SELECT COUNT(*) FROM translations WHERE id LIKE 'v173-%'" }
+      changes:
+        - loadData:
+            file: db/changelog/data/insert/files/20260810_v173_guided_onboarding_translations.csv
+            separator: ;
+            tableName: translations
+            encoding: UTF-8
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v173-%'" }

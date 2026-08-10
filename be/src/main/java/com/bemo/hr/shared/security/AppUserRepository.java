@@ -30,4 +30,5 @@ public interface AppUserRepository extends JpaRepository<AppUser, String> {
 
     boolean existsByAppIdAndUsernameIgnoreCase(String appId, String username);
     boolean existsByAppIdAndUsernameIgnoreCaseAndIdNot(String appId, String username, String id);
+    long countByAppId(String appId);
 }

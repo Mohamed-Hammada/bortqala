@@ -78,7 +78,7 @@ class SupplierPaymentValidationTests {
         when(businessPartyRepository.findById("supplier-a"))
                 .thenReturn(Optional.of(new com.bemo.hr.party.BusinessParty("supplier-a", "مورد أ", null,
                         "SUPPLIER", null, null, null, null, null, true,
-                        null, null, null, null, null, null, null, null, null)));
+                        null, null, null, null, null, null, null, null, "EG123456789012345678901234")));
         when(supplierPaymentRepository.findByOperationId("op-1")).thenReturn(Optional.empty());
         when(supplierPaymentRepository.findBySupplierInvoiceId(invoice.getId())).thenReturn(List.of());
     }
@@ -97,6 +97,19 @@ class SupplierPaymentValidationTests {
         assertThatThrownBy(() -> procurementService.createSupplierPayment(payload))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("يتجاوز الرصيد المتبقي");
+    }
+
+    @Test
+    void rejectsPaymentWhenSupplierBankIsNotVerified() {
+        when(businessPartyRepository.findById("supplier-a"))
+                .thenReturn(Optional.of(new com.bemo.hr.party.BusinessParty("supplier-a", "Supplier A", null,
+                        "SUPPLIER", null, null, null, null, null, true,
+                        null, null, null, null, "EGP", "E_INVOICE", "CASH", "TAX12345", null)));
+
+        assertThatThrownBy(() -> procurementService.createSupplierPayment(payload("supplier-a", new BigDecimal("20.00"))))
+                .isInstanceOf(BusinessRuleException.class)
+                .extracting(ex -> ((BusinessRuleException) ex).getCode())
+                .isEqualTo("PROC_SUPPLIER_BANK_VERIFICATION_REQUIRED");
     }
 
     @Test

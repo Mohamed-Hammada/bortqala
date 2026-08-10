@@ -14,7 +14,9 @@ final class BusinessPartyApi {
                     String notes, String managedType, String responsiblePartyId,
                     String relationshipStartDate, String relationshipEndDate,
                     String currencyCode, String invoicePolicy, String paymentTerms, String taxId,
-                    String bankAccount, boolean active, long version,
+                    String bankAccount, String onboardingStatus, String supplierCategory, String riskLevel,
+                    String ownerUserId, String approvalInstanceId, boolean bankVerified,
+                    Long bankVerifiedAt, String bankVerifiedBy, boolean active, long version,
                     Instant createdAt, Instant updatedAt) { }
 
     record Request(@NotBlank @Size(max = 50) String code,
@@ -35,6 +37,9 @@ final class BusinessPartyApi {
                    @NotBlank @Size(max = 30) String paymentTerms,
                    @Size(max = 50) String taxId,
                    @Size(max = 100) String bankAccount,
+                   @Size(max = 50) String supplierCategory,
+                   @Size(max = 20) String riskLevel,
+                   @Size(max = 100) String ownerUserId,
                    @NotNull Boolean active,
                    Long version) { }
 }

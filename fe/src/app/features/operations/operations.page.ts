@@ -35,7 +35,7 @@ export class OperationsPage {
   readonly store = inject(OperationsStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
-  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | null>(null);
+  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | null>(null);
   readonly itemPagination = new TablePagination();
   readonly movementPagination = new TablePagination();
   readonly balancePagination = new TablePagination();
@@ -76,6 +76,7 @@ export class OperationsPage {
       validators: [Validators.required, Validators.min(0.01)],
     }),
     amountDelta: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    unitCost: new FormControl<number | null>(null, { validators: [Validators.min(0)] }),
     lossPercentage: new FormControl<number | null>(null, {
       validators: [Validators.min(0), Validators.max(100)],
     }),
@@ -129,11 +130,38 @@ export class OperationsPage {
     abbreviation: new FormControl('', { nonNullable: true }),
     description: new FormControl('', { nonNullable: true }),
   });
+  readonly valuationForm = new FormGroup({
+    valuationMethod: new FormControl<'FIFO' | 'WEIGHTED_AVERAGE'>('WEIGHTED_AVERAGE', { nonNullable: true }),
+    inventoryAccountId: new FormControl('', { nonNullable: true }),
+    receiptOffsetAccountId: new FormControl('', { nonNullable: true }),
+    cogsAccountId: new FormControl('', { nonNullable: true }),
+    adjustmentAccountId: new FormControl('', { nonNullable: true }),
+    glPostingEnabled: new FormControl(false, { nonNullable: true }),
+    allowBackdatedPosting: new FormControl(false, { nonNullable: true }),
+  });
+  readonly revaluationForm = new FormGroup({
+    itemId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    newUnitCost: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0.000001)] }),
+    reason: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    occurredAt: new FormControl(this.nowInput(), { nonNullable: true, validators: Validators.required }),
+  });
 
   constructor() {
     void this.store.load();
   }
-  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom'): void {
+  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation'): void {
+    if (kind === 'valuation') {
+      const policy = this.store.valuation()?.policy;
+      if (policy) this.valuationForm.reset({
+        valuationMethod: policy.valuationMethod,
+        inventoryAccountId: policy.inventoryAccountId ?? '',
+        receiptOffsetAccountId: policy.receiptOffsetAccountId ?? '',
+        cogsAccountId: policy.cogsAccountId ?? '',
+        adjustmentAccountId: policy.adjustmentAccountId ?? '',
+        glPostingEnabled: policy.glPostingEnabled,
+        allowBackdatedPosting: policy.allowBackdatedPosting,
+      });
+    }
     this.drawer.set(kind);
   }
   close(): void {
@@ -259,6 +287,45 @@ export class OperationsPage {
       this.notification.success(this.i18n.t('operations.uomCreatedSuccess'));
       this.close();
     }
+  }
+  async saveValuationPolicy(): Promise<void> {
+    if (this.valuationForm.invalid) return this.valuationForm.markAllAsTouched();
+    const value = this.valuationForm.getRawValue();
+    if (value.glPostingEnabled && (!value.inventoryAccountId || !value.receiptOffsetAccountId || !value.cogsAccountId || !value.adjustmentAccountId)) {
+      this.notification.error(this.i18n.t('INV_VAL_GL_ACCOUNTS_REQUIRED'));
+      return;
+    }
+    if (await this.store.saveValuationPolicy({
+      ...value,
+      inventoryAccountId: value.inventoryAccountId || null,
+      receiptOffsetAccountId: value.receiptOffsetAccountId || null,
+      cogsAccountId: value.cogsAccountId || null,
+      adjustmentAccountId: value.adjustmentAccountId || null,
+      version: this.store.valuation()?.policy.version ?? 0,
+    })) {
+      this.notification.success(this.i18n.t('operations.valuation.settingsSaved'));
+      this.close();
+    }
+  }
+  async saveRevaluation(): Promise<void> {
+    if (this.revaluationForm.invalid) return this.revaluationForm.markAllAsTouched();
+    const value = this.revaluationForm.getRawValue();
+    if (await this.store.revalue({
+      ...value,
+      occurredAt: new Date(value.occurredAt).getTime(),
+      operationId: crypto.randomUUID(),
+    })) {
+      this.notification.success(this.i18n.t('operations.valuation.revalued'));
+      this.close();
+    }
+  }
+  money(value: number): string {
+    return new Intl.NumberFormat(this.i18n.locale(), { style: 'currency', currency: 'EGP' }).format(value);
+  }
+  valuationMethodLabel(): string {
+    return this.i18n.t(this.store.valuation()?.policy.valuationMethod === 'FIFO'
+      ? 'operations.valuation.fifo'
+      : 'operations.valuation.weightedAverage');
   }
   date(value: number): string {
     return formatDateTime(value);
@@ -410,6 +477,12 @@ export class OperationsPage {
       } else if (this.drawer() === 'uom') {
         event.preventDefault();
         void this.saveUom();
+      } else if (this.drawer() === 'valuation') {
+        event.preventDefault();
+        void this.saveValuationPolicy();
+      } else if (this.drawer() === 'revaluation') {
+        event.preventDefault();
+        void this.saveRevaluation();
       }
     }
   }

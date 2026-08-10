@@ -475,6 +475,10 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260806_v102_access_guidance_extensions_translations.yaml
   - include:
       file: db/changelog/data/insert/20260806_v103_procurement_i18n_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260806_v106_approval_workflow_engine.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v107_approval_engine_translations.yaml
   - changeSet:
       id: test-v116-unified-document-numbering
       author: codex
@@ -564,3 +568,72 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260809_v152_app_scoped_translations.yaml
   - include:
       file: db/changelog/data/insert/20260809_v153_translation_admin_ui.yaml
+  - include:
+      file: db/changelog/schema/create/20260809_v154_inventory_valuation.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v155_inventory_valuation_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260809_v156_supplier_onboarding.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v157_supplier_onboarding_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260809_v158_bank_reconciliation.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v159_bank_reconciliation_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260809_v160_advanced_approvals.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v161_advanced_approval_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260809_v162_advanced_attendance.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v163_advanced_attendance_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260809_v164_accounts_receivable.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v165_accounts_receivable_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260809_v166_entitlement_change_reason.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v167_entitlement_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260809_v168_industry_pack_framework.yaml
+  - include:
+      file: db/changelog/data/insert/20260809_v169_contractor_workforce_pack.yaml
+  - include:
+      file: db/changelog/schema/create/20260810_v170_trial_demo_control.yaml
+  - include:
+      file: db/changelog/data/insert/20260810_v171_trial_demo_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260810_v172_guided_onboarding_quality.yaml
+  - include:
+      file: db/changelog/data/insert/20260810_v173_guided_onboarding_translations.yaml
+  # V112/V113 were historically missing from the H2 mirror; V174 depends on their table.
+  - include:
+      file: db/changelog/schema/create/20260806_v112_action_center_notifications.yaml
+  - include:
+      file: db/changelog/data/insert/20260806_v113_action_center_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260810_v174_action_center_2.yaml
+  - include:
+      file: db/changelog/data/insert/20260810_v175_action_center_2_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260810_v176_partner_risk_scores.yaml
+  - include:
+      file: db/changelog/data/insert/20260810_v177_partner_risk_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260810_v178_product_analytics_activation.yaml
+  - include:
+      file: db/changelog/data/insert/20260810_v179_product_analytics_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260810_v180_subscription_control_plane.yaml
+  - include:
+      file: db/changelog/data/insert/20260810_v181_subscription_translations.yaml
+  - include:
+      file: db/changelog/schema/create/20260810_v182_support_customer_health.yaml
+  - include:
+      file: db/changelog/data/insert/20260810_v183_support_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260810_v184_data_driven_industry_packs.yaml
+  - include:
+      file: db/changelog/data/insert/20260810_v185_food_distribution_pack_translations.yaml

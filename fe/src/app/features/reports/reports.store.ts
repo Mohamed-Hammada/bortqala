@@ -10,6 +10,8 @@ import {
   AttendanceDecision, BulkDecisionRequest, BulkDecisionResponse, DayAnomalyActionResponse,
   DayAnomalyDecisionRequest, DowntimeDecisionRequest, HolidayProposalStatus, PeriodOption,
   ReportDetails, ReportPayCycle, ReportPeriodSelection, ReportPreview, ReportSummary,
+  AttendanceExceptionWorkbench, AttendanceExceptionBulkRequest, AttendanceExceptionBulkPreview,
+  AttendanceExceptionBulkResult,
 } from './reports.models';
 
 @Injectable()
@@ -20,6 +22,7 @@ export class ReportsStore {
   readonly reports = signal<ReportSummary[]>([]);
   readonly periods = signal<PeriodOption[]>([]);
   readonly details = signal<ReportDetails | null>(null);
+  readonly exceptionWorkbench = signal<AttendanceExceptionWorkbench | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
@@ -55,7 +58,13 @@ export class ReportsStore {
 
   async load(id: string): Promise<void> {
     this.loading.set(true); this.error.set(null);
-    try { this.details.set(await firstValueFrom(this.http.get<ReportDetails>(`/api/v1/reports/${id}`))); }
+    try {
+      const [details, exceptions] = await Promise.all([
+        firstValueFrom(this.http.get<ReportDetails>(`/api/v1/reports/${id}`)),
+        firstValueFrom(this.http.get<AttendanceExceptionWorkbench>(`/api/v1/reports/${id}/attendance-exceptions`)),
+      ]);
+      this.details.set(details); this.exceptionWorkbench.set(exceptions);
+    }
     catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
     finally { this.loading.set(false); }
   }
@@ -117,6 +126,20 @@ export class ReportsStore {
   }
   async reopenDayAnomaly(reportId: string, anomalyId: string): Promise<boolean> {
     return this.mutate(this.http.post<ReportDetails>(`/api/v1/reports/${reportId}/day-anomalies/${anomalyId}/reopen`, {}));
+  }
+  async detectAttendanceExceptions(reportId: string): Promise<boolean> {
+    try { await firstValueFrom(this.http.post<number>(`/api/v1/reports/${reportId}/attendance-exceptions/detect`, {})); await this.load(reportId); return true; }
+    catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); return false; }
+  }
+  async previewAttendanceExceptions(reportId: string, request: AttendanceExceptionBulkRequest): Promise<AttendanceExceptionBulkPreview | null> {
+    try { return await firstValueFrom(this.http.post<AttendanceExceptionBulkPreview>(`/api/v1/reports/${reportId}/attendance-exceptions/bulk-preview`, request)); }
+    catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); return null; }
+  }
+  async resolveAttendanceExceptions(reportId: string, request: AttendanceExceptionBulkRequest): Promise<AttendanceExceptionBulkResult | null> {
+    try {
+      const response = await firstValueFrom(this.http.post<AttendanceExceptionBulkResult>(`/api/v1/reports/${reportId}/attendance-exceptions/bulk-resolve`, request));
+      this.exceptionWorkbench.set(response.workbench); await this.load(reportId); return response;
+    } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); return null; }
   }
   async export(id: string): Promise<void> {
     try {

@@ -27,6 +27,7 @@ import java.util.List;
 @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
 public class OperationsController {
     private final OperationsService operationsService;
+    private final InventoryValuationService inventoryValuationService;
     private final AuthService authService;
 
     @GetMapping OperationsApi.Snapshot snapshot() { return operationsService.snapshot(); }
@@ -83,6 +84,32 @@ public class OperationsController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.Snapshot adjustment(@Valid @RequestBody OperationsApi.AdjustmentRequest request, Authentication authentication) {
         return operationsService.createStockAdjustment(request, authentication.getName());
+    }
+
+    @GetMapping("/valuation/settings")
+    OperationsApi.ValuationPolicyView valuationSettings() { return inventoryValuationService.policy(); }
+
+    @PutMapping("/valuation/settings")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    OperationsApi.ValuationPolicyView updateValuationSettings(
+            @Valid @RequestBody OperationsApi.ValuationPolicyRequest request, Authentication authentication) {
+        return inventoryValuationService.updatePolicy(request, authentication.getName());
+    }
+
+    @GetMapping("/valuation/report")
+    OperationsApi.ValuationReport valuationReport() { return inventoryValuationService.report(); }
+
+    @GetMapping("/valuation/movements/{movementId}")
+    OperationsApi.MovementCostView movementCost(@PathVariable String movementId) {
+        return inventoryValuationService.movementCost(movementId);
+    }
+
+    @PostMapping("/valuation/revaluations")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    OperationsApi.RevaluationView revalue(@Valid @RequestBody OperationsApi.RevaluationRequest request,
+                                          Authentication authentication) {
+        return inventoryValuationService.revalue(request, authentication.getName());
     }
 
     @GetMapping("/export.xlsx")

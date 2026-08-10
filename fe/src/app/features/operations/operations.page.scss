@@ -1,7 +1,25 @@
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 1rem;
+}
+.valuation-total {
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--line));
+  background: linear-gradient(135deg, var(--surface), var(--gold-glow));
+}
+.valuation-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.warning-text { color: var(--warning); font-weight: 700; }
+.valuation-details {
+  margin-top: 0.75rem;
+  padding: 0;
+  overflow: hidden;
+  summary { cursor: pointer; padding: 0.8rem 1rem; color: var(--gold); font-weight: 700; }
+  .table-card { border: 0; border-top: 1px solid var(--line); border-radius: 0; box-shadow: none; }
 }
 .metric-card {
   padding: 1.2rem;

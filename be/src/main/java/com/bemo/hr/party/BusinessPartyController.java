@@ -21,6 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 class BusinessPartyController {
     private final BusinessPartyService businessPartyService;
+    private final SupplierOnboardingService supplierOnboardingService;
 
     @GetMapping
     List<BusinessPartyApi.Response> list() { return businessPartyService.list(); }
@@ -47,5 +48,89 @@ class BusinessPartyController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     java.util.Map<String, Integer> cleanupInvalidPhone() {
         return java.util.Map.of("cleaned", businessPartyService.cleanupInvalidPhone());
+    }
+
+    @PostMapping("/supplier-requests")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @ResponseStatus(HttpStatus.CREATED)
+    BusinessPartyApi.Response createSupplierRequest(@Valid @RequestBody SupplierOnboardingApi.SupplierRequest request) {
+        return supplierOnboardingService.createRequest(request);
+    }
+
+    @GetMapping("/supplier-duplicates")
+    SupplierOnboardingApi.DuplicateResponse duplicates(
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String taxId,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String iban,
+            @org.springframework.web.bind.annotation.RequestParam(required = false) String excludeSupplierId) {
+        return supplierOnboardingService.duplicates(taxId, iban, excludeSupplierId);
+    }
+
+    @GetMapping("/{id}/supplier-360")
+    SupplierOnboardingApi.Supplier360 supplier360(@PathVariable String id) {
+        return supplierOnboardingService.get360(id);
+    }
+
+    @PostMapping(value = "/{id}/documents", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @ResponseStatus(HttpStatus.CREATED)
+    SupplierOnboardingApi.DocumentResponse addDocument(@PathVariable String id,
+            @Valid @org.springframework.web.bind.annotation.RequestPart("metadata") SupplierOnboardingApi.DocumentRequest request,
+            @org.springframework.web.bind.annotation.RequestPart("file") org.springframework.web.multipart.MultipartFile file) {
+        return supplierOnboardingService.addDocument(id, request, file);
+    }
+
+    @GetMapping("/{id}/documents/{documentId}/download")
+    org.springframework.http.ResponseEntity<byte[]> downloadDocument(@PathVariable String id, @PathVariable String documentId) {
+        SupplierDocument document = supplierOnboardingService.downloadDocument(id, documentId);
+        return org.springframework.http.ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType(document.getContentType()))
+                .contentLength(document.getFileSize())
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.attachment().filename(document.getFileName(), java.nio.charset.StandardCharsets.UTF_8).build().toString())
+                .body(document.contentCopy());
+    }
+
+    @PostMapping("/{id}/documents/{documentId}/verify")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    SupplierOnboardingApi.DocumentResponse verifyDocument(@PathVariable String id, @PathVariable String documentId) {
+        return supplierOnboardingService.verifyDocument(id, documentId);
+    }
+
+    @PostMapping("/{id}/bank-accounts")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @ResponseStatus(HttpStatus.CREATED)
+    SupplierOnboardingApi.BankAccountResponse addBank(@PathVariable String id,
+            @Valid @RequestBody SupplierOnboardingApi.BankAccountRequest request) {
+        return supplierOnboardingService.addBankAccount(id, request);
+    }
+
+    @PostMapping("/{id}/bank-accounts/{accountId}/verify")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    SupplierOnboardingApi.BankAccountResponse verifyBank(@PathVariable String id, @PathVariable String accountId) {
+        return supplierOnboardingService.verifyBankAccount(id, accountId);
+    }
+
+    @PostMapping("/{id}/onboarding/submit")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    BusinessPartyApi.Response submitOnboarding(@PathVariable String id) { return supplierOnboardingService.submit(id); }
+
+    @PostMapping("/{id}/onboarding/approve")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    BusinessPartyApi.Response approveOnboarding(@PathVariable String id) { return supplierOnboardingService.approve(id); }
+
+    @PostMapping("/{id}/onboarding/activate")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    BusinessPartyApi.Response activateOnboarding(@PathVariable String id) { return supplierOnboardingService.activate(id); }
+
+    @PostMapping("/{id}/onboarding/suspend")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    BusinessPartyApi.Response suspend(@PathVariable String id, @RequestBody SupplierOnboardingApi.TransitionRequest request) {
+        return supplierOnboardingService.suspend(id, request.reason());
+    }
+
+    @PostMapping("/{id}/onboarding/blacklist")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    BusinessPartyApi.Response blacklist(@PathVariable String id, @RequestBody SupplierOnboardingApi.TransitionRequest request) {
+        return supplierOnboardingService.blacklist(id, request.reason());
     }
 }

@@ -10,6 +10,7 @@ export interface ApprovalWorkflowStep {
   minimumApprovals: number;
   allowSelfApproval: boolean;
   escalationHours?: number;
+  decisionPolicy: 'ANY_N';
 }
 
 export interface ApprovalWorkflowDefinition {
@@ -33,6 +34,12 @@ export interface ApprovalTask {
   status: string;
   submittedBy: string;
   submittedAt: number;
+  dueAt?: number;
+  overdue: boolean;
+  escalationLevel: number;
+  approvalsReceived: number;
+  approvalsRequired: number;
+  delegatedFrom?: string;
 }
 
 export interface DecisionRecord {
@@ -43,6 +50,7 @@ export interface DecisionRecord {
   comment?: string;
   decidedBy: string;
   decidedAt: number;
+  delegatedFrom?: string;
 }
 
 export interface ApprovalInstanceDetail {
@@ -54,5 +62,35 @@ export interface ApprovalInstanceDetail {
   submittedBy: string;
   submittedAt: number;
   completedAt?: number;
+  workflowDefinitionVersion: number;
+  documentSnapshotJson: string;
+  stepDueAt?: number;
+  overdue: boolean;
+  escalationLevel: number;
+  approvalsReceived: number;
+  approvalsRequired: number;
   history: DecisionRecord[];
+}
+
+export interface ApprovalDelegation {
+  id: string;
+  delegatorUserId: string;
+  delegateUserId: string;
+  documentType?: string;
+  startsAt: number;
+  endsAt: number;
+  reason: string;
+  active: boolean;
+  createdBy: string;
+  createdAt: number;
+  version: number;
+}
+
+export interface ApprovalDelegationPayload {
+  delegatorUserId: string;
+  delegateUserId: string;
+  documentType?: string;
+  startsAt: number;
+  endsAt: number;
+  reason: string;
 }

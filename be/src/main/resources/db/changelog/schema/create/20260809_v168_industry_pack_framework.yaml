@@ -1,0 +1,73 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_industry_packs
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not: { tableExists: { tableName: industry_packs } }
+      changes:
+        - createTable:
+            tableName: industry_packs
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: code, type: varchar(80), constraints: { nullable: false, unique: true } }
+              - column: { name: name_key, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: description_key, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: pack_version, type: int, constraints: { nullable: false } }
+              - column: { name: country_code, type: varchar(3), constraints: { nullable: false } }
+              - column: { name: required_features_json, type: varchar(2000), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+      rollback:
+        - dropTable: { tableName: industry_packs }
+  - changeSet:
+      id: create_tenant_industry_packs
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not: { tableExists: { tableName: tenant_industry_packs } }
+      changes:
+        - createTable:
+            tableName: tenant_industry_packs
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_tenant_pack_app, references: apps(id) } }
+              - column: { name: pack_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_tenant_pack_definition, references: industry_packs(id) } }
+              - column: { name: installed_version, type: int, constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: settings_json, type: varchar(4000), constraints: { nullable: false } }
+              - column: { name: customized, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: last_upgrade_operation_id, type: varchar(80) }
+              - column: { name: installed_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: installed_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: tenant_industry_packs, columnNames: app_id,pack_id, constraintName: uk_tenant_industry_pack }
+        - addUniqueConstraint: { tableName: tenant_industry_packs, columnNames: app_id,operation_id, constraintName: uk_tenant_pack_operation }
+      rollback:
+        - dropTable: { tableName: tenant_industry_packs }
+  - changeSet:
+      id: create_industry_onboarding_steps
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not: { tableExists: { tableName: industry_onboarding_steps } }
+      changes:
+        - createTable:
+            tableName: industry_onboarding_steps
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_pack_step_app, references: apps(id) } }
+              - column: { name: tenant_pack_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_pack_step_install, references: tenant_industry_packs(id) } }
+              - column: { name: step_key, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: sequence_no, type: int, constraints: { nullable: false } }
+              - column: { name: prerequisite_key, type: varchar(100) }
+              - column: { name: optional, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: completed_at, type: timestamp with time zone }
+              - column: { name: completed_by, type: varchar(100) }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: industry_onboarding_steps, columnNames: app_id,tenant_pack_id,step_key, constraintName: uk_industry_onboarding_step }
+      rollback:
+        - dropTable: { tableName: industry_onboarding_steps }

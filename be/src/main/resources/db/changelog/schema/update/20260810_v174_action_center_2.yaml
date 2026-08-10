@@ -1,0 +1,37 @@
+databaseChangeLog:
+  - changeSet:
+      id: extend_business_notifications_for_action_center
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: HALT
+        - tableExists: { tableName: business_notifications }
+        - not: { columnExists: { tableName: business_notifications, columnName: exception_key } }
+      changes:
+        - addColumn:
+            tableName: business_notifications
+            columns:
+              - column: { name: exception_key, type: varchar(100) }
+              - column: { name: impact_ar, type: varchar(500) }
+              - column: { name: impact_en, type: varchar(500) }
+              - column: { name: reason_ar, type: varchar(500) }
+              - column: { name: reason_en, type: varchar(500) }
+              - column: { name: recommendation_ar, type: varchar(500) }
+              - column: { name: recommendation_en, type: varchar(500) }
+              - column: { name: impact_amount, type: "decimal(19,4)" }
+              - column: { name: impact_currency, type: varchar(3) }
+              - column: { name: action_label_key, type: varchar(120) }
+              - column: { name: role_targets, type: varchar(500) }
+        - createIndex: { tableName: business_notifications, indexName: ix_notification_action_queue, columns: [ { column: { name: app_id } }, { column: { name: recipient_username } }, { column: { name: is_read } }, { column: { name: priority } }, { column: { name: created_at } } ] }
+      rollback:
+        - dropIndex: { tableName: business_notifications, indexName: ix_notification_action_queue }
+        - dropColumn: { tableName: business_notifications, columnName: exception_key }
+        - dropColumn: { tableName: business_notifications, columnName: impact_ar }
+        - dropColumn: { tableName: business_notifications, columnName: impact_en }
+        - dropColumn: { tableName: business_notifications, columnName: reason_ar }
+        - dropColumn: { tableName: business_notifications, columnName: reason_en }
+        - dropColumn: { tableName: business_notifications, columnName: recommendation_ar }
+        - dropColumn: { tableName: business_notifications, columnName: recommendation_en }
+        - dropColumn: { tableName: business_notifications, columnName: impact_amount }
+        - dropColumn: { tableName: business_notifications, columnName: impact_currency }
+        - dropColumn: { tableName: business_notifications, columnName: action_label_key }
+        - dropColumn: { tableName: business_notifications, columnName: role_targets }

@@ -267,7 +267,7 @@ public class ProcurementService {
 
         String actor = getCurrentUser();
         lines.stream().filter(line -> line.getQuantity().signum() > 0).forEach(line ->
-                operationsService.recordGoodsReceipt(line.getItemId(), po.getSupplierId(), line.getQuantity(),
+                operationsService.recordGoodsReceipt(line.getItemId(), po.getSupplierId(), line.getQuantity(), line.getUnitPrice(),
                         saved.getGrnNumber(), line.getQualityReason(),
                         receiptDate.atStartOfDay(ZoneOffset.UTC).toInstant(), actor));
         boolean fullyReceived = orderedLines.values().stream().allMatch(line ->
@@ -382,6 +382,7 @@ public class ProcurementService {
 
         if (!inv.getSupplierId().equals(payload.supplierId()))
             throw new BusinessRuleException("الفاتورة المحددة لا تخص المورد المختار. اختر فاتورة مفتوحة لنفس المورد.", "PROC_INVOICE_SUPPLIER_MISMATCH", HttpStatus.CONFLICT);
+        requirePayableSupplier(payload.supplierId());
         if (payload.amount().signum() <= 0)
             throw new BusinessRuleException("يجب أن يكون مبلغ الدفعة أكبر من صفر.", "PROC_PAYMENT_AMOUNT_POSITIVE", HttpStatus.CONFLICT);
         BigDecimal paidBefore = paidAmount(inv.getId());
@@ -419,8 +420,17 @@ public class ProcurementService {
     private void requireSupplier(String id) {
         var supplier = businessPartyRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("المورد غير موجود في دليل الموردين.", "PROC_SUPPLIER_NOT_IN_DIRECTORY", HttpStatus.CONFLICT));
-        if (!supplier.isActive() || !"SUPPLIER".equals(supplier.getPartyType()))
+        if (!supplier.isProcurementAllowed())
             throw new BusinessRuleException("يجب اختيار مورد نشط ومسجل في دليل الموردين.", "PROC_SUPPLIER_ACTIVE_REQUIRED", HttpStatus.CONFLICT);
+    }
+
+    private void requirePayableSupplier(String id) {
+        var supplier = businessPartyRepository.findById(id)
+                .orElseThrow(() -> new BusinessRuleException("المورد غير موجود في دليل الموردين.", "PROC_SUPPLIER_NOT_IN_DIRECTORY", HttpStatus.CONFLICT));
+        if (!supplier.isPaymentAllowed()) {
+            throw new BusinessRuleException("يجب تفعيل المورد والتحقق من حسابه البنكي قبل الدفع.",
+                    "PROC_SUPPLIER_BANK_VERIFICATION_REQUIRED", HttpStatus.CONFLICT);
+        }
     }
 
     private String resolveCurrency(String requested, String supplierId) {

@@ -27,12 +27,13 @@ public class ApprovalWorkflowStep {
     @Column(name = "minimum_approvals") private int minimumApprovals;
     @Column(name = "allow_self_approval") private boolean allowSelfApproval;
     @Column(name = "escalation_hours") private Integer escalationHours;
+    @Column(name = "decision_policy", nullable = false, length = 20) private String decisionPolicy;
 
     protected ApprovalWorkflowStep() { }
 
     public ApprovalWorkflowStep(String workflowDefinitionId, int stepOrder, String stepCode, String name,
                                 String requiredRole, String requiredUserId, BigDecimal amountFrom, BigDecimal amountTo,
-                                int minimumApprovals, boolean allowSelfApproval, Integer escalationHours) {
+                                int minimumApprovals, boolean allowSelfApproval, Integer escalationHours, String decisionPolicy) {
         this.id = UUID.randomUUID().toString();
         this.workflowDefinitionId = workflowDefinitionId;
         this.stepOrder = stepOrder;
@@ -45,5 +46,13 @@ public class ApprovalWorkflowStep {
         this.minimumApprovals = minimumApprovals > 0 ? minimumApprovals : 1;
         this.allowSelfApproval = allowSelfApproval;
         this.escalationHours = escalationHours;
+        this.decisionPolicy = decisionPolicy == null || decisionPolicy.isBlank() ? "ANY_N" : decisionPolicy.strip().toUpperCase();
+    }
+
+    public ApprovalWorkflowStep(String workflowDefinitionId, int stepOrder, String stepCode, String name,
+                                String requiredRole, String requiredUserId, BigDecimal amountFrom, BigDecimal amountTo,
+                                int minimumApprovals, boolean allowSelfApproval, Integer escalationHours) {
+        this(workflowDefinitionId, stepOrder, stepCode, name, requiredRole, requiredUserId, amountFrom, amountTo,
+                minimumApprovals, allowSelfApproval, escalationHours, "ANY_N");
     }
 }

@@ -12,6 +12,12 @@ export interface BusinessNotificationItem {
   notificationType: string;
   priority: string;
   actionLink?: string;
+  exceptionKey?: string;
+  impactAr?: string; impactEn?: string;
+  reasonAr?: string; reasonEn?: string;
+  recommendationAr?: string; recommendationEn?: string;
+  impactAmount?: number; impactCurrency?: string;
+  actionLabelKey?: string; roleTargets: string[]; priorityScore: number;
   isRead: boolean;
   readAt?: number;
   createdAt: number;

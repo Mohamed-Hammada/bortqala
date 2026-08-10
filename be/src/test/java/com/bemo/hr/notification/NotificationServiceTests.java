@@ -9,6 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,5 +62,35 @@ class NotificationServiceTests {
 
         assertThat(response.isRead()).isTrue();
         assertThat(response.readAt()).isNotNull();
+    }
+
+    @Test
+    void actionCenterRanksRoleRelevantExceptionAheadOfGenericCard() {
+        var generic=new BusinessNotification("admin","عام","Generic","رسالة","Message","INFO","HIGH","/dashboard");
+        var finance=new BusinessNotification("admin","تحصيل","Collection","رسالة","Message","COLLECTION_EXCEPTION","MEDIUM","/sales");
+        finance.enrich("OVERDUE_RECEIVABLE","أثر","Impact","سبب","Reason","توصية","Recommendation",new BigDecimal("12000"),"egp","actionCenter.resolve",List.of("FINANCE_MANAGER"));
+        when(notificationRepository.findByRecipientUsernameIgnoreCaseOrderByCreatedAtDesc("admin")).thenReturn(List.of(generic,finance));
+        var result=notificationService.getNotificationsForUser("admin", Set.of("FINANCE_MANAGER"));
+        assertThat(result).extracting(NotificationApi.NotificationResponse::exceptionKey).containsExactly("OVERDUE_RECEIVABLE",null);
+        assertThat(result.get(0).priorityScore()).isEqualTo(90);
+        assertThat(result.get(0).impactAmount()).isEqualByComparingTo("12000");
+    }
+
+    @Test
+    void advancedCardCarriesReasonRecommendationAndSafeDirectAction() {
+        var payload=new NotificationApi.SendNotificationPayload("admin","عنوان","Title","رسالة","Message","ATTENDANCE_EXCEPTION","CRITICAL","/reports/1","MISSING_PUNCH","أثر","Payroll impact","سبب","Missing checkout","توصية","Review evidence",null,null,"actionCenter.review",List.of("HR_MANAGER"));
+        when(notificationRepository.save(any())).thenAnswer(invocation->invocation.getArgument(0));
+        var result=notificationService.sendNotification(payload,"system");
+        assertThat(result.reasonEn()).isEqualTo("Missing checkout");
+        assertThat(result.recommendationEn()).isEqualTo("Review evidence");
+        assertThat(result.actionLink()).isEqualTo("/reports/1");
+        assertThat(result.roleTargets()).containsExactly("HR_MANAGER");
+    }
+
+    @Test
+    void externalActionLinksAreRejected() {
+        var payload=new NotificationApi.SendNotificationPayload("admin","عنوان","Title","رسالة","Message","INFO","INFO","https://example.com",null,null,null,null,null,null,null,null,null,null,List.of());
+        when(notificationRepository.save(any())).thenAnswer(invocation->invocation.getArgument(0));
+        assertThat(notificationService.sendNotification(payload,"system").actionLink()).isNull();
     }
 }

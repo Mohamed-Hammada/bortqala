@@ -16,3 +16,7 @@
 **EN:** The review workspace keeps KPI cards, advanced filters, Smart AI bulk actions, filtered status tabs, and anomaly controls within the available content width. Bulk actions use responsive grids, the page never creates document-level horizontal overflow, and wide attendance data scrolls only inside its table container.
 
 **AR:** تحافظ واجهة المراجعة على بطاقات المؤشرات والتصفية المتقدمة والإجراءات الجماعية الذكية وتبويبات الحالات وأدوات الشذوذ داخل عرض المحتوى المتاح. تستخدم الإجراءات تخطيطاً متجاوباً، ولا تنشئ الصفحة تمريراً أفقياً عاماً، بينما يظل تمرير بيانات الحضور العريضة داخل الجدول فقط.
+
+**EN:** The advanced exception workbench shows open/critical summaries, policy and score explanations, deterministic filters, selection, and a server-calculated preview. Daily evidence changes only after explicit confirmation.
+
+**AR:** تعرض منضدة الاستثناءات المتقدمة ملخص المفتوح والحرج وشرح السياسة والدرجة والتصفية والاختيار ومعاينة محسوبة من الخادم، ولا تتغير أدلة الأيام إلا بعد التأكيد الصريح.

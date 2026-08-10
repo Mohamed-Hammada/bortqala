@@ -48,6 +48,7 @@ public class PayrollService {
     private final WorkforceAdvanceService workforceAdvanceService;
     private final PayrollExcelExporter payrollExcelExporter;
     private final com.bemo.hr.audit.application.AuditService auditService;
+    private final com.bemo.hr.reporting.application.AttendanceExceptionService attendanceExceptionService;
 
     public List<PayrollApi.ExplanationResponse> getPaymentExplanation(String paymentId) {
         var explanations = explanationRepository.findBySalaryPaymentIdOrderByCreatedAtAsc(paymentId);
@@ -270,6 +271,9 @@ public class PayrollService {
         var monthObj = YearMonth.of(request.periodYear(), request.periodMonth());
         LocalDate pStart = request.periodStart() == null ? monthObj.atDay(1) : request.periodStart();
         LocalDate pEnd = request.periodEnd() == null ? monthObj.atEndOfMonth() : request.periodEnd();
+        var payrollReport = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
+                com.bemo.hr.employee.domain.PayCycle.MONTHLY, pStart, pEnd).orElse(null);
+        attendanceExceptionService.assertPayrollReady(payrollReport == null ? null : payrollReport.getId(), emp.getId());
 
         // Immutably derive gross, deductions, advances, and net salary
         BigDecimal base = emp.getBaseSalary() == null ? BigDecimal.ZERO : emp.getBaseSalary();
@@ -321,6 +325,11 @@ public class PayrollService {
     @Transactional
     public PayrollApi.SheetResponse transitionStatus(PayrollApi.StatusTransitionRequest request, String actor) {
         var sheet = getSheet(request.periodYear(), request.periodMonth(), request.categoryId());
+        if (request.targetStatus() == PaymentStatus.APPROVED || request.targetStatus() == PaymentStatus.POSTED
+                || request.targetStatus() == PaymentStatus.PAID) {
+            sheet.rows().stream().map(PayrollApi.PayrollRow::reportId).filter(java.util.Objects::nonNull).distinct()
+                    .forEach(reportId -> attendanceExceptionService.assertPayrollReady(reportId, null));
+        }
         for (var row : sheet.rows()) {
             if (row.paymentStatus() != PaymentStatus.REVERSED && row.paymentStatus() != PaymentStatus.PAID) {
                 var periodKind = row.periodKind() == null ? "FULL_MONTH" : row.periodKind();
