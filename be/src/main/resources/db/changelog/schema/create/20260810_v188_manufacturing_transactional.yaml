@@ -19,6 +19,8 @@ databaseChangeLog:
               - column:
                   name: effective_to
                   type: date
+        - dropTable:
+            tableName: bom_lines
         - createTable:
             tableName: bom_lines
             columns:
