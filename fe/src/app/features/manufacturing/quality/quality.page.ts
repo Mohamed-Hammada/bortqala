@@ -7,6 +7,7 @@ import { I18nService } from '../../../core/i18n.service';
 import { NotificationService } from '../../../core/notification.service';
 import { apiErrorMessage } from '../../../core/api-error';
 import { formatDate } from '../../../core/date';
+import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 
 export interface QualityInspection {
   id: string;
@@ -23,7 +24,7 @@ export interface QualityInspection {
 
 @Component({
   selector: 'app-quality-page',
-  imports: [ReactiveFormsModule, DecimalPipe],
+  imports: [ReactiveFormsModule, DecimalPipe, ModalDialogComponent],
   templateUrl: './quality.page.html',
   styleUrl: './quality.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -97,7 +98,7 @@ export class QualityPage {
         inspectionDate: dateMs,
       };
       await firstValueFrom(this.http.post('/api/v1/manufacturing/quality', payload));
-      this.notification.success('تم تسجيل محضر فحص الجودة بنجاح ✓');
+      this.notification.success(this.i18n.t('quality.recordSavedSuccess'));
       this.drawerOpen.set(false);
       await this.load();
     } catch (e) {

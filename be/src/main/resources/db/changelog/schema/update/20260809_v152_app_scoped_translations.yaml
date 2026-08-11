@@ -1,0 +1,62 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260809-v152-app-scoped-translations
+      author: bemo-erp
+      comment: Allows a translation key and locale to have a nullable platform default plus one override per SaaS application.
+      changes:
+        - addColumn:
+            tableName: translations
+            columns:
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+        - addForeignKeyConstraint:
+            baseTableName: translations
+            baseColumnNames: app_id
+            referencedTableName: apps
+            referencedColumnNames: id
+            constraintName: fk_translations_app
+            onDelete: CASCADE
+        - dropUniqueConstraint:
+            tableName: translations
+            constraintName: uq_translations_key_locale
+        - createIndex:
+            tableName: translations
+            indexName: uq_translations_app_key_locale
+            unique: true
+            columns:
+              - column: { name: app_id }
+              - column: { name: translation_key }
+              - column: { name: locale }
+      rollback:
+        - delete:
+            tableName: translations
+            where: app_id IS NOT NULL
+        - dropIndex:
+            tableName: translations
+            indexName: uq_translations_app_key_locale
+        - addUniqueConstraint:
+            tableName: translations
+            columnNames: translation_key, locale
+            constraintName: uq_translations_key_locale
+        - dropForeignKeyConstraint:
+            baseTableName: translations
+            constraintName: fk_translations_app
+        - dropColumn:
+            tableName: translations
+            columnName: app_id
+
+  - changeSet:
+      id: 20260809-v152-default-translation-uniqueness
+      author: bemo-erp
+      dbms: postgresql
+      comment: PostgreSQL backstop preventing duplicate NULL-app default translations.
+      changes:
+        - sql:
+            sql: |
+              CREATE UNIQUE INDEX IF NOT EXISTS uq_translations_default_key_locale
+              ON translations (translation_key, locale)
+              WHERE app_id IS NULL;
+      rollback:
+        - sql:
+            sql: DROP INDEX IF EXISTS uq_translations_default_key_locale;

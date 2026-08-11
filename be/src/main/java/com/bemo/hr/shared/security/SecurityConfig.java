@@ -41,7 +41,7 @@ import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
-@EnableConfigurationProperties(JwtProperties.class)
+@EnableConfigurationProperties({JwtProperties.class, DemoNoLoginProperties.class})
 public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -60,10 +60,14 @@ public class SecurityConfig {
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/refresh",
                                 "/api/v1/auth/logout",
-                                "/api/v1/i18n/**",
+                                "/api/v1/auth/demo-login",
                                 "/api/v1/system/status",
                                 "/actuator/health",
                                 "/actuator/health/**"
+                        ).permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/i18n/ar-EG",
+                                "/api/v1/i18n/en-US"
                         ).permitAll()
                         .requestMatchers(
                                 "/api/v1/auth/change-password",

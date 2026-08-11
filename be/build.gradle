@@ -47,11 +47,31 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
     finalizedBy tasks.named('jacocoTestReport')
+
+    // Docker/Testcontainers unavailable in some local environments; skip those suites
+    // with ./gradlew test -PskipDockerTests or -PskipDockerTests=true.
+    def skipDockerTests = providers.gradleProperty('skipDockerTests')
+        .map { it.trim().isEmpty() || it.toBoolean() }
+        .getOrElse(false)
+    if (skipDockerTests) {
+        [
+            '**/PostgresIntegrationTest*',
+            '**/LiquibaseUpgradePathTests*',
+            '**/PunchSourceIdentityMigrationTests*',
+            '**/PunchSourceIdentityConcurrencyTests*',
+            '**/ReportingBulkDecisionConcurrencyTests*',
+            '**/ReportingDecisionHistoryContractTests*',
+            '**/ReportingGenerationContractTests*',
+            '**/SupplierPaymentConcurrencyTests*',
+            '**/GoodsReceiptPersistenceTests*',
+            '**/WorkforceImportCommitConcurrencyTests*',
+        ].each { exclude it }
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-    options.release = 21
+    options.release = 17
     options.compilerArgs += ['-parameters']
 }
 

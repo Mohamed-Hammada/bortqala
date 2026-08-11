@@ -1,0 +1,7 @@
+id;translation_key;locale;text_value
+v126-001;procurement.matchResolutionNotesRequired;ar-EG;"ملاحظات التسوية مطلوبة."
+v126-002;procurement.matchResolutionNotesRequired;en-US;"Resolution notes are required."
+v126-003;procurement.matchResolvedSuccess;ar-EG;"تمت تسوية تفاوت المطابقة بنجاح."
+v126-004;procurement.matchResolvedSuccess;en-US;"The match variance was resolved successfully."
+v126-005;procurement.resolvingMatch;ar-EG;"جارٍ تسوية التفاوت..."
+v126-006;procurement.resolvingMatch;en-US;"Resolving variance..."

@@ -1,0 +1,119 @@
+id;key;locale;text
+v165-001;sales.ar.title;en-US;Accounts receivable and collections
+v165-002;sales.ar.title;ar-EG;الذمم المدينة والتحصيل
+v165-003;sales.ar.description;en-US;Issue customer invoices allocate receipts and follow overdue balances
+v165-004;sales.ar.description;ar-EG;إصدار فواتير العملاء وتخصيص التحصيلات ومتابعة الأرصدة المتأخرة
+v165-005;sales.ar.totalOutstanding;en-US;Total outstanding
+v165-006;sales.ar.totalOutstanding;ar-EG;إجمالي المستحق
+v165-007;sales.ar.openInvoices;en-US;Open invoices
+v165-008;sales.ar.openInvoices;ar-EG;الفواتير المفتوحة
+v165-009;sales.ar.over90;en-US;Over 90 days
+v165-010;sales.ar.over90;ar-EG;أكثر من 90 يوماً
+v165-011;sales.ar.collectionTasks;en-US;Collection tasks
+v165-012;sales.ar.collectionTasks;ar-EG;مهام التحصيل
+v165-013;sales.ar.invoices;en-US;Invoices
+v165-014;sales.ar.invoices;ar-EG;الفواتير
+v165-015;sales.ar.receipts;en-US;Receipts
+v165-016;sales.ar.receipts;ar-EG;التحصيلات
+v165-017;sales.ar.collections;en-US;Collections
+v165-018;sales.ar.collections;ar-EG;المتابعات
+v165-019;sales.ar.creditControl;en-US;Credit control
+v165-020;sales.ar.creditControl;ar-EG;الرقابة الائتمانية
+v165-021;sales.ar.invoiceNumber;en-US;Invoice number
+v165-022;sales.ar.invoiceNumber;ar-EG;رقم الفاتورة
+v165-023;sales.ar.customerId;en-US;Customer ID
+v165-024;sales.ar.customerId;ar-EG;معرف العميل
+v165-025;sales.ar.invoiceDate;en-US;Invoice date
+v165-026;sales.ar.invoiceDate;ar-EG;تاريخ الفاتورة
+v165-027;sales.ar.dueDate;en-US;Due date
+v165-028;sales.ar.dueDate;ar-EG;تاريخ الاستحقاق
+v165-029;sales.ar.currency;en-US;Currency
+v165-030;sales.ar.currency;ar-EG;العملة
+v165-031;sales.ar.amount;en-US;Amount
+v165-032;sales.ar.amount;ar-EG;المبلغ
+v165-033;sales.ar.createInvoice;en-US;Create invoice
+v165-034;sales.ar.createInvoice;ar-EG;إنشاء فاتورة
+v165-035;sales.ar.current;en-US;Current
+v165-036;sales.ar.current;ar-EG;حالي
+v165-037;sales.ar.days1To30;en-US;1–30 days
+v165-038;sales.ar.days1To30;ar-EG;1–30 يوماً
+v165-039;sales.ar.days31To60;en-US;31–60 days
+v165-040;sales.ar.days31To60;ar-EG;31–60 يوماً
+v165-041;sales.ar.days61To90;en-US;61–90 days
+v165-042;sales.ar.days61To90;ar-EG;61–90 يوماً
+v165-043;sales.ar.outstanding;en-US;Outstanding
+v165-044;sales.ar.outstanding;ar-EG;المتبقي
+v165-045;sales.ar.issue;en-US;Issue
+v165-046;sales.ar.issue;ar-EG;إصدار
+v165-047;sales.ar.noInvoices;en-US;No customer invoices yet
+v165-048;sales.ar.noInvoices;ar-EG;لا توجد فواتير عملاء بعد
+v165-049;sales.ar.receiptNumber;en-US;Receipt number
+v165-050;sales.ar.receiptNumber;ar-EG;رقم التحصيل
+v165-051;sales.ar.receiptDate;en-US;Receipt date
+v165-052;sales.ar.receiptDate;ar-EG;تاريخ التحصيل
+v165-053;sales.ar.unallocated;en-US;Unallocated advance
+v165-054;sales.ar.unallocated;ar-EG;دفعة مقدمة غير مخصصة
+v165-055;sales.ar.allocationAmount;en-US;Allocation amount
+v165-056;sales.ar.allocationAmount;ar-EG;مبلغ التخصيص
+v165-057;sales.ar.recordReceipt;en-US;Record receipt
+v165-058;sales.ar.recordReceipt;ar-EG;تسجيل التحصيل
+v165-059;sales.ar.noReceipts;en-US;No customer receipts yet
+v165-060;sales.ar.noReceipts;ar-EG;لا توجد تحصيلات عملاء بعد
+v165-061;sales.ar.daysOverdue;en-US;Days overdue
+v165-062;sales.ar.daysOverdue;ar-EG;أيام التأخير
+v165-063;sales.ar.markContacted;en-US;Mark contacted
+v165-064;sales.ar.markContacted;ar-EG;تسجيل التواصل
+v165-065;sales.ar.noCollectionTasks;en-US;No overdue collection tasks
+v165-066;sales.ar.noCollectionTasks;ar-EG;لا توجد مهام تحصيل متأخرة
+v165-067;sales.ar.creditLimit;en-US;Credit limit
+v165-068;sales.ar.creditLimit;ar-EG;الحد الائتماني
+v165-069;sales.ar.paymentTermsDays;en-US;Payment terms days
+v165-070;sales.ar.paymentTermsDays;ar-EG;أيام السداد
+v165-071;sales.ar.creditHold;en-US;Place customer on credit hold
+v165-072;sales.ar.creditHold;ar-EG;إيقاف ائتمان العميل
+v165-073;sales.ar.availableCredit;en-US;Available credit
+v165-074;sales.ar.availableCredit;ar-EG;الائتمان المتاح
+v165-075;sales.ar.invoiceCreated;en-US;Customer invoice created
+v165-076;sales.ar.invoiceCreated;ar-EG;تم إنشاء فاتورة العميل
+v165-077;sales.ar.invoiceIssued;en-US;Customer invoice issued
+v165-078;sales.ar.invoiceIssued;ar-EG;تم إصدار فاتورة العميل
+v165-079;sales.ar.receiptRecorded;en-US;Customer receipt recorded
+v165-080;sales.ar.receiptRecorded;ar-EG;تم تسجيل تحصيل العميل
+v165-081;sales.ar.creditSaved;en-US;Credit controls saved
+v165-082;sales.ar.creditSaved;ar-EG;تم حفظ ضوابط الائتمان
+v165-083;sales.ar.collectionUpdated;en-US;Collection task updated
+v165-084;sales.ar.collectionUpdated;ar-EG;تم تحديث مهمة التحصيل
+v165-085;sales.ar.allocationTooHigh;en-US;Allocation cannot exceed the receipt amount
+v165-086;sales.ar.allocationTooHigh;ar-EG;لا يمكن أن يتجاوز التخصيص مبلغ التحصيل
+v165-087;AR_ALLOCATION_CUSTOMER_CURRENCY_MISMATCH;en-US;Allocation customer or currency does not match the receipt
+v165-088;AR_ALLOCATION_CUSTOMER_CURRENCY_MISMATCH;ar-EG;عميل أو عملة التخصيص لا تطابق التحصيل
+v165-089;AR_ALLOCATION_EXCEEDS_OUTSTANDING;en-US;Allocation exceeds the invoice outstanding amount
+v165-090;AR_ALLOCATION_EXCEEDS_OUTSTANDING;ar-EG;التخصيص يتجاوز الرصيد المتبقي للفاتورة
+v165-091;AR_ALLOCATION_EXCEEDS_RECEIPT;en-US;Allocations exceed the receipt amount
+v165-092;AR_ALLOCATION_EXCEEDS_RECEIPT;ar-EG;التخصيصات تتجاوز مبلغ التحصيل
+v165-093;AR_COLLECTION_STATUS_INVALID;en-US;Collection status is invalid
+v165-094;AR_COLLECTION_STATUS_INVALID;ar-EG;حالة التحصيل غير صحيحة
+v165-095;AR_COLLECTION_TASK_NOT_FOUND;en-US;Collection task was not found
+v165-096;AR_COLLECTION_TASK_NOT_FOUND;ar-EG;مهمة التحصيل غير موجودة
+v165-097;AR_CREDIT_LIMIT_EXCEEDED;en-US;Customer credit limit would be exceeded
+v165-098;AR_CREDIT_LIMIT_EXCEEDED;ar-EG;سيتم تجاوز الحد الائتماني للعميل
+v165-099;AR_CUSTOMER_CREDIT_HOLD;en-US;Customer is on credit hold
+v165-100;AR_CUSTOMER_CREDIT_HOLD;ar-EG;ائتمان العميل موقوف
+v165-101;AR_CUSTOMER_INACTIVE;en-US;Customer is inactive or is not a customer
+v165-102;AR_CUSTOMER_INACTIVE;ar-EG;العميل غير نشط أو ليس عميلاً
+v165-103;AR_CUSTOMER_NOT_FOUND;en-US;Customer was not found
+v165-104;AR_CUSTOMER_NOT_FOUND;ar-EG;العميل غير موجود
+v165-105;AR_DUE_DATE_INVALID;en-US;Due date cannot be before invoice date
+v165-106;AR_DUE_DATE_INVALID;ar-EG;لا يمكن أن يسبق الاستحقاق تاريخ الفاتورة
+v165-107;AR_DUPLICATE_ALLOCATION;en-US;The receipt contains a duplicate invoice allocation
+v165-108;AR_DUPLICATE_ALLOCATION;ar-EG;يتضمن التحصيل تخصيصاً مكرراً للفاتورة
+v165-109;AR_INVOICE_NOT_FOUND;en-US;Customer invoice was not found
+v165-110;AR_INVOICE_NOT_FOUND;ar-EG;فاتورة العميل غير موجودة
+v165-111;AR_INVOICE_NUMBER_EXISTS;en-US;Customer invoice number already exists
+v165-112;AR_INVOICE_NUMBER_EXISTS;ar-EG;رقم فاتورة العميل موجود مسبقاً
+v165-113;AR_RECEIPT_NUMBER_EXISTS;en-US;Customer receipt number already exists
+v165-114;AR_RECEIPT_NUMBER_EXISTS;ar-EG;رقم تحصيل العميل موجود مسبقاً
+v165-115;SALE_ORDER_STATE_INVALID;en-US;Sales order cannot be confirmed from its current state
+v165-116;SALE_ORDER_STATE_INVALID;ar-EG;لا يمكن تأكيد أمر البيع من حالته الحالية
+v165-117;STALE_STATE;en-US;The record changed since it was loaded. Refresh and retry
+v165-118;STALE_STATE;ar-EG;تغير السجل منذ تحميله. حدّث الصفحة وأعد المحاولة

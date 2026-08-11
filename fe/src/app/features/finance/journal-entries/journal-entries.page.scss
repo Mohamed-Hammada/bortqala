@@ -4,4 +4,7 @@
 .lines-section { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
 .lines-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
 .lines-table th, .lines-table td { padding: 8px; border-bottom: 1px solid var(--border-color); }
+.lines-table td.line-error { color: var(--danger); font-size: 12px; padding-top: 2px; padding-bottom: 8px; }
+.lines-table select.invalid,
+.lines-table input.invalid { border-color: var(--danger); }
 .btn-sm { font-size: 13px; padding: 4px 8px; }

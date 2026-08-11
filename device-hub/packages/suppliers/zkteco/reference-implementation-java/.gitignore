@@ -1,0 +1,10 @@
+**/target/
+**/bin/
+**/obj/
+.idea/
+.vscode/
+*.log
+.env
+vendor/**/*
+!vendor/README.md
+!vendor/**/.gitkeep

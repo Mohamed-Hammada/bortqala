@@ -1,0 +1,20 @@
+{
+  "model": "REPLACE_WITH_DEVICE_MODEL",
+  "firmware": "REPLACE_WITH_DEVICE_FIRMWARE",
+  "platform_version": "",
+  "server_version": "",
+  "os_name": "windows",
+  "architecture": "x64",
+  "sdk_versions": {
+    "biostar-device-sdk": "REPLACE_WITH_EXACT_VERSION",
+    "biostar1-legacy-sdk": "REPLACE_WITH_EXACT_VERSION",
+    "g-sdk": "REPLACE_WITH_EXACT_VERSION",
+    "svp-android-sdk": "REPLACE_WITH_EXACT_VERSION"
+  },
+  "api_versions": {
+    "biostar2-api-v1": "REPLACE_IF_API_HAS_EXPLICIT_VERSION",
+    "biostar2-api-v2": "REPLACE_IF_API_HAS_EXPLICIT_VERSION",
+    "biostar2-local-api": "REPLACE_IF_API_HAS_EXPLICIT_VERSION"
+  },
+  "capability_hints": []
+}

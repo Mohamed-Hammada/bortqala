@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260806-v99-employee-deactivation-translations
+      author: codex
+      comment: Arabic/English translations for employee deactivation and reactivation actions.
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260806_v99_employee_deactivation_translations.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v99-%'" }

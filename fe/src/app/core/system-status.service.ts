@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 export interface SystemStatus {
@@ -10,6 +10,7 @@ export interface SystemStatus {
   serverTime: number;
   cacheUpdatedAt: number | null;
   cacheUpdatedBy: string | null;
+  demoNoLoginEnabled: boolean;
 }
 
 export type BackendConnectionState = 'CHECKING' | 'ONLINE' | 'OFFLINE';
@@ -27,6 +28,7 @@ export class SystemStatusService {
   readonly connectionState = signal<BackendConnectionState>('CHECKING');
   readonly status = signal<SystemStatus | null>(null);
   readonly lastCheckedAt = signal<number | null>(null);
+  readonly demoNoLoginEnabled = computed(() => this.status()?.demoNoLoginEnabled ?? false);
 
   async initialize(): Promise<void> {
     await this.checkNow();

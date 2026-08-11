@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260808-v138-reports-preset-translations
+      author: bemo-erp
+      comment: "REM-006: report period shortcut cards now state the action verb (use this period / fill only) and an explicit screen-reader name. Also refreshes reports.presetHint text for existing deployments."
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260808_v138_reports_preset_translations.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+        - sql:
+            sql: |
+              UPDATE translations SET text_value = 'تُملأ الحقول فقط — ثم اختر معاينة أو إنشاء التقرير'
+              WHERE translation_key = 'reports.presetHint' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'Only fills the form - then choose Preview or Create'
+              WHERE translation_key = 'reports.presetHint' AND locale = 'en-US';
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v138-%'" }

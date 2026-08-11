@@ -32,9 +32,9 @@
     }
 
     &.active {
-      color: var(--primary, #b8860b);
-      border-bottom-color: var(--primary, #b8860b);
-      background: var(--surface-card, #ffffff);
+      color: var(--gold);
+      border-bottom-color: var(--gold);
+      background: var(--surface);
       font-weight: 700;
     }
   }
@@ -601,5 +601,80 @@
   .excel-theme-grid,
   .segmented-pills-grid.two-col {
     grid-template-columns: 1fr;
+  }
+}
+
+/* BEMO theme-safe settings controls */
+.settings-default-page-select {
+  max-width: 300px;
+}
+
+.settings-section-divider {
+  margin-top: var(--space-6, 24px);
+  padding-top: var(--space-4, 16px);
+  border-top: 1px solid var(--line);
+}
+
+.settings-option-stack {
+  gap: var(--space-3, 12px);
+  margin-top: var(--space-3, 12px);
+}
+
+.settings-toggle-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--surface-muted);
+  color: var(--ink);
+}
+
+.settings-toggle-card:hover {
+  border-color: var(--gold);
+  background: var(--surface-hover);
+}
+
+.settings-option-hint {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+}
+
+.settings-inline-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-top: var(--space-2, 8px);
+}
+
+.settings-nav-tabs .tab-btn:hover {
+  background: var(--surface-hover);
+}
+
+/* UI5-07: categorized product-standard settings tabs */
+.settings-tab-groups {
+  display: grid;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-5, 20px);
+}
+
+.settings-tab-group {
+  justify-content: flex-start;
+}
+
+.settings-tab-group-admin {
+  background: color-mix(in srgb, var(--surface-muted) 82%, var(--canvas));
+}
+
+.settings-tab-group .app-tab {
+  min-height: 38px;
+}
+
+@media (max-width: 620px) {
+  .settings-tab-group .app-tab {
+    flex: 1 1 140px;
   }
 }

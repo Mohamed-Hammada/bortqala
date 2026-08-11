@@ -1,5 +1,6 @@
 package com.bemo.hr.finance.api;
 
+import com.bemo.hr.finance.application.ExchangeRateHintService;
 import com.bemo.hr.finance.domain.BankAccount;
 import com.bemo.hr.finance.domain.Currency;
 import com.bemo.hr.finance.domain.TaxRate;
@@ -13,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.ZoneOffset;
 import java.util.List;
 
 @RestController
@@ -22,13 +24,16 @@ public class TreasuryController {
     private final BankAccountRepository bankAccountRepository;
     private final TaxRateRepository taxRateRepository;
     private final CurrencyRepository currencyRepository;
+    private final ExchangeRateHintService exchangeRateHintService;
 
     public TreasuryController(BankAccountRepository bankAccountRepository,
                               TaxRateRepository taxRateRepository,
-                              CurrencyRepository currencyRepository) {
+                              CurrencyRepository currencyRepository,
+                              ExchangeRateHintService exchangeRateHintService) {
         this.bankAccountRepository = bankAccountRepository;
         this.taxRateRepository = taxRateRepository;
         this.currencyRepository = currencyRepository;
+        this.exchangeRateHintService = exchangeRateHintService;
     }
 
     // --- Bank Accounts ---
@@ -39,19 +44,19 @@ public class TreasuryController {
 
     @PostMapping("/banks")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.BankAccountResponse createBankAccount(@Valid @RequestBody TreasuryApi.BankAccountPayload payload) {
-        BankAccount bank = new BankAccount(payload.bankName(), payload.accountNumber(), payload.iban(), payload.swiftCode(), payload.accountId(), payload.active());
+        BankAccount bank = new BankAccount(payload.bankName(), payload.accountNumber(), payload.iban(), payload.swiftCode(), payload.accountId(), payload.currencyCode(), payload.active());
         return toResponse(bankAccountRepository.save(bank));
     }
 
     @PutMapping("/banks/{id}")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.BankAccountResponse updateBankAccount(@PathVariable String id, @Valid @RequestBody TreasuryApi.BankAccountPayload payload) {
         BankAccount bank = bankAccountRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("الحساب البنكي غير موجود", "FIN_BANK_ACCOUNT_NOT_FOUND", HttpStatus.CONFLICT));
-        bank.update(payload.bankName(), payload.accountNumber(), payload.iban(), payload.swiftCode(), payload.accountId(), payload.active());
+        bank.update(payload.bankName(), payload.accountNumber(), payload.iban(), payload.swiftCode(), payload.accountId(), payload.currencyCode(), payload.active());
         return toResponse(bankAccountRepository.save(bank));
     }
 
@@ -63,7 +68,7 @@ public class TreasuryController {
 
     @PostMapping("/taxes")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.TaxRateResponse createTaxRate(@Valid @RequestBody TreasuryApi.TaxRatePayload payload) {
         TaxRate.Type type = TaxRate.Type.valueOf(payload.taxType().toUpperCase());
         TaxRate tax = new TaxRate(payload.code(), payload.name(), payload.ratePercentage(), type, payload.accountId(), payload.active());
@@ -72,7 +77,7 @@ public class TreasuryController {
 
     @PutMapping("/taxes/{id}")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.TaxRateResponse updateTaxRate(@PathVariable String id, @Valid @RequestBody TreasuryApi.TaxRatePayload payload) {
         TaxRate tax = taxRateRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("ضريبة النظام غير موجودة", "FIN_SYSTEM_TAX_NOT_FOUND", HttpStatus.CONFLICT));
@@ -89,7 +94,7 @@ public class TreasuryController {
 
     @PostMapping("/currencies")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.CurrencyResponse createCurrency(@Valid @RequestBody TreasuryApi.CurrencyPayload payload) {
         Currency currency = new Currency(payload.code(), payload.name(), payload.symbol(), payload.isBase(), payload.exchangeRate(), payload.active());
         return toResponse(currencyRepository.save(currency));
@@ -97,7 +102,7 @@ public class TreasuryController {
 
     @PutMapping("/currencies/{id}")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.CurrencyResponse updateCurrency(@PathVariable String id, @Valid @RequestBody TreasuryApi.CurrencyPayload payload) {
         Currency currency = currencyRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("العملة غير موجودة", "FIN_CURRENCY_NOT_FOUND", HttpStatus.CONFLICT));
@@ -105,10 +110,30 @@ public class TreasuryController {
         return toResponse(currencyRepository.save(currency));
     }
 
+    // --- Online exchange-rate hints (Frankfurter) ---
+    @GetMapping("/exchange-rate-hints/settings")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR')")
+    public ExchangeRateHintApi.SettingsResponse exchangeRateHintSettings() {
+        return exchangeRateHintService.settings();
+    }
+
+    @PutMapping("/exchange-rate-hints/settings")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    public ExchangeRateHintApi.SettingsResponse updateExchangeRateHintSettings(
+            @Valid @RequestBody ExchangeRateHintApi.SettingsRequest request) {
+        return exchangeRateHintService.updateSettings(request);
+    }
+
+    @PostMapping("/exchange-rate-hints/refresh")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    public ExchangeRateHintApi.RefreshResponse refreshExchangeRateHints() {
+        return exchangeRateHintService.refreshNow();
+    }
+
     private TreasuryApi.BankAccountResponse toResponse(BankAccount b) {
         return new TreasuryApi.BankAccountResponse(
                 b.getId(), b.getBankName(), b.getAccountNumber(), b.getIban(), b.getSwiftCode(),
-                b.getAccountId(), b.isActive(), b.getCreatedAt(), b.getUpdatedAt()
+                b.getAccountId(), b.getCurrencyCode(), b.isActive(), b.getCreatedAt(), b.getUpdatedAt()
         );
     }
 
@@ -120,9 +145,20 @@ public class TreasuryController {
     }
 
     private TreasuryApi.CurrencyResponse toResponse(Currency c) {
+        Long providerDate = c.getReferenceRateDate() == null
+                ? null
+                : c.getReferenceRateDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
+
         return new TreasuryApi.CurrencyResponse(
                 c.getId(), c.getCode(), c.getName(), c.getSymbol(), c.isBase(),
-                c.getExchangeRate(), c.isActive(), c.getCreatedAt(), c.getUpdatedAt()
+                c.getExchangeRate(),
+                c.getReferenceExchangeRate(),
+                c.getReferenceRateProvider(),
+                c.getReferenceRateBaseCode(),
+                providerDate,
+                c.getReferenceRateFetchedAt(),
+                c.getReferenceRateSupported(),
+                c.isActive(), c.getCreatedAt(), c.getUpdatedAt()
         );
     }
 }

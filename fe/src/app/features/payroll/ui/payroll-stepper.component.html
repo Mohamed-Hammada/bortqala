@@ -1,4 +1,4 @@
-<div class="payroll-stepper-container" role="region" aria-label="مسار حالة المرتبات">
+<div class="payroll-stepper-container" role="region" [attr.aria-label]="i18n.t('payroll.stepperAria')">
   <div class="stepper-track">
     @for (step of steps; track step.key; let idx = $index) {
       <div
@@ -14,7 +14,7 @@
           }
         </div>
         <div class="step-label">
-          {{ isEn() ? step.labelEn : step.labelAr }}
+          {{ label(step) }}
         </div>
       </div>
       @if (idx < steps.length - 1) {

@@ -32,7 +32,7 @@ export class ReportsPage {
   readonly pagedReports = computed(() => this.pagination.slice(this.store.reports()));
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
-  private readonly initialRange = this.currentMonthRange();
+  private readonly initialRange = this.currentDayRange();
   readonly periodForm = this.formBuilder.nonNullable.group({
     periodStart: [this.initialRange.start, Validators.required],
     periodEnd: [this.initialRange.end, Validators.required],
@@ -47,17 +47,36 @@ export class ReportsPage {
     });
     this.periodForm.valueChanges.subscribe(() => this.previewResult.set(null));
   }
+
   changeYear(value: string): void {
     this.year.set(Number(value));
     void this.store.list(this.year());
   }
-  async create(period: PeriodOption): Promise<void> {
-    const id = await this.store.create({
-      periodStart: period.start,
-      periodEnd: period.end,
+
+  onPeriodStartChanged(): void {
+    const start = this.periodForm.controls.periodStart.value;
+    if (!start) return;
+    // A newly selected start date begins as a one-day range.
+    // The user can then deliberately extend the end date.
+    this.periodForm.controls.periodEnd.setValue(start);
+    this.previewResult.set(null);
+    this.customError.set(null);
+  }
+
+  /**
+   * Preset cards are shortcuts for configuring the form, not an immediate
+   * create side effect. The user still has Preview and Create as explicit actions.
+   */
+  applyPreset(period: PeriodOption): void {
+    this.customError.set(null);
+    this.previewResult.set(null);
+    this.periodForm.setValue({
+      periodStart: epochToDateInput(period.start),
+      periodEnd: epochToDateInput(period.end),
       payCycle: period.kind === 'MONTHLY' ? 'MONTHLY' : 'HALF_MONTHLY',
     });
-    if (id) await this.router.navigate(['/reports', id]);
+    this.periodForm.markAsDirty();
+    document.querySelector<HTMLFormElement>('form')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   async createCustom(): Promise<void> {
@@ -74,7 +93,11 @@ export class ReportsPage {
       return;
     }
     const id = await this.store.create({ periodStart, periodEnd, payCycle: value.payCycle });
-    if (id) await this.router.navigate(['/reports', id]);
+    if (id) {
+      await this.router.navigate(['/reports', id]);
+    } else if (this.store.error()) {
+      this.customError.set(this.store.error());
+    }
   }
 
   async previewCustom(): Promise<void> {
@@ -86,7 +109,9 @@ export class ReportsPage {
     const value = this.periodForm.getRawValue();
     this.previewing.set(true);
     try {
-      this.previewResult.set(await this.store.preview(value.periodStart, value.periodEnd, value.payCycle));
+      const preview = await this.store.preview(value.periodStart, value.periodEnd, value.payCycle);
+      this.previewResult.set(preview);
+      if (!preview && this.store.error()) this.customError.set(this.store.error());
     } finally {
       this.previewing.set(false);
     }
@@ -108,42 +133,29 @@ export class ReportsPage {
   cycleLabel(period: PeriodOption): string {
     return this.i18n.t(period.kind === 'MONTHLY' ? 'reports.cycleMonthly' : 'reports.cycleHalf');
   }
-  date(value: number): string {
-    return formatDate(value);
-  }
-  dateTime(value: number): string {
-    return formatDateTime(value);
-  }
+  date(value: number): string { return formatDate(value); }
+  dateTime(value: number): string { return formatDateTime(value); }
   label(status: ReportStatus): string {
-    return this.i18n.t(
-      {
-        DRAFT: 'status.draft',
-        IN_REVIEW: 'status.inReview',
-        APPROVED: 'status.approved',
-        EXPORTED: 'status.exported',
-      }[status],
-    );
+    return this.i18n.t({
+      DRAFT: 'status.draft', IN_REVIEW: 'status.inReview',
+      APPROVED: 'status.approved', EXPORTED: 'status.exported',
+    }[status]);
   }
 
   payCycleLabel(value: ReportPayCycle): string {
-    return this.i18n.t(
-      {
-        MONTHLY: 'reports.monthlyShort',
-        HALF_MONTHLY: 'reports.halfMonthly',
-        THIRTY_DAYS: 'reports.thirtyDays',
-      }[value],
-    );
+    return this.i18n.t({
+      MONTHLY: 'reports.monthlyShort',
+      HALF_MONTHLY: 'reports.halfMonthly',
+      THIRTY_DAYS: 'reports.thirtyDays',
+    }[value]);
   }
 
-  private currentMonthRange(): { start: string; end: string } {
+  private currentDayRange(): { start: string; end: string } {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1;
-    const lastDay = new Date(year, month, 0).getDate();
-    const mm = String(month).padStart(2, '0');
-    return {
-      start: `${year}-${mm}-01`,
-      end: `${year}-${mm}-${String(lastDay).padStart(2, '0')}`,
-    };
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const today = `${yyyy}-${mm}-${dd}`;
+    return { start: today, end: today };
   }
 }

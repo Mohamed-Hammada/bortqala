@@ -5,12 +5,12 @@
       <h1>{{ i18n.t('fiscal.title') }}</h1>
       <p>{{ i18n.t('fiscal.description') }}</p>
     </div>
-    <div class="toolbar">
-      <div class="field">
+    <div class="toolbar fiscal-toolbar">
+      <div class="field fiscal-year-field">
         <label>{{ i18n.t('fiscal.yearLabel') }}</label>
         <input #yInput type="number" class="ltr" [value]="year()" (change)="year.set(+yInput.value); load()" />
       </div>
-      <button class="button primary" (click)="generateYear()">⚡ {{ i18n.t('fiscal.createButton') }}</button>
+      <button class="button primary fiscal-generate-button" (click)="generateYear()">{{ i18n.t('fiscal.createButton') }}</button>
     </div>
   </header>
 

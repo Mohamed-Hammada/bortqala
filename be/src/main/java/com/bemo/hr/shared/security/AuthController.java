@@ -10,6 +10,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -84,6 +85,18 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/auth/sessions/revoke-all")
+    @PreAuthorize("isAuthenticated()")
+    ResponseEntity<Void> logoutAllDevices(HttpServletResponse servletResponse,
+                                          Authentication authentication) {
+        try {
+            authService.revokeOwnSessions(authentication.getName());
+        } finally {
+            clearRefreshCookie(servletResponse);
+        }
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/auth/change-password")
     @PreAuthorize("isAuthenticated()")
     ResponseEntity<Void> changePassword(@Valid @RequestBody AuthApi.ChangePasswordRequest request,
@@ -112,7 +125,7 @@ public class AuthController {
     AuthApi.UserResponse me(Authentication authentication) { return authService.current(authentication.getName()); }
 
     @GetMapping("/users/me")
-    AuthApi.MeResponse usersMe(Jwt jwt) {
+    AuthApi.MeResponse usersMe(@AuthenticationPrincipal Jwt jwt) {
         return authService.me(jwt.getSubject(), jwt.getExpiresAt());
     }
 
@@ -160,7 +173,10 @@ public class AuthController {
     @PostMapping("/users")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
-    AuthApi.UserResponse create(@Valid @RequestBody AuthApi.UserUpsertRequest request) { return authService.create(request); }
+    AuthApi.UserResponse create(@Valid @RequestBody AuthApi.UserUpsertRequest request,
+                                Authentication authentication) {
+        return authService.create(request, authentication.getName());
+    }
 
     @PutMapping("/users/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")

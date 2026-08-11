@@ -410,7 +410,7 @@
                     <div class="detail-grid">
                       <div class="detail-box">
                         <span>{{ i18n.t('review.expectedInLabel') }}</span>
-                        <strong>08:00 AM</strong>
+                        <strong class="text-muted">—</strong>
                       </div>
                       <div class="detail-box">
                         <span>{{ i18n.t('review.firstPunchLabel') }}</span>
@@ -463,6 +463,52 @@
         (pageSizeChange)="pagination.changePageSize($event)"
       />
     </div>
+
+    <section class="exception-workbench">
+      <div class="section-head">
+        <div><h2>{{ i18n.t('review.exceptionWorkbenchTitle') }}</h2><p>{{ i18n.t('review.exceptionWorkbenchHint') }}</p></div>
+        <button class="button secondary" type="button" (click)="detectAttendanceExceptions()">{{ i18n.t('review.detectExceptions') }}</button>
+      </div>
+      <div class="exception-summary">
+        <article><strong>{{ exceptionSummary().open }}</strong><span>{{ i18n.t('review.exceptionOpen') }}</span></article>
+        <article><strong>{{ exceptionSummary().critical }}</strong><span>{{ i18n.t('review.exceptionCritical') }}</span></article>
+        <article><strong>{{ exceptionSummary().affectedEmployees }}</strong><span>{{ i18n.t('review.exceptionEmployees') }}</span></article>
+        <article><strong>{{ exceptionSummary().resolved }}</strong><span>{{ i18n.t('review.exceptionResolved') }}</span></article>
+      </div>
+      <div class="exception-toolbar">
+        <button type="button" [class.active]="exceptionFilter() === 'OPEN'" (click)="exceptionFilter.set('OPEN')">{{ i18n.t('review.exceptionOpen') }}</button>
+        <button type="button" [class.active]="exceptionFilter() === 'CRITICAL'" (click)="exceptionFilter.set('CRITICAL')">{{ i18n.t('review.exceptionCritical') }}</button>
+        <button type="button" [class.active]="exceptionFilter() === 'ALL'" (click)="exceptionFilter.set('ALL')">{{ i18n.t('common.all') }}</button>
+        <button type="button" (click)="selectVisibleExceptions()">{{ i18n.t('review.selectVisible') }}</button>
+      </div>
+      <div class="table-wrap"><table class="data-table exception-table">
+        <thead><tr><th></th><th>{{ i18n.t('review.employee') }}</th><th>{{ i18n.t('review.exceptionType') }}</th><th>{{ i18n.t('review.exceptionScore') }}</th><th>{{ i18n.t('review.exceptionExplanation') }}</th><th>{{ i18n.t('review.exceptionPolicy') }}</th><th>{{ i18n.t('common.status') }}</th></tr></thead>
+        <tbody>
+          @for (item of attendanceExceptions(); track item.id) {
+            <tr [class.critical-row]="item.payrollBlocking && item.status === 'OPEN'">
+              <td><input type="checkbox" [disabled]="item.status !== 'OPEN'" [checked]="exceptionSelected(item.id)" (change)="toggleException(item.id)" /></td>
+              <td><strong>{{ item.employeeName }}</strong><small>{{ item.workDate | date:'yyyy-MM-dd' }} · {{ item.categoryName }}</small></td>
+              <td>{{ exceptionTypeLabel(item) }}</td><td><span class="score" [class.critical]="item.payrollBlocking">{{ item.score }}</span></td>
+              <td>{{ i18n.t(item.explanationKey, { minutes: item.metricMinutes }) }}</td><td>{{ item.policyName }} <small>{{ item.policyScope }}</small></td><td>{{ item.status }}</td>
+            </tr>
+          } @empty { <tr><td colspan="7" class="empty-state">{{ i18n.t('review.exceptionEmpty') }}</td></tr> }
+        </tbody>
+      </table></div>
+      <div class="bulk-exception-actions">
+        <select [ngModel]="exceptionResolution()" (ngModelChange)="exceptionResolution.set($event)"><option value="ACCEPT">{{ i18n.t('review.exceptionAccept') }}</option><option value="MARK_PRESENT">{{ i18n.t('review.exceptionMarkPresent') }}</option><option value="MARK_ABSENT">{{ i18n.t('review.exceptionMarkAbsent') }}</option><option value="IGNORE">{{ i18n.t('review.exceptionIgnore') }}</option></select>
+        <input [ngModel]="exceptionReason()" (ngModelChange)="exceptionReason.set($event)" [placeholder]="i18n.t('review.exceptionReason')" />
+        <button type="button" class="button gold" (click)="previewExceptionBulk()">{{ i18n.t('review.bulkPreview') }}</button>
+      </div>
+    </section>
+
+    @if (exceptionPreview(); as preview) {
+      <div class="modal-overlay" (click)="exceptionPreview.set(null)"><div class="confirm-dialog" (click)="$event.stopPropagation()">
+        <h3>{{ i18n.t('review.exceptionPreviewTitle') }}</h3>
+        <div class="preview-grid"><div><span>{{ i18n.t('review.exceptionSelected') }}</span><strong>{{ preview.selected }}</strong></div><div><span>{{ i18n.t('review.exceptionEditable') }}</span><strong>{{ preview.editable }}</strong></div><div><span>{{ i18n.t('review.exceptionPayrollCleared') }}</span><strong>{{ preview.payrollBlockersCleared }}</strong></div><div><span>{{ i18n.t('review.exceptionExcluded') }}</span><strong>{{ preview.alreadyClosed }}</strong></div></div>
+        <p>{{ i18n.t('review.exceptionNoChangeBeforeConfirm') }}</p>
+        <div class="modal-actions"><button class="button gold" [disabled]="resolvingExceptions()" (click)="applyExceptionBulk()">{{ i18n.t('common.confirm') }}</button><button class="button secondary" (click)="exceptionPreview.set(null)">{{ i18n.t('common.cancel') }}</button></div>
+      </div></div>
+    }
 
     <!-- Persisted day anomaly workflow -->
     <div class="card downtimes-card">
@@ -611,11 +657,15 @@
             <h3>{{ i18n.t(ps.titleKey) }}</h3>
           </div>
           <div class="modal-body">
-            <input #promptInput class="form-input ltr" type="text" [value]="ps.defaultValue" autofocus />
+            <input #promptInput class="form-input ltr" type="text" [value]="ps.defaultValue" autofocus
+              [disabled]="savingRowId() !== null" (keydown.enter)="savingRowId() === null && ps.onConfirm(promptInput.value)" />
+            @if (ps.error) {
+              <div class="save-error" role="alert">{{ ps.error }}</div>
+            }
           </div>
           <div class="modal-footer">
-            <button class="button gold" (click)="ps.onConfirm(promptInput.value)">{{ i18n.t('common.confirm', {}, 'تأكيد') }}</button>
-            <button class="button secondary" (click)="ps.onCancel()">{{ i18n.t('common.cancel', {}, 'إلغاء') }}</button>
+            <button class="button gold" (click)="ps.onConfirm(promptInput.value)" [disabled]="savingRowId() !== null">{{ savingRowId() !== null ? i18n.t('common.executing', {}, 'جارٍ الحفظ...') : (ps.error ? i18n.t('common.retry', {}, 'إعادة المحاولة') : i18n.t('common.confirm', {}, 'تأكيد')) }}</button>
+            <button class="button secondary" (click)="ps.onCancel()" [disabled]="savingRowId() !== null">{{ i18n.t('common.cancel', {}, 'إلغاء') }}</button>
           </div>
         </div>
       </div>

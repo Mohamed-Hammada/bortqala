@@ -7,56 +7,70 @@
     </div>
   </header>
 
-  <!-- Settings Tabs Header -->
-  <nav class="settings-nav-tabs" [attr.aria-label]="i18n.t('settings.tabsAriaLabel', undefined, 'تبويبات الإعدادات')">
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab() === 'appearance'"
-      (click)="setTab('appearance')"
-    >
-      🎨 {{ i18n.t('settings.tabAppearance', undefined, 'المظهر واللغة') }}
-    </button>
+  <!-- Settings tabs: categorized into daily/user settings and system/admin settings. -->
+  <div class="settings-tab-groups">
+    <nav class="app-tabs app-tabs-wrap settings-tab-group" [attr.aria-label]="i18n.t('settings.tabsAriaLabel', undefined, 'تبويبات الإعدادات')">
+      <button type="button" class="app-tab" [class.active]="activeTab() === 'appearance'" (click)="setTab('appearance')">
+        {{ i18n.t('settings.tabAppearance', undefined, 'المظهر واللغة') }}
+      </button>
 
-    @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
-      <button
-        type="button"
-        class="tab-btn"
-        [class.active]="activeTab() === 'session'"
-        (click)="setTab('session')"
-      >
-        ⏳ {{ i18n.t('settings.tabSession', undefined, 'الجلسة') }}
+      @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+        <button type="button" class="app-tab" [class.active]="activeTab() === 'session'" (click)="setTab('session')">
+          {{ i18n.t('settings.tabSession', undefined, 'الجلسة') }}
+        </button>
+        <button type="button" class="app-tab" [class.active]="activeTab() === 'security'" (click)="setTab('security')">
+          {{ i18n.t('settings.tabSecurity', undefined, 'الأمان') }}
+        </button>
+      }
+
+      <button type="button" class="app-tab" [class.active]="activeTab() === 'reports'" (click)="setTab('reports')">
+        {{ i18n.t('settings.tabReports', undefined, 'التقارير والتصدير') }}
       </button>
 
       <button
         type="button"
-        class="tab-btn"
-        [class.active]="activeTab() === 'security'"
-        (click)="setTab('security')"
+        class="app-tab"
+        [class.active]="activeTab() === 'shortcuts'"
+        (click)="setTab('shortcuts')"
+        [attr.title]="i18n.t('shortcuts.subtitle')"
       >
-        🛡️ {{ i18n.t('settings.tabSecurity', undefined, 'الأمان') }}
+        {{ i18n.t('settings.tabShortcuts') }}
       </button>
+    </nav>
+
+    @if (authService.hasAnyRole(['SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER','WORKFORCE_MANAGER','FINANCE_MANAGER'])) {
+      <nav class="app-tabs app-tabs-wrap settings-tab-group settings-tab-group-admin" [attr.aria-label]="i18n.t('settings.tabsAriaLabel', undefined, 'تبويبات الإعدادات')">
+        @if (authService.isSuperAdmin()) {
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'subscription'" (click)="setTab('subscription')">{{ i18n.t('subscription.tab') }}</button>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'trial'" (click)="setTab('trial')">{{ i18n.t('trialDemo.tab') }}</button>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'industry'" (click)="setTab('industry')">{{ i18n.t('industryPack.tab') }}</button>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'entitlements'" (click)="setTab('entitlements')">{{ i18n.t('entitlements.tab') }}</button>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'translations'" (click)="setTab('translations')">
+            {{ i18n.t('translations.menu', undefined, 'إدارة الترجمات') }}
+          </button>
+        }
+
+        @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'onboarding'" (click)="setTab('onboarding')">{{ i18n.t('onboarding.tab') }}</button>
+        }
+
+        @if (authService.hasAnyRole(['SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER','WORKFORCE_MANAGER','FINANCE_MANAGER'])) {
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'risk'" (click)="setTab('risk')">{{ i18n.t('risk.tab') }}</button>
+        }
+
+        @if (authService.hasAnyRole(['SUPER_ADMIN','ADMIN'])) {
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'analytics'" (click)="setTab('analytics')">{{ i18n.t('analytics.tab') }}</button>
+        }
+      </nav>
     }
-
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab() === 'reports'"
-      (click)="setTab('reports')"
-    >
-      📊 {{ i18n.t('settings.tabReports', undefined, 'التقارير والتصدير') }}
-    </button>
-
-    <button
-      type="button"
-      class="tab-btn"
-      [class.active]="activeTab() === 'shortcuts'"
-      (click)="setTab('shortcuts')"
-      [attr.title]="i18n.t('shortcuts.subtitle')"
-    >
-      ⌨ {{ i18n.t('settings.tabShortcuts') }}
-    </button>
-  </nav>
+  </div>
+@if (activeTab() === 'entitlements' && authService.isSuperAdmin()) { <app-entitlement-settings /> }
+  @if (activeTab() === 'subscription' && authService.isSuperAdmin()) { <app-subscription-settings /> }
+  @if (activeTab() === 'industry' && authService.isSuperAdmin()) { <app-industry-pack-settings /> }
+  @if (activeTab() === 'trial' && authService.isSuperAdmin()) { <app-trial-demo-settings /> }
+  @if (activeTab() === 'onboarding' && authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) { <app-guided-onboarding /> }
+  @if (activeTab() === 'risk' && authService.hasAnyRole(['SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER','WORKFORCE_MANAGER','FINANCE_MANAGER'])) { <app-partner-risk-settings /> }
+  @if (activeTab() === 'analytics' && authService.hasAnyRole(['SUPER_ADMIN','ADMIN'])) { <app-product-analytics-settings /> }
 
   <!-- Tab 1: Appearance & Language -->
   @if (activeTab() === 'appearance') {
@@ -72,7 +86,7 @@
               <div class="card-icon">☀</div>
               <div class="card-info">
                 <strong>{{ i18n.t('settings.light') }}</strong>
-                <small>Clean white workspace</small>
+                <small>{{ i18n.t('settings.themeLightHint') }}</small>
               </div>
             </label>
 
@@ -81,7 +95,7 @@
               <div class="card-icon">🌙</div>
               <div class="card-info">
                 <strong>{{ i18n.t('settings.dark') }}</strong>
-                <small>Sleek high-contrast dark</small>
+                <small>{{ i18n.t('settings.themeDarkHint') }}</small>
               </div>
             </label>
 
@@ -90,7 +104,7 @@
               <div class="card-icon">💻</div>
               <div class="card-info">
                 <strong>{{ i18n.t('settings.system') }}</strong>
-                <small>Match OS preferences</small>
+                <small>{{ i18n.t('settings.themeSystemHint') }}</small>
               </div>
             </label>
           </div>
@@ -137,7 +151,7 @@
           <legend class="group-title">{{ i18n.t('settings.defaultPageTitle') }}</legend>
           <p class="group-hint">{{ i18n.t('settings.defaultPageHint') }}</p>
           <div class="field">
-            <select formControlName="defaultPage" style="max-width: 300px;">
+            <select class="settings-default-page-select" formControlName="defaultPage">
               @for (page of availablePages; track page.path) {
                 <option [value]="page.path">{{ i18n.t(page.labelKey) }}</option>
               }
@@ -146,24 +160,24 @@
         </fieldset>
 
         <!-- Section 5: Menu Navigation Visibility Settings -->
-        <fieldset class="settings-group" style="margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+        <fieldset class="settings-group settings-section-divider">
           <legend class="group-title">{{ i18n.t('settings.sidebarTitle') }}</legend>
           <p class="group-hint">{{ i18n.t('settings.sidebarHint') }}</p>
 
-          <div class="field-stack" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem;">
-            <label class="selectable-card" style="display: flex; align-items: center; gap: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer;">
+          <div class="field-stack settings-option-stack">
+            <label class="selectable-card settings-toggle-card">
               <input type="checkbox" [checked]="showFavorites()" (change)="toggleShowFavorites($any($event.target).checked)" />
               <span>
                 <strong>{{ i18n.t('settings.showFavoritesLabel') }}</strong>
-                <small style="display: block; color: #64748b;">{{ i18n.t('settings.showFavoritesHint') }}</small>
+                <small class="settings-option-hint">{{ i18n.t('settings.showFavoritesHint') }}</small>
               </span>
             </label>
 
-            <label class="selectable-card" style="display: flex; align-items: center; gap: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer;">
+            <label class="selectable-card settings-toggle-card">
               <input type="checkbox" [checked]="showRecentlyUsed()" (change)="toggleShowRecentlyUsed($any($event.target).checked)" />
               <span>
                 <strong>{{ i18n.t('settings.showRecentLabel') }}</strong>
-                <small style="display: block; color: #64748b;">{{ i18n.t('settings.showRecentHint') }}</small>
+                <small class="settings-option-hint">{{ i18n.t('settings.showRecentHint') }}</small>
               </span>
             </label>
 
@@ -173,7 +187,7 @@
                      (change)="setMaxRecentlyUsed(+$any($event.target).value)" />
             </div>
 
-            <div style="margin-top: 0.5rem;">
+            <div class="settings-inline-actions">
               <button type="button" class="button secondary btn-sm" (click)="clearRecentHistory()">{{ i18n.t('settings.clearRecentButton') }}</button>
               <button type="button" class="button secondary btn-sm" (click)="resetFavorites()">{{ i18n.t('settings.resetFavorites', undefined, 'Reset favorites') }}</button>
             </div>
@@ -181,40 +195,40 @@
         </fieldset>
 
         <!-- Section 6: Notification Preferences -->
-        <fieldset class="settings-group" style="margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
+        <fieldset class="settings-group settings-section-divider">
           <legend class="group-title">{{ i18n.t('settings.notificationsTitle') }}</legend>
           <p class="group-hint">{{ i18n.t('settings.notificationsHint') }}</p>
 
-          <div class="field-stack" style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.75rem;">
-            <label class="selectable-card" style="display: flex; align-items: center; gap: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer;">
+          <div class="field-stack settings-option-stack">
+            <label class="selectable-card settings-toggle-card">
               <input type="checkbox" [checked]="notificationPrefs().emailApprovals" (change)="updateNotificationPrefs('emailApprovals', $any($event.target).checked)" />
               <span>
                 <strong>{{ i18n.t('settings.emailApprovalsLabel') }}</strong>
-                <small style="display: block; color: #64748b;">{{ i18n.t('settings.emailApprovalsHint') }}</small>
+                <small class="settings-option-hint">{{ i18n.t('settings.emailApprovalsHint') }}</small>
               </span>
             </label>
 
-            <label class="selectable-card" style="display: flex; align-items: center; gap: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer;">
+            <label class="selectable-card settings-toggle-card">
               <input type="checkbox" [checked]="notificationPrefs().emailPayroll" (change)="updateNotificationPrefs('emailPayroll', $any($event.target).checked)" />
               <span>
                 <strong>{{ i18n.t('settings.emailPayrollLabel') }}</strong>
-                <small style="display: block; color: #64748b;">{{ i18n.t('settings.emailPayrollHint') }}</small>
+                <small class="settings-option-hint">{{ i18n.t('settings.emailPayrollHint') }}</small>
               </span>
             </label>
 
-            <label class="selectable-card" style="display: flex; align-items: center; gap: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer;">
+            <label class="selectable-card settings-toggle-card">
               <input type="checkbox" [checked]="notificationPrefs().pushApprovals" (change)="updateNotificationPrefs('pushApprovals', $any($event.target).checked)" />
               <span>
                 <strong>{{ i18n.t('settings.pushApprovalsLabel') }}</strong>
-                <small style="display: block; color: #64748b;">{{ i18n.t('settings.pushApprovalsHint') }}</small>
+                <small class="settings-option-hint">{{ i18n.t('settings.pushApprovalsHint') }}</small>
               </span>
             </label>
 
-            <label class="selectable-card" style="display: flex; align-items: center; gap: 0.75rem; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; cursor: pointer;">
+            <label class="selectable-card settings-toggle-card">
               <input type="checkbox" [checked]="notificationPrefs().pushPayroll" (change)="updateNotificationPrefs('pushPayroll', $any($event.target).checked)" />
               <span>
                 <strong>{{ i18n.t('settings.pushPayrollLabel') }}</strong>
-                <small style="display: block; color: #64748b;">{{ i18n.t('settings.pushPayrollHint') }}</small>
+                <small class="settings-option-hint">{{ i18n.t('settings.pushPayrollHint') }}</small>
               </span>
             </label>
           </div>
@@ -230,6 +244,12 @@
         </button>
       </div>
     </form>
+  }
+
+  @if (activeTab() === 'translations' && authService.isSuperAdmin()) {
+    <div class="card settings-card">
+      <app-translation-management />
+    </div>
   }
 
   <!-- Tab 2: Session Settings (Admin only) -->
@@ -272,10 +292,10 @@
       </fieldset>
 
       <fieldset class="settings-group">
-        <legend class="group-title">اكتشاف انقطاع أجهزة البصمة</legend>
-        <p class="group-hint">ينشئ النظام حالة شذوذ يومي عندما تبلغ نسبة الموظفين بلا بصمة هذا الحد داخل الفئة.</p>
+        <legend class="group-title">{{ i18n.t('settings.attendanceAnomalyTitle') }}</legend>
+        <p class="group-hint">{{ i18n.t('settings.attendanceAnomalyHint') }}</p>
         <div class="field session-timeout-field">
-          <label for="attendance-anomaly-threshold">نسبة الاكتشاف (%)</label>
+          <label for="attendance-anomaly-threshold">{{ i18n.t('settings.attendanceAnomalyPercentLabel') }}</label>
           <input
             id="attendance-anomaly-threshold"
             class="ltr"
@@ -284,7 +304,7 @@
             max="100"
             formControlName="attendanceAnomalyThresholdPercent"
           />
-          <small class="field-hint session-hint">القيمة الافتراضية 70%. لا يطبق النظام قراراً تلقائياً.</small>
+          <small class="field-hint session-hint">{{ i18n.t('settings.attendanceAnomalyDefaultHint') }}</small>
         </div>
       </fieldset>
 
@@ -308,6 +328,17 @@
           <span>
             <strong>{{ i18n.t('settings.procurementNumberingAutomatic') }}</strong>
             <small>{{ i18n.t('settings.procurementNumberingHint') }}</small>
+          </span>
+        </label>
+      </fieldset>
+
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.documentNumberingTitle') }}</legend>
+        <label class="selectable-card">
+          <input type="checkbox" formControlName="automaticDocumentNumbering" />
+          <span>
+            <strong>{{ i18n.t('settings.documentNumberingAutomatic') }}</strong>
+            <small>{{ i18n.t('settings.documentNumberingHint') }}</small>
           </span>
         </label>
       </fieldset>
@@ -449,7 +480,7 @@
               <input type="radio" formControlName="excelTableStyle" value="GOLD" />
               <div class="mini-excel-table gold-tbl">
                 <div class="tbl-head">🟨 {{ i18n.t('settings.excelGold') }}</div>
-                <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+                <div class="tbl-row"><span>{{ i18n.t('settings.excelRowPreview') }}</span><span>100</span></div>
               </div>
             </label>
 
@@ -457,7 +488,7 @@
               <input type="radio" formControlName="excelTableStyle" value="BLUE" />
               <div class="mini-excel-table blue-tbl">
                 <div class="tbl-head">🟦 {{ i18n.t('settings.excelBlue') }}</div>
-                <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+                <div class="tbl-row"><span>{{ i18n.t('settings.excelRowPreview') }}</span><span>100</span></div>
               </div>
             </label>
 
@@ -465,7 +496,7 @@
               <input type="radio" formControlName="excelTableStyle" value="GREEN" />
               <div class="mini-excel-table green-tbl">
                 <div class="tbl-head">🟩 {{ i18n.t('settings.excelGreen') }}</div>
-                <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+                <div class="tbl-row"><span>{{ i18n.t('settings.excelRowPreview') }}</span><span>100</span></div>
               </div>
             </label>
 
@@ -473,7 +504,7 @@
               <input type="radio" formControlName="excelTableStyle" value="GRAY" />
               <div class="mini-excel-table gray-tbl">
                 <div class="tbl-head">⬜ {{ i18n.t('settings.excelGray') }}</div>
-                <div class="tbl-row"><span>Row 1</span><span>100</span></div>
+                <div class="tbl-row"><span>{{ i18n.t('settings.excelRowPreview') }}</span><span>100</span></div>
               </div>
             </label>
           </div>
@@ -507,39 +538,7 @@
   }
 
   @if (activeTab() === 'shortcuts') {
-    <section class="card settings-card shortcuts-settings-card">
-      <header class="shortcuts-settings-header">
-        <div>
-          <h2>{{ i18n.t('shortcuts.title') }}</h2>
-          <p>{{ i18n.t('shortcuts.subtitle') }}</p>
-        </div>
-        <kbd>?</kbd>
-      </header>
-
-      <div class="shortcuts-settings-grid">
-        <section>
-          <h3>{{ i18n.t('shortcuts.globalTitle') }}</h3>
-          @for (shortcut of globalShortcuts; track shortcut.labelKey) {
-            <div class="settings-shortcut-row">
-              <span>{{ i18n.t(shortcut.labelKey) }}</span>
-              <kbd>{{ shortcut.keys }}</kbd>
-            </div>
-          }
-        </section>
-
-        <section>
-          <h3>{{ i18n.t('shortcuts.navigationTitle') }}</h3>
-          @for (shortcut of menuShortcuts; track shortcut.menuId) {
-            <div class="settings-shortcut-row">
-              <span>{{ i18n.t(shortcut.labelKey) }}</span>
-              <kbd>{{ shortcut.keys }}</kbd>
-            </div>
-          }
-        </section>
-      </div>
-
-      <p class="shortcuts-settings-note">{{ i18n.t('shortcuts.availableByPermission') }}</p>
-    </section>
+    <app-shortcut-settings />
   }
 </section>
 
@@ -549,8 +548,8 @@
       <div class="confirm-icon">&#9888;&#65039;</div>
       <div class="confirm-message">{{ action.message }}</div>
       <div class="confirm-actions">
-        <button type="button" class="button primary" (click)="action.onConfirm()">تأكيد</button>
-        <button type="button" class="button secondary" (click)="confirmAction.set(null)">إلغاء</button>
+        <button type="button" class="button primary" (click)="action.onConfirm()">{{ i18n.t('common.confirm') }}</button>
+        <button type="button" class="button secondary" (click)="confirmAction.set(null)">{{ i18n.t('common.cancel') }}</button>
       </div>
     </div>
   </div>

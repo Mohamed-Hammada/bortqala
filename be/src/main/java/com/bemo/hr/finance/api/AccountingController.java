@@ -33,7 +33,7 @@ public class AccountingController {
 
     @PostMapping("/accounts")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
     public AccountingApi.AccountResponse createAccount(@Valid @RequestBody AccountingApi.AccountPayload payload) {
         Account.Type type = Account.Type.valueOf(payload.type().toUpperCase());
         Account account = new Account(payload.code(), payload.name(), type, payload.parentId(), payload.isHeader(), payload.currency(), payload.active());
@@ -42,7 +42,7 @@ public class AccountingController {
 
     @PutMapping("/accounts/{id}")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
     public AccountingApi.AccountResponse updateAccount(@PathVariable String id, @Valid @RequestBody AccountingApi.AccountPayload payload) {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new com.bemo.hr.shared.domain.BusinessRuleException("الحساب غير موجود في دليل الحسابات"));
@@ -52,6 +52,11 @@ public class AccountingController {
     }
 
     // --- Journal Entries ---
+    @GetMapping("/numbering-settings")
+    public AccountingApi.NumberingSettings numberingSettings() {
+        return journalEntryService.numberingSettings();
+    }
+
     @GetMapping("/journal-entries")
     public AccountingApi.JournalEntryPageResponse listJournalEntries(
             @RequestParam(defaultValue = "0") int page,
@@ -64,14 +69,14 @@ public class AccountingController {
     }
 
     @PostMapping("/journal-entries")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
     public AccountingApi.JournalEntryResponse createJournalEntry(@Valid @RequestBody AccountingApi.JournalEntryPayload payload,
                                                                  Authentication authentication) {
         return journalEntryService.create(payload, authentication.getName());
     }
 
     @PostMapping("/journal-entries/{id}/post")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
     public AccountingApi.JournalEntryResponse postJournalEntry(@PathVariable String id,
                                                                @Valid @RequestBody AccountingApi.JournalActionRequest request,
                                                                Authentication authentication) {
@@ -79,7 +84,7 @@ public class AccountingController {
     }
 
     @PostMapping("/journal-entries/{id}/reverse")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public AccountingApi.JournalEntryResponse reverseJournalEntry(@PathVariable String id,
                                                                   @Valid @RequestBody AccountingApi.JournalActionRequest request,
                                                                   Authentication authentication) {

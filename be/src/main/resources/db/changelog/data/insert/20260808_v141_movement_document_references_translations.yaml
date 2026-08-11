@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260808-v141-movement-document-references-translations
+      author: bemo-erp
+      comment: "REM-005: Arabic/English labels for the separate stock-movement document references (PO, receipt, delivery note, invoice, voucher, external reference, warehouse, attachment) plus the six new validation error codes introduced by the per-operation-type reference rules."
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260808_v141_movement_document_references_translations.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v141-%'" }

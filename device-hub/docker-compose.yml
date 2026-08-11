@@ -1,0 +1,14 @@
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.bortqala
+    environment:
+      DEVICE_HUB_REGISTRY_PATH: /data/devices.json
+      DEVICE_HUB_API_KEY: ${DEVICE_HUB_API_KEY:-}
+    ports: ["8090:8090"]
+    volumes:
+      - device-hub-data:/data
+    restart: unless-stopped
+volumes:
+  device-hub-data:

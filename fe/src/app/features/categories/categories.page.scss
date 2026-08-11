@@ -43,81 +43,34 @@ td small {
   color: var(--ink);
   cursor: pointer;
 }
-.check-field input {
-  accent-color: var(--gold);
-}
-/* Selectable Day Cards Redesign */
-.days {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 4px;
-}
+.check-field input { accent-color: var(--gold); }
+.days { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
 .days label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1.5px solid var(--line);
-  border-radius: 6px;
-  background: var(--surface-muted);
-  color: var(--secondary-text);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  user-select: none;
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px;
+  border: 1.5px solid var(--line); border-radius: 6px; background: var(--surface-muted);
+  color: var(--secondary-text); font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s ease; user-select: none;
 }
-.days label:hover {
-  background: var(--surface-hover);
-  border-color: var(--gold);
-  color: var(--ink);
-}
+.days label:hover { background: var(--surface-hover); border-color: var(--gold); color: var(--ink); }
 .days label.day-selected,
 .days label:has(input:checked) {
-  background: var(--gold-glow);
-  border-color: var(--gold);
-  color: var(--ink);
-  font-weight: 700;
-  box-shadow: 0 0 0 1px var(--gold);
+  background: var(--gold-glow); border-color: var(--gold); color: var(--ink);
+  font-weight: 700; box-shadow: 0 0 0 1px var(--gold);
 }
-.days input {
-  accent-color: var(--gold);
-  cursor: pointer;
-}
+.days input { accent-color: var(--gold); cursor: pointer; }
 .rules-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 20px 0 10px;
-  padding-top: 16px;
-  border-top: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin: 20px 0 10px; padding-top: 16px; border-top: 1px solid var(--line);
 }
-.rules-title h3 {
-  margin: 0 0 2px;
-}
-.rules-title p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 12px;
-}
-.rules {
-  display: grid;
-  gap: 10px;
-}
-.rule-card {
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface-muted);
-}
-.rule-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-.active-check {
-  margin: 16px 0 4px;
-}
+.rules-title h3 { margin: 0 0 2px; }
+.rules-title p { margin: 0; color: var(--muted); font-size: 12px; }
+.rules { display: grid; gap: 10px; }
+.rule-card { padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-muted); }
+.rule-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.active-check { margin: 16px 0 4px; }
+
+/* QA: keep the category list full-width on desktop and scroll only the table if needed. */
+:host { display: block; width: 100%; min-width: 0; }
+.page { width: 100%; max-width: none; min-width: 0; }
+.table-card { width: 100%; max-width: 100%; overflow-x: auto; }
+.table-card table { width: 100%; min-width: 900px; }

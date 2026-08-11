@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+vendor-libs/**
+!vendor-libs/README.md
+.idea/
+.vscode/
+target/
+bin/
+obj/

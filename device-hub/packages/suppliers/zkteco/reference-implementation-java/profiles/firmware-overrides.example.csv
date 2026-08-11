@@ -1,0 +1,5 @@
+model,firmware_pattern,protocol,priority,notes
+F18,*AC Push*,AC_PUSH,1,Example only - replace with tested firmware identifiers
+F18,*TA Push*,ADMS_PUSH,1,Example only - replace with tested firmware identifiers
+iClock700,*,ADMS_PUSH,1,Use when Cloud Server/ADMS is enabled
+*,*,ZK_PULL,50,Safe fallback probe for classic TCP/UDP 4370 devices

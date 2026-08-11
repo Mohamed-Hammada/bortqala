@@ -21,6 +21,7 @@ export type RoleCode =
 export type ThemePreference = 'LIGHT' | 'DARK' | 'SYSTEM';
 export type TableDensity = 'COMFORTABLE' | 'COMPACT' | 'DENSE';
 export type ExcelTableStyle = 'GOLD' | 'BLUE' | 'GREEN' | 'GRAY';
+export type MenuAccessMode = 'ALL' | 'SELECTED';
 
 export interface UserPreferences {
   theme: ThemePreference;
@@ -76,6 +77,7 @@ export interface AuthUser {
   displayName: string;
   roles: RoleCode[];
   allowedMenus?: string[];
+  menuAccessMode?: MenuAccessMode;
   canViewSalary?: boolean;
   categoryId?: string | null;
   dashboardCustomizationEnabled?: boolean;
@@ -97,6 +99,8 @@ export interface MeResponse {
   tenant: { id: string; code: string; name: string };
   roles: RoleCode[];
   scopes: string[];
+  allowedMenus?: string[];
+  menuAccessMode?: MenuAccessMode;
   canViewSalary: boolean;
   categoryId?: string | null;
   dashboardCustomizationEnabled: boolean;
@@ -133,6 +137,7 @@ export interface AppSettings {
   showReportPresets: boolean;
   attendanceAnomalyThresholdPercent: number;
   automaticProcurementNumbering: boolean;
+  automaticDocumentNumbering?: boolean;
   adminDashboardCustomizationEnabled: boolean;
   minPasswordLength?: number;
   requireUppercase?: boolean;

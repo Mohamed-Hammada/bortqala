@@ -27,20 +27,25 @@ import java.util.List;
 @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
 public class OperationsController {
     private final OperationsService operationsService;
+    private final InventoryValuationService inventoryValuationService;
     private final AuthService authService;
 
     @GetMapping OperationsApi.Snapshot snapshot() { return operationsService.snapshot(); }
     @PostMapping("/items") @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.ItemView createItem(@Valid @RequestBody OperationsApi.ItemRequest request) { return operationsService.createItem(request); }
     @PutMapping("/items/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.ItemView updateItem(@PathVariable String id, @Valid @RequestBody OperationsApi.ItemRequest request) {
         return operationsService.updateItem(id, request);
     }
     @PostMapping("/transactions") @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.Snapshot transaction(@Valid @RequestBody OperationsApi.TransactionRequest request, Authentication authentication) {
         return operationsService.recordTransaction(request, authentication.getName());
     }
     @PostMapping("/advances") @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.Snapshot advance(@Valid @RequestBody OperationsApi.AdvanceRequest request, Authentication authentication) {
         return operationsService.recordAdvance(request, authentication.getName());
     }
@@ -49,6 +54,7 @@ public class OperationsController {
     List<OperationsApi.ItemCategoryView> listCategories() { return operationsService.listItemCategories(); }
 
     @PostMapping("/item-categories") @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.ItemCategoryView createCategory(@Valid @RequestBody OperationsApi.ItemCategoryRequest request) {
         return operationsService.createItemCategory(request);
     }
@@ -57,6 +63,7 @@ public class OperationsController {
     List<OperationsApi.UnitOfMeasureView> listUoms() { return operationsService.listUnitOfMeasures(); }
 
     @PostMapping("/uoms") @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.UnitOfMeasureView createUom(@Valid @RequestBody OperationsApi.UnitOfMeasureRequest request) {
         return operationsService.createUnitOfMeasure(request);
     }
@@ -65,6 +72,7 @@ public class OperationsController {
     List<OperationsApi.UnitConversionView> listUnitConversions() { return operationsService.listUnitConversions(); }
 
     @PostMapping("/uom-conversions") @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.UnitConversionView createUnitConversion(@Valid @RequestBody OperationsApi.UnitConversionRequest request, Authentication authentication) {
         return operationsService.createUnitConversion(request, authentication.getName());
     }
@@ -76,6 +84,32 @@ public class OperationsController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.Snapshot adjustment(@Valid @RequestBody OperationsApi.AdjustmentRequest request, Authentication authentication) {
         return operationsService.createStockAdjustment(request, authentication.getName());
+    }
+
+    @GetMapping("/valuation/settings")
+    OperationsApi.ValuationPolicyView valuationSettings() { return inventoryValuationService.policy(); }
+
+    @PutMapping("/valuation/settings")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    OperationsApi.ValuationPolicyView updateValuationSettings(
+            @Valid @RequestBody OperationsApi.ValuationPolicyRequest request, Authentication authentication) {
+        return inventoryValuationService.updatePolicy(request, authentication.getName());
+    }
+
+    @GetMapping("/valuation/report")
+    OperationsApi.ValuationReport valuationReport() { return inventoryValuationService.report(); }
+
+    @GetMapping("/valuation/movements/{movementId}")
+    OperationsApi.MovementCostView movementCost(@PathVariable String movementId) {
+        return inventoryValuationService.movementCost(movementId);
+    }
+
+    @PostMapping("/valuation/revaluations")
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    OperationsApi.RevaluationView revalue(@Valid @RequestBody OperationsApi.RevaluationRequest request,
+                                          Authentication authentication) {
+        return inventoryValuationService.revalue(request, authentication.getName());
     }
 
     @GetMapping("/export.xlsx")

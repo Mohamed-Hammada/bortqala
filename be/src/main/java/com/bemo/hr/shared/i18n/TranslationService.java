@@ -1,6 +1,7 @@
 package com.bemo.hr.shared.i18n;
 
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.security.TenantContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,9 +29,14 @@ public class TranslationService {
                 .findFirst().orElseThrow(() -> new BusinessRuleException("Unsupported locale.",
                         "I18N_UNSUPPORTED_LOCALE", HttpStatus.CONFLICT));
         Map<String, String> messages = new LinkedHashMap<>();
-        translationRepository.findAllByLocaleIgnoreCaseOrderByTranslationKeyAsc(normalized)
+        translationRepository.findAllByLocaleIgnoreCaseAndAppIdIsNullOrderByTranslationKeyAsc(normalized)
                 .forEach(entry -> messages.put(entry.getTranslationKey(), entry.getTextValue()));
-        return new TranslationBundle(normalized, Map.copyOf(messages));
+        String appId = TenantContext.current();
+        if (appId != null) {
+            translationRepository.findAllByLocaleIgnoreCaseAndAppIdOrderByTranslationKeyAsc(normalized, appId)
+                    .forEach(entry -> messages.put(entry.getTranslationKey(), entry.getTextValue()));
+        }
+        return new TranslationBundle(normalized, appId, Map.copyOf(messages));
     }
 
     public String translate(String key, String locale) {
@@ -38,9 +44,14 @@ public class TranslationService {
     }
 
     public String translateOrDefault(String key, String locale, String defaultMsg) {
-        return translationRepository.findByLocaleIgnoreCaseAndTranslationKey(normalize(locale), key)
-                .map(TranslationEntry::getTextValue)
-                .orElse(defaultMsg);
+        String normalized = normalize(locale);
+        String appId = TenantContext.current();
+        if (appId != null) {
+            var scoped = translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppId(normalized, key, appId);
+            if (scoped.isPresent()) return scoped.get().getTextValue();
+        }
+        return translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppIdIsNull(normalized, key)
+                .map(TranslationEntry::getTextValue).orElse(defaultMsg);
     }
 
     public boolean isSupported(String locale) {
@@ -117,5 +128,5 @@ public class TranslationService {
 
     private record LocalePreference(String locale, double quality) { }
 
-    public record TranslationBundle(String locale, Map<String, String> messages) { }
+    public record TranslationBundle(String locale, String appId, Map<String, String> messages) { }
 }

@@ -19,6 +19,7 @@ import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { AuthService } from '../../core/auth/auth.service';
+import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -42,13 +43,14 @@ export class EmployeesPage {
   readonly store = inject(EmployeesStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
+  private readonly confirm = inject(ConfirmDialogService);
   private readonly router = inject(Router);
-  readonly confirmAction = signal<{ message: string; onConfirm: () => void } | null>(null);
   readonly drawerOpen = signal(false);
   readonly submitAttempted = signal(false);
   readonly pagination = new TablePagination();
   readonly editingId = signal<string | null>(null);
   readonly search = signal('');
+  private closing = false;
 
   openEmployeeAdvances(): void {
     void this.router.navigate(['/workforce/advances'], {
@@ -153,6 +155,10 @@ export class EmployeesPage {
       return;
     }
     const raw = this.form.getRawValue();
+    if (raw.activeTo && dateInputToEpoch(raw.activeTo) < dateInputToEpoch(raw.activeFrom)) {
+      this.notification.warning(this.i18n.t('employees.activeToBeforeActiveFrom'));
+      return;
+    }
     const payload: EmployeePayload = {
       ...raw,
       deviceUserId: raw.deviceUserId.trim() || null,
@@ -161,25 +167,92 @@ export class EmployeesPage {
       activeTo: raw.activeTo ? dateInputToEpoch(raw.activeTo) : null,
     };
     if (await this.store.save(this.editingId(), payload)) {
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t(this.editingId() ? 'employees.updateSuccess' : 'employees.createSuccess') + ' ✓');
       this.submitAttempted.set(false);
+      this.form.reset({
+        ...payload,
+        deviceUserId: payload.deviceUserId ?? '',
+        activeFrom: epochToDateInput(payload.activeFrom),
+        activeTo: payload.activeTo ? epochToDateInput(payload.activeTo) : '',
+      });
       this.drawerOpen.set(false);
     }
   }
 
   deactivate(item: Employee) {
-    this.confirmAction.set({
-      message: this.i18n.t('employees.deactivateConfirm', { name: item.fullName }),
-      onConfirm: () => {
-        this.confirmAction.set(null);
-        this.store.deactivate(item.id).then(() => {
-          this.notification.info(this.i18n.t('common.save') + ' ✓');
-        });
+    void this.confirm.confirmAndRun(
+      {
+        titleKey: 'employees.deactivateTitle',
+        messageKey: 'employees.deactivateConfirm',
+        params: { name: item.fullName },
+        confirmKey: 'employees.deactivate',
+        danger: true,
+        dangerMessageKey: 'employees.deactivateDanger',
+        details: [
+          { label: this.i18n.t('employees.employeeCode'), value: item.employeeCode },
+          { label: this.i18n.t('employees.category'), value: item.categoryName },
+        ],
       },
-    });
+      async () => {
+        await this.store.deactivate(item.id);
+        this.notification.success(this.i18n.t('employees.deactivateSuccess') + ' ✓');
+      },
+    );
   }
 
-  closeDrawer(): void {
+  reactivate(item: Employee) {
+    void this.confirm.confirmAndRun(
+      {
+        titleKey: 'employees.reactivateTitle',
+        messageKey: 'employees.reactivateConfirm',
+        params: { name: item.fullName },
+        confirmKey: 'employees.reactivate',
+        details: [
+          { label: this.i18n.t('employees.employeeCode'), value: item.employeeCode },
+          { label: this.i18n.t('employees.category'), value: item.categoryName },
+        ],
+      },
+      async () => {
+        await this.store.reactivate(item.id, this.payloadFrom(item));
+        this.notification.success(this.i18n.t('employees.reactivateSuccess') + ' ✓');
+      },
+    );
+  }
+
+  private payloadFrom(item: Employee): EmployeePayload {
+    return {
+      employeeCode: item.employeeCode,
+      fullName: item.fullName,
+      deviceUserId: item.deviceUserId,
+      categoryId: item.categoryId,
+      employmentType: item.employmentType,
+      baseSalary: item.baseSalary ?? 0,
+      activeFrom: item.activeFrom,
+      activeTo: item.activeTo,
+      active: true,
+      version: item.version,
+    };
+  }
+
+  async closeDrawer(): Promise<void> {
+    if (this.closing) return;
+    if (this.hasUnsavedChanges()) {
+      this.closing = true;
+      await this.confirm.confirmAndRun(
+        {
+          titleKey: 'common.unsavedTitle',
+          messageKey: 'common.unsavedMessage',
+          confirmKey: 'common.discard',
+          danger: true,
+        },
+        async () => {
+          this.drawerOpen.set(false);
+          this.submitAttempted.set(false);
+        },
+      );
+      this.closing = false;
+      return;
+    }
     this.drawerOpen.set(false);
     this.submitAttempted.set(false);
   }
@@ -190,7 +263,8 @@ export class EmployeesPage {
 
   @HostListener('document:keydown', ['$event']) onKeyDown(event: KeyboardEvent): void {
     if (event.key === 'Escape' && this.drawerOpen()) {
-      this.closeDrawer();
+      event.preventDefault();
+      void this.closeDrawer();
     } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
       if (this.drawerOpen()) {
         event.preventDefault();

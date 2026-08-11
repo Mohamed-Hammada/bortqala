@@ -60,7 +60,8 @@ class ReportingTransitionTests {
                 employeeRepository, punchRecordRepository, reportExporter, "Africa/Cairo",
                 auditService, tenantApplicationRepository, attendanceReportDecisionRepository,
                 new com.bemo.hr.shared.idempotency.application.IdempotencyService(
-                        org.mockito.Mockito.mock(com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository.class)));
+                        org.mockito.Mockito.mock(com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository.class)),
+                org.mockito.Mockito.mock(AttendanceExceptionService.class));
     }
 
     private static AttendanceReport inReviewReport() {

@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260806_v108_payroll_automation_explanations
+      author: Antigravity
+      changes:
+        - createTable:
+            tableName: salary_payment_explanations
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: salary_payment_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: component_type, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: formula, type: VARCHAR(500), constraints: { nullable: false } }
+              - column: { name: input_values_json, type: VARCHAR(1000) }
+              - column: { name: calculated_amount, type: "NUMERIC(19, 2)", constraints: { nullable: false } }
+              - column: { name: explanation_text_ar, type: VARCHAR(1000) }
+              - column: { name: explanation_text_en, type: VARCHAR(1000) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }

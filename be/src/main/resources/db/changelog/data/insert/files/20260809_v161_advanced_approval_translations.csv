@@ -1,0 +1,121 @@
+id;key;locale;text
+v161-001;APPROVAL_ALREADY_SUBMITTED;en-US;An approval request already exists for this document
+v161-002;APPROVAL_ALREADY_SUBMITTED;ar-EG;يوجد طلب اعتماد لهذا المستند بالفعل
+v161-003;APPROVAL_SNAPSHOT_TOO_LARGE;en-US;The approval document snapshot is too large
+v161-004;APPROVAL_SNAPSHOT_TOO_LARGE;ar-EG;لقطة مستند الاعتماد أكبر من الحد المسموح
+v161-005;APPROVAL_DUPLICATE_DECISION;en-US;You have already approved this step
+v161-006;APPROVAL_DUPLICATE_DECISION;ar-EG;لقد اعتمدت هذه الخطوة بالفعل
+v161-007;APPROVAL_DELEGATION_SELF;en-US;You cannot delegate approval authority to yourself
+v161-008;APPROVAL_DELEGATION_SELF;ar-EG;لا يمكن تفويض صلاحية الاعتماد لنفس المستخدم
+v161-009;APPROVAL_DELEGATION_DATES_INVALID;en-US;The delegation end must be after its start
+v161-010;APPROVAL_DELEGATION_DATES_INVALID;ar-EG;يجب أن تكون نهاية التفويض بعد بدايته
+v161-011;APPROVAL_DELEGATION_NOT_FOUND;en-US;The approval delegation was not found
+v161-012;APPROVAL_DELEGATION_NOT_FOUND;ar-EG;تفويض الاعتماد غير موجود
+v161-013;APPROVAL_STEPS_REQUIRED;en-US;At least one approval step is required
+v161-014;APPROVAL_STEPS_REQUIRED;ar-EG;يجب إضافة خطوة اعتماد واحدة على الأقل
+v161-015;APPROVAL_STEP_INVALID;en-US;The approval step configuration is invalid
+v161-016;APPROVAL_STEP_INVALID;ar-EG;إعداد خطوة الاعتماد غير صالح
+v161-017;approvals.actionCenter;en-US;Approval action center
+v161-018;approvals.actionCenter;ar-EG;مركز إجراءات الاعتماد
+v161-019;approvals.pendingTitle;en-US;Pending approvals
+v161-020;approvals.pendingTitle;ar-EG;طلبات الاعتماد المعلقة
+v161-021;approvals.manageDelegations;en-US;Manage delegations
+v161-022;approvals.manageDelegations;ar-EG;إدارة التفويضات
+v161-023;approvals.totalPending;en-US;Total pending
+v161-024;approvals.totalPending;ar-EG;إجمالي المعلق
+v161-025;approvals.overdue;en-US;Overdue
+v161-026;approvals.overdue;ar-EG;متأخر
+v161-027;approvals.delegatedToMe;en-US;Delegated to me
+v161-028;approvals.delegatedToMe;ar-EG;مفوّض إليّ
+v161-029;approvals.filters;en-US;Approval filters
+v161-030;approvals.filters;ar-EG;مرشحات الاعتماد
+v161-031;approvals.delegated;en-US;Delegated
+v161-032;approvals.delegated;ar-EG;مفوّض
+v161-033;approvals.loadingTasks;en-US;Loading approval tasks…
+v161-034;approvals.loadingTasks;ar-EG;جارٍ تحميل مهام الاعتماد…
+v161-035;approvals.document;en-US;Document
+v161-036;approvals.document;ar-EG;المستند
+v161-037;approvals.currentStep;en-US;Current step
+v161-038;approvals.currentStep;ar-EG;الخطوة الحالية
+v161-039;approvals.progress;en-US;Approval progress
+v161-040;approvals.progress;ar-EG;تقدم الاعتماد
+v161-041;approvals.age;en-US;Age and SLA
+v161-042;approvals.age;ar-EG;العمر ومستوى الخدمة
+v161-043;approvals.from;en-US;From
+v161-044;approvals.from;ar-EG;من
+v161-047;approvals.noPending;en-US;No approval tasks match this filter
+v161-048;approvals.noPending;ar-EG;لا توجد مهام اعتماد تطابق هذا المرشح
+v161-049;approvals.confirmApprove;en-US;Confirm approval
+v161-050;approvals.confirmApprove;ar-EG;تأكيد الاعتماد
+v161-051;approvals.confirmReject;en-US;Confirm rejection
+v161-052;approvals.confirmReject;ar-EG;تأكيد الرفض
+v161-053;approvals.rejectionReason;en-US;Rejection reason
+v161-054;approvals.rejectionReason;ar-EG;سبب الرفض
+v161-055;approvals.comment;en-US;Comment
+v161-056;approvals.comment;ar-EG;ملاحظات
+v161-057;approvals.definitionVersion;en-US;Workflow version
+v161-058;approvals.definitionVersion;ar-EG;إصدار المسار
+v161-059;approvals.decision;en-US;Decision
+v161-060;approvals.decision;ar-EG;القرار
+v161-061;approvals.decidedBy;en-US;Decided by
+v161-062;approvals.decidedBy;ar-EG;صاحب القرار
+v161-063;approvals.for;en-US;For
+v161-064;approvals.for;ar-EG;بالنيابة عن
+v161-065;approvals.noHistory;en-US;No decisions have been recorded yet
+v161-066;approvals.noHistory;ar-EG;لم تسجل قرارات بعد
+v161-067;approvals.delegateUser;en-US;Delegate user
+v161-068;approvals.delegateUser;ar-EG;المستخدم المفوّض إليه
+v161-069;approvals.documentType;en-US;Document type
+v161-070;approvals.documentType;ar-EG;نوع المستند
+v161-071;approvals.noDelegations;en-US;No delegations have been created
+v161-072;approvals.noDelegations;ar-EG;لم تنشأ تفويضات بعد
+v161-073;approvals.loadFailed;en-US;Approval tasks could not be loaded
+v161-074;approvals.loadFailed;ar-EG;تعذر تحميل مهام الاعتماد
+v161-075;approvals.historyLoadFailed;en-US;Approval history could not be loaded
+v161-076;approvals.historyLoadFailed;ar-EG;تعذر تحميل سجل الاعتماد
+v161-077;approvals.decisionSaved;en-US;The approval decision was saved
+v161-078;approvals.decisionSaved;ar-EG;تم حفظ قرار الاعتماد
+v161-079;approvals.decisionFailed;en-US;The approval decision could not be saved
+v161-080;approvals.decisionFailed;ar-EG;تعذر حفظ قرار الاعتماد
+v161-081;approvals.delegationRequired;en-US;Complete the required delegation fields
+v161-082;approvals.delegationRequired;ar-EG;أكمل حقول التفويض المطلوبة
+v161-083;approvals.delegationSaved;en-US;The delegation was saved
+v161-084;approvals.delegationSaved;ar-EG;تم حفظ التفويض
+v161-085;approvals.delegationFailed;en-US;The delegation could not be saved
+v161-086;approvals.delegationFailed;ar-EG;تعذر حفظ التفويض
+v161-087;approvals.delegationDeactivated;en-US;The delegation was deactivated
+v161-088;approvals.delegationDeactivated;ar-EG;تم إيقاف التفويض
+v161-089;approvals.minimumApprovals;en-US;Minimum approvals
+v161-090;approvals.minimumApprovals;ar-EG;الحد الأدنى للموافقات
+v161-091;approvals.escalationHours;en-US;SLA hours
+v161-092;approvals.escalationHours;ar-EG;ساعات مستوى الخدمة
+v161-093;approvals.defaultFirstStep;en-US;First approval
+v161-094;approvals.defaultFirstStep;ar-EG;الاعتماد الأول
+v161-095;approvals.documentType.PURCHASE_ORDER;en-US;Purchase order
+v161-096;approvals.documentType.PURCHASE_ORDER;ar-EG;أمر شراء
+v161-097;approvals.documentType.CONTRACTOR_SETTLEMENT;en-US;Contractor settlement
+v161-098;approvals.documentType.CONTRACTOR_SETTLEMENT;ar-EG;تسوية مقاول
+v161-099;approvals.documentType.PAYROLL_RUN;en-US;Payroll run
+v161-100;approvals.documentType.PAYROLL_RUN;ar-EG;مسير رواتب
+v161-101;approvals.documentType.SUPPLIER_INVOICE;en-US;Supplier invoice
+v161-102;approvals.documentType.SUPPLIER_INVOICE;ar-EG;فاتورة مورد
+v161-103;approvals.documentType.SUPPLIER_PAYMENT;en-US;Supplier payment
+v161-104;approvals.documentType.SUPPLIER_PAYMENT;ar-EG;سداد مورد
+v161-105;approvals.documentType.JOURNAL_ENTRY;en-US;Journal entry
+v161-106;approvals.documentType.JOURNAL_ENTRY;ar-EG;قيد محاسبي
+v161-107;approvals.documentType.LABOR_REQUEST;en-US;Labor request
+v161-108;approvals.documentType.LABOR_REQUEST;ar-EG;طلب عمالة
+v161-109;approvals.documentType.ADVANCE;en-US;Workforce advance
+v161-110;approvals.documentType.ADVANCE;ar-EG;سلفة عمالة
+v161-111;common.approve;en-US;Approve
+v161-112;common.approve;ar-EG;اعتماد
+v161-113;common.reject;en-US;Reject
+v161-114;common.reject;ar-EG;رفض
+v161-115;common.date;en-US;Date
+v161-116;common.date;ar-EG;التاريخ
+v161-117;common.period;en-US;Period
+v161-118;common.period;ar-EG;الفترة
+v161-119;common.reason;en-US;Reason
+v161-120;common.reason;ar-EG;السبب
+v161-121;common.to;en-US;To
+v161-122;common.to;ar-EG;إلى

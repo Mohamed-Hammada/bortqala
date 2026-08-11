@@ -61,7 +61,8 @@ public final class WorkforceApi {
         BigDecimal defaultDailyRate,
         BigDecimal standardDailyHours,
         String defaultSettlementCycle,
-        String status
+        String status,
+        String scope
     ) { }
 
     public record CategoryResponse(
@@ -73,6 +74,8 @@ public final class WorkforceApi {
         BigDecimal standardDailyHours,
         String defaultSettlementCycle,
         String status,
+        String scope,
+        boolean active,
         long createdAt,
         long updatedAt
     ) { }
@@ -240,6 +243,78 @@ public final class WorkforceApi {
     public record SettlementIssueResponse(
         String id, String workerId, String workerName, String severity,
         String code, String message
+    ) { }
+
+    public record ContractorSettlementLineResponse(
+        String id,
+        String settlementId,
+        String workerId,
+        String workerName,
+        BigDecimal attendanceDays,
+        BigDecimal dailyWage,
+        BigDecimal grossWage,
+        BigDecimal overtimeAmount,
+        BigDecimal deductionsAmount,
+        BigDecimal advanceInstallments,
+        BigDecimal netWage
+    ) { }
+
+    public record ContractorSettlementAdjustmentResponse(
+        String id,
+        String settlementId,
+        String adjustmentType,
+        String description,
+        BigDecimal amount,
+        String reason,
+        String createdBy,
+        long createdAt
+    ) { }
+
+    public record ContractorSettlementDetailResponse(
+        String id,
+        String periodId,
+        String contractorId,
+        String contractorName,
+        String accountingModel,
+        BigDecimal workersNetTotal,
+        BigDecimal contractorRatesTotal,
+        BigDecimal commissionAmount,
+        BigDecimal fixedAmount,
+        BigDecimal additionsAmount,
+        BigDecimal deductionsAmount,
+        BigDecimal grossAmount,
+        BigDecimal netPayable,
+        BigDecimal paidAmount,
+        String invoiceNumber,
+        Long invoiceDate,
+        String postedJournalEntryId,
+        String status,
+        Long version,
+        List<ContractorSettlementLineResponse> lines,
+        List<ContractorSettlementAdjustmentResponse> adjustments,
+        long createdAt,
+        long updatedAt
+    ) { }
+
+    public record LinkInvoiceRequest(
+        @NotBlank String invoiceNumber,
+        @NotNull Long invoiceDate,
+        BigDecimal invoiceAmount,
+        String notes
+    ) { }
+
+    public record SettlementPostingRequest(
+        @NotBlank String operationId,
+        @NotNull Long expectedVersion,
+        String reason
+    ) { }
+
+    public record RecordSettlementPaymentRequest(
+        @NotBlank String operationId,
+        @NotNull BigDecimal amount,
+        Long paymentDate,
+        String paymentReference,
+        String notes
     ) { }
 
     // --- Bulk Attendance Update DTOs ---

@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { MENU_SHORTCUTS, shortcutForMenu } from './app-shortcuts';
+import { DEFAULT_SCREEN_SHORTCUTS, GLOBAL_SHORTCUTS } from './app-shortcuts';
 
 describe('application shortcuts', () => {
-  it('uses unique menu ids, chord keys and paths', () => {
-    expect(new Set(MENU_SHORTCUTS.map((item) => item.menuId)).size).toBe(MENU_SHORTCUTS.length);
-    expect(new Set(MENU_SHORTCUTS.map((item) => item.chordKey)).size).toBe(MENU_SHORTCUTS.length);
-    expect(new Set(MENU_SHORTCUTS.map((item) => item.path)).size).toBe(MENU_SHORTCUTS.length);
+  it('has valid global shortcut definitions', () => {
+    expect(GLOBAL_SHORTCUTS.length).toBeGreaterThan(0);
+    expect(new Set(GLOBAL_SHORTCUTS.map((item) => item.labelKey)).size).toBe(GLOBAL_SHORTCUTS.length);
   });
 
-  it('finds the procurement shortcut', () => {
-    expect(shortcutForMenu('procurement')).toMatchObject({ path: '/trade/procurement', keys: 'G → P' });
+  it('uses unique default page codes and second key codes', () => {
+    expect(new Set(DEFAULT_SCREEN_SHORTCUTS.map((item) => item.pageCode)).size).toBe(DEFAULT_SCREEN_SHORTCUTS.length);
+    expect(new Set(DEFAULT_SCREEN_SHORTCUTS.map((item) => item.secondKeyCode)).size).toBe(DEFAULT_SCREEN_SHORTCUTS.length);
   });
 });

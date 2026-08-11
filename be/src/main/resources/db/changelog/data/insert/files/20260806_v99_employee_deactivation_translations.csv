@@ -1,0 +1,17 @@
+id;translation_key;locale;text_value
+v99-ar-001;employees.deactivate;ar-EG;تعطيل الموظف
+v99-en-001;employees.deactivate;en-US;Deactivate employee
+v99-ar-002;employees.deactivateTitle;ar-EG;تعطيل الموظف
+v99-en-002;employees.deactivateTitle;en-US;Deactivate employee
+v99-ar-003;employees.deactivateDanger;ar-EG;سيؤدي التعطيل إلى إغلاق التعيين الحالي للموظف وسيظهر كموظف غير نشط في القائمة. يمكنك إعادة التفعيل لاحقًا.
+v99-en-003;employees.deactivateDanger;en-US;Deactivation closes the employee's current assignment and the employee will appear as inactive. You can reactivate them later.
+v99-ar-004;employees.deactivateSuccess;ar-EG;تم تعطيل الموظف
+v99-en-004;employees.deactivateSuccess;en-US;Employee deactivated
+v99-ar-005;employees.reactivate;ar-EG;إعادة التفعيل
+v99-en-005;employees.reactivate;en-US;Reactivate
+v99-ar-006;employees.reactivateTitle;ar-EG;إعادة تفعيل الموظف
+v99-en-006;employees.reactivateTitle;en-US;Reactivate employee
+v99-ar-007;employees.reactivateConfirm;ar-EG;إعادة تفعيل {name}؟
+v99-en-007;employees.reactivateConfirm;en-US;Reactivate {name}?
+v99-ar-008;employees.reactivateSuccess;ar-EG;تمت إعادة تفعيل الموظف
+v99-en-008;employees.reactivateSuccess;en-US;Employee reactivated

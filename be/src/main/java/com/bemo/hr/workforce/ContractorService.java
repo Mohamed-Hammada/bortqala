@@ -1,6 +1,8 @@
 package com.bemo.hr.workforce;
 
+import com.bemo.hr.audit.application.AuditService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,6 +12,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ContractorService {
     private final ContractorRepository contractorRepository;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<WorkforceApi.ContractorResponse> list() {
@@ -32,7 +35,10 @@ public class ContractorService {
             request.defaultDailyRate(), request.feeType(), request.feeValue(),
             request.feeBase(), request.fixedPeriodAmount(), request.status(), request.notes()
         );
-        return mapToResponse(contractorRepository.save(contractor));
+        var saved = mapToResponse(contractorRepository.save(contractor));
+        auditService.record("CREATE", "CONTRACTOR", saved.id(), currentActor(),
+                "{\"code\":\"" + safe(saved.code()) + "\",\"name\":\"" + safe(saved.name()) + "\"}", null);
+        return saved;
     }
 
     @Transactional
@@ -47,8 +53,18 @@ public class ContractorService {
             request.defaultDailyRate(), request.feeType(), request.feeValue(),
             request.feeBase(), request.fixedPeriodAmount(), request.status(), request.notes()
         );
-        return mapToResponse(contractorRepository.save(contractor));
+        var saved = mapToResponse(contractorRepository.save(contractor));
+        auditService.record("UPDATE", "CONTRACTOR", saved.id(), currentActor(),
+                "{\"code\":\"" + safe(saved.code()) + "\",\"name\":\"" + safe(saved.name()) + "\"}", null);
+        return saved;
     }
+
+    private String currentActor() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        return (auth != null && auth.getName() != null && !auth.getName().isBlank()) ? auth.getName() : "system";
+    }
+
+    private String safe(String value) { return value == null ? "" : value.replace("\"", "'"); }
 
     private WorkforceApi.ContractorResponse mapToResponse(Contractor c) {
         return new WorkforceApi.ContractorResponse(

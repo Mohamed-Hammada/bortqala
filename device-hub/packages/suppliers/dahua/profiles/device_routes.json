@@ -1,0 +1,91 @@
+[
+  {
+    "model_pattern": "ASI.*|ASA.*",
+    "generation_or_version": "terminal",
+    "routes": [
+      "netsdk",
+      "dss-openapi"
+    ],
+    "preferred_route": "netsdk",
+    "fallback_routes": [
+      "dss-openapi"
+    ],
+    "notes": "Standalone access/attendance terminals: direct NetSDK or DSS platform.",
+    "official_documentation": [
+      "https://www.dahuasecurity.com/download-center/softwares",
+      "https://previous-depp.dahuasecurity.com/integration/guide/download/sdk",
+      "https://www.dahuasecurity.com/products/software/ecosystem/integration-with-dss",
+      "https://www.dahuasecurity.com/products/software/software-products/dss-professional"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "ASC.*",
+    "generation_or_version": "controller",
+    "routes": [
+      "netsdk",
+      "dss-openapi"
+    ],
+    "preferred_route": "netsdk",
+    "fallback_routes": [
+      "dss-openapi"
+    ],
+    "notes": "Access controllers.",
+    "official_documentation": [
+      "https://www.dahuasecurity.com/download-center/softwares",
+      "https://previous-depp.dahuasecurity.com/integration/guide/download/sdk",
+      "https://www.dahuasecurity.com/products/software/ecosystem/integration-with-dss",
+      "https://www.dahuasecurity.com/products/software/software-products/dss-professional"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "DSS.*",
+    "generation_or_version": "platform",
+    "routes": [
+      "dss-openapi",
+      "dss-sdk",
+      "dss-dip-bridge"
+    ],
+    "preferred_route": "dss-openapi",
+    "fallback_routes": [
+      "dss-sdk",
+      "dss-dip-bridge"
+    ],
+    "notes": "Platform integration.",
+    "official_documentation": [
+      "https://www.dahuasecurity.com/products/software/ecosystem/integration-with-dss",
+      "https://www.dahuasecurity.com/products/software/software-products/dss-professional",
+      "https://previous-depp.dahuasecurity.com/integration/guide/download/sdk"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "UNKNOWN",
+    "generation_or_version": "unknown",
+    "routes": [
+      "netsdk",
+      "dss-openapi"
+    ],
+    "preferred_route": "netsdk",
+    "fallback_routes": [
+      "dss-openapi"
+    ],
+    "notes": "Use NetSDK for direct devices; DSS OpenAPI for managed estates.",
+    "official_documentation": [
+      "https://www.dahuasecurity.com/download-center/softwares",
+      "https://previous-depp.dahuasecurity.com/integration/guide/download/sdk",
+      "https://www.dahuasecurity.com/products/software/ecosystem/integration-with-dss",
+      "https://www.dahuasecurity.com/products/software/software-products/dss-professional"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  }
+]

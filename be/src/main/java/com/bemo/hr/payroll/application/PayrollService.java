@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 public class PayrollService {
 
     private final SalaryPaymentRepository salaryPaymentRepository;
+    private final com.bemo.hr.payroll.domain.SalaryPaymentExplanationRepository explanationRepository;
     private final EmployeeRepository employeeRepository;
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final AttendanceReportRepository attendanceReportRepository;
@@ -47,6 +48,47 @@ public class PayrollService {
     private final WorkforceAdvanceService workforceAdvanceService;
     private final PayrollExcelExporter payrollExcelExporter;
     private final com.bemo.hr.audit.application.AuditService auditService;
+    private final com.bemo.hr.reporting.application.AttendanceExceptionService attendanceExceptionService;
+
+    public List<PayrollApi.ExplanationResponse> getPaymentExplanation(String paymentId) {
+        var explanations = explanationRepository.findBySalaryPaymentIdOrderByCreatedAtAsc(paymentId);
+        if (explanations.isEmpty()) {
+            // Generate fallback default transparent breakdown
+            var payment = salaryPaymentRepository.findById(paymentId).orElse(null);
+            if (payment != null) {
+                saveDefaultExplanations(payment);
+                explanations = explanationRepository.findBySalaryPaymentIdOrderByCreatedAtAsc(paymentId);
+            }
+        }
+        return explanations.stream()
+                .map(e -> new PayrollApi.ExplanationResponse(
+                        e.getId(), e.getSalaryPaymentId(), e.getComponentType(),
+                        e.getFormula(), e.getInputValuesJson(), e.getCalculatedAmount(),
+                        e.getExplanationTextAr(), e.getExplanationTextEn(), e.getCreatedAt().toEpochMilli()
+                )).toList();
+    }
+
+    private void saveDefaultExplanations(SalaryPayment payment) {
+        BigDecimal gross = payment.getGrossAmount() != null ? payment.getGrossAmount() : BigDecimal.ZERO;
+        BigDecimal adv = payment.getAdvancesDeducted() != null ? payment.getAdvancesDeducted() : BigDecimal.ZERO;
+        BigDecimal otherDed = payment.getOtherDeductions() != null ? payment.getOtherDeductions() : BigDecimal.ZERO;
+        BigDecimal net = payment.getNetAmount() != null ? payment.getNetAmount() : gross.subtract(adv).subtract(otherDed).max(BigDecimal.ZERO);
+
+        explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
+                payment.getId(), "BASIC_SALARY", "Gross Base Salary", "{\"gross\":" + gross + "}",
+                gross, "إجمالي الراتب المستحق المستخرج من سجل الحضور والانصراف", "Gross base salary derived from locked attendance records"
+        ));
+        if (adv.compareTo(BigDecimal.ZERO) > 0) {
+            explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
+                    payment.getId(), "ADVANCE_DEDUCTION", "Gross - Active Advance Installment", "{\"advanceDeduction\":" + adv + "}",
+                    adv, "استقطاع قسط السلفة الشهرية النشطة للموظف", "Deduction of active monthly advance installment"
+            ));
+        }
+        explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
+                payment.getId(), "NET_PAYABLE", "Gross - Deductions = Net Payable", "{\"netAmount\":" + net + "}",
+                net, "صافي الراتب المستحق للصرف بعد خصم الاستقطاعات والسلف", "Net payable amount after all deductions and advances"
+        ));
+    }
 
     public PayrollApi.SheetResponse getSheet(int year, int month, String categoryIdFilter) {
         var employees = employeeRepository.findAllByOrderByFullNameAsc();
@@ -229,6 +271,9 @@ public class PayrollService {
         var monthObj = YearMonth.of(request.periodYear(), request.periodMonth());
         LocalDate pStart = request.periodStart() == null ? monthObj.atDay(1) : request.periodStart();
         LocalDate pEnd = request.periodEnd() == null ? monthObj.atEndOfMonth() : request.periodEnd();
+        var payrollReport = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
+                com.bemo.hr.employee.domain.PayCycle.MONTHLY, pStart, pEnd).orElse(null);
+        attendanceExceptionService.assertPayrollReady(payrollReport == null ? null : payrollReport.getId(), emp.getId());
 
         // Immutably derive gross, deductions, advances, and net salary
         BigDecimal base = emp.getBaseSalary() == null ? BigDecimal.ZERO : emp.getBaseSalary();
@@ -280,6 +325,11 @@ public class PayrollService {
     @Transactional
     public PayrollApi.SheetResponse transitionStatus(PayrollApi.StatusTransitionRequest request, String actor) {
         var sheet = getSheet(request.periodYear(), request.periodMonth(), request.categoryId());
+        if (request.targetStatus() == PaymentStatus.APPROVED || request.targetStatus() == PaymentStatus.POSTED
+                || request.targetStatus() == PaymentStatus.PAID) {
+            sheet.rows().stream().map(PayrollApi.PayrollRow::reportId).filter(java.util.Objects::nonNull).distinct()
+                    .forEach(reportId -> attendanceExceptionService.assertPayrollReady(reportId, null));
+        }
         for (var row : sheet.rows()) {
             if (row.paymentStatus() != PaymentStatus.REVERSED && row.paymentStatus() != PaymentStatus.PAID) {
                 var periodKind = row.periodKind() == null ? "FULL_MONTH" : row.periodKind();

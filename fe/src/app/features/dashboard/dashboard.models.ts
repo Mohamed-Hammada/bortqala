@@ -68,3 +68,18 @@ export interface DepartmentMetric {
   scheduledDays: number;
   rate: number;
 }
+
+export interface TrendPoint {
+  label: string;
+  year: number;
+  month: number;
+  scheduledEmployeeDays: number;
+  presentEmployeeDays: number;
+  attendanceRate: number;
+  exceptionDays: number;
+  overtimeMinutes: number;
+  paidCount: number;
+  pendingCount: number;
+  totalGross: number;
+  totalPaid: number;
+}

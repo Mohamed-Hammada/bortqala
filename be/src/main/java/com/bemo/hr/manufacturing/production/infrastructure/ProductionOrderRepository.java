@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ProductionOrderRepository extends JpaRepository<ProductionOrder, String> {
     List<ProductionOrder> findAllByOrderByStartDateDescCreatedAtDesc();
+    boolean existsByOrderNumberIgnoreCase(String orderNumber);
 }

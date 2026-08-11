@@ -88,7 +88,10 @@ public class DashboardService {
         return new DashboardApi.Response(
                 year, month, java.time.Instant.now(),
                 employeeRepository.findAll().stream().filter(com.bemo.hr.employee.domain.Employee::isActive).count(),
-                attendanceCategoryRepository.findAll().stream().filter(com.bemo.hr.employee.domain.AttendanceCategory::isActive).count(),
+                attendanceCategoryRepository.findByScopeIn(java.util.List.of(
+                        com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE,
+                        com.bemo.hr.employee.domain.CategoryScope.BOTH)).stream()
+                        .filter(com.bemo.hr.employee.domain.AttendanceCategory::isActive).count(),
                 report == null ? null : report.getStatus(),
                 report == null ? null : report.getId(),
                 report == null ? 0 : report.getUnresolvedCount(),
@@ -192,5 +195,51 @@ public class DashboardService {
                 })
                 .sorted(Comparator.comparing(DashboardApi.DepartmentMetric::departmentName))
                 .toList();
+    }
+
+    public List<DashboardApi.TrendPoint> trends(int months) {
+        int capped = Math.min(Math.max(months, 1), 24);
+        var anchor = YearMonth.now(companyZone);
+        var points = new ArrayList<DashboardApi.TrendPoint>(capped);
+        for (int offset = capped - 1; offset >= 0; offset--) {
+            var period = anchor.minusMonths(offset);
+            points.add(pointFor(period));
+        }
+        return points;
+    }
+
+    private DashboardApi.TrendPoint pointFor(YearMonth period) {
+        var report = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
+                PayCycle.MONTHLY, period.atDay(1), period.atEndOfMonth()).orElse(null);
+        var rows = report == null ? List.<com.bemo.hr.reporting.domain.DailyAttendanceResult>of()
+                : dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(report.getId());
+        long scheduled = rows.stream().filter(row -> row.getStatus() != DailyStatus.NON_WORKDAY && row.getStatus() != DailyStatus.HOLIDAY).count();
+        long present = rows.stream().filter(row -> row.getStatus() == DailyStatus.PRESENT || row.getDecision() == AttendanceDecision.NORMAL_DAY).count();
+        double rate = scheduled == 0 ? 0 : Math.round((present * 10_000.0 / scheduled)) / 100.0;
+        long exceptions = rows.stream().filter(com.bemo.hr.reporting.domain.DailyAttendanceResult::isBlocking).count();
+        long overtime = rows.stream().mapToLong(com.bemo.hr.reporting.domain.DailyAttendanceResult::getOvertimeMinutes).sum();
+
+        var payments = salaryPaymentRepository.findByPeriodYearAndPeriodMonthOrderByCreatedAtDesc(period.getYear(), period.getMonthValue());
+        int paid = 0;
+        int pending = 0;
+        var totalGross = BigDecimal.ZERO;
+        var totalPaid = BigDecimal.ZERO;
+        var totalPending = BigDecimal.ZERO;
+        for (var payment : payments) {
+            var gross = payment.getGrossAmount() == null ? BigDecimal.ZERO : payment.getGrossAmount();
+            var net = payment.getNetAmount() == null ? BigDecimal.ZERO : payment.getNetAmount();
+            totalGross = totalGross.add(gross);
+            if (payment.getPaymentStatus() == PaymentStatus.PAID || payment.getPaymentStatus() == PaymentStatus.POSTED) {
+                paid++;
+                totalPaid = totalPaid.add(net);
+            } else {
+                pending++;
+                totalPending = totalPending.add(net);
+            }
+        }
+        return new DashboardApi.TrendPoint(
+                period.toString(), period.getYear(), period.getMonthValue(),
+                scheduled, present, rate, exceptions, overtime,
+                paid, pending, totalGross, totalPaid);
     }
 }

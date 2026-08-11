@@ -1,0 +1,154 @@
+[
+  {
+    "route": "accessmanager-pro",
+    "kind": "api",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://support.unionbiometrics.com/TechHub/Faq",
+      "https://support.unionbiometrics.com/TechHub/TechResource"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "alpeta-api",
+    "kind": "api",
+    "version_policy": "alpeta-server-coupled",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://support.unionbiometrics.com/",
+      "https://support.unionbiometrics.com/TechHub/Faq"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "tcp-terminal",
+    "kind": "protocol",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://support.unionbiometrics.com/TechHub/Faq"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "ucs-sdk",
+    "kind": "sdk",
+    "version_policy": "device-firmware-sdk-matched",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://support.unionbiometrics.com/",
+      "https://support.unionbiometrics.com/TechHub/Faq"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "unis-server",
+    "kind": "api",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://support.unionbiometrics.com/TechHub/Faq",
+      "https://support.unionbiometrics.com/TechHub/TechResource"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "usb-scanner-sdk",
+    "kind": "sdk",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://support.unionbiometrics.com/",
+      "https://support.unionbiometrics.com/TechHub/TechResource"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "wiegand-rs485",
+    "kind": "protocol",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://support.unionbiometrics.com/TechHub/Faq",
+      "https://support.unionbiometrics.com/TechHub/TechCourse"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  }
+]

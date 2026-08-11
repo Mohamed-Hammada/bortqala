@@ -274,30 +274,40 @@ nav {
 .workspace-section-tools {
   display: flex;
   align-items: center;
+  /* flex-start follows the product language direction:
+     right in RTL, left in LTR. */
   justify-content: flex-start;
   padding: 4px 8px 8px;
   border-bottom: 1px dashed var(--sidebar-line);
   margin-bottom: 6px;
-  gap: 6px;
+  gap: var(--space-2, 8px);
+}
 
-  .expand-all-btn {
-    background: rgba(212, 160, 23, 0.1);
-    border: 1px solid rgba(212, 160, 23, 0.3);
-    color: var(--gold);
-    border-radius: 6px;
-    padding: 4px 10px;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    width: 100%;
-    text-align: center;
+.workspace-tool-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--sidebar-line);
+  border-radius: var(--radius-sm, 8px);
+  background: transparent;
+  color: var(--sidebar-muted);
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
 
-    &:hover {
-      background: var(--gold);
-      color: #0F172A;
-    }
-  }
+.workspace-tool-icon:hover,
+.workspace-tool-icon:focus-visible {
+  border-color: var(--gold);
+  background: var(--sidebar-active-bg);
+  color: var(--gold);
+  outline: none;
+}
+
+.workspace-tool-icon app-icon {
+  width: 18px;
+  height: 18px;
 }
 
 kbd {
@@ -884,13 +894,33 @@ kbd {
 }
 
 .mobile-header {
-  height: 48px;
-  padding: 0 12px;
+  display: flex;
+  height: 56px;
+  min-height: 56px;
+  flex: 0 0 auto;
+  padding: 0 16px;
   align-items: center;
   gap: 10px;
   color: var(--ink);
   background: var(--surface);
   border-bottom: 1px solid var(--line);
+}
+
+.mobile-header > strong {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.mobile-menu-trigger {
+  display: none;
+}
+
+.mobile-header .global-search-container {
+  flex: 1 1 520px;
+  width: auto;
+  min-width: 260px;
+  max-width: 720px;
+  margin-inline: auto;
 }
 
 .mobile-settings {
@@ -927,8 +957,16 @@ kbd {
     margin-left: 0;
     --current-sidebar-width: 0px;
   }
+  .mobile-menu-trigger {
+    display: grid;
+  }
   .mobile-header {
-    display: flex;
+    padding-inline: 12px;
+  }
+  .mobile-header .global-search-container {
+    min-width: 0;
+    max-width: none;
+    margin-inline: 6px;
   }
   .backdrop {
     position: fixed;
@@ -951,4 +989,40 @@ kbd {
   .server-status.checking .server-status-dot {
     animation: none;
   }
+}
+
+.action-center-dialog{max-width:560px;width:100%;padding:1.2rem}.action-center-header{margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center}.action-center-list{display:grid;gap:.8rem;max-height:70vh;overflow-y:auto}.action-card{padding:.9rem;border-radius:10px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;gap:.45rem}.action-card.read{background:var(--surface-muted);opacity:.82}.action-card-head{display:flex;justify-content:space-between;align-items:center;gap:.5rem}.action-card-head strong{font-size:.95rem;color:var(--text)}.action-card p{margin:0;font-size:.85rem;color:var(--muted)}.priority,.exception{font-size:.75rem;padding:2px 8px;border-radius:4px;font-weight:700;background:var(--surface-muted);color:var(--text)}.exception{justify-self:start}.action-detail{display:grid;grid-template-columns:7rem 1fr;gap:.5rem;font-size:.82rem}.action-detail span{color:var(--muted)}.action-link{justify-self:start}.action-center-empty{text-align:center;padding:2rem;color:var(--muted);font-size:.9rem}
+
+/* BEMO directional shell polish */
+/* The panel arrow was authored for the default RTL shell; mirror for LTR. */
+:host-context([dir='ltr']) .collapse-toggle app-icon {
+  transform: scaleX(-1);
+}
+
+.workspace-section-tools {
+  min-height: 34px;
+  padding-block: 2px 6px;
+  gap: 4px;
+}
+
+.workspace-tool-icon {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--sidebar-muted);
+  box-shadow: none;
+}
+
+.workspace-tool-icon:hover,
+.workspace-tool-icon:focus-visible {
+  border-color: transparent;
+  background: var(--sidebar-hover);
+  color: var(--gold);
+}
+
+.workspace-tool-icon app-icon {
+  width: 18px;
+  height: 18px;
 }

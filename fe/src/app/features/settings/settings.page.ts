@@ -6,9 +6,18 @@ import { AuthService } from '../../core/auth/auth.service';
 import { ExcelTableStyle, NotificationPreferences, TableDensity, ThemePreference } from '../../core/auth/auth.models';
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
-import { GLOBAL_SHORTCUTS, MENU_SHORTCUTS } from '../../core/app-shortcuts';
+import { ActivatedRoute } from '@angular/router';
+import { ShortcutSettingsComponent } from './shortcuts/shortcut-settings.component';
+import { TranslationManagementComponent } from './translation-management.component';
+import { EntitlementSettingsComponent } from './entitlement-settings.component';
+import { IndustryPackSettingsComponent } from './industry-pack-settings.component';
+import { TrialDemoSettingsComponent } from './trial-demo-settings.component';
+import { GuidedOnboardingComponent } from './guided-onboarding.component';
+import { PartnerRiskSettingsComponent } from './partner-risk-settings.component';
+import { ProductAnalyticsSettingsComponent } from './product-analytics-settings.component';
+import { SubscriptionSettingsComponent } from './subscription-settings.component';
 
-export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports' | 'shortcuts';
+export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports' | 'shortcuts' | 'translations' | 'entitlements' | 'industry' | 'trial' | 'onboarding' | 'risk' | 'analytics' | 'subscription';
 
 const NOTIFICATION_KEY = 'bemo_notification_prefs';
 
@@ -27,7 +36,7 @@ function saveNotificationPrefs(prefs: NotificationPreferences): void {
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ShortcutSettingsComponent, TranslationManagementComponent, EntitlementSettingsComponent, IndustryPackSettingsComponent, TrialDemoSettingsComponent, GuidedOnboardingComponent, PartnerRiskSettingsComponent, ProductAnalyticsSettingsComponent, SubscriptionSettingsComponent],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,6 +46,7 @@ export class SettingsPage {
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly route = inject(ActivatedRoute);
 
   readonly activeTab = signal<SettingsTab>('appearance');
 
@@ -55,8 +65,6 @@ export class SettingsPage {
   readonly showRecentlyUsed = signal(this.authService.preferences().showRecentlyUsed);
   readonly maxRecentlyUsed = signal(this.authService.preferences().maxRecentlyUsed);
   readonly notificationPrefs = signal<NotificationPreferences>(loadNotificationPrefs());
-  readonly globalShortcuts = GLOBAL_SHORTCUTS;
-  readonly menuShortcuts = MENU_SHORTCUTS;
 
   readonly availablePages = [
     { path: '/dashboard', labelKey: 'nav.dashboard' },
@@ -93,10 +101,7 @@ export class SettingsPage {
   }
 
   updateNotificationPrefs(key: keyof NotificationPreferences, value: boolean) {
-    const updated = { ...this.notificationPrefs(), [key]: value };
-    this.notificationPrefs.set(updated);
-    saveNotificationPrefs(updated);
-    this.notification.success(this.i18n.t('settings.notificationSaved'));
+    this.notificationPrefs.update((current) => ({ ...current, [key]: value }));
   }
 
   readonly form = this.formBuilder.nonNullable.group({
@@ -119,6 +124,7 @@ export class SettingsPage {
     showReportPresets: [true, Validators.required],
     attendanceAnomalyThresholdPercent: [70, [Validators.required, Validators.min(1), Validators.max(100)]],
     automaticProcurementNumbering: [true, Validators.required],
+    automaticDocumentNumbering: [true, Validators.required],
     adminDashboardCustomizationEnabled: [true, Validators.required],
     minPasswordLength: [8, [Validators.required, Validators.min(6), Validators.max(128)]],
     requireUppercase: [false],
@@ -132,6 +138,11 @@ export class SettingsPage {
   });
 
   constructor() {
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    const allowedTab = !['translations','entitlements','industry','trial','subscription'].includes(tabParam ?? '') || this.authService.isSuperAdmin();
+    if (tabParam && allowedTab && ['appearance', 'session', 'security', 'reports', 'shortcuts', 'translations', 'entitlements', 'industry', 'trial', 'onboarding', 'risk', 'analytics','subscription'].includes(tabParam)) {
+      this.activeTab.set(tabParam as SettingsTab);
+    }
     if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) void this.loadAppSettings();
   }
 
@@ -171,6 +182,7 @@ export class SettingsPage {
       excelTableStyle: prefs.excelTableStyle as ExcelTableStyle,
       defaultPage: prefs.defaultPage ?? '/dashboard',
     });
+    this.notificationPrefs.set(loadNotificationPrefs());
   }
 
   async saveUserPreferences(): Promise<void> {
@@ -178,6 +190,7 @@ export class SettingsPage {
     this.saving.set(true);
     try {
       await firstValueFrom(this.authService.updatePreferences(this.form.getRawValue()));
+      saveNotificationPrefs(this.notificationPrefs());
       this.form.markAsPristine();
       this.notification.success(this.i18n.t('settings.saved'));
     } catch (error) {
@@ -203,6 +216,7 @@ export class SettingsPage {
         showReportPresets: saved.showReportPresets,
         attendanceAnomalyThresholdPercent: saved.attendanceAnomalyThresholdPercent ?? 70,
         automaticProcurementNumbering: saved.automaticProcurementNumbering ?? true,
+        automaticDocumentNumbering: saved.automaticDocumentNumbering ?? true,
         adminDashboardCustomizationEnabled: saved.adminDashboardCustomizationEnabled ?? true,
         minPasswordLength: saved.minPasswordLength ?? 8,
         requireUppercase: saved.requireUppercase ?? false,
@@ -215,7 +229,7 @@ export class SettingsPage {
         passwordHistoryCount: saved.passwordHistoryCount ?? 0,
       });
       this.appSettingsForm.markAsPristine();
-      this.notification.success(this.i18n.t('settings.saveAllSystemSettings', undefined, 'تم حفظ جميع الإعدادات بنجاح.'));
+      this.notification.success(this.i18n.t('settings.saveAllSystemSettings', undefined));
     } catch (error) {
       const msg = apiErrorMessage(error, this.i18n);
       this.notification.error(msg);
@@ -245,6 +259,7 @@ export class SettingsPage {
         showReportPresets: settings.showReportPresets ?? true,
         attendanceAnomalyThresholdPercent: settings.attendanceAnomalyThresholdPercent ?? 70,
         automaticProcurementNumbering: settings.automaticProcurementNumbering ?? true,
+        automaticDocumentNumbering: settings.automaticDocumentNumbering ?? true,
         adminDashboardCustomizationEnabled: settings.adminDashboardCustomizationEnabled ?? true,
         minPasswordLength: settings.minPasswordLength ?? 8,
         requireUppercase: settings.requireUppercase ?? false,

@@ -24,7 +24,7 @@ public class ProcurementApi {
 
     public record PurchaseOrderResponse(
             String id, String poNumber, long poDate, String supplierId, String supplierName,
-            String purchaseRequestId, String paymentTerms, String currencyCode,
+            String purchaseRequestId, String departmentId, String paymentTerms, String currencyCode,
             String baseCurrencyCode, BigDecimal exchangeRate, long exchangeRateDate,
             String exchangeRateSource, String exchangeRateOverrideReason, BigDecimal baseTotalAmount,
             String status, BigDecimal totalAmount,
@@ -33,7 +33,7 @@ public class ProcurementApi {
 
     public record PurchaseOrderPayload(
             String poNumber, long poDate, @NotBlank String supplierId,
-            String purchaseRequestId, String paymentTerms, String currencyCode,
+            String purchaseRequestId, String departmentId, String paymentTerms, String currencyCode,
             BigDecimal exchangeRate, String exchangeRateOverrideReason,
             List<PurchaseOrderLinePayload> items
     ) {}
@@ -41,6 +41,21 @@ public class ProcurementApi {
     public record ExchangeRateQuote(
             String currencyCode, String baseCurrencyCode, BigDecimal exchangeRate,
             long rateDate, String source
+    ) {}
+
+    public record ThreeWayMatchResponse(
+        String id, String purchaseOrderId, String goodsReceiptId, String supplierInvoiceId,
+        String matchStatus, BigDecimal priceVarianceAmount, BigDecimal quantityVarianceAmount,
+        BigDecimal tolerancePercentage, String varianceReason, String resolvedBy,
+        Long resolvedAt, long createdAt
+    ) {}
+
+    public record PerformMatchPayload(
+        BigDecimal tolerancePercentage
+    ) {}
+
+    public record ResolveMatchPayload(
+        @NotBlank String resolutionNotes
     ) {}
 
     // ─── Goods Receipt ────────────────────────────────────────────────
@@ -109,5 +124,32 @@ public class ProcurementApi {
             @NotBlank String paymentNumber, long paymentDate, @NotBlank String supplierId,
             @NotBlank String supplierInvoiceId, @NotNull BigDecimal amount,
             @NotBlank String paymentMethod, String notes, @NotBlank String operationId
+    ) {}
+
+    // ─── Supplier Return ──────────────────────────────────────────────
+
+    public record SupplierReturnLineResponse(
+            String id, String purchaseOrderLineId, String itemId, String itemName, String itemCategory,
+            BigDecimal quantity, String unitOfMeasure, BigDecimal unitPrice,
+            String locationId, String reason
+    ) {}
+
+    public record SupplierReturnLinePayload(
+            @NotBlank String purchaseOrderLineId, @NotBlank String itemId, @NotBlank String itemName, String itemCategory,
+            @NotNull @DecimalMin(value = "0.000001") BigDecimal quantity,
+            String unitOfMeasure, @NotNull BigDecimal unitPrice,
+            String locationId, String reason
+    ) {}
+
+    public record SupplierReturnResponse(
+            String id, String returnNumber, long returnDate, String purchaseOrderId,
+            String supplierId, String supplierName, String warehouseId, String status,
+            String notes, List<SupplierReturnLineResponse> lines, long createdAt
+    ) {}
+
+    public record SupplierReturnPayload(
+            String returnNumber, long returnDate, @NotBlank String purchaseOrderId,
+            @NotBlank String supplierId, String warehouseId, String notes,
+            @NotNull @Size(min = 1) List<@Valid SupplierReturnLinePayload> lines
     ) {}
 }

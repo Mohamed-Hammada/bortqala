@@ -31,7 +31,7 @@ public interface ImportBatchRepository extends JpaRepository<ImportBatch, String
                 :id, :appId, :checksum, :fileName, :sourceId, :deviceName, :status,
                 :totalRows, :validRows, :validRows, 0, 0, :errorRows, :importedBy, CURRENT_TIMESTAMP
             )
-            ON CONFLICT (app_id, source_id, checksum) DO NOTHING
+            ON CONFLICT DO NOTHING
             """, nativeQuery = true)
     int insertIfAbsent(@Param("id") String id, @Param("appId") String appId,
                        @Param("checksum") String checksum, @Param("fileName") String fileName,

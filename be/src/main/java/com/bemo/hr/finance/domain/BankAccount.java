@@ -37,6 +37,7 @@ public class BankAccount {
 
     @Column(name = "account_id", length = 36)
     private String accountId;
+    @Column(name = "currency_code", nullable = false, length = 10) private String currencyCode;
 
     @Column(nullable = false)
     private boolean active;
@@ -53,17 +54,18 @@ public class BankAccount {
 
     protected BankAccount() {}
 
-    public BankAccount(String bankName, String accountNumber, String iban, String swiftCode, String accountId, boolean active) {
+    public BankAccount(String bankName, String accountNumber, String iban, String swiftCode, String accountId, String currencyCode, boolean active) {
         this.id = UUID.randomUUID().toString();
-        update(bankName, accountNumber, iban, swiftCode, accountId, active);
+        update(bankName, accountNumber, iban, swiftCode, accountId, currencyCode, active);
     }
 
-    public void update(String bankName, String accountNumber, String iban, String swiftCode, String accountId, boolean active) {
+    public void update(String bankName, String accountNumber, String iban, String swiftCode, String accountId, String currencyCode, boolean active) {
         this.bankName = bankName.strip();
         this.accountNumber = accountNumber.strip();
         this.iban = iban == null ? null : iban.strip();
         this.swiftCode = swiftCode == null ? null : swiftCode.strip();
         this.accountId = accountId == null || accountId.isBlank() ? null : accountId.strip();
+        this.currencyCode = currencyCode == null || currencyCode.isBlank() ? "EGP" : currencyCode.strip().toUpperCase();
         this.active = active;
     }
 
@@ -79,6 +81,7 @@ public class BankAccount {
     public String getIban() { return iban; }
     public String getSwiftCode() { return swiftCode; }
     public String getAccountId() { return accountId; }
+    public String getCurrencyCode() { return currencyCode; }
     public boolean isActive() { return active; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }

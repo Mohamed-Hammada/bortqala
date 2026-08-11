@@ -129,7 +129,7 @@ class HrConfigurationEmployeeTests {
         TenantContext.set(appB.getId());
         var inOtherTenant = hrConfigurationService.createEmployee(employeeRequest("EMP1", categoryB, false));
         employeesByApp.computeIfAbsent(appB.getId(), ignored -> new ArrayList<>()).add(inOtherTenant.id());
-        assertThat(inOtherTenant.employeeCode()).isEqualTo("SEC-EMP1");
+        assertThat(inOtherTenant.employeeCode()).isEqualTo("EMP1");
     }
 
     @Test

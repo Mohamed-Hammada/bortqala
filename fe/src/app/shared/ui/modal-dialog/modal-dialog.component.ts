@@ -26,6 +26,7 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
       <section
         #dialogBox
         class="modal-dialog-box"
+        [class.compact]="size === 'compact'"
         [class.wide]="size === 'wide'"
         [class.large]="size === 'large'"
         role="dialog"
@@ -64,7 +65,7 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      z-index: 10000;
+      z-index: var(--z-modal, 10000);
 
       display: grid;
       place-items: center;
@@ -93,9 +94,14 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
 
       color: var(--ink, #0f172a);
       background: var(--surface, #ffffff);
-      border-radius: 14px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--line, #e2e8f0);
+      border-radius: var(--radius-lg, 16px);
+      box-shadow: var(--shadow-modal, 0 24px 70px rgba(0, 0, 0, 0.38));
       animation: zoomIn 0.2s ease-out;
+    }
+
+    .modal-dialog-box.compact {
+      width: min(100%, var(--modal-compact-max-width, 560px));
     }
 
     .modal-dialog-box.wide {
@@ -175,6 +181,10 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
       border-top: 1px solid var(--line, #e2e8f0);
     }
 
+    .modal-actions:empty {
+      display: none;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -206,7 +216,7 @@ export class ModalDialogComponent implements OnInit, OnChanges, OnDestroy, After
   @Input() isOpen = true;
   @Input() title = '';
   @Input() titleId = 'modal-title-' + Math.random().toString(36).substring(2, 9);
-  @Input() size: 'normal' | 'wide' | 'large' = 'normal';
+  @Input() size: 'compact' | 'normal' | 'wide' | 'large' = 'normal';
   @Input() showFooter = true;
   @Input() preventOutsideClose = false;
 

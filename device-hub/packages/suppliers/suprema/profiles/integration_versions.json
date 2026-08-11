@@ -1,0 +1,194 @@
+[
+  {
+    "route": "biostar-device-sdk",
+    "kind": "sdk",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://kb.supremainc.com/bs2sdk/doku.php?id=en:start",
+      "https://kb.supremainc.com/bs2sdk/doku.php?id=en:api_references",
+      "https://support.supremainc.com/en/support/solutions/articles/24000005839",
+      "https://download.supremainc.com/download-center/pages/login.asp"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "biostar1-legacy-sdk",
+    "kind": "sdk",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://support.supremainc.com/en/support/solutions/articles/24000054528-g-sdk-introduction"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "biostar2-api-v1",
+    "kind": "api",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "1.*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": true,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://support.supremainc.com/en/support/solutions/articles/24000005839"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "biostar2-api-v2",
+    "kind": "api",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "2.*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": true,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://support.supremainc.com/en/support/solutions/articles/24000005839"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "biostar2-local-api",
+    "kind": "api",
+    "version_policy": "server-coupled",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": ">=2.7.10",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://support.supremainc.com/en/support/solutions/articles/24000005839",
+      "https://kb.supremainc.com/knowledge/doku.php?id=en:how_to_use_swagger_ui_and_postman_for_biostar_2_new_local_api"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  },
+  {
+    "route": "g-sdk",
+    "kind": "sdk",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": ">=1.0.0,<2.0.0",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "device-firmware-matrix",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "bridge-probe",
+    "official_documentation": [
+      "https://supremainc.github.io/g-sdk/overview/",
+      "https://supremainc.github.io/g-sdk/api/",
+      "https://support.supremainc.com/en/support/solutions/articles/24000054528-g-sdk-introduction"
+    ],
+    "notes": "G-SDK public releases are currently 1.x; device/feature support is still firmware-specific.",
+    "publicly_observed_current_version_as_of_2026_08_08": "1.9.1"
+  },
+  {
+    "route": "svp-android-sdk",
+    "kind": "sdk",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": true,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "vendor-matrix-required",
+    "os": [
+      "windows",
+      "linux",
+      "android",
+      "ios"
+    ],
+    "architectures": [
+      "x86",
+      "x64",
+      "arm",
+      "arm64"
+    ],
+    "implementation_status": "sdk-bridge-probe",
+    "official_documentation": [
+      "https://support.supremainc.com/en/support/solutions/articles/24000005839"
+    ],
+    "notes": "Pin exact versions in deployment. Do not assume newest SDK supports every historical device firmware."
+  },
+  {
+    "route": "wiegand-rs485",
+    "kind": "protocol",
+    "version_policy": "capability-or-vendor-matrix",
+    "sdk_version_spec": "*",
+    "api_version_spec": "*",
+    "server_version_spec": "*",
+    "requires_explicit_sdk_version": false,
+    "requires_explicit_api_version": false,
+    "compatibility_matrix_status": "capability-negotiated",
+    "os": [],
+    "architectures": [],
+    "implementation_status": "generic-client-or-probe",
+    "official_documentation": [
+      "https://supremainc.github.io/g-sdk/api/",
+      "https://kb.supremainc.com/bs2sdk/doku.php?id=en:api_references"
+    ],
+    "notes": "Negotiate capabilities/version at runtime and retain server/device version in inventory."
+  }
+]

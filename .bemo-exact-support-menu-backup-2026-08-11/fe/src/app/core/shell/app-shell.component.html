@@ -1,0 +1,551 @@
+<div class="app-frame">
+  <app-toast-container />
+  <aside class="sidebar" [class.open]="menuOpen()" [class.collapsed]="collapsed()">
+    <div class="brand">
+      <span class="brand-mark" [appTooltip]="authService.app()?.name ?? 'Bemo ERP'">
+        <img src="/icons/bemo-erp-logo.svg" alt="" width="36" height="36" />
+      </span>
+      <div class="brand-info">
+        <strong>{{ authService.app()?.name ?? i18n.t('app.defaultName') }}</strong
+        ><small>{{ authService.app()?.code }} · {{ i18n.t('app.attendanceReports') }}</small>
+      </div>
+      <div class="brand-actions">
+        <button
+          class="icon-button collapse-toggle"
+          type="button"
+          (click)="collapsed.set(!collapsed())"
+          [attr.aria-label]="collapsed() ? i18n.t('action.openMenu') : i18n.t('action.closeMenu')"
+          [appTooltip]="collapsed() ? i18n.t('action.openMenu') : i18n.t('action.closeMenu')"
+        >
+          <app-icon [name]="collapsed() ? 'panel-expand' : 'panel-collapse'" />
+        </button>
+      </div>
+      <button
+        class="icon-button close-menu"
+        type="button"
+        (click)="closeMenu()"
+        [attr.aria-label]="i18n.t('action.closeMenu')"
+        [appTooltip]="i18n.t('action.closeMenu')"
+      >
+        <app-icon name="close" />
+      </button>
+    </div>
+
+    <button
+      type="button"
+      class="server-status"
+      [class.online]="network.backendState() === 'ONLINE'"
+      [class.offline]="network.backendState() === 'OFFLINE'"
+      [class.checking]="network.backendState() === 'CHECKING'"
+      (click)="network.checkNow()"
+      [attr.aria-label]="i18n.t('appShell.serverRetry')"
+      [appTooltip]="(network.backendStatus()?.service ?? 'Bemo ERP') + ' · ' + (network.backendStatus()?.version ?? '—')"
+    >
+      <span class="server-status-dot" aria-hidden="true"></span>
+      <span class="server-status-label">
+        {{
+          network.backendState() === 'ONLINE'
+            ? i18n.t('appShell.serverOnline')
+            : network.backendState() === 'OFFLINE'
+              ? i18n.t('appShell.serverOffline')
+              : i18n.t('appShell.serverChecking')
+        }}
+      </span>
+    </button>
+
+    <nav [attr.aria-label]="i18n.t('nav.main')">
+      <!-- Section: Favorites -->
+      @if (favoriteItems().length > 0) {
+        <div class="workspace-section favorites-section">
+          <p class="workspace-header section-title-static">⭐ {{ i18n.t('nav.favorites', undefined, 'المفضلة') }}</p>
+          @for (item of favoriteItems(); track item.path) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [appTooltip]="navTooltip(item)"
+              (click)="onNavItemClick(item)"
+              class="nav-item favorite-item"
+            >
+              <div class="icon-container">
+                <app-icon class="nav-icon" [name]="item.icon" />
+              </div>
+              <span class="nav-text"
+                ><strong>{{ i18n.t(item.labelKey) }}</strong
+                ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+              >
+              <button
+                type="button"
+                class="fav-star-btn active"
+                (click)="toggleFavorite(item.menuId, $event)"
+                [attr.aria-label]="i18n.t('appShell.favoriteTooltip')"
+                [appTooltip]="i18n.t('appShell.favoriteTooltip')"
+              >
+                ★
+              </button>
+              <span class="collapsed-tooltip">{{ i18n.t(item.labelKey) }}</span>
+            </a>
+          }
+        </div>
+      }
+
+      <!-- Section: Recently Used -->
+      @if (recentItems().length > 0) {
+        <div class="workspace-section recents-section">
+          <p class="workspace-header section-title-static">🕒 {{ i18n.t('nav.recentlyUsed') }}</p>
+          @for (item of recentItems(); track item.path) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="active"
+              [appTooltip]="navTooltip(item)"
+              (click)="onNavItemClick(item)"
+              class="nav-item recent-item"
+            >
+              <div class="icon-container">
+                <app-icon class="nav-icon" [name]="item.icon" />
+              </div>
+              <span class="nav-text"
+                ><strong>{{ i18n.t(item.labelKey) }}</strong
+                ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+              >
+              <button
+                type="button"
+                class="fav-star-btn"
+                [class.active]="isFavorite(item.menuId)"
+                (click)="toggleFavorite(item.menuId, $event)"
+                [attr.aria-label]="i18n.t('appShell.addFavoriteTooltip')"
+                [appTooltip]="i18n.t('appShell.addFavoriteTooltip')"
+              >
+                ★
+              </button>
+              <span class="collapsed-tooltip">{{ i18n.t(item.labelKey) }}</span>
+            </a>
+          }
+        </div>
+      }
+
+      <!-- Workspace Controls -->
+      <div class="workspace-section-tools" [attr.aria-label]="i18n.t('nav.main')">
+        <button
+          type="button"
+          class="workspace-tool-icon"
+          (click)="expandAllGroups()"
+          [attr.aria-label]="i18n.t('action.expandAll')"
+          [appTooltip]="i18n.t('action.expandAll')"
+        >
+          <app-icon name="expand-all" />
+        </button>
+        <button
+          type="button"
+          class="workspace-tool-icon"
+          (click)="collapseAllGroups()"
+          [attr.aria-label]="i18n.t('action.collapseAll')"
+          [appTooltip]="i18n.t('action.collapseAll')"
+        >
+          <app-icon name="collapse-all" />
+        </button>
+      </div>
+
+      <!-- Workspace Collapsible Sections -->
+      @for (section of workspaceSections(); track section.titleKey) {
+        <div class="workspace-section" [class.is-collapsed]="isGroupCollapsed(section.titleKey)">
+          <button
+            type="button"
+            class="workspace-header group-toggle-btn"
+            (click)="toggleGroupCollapse(section.titleKey)"
+            [attr.aria-label]="i18n.t(section.titleKey) + ' — ' + (isGroupCollapsed(section.titleKey) ? i18n.t('shortcuts.expandGroup') : i18n.t('shortcuts.collapseGroup'))"
+            [appTooltip]="isGroupCollapsed(section.titleKey) ? i18n.t('shortcuts.expandGroup') : i18n.t('shortcuts.collapseGroup')"
+          >
+            <span>{{ i18n.t(section.titleKey) }}</span>
+            <span class="chevron-arrow">{{ isGroupCollapsed(section.titleKey) ? '◀' : '▼' }}</span>
+          </button>
+
+          @if (!isGroupCollapsed(section.titleKey)) {
+            <div class="section-group-items">
+              @for (item of section.items; track item.path) {
+                <a
+                  [routerLink]="item.path"
+                  routerLinkActive="active"
+                  [appTooltip]="navTooltip(item)"
+                  (click)="onNavItemClick(item)"
+                  class="nav-item"
+                >
+                  <div class="icon-container">
+                    <app-icon class="nav-icon" [name]="item.icon" />
+                  </div>
+                  <span class="nav-text"
+                    ><strong>{{ i18n.t(item.labelKey) }}</strong
+                    ><small>{{ i18n.t(item.descriptionKey) }}</small></span
+                  >
+                  <button
+                    type="button"
+                    class="fav-star-btn"
+                    [class.active]="isFavorite(item.menuId)"
+                    (click)="toggleFavorite(item.menuId, $event)"
+                    [attr.aria-label]="i18n.t('appShell.pinFavoriteTooltip')"
+                    [appTooltip]="i18n.t('appShell.pinFavoriteTooltip')"
+                  >
+                    ★
+                  </button>
+                  <span class="collapsed-tooltip">{{ i18n.t(item.labelKey) }}</span>
+                </a>
+              }
+            </div>
+          }
+        </div>
+      }
+    </nav>
+
+    <div class="sidebar-foot">
+      <span class="avatar" [appTooltip]="authService.user()?.displayName ?? ''">{{ authService.user()?.displayName?.charAt(0) }}</span>
+      <div class="user-info">
+        <strong>{{ authService.user()?.displayName }}</strong
+        ><small>{{ userRolesLabel() }}</small>
+      </div>
+      <button
+        class="icon-button logout-btn"
+        type="button"
+        (click)="logout()"
+        [attr.aria-label]="i18n.t('action.logout')"
+        [appTooltip]="i18n.t('action.logout')"
+      >
+        <app-icon name="logout" />
+      </button>
+    </div>
+  </aside>
+
+  <button
+    class="backdrop"
+    [class.visible]="menuOpen()"
+    type="button"
+    (click)="closeMenu()"
+    [attr.aria-label]="i18n.t('action.closeMenu')"
+  ></button>
+
+  <main class="main-area" [class.collapsed]="collapsed()">
+    @if (!network.isOnline()) {
+      <div class="offline-banner" [innerHTML]="i18n.t('appShell.offlineBanner')"></div>
+    }
+
+    <header class="mobile-header">
+      <button
+        class="icon-button"
+        type="button"
+        (click)="menuOpen.set(true)"
+        [attr.aria-label]="i18n.t('action.openMenu')"
+        [appTooltip]="i18n.t('action.openMenu')"
+      >
+        <app-icon name="menu" />
+      </button>
+      <strong>{{ authService.app()?.name ?? i18n.t('app.defaultName') }}</strong>
+      <div class="global-search-container">
+        <button
+          type="button"
+          class="global-search-input quick-search-trigger"
+          (click)="openQuickNav()"
+          [appTooltip]="i18n.t('shortcuts.quickNavTooltip')"
+        >
+          <span>{{ i18n.t('appShell.searchPlaceholder') }}</span>
+          <kbd>Ctrl K</kbd>
+        </button>
+      </div>
+      <button
+        class="icon-button shortcut-help-trigger"
+        type="button"
+        (click)="openShortcutHelp()"
+        [attr.aria-label]="i18n.t('shortcuts.showHelp')"
+        [appTooltip]="i18n.t('shortcuts.openHelpTooltip')"
+      >?</button>
+      <a class="icon-button" routerLink="/support" [attr.aria-label]="i18n.t('support.nav')" [appTooltip]="i18n.t('support.nav')">💬</a>
+      <button
+        class="icon-button notification-bell-btn"
+        type="button"
+        (click)="notificationCenter.togglePanel()"
+        [attr.aria-label]="i18n.t('actionCenter.title', undefined, 'مركز الإشعارات')"
+        [appTooltip]="i18n.t('actionCenter.title', undefined, 'مركز الإشعارات')"
+        style="position:relative;"
+      >
+        🔔
+        @if (notificationCenter.unreadCount() > 0) {
+          <span style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:0.75rem;font-weight:700;padding:2px 6px;border-radius:10px;line-height:1;">
+            {{ notificationCenter.unreadCount() }}
+          </span>
+        }
+      </button>
+      <button
+        class="icon-button"
+        type="button"
+        (click)="logout()"
+        [attr.aria-label]="i18n.t('action.logout')"
+        [appTooltip]="i18n.t('action.logout')"
+      >
+        <app-icon name="logout" />
+      </button>
+    </header>
+
+    <div class="content-wrapper">
+      <router-outlet />
+    </div>
+  </main>
+</div>
+
+@if (logoutOptionsOpen()) {
+  <div class="shortcut-overlay" (click)="closeLogoutOptions()">
+    <section
+      class="shortcut-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="i18n.t('auth.logoutTitle')"
+      [attr.aria-busy]="logoutAllDevicesBusy()"
+      (click)="$event.stopPropagation()"
+      style="max-width: 520px; width: min(520px, calc(100vw - 2rem));"
+    >
+      <header class="shortcut-dialog-header">
+        <div>
+          <h2>{{ i18n.t('auth.logoutTitle') }}</h2>
+          <p>{{ i18n.t('auth.logoutHint') }}</p>
+        </div>
+        <button
+          type="button"
+          class="shortcut-close"
+          (click)="closeLogoutOptions()"
+          [disabled]="logoutAllDevicesBusy()"
+          [attr.aria-label]="i18n.t('action.cancel')"
+        >✕</button>
+      </header>
+
+      <div style="display: grid; gap: 0.75rem;">
+        <button
+          type="button"
+          class="button secondary"
+          (click)="logoutCurrentBrowser()"
+          [disabled]="logoutAllDevicesBusy()"
+          style="display: grid; gap: 0.25rem; text-align: start; min-height: 64px;"
+        >
+          <strong>{{ i18n.t('auth.logoutCurrentBrowser') }}</strong>
+          <span>{{ i18n.t('auth.logoutCurrentBrowserHint') }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="button"
+          (click)="logoutAllDevices()"
+          [disabled]="logoutAllDevicesBusy()"
+          style="display: grid; gap: 0.25rem; text-align: start; min-height: 64px;"
+        >
+          <strong>
+            {{
+              logoutAllDevicesBusy()
+                ? i18n.t('auth.logoutAllDevicesWorking')
+                : i18n.t('auth.logoutAllDevices')
+            }}
+          </strong>
+          <span>{{ i18n.t('auth.logoutAllDevicesHint') }}</span>
+        </button>
+      </div>
+
+      @if (logoutError()) {
+        <p role="alert" style="margin: 0.75rem 0 0; color: var(--danger, #b91c1c);">
+          {{ logoutError() }}
+        </p>
+      }
+    </section>
+  </div>
+}
+
+<!-- Action Center Notifications Dropdown Panel -->
+@if (notificationCenter.panelOpen()) {
+  <div class="shortcut-overlay" (click)="notificationCenter.closePanel()">
+    <section class="shortcut-dialog action-center-dialog" (click)="$event.stopPropagation()">
+      <header class="shortcut-dialog-header action-center-header">
+        <div>
+          <h2 style="margin:0;font-size:1.1rem;">🔔 {{ i18n.t('actionCenter.title', undefined, 'مركز الإشعارات والتنبيهات') }}</h2>
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <button type="button" class="button secondary btn-sm" (click)="notificationCenter.markAllAsRead()">{{ i18n.t('actionCenter.markAllRead', undefined, 'تحديد الكل كمقروء') }}</button>
+          <button type="button" class="shortcut-close" (click)="notificationCenter.closePanel()">✕</button>
+        </div>
+      </header>
+      <div class="action-center-list">
+        @for (item of notificationCenter.notifications(); track item.id) {
+          <article
+            class="action-card"
+            [class.read]="item.isRead"
+            (click)="notificationCenter.markAsRead(item.id)"
+          >
+            <div class="action-card-head">
+              <strong>{{ i18n.locale() === 'en-US' ? item.titleEn : item.titleAr }}</strong>
+              <span class="priority">{{ i18n.t(notificationPriorityKey(item.priority)) }}</span>
+            </div>
+            @if(item.exceptionKey){<small class="exception">{{ i18n.t('actionCenter.exception') }} · {{ item.exceptionKey }}</small>}
+            <p>{{ i18n.locale() === 'en-US' ? item.messageEn : item.messageAr }}</p>
+            @if(item.impactEn||item.impactAr){<div class="action-detail"><b>{{ i18n.t('actionCenter.impact') }}</b><span>{{ i18n.locale() === 'en-US' ? item.impactEn : item.impactAr }} @if(item.impactAmount){ · {{ item.impactAmount }} {{ item.impactCurrency }} }</span></div>}
+            @if(item.reasonEn||item.reasonAr){<div class="action-detail"><b>{{ i18n.t('actionCenter.reason') }}</b><span>{{ i18n.locale() === 'en-US' ? item.reasonEn : item.reasonAr }}</span></div>}
+            @if(item.recommendationEn||item.recommendationAr){<div class="action-detail"><b>{{ i18n.t('actionCenter.recommendation') }}</b><span>{{ i18n.locale() === 'en-US' ? item.recommendationEn : item.recommendationAr }}</span></div>}
+            @if(item.actionLink){<a class="button primary btn-sm action-link" [routerLink]="item.actionLink" (click)="$event.stopPropagation(); notificationCenter.markAsRead(item.id); notificationCenter.closePanel()">{{ item.actionLabelKey ? i18n.t(item.actionLabelKey) : i18n.t('actionCenter.openAction') }}</a>}
+          </article>
+        } @empty {
+          <div class="action-center-empty">{{ i18n.t('actionCenter.noNotifications', undefined, 'لا توجد إشعارات جديدة.') }}</div>
+        }
+      </div>
+    </section>
+  </div>
+}
+
+@if (chordWaiting()) {
+  <div class="shortcut-chord-hint" role="status">
+    <kbd>G</kbd> {{ i18n.t('shortcuts.waitingForDestination') }}
+  </div>
+}
+
+@if (quickNavOpen()) {
+  <div class="shortcut-overlay" (click)="closeShortcutPanels()">
+    <section
+      class="shortcut-dialog quick-nav-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="i18n.t('shortcuts.quickNavTitle')"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="shortcut-dialog-header">
+        <div>
+          <h2>{{ i18n.t('shortcuts.quickNavTitle') }}</h2>
+          <p>{{ i18n.t('shortcuts.quickNavHint') }}</p>
+        </div>
+        <button type="button" class="shortcut-close" (click)="closeShortcutPanels()" [attr.aria-label]="i18n.t('shortcuts.closeDialog')" [appTooltip]="i18n.t('shortcuts.closeDialog')">✕</button>
+      </header>
+      <div class="quick-nav-search-wrap">
+        <span aria-hidden="true">⌕</span>
+        <input
+          data-quick-nav-search
+          type="search"
+          [placeholder]="i18n.t('shortcuts.searchPlaceholder')"
+          [value]="searchQuery()"
+          (input)="updateQuickNavQuery($any($event.target).value)"
+          (keydown)="onQuickNavKeydown($event)"
+        />
+        <kbd>Ctrl + K</kbd>
+      </div>
+      <div class="quick-nav-results" role="listbox">
+        @for (item of quickNavItems(); track item.path; let index = $index) {
+          <button
+            type="button"
+            class="quick-nav-result"
+            [class.selected]="selectedQuickNavIndex() === index"
+            (mouseenter)="selectedQuickNavIndex.set(index)"
+            (click)="navigateToItem(item)"
+            role="option"
+            [attr.aria-selected]="selectedQuickNavIndex() === index"
+            [appTooltip]="navTooltip(item)"
+          >
+            <span class="quick-nav-icon"><app-icon [name]="item.icon" /></span>
+            <span class="quick-nav-copy">
+              <strong>{{ i18n.t(item.labelKey) }}</strong>
+              <small>{{ i18n.t(item.descriptionKey) }}</small>
+            </span>
+            @if (shortcut(item); as menuShortcut) {
+              <kbd>G → {{ menuShortcut.displayKey }}</kbd>
+            }
+          </button>
+        } @empty {
+          <div class="quick-nav-empty">{{ i18n.t('shortcuts.noResults') }}</div>
+        }
+      </div>
+      <footer class="quick-nav-footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> {{ i18n.t('shortcuts.move') }}</span>
+        <span><kbd>Enter</kbd> {{ i18n.t('shortcuts.open') }}</span>
+        <button type="button" (click)="openShortcutHelp()">? {{ i18n.t('shortcuts.showAll') }}</button>
+      </footer>
+    </section>
+  </div>
+}
+
+@if (shortcutHelpOpen()) {
+  <div class="shortcut-overlay" (click)="closeShortcutPanels()">
+    <section
+      class="shortcut-dialog shortcut-reference-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="i18n.t('shortcuts.title')"
+      (click)="$event.stopPropagation()"
+    >
+      <header class="shortcut-dialog-header">
+        <div>
+          <h2>{{ i18n.t('shortcuts.title') }}</h2>
+          <p>{{ i18n.t('shortcuts.subtitle') }}</p>
+        </div>
+        <button type="button" class="shortcut-close" (click)="closeShortcutPanels()" [attr.aria-label]="i18n.t('shortcuts.closeDialog')" [appTooltip]="i18n.t('shortcuts.closeDialog')">✕</button>
+      </header>
+      <div class="shortcut-reference-grid">
+        <section>
+          <h3>{{ i18n.t('shortcuts.globalTitle') }}</h3>
+          @for (shortcutItem of globalShortcuts; track shortcutItem.labelKey) {
+            <div class="shortcut-row">
+              <span>{{ i18n.t(shortcutItem.labelKey) }}</span>
+              <kbd>{{ shortcutItem.keys }}</kbd>
+            </div>
+          }
+        </section>
+        <section>
+          <h3>{{ i18n.t('shortcuts.navigationTitle') }}</h3>
+          @for (shortcutItem of screenShortcuts.runtimeShortcuts(); track shortcutItem.pageCode) {
+            <div class="shortcut-row">
+              <span>{{ i18n.t(shortcutItem.titleKey) }}</span>
+              <kbd>G → {{ shortcutItem.displayKey }}</kbd>
+            </div>
+          }
+        </section>
+      </div>
+      <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <p class="shortcut-permission-note" style="margin: 0;">{{ i18n.t('shortcuts.availableByPermission') }}</p>
+        <a routerLink="/settings" [queryParams]="{ tab: 'shortcuts' }" (click)="closeShortcutPanels()" class="link-btn">
+          {{ i18n.t('shortcuts.manage') }}
+        </a>
+      </div>
+    </section>
+  </div>
+}
+
+@if (confirmDialog.confirmState(); as state) {
+  <div class="confirm-overlay" (click)="confirmDialog.cancel()">
+    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+      <div class="confirm-icon">&#9888;&#65039;</div>
+      @if (state.options.titleKey) {
+        <h3 class="confirm-title">{{ i18n.t(state.options.titleKey) }}</h3>
+      }
+      <div class="confirm-message">{{ i18n.t(state.options.messageKey, state.options.params) }}</div>
+      @if (state.options.details?.length) {
+        <dl class="confirm-details">
+          @for (detail of state.options.details; track detail.label) {
+            <div class="confirm-detail-row">
+              <dt>{{ detail.label }}</dt>
+              <dd class="ltr">{{ detail.value }}</dd>
+            </div>
+          }
+        </dl>
+      }
+      @if (state.options.dangerMessageKey) {
+        <p class="confirm-danger">{{ i18n.t(state.options.dangerMessageKey) }}</p>
+      }
+      @if (state.error) {
+        <div class="confirm-error" role="alert">{{ state.error }}</div>
+      }
+      @if (state.busy) {
+        <div class="confirm-busy" role="status">{{ i18n.t('common.processing') }}</div>
+      }
+      <div class="confirm-actions">
+        <button
+          type="button"
+          class="button primary"
+          [class.danger]="state.options.danger"
+          [disabled]="state.busy"
+          (click)="confirmDialog.proceed()"
+        >
+          {{ i18n.t(state.options.confirmKey ?? 'common.confirm') }}
+        </button>
+        <button type="button" class="button secondary" [disabled]="state.busy" (click)="confirmDialog.cancel()">
+          {{ i18n.t(state.options.cancelKey ?? 'common.cancel') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

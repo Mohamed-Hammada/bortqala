@@ -16,7 +16,7 @@ import java.util.Map;
 public class OperationsExcelExporter {
     private final TranslationService translationService;
 
-    byte[] export(OperationsApi.Snapshot data, ExcelExportOptions options) {
+    byte[] export(OperationsApi.Snapshot data, OperationsApi.ValuationReport valuation, ExcelExportOptions options) {
         Map<String, String> messages = ExcelExportSupport.messages(translationService, options);
         try (var workbook = new XSSFWorkbook(); var output = new ByteArrayOutputStream()) {
             write(workbook, ExcelExportSupport.text(messages, "operations.stockBalances"),
@@ -47,6 +47,23 @@ public class OperationsExcelExporter {
                     data.employeeAdvances().stream().<List<?>>map(advance -> List.of(
                             advance.employeeCode(), advance.employeeName(), advanceType(messages, advance.entryType()),
                             advance.amountDelta(), advance.currentBalance(), advance.occurredAt())).toList(),
+                    messages, options);
+            write(workbook, ExcelExportSupport.text(messages, "operations.valuation.title"),
+                    "InventoryValuationTable",
+                    List.of("common.code", "common.name", "operations.valuation.onHand",
+                            "operations.valuation.averageCost", "operations.valuation.inventoryValue",
+                            "operations.valuation.openingGap"),
+                    valuation.items().stream().<List<?>>map(item -> List.of(item.itemCode(), item.itemName(),
+                            item.quantityOnHand(), item.averageUnitCost(), item.inventoryValue(),
+                            item.openingQuantityGap())).toList(), messages, options);
+            write(workbook, ExcelExportSupport.text(messages, "operations.valuation.movementCosts"),
+                    "InventoryMovementCostsTable",
+                    List.of("operations.date", "common.code", "common.name", "operations.valuation.method",
+                            "operations.quantity", "operations.valuation.unitCost", "operations.valuation.valueEffect",
+                            "operations.valuation.journal", "operations.valuation.explanation"),
+                    valuation.movementCosts().stream().<List<?>>map(cost -> List.of(cost.occurredAt(), cost.itemCode(),
+                            cost.itemName(), cost.valuationMethod().name(), cost.quantityEffect(), cost.unitCost(),
+                            cost.valueEffect(), blankIfNull(cost.journalEntryId()), cost.explanation())).toList(),
                     messages, options);
             workbook.write(output);
             return output.toByteArray();

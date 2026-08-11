@@ -74,7 +74,7 @@ public class ReportingService {
 
     private static final Map<String, List<String>> ATTENDANCE_REPORT_ACTIONS = Map.of(
             "DRAFT", List.of("DECISION"),
-            "IN_REVIEW", List.of("DECISION", "BULK_DECISION", "DOWNTIME_DECISION", "DAY_ANOMALY", "HOLIDAY_DECISION", "APPROVE", "EXPORT"),
+            "IN_REVIEW", List.of("DECISION", "BULK_DECISION", "DOWNTIME_DECISION", "DAY_ANOMALY", "ATTENDANCE_EXCEPTION", "HOLIDAY_DECISION", "APPROVE", "EXPORT"),
             "APPROVED", List.of("REOPEN", "EXPORT"),
             "EXPORTED", List.of("REOPEN"));
 
@@ -94,6 +94,7 @@ public class ReportingService {
     private final TenantApplicationRepository tenantApplicationRepository;
     private final AttendanceReportDecisionRepository attendanceReportDecisionRepository;
     private final IdempotencyService idempotencyService;
+    private final AttendanceExceptionService attendanceExceptionService;
 
     public ReportingService(AttendanceReportRepository attendanceReportRepository,
                             DailyAttendanceResultRepository dailyAttendanceResultRepository,
@@ -110,7 +111,8 @@ public class ReportingService {
                             com.bemo.hr.audit.application.AuditService auditService,
                             TenantApplicationRepository tenantApplicationRepository,
                             AttendanceReportDecisionRepository attendanceReportDecisionRepository,
-                            IdempotencyService idempotencyService) {
+                            IdempotencyService idempotencyService,
+                            AttendanceExceptionService attendanceExceptionService) {
         this.attendanceReportRepository = attendanceReportRepository;
         this.dailyAttendanceResultRepository = dailyAttendanceResultRepository;
         this.holidayProposalRepository = holidayProposalRepository;
@@ -127,6 +129,7 @@ public class ReportingService {
         this.tenantApplicationRepository = tenantApplicationRepository;
         this.attendanceReportDecisionRepository = attendanceReportDecisionRepository;
         this.idempotencyService = idempotencyService;
+        this.attendanceExceptionService = attendanceExceptionService;
     }
 
     public List<ReportingApi.Summary> list() {
@@ -137,10 +140,16 @@ public class ReportingService {
         return details(requireReport(id));
     }
 
+    private List<AttendanceCategory> employeeCategories() {
+        return attendanceCategoryRepository.findByScopeIn(
+                java.util.List.of(com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE,
+                        com.bemo.hr.employee.domain.CategoryScope.BOTH));
+    }
+
     public List<ReportingApi.PeriodOption> availablePeriods(int year) {
         if (year < 2000 || year > 2200) throw new BusinessRuleException("Year is outside the supported range.", "RPT_YEAR_OUT_OF_RANGE", HttpStatus.CONFLICT);
         var reports = attendanceReportRepository.findByPeriodStartBetween(LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
-        var activeCategories = attendanceCategoryRepository.findAll().stream().filter(AttendanceCategory::isActive).toList();
+        var activeCategories = employeeCategories().stream().filter(AttendanceCategory::isActive).toList();
         boolean hasMonthly = activeCategories.isEmpty()
                 || activeCategories.stream().anyMatch(category -> category.getPayCycle() == PayCycle.MONTHLY);
         boolean hasHalfMonthly = activeCategories.stream()
@@ -162,7 +171,7 @@ public class ReportingService {
 
     public ReportingApi.PreviewResponse preview(LocalDate periodStart, LocalDate periodEnd, PayCycle payCycle) {
         validatePeriod(periodStart, periodEnd);
-        var categories = attendanceCategoryRepository.findAll().stream()
+        var categories = employeeCategories().stream()
                 .filter(AttendanceCategory::isActive)
                 .filter(category -> category.getPayCycle() == payCycle)
                 .toList();
@@ -209,7 +218,7 @@ public class ReportingService {
                 payCycle, request.periodEnd(), request.periodStart())) {
             throw new BusinessRuleException("A report for this pay cycle already overlaps the selected period.", "RPT_OVERLAPPING_REPORT", HttpStatus.CONFLICT);
         }
-        var categories = attendanceCategoryRepository.findAll().stream()
+        var categories = employeeCategories().stream()
                 .filter(AttendanceCategory::isActive)
                 .filter(category -> category.getPayCycle() == payCycle)
                 .collect(Collectors.toMap(AttendanceCategory::getId, Function.identity()));
@@ -226,7 +235,7 @@ public class ReportingService {
         var confirmedHolidays = confirmedHolidayRepository.findByWorkDateBetween(request.periodStart(), request.periodEnd()).stream()
                 .map(holiday -> holiday.getCategoryId() + "|" + holiday.getWorkDate()).collect(Collectors.toSet());
         Instant from = request.periodStart().atStartOfDay(companyZone).toInstant();
-        Instant to = request.periodEnd().plusDays(1).atStartOfDay(companyZone).toInstant();
+        Instant to = request.periodEnd().plusDays(2).atStartOfDay(companyZone).toInstant();
         var currentDeviceOwners = employees.stream().filter(employee -> employee.getDeviceUserId() != null)
                 .collect(Collectors.toMap(Employee::getDeviceUserId, Function.identity()));
         var byId = employees.stream().collect(Collectors.toMap(Employee::getId, Function.identity()));
@@ -235,7 +244,13 @@ public class ReportingService {
             var owner = currentDeviceOwners.get(punch.getDeviceUserId());
             if (owner == null && punch.getEmployeeId() != null) owner = byId.get(punch.getEmployeeId());
             if (owner == null) continue;
-            LocalDate date = punch.getPunchedAt().atZone(companyZone).toLocalDate();
+            var localPunch = punch.getPunchedAt().atZone(companyZone);
+            LocalDate date = localPunch.toLocalDate();
+            var ownerSchedules = schedules.getOrDefault(owner.getCategoryId(), List.of());
+            var previousSchedule = effectiveSchedule(ownerSchedules, date.minusDays(1));
+            date = DailyAttendanceCalculator.workDateForPunch(localPunch,
+                    previousSchedule == null ? null : previousSchedule.getStartTime(),
+                    previousSchedule == null ? null : previousSchedule.getEndTime());
             punchMap.computeIfAbsent(owner.getId() + "|" + date, ignored -> new ArrayList<>()).add(punch.getPunchedAt());
         }
 
@@ -246,20 +261,25 @@ public class ReportingService {
                 if (!employee.activeOn(workDate)) continue;
                 var category = categories.get(employee.getCategoryId());
                 if (category == null) continue;
-                var schedule = schedules.getOrDefault(category.getId(), List.of()).stream()
-                        .filter(rule -> rule.appliesOn(workDate)).max(Comparator.comparing(ScheduleRule::getEffectiveFrom)).orElse(null);
+                var schedule = effectiveSchedule(schedules.getOrDefault(category.getId(), List.of()), workDate);
                 results.add(DailyAttendanceCalculator.calculate(report.getId(), employee, category, schedule, workDate,
                         punchMap.getOrDefault(employee.getId() + "|" + workDate, List.of()),
                         confirmedHolidays.contains(category.getId() + "|" + workDate), companyZone));
             }
         }
         dailyAttendanceResultRepository.saveAll(results);
+        attendanceExceptionService.detect(report.getId(), actor);
         detectAnomalies(report, results);
 
         var proposals = createHolidayProposals(report, results, categories);
         holidayProposalRepository.saveAll(proposals);
         report.startReview(unresolved(results, proposals));
         return details(report);
+    }
+
+    private static ScheduleRule effectiveSchedule(List<ScheduleRule> rules, LocalDate date) {
+        return rules.stream().filter(rule -> rule.appliesOn(date))
+                .max(Comparator.comparing(ScheduleRule::getEffectiveFrom)).orElse(null);
     }
 
     @Transactional
@@ -340,6 +360,9 @@ public class ReportingService {
         result.decide(request.decision(), worked, request.note(), actor);
         recordDecision(reportId, result, UUID.randomUUID().toString(), "DECIDE", before, actor);
         refreshUnresolved(report);
+        auditService.record("DECIDE", "ATTENDANCE_DAILY_RESULT", resultId, actor,
+                "{\"reportId\":\"" + reportId + "\",\"decision\":\"" + request.decision()
+                        + "\",\"workedMinutes\":" + (worked == null ? "null" : worked) + "}", null);
         return details(report);
     }
 
@@ -515,6 +538,8 @@ public class ReportingService {
                     });
         }
         refreshUnresolved(report);
+        auditService.record("HOLIDAY_DECISION", "ATTENDANCE_HOLIDAY_PROPOSAL", proposalId, actor,
+                "{\"reportId\":\"" + reportId + "\",\"status\":\"" + request.status() + "\"}", null);
         return details(report);
     }
 
@@ -529,6 +554,7 @@ public class ReportingService {
             throw new BusinessRuleException("Cannot approve an empty report with 0 employee records.", "RPT_EMPTY_REPORT_APPROVAL", HttpStatus.CONFLICT);
         }
         refreshUnresolved(report);
+        attendanceExceptionService.assertNoCriticalOpen(report.getId());
         report.approve(actor);
         auditService.record("REPORT_APPROVE", "ATTENDANCE_REPORT", report.getId(), actor, "Approved attendance report for range " + report.getPeriodStart() + " to " + report.getPeriodEnd(), null);
         return WorkflowTransitions.response(report.getStatus().name(), report.getVersion(), ATTENDANCE_REPORT_WORKFLOW);

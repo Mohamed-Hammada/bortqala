@@ -1,0 +1,78 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_attendance_policies_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.attendance_policies
+      changes:
+        - createTable:
+            tableName: attendance_policies
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_attendance_policy_app, references: apps(id) } }
+              - column: { name: name, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: scope_type, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: scope_id, type: varchar(36) }
+              - column: { name: effective_from, type: date, constraints: { nullable: false } }
+              - column: { name: effective_to, type: date }
+              - column: { name: priority, type: int, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: late_threshold_minutes, type: int, defaultValueNumeric: 15, constraints: { nullable: false } }
+              - column: { name: early_threshold_minutes, type: int, defaultValueNumeric: 15, constraints: { nullable: false } }
+              - column: { name: max_shift_minutes, type: int, defaultValueNumeric: 960, constraints: { nullable: false } }
+              - column: { name: missing_punch_score, type: int, defaultValueNumeric: 100, constraints: { nullable: false } }
+              - column: { name: single_punch_score, type: int, defaultValueNumeric: 70, constraints: { nullable: false } }
+              - column: { name: late_score, type: int, defaultValueNumeric: 30, constraints: { nullable: false } }
+              - column: { name: early_score, type: int, defaultValueNumeric: 30, constraints: { nullable: false } }
+              - column: { name: payroll_block_score, type: int, defaultValueNumeric: 70, constraints: { nullable: false } }
+              - column: { name: active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: attendance_policies, columnNames: app_id,scope_type,scope_id,effective_from,priority, constraintName: uk_attendance_policy_scope_effective }
+        - createIndex: { tableName: attendance_policies, indexName: ix_attendance_policy_resolution, columns: [{ column: { name: active } }, { column: { name: scope_type } }, { column: { name: scope_id } }, { column: { name: effective_from } }] }
+      rollback:
+        - dropTable: { tableName: attendance_policies }
+  - changeSet:
+      id: create_attendance_exceptions_table
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: ${database.defaultSchemaName}.attendance_exceptions
+      changes:
+        - createTable:
+            tableName: attendance_exceptions
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_attendance_exception_app, references: apps(id) } }
+              - column: { name: report_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_attendance_exception_report, references: reports(id) } }
+              - column: { name: daily_result_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_attendance_exception_result, references: daily_results(id) } }
+              - column: { name: employee_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: category_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: work_date, type: date, constraints: { nullable: false } }
+              - column: { name: exception_type, type: varchar(30), constraints: { nullable: false } }
+              - column: { name: score, type: int, constraints: { nullable: false } }
+              - column: { name: explanation_key, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: policy_id, type: varchar(36) }
+              - column: { name: policy_name, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: policy_version, type: bigint, constraints: { nullable: false } }
+              - column: { name: policy_snapshot_json, type: varchar(1000), constraints: { nullable: false } }
+              - column: { name: policy_scope, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: payroll_blocking, type: boolean, constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: resolution, type: varchar(30) }
+              - column: { name: reason, type: varchar(500) }
+              - column: { name: operation_id, type: varchar(80) }
+              - column: { name: resolved_by, type: varchar(100) }
+              - column: { name: resolved_at, type: timestamp with time zone }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: attendance_exceptions, columnNames: app_id,report_id,daily_result_id,exception_type, constraintName: uk_attendance_exception_evidence }
+        - createIndex: { tableName: attendance_exceptions, indexName: ix_attendance_exception_payroll_gate, columns: [{ column: { name: report_id } }, { column: { name: employee_id } }, { column: { name: status } }, { column: { name: payroll_blocking } }] }
+      rollback:
+        - dropTable: { tableName: attendance_exceptions }

@@ -1,0 +1,213 @@
+<section class="page integration-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('deviceIntegrations.eyebrow', {}, 'ATTENDANCE · DEVICE CONNECTIVITY') }}</p>
+      <h1>{{ i18n.t('deviceIntegrations.title', {}, 'Biometric & Access Device Integrations') }}</h1>
+      <p>{{ i18n.t('deviceIntegrations.description', {}, 'Version-aware integrations for ZKTeco, Hikvision, Dahua, Suprema, VIRDI, Anviz and Honeywell.') }}</p>
+    </div>
+    <div class="header-actions">
+      <a class="button secondary" href="/imports">{{ i18n.t('deviceIntegrations.backImports', {}, 'Attendance imports') }}</a>
+      <button class="button primary" type="button" (click)="openNew()">+ {{ i18n.t('deviceIntegrations.add', {}, 'Add device') }}</button>
+    </div>
+  </header>
+
+  @if (store.error()) {
+    <div class="alert error">{{ store.error() }}</div>
+  }
+
+  <section class="summary-grid">
+    <article class="summary-card">
+      <span>{{ i18n.t('deviceIntegrations.hubStatus', {}, 'Integration hub') }}</span>
+      <strong [class.success-text]="store.health()?.ok">{{ store.health()?.ok ? i18n.t('deviceIntegrations.online', {}, 'Online') : i18n.t('deviceIntegrations.offline', {}, 'Unavailable') }}</strong>
+      <small>{{ store.health()?.version ?? '—' }}</small>
+    </article>
+    <article class="summary-card">
+      <span>{{ i18n.t('deviceIntegrations.suppliers', {}, 'Suppliers') }}</span>
+      <strong>{{ store.suppliers().length }}</strong>
+      <small>{{ i18n.t('deviceIntegrations.versionAware', {}, 'Model + firmware + API/SDK version aware') }}</small>
+    </article>
+    <article class="summary-card">
+      <span>{{ i18n.t('deviceIntegrations.registered', {}, 'Registered devices') }}</span>
+      <strong>{{ store.devices().length }}</strong>
+      <small>{{ i18n.t('deviceIntegrations.normalizedPunches', {}, 'Normalized into Bortqala attendance') }}</small>
+    </article>
+  </section>
+
+  <section class="supplier-strip" aria-label="Supported suppliers">
+    @for (supplier of store.suppliers(); track supplier.supplier) {
+      <div class="supplier-chip">
+        <strong>{{ supplierName(supplier.supplier) }}</strong>
+        <span>{{ supplier.routes.length }} {{ i18n.t('deviceIntegrations.routes', {}, 'routes') }}</span>
+      </div>
+    }
+  </section>
+
+  <section class="card device-list-card">
+    <div class="list-head">
+      <div>
+        <h2>{{ i18n.t('deviceIntegrations.devices', {}, 'Configured devices') }}</h2>
+        <p>{{ i18n.t('deviceIntegrations.devicesHint', {}, 'Each device is pinned to a route only after version compatibility is verified.') }}</p>
+      </div>
+      <input class="search" [value]="filter()" (input)="filter.set($any($event.target).value)" [placeholder]="i18n.t('deviceIntegrations.search', {}, 'Search devices…')" />
+    </div>
+
+    @if (store.loading()) {
+      <div class="loading"></div>
+    }
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('deviceIntegrations.device', {}, 'Device') }}</th>
+            <th>{{ i18n.t('deviceIntegrations.supplier', {}, 'Supplier') }}</th>
+            <th>{{ i18n.t('deviceIntegrations.route', {}, 'Integration route') }}</th>
+            <th>{{ i18n.t('deviceIntegrations.implementation', {}, 'Implementation') }}</th>
+            <th>{{ i18n.t('deviceIntegrations.testStatus', {}, 'Last test') }}</th>
+            <th>{{ i18n.t('deviceIntegrations.actions', {}, 'Actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (device of visibleDevices(); track device.id) {
+            <tr>
+              <td>
+                <strong>{{ device.name }}</strong>
+                <small>{{ device.model }}{{ device.firmwareVersion ? i18n.t('deviceIntegrations.firmwareShort', {}, ' · FW ') + device.firmwareVersion : '' }}</small>
+              </td>
+              <td><span class="vendor-badge">{{ supplierName(device.vendor) }}</span></td>
+              <td>
+                <code>{{ device.route }}</code>
+                <span class="status {{ statusClass(device.routeStatus) }}">{{ device.routeStatus }}</span>
+              </td>
+              <td>
+                <span class="status {{ statusClass(device.implementationStatus) }}">{{ device.implementationStatus }}</span>
+                @if (!implementationReady(device.implementationStatus)) {
+                  <small class="warning-copy">{{ i18n.t('deviceIntegrations.bridgeWarning', {}, 'Vendor SDK/API completion may still be required for event retrieval.') }}</small>
+                }
+              </td>
+              <td>
+                <span class="status {{ statusClass(device.lastProbeStatus ?? '') }}">{{ device.lastProbeStatus ?? '—' }}</span>
+                @if (device.lastProbeMessage) { <small>{{ device.lastProbeMessage }}</small> }
+              </td>
+              <td>
+                <div class="row-actions">
+                  <button class="button secondary btn-sm" type="button" (click)="openEdit(device)">{{ i18n.t('common.edit', {}, 'Edit') }}</button>
+                  <button class="button secondary btn-sm" type="button" [disabled]="workingId() === device.id" (click)="probe(device)">{{ i18n.t('deviceIntegrations.test', {}, 'Test') }}</button>
+                  <button class="button gold btn-sm" type="button" [disabled]="workingId() === device.id" (click)="sync(device)">{{ i18n.t('deviceIntegrations.sync', {}, 'Sync punches') }}</button>
+                </div>
+                @if (device.officialDocumentation.length) {
+                  <a class="docs-link" [href]="device.officialDocumentation[0]" target="_blank" rel="noopener">{{ i18n.t('deviceIntegrations.docs', {}, 'Official docs ↗') }}</a>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="6" class="empty">{{ i18n.t('deviceIntegrations.empty', {}, 'No multi-vendor devices configured yet.') }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <app-modal-dialog
+    [isOpen]="drawerOpen()"
+    [title]="editingId() ? i18n.t('deviceIntegrations.editTitle', {}, 'Edit device integration') : i18n.t('deviceIntegrations.addTitle', {}, 'Add device integration')"
+    size="large"
+    (close)="drawerOpen.set(false)">
+    <form class="device-form" [formGroup]="form" (ngSubmit)="save()">
+      <div class="form-grid">
+        <label>{{ i18n.t('deviceIntegrations.name', {}, 'Device name') }}<input formControlName="name" /></label>
+        <label>{{ i18n.t('deviceIntegrations.vendor', {}, 'Supplier') }}
+          <select formControlName="vendor" (change)="resolution.set(null); selectedRoute.set('')">
+            @for (supplier of store.suppliers(); track supplier.supplier) {
+              <option [value]="supplier.supplier">{{ supplierName(supplier.supplier) }}</option>
+            }
+          </select>
+        </label>
+        <label>{{ i18n.t('deviceIntegrations.model', {}, 'Model') }}<input formControlName="model" placeholder="F18 / DS-K1T341 / BioStation 3" /></label>
+        <label>{{ i18n.t('deviceIntegrations.serial', {}, 'Serial number') }}<input formControlName="serialNumber" /></label>
+        <label>{{ i18n.t('deviceIntegrations.firmware', {}, 'Firmware version') }}<input formControlName="firmwareVersion" placeholder="e.g. 3.2.1" /></label>
+        <label>{{ i18n.t('deviceIntegrations.serverVersion', {}, 'Server/platform version') }}<input formControlName="serverVersion" placeholder="BioStar / DSS / Pro-Watch…" /></label>
+        <label>{{ i18n.t('deviceIntegrations.host', {}, 'Device host/IP') }}<input class="ltr" formControlName="host" placeholder="192.168.1.50" /></label>
+        <label>{{ i18n.t('deviceIntegrations.port', {}, 'Port') }}<input type="number" formControlName="port" /></label>
+        <label class="wide">{{ i18n.t('deviceIntegrations.baseUrl', {}, 'API / platform base URL') }}<input class="ltr" formControlName="baseUrl" placeholder="https://server.example/api" /></label>
+        <label>{{ i18n.t('deviceIntegrations.username', {}, 'Username') }}<input formControlName="username" /></label>
+        <label>{{ i18n.t('deviceIntegrations.password', {}, 'Password') }}
+          <input type="password" formControlName="password" autocomplete="new-password" />
+          @if (editingId()) {
+            <small>{{ i18n.t('deviceIntegrations.keepPassword', {}, 'Leave blank to keep the existing password.') }}</small>
+          }
+        </label>
+      </div>
+
+      <button type="button" class="text-button" (click)="showAdvanced.set(!showAdvanced())">{{ showAdvanced() ? '−' : '+' }} {{ i18n.t('deviceIntegrations.advanced', {}, 'Version & SDK/API details') }}</button>
+      @if (showAdvanced()) {
+        <div class="advanced-panel form-grid">
+          <label>{{ i18n.t('deviceIntegrations.platformVersion', {}, 'Device platform version') }}<input formControlName="platformVersion" /></label>
+          <label>{{ i18n.t('deviceIntegrations.os', {}, 'SDK host OS') }}<input formControlName="osName" placeholder="windows / linux" /></label>
+          <label>{{ i18n.t('deviceIntegrations.arch', {}, 'Architecture') }}<input formControlName="architecture" placeholder="x64 / x86 / arm64" /></label>
+          <label class="wide">{{ i18n.t('deviceIntegrations.sdkVersions', {}, 'Installed SDK versions (route=version)') }}<textarea formControlName="sdkVersionsText" rows="3" placeholder="hcnet-sdk=6.1.9&#10;g-sdk=1.9.1"></textarea></label>
+          <label class="wide">{{ i18n.t('deviceIntegrations.apiVersions', {}, 'API versions (route=version)') }}<textarea formControlName="apiVersionsText" rows="3" placeholder="biostar2-local-api=2.9&#10;zkbio-time-api=9.0.6"></textarea></label>
+          <label class="wide">{{ i18n.t('deviceIntegrations.capabilities', {}, 'Capability hints') }}<textarea formControlName="capabilityHintsText" rows="2" placeholder="face, fingerprint, access-control"></textarea></label>
+          <label>{{ i18n.t('deviceIntegrations.authMode', {}, 'API authentication') }}
+            <select formControlName="authMode">
+              <option value="">{{ i18n.t('deviceIntegrations.authVendorSpecific', {}, 'Vendor specific / none') }}</option>
+              <option value="basic">{{ i18n.t('deviceIntegrations.authBasic', {}, 'Basic') }}</option><option value="digest">{{ i18n.t('deviceIntegrations.authDigest', {}, 'Digest') }}</option><option value="bearer">{{ i18n.t('deviceIntegrations.authBearer', {}, 'Bearer token') }}</option><option value="api-key">{{ i18n.t('deviceIntegrations.authApiKey', {}, 'API key header') }}</option>
+            </select>
+          </label>
+          <label>{{ i18n.t('deviceIntegrations.authHeader', {}, 'API-key header name') }}<input formControlName="authHeader" placeholder="X-API-Key" /></label>
+          <label class="wide">{{ i18n.t('deviceIntegrations.punchPath', {}, 'Attendance/event endpoint path') }}<input class="ltr" formControlName="punchPath" placeholder="/api/events/search" /></label>
+          <label>{{ i18n.t('deviceIntegrations.punchMethod', {}, 'Event request method') }}<select formControlName="punchMethod"><option>{{ i18n.t('deviceIntegrations.methodGet', {}, 'GET') }}</option><option>{{ i18n.t('deviceIntegrations.methodPost', {}, 'POST') }}</option></select></label>
+          <label>{{ i18n.t('deviceIntegrations.punchArrayPath', {}, 'Response array path') }}<input class="ltr" formControlName="punchArrayPath" placeholder="data.events" /></label>
+          <label>{{ i18n.t('deviceIntegrations.sinceParam', {}, 'Incremental sync parameter') }}<input class="ltr" formControlName="sinceParam" placeholder="since / startTime" /></label>
+          <label class="wide">{{ i18n.t('deviceIntegrations.options', {}, 'Other advanced adapter options (JSON)') }}<textarea class="ltr code-area" formControlName="optionsText" rows="5" placeholder='{"timeout":15,"headers":{"Accept-Language":"en"}}'></textarea></label>
+        </div>
+      }
+
+      <div class="resolve-bar">
+        <div>
+          <strong>{{ i18n.t('deviceIntegrations.resolveTitle', {}, 'Resolve supported integration') }}</strong>
+          <p>{{ i18n.t('deviceIntegrations.resolveHint', {}, 'The resolver checks device generation plus firmware, API/SDK, server, OS and architecture constraints.') }}</p>
+        </div>
+        <button class="button secondary" type="button" [disabled]="store.resolving()" (click)="resolveRoutes()">{{ store.resolving() ? i18n.t('deviceIntegrations.checking', {}, 'Checking…') : i18n.t('deviceIntegrations.resolve', {}, 'Check compatibility') }}</button>
+      </div>
+
+      @if (resolution(); as result) {
+        <div class="route-results">
+          @for (candidate of result.candidates; track candidate.route) {
+            <article class="route-card" [class.selected]="selectedRoute() === candidate.route" [class.disabled-route]="candidate.status !== 'COMPATIBLE'">
+              <div class="route-head">
+                <code>{{ candidate.route }}</code>
+                <span class="status {{ statusClass(candidate.status) }}">{{ candidate.status }}</span>
+              </div>
+              <p>{{ candidate.reason }}</p>
+              <div class="route-meta">
+                <span>{{ candidate.kind }}</span>
+                @if (candidate.sdkVersionSpec !== '*') { <span>{{ i18n.t('deviceIntegrations.sdkLabel', {}, 'SDK') }} {{ candidate.sdkVersionSpec }}</span> }
+                @if (candidate.apiVersionSpec !== '*') { <span>{{ i18n.t('deviceIntegrations.apiLabel', {}, 'API') }} {{ candidate.apiVersionSpec }}</span> }
+                @if (candidate.serverVersionSpec !== '*') { <span>{{ i18n.t('deviceIntegrations.serverLabel', {}, 'Server') }} {{ candidate.serverVersionSpec }}</span> }
+              </div>
+              <span class="implementation-line">{{ candidate.implementationStatus }}</span>
+              <div class="route-actions">
+                <button class="button secondary btn-sm" type="button" [disabled]="candidate.status !== 'COMPATIBLE'" (click)="selectRoute(candidate)">
+                  {{ selectedRoute() === candidate.route ? i18n.t('deviceIntegrations.selected', {}, 'Selected') : i18n.t('deviceIntegrations.useRoute', {}, 'Use route') }}
+                </button>
+                @if (candidate.officialDocumentation.length) {
+                  <a [href]="candidate.officialDocumentation[0]" target="_blank" rel="noopener">{{ i18n.t('deviceIntegrations.docs', {}, 'Official docs ↗') }}</a>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      }
+
+      <div class="form-footer">
+        <label class="toggle"><input type="checkbox" formControlName="enabled" /> {{ i18n.t('deviceIntegrations.autoSync', {}, 'Enable scheduled attendance sync') }}</label>
+        <label>{{ i18n.t('deviceIntegrations.interval', {}, 'Sync every (minutes)') }}<input class="interval" type="number" formControlName="syncIntervalMinutes" /></label>
+        <div class="footer-actions">
+          <button class="button secondary" type="button" (click)="drawerOpen.set(false)">{{ i18n.t('common.cancel', {}, 'Cancel') }}</button>
+          <button class="button primary" type="submit" [disabled]="store.loading()">{{ i18n.t('common.save', {}, 'Save') }}</button>
+        </div>
+      </div>
+    </form>
+  </app-modal-dialog>
+</section>

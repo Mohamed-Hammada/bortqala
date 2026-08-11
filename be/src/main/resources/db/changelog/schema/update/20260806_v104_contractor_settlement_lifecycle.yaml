@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260806_v104_contractor_settlement_lifecycle
+      author: Antigravity
+      changes:
+        - addColumn:
+            tableName: contractor_settlements
+            columns:
+              - column: { name: invoice_number, type: VARCHAR(100) }
+              - column: { name: invoice_date, type: timestamp }
+              - column: { name: posted_journal_entry_id, type: VARCHAR(36) }
+              - column: { name: calculation_version, type: INT, defaultValueNumeric: 1 }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0 }
+
+        - createTable:
+            tableName: contractor_settlement_lines
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: settlement_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: worker_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: attendance_days, type: "NUMERIC(8, 2)", defaultValueNumeric: 0 }
+              - column: { name: daily_wage, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: gross_wage, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: overtime_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: deductions_amount, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: advance_installments, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: net_wage, type: "NUMERIC(12, 2)", defaultValueNumeric: 0 }
+              - column: { name: calculation_details_json, type: VARCHAR(2000) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+
+        - createTable:
+            tableName: contractor_settlement_adjustments
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: settlement_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: adjustment_type, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: description, type: VARCHAR(500) }
+              - column: { name: amount, type: "NUMERIC(12, 2)", constraints: { nullable: false } }
+              - column: { name: reason, type: VARCHAR(500) }
+              - column: { name: created_by, type: VARCHAR(160) }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }

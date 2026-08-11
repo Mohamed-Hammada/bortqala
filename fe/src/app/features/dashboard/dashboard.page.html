@@ -382,6 +382,70 @@
       }
     </article>
 
+    <!-- Multi-Period Trends -->
+    <article class="card section-card">
+      <div class="section-title">
+        <div>
+          <h2>{{ i18n.t('dashboard.trendsTitle') }}</h2>
+          <p>{{ i18n.t('dashboard.trendsHint') }}</p>
+        </div>
+        <div class="trend-tools">
+          <select class="trend-months-select" [value]="trendMonthCount()"
+            (change)="changeTrendMonths($any($event.target).value)">
+            @for (count of trendMonthOptions; track count) {
+              <option [value]="count">{{ count }} {{ i18n.t('dashboard.trendMonths') }}</option>
+            }
+          </select>
+          <button type="button" class="button secondary trend-export-button"
+            (click)="exportTrends()" [disabled]="trendExporting() || store.trendsLoading()">
+            ⇩ {{ i18n.t('common.export') }}
+          </button>
+        </div>
+      </div>
+      @if (store.trendsLoading()) {
+        <div class="chart-loading">{{ i18n.t('common.loading') }}</div>
+      } @else if (store.trends(); as trends) {
+        @if (trends.length) {
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('dashboard.trendMonth') }}</th>
+                  <th>{{ i18n.t('dashboard.trendRate') }}</th>
+                  <th>{{ i18n.t('dashboard.trendPresence') }}</th>
+                  <th>{{ i18n.t('dashboard.trendExceptions') }}</th>
+                  <th>{{ i18n.t('dashboard.trendOvertime') }}</th>
+                  <th>{{ i18n.t('dashboard.trendPaid') }}</th>
+                  <th>{{ i18n.t('dashboard.trendGross') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (point of trends; track point.label) {
+                  <tr>
+                    <td><strong class="ltr">{{ point.label }}</strong></td>
+                    <td>
+                      <span class="status" [class.success]="point.attendanceRate >= 80" [class.warning]="point.attendanceRate < 80">
+                        {{ point.attendanceRate }}%
+                      </span>
+                    </td>
+                    <td>{{ point.presentEmployeeDays }} / {{ point.scheduledEmployeeDays }}</td>
+                    <td>{{ point.exceptionDays }}</td>
+                    <td>{{ (point.overtimeMinutes / 60).toFixed(1) }} {{ i18n.t('dashboard.hourShort') }}</td>
+                    <td>{{ point.paidCount }} / {{ point.paidCount + point.pendingCount }}</td>
+                    <td>{{ point.totalGross | number: '1.2-2' }} {{ i18n.t('dashboard.currency') }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <div class="empty-state">
+            <strong>{{ i18n.t('dashboard.noChartData') }}</strong>
+          </div>
+        }
+      }
+    </article>
+
     <!-- Priority 3: Details Content Grid -->
     <div class="content-grid dashboard-widget" [hidden]="!widgetVisible('categories') && !widgetVisible('imports')"
       [style.order]="widgetOrder(widgetOrder('categories') < widgetOrder('imports') ? 'categories' : 'imports')">
@@ -508,10 +572,22 @@
             <span>{{ i18n.t(widget.labelKey) }}</span>
           </label>
           <div class="reorder-actions">
-            <button type="button" (click)="moveWidget(widget.id, -1)" [disabled]="!widgetVisible(widget.id)"
-              [appTooltip]="i18n.t('dashboard.moveUp')">↑</button>
-            <button type="button" (click)="moveWidget(widget.id, 1)" [disabled]="!widgetVisible(widget.id)"
-              [appTooltip]="i18n.t('dashboard.moveDown')">↓</button>
+            <button
+              type="button"
+              class="reorder-icon-button"
+              (click)="moveWidget(widget.id, -1)"
+              [disabled]="!canMoveWidget(widget.id, -1)"
+              [attr.aria-label]="i18n.t('dashboard.moveUp')"
+              [appTooltip]="i18n.t('dashboard.moveUp')"
+            ><app-icon name="arrow-up" /></button>
+            <button
+              type="button"
+              class="reorder-icon-button"
+              (click)="moveWidget(widget.id, 1)"
+              [disabled]="!canMoveWidget(widget.id, 1)"
+              [attr.aria-label]="i18n.t('dashboard.moveDown')"
+              [appTooltip]="i18n.t('dashboard.moveDown')"
+            ><app-icon name="arrow-down" /></button>
           </div>
         </div>
       }

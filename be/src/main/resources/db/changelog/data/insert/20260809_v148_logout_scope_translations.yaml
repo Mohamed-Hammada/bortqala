@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260809-v148-logout-scope-translations
+      author: bemo-erp
+      comment: "Logout-scope UI: bilingual copy for the current-browser / all-devices sign-out dialog (auth.logout*) plus the shared action.cancel aria label used by its close button."
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260809_v148_logout_scope_translations.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v148-%'" }

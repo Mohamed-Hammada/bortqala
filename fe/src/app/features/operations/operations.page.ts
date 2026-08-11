@@ -14,7 +14,14 @@ import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { OperationsStore } from './operations.store';
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
-import { ItemCategory, UnitOfMeasure } from './operations.models';
+import { ItemCategory, StockMovement, TransactionPayload, UnitOfMeasure } from './operations.models';
+
+type DocumentReferenceKey =
+  | 'purchaseOrderNo'
+  | 'receiptNo'
+  | 'deliveryNoteNo'
+  | 'invoiceNo'
+  | 'voucherNo';
 
 @Component({
   selector: 'app-operations-page',
@@ -28,7 +35,7 @@ export class OperationsPage {
   readonly store = inject(OperationsStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
-  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | null>(null);
+  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | null>(null);
   readonly itemPagination = new TablePagination();
   readonly movementPagination = new TablePagination();
   readonly balancePagination = new TablePagination();
@@ -69,11 +76,22 @@ export class OperationsPage {
       validators: [Validators.required, Validators.min(0.01)],
     }),
     amountDelta: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    unitCost: new FormControl<number | null>(null, { validators: [Validators.min(0)] }),
     lossPercentage: new FormControl<number | null>(null, {
       validators: [Validators.min(0), Validators.max(100)],
     }),
     referenceCode: new FormControl('', { nonNullable: true }),
+    documentType: new FormControl('', { nonNullable: true }),
+    reason: new FormControl('', { nonNullable: true }),
     note: new FormControl('', { nonNullable: true }),
+    purchaseOrderNo: new FormControl('', { nonNullable: true }),
+    receiptNo: new FormControl('', { nonNullable: true }),
+    deliveryNoteNo: new FormControl('', { nonNullable: true }),
+    invoiceNo: new FormControl('', { nonNullable: true }),
+    voucherNo: new FormControl('', { nonNullable: true }),
+    externalRef: new FormControl('', { nonNullable: true }),
+    warehouse: new FormControl('', { nonNullable: true }),
+    attachmentFile: new FormControl<File | null>(null),
     occurredAt: new FormControl(this.nowInput(), {
       nonNullable: true,
       validators: Validators.required,
@@ -112,11 +130,38 @@ export class OperationsPage {
     abbreviation: new FormControl('', { nonNullable: true }),
     description: new FormControl('', { nonNullable: true }),
   });
+  readonly valuationForm = new FormGroup({
+    valuationMethod: new FormControl<'FIFO' | 'WEIGHTED_AVERAGE'>('WEIGHTED_AVERAGE', { nonNullable: true }),
+    inventoryAccountId: new FormControl('', { nonNullable: true }),
+    receiptOffsetAccountId: new FormControl('', { nonNullable: true }),
+    cogsAccountId: new FormControl('', { nonNullable: true }),
+    adjustmentAccountId: new FormControl('', { nonNullable: true }),
+    glPostingEnabled: new FormControl(false, { nonNullable: true }),
+    allowBackdatedPosting: new FormControl(false, { nonNullable: true }),
+  });
+  readonly revaluationForm = new FormGroup({
+    itemId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    newUnitCost: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0.000001)] }),
+    reason: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    occurredAt: new FormControl(this.nowInput(), { nonNullable: true, validators: Validators.required }),
+  });
 
   constructor() {
     void this.store.load();
   }
-  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom'): void {
+  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation'): void {
+    if (kind === 'valuation') {
+      const policy = this.store.valuation()?.policy;
+      if (policy) this.valuationForm.reset({
+        valuationMethod: policy.valuationMethod,
+        inventoryAccountId: policy.inventoryAccountId ?? '',
+        receiptOffsetAccountId: policy.receiptOffsetAccountId ?? '',
+        cogsAccountId: policy.cogsAccountId ?? '',
+        adjustmentAccountId: policy.adjustmentAccountId ?? '',
+        glPostingEnabled: policy.glPostingEnabled,
+        allowBackdatedPosting: policy.allowBackdatedPosting,
+      });
+    }
     this.drawer.set(kind);
   }
   close(): void {
@@ -149,7 +194,6 @@ export class OperationsPage {
           this.i18n.t(
             'operations.invalidNegativeQuantity',
             undefined,
-            'كمية الحركة يجب أن تكون رقماً موجباً أكبر من الصفر.',
           ),
         );
       }
@@ -163,19 +207,36 @@ export class OperationsPage {
         this.i18n.t(
           'operations.invalidNegativeQuantity',
           undefined,
-          'كمية الحركة يجب أن تكون رقماً موجباً أكبر من الصفر.',
         ),
       );
       return;
     }
-    if (
-      await this.store.transaction({
-        ...value,
-        itemId: value.itemId || null,
-        partyId: value.partyId || null,
-        occurredAt: new Date(value.occurredAt).getTime(),
-      })
-    ) {
+    const missing = this.requiredReferences().find((key) => !(value[key] ?? '').trim());
+    if (missing) {
+      this.transactionForm.controls[missing].markAsTouched();
+      this.notification.error(this.i18n.t(this.referenceErrorKey(missing)));
+      return;
+    }
+    const { attachmentFile, ...rest } = value;
+    const payload: TransactionPayload = {
+      ...rest,
+      itemId: value.itemId || null,
+      partyId: value.partyId || null,
+      documentType: value.documentType || null,
+      reason: value.reason?.trim() || null,
+      purchaseOrderNo: value.purchaseOrderNo?.trim() || null,
+      receiptNo: value.receiptNo?.trim() || null,
+      deliveryNoteNo: value.deliveryNoteNo?.trim() || null,
+      invoiceNo: value.invoiceNo?.trim() || null,
+      voucherNo: value.voucherNo?.trim() || null,
+      externalRef: value.externalRef?.trim() || null,
+      warehouse: value.warehouse?.trim() || null,
+      attachmentName: attachmentFile?.name ?? null,
+      attachmentContentType: attachmentFile?.type ?? null,
+      attachmentSize: attachmentFile?.size ?? null,
+      occurredAt: new Date(value.occurredAt).getTime(),
+    };
+    if (await this.store.transaction(payload)) {
       this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.close();
     }
@@ -192,7 +253,7 @@ export class OperationsPage {
     if (this.adjustmentForm.invalid) return this.adjustmentForm.markAllAsTouched();
     const value = this.adjustmentForm.getRawValue();
     if (value.quantityDelta === 0) {
-      this.notification.error('كمية التسوية يجب ألا تكون صفراً');
+      this.notification.error(this.i18n.t('operations.adjustmentQuantityZero'));
       return;
     }
     if (await this.store.adjustment({
@@ -203,7 +264,7 @@ export class OperationsPage {
       approved: value.approved,
       occurredAt: new Date(value.occurredAt).getTime(),
     })) {
-      this.notification.success('تم إجراء تسوية المخزون بنجاح ✓');
+      this.notification.success(this.i18n.t('operations.adjustmentSuccess'));
       this.close();
     }
   }
@@ -211,7 +272,7 @@ export class OperationsPage {
     if (this.categoryForm.invalid) return this.categoryForm.markAllAsTouched();
     const value = this.categoryForm.getRawValue();
     if (await this.store.createCategory({ name: value.name, description: value.description || null })) {
-      this.notification.success('تم إنشاء تصنيف المخزون بنجاح ✓');
+      this.notification.success(this.i18n.t('operations.categoryCreatedSuccess'));
       this.close();
     }
   }
@@ -223,9 +284,48 @@ export class OperationsPage {
       abbreviation: value.abbreviation || null,
       description: value.description || null,
     })) {
-      this.notification.success('تم إنشاء وحدة القياس بنجاح ✓');
+      this.notification.success(this.i18n.t('operations.uomCreatedSuccess'));
       this.close();
     }
+  }
+  async saveValuationPolicy(): Promise<void> {
+    if (this.valuationForm.invalid) return this.valuationForm.markAllAsTouched();
+    const value = this.valuationForm.getRawValue();
+    if (value.glPostingEnabled && (!value.inventoryAccountId || !value.receiptOffsetAccountId || !value.cogsAccountId || !value.adjustmentAccountId)) {
+      this.notification.error(this.i18n.t('INV_VAL_GL_ACCOUNTS_REQUIRED'));
+      return;
+    }
+    if (await this.store.saveValuationPolicy({
+      ...value,
+      inventoryAccountId: value.inventoryAccountId || null,
+      receiptOffsetAccountId: value.receiptOffsetAccountId || null,
+      cogsAccountId: value.cogsAccountId || null,
+      adjustmentAccountId: value.adjustmentAccountId || null,
+      version: this.store.valuation()?.policy.version ?? 0,
+    })) {
+      this.notification.success(this.i18n.t('operations.valuation.settingsSaved'));
+      this.close();
+    }
+  }
+  async saveRevaluation(): Promise<void> {
+    if (this.revaluationForm.invalid) return this.revaluationForm.markAllAsTouched();
+    const value = this.revaluationForm.getRawValue();
+    if (await this.store.revalue({
+      ...value,
+      occurredAt: new Date(value.occurredAt).getTime(),
+      operationId: crypto.randomUUID(),
+    })) {
+      this.notification.success(this.i18n.t('operations.valuation.revalued'));
+      this.close();
+    }
+  }
+  money(value: number): string {
+    return new Intl.NumberFormat(this.i18n.locale(), { style: 'currency', currency: 'EGP' }).format(value);
+  }
+  valuationMethodLabel(): string {
+    return this.i18n.t(this.store.valuation()?.policy.valuationMethod === 'FIFO'
+      ? 'operations.valuation.fifo'
+      : 'operations.valuation.weightedAverage');
   }
   date(value: number): string {
     return formatDateTime(value);
@@ -268,6 +368,87 @@ export class OperationsPage {
       value === 'REPAYMENT' ? 'operations.advanceRepaid' : 'operations.advancePaid',
     );
   }
+  requiredReferences(): DocumentReferenceKey[] {
+    switch (this.transactionForm.controls.operationType.value) {
+      case 'SUPPLY_RECEIPT':
+        return ['purchaseOrderNo', 'receiptNo'];
+      case 'PROCESSING_INTAKE':
+        return ['receiptNo'];
+      case 'PROCESSING_DELIVERY':
+      case 'EXPORT_SALE':
+      case 'SORTING_SALE':
+        return ['deliveryNoteNo'];
+      case 'ADJUSTMENT':
+        return ['voucherNo'];
+      default:
+        return [];
+    }
+  }
+  referenceErrorKey(key: DocumentReferenceKey): string {
+    const map: Record<string, string> = {
+      purchaseOrderNo: 'OPS_MOVEMENT_PURCHASE_ORDER_REQUIRED',
+      receiptNo: 'OPS_MOVEMENT_RECEIPT_REQUIRED',
+      deliveryNoteNo: 'OPS_MOVEMENT_DELIVERY_NOTE_REQUIRED',
+      voucherNo: 'OPS_MOVEMENT_VOUCHER_REQUIRED',
+    };
+    return map[key] ?? 'OPS_MOVEMENT_RECEIPT_REQUIRED';
+  }
+  documentTypeLabel(value: string | null): string {
+    if (!value) return '—';
+    const key = (
+      {
+        GOODS_RECEIPT: 'goodsReceipt',
+        PURCHASE_ORDER: 'purchaseOrder',
+        SUPPLIER_INVOICE: 'supplierInvoice',
+        SUPPLIER_PAYMENT: 'supplierPayment',
+        DELIVERY_NOTE: 'deliveryNote',
+        ADJUSTMENT: 'adjustment',
+        VOUCHER: 'voucher',
+      } as Record<string, string>
+    )[value];
+    return key ? this.i18n.t(`operations.documentType.${key}`) : value.replaceAll('_', ' ');
+  }
+  primaryReference(row: StockMovement): string {
+    return (
+      row.receiptNo ??
+      row.invoiceNo ??
+      row.deliveryNoteNo ??
+      row.purchaseOrderNo ??
+      row.voucherNo ??
+      row.externalRef ??
+      row.referenceCode ??
+      '—'
+    );
+  }
+  onAttachmentSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+    if (!file) {
+      this.transactionForm.controls.attachmentFile.setValue(null);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      this.transactionForm.controls.attachmentFile.setValue(null);
+      this.notification.error(this.i18n.t('operations.attachmentSizeError'));
+      return;
+    }
+    const type = file.type.toLowerCase();
+    const allowed =
+      type.startsWith('image/') ||
+      type === 'application/pdf' ||
+      type === 'application/vnd.ms-excel' ||
+      type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    if (!allowed) {
+      this.transactionForm.controls.attachmentFile.setValue(null);
+      this.notification.error(this.i18n.t('operations.attachmentTypeError'));
+      return;
+    }
+    this.transactionForm.controls.attachmentFile.setValue(file);
+  }
+  removeAttachment(): void {
+    this.transactionForm.controls.attachmentFile.setValue(null);
+  }
   private nowInput(): string {
     const date = new Date();
     date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
@@ -296,6 +477,12 @@ export class OperationsPage {
       } else if (this.drawer() === 'uom') {
         event.preventDefault();
         void this.saveUom();
+      } else if (this.drawer() === 'valuation') {
+        event.preventDefault();
+        void this.saveValuationPolicy();
+      } else if (this.drawer() === 'revaluation') {
+        event.preventDefault();
+        void this.saveRevaluation();
       }
     }
   }

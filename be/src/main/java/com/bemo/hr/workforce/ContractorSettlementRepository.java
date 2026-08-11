@@ -7,4 +7,5 @@ import java.util.Optional;
 public interface ContractorSettlementRepository extends JpaRepository<ContractorSettlement, String> {
     List<ContractorSettlement> findByPeriodId(String periodId);
     Optional<ContractorSettlement> findByPeriodIdAndContractorId(String periodId, String contractorId);
+    List<ContractorSettlement> findByContractorId(String contractorId);
 }

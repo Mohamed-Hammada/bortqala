@@ -1,8 +1,10 @@
 package com.bemo.hr.workforce;
 
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.operations.PartnerLedgerEntryRepository;
 import com.bemo.hr.shared.api.TransitionResponse;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -25,20 +27,26 @@ class WorkforceSettlementTransitionTests {
     @Mock private WorkforceSettlementPeriodRepository periodRepository;
     @Mock private WorkerSettlementRepository workerSettlementRepository;
     @Mock private ContractorSettlementRepository contractorSettlementRepository;
+    @Mock private ContractorSettlementLineRepository contractorSettlementLineRepository;
+    @Mock private ContractorSettlementAdjustmentRepository contractorSettlementAdjustmentRepository;
     @Mock private WorkforceSettlementIssueRepository issueRepository;
     @Mock private ManualAttendanceEntryRepository attendanceRepository;
     @Mock private WorkerRepository workerRepository;
     @Mock private ContractorRepository contractorRepository;
     @Mock private WorkforceAdvanceRepository advanceRepository;
     @Mock private WorkforceAdvancePolicyRepository advancePolicyRepository;
+    @Mock private PartnerLedgerEntryRepository partnerLedgerEntryRepository;
+    @Mock private IdempotencyService idempotencyService;
     @Mock private WorkforceExcelExportService excelExportService;
     @Mock private AuditService auditService;
     @Mock private PlatformTransactionManager platformTransactionManager;
 
     private WorkforceSettlementService service() {
         return new WorkforceSettlementService(periodRepository, workerSettlementRepository, contractorSettlementRepository,
+                contractorSettlementLineRepository, contractorSettlementAdjustmentRepository,
                 issueRepository, attendanceRepository, workerRepository, contractorRepository, advanceRepository,
-                advancePolicyRepository, excelExportService, auditService, platformTransactionManager);
+                advancePolicyRepository, partnerLedgerEntryRepository, idempotencyService,
+                excelExportService, auditService, platformTransactionManager);
     }
 
     private static WorkforceSettlementPeriod calculatedPeriod() {

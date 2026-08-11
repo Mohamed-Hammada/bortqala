@@ -1,0 +1,23 @@
+family,models,device_family,recommended_protocols,notes
+K Series,K20/K30/K40/K50/K60/K70,TIME_ATTENDANCE,ZK_PULL|USB_IMPORT_EXPORT,Egypt legacy attendance family; confirm firmware/Comm Key.
+K Series,K14 Pro/K40 Pro/K60 Pro,TIME_ATTENDANCE,ZK_PULL|ADMS_PUSH|USB_IMPORT_EXPORT,"Egypt/North Africa listing; auto-probe PULL first, then inspect Cloud Server/ADMS menu."
+LX Series,LX50,TIME_ATTENDANCE,ZK_PULL|USB_IMPORT_EXPORT,Common entry-level attendance deployment.
+MB Series,MB20/MB360,TIME_ATTENDANCE,ZK_PULL|USB_IMPORT_EXPORT,Multi-biometric attendance; some firmware/software generations differ.
+IN Series,IN01-A/IN05-A,TIME_ATTENDANCE,ZK_PULL|ADMS_PUSH|USB_IMPORT_EXPORT,Network attendance family; PUSH availability is firmware dependent.
+iClock,iClock360/iClock560/iClock580/iClock680/iClock700,TIME_ATTENDANCE,ADMS_PUSH|ZK_PULL|WINDOWS_SDK_BRIDGE,iClock700/680 officially advertise ADMS and former SDK compatibility.
+F Series,F18/F22/F21Lite/F16,STANDALONE_ACCESS,AC_PUSH|ADMS_PUSH|ZK_PULL|WINDOWS_SDK_BRIDGE,"F18 explicitly has AC PUSH, TA PUSH and Standalone SDK firmware variants."
+TF Series,TF1700,STANDALONE_ACCESS,ADMS_PUSH|ZK_PULL|WINDOWS_SDK_BRIDGE,Firmware variants exist; use auto detection.
+MA Series,MA300/MA500,STANDALONE_ACCESS,ZK_PULL|WINDOWS_SDK_BRIDGE,Access-control family; newer PULL SDK is common on some firmware.
+uFace,uFace302/uFace402/uFace602/uFace702/uFace802,FACE_TERMINAL,ADMS_PUSH|ZK_PULL|WINDOWS_SDK_BRIDGE,Older face/fingerprint family; firmware determines push/pull behavior.
+SpeedFace,SpeedFace-V3L/SpeedFace-V4L/SpeedFace-V5L,FACE_TERMINAL,AC_PUSH|ADMS_PUSH|ZKBIO_CVSECURITY_API|ZKBIO_CVACCESS_API,Modern visible-light terminals generally integrate through ZKBio/PUSH paths.
+SenseFace,SenseFace 2A/SenseFace 3A/SenseFace 4A/SenseFace 7A/SenseFace T Series,FACE_TERMINAL,AC_PUSH|ADMS_PUSH|ZKBIO_CVSECURITY_API|ZKBIO_CVACCESS_API,Modern face access family.
+ProFace,ProFace X/ProFace X TD,FACE_TERMINAL,AC_PUSH|ADMS_PUSH|ZKBIO_CVSECURITY_API,CVSecurity related product family.
+Horus,Horus H1/Horus E2,FACE_TERMINAL,ADMS_PUSH|ZKBIO_TIME_API|ZKBIO_CVSECURITY_API,Platform-managed visible-light family.
+Access Panels,C3-100/C3-200/C3-400,ACCESS_PANEL,PLCOMM_PRO_SDK|ZKBIO_CVACCESS_API|ZKBIO_CVSECURITY_API,Panel integration normally uses vendor PULL SDK/platform rather than attendance terminal protocol.
+Access Panels,inBio160/inBio260/inBio460,ACCESS_PANEL,PLCOMM_PRO_SDK|ZKBIO_CVACCESS_API|ZKBIO_CVSECURITY_API,Biometric access panels/controllers.
+Fingerprint Scanner,SLK20R/ZK9500/ZK6500/ZK8500R,FINGERPRINT_SCANNER,ZKFINGER_SCANNER,Official ZKFinger SDK lists these scanner families.
+Readers,KR/FR/ProID/QR/MR series,READER,WIEGAND_READER|RS485_READER,"Usually connected to a controller; gateway integrates the controller, not the passive reader directly."
+Software,ZKBio Time 8/9,PLATFORM_SOFTWARE,ZKBIO_TIME_API|ADMS_PUSH,API route for ERP/HR plus PUSH device backend.
+Software,ZKBio CVSecurity 6.x,PLATFORM_SOFTWARE,ZKBIO_CVSECURITY_API|AC_PUSH,Third-party REST API/platform route.
+Software,ZKBio CVAccess 4.x,PLATFORM_SOFTWARE,ZKBIO_CVACCESS_API|AC_PUSH,SMB access/security platform route.
+Software,ZKBio WDMS 9.x,PLATFORM_SOFTWARE,WDMS_API|ADMS_PUSH,Middleware for standalone PUSH devices.

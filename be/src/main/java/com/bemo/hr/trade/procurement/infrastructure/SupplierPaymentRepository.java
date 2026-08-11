@@ -12,4 +12,5 @@ public interface SupplierPaymentRepository extends JpaRepository<SupplierPayment
     List<SupplierPayment> findAllByOrderByPaymentDateDesc();
     List<SupplierPayment> findBySupplierInvoiceId(String supplierInvoiceId);
     Optional<SupplierPayment> findByOperationId(String operationId);
+    boolean existsByPaymentNumberIgnoreCase(String paymentNumber);
 }

@@ -97,4 +97,9 @@ public class PayrollController {
                 StandardCharsets.UTF_8).build());
         return new ResponseEntity<>(payrollService.export(year, month, categoryId, options), headers, HttpStatus.OK);
     }
+
+    @GetMapping("/payments/{id}/explanation")
+    public java.util.List<PayrollApi.ExplanationResponse> getExplanation(@PathVariable String id) {
+        return payrollService.getPaymentExplanation(id);
+    }
 }

@@ -195,6 +195,22 @@
   border: 1px solid var(--line);
 }
 
+.trend-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.trend-months-select {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+}
+
 .insights-grid {
   display: grid;
   grid-template-columns: minmax(180px, .8fr) minmax(220px, 1fr) minmax(300px, 1.6fr);
@@ -785,4 +801,55 @@ td small {
 .motion-disabled .bar {
   animation: none !important;
   transition: none !important;
+}
+
+/* BEMO dashboard organization fixes */
+
+/*
+ * categories/imports were visually grouped inside one flex item while the editor
+ * treated them as two independent widgets. display: contents makes their existing
+ * per-widget order values participate in the page flex ordering correctly.
+ */
+.content-grid.dashboard-widget {
+  display: contents;
+}
+
+.content-grid.dashboard-widget > .section-card {
+  width: 100%;
+  margin: 0;
+}
+
+.reorder-actions {
+  gap: var(--space-1, 4px);
+}
+
+.reorder-icon-button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--surface);
+  color: var(--secondary-text);
+  cursor: pointer;
+}
+
+.reorder-icon-button:hover:not(:disabled),
+.reorder-icon-button:focus-visible {
+  border-color: var(--gold);
+  background: var(--gold-glow);
+  color: var(--gold);
+  outline: none;
+}
+
+.reorder-icon-button:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+.reorder-icon-button app-icon {
+  width: 17px;
+  height: 17px;
 }

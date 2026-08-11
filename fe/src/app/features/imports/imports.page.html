@@ -6,6 +6,10 @@
       <p>{{ i18n.t('imports.description') }}</p>
     </div>
     <div class="header-actions" style="display: flex; gap: 0.5rem; align-items: center;">
+      <!-- device-integrations-entry -->
+      <a class="button secondary" href="/imports/device-integrations">
+        {{ i18n.t('deviceIntegrations.open', {}, i18n.locale() === 'ar-EG' ? 'تكامل الأجهزة' : 'Device integrations') }}
+      </a>
       <button class="button gold" (click)="showTemplateModal.set(true)">
         {{ i18n.t('imports.viewTemplate') }}
       </button>

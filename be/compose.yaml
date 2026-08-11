@@ -15,5 +15,19 @@ services:
       timeout: 3s
       retries: 10
 
+  device-hub:
+    build:
+      context: ../device-hub
+      dockerfile: Dockerfile.bortqala
+    environment:
+      DEVICE_HUB_REGISTRY_PATH: /data/devices.json
+      DEVICE_HUB_API_KEY: ${DEVICE_HUB_API_KEY:-}
+    ports:
+      - "8090:8090"
+    volumes:
+      - bemo-device-hub-data:/data
+    restart: unless-stopped
+
 volumes:
   bemo-erp-postgres:
+  bemo-device-hub-data:

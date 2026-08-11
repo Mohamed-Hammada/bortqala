@@ -1,0 +1,73 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_trial_demo_control
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: HALT
+        - tableExists: { tableName: apps }
+        - not: { columnExists: { tableName: apps, columnName: commercial_state } }
+      changes:
+        - addColumn:
+            tableName: apps
+            columns:
+              - column: { name: commercial_state, type: varchar(20), defaultValue: PAID, constraints: { nullable: false } }
+              - column: { name: trial_started_at, type: timestamp with time zone }
+              - column: { name: trial_ends_at, type: timestamp with time zone }
+              - column: { name: converted_at, type: timestamp with time zone }
+              - column: { name: last_trial_operation_id, type: varchar(80) }
+              - column: { name: last_conversion_operation_id, type: varchar(80) }
+              - column: { name: demo_tenant, type: boolean, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: demo_template_code, type: varchar(80) }
+              - column: { name: demo_template_version, type: int }
+              - column: { name: last_demo_reset_operation_id, type: varchar(80) }
+              - column: { name: last_demo_reset_at, type: timestamp with time zone }
+              - column: { name: last_demo_reset_by, type: varchar(100) }
+        - createTable:
+            tableName: demo_tenant_templates
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: code, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: template_version, type: int, constraints: { nullable: false } }
+              - column: { name: name_key, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: sample_json, type: varchar(4000), constraints: { nullable: false } }
+              - column: { name: active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: demo_tenant_templates, columnNames: code,template_version, constraintName: uk_demo_template_version }
+        - createTable:
+            tableName: demo_sample_records
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_demo_sample_app, references: apps(id) } }
+              - column: { name: template_code, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: template_version, type: int, constraints: { nullable: false } }
+              - column: { name: record_key, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: payload_json, type: varchar(2000), constraints: { nullable: false } }
+              - column: { name: reset_operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: demo_sample_records, columnNames: app_id,record_key, constraintName: uk_demo_sample_record }
+        - createIndex: { tableName: demo_sample_records, indexName: ix_demo_sample_app, columns: [ { column: { name: app_id } } ] }
+        - insert:
+            tableName: demo_tenant_templates
+            columns:
+              - column: { name: id, value: demo-contractor-workforce-eg-v1 }
+              - column: { name: code, value: CONTRACTOR_WORKFORCE_EG }
+              - column: { name: template_version, valueNumeric: 1 }
+              - column: { name: name_key, value: trialDemo.template.contractorWorkforce }
+              - column: { name: sample_json, value: '[{"key":"contractor","payload":{"code":"DEMO-CONTRACTOR","name":"Nile Workforce"}},{"key":"worker","payload":{"code":"DEMO-WORKER-001","name":"Sample Worker"}},{"key":"attendance","payload":{"status":"EXCEPTION","minutes":420}},{"key":"settlement","payload":{"status":"DRAFT","amount":3500}}]' }
+              - column: { name: active, valueBoolean: true }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+      rollback:
+        - dropTable: { tableName: demo_sample_records }
+        - dropTable: { tableName: demo_tenant_templates }
+        - dropColumn: { tableName: apps, columnName: commercial_state }
+        - dropColumn: { tableName: apps, columnName: trial_started_at }
+        - dropColumn: { tableName: apps, columnName: trial_ends_at }
+        - dropColumn: { tableName: apps, columnName: converted_at }
+        - dropColumn: { tableName: apps, columnName: last_trial_operation_id }
+        - dropColumn: { tableName: apps, columnName: last_conversion_operation_id }
+        - dropColumn: { tableName: apps, columnName: demo_tenant }
+        - dropColumn: { tableName: apps, columnName: demo_template_code }
+        - dropColumn: { tableName: apps, columnName: demo_template_version }
+        - dropColumn: { tableName: apps, columnName: last_demo_reset_operation_id }
+        - dropColumn: { tableName: apps, columnName: last_demo_reset_at }
+        - dropColumn: { tableName: apps, columnName: last_demo_reset_by }

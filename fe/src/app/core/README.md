@@ -4,6 +4,10 @@
 
 **AR:** تسجيل الدخول وإرسال JWT والحراس وترجمة عربية/إنجليزية من قاعدة البيانات وتطبيق المظهر/الكثافة وقالب الصلاحيات ومعالجة الأخطاء المشتركة. يبدأ `I18nService` من `provideAppInitializer` حتى لا تُرسم المسارات قبل اكتمال قاموس اللغة ولا تظهر مفاتيح الترجمة الخام.
 
+**EN:** Translation bundles are cached by locale and authenticated application id together. Pre-login uses the platform default scope; after login/refresh the JWT loads the application-specific bundle. Stale requests cannot overwrite the active tenant bundle, and database text takes priority over emergency in-code fallbacks.
+
+**AR:** تُخزّن حزم الترجمة مؤقتًا باستخدام اللغة ورقم التطبيق المسجل معًا. قبل تسجيل الدخول تُحمّل النصوص الافتراضية، وبعد الدخول أو تجديد الجلسة يُرسل JWT فتُحمّل تخصيصات التطبيق. لا يمكن لطلب قديم استبدال حزمة العميل الحالي، ونص قاعدة البيانات له الأولوية على النص الاحتياطي داخل الكود.
+
 **EN:** The shell consumes server-backed navigation preferences for synchronized favorites and recently used sections; hiding either section never changes route authorization.
 
 **AR:** يقرأ قالب التطبيق تفضيلات التنقل المحفوظة في الخادم لمزامنة المفضلة والمستخدمة حديثاً، وإخفاء أي قسم لا يغير صلاحيات المسارات.
@@ -23,6 +27,10 @@
 **EN:** The permission-aware shortcut layer provides `Ctrl+K` quick navigation, `?` help, `G`-then-letter menu chords, arrow/Enter result navigation, and descriptive menu/action tooltips. Shortcuts are ignored while users type in form controls.
 
 **AR:** توفر طبقة الاختصارات المراعية للصلاحيات انتقالاً سريعاً عبر `Ctrl+K`، ودليل الاختصارات عبر `?`، وانتقالاً للقوائم بحرف `G` ثم حرف الوجهة، مع أسهم وEnter للنتائج وتلميحات واضحة. ولا تعمل اختصارات الحروف أثناء الكتابة داخل الحقول.
+
+**EN:** The auth interceptor treats `/api/v1/auth/demo-login` as public, and `authGuard` preserves query parameters when redirecting to the login screen so a deep-linked demo secret survives to the exchange.
+
+**AR:** يعامل اعتراض الطلبات نقطة `/api/v1/auth/demo-login` كنقطة عامة، ويحافظ `authGuard` على معاملات العنوان عند التحويل إلى شاشة الدخول حتى يصل سر الرابط التجريبي إليها من رابط مباشر.
 
 ## Visible tooltips / التلميحات المرئية
 

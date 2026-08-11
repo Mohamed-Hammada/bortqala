@@ -9,6 +9,18 @@ export type PaymentStatus =
   | 'PENDING'
   | 'CANCELLED';
 
+export interface SalaryPaymentExplanation {
+  id: string;
+  salaryPaymentId: string;
+  componentType: string;
+  formula: string;
+  inputValuesJson?: string;
+  calculatedAmount: number;
+  explanationTextAr?: string;
+  explanationTextEn?: string;
+  createdAt: number;
+}
+
 export type PaymentMethod = 'CASH' | 'BANK_TRANSFER' | 'CHEQUE';
 
 export interface PayrollRow {

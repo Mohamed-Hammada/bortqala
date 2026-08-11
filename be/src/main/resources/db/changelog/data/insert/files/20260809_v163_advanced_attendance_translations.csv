@@ -1,0 +1,85 @@
+id;key;locale;text
+v163-001;PAYROLL_ATTENDANCE_REPORT_NOT_APPROVED;en-US;The attendance report must be approved before payroll can proceed
+v163-002;PAYROLL_ATTENDANCE_REPORT_NOT_APPROVED;ar-EG;يجب اعتماد تقرير الحضور قبل متابعة الرواتب
+v163-003;PAYROLL_ATTENDANCE_EXCEPTIONS_OPEN;en-US;Critical attendance exceptions must be resolved before payroll can proceed
+v163-004;PAYROLL_ATTENDANCE_EXCEPTIONS_OPEN;ar-EG;يجب معالجة استثناءات الحضور الحرجة قبل متابعة الرواتب
+v163-005;ATTENDANCE_EXCEPTION_PERIOD_LOCKED;en-US;Attendance exceptions cannot be changed after the report is locked
+v163-006;ATTENDANCE_EXCEPTION_PERIOD_LOCKED;ar-EG;لا يمكن تعديل استثناءات الحضور بعد قفل التقرير
+v163-007;ATTENDANCE_POLICY_INVALID;en-US;The attendance policy scope or effective dates are invalid
+v163-008;ATTENDANCE_POLICY_INVALID;ar-EG;نطاق سياسة الحضور أو تواريخ سريانها غير صالحة
+v163-009;ATTENDANCE_RESULT_NOT_FOUND;en-US;The attendance result linked to this exception was not found
+v163-010;ATTENDANCE_RESULT_NOT_FOUND;ar-EG;نتيجة الحضور المرتبطة بهذا الاستثناء غير موجودة
+v163-011;attendance.exception.noPunch;en-US;No punch was recorded for {{minutes}} expected minutes
+v163-012;attendance.exception.noPunch;ar-EG;لم تسجل بصمة خلال {{minutes}} دقيقة متوقعة
+v163-013;attendance.exception.singlePunch;en-US;Only one punch was recorded for a {{minutes}} minute shift
+v163-014;attendance.exception.singlePunch;ar-EG;سجلت بصمة واحدة فقط لوردية مدتها {{minutes}} دقيقة
+v163-015;attendance.exception.missingSchedule;en-US;No effective schedule covered this workday
+v163-016;attendance.exception.missingSchedule;ar-EG;لا يوجد جدول عمل ساري يغطي هذا اليوم
+v163-017;attendance.exception.late;en-US;Arrival was {{minutes}} minutes late
+v163-018;attendance.exception.late;ar-EG;تأخر الحضور {{minutes}} دقيقة
+v163-019;attendance.exception.earlyLeave;en-US;Departure was {{minutes}} minutes early
+v163-020;attendance.exception.earlyLeave;ar-EG;تم الانصراف مبكراً بمقدار {{minutes}} دقيقة
+v163-021;attendance.exception.excessShift;en-US;Worked duration of {{minutes}} minutes exceeds the policy maximum
+v163-022;attendance.exception.excessShift;ar-EG;مدة العمل {{minutes}} دقيقة تتجاوز الحد الأقصى للسياسة
+v163-023;review.exceptionWorkbenchTitle;en-US;Attendance exception workbench
+v163-024;review.exceptionWorkbenchTitle;ar-EG;منصة استثناءات الحضور
+v163-025;review.exceptionWorkbenchHint;en-US;Review scored exceptions with their effective policy and payroll impact before applying audited changes
+v163-026;review.exceptionWorkbenchHint;ar-EG;راجع الاستثناءات ودرجاتها والسياسة المطبقة وتأثير الرواتب قبل تنفيذ تغييرات مدققة
+v163-027;review.detectExceptions;en-US;Refresh exception detection
+v163-028;review.detectExceptions;ar-EG;تحديث كشف الاستثناءات
+v163-029;review.exceptionOpen;en-US;Open
+v163-030;review.exceptionOpen;ar-EG;مفتوح
+v163-031;review.exceptionCritical;en-US;Payroll blockers
+v163-032;review.exceptionCritical;ar-EG;معطلات الرواتب
+v163-033;review.exceptionEmployees;en-US;Affected employees
+v163-034;review.exceptionEmployees;ar-EG;الموظفون المتأثرون
+v163-035;review.exceptionResolved;en-US;Resolved
+v163-036;review.exceptionResolved;ar-EG;تمت المعالجة
+v163-037;review.selectVisible;en-US;Select visible open items
+v163-038;review.selectVisible;ar-EG;تحديد العناصر المفتوحة الظاهرة
+v163-039;review.employee;en-US;Employee
+v163-040;review.employee;ar-EG;الموظف
+v163-041;review.exceptionType;en-US;Exception
+v163-042;review.exceptionType;ar-EG;الاستثناء
+v163-043;review.exceptionScore;en-US;Score
+v163-044;review.exceptionScore;ar-EG;الدرجة
+v163-045;review.exceptionExplanation;en-US;Explanation
+v163-046;review.exceptionExplanation;ar-EG;التفسير
+v163-047;review.exceptionPolicy;en-US;Effective policy
+v163-048;review.exceptionPolicy;ar-EG;السياسة المطبقة
+v163-049;review.exceptionEmpty;en-US;No attendance exceptions match this filter
+v163-050;review.exceptionEmpty;ar-EG;لا توجد استثناءات حضور تطابق هذا المرشح
+v163-051;review.exceptionAccept;en-US;Accept calculated result
+v163-052;review.exceptionAccept;ar-EG;قبول النتيجة المحسوبة
+v163-053;review.exceptionMarkPresent;en-US;Mark present
+v163-054;review.exceptionMarkPresent;ar-EG;اعتبار حضور
+v163-055;review.exceptionMarkAbsent;en-US;Mark absent
+v163-056;review.exceptionMarkAbsent;ar-EG;اعتبار غياب
+v163-057;review.exceptionIgnore;en-US;Ignore exception
+v163-058;review.exceptionIgnore;ar-EG;تجاهل الاستثناء
+v163-059;review.exceptionReason;en-US;Mandatory resolution reason
+v163-060;review.exceptionReason;ar-EG;سبب المعالجة الإلزامي
+v163-061;review.bulkPreview;en-US;Preview bulk action
+v163-062;review.bulkPreview;ar-EG;معاينة الإجراء الجماعي
+v163-063;review.exceptionPreviewTitle;en-US;Attendance change preview
+v163-064;review.exceptionPreviewTitle;ar-EG;معاينة تغيير الحضور
+v163-065;review.exceptionSelected;en-US;Selected
+v163-066;review.exceptionSelected;ar-EG;المحدد
+v163-067;review.exceptionEditable;en-US;Will change
+v163-068;review.exceptionEditable;ar-EG;سيتم تغييره
+v163-069;review.exceptionPayrollCleared;en-US;Payroll blockers cleared
+v163-070;review.exceptionPayrollCleared;ar-EG;معطلات الرواتب التي ستزال
+v163-071;review.exceptionExcluded;en-US;Excluded
+v163-072;review.exceptionExcluded;ar-EG;مستبعد
+v163-073;review.exceptionNoChangeBeforeConfirm;en-US;This preview has not changed attendance or payroll data
+v163-074;review.exceptionNoChangeBeforeConfirm;ar-EG;لم تغير هذه المعاينة بيانات الحضور أو الرواتب
+v163-075;review.exceptionDetectionComplete;en-US;Attendance exception detection is up to date
+v163-076;review.exceptionDetectionComplete;ar-EG;تم تحديث كشف استثناءات الحضور
+v163-077;review.exceptionActionFailed;en-US;The attendance exception action could not be completed
+v163-078;review.exceptionActionFailed;ar-EG;تعذر إكمال إجراء استثناء الحضور
+v163-079;review.exceptionSelectionReasonRequired;en-US;Select at least one exception and enter a reason
+v163-080;review.exceptionSelectionReasonRequired;ar-EG;حدد استثناء واحداً على الأقل وأدخل السبب
+v163-081;review.exceptionApplied;en-US;Resolved {{count}} attendance exceptions
+v163-082;review.exceptionApplied;ar-EG;تمت معالجة {{count}} من استثناءات الحضور
+v163-083;RPT_CRITICAL_ATTENDANCE_EXCEPTIONS;en-US;Resolve critical attendance exceptions before approving the report
+v163-084;RPT_CRITICAL_ATTENDANCE_EXCEPTIONS;ar-EG;عالج استثناءات الحضور الحرجة قبل اعتماد التقرير

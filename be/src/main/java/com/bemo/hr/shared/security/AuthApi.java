@@ -23,15 +23,17 @@ public final class AuthApi {
                                 boolean mustChangePassword,
                                 AppResponse app, UserResponse user, PreferenceResponse preferences) { }
     public record RefreshResponse(String accessToken, String tokenType, Instant expiresAt) { }
+    public record DemoLoginRequest(@NotBlank @Size(max = 128) String secret) { }
     public record ChangePasswordRequest(@NotBlank @Size(max = 72) String currentPassword,
                                         @NotBlank @Size(max = 72) String newPassword) { }
     public record UserResponse(String id, String username, String displayName, Set<RoleCode> roles,
-                               Set<String> allowedMenus, boolean canViewSalary, String categoryId,
+                               Set<String> allowedMenus, String menuAccessMode, boolean canViewSalary, String categoryId,
                                boolean dashboardCustomizationEnabled, boolean active, long version, Set<String> activeFeatures) { }
     public record TenantInfo(String id, String code, String name) { }
     public record SessionInfo(Instant expiresAt, int timeoutMinutes, boolean timeoutEnabled) { }
     public record MeResponse(String id, String username, String displayName,
                              TenantInfo tenant, Set<RoleCode> roles, Set<String> scopes,
+                             Set<String> allowedMenus, String menuAccessMode,
                              boolean canViewSalary, String categoryId,
                              boolean dashboardCustomizationEnabled, boolean active,
                              SessionInfo session, long version) { }
@@ -45,7 +47,8 @@ public final class AuthApi {
             String categoryId,
             Boolean dashboardCustomizationEnabled,
             boolean active,
-            Long version) { }
+            Long version,
+            @Size(max = 1000) String accessChangeReason) { }
     public record PreferenceResponse(ThemePreference theme, TableDensity tableDensity,
                                      String locale, ExcelTableStyle excelTableStyle, int defaultPageSize,
                                      String defaultPage, boolean showFavorites, boolean showRecentlyUsed,
@@ -71,7 +74,7 @@ public final class AuthApi {
     public record AppSettingsResponse(
             int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets,
             int attendanceAnomalyThresholdPercent,
-            boolean automaticProcurementNumbering, boolean adminDashboardCustomizationEnabled,
+            boolean automaticProcurementNumbering, boolean automaticDocumentNumbering, boolean adminDashboardCustomizationEnabled,
             int minPasswordLength, boolean requireUppercase, boolean requireLowercase,
             boolean requireNumbers, boolean requireSpecialChars, boolean disallowSpaces,
             int maxPasswordLength, int passwordExpiryDays, int passwordHistoryCount,
@@ -84,6 +87,7 @@ public final class AuthApi {
             boolean showReportPresets,
             @Min(1) @Max(100) int attendanceAnomalyThresholdPercent,
             boolean automaticProcurementNumbering,
+            boolean automaticDocumentNumbering,
             boolean adminDashboardCustomizationEnabled,
             @Min(6) @Max(128) Integer minPasswordLength,
             boolean requireUppercase,

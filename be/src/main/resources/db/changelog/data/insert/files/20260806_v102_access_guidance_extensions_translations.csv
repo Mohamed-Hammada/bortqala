@@ -1,0 +1,25 @@
+id;translation_key;locale;text_value
+v102-ar-001;access.ackReasonLabel;ar-EG;سبب الاعتماد
+v102-en-001;access.ackReasonLabel;en-US;Acknowledgement reason
+v102-ar-002;access.ackReasonPlaceholder;ar-EG;اشرح لماذا يتجاوز هذا التخصيص دليل الصلاحيات (إلزامي قبل الحفظ)
+v102-en-002;access.ackReasonPlaceholder;en-US;Explain why this configuration deviates from the access catalog (required before saving)
+v102-ar-003;access.ackReasonRequired;ar-EG;مطلوب إدخال سبب الاعتماد قبل الحفظ.
+v102-en-003;access.ackReasonRequired;en-US;An acknowledgement reason is required before saving.
+v102-ar-004;access.adminOverrideNotice;ar-EG;فئة المدير تتحكم في القوائم المعروضة لهذا المستخدم وتتجاوز القائمة المخصصة.
+v102-en-004;access.adminOverrideNotice;en-US;The admin role governs this user's menus and overrides the custom list below.
+v102-ar-005;access.menuFeatureDisabled;ar-EG;الوحدة غير مفعّلة في اشتراك هذه المنشأة
+v102-en-005;access.menuFeatureDisabled;en-US;Module disabled for this tenant
+v102-ar-006;access.menuRoleMismatch;ar-EG;الدور الحالي لا يسمح بهذه القائمة وفقًا لدليل الصلاحيات
+v102-en-006;access.menuRoleMismatch;en-US;Current role is not permitted this menu by the access catalog
+v102-ar-007;access.roleNoPages;ar-EG;لا توجد صفحات مرتبطة بهذا الدور.
+v102-en-007;access.roleNoPages;en-US;No pages are associated with this role.
+v102-ar-008;access.saveBlockedCatalog;ar-EG;تعذّر تحميل دليل الصلاحيات. الحفظ معطّل حتى اكتمال التحميل.
+v102-en-008;access.saveBlockedCatalog;en-US;Unable to load the access catalog. Saving is disabled until it loads.
+v102-ar-009;access.validateError.ACCESS_UNKNOWN_MENU;ar-EG;قائمة غير معروفة في دليل الصلاحيات.
+v102-en-009;access.validateError.ACCESS_UNKNOWN_MENU;en-US;Unknown menu in the access catalog.
+v102-ar-010;access.validateError.ACCESS_MENU_ROLE_MISMATCH;ar-EG;هذه القائمة غير مسموح بها للدور الحالي وفقًا لدليل الصلاحيات.
+v102-en-010;access.validateError.ACCESS_MENU_ROLE_MISMATCH;en-US;This menu is not allowed for the current role by the access catalog.
+v102-ar-011;access.validateError.ACCESS_FEATURE_DISABLED;ar-EG;وحدة القائمة غير مفعّلة في اشتراك هذه المنشأة.
+v102-en-011;access.validateError.ACCESS_FEATURE_DISABLED;en-US;The menu's module is disabled for this tenant.
+v102-ar-012;access.validateError.ACCESS_ACK_REASON_REQUIRED;ar-EG;مطلوب سبب الاعتماد لتفعيل الحفظ.
+v102-en-012;access.validateError.ACCESS_ACK_REASON_REQUIRED;en-US;An acknowledgement reason is required to enable saving.

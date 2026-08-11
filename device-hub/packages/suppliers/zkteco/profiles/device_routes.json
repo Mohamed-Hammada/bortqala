@@ -1,0 +1,173 @@
+[
+  {
+    "model_pattern": "F18",
+    "generation_or_version": "firmware-dependent",
+    "routes": [
+      "ac-push",
+      "adms-ta-push",
+      "standalone-sdk"
+    ],
+    "preferred_route": "ac-push",
+    "fallback_routes": [
+      "adms-ta-push",
+      "standalone-sdk"
+    ],
+    "notes": "F18 is explicitly sold with AC PUSH, TA PUSH, or Standalone SDK variants; detect firmware before selecting.",
+    "official_documentation": [
+      "https://www.zkteco.com/en/PUSHSDK",
+      "https://zkteco.com/en/FSeries/F18",
+      "https://www.zkteco.com/en/ZKBio_WDMS/ZKBio_WDMS",
+      "https://www.zkteco.com/en/SDK"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "F22|F16|TF1700|MA300|MA500",
+    "generation_or_version": "legacy/access",
+    "routes": [
+      "ac-push",
+      "standalone-sdk",
+      "zk-pull"
+    ],
+    "preferred_route": "ac-push",
+    "fallback_routes": [
+      "standalone-sdk",
+      "zk-pull"
+    ],
+    "notes": "Exact firmware decides PUSH vs SDK; probe safe routes.",
+    "official_documentation": [
+      "https://www.zkteco.com/en/PUSHSDK",
+      "https://zkteco.com/en/FSeries/F18",
+      "https://www.zkteco.com/en/SDK"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "K20|K30|K40|K50|K60|LX50|UA.*|iClock.*|IN0.*",
+    "generation_or_version": "classic-attendance",
+    "routes": [
+      "zk-pull",
+      "adms-ta-push",
+      "standalone-sdk"
+    ],
+    "preferred_route": "zk-pull",
+    "fallback_routes": [
+      "adms-ta-push",
+      "standalone-sdk"
+    ],
+    "notes": "Classic attendance families; PUSH availability varies by firmware.",
+    "official_documentation": [
+      "https://www.zkteco.com/en/SDK",
+      "https://www.zkteco.com/en/PUSHSDK",
+      "https://www.zkteco.com/en/ZKBio_WDMS/ZKBio_WDMS",
+      "https://zkteco.com/en/FSeries/F18"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "MB.*|uFace.*|SpeedFace.*|SenseFace.*|ProFace.*|Horus.*|G4.*|G5.*",
+    "generation_or_version": "modern",
+    "routes": [
+      "adms-ta-push",
+      "ac-push",
+      "zkbio-time-api",
+      "zkbio-cvsecurity-api",
+      "android-lcdp"
+    ],
+    "preferred_route": "adms-ta-push",
+    "fallback_routes": [
+      "ac-push",
+      "zkbio-time-api",
+      "zkbio-cvsecurity-api",
+      "android-lcdp"
+    ],
+    "notes": "Modern terminals commonly use PUSH/platform routes; model firmware must confirm.",
+    "official_documentation": [
+      "https://www.zkteco.com/en/PUSHSDK",
+      "https://www.zkteco.com/en/ZKBio_WDMS/ZKBio_WDMS",
+      "https://zkteco.com/en/FSeries/F18",
+      "https://www.zkteco.com/en/ZKBioTime_API/ZKBioTime_API",
+      "https://www.zkteco.com/en/other_document",
+      "https://www.zkteco.com/en/ZKBio_CVSecurity_API/ZKBioCVSecurity_API",
+      "https://www.zkteco.com/en/ZKBio_CVSecurity/ZKBio_CVSecurity",
+      "https://www.zkteco.com/en/SDK"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "C3.*|inBio.*",
+    "generation_or_version": "controller",
+    "routes": [
+      "plcommpro-pull",
+      "zkbio-cvsecurity-api",
+      "zkbio-cvaccess-api"
+    ],
+    "preferred_route": "plcommpro-pull",
+    "fallback_routes": [
+      "zkbio-cvsecurity-api",
+      "zkbio-cvaccess-api"
+    ],
+    "notes": "Controller family route.",
+    "official_documentation": [
+      "https://www.zkteco.com/en/SDK",
+      "https://www.zkteco.com/en/ZKBio_CVSecurity_API/ZKBioCVSecurity_API",
+      "https://www.zkteco.com/en/ZKBio_CVSecurity/ZKBio_CVSecurity",
+      "https://www.zkteco.com/en/ZKBio_CVAccess/ZKBio_CVAccess"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "ZK9500|ZK6500|ZK8500|SLK20R",
+    "generation_or_version": "usb-scanner",
+    "routes": [
+      "zkfinger-sdk"
+    ],
+    "preferred_route": "zkfinger-sdk",
+    "fallback_routes": [],
+    "notes": "USB scanner route.",
+    "official_documentation": [
+      "https://www.zkteco.com/en/SDK"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "UNKNOWN",
+    "generation_or_version": "unknown",
+    "routes": [
+      "zk-pull",
+      "adms-ta-push",
+      "ac-push",
+      "standalone-sdk",
+      "plcommpro-pull"
+    ],
+    "preferred_route": "zk-pull",
+    "fallback_routes": [
+      "adms-ta-push",
+      "ac-push",
+      "standalone-sdk",
+      "plcommpro-pull"
+    ],
+    "notes": "Auto-detect using capabilities and safe probes.",
+    "official_documentation": [
+      "https://www.zkteco.com/en/SDK",
+      "https://www.zkteco.com/en/PUSHSDK",
+      "https://www.zkteco.com/en/ZKBio_WDMS/ZKBio_WDMS",
+      "https://zkteco.com/en/FSeries/F18"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  }
+]

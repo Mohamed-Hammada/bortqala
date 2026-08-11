@@ -8,3 +8,7 @@
 **EN:** `DayAnomaly` owns the Open, Deferred, Resolved, Reversed lifecycle. `DayAnomalyResultSnapshot` retains the previous attendance decision for safe audited reversal.
 
 **AR:** يدير `DayAnomaly` دورة مفتوحة ومؤجلة ومعالجة ومعكوسة، ويحفظ `DayAnomalyResultSnapshot` قرار الحضور السابق لتراجع آمن ومسجل.
+
+**EN:** `AttendancePolicy` defines effective hierarchy and thresholds. `AttendanceException` retains score, type, policy version/JSON snapshot, payroll impact, resolution, actor, and operation ID. Cross-midnight attribution stays in the Spring-free calculator.
+
+**AR:** يحدد `AttendancePolicy` ترتيب السياسات وحدودها حسب تاريخ السريان، ويحفظ `AttendanceException` الدرجة والنوع ونسخة السياسة وتأثير الرواتب والقرار والمنفذ ومعرف العملية. ويبقى إسناد الوردية العابرة لمنتصف الليل داخل الحاسبة المستقلة عن Spring.

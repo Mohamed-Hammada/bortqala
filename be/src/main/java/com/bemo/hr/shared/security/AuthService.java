@@ -1,5 +1,6 @@
 package com.bemo.hr.shared.security;
 
+import com.bemo.hr.access.application.AccessCatalogService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.i18n.TranslationService;
@@ -45,6 +46,9 @@ public class AuthService {
     private final WorkerCategoryRepository workerCategoryRepository;
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final TenantFeatureService tenantFeatureService;
+    private final DemoNoLoginProperties demoNoLoginProperties;
+    private final AccessCatalogService accessCatalogService;
+    private final com.bemo.hr.product.subscription.SubscriptionLimitService subscriptionLimitService;
 
     public AuthService(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, JwtProperties jwtProperties,
                        AppUserRepository appUserRepository, RoleRepository roleRepository,
@@ -57,7 +61,10 @@ public class AuthService {
                        TranslationService translationService,
                        WorkerCategoryRepository workerCategoryRepository,
                        AttendanceCategoryRepository attendanceCategoryRepository,
-                       TenantFeatureService tenantFeatureService) {
+                       TenantFeatureService tenantFeatureService,
+                       DemoNoLoginProperties demoNoLoginProperties,
+                       AccessCatalogService accessCatalogService,
+                       com.bemo.hr.product.subscription.SubscriptionLimitService subscriptionLimitService) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
         this.jwtProperties = jwtProperties;
@@ -75,10 +82,57 @@ public class AuthService {
         this.workerCategoryRepository = workerCategoryRepository;
         this.attendanceCategoryRepository = attendanceCategoryRepository;
         this.tenantFeatureService = tenantFeatureService;
+        this.demoNoLoginProperties = demoNoLoginProperties;
+        this.accessCatalogService = accessCatalogService;
+        this.subscriptionLimitService = subscriptionLimitService;
     }
 
     private static final String DUMMY_PASSWORD_HASH =
             "$2a$12$XnjwgsuR3b/qd7/gd5SNmeewo2ZHV5Hw1Citn8vLnTcT9OaPckNYG";
+
+    private static final String DEMO_SUPERADMIN_USERNAME = "demo_superadmin";
+
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public LoginResult demoSuperadminLogin(String deviceId) {
+        var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue(demoNoLoginProperties.appCode())
+                .orElseThrow(() -> new NotFoundException("The demo application is not configured.",
+                        "DEMO_NO_LOGIN_APP_NOT_CONFIGURED"));
+        String appId = app.getId();
+        TenantContext.set(appId);
+        try {
+            AppUser user = appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, DEMO_SUPERADMIN_USERNAME)
+                    .orElseGet(() -> createDemoSuperadmin(appId));
+            if (!user.isActive()) {
+                throw new NotFoundException("The demo superadmin link is invalid or has expired.",
+                        "DEMO_NO_LOGIN_LINK_INVALID");
+            }
+            Instant now = Instant.now();
+            Instant accessExpiresAt = issueAccessToken(app, user, now);
+            var refresh = refreshTokenService.issue(appId, user.getId(), deviceId);
+            auditService.record("DEMO_SUPERADMIN_LOGIN", "USER", user.getId(), user.getUsername(),
+                    "Entered the dashboard through the demo no-login link", null);
+            return new LoginResult(appId,
+                    new AuthApi.LoginResponse(accessToken(appId, user, now, accessExpiresAt), "Bearer", accessExpiresAt,
+                            false,
+                            new AuthApi.AppResponse(appId, app.getCode(), app.getName(),
+                                    app.isAdminDashboardCustomizationEnabled()), toResponse(user),
+                            toPreferenceResponse(preferenceFor(user), user, app)),
+                    refresh.rawValue(), refresh.expiresAt());
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    private AppUser createDemoSuperadmin(String appId) {
+        byte[] bytes = new byte[32];
+        new java.security.SecureRandom().nextBytes(bytes);
+        String randomPassword = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        var roles = requireRoles(Set.of(RoleCode.SUPER_ADMIN));
+        var created = new AppUser(appId, DEMO_SUPERADMIN_USERNAME, "Demo Super Admin",
+                passwordEncoder.encode(randomPassword), roles, Set.of(), true, true);
+        created.markPasswordChanged(Instant.now());
+        return appUserRepository.save(created);
+    }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public LoginResult login(AuthApi.LoginRequest request, String deviceId, String ip) {
@@ -156,7 +210,6 @@ public class AuthService {
             }
             Instant now = Instant.now();
             Instant accessExpiresAt = issueAccessToken(appId, user, now);
-            auditService.record("TOKEN_REFRESH", "USER", user.getId(), user.getUsername(), "Refreshed session token", null);
             return new RefreshResult(appId,
                     new AuthApi.RefreshResponse(accessToken(appId, user, now, accessExpiresAt), "Bearer", accessExpiresAt),
                     rotation.rawValue(), rotation.expiresAt());
@@ -176,6 +229,16 @@ public class AuthService {
         } finally {
             TenantContext.clear();
         }
+    }
+
+    @Transactional
+    public void revokeOwnSessions(String username) {
+        String appId = TenantContext.require();
+        var user = requireByUsername(appId, username);
+        user.bumpTokenVersion();
+        refreshTokenService.revokeAllForUser(appId, user.getId(), username);
+        auditService.record("SESSIONS_REVOKED_SELF", "USER", user.getId(), username,
+                "User signed out from all devices", null);
     }
 
     @Transactional
@@ -230,6 +293,7 @@ public class AuthService {
                 new AuthApi.TenantInfo(app.getId(), app.getCode(), app.getName()),
                 user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
                 user.getRoles().stream().map(role -> role.getCode().name()).sorted().collect(Collectors.toUnmodifiableSet()),
+                user.getAllowedMenus(), menuAccessMode(user),
                 user.isCanViewSalary(), user.getCategoryId(),
                 dashboardLayoutAllowed(user, app), user.isActive(),
                 new AuthApi.SessionInfo(sessionExpiresAt, app.getSessionTimeoutMinutes(), app.isSessionTimeoutEnabled()),
@@ -274,14 +338,23 @@ public class AuthService {
     }
 
     public List<AuthApi.UserCategoryResponse> listCategories() {
-        var categories = new java.util.ArrayList<AuthApi.UserCategoryResponse>();
-        attendanceCategoryRepository.findAllByOrderByNameAsc().stream().filter(c -> c.isActive())
-                .map(c -> new AuthApi.UserCategoryResponse(c.getId(), c.getCode(), c.getName(), "EMPLOYEE"))
-                .forEach(categories::add);
+        var employeeScopes = java.util.List.of(com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE,
+                com.bemo.hr.employee.domain.CategoryScope.BOTH);
+        var workerScopes = java.util.List.of(com.bemo.hr.employee.domain.CategoryScope.WORKER,
+                com.bemo.hr.employee.domain.CategoryScope.BOTH);
+        var canonicalById = new java.util.HashMap<String, com.bemo.hr.employee.domain.AttendanceCategory>();
+        attendanceCategoryRepository.findByScopeIn(employeeScopes).stream()
+                .filter(com.bemo.hr.employee.domain.AttendanceCategory::isActive)
+                .forEach(c -> canonicalById.putIfAbsent(c.getId(), c));
         workerCategoryRepository.findByStatus("ACTIVE").stream()
-                .map(c -> new AuthApi.UserCategoryResponse(c.getId(), c.getCode(), c.getName(), "WORKER"))
-                .forEach(categories::add);
-        return categories.stream().sorted(java.util.Comparator.comparing(AuthApi.UserCategoryResponse::name)).toList();
+                .map(com.bemo.hr.workforce.WorkerCategory::getCategoryId)
+                .filter(java.util.Objects::nonNull)
+                .forEach(categoryId -> attendanceCategoryRepository.findById(categoryId)
+                        .filter(c -> c.isActive() && workerScopes.contains(c.getScope()))
+                        .ifPresent(c -> canonicalById.putIfAbsent(c.getId(), c)));
+        return canonicalById.values().stream()
+                .map(c -> new AuthApi.UserCategoryResponse(c.getId(), c.getCode(), c.getName(), c.getScope().name()))
+                .sorted(java.util.Comparator.comparing(AuthApi.UserCategoryResponse::name)).toList();
     }
 
     public AuthApi.AppSettingsResponse currentAppSettings() {
@@ -301,6 +374,7 @@ public class AuthService {
         app.updateSettings(request.sessionTimeoutMinutes(), request.sessionTimeoutEnabled(), request.showReportPresets(), minPass);
         app.updateAttendanceAnomalyThreshold(request.attendanceAnomalyThresholdPercent());
         app.updateProcurementNumbering(request.automaticProcurementNumbering());
+        app.updateDocumentNumbering(request.automaticDocumentNumbering());
         if (hasRole(actor, RoleCode.SUPER_ADMIN)) {
             app.updateDashboardPolicy(request.adminDashboardCustomizationEnabled());
         }
@@ -324,9 +398,16 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthApi.UserResponse create(AuthApi.UserUpsertRequest request) {
+    public AuthApi.UserResponse create(AuthApi.UserUpsertRequest request, String currentUsername) {
         String appId = TenantContext.require();
+        subscriptionLimitService.assertCanAddUser(appUserRepository.countByAppId(appId));
         validate(request, appId, null, true);
+        var actor = requireByUsername(appId, currentUsername);
+        var actorRoles = actor.getRoles().stream().map(Role::getCode).map(Enum::name)
+                .collect(Collectors.toUnmodifiableSet());
+        var menuCodes = request.allowedMenus() == null ? java.util.List.<String>of() : request.allowedMenus().stream().toList();
+        accessCatalogService.validateAssignmentOrThrow(actorRoles, actor.getId(), request.roles().stream().map(Enum::name).toList(),
+                menuCodes, null, null, request.accessChangeReason());
         var user = new AppUser(appId, request.username(), request.displayName(), passwordEncoder.encode(request.password()),
                 requireRoles(request.roles()), request.allowedMenus(), request.canViewSalary(),
                 request.dashboardCustomizationEnabled());
@@ -334,14 +415,17 @@ public class AuthService {
         validateCategory(request.categoryId());
         user.assignCategory(request.categoryId());
         appUserRepository.save(user);
-        auditService.record("USER_CREATE", "USER", user.getId(), request.username(), "Created user " + user.getDisplayName(), null);
+        auditService.record("USER_CREATE", "USER", user.getId(), currentUsername,
+                "Created user " + user.getDisplayName() + " roles=" + request.roles()
+                        + (request.accessChangeReason() == null || request.accessChangeReason().isBlank()
+                        ? "" : " accessChangeReason=" + request.accessChangeReason().strip()), null);
         return toResponse(user);
     }
 
     @Transactional
     public AuthApi.UserResponse update(String id, AuthApi.UserUpsertRequest request, String currentUsername) {
         String appId = TenantContext.require();
-        var user = appUserRepository.findById(id).filter(item -> item.getAppId().equals(appId))
+        var user = appUserRepository.findByAppIdAndId(appId, id)
                 .orElseThrow(() -> new NotFoundException("User not found.", "AUTH_USER_NOT_FOUND"));
         if (request.version() == null || request.version() != user.getVersion()) {
             throw new BusinessRuleException("This user changed since it was loaded. Refresh and try again.",
@@ -377,6 +461,15 @@ public class AuthService {
             throw new BusinessRuleException("You cannot deactivate your own account.",
                     "AUTH_SELF_DEACTIVATE_FORBIDDEN", HttpStatus.CONFLICT);
         }
+        var previousRoles = user.getRoles().stream().map(Role::getCode).map(Enum::name)
+                .collect(Collectors.toUnmodifiableSet());
+        var actorRoles = actor.getRoles().stream().map(Role::getCode).map(Enum::name)
+                .collect(Collectors.toUnmodifiableSet());
+        var menuCodes = request.allowedMenus() == null ? java.util.List.<String>of() : request.allowedMenus().stream().toList();
+        accessCatalogService.validateAssignmentOrThrow(actorRoles, actor.getId(),
+                request.roles().stream().map(Enum::name).toList(), menuCodes, id, previousRoles,
+                request.accessChangeReason());
+
         String passwordHash = request.password() == null || request.password().isBlank()
                 ? null : passwordEncoder.encode(request.password());
         user.update(request.username(), request.displayName(), passwordHash, request.active(),
@@ -389,8 +482,22 @@ public class AuthService {
         }
         validateCategory(request.categoryId());
         user.assignCategory(request.categoryId());
-        auditService.record("USER_UPDATE", "USER", user.getId(), currentUsername, "Updated user " + user.getUsername() + " active=" + user.isActive(), null);
+        auditService.record("USER_UPDATE", "USER", user.getId(), currentUsername,
+                accessChangeDetails(user, request, previousRoles), null);
         return toResponse(user);
+    }
+
+    private String accessChangeDetails(AppUser user, AuthApi.UserUpsertRequest request, Set<String> previousRoles) {
+        var newRoles = request.roles().stream().map(Enum::name).collect(Collectors.toUnmodifiableSet());
+        var added = new java.util.TreeSet<>(newRoles);
+        added.removeAll(previousRoles);
+        var removed = new java.util.TreeSet<>(previousRoles);
+        removed.removeAll(newRoles);
+        return "Updated user " + user.getUsername() + " active=" + user.isActive()
+                + " previousRoles=" + previousRoles + " newRoles=" + newRoles
+                + " added=" + added + " removed=" + removed
+                + (request.accessChangeReason() == null || request.accessChangeReason().isBlank()
+                ? "" : " accessChangeReason=" + request.accessChangeReason().strip());
     }
 
     @Transactional
@@ -405,7 +512,7 @@ public class AuthService {
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(app.getId(), username).orElseGet(() -> {
             var roles = requireRoles(roleCodes);
             var created = appUserRepository.save(new AppUser(app.getId(), username, displayName,
-                    passwordEncoder.encode(password), roles, Set.of("dashboard","categories","employees","imports","parties","reports","operations","payroll","users","settings","workforce-dashboard","workforce-contractors","workforce-workers","workforce-categories","workforce-requests","workforce-attendance","workforce-settlements","workforce-advances","workforce-accounts","workforce-reports"), true, true));
+                    passwordEncoder.encode(password), roles, Set.of("dashboard","categories","employees","imports","parties","reports","operations","payroll","users","settings","workforce-dashboard","workforce-contractors","workforce-workers","workforce-categories","workforce-requests","workforce-attendance","workforce-settlements","workforce-advances","workforce-accounts","workforce-reports","approvals-my-tasks","approvals-workflows","budgets"), true, true));
             created.requirePasswordChangeOnNextLogin();
             return created;
         });
@@ -535,8 +642,12 @@ public class AuthService {
         var activeFeatures = tenantFeatureService.getAllEnabled(user.getAppId());
         return new AuthApi.UserResponse(user.getId(), user.getUsername(), user.getDisplayName(),
                 user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
-                user.getAllowedMenus(), user.isCanViewSalary(), user.getCategoryId(),
+                user.getAllowedMenus(), menuAccessMode(user), user.isCanViewSalary(), user.getCategoryId(),
                 user.isDashboardCustomizationEnabled(), user.isActive(), user.getVersion(), activeFeatures);
+    }
+
+    private String menuAccessMode(AppUser user) {
+        return user.isMenuAccessAll() ? "ALL" : "SELECTED";
     }
 
     private boolean hasRole(AppUser user, RoleCode roleCode) {
@@ -545,8 +656,7 @@ public class AuthService {
 
     private void validateCategory(String categoryId) {
         if (categoryId == null || categoryId.isBlank()) return;
-        boolean exists = attendanceCategoryRepository.findById(categoryId).filter(c -> c.isActive()).isPresent()
-                || workerCategoryRepository.findById(categoryId).filter(c -> "ACTIVE".equals(c.getStatus())).isPresent();
+        boolean exists = attendanceCategoryRepository.findById(categoryId).filter(c -> c.isActive()).isPresent();
         if (!exists) throw new BusinessRuleException("Select an active category.",
                 "AUTH_ACTIVE_CATEGORY_REQUIRED", HttpStatus.CONFLICT);
     }
@@ -584,6 +694,7 @@ public class AuthService {
                 app.isShowReportPresets(),
                 app.getAttendanceAnomalyThresholdPercent(),
                 app.isAutomaticProcurementNumbering(),
+                app.isAutomaticDocumentNumbering(),
                 app.isAdminDashboardCustomizationEnabled(),
                 app.getMinPasswordLength(),
                 app.isRequireUppercase(),

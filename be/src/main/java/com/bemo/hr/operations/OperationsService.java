@@ -35,9 +35,10 @@ public class OperationsService {
     private final UnitConversionRepository unitConversionRepository;
     private final OperationsExcelExporter operationsExcelExporter;
     private final com.bemo.hr.audit.application.AuditService auditService;
+    private final InventoryValuationService inventoryValuationService;
 
     public byte[] export(com.bemo.hr.reporting.application.ExcelExportOptions options) {
-        return operationsExcelExporter.export(snapshot(), options);
+        return operationsExcelExporter.export(snapshot(), inventoryValuationService.report(), options);
     }
 
     public long countStockMovements() {
@@ -93,6 +94,9 @@ public class OperationsService {
                     party == null ? null : party.getName(), movement.getOperationType(), movement.getDocumentType(),
                     movement.getQuantityDelta(),
                     movement.getLossPercentage(), movement.getReferenceCode(), movement.getNote(), movement.getReason(),
+                    movement.getPurchaseOrderNo(), movement.getReceiptNo(), movement.getDeliveryNoteNo(),
+                    movement.getInvoiceNo(), movement.getVoucherNo(), movement.getExternalRef(), movement.getWarehouse(),
+                    movement.getAttachmentName(), movement.getAttachmentContentType(), movement.getAttachmentSize(),
                     movement.getOccurredAt(),
                     movement.getCreatedBy(), movement.getCreatedAt());
         }).toList();
@@ -202,6 +206,7 @@ public class OperationsService {
                 request.itemId(), null, "ADJUSTMENT", request.quantityDelta(),
                 null, request.referenceCode(), null, request.occurredAt(), actor));
         sm.assignDocument("ADJUSTMENT", request.reason());
+        inventoryValuationService.valueMovement(sm, null, actor);
         auditService.record("STOCK_ADJUSTMENT", "STOCK_ITEM", request.itemId(), actor,
                 "Stock adjustment qty: " + request.quantityDelta() + " reason: " + request.reason(), null);
         return snapshot();
@@ -241,17 +246,25 @@ public class OperationsService {
                 || request.lossPercentage().compareTo(BigDecimal.valueOf(100)) > 0)) {
             throw new BusinessRuleException("Loss percentage must be between 0 and 100.", "OPS_MOVEMENT_LOSS_PERCENT_RANGE", HttpStatus.CONFLICT);
         }
+        String op = request.operationType() == null ? "" : request.operationType().toUpperCase();
+        validateDocumentReferences(request, op);
         if (request.quantityDelta().signum() != 0) {
             if (request.itemId() == null || request.itemId().isBlank()) throw new BusinessRuleException("An inventory item is required for quantity movement.", "OPS_MOVEMENT_ITEM_REQUIRED", HttpStatus.CONFLICT);
             requireItem(request.itemId());
             BigDecimal qty = request.quantityDelta().abs();
-            String op = request.operationType() == null ? "" : request.operationType().toUpperCase();
             if (op.equals("PROCESSING_INTAKE") || op.equals("PROCESSING_DELIVERY")
                 || op.equals("EXPORT_SALE") || op.equals("SORTING_SALE") || op.equals("DISPOSAL")) {
                 qty = qty.negate();
             }
             var sm = stockMovementRepository.save(new StockMovement(request.itemId(), normalizeId(request.partyId()), request.operationType(),
                     qty, request.lossPercentage(), request.referenceCode(), request.note(), request.occurredAt(), actor));
+            sm.assignDocument(request.documentType() != null && !request.documentType().isBlank()
+                    ? request.documentType().strip().toUpperCase()
+                    : defaultDocumentType(op), request.reason());
+            sm.assignReferences(request.purchaseOrderNo(), request.receiptNo(), request.deliveryNoteNo(), request.invoiceNo(),
+                    request.voucherNo(), request.externalRef(), request.warehouse(), request.attachmentName(),
+                    request.attachmentContentType(), request.attachmentSize());
+            inventoryValuationService.valueMovement(sm, request.unitCost(), actor);
             auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", request.itemId(), actor, "Recorded stock movement " + op + " qty: " + qty, null);
         }
         if (request.amountDelta().signum() != 0) {
@@ -267,7 +280,7 @@ public class OperationsService {
 
     @Transactional
     public void recordGoodsReceipt(String itemId, String supplierId, BigDecimal acceptedQuantity,
-                                   String grnNumber, String note, Instant occurredAt, String actor) {
+                                   BigDecimal unitCost, String grnNumber, String note, Instant occurredAt, String actor) {
         requireItem(itemId);
         if (acceptedQuantity == null || acceptedQuantity.signum() <= 0) {
             throw new BusinessRuleException("Accepted goods-receipt quantity must be positive.", "OPS_GRN_ACCEPTED_POSITIVE", HttpStatus.CONFLICT);
@@ -275,8 +288,60 @@ public class OperationsService {
         var movement = stockMovementRepository.save(new StockMovement(itemId, normalizeId(supplierId),
                 "PURCHASE_RECEIPT", acceptedQuantity, null, grnNumber, note, occurredAt, actor));
         movement.assignDocument("GOODS_RECEIPT", "Accepted quantity posted from supplier receipt");
+        inventoryValuationService.valueMovement(movement, unitCost, actor);
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Goods receipt " + grnNumber + " accepted qty: " + acceptedQuantity, null);
+    }
+
+    @Transactional
+    public void recordSupplierReturn(String itemId, String supplierId, BigDecimal returnQuantity,
+                                     BigDecimal unitCost, String returnNumber, String note, Instant occurredAt, String actor) {
+        requireItem(itemId);
+        if (returnQuantity == null || returnQuantity.signum() <= 0) {
+            throw new BusinessRuleException("Supplier return quantity must be positive.", "OPS_RETURN_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+        }
+        BigDecimal currentBalance = stockMovementRepository.balance(itemId);
+        if (currentBalance.subtract(returnQuantity).signum() < 0) {
+            throw new BusinessRuleException("Supplier return cannot create a negative stock balance.", "OPS_RETURN_NEGATIVE_BALANCE", HttpStatus.CONFLICT);
+        }
+        var movement = stockMovementRepository.save(new StockMovement(itemId, normalizeId(supplierId),
+                "SUPPLIER_RETURN", returnQuantity.negate(), null, returnNumber, note, occurredAt, actor));
+        movement.assignDocument("SUPPLIER_RETURN", "Returned stock to supplier");
+        inventoryValuationService.valueMovement(movement, unitCost, actor);
+        auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
+                "Supplier return " + returnNumber + " return qty: " + returnQuantity, null);
+    }
+
+    @Transactional
+    public void recordProductionIssue(String itemId, BigDecimal quantity, String orderNumber, String note, Instant occurredAt, String actor) {
+        requireItem(itemId);
+        if (quantity == null || quantity.signum() <= 0) {
+            throw new BusinessRuleException("Production issue quantity must be positive.", "OPS_PROD_ISSUE_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+        }
+        BigDecimal currentBalance = stockMovementRepository.balance(itemId);
+        if (currentBalance.subtract(quantity).signum() < 0) {
+            throw new BusinessRuleException("Production issue cannot exceed available inventory balance.", "OPS_PROD_ISSUE_NEGATIVE_BALANCE", HttpStatus.CONFLICT);
+        }
+        var movement = stockMovementRepository.save(new StockMovement(itemId, null,
+                "PRODUCTION_ISSUE", quantity.negate(), null, orderNumber, note, occurredAt, actor));
+        movement.assignDocument("PRODUCTION_ISSUE", "Issued raw materials for work order");
+        inventoryValuationService.valueMovement(movement, null, actor);
+        auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
+                "Production issue " + orderNumber + " qty: " + quantity, null);
+    }
+
+    @Transactional
+    public void recordProductionReceipt(String itemId, BigDecimal quantity, BigDecimal unitCost, String orderNumber, String note, Instant occurredAt, String actor) {
+        requireItem(itemId);
+        if (quantity == null || quantity.signum() <= 0) {
+            throw new BusinessRuleException("Production receipt quantity must be positive.", "OPS_PROD_RECEIPT_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+        }
+        var movement = stockMovementRepository.save(new StockMovement(itemId, null,
+                "PRODUCTION_RECEIPT", quantity, null, orderNumber, note, occurredAt, actor));
+        movement.assignDocument("PRODUCTION_RECEIPT", "Finished goods receipt from work order");
+        inventoryValuationService.valueMovement(movement, unitCost, actor);
+        auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
+                "Production receipt " + orderNumber + " qty: " + quantity, null);
     }
 
     @Transactional
@@ -356,5 +421,66 @@ public class OperationsService {
     }
     private String getCurrentAppId() {
         return TenantContext.require();
+    }
+
+    private static String defaultDocumentType(String op) {
+        return switch (op) {
+            case "SUPPLY_RECEIPT", "PROCESSING_INTAKE" -> "GOODS_RECEIPT";
+            case "PROCESSING_DELIVERY", "EXPORT_SALE", "SORTING_SALE" -> "DELIVERY_NOTE";
+            case "ADJUSTMENT" -> "ADJUSTMENT";
+            case "PAYMENT" -> "SUPPLIER_PAYMENT";
+            default -> null;
+        };
+    }
+
+    private void validateDocumentReferences(OperationsApi.TransactionRequest request, String op) {
+        String partyId = normalizeId(request.partyId());
+        switch (op) {
+            case "SUPPLY_RECEIPT", "PROCESSING_INTAKE" -> {
+                if (isBlank(request.receiptNo())) {
+                    throw new BusinessRuleException("A receipt document number is required for a goods receipt movement.",
+                            "OPS_MOVEMENT_RECEIPT_REQUIRED", HttpStatus.CONFLICT);
+                }
+                if (op.equals("SUPPLY_RECEIPT") && isBlank(request.purchaseOrderNo())) {
+                    throw new BusinessRuleException("A purchase-order number is required for a supplier receipt movement.",
+                            "OPS_MOVEMENT_PURCHASE_ORDER_REQUIRED", HttpStatus.CONFLICT);
+                }
+            }
+            case "PROCESSING_DELIVERY", "EXPORT_SALE", "SORTING_SALE" -> {
+                if (isBlank(request.deliveryNoteNo())) {
+                    throw new BusinessRuleException("A delivery-note number is required for a sale/delivery movement.",
+                            "OPS_MOVEMENT_DELIVERY_NOTE_REQUIRED", HttpStatus.CONFLICT);
+                }
+            }
+            case "ADJUSTMENT" -> {
+                if (isBlank(request.voucherNo())) {
+                    throw new BusinessRuleException("An adjustment voucher number is required for an adjustment movement.",
+                            "OPS_MOVEMENT_VOUCHER_REQUIRED", HttpStatus.CONFLICT);
+                }
+            }
+            default -> { /* PAYMENT and other financial-only movements carry optional references only. */ }
+        }
+        if (!isBlank(request.invoiceNo())) {
+            if (partyId == null) {
+                throw new BusinessRuleException("A business party is required when an invoice number is provided.",
+                        "OPS_MOVEMENT_INVOICE_PARTY_REQUIRED", HttpStatus.CONFLICT);
+            }
+            if (stockMovementRepository.existsByPartyIdAndInvoiceNoIgnoreCase(partyId, request.invoiceNo().strip())) {
+                throw new BusinessRuleException("Invoice number " + request.invoiceNo().strip() + " is already recorded for this supplier.",
+                        "OPS_MOVEMENT_INVOICE_DUPLICATE", HttpStatus.CONFLICT);
+            }
+        }
+    }
+
+    public BigDecimal stockBalance(String itemId) {
+        return stockMovementRepository.balance(itemId);
+    }
+
+    public BigDecimal latestUnitCost(String itemId) {
+        return inventoryValuationService.getItemUnitCost(itemId);
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }

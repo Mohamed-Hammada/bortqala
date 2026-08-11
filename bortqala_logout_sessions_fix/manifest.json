@@ -1,0 +1,14 @@
+{
+  "repo": "Mohamed-Hammada/bortqala",
+  "branch": "fm_bemo_consolidated",
+  "base_commit": "da9374aaf5a94a09c5ef3d97a2f03241218fbf8e",
+  "files_modified": [
+    "fe/src/app/core/auth/auth.service.ts",
+    "fe/src/app/core/shell/app-shell.component.ts",
+    "fe/src/app/core/shell/app-shell.component.html",
+    "fe/src/app/core/i18n.service.ts",
+    "be/src/main/java/com/bemo/hr/shared/security/AuthController.java",
+    "be/src/main/java/com/bemo/hr/shared/security/AuthService.java"
+  ],
+  "files_deleted": []
+}

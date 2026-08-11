@@ -103,10 +103,8 @@ public class AppUser {
         this.roles.addAll(roles);
         this.canViewSalary = canViewSalary == null ? true : canViewSalary;
         this.dashboardCustomizationEnabled = dashboardCustomizationEnabled == null || dashboardCustomizationEnabled;
-        if (allowedMenus != null && !allowedMenus.isEmpty()) {
+        if (allowedMenus != null) {
             this.allowedMenus = String.join(",", allowedMenus);
-        } else {
-            this.allowedMenus = "dashboard,employees,categories,reports,imports,parties,operations,payroll,users,settings,workforce-dashboard,workforce-contractors,workforce-workers,workforce-categories,workforce-requests,workforce-attendance,workforce-settlements,workforce-advances,workforce-accounts,workforce-reports";
         }
     }
 
@@ -186,9 +184,13 @@ public class AppUser {
     public Set<Role> getRoles() { return Set.copyOf(roles); }
     public Set<String> getAllowedMenus() {
         if (allowedMenus == null || allowedMenus.isBlank()) {
-            return Set.of("dashboard","employees","categories","reports","imports","parties","operations","payroll","users","settings","workforce-dashboard","workforce-contractors","workforce-workers","workforce-categories","workforce-requests","workforce-attendance","workforce-settlements","workforce-advances","workforce-accounts","workforce-reports");
+            return Set.of();
         }
         return Set.of(allowedMenus.split(","));
     }
     public long getVersion() { return version; }
+    public boolean isMenuAccessAll() {
+        return roles.stream().anyMatch(role -> role.getCode() == RoleCode.SUPER_ADMIN
+                || role.getCode() == RoleCode.ADMIN);
+    }
 }

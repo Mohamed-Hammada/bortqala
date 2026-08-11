@@ -47,13 +47,13 @@ export class EmployeesStore {
       this.loading.set(false);
     }
   }
-  async deactivate(id: string) {
-    try {
-      await firstValueFrom(this.http.delete<void>(`/api/v1/employees/${id}`));
-      await this.load();
-    } catch (e) {
-      this.error.set(apiErrorMessage(e, this.i18n));
-    }
+  async deactivate(id: string): Promise<void> {
+    await firstValueFrom(this.http.delete<void>(`/api/v1/employees/${id}`));
+    await this.load();
+  }
+  async reactivate(id: string, payload: EmployeePayload): Promise<void> {
+    await firstValueFrom(this.http.put<Employee>(`/api/v1/employees/${id}`, payload));
+    await this.load();
   }
   async export() {
     try {

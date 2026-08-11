@@ -14,6 +14,7 @@ public class TreasuryApi {
             String iban,
             String swiftCode,
             String accountId,
+            String currencyCode,
             boolean active,
             long createdAt,
             long updatedAt
@@ -25,6 +26,7 @@ public class TreasuryApi {
             String iban,
             String swiftCode,
             String accountId,
+            String currencyCode,
             boolean active
     ) {}
 
@@ -56,6 +58,12 @@ public class TreasuryApi {
             String symbol,
             boolean isBase,
             BigDecimal exchangeRate,
+            BigDecimal referenceExchangeRate,
+            String referenceRateProvider,
+            String referenceRateBaseCode,
+            Long referenceRateDate,
+            Long referenceRateFetchedAt,
+            Boolean referenceRateSupported,
             boolean active,
             long createdAt,
             long updatedAt

@@ -14,6 +14,9 @@ import {
   BulkDecisionResponse,
   DayAnomaly,
   DayAnomalyDecision,
+  AttendanceExceptionView,
+  AttendanceExceptionResolution,
+  AttendanceExceptionBulkPreview,
 } from './reports.models';
 import { ReportsStore } from './reports.store';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
@@ -73,9 +76,11 @@ export class ReportReviewPage {
   readonly promptState = signal<{
     titleKey: string;
     defaultValue: string;
+    error: string | null;
     onConfirm: (value: string) => void;
     onCancel: () => void;
   } | null>(null);
+  readonly savingRowId = signal<string | null>(null);
 
   readonly detectingAnomalies = signal(false);
   readonly anomalySavingId = signal<string | null>(null);
@@ -83,6 +88,19 @@ export class ReportReviewPage {
   readonly dayAnomalies = computed(() => this.store.details()?.dayAnomalies ?? []);
   readonly openDayAnomalies = computed(() => this.dayAnomalies().filter(item => item.status === 'OPEN'));
   readonly dayAnomalyHistory = computed(() => this.dayAnomalies().filter(item => item.status !== 'OPEN'));
+  readonly exceptionFilter = signal<'ALL' | 'OPEN' | 'CRITICAL'>('OPEN');
+  readonly selectedExceptionIds = signal<string[]>([]);
+  readonly exceptionResolution = signal<AttendanceExceptionResolution>('ACCEPT');
+  readonly exceptionReason = signal('');
+  readonly exceptionPreview = signal<AttendanceExceptionBulkPreview | null>(null);
+  readonly resolvingExceptions = signal(false);
+  readonly attendanceExceptions = computed(() => {
+    const items = this.store.exceptionWorkbench()?.exceptions ?? [];
+    if (this.exceptionFilter() === 'OPEN') return items.filter(item => item.status === 'OPEN');
+    if (this.exceptionFilter() === 'CRITICAL') return items.filter(item => item.status === 'OPEN' && item.payrollBlocking);
+    return items;
+  });
+  readonly exceptionSummary = computed(() => this.store.exceptionWorkbench()?.summary ?? { total: 0, open: 0, critical: 0, resolved: 0, affectedEmployees: 0 });
 
   // Filtered base data — all counts come from this to ensure consistency
   readonly filteredResults = computed(() => {
@@ -125,7 +143,8 @@ export class ReportReviewPage {
   readonly reviewedCount = computed(() => Math.max(0, this.totalCount() - this.unresolvedCount()));
   readonly reviewedPercent = computed(() => (this.totalCount() > 0 ? Math.round((this.reviewedCount() / this.totalCount()) * 100) : 0));
   readonly canReview = computed(() => this.auth.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER']));
-  readonly canApprove = computed(() => this.totalCount() > 0 && this.unresolvedCount() === 0 && this.auth.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER']));
+  readonly canApprove = computed(() => this.totalCount() > 0 && this.unresolvedCount() === 0
+    && this.exceptionSummary().critical === 0 && this.auth.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER']));
   readonly rows = computed(() => {
     const f = this.filter();
     const all = this.filteredResults();
@@ -150,8 +169,8 @@ export class ReportReviewPage {
     this.detectingAnomalies.set(true);
     const success = await this.store.detectDayAnomalies(this.id);
     this.detectingAnomalies.set(false);
-    if (success) this.notification.success(this.i18n.t('review.anomalyDetectSuccess', {}, 'اكتمل فحص الأيام غير الطبيعية وفق النسبة المضبوطة.'));
-    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyDetectFailed', {}, 'تعذر فحص شذوذ البصمة.'));
+    if (success) this.notification.success(this.i18n.t('review.anomalyDetectSuccess', {}));
+    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyDetectFailed', {}));
   }
 
   previewAnomalyDecision(anomaly: DayAnomaly, decision: DayAnomalyDecision): void {
@@ -166,7 +185,7 @@ export class ReportReviewPage {
     const preview = this.anomalyPreview();
     if (!preview) return;
     if (!preview.reason.trim()) {
-      this.notification.warning(this.i18n.t('review.anomalyReasonRequired', {}, 'اكتب سبب القرار قبل التنفيذ.'));
+      this.notification.warning(this.i18n.t('review.anomalyReasonRequired', {}));
       return;
     }
     this.anomalySavingId.set(preview.anomaly.id);
@@ -177,25 +196,25 @@ export class ReportReviewPage {
     });
     this.anomalySavingId.set(null);
     if (response) {
-      this.notification.success(this.i18n.t('review.anomalyAppliedCount', { applied: response.appliedCount, skipped: response.skippedCount }, 'تم تطبيق القرار على سجل، وتجاوز آخر.'));
+      this.notification.success(this.i18n.t('review.anomalyAppliedCount', { applied: response.appliedCount, skipped: response.skippedCount }));
       this.anomalyPreview.set(null);
-    } else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyApplyFailed', {}, 'تعذر تنفيذ قرار الشذوذ.'));
+    } else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyApplyFailed', {}));
   }
 
   async reverseDayAnomaly(anomaly: DayAnomaly): Promise<void> {
     this.anomalySavingId.set(anomaly.id);
     const response = await this.store.reverseDayAnomaly(this.id, anomaly.id);
     this.anomalySavingId.set(null);
-    if (response) this.notification.success(this.i18n.t('review.anomalyReversedCount', { applied: response.appliedCount }, 'تم إنشاء القيد العكسي واستعادة سجل.'));
-    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyReverseFailed', {}, 'تعذر التراجع عن القرار.'));
+    if (response) this.notification.success(this.i18n.t('review.anomalyReversedCount', { applied: response.appliedCount }));
+    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyReverseFailed', {}));
   }
 
   async reopenDayAnomaly(anomaly: DayAnomaly): Promise<void> {
     this.anomalySavingId.set(anomaly.id);
     const success = await this.store.reopenDayAnomaly(this.id, anomaly.id);
     this.anomalySavingId.set(null);
-    if (success) this.notification.success(this.i18n.t('review.anomalyReopened', {}, 'أعيد فتح حالة الشذوذ لاتخاذ قرار جديد.'));
-    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyReopenFailed', {}, 'تعذر إعادة فتح الحالة.'));
+    if (success) this.notification.success(this.i18n.t('review.anomalyReopened', {}));
+    else this.notification.error(this.store.error() ?? this.i18n.t('review.anomalyReopenFailed', {}));
   }
 
   anomalyDecisionLabel(decision: DayAnomalyDecision | null): string {
@@ -207,6 +226,30 @@ export class ReportReviewPage {
   anomalyHours(minutes: number): string {
     return (minutes / 60).toFixed(1);
   }
+
+  exceptionSelected(id: string): boolean { return this.selectedExceptionIds().includes(id); }
+  toggleException(id: string): void { this.selectedExceptionIds.update(ids => ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id]); }
+  selectVisibleExceptions(): void { this.selectedExceptionIds.set(this.attendanceExceptions().filter(x => x.status === 'OPEN').map(x => x.id)); }
+  exceptionTypeLabel(item: AttendanceExceptionView): string { return this.i18n.t(`attendance.exception.${({ NO_PUNCH: 'noPunch', SINGLE_PUNCH: 'singlePunch', MISSING_SCHEDULE: 'missingSchedule', LATE: 'late', EARLY_LEAVE: 'earlyLeave', EXCESS_SHIFT: 'excessShift' } as Record<string, string>)[item.exceptionType]}`); }
+  async detectAttendanceExceptions(): Promise<void> {
+    const ok = await this.store.detectAttendanceExceptions(this.id);
+    ok ? this.notification.success(this.i18n.t('review.exceptionDetectionComplete')) : this.notification.error(this.store.error() ?? this.i18n.t('review.exceptionActionFailed'));
+  }
+  async previewExceptionBulk(): Promise<void> {
+    if (!this.selectedExceptionIds().length || !this.exceptionReason().trim()) { this.notification.warning(this.i18n.t('review.exceptionSelectionReasonRequired')); return; }
+    this.pendingExceptionOperationId = crypto.randomUUID();
+    const preview = await this.store.previewAttendanceExceptions(this.id, { exceptionIds: this.selectedExceptionIds(), resolution: this.exceptionResolution(), reason: this.exceptionReason().trim(), operationId: this.pendingExceptionOperationId });
+    this.exceptionPreview.set(preview);
+  }
+  async applyExceptionBulk(): Promise<void> {
+    const preview = this.exceptionPreview(); if (!preview) return;
+    this.resolvingExceptions.set(true);
+    const response = await this.store.resolveAttendanceExceptions(this.id, { exceptionIds: this.selectedExceptionIds(), resolution: this.exceptionResolution(), reason: this.exceptionReason().trim(), operationId: this.pendingExceptionOperationId });
+    this.resolvingExceptions.set(false);
+    if (response) { this.notification.success(this.i18n.t('review.exceptionApplied', { count: response.applied })); this.exceptionPreview.set(null); this.selectedExceptionIds.set([]); this.exceptionReason.set(''); }
+    else this.notification.error(this.store.error() ?? this.i18n.t('review.exceptionActionFailed'));
+  }
+  private pendingExceptionOperationId = '';
 
   toggleFilterPanel() {
     this.showFilterPanel.update(v => !v);
@@ -270,11 +313,11 @@ export class ReportReviewPage {
       : decision === 'DEDUCT'
         ? this.i18n.t('review.decisionDeduct')
         : decision === 'ABSENCE'
-          ? this.i18n.t('review.absence', undefined, 'غياب')
+          ? this.i18n.t('review.absence', undefined)
           : decision === 'OFFICIAL_HOLIDAY'
-            ? this.i18n.t('review.officialHoliday', undefined, 'إجازة رسمية')
+            ? this.i18n.t('review.officialHoliday', undefined)
             : decision === 'INDIVIDUAL_REVIEW'
-              ? this.i18n.t('review.individualReview', undefined, 'مراجعة فردية')
+              ? this.i18n.t('review.individualReview', undefined)
               : this.i18n.t('review.approvedLeave');
 
     this.bulkPreview.set({
@@ -364,11 +407,11 @@ export class ReportReviewPage {
       case 'APPROVED_LEAVE':
         return this.i18n.t('decision.approvedLeave');
       case 'ABSENCE':
-        return this.i18n.t('review.absence', undefined, 'غياب');
+        return this.i18n.t('review.absence', undefined);
       case 'OFFICIAL_HOLIDAY':
-        return this.i18n.t('review.officialHoliday', undefined, 'إجازة رسمية');
+        return this.i18n.t('review.officialHoliday', undefined);
       case 'INDIVIDUAL_REVIEW':
-        return this.i18n.t('review.individualReview', undefined, 'مراجعة فردية');
+        return this.i18n.t('review.individualReview', undefined);
       default:
         return value;
     }
@@ -398,16 +441,15 @@ export class ReportReviewPage {
       this.promptState.set({
         titleKey: 'review.workedMinutesPrompt',
         defaultValue: String(row.expectedMinutes),
+        error: null,
         onConfirm: (input) => {
           const worked = Number(input);
           if (!Number.isFinite(worked) || worked < 0) return;
           this.promptState.set({
             titleKey: 'review.decisionNotePrompt',
             defaultValue: '',
-            onConfirm: (note) => {
-              this.promptState.set(null);
-              this.store.decide(this.id, row.id, decision, worked, note || null, row.version);
-            },
+            error: null,
+            onConfirm: (note) => void this.submitDecision(row, decision, worked, note || null),
             onCancel: () => this.promptState.set(null),
           });
         },
@@ -417,12 +459,23 @@ export class ReportReviewPage {
       this.promptState.set({
         titleKey: 'review.decisionNotePrompt',
         defaultValue: '',
-        onConfirm: (note) => {
-          this.promptState.set(null);
-          this.store.decide(this.id, row.id, decision, null, note || null, row.version);
-        },
+        error: null,
+        onConfirm: (note) => void this.submitDecision(row, decision, null, note || null),
         onCancel: () => this.promptState.set(null),
       });
+    }
+  }
+
+  private async submitDecision(row: DailyResult, decision: AttendanceDecision,
+                               workedMinutes: number | null, note: string | null): Promise<void> {
+    if (this.savingRowId() === row.id) return;
+    this.savingRowId.set(row.id);
+    const success = await this.store.decide(this.id, row.id, decision, workedMinutes, note, row.version);
+    this.savingRowId.set(null);
+    if (success) {
+      this.promptState.set(null);
+    } else {
+      this.promptState.update(ps => ps ? { ...ps, error: this.store.error() ?? this.i18n.t('review.decisionPersistenceFailed') } : ps);
     }
   }
   holiday(item: HolidayProposal, confirming: boolean) {
@@ -430,11 +483,13 @@ export class ReportReviewPage {
       this.promptState.set({
         titleKey: 'review.holidayNamePrompt',
         defaultValue: this.i18n.t('review.confirmedHoliday'),
+        error: null,
         onConfirm: (name) => {
           if (!name) return;
           this.promptState.set({
             titleKey: 'review.notePrompt',
             defaultValue: '',
+            error: null,
             onConfirm: (note) => {
               this.promptState.set(null);
               this.store.decideHoliday(this.id, item.id, 'CONFIRMED', name, note || null);
@@ -448,6 +503,7 @@ export class ReportReviewPage {
       this.promptState.set({
         titleKey: 'review.notePrompt',
         defaultValue: '',
+        error: null,
         onConfirm: (note) => {
           this.promptState.set(null);
           this.store.decideHoliday(this.id, item.id, 'REJECTED', null, note || null);

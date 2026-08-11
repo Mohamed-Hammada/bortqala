@@ -1,0 +1,2033 @@
+{
+  "package": "bortqala-fm_bemo_consolidated-device-integrations",
+  "base_branch": "fm_bemo_consolidated",
+  "version": "0.5.0",
+  "file_count": 405,
+  "files": [
+    {
+      "path": "README_DEVICE_INTEGRATIONS.md",
+      "size": 7085,
+      "sha256": "53053217ecf357a46f27f37e0e0f70ed6513fc2980e4cea1a237df9ec61f7606"
+    },
+    {
+      "path": "VALIDATION.md",
+      "size": 1960,
+      "sha256": "66f58b5f56c885c8074b28f8c24db14f4b86fbf1d8cecf0c60fab5b6b59470e8"
+    },
+    {
+      "path": "apply.ps1",
+      "size": 70,
+      "sha256": "1679f7e341fd8b9391460ea7fb66132eed6b76854b4101d44ea76bd29387bbee"
+    },
+    {
+      "path": "apply.sh",
+      "size": 63,
+      "sha256": "cde4307545c10d5559a7d6b7bc1f5431be6988c6e8e0277bfd574fc07430e196"
+    },
+    {
+      "path": "be/compose.yaml",
+      "size": 765,
+      "sha256": "ea29b04e2b4a9fcc618b24f0c999fea8b35814336600109ec8621cb89bab144e"
+    },
+    {
+      "path": "be/src/main/java/com/bemo/hr/attendance/api/DeviceIntegrationApi.java",
+      "size": 3729,
+      "sha256": "dac5ae9dfb3e7b5f6ee2a099e9410e93945bc9663ba75ac3ac601ec93a148fc0"
+    },
+    {
+      "path": "be/src/main/java/com/bemo/hr/attendance/api/DeviceIntegrationController.java",
+      "size": 3672,
+      "sha256": "b52433028f388e118e85669fc14daa7c0fb61af6ffa7b417014f6e09179a6ee9"
+    },
+    {
+      "path": "be/src/main/java/com/bemo/hr/attendance/application/DeviceIntegrationService.java",
+      "size": 17148,
+      "sha256": "816109be43f4f7814012981cfb5041e0d3f8e89fc4d58dfebe2fde7b146782df"
+    },
+    {
+      "path": "be/src/main/java/com/bemo/hr/attendance/domain/BiometricDeviceIntegration.java",
+      "size": 7539,
+      "sha256": "a3bab390fc20ff0d066f8633965e34ea23a9c11689a97d2e0ecd01a79ba56b47"
+    },
+    {
+      "path": "be/src/main/java/com/bemo/hr/attendance/infrastructure/BiometricDeviceIntegrationRepository.java",
+      "size": 579,
+      "sha256": "614782490a07315892f772344969fd4a479f35c2887a6d214fff4d744146f7ab"
+    },
+    {
+      "path": "be/src/main/java/com/bemo/hr/attendance/infrastructure/HttpBiometricDeviceClient.java",
+      "size": 7151,
+      "sha256": "e23335b4da5f7a7eb991e8139313b2135f491c04367d076b0fc5224a31c78146"
+    },
+    {
+      "path": "be/src/main/java/com/bemo/hr/attendance/infrastructure/VendorHubClient.java",
+      "size": 9090,
+      "sha256": "a5d2f9880d988433c6487bd879f2cc5dae9e0b2af0b48c111fb582043f61529e"
+    },
+    {
+      "path": "be/src/main/resources/db/changelog/data/insert/20260809_v146_device_integration_translations.yaml",
+      "size": 890,
+      "sha256": "5f8f2c927e37d52a60723144e95a9f4131ebf75f10e9ebc440e0b4a396625ebb"
+    },
+    {
+      "path": "be/src/main/resources/db/changelog/data/insert/files/20260809_v146_device_integration_translations.csv",
+      "size": 2208,
+      "sha256": "6c481271815a00db98ac2e590c9d31dec114286a721cce596178823c455b5218"
+    },
+    {
+      "path": "be/src/main/resources/db/changelog/schema/create/20260809_v145_biometric_device_integrations.yaml",
+      "size": 4456,
+      "sha256": "23ba7ad53fb368cc5876b8dd0350c22124d25a2592155c0278843d1a48533298"
+    },
+    {
+      "path": "device-hub/.github/workflows/ci.yml",
+      "size": 772,
+      "sha256": "138786e64c8817ae5938972bdab7acdb64f0ab8fd9d261ca5cec4e8af97ce6ba"
+    },
+    {
+      "path": "device-hub/.github/workflows/supplier-packages.yml",
+      "size": 499,
+      "sha256": "8f41617842f41cb92cab8c3285ab43f3dcfc5a23b31684e17dc2e56a5d4a4011"
+    },
+    {
+      "path": "device-hub/.gitignore",
+      "size": 103,
+      "sha256": "64865fcd7d5ed7a8f304b3187b876895927a44400eb83aeac4e3a0edb6e8c331"
+    },
+    {
+      "path": "device-hub/Dockerfile.bortqala",
+      "size": 466,
+      "sha256": "a17b460013b9d08b1cc6c077f9e8d0f02a9698207e8d81f89828a2e9a488dda4"
+    },
+    {
+      "path": "device-hub/LICENSE",
+      "size": 593,
+      "sha256": "6ad0c6b3f9e19256e98d0c1674ed51bd1625678a6d8389a14041a11664690fd7"
+    },
+    {
+      "path": "device-hub/MANIFEST.json",
+      "size": 77341,
+      "sha256": "2e168c0d6d45d0e972491944b5c869bd70863c5a5d3567d28b4c43255d311eab"
+    },
+    {
+      "path": "device-hub/README.md",
+      "size": 3299,
+      "sha256": "bf4a97533e4f3955e10c3d7548409b3b6d112672e7994ef97acbf9cb8478cee8"
+    },
+    {
+      "path": "device-hub/VERSION",
+      "size": 6,
+      "sha256": "a0ad50640139a524f86591157145bf1d4674ea9c065bfea21558f0f7b04430c8"
+    },
+    {
+      "path": "device-hub/contracts/openapi.yaml",
+      "size": 1934,
+      "sha256": "803d631e147b860c0633e9381de87d773f1de68f2ca13e189da81553194f1bf6"
+    },
+    {
+      "path": "device-hub/docker-compose.yml",
+      "size": 329,
+      "sha256": "09cb78bac415d839203073aedac3568f70959204556ec4c37d099979e06831f7"
+    },
+    {
+      "path": "device-hub/docs/API_SUPPORT_MATRIX.md",
+      "size": 2440,
+      "sha256": "8c92295e19eb7777a063dbd8bdb9e3455c16ff073cf0773ad04de431b5d890dc"
+    },
+    {
+      "path": "device-hub/docs/ARCHITECTURE.md",
+      "size": 1143,
+      "sha256": "be1328d5dbbd1beb78bfda981e354883534e39995edc844c94f2e9a5968b52ef"
+    },
+    {
+      "path": "device-hub/docs/BORTQALA_INTEGRATION.md",
+      "size": 1062,
+      "sha256": "da6c337ab2011c7dc40f53e151b638ab0266fce9c4a4bd7db344311abfb202c7"
+    },
+    {
+      "path": "device-hub/docs/CONFORMANCE.md",
+      "size": 805,
+      "sha256": "4a78bc0ad949de9f0928093edba3ed41f1f8bf9e39f2156ff0130faa78a95bb6"
+    },
+    {
+      "path": "device-hub/docs/INTEGRATION_ROUTES.md",
+      "size": 1213,
+      "sha256": "d099aa3f9e2236d0c492cd8419f2271ffdbefa5a68ea38b6f7a0d0714c2a90e8"
+    },
+    {
+      "path": "device-hub/docs/OFFICIAL_DOCUMENTATION_INDEX.md",
+      "size": 4931,
+      "sha256": "f5c72c5fe67607dbc2098a6cc5f28d4c46fc36710ad7a5c40711289a92c2e618"
+    },
+    {
+      "path": "device-hub/docs/SDK_API_VERSIONING.md",
+      "size": 1019,
+      "sha256": "fc7c4e612b6491a9a15a71a0dca3507ff29db8259ca6fdaacc80613a641c3a32"
+    },
+    {
+      "path": "device-hub/docs/SDK_VERSION_MATRIX.md",
+      "size": 2095,
+      "sha256": "2cad316a2cfaa51a9bd403d14f45c3b11ca087f6416ab3a65878ab5224378a01"
+    },
+    {
+      "path": "device-hub/docs/SECURITY.md",
+      "size": 628,
+      "sha256": "18a51918fc30e300e3a7b11c09a9ed53c069addb0a1b21251e66eb9abd1faa48"
+    },
+    {
+      "path": "device-hub/docs/SUPPLIER_PACKAGE_STANDARD.md",
+      "size": 742,
+      "sha256": "374933ca1177aef3a5a3d40cbc611b380bbd15deb449e589a9685be9e2a75ec9"
+    },
+    {
+      "path": "device-hub/docs/VENDOR_SDK_ARTIFACTS.md",
+      "size": 772,
+      "sha256": "511d6d4ce822dcdc0f221988fde8401ce2e6d5db51f67d0142db66e5b2c7c24a"
+    },
+    {
+      "path": "device-hub/gateway/Dockerfile",
+      "size": 191,
+      "sha256": "ccac595b4fa82e50286924472aa2436b8dd163237e59548aef0784b9ecce7f1c"
+    },
+    {
+      "path": "device-hub/gateway/app/__init__.py",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/gateway/app/main.py",
+      "size": 6701,
+      "sha256": "6c445c710468bab7a4dbc3ee3e9238b030bf1c12b9aab27dc91c973e3bd4668d"
+    },
+    {
+      "path": "device-hub/gateway/app/models.py",
+      "size": 1805,
+      "sha256": "55ad4375e99f6c76bc12baea2a9f163f58b1ced1973933de6700c46d583a750d"
+    },
+    {
+      "path": "device-hub/gateway/app/registry.py",
+      "size": 2263,
+      "sha256": "1044910e856a3ab7988317f8aecd43e2b03933b5dfe9220a9395c4e92dc08285"
+    },
+    {
+      "path": "device-hub/gateway/app/supplier_loader.py",
+      "size": 2802,
+      "sha256": "3e1838d29f388fdba8a317dbc664aff985828a51b7633e963bb0e4b3acba73b8"
+    },
+    {
+      "path": "device-hub/gateway/requirements.txt",
+      "size": 99,
+      "sha256": "5aae7c9d3c7c879313f1d88292df2aa4dd0dd3aaed42c1b7a08f76c24ef033d0"
+    },
+    {
+      "path": "device-hub/gateway/tests/test_imports.py",
+      "size": 392,
+      "sha256": "f8d733000a6f651239fb3a97665cab439902864babbe7f215a69a1ab3c22a4fd"
+    },
+    {
+      "path": "device-hub/java-sdk/README.md",
+      "size": 352,
+      "sha256": "168c0d5c9821f82fa020a4f01b58f99dfd46cff2a59b3339f8c4c6e4c85ee7f8"
+    },
+    {
+      "path": "device-hub/java-sdk/src/main/java/org/example/devicehub/Adapter.java",
+      "size": 134,
+      "sha256": "a3b3423fb954fd2da942c5e17eab52bba5b4591a0a78807456283a08b8e899d2"
+    },
+    {
+      "path": "device-hub/java-sdk/src/main/java/org/example/devicehub/Endpoint.java",
+      "size": 288,
+      "sha256": "bf4cfc4e2af545ad2b169d7dcedd015c5512be81b5517e09a12538ca5f55e1cc"
+    },
+    {
+      "path": "device-hub/java-sdk/src/main/java/org/example/devicehub/HikvisionIsapiAdapter.java",
+      "size": 270,
+      "sha256": "c6852da17b5649a4c00107789c854c1a559d0d9e7010da3b9f5619ff20867a87"
+    },
+    {
+      "path": "device-hub/java-sdk/src/main/java/org/example/devicehub/HttpAdapter.java",
+      "size": 1153,
+      "sha256": "7c9c83b09a5112b8328bcb9f6db0655a461ae5fa81256d78b46866b17136ef6e"
+    },
+    {
+      "path": "device-hub/java-sdk/src/main/java/org/example/devicehub/IntegrationRoute.java",
+      "size": 312,
+      "sha256": "c93653580ce633fa08c3c8e80cbd23d2c675c18ce12d21c7bfbf790c16c546d5"
+    },
+    {
+      "path": "device-hub/java-sdk/src/main/java/org/example/devicehub/PlatformAdapter.java",
+      "size": 405,
+      "sha256": "3a5c299de33a31743629fb077e2d88acd2bf90dc69720b64c4568247f25f5771"
+    },
+    {
+      "path": "device-hub/java-sdk/src/main/java/org/example/devicehub/ProbeResult.java",
+      "size": 113,
+      "sha256": "9776329f7275f06d56d2c2b793e37bd3cc4f310112e20cba09a1df7e6673f3e1"
+    },
+    {
+      "path": "device-hub/java-sdk/src/main/java/org/example/devicehub/Vendor.java",
+      "size": 107,
+      "sha256": "22bc5900c68daaff876ab2c205a5fdad141896cfea995ebd07f6a54fd493c0a4"
+    },
+    {
+      "path": "device-hub/java-sdk/src/test/java/org/example/devicehub/SelfTest.java",
+      "size": 267,
+      "sha256": "274701d4ef30edd6b6e638af88fb091b12bc244acca30b17507da45e4322794d"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/COMPATIBILITY.md",
+      "size": 1102,
+      "sha256": "5376afa32f6a249080fa022b6bd7e62e9349c5926f024a200be452acd42cfe3a"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/DOCUMENTATION.md",
+      "size": 1921,
+      "sha256": "def177803a9c8e0ff6475241c1fac77506d04a2f401e124e55ec29fda890f357"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/README.md",
+      "size": 1422,
+      "sha256": "4a76c919efe1080458ba9352289737f0b72dcbdeec36adec3b63711929b26799"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/SDK_API_VERSIONING.md",
+      "size": 1242,
+      "sha256": "ffae0dbdf79c67113546812398a23f39fe474eb72b7796ab87088bc7bdce7e22"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/examples/device.example.json",
+      "size": 218,
+      "sha256": "d91325de80a7c6ab5e37798eaa44fe0cd4b5cadc0fa1d9da003970ec88521f26"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/examples/version-aware-device.example.json",
+      "size": 565,
+      "sha256": "87f6fae904dff7077cf7996d699e4d804cc0d99732c5ae695e240126da43029f"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/integrations/anviz-standard-sdk/README.md",
+      "size": 781,
+      "sha256": "c44634f52367d7b009ce01ac033266a06c4ccae246dd6067a6435bbcf06d5402"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/integrations/cloudkit/README.md",
+      "size": 737,
+      "sha256": "732f574663edcb228ccd0eb42a0113a28c5883fbf6cd94f8e92fdc16bed3d2ef"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/integrations/crosschex-cloud-api/README.md",
+      "size": 984,
+      "sha256": "83bb190ebf6a66335fc2ee4447b7f767dd3d13eee370d564ab332a65ae8cd4ea"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/integrations/crosschex-cloud-webhook/README.md",
+      "size": 860,
+      "sha256": "d453b5c0b5ffc24b9342cf876d1c787691c0561fb97866e1d02d5d2ce1f06477"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/integrations/crosschex-standard/README.md",
+      "size": 785,
+      "sha256": "9d0953ee50e24dc6f3395cadea4272dc377fe7e2f1842708247e5384c82aad3b"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/integrations/usb-export/README.md",
+      "size": 722,
+      "sha256": "588aaf122ad224d741e8648308f276636fdce12b3dec33b1a9927e5a091962f0"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/integrations/wiegand/README.md",
+      "size": 718,
+      "sha256": "8bd868411e741162094625c4122e6cf47ddab0cfed7dd7fa870ffbbeb6aa2ada"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/profiles/device_routes.csv",
+      "size": 1576,
+      "sha256": "00440ec5b5b8f67336d375c81bb595058f48e11bfc0f952df3689f5bed3d4b7c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/profiles/device_routes.json",
+      "size": 3109,
+      "sha256": "0e9e6cae1cfdec3b945b7f945e18596088356bca59ac109975f504a332cba7f8"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/profiles/integration_versions.json",
+      "size": 5178,
+      "sha256": "8638219c734cdd80c04e3cb3d3782117403d9f6f9245b1ee4649601ed1e3fa86"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/pyproject.toml",
+      "size": 296,
+      "sha256": "522f08b0c198e2badc61899f41abc799c4572c95142174bd1ba927c17d5c41d5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/__init__.py",
+      "size": 176,
+      "sha256": "fc7c17a90c2d20846bb3b840b94a3dcc023e48fc705410c7487397e90e2c1af7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/adapters/__init__.py",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/adapters/anviz_standard_sdk.py",
+      "size": 188,
+      "sha256": "a3e9db8bca8d07900f98415590510451f6b653a65a93c1008a1bc7f2d244555c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/adapters/base.py",
+      "size": 10494,
+      "sha256": "67ad5851260a3dac37833ca4119163491156cef60a993eb9647e3e642f573fbd"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/adapters/cloudkit.py",
+      "size": 160,
+      "sha256": "477df57633dbd5186e42e70fa42a744725a88e3e2cff5c645d2c36ac5d2177e0"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/adapters/crosschex_cloud_api.py",
+      "size": 134,
+      "sha256": "6aa47e3632a91cf21008d6c455c54bdd2f7846462198f96f7e0fa8d6c60b72fa"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/adapters/crosschex_cloud_webhook.py",
+      "size": 141,
+      "sha256": "23ab0f4484c4e6a0fee361f6d29cceb22fdbf0d77448fde1910ff80c5b86505a"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/adapters/crosschex_standard.py",
+      "size": 194,
+      "sha256": "1a2eddef209208a209533fa814a7e67375b98174f609354f0b74bb54c1c6edce"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/adapters/usb_export.py",
+      "size": 111,
+      "sha256": "57cd9bf4dbf26d2de92423ff46fb75f14f9f0269716463e8208f354b4441be2c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/adapters/wiegand.py",
+      "size": 103,
+      "sha256": "fccff6d252d3468fc18c951ef5efb71e349b60a62a467728856803c13ea61eab"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/models.py",
+      "size": 1183,
+      "sha256": "d984dbbf332d69a75fd75c2bc0789ff15e755059eba999f153ec40dd7f2a0d38"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/router.py",
+      "size": 4929,
+      "sha256": "22bda2436d5678c95a35f089c751154dd1bdf054cbc2bd6b1ec26984b8024312"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/src/supplier_anviz/versioning.py",
+      "size": 1272,
+      "sha256": "25f558d107c9cf9377464ba5e08c61368680cd04f9a295cf9c397a53c6512dd3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/tests/test_router.py",
+      "size": 504,
+      "sha256": "9bd3f85a59b2f147815b377b683c66ae86a887b3761ac6acaa869574d2b7c238"
+    },
+    {
+      "path": "device-hub/packages/suppliers/anviz/vendor-libs/README.md",
+      "size": 297,
+      "sha256": "78b7f41baed380fade3c1f7133362679a2c29347b5859550134de44659ffb8e8"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/COMPATIBILITY.md",
+      "size": 817,
+      "sha256": "a0243e047a645f67167cec3767c29c4524ac2d95d3c67e3cc337a2d2fdd68217"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/DOCUMENTATION.md",
+      "size": 1771,
+      "sha256": "b14ad6385886bc920b42d0a3224995bf357cb1798aeddf2c805545fa1ef29f10"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/README.md",
+      "size": 1329,
+      "sha256": "facb95eb1a8ab825b3958d430a2bbcecf09e7bf1dceb1568b1599d92ed8644e3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/SDK_API_VERSIONING.md",
+      "size": 1242,
+      "sha256": "23dae1f0d67706eed20fb63af373d8352bb886511184a6bf3246231a12ce99b7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/examples/device.example.json",
+      "size": 218,
+      "sha256": "57034bdd0ee5eb971a6756af85faea129d63939ffc6813e7e0ec83aeb4f80281"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/examples/version-aware-device.example.json",
+      "size": 470,
+      "sha256": "726cc63d40a7d105e53411dcafcd1cd03d75b5d250320470bd70e8a3e11a703c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/integrations/dss-dip-bridge/README.md",
+      "size": 774,
+      "sha256": "f9c45d9f2b3972e6359ded65cbc6be7760e4134844d95bebd2d418b3e070e3ec"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/integrations/dss-openapi/README.md",
+      "size": 852,
+      "sha256": "72a72347e62e474a56b417d7e0f08f9ec24da59eb7c809d09d8a52164af31209"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/integrations/dss-sdk/README.md",
+      "size": 864,
+      "sha256": "94371cc9af55e2f70fee88e3c66b29f7e2ddb7004b2dbf9d5ae031836e72236a"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/integrations/netsdk/README.md",
+      "size": 849,
+      "sha256": "1554b2a716ac9e4d149bcd6a588e3729b1af558ed114fb553c0ddd084a739214"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/integrations/onvif-discovery/README.md",
+      "size": 797,
+      "sha256": "84afebd6c526a5ae61b99a719e20582e69c5c27c2f96ac11fc81e5be4c3517e9"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/integrations/wiegand-osdp-rs485/README.md",
+      "size": 764,
+      "sha256": "101a036b861775252a85df9329927eba722e93078ffe3a6ef290fc677ac53989"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/profiles/device_routes.csv",
+      "size": 1540,
+      "sha256": "81195a713b991b4219e8a76ad3f4581cfa077a31e9ab08adf4db6c2cf4d533c6"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/profiles/device_routes.json",
+      "size": 2950,
+      "sha256": "544fedb3f5456ddd46a10246a477cf366d86e6989ad88c0c373f6624780095dc"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/profiles/integration_versions.json",
+      "size": 4529,
+      "sha256": "61d77cabe7e72be2724663c668272092b5cdafbc36725f924568e38f872c2b17"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/pyproject.toml",
+      "size": 296,
+      "sha256": "b327e0c5e9b7f8c026f39283fb3d0d43b51d99e986235f97f143888bc498f865"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/src/supplier_dahua/__init__.py",
+      "size": 176,
+      "sha256": "fc7c17a90c2d20846bb3b840b94a3dcc023e48fc705410c7487397e90e2c1af7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/src/supplier_dahua/adapters/__init__.py",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/src/supplier_dahua/adapters/base.py",
+      "size": 10494,
+      "sha256": "67ad5851260a3dac37833ca4119163491156cef60a993eb9647e3e642f573fbd"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/src/supplier_dahua/adapters/dss_dip_bridge.py",
+      "size": 127,
+      "sha256": "3195a8b15dd0e1c1181c65c40519025bf24ff98a6659ccc956a486664c7d7071"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/src/supplier_dahua/adapters/dss_openapi.py",
+      "size": 122,
+      "sha256": "c63bb8317867e9978913eec15bf78624aba6bb43f3b2aeb9fbf100584ffff1a4"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/src/supplier_dahua/adapters/dss_sdk.py",
+      "size": 156,
+      "sha256": "d2a369cf3c3e8bbf58da40df040b94ec7f674496acff99f3c396f3acc1a846e2"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/src/supplier_dahua/adapters/netsdk.py",
+      "size": 154,
+      "sha256": "cbfcd49ebd6f561a4c83170793920a6058254df7b16529e57ee07e01fa0fbd16"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/src/supplier_dahua/adapters/onvif_discovery.py",
+      "size": 126,
+      "sha256": "764d686533d7fb4b29b6ae902f3e67189f8e80f05b1ad0d9090b361ed9434e55"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/src/supplier_dahua/adapters/wiegand_osdp_rs485.py",
+      "size": 123,
+      "sha256": "3f82d3513716ce50b6c09f3d87669e148c034003d5ce10ccdb111a627d9e17f0"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/src/supplier_dahua/models.py",
+      "size": 1183,
+      "sha256": "d984dbbf332d69a75fd75c2bc0789ff15e755059eba999f153ec40dd7f2a0d38"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/src/supplier_dahua/router.py",
+      "size": 4929,
+      "sha256": "1338167732bdfc6f5f8f14835a59d8c905c5e41d6ebd28d61c22b10fc5b1b537"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/src/supplier_dahua/versioning.py",
+      "size": 1272,
+      "sha256": "25f558d107c9cf9377464ba5e08c61368680cd04f9a295cf9c397a53c6512dd3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/tests/test_router.py",
+      "size": 504,
+      "sha256": "5b7c0e751b05f7c1039f21948917ba9ea1abdd7b9d0d0ef3d90aa6ae3851caf3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/dahua/vendor-libs/README.md",
+      "size": 297,
+      "sha256": "41b100314a72eb95e0fd5fe5545378d02f3535788733a00bf8ef323fec844bd8"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/COMPATIBILITY.md",
+      "size": 1302,
+      "sha256": "63ee85791b6e7a40cef0f101d866647ff5426b2d29c70dc7ed3f9d8aefc33a19"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/DOCUMENTATION.md",
+      "size": 2277,
+      "sha256": "79d868561ada21ed15679409fa102bd7b5f7024b134e7575a9d95085428f739e"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/README.md",
+      "size": 1485,
+      "sha256": "4638f7870695997de28716ee5074c64facc2c4273159e9f0680aa7a6996e2ce7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/SDK_API_VERSIONING.md",
+      "size": 1254,
+      "sha256": "8f1a57524d8adcf961050adbd8005922ec30029dc2ff656b7867d24e40ed39b0"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/examples/device.example.json",
+      "size": 222,
+      "sha256": "bb0da3ce2bca2a5cd4601e2b41a5eb167613e5624ce2df6d13a89e117dca96d4"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/examples/version-aware-device.example.json",
+      "size": 676,
+      "sha256": "4b3a6d420c20260c7ced4a712672c6418930dde0b82950a1351eb78cf5f5bc05"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/integrations/device-gateway/README.md",
+      "size": 763,
+      "sha256": "51a7d847b499edce5669d77bd405d9ecda60d7afc8e2125f8ffe9c7cf6f5ad19"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/integrations/hcnet-sdk/README.md",
+      "size": 1001,
+      "sha256": "20d05bcb9c37431097e3b77bb1f3fe3416f2cd39faffd3b4d7054ae3edc92102"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/integrations/hikcentral-openapi/README.md",
+      "size": 748,
+      "sha256": "f4b2b901fea5c61ca6d510a960b8816885587eeab8f1375783b4bcf51ab75152"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/integrations/isapi/README.md",
+      "size": 721,
+      "sha256": "c23e853a42b05db71a316a38b96ee58df5ffde66fedb1cbb834869d300997f0c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/integrations/isup-sdk/README.md",
+      "size": 830,
+      "sha256": "c46093c82dc75038cfdd5e5bbba270c19753173aee8ad0ab0b81d9ff2ce2f4af"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/integrations/otap-sdk/README.md",
+      "size": 868,
+      "sha256": "1714500aabfbc6bfeafa300fa6d2c61c9bb1ee81da8cda661b3c5ff2a89713dc"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/integrations/sadp-discovery/README.md",
+      "size": 827,
+      "sha256": "67b66b874a6c4322cb5953d1685f7310bd4236974efe3575b8a2ffba1ae14d3b"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/integrations/usb-sdk/README.md",
+      "size": 793,
+      "sha256": "7cd3d566f19f2fb0bb6b53e0b36059683bfad03eadd3ad7d91ae772f9c625715"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/integrations/wiegand-osdp/README.md",
+      "size": 733,
+      "sha256": "286ee2fdab901026f8810d6941118d870ad2054bf7a3a74fe4b2ad7905fc10df"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/profiles/device_routes.csv",
+      "size": 1906,
+      "sha256": "6df65823778ec2ff119c8c8cc2e1236dc1d1c20df6269ad6606ff160ee6cebca"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/profiles/device_routes.json",
+      "size": 4426,
+      "sha256": "c73ab821f1179ccf9c2c1dcfba06b79f09e0a857b693b4d7b6a22580a8716467"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/profiles/integration_versions.json",
+      "size": 6772,
+      "sha256": "7a5fa10fd46eb49a5a08f6522ebbfc3ab2f59a43b0fc00ba54ba892238df3d91"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/pyproject.toml",
+      "size": 304,
+      "sha256": "d091fc9872892f100ee90ae8b071b37431106f1f79f9eb8b128bf17fc0f417b6"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/__init__.py",
+      "size": 176,
+      "sha256": "fc7c17a90c2d20846bb3b840b94a3dcc023e48fc705410c7487397e90e2c1af7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/adapters/__init__.py",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/adapters/base.py",
+      "size": 10494,
+      "sha256": "67ad5851260a3dac37833ca4119163491156cef60a993eb9647e3e642f573fbd"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/adapters/device_gateway.py",
+      "size": 128,
+      "sha256": "5562e51c9c078938076e8bc9792e5e0ce023788f43b8e790964c8bf3c8cffc75"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/adapters/hcnet_sdk.py",
+      "size": 166,
+      "sha256": "fa6382f966ab7d9b69e180a46c42fe9bb8736f274e1d1010e3ed8a3985d9c88b"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/adapters/hikcentral_openapi.py",
+      "size": 136,
+      "sha256": "3b3fc9ba0785d96b283077135ebfb9647e8f539f70fe121ccb1cf25822e87e93"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/adapters/isapi.py",
+      "size": 151,
+      "sha256": "446787ea378ae76a8a28fe52e5fd1981c4b5b86c44d316b0a5512fff546daf86"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/adapters/isup_sdk.py",
+      "size": 163,
+      "sha256": "31086d8bab99ec739b2affd872b67a1278cd8796deebe723c0745018f53d133b"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/adapters/otap_sdk.py",
+      "size": 163,
+      "sha256": "29ea8892ca1a4c65d6b5a7e078cb3046e21d4ef5276679fd0a467dd69e3786c5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/adapters/sadp_discovery.py",
+      "size": 181,
+      "sha256": "d4e2044c9decce4df3f054025874aaeaddc23d05a08839894769221d78f1ae5e"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/adapters/usb_sdk.py",
+      "size": 160,
+      "sha256": "cdb2d14264dced29a9286f7083264fc923362ca819c044520c9d24201197c9d4"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/adapters/wiegand_osdp.py",
+      "size": 112,
+      "sha256": "8d0057a3f846a9a1fecf485242413d6cb9a2e7e9b1dd2b67ddda01e58cc4c8b2"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/models.py",
+      "size": 1183,
+      "sha256": "d984dbbf332d69a75fd75c2bc0789ff15e755059eba999f153ec40dd7f2a0d38"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/router.py",
+      "size": 4933,
+      "sha256": "ddba8a10311a3229e0dca781f5901edae0254c7541a066aead6366d1a9d9bc7c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/src/supplier_hikvision/versioning.py",
+      "size": 1272,
+      "sha256": "25f558d107c9cf9377464ba5e08c61368680cd04f9a295cf9c397a53c6512dd3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/tests/test_router.py",
+      "size": 512,
+      "sha256": "82e465ac23f1b84050f81da250ecd95ea52811e4e208e630bc48e43e20f7fd70"
+    },
+    {
+      "path": "device-hub/packages/suppliers/hikvision/vendor-libs/README.md",
+      "size": 301,
+      "sha256": "07b10846bdd8389baf1ce551eaea53958a2989ec0be51435ada159482569eefb"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/COMPATIBILITY.md",
+      "size": 1010,
+      "sha256": "5c85fdf17018ad64d6ad3d1ca8afb5b8b08d4fd1e387c4cb37ba0f924df21b1a"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/DOCUMENTATION.md",
+      "size": 2610,
+      "sha256": "c55245fa1a0ffe20a658ac8798c88ea74f3181bfb705e1bf80a8c21264ccd52d"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/README.md",
+      "size": 1336,
+      "sha256": "fa399637512515ebcbb5de7c2e895740741dbc879c557c40d090bf573dacebf9"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/SDK_API_VERSIONING.md",
+      "size": 1254,
+      "sha256": "2f36d02fbe3f8085b92afd23de8399c9e0687c20394c5ca49dcf7b77b2870aaf"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/examples/device.example.json",
+      "size": 222,
+      "sha256": "42e119748379e538d8e252c7dd0c4732afc94d821d5903976b0e8004c40fc4c2"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/examples/version-aware-device.example.json",
+      "size": 520,
+      "sha256": "3a18607aadd4d02d0434c2fc690988cb8f2f9543ea63f9e01a18e9eb37946eea"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/integrations/panel-through-prowatch/README.md",
+      "size": 1042,
+      "sha256": "c9a049793282c44ef959bde2efe0c3d1eb843c180c6a7a0420318ce2c9f1f380"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/integrations/prowatch-db-integration/README.md",
+      "size": 836,
+      "sha256": "2302aa9eee4f44d27caccf28a317e4c8b8bee682cce881ca50024c10d9a1c54f"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/integrations/prowatch-hsdk/README.md",
+      "size": 1054,
+      "sha256": "08ddbcfd9df2e2c564bca46276d753b3081d053fc0c2d40d22e9a32513571bcb"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/integrations/prowatch-web-services/README.md",
+      "size": 1158,
+      "sha256": "d269fe8cf1d3aa2ea8801529f40f7786953e5a97580523caf28c5365a09fe506"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/integrations/reader-bus/README.md",
+      "size": 772,
+      "sha256": "34203b971010b5c4ac01932f6d8622dece717beabe142e1683e178fccb2d8ffc"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/profiles/device_routes.csv",
+      "size": 2279,
+      "sha256": "17520496311db202369811e97d2db3e84e8f4e13ff687c086125575cc3afd85e"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/profiles/device_routes.json",
+      "size": 3676,
+      "sha256": "cf3ef8b102a9b73a5a9239f2ea4c07d56bfff2dbce7e1705d464852766e5b4b7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/profiles/integration_versions.json",
+      "size": 4271,
+      "sha256": "c7331a6af85e385552161a7fc47763a75592ee004ece331041438e5006bd6f04"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/pyproject.toml",
+      "size": 304,
+      "sha256": "36dbae63f5db0ba11f0fc162325450a8bd2f998da17f4ab4b655e0b67ec0773b"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/src/supplier_honeywell/__init__.py",
+      "size": 176,
+      "sha256": "fc7c17a90c2d20846bb3b840b94a3dcc023e48fc705410c7487397e90e2c1af7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/src/supplier_honeywell/adapters/__init__.py",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/src/supplier_honeywell/adapters/base.py",
+      "size": 10494,
+      "sha256": "67ad5851260a3dac37833ca4119163491156cef60a993eb9647e3e642f573fbd"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/src/supplier_honeywell/adapters/panel_through_prowatch.py",
+      "size": 143,
+      "sha256": "d2a0be2d9c66e3cc24623082a75532cba734e5979ed8b343b26474a350120720"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/src/supplier_honeywell/adapters/prowatch_db_integration.py",
+      "size": 212,
+      "sha256": "4f555049a495db2d16e67072e946f5bc6de99c5c01de854bd4600d083d351892"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/src/supplier_honeywell/adapters/prowatch_hsdk.py",
+      "size": 178,
+      "sha256": "1fe7607cca271f295230146683018686ef1cc87f6295682d24c9f246af9b7e2f"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/src/supplier_honeywell/adapters/prowatch_web_services.py",
+      "size": 141,
+      "sha256": "c1555b08426b7adf5d0f41cad5285a14cdd171be3211b76c530a9ea6d4f18603"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/src/supplier_honeywell/adapters/reader_bus.py",
+      "size": 108,
+      "sha256": "3f4728ff92ed8de56247380f1d7d5358ec2d85f70063ac84c90aeefde713a962"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/src/supplier_honeywell/models.py",
+      "size": 1183,
+      "sha256": "d984dbbf332d69a75fd75c2bc0789ff15e755059eba999f153ec40dd7f2a0d38"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/src/supplier_honeywell/router.py",
+      "size": 4933,
+      "sha256": "ead3a6a40f0a3036d00f72961ce5cc0902d279fbd0b5619113f905b82f3d07d1"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/src/supplier_honeywell/versioning.py",
+      "size": 1272,
+      "sha256": "25f558d107c9cf9377464ba5e08c61368680cd04f9a295cf9c397a53c6512dd3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/tests/test_router.py",
+      "size": 512,
+      "sha256": "4643f9bb055b22f94f4c59bca93f9f70be3ecfbbf08e90e5d201bd524e0369db"
+    },
+    {
+      "path": "device-hub/packages/suppliers/honeywell/vendor-libs/README.md",
+      "size": 301,
+      "sha256": "e255948da88dfcee3d65fa39e2f84a6931eb835cdb2c31e79e8d06a37dd240df"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/COMPATIBILITY.md",
+      "size": 1308,
+      "sha256": "3722c4e2637d93e3193d501a2acdf26e87a537351ad3fd456cd45ac23cc7de43"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/DOCUMENTATION.md",
+      "size": 2826,
+      "sha256": "96ca8a7c2049a9ceb3ea24b881c7294552bd1ce2652b0461030a994ca12948d2"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/README.md",
+      "size": 1463,
+      "sha256": "df258be581725bf4f9f88d6840a4ae50f6f1f54dab60cba0e223c097ca1e4820"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/SDK_API_VERSIONING.md",
+      "size": 1248,
+      "sha256": "6fc4eb1d810c964437dbf9a8a162cb524c9a29e74cf6a228845ca3d55c5c259e"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/examples/device.example.json",
+      "size": 220,
+      "sha256": "75b332cc745aa6cbb55cfa3f6232ac760abeed72a1746591da472620b2b02cd0"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/examples/version-aware-device.example.json",
+      "size": 660,
+      "sha256": "0c6898be32b1fe297e6474d3df9aeed472c6863cb2bb93f7ddd1cc3269e6681a"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/integrations/biostar-device-sdk/README.md",
+      "size": 1078,
+      "sha256": "6ac6d04c110d76674faf4b96c03db583ee65dd1c9a75a721fa825055a267646e"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/integrations/biostar1-legacy-sdk/README.md",
+      "size": 798,
+      "sha256": "1065ea85ab4115da6cb3a3cb4c0ac88510ee2742863dd62f790b6ec38fc55b8b"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/integrations/biostar2-api-v1/README.md",
+      "size": 752,
+      "sha256": "f1d63cededf88de0388983aff3d72919b7e1e32d421472fb8d4dc49e370c486b"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/integrations/biostar2-api-v2/README.md",
+      "size": 751,
+      "sha256": "043022ea18ca7ef87104aa1dc29a1f9e508b3012cedfff88e0e3beb7305f56e0"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/integrations/biostar2-local-api/README.md",
+      "size": 933,
+      "sha256": "aee80126811a9bce1f73107b165797f4133e0f979baedb61513e68b34c2f923e"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/integrations/g-sdk/README.md",
+      "size": 926,
+      "sha256": "a0093fd4fddd6b51f64658400c30639f495d7bbaeec87b44406c22b2530c8d8c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/integrations/svp-android-sdk/README.md",
+      "size": 781,
+      "sha256": "c873339603209dba3f10d2021c2139480f5c923f2013bff82c5c5a6d81a8ad24"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/integrations/wiegand-rs485/README.md",
+      "size": 796,
+      "sha256": "691b35e5e520edab2e3d9fdbe1493e4e5caac63ca0e35504b7b7ff8e884f53ea"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/profiles/device_routes.csv",
+      "size": 2289,
+      "sha256": "0319fe8a036d0e449be6297ea616f41da7b9f0ede300ce2df02501668929718b"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/profiles/device_routes.json",
+      "size": 4375,
+      "sha256": "2a4d8b74a4a2d3f00215c10b77f2fdfad2331500e9acf1a5ecd1df9391884dff"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/profiles/integration_versions.json",
+      "size": 6458,
+      "sha256": "ea272c0a85d63c83c0697a997dac5f3da9607e816383c391113287a291dfb01c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/pyproject.toml",
+      "size": 300,
+      "sha256": "d5251f0e349783e4eeac12167de624f748e322bca9885a918c45f9cbd9476dac"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/__init__.py",
+      "size": 176,
+      "sha256": "fc7c17a90c2d20846bb3b840b94a3dcc023e48fc705410c7487397e90e2c1af7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/adapters/__init__.py",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/adapters/base.py",
+      "size": 10494,
+      "sha256": "67ad5851260a3dac37833ca4119163491156cef60a993eb9647e3e642f573fbd"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/adapters/biostar1_legacy_sdk.py",
+      "size": 193,
+      "sha256": "402a3d0c4037afc6ff8a63a5c8105988d09361c433132bb695280a20a9f23052"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/adapters/biostar2_api_v1.py",
+      "size": 129,
+      "sha256": "2cadeaee8595abd48d35bfba6d295ba8a2279ad82e833cc17d12126ebf169811"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/adapters/biostar2_api_v2.py",
+      "size": 129,
+      "sha256": "4ef3e2e617ebf0a768de63886a3e8e5c675f778b5ee06856ee3bb0560728fd47"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/adapters/biostar2_local_api.py",
+      "size": 135,
+      "sha256": "55465a2f8fc8b1729eb60ccefbf1b070abee747e8f08c93a4227e2267979a374"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/adapters/biostar_device_sdk.py",
+      "size": 190,
+      "sha256": "240c0c2c84fe866b2977503f746f0aea6da0c4dfa651a2a4f2f337b3de6877c4"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/adapters/g_sdk.py",
+      "size": 101,
+      "sha256": "c3796a82277074edfbcd97b81ed723ae8cdd23868b10460b674585d8d1cfb92c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/adapters/svp_android_sdk.py",
+      "size": 181,
+      "sha256": "e4e1c184600824ad653cf9aed3f4e696fc80b99d8c469659394710e3fd260315"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/adapters/wiegand_rs485.py",
+      "size": 114,
+      "sha256": "b46bc0a81da9e889528635f8ba1ebe9f28a3748f643b3645ee0c6fb69353b3d5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/models.py",
+      "size": 1183,
+      "sha256": "d984dbbf332d69a75fd75c2bc0789ff15e755059eba999f153ec40dd7f2a0d38"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/router.py",
+      "size": 4931,
+      "sha256": "6b977b6fae9fc3b7213be0da52afc98eaea32e05d3653cc3b8fccec15c40fbe9"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/src/supplier_suprema/versioning.py",
+      "size": 1272,
+      "sha256": "25f558d107c9cf9377464ba5e08c61368680cd04f9a295cf9c397a53c6512dd3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/tests/test_router.py",
+      "size": 508,
+      "sha256": "9a884beb500c7d7e7f787102cd70bd665a2a6ad49433c5ed399510da1b842c80"
+    },
+    {
+      "path": "device-hub/packages/suppliers/suprema/vendor-libs/README.md",
+      "size": 299,
+      "sha256": "bf34d4bb9c7baa1840c70d92225d41741fb139c884760684144a6071610c5db2"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/COMPATIBILITY.md",
+      "size": 1051,
+      "sha256": "8f9962ce3d5a3ec9f623bc93399a1a2dedd011253f2f10abe9f91f5c072ebbc5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/DOCUMENTATION.md",
+      "size": 1881,
+      "sha256": "5dd49d86d683ada77aaf7003cf5f9a00b2734682f3618108cce1e1625bcfeaa3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/README.md",
+      "size": 1376,
+      "sha256": "3d08ccd4439a618f952005dc0c225cccf6d7ef192192c33b36f691f6af02d91e"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/SDK_API_VERSIONING.md",
+      "size": 1242,
+      "sha256": "f0115260af71dd0ef38217a7993ace716b4527711e79507b5b20cf7b5a4cdd90"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/examples/device.example.json",
+      "size": 218,
+      "sha256": "973df412cdc459cc308853705aa1db084b4ca4ea28fbfabddd409cbdfcde244e"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/examples/version-aware-device.example.json",
+      "size": 539,
+      "sha256": "83d37e283831c4d3a53409ffaabd26c73c584f4e0b007ce13f5a754aaaf0ac79"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/integrations/accessmanager-pro/README.md",
+      "size": 838,
+      "sha256": "039424e90e664492d5b82f09ab2fc586b49ba271ec309a8a76076c572d770542"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/integrations/alpeta-api/README.md",
+      "size": 780,
+      "sha256": "9092513fafd39e9b98c61a6dc40e14192c89b6a529224a32eac29f8ad2464b32"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/integrations/tcp-terminal/README.md",
+      "size": 760,
+      "sha256": "75306b43b56a5a9720a8674ae44ebc15cc910298b88a15185863977b24e6eead"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/integrations/ucs-sdk/README.md",
+      "size": 808,
+      "sha256": "8a1a6050fe2b9c53618b32285d09533de94e11879a7710c3b1a8e89709c957b6"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/integrations/unis-server/README.md",
+      "size": 823,
+      "sha256": "530009a507c202f5c3dd84abb7f177861ff1396a8c1d56a775eb696e209f97ff"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/integrations/usb-scanner-sdk/README.md",
+      "size": 818,
+      "sha256": "a64e9ed966a3567b595684189459aae7b7d1292f66970d53134e19dac1616d89"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/integrations/wiegand-rs485/README.md",
+      "size": 816,
+      "sha256": "f9f004120f30fc96d0fb21ed75ffc765b00643ba6e14e1de4cfc6a8add595dbc"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/profiles/device_routes.csv",
+      "size": 1262,
+      "sha256": "ec8ac583c99c4f5a60d369c9ae4ac0ec2173e81fea581863b06058473bc36ed7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/profiles/device_routes.json",
+      "size": 2985,
+      "sha256": "226416c30a2141bddb3e352f7a1ced75c7a28908ade0c0c949cca81337718380"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/profiles/integration_versions.json",
+      "size": 5105,
+      "sha256": "f763d5c06112baa7e9b69edd86680f5d2b8e59ad7fb7413434f10563dcdc9932"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/pyproject.toml",
+      "size": 296,
+      "sha256": "6ecf636ae268983988a1fcf1c87ee37dc53cb02cb2d169a78efe4cc0db3d04d1"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/__init__.py",
+      "size": 176,
+      "sha256": "fc7c17a90c2d20846bb3b840b94a3dcc023e48fc705410c7487397e90e2c1af7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/adapters/__init__.py",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/adapters/accessmanager_pro.py",
+      "size": 191,
+      "sha256": "8bbaf9f89ce202db9951dbff46f50868d14445c83c5e31bc55d9e0d0961df9af"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/adapters/alpeta_api.py",
+      "size": 120,
+      "sha256": "d72159db39e31c9b431f475e02352f44072ce7ea235687bc46274ac74eb0311d"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/adapters/base.py",
+      "size": 10494,
+      "sha256": "67ad5851260a3dac37833ca4119163491156cef60a993eb9647e3e642f573fbd"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/adapters/tcp_terminal.py",
+      "size": 136,
+      "sha256": "2b6b321084bee34692c27fcbb6837ee3d04480eeba0bfa30ad176b529da1f06b"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/adapters/ucs_sdk.py",
+      "size": 156,
+      "sha256": "6c457899f7be3af34e6fecdf97e74ad664c02f8d96db2adda06d5d20f6e058bb"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/adapters/unis_server.py",
+      "size": 173,
+      "sha256": "f00d935c3b773700f93faaa4537867d76c5fd138fc661b3a7868320e6d2b2adb"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/adapters/usb_scanner_sdk.py",
+      "size": 179,
+      "sha256": "834004bd971ab7a96cbcc39875fb45553ca7a2bec8460635e30a66f06207a794"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/adapters/wiegand_rs485.py",
+      "size": 114,
+      "sha256": "b46bc0a81da9e889528635f8ba1ebe9f28a3748f643b3645ee0c6fb69353b3d5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/models.py",
+      "size": 1183,
+      "sha256": "d984dbbf332d69a75fd75c2bc0789ff15e755059eba999f153ec40dd7f2a0d38"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/router.py",
+      "size": 4929,
+      "sha256": "2b75e949592d0ddea8f317e8f08f2235e97ebba8f7a943cf19c9ed4ddc01b27c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/src/supplier_virdi/versioning.py",
+      "size": 1272,
+      "sha256": "25f558d107c9cf9377464ba5e08c61368680cd04f9a295cf9c397a53c6512dd3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/tests/test_router.py",
+      "size": 504,
+      "sha256": "99c41cc32d0a1b06b582692f505560e3fc926fb4b7dc29056568cd7c6c3de70f"
+    },
+    {
+      "path": "device-hub/packages/suppliers/virdi/vendor-libs/README.md",
+      "size": 297,
+      "sha256": "cf7f101004f07db896d94aeef11284c03a1329e709931fe8891830563313245d"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/.pytest_cache/.gitignore",
+      "size": 37,
+      "sha256": "3ed731b65d06150c138e2dadb0be0697550888a6b47eb8c45ecc9adba8b8e9bd"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/.pytest_cache/CACHEDIR.TAG",
+      "size": 191,
+      "sha256": "37dc88ef9a0abeddbe81053a6dd8fdfb13afb613045ea1eb4a5c815a74a3bde4"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/.pytest_cache/README.md",
+      "size": 302,
+      "sha256": "73fd6fccdd802c419a6b2d983d6c3173b7da97558ac4b589edec2dfe443db9ad"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/.pytest_cache/v/cache/nodeids",
+      "size": 2,
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/COMPATIBILITY.md",
+      "size": 1545,
+      "sha256": "47a278b8f583f7a8ee3a8accc76c8753ff12e37f0ee4122a15e38a3039f2f3c0"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/DOCUMENTATION.md",
+      "size": 2510,
+      "sha256": "1007b8dad020a1041d76e9ccab9b73098a5e59c7938c5f4ecf87e1280469bfe7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/README.md",
+      "size": 1717,
+      "sha256": "158d0e48c6c99cb944ea0da2013da641213dcf44a98235b010decb45c90cedfa"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/SDK_API_VERSIONING.md",
+      "size": 1245,
+      "sha256": "3739d7c8928a8b80d7cc78b74887d38c65c40a960f8efd47050a8707866480c0"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/examples/device.example.json",
+      "size": 219,
+      "sha256": "1058037a428000a61696707f91e34660318ace09ca873cc0160881cd3ad17b32"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/examples/version-aware-device.example.json",
+      "size": 777,
+      "sha256": "e7848c1d40285f49b54abfd4d4083ae5c60648af9b4659f88132d054aee911e5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/ac-push/README.md",
+      "size": 759,
+      "sha256": "b89e5f11e298266f9ddb192760430e8c63a28014b5fb4e2ece21633eef34a9df"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/adms-ta-push/README.md",
+      "size": 758,
+      "sha256": "b12560840c6e1b887e70fa2a782d544abd2cdde44f06dfa4509816df0972fbf1"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/android-lcdp/README.md",
+      "size": 710,
+      "sha256": "e530f24ea11557e35916e749b6de597b0cbcb1d10a67dd9c0e08389c233ea26e"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/plcommpro-pull/README.md",
+      "size": 705,
+      "sha256": "2a883da79f8589e61aba189fa0529a73f7f4abbc38a97614eb5a89e3ff191bac"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/standalone-sdk/README.md",
+      "size": 813,
+      "sha256": "a15c76b2417938bc1359447ead3cedb6f43efb146a8833ff031e7f5a81c9271c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/time-cloud-zlink/README.md",
+      "size": 727,
+      "sha256": "7a0772d6a4b57920284bd5c2f9279aa8931a174a3949c23047296fa1ab39e906"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/wdms-api/README.md",
+      "size": 691,
+      "sha256": "ef5854e10a664894e708e87ea745b25eafe4c55403d44571b8c06f708224a771"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/wiegand-rs485/README.md",
+      "size": 697,
+      "sha256": "7f01ed55919aebcf72787251f402c7b5ace71dd11bcc709ee70d119aaaa293da"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/zk-pull/README.md",
+      "size": 731,
+      "sha256": "59438cc002b2483d5f2246a354d983c4c647e761645276422b09d3d060dabf30"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/zkbio-cvaccess-api/README.md",
+      "size": 718,
+      "sha256": "fdc253a6766ec7d6eaf918ea2fb9d1d6b795566be992f3d16a2cea085e05adc5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/zkbio-cvsecurity-api/README.md",
+      "size": 818,
+      "sha256": "a9d87f2cd34eafcf779ace9d6ace5be3fed7576af0dff8959229136a4b8fc5d5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/zkbio-time-api/README.md",
+      "size": 793,
+      "sha256": "370468c55f474b9070487e067a561b8eaecc7a194a94560bfdc746cc6006076a"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/integrations/zkfinger-sdk/README.md",
+      "size": 693,
+      "sha256": "7e8d8a8a427be96b084e09b6e0e8f53907638df28b52b129f2a9b079ec3270a5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/profiles/device_routes.csv",
+      "size": 2238,
+      "sha256": "3525e4633de3a3bb2106f736ad526537af7c4f90e9957d90a7e1a20ea01ff2f4"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/profiles/device_routes.json",
+      "size": 5055,
+      "sha256": "93c9c6516600cf23430c08e02c10eaa29e0def1fc70eca63295c8a7924a74da0"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/profiles/integration_versions.json",
+      "size": 9151,
+      "sha256": "0674e5ee4ca4e0d380add4a1a3f81c9de58591dc18f576c7af0eca2c3b0874d8"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/pyproject.toml",
+      "size": 298,
+      "sha256": "891035073bb508180c8cb844f6929d52c9fff58c4e4a2080df20c2c4def0faed"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/.github/workflows/ci.yml",
+      "size": 533,
+      "sha256": "39481a3788e9f4e40f23f786ccccad12b56de25a185a684e1deba23262e6d5aa"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/.gitignore",
+      "size": 104,
+      "sha256": "5c1ebc308426099d84b4fc78bfbea5d59356aa503a4868eed466be059b402713"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/LICENSE",
+      "size": 614,
+      "sha256": "8743b120ab6dfce5ce99eada6cbf4e62261b0a30f7d8762e162352f0fbe38d86"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/MANIFEST.json",
+      "size": 18292,
+      "sha256": "1fe05650825f688da04da3553188cc9b4e019a2029fd2cb14c22d2920c3da285"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/README.md",
+      "size": 4832,
+      "sha256": "988ab5091b1b6245c45b8db2f9a44a0d30e3bb0d83831b1810b3c2c6f33bf782"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/VERSION",
+      "size": 23,
+      "sha256": "a4b6583b6e03e64bc29e41502044837035351dda4aece97029098038fb886992"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-adms-push/pom.xml",
+      "size": 757,
+      "sha256": "c23dd409accfa38a558495c3326cb34bfdfaf09220f77fe66724fa91e36409a8"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsCommand.java",
+      "size": 293,
+      "sha256": "564ea38100dbefe6063765bc52f803dbe333b1f012163b89f502a3610f3735d0"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsCommandQueue.java",
+      "size": 907,
+      "sha256": "57c56ffaba00b2617332c4cb4b53139d973350e343a4d9a97a4fde4d417efa76"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsEnvelope.java",
+      "size": 496,
+      "sha256": "ed1c2756ea517dd70f736c74dd02f150bc808d2530ae4a3a007f5565ed248bfb"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsIngressStore.java",
+      "size": 2318,
+      "sha256": "c75615bcc90592d3d0669594eb2614e3a16ad2e5ce69a06621764bc170d3e134"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsParsedRecord.java",
+      "size": 346,
+      "sha256": "276afe47f3d29b0209c69424d96311ed184c81526e58a970a16a9a16fe3c4c12"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsPayloadParser.java",
+      "size": 3156,
+      "sha256": "ca63de98add5796ddb3daff2c54744c694b1249920efb090d6f194d729f1bf94"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsPushAdapter.java",
+      "size": 813,
+      "sha256": "a09ab24a7486497dfcd28b59168a58701fafe6b1242fac6ab5f7f2668ea6a3bf"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-adms-push/src/test/java/org/example/zkteco/adapter/adms/AdmsParserSelfTest.java",
+      "size": 314,
+      "sha256": "dd19ea87ae46dae638ff6932c1b66798f18acfb6bf797ce76d71aa5bd0cfc9a5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-http-platforms/pom.xml",
+      "size": 762,
+      "sha256": "383e37d233f45ea94d00a64c51c858f278d1b29e0d98af464910f9ebf6f9ebf4"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/AbstractHttpPlatformAdapter.java",
+      "size": 3036,
+      "sha256": "6d56727e977a931c0f027c739d1bc4e47d24cab522ca2e43fc9793d4df0c56a5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/PlcommProBridgeAdapter.java",
+      "size": 241,
+      "sha256": "f6401496277913a3d9195161daa31e7d347162fd2e0715ee30205f8744a3f04a"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/WdmsApiAdapter.java",
+      "size": 240,
+      "sha256": "96ed0941a4b33b0a6258ec05e228f9a0e3d6f616dd148872690c3efb32cee6f7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/WindowsSdkBridgeAdapter.java",
+      "size": 268,
+      "sha256": "0ce6d1ab916061d1e7751db1ded726a1d146e1851fbdddd6d52d744f4ecd454f"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/ZkBioCvAccessApiAdapter.java",
+      "size": 247,
+      "sha256": "37ab588603884506121553d8d11bfd01cde514f56441929b99f7d7b05b7dc9a3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/ZkBioCvSecurityApiAdapter.java",
+      "size": 274,
+      "sha256": "28d29dcda609218c96671229b986d3349fcabcb11303e5761554c1a1a115bb2f"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/ZkBioTimeApiAdapter.java",
+      "size": 256,
+      "sha256": "5b84f5f6af3bfbb086eb559f57b0094f9d73b072ec7df2f460bc5af1f9c74ae3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/ZkBioTimeCloudApiAdapter.java",
+      "size": 251,
+      "sha256": "cbd64358897b5e0c30887f630ad137ce97a02036a5106dc55fc5ccc1e2f92565"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/ZkBioZlinkApiAdapter.java",
+      "size": 238,
+      "sha256": "1e7ca12c19143825aa6f7fd3a807b0c2868b678cabfbc8e8d819f5612edfd2c2"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/ZkFingerBridgeAdapter.java",
+      "size": 241,
+      "sha256": "0a104ca0c4006e6d5488e2ee36c47b108a6b40f55e8dbd5fde699ce994ddc4c0"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-zk-pull/pom.xml",
+      "size": 930,
+      "sha256": "f2e869617ddfb47e1563058c60f1df9a88782deeab47c40e6548cf22518d5bfe"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkCommands.java",
+      "size": 1163,
+      "sha256": "a313f2d5c150365357315fbd0af39d9307c2add5d626ffaffe637fc4d6e20482"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkPacket.java",
+      "size": 283,
+      "sha256": "262df83fb3727c28a24f10c01361b666ca29de8d1018f2fb79a2305c6e18be15"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkPacketCodec.java",
+      "size": 2812,
+      "sha256": "65a2b057ecdf768543c6152c578afcb38f25e6d7ad537561ad4dc54aff64d2c4"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkPullAdapter.java",
+      "size": 2311,
+      "sha256": "5cc9f8a367419aedf7a7cb6d7ce8a9de3cb07a6b21337baf79b4dabe9396d77c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkPullClient.java",
+      "size": 4978,
+      "sha256": "08bb9753f4e0a7c960b05998d4934ad4f19ad5e8fc98683286d2f3ca8eaf2dee"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkPullTransport.java",
+      "size": 2285,
+      "sha256": "9b2997759089ef4f93fb5f187682214e90f85a1b7ab7e2b26e4009093fad6857"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkTimeCodec.java",
+      "size": 944,
+      "sha256": "694c7aa6372dd445c8369792cfc71fbbc464f3411aa811fae072505404949ed7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-zk-pull/src/test/java/org/example/zkteco/adapter/pull/ZkProtocolSelfTest.java",
+      "size": 730,
+      "sha256": "913ab403b35fbdfe40e97b91fedc233fa35164b595dd94135a3e34fd81d5069d"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/adapter-zk-pull/src/test/java/org/example/zkteco/adapter/pull/ZkPullAdapterTest.java",
+      "size": 1213,
+      "sha256": "a91a3b93063c07da00829689b5d180743b20e04a9670ecfcabff17f5b75b59f8"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/pom.xml",
+      "size": 734,
+      "sha256": "fe866e440915c2584dd31f3a3ae3784c2d766758b6765f28e4e1e08ed1835986"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/main/java/org/example/zkteco/core/AdapterRegistry.java",
+      "size": 1307,
+      "sha256": "ac30f81ba7eac048332e8a4ab9c90d9af961d7784dc98b2a46a1972e5d2a9bf2"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/main/java/org/example/zkteco/core/AttendanceEvent.java",
+      "size": 453,
+      "sha256": "0a131823720b70f61fbfa8f0107f9db17e8290b3bff24f65063ca7d33ffa41ba"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/main/java/org/example/zkteco/core/DeviceAdapter.java",
+      "size": 821,
+      "sha256": "35d67b0c77924815d815539bf0fe1e4016f6b7a84ace5dc36fc7c58f043638be"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/main/java/org/example/zkteco/core/DeviceCapability.java",
+      "size": 598,
+      "sha256": "46ae74307cd8c41335490f41e4e484669d8bd4bab7ccda764493d466cf406352"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/main/java/org/example/zkteco/core/DeviceCommand.java",
+      "size": 441,
+      "sha256": "03fbdb12374afc30ee0341f28e830f423e5df6632fbcaa89fb6ad38f69c82eda"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/main/java/org/example/zkteco/core/DeviceCommandResult.java",
+      "size": 444,
+      "sha256": "86a4b38b2b18c7bf4087efb14c3052deaca68a62c1578ce88067e906484b5638"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/main/java/org/example/zkteco/core/DeviceEndpoint.java",
+      "size": 1319,
+      "sha256": "fad15c63916f7e4e92e6c045ab92c6eced24eebc6dcb520420dd001989f091cf"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/main/java/org/example/zkteco/core/DeviceFamily.java",
+      "size": 257,
+      "sha256": "d0fd807ccba80287e45b8fb8a57c9ebafe8964cc860059dd868f1de90f9175c7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/main/java/org/example/zkteco/core/DeviceProbeResult.java",
+      "size": 903,
+      "sha256": "3b73df7a2da74d17e03f0277921e283c2b46e01f0ddb6d9bbd08cc9e7dae2894"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/main/java/org/example/zkteco/core/DeviceProfile.java",
+      "size": 833,
+      "sha256": "a59b263fb4c48de4d4d7578de6d88917528b7879f1bae4841cbfbd91d00a5e4e"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/main/java/org/example/zkteco/core/DeviceProtocol.java",
+      "size": 905,
+      "sha256": "06cc3f3bb6b00f3c7f505920395738113344b85c55395c659d97a791841563c8"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/main/java/org/example/zkteco/core/PersonRecord.java",
+      "size": 347,
+      "sha256": "b4110b125a2a3fc2abbb7407a6771ef9636f6a7b5eb7a69a96660bd84d10e571"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/core/src/test/java/org/example/zkteco/core/AdapterRegistryTest.java",
+      "size": 1609,
+      "sha256": "87276d6c3468f6bbeac63a733b347b58ba1de0bae7666e8cbcb24851d7b92a4f"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/docker-compose.yml",
+      "size": 596,
+      "sha256": "3c1765dd26d7313eda72ee47f191436656a0d013f9452283aa025d6e2d572129"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/docs/ALL_INTEGRATIONS_MANIFEST.md",
+      "size": 3010,
+      "sha256": "ce82c3a285325a87fa051503709e38bc7cee11f20d7624bba71a1bd000049bfc"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/docs/ARCHITECTURE.md",
+      "size": 843,
+      "sha256": "d4cf0fc9e464e6ac9a4f0548bb037e2192e1ebdf38a80672753670ab6ec7e8eb"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/docs/BUILD_VALIDATION.md",
+      "size": 1001,
+      "sha256": "e84bb20b644797c647ddb0ccbbd86d0c244671ffa60ba771b1b85c84e6ab4ac7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/docs/COMPATIBILITY_MATRIX.md",
+      "size": 2127,
+      "sha256": "55bfda0915462b12d8c8b50a9e8230b7d7ff53f36ed765a44b9075f88091c368"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/docs/CONFORMANCE.md",
+      "size": 951,
+      "sha256": "67616b55d7eb261e30e98738131d225bd3612c3d44f4857168cebf2dabad4a46"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/docs/DEVICE_ONBOARDING.md",
+      "size": 1610,
+      "sha256": "2d6d8b607ca324150c504370e94fc8665ea436b8b5f06d98fc713adc4eb7fc50"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/docs/EGYPT_DEVICE_FAMILIES.md",
+      "size": 1141,
+      "sha256": "1e8b058cf77b489f031a297e69df930c161537ad83e314e9a1a615845f8098dc"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/docs/OFFICIAL_INTEGRATION_PATHS.md",
+      "size": 769,
+      "sha256": "2d756eba7089a9534c6f4db6772d69fae5022fae24e6220897bfad6fb7c4cdb7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/docs/SECURITY.md",
+      "size": 737,
+      "sha256": "20fabe0eee96e6ee87e6948eddc575c509170a4bae17a5f6cf5a87b0e9f4c431"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/docs/VENDOR_ARTIFACTS.md",
+      "size": 738,
+      "sha256": "945b32dccc80d29bf07f4bd9ccf68d43e11c2682f14dd9f0ec21b555b9fb98f8"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/fixtures/README.md",
+      "size": 226,
+      "sha256": "f488e74858cab7e1449a5dc485fd12c37c895ba443758a906bdd964eb13d2624"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/fixtures/adms/attlog_kv.txt",
+      "size": 53,
+      "sha256": "da31059d72951fafcd5d2af62ed057c4a174705a96160cf3bc4fb8d065816846"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/fixtures/adms/attlog_tab.txt",
+      "size": 61,
+      "sha256": "22a9a9ccca2186c2d5b1310aecde980cf8e84aa090c3fd1a764068c7ecbe9095"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/pom.xml",
+      "size": 2266,
+      "sha256": "eef5dbead57d7e38fb066a59bc1ce4b69103fd6aa235817d6dd9d043d152183d"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/src/main/java/org/example/zkteco/gateway/GatewayApplication.java",
+      "size": 331,
+      "sha256": "c2684de44a368f01c8a2ff356eb3066218bf6c35b8ae46a3bbc151b6f106660c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/src/main/java/org/example/zkteco/gateway/adms/AdmsAdminController.java",
+      "size": 974,
+      "sha256": "c2a9f614a20456129929b8735c2a9252aa3ae0a2ecc99c9621597ad76a7ddbff"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/src/main/java/org/example/zkteco/gateway/adms/AdmsPushController.java",
+      "size": 2203,
+      "sha256": "aca841f736f9eb42cede4df57c2064b3c4742fbacbcad3a90567b2d2dd44f0cc"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/src/main/java/org/example/zkteco/gateway/compatibility/CompatibilityController.java",
+      "size": 1527,
+      "sha256": "dae8203393835a0166c3d7c6fe533809daeaebf8b6dd08c0a69aa1bd8dc26fa3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/src/main/java/org/example/zkteco/gateway/config/AdapterConfiguration.java",
+      "size": 1498,
+      "sha256": "bf1829ce15eaa0383128a6a6ba81e4b975085c07ab65a867ffd820f28f71ef8d"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/src/main/java/org/example/zkteco/gateway/config/AdmsConfiguration.java",
+      "size": 537,
+      "sha256": "e26d9518fc1ac18314bed28943b71ca4db29ab6d31ec82d33262c53cd23d1ba7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/src/main/java/org/example/zkteco/gateway/device/ApiExceptionHandler.java",
+      "size": 979,
+      "sha256": "ed719c339b4a3476a9fe1932a76fb225579b6c0f6dd31455d2f0ed28e40b6e2b"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/src/main/java/org/example/zkteco/gateway/device/DeviceController.java",
+      "size": 2158,
+      "sha256": "776bbb0a556bea216b0fb395b4e0f90a7f1d3a11228e350d7264db835e97cff3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/src/main/java/org/example/zkteco/gateway/device/DeviceNotFoundException.java",
+      "size": 234,
+      "sha256": "8f65d7467274848a82a8dc7d18eb4ac5863a414b01af0d0928b233b7fba875a5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/src/main/java/org/example/zkteco/gateway/device/DeviceRegistryService.java",
+      "size": 1395,
+      "sha256": "c354939360642476a1f9d4dc33c8e24ca905f948f8e1c9e2a558a3c8d816bb90"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/src/main/resources/application.yml",
+      "size": 457,
+      "sha256": "f58d3f55818349d2332f8a8fed0cb9e8cb2d5302168402c4b907b295f5de366b"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/gateway-app/src/test/java/org/example/zkteco/gateway/adms/AdmsPushControllerTest.java",
+      "size": 1336,
+      "sha256": "a465be21e8aecf884a3618389cc20ba75c8f9b7caafd4262eb882167325ea6ef"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/pom.xml",
+      "size": 1082,
+      "sha256": "0943e73b883dd57153e65e92cf40e8bec75c6476da68f3bfff229e5ff5895567"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/profiles/device-profiles.csv",
+      "size": 3256,
+      "sha256": "96cdb143024722f25b3e7011dbcf52f9334615f64b2cacc06d48baffa3c9bc5d"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/profiles/firmware-overrides.example.csv",
+      "size": 339,
+      "sha256": "96a48cbc6450215ec9f8033b0839cd021d75ff037b2c6c307f5703fa170e26fc"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/scripts/create-github-repo.ps1",
+      "size": 411,
+      "sha256": "b4da3bb1c89ca8654827d32d021ceafc343b29a9b7c2b394ce3a8e3425011612"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/scripts/create-github-repo.sh",
+      "size": 317,
+      "sha256": "846069a3a8eda8ba585ba52d3c9f1ff8cd34008306c2271e5839e54eb3c4fa9c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/tools/zk_probe.py",
+      "size": 1457,
+      "sha256": "9f8a35a41888a68b0b6589b1deb0d5709325ee60a3f49b5a61751f4a89422a72"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/vendor/README.md",
+      "size": 702,
+      "sha256": "0dd3b8ede5ab2294470072b1a4c22f3842a86db3b92fcc25ef2c6b9a610533fe"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/vendor/android/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/vendor/plcommpro/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/vendor/standalone-sdk/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/vendor/visible-light-sdk/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/vendor/zkfinger/linux/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/vendor/zkfinger/windows/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/windows-sdk-bridge/README.md",
+      "size": 714,
+      "sha256": "c16a5d757abdb1ea306ba699474e8342c18881547a97c790b43b64c55dbb7ffb"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/windows-sdk-bridge/Zkteco.WindowsBridge/Models.cs",
+      "size": 501,
+      "sha256": "e2d14bd4bf5fd219e52b513fa1ecb597310f26507c6e05c6207117f608cb8b72"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/windows-sdk-bridge/Zkteco.WindowsBridge/PlcommproBridge.cs",
+      "size": 2367,
+      "sha256": "c22918aa6678da991a489427a42fcfb8e00085032a7fc1e65983c9447429e26d"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/windows-sdk-bridge/Zkteco.WindowsBridge/Program.cs",
+      "size": 1537,
+      "sha256": "d09f5cebeaf95498db0b97f85876a1f9e7d30469cd00b44700b10819b59b6117"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/windows-sdk-bridge/Zkteco.WindowsBridge/ZkFingerNativeBridge.cs",
+      "size": 707,
+      "sha256": "f9373316983e3f1474bfeb948e326165099700ab29337ce2faa3ddb49619b232"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/windows-sdk-bridge/Zkteco.WindowsBridge/ZkemkeeperComBridge.cs",
+      "size": 2627,
+      "sha256": "e7cd1a7eb2637b6701448ae9032d9664bd2589017fe749570fdffe117c657eb3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/reference-implementation-java/windows-sdk-bridge/Zkteco.WindowsBridge/Zkteco.WindowsBridge.csproj",
+      "size": 264,
+      "sha256": "96b68195595b4b5c1b922a1a7397bf39f5dff285ba2d0ba55a54d2ae5704e0c3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/__init__.py",
+      "size": 176,
+      "sha256": "fc7c17a90c2d20846bb3b840b94a3dcc023e48fc705410c7487397e90e2c1af7"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/__init__.py",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/ac_push.py",
+      "size": 110,
+      "sha256": "fc14661bebc0b628ca6b84dd760751dbd396bc7d7dc1ec91f458cf33338eb7df"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/adms_ta_push.py",
+      "size": 119,
+      "sha256": "64c800870b886a83eb6742cb75c35c9553dc29c9216bd506da73831f3ab40e8a"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/android_lcdp.py",
+      "size": 172,
+      "sha256": "f1b36bca3e72ee601f78b82318be36b66b222fe190afbac5f4e037d2f6462165"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/base.py",
+      "size": 10494,
+      "sha256": "67ad5851260a3dac37833ca4119163491156cef60a993eb9647e3e642f573fbd"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/plcommpro_pull.py",
+      "size": 178,
+      "sha256": "7919e6dffd391e0ac4abb6a8babeaec8ffac4015035ac99ab1dfb15df1b8aca1"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/standalone_sdk.py",
+      "size": 178,
+      "sha256": "7b8b59bb4202d59ad24b3404303fba2da1771f3329f3a4a41b22b6cb2b692208"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/time_cloud_zlink.py",
+      "size": 128,
+      "sha256": "ad8d738577d478f02304e2fde77babfefe1236d4d5d988752547ef2163d88ffe"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/wdms_api.py",
+      "size": 116,
+      "sha256": "9f56af9d7054f3020c6b611b072139462263df20f96ae4cf9b8d5f4f75d33528"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/wiegand_rs485.py",
+      "size": 114,
+      "sha256": "b46bc0a81da9e889528635f8ba1ebe9f28a3748f643b3645ee0c6fb69353b3d5"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/zk_pull.py",
+      "size": 150,
+      "sha256": "6994f99c07c055e29c9834e17169abf8023c55916ea2895e78a3ce181de86fc9"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/zkbio_cvaccess_api.py",
+      "size": 135,
+      "sha256": "80ad34c83a77f2e38a7637e825775866807aa318dc12d40f2ccb936cb44fb30d"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/zkbio_cvsecurity_api.py",
+      "size": 139,
+      "sha256": "5adf4c10f24a18fee2782e4c558c466f7dcef96790428400ecfc89b66c67dd49"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/zkbio_time_api.py",
+      "size": 127,
+      "sha256": "b34ff8e712eb989f9936a2559b374c1a5e7eb4dfecc66d18d027046568e4885f"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/adapters/zkfinger_sdk.py",
+      "size": 172,
+      "sha256": "61dff7bf494503cd9f196f395a685aaac1fade5f380f65e5fe9e1838b5c88319"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/models.py",
+      "size": 1183,
+      "sha256": "d984dbbf332d69a75fd75c2bc0789ff15e755059eba999f153ec40dd7f2a0d38"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/router.py",
+      "size": 4930,
+      "sha256": "b89a61ce4f482081419c7274a2e27474071c1a8fcd669cfac15ca2ea30c202fa"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/src/supplier_zkteco/versioning.py",
+      "size": 1272,
+      "sha256": "25f558d107c9cf9377464ba5e08c61368680cd04f9a295cf9c397a53c6512dd3"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/tests/test_router.py",
+      "size": 506,
+      "sha256": "ee20e07d7f2cbb87178488f2750a51897081816329ef0ed33d9f3328aee2832c"
+    },
+    {
+      "path": "device-hub/packages/suppliers/zkteco/vendor-libs/README.md",
+      "size": 298,
+      "sha256": "c1c994e15aef8f0b8810173a2b4defa2f9b9c39b0a8603112ac3b3d3c92a4adf"
+    },
+    {
+      "path": "device-hub/profiles/README.md",
+      "size": 279,
+      "sha256": "891dfe0f04dbb6b818e5bbc52cdf36d8fe8208d3781ac18f8adace8c237568bb"
+    },
+    {
+      "path": "device-hub/profiles/device-matrix.csv",
+      "size": 3394,
+      "sha256": "4545ad4a71aae1eee0d89b29a623214a9bee9b8d36a91641c4cd9407edece6c0"
+    },
+    {
+      "path": "device-hub/scripts/create-github-repo.ps1",
+      "size": 242,
+      "sha256": "6eb4025f2714e13aa1aefca6351efeb85fa5ec8c5d345b5bf1b8bf04c6c96da2"
+    },
+    {
+      "path": "device-hub/scripts/create-github-repo.sh",
+      "size": 238,
+      "sha256": "ebccf81c14615b23905ec9cba42309d586360883661a5818c4784e2fbc0b3fbe"
+    },
+    {
+      "path": "device-hub/tools/device_probe.py",
+      "size": 1313,
+      "sha256": "0194c2bb17a0c2a2933e48e9d9110d0874c4bed4dfcbd8a0fcf11219f4383296"
+    },
+    {
+      "path": "device-hub/tools/select_supplier_route.py",
+      "size": 697,
+      "sha256": "3e2a0fd69a27638fd5bb0fce2c38717313e7fda0b246efa0b823a755f12727f1"
+    },
+    {
+      "path": "device-hub/vendor-libs/README.md",
+      "size": 85,
+      "sha256": "4f26537beca4024776a925753c26bfa1ce069a6d238605878e8ce2d90bd246f1"
+    },
+    {
+      "path": "fe/src/app/features/device-integrations/device-integrations.models.ts",
+      "size": 2920,
+      "sha256": "fc565dc8825096240d483e4696248e5bbcf8eff913a21ff7aefb059225b562b5"
+    },
+    {
+      "path": "fe/src/app/features/device-integrations/device-integrations.page.html",
+      "size": 17057,
+      "sha256": "44457de317bdd77c8e01a23afcb8594dbe152ba2b408a8e3b179e7f826df7916"
+    },
+    {
+      "path": "fe/src/app/features/device-integrations/device-integrations.page.scss",
+      "size": 5073,
+      "sha256": "44bce9cf106f2b588b54df4e425c18fd0fd06c959a5b407dfeea8b66e4d412d2"
+    },
+    {
+      "path": "fe/src/app/features/device-integrations/device-integrations.page.ts",
+      "size": 13366,
+      "sha256": "e79152131846c298b97b272bfe886c19bbc517b004112be9e9fba09867d72211"
+    },
+    {
+      "path": "fe/src/app/features/device-integrations/device-integrations.store.ts",
+      "size": 3724,
+      "sha256": "98f2f9d2a34827c7e5862eca90a0e87cd04bc2d7ec28f41263b9a464a73b3814"
+    },
+    {
+      "path": "scripts/apply_to_bortqala.py",
+      "size": 4363,
+      "sha256": "4e16ae77c24fb03275741dd9bf38b95da0043fae0e35f77e1f51588674fa2fb2"
+    },
+    {
+      "path": "scripts/validate_package.py",
+      "size": 1766,
+      "sha256": "c4b01287163451a2afd43e2fb955255c9abd7c7aa5abcbc3dfc3ac29803a05b7"
+    }
+  ]
+}

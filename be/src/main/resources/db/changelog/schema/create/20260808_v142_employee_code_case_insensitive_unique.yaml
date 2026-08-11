@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260808-v142-employee-code-case-insensitive-unique
+      author: bemo-erp
+      dbms: postgresql
+      comment: "REM-004: tenant-aware case-insensitive uniqueness guard for employee codes. The app already validates via existsByEmployeeCodeIgnoreCase on every create/update; this functional unique index (app_id, lower(employee_code)) is the database-level backstop so imports or direct writes can never register two codes that differ only by case."
+      changes:
+        - sql:
+            sql: |
+              CREATE UNIQUE INDEX IF NOT EXISTS uq_employees_app_lower_employee_code
+              ON employees (app_id, LOWER(employee_code));
+      rollback:
+        - sql:
+            sql: |
+              DROP INDEX IF EXISTS uq_employees_app_lower_employee_code;

@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_tenant_feature_change_reason
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists: { tableName: tenant_features }
+        - not: { columnExists: { tableName: tenant_features, columnName: change_reason } }
+      changes:
+        - addColumn:
+            tableName: tenant_features
+            columns:
+              - column: { name: change_reason, type: varchar(500), defaultValue: Legacy entitlement configuration, constraints: { nullable: false } }
+      rollback:
+        - dropColumn: { tableName: tenant_features, columnName: change_reason }

@@ -23,6 +23,12 @@
 **AR:** تعرض تبويبة إعدادات الجلسة سياسة تخصيص لوحات المديرين للمدير الشامل فقط، بينما يحتفظ المدير العادي بالقيمة الحالية ولا يستطيع تغييرها.
 
 **AR:** تبويب الاختصارات متاح لكل مستخدم مسجل، ويعرض اختصارات العمليات العامة والانتقال المباشر للقوائم، مع استمرار تطبيق صلاحيات المستخدم على التنقل الفعلي.
+
+## Translation management / إدارة الترجمات
+
+**EN:** Super Admin sees the Arabic tab “إدارة الترجمات”. The view selects a language and either the platform default scope or one application. Save updates that scope; an application override takes priority, while “Restore default” deletes only the override and immediately exposes the platform text. Search covers keys and effective text, and new keys can be added from the same view.
+
+**AR:** يظهر للمدير الشامل فقط تبويب «إدارة الترجمات». يختار المدير اللغة ثم «الترجمة الافتراضية لكل التطبيقات» أو تطبيقًا محددًا. الحفظ يحدّث النطاق المختار، والنص الخاص بالتطبيق له الأولوية. زر «العودة للافتراضي» يحذف تخصيص التطبيق فقط ليظهر النص العام فورًا. يمكن البحث بالمفتاح أو النص وإضافة مفتاح جديد من الشاشة نفسها.
 # Attendance anomaly threshold / نسبة شذوذ الحضور
 
 **EN:** Tenant settings expose the percentage used by the backend to create daily biometric outage anomalies.
@@ -34,3 +40,15 @@
 **EN:** Successful user-preference and application-setting saves mark their reactive forms pristine. Navigation prompts only appear for changes made after the last successful save.
 
 **AR:** بعد نجاح حفظ تفضيلات المستخدم أو إعدادات الشركة تُعلّم النماذج كبيانات محفوظة، لذلك لا يظهر تحذير المغادرة إلا للتغييرات التي تمت بعد آخر حفظ ناجح.
+
+## 2026-08-10 theme-safe appearance controls
+
+**EN:** Appearance preferences no longer hard-code light-only `#f8fafc`, `#cbd5e1`, and `#64748b` surfaces for sidebar and notification options. Those controls now use the shared semantic theme tokens.
+
+**AR:** لم تعد خيارات المظهر الخاصة بالقائمة الجانبية والإشعارات تستخدم ألوان Light ثابتة داخل HTML، وأصبحت تعتمد على متغيرات الثيم المشتركة لتظهر بشكل صحيح في الوضع الداكن والفاتح.
+
+## 2026-08-10 — Categorized product tabs
+
+**EN:** Settings navigation now uses the BEMO product tab pattern in two wrapped groups: everyday/user settings and system/admin settings. This removes the long horizontal tab scrollbar on normal desktop widths.
+
+**AR:** أصبحت تبويبات الإعدادات تستخدم نمط BEMO الموحد ومقسمة إلى مجموعتين ملتفتين: إعدادات الاستخدام اليومية/المستخدم وإعدادات النظام/الإدارة، بدلاً من شريط أفقي طويل.

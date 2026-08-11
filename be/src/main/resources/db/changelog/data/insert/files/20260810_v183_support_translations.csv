@@ -1,0 +1,125 @@
+id;key;locale;text
+v183-001;support.nav;en-US;Help and feedback
+v183-002;support.nav;ar-EG;المساعدة والملاحظات
+v183-003;support.title;en-US;Support Center
+v183-004;support.title;ar-EG;مركز الدعم
+v183-005;support.description;en-US;Track issues ask questions and share product feedback
+v183-006;support.description;ar-EG;تابع المشكلات واطرح الأسئلة وشارك ملاحظات المنتج
+v183-007;support.tickets;en-US;Tickets
+v183-008;support.tickets;ar-EG;التذاكر
+v183-009;support.newTicket;en-US;New support ticket
+v183-010;support.newTicket;ar-EG;تذكرة دعم جديدة
+v183-011;support.priority;en-US;Priority
+v183-012;support.priority;ar-EG;الأولوية
+v183-013;support.category;en-US;Category
+v183-014;support.category;ar-EG;التصنيف
+v183-015;support.module;en-US;Module
+v183-016;support.module;ar-EG;الوحدة
+v183-017;support.screen;en-US;Screen
+v183-018;support.screen;ar-EG;الشاشة
+v183-019;support.impact;en-US;Business impact
+v183-020;support.impact;ar-EG;أثر المشكلة على العمل
+v183-021;support.details;en-US;Description
+v183-022;support.details;ar-EG;الوصف
+v183-023;support.submit;en-US;Submit ticket
+v183-024;support.submit;ar-EG;إرسال التذكرة
+v183-025;support.created;en-US;Support ticket created
+v183-026;support.created;ar-EG;تم إنشاء تذكرة الدعم
+v183-027;support.ticketNo;en-US;Ticket
+v183-028;support.ticketNo;ar-EG;التذكرة
+v183-029;support.status;en-US;Status
+v183-030;support.status;ar-EG;الحالة
+v183-031;support.team;en-US;Assigned team
+v183-032;support.team;ar-EG;الفريق المسؤول
+v183-033;support.sla;en-US;SLA due
+v183-034;support.sla;ar-EG;موعد الاستجابة
+v183-035;support.update;en-US;Update ticket
+v183-036;support.update;ar-EG;تحديث التذكرة
+v183-037;support.comment;en-US;Update comment
+v183-038;support.comment;ar-EG;تعليق التحديث
+v183-039;support.feedback;en-US;Feedback
+v183-040;support.feedback;ar-EG;الملاحظات
+v183-041;support.feedbackType;en-US;Feedback type
+v183-042;support.feedbackType;ar-EG;نوع الملاحظة
+v183-043;support.message;en-US;Message
+v183-044;support.message;ar-EG;الرسالة
+v183-045;support.rating;en-US;Rating
+v183-046;support.rating;ar-EG;التقييم
+v183-047;support.sendFeedback;en-US;Send feedback
+v183-048;support.sendFeedback;ar-EG;إرسال الملاحظة
+v183-049;support.feedbackSent;en-US;Feedback sent
+v183-050;support.feedbackSent;ar-EG;تم إرسال الملاحظة
+v183-051;support.health;en-US;Customer health
+v183-052;support.health;ar-EG;صحة العميل
+v183-053;support.calculate;en-US;Recalculate health
+v183-054;support.calculate;ar-EG;إعادة حساب الصحة
+v183-055;support.score;en-US;Health score
+v183-056;support.score;ar-EG;درجة الصحة
+v183-057;support.reasons;en-US;Transparent reasons and recommended actions
+v183-058;support.reasons;ar-EG;الأسباب الواضحة والإجراءات المقترحة
+v183-059;support.points;en-US;points
+v183-060;support.points;ar-EG;نقاط
+v183-061;support.actionRequired;en-US;Action required
+v183-062;support.actionRequired;ar-EG;إجراء مطلوب
+v183-063;support.positive;en-US;Positive
+v183-064;support.positive;ar-EG;إيجابي
+v183-065;support.noData;en-US;No records yet
+v183-066;support.noData;ar-EG;لا توجد سجلات بعد
+v183-067;support.priority.low;en-US;Low
+v183-068;support.priority.low;ar-EG;منخفضة
+v183-069;support.priority.medium;en-US;Medium
+v183-070;support.priority.medium;ar-EG;متوسطة
+v183-071;support.priority.high;en-US;High
+v183-072;support.priority.high;ar-EG;مرتفعة
+v183-073;support.priority.critical;en-US;Critical
+v183-074;support.priority.critical;ar-EG;حرجة
+v183-075;support.type.problem;en-US;Report a problem
+v183-076;support.type.problem;ar-EG;الإبلاغ عن مشكلة
+v183-077;support.type.feature;en-US;Suggest a feature
+v183-078;support.type.feature;ar-EG;اقتراح ميزة
+v183-079;support.type.question;en-US;Ask a question
+v183-080;support.type.question;ar-EG;طرح سؤال
+v183-081;support.type.rating;en-US;Rate this workflow
+v183-082;support.type.rating;ar-EG;تقييم هذا المسار
+v183-083;support.type.general;en-US;General feedback
+v183-084;support.type.general;ar-EG;ملاحظة عامة
+v183-085;health.activation;en-US;Activation milestones
+v183-086;health.activation;ar-EG;مراحل التفعيل
+v183-087;health.usage;en-US;Recent usage
+v183-088;health.usage;ar-EG;الاستخدام الحديث
+v183-089;health.adoption;en-US;Workflow adoption
+v183-090;health.adoption;ar-EG;تبني مسارات العمل
+v183-091;health.dataQuality;en-US;Data quality
+v183-092;health.dataQuality;ar-EG;جودة البيانات
+v183-093;health.operational;en-US;Operational health
+v183-094;health.operational;ar-EG;الصحة التشغيلية
+v183-095;health.support;en-US;Support load
+v183-096;health.support;ar-EG;عبء الدعم
+v183-097;health.commercial;en-US;Commercial state
+v183-098;health.commercial;ar-EG;الحالة التجارية
+v183-099;SUPPORT_CRITICAL_IMPACT_REQUIRED;en-US;Critical tickets require a detailed business impact
+v183-100;SUPPORT_CRITICAL_IMPACT_REQUIRED;ar-EG;تتطلب التذاكر الحرجة وصفاً تفصيلياً لأثر العمل
+v183-101;SUPPORT_TICKET_NOT_FOUND;en-US;Support ticket was not found
+v183-102;SUPPORT_TICKET_NOT_FOUND;ar-EG;لم يتم العثور على تذكرة الدعم
+v183-103;SUPPORT_STATUS_TRANSITION_INVALID;en-US;Support ticket status transition is invalid
+v183-104;SUPPORT_STATUS_TRANSITION_INVALID;ar-EG;انتقال حالة تذكرة الدعم غير صالح
+v183-105;FEEDBACK_RATING_REQUIRED;en-US;A rating is required for rating feedback
+v183-106;FEEDBACK_RATING_REQUIRED;ar-EG;التقييم مطلوب لملاحظة التقييم
+v183-107;CUSTOMER_HEALTH_SNAPSHOT_INVALID;en-US;Customer health evidence is invalid
+v183-108;CUSTOMER_HEALTH_SNAPSHOT_INVALID;ar-EG;دليل صحة العميل غير صالح
+v183-109;SUPPORT_CONTEXT_INVALID;en-US;Support context route is invalid
+v183-110;SUPPORT_CONTEXT_INVALID;ar-EG;مسار سياق الدعم غير صالح
+v183-111;support.separator;en-US;-
+v183-112;support.separator;ar-EG;-
+v183-113;support.status.new;en-US;New
+v183-114;support.status.new;ar-EG;جديدة
+v183-115;support.status.triaged;en-US;Triaged
+v183-116;support.status.triaged;ar-EG;تم الفرز
+v183-117;support.status.inprogress;en-US;In progress
+v183-118;support.status.inprogress;ar-EG;قيد المعالجة
+v183-119;support.status.waitingcustomer;en-US;Waiting for customer
+v183-120;support.status.waitingcustomer;ar-EG;بانتظار العميل
+v183-121;support.status.resolved;en-US;Resolved
+v183-122;support.status.resolved;ar-EG;تم الحل
+v183-123;support.status.closed;en-US;Closed
+v183-124;support.status.closed;ar-EG;مغلقة

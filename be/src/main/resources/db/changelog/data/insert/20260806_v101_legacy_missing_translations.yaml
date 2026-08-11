@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260806-v101-legacy-missing-translations
+      author: codex
+      comment: "Backfills Arabic/English translations for legacy UI keys that predated the database-backed translation tables (login, settings, reports and the sidebar expand-all action). Idempotent: each row is only inserted when the key/locale pair is still absent, so it coexists with the older unconditional seed changesets."
+      changes:
+        - sql:
+            splitStatements: true
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-ar-001', 'action.expandAll', 'ar-EG', 'توسيع الكل' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'action.expandAll' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-en-001', 'action.expandAll', 'en-US', 'Expand all' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'action.expandAll' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-ar-002', 'login.invalidCredentials', 'ar-EG', 'اسم المستخدم أو كلمة المرور غير صحيحة' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'login.invalidCredentials' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-en-002', 'login.invalidCredentials', 'en-US', 'Invalid username or password' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'login.invalidCredentials' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-ar-003', 'login.sessionExpired', 'ar-EG', 'انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'login.sessionExpired' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-en-003', 'login.sessionExpired', 'en-US', 'Your session has expired. Please sign in again.' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'login.sessionExpired' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-ar-004', 'reports.thirtyDays', 'ar-EG', 'آخر 30 يومًا' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'reports.thirtyDays' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-en-004', 'reports.thirtyDays', 'en-US', 'Last 30 days' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'reports.thirtyDays' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-ar-005', 'settings.maxRecentlyUsed', 'ar-EG', 'الحد الأقصى لعدد العناصر المستخدمة مؤخراً' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.maxRecentlyUsed' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-en-005', 'settings.maxRecentlyUsed', 'en-US', 'Maximum recently used items' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.maxRecentlyUsed' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-ar-006', 'settings.resetFavorites', 'ar-EG', 'إعادة تعيين المفضلة' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.resetFavorites' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-en-006', 'settings.resetFavorites', 'en-US', 'Reset favorites' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.resetFavorites' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-ar-007', 'settings.sessionHint', 'ar-EG', 'اختر المدة التي تظل الجلسة فيها نشطة قبل انتهاء الصلاحية.' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.sessionHint' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-en-007', 'settings.sessionHint', 'en-US', 'Choose how long a session stays active before timeout.' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.sessionHint' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-ar-008', 'settings.sessionMinutes', 'ar-EG', 'مهلة انتهاء الجلسة (بالدقائق)' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.sessionMinutes' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-en-008', 'settings.sessionMinutes', 'en-US', 'Session timeout (minutes)' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.sessionMinutes' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-ar-009', 'settings.sessionTitle', 'ar-EG', 'الجلسة' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.sessionTitle' AND locale = 'ar-EG');
+              INSERT INTO translations (id, translation_key, locale, text_value) SELECT 'v101-en-009', 'settings.sessionTitle', 'en-US', 'Session' WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.sessionTitle' AND locale = 'en-US');
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v101-%'" }

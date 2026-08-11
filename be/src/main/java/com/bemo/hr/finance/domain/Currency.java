@@ -10,7 +10,7 @@ import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -38,6 +38,29 @@ public class Currency {
 
     @Column(name = "exchange_rate", nullable = false, precision = 12, scale = 4)
     private BigDecimal exchangeRate;
+
+    /*
+     * The following fields are deliberately separate from exchange_rate.
+     * They are informational hints fetched from Frankfurter and MUST NOT
+     * silently change the configured accounting rate.
+     */
+    @Column(name = "reference_exchange_rate", precision = 20, scale = 8)
+    private BigDecimal referenceExchangeRate;
+
+    @Column(name = "reference_rate_provider", length = 30)
+    private String referenceRateProvider;
+
+    @Column(name = "reference_rate_base_code", length = 10)
+    private String referenceRateBaseCode;
+
+    @Column(name = "reference_rate_date")
+    private LocalDate referenceRateDate;
+
+    @Column(name = "reference_rate_fetched_at")
+    private Long referenceRateFetchedAt;
+
+    @Column(name = "reference_rate_supported")
+    private Boolean referenceRateSupported;
 
     @Column(nullable = false)
     private boolean active;
@@ -68,6 +91,24 @@ public class Currency {
         this.active = active;
     }
 
+    public void updateReferenceRate(String baseCode, BigDecimal rateInBase, LocalDate providerDate, long fetchedAt) {
+        this.referenceExchangeRate = rateInBase;
+        this.referenceRateProvider = "FRANKFURTER";
+        this.referenceRateBaseCode = baseCode == null ? null : baseCode.strip().toUpperCase();
+        this.referenceRateDate = providerDate;
+        this.referenceRateFetchedAt = fetchedAt;
+        this.referenceRateSupported = Boolean.TRUE;
+    }
+
+    public void markReferenceUnavailable(String baseCode, long fetchedAt, boolean supported) {
+        this.referenceExchangeRate = null;
+        this.referenceRateProvider = "FRANKFURTER";
+        this.referenceRateBaseCode = baseCode == null ? null : baseCode.strip().toUpperCase();
+        this.referenceRateDate = null;
+        this.referenceRateFetchedAt = fetchedAt;
+        this.referenceRateSupported = supported;
+    }
+
     @PrePersist
     void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
 
@@ -80,6 +121,12 @@ public class Currency {
     public String getSymbol() { return symbol; }
     public boolean isBase() { return isBase; }
     public BigDecimal getExchangeRate() { return exchangeRate; }
+    public BigDecimal getReferenceExchangeRate() { return referenceExchangeRate; }
+    public String getReferenceRateProvider() { return referenceRateProvider; }
+    public String getReferenceRateBaseCode() { return referenceRateBaseCode; }
+    public LocalDate getReferenceRateDate() { return referenceRateDate; }
+    public Long getReferenceRateFetchedAt() { return referenceRateFetchedAt; }
+    public Boolean getReferenceRateSupported() { return referenceRateSupported; }
     public boolean isActive() { return active; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }

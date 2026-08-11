@@ -86,19 +86,20 @@ import { WorkforceService } from '../../data-access/workforce.service';
   styles: [`
     .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; direction: rtl; }
     .eyebrow { font-size: .875rem; color: #d97706; font-weight: 600; }
-    .page-header h1 { font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: .25rem 0 0; }
+    .page-header h1 { font-size: 1.75rem; font-weight: 800; color: var(--ink); margin: .25rem 0 0; }
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
-    .kpi-card, .card { background: #fff; padding: 1.25rem; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .kpi-card, .card { background: var(--surface); padding: 1.25rem; border-radius: 12px; border: 1px solid var(--line); }
     .kpi-card { display: flex; flex-direction: column; gap: .5rem; }
     a.kpi-card, a.bar-row { color: inherit; text-decoration: none; }
     a.kpi-card:hover, a.bar-row:hover { border-color: #f59e0b; transform: translateY(-1px); }
     .shared-filters { display: flex; flex-wrap: wrap; align-items: end; gap: .8rem; }
     .shared-filters div { display: flex; flex-direction: column; gap: .25rem; }
-    .shared-filters label, .shared-filters small { font-size: .75rem; color: #64748b; }
-    .shared-filters select, .shared-filters button { border: 1px solid #cbd5e1; border-radius: 8px; padding: .5rem .65rem; background: white; }
+    .shared-filters label, .shared-filters small { font-size: .75rem; color: var(--muted); }
+    .shared-filters select, .shared-filters button { border: 1px solid var(--line); border-radius: 8px; padding: .5rem .65rem; background: var(--input-bg); color: var(--ink); }
+    .shared-filters select option, .shared-filters select optgroup { background: var(--surface); color: var(--ink); }
     .shared-filters small { flex-basis: 100%; }
-    .kpi-title, .chart-eyebrow { font-size: .8rem; color: #64748b; font-weight: 700; }
-    .kpi-value { font-size: 1.875rem; font-weight: 800; color: #0f172a; }
+    .kpi-title, .chart-eyebrow { font-size: .8rem; color: var(--muted); font-weight: 700; }
+    .kpi-value { font-size: 1.875rem; font-weight: 800; color: var(--ink); }
     .dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
     .contractor-table { grid-column: 1 / -1; }
     .chart-card { min-height: 245px; }
@@ -106,25 +107,25 @@ import { WorkforceService } from '../../data-access/workforce.service';
     .chart-head h3, .donut-card h3 { margin: .2rem 0 1rem; }
     .bar-chart { display: flex; flex-direction: column; gap: .85rem; margin-top: 1rem; }
     .bar-row { display: grid; grid-template-columns: minmax(90px, 1fr) 3fr 34px; align-items: center; gap: .75rem; font-size: .82rem; }
-    .bar-track { height: 12px; border-radius: 99px; background: #f1f5f9; overflow: hidden; }
+    .bar-track { height: 12px; border-radius: 99px; background: var(--surface-muted); overflow: hidden; }
     .bar-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #d97706, #fbbf24); }
     .category-bars .bar-track i { background: linear-gradient(90deg, #0369a1, #38bdf8); }
     .donut-layout { display: flex; align-items: center; justify-content: space-around; gap: 1.5rem; min-height: 160px; }
     .donut { width: 135px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; position: relative; }
-    .donut::after { content: ''; position: absolute; inset: 18px; background: #fff; border-radius: 50%; }
+    .donut::after { content: ''; position: absolute; inset: 18px; background: var(--surface); border-radius: 50%; }
     .donut span { position: relative; z-index: 1; font-size: 1.4rem; font-weight: 800; }
     .legend { display: flex; flex-direction: column; gap: .75rem; font-size: .85rem; }
     .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-left: .4rem; }
-    .legend .accepted { background: #16a34a; } .legend .remaining { background: #e2e8f0; }
+    .legend .accepted { background: #16a34a; } .legend .remaining { background: var(--line); }
     .financial-meter { height: 34px; border-radius: 10px; background: #dcfce7; overflow: hidden; margin: 2.5rem 0 .75rem; }
     .financial-meter i { display: block; height: 100%; background: linear-gradient(90deg, #ef4444, #f97316); }
-    .meter-labels { display: flex; justify-content: space-between; color: #64748b; font-size: .78rem; }
+    .meter-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: .78rem; }
     .data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; text-align: right; }
-    .data-table th, .data-table td { padding: .75rem 1rem; border-bottom: 1px solid #e2e8f0; }
+    .data-table th, .data-table td { padding: .75rem 1rem; border-bottom: 1px solid var(--line); }
     .badge { padding: .25rem .625rem; border-radius: 6px; font-size: .75rem; font-weight: 600; }
-    .badge.active { background: #dcfce7; color: #166534; } .badge.model-badge { background: #fef3c7; color: #92400e; }
-    .empty-cell { text-align: center; color: #94a3b8; padding: 2rem; }
-    .loading-state, .error-state { padding: 2rem; text-align: center; color: #64748b; } .error-state { color: #dc2626; }
+    .badge.active { background: #dcfce7; color: var(--success); } .badge.model-badge { background: #fef3c7; color: #92400e; }
+    .empty-cell { text-align: center; color: var(--muted); padding: 2rem; }
+    .loading-state, .error-state { padding: 2rem; text-align: center; color: var(--muted); } .error-state { color: var(--danger); }
     .motion-enabled .bar-track i, .motion-enabled .financial-meter i { animation: grow-bar 500ms cubic-bezier(.2,.8,.2,1) both; transform-origin: right; }
     .motion-disabled .bar-track i, .motion-disabled .financial-meter i { animation: none; }
     @keyframes grow-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }

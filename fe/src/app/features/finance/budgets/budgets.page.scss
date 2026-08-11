@@ -1,0 +1,99 @@
+.page { display: flex; flex-direction: column; gap: 20px; }
+
+.header-actions { display: flex; gap: 0.75rem; }
+
+.filter-pills-bar {
+  margin-bottom: 16px;
+
+  .pills-group {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .pill-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    min-height: 42px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--secondary-text);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.35;
+    text-align: center;
+    cursor: pointer;
+    transition: all 180ms ease;
+
+    &:hover {
+      border-color: var(--gold);
+      background: var(--surface-muted);
+    }
+
+    &.active {
+      background: #FFF8E1;
+      border-color: var(--gold);
+      color: #1F2937;
+      font-weight: 700;
+    }
+  }
+
+  .filter-select {
+    min-width: 180px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 13px;
+  }
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
+
+@media (max-width: 720px) {
+  .filter-pills-bar .pills-group { grid-template-columns: 1fr; }
+}
+
+/* Phase 3: product tabs + organized modal. */
+.budget-dialog {
+  --modal-wide-max-width: 780px;
+  --modal-body-padding: 18px 20px 20px;
+}
+
+.budget-dialog-form .field {
+  min-width: 0;
+}
+
+.budget-dialog-form .field input,
+.budget-dialog-form .field select {
+  width: 100%;
+}
+
+.budget-dialog-form .modal-form-actions {
+  justify-content: flex-start;
+}
+
+/* Old pill rules are intentionally superseded by .app-tabs/.app-tab. */
+.filter-pills-bar .pills-group {
+  display: flex;
+}
+
+.filter-pills-bar .filter-select {
+  min-height: var(--control-height);
+  border-radius: var(--radius-sm);
+  background: var(--input-bg);
+}

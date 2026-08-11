@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -72,6 +72,14 @@ export class AccountsPage {
 
   closeDrawer() {
     this.drawerOpen.set(false);
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKey(event: Event): void {
+    if (!this.drawerOpen()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.closeDrawer();
   }
 
   async submit() {

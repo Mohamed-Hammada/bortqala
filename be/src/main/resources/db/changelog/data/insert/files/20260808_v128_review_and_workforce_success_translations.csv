@@ -1,0 +1,7 @@
+id;translation_key;locale;text_value
+v128-001;review.decisionSaved;ar-EG;"تم حفظ قرار الحضور بنجاح"
+v128-002;review.decisionSaved;en-US;"Attendance decision saved successfully."
+v128-003;review.decisionPersistenceFailed;ar-EG;"لم يتم تأكيد حفظ القرار بعد إعادة تحميل التقرير."
+v128-004;review.decisionPersistenceFailed;en-US;"The decision could not be confirmed after reloading the report."
+v128-005;workforce.categoryCreatedSuccess;ar-EG;"تم إنشاء فئة العمال بنجاح"
+v128-006;workforce.categoryCreatedSuccess;en-US;"Worker category created successfully."

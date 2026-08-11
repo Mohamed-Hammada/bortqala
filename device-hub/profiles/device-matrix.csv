@@ -1,0 +1,29 @@
+vendor,family,models_examples,routes,verification_status,notes
+ZKTeco,K/LX attendance,K20; K30; K40; K50; K60; LX50,ZK_PULL | WINDOWS_SDK_BRIDGE,SEED,
+ZKTeco,iClock attendance,iClock 360/560/580/680/700 and variants,ADMS_PUSH | ZK_PULL | WINDOWS_SDK_BRIDGE,SEED,
+ZKTeco,Standalone access,F16; F18; F22; TF1700; MA300; MA500,AC_PUSH | ADMS_PUSH | ZK_PULL | WINDOWS_SDK_BRIDGE,SEED,Firmware variant decides route
+ZKTeco,Face/palm terminals,uFace; MB; SpeedFace; SenseFace; ProFace; Horus families,ADMS_PUSH | AC_PUSH | ZKBIO_PLATFORM_API | VISIBLE_LIGHT_SDK,SEED,
+ZKTeco,Access panels,C3; inBio families,PLCOMM_PRO_SDK | ZKBIO_CVSECURITY_API,SEED,
+ZKTeco,USB scanners,ZK9500; ZK6500; ZK8500R; SLK20R,ZKFINGER_SCANNER,SEED,
+Hikvision,MinMoe face access terminals,DS-K1T3xx; DS-K1T6xx; DS-K1T67x and regional variants,HIKVISION_ISAPI | HIKVISION_HCNETSDK | HIKVISION_HIKCENTRAL,SEED,Exact ISAPI capability differs by firmware
+Hikvision,Fingerprint/card terminals,DS-K1T80x/804/804B and related legacy families,HIKVISION_ISAPI | HIKVISION_HCNETSDK,SEED,
+Hikvision,Access controllers,DS-K26xx; DS-K28xx; newer controllers,HIKVISION_ISAPI | HIKVISION_HCNETSDK | HIKVISION_HIKCENTRAL,SEED,
+Hikvision,HikCentral managed estate,HikCentral Professional compatible devices,HIKVISION_HIKCENTRAL,SEED,
+Dahua,ASI face/access terminals,ASI3xxx; ASI6xxx; ASI7xxx families,DAHUA_NETSDK | DAHUA_DSS,SEED,
+Dahua,ASA attendance terminals,ASA series,DAHUA_NETSDK | DAHUA_DSS,SEED,
+Dahua,ASC access controllers,ASC series,DAHUA_NETSDK | DAHUA_DSS,SEED,
+Dahua,DSS managed estate,DSS Professional compatible devices,DAHUA_DSS,SEED,
+Suprema,2nd generation biometric,BioStation 2; BioLite N2; FaceStation F2; FaceLite; BioEntry W2; BioEntry P2,SUPREMA_DEVICE_SDK | SUPREMA_GSDK | SUPREMA_BIOSTAR_API,SEED,
+Suprema,Current terminals,BioStation 3; BioStation 3 Max; FaceStation F2; X-Station 2,SUPREMA_DEVICE_SDK | SUPREMA_GSDK | SUPREMA_BIOSTAR_API,SEED,
+Suprema,Card/mobile readers,XPass 2; XPass D2; XPass Q2; Airfob-compatible families,SUPREMA_DEVICE_SDK | SUPREMA_GSDK | SUPREMA_BIOSTAR_API,SEED,
+Suprema,Legacy BioStar 1 devices,BioEntry Plus; BioEntry W; first-gen XPass etc.,SUPREMA_LEGACY_SDK,SEED,Separate legacy path; not G-SDK
+Virdi,UBio-X,UBio-X Face; Face Pro/Premium; Pro2; Pro Lite; Iris; Slim,VIRDI_ALPETA_API | VIRDI_UCS_SDK,SEED,
+Virdi,AC terminals,AC-5000/5100; AC-2100 PLUS/2200; AC-2000; AC-1100,VIRDI_UCS_SDK | VIRDI_UNIS | VIRDI_ALPETA_API,SEED,
+Virdi,UNIS legacy estate,UNIS-connected legacy terminals,VIRDI_UNIS | VIRDI_UCS_SDK,SEED,
+Anviz,Face terminals,FaceDeep 3; FaceDeep 5; FacePass 7 Pro,ANVIZ_CROSSCHEX | ANVIZ_SDK,SEED,
+Anviz,Cloud-connected CX/W,CX2; CX3; CX7; W1/W2/W3 families,ANVIZ_CROSSCHEX | ANVIZ_SDK,SEED,
+Anviz,Access terminals,C2; C2 Slim; C2 Pro; M5 Plus; T5 Pro,ANVIZ_SDK | ANVIZ_CROSSCHEX,SEED,
+Anviz,Palm/new devices,M7 Palm and newer supported CrossChex devices,ANVIZ_CROSSCHEX | ANVIZ_SDK,SEED,
+Honeywell,Pro-Watch managed access,Pro-Watch 4.x/5.x/6.x managed panels and readers,HONEYWELL_PROWATCH | HONEYWELL_HSDK,SEED,
+Honeywell,PRO controllers,PRO3200; PRO4200 families via Pro-Watch,HONEYWELL_PROWATCH | HONEYWELL_HSDK,SEED,
+Honeywell,Mercury-backed estates,Mercury LP/MP/M5 integrations supported by Pro-Watch generation,HONEYWELL_PROWATCH | HONEYWELL_HSDK,SEED,"Use supported Pro-Watch integration, not reverse-engineered panel protocol"

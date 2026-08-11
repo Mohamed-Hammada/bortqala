@@ -1,0 +1,132 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260808-v129-bilingual-arabic-cleanup
+      author: bemo-erp
+      comment: "Removes the English translation parentheticals from 118 ar-EG UI strings so the Arabic locale shows pure Arabic (accounts, quality, tax, settings, workspace nav, payroll, production, sales, audit, review, banks, journal, fiscal, parties, AUTH_* exceptions). Technical terms (CSV, IBAN, SWIFT, BOM, SO, etc.) are retained."
+      changes:
+        - sql:
+            sql: |
+              UPDATE translations SET text_value = 'البتّ' WHERE translation_key = 'access.level.DECIDE' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'النظام المالي المحاسبي' WHERE translation_key = 'accounts.eyebrow' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'حساب رئيسي' WHERE translation_key = 'accounts.headerAccount' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'حساب رئيسي - لا يقبل قيود مباشرة' WHERE translation_key = 'accounts.isHeaderLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'الحساب الأب' WHERE translation_key = 'accounts.parentLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'حساب فرعي' WHERE translation_key = 'accounts.postingAccount' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'دليل الحسابات الشامل' WHERE translation_key = 'accounts.title' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'أصول' WHERE translation_key = 'accounts.typeAssetFull' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'حقوق ملكية' WHERE translation_key = 'accounts.typeEquityFull' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مصروفات' WHERE translation_key = 'accounts.typeExpenseFull' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'خصوم والتزامات' WHERE translation_key = 'accounts.typeLiabilityFull' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'إيرادات' WHERE translation_key = 'accounts.typeRevenueFull' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'بالوساطة' WHERE translation_key = 'parties.managedBrokered' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مباشر' WHERE translation_key = 'parties.managedDirect' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'نقدي' WHERE translation_key = 'parties.termsCash' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'تقرير ووحدة المطابقة الثلاثية' WHERE translation_key = 'procurement.matchModalTitle' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'محضر فحص جديد' WHERE translation_key = 'quality.add' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'الجودة والرقابة' WHERE translation_key = 'quality.eyebrow' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مرفوض' WHERE translation_key = 'quality.optionFailed' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'استلام بضائع من مورد' WHERE translation_key = 'quality.optionIncomingGrn' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مقبول' WHERE translation_key = 'quality.optionPassed' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مرفوض ✗' WHERE translation_key = 'quality.resultFailed' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مقبول ✓' WHERE translation_key = 'quality.resultPassed' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'فحص ومراقبة الجودة' WHERE translation_key = 'quality.title' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'كود العملة' WHERE translation_key = 'taxCurrency.currencyCodeLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'إعدادات الضرائب والعملات' WHERE translation_key = 'taxCurrency.eyebrow' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'تعيين كعملة أساسية للنظام' WHERE translation_key = 'taxCurrency.setBaseCurrency' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'الرمز' WHERE translation_key = 'taxCurrency.symbolLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'ضريبة مدخلات' WHERE translation_key = 'taxCurrency.typeInput' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'ضريبة مبيعات' WHERE translation_key = 'taxCurrency.typeOutput' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'خصم وإضافة' WHERE translation_key = 'taxCurrency.typeWithholding' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = '⚡ <strong>تنبيه انقطاع الاتصال:</strong> أنت تعمل حالياً دون اتصال بالشبكة، سيعاد التزامن فور عودة الاتصال.' WHERE translation_key = 'appShell.offlineBanner' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'العملية' WHERE translation_key = 'audit.colAction' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'تفاصيل التغيير' WHERE translation_key = 'audit.colDetails' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'نوع الكيان' WHERE translation_key = 'audit.colEntityType' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'المستخدم' WHERE translation_key = 'audit.colUser' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'سجل التتبع والرقابة' WHERE translation_key = 'audit.eyebrow' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'سجل التتبع والتدقيق للعمليات' WHERE translation_key = 'audit.title' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'تفاصيل مؤشر الأداء' WHERE translation_key = 'dashboard.kpiModalEyebrow' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مغلقة' WHERE translation_key = 'fiscal.closedLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'الرقابة المالية وقفل الفترات' WHERE translation_key = 'fiscal.eyebrow' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مقفلة بالكامل' WHERE translation_key = 'fiscal.lockedLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مفتوحة' WHERE translation_key = 'fiscal.openLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'توجيه ذكي لمسؤول الموارد البشرية' WHERE translation_key = 'review.aiHeading' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'جميع الصفوف' WHERE translation_key = 'review.allFilterLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مؤكد' WHERE translation_key = 'review.holidayConfirmed' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'معلق' WHERE translation_key = 'review.holidayPending' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مرفوض' WHERE translation_key = 'review.holidayRejected' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'نسبة مراجعة السجلات' WHERE translation_key = 'review.progressLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'غير المحلول' WHERE translation_key = 'review.unresolvedFilterLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'اختر لغة واجهة النظام' WHERE translation_key = 'settings.localeHint' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = '📱 إشعارات الموافقات' WHERE translation_key = 'settings.pushApprovalsLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = '📱 إشعارات الرواتب' WHERE translation_key = 'settings.pushPayrollLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'إظهار شريط الاختصارات الجاهزة في شاشة التقارير' WHERE translation_key = 'settings.reportsPresetsHint' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = '🔒 سياسة الأمان وكلمات المرور' WHERE translation_key = 'settings.securityTitle' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'تفعيل مدة انتهاء الجلسة' WHERE translation_key = 'settings.sessionEnabledLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'إظهار قسم القوائم المفضلة' WHERE translation_key = 'settings.showFavoritesLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'إظهار قسم الصفحات المستخدمة مؤخراً' WHERE translation_key = 'settings.showRecentLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'إدارة الخزينة والسيولة' WHERE translation_key = 'banks.eyebrow' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'الحسابات البنكية والخزائن' WHERE translation_key = 'banks.title' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'رمز السويفت' WHERE translation_key = 'banks.colSwift' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'رمز السويفت كود' WHERE translation_key = 'banks.swiftLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'دفتر اليومية العامة والقيود' WHERE translation_key = 'journal.eyebrow' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'القيود اليومية' WHERE translation_key = 'journal.title' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مسودة' WHERE translation_key = 'journal.statusDraft' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مُرحَّل' WHERE translation_key = 'journal.statusPosted' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'متراجع عنه' WHERE translation_key = 'journal.statusReversed' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'إضافة قيد يومية جديد' WHERE translation_key = 'journal.newTitle' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مدين' WHERE translation_key = 'journal.debit' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'دائن' WHERE translation_key = 'journal.credit' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'التصنيع وتخطيط احتياجات المواد' WHERE translation_key = 'production.eyebrow' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'أوامر الإنتاج وقوائم المكونات' WHERE translation_key = 'production.title' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'أمر إنتاج جديد' WHERE translation_key = 'production.addOrder' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'قائمة مكونات جديدة' WHERE translation_key = 'production.addBom' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'قوائم المكونات والتركيب' WHERE translation_key = 'production.tabBoms' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'قائمة المكونات' WHERE translation_key = 'production.colBom' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مخطط' WHERE translation_key = 'production.statusPlanned' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'قيد التصنيع' WHERE translation_key = 'production.statusInProgress' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مكتمل ومرحّل للمخزن' WHERE translation_key = 'production.statusCompleted' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'اسم المنتج النهائي' WHERE translation_key = 'production.colFinishedGood' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'كمية الناتج' WHERE translation_key = 'production.colYieldQuantity' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'قائمة مكونات جديدة' WHERE translation_key = 'production.bomTitle' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'اختر قائمة المكونات' WHERE translation_key = 'production.selectBomLabel' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'تمت إضافة قائمة المكونات بنجاح ✓' WHERE translation_key = 'production.bomSaved' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'سلسلة الإمداد ودورة البيع والتحصيل' WHERE translation_key = 'sales.eyebrow' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'دورة المبيعات' WHERE translation_key = 'sales.title' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'أمر بيع جديد' WHERE translation_key = 'sales.add' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'عرض سعر' WHERE translation_key = 'sales.stepQuotation' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'أمر بيع' WHERE translation_key = 'sales.stepOrder' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'إذن تسليم' WHERE translation_key = 'sales.stepDelivery' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مسودة' WHERE translation_key = 'sales.statusDraft' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مؤكد من العميل' WHERE translation_key = 'sales.statusConfirmed' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'تم التسليم من المخزن' WHERE translation_key = 'sales.statusDelivered' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'أمر بيع جديد' WHERE translation_key = 'sales.newTitle' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'البنية الإدارية والهيكل المؤسسي' WHERE translation_key = 'organization.eyebrow' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مدير النظام الشامل' WHERE translation_key = 'role.superAdmin' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'الأفراد والموظفين' WHERE translation_key = 'workspace.people' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'متابعة والدوام' WHERE translation_key = 'workspace.attendance' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'العمليات والمخزون' WHERE translation_key = 'workspace.operations' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'المالية والمرتبات' WHERE translation_key = 'workspace.finance' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'الإدارة والنظام' WHERE translation_key = 'workspace.admin' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'ترحيل القيود' WHERE translation_key = 'payroll.postGl' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'إجمالي المستحق - محسوب' WHERE translation_key = 'payroll.calculatedGross' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'الصافي المستحق للصرف - محسوب' WHERE translation_key = 'payroll.calculatedNet' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'نقداً' WHERE translation_key = 'payroll.methodCash' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'تحويل بنكي' WHERE translation_key = 'payroll.methodBank' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'شيك' WHERE translation_key = 'payroll.methodCheque' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مسودة' WHERE translation_key = 'payroll.statusDraft' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'محسوب' WHERE translation_key = 'payroll.statusCalculated' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مراجَع' WHERE translation_key = 'payroll.statusReviewed' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'معتمد ومقفل' WHERE translation_key = 'payroll.statusApproved' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مُرحَّل للمحاسبة' WHERE translation_key = 'payroll.statusPosted' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'مدفوع' WHERE translation_key = 'payroll.statusPaid' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'متراجع عنه' WHERE translation_key = 'payroll.statusReversed' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'فقط مسؤول النظام الأعلى يمكنه تغيير صلاحية تخصيص لوحة المعلومات للمسؤولين.' WHERE translation_key = 'AUTH_DASHBOARD_CUSTOMIZATION_SUPER_ADMIN_ONLY' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'فقط مسؤول النظام الأعلى يمكنه تعديل أو تعطيل حسابات المسؤول الأعلى.' WHERE translation_key = 'AUTH_SUPER_ADMIN_ACCOUNT_PROTECTED' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'فقط مسؤول النظام الأعلى يمكنه منح دور المسؤول الأعلى.' WHERE translation_key = 'AUTH_SUPER_ADMIN_ROLE_ASSIGNMENT_FORBIDDEN' AND locale = 'ar-EG';
+               UPDATE translations SET text_value = 'تصدير كشف الصرف' WHERE translation_key = 'payroll.exportExcel' AND locale = 'ar-EG';
+               INSERT INTO translations (id, translation_key, locale, text_value) VALUES ('v129-nav-001', 'nav.settingsHint', 'ar-EG', 'إعدادات النظام والتفضيلات');
+               INSERT INTO translations (id, translation_key, locale, text_value) VALUES ('v129-nav-002', 'nav.settingsHint', 'en-US', 'System settings and preferences');
+      rollback:
+        - sql:
+            sql: |
+              -- no-op: value cleanup is not reversible without the original strings

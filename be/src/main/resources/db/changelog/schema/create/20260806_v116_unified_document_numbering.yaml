@@ -1,0 +1,31 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260806-v116-unified-document-numbering
+      author: codex
+      changes:
+        - addColumn:
+            tableName: apps
+            columns:
+              - column:
+                  name: automatic_document_numbering
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints: { nullable: false }
+        - createTable:
+            tableName: document_number_sequences
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false } }
+              - column: { name: document_type, type: varchar(40), constraints: { nullable: false } }
+              - column: { name: year, type: int, constraints: { nullable: false } }
+              - column: { name: next_value, type: bigint, defaultValueNumeric: 1, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: document_number_sequences
+            columnNames: app_id, document_type, year
+            constraintName: uk_document_number_sequence_app_type_year
+      rollback:
+        - dropUniqueConstraint: { tableName: document_number_sequences, constraintName: uk_document_number_sequence_app_type_year }
+        - dropTable: { tableName: document_number_sequences }
+        - dropColumn: { tableName: apps, columnName: automatic_document_numbering }

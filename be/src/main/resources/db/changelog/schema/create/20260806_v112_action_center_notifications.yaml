@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260806_v112_action_center_notifications
+      author: Antigravity
+      changes:
+        - createTable:
+            tableName: business_notifications
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: recipient_username, type: VARCHAR(160), constraints: { nullable: false } }
+              - column: { name: title_ar, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: title_en, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: message_ar, type: VARCHAR(1000), constraints: { nullable: false } }
+              - column: { name: message_en, type: VARCHAR(1000), constraints: { nullable: false } }
+              - column: { name: notification_type, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: priority, type: VARCHAR(20), defaultValue: "INFO", constraints: { nullable: false } }
+              - column: { name: action_link, type: VARCHAR(500) }
+              - column: { name: is_read, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: read_at, type: timestamp }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }

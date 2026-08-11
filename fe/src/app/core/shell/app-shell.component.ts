@@ -9,12 +9,10 @@ import { IconComponent, IconName } from '../../shared/ui/icon/icon.component';
 import { ToastContainerComponent } from '../../shared/ui/toast/toast-container.component';
 import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
 import { NetworkService } from '../network.service';
-import {
-  GLOBAL_SHORTCUTS,
-  MENU_SHORTCUTS,
-  MenuShortcut,
-  shortcutForMenu,
-} from '../app-shortcuts';
+import { GLOBAL_SHORTCUTS } from '../app-shortcuts';
+import { ScreenShortcutService } from '../shortcuts/screen-shortcut.service';
+import { ScreenShortcut } from '../shortcuts/screen-shortcut.models';
+import { ProductAnalyticsClient } from '../product-analytics-client.service';
 
 export type WorkspaceGroup =
   | 'workspace.people'
@@ -22,7 +20,8 @@ export type WorkspaceGroup =
   | 'workspace.workforce'
   | 'workspace.operations'
   | 'workspace.finance'
-  | 'workspace.admin';
+  | 'workspace.admin'
+  | 'workspace.approvals';
 
 export interface NavItem {
   menuId: string;
@@ -39,7 +38,7 @@ export interface WorkspaceSection {
   items: NavItem[];
 }
 
-const FINANCE_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'HR_MANAGER', 'AUDITOR'];
+const FINANCE_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'];
 const PROCUREMENT_ROLES: RoleCode[] = [
   'PROCUREMENT_MANAGER',
   'PROCUREMENT_USER',
@@ -47,54 +46,23 @@ const PROCUREMENT_ROLES: RoleCode[] = [
   'FINANCE_MANAGER',
   'ACCOUNTANT',
   'TREASURY_USER',
-  'HR_MANAGER',
   'AUDITOR',
 ];
-const SALES_ROLES: RoleCode[] = ['SALES_MANAGER', 'HR_MANAGER'];
-const PRODUCTION_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER', 'HR_MANAGER'];
-const QUALITY_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER', 'QUALITY_MANAGER', 'HR_MANAGER'];
+const SALES_ROLES: RoleCode[] = ['SALES_MANAGER'];
+const PRODUCTION_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER'];
+const QUALITY_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER', 'QUALITY_MANAGER'];
 const PAYROLL_ROLES: RoleCode[] = ['PAYROLL_MANAGER', 'HR_MANAGER', 'HR_REVIEWER'];
-const WORKFORCE_ROLES: RoleCode[] = [
+const WORKFORCE_BASE_ROLES: RoleCode[] = [
   'WORKFORCE_MANAGER',
   'WORKFORCE_REVIEWER',
   'WORKFORCE_FINANCE',
-  'HR_MANAGER',
-  'HR_REVIEWER',
 ];
+const WORKFORCE_IMPORT_ROLES: RoleCode[] = ['WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER'];
+const WORKFORCE_ACCOUNT_ROLES: RoleCode[] = ['WORKFORCE_MANAGER', 'WORKFORCE_FINANCE'];
 
 const COLLAPSED_GROUPS_KEY = 'hr-collapsed-groups';
 
-@Component({
-  selector: 'app-shell',
-  standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ToastContainerComponent, AppTooltipDirective],
-  templateUrl: './app-shell.component.html',
-  styleUrl: './app-shell.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class AppShellComponent {
-  readonly authService = inject(AuthService);
-  readonly i18n = inject(I18nService);
-  readonly confirmDialog = inject(ConfirmDialogService);
-  readonly network = inject(NetworkService);
-  readonly router = inject(Router);
-
-  readonly searchQuery = signal('');
-  readonly menuOpen = signal(false);
-  readonly collapsed = signal(false);
-  readonly quickNavOpen = signal(false);
-  readonly shortcutHelpOpen = signal(false);
-  readonly selectedQuickNavIndex = signal(0);
-  readonly chordWaiting = signal(false);
-  readonly globalShortcuts = GLOBAL_SHORTCUTS;
-  readonly menuShortcuts = MENU_SHORTCUTS;
-  private chordTimer: ReturnType<typeof setTimeout> | null = null;
-
-  readonly favorites = signal<string[]>(this.authService.preferences().favoriteMenuIds);
-  readonly recentIds = signal<string[]>(this.authService.preferences().recentMenuIds);
-  readonly collapsedGroups = signal<string[]>(this.loadStoredCollapsedGroups());
-
-  readonly items: NavItem[] = [
+export const NAV_ITEMS: NavItem[] = [
     {
       menuId: 'employees',
       labelKey: 'nav.employees',
@@ -145,7 +113,7 @@ export class AppShellComponent {
       path: '/workforce/dashboard',
       icon: 'dashboard',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-contractors',
@@ -154,7 +122,7 @@ export class AppShellComponent {
       path: '/workforce/contractors',
       icon: 'users',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-workers',
@@ -163,7 +131,7 @@ export class AppShellComponent {
       path: '/workforce/workers',
       icon: 'employees',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-categories',
@@ -172,7 +140,7 @@ export class AppShellComponent {
       path: '/workforce/categories',
       icon: 'categories',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-requests',
@@ -181,7 +149,7 @@ export class AppShellComponent {
       path: '/workforce/labor-requests',
       icon: 'imports',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-attendance',
@@ -190,7 +158,7 @@ export class AppShellComponent {
       path: '/workforce/attendance',
       icon: 'reports',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-settlements',
@@ -199,7 +167,7 @@ export class AppShellComponent {
       path: '/workforce/settlement-periods',
       icon: 'dashboard',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-advances',
@@ -208,7 +176,7 @@ export class AppShellComponent {
       path: '/workforce/advances',
       icon: 'categories',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_BASE_ROLES,
     },
     {
       menuId: 'workforce-accounts',
@@ -217,7 +185,7 @@ export class AppShellComponent {
       path: '/workforce/contractor-accounts',
       icon: 'users',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_ACCOUNT_ROLES,
     },
     {
       menuId: 'workforce-reports',
@@ -226,7 +194,24 @@ export class AppShellComponent {
       path: '/workforce/reports-import',
       icon: 'reports',
       workspace: 'workspace.workforce',
-      roles: WORKFORCE_ROLES,
+      roles: WORKFORCE_IMPORT_ROLES,
+    },
+    {
+      menuId: 'approvals-my-tasks',
+      labelKey: 'approvals.myTasks',
+      descriptionKey: 'nav.approvalsHint',
+      path: '/approvals/my-tasks',
+      icon: 'reports',
+      workspace: 'workspace.approvals',
+    },
+    {
+      menuId: 'approvals-workflows',
+      labelKey: 'approvals.workflows',
+      descriptionKey: 'nav.approvalsHint',
+      path: '/approvals/definitions',
+      icon: 'categories',
+      workspace: 'workspace.approvals',
+      roles: ['SUPER_ADMIN', 'ADMIN'],
     },
     {
       menuId: 'operations',
@@ -235,7 +220,7 @@ export class AppShellComponent {
       path: '/operations',
       icon: 'categories',
       workspace: 'workspace.operations',
-      roles: ['ADMIN', 'HR_MANAGER'],
+      roles: ['ADMIN'],
     },
     {
       menuId: 'procurement',
@@ -337,6 +322,15 @@ export class AppShellComponent {
       roles: FINANCE_ROLES,
     },
     {
+      menuId: 'budgets',
+      labelKey: 'nav.budgets',
+      descriptionKey: 'nav.budgetsHint',
+      path: '/finance/budgets',
+      icon: 'reports',
+      workspace: 'workspace.finance',
+      roles: FINANCE_ROLES,
+    },
+    {
       menuId: 'organization',
       labelKey: 'nav.organization',
       descriptionKey: 'nav.organizationHint',
@@ -372,6 +366,50 @@ export class AppShellComponent {
       workspace: 'workspace.admin',
     },
   ];
+
+/** Route-guard roles per shell menu id; empty array means no role guard. */
+export const SHELL_MENU_ROLES: Record<string, RoleCode[]> = Object.fromEntries(
+  NAV_ITEMS.map((item) => [item.menuId, item.roles ?? []]),
+);
+
+import { NotificationCenterService } from '../notification-center/notification-center.service';
+
+@Component({
+  selector: 'app-shell',
+  standalone: true,
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ToastContainerComponent, AppTooltipDirective],
+  templateUrl: './app-shell.component.html',
+  styleUrl: './app-shell.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AppShellComponent {
+  readonly authService = inject(AuthService);
+  readonly i18n = inject(I18nService);
+  readonly confirmDialog = inject(ConfirmDialogService);
+  readonly network = inject(NetworkService);
+  readonly router = inject(Router);
+  readonly notificationCenter = inject(NotificationCenterService);
+  readonly screenShortcuts = inject(ScreenShortcutService);
+  private readonly productAnalytics = inject(ProductAnalyticsClient);
+
+  readonly searchQuery = signal('');
+  readonly menuOpen = signal(false);
+  readonly collapsed = signal(false);
+  readonly quickNavOpen = signal(false);
+  readonly shortcutHelpOpen = signal(false);
+  readonly selectedQuickNavIndex = signal(0);
+  readonly chordWaiting = signal(false);
+  readonly logoutOptionsOpen = signal(false);
+  readonly logoutAllDevicesBusy = signal(false);
+  readonly logoutError = signal('');
+  readonly globalShortcuts = GLOBAL_SHORTCUTS;
+  private chordTimer: ReturnType<typeof setTimeout> | null = null;
+
+  readonly favorites = signal<string[]>(this.authService.preferences().favoriteMenuIds);
+  readonly recentIds = signal<string[]>(this.authService.preferences().recentMenuIds);
+  readonly collapsedGroups = signal<string[]>(this.loadStoredCollapsedGroups());
+
+  readonly items = NAV_ITEMS;
 
   readonly quickNavItems = computed<NavItem[]>(() => {
     const query = this.searchQuery().trim().toLocaleLowerCase();
@@ -449,11 +487,18 @@ export class AppShellComponent {
   });
 
   constructor() {
+    this.notificationCenter.loadUnreadCount();
+    void this.screenShortcuts.load();
     effect(() => {
       const preferences = this.authService.preferences();
       this.favorites.set([...preferences.favoriteMenuIds]);
       this.recentIds.set([...preferences.recentMenuIds]);
     }, { allowSignalWrites: true });
+    effect(() => {
+      if (this.authService.user() === null) {
+        queueMicrotask(() => void this.router.navigate(['/login']));
+      }
+    });
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe((event) => {
@@ -573,56 +618,103 @@ export class AppShellComponent {
     void this.router.navigateByUrl(item.path);
   }
 
-  shortcut(item: NavItem): MenuShortcut | undefined {
-    return shortcutForMenu(item.menuId);
+  shortcut(item: NavItem): ScreenShortcut | undefined {
+    return this.screenShortcuts.runtimeShortcuts().find(
+      (shortcut) => shortcut.menuId === item.menuId
+    );
   }
 
   navTooltip(item: NavItem): string {
     const shortcut = this.shortcut(item);
     const details = `${this.i18n.t(item.labelKey)} — ${this.i18n.t(item.descriptionKey)}`;
-    return shortcut ? `${details} · ${shortcut.keys}` : details;
+    return shortcut ? `${details} · G → ${shortcut.displayKey}` : details;
   }
 
   @HostListener('document:keydown', ['$event'])
   onGlobalShortcut(event: KeyboardEvent): void {
-    if (event.isComposing) return;
-    const key = event.key.toLocaleLowerCase();
+    if (event.isComposing || event.repeat) return;
+
     const target = event.target;
     const typing = target instanceof HTMLElement
-      && target.matches('input, textarea, select, [contenteditable="true"]');
+      && target.matches('input, textarea, select, [contenteditable="true"], [data-shortcut-capture="true"]');
 
-    if (((event.ctrlKey || event.metaKey) && !event.altKey && (key === 'k' || key === '/')) || (!typing && !event.ctrlKey && !event.metaKey && !event.altKey && event.key === '/')) {
+    const lowerKey = event.key.toLocaleLowerCase();
+
+    if (
+      ((event.ctrlKey || event.metaKey)
+        && !event.altKey
+        && (lowerKey === 'k' || lowerKey === '/'))
+      || (!typing
+        && !event.ctrlKey
+        && !event.metaKey
+        && !event.altKey
+        && event.key === '/')
+    ) {
       event.preventDefault();
       this.openQuickNav();
       return;
     }
 
-    if (event.key === 'Escape' && (this.quickNavOpen() || this.shortcutHelpOpen() || this.chordWaiting())) {
+    if (event.key === 'Escape' && this.logoutOptionsOpen()) {
+      event.preventDefault();
+      this.closeLogoutOptions();
+      return;
+    }
+
+    if (
+      event.key === 'Escape'
+      && (this.quickNavOpen() || this.shortcutHelpOpen() || this.chordWaiting())
+    ) {
       event.preventDefault();
       this.closeShortcutPanels();
       return;
     }
 
-    if (!typing && !event.ctrlKey && !event.metaKey && !event.altKey && event.key === '?') {
+    if (
+      !typing
+      && !event.ctrlKey
+      && !event.metaKey
+      && !event.altKey
+      && event.key === '?'
+    ) {
       event.preventDefault();
       this.openShortcutHelp();
       return;
     }
 
-    if (typing || event.ctrlKey || event.metaKey || event.altKey || this.quickNavOpen() || this.shortcutHelpOpen()) return;
+    if (
+      typing
+      || event.ctrlKey
+      || event.metaKey
+      || event.altKey
+      || this.quickNavOpen()
+      || this.shortcutHelpOpen()
+      || this.logoutOptionsOpen()
+    ) return;
 
     if (this.chordWaiting()) {
       event.preventDefault();
-      const shortcut = this.menuShortcuts.find((item) => item.chordKey === key);
+
+      const shortcut = this.screenShortcuts.findByCode(event.code);
       this.clearChord();
-      if (shortcut) {
-        const item = this.items.find((candidate) => candidate.menuId === shortcut.menuId);
-        if (item && this.visible(item)) this.navigateToItem(item);
+
+      if (!shortcut) return;
+
+      const item = this.items.find(
+        (candidate) => candidate.menuId === shortcut.menuId
+      );
+
+      if (
+        item
+        && this.visible(item)
+        && item.path === shortcut.route
+      ) {
+        this.navigateToItem(item);
       }
       return;
     }
 
-    if (key === 'g') {
+    if (event.code === 'KeyG') {
       event.preventDefault();
       this.chordWaiting.set(true);
       this.chordTimer = setTimeout(() => this.clearChord(), 1800);
@@ -652,11 +744,53 @@ export class AppShellComponent {
   }
 
   logout(): void {
-    this.authService.logout();
+    this.logoutError.set('');
+    this.logoutOptionsOpen.set(true);
+  }
+
+  closeLogoutOptions(): void {
+    if (this.logoutAllDevicesBusy()) return;
+    this.logoutOptionsOpen.set(false);
+    this.logoutError.set('');
+  }
+
+  logoutCurrentBrowser(): void {
+    if (this.logoutAllDevicesBusy()) return;
+    this.logoutOptionsOpen.set(false);
+    this.authService.logoutCurrentBrowser();
     void this.router.navigate(['/login']);
   }
 
+  logoutAllDevices(): void {
+    if (this.logoutAllDevicesBusy()) return;
+    this.logoutAllDevicesBusy.set(true);
+    this.logoutError.set('');
+
+    this.authService.logoutAllDevices().subscribe({
+      next: () => {
+        this.logoutAllDevicesBusy.set(false);
+        this.logoutOptionsOpen.set(false);
+        void this.router.navigate(['/login']);
+      },
+      error: () => {
+        this.logoutAllDevicesBusy.set(false);
+        this.logoutError.set(this.i18n.t('auth.logoutAllDevicesError'));
+      },
+    });
+  }
+
+  notificationPriorityKey(priority: string): string {
+    const keys: Record<string, string> = {
+      CRITICAL: 'actionCenter.priority.critical',
+      HIGH: 'actionCenter.priority.high',
+      MEDIUM: 'actionCenter.priority.medium',
+      INFO: 'actionCenter.priority.info',
+    };
+    return keys[priority] ?? keys['INFO'];
+  }
+
   private trackRecentNavigation(url: string): void {
+    this.productAnalytics.captureNavigation(url);
     const matched = this.items.find((i) => url.startsWith(i.path));
     if (matched) {
       this.pushRecent(matched.menuId);

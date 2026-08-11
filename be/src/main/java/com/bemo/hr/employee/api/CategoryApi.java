@@ -2,6 +2,7 @@ package com.bemo.hr.employee.api;
 
 import com.bemo.hr.employee.domain.PayCycle;
 import com.bemo.hr.employee.domain.AttendanceMode;
+import com.bemo.hr.employee.domain.CategoryScope;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -31,6 +32,7 @@ public final class CategoryApi {
             boolean allowsEmployeeAdvances,
             @NotEmpty Set<DayOfWeek> workDays,
             boolean active,
+            CategoryScope scope,
             @NotNull @Valid List<ScheduleRequest> schedules,
             Long version) {
     }
@@ -56,6 +58,7 @@ public final class CategoryApi {
             String id,
             String code,
             String name,
+            CategoryScope scope,
             int expectedDailyMinutes,
             PayCycle payCycle,
             AttendanceMode attendanceMode,

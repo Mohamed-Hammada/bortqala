@@ -12,10 +12,12 @@ import { DashboardWidgetId } from '../../core/auth/auth.models';
 import { NotificationService } from '../../core/notification.service';
 import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { downloadBlob, timestampedExcelFileName } from '../../core/download';
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [RouterLink, TablePaginationComponent, FormsModule, DecimalPipe, AppTooltipDirective, ModalDialogComponent],
+  imports: [RouterLink, TablePaginationComponent, FormsModule, DecimalPipe, AppTooltipDirective, ModalDialogComponent, IconComponent],
   providers: [DashboardStore],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss',
@@ -39,6 +41,9 @@ export class DashboardPage {
 
   readonly selectedPeriod = signal<'WEEK' | 'MONTH'>('MONTH');
   readonly selectedDepartmentId = signal<string | null>(null);
+  readonly trendMonthCount = signal(6);
+  readonly trendExporting = signal(false);
+  readonly trendMonthOptions = [3, 6, 12, 24];
   readonly departmentOptions = computed(() => {
     const depts = this.store.departmentMetrics();
     return [{ id: null as string | null, name: this.i18n.t('dashboard.allDepartments') }, ...depts.map(d => ({ id: d.departmentId, name: d.departmentName }))];
@@ -122,11 +127,19 @@ export class DashboardPage {
     }
   }
 
+  canMoveWidget(id: DashboardWidgetId, direction: -1 | 1): boolean {
+    const current = this.draftWidgetIds();
+    const index = current.indexOf(id);
+    if (index < 0) return false;
+    const next = index + direction;
+    return next >= 0 && next < current.length;
+  }
+
   moveWidget(id: DashboardWidgetId, direction: -1 | 1): void {
+    if (!this.canMoveWidget(id, direction)) return;
     const current = [...this.draftWidgetIds()];
     const index = current.indexOf(id);
     const next = index + direction;
-    if (index < 0 || next < 0 || next >= current.length) return;
     [current[index], current[next]] = [current[next], current[index]];
     this.draftWidgetIds.set(current);
   }
@@ -168,6 +181,7 @@ export class DashboardPage {
       this.month(),
       this.selectedPeriod(),
       this.selectedDepartmentId(),
+      this.trendMonthCount(),
     );
   }
 
@@ -210,6 +224,31 @@ export class DashboardPage {
   }
   reload(): void {
     void this.loadAll();
+  }
+
+  changeTrendMonths(monthsStr: string): void {
+    const months = Number(monthsStr);
+    if (!isNaN(months) && months >= 1 && months <= 24) {
+      this.trendMonthCount.set(months);
+      void this.store.loadTrends(months);
+    }
+  }
+
+  async exportTrends(): Promise<void> {
+    if (this.trendExporting()) return;
+    this.trendExporting.set(true);
+    try {
+      const blob = await this.store.downloadTrends(this.trendMonthCount());
+      downloadBlob(blob, timestampedExcelFileName(
+        'اتجاهات-متعددة-الفترات',
+        'multi-period-trends',
+        this.i18n.locale(),
+      ));
+    } catch {
+      this.notification.error(this.i18n.t('dashboard.exportFailed'));
+    } finally {
+      this.trendExporting.set(false);
+    }
   }
 
   formatLastUpdated(value: string | null): string {

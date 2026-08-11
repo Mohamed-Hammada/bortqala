@@ -15,6 +15,9 @@ public interface AppUserRepository extends JpaRepository<AppUser, String> {
     Optional<AppUser> findByAppIdAndUsernameIgnoreCase(String appId, String username);
 
     @EntityGraph(attributePaths = "roles")
+    Optional<AppUser> findByUsernameIgnoreCase(String username);
+
+    @EntityGraph(attributePaths = "roles")
     Optional<AppUser> findByAppIdAndId(String appId, String id);
 
     @EntityGraph(attributePaths = "roles")
@@ -27,4 +30,5 @@ public interface AppUserRepository extends JpaRepository<AppUser, String> {
 
     boolean existsByAppIdAndUsernameIgnoreCase(String appId, String username);
     boolean existsByAppIdAndUsernameIgnoreCaseAndIdNot(String appId, String username, String id);
+    long countByAppId(String appId);
 }

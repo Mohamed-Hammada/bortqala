@@ -1,0 +1,9 @@
+id;translation_key;locale;text_value
+v113-001;actionCenter.title;ar-EG;"مركز الإشعارات والتنبيهات"
+v113-002;actionCenter.title;en-US;"Action Center & Notifications"
+v113-003;actionCenter.markAllRead;ar-EG;"تحديد الكل كمقروء"
+v113-004;actionCenter.markAllRead;en-US;"Mark all as read"
+v113-005;actionCenter.noNotifications;ar-EG;"لا توجد إشعارات جديدة."
+v113-006;actionCenter.noNotifications;en-US;"No new notifications."
+v113-007;actionCenter.unread;ar-EG;"غير مقروءة"
+v113-008;actionCenter.unread;en-US;"Unread"

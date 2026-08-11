@@ -3,10 +3,9 @@ export interface AppShortcut {
   keys: string;
 }
 
-export interface MenuShortcut extends AppShortcut {
-  menuId: string;
-  path: string;
-  chordKey: string;
+export interface DefaultScreenShortcut {
+  pageCode: string;
+  secondKeyCode: string;
 }
 
 export const GLOBAL_SHORTCUTS: readonly AppShortcut[] = [
@@ -17,18 +16,15 @@ export const GLOBAL_SHORTCUTS: readonly AppShortcut[] = [
   { labelKey: 'shortcuts.nextField', keys: 'Tab' },
 ];
 
-export const MENU_SHORTCUTS: readonly MenuShortcut[] = [
-  { menuId: 'dashboard', labelKey: 'nav.dashboard', path: '/dashboard', chordKey: 'd', keys: 'G → D' },
-  { menuId: 'employees', labelKey: 'nav.employees', path: '/employees', chordKey: 'e', keys: 'G → E' },
-  { menuId: 'imports', labelKey: 'nav.imports', path: '/imports', chordKey: 'i', keys: 'G → I' },
-  { menuId: 'reports', labelKey: 'nav.reports', path: '/reports', chordKey: 'r', keys: 'G → R' },
-  { menuId: 'operations', labelKey: 'nav.operations', path: '/operations', chordKey: 'o', keys: 'G → O' },
-  { menuId: 'procurement', labelKey: 'nav.procurement', path: '/trade/procurement', chordKey: 'p', keys: 'G → P' },
-  { menuId: 'parties', labelKey: 'nav.parties', path: '/parties', chordKey: 'c', keys: 'G → C' },
-  { menuId: 'settings', labelKey: 'nav.settings', path: '/settings', chordKey: 's', keys: 'G → S' },
+export const DEFAULT_SCREEN_SHORTCUTS: readonly DefaultScreenShortcut[] = [
+  { pageCode: 'DASHBOARD', secondKeyCode: 'KeyD' },
+  { pageCode: 'EMPLOYEES', secondKeyCode: 'KeyE' },
+  { pageCode: 'IMPORTS', secondKeyCode: 'KeyI' },
+  { pageCode: 'REPORTS', secondKeyCode: 'KeyR' },
+  { pageCode: 'WORKFORCE_WORKERS', secondKeyCode: 'KeyW' },
+  { pageCode: 'WORKFORCE_ATTENDANCE', secondKeyCode: 'KeyA' },
+  { pageCode: 'PROCUREMENT', secondKeyCode: 'KeyP' },
+  { pageCode: 'JOURNAL_ENTRIES', secondKeyCode: 'KeyJ' },
+  { pageCode: 'USERS', secondKeyCode: 'KeyU' },
+  { pageCode: 'SETTINGS', secondKeyCode: 'KeyS' },
 ];
-
-export function shortcutForMenu(menuId: string): MenuShortcut | undefined {
-  return MENU_SHORTCUTS.find((shortcut) => shortcut.menuId === menuId);
-}
-

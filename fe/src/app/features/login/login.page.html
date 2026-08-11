@@ -27,6 +27,10 @@
   <section class="login-panel">
     <form [formGroup]="form" (ngSubmit)="submit()" class="login-card">
       <div class="card-header">
+        <div class="logo-watermark">
+          <span class="mini-logo"><img src="/icons/bemo-erp-logo.svg" alt="" width="22" height="22" /></span>
+          <span class="company-tag">{{ authService.app()?.name ?? 'Bemo ERP' }}</span>
+        </div>
         <div class="segmented-control" [attr.aria-label]="i18n.t('login.langToggleLabel')">
           <button
             type="button"
@@ -42,10 +46,6 @@
           >
             {{ i18n.t('login.langEn') }}
           </button>
-        </div>
-        <div class="logo-watermark">
-          <span class="mini-logo"><img src="/icons/bemo-erp-logo.svg" alt="" width="22" height="22" /></span>
-          <span class="company-tag">{{ authService.app()?.name ?? 'Bemo ERP' }}</span>
         </div>
       </div>
 
@@ -66,6 +66,8 @@
         <label for="appCode">{{ i18n.t('login.appCode') }}</label>
         <input
           id="appCode"
+          class="technical-input ltr"
+          dir="ltr"
           formControlName="appCode"
           autocomplete="organization"
           [placeholder]="i18n.t('login.appCodePlaceholder')"
@@ -76,6 +78,8 @@
         <label for="username">{{ i18n.t('login.username') }}</label>
         <input
           id="username"
+          class="technical-input ltr"
+          dir="ltr"
           formControlName="username"
           autocomplete="username"
           [placeholder]="i18n.t('login.usernamePlaceholder')"
@@ -84,15 +88,25 @@
 
       <div class="field password-field">
         <label for="password">{{ i18n.t('login.password') }}</label>
-        <input
-          id="password"
-          formControlName="password"
-          [type]="showPassword() ? 'text' : 'password'"
-          autocomplete="current-password"
-        />
-        <button type="button" class="toggle-password" (click)="showPassword.set(!showPassword())">
-          {{ i18n.t(showPassword() ? 'login.hide' : 'login.show') }}
-        </button>
+        <div class="password-control">
+          <input
+            id="password"
+            class="technical-input ltr"
+            dir="ltr"
+            formControlName="password"
+            [type]="showPassword() ? 'text' : 'password'"
+            autocomplete="current-password"
+          />
+          <button
+            type="button"
+            class="password-visibility-toggle"
+            (click)="showPassword.set(!showPassword())"
+            [attr.aria-label]="i18n.t(showPassword() ? 'login.hide' : 'login.show')"
+            [attr.title]="i18n.t(showPassword() ? 'login.hide' : 'login.show')"
+          >
+            <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" />
+          </button>
+        </div>
       </div>
 
       <button class="button primary submit-btn" type="submit" [disabled]="loading()">

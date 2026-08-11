@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260807-v122-budget-encumbrance-schema
+      author: bemo-erp
+      comment: "B-1 Budget control & encumbrance: budgets table, encumbrances table, and the department_id column on purchase orders so PO issue can reserve budget."
+      changes:
+        - createTable:
+            tableName: budgets
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: fiscal_year, type: INT, constraints: { nullable: false } }
+              - column: { name: period_type, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: period_month, type: INT }
+              - column: { name: department_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: planned_amount, type: "NUMERIC(15, 2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: currency_code, type: VARCHAR(10), defaultValue: "EGP", constraints: { nullable: false } }
+              - column: { name: blocking, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+        - createTable:
+            tableName: encumbrances
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: budget_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: purchase_order_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: purchase_order_number, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: document_type, type: VARCHAR(30), defaultValue: "PURCHASE_ORDER", constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(10), defaultValue: "ACTIVE", constraints: { nullable: false } }
+              - column: { name: committed_amount, type: "NUMERIC(15, 2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: liquidated_amount, type: "NUMERIC(15, 2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: released_amount, type: "NUMERIC(15, 2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: currency_code, type: VARCHAR(10), defaultValue: "EGP", constraints: { nullable: false } }
+              - column: { name: committed_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: released_at, type: BIGINT }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+
+        - addColumn:
+            tableName: purchase_orders
+            columns:
+              - column: { name: department_id, type: VARCHAR(36) }
+
+      rollback:
+        - dropTable:
+            tableName: encumbrances
+        - dropTable:
+            tableName: budgets
+        - dropColumn:
+            tableName: purchase_orders
+            columnName: department_id

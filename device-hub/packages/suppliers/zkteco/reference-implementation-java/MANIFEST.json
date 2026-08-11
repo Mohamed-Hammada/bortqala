@@ -1,0 +1,488 @@
+{
+  "name": "zkteco-universal-gateway",
+  "version": "0.2.0-all-integrations",
+  "generated": "2026-08-08",
+  "file_count": 96,
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "size": 533,
+      "sha256": "39481a3788e9f4e40f23f786ccccad12b56de25a185a684e1deba23262e6d5aa"
+    },
+    {
+      "path": ".gitignore",
+      "size": 104,
+      "sha256": "5c1ebc308426099d84b4fc78bfbea5d59356aa503a4868eed466be059b402713"
+    },
+    {
+      "path": "LICENSE",
+      "size": 614,
+      "sha256": "8743b120ab6dfce5ce99eada6cbf4e62261b0a30f7d8762e162352f0fbe38d86"
+    },
+    {
+      "path": "README.md",
+      "size": 3703,
+      "sha256": "c6429e6f805b1c22c8565ae46726b386b4c8b5fb4f304bfc26af84adb737c3c5"
+    },
+    {
+      "path": "VERSION",
+      "size": 23,
+      "sha256": "a4b6583b6e03e64bc29e41502044837035351dda4aece97029098038fb886992"
+    },
+    {
+      "path": "adapter-adms-push/pom.xml",
+      "size": 757,
+      "sha256": "c23dd409accfa38a558495c3326cb34bfdfaf09220f77fe66724fa91e36409a8"
+    },
+    {
+      "path": "adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsCommand.java",
+      "size": 293,
+      "sha256": "564ea38100dbefe6063765bc52f803dbe333b1f012163b89f502a3610f3735d0"
+    },
+    {
+      "path": "adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsCommandQueue.java",
+      "size": 907,
+      "sha256": "57c56ffaba00b2617332c4cb4b53139d973350e343a4d9a97a4fde4d417efa76"
+    },
+    {
+      "path": "adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsEnvelope.java",
+      "size": 496,
+      "sha256": "ed1c2756ea517dd70f736c74dd02f150bc808d2530ae4a3a007f5565ed248bfb"
+    },
+    {
+      "path": "adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsIngressStore.java",
+      "size": 2318,
+      "sha256": "c75615bcc90592d3d0669594eb2614e3a16ad2e5ce69a06621764bc170d3e134"
+    },
+    {
+      "path": "adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsParsedRecord.java",
+      "size": 346,
+      "sha256": "276afe47f3d29b0209c69424d96311ed184c81526e58a970a16a9a16fe3c4c12"
+    },
+    {
+      "path": "adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsPayloadParser.java",
+      "size": 3156,
+      "sha256": "ca63de98add5796ddb3daff2c54744c694b1249920efb090d6f194d729f1bf94"
+    },
+    {
+      "path": "adapter-adms-push/src/main/java/org/example/zkteco/adapter/adms/AdmsPushAdapter.java",
+      "size": 813,
+      "sha256": "a09ab24a7486497dfcd28b59168a58701fafe6b1242fac6ab5f7f2668ea6a3bf"
+    },
+    {
+      "path": "adapter-adms-push/src/test/java/org/example/zkteco/adapter/adms/AdmsParserSelfTest.java",
+      "size": 314,
+      "sha256": "dd19ea87ae46dae638ff6932c1b66798f18acfb6bf797ce76d71aa5bd0cfc9a5"
+    },
+    {
+      "path": "adapter-http-platforms/pom.xml",
+      "size": 762,
+      "sha256": "383e37d233f45ea94d00a64c51c858f278d1b29e0d98af464910f9ebf6f9ebf4"
+    },
+    {
+      "path": "adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/AbstractHttpPlatformAdapter.java",
+      "size": 3036,
+      "sha256": "6d56727e977a931c0f027c739d1bc4e47d24cab522ca2e43fc9793d4df0c56a5"
+    },
+    {
+      "path": "adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/PlcommProBridgeAdapter.java",
+      "size": 241,
+      "sha256": "f6401496277913a3d9195161daa31e7d347162fd2e0715ee30205f8744a3f04a"
+    },
+    {
+      "path": "adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/WdmsApiAdapter.java",
+      "size": 240,
+      "sha256": "96ed0941a4b33b0a6258ec05e228f9a0e3d6f616dd148872690c3efb32cee6f7"
+    },
+    {
+      "path": "adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/WindowsSdkBridgeAdapter.java",
+      "size": 268,
+      "sha256": "0ce6d1ab916061d1e7751db1ded726a1d146e1851fbdddd6d52d744f4ecd454f"
+    },
+    {
+      "path": "adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/ZkBioCvAccessApiAdapter.java",
+      "size": 247,
+      "sha256": "37ab588603884506121553d8d11bfd01cde514f56441929b99f7d7b05b7dc9a3"
+    },
+    {
+      "path": "adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/ZkBioCvSecurityApiAdapter.java",
+      "size": 274,
+      "sha256": "28d29dcda609218c96671229b986d3349fcabcb11303e5761554c1a1a115bb2f"
+    },
+    {
+      "path": "adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/ZkBioTimeApiAdapter.java",
+      "size": 256,
+      "sha256": "5b84f5f6af3bfbb086eb559f57b0094f9d73b072ec7df2f460bc5af1f9c74ae3"
+    },
+    {
+      "path": "adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/ZkBioTimeCloudApiAdapter.java",
+      "size": 251,
+      "sha256": "cbd64358897b5e0c30887f630ad137ce97a02036a5106dc55fc5ccc1e2f92565"
+    },
+    {
+      "path": "adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/ZkBioZlinkApiAdapter.java",
+      "size": 238,
+      "sha256": "1e7ca12c19143825aa6f7fd3a807b0c2868b678cabfbc8e8d819f5612edfd2c2"
+    },
+    {
+      "path": "adapter-http-platforms/src/main/java/org/example/zkteco/adapter/http/ZkFingerBridgeAdapter.java",
+      "size": 241,
+      "sha256": "0a104ca0c4006e6d5488e2ee36c47b108a6b40f55e8dbd5fde699ce994ddc4c0"
+    },
+    {
+      "path": "adapter-zk-pull/pom.xml",
+      "size": 930,
+      "sha256": "f2e869617ddfb47e1563058c60f1df9a88782deeab47c40e6548cf22518d5bfe"
+    },
+    {
+      "path": "adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkCommands.java",
+      "size": 1163,
+      "sha256": "a313f2d5c150365357315fbd0af39d9307c2add5d626ffaffe637fc4d6e20482"
+    },
+    {
+      "path": "adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkPacket.java",
+      "size": 283,
+      "sha256": "262df83fb3727c28a24f10c01361b666ca29de8d1018f2fb79a2305c6e18be15"
+    },
+    {
+      "path": "adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkPacketCodec.java",
+      "size": 2812,
+      "sha256": "65a2b057ecdf768543c6152c578afcb38f25e6d7ad537561ad4dc54aff64d2c4"
+    },
+    {
+      "path": "adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkPullAdapter.java",
+      "size": 2311,
+      "sha256": "5cc9f8a367419aedf7a7cb6d7ce8a9de3cb07a6b21337baf79b4dabe9396d77c"
+    },
+    {
+      "path": "adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkPullClient.java",
+      "size": 4978,
+      "sha256": "08bb9753f4e0a7c960b05998d4934ad4f19ad5e8fc98683286d2f3ca8eaf2dee"
+    },
+    {
+      "path": "adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkPullTransport.java",
+      "size": 2285,
+      "sha256": "9b2997759089ef4f93fb5f187682214e90f85a1b7ab7e2b26e4009093fad6857"
+    },
+    {
+      "path": "adapter-zk-pull/src/main/java/org/example/zkteco/adapter/pull/ZkTimeCodec.java",
+      "size": 944,
+      "sha256": "694c7aa6372dd445c8369792cfc71fbbc464f3411aa811fae072505404949ed7"
+    },
+    {
+      "path": "adapter-zk-pull/src/test/java/org/example/zkteco/adapter/pull/ZkProtocolSelfTest.java",
+      "size": 730,
+      "sha256": "913ab403b35fbdfe40e97b91fedc233fa35164b595dd94135a3e34fd81d5069d"
+    },
+    {
+      "path": "adapter-zk-pull/src/test/java/org/example/zkteco/adapter/pull/ZkPullAdapterTest.java",
+      "size": 1213,
+      "sha256": "a91a3b93063c07da00829689b5d180743b20e04a9670ecfcabff17f5b75b59f8"
+    },
+    {
+      "path": "core/pom.xml",
+      "size": 734,
+      "sha256": "fe866e440915c2584dd31f3a3ae3784c2d766758b6765f28e4e1e08ed1835986"
+    },
+    {
+      "path": "core/src/main/java/org/example/zkteco/core/AdapterRegistry.java",
+      "size": 1307,
+      "sha256": "ac30f81ba7eac048332e8a4ab9c90d9af961d7784dc98b2a46a1972e5d2a9bf2"
+    },
+    {
+      "path": "core/src/main/java/org/example/zkteco/core/AttendanceEvent.java",
+      "size": 453,
+      "sha256": "0a131823720b70f61fbfa8f0107f9db17e8290b3bff24f65063ca7d33ffa41ba"
+    },
+    {
+      "path": "core/src/main/java/org/example/zkteco/core/DeviceAdapter.java",
+      "size": 821,
+      "sha256": "35d67b0c77924815d815539bf0fe1e4016f6b7a84ace5dc36fc7c58f043638be"
+    },
+    {
+      "path": "core/src/main/java/org/example/zkteco/core/DeviceCapability.java",
+      "size": 598,
+      "sha256": "46ae74307cd8c41335490f41e4e484669d8bd4bab7ccda764493d466cf406352"
+    },
+    {
+      "path": "core/src/main/java/org/example/zkteco/core/DeviceCommand.java",
+      "size": 441,
+      "sha256": "03fbdb12374afc30ee0341f28e830f423e5df6632fbcaa89fb6ad38f69c82eda"
+    },
+    {
+      "path": "core/src/main/java/org/example/zkteco/core/DeviceCommandResult.java",
+      "size": 444,
+      "sha256": "86a4b38b2b18c7bf4087efb14c3052deaca68a62c1578ce88067e906484b5638"
+    },
+    {
+      "path": "core/src/main/java/org/example/zkteco/core/DeviceEndpoint.java",
+      "size": 1319,
+      "sha256": "fad15c63916f7e4e92e6c045ab92c6eced24eebc6dcb520420dd001989f091cf"
+    },
+    {
+      "path": "core/src/main/java/org/example/zkteco/core/DeviceFamily.java",
+      "size": 257,
+      "sha256": "d0fd807ccba80287e45b8fb8a57c9ebafe8964cc860059dd868f1de90f9175c7"
+    },
+    {
+      "path": "core/src/main/java/org/example/zkteco/core/DeviceProbeResult.java",
+      "size": 903,
+      "sha256": "3b73df7a2da74d17e03f0277921e283c2b46e01f0ddb6d9bbd08cc9e7dae2894"
+    },
+    {
+      "path": "core/src/main/java/org/example/zkteco/core/DeviceProfile.java",
+      "size": 833,
+      "sha256": "a59b263fb4c48de4d4d7578de6d88917528b7879f1bae4841cbfbd91d00a5e4e"
+    },
+    {
+      "path": "core/src/main/java/org/example/zkteco/core/DeviceProtocol.java",
+      "size": 905,
+      "sha256": "06cc3f3bb6b00f3c7f505920395738113344b85c55395c659d97a791841563c8"
+    },
+    {
+      "path": "core/src/main/java/org/example/zkteco/core/PersonRecord.java",
+      "size": 347,
+      "sha256": "b4110b125a2a3fc2abbb7407a6771ef9636f6a7b5eb7a69a96660bd84d10e571"
+    },
+    {
+      "path": "core/src/test/java/org/example/zkteco/core/AdapterRegistryTest.java",
+      "size": 1609,
+      "sha256": "87276d6c3468f6bbeac63a733b347b58ba1de0bae7666e8cbcb24851d7b92a4f"
+    },
+    {
+      "path": "docker-compose.yml",
+      "size": 596,
+      "sha256": "3c1765dd26d7313eda72ee47f191436656a0d013f9452283aa025d6e2d572129"
+    },
+    {
+      "path": "docs/ALL_INTEGRATIONS_MANIFEST.md",
+      "size": 3010,
+      "sha256": "ce82c3a285325a87fa051503709e38bc7cee11f20d7624bba71a1bd000049bfc"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "size": 843,
+      "sha256": "d4cf0fc9e464e6ac9a4f0548bb037e2192e1ebdf38a80672753670ab6ec7e8eb"
+    },
+    {
+      "path": "docs/BUILD_VALIDATION.md",
+      "size": 1001,
+      "sha256": "e84bb20b644797c647ddb0ccbbd86d0c244671ffa60ba771b1b85c84e6ab4ac7"
+    },
+    {
+      "path": "docs/COMPATIBILITY_MATRIX.md",
+      "size": 2127,
+      "sha256": "55bfda0915462b12d8c8b50a9e8230b7d7ff53f36ed765a44b9075f88091c368"
+    },
+    {
+      "path": "docs/CONFORMANCE.md",
+      "size": 951,
+      "sha256": "67616b55d7eb261e30e98738131d225bd3612c3d44f4857168cebf2dabad4a46"
+    },
+    {
+      "path": "docs/DEVICE_ONBOARDING.md",
+      "size": 1610,
+      "sha256": "2d6d8b607ca324150c504370e94fc8665ea436b8b5f06d98fc713adc4eb7fc50"
+    },
+    {
+      "path": "docs/EGYPT_DEVICE_FAMILIES.md",
+      "size": 1141,
+      "sha256": "1e8b058cf77b489f031a297e69df930c161537ad83e314e9a1a615845f8098dc"
+    },
+    {
+      "path": "docs/OFFICIAL_INTEGRATION_PATHS.md",
+      "size": 769,
+      "sha256": "2d756eba7089a9534c6f4db6772d69fae5022fae24e6220897bfad6fb7c4cdb7"
+    },
+    {
+      "path": "docs/SECURITY.md",
+      "size": 737,
+      "sha256": "20fabe0eee96e6ee87e6948eddc575c509170a4bae17a5f6cf5a87b0e9f4c431"
+    },
+    {
+      "path": "docs/VENDOR_ARTIFACTS.md",
+      "size": 738,
+      "sha256": "945b32dccc80d29bf07f4bd9ccf68d43e11c2682f14dd9f0ec21b555b9fb98f8"
+    },
+    {
+      "path": "fixtures/README.md",
+      "size": 226,
+      "sha256": "f488e74858cab7e1449a5dc485fd12c37c895ba443758a906bdd964eb13d2624"
+    },
+    {
+      "path": "fixtures/adms/attlog_kv.txt",
+      "size": 53,
+      "sha256": "da31059d72951fafcd5d2af62ed057c4a174705a96160cf3bc4fb8d065816846"
+    },
+    {
+      "path": "fixtures/adms/attlog_tab.txt",
+      "size": 61,
+      "sha256": "22a9a9ccca2186c2d5b1310aecde980cf8e84aa090c3fd1a764068c7ecbe9095"
+    },
+    {
+      "path": "gateway-app/pom.xml",
+      "size": 2266,
+      "sha256": "eef5dbead57d7e38fb066a59bc1ce4b69103fd6aa235817d6dd9d043d152183d"
+    },
+    {
+      "path": "gateway-app/src/main/java/org/example/zkteco/gateway/GatewayApplication.java",
+      "size": 331,
+      "sha256": "c2684de44a368f01c8a2ff356eb3066218bf6c35b8ae46a3bbc151b6f106660c"
+    },
+    {
+      "path": "gateway-app/src/main/java/org/example/zkteco/gateway/adms/AdmsAdminController.java",
+      "size": 974,
+      "sha256": "c2a9f614a20456129929b8735c2a9252aa3ae0a2ecc99c9621597ad76a7ddbff"
+    },
+    {
+      "path": "gateway-app/src/main/java/org/example/zkteco/gateway/adms/AdmsPushController.java",
+      "size": 2203,
+      "sha256": "aca841f736f9eb42cede4df57c2064b3c4742fbacbcad3a90567b2d2dd44f0cc"
+    },
+    {
+      "path": "gateway-app/src/main/java/org/example/zkteco/gateway/compatibility/CompatibilityController.java",
+      "size": 1527,
+      "sha256": "dae8203393835a0166c3d7c6fe533809daeaebf8b6dd08c0a69aa1bd8dc26fa3"
+    },
+    {
+      "path": "gateway-app/src/main/java/org/example/zkteco/gateway/config/AdapterConfiguration.java",
+      "size": 1498,
+      "sha256": "bf1829ce15eaa0383128a6a6ba81e4b975085c07ab65a867ffd820f28f71ef8d"
+    },
+    {
+      "path": "gateway-app/src/main/java/org/example/zkteco/gateway/config/AdmsConfiguration.java",
+      "size": 537,
+      "sha256": "e26d9518fc1ac18314bed28943b71ca4db29ab6d31ec82d33262c53cd23d1ba7"
+    },
+    {
+      "path": "gateway-app/src/main/java/org/example/zkteco/gateway/device/ApiExceptionHandler.java",
+      "size": 979,
+      "sha256": "ed719c339b4a3476a9fe1932a76fb225579b6c0f6dd31455d2f0ed28e40b6e2b"
+    },
+    {
+      "path": "gateway-app/src/main/java/org/example/zkteco/gateway/device/DeviceController.java",
+      "size": 2158,
+      "sha256": "776bbb0a556bea216b0fb395b4e0f90a7f1d3a11228e350d7264db835e97cff3"
+    },
+    {
+      "path": "gateway-app/src/main/java/org/example/zkteco/gateway/device/DeviceNotFoundException.java",
+      "size": 234,
+      "sha256": "8f65d7467274848a82a8dc7d18eb4ac5863a414b01af0d0928b233b7fba875a5"
+    },
+    {
+      "path": "gateway-app/src/main/java/org/example/zkteco/gateway/device/DeviceRegistryService.java",
+      "size": 1395,
+      "sha256": "c354939360642476a1f9d4dc33c8e24ca905f948f8e1c9e2a558a3c8d816bb90"
+    },
+    {
+      "path": "gateway-app/src/main/resources/application.yml",
+      "size": 457,
+      "sha256": "f58d3f55818349d2332f8a8fed0cb9e8cb2d5302168402c4b907b295f5de366b"
+    },
+    {
+      "path": "gateway-app/src/test/java/org/example/zkteco/gateway/adms/AdmsPushControllerTest.java",
+      "size": 1336,
+      "sha256": "a465be21e8aecf884a3618389cc20ba75c8f9b7caafd4262eb882167325ea6ef"
+    },
+    {
+      "path": "pom.xml",
+      "size": 1082,
+      "sha256": "0943e73b883dd57153e65e92cf40e8bec75c6476da68f3bfff229e5ff5895567"
+    },
+    {
+      "path": "profiles/device-profiles.csv",
+      "size": 3256,
+      "sha256": "96cdb143024722f25b3e7011dbcf52f9334615f64b2cacc06d48baffa3c9bc5d"
+    },
+    {
+      "path": "profiles/firmware-overrides.example.csv",
+      "size": 339,
+      "sha256": "96a48cbc6450215ec9f8033b0839cd021d75ff037b2c6c307f5703fa170e26fc"
+    },
+    {
+      "path": "scripts/create-github-repo.ps1",
+      "size": 411,
+      "sha256": "b4da3bb1c89ca8654827d32d021ceafc343b29a9b7c2b394ce3a8e3425011612"
+    },
+    {
+      "path": "scripts/create-github-repo.sh",
+      "size": 317,
+      "sha256": "846069a3a8eda8ba585ba52d3c9f1ff8cd34008306c2271e5839e54eb3c4fa9c"
+    },
+    {
+      "path": "tools/zk_probe.py",
+      "size": 1457,
+      "sha256": "9f8a35a41888a68b0b6589b1deb0d5709325ee60a3f49b5a61751f4a89422a72"
+    },
+    {
+      "path": "vendor/README.md",
+      "size": 702,
+      "sha256": "0dd3b8ede5ab2294470072b1a4c22f3842a86db3b92fcc25ef2c6b9a610533fe"
+    },
+    {
+      "path": "vendor/android/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vendor/plcommpro/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vendor/standalone-sdk/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vendor/visible-light-sdk/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vendor/zkfinger/linux/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "vendor/zkfinger/windows/.gitkeep",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "windows-sdk-bridge/README.md",
+      "size": 714,
+      "sha256": "c16a5d757abdb1ea306ba699474e8342c18881547a97c790b43b64c55dbb7ffb"
+    },
+    {
+      "path": "windows-sdk-bridge/Zkteco.WindowsBridge/Models.cs",
+      "size": 501,
+      "sha256": "e2d14bd4bf5fd219e52b513fa1ecb597310f26507c6e05c6207117f608cb8b72"
+    },
+    {
+      "path": "windows-sdk-bridge/Zkteco.WindowsBridge/PlcommproBridge.cs",
+      "size": 2367,
+      "sha256": "c22918aa6678da991a489427a42fcfb8e00085032a7fc1e65983c9447429e26d"
+    },
+    {
+      "path": "windows-sdk-bridge/Zkteco.WindowsBridge/Program.cs",
+      "size": 1537,
+      "sha256": "d09f5cebeaf95498db0b97f85876a1f9e7d30469cd00b44700b10819b59b6117"
+    },
+    {
+      "path": "windows-sdk-bridge/Zkteco.WindowsBridge/ZkFingerNativeBridge.cs",
+      "size": 707,
+      "sha256": "f9373316983e3f1474bfeb948e326165099700ab29337ce2faa3ddb49619b232"
+    },
+    {
+      "path": "windows-sdk-bridge/Zkteco.WindowsBridge/ZkemkeeperComBridge.cs",
+      "size": 2627,
+      "sha256": "e7cd1a7eb2637b6701448ae9032d9664bd2589017fe749570fdffe117c657eb3"
+    },
+    {
+      "path": "windows-sdk-bridge/Zkteco.WindowsBridge/Zkteco.WindowsBridge.csproj",
+      "size": 264,
+      "sha256": "96b68195595b4b5c1b922a1a7397bf39f5dff285ba2d0ba55a54d2ae5704e0c3"
+    }
+  ]
+}

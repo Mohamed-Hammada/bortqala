@@ -1,0 +1,14 @@
+package org.example.zkteco.core;
+
+public enum DeviceFamily {
+    TIME_ATTENDANCE,
+    STANDALONE_ACCESS,
+    FACE_TERMINAL,
+    PALM_TERMINAL,
+    ACCESS_PANEL,
+    FINGERPRINT_SCANNER,
+    BIOMETRIC_MODULE,
+    READER,
+    PLATFORM_SOFTWARE,
+    UNKNOWN
+}

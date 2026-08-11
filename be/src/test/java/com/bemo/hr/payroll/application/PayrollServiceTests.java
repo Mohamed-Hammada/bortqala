@@ -13,6 +13,11 @@ import com.bemo.hr.payroll.application.PayrollExcelExporter;
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantContext;
+import com.bemo.hr.reporting.application.AttendanceExceptionService;
+import com.bemo.hr.reporting.domain.AttendanceReport;
+import com.bemo.hr.employee.domain.Employee;
+import com.bemo.hr.employee.domain.EmploymentType;
+import com.bemo.hr.employee.domain.PayCycle;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +52,7 @@ class PayrollServiceTests {
     @Mock private WorkforceAdvanceService workforceAdvanceService;
     @Mock private PayrollExcelExporter payrollExcelExporter;
     @Mock private AuditService auditService;
+    @Mock private AttendanceExceptionService attendanceExceptionService;
 
     @InjectMocks
     private PayrollService payrollService;
@@ -78,6 +84,28 @@ class PayrollServiceTests {
         assertThatThrownBy(() -> payrollService.reversePayment(req, "admin"))
                 .isInstanceOf(com.bemo.hr.shared.domain.NotFoundException.class)
                 .hasMessageContaining("قيد الراتب غير موجود.");
+    }
+
+    @Test
+    void recordPayment_enforcesTheAttendanceExceptionGate() {
+        Employee employee = new Employee("E-1", "Employee", null, "cat-1", EmploymentType.FIXED,
+                new BigDecimal("5000"), LocalDate.of(2026, 1, 1), null, true);
+        AttendanceReport report = new AttendanceReport(LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31),
+                PayCycle.MONTHLY, "cfg", "admin");
+        report.startReview(0); report.approve("admin");
+        when(employeeRepository.findById(employee.getId())).thenReturn(Optional.of(employee));
+        when(salaryPaymentRepository.findByEmployeeIdAndPeriodYearAndPeriodMonthAndPeriodKind(employee.getId(), 2026, 8, "FULL_MONTH"))
+                .thenReturn(Optional.empty());
+        when(attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(PayCycle.MONTHLY,
+                LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31))).thenReturn(Optional.of(report));
+        doThrow(new BusinessRuleException("blocked", "PAYROLL_ATTENDANCE_EXCEPTIONS_OPEN", HttpStatus.CONFLICT))
+                .when(attendanceExceptionService).assertPayrollReady(report.getId(), employee.getId());
+        PayrollApi.PaymentRequest request = new PayrollApi.PaymentRequest(employee.getId(), 2026, 8, "FULL_MONTH",
+                null, null, null, null, BigDecimal.ZERO, BigDecimal.ZERO, null, null, null, null, null);
+        assertThatThrownBy(() -> payrollService.recordPayment(request, "payroll"))
+                .isInstanceOf(BusinessRuleException.class).hasMessageContaining("blocked");
+        verify(attendanceExceptionService).assertPayrollReady(report.getId(), employee.getId());
+        verify(salaryPaymentRepository, never()).save(any());
     }
 
     // A golden example for 8-hour category should ideally be a fully verified test using actual logic.

@@ -1,0 +1,124 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260810-v186-supplier-returns-schema
+      author: bemo-erps
+      changes:
+        - createTable:
+            tableName: supplier_returns
+            columns:
+              - column:
+                  name: id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: app_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: return_number
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: return_date
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: purchase_order_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: supplier_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: warehouse_id
+                  type: varchar(36)
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: notes
+                  type: varchar(500)
+              - column:
+                  name: created_at
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: supplier_return_lines
+            columns:
+              - column:
+                  name: id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: app_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: supplier_return_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: purchase_order_line_id
+                  type: varchar(36)
+              - column:
+                  name: item_id
+                  type: varchar(36)
+              - column:
+                  name: item_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: item_category
+                  type: varchar(100)
+              - column:
+                  name: quantity
+                  type: numeric(15, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: unit_of_measure
+                  type: varchar(50)
+              - column:
+                  name: unit_price
+                  type: numeric(15, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: location_id
+                  type: varchar(36)
+              - column:
+                  name: reason
+                  type: varchar(500)
+        - addForeignKeyConstraint:
+            baseTableName: supplier_return_lines
+            baseColumnNames: supplier_return_id
+            constraintName: fk_supplier_return_lines_return
+            referencedTableName: supplier_returns
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: supplier_returns
+            columnNames: app_id, return_number
+            constraintName: uq_supplier_returns_app_number

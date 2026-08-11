@@ -36,6 +36,9 @@ public class TenantFeature {
     @Column(name = "updated_by", length = 160)
     private String updatedBy;
 
+    @Column(name = "change_reason", nullable = false, length = 500)
+    private String changeReason;
+
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
@@ -48,6 +51,7 @@ public class TenantFeature {
         this.enabled = enabled;
         this.configJson = configJson;
         this.updatedBy = updatedBy;
+        this.changeReason = "Initial entitlement configuration";
     }
 
     @PrePersist
@@ -90,6 +94,15 @@ public class TenantFeature {
 
     public void setUpdatedBy(String updatedBy) {
         this.updatedBy = updatedBy;
+    }
+
+    public String getChangeReason() { return changeReason; }
+
+    public void update(boolean enabled, String configJson, String reason, String actor) {
+        this.enabled = enabled;
+        this.configJson = configJson == null || configJson.isBlank() ? null : configJson.strip();
+        this.changeReason = reason.strip();
+        this.updatedBy = actor;
     }
 
     public Instant getUpdatedAt() {

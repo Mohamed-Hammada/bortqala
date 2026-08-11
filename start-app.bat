@@ -8,8 +8,8 @@ echo ========================================================
 echo.
 
 :: 1. Launch Backend in a new window
-echo [1/3] Starting Backend (Spring Boot)...
-start "Bemo ERP Backend" cmd /k "%~dp0start-backend.bat"
+echo [1/3] Starting Backend (Spring Boot, DEV profile)...
+start "Bemo ERP Backend" cmd /k "%~dp0start-backend-dev.bat"
 
 :: 2. Launch Frontend in a new window
 echo [2/3] Starting Frontend (Angular)...

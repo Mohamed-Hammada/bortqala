@@ -1,0 +1,250 @@
+<div class="shortcut-settings">
+  <div class="shortcut-intro">
+    <div class="shortcut-intro__topline">
+      <div class="header-badge">
+        @if (profile()?.profileMode === 'CUSTOM') {
+          <span class="custom-badge">{{ i18n.t('shortcuts.customBadge') }}</span>
+        } @else {
+          <span class="default-badge">{{ i18n.t('shortcuts.defaultBadge') }}</span>
+        }
+      </div>
+      <span class="shortcut-count" aria-label="Shortcut count">
+        {{ drafts().length }} / {{ maxShortcuts }}
+      </span>
+    </div>
+
+    <h2>{{ i18n.t('shortcuts.settingsTitle') }}</h2>
+    <p>{{ i18n.t('shortcuts.settingsDescription') }}</p>
+    <p class="only-available-note">{{ i18n.t('shortcuts.onlyAvailableScreens') }}</p>
+  </div>
+
+  <div class="shortcut-toolbar">
+    <div class="shortcut-search">
+      <input
+        type="search"
+        class="form-control"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value); onSearchChange()"
+        [attr.aria-label]="i18n.t('shortcuts.searchLabel')"
+        [placeholder]="i18n.t('shortcuts.searchPlaceholder')"
+      />
+    </div>
+    <div class="toolbar-actions">
+      <button
+        type="button"
+        class="button secondary add-button"
+        data-testid="shortcut-add"
+        (click)="addShortcut()"
+        [disabled]="!canAddShortcut()"
+      >
+        <span class="button-icon" aria-hidden="true">＋</span>
+        <span>{{ i18n.t('shortcuts.add') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="button primary"
+        data-testid="shortcut-save"
+        (click)="save()"
+        [disabled]="loading() || saving()"
+      >
+        <span class="button-icon" aria-hidden="true">✓</span>
+        <span>{{ i18n.t('shortcuts.save') }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="button secondary danger"
+        data-testid="shortcut-reset"
+        (click)="reset()"
+        [disabled]="loading() || saving()"
+      >
+        <span class="button-icon" aria-hidden="true">↺</span>
+        <span>{{ i18n.t('shortcuts.reset') }}</span>
+      </button>
+    </div>
+  </div>
+
+  @if (liveAnnouncement()) {
+    <div class="shortcut-feedback" role="status" aria-live="polite">
+      {{ liveAnnouncement() }}
+    </div>
+  }
+
+  @if (error(); as errorKey) {
+    <div class="shortcut-error" role="alert">
+      {{ i18n.t(errorKey) }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading-state">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <span>{{ i18n.t('common.loading') }}</span>
+    </div>
+  } @else {
+    <section class="shortcut-section">
+      <div class="shortcut-section__header">
+        <h3>{{ i18n.t('shortcuts.personalTitle') }}</h3>
+        <span class="shortcut-section__count">{{ drafts().length }}</span>
+      </div>
+
+      @if (filteredDrafts().length === 0) {
+        @if (drafts().length === 0) {
+          <div class="empty-state">{{ i18n.t('shortcuts.noAssignment') }}</div>
+        } @else {
+          <div class="empty-state">{{ i18n.t('shortcuts.noSearchResults') }}</div>
+        }
+      } @else {
+        <div class="shortcut-table-wrapper">
+          <table class="shortcut-table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('shortcuts.key') }}</th>
+                <th>{{ i18n.t('shortcuts.destination') }}</th>
+                <th>{{ i18n.t('shortcuts.status') }}</th>
+                <th>{{ i18n.t('shortcuts.enabled') }}</th>
+                <th class="action-heading"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of filteredDrafts(); track entry.draft.clientId) {
+                <tr
+                  [class.capturing]="captureIndex() === entry.index"
+                  [class.newly-added]="lastAddedClientId() === entry.draft.clientId"
+                  [class.editing]="editingClientId() === entry.draft.clientId"
+                  [attr.data-shortcut-client-id]="entry.draft.clientId"
+                >
+                  <td class="shortcut-key-cell">
+                    @if (editingClientId() === entry.draft.clientId) {
+                      <div class="shortcut-key-builder">
+                        <kbd class="prefix-kbd">G</kbd>
+                        <span class="arrow" aria-hidden="true">→</span>
+                        <button
+                          type="button"
+                          class="capture-btn"
+                          data-shortcut-capture="true"
+                          (click)="captureIndex.set(entry.index)"
+                          (keydown)="captureKey(entry.index, $event)"
+                          [disabled]="saving()"
+                          [attr.aria-pressed]="captureIndex() === entry.index"
+                          [attr.aria-label]="i18n.t('shortcuts.captureAria', { key: displayKey(entry.draft.secondKeyCode) })"
+                        >
+                          @if (captureIndex() === entry.index) {
+                            <span class="press-hint">{{ i18n.t('shortcuts.pressKey') }}</span>
+                          } @else {
+                            <kbd class="key-kbd">{{ displayKey(entry.draft.secondKeyCode) }}</kbd>
+                          }
+                        </button>
+                      </div>
+                    } @else {
+                      <div class="shortcut-key-builder compact">
+                        <kbd class="prefix-kbd">G</kbd>
+                        <span class="arrow" aria-hidden="true">→</span>
+                        <kbd class="key-kbd">{{ displayKey(entry.draft.secondKeyCode) }}</kbd>
+                      </div>
+                    }
+                  </td>
+
+                  <td class="shortcut-dest-cell">
+                    @if (editingClientId() === entry.draft.clientId) {
+                      <select
+                        class="form-control shortcut-destination-select"
+                        [attr.data-edit-client-id]="entry.draft.clientId"
+                        [ngModel]="entry.draft.pageCode"
+                        (change)="changeDestination(entry.index, $event)"
+                        [disabled]="saving()"
+                        [attr.aria-label]="i18n.t('shortcuts.destination')"
+                      >
+                        @for (dest of destinationOptions(entry.index); track dest.pageCode) {
+                          <option
+                            [value]="dest.pageCode"
+                            [disabled]="dest.unavailable"
+                          >
+                            {{ dest.title }}
+                          </option>
+                        }
+                      </select>
+                    } @else {
+                      <span class="shortcut-dest-title">{{ getDestinationTitle(entry.draft.pageCode) }}</span>
+                    }
+                  </td>
+
+                  <td class="shortcut-status-cell">
+                    @let statusInfo = getAvailabilityStatus(entry.draft.pageCode);
+                    <span class="status-badge" [ngClass]="statusInfo.cssClass">
+                      {{ i18n.t(statusInfo.statusKey) }}
+                    </span>
+                  </td>
+
+                  <td class="shortcut-enabled-cell">
+                    <label class="switch-label">
+                      <input
+                        type="checkbox"
+                        [checked]="entry.draft.enabled"
+                        (change)="toggleEnabled(entry.index, $any($event.target).checked)"
+                        [disabled]="saving()"
+                      />
+                      <span>{{ i18n.t('shortcuts.enabled') }}</span>
+                    </label>
+                  </td>
+
+                  <td class="shortcut-action-cell">
+                    @if (editingClientId() === entry.draft.clientId) {
+                      <div class="row-actions">
+                        <button
+                          type="button"
+                          class="button secondary row-save"
+                          data-testid="shortcut-save-row"
+                          (click)="saveEdit(entry.index)"
+                          [disabled]="saving()"
+                        >
+                          <span class="button-icon" aria-hidden="true">✓</span>
+                          <span>{{ i18n.t('shortcuts.save') }}</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="button ghost"
+                          data-testid="shortcut-cancel-row"
+                          (click)="cancelEdit()"
+                          [disabled]="saving()"
+                        >
+                          {{ i18n.t('common.cancel') }}
+                        </button>
+                      </div>
+                    } @else {
+                      <div class="row-actions">
+                        <button
+                          type="button"
+                          class="icon-button"
+                          data-testid="shortcut-edit"
+                          (click)="beginEdit(entry.index)"
+                          [disabled]="saving()"
+                          [attr.aria-label]="i18n.t('shortcuts.editAria', { key: displayKey(entry.draft.secondKeyCode) })"
+                          [appTooltip]="i18n.t('shortcuts.edit')"
+                        >
+                          <span aria-hidden="true">✎</span>
+                        </button>
+                        <button
+                          type="button"
+                          class="icon-button danger"
+                          data-testid="shortcut-remove"
+                          (click)="remove(entry.index)"
+                          [disabled]="saving()"
+                          [attr.aria-label]="i18n.t('shortcuts.remove')"
+                          [appTooltip]="i18n.t('shortcuts.remove')"
+                        >
+                          <span aria-hidden="true">✕</span>
+                        </button>
+                      </div>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  }
+</div>

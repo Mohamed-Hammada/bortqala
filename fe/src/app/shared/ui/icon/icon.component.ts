@@ -10,7 +10,15 @@ export type IconName =
   | 'settings'
   | 'logout'
   | 'menu'
-  | 'close';
+  | 'close'
+  | 'panel-expand'
+  | 'panel-collapse'
+  | 'expand-all'
+  | 'collapse-all'
+  | 'arrow-up'
+  | 'arrow-down'
+  | 'eye'
+  | 'eye-off';
 
 @Component({
   selector: 'app-icon',

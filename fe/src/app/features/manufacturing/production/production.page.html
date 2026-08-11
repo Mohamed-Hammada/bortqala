@@ -17,17 +17,15 @@
     <div class="alert error">{{ error() }}</div>
   }
 
-  <!-- Tab Selector Pills -->
-  <div class="filter-pills-bar">
-    <div class="pills-group">
-      <button class="pill-tab" [class.active]="activeTab() === 'orders'" (click)="activeTab.set('orders')">
-        🏭 {{ i18n.t('production.tabOrders') }} ({{ orders().length }})
-      </button>
-      <button class="pill-tab" [class.active]="activeTab() === 'boms'" (click)="activeTab.set('boms')">
-        📜 {{ i18n.t('production.tabBoms') }} ({{ boms().length }})
-      </button>
-    </div>
-  </div>
+  <!-- Product-standard tabs -->
+  <nav class="app-tabs" [attr.aria-label]="i18n.t('production.title')">
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'orders'" (click)="activeTab.set('orders')">
+      {{ i18n.t('production.tabOrders') }} ({{ orders().length }})
+    </button>
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'boms'" (click)="activeTab.set('boms')">
+      {{ i18n.t('production.tabBoms') }} ({{ boms().length }})
+    </button>
+  </nav>
 
   @if (!loading()) {
     <!-- Production Orders Tab -->

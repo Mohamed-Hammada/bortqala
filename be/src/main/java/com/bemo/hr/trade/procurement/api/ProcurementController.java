@@ -55,7 +55,7 @@ public class ProcurementController {
 
     @PostMapping("/orders")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
     public ProcurementApi.PurchaseOrderResponse createPurchaseOrder(
             @Valid @RequestBody ProcurementApi.PurchaseOrderPayload payload) {
         return procurementService.create(payload);
@@ -63,7 +63,7 @@ public class ProcurementController {
 
     @PutMapping("/orders/{id}")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
     public ProcurementApi.PurchaseOrderResponse updatePurchaseOrder(
             @PathVariable String id, @Valid @RequestBody ProcurementApi.PurchaseOrderPayload payload) {
         return procurementService.update(id, payload);
@@ -71,21 +71,21 @@ public class ProcurementController {
 
     @PostMapping("/orders/{id}/issue")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
     public ProcurementApi.PurchaseOrderResponse issuePurchaseOrder(@PathVariable String id) {
         return procurementService.issue(id);
     }
 
     @PostMapping("/orders/{id}/receive")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
     public ProcurementApi.PurchaseOrderResponse receivePurchaseOrder(@PathVariable String id) {
         return procurementService.receive(id);
     }
 
     @PostMapping("/orders/{id}/cancel")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
     public ProcurementApi.PurchaseOrderResponse cancelPurchaseOrder(@PathVariable String id) {
         return procurementService.cancel(id);
     }
@@ -99,11 +99,27 @@ public class ProcurementController {
 
     @PostMapping("/goods-receipts")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     public ProcurementApi.GoodsReceiptResponse createGoodsReceipt(
             @Valid @RequestBody ProcurementApi.GoodsReceiptPayload payload) {
         return procurementService.createGoodsReceipt(payload);
+    }
+
+    // ─── Supplier Returns ───────────────────────────────────────────
+
+    @GetMapping("/returns")
+    public List<ProcurementApi.SupplierReturnResponse> listSupplierReturns() {
+        return procurementService.listSupplierReturns();
+    }
+
+    @PostMapping("/returns")
+    @Transactional
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ProcurementApi.SupplierReturnResponse createSupplierReturn(
+            @Valid @RequestBody ProcurementApi.SupplierReturnPayload payload) {
+        return procurementService.createSupplierReturn(payload);
     }
 
     // ─── Supplier Invoices ──────────────────────────────────────────
@@ -115,7 +131,7 @@ public class ProcurementController {
 
     @PostMapping("/invoices")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     public ProcurementApi.SupplierInvoiceResponse createSupplierInvoice(
             @Valid @RequestBody ProcurementApi.SupplierInvoicePayload payload) {
@@ -131,10 +147,35 @@ public class ProcurementController {
 
     @PostMapping("/payments")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     public ProcurementApi.SupplierPaymentResponse createSupplierPayment(
             @Valid @RequestBody ProcurementApi.SupplierPaymentPayload payload) {
         return procurementService.createSupplierPayment(payload);
+    }
+
+    // ─── Three-Way Matching ─────────────────────────────────────────
+
+    @PostMapping("/invoices/{id}/three-way-match")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER')")
+    public ProcurementApi.ThreeWayMatchResponse performThreeWayMatch(
+            @PathVariable String id,
+            @RequestBody(required = false) ProcurementApi.PerformMatchPayload payload) {
+        java.math.BigDecimal tolerance = payload != null ? payload.tolerancePercentage() : java.math.BigDecimal.ZERO;
+        return procurementService.performThreeWayMatch(id, tolerance);
+    }
+
+    @GetMapping("/invoices/{id}/three-way-match")
+    @PreAuthorize("isAuthenticated()")
+    public ProcurementApi.ThreeWayMatchResponse getThreeWayMatch(@PathVariable String id) {
+        return procurementService.getThreeWayMatch(id);
+    }
+
+    @PostMapping("/three-way-matches/{id}/resolve")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
+    public ProcurementApi.ThreeWayMatchResponse resolveMatchVariance(
+            @PathVariable String id,
+            @Valid @RequestBody ProcurementApi.ResolveMatchPayload payload) {
+        return procurementService.resolveMatchVariance(id, payload.resolutionNotes());
     }
 }

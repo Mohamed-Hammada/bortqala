@@ -12,6 +12,7 @@ import {
   AttendanceCategory,
   AttendanceMode,
   CategoryPayload,
+  CategoryScope,
   DayOfWeek,
   PayCycle,
   ScheduleRule,
@@ -77,6 +78,7 @@ export class CategoriesPage {
       { nonNullable: true, validators: [Validators.required] },
     ),
     active: new FormControl(true, { nonNullable: true }),
+    scope: new FormControl<CategoryScope>('EMPLOYEE', { nonNullable: true }),
     version: new FormControl<number | null>(null),
     schedules: new FormArray<ScheduleForm>([]),
   });
@@ -95,6 +97,7 @@ export class CategoriesPage {
       allowsEmployeeAdvances: false,
       workDays: ['SATURDAY', 'SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY'],
       active: true,
+      scope: 'EMPLOYEE',
       version: null,
     });
     this.form.controls.schedules.clear();
@@ -113,6 +116,7 @@ export class CategoriesPage {
       allowsEmployeeAdvances: item.allowsEmployeeAdvances,
       workDays: item.workDays,
       active: item.active,
+      scope: item.scope,
       version: item.version,
     });
     this.form.controls.schedules.clear();
@@ -185,7 +189,7 @@ export class CategoriesPage {
       })),
     };
     if (await this.store.save(this.editingId(), payload)) {
-      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.notification.success(this.i18n.t(this.editingId() ? 'categories.updateSuccess' : 'categories.createSuccess') + ' ✓');
       this.drawerOpen.set(false);
     }
   }
@@ -228,6 +232,15 @@ export class CategoriesPage {
         MONTHLY: 'payCycle.monthly',
         HALF_MONTHLY: 'payCycle.halfMonthly',
         THIRTY_DAYS: 'payCycle.thirtyDays',
+      }[value],
+    );
+  }
+  scopeLabel(value: CategoryScope) {
+    return this.i18n.t(
+      {
+        EMPLOYEE: 'scope.employee',
+        WORKER: 'scope.worker',
+        BOTH: 'scope.both',
       }[value],
     );
   }

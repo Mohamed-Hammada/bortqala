@@ -51,7 +51,7 @@ public class AccountingApi {
     ) {}
 
     public record JournalEntryPayload(
-            @NotBlank String entryNumber,
+            String entryNumber,
             long entryDate,
             @NotBlank String description,
             String reference,
@@ -98,4 +98,6 @@ public class AccountingApi {
             long totalElements,
             int totalPages
     ) {}
+
+    public record NumberingSettings(boolean automaticNumbering) {}
 }

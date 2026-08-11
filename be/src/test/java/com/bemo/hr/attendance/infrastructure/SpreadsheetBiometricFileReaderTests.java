@@ -6,12 +6,14 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class SpreadsheetBiometricFileReaderTests {
+    private final ZoneId zone = ZoneId.of("Africa/Cairo");
     private final SpreadsheetBiometricFileReader reader = new SpreadsheetBiometricFileReader("Africa/Cairo");
 
     @Test
@@ -40,7 +42,8 @@ class SpreadsheetBiometricFileReaderTests {
         assertThat(parsed.errors()).isEmpty();
         assertThat(parsed.rows()).extracting(row -> row.deviceUserId()).containsOnly("EMP-001");
         assertThat(parsed.rows()).extracting(row -> row.punchedAt()).containsExactly(
-                Instant.parse("2026-07-24T05:07:00Z"), Instant.parse("2026-07-24T13:15:00Z"));
+                LocalDate.of(2026, 7, 24).atTime(8, 7).atZone(zone).toInstant(),
+                LocalDate.of(2026, 7, 24).atTime(16, 15).atZone(zone).toInstant());
     }
 
     @Test
@@ -52,7 +55,7 @@ class SpreadsheetBiometricFileReaderTests {
 
         assertThat(parsed.importedRows()).isEqualTo(1);
         assertThat(parsed.rows()).hasSize(1);
-        assertThat(parsed.rows().get(0).punchedAt()).isEqualTo(Instant.parse("2026-07-24T05:03:00Z"));
+        assertThat(parsed.rows().get(0).punchedAt()).isEqualTo(LocalDate.of(2026, 7, 24).atTime(8, 3).atZone(zone).toInstant());
     }
 
     @Test
@@ -86,7 +89,8 @@ class SpreadsheetBiometricFileReaderTests {
         assertThat(parsed.errors()).isEmpty();
         assertThat(parsed.importedRows()).isEqualTo(2);
         assertThat(parsed.rows()).extracting(row -> row.punchedAt()).contains(
-                Instant.parse("2026-07-29T05:05:00Z"), Instant.parse("2026-07-30T05:00:00Z"));
+                LocalDate.of(2026, 7, 29).atTime(8, 5).atZone(zone).toInstant(),
+                LocalDate.of(2026, 7, 30).atTime(8, 0).atZone(zone).toInstant());
     }
 
     @Test

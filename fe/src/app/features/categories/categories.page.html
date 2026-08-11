@@ -22,6 +22,7 @@
       <thead>
         <tr>
           <th>{{ i18n.t('categories.codeAndCategory') }}</th>
+          <th>{{ i18n.t('categories.categoryScope') }}</th>
           <th>{{ i18n.t('categories.attendanceMode') }}</th>
           <th>{{ i18n.t('categories.defaultHours') }}</th>
           <th>{{ i18n.t('categories.payCycle') }}</th>
@@ -36,6 +37,9 @@
             <td>
               <strong>{{ item.name }}</strong
               ><small class="ltr">{{ item.code }}</small>
+            </td>
+            <td>
+              <span class="status neutral">{{ scopeLabel(item.scope) }}</span>
             </td>
             <td>
               <span class="status neutral">{{ modeLabel(item.attendanceMode) }}</span>
@@ -76,7 +80,7 @@
           </tr>
         } @empty {
           <tr>
-            <td colspan="7">
+            <td colspan="8">
               <div class="empty-state">
                 <strong>{{ i18n.t('categories.noResults') }}</strong
                 >{{ i18n.t('categories.noResultsHint') }}
@@ -112,6 +116,13 @@
         <div class="field">
           <label>{{ i18n.t('categories.name') }}</label>
           <input formControlName="name" [placeholder]="i18n.t('categories.namePlaceholder')" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('categories.categoryScope') }}</label>
+          <select formControlName="scope">
+            <option value="EMPLOYEE">{{ i18n.t('scope.employee') }}</option>
+            <option value="BOTH">{{ i18n.t('scope.both') }}</option>
+          </select>
         </div>
         <div class="field">
           <label>{{ i18n.t('categories.attendanceProof') }}</label>
@@ -255,8 +266,8 @@
         <div class="confirm-icon">&#9888;&#65039;</div>
         <div class="confirm-message">{{ action.message }}</div>
         <div class="confirm-actions">
-          <button type="button" class="button primary" (click)="action.onConfirm()">تأكيد</button>
-          <button type="button" class="button secondary" (click)="confirmAction.set(null)">إلغاء</button>
+          <button type="button" class="button primary" (click)="action.onConfirm()">{{ i18n.t('common.confirm') }}</button>
+          <button type="button" class="button secondary" (click)="confirmAction.set(null)">{{ i18n.t('common.cancel') }}</button>
         </div>
       </div>
     </div>

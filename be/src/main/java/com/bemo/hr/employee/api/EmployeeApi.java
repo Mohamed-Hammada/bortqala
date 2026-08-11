@@ -48,4 +48,13 @@ public final class EmployeeApi {
             LocalDate effectiveTo,
             Instant createdAt) {
     }
+
+    public record CodeCorrectionRequest(boolean dryRun) {
+    }
+
+    public record CodeCorrectionItem(String employeeId, String oldCode, String newCode, boolean conflict) {
+    }
+
+    public record CodeCorrectionReport(int correctedCount, java.util.List<CodeCorrectionItem> items) {
+    }
 }

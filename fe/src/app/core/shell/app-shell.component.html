@@ -17,7 +17,7 @@
           [attr.aria-label]="collapsed() ? i18n.t('action.openMenu') : i18n.t('action.closeMenu')"
           [appTooltip]="collapsed() ? i18n.t('action.openMenu') : i18n.t('action.closeMenu')"
         >
-          <app-icon name="menu" />
+          <app-icon [name]="collapsed() ? 'panel-expand' : 'panel-collapse'" />
         </button>
       </div>
       <button
@@ -124,12 +124,24 @@
       }
 
       <!-- Workspace Controls -->
-      <div class="workspace-section-tools">
-        <button type="button" class="expand-all-btn" (click)="expandAllGroups()" [appTooltip]="i18n.t('action.expandAll')">
-          📂 {{ i18n.t('action.expandAll') }}
+      <div class="workspace-section-tools" [attr.aria-label]="i18n.t('nav.main')">
+        <button
+          type="button"
+          class="workspace-tool-icon"
+          (click)="expandAllGroups()"
+          [attr.aria-label]="i18n.t('action.expandAll')"
+          [appTooltip]="i18n.t('action.expandAll')"
+        >
+          <app-icon name="expand-all" />
         </button>
-        <button type="button" class="expand-all-btn" (click)="collapseAllGroups()" [appTooltip]="i18n.t('action.collapseAll')">
-          📁 {{ i18n.t('action.collapseAll') }}
+        <button
+          type="button"
+          class="workspace-tool-icon"
+          (click)="collapseAllGroups()"
+          [attr.aria-label]="i18n.t('action.collapseAll')"
+          [appTooltip]="i18n.t('action.collapseAll')"
+        >
+          <app-icon name="collapse-all" />
         </button>
       </div>
 
@@ -216,7 +228,7 @@
 
     <header class="mobile-header">
       <button
-        class="icon-button"
+        class="icon-button mobile-menu-trigger"
         type="button"
         (click)="menuOpen.set(true)"
         [attr.aria-label]="i18n.t('action.openMenu')"
@@ -243,6 +255,22 @@
         [attr.aria-label]="i18n.t('shortcuts.showHelp')"
         [appTooltip]="i18n.t('shortcuts.openHelpTooltip')"
       >?</button>
+      <a class="icon-button" routerLink="/support" [attr.aria-label]="i18n.t('support.nav')" [appTooltip]="i18n.t('support.nav')">💬</a>
+      <button
+        class="icon-button notification-bell-btn"
+        type="button"
+        (click)="notificationCenter.togglePanel()"
+        [attr.aria-label]="i18n.t('actionCenter.title', undefined, 'مركز الإشعارات')"
+        [appTooltip]="i18n.t('actionCenter.title', undefined, 'مركز الإشعارات')"
+        style="position:relative;"
+      >
+        🔔
+        @if (notificationCenter.unreadCount() > 0) {
+          <span style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:0.75rem;font-weight:700;padding:2px 6px;border-radius:10px;line-height:1;">
+            {{ notificationCenter.unreadCount() }}
+          </span>
+        }
+      </button>
       <button
         class="icon-button"
         type="button"
@@ -259,6 +287,109 @@
     </div>
   </main>
 </div>
+
+@if (logoutOptionsOpen()) {
+  <div class="shortcut-overlay" (click)="closeLogoutOptions()">
+    <section
+      class="shortcut-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="i18n.t('auth.logoutTitle')"
+      [attr.aria-busy]="logoutAllDevicesBusy()"
+      (click)="$event.stopPropagation()"
+      style="max-width: 520px; width: min(520px, calc(100vw - 2rem));"
+    >
+      <header class="shortcut-dialog-header">
+        <div>
+          <h2>{{ i18n.t('auth.logoutTitle') }}</h2>
+          <p>{{ i18n.t('auth.logoutHint') }}</p>
+        </div>
+        <button
+          type="button"
+          class="shortcut-close"
+          (click)="closeLogoutOptions()"
+          [disabled]="logoutAllDevicesBusy()"
+          [attr.aria-label]="i18n.t('action.cancel')"
+        >✕</button>
+      </header>
+
+      <div style="display: grid; gap: 0.75rem;">
+        <button
+          type="button"
+          class="button secondary"
+          (click)="logoutCurrentBrowser()"
+          [disabled]="logoutAllDevicesBusy()"
+          style="display: grid; gap: 0.25rem; text-align: start; min-height: 64px;"
+        >
+          <strong>{{ i18n.t('auth.logoutCurrentBrowser') }}</strong>
+          <span>{{ i18n.t('auth.logoutCurrentBrowserHint') }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="button"
+          (click)="logoutAllDevices()"
+          [disabled]="logoutAllDevicesBusy()"
+          style="display: grid; gap: 0.25rem; text-align: start; min-height: 64px;"
+        >
+          <strong>
+            {{
+              logoutAllDevicesBusy()
+                ? i18n.t('auth.logoutAllDevicesWorking')
+                : i18n.t('auth.logoutAllDevices')
+            }}
+          </strong>
+          <span>{{ i18n.t('auth.logoutAllDevicesHint') }}</span>
+        </button>
+      </div>
+
+      @if (logoutError()) {
+        <p role="alert" style="margin: 0.75rem 0 0; color: var(--danger, #b91c1c);">
+          {{ logoutError() }}
+        </p>
+      }
+    </section>
+  </div>
+}
+
+<!-- Action Center Notifications Dropdown Panel -->
+@if (notificationCenter.panelOpen()) {
+  <div class="shortcut-overlay" (click)="notificationCenter.closePanel()">
+    <section class="shortcut-dialog action-center-dialog" (click)="$event.stopPropagation()">
+      <header class="shortcut-dialog-header action-center-header">
+        <div>
+          <h2 style="margin:0;font-size:1.1rem;">🔔 {{ i18n.t('actionCenter.title', undefined, 'مركز الإشعارات والتنبيهات') }}</h2>
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+          <button type="button" class="button secondary btn-sm" (click)="notificationCenter.markAllAsRead()">{{ i18n.t('actionCenter.markAllRead', undefined, 'تحديد الكل كمقروء') }}</button>
+          <button type="button" class="shortcut-close" (click)="notificationCenter.closePanel()">✕</button>
+        </div>
+      </header>
+      <div class="action-center-list">
+        @for (item of notificationCenter.notifications(); track item.id) {
+          <article
+            class="action-card"
+            [class.read]="item.isRead"
+            (click)="notificationCenter.markAsRead(item.id)"
+          >
+            <div class="action-card-head">
+              <strong>{{ i18n.locale() === 'en-US' ? item.titleEn : item.titleAr }}</strong>
+              <span class="priority">{{ i18n.t(notificationPriorityKey(item.priority)) }}</span>
+            </div>
+            @if(item.exceptionKey){<small class="exception">{{ i18n.t('actionCenter.exception') }} · {{ item.exceptionKey }}</small>}
+            <p>{{ i18n.locale() === 'en-US' ? item.messageEn : item.messageAr }}</p>
+            @if(item.impactEn||item.impactAr){<div class="action-detail"><b>{{ i18n.t('actionCenter.impact') }}</b><span>{{ i18n.locale() === 'en-US' ? item.impactEn : item.impactAr }} @if(item.impactAmount){ · {{ item.impactAmount }} {{ item.impactCurrency }} }</span></div>}
+            @if(item.reasonEn||item.reasonAr){<div class="action-detail"><b>{{ i18n.t('actionCenter.reason') }}</b><span>{{ i18n.locale() === 'en-US' ? item.reasonEn : item.reasonAr }}</span></div>}
+            @if(item.recommendationEn||item.recommendationAr){<div class="action-detail"><b>{{ i18n.t('actionCenter.recommendation') }}</b><span>{{ i18n.locale() === 'en-US' ? item.recommendationEn : item.recommendationAr }}</span></div>}
+            @if(item.actionLink){<a class="button primary btn-sm action-link" [routerLink]="item.actionLink" (click)="$event.stopPropagation(); notificationCenter.markAsRead(item.id); notificationCenter.closePanel()">{{ item.actionLabelKey ? i18n.t(item.actionLabelKey) : i18n.t('actionCenter.openAction') }}</a>}
+          </article>
+        } @empty {
+          <div class="action-center-empty">{{ i18n.t('actionCenter.noNotifications', undefined, 'لا توجد إشعارات جديدة.') }}</div>
+        }
+      </div>
+    </section>
+  </div>
+}
 
 @if (chordWaiting()) {
   <div class="shortcut-chord-hint" role="status">
@@ -312,7 +443,7 @@
               <small>{{ i18n.t(item.descriptionKey) }}</small>
             </span>
             @if (shortcut(item); as menuShortcut) {
-              <kbd>{{ menuShortcut.keys }}</kbd>
+              <kbd>G → {{ menuShortcut.displayKey }}</kbd>
             }
           </button>
         } @empty {
@@ -356,27 +487,64 @@
         </section>
         <section>
           <h3>{{ i18n.t('shortcuts.navigationTitle') }}</h3>
-          @for (shortcutItem of menuShortcuts; track shortcutItem.menuId) {
+          @for (shortcutItem of screenShortcuts.runtimeShortcuts(); track shortcutItem.pageCode) {
             <div class="shortcut-row">
-              <span>{{ i18n.t(shortcutItem.labelKey) }}</span>
-              <kbd>{{ shortcutItem.keys }}</kbd>
+              <span>{{ i18n.t(shortcutItem.titleKey) }}</span>
+              <kbd>G → {{ shortcutItem.displayKey }}</kbd>
             </div>
           }
         </section>
       </div>
-      <p class="shortcut-permission-note">{{ i18n.t('shortcuts.availableByPermission') }}</p>
+      <div style="margin-top: 1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <p class="shortcut-permission-note" style="margin: 0;">{{ i18n.t('shortcuts.availableByPermission') }}</p>
+        <a routerLink="/settings" [queryParams]="{ tab: 'shortcuts' }" (click)="closeShortcutPanels()" class="link-btn">
+          {{ i18n.t('shortcuts.manage') }}
+        </a>
+      </div>
     </section>
   </div>
 }
 
 @if (confirmDialog.confirmState(); as state) {
-  <div class="confirm-overlay" (click)="confirmDialog.resolve(false)">
+  <div class="confirm-overlay" (click)="confirmDialog.cancel()">
     <div class="confirm-dialog" (click)="$event.stopPropagation()">
       <div class="confirm-icon">&#9888;&#65039;</div>
-      <div class="confirm-message">{{ state.message }}</div>
+      @if (state.options.titleKey) {
+        <h3 class="confirm-title">{{ i18n.t(state.options.titleKey) }}</h3>
+      }
+      <div class="confirm-message">{{ i18n.t(state.options.messageKey, state.options.params) }}</div>
+      @if (state.options.details?.length) {
+        <dl class="confirm-details">
+          @for (detail of state.options.details; track detail.label) {
+            <div class="confirm-detail-row">
+              <dt>{{ detail.label }}</dt>
+              <dd class="ltr">{{ detail.value }}</dd>
+            </div>
+          }
+        </dl>
+      }
+      @if (state.options.dangerMessageKey) {
+        <p class="confirm-danger">{{ i18n.t(state.options.dangerMessageKey) }}</p>
+      }
+      @if (state.error) {
+        <div class="confirm-error" role="alert">{{ state.error }}</div>
+      }
+      @if (state.busy) {
+        <div class="confirm-busy" role="status">{{ i18n.t('common.processing') }}</div>
+      }
       <div class="confirm-actions">
-        <button type="button" class="button primary" (click)="confirmDialog.resolve(true)">تأكيد</button>
-        <button type="button" class="button secondary" (click)="confirmDialog.resolve(false)">إلغاء</button>
+        <button
+          type="button"
+          class="button primary"
+          [class.danger]="state.options.danger"
+          [disabled]="state.busy"
+          (click)="confirmDialog.proceed()"
+        >
+          {{ i18n.t(state.options.confirmKey ?? 'common.confirm') }}
+        </button>
+        <button type="button" class="button secondary" [disabled]="state.busy" (click)="confirmDialog.cancel()">
+          {{ i18n.t(state.options.cancelKey ?? 'common.cancel') }}
+        </button>
       </div>
     </div>
   </div>

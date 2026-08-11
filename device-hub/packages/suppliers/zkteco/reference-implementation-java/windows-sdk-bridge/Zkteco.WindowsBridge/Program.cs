@@ -1,0 +1,10 @@
+using Zkteco.WindowsBridge;
+var builder=WebApplication.CreateBuilder(args); var app=builder.Build();
+app.MapGet("/health",()=>Results.Ok(new {status="ok",bridge="zkteco-windows-sdk"}));
+app.MapGet("/capabilities",()=>Results.Ok(new[]{"zkemkeeper-com","plcommpro","zkfinger-native"}));
+app.MapPost("/standalone/probe",(ConnectRequest r)=>{try{using var z=new ZkemkeeperComBridge(); if(!z.Connect(r.Host,r.Port,r.MachineNumber))return Results.BadRequest(new ProbeReply(false,null,null,null,"Connect_Net returned false")); return Results.Ok(z.Probe());}catch(Exception e){return Results.BadRequest(new ProbeReply(false,null,null,null,e.Message));}});
+app.MapPost("/standalone/users",(ConnectRequest r)=>{using var z=new ZkemkeeperComBridge(); if(!z.Connect(r.Host,r.Port,r.MachineNumber))return Results.BadRequest("connect failed"); return Results.Ok(z.Users());});
+app.MapPost("/standalone/attendance",(ConnectRequest r)=>{using var z=new ZkemkeeperComBridge(); if(!z.Connect(r.Host,r.Port,r.MachineNumber))return Results.BadRequest("connect failed"); return Results.Ok(z.Attendance());});
+app.MapPost("/plcommpro/query",(PlcommRequest r,string table,string fields)=>{try{using var p=new PlcommproBridge();p.Connect(r.ConnectionString);return Results.Text(p.GetDeviceData(table,fields));}catch(Exception e){return Results.BadRequest(e.Message);}});
+app.MapGet("/zkfinger/device-count",()=>{try{return Results.Ok(new {count=new ZkFingerNativeBridge().DeviceCount()});}catch(Exception e){return Results.BadRequest(e.Message);}});
+app.Run();

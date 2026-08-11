@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: make_industry_packs_data_driven_and_seed_food_distribution
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: HALT
+        - tableExists: { tableName: industry_packs }
+        - not: { columnExists: { tableName: industry_packs, columnName: defaults_json } }
+      changes:
+        - addColumn:
+            tableName: industry_packs
+            columns:
+              - column: { name: defaults_json, type: varchar(4000), defaultValue: '{}', constraints: { nullable: false } }
+              - column: { name: default_roles_json, type: varchar(2000), defaultValue: '[]', constraints: { nullable: false } }
+              - column: { name: kpis_json, type: varchar(2000), defaultValue: '[]', constraints: { nullable: false } }
+              - column: { name: import_templates_json, type: varchar(2000), defaultValue: '[]', constraints: { nullable: false } }
+              - column: { name: onboarding_steps_json, type: varchar(3000), defaultValue: '[]', constraints: { nullable: false } }
+        - update:
+            tableName: industry_packs
+            where: "code='CONTRACTOR_WORKFORCE_EG'"
+            columns:
+              - column: { name: defaults_json, value: '{"terminology":{"employee":"worker","supplier":"contractor"},"dashboard":"workforce","kpis":["contractorFillRate","attendanceExceptionRate","settlementVariance","contractorReliability"]}' }
+              - column: { name: default_roles_json, value: '["WORKFORCE_MANAGER","WORKFORCE_REVIEWER","WORKFORCE_FINANCE"]' }
+              - column: { name: kpis_json, value: '["contractorFillRate","attendanceExceptionRate","settlementVariance","contractorReliability"]' }
+              - column: { name: import_templates_json, value: '["workers.xlsx","attendance.xlsx","advances.xlsx"]' }
+              - column: { name: onboarding_steps_json, value: '["industryPack.step.company","industryPack.step.contractors","industryPack.step.categories","industryPack.step.workers","industryPack.step.attendance","industryPack.step.advances?","industryPack.step.settlement"]' }
+        - insert:
+            tableName: industry_packs
+            columns:
+              - column: { name: id, value: pack-food-distribution-eg-v1 }
+              - column: { name: code, value: FOOD_DISTRIBUTION_EG }
+              - column: { name: name_key, value: industryPack.foodDistribution.name }
+              - column: { name: description_key, value: industryPack.foodDistribution.description }
+              - column: { name: pack_version, valueNumeric: 1 }
+              - column: { name: country_code, value: EGY }
+              - column: { name: required_features_json, value: '["procurement.enabled","inventory.advanced.enabled","sales.enabled","finance.enabled","exports.enabled","notifications.enabled","navigation.favorites.enabled","navigation.recents.enabled"]' }
+              - column: { name: defaults_json, value: '{"terminology":{"customer":"distributionCustomer","warehouse":"distributionWarehouse"},"dashboard":"foodDistribution","issuePolicy":"FEFO","creditControl":true,"expiryWindowsDays":[7,30,60]}' }
+              - column: { name: default_roles_json, value: '["SALES_MANAGER","INVENTORY_MANAGER","PROCUREMENT_MANAGER","FINANCE_MANAGER"]' }
+              - column: { name: kpis_json, value: '["expiryRiskValue","stockoutItems","slowMovingInventory","salesByRoute","grossMarginByRoute","customerOverdue","deliverySuccessRate","returnRate","fillRate"]' }
+              - column: { name: import_templates_json, value: '["items.xlsx","customers.xlsx","opening-stock.xlsx","suppliers.xlsx"]' }
+              - column: { name: onboarding_steps_json, value: '["industryPack.food.step.company","industryPack.food.step.warehouses","industryPack.food.step.items","industryPack.food.step.suppliers","industryPack.food.step.customers","industryPack.food.step.openingStock","industryPack.food.step.firstPurchase","industryPack.food.step.firstSale","industryPack.food.step.margin?"]' }
+              - column: { name: status, value: ACTIVE }
+              - column: { name: created_at, valueComputed: CURRENT_TIMESTAMP }
+              - column: { name: updated_at, valueComputed: CURRENT_TIMESTAMP }
+      rollback:
+        - delete: { tableName: industry_packs, where: "code='FOOD_DISTRIBUTION_EG'" }
+        - dropColumn: { tableName: industry_packs, columnName: onboarding_steps_json }
+        - dropColumn: { tableName: industry_packs, columnName: import_templates_json }
+        - dropColumn: { tableName: industry_packs, columnName: kpis_json }
+        - dropColumn: { tableName: industry_packs, columnName: default_roles_json }
+        - dropColumn: { tableName: industry_packs, columnName: defaults_json }

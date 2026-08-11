@@ -6,10 +6,11 @@ import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18nService, SupportedLocale } from '../../core/i18n.service';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
 
 @Component({
   selector: 'app-login-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, IconComponent],
   templateUrl: './login.page.html',
   styleUrl: './login.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,7 +34,30 @@ export class LoginPage {
 
   constructor() {
     if (this.authService.authenticated()) void this.router.navigate(['/dashboard']);
+    else void this.attemptDemoLogin();
     void this.loadDesktopCredentials();
+  }
+
+  private async attemptDemoLogin(): Promise<void> {
+    const secret = this.activatedRoute.snapshot.queryParamMap.get('my_secret');
+    if (!secret || this.loading()) return;
+    this.loading.set(true);
+    this.error.set(null);
+    try {
+      const session = await firstValueFrom(this.authService.demoLogin(secret));
+      await this.i18n.use(session.preferences.locale, session.app.id);
+      document.documentElement.lang = this.i18n.locale().startsWith('ar') ? 'ar' : 'en';
+      document.documentElement.dir = this.i18n.locale().startsWith('ar') ? 'rtl' : 'ltr';
+      await this.router.navigate(
+        session.mustChangePassword ? ['/change-password'] : ['/dashboard'],
+        { replaceUrl: true },
+      );
+    } catch (error) {
+      await this.router.navigate([], { queryParams: { my_secret: null }, replaceUrl: true });
+      this.error.set(apiErrorMessage(error, this.i18n));
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   private async loadDesktopCredentials(): Promise<void> {
@@ -87,7 +111,7 @@ export class LoginPage {
           this.form.controls.password.value,
         ),
       );
-      await this.i18n.use(session.preferences.locale);
+      await this.i18n.use(session.preferences.locale, session.app.id);
       document.documentElement.lang = this.i18n.locale().startsWith('ar') ? 'ar' : 'en';
       document.documentElement.dir = this.i18n.locale().startsWith('ar') ? 'rtl' : 'ltr';
       await this.router.navigate(session.mustChangePassword ? ['/change-password'] : ['/dashboard']);

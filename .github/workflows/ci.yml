@@ -18,6 +18,12 @@ jobs:
       - name: Backend clean test check
         working-directory: be
         run: ./gradlew clean test check
+      - name: Backend test-count regression gate
+        working-directory: be
+        run: python3 tools/check-test-count.py
+      - name: Backend error-code i18n parity gate (E-2)
+        working-directory: be
+        run: python3 tools/check-error-codes.py
 
   frontend:
     name: Frontend (Angular)
@@ -29,15 +35,21 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: fe/package-lock.json
+      - name: Node version guard (engines >=22 <25)
+        working-directory: fe
+        run: node -e "const e=require('./package.json').engines;const ok=process.version.match(/^v(\d+)\./);console.log('node',process.version,'| engines',JSON.stringify(e));if(!ok||Number(ok[1])>=25||Number(ok[1])<22){console.error('Node version outside engines range');process.exit(1)}"
       - name: Install dependencies
         working-directory: fe
         run: npm ci
       - name: i18n key coverage
         working-directory: fe
         run: npm run check:i18n
-      - name: Unit tests
+      - name: Hardcoded UI strings check
         working-directory: fe
-        run: npx ng test --watch=false
+        run: npm run check:hardcoded
+      - name: Unit tests + test-count regression gate
+        working-directory: fe
+        run: npx ng test --watch=false --no-progress | tee /tmp/fe-test.log | node tools/check-test-count.mjs
       - name: Production build
         working-directory: fe
         run: npm run build

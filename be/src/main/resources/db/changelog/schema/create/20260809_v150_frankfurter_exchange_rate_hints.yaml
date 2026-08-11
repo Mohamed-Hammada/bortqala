@@ -1,0 +1,114 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260809-v150-frankfurter-exchange-rate-hints
+      author: bemo-erp
+      comment: "Frankfurter informational exchange-rate hints: tenant-scoped refresh settings and non-authoritative online reference-rate metadata on currencies."
+      changes:
+        - createTable:
+            tableName: exchange_rate_hint_settings
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enabled
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: refresh_interval_hours
+                  type: INTEGER
+                  defaultValueNumeric: 4
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_attempt_at
+                  type: BIGINT
+              - column:
+                  name: last_success_at
+                  type: BIGINT
+              - column:
+                  name: last_error_code
+                  type: VARCHAR(80)
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            tableName: exchange_rate_hint_settings
+            columnNames: app_id
+            constraintName: uq_exchange_rate_hint_settings_app
+
+        - addForeignKeyConstraint:
+            baseTableName: exchange_rate_hint_settings
+            baseColumnNames: app_id
+            referencedTableName: apps
+            referencedColumnNames: id
+            constraintName: fk_exchange_rate_hint_settings_app
+            onDelete: CASCADE
+
+        - addColumn:
+            tableName: currencies
+            columns:
+              - column:
+                  name: reference_exchange_rate
+                  type: DECIMAL(20,8)
+              - column:
+                  name: reference_rate_provider
+                  type: VARCHAR(30)
+              - column:
+                  name: reference_rate_base_code
+                  type: VARCHAR(10)
+              - column:
+                  name: reference_rate_date
+                  type: DATE
+              - column:
+                  name: reference_rate_fetched_at
+                  type: BIGINT
+              - column:
+                  name: reference_rate_supported
+                  type: BOOLEAN
+
+      rollback:
+        - dropColumn:
+            tableName: currencies
+            columnName: reference_rate_supported
+        - dropColumn:
+            tableName: currencies
+            columnName: reference_rate_fetched_at
+        - dropColumn:
+            tableName: currencies
+            columnName: reference_rate_date
+        - dropColumn:
+            tableName: currencies
+            columnName: reference_rate_base_code
+        - dropColumn:
+            tableName: currencies
+            columnName: reference_rate_provider
+        - dropColumn:
+            tableName: currencies
+            columnName: reference_exchange_rate
+        - dropTable:
+            tableName: exchange_rate_hint_settings

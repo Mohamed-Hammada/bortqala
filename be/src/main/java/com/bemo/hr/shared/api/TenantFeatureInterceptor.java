@@ -3,29 +3,19 @@ package com.bemo.hr.shared.api;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.shared.security.TenantFeatureService;
+import com.bemo.hr.shared.security.EntitlementCatalog;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.util.Map;
-
 public class TenantFeatureInterceptor implements HandlerInterceptor {
-
-    private static final Map<String, String> GATED_PREFIXES = Map.ofEntries(
-            Map.entry("/api/v1/payroll", "payroll.enabled"),
-            Map.entry("/api/v1/trade/sales", "sales.enabled"),
-            Map.entry("/api/v1/trade/procurement", "procurement.enabled"),
-            Map.entry("/api/v1/manufacturing", "manufacturing.enabled"),
-            Map.entry("/api/v1/finance", "finance.enabled"),
-            Map.entry("/api/v1/fiscal-periods", "finance.enabled"),
-            Map.entry("/api/v1/workforce/contractors", "workforce.contractorAccounts.enabled"),
-            Map.entry("/api/v1/workforce/settlements", "workforce.contractorAccounts.enabled"));
-
     private final TenantFeatureService featureService;
+    private final EntitlementCatalog catalog;
 
-    public TenantFeatureInterceptor(TenantFeatureService featureService) {
+    public TenantFeatureInterceptor(TenantFeatureService featureService,EntitlementCatalog catalog) {
         this.featureService = featureService;
+        this.catalog = catalog;
     }
 
     @Override
@@ -37,13 +27,10 @@ public class TenantFeatureInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        for (Map.Entry<String, String> gate : GATED_PREFIXES.entrySet()) {
-            if (uri.startsWith(gate.getKey())
-                    && !featureService.isEnabled(appId, gate.getValue())) {
+        var required=catalog.requiredFeature(uri);
+        if(required.isPresent()&&!featureService.isEnabled(appId,required.get())){
                 throw new BusinessRuleException("Feature is disabled", "FEATURE_DISABLED", HttpStatus.FORBIDDEN);
-            }
         }
-
         return true;
     }
 }

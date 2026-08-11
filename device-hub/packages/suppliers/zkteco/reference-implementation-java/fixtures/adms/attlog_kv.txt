@@ -1,0 +1,1 @@
+PIN=1	DateTime=2026-08-08 08:15:00	Status=0	Verify=1

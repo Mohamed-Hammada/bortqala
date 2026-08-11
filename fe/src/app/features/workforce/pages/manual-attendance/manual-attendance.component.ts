@@ -58,8 +58,8 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
             {{ i18n.t('manualAttendance.exportExcel') }}
           </button>
           <button type="button" class="btn btn-secondary" (click)="applyFullDayAll()"
-            [appTooltip]="i18n.t('manualAttendance.setFullDayAll', undefined, 'يوم كامل للكل — يغيّر كل الخلايا الظاهرة إلى دوام كامل')">
-            {{ i18n.t('manualAttendance.setFullDayAllLabel', undefined, 'تعيين يوم كامل للكل') }}
+            [appTooltip]="i18n.t('manualAttendance.setFullDayAll', undefined)">
+            {{ i18n.t('manualAttendance.setFullDayAllLabel', undefined) }}
           </button>
           <button type="button" class="btn btn-primary" [disabled]="saving() || dirtyCellKeys().size === 0" (click)="saveAttendance()"
             [appTooltip]="i18n.t('manualAttendance.saveAttendance')">
@@ -149,6 +149,30 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
         </div>
       </div>
 
+      <!-- Calculation Rules Banner -->
+      @if (rules(); as r) {
+        <div class="card rules-card">
+          <details>
+            <summary class="rules-summary">📊 قواعد احتساب الحضور والانصراف</summary>
+            <div class="rules-body">
+              <div class="rule-item">
+                <span class="rule-label">معدل الأوفرتايم:</span>
+                <span class="rule-value">{{ r.overtimeRate }}× بعد {{ r.overtimeThresholdHours }} ساعات</span>
+              </div>
+              <div class="rule-item">
+                <span class="rule-label">معدل خصم ساعة:</span>
+                <span class="rule-value">الأجر اليومي ÷ {{ r.standardDailyHours }}</span>
+              </div>
+              <div class="rule-item">
+                <span class="rule-label">معدل أجر العطلات:</span>
+                <span class="rule-value">{{ r.holidayPayRate }}× الأجر العادي</span>
+              </div>
+              <p class="rules-desc">{{ r.description }}</p>
+            </div>
+          </details>
+        </div>
+      }
+
       @if (saveSummary(); as summary) {
         <div class="card save-summary" role="status" aria-live="polite">
           <strong>ملخص آخر عملية حفظ</strong>
@@ -183,30 +207,6 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
         <div class="card empty-card">
           <div class="empty-icon">👷</div>
           <p>{{ selectedContractorId() || selectedCategoryId() ? 'لا يوجد عمال مطابقون للفلترة المحددة.' : 'لا يوجد عمال مسجلون. أضف عمالاً من قسم العمال أولاً.' }}</p>
-        </div>
-      }
-
-      <!-- Calculation Rules Banner -->
-      @if (rules(); as r) {
-        <div class="card rules-card">
-          <details>
-            <summary class="rules-summary">📊 قواعد احتساب الحضور والانصراف</summary>
-            <div class="rules-body">
-              <div class="rule-item">
-                <span class="rule-label">معدل الأوفرتايم:</span>
-                <span class="rule-value">{{ r.overtimeRate }}× بعد {{ r.overtimeThresholdHours }} ساعات</span>
-              </div>
-              <div class="rule-item">
-                <span class="rule-label">معدل خصم ساعة:</span>
-                <span class="rule-value">الأجر اليومي ÷ {{ r.standardDailyHours }}</span>
-              </div>
-              <div class="rule-item">
-                <span class="rule-label">معدل أجر العطلات:</span>
-                <span class="rule-value">{{ r.holidayPayRate }}× الأجر العادي</span>
-              </div>
-              <p class="rules-desc">{{ r.description }}</p>
-            </div>
-          </details>
         </div>
       }
 
@@ -462,54 +462,54 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
     .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; direction: rtl; }
     .eyebrow { font-size: 0.875rem; color: #d97706; font-weight: 600; }
     .page-header { display: flex; justify-content: space-between; align-items: center; }
-    .page-header h1 { font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0 0 0; }
+    .page-header h1 { font-size: 1.5rem; font-weight: 800; color: var(--ink); margin: 0.25rem 0 0 0; }
     .header-actions { display: flex; gap: 0.75rem; }
-    .card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 1.25rem; }
+    .card { background: var(--surface); border-radius: 12px; border: 1px solid var(--line); padding: 1.25rem; }
     .controls-card { display: flex; flex-direction: column; gap: 1rem; }
     .controls-row { display: flex; align-items: flex-end; gap: 1.25rem; flex-wrap: wrap; }
     .control-group { display: flex; flex-direction: column; gap: 0.375rem; }
-    .control-group label { font-size: 0.8125rem; font-weight: 600; color: #64748b; }
-    .form-input { padding: 0.5rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; }
+    .control-group label { font-size: 0.8125rem; font-weight: 600; color: var(--muted); }
+    .form-input { padding: 0.5rem 0.75rem; border: 1px solid var(--line); border-radius: 8px; font-size: 0.875rem; }
     .preset-btns { display: flex; gap: 0.5rem; }
     .btn { padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 0.875rem; }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn:disabled { opacity: 0.6; cursor:not-allowed; }
     .btn-primary { background: #d97706; color: #fff; }
-    .btn-secondary { background: #e2e8f0; color: #334155; }
-    .btn-preset { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 0.375rem 0.75rem; }
-    .btn-preset:hover { background: #e2e8f0; }
-    .btn-outline { background: transparent; border: 1px solid #cbd5e1; color: #475569; }
+    .btn-secondary { background: var(--line); color: var(--secondary-text); }
+    .btn-preset { background: var(--surface-muted); color: var(--secondary-text); border: 1px solid var(--line); padding: 0.375rem 0.75rem; }
+    .btn-preset:hover { background: var(--line); }
+    .btn-outline { background: transparent; border: 1px solid var(--line); color: var(--secondary-text); }
     .period-summary { padding: 0.5rem 0 0 0; }
-    .badge-info { background: #eff6ff; color: #1e40af; padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8125rem; font-weight: 500; }
+    .badge-info { background: var(--surface-muted); color: var(--secondary-text); padding: 0.375rem 0.75rem; border-radius: 6px; font-size: 0.8125rem; font-weight: 500; }
     /* Skeleton */
     .skeleton-card { display: flex; flex-direction: column; gap: 0.75rem; }
-    .skeleton-title { height: 28px; width: 40%; background: #f1f5f9; border-radius: 4px; }
-    .skeleton-row { height: 48px; background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; border-radius: 6px; animation: shimmer 1.5s infinite; }
+    .skeleton-title { height: 28px; width: 40%; background: var(--surface-muted); border-radius: 4px; }
+    .skeleton-row { height: 48px; background: linear-gradient(90deg, var(--surface-muted) 25%, var(--line) 50%, var(--surface-muted) 75%); background-size: 200% 100%; border-radius: 6px; animation: shimmer 1.5s infinite; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     /* Error / Empty */
-    .error-card { background: #fef2f2; border-color: #fecaca; color: #dc2626; display: flex; align-items: center; gap: 1rem; }
-    .empty-card { text-align: center; padding: 3rem; color: #64748b; }
+    .error-card { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); color: var(--danger); display: flex; align-items: center; gap: 1rem; }
+    .empty-card { text-align: center; padding: 3rem; color: var(--muted); }
     .empty-icon { font-size: 3rem; margin-bottom: 0.75rem; }
     /* Legend */
     .legend-row { display: flex; gap: 1.25rem; margin-bottom: 0.75rem; }
     .legend-item { font-size: 0.8125rem; font-weight: 500; display: flex; align-items: center; gap: 0.375rem; }
-    .legend-item.full { color: #15803d; }
+    .legend-item.full { color: var(--success); }
     .legend-item.half { color: #b45309; }
-    .legend-item.absent { color: #64748b; }
+    .legend-item.absent { color: var(--muted); }
     /* Matrix Table */
     .matrix-card { padding: 0.75rem; }
     .table-scroll-wrapper { overflow-x: auto; max-height: 75vh; overflow-y: auto; }
     .matrix-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.8125rem; }
-    .matrix-table th { background: #f8fafc; padding: 0.5rem 0.375rem; border: 1px solid #e2e8f0; position: sticky; top: 0; z-index: 10; white-space: nowrap; }
-    .matrix-table td { padding: 0.25rem 0.25rem; border: 1px solid #e2e8f0; }
-    .sticky-col { position: sticky; background: #fff; z-index: 8; }
+    .matrix-table th { background: var(--surface-muted); padding: 0.5rem 0.375rem; border: 1px solid var(--line); position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+    .matrix-table td { padding: 0.25rem 0.25rem; border: 1px solid var(--line); }
+    .sticky-col { position: sticky; background: var(--surface); z-index: 8; }
     .worker-col { right: 0; min-width: 80px; text-align: right; padding-right: 0.5rem; }
     .name-col { right: 80px; min-width: 150px; text-align: right; padding-right: 0.5rem; }
     .rate-col { right: 230px; min-width: 80px; }
     .matrix-table th.sticky-col { z-index: 12; }
     .date-col { min-width: 52px; }
     .date-header { display: flex; flex-direction: column; align-items: center; gap: 0.125rem; }
-    .day-name { font-size: 0.6875rem; color: #94a3b8; }
-    .day-num { font-size: 0.875rem; font-weight: 700; color: #0f172a; }
+    .day-name { font-size: 0.6875rem; color: var(--muted); }
+    .day-num { font-size: 0.875rem; font-weight: 700; color: var(--ink); }
     .weekend-col { background: #fef9ec !important; }
     .weekend-cell { background: #fefce8; }
     .cell-td { padding: 0.125rem; }
@@ -517,49 +517,49 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
     .cell-dirty::after { content: ''; position: absolute; inset-inline-start: 2px; top: 2px; width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; }
     .cell-invalid { box-shadow: inset 0 0 0 2px #dc2626; position: relative; }
     .cell-error-mark { position: absolute; inset-inline-end: 1px; bottom: 1px; width: 13px; height: 13px; border-radius: 50%; background: #dc2626; color: white; font-size: 10px; line-height: 13px; font-weight: 800; }
-    .cell-select { width: 48px; padding: 0.25rem; border-radius: 4px; border: 1px solid #e2e8f0; font-weight: 700; font-size: 0.8125rem; text-align: center; cursor: pointer; }
-    .cell-full { background: #dcfce7; color: #15803d; border-color: #86efac; }
-    .cell-half { background: #fef3c7; color: #b45309; border-color: #fde68a; }
-    .cell-absent { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; }
-    .total-col { min-width: 80px; background: #f8fafc; font-size: 0.8125rem; }
-    .total-days { color: #0f172a; }
-    .total-amount { color: #1e40af; }
-    .contractor-name { font-size: 0.75rem; color: #94a3b8; }
-    .totals-row { background: #f1f5f9; font-weight: 700; }
-    .grand-total { text-align: center; color: #1e40af; font-size: 0.9375rem; }
+    .cell-select { width: 48px; padding: 0.25rem; border-radius: 4px; border: 1px solid var(--line); font-weight: 700; font-size: 0.8125rem; text-align: center; cursor: pointer; }
+    .cell-full { background: #dcfce7; color: var(--success); border-color: #86efac; }
+    .cell-half { background: #fef3c7; color: #b45309; border-color: color-mix(in srgb, var(--warning) 45%, var(--line)); }
+    .cell-absent { background: var(--surface-muted); color: var(--muted); border-color: var(--line); }
+    .total-col { min-width: 80px; background: var(--surface-muted); font-size: 0.8125rem; }
+    .total-days { color: var(--ink); }
+    .total-amount { color: var(--secondary-text); }
+    .contractor-name { font-size: 0.75rem; color: var(--muted); }
+    .totals-row { background: var(--surface-muted); font-weight: 700; }
+    .grand-total { text-align: center; color: var(--secondary-text); font-size: 0.9375rem; }
     /* Search input */
     .search-input { min-width: 140px; }
     /* Toggle group */
     .toggle-group { justify-content: flex-end; }
-    .toggle-label { display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.8125rem; color: #334155; user-select: none; }
+    .toggle-label { display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.8125rem; color: var(--secondary-text); user-select: none; }
     .toggle-text { font-weight: 500; }
     /* Checkbox column */
-    .check-col { position: sticky; background: #fff; z-index: 8; right: 310px; min-width: 36px; text-align: center; }
+    .check-col { position: sticky; background: var(--surface); z-index: 8; right: 310px; min-width: 36px; text-align: center; }
     .row-check { width: 16px; height: 16px; cursor: pointer; accent-color: #d97706; }
     .selected-row { background: #fefce8 !important; }
     /* Bulk bar */
-    .bulk-bar { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.75rem; margin-bottom: 0.625rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; }
+    .bulk-bar { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.75rem; margin-bottom: 0.625rem; background: var(--warning-soft); border: 1px solid color-mix(in srgb, var(--warning) 45%, var(--line)); border-radius: 8px; }
     .bulk-count { font-weight: 700; color: #b45309; font-size: 0.875rem; }
     .bulk-context { color: #78350f; font-size: .75rem; max-width: 280px; }
     .bulk-select { width: auto; padding: 0.3rem 0.5rem; }
     .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.8125rem; }
-    .save-summary { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1.25rem; background: #f8fafc; font-size: .875rem; }
-    .save-summary strong { color: #0f172a; }
-    .summary-created, .summary-updated { color: #166534; }
-    .summary-failed { color: #b91c1c; font-weight: 800; }
-    .save-summary small { flex-basis: 100%; color: #b91c1c; }
+    .save-summary { display: flex; flex-wrap: wrap; align-items: center; gap: .65rem 1.25rem; background: var(--surface-muted); font-size: .875rem; }
+    .save-summary strong { color: var(--ink); }
+    .summary-created, .summary-updated { color: var(--success); }
+    .summary-failed { color: var(--danger); font-weight: 800; }
+    .save-summary small { flex-basis: 100%; color: var(--danger); }
     /* Indicator column */
-    .indicator-col { min-width: 48px; background: #f8fafc; font-size: 1rem; text-align: center; }
+    .indicator-col { min-width: 48px; background: var(--surface-muted); font-size: 1rem; text-align: center; }
     .indicator { cursor: help; display: inline-block; margin: 0 1px; }
-    .badge-inactive { display: inline-block; background: #fef2f2; color: #dc2626; font-size: 0.6875rem; padding: 0.125rem 0.375rem; border-radius: 4px; margin-right: 0.375rem; font-weight: 600; }
+    .badge-inactive { display: inline-block; background: var(--danger-soft); color: var(--danger); font-size: 0.6875rem; padding: 0.125rem 0.375rem; border-radius: 4px; margin-right: 0.375rem; font-weight: 600; }
     /* Calculation rules card */
-    .rules-card { background: #f0fdf4; border-color: #bbf7d0; padding: 0.75rem 1rem; }
-    .rules-summary { font-weight: 700; color: #166534; cursor: pointer; font-size: 0.875rem; }
+    .rules-card { background: var(--success-soft); border-color: color-mix(in srgb, var(--success) 45%, var(--line)); padding: 0.75rem 1rem; }
+    .rules-summary { font-weight: 700; color: var(--success); cursor: pointer; font-size: 0.875rem; }
     .rules-body { margin-top: 0.625rem; display: flex; flex-direction: column; gap: 0.375rem; }
     .rule-item { display: flex; gap: 0.5rem; font-size: 0.8125rem; }
-    .rule-label { color: #475569; font-weight: 600; min-width: 110px; }
-    .rule-value { color: #0f172a; font-weight: 500; }
-    .rules-desc { font-size: 0.75rem; color: #64748b; margin-top: 0.375rem; font-style: italic; }
+    .rule-label { color: var(--secondary-text); font-weight: 600; min-width: 110px; }
+    .rule-value { color: var(--ink); font-weight: 500; }
+    .rules-desc { font-size: 0.75rem; color: var(--muted); margin-top: 0.375rem; font-style: italic; }
   `]
 })
 export class ManualAttendanceComponent implements OnInit {
@@ -1139,7 +1139,7 @@ export class ManualAttendanceComponent implements OnInit {
   }
 
   private confirmDiscardChanges(): boolean {
-    return !this.hasUnsavedChanges() || window.confirm('لديك تعديلات حضور غير محفوظة. هل تريد تجاهلها والمتابعة؟');
+    return !this.hasUnsavedChanges() || window.confirm(this.i18n.t('manualAttendance.discardUnsavedConfirm'));
   }
 
   // --- Calculation helpers ---

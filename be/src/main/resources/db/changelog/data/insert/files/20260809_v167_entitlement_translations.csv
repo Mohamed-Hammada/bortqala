@@ -1,0 +1,51 @@
+id;key;locale;text
+v167-001;ENTITLEMENT_UNKNOWN_FEATURE;en-US;Entitlement feature is not registered
+v167-002;ENTITLEMENT_UNKNOWN_FEATURE;ar-EG;ميزة الاستحقاق غير مسجلة
+v167-003;ENTITLEMENT_DEPENDENCY_MISSING;en-US;Required module dependency must be enabled first
+v167-004;ENTITLEMENT_DEPENDENCY_MISSING;ar-EG;يجب تفعيل تبعية الوحدة المطلوبة أولاً
+v167-005;ENTITLEMENT_DEPENDENT_ACTIVE;en-US;Disable dependent modules before this entitlement
+v167-006;ENTITLEMENT_DEPENDENT_ACTIVE;ar-EG;عطّل الوحدات التابعة قبل هذا الاستحقاق
+v167-007;entitlements.tab;en-US;Modules and entitlements
+v167-008;entitlements.tab;ar-EG;الوحدات والاستحقاقات
+v167-009;entitlements.title;en-US;Module entitlement catalog
+v167-010;entitlements.title;ar-EG;كتالوج استحقاقات الوحدات
+v167-011;entitlements.description;en-US;Control purchased capabilities with dependency-safe backend enforcement
+v167-012;entitlements.description;ar-EG;تحكم في الإمكانات المشتراة مع فرض التبعيات في الخادم
+v167-013;entitlements.enabled;en-US;Enabled
+v167-014;entitlements.enabled;ar-EG;مفعّل
+v167-015;entitlements.disabled;en-US;Disabled
+v167-016;entitlements.disabled;ar-EG;معطّل
+v167-017;entitlements.dependencies;en-US;Requires
+v167-018;entitlements.dependencies;ar-EG;يتطلب
+v167-019;entitlements.lastReason;en-US;Last change reason
+v167-020;entitlements.lastReason;ar-EG;سبب آخر تغيير
+v167-021;entitlements.reason;en-US;Required change reason
+v167-022;entitlements.reason;ar-EG;سبب التغيير مطلوب
+v167-023;entitlements.reasonRequired;en-US;Enter a reason before changing an entitlement
+v167-024;entitlements.reasonRequired;ar-EG;أدخل سبباً قبل تغيير الاستحقاق
+v167-025;entitlements.enable;en-US;Enable
+v167-026;entitlements.enable;ar-EG;تفعيل
+v167-027;entitlements.disable;en-US;Disable
+v167-028;entitlements.disable;ar-EG;تعطيل
+v167-029;entitlements.saved;en-US;Entitlement updated
+v167-030;entitlements.saved;ar-EG;تم تحديث الاستحقاق
+v167-031;entitlements.module.hr;en-US;Human resources
+v167-032;entitlements.module.hr;ar-EG;الموارد البشرية
+v167-033;entitlements.module.workforce;en-US;Contractor workforce
+v167-034;entitlements.module.workforce;ar-EG;عمالة المقاولين
+v167-035;entitlements.module.payroll;en-US;Payroll
+v167-036;entitlements.module.payroll;ar-EG;الرواتب
+v167-037;entitlements.module.procurement;en-US;Procurement
+v167-038;entitlements.module.procurement;ar-EG;المشتريات
+v167-039;entitlements.module.inventory;en-US;Inventory
+v167-040;entitlements.module.inventory;ar-EG;المخزون
+v167-041;entitlements.module.sales;en-US;Sales
+v167-042;entitlements.module.sales;ar-EG;المبيعات
+v167-043;entitlements.module.manufacturing;en-US;Manufacturing
+v167-044;entitlements.module.manufacturing;ar-EG;التصنيع
+v167-045;entitlements.module.quality;en-US;Quality
+v167-046;entitlements.module.quality;ar-EG;الجودة
+v167-047;entitlements.module.finance;en-US;Finance
+v167-048;entitlements.module.finance;ar-EG;المالية
+v167-049;entitlements.module.platform;en-US;Platform services
+v167-050;entitlements.module.platform;ar-EG;خدمات المنصة

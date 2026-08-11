@@ -1,0 +1,49 @@
+<section class="packs">
+  <header>
+    <h2>{{ i18n.t('industryPack.title') }}</h2>
+    <p>{{ i18n.t('industryPack.description') }}</p>
+  </header>
+  @if (error()) { <div class="alert error">{{ error() }}</div> }
+  @if (loading()) { <div class="loading"></div> }
+  @else {
+    @for (pack of packs(); track pack.code) {
+      <article class="pack">
+        <div class="pack-head">
+          <div><h3>{{ i18n.t(pack.nameKey) }}</h3><p>{{ i18n.t(pack.descriptionKey) }}</p></div>
+          <span>{{ i18n.t('industryPack.version') }} {{ pack.availableVersion }}</span>
+        </div>
+        @if (!pack.installedVersion) {
+          <button class="button primary" (click)="install(pack)" [disabled]="saving()">{{ i18n.t('industryPack.install') }}</button>
+        } @else {
+          <div class="meta">
+            <span>{{ i18n.t('industryPack.installed') }} {{ pack.installedVersion }}</span>
+            @if (pack.goLiveReady) { <strong>{{ i18n.t('industryPack.goLiveReady') }}</strong> }
+            @if (pack.upgradeAvailable) { <button class="button primary" (click)="upgrade(pack)" [disabled]="saving()">{{ i18n.t('industryPack.upgrade') }}</button> }
+          </div>
+          <div class="columns">
+            <div><h4>{{ i18n.t('industryPack.requiredModules') }}</h4><ul>@for (item of pack.requiredFeatures; track item) { <li>{{ item }}</li> }</ul></div>
+            <div><h4>{{ i18n.t('industryPack.roles') }}</h4><ul>@for (item of pack.defaultRoles; track item) { <li>{{ item }}</li> }</ul></div>
+            <div><h4>{{ i18n.t('industryPack.kpis') }}</h4><ul>@for (item of pack.kpis; track item) { <li>{{ item }}</li> }</ul></div>
+            <div><h4>{{ i18n.t('industryPack.importTemplates') }}</h4><ul>@for (item of pack.importTemplates; track item) { <li>{{ item }}</li> }</ul></div>
+          </div>
+          <h4>{{ i18n.t('industryPack.onboarding') }}</h4>
+          <ol class="steps">
+            @for (step of pack.steps; track step.id) {
+              <li [class.blocked]="step.status === 'BLOCKED'">
+                <span>{{ i18n.t(step.key) }}</span>
+                <b>{{ step.status === 'READY' ? i18n.t('industryPack.ready') : step.status === 'BLOCKED' ? i18n.t('industryPack.blocked') : step.status }}</b>
+                @if (step.status === 'READY') {
+                  <button class="button primary" (click)="complete(pack, step)" [disabled]="saving()">{{ i18n.t('industryPack.complete') }}</button>
+                  @if (step.optional) { <button class="button secondary" (click)="complete(pack, step, true)" [disabled]="saving()">{{ i18n.t('industryPack.skip') }}</button> }
+                }
+              </li>
+            }
+          </ol>
+          <label>{{ i18n.t('industryPack.settings') }}</label>
+          <textarea rows="5" [ngModel]="settings()[pack.code]" (ngModelChange)="setSettings(pack.code, $event)"></textarea>
+          <button class="button secondary" (click)="saveSettings(pack)" [disabled]="saving()">{{ i18n.t('industryPack.saveSettings') }}</button>
+        }
+      </article>
+    }
+  }
+</section>

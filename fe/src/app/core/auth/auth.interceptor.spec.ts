@@ -50,4 +50,10 @@ describe('authInterceptor', () => {
     const sent = run(req);
     expect(sent?.headers.get('Accept-Language')).toBe('ar-EG');
   });
+
+  it('attaches the JWT to translation bundles so the backend can resolve the application override', () => {
+    const req = new HttpRequest('GET', '/api/v1/i18n/ar-EG');
+    const sent = run(req);
+    expect(sent?.headers.get('Authorization')).toBe('Bearer jwt-token');
+  });
 });

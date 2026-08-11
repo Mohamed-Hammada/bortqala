@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260809-v155-inventory-valuation-translations
+      author: codex
+      changes:
+        - loadData:
+            file: db/changelog/data/insert/files/20260809_v155_inventory_valuation_translations.csv
+            separator: ;
+            tableName: translations
+            encoding: UTF-8
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v155-%'" }

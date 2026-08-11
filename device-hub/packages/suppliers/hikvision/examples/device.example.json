@@ -1,0 +1,12 @@
+{
+  "supplier": "hikvision",
+  "model": "UNKNOWN",
+  "firmware": "",
+  "platform_version": "",
+  "capability_hints": [],
+  "config": {
+    "host": "192.0.2.10",
+    "base_url": "https://192.0.2.10",
+    "timeout": 5
+  }
+}

@@ -1,3 +1,128 @@
-.page { display: flex; flex-direction: column; gap: 20px; }
-.empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
-code { font-family: monospace; font-size: 13px; color: var(--gold); }
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--muted);
+  padding: 40px 20px;
+}
+
+code {
+  font-family: monospace;
+  font-size: 13px;
+  color: var(--gold);
+}
+
+.rate-hint-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface, var(--card));
+}
+
+.rate-hint-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.rate-hint-head h2 {
+  margin: 2px 0 6px;
+}
+
+.rate-hint-head p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 820px;
+}
+
+.rate-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.rate-status-grid > div {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.rate-status-grid span,
+.reference-rate small,
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.rate-settings-form {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) minmax(180px, 260px) auto;
+  gap: 14px;
+  align-items: end;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.rate-enabled-toggle {
+  align-items: flex-start;
+}
+
+.rate-enabled-toggle span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rate-enabled-toggle small {
+  color: var(--muted);
+}
+
+.reference-rate {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.alert.warning {
+  border-color: color-mix(in srgb, #d99d28 55%, var(--line));
+}
+
+@media (max-width: 1100px) {
+  .rate-status-grid {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+
+  .rate-settings-form {
+    grid-template-columns: 1fr;
+  }
+
+  .rate-hint-head {
+    flex-direction: column;
+  }
+}
+
+/* Phase 3: product tab/modal consistency. */
+.tax-currency-dialog {
+  --modal-wide-max-width: 720px;
+  --modal-body-padding: 18px 20px 20px;
+}
+
+.tax-currency-dialog .field input,
+.tax-currency-dialog .field select {
+  width: 100%;
+}
+
+.tax-currency-dialog .modal-form-actions {
+  justify-content: flex-start;
+}

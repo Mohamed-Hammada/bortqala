@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.Authentication;
 
@@ -25,20 +26,24 @@ public class DataExportController {
     private final DataExportService dataExportService;
     private final AuthService authService;
     @GetMapping("/{scope}.xlsx")
-    ResponseEntity<byte[]> export(@PathVariable String scope, Authentication authentication) {
+    ResponseEntity<byte[]> export(@PathVariable String scope,
+                                  @RequestParam(required = false) Integer months,
+                                  Authentication authentication) {
         var preference = authService.currentPreferences(authentication.getName());
         var options = new ExcelExportOptions(preference.locale(), preference.excelTableStyle());
+        int monthsCount = months == null ? 6 : Math.min(Math.max(months, 1), 24);
         byte[] body = switch (scope) {
             case "categories" -> dataExportService.categories(options); case "employees" -> dataExportService.employees(options);
             case "imports" -> dataExportService.imports(options); case "unmatched" -> dataExportService.unmatched(options);
             case "parties" -> dataExportService.parties(options);
+            case "trends" -> dataExportService.trends(monthsCount, options);
             default -> throw new com.bemo.hr.shared.domain.NotFoundException("Export scope not found.");
         };
         var headers = new HttpHeaders(); headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
         String localizedScope = preference.locale().startsWith("ar") ? switch (scope) {
             case "categories" -> "الفئات"; case "employees" -> "الموظفون";
             case "imports" -> "سجل-الاستيراد"; case "unmatched" -> "هويات-غير-مربوطة";
-            case "parties" -> "جهات-التعامل";
+            case "parties" -> "جهات-التعامل"; case "trends" -> "اتجاهات-متعددة-الفترات";
             default -> scope;
         } : scope;
         headers.setContentDisposition(ContentDisposition.attachment()

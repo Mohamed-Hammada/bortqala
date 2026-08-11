@@ -26,7 +26,6 @@ public class WorkforceAdvanceService {
     private final WorkforceAdvanceInstallmentRepository installmentRepository;
     private final WorkforceAdvanceLedgerEntryRepository ledgerRepository;
     private final WorkerRepository workerRepository;
-    private final WorkerCategoryRepository categoryRepository;
     private final ContractorRepository contractorRepository;
     private final AuditService auditService;
     private final WorkforceAdvancePolicyRepository policyRepository;
@@ -199,10 +198,9 @@ public class WorkforceAdvanceService {
     private WorkforceApi.AdvancePolicyResponse mapPolicy(WorkforceAdvancePolicy policy) {
         String scopeName = switch (policy.getScopeType()) {
             case "WORKER" -> workerRepository.findById(policy.getScopeId()).map(Worker::getFullName).orElse("—");
-            case "CATEGORY" -> categoryRepository.findById(policy.getScopeId()).map(WorkerCategory::getName).orElse("—");
-            case "EMPLOYEE" -> employeeRepository.findById(policy.getScopeId()).map(Employee::getFullName).orElse("—");
-            case "EMPLOYEE_CATEGORY" -> attendanceCategoryRepository.findById(policy.getScopeId())
+            case "CATEGORY", "EMPLOYEE_CATEGORY" -> attendanceCategoryRepository.findById(policy.getScopeId())
                     .map(com.bemo.hr.employee.domain.AttendanceCategory::getName).orElse("—");
+            case "EMPLOYEE" -> employeeRepository.findById(policy.getScopeId()).map(Employee::getFullName).orElse("—");
             default -> "الإعداد العام";
         };
         return new WorkforceApi.AdvancePolicyResponse(policy.getId(), policy.getScopeType(), policy.getScopeId(), scopeName,

@@ -3,6 +3,7 @@ package com.bemo.hr.employee.application;
 import com.bemo.hr.employee.api.CategoryApi;
 import com.bemo.hr.employee.api.EmployeeApi;
 import com.bemo.hr.employee.domain.AttendanceCategory;
+import com.bemo.hr.employee.domain.CategoryScope;
 import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.domain.EmployeeAssignment;
 import com.bemo.hr.employee.domain.ScheduleRule;
@@ -38,28 +39,32 @@ public class HrConfigurationService {
     private final EmployeeCodeSequenceRepository employeeCodeSequenceRepository;
     private final EmployeeAssignmentRepository employeeAssignmentRepository;
     private final AppUserRepository appUserRepository;
+    private final com.bemo.hr.audit.application.AuditService auditService;
 
     public HrConfigurationService(AttendanceCategoryRepository attendanceCategoryRepository,
                                   ScheduleRuleRepository scheduleRuleRepository,
                                   EmployeeRepository employeeRepository,
                                   EmployeeCodeSequenceRepository employeeCodeSequenceRepository,
                                   EmployeeAssignmentRepository employeeAssignmentRepository,
-                                  AppUserRepository appUserRepository) {
+                                  AppUserRepository appUserRepository,
+                                  com.bemo.hr.audit.application.AuditService auditService) {
         this.attendanceCategoryRepository = attendanceCategoryRepository;
         this.scheduleRuleRepository = scheduleRuleRepository;
         this.employeeRepository = employeeRepository;
         this.employeeCodeSequenceRepository = employeeCodeSequenceRepository;
         this.employeeAssignmentRepository = employeeAssignmentRepository;
         this.appUserRepository = appUserRepository;
+        this.auditService = auditService;
     }
+
+    private static final List<CategoryScope> EMPLOYEE_SCOPES = List.of(CategoryScope.EMPLOYEE, CategoryScope.BOTH);
 
     public List<CategoryApi.Response> listCategories() {
-        return attendanceCategoryRepository.findAllByOrderByNameAsc().stream().map(this::toCategoryResponse).toList();
+        return attendanceCategoryRepository.findByScopeInOrderByNameAsc(EMPLOYEE_SCOPES)
+                .stream().map(this::toCategoryResponse).toList();
     }
 
-    public CategoryApi.Response getCategory(String id) {
-        return toCategoryResponse(requireCategory(id));
-    }
+    public CategoryApi.Response getCategory(String id) { return toCategoryResponse(requireCategory(id)); }
 
     public List<CategoryApi.ScheduleResponse> getScheduleHistory(String categoryId) {
         requireCategory(categoryId);
@@ -78,7 +83,8 @@ public class HrConfigurationService {
                     "HRCFG_CATEGORY_CODE_EXISTS", HttpStatus.CONFLICT);
         }
         var category = new AttendanceCategory(request.code(), request.name(), request.expectedDailyMinutes(),
-                request.payCycle(), request.attendanceMode(), request.singlePunchCounts(), toMask(request.workDays()), request.active());
+                request.payCycle(), request.attendanceMode(), request.singlePunchCounts(), toMask(request.workDays()), request.active(),
+                request.scope() == null ? CategoryScope.EMPLOYEE : request.scope());
         category.configureAdvanceEligibility(request.allowsEmployeeAdvances());
         attendanceCategoryRepository.save(category);
         employeeCodeSequenceRepository.save(new com.bemo.hr.employee.domain.EmployeeCodeSequence(category.getId()));
@@ -97,6 +103,7 @@ public class HrConfigurationService {
         }
         category.update(request.code(), request.name(), request.expectedDailyMinutes(), request.payCycle(), request.attendanceMode(),
                 request.singlePunchCounts(), toMask(request.workDays()), request.active());
+        category.updateScope(request.scope());
         category.configureAdvanceEligibility(request.allowsEmployeeAdvances());
         replaceSchedules(id, request.schedules());
         return toCategoryResponse(category);
@@ -131,6 +138,9 @@ public class HrConfigurationService {
         employeeRepository.save(employee);
         employeeAssignmentRepository.save(new EmployeeAssignment(employee.getId(), employee.getCategoryId(),
                 employee.getActiveFrom(), employee.getActiveTo()));
+        auditService.record("CREATE", "EMPLOYEE", employee.getId(), currentActor(),
+                "{\"employeeCode\":\"" + safeJson(employeeCode) + "\",\"fullName\":\"" + safeJson(employee.getFullName())
+                        + "\",\"categoryId\":\"" + category.getId() + "\"}", null);
         return toEmployeeResponse(employee, category);
     }
 
@@ -147,9 +157,7 @@ public class HrConfigurationService {
                 || !java.util.Objects.equals(request.activeTo(), employee.getActiveTo());
         employee.update(employeeCode, request.fullName(), request.deviceUserId(), request.categoryId(),
                 request.employmentType(), request.baseSalary(), request.activeFrom(), request.activeTo(), request.active());
-        if (assignmentChanged) {
-            recordAssignmentChange(employee, employee.getActiveFrom());
-        }
+        if (assignmentChanged) recordAssignmentChange(employee, employee.getActiveFrom());
         return toEmployeeResponse(employee, category);
     }
 
@@ -164,7 +172,8 @@ public class HrConfigurationService {
     }
 
     public List<EmployeeApi.AssignmentResponse> getEmployeeAssignments(String id) {
-        employeeRepository.findById(id).orElseThrow(() -> new NotFoundException("Employee not found.", "HRCFG_EMPLOYEE_NOT_FOUND"));
+        employeeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Employee not found.", "HRCFG_EMPLOYEE_NOT_FOUND"));
         var categories = attendanceCategoryRepository.findAll().stream()
                 .collect(Collectors.toMap(AttendanceCategory::getId, Function.identity()));
         return employeeAssignmentRepository.findByEmployeeIdOrderByEffectiveFromDesc(id).stream()
@@ -174,17 +183,13 @@ public class HrConfigurationService {
                 .toList();
     }
 
-    private String categoryName(AttendanceCategory category) {
-        return category == null ? "—" : category.getName();
-    }
+    private String categoryName(AttendanceCategory category) { return category == null ? "—" : category.getName(); }
 
     private void recordAssignmentChange(Employee employee, LocalDate newEffectiveFrom) {
         var open = employeeAssignmentRepository.findFirstByEmployeeIdAndEffectiveToIsNullOrderByEffectiveFromDesc(employee.getId());
         if (open != null) {
             var closeOn = newEffectiveFrom.minusDays(1);
-            if (closeOn.isBefore(open.getEffectiveFrom())) {
-                closeOn = open.getEffectiveFrom();
-            }
+            if (closeOn.isBefore(open.getEffectiveFrom())) closeOn = open.getEffectiveFrom();
             open.closeOn(closeOn);
         }
         employeeAssignmentRepository.save(new EmployeeAssignment(employee.getId(), employee.getCategoryId(),
@@ -193,9 +198,7 @@ public class HrConfigurationService {
 
     private void closeOpenAssignment(String employeeId, LocalDate effectiveTo) {
         var open = employeeAssignmentRepository.findFirstByEmployeeIdAndEffectiveToIsNullOrderByEffectiveFromDesc(employeeId);
-        if (open != null && effectiveTo != null && !effectiveTo.isBefore(open.getEffectiveFrom())) {
-            open.closeOn(effectiveTo);
-        }
+        if (open != null && effectiveTo != null && !effectiveTo.isBefore(open.getEffectiveFrom())) open.closeOn(effectiveTo);
     }
 
     private AttendanceCategory requireCategory(String id) {
@@ -263,16 +266,24 @@ public class HrConfigurationService {
         if (!creating && (requested == null || requested.isBlank())) return currentCode;
         String prefix = category.getCode() + "-";
         if (requested != null && !requested.isBlank()) {
-            String normalized = requested.strip().toUpperCase(java.util.Locale.ROOT);
-            String code = normalized.startsWith(prefix) ? normalized : prefix + normalized;
+            // A user-supplied code is a complete business identifier. Normalize it,
+            // but never prepend the category code again (BUG-006).
+            String code = requested.strip().toUpperCase(java.util.Locale.ROOT);
             boolean duplicate = creating ? employeeRepository.existsByEmployeeCodeIgnoreCase(code)
-                    : employeeRepository.existsByEmployeeCodeIgnoreCaseAndIdNot(code, employeeRepository.findByEmployeeCodeIgnoreCase(currentCode).map(Employee::getId).orElse(""));
-            if (duplicate) throw new BusinessRuleException("Employee code already exists.",
-                    "HRCFG_EMPLOYEE_CODE_EXISTS", HttpStatus.CONFLICT);
+                    : employeeRepository.existsByEmployeeCodeIgnoreCaseAndIdNot(
+                            code,
+                            employeeRepository.findByEmployeeCodeIgnoreCase(currentCode)
+                                    .map(Employee::getId).orElse(""));
+            if (duplicate) {
+                throw new BusinessRuleException("Employee code already exists.",
+                        "HRCFG_EMPLOYEE_CODE_EXISTS", HttpStatus.CONFLICT);
+            }
             return code;
         }
+
         var sequence = employeeCodeSequenceRepository.findForUpdate(category.getId())
-                .orElseGet(() -> employeeCodeSequenceRepository.save(new com.bemo.hr.employee.domain.EmployeeCodeSequence(category.getId())));
+                .orElseGet(() -> employeeCodeSequenceRepository.save(
+                        new com.bemo.hr.employee.domain.EmployeeCodeSequence(category.getId())));
         String generated;
         do { generated = prefix + "%04d".formatted(sequence.takeNext()); }
         while (employeeRepository.existsByEmployeeCodeIgnoreCase(generated));
@@ -297,7 +308,7 @@ public class HrConfigurationService {
                         rule.getEndTime(), rule.getScope(), rule.getScopeCategoryId()))
                 .toList();
         return new CategoryApi.Response(category.getId(), category.getCode(), category.getName(),
-                category.getExpectedDailyMinutes(), category.getPayCycle(), category.getAttendanceMode(),
+                category.getScope(), category.getExpectedDailyMinutes(), category.getPayCycle(), category.getAttendanceMode(),
                 category.isSinglePunchCounts(), category.isAllowsEmployeeAdvances(),
                 fromMask(category.getWorkDaysMask()), category.isActive(), category.getVersion(),
                 category.getCreatedAt(), category.getUpdatedAt(), schedules);
@@ -314,9 +325,7 @@ public class HrConfigurationService {
     private boolean currentUserCanViewSalary() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getPrincipal())) {
-            return true;
-        }
+                || "anonymousUser".equals(authentication.getPrincipal())) return true;
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(TenantContext.require(), authentication.getName())
                 .map(com.bemo.hr.shared.security.AppUser::isCanViewSalary).orElse(true);
     }
@@ -339,4 +348,11 @@ public class HrConfigurationService {
                     "HRCFG_VERSION_CONFLICT", HttpStatus.CONFLICT);
         }
     }
+
+    private String currentActor() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        return (auth != null && auth.getName() != null && !auth.getName().isBlank()) ? auth.getName() : "system";
+    }
+
+    private String safeJson(String value) { return value == null ? "" : value.replace("\"", "'"); }
 }

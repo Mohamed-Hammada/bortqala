@@ -1,0 +1,28 @@
+<section class="trial-demo">
+  <header><h2>{{ i18n.t('trialDemo.title') }}</h2><p>{{ i18n.t('trialDemo.description') }}</p></header>
+  @if(error()){<div class="alert error">{{ error() }}</div>}
+  @if(loading()){<div class="loading"></div>}@else if(status();as current){
+    <article class="status-card">
+      <div><span>{{ i18n.t('trialDemo.state') }}</span><strong>{{ i18n.t(stateKey(current.commercialState)) }}</strong></div>
+      <div><span>{{ i18n.t('trialDemo.startedAt') }}</span><strong>{{ format(current.trialStartedAt) }}</strong></div>
+      <div><span>{{ i18n.t('trialDemo.endsAt') }}</span><strong>{{ format(current.trialEndsAt) }}</strong></div>
+      <div><span>{{ i18n.t('trialDemo.access') }}</span><strong>{{ i18n.t(current.writeAllowed?'trialDemo.writeEnabled':'trialDemo.readOnly') }}</strong></div>
+    </article>
+    <article class="panel">
+      <h3>{{ i18n.t('trialDemo.startTitle') }}</h3>
+      <label>{{ i18n.t('trialDemo.days') }}<input type="number" min="1" max="90" [(ngModel)]="days"></label>
+      <label class="check"><input type="checkbox" [(ngModel)]="demo">{{ i18n.t('trialDemo.demoTenant') }}</label>
+      @if(demo){<label>{{ i18n.t('trialDemo.template') }}<select [(ngModel)]="templateCode">@for(template of templates();track template.code+'-'+template.version){<option [value]="template.code">{{ i18n.t(template.nameKey) }} · {{ template.version }}</option>}</select></label>}
+      <button class="button primary" type="button" (click)="start()" [disabled]="saving()">{{ i18n.t('trialDemo.start') }}</button>
+      @if(current.commercialState==='TRIAL'||current.commercialState==='EXPIRED'){<button class="button secondary" type="button" (click)="convert()" [disabled]="saving()">{{ i18n.t('trialDemo.convert') }}</button>}
+    </article>
+    @if(current.demoTenant){
+      <article class="panel">
+        <h3>{{ i18n.t('trialDemo.resetTitle') }}</h3><p>{{ i18n.t('trialDemo.resetSafety') }}</p>
+        <div class="meta">{{ current.templateCode }} · {{ current.templateVersion }} · {{ i18n.t('trialDemo.samples') }} {{ current.sampleCount }}</div>
+        <button class="button secondary" type="button" (click)="reset()" [disabled]="saving()">{{ i18n.t('trialDemo.reset') }}</button>
+        <div class="samples">@for(sample of current.samples;track sample.key){<details><summary>{{ sample.key }}</summary><code>{{ sample.payloadJson }}</code></details>}</div>
+      </article>
+    }
+  }
+</section>

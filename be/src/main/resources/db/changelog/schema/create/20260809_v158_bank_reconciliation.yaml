@@ -1,0 +1,75 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260809-v158-bank-reconciliation
+      author: codex
+      changes:
+        - addColumn:
+            tableName: bank_accounts
+            columns:
+              - column: { name: currency_code, type: varchar(10), defaultValue: EGP, constraints: { nullable: false } }
+        - createTable:
+            tableName: bank_statements
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_bank_statement_app, references: apps(id) } }
+              - column: { name: bank_account_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_bank_statement_account, references: bank_accounts(id) } }
+              - column: { name: statement_reference, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: period_start, type: date, constraints: { nullable: false } }
+              - column: { name: period_end, type: date, constraints: { nullable: false } }
+              - column: { name: opening_balance, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: closing_balance, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: currency_code, type: varchar(10), constraints: { nullable: false } }
+              - column: { name: file_name, type: varchar(255), constraints: { nullable: false } }
+              - column: { name: file_hash, type: varchar(64), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), defaultValue: IMPORTED, constraints: { nullable: false } }
+              - column: { name: imported_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: imported_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: reconciled_by, type: varchar(100) }
+              - column: { name: reconciled_at, type: timestamp with time zone }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: bank_statements, columnNames: app_id,bank_account_id,file_hash, constraintName: uk_bank_statement_file }
+        - addUniqueConstraint: { tableName: bank_statements, columnNames: app_id,bank_account_id,statement_reference, constraintName: uk_bank_statement_reference }
+        - createIndex: { tableName: bank_statements, indexName: ix_bank_statements_account_period, columns: [{ column: { name: bank_account_id } }, { column: { name: period_end } }] }
+        - createTable:
+            tableName: bank_statement_lines
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_bank_statement_line_app, references: apps(id) } }
+              - column: { name: statement_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_bank_statement_line_statement, references: bank_statements(id) } }
+              - column: { name: line_number, type: int, constraints: { nullable: false } }
+              - column: { name: transaction_date, type: date, constraints: { nullable: false } }
+              - column: { name: value_date, type: date }
+              - column: { name: description, type: varchar(1000), constraints: { nullable: false } }
+              - column: { name: bank_reference, type: varchar(200) }
+              - column: { name: amount, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: running_balance, type: "decimal(19,2)" }
+              - column: { name: fingerprint, type: varchar(64), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), defaultValue: UNMATCHED, constraints: { nullable: false } }
+              - column: { name: matched_amount, type: "decimal(19,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: bank_statement_lines, columnNames: app_id,statement_id,line_number, constraintName: uk_bank_statement_line_number }
+        - createIndex: { tableName: bank_statement_lines, indexName: ix_bank_statement_lines_status_date, columns: [{ column: { name: statement_id } }, { column: { name: status } }, { column: { name: transaction_date } }] }
+        - createTable:
+            tableName: bank_reconciliation_matches
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_bank_match_app, references: apps(id) } }
+              - column: { name: statement_line_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_bank_match_line, references: bank_statement_lines(id) } }
+              - column: { name: journal_entry_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_bank_match_journal, references: journal_entries(id) } }
+              - column: { name: matched_amount, type: "decimal(19,2)", constraints: { nullable: false } }
+              - column: { name: match_type, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), defaultValue: ACTIVE, constraints: { nullable: false } }
+              - column: { name: operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: matched_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: matched_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: reversed_by, type: varchar(100) }
+              - column: { name: reversed_at, type: timestamp with time zone }
+              - column: { name: reversal_reason, type: varchar(500) }
+        - addUniqueConstraint: { tableName: bank_reconciliation_matches, columnNames: app_id,statement_line_id,journal_entry_id,operation_id, constraintName: uk_bank_match_operation }
+        - createIndex: { tableName: bank_reconciliation_matches, indexName: ix_bank_matches_line_status, columns: [{ column: { name: statement_line_id } }, { column: { name: status } }] }
+      rollback:
+        - dropTable: { tableName: bank_reconciliation_matches }
+        - dropTable: { tableName: bank_statement_lines }
+        - dropTable: { tableName: bank_statements }
+        - dropColumn: { tableName: bank_accounts, columnName: currency_code }

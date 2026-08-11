@@ -1,0 +1,85 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260809-v145-01-biometric-device-integrations
+      author: bemo-erp
+      comment: Add version-aware multi-vendor biometric/access device integration metadata linked to the existing biometric sync device.
+      changes:
+        - createTable:
+            tableName: biometric_device_integrations
+            columns:
+              - column:
+                  name: id
+                  type: varchar(36)
+                  constraints: { nullable: false, primaryKey: true, primaryKeyName: pk_biometric_device_integrations }
+              - column:
+                  name: app_id
+                  type: varchar(64)
+                  constraints: { nullable: false }
+              - column:
+                  name: biometric_device_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_biometric_device_integration_device
+                    referencedTableName: biometric_devices
+                    referencedColumnNames: id
+              - column:
+                  name: hub_device_id
+                  type: varchar(64)
+                  constraints: { nullable: false }
+              - column: { name: name, type: varchar(150), constraints: { nullable: false } }
+              - column: { name: vendor, type: varchar(40), constraints: { nullable: false } }
+              - column: { name: model, type: varchar(160), constraints: { nullable: false } }
+              - column: { name: serial_number, type: varchar(180) }
+              - column: { name: firmware_version, type: varchar(160) }
+              - column: { name: platform_version, type: varchar(160) }
+              - column: { name: server_version, type: varchar(160) }
+              - column: { name: os_name, type: varchar(80) }
+              - column: { name: architecture, type: varchar(80) }
+              - column: { name: sdk_versions_json, type: TEXT }
+              - column: { name: api_versions_json, type: TEXT }
+              - column: { name: capability_hints_json, type: TEXT }
+              - column: { name: host, type: varchar(255) }
+              - column: { name: port, type: integer }
+              - column: { name: base_url, type: varchar(1000) }
+              - column: { name: route, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: route_status, type: varchar(40), constraints: { nullable: false } }
+              - column: { name: route_kind, type: varchar(40), constraints: { nullable: false } }
+              - column: { name: implementation_status, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: official_documentation_json, type: TEXT }
+              - column: { name: options_json, type: TEXT }
+              - column: { name: last_probe_status, type: varchar(40) }
+              - column: { name: last_probe_message, type: varchar(1000) }
+              - column: { name: last_probe_at, type: TIMESTAMP WITH TIME ZONE }
+              - column:
+                  name: version
+                  type: bigint
+                  defaultValueNumeric: 0
+                  constraints: { nullable: false }
+              - column: { name: created_at, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }
+              - column: { name: updated_at, type: TIMESTAMP WITH TIME ZONE, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: biometric_device_integrations
+            columnNames: app_id, biometric_device_id
+            constraintName: uk_bio_integration_app_device
+        - addUniqueConstraint:
+            tableName: biometric_device_integrations
+            columnNames: app_id, hub_device_id
+            constraintName: uk_bio_integration_app_hub_device
+        - createIndex:
+            tableName: biometric_device_integrations
+            indexName: idx_bio_integration_app_vendor_model
+            columns:
+              - column: { name: app_id }
+              - column: { name: vendor }
+              - column: { name: model }
+        - createIndex:
+            tableName: biometric_device_integrations
+            indexName: idx_bio_integration_app_route
+            columns:
+              - column: { name: app_id }
+              - column: { name: route }
+      rollback:
+        - dropTable:
+            tableName: biometric_device_integrations
+            cascadeConstraints: true

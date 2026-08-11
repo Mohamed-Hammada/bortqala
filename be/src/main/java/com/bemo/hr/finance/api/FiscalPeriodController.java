@@ -37,7 +37,7 @@ public class FiscalPeriodController {
 
     @PostMapping("/generate-year")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public List<FiscalPeriodApi.FiscalPeriodResponse> generateYear(@RequestParam int year) {
         // Auto generate 12 monthly periods for given year if none exist
         var existing = repository.findByFiscalYearOrderByPeriodNumberAsc(year);
@@ -57,7 +57,7 @@ public class FiscalPeriodController {
 
     @PutMapping("/{id}/status")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'HR_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public FiscalPeriodApi.FiscalPeriodResponse updateStatus(@PathVariable String id,
                                                             @Valid @RequestBody FiscalPeriodApi.UpdateStatusPayload payload,
                                                             Authentication authentication) {

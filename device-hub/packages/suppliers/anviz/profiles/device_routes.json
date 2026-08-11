@@ -1,0 +1,93 @@
+[
+  {
+    "model_pattern": "^(FaceDeep.*|FacePass.*|W2 Face.*|M7 Palm.*|CX.*|W.*|C2.*|M5.*)$",
+    "generation_or_version": "current-mixed",
+    "routes": [
+      "anviz-standard-sdk",
+      "crosschex-cloud-api",
+      "cloudkit"
+    ],
+    "preferred_route": "anviz-standard-sdk",
+    "fallback_routes": [
+      "crosschex-cloud-api",
+      "cloudkit"
+    ],
+    "notes": "Cloud capabilities differ by model/server; direct SDK remains fallback when supported.",
+    "official_documentation": [
+      "https://support.anviz.com/hc/en-us/articles/41638799732377-Anviz-Software",
+      "https://support.anviz.com/hc/en-us/sections/41599769281049-CrossChex-Cloud",
+      "https://community.anviz.com/c/integration/46",
+      "https://community.anviz.com/t/crosschex-cloud-api-documentation/2079"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "EP300.*|A300.*|OA.*|TC.*",
+    "generation_or_version": "legacy-attendance",
+    "routes": [
+      "anviz-standard-sdk",
+      "crosschex-standard",
+      "usb-export"
+    ],
+    "preferred_route": "anviz-standard-sdk",
+    "fallback_routes": [
+      "crosschex-standard",
+      "usb-export"
+    ],
+    "notes": "Legacy attendance route.",
+    "official_documentation": [
+      "https://support.anviz.com/hc/en-us/articles/41638799732377-Anviz-Software",
+      "https://support.anviz.com/hc/en-us/articles/41638698285081-Manual"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "CrossChex Cloud",
+    "generation_or_version": "platform",
+    "routes": [
+      "crosschex-cloud-api",
+      "crosschex-cloud-webhook"
+    ],
+    "preferred_route": "crosschex-cloud-api",
+    "fallback_routes": [
+      "crosschex-cloud-webhook"
+    ],
+    "notes": "Cloud integration; endpoint scope depends on account/plan/vendor enablement.",
+    "official_documentation": [
+      "https://support.anviz.com/hc/en-us/sections/41599769281049-CrossChex-Cloud",
+      "https://community.anviz.com/c/integration/46",
+      "https://community.anviz.com/t/crosschex-cloud-api-documentation/2079"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  },
+  {
+    "model_pattern": "UNKNOWN",
+    "generation_or_version": "unknown",
+    "routes": [
+      "anviz-standard-sdk",
+      "crosschex-cloud-api",
+      "crosschex-standard"
+    ],
+    "preferred_route": "anviz-standard-sdk",
+    "fallback_routes": [
+      "crosschex-cloud-api",
+      "crosschex-standard"
+    ],
+    "notes": "Detect whether the estate is direct, cloud, or CrossChex-managed.",
+    "official_documentation": [
+      "https://support.anviz.com/hc/en-us/articles/41638799732377-Anviz-Software",
+      "https://support.anviz.com/hc/en-us/sections/41599769281049-CrossChex-Cloud",
+      "https://community.anviz.com/c/integration/46",
+      "https://community.anviz.com/t/crosschex-cloud-api-documentation/2079"
+    ],
+    "firmware_spec": "*",
+    "platform_version_spec": "*",
+    "server_version_spec": "*"
+  }
+]

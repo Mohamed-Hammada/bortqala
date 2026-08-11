@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -31,7 +32,12 @@ public class ContractorSettlement {
     @Column(name = "gross_amount", precision = 12, scale = 2) private BigDecimal grossAmount;
     @Column(name = "net_payable", precision = 12, scale = 2) private BigDecimal netPayable;
     @Column(name = "paid_amount", precision = 12, scale = 2) private BigDecimal paidAmount;
+    @Column(name = "invoice_number", length = 100) private String invoiceNumber;
+    @Column(name = "invoice_date") private Instant invoiceDate;
+    @Column(name = "posted_journal_entry_id", length = 36) private String postedJournalEntryId;
+    @Column(name = "calculation_version") private Integer calculationVersion;
     @Column(nullable = false, length = 30) private String status;
+    @Version private Long version;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
 
@@ -55,13 +61,24 @@ public class ContractorSettlement {
         this.grossAmount = grossAmount != null ? grossAmount : BigDecimal.ZERO;
         this.netPayable = netPayable != null ? netPayable : BigDecimal.ZERO;
         this.paidAmount = paidAmount != null ? paidAmount : BigDecimal.ZERO;
+        this.calculationVersion = 1;
         this.status = status != null ? status.strip().toUpperCase() : "DRAFT";
+    }
+
+    public void linkInvoice(String invoiceNumber, Instant invoiceDate) {
+        this.invoiceNumber = invoiceNumber;
+        this.invoiceDate = invoiceDate;
+    }
+
+    public void markPosted(String journalEntryId) {
+        this.postedJournalEntryId = journalEntryId;
+        this.status = "POSTED";
     }
 
     public void updatePaidAmount(BigDecimal amount) {
         this.paidAmount = this.paidAmount.add(amount != null ? amount : BigDecimal.ZERO);
         if (this.paidAmount.compareTo(this.netPayable) >= 0) {
-            this.status = "DISBURSED";
+            this.status = "PAID";
         }
     }
 

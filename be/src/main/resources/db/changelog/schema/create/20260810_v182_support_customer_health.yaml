@@ -1,0 +1,84 @@
+databaseChangeLog:
+  - changeSet:
+      id: create_support_customer_health
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: HALT
+        - tableExists: { tableName: apps }
+        - tableExists: { tableName: product_event_daily_aggregates }
+        - not: { tableExists: { tableName: support_tickets } }
+      changes:
+        - createTable:
+            tableName: support_tickets
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_support_ticket_app, references: apps(id) } }
+              - column: { name: ticket_no, type: varchar(40), constraints: { nullable: false } }
+              - column: { name: priority, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: category, type: varchar(40), constraints: { nullable: false } }
+              - column: { name: module_code, type: varchar(60), constraints: { nullable: false } }
+              - column: { name: screen, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: business_impact, type: varchar(1000), constraints: { nullable: false } }
+              - column: { name: description, type: varchar(4000), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(30), constraints: { nullable: false } }
+              - column: { name: assigned_team, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: sla_due_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: created_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: resolved_at, type: timestamp with time zone }
+              - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: support_tickets, columnNames: app_id,ticket_no, constraintName: uk_support_ticket_no }
+        - addUniqueConstraint: { tableName: support_tickets, columnNames: app_id,operation_id, constraintName: uk_support_ticket_operation }
+        - createIndex: { tableName: support_tickets, indexName: ix_support_queue, columns: [ { column: { name: app_id } }, { column: { name: status } }, { column: { name: priority } }, { column: { name: sla_due_at } } ] }
+        - createTable:
+            tableName: support_ticket_updates
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_support_update_app, references: apps(id) } }
+              - column: { name: ticket_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_support_update_ticket, references: support_tickets(id) } }
+              - column: { name: from_status, type: varchar(30) }
+              - column: { name: to_status, type: varchar(30), constraints: { nullable: false } }
+              - column: { name: comment, type: varchar(2000), constraints: { nullable: false } }
+              - column: { name: actor, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: support_ticket_updates, columnNames: app_id,operation_id, constraintName: uk_support_update_operation }
+        - createTable:
+            tableName: feedback_items
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_feedback_app, references: apps(id) } }
+              - column: { name: type, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: module_code, type: varchar(60), constraints: { nullable: false } }
+              - column: { name: message, type: varchar(3000), constraints: { nullable: false } }
+              - column: { name: rating, type: integer }
+              - column: { name: route, type: varchar(300), constraints: { nullable: false } }
+              - column: { name: application_version, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: browser, type: varchar(300), constraints: { nullable: false } }
+              - column: { name: correlation_id, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: created_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: feedback_items, columnNames: app_id,operation_id, constraintName: uk_feedback_operation }
+        - createTable:
+            tableName: customer_health_snapshots
+            columns:
+              - column: { name: id, type: varchar(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: varchar(36), constraints: { nullable: false, foreignKeyName: fk_customer_health_app, references: apps(id) } }
+              - column: { name: score, type: integer, constraints: { nullable: false } }
+              - column: { name: band, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: dimensions_json, type: varchar(3000), constraints: { nullable: false } }
+              - column: { name: reasons_json, type: varchar(5000), constraints: { nullable: false } }
+              - column: { name: operation_id, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: calculated_by, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: calculated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: customer_health_snapshots, columnNames: app_id,operation_id, constraintName: uk_customer_health_operation }
+        - createIndex: { tableName: customer_health_snapshots, indexName: ix_customer_health_time, columns: [ { column: { name: app_id } }, { column: { name: calculated_at } } ] }
+      rollback:
+        - dropTable: { tableName: customer_health_snapshots }
+        - dropTable: { tableName: feedback_items }
+        - dropTable: { tableName: support_ticket_updates }
+        - dropTable: { tableName: support_tickets }

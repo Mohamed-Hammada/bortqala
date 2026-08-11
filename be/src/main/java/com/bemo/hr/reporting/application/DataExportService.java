@@ -26,10 +26,13 @@ public class DataExportService {
     private final PunchRecordRepository punchRecordRepository;
     private final TranslationService translationService;
     private final BusinessPartyRepository businessPartyRepository;
+    private final DashboardService dashboardService;
 
     public byte[] categories(ExcelExportOptions options) {
         var messages = ExcelExportSupport.messages(translationService, options);
-        var rows = attendanceCategoryRepository.findAllByOrderByNameAsc().stream().<List<?>>map(item -> List.of(
+        var rows = attendanceCategoryRepository.findByScopeInOrderByNameAsc(java.util.List.of(
+                        com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE,
+                        com.bemo.hr.employee.domain.CategoryScope.BOTH)).stream().<List<?>>map(item -> List.of(
                 item.getCode(), item.getName(), item.getExpectedDailyMinutes(),
                 ExcelExportSupport.enumText(messages, item.getAttendanceMode()),
                 ExcelExportSupport.enumText(messages, item.getPayCycle()),
@@ -79,6 +82,17 @@ public class DataExportService {
                 ExcelExportSupport.text(messages, item.isActive() ? "export.value.yes" : "export.value.no"))).toList();
         return workbook("export.sheet.parties", "BusinessPartiesTable", List.of("code", "name", "type",
                 "contactPerson", "phone", "notes", "active"), rows, options);
+    }
+
+    public byte[] trends(int months, ExcelExportOptions options) {
+        var messages = ExcelExportSupport.messages(translationService, options);
+        var rows = dashboardService.trends(months).stream().<List<?>>map(point -> List.of(
+                point.label(), point.scheduledEmployeeDays(), point.presentEmployeeDays(),
+                point.attendanceRate() + "%", point.exceptionDays(), point.overtimeMinutes(),
+                point.paidCount(), point.pendingCount(), point.totalGross(), point.totalPaid())).toList();
+        return workbook("export.sheet.trends", "MultiPeriodTrendsTable", List.of("month", "scheduledDays",
+                "presentDays", "attendanceRate", "exceptionDays", "overtimeMinutes", "paidCount",
+                "pendingCount", "grossTotal", "paidTotal"), rows, options);
     }
 
     private byte[] workbook(String sheetKey, String tableName, List<String> headerKeys,

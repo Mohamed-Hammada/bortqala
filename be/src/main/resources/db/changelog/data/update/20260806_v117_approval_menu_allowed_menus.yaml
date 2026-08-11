@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260806-v117-approval-menu-allowed-menus
+      author: bemo-erp
+      comment: "Grant the approval screens to existing users (ACCESS-APPROVAL-001)."
+      changes:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = CONCAT(COALESCE(allowed_menus, ''), ',approvals-my-tasks')
+              WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%approvals-my-tasks%';
+              UPDATE app_users SET allowed_menus = CONCAT(COALESCE(allowed_menus, ''), ',approvals-workflows')
+              WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%approvals-workflows%';
+      rollback:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = REPLACE(REPLACE(allowed_menus, ',approvals-my-tasks', ''), ',approvals-workflows', '')
+              WHERE allowed_menus IS NOT NULL;

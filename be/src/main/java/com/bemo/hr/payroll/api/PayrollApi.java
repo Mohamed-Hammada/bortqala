@@ -57,6 +57,18 @@ public final class PayrollApi {
             BigDecimal totalAdvancesDeducted
     ) { }
 
+    public record ExplanationResponse(
+        String id,
+        String salaryPaymentId,
+        String componentType,
+        String formula,
+        String inputValuesJson,
+        BigDecimal calculatedAmount,
+        String explanationTextAr,
+        String explanationTextEn,
+        long createdAt
+    ) { }
+
     public record SheetResponse(
             int periodYear,
             int periodMonth,

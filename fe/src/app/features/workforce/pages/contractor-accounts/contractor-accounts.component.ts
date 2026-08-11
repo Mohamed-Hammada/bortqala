@@ -50,12 +50,12 @@ import { WorkforceService } from '../../data-access/workforce.service';
   styles: [`
     .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
     .eyebrow { font-size: 0.875rem; color: #d97706; font-weight: 600; }
-    .page-header h1 { font-size: 1.75rem; font-weight: 800; color: #0f172a; margin: 0.25rem 0 0 0; }
-    .card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 1.25rem; }
+    .page-header h1 { font-size: 1.75rem; font-weight: 800; color: var(--ink); margin: 0.25rem 0 0 0; }
+    .card { background: var(--surface); border-radius: 12px; border: 1px solid var(--line); padding: 1.25rem; }
     .data-table { width: 100%; border-collapse: collapse; text-align: right; }
-    .data-table th, .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #e2e8f0; }
+    .data-table th, .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--line); }
     .btn { padding: 0.625rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; }
-    .btn-secondary { background: #e2e8f0; color: #334155; }
+    .btn-secondary { background: var(--line); color: var(--secondary-text); }
     .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.875rem; }
     .due-bal { color: #d97706; font-weight: 700; }
   `]

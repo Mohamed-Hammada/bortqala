@@ -19,6 +19,7 @@ import java.util.UUID;
 public class WorkerCategory {
     @Id private String id;
     @TenantId @Column(name = "app_id", nullable = false) private String appId;
+    @Column(name = "category_id", length = 36) private String categoryId;
     @Column(nullable = false, length = 50) private String code;
     @Column(nullable = false, length = 160) private String name;
     @Column(length = 500) private String description;
@@ -46,6 +47,10 @@ public class WorkerCategory {
         this.standardDailyHours = standardDailyHours != null ? standardDailyHours : new BigDecimal("8.0");
         this.defaultSettlementCycle = defaultSettlementCycle != null ? defaultSettlementCycle : "HALF_MONTH";
         this.status = status != null ? status.strip().toUpperCase() : "ACTIVE";
+    }
+
+    public void linkToCategory(String canonicalCategoryId) {
+        this.categoryId = canonicalCategoryId;
     }
 
     @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }

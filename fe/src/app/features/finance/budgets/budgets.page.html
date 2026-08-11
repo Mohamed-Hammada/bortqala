@@ -1,0 +1,243 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('nav.budgets') }}</p>
+      <h1>{{ i18n.t('budget.title') }}</h1>
+      <p>{{ i18n.t('budget.statusTitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="button secondary" (click)="exportExcel()">⇩ {{ i18n.t('budget.export') }}</button>
+      <button class="button primary" (click)="openNew()">＋ {{ i18n.t('budget.create') }}</button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="loading">{{ i18n.t('common.loading') }}</div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (!loading()) {
+    <nav class="app-tabs" [attr.aria-label]="i18n.t('nav.budgets')">
+      <button class="app-tab" [class.active]="activeTab() === 'budgets'" (click)="activeTab.set('budgets')">
+        {{ i18n.t('budget.listTitle', { count: budgets().length }) }}
+      </button>
+      <button class="app-tab" [class.active]="activeTab() === 'status'" (click)="activeTab.set('status')">
+        {{ i18n.t('budget.statusTitle', { count: filteredStatus().length }) }}
+      </button>
+      <button class="app-tab" [class.active]="activeTab() === 'encumbrances'" (click)="activeTab.set('encumbrances')">
+        {{ i18n.t('budget.encumbrancesTitle', { count: encumbrances().length }) }}
+      </button>
+    </nav>
+
+    @if (activeTab() === 'budgets') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('budget.fiscalYear') }}</th>
+              <th>{{ i18n.t('budget.periodType') }}</th>
+              <th>{{ i18n.t('budget.periodMonth') }}</th>
+              <th>{{ i18n.t('budget.department') }}</th>
+              <th>{{ i18n.t('budget.plannedAmount') }}</th>
+              <th>{{ i18n.t('budget.currencyCode') }}</th>
+              <th>{{ i18n.t('budget.blocking') }}</th>
+              <th>{{ i18n.t('budget.active') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (budget of budgets(); track budget.id) {
+              <tr>
+                <td class="ltr">{{ budget.fiscalYear }}</td>
+                <td>{{ periodLabel(budget) }}</td>
+                <td class="ltr">{{ budget.periodMonth ?? '—' }}</td>
+                <td><strong>{{ departmentName(budget.departmentId, budget.departmentName) }}</strong></td>
+                <td class="ltr"><strong>{{ formatAmount(budget.plannedAmount) }}</strong></td>
+                <td class="ltr">{{ budget.currencyCode }}</td>
+                <td><span class="status" [class.success]="budget.blocking">{{ yesNo(budget.blocking) }}</span></td>
+                <td><span class="status" [class.success]="budget.active">{{ yesNo(budget.active) }}</span></td>
+                <td>
+                  <button class="button secondary btn-sm" (click)="openEdit(budget)">✏️ {{ i18n.t('common.edit') }}</button>
+                  <button class="button danger btn-sm" (click)="deleteBudget(budget)">🗑️ {{ i18n.t('common.delete') }}</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="9">
+                  <div class="empty-state">{{ i18n.t('budget.empty') }}</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (activeTab() === 'status') {
+      <div class="filter-pills-bar">
+        <div class="pills-group">
+          <select class="filter-select ltr" [value]="yearFilter() ?? ''" (change)="yearFilter.set(+($any($event.target).value) || null)">
+            <option value="">{{ i18n.t('budget.allYears') }}</option>
+            @for (year of yearOptions(); track year) {
+              <option [value]="year">{{ year }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('budget.department') }}</th>
+              <th>{{ i18n.t('budget.fiscalYear') }}</th>
+              <th>{{ i18n.t('budget.plannedAmount') }}</th>
+              <th>{{ i18n.t('budget.committed') }}</th>
+              <th>{{ i18n.t('budget.actual') }}</th>
+              <th>{{ i18n.t('budget.available') }}</th>
+              <th>{{ i18n.t('budget.utilization') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (status of filteredStatus(); track status.budgetId) {
+              <tr>
+                <td><strong>{{ departmentName(status.departmentId, status.departmentName) }}</strong></td>
+                <td class="ltr">{{ status.fiscalYear }} {{ statusPeriodLabel(status) }}</td>
+                <td class="ltr">{{ formatAmount(status.plannedAmount) }}</td>
+                <td class="ltr">{{ formatAmount(status.committedAmount) }}</td>
+                <td class="ltr">{{ formatAmount(status.actualAmount) }}</td>
+                <td class="ltr"><strong>{{ formatAmount(status.availableAmount) }}</strong></td>
+                <td class="ltr">
+                  <span class="status" [class.danger]="status.utilizationPercent >= 100" [class.warning]="status.utilizationPercent >= 80 && status.utilizationPercent < 100">
+                    {{ status.utilizationPercent | number:'1.2-2' }}%
+                  </span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7">
+                  <div class="empty-state">{{ i18n.t('budget.empty') }}</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (activeTab() === 'encumbrances') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('budget.poNumber') }}</th>
+              <th>{{ i18n.t('budget.encumbranceStatus') }}</th>
+              <th>{{ i18n.t('budget.encumbranceCommittedAt') }}</th>
+              <th>{{ i18n.t('budget.committed') }}</th>
+              <th>{{ i18n.t('budget.encumbranceLiquidated') }}</th>
+              <th>{{ i18n.t('budget.encumbranceReleased') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (enc of encumbrances(); track enc.id) {
+              <tr>
+                <td><strong class="ltr">{{ enc.purchaseOrderNumber }}</strong></td>
+                <td>
+                  <span class="status" [class.success]="enc.status === 'ACTIVE'">{{ encumbranceStatusLabel(enc.status) }}</span>
+                </td>
+                <td class="ltr">{{ date(enc.committedAt) }}</td>
+                <td class="ltr">{{ formatAmount(enc.committedAmount) }} {{ enc.currencyCode }}</td>
+                <td class="ltr">{{ formatAmount(enc.liquidatedAmount) }}</td>
+                <td class="ltr">{{ enc.releasedAt ? formatAmount(enc.releasedAmount) : '—' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6">
+                  <div class="empty-state">{{ i18n.t('budget.encumbranceEmpty') }}</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <app-modal-dialog
+    class="budget-dialog"
+    [isOpen]="drawerOpen()"
+    [title]="editingId() ? i18n.t('budget.edit') : i18n.t('budget.create')"
+    size="wide"
+    [showFooter]="false"
+    [preventOutsideClose]="true"
+    (close)="closeDrawer()"
+  >
+      <form class="budget-dialog-form" [formGroup]="budgetForm" (ngSubmit)="submitBudget()">
+        <div class="form-grid dialog-form-grid">
+          <div class="field">
+            <label>{{ i18n.t('budget.fiscalYear') }} *</label>
+            <input type="number" class="ltr" formControlName="fiscalYear" />
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('budget.periodType') }} *</label>
+            <select formControlName="periodType">
+              <option value="ANNUAL">{{ i18n.t('budget.periodAnnual') }}</option>
+              <option value="MONTHLY">{{ i18n.t('budget.periodMonthly') }}</option>
+            </select>
+          </div>
+          @if (budgetForm.controls.periodType.value === 'MONTHLY') {
+            <div class="field">
+              <label>{{ i18n.t('budget.periodMonth') }} *</label>
+              <select formControlName="periodMonth">
+                @for (month of months(); track month) {
+                  <option [ngValue]="month">{{ month }}</option>
+                }
+              </select>
+            </div>
+          }
+          <div class="field">
+            <label>{{ i18n.t('budget.department') }} *</label>
+            <select formControlName="departmentId">
+              @for (d of departments(); track d.id) {
+                <option [value]="d.id">{{ d.code }} — {{ d.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('budget.plannedAmount') }} *</label>
+            <input type="number" class="ltr" formControlName="plannedAmount" min="0" step="0.01" />
+          </div>
+          <div class="field">
+            <label>{{ i18n.t('budget.currencyCode') }} *</label>
+            <select formControlName="currencyCode">
+              @for (currency of currencies(); track currency.code) {
+                <option [value]="currency.code">{{ currency.code }} — {{ currency.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="field span-2">
+            <label class="dialog-toggle">
+              <input type="checkbox" formControlName="blocking" />
+              <span>
+                <strong>{{ i18n.t('budget.blocking') }}</strong>
+                <small>{{ i18n.t('budget.blockingHint') }}</small>
+              </span>
+            </label>
+          </div>
+          <div class="field span-2">
+            <label class="dialog-toggle">
+              <input type="checkbox" formControlName="active" />
+              <span><strong>{{ i18n.t('budget.active') }}</strong></span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-form-actions">
+          <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('budget.cancel') }}</button>
+          <button class="button primary" type="submit" [disabled]="submitting() || budgetForm.invalid">
+            {{ submitting() ? i18n.t('common.loading') : i18n.t('budget.save') }}
+          </button>
+        </div>
+      </form>
+  </app-modal-dialog>
+</section>

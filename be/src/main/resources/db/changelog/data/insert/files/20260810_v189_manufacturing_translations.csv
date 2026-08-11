@@ -1,0 +1,41 @@
+id;key;locale;text
+v189-001;MFG_BOM_CODE_EXISTS;ar-EG;كود قائمة المواد مستخدم بالفعل.
+v189-002;MFG_BOM_CODE_EXISTS;en-US;BOM code already exists.
+v189-003;MFG_BOM_NOT_FOUND;ar-EG;قائمة المواد غير موجودة.
+v189-004;MFG_BOM_NOT_FOUND;en-US;BOM not found.
+v189-005;MFG_ORDER_NUMBER_EXISTS;ar-EG;رقم أمر الإنتاج مستخدم بالفعل.
+v189-006;MFG_ORDER_NUMBER_EXISTS;en-US;Production order number already exists.
+v189-007;MFG_ORDER_START_FROM_PLANNED_ONLY;ar-EG;يمكن بدء أمر الإنتاج فقط من حالة مخطط.
+v189-010;MFG_ORDER_START_FROM_PLANNED_ONLY;en-US;Production order can only be started from PLANNED status.
+v189-011;MFG_BOM_NO_LINES;ar-EG;لا يمكن بدء أمر إنتاج بقائمة مواد خالية من المكونات.
+v189-012;MFG_BOM_NO_LINES;en-US;Cannot start production order with an empty BOM.
+v189-013;MFG_MATERIAL_SHORTAGE;ar-EG;نقص في الرصيد المتاح للمواد الخام المطلوبة لتنفيذ أمر الإنتاج.
+v189-014;MFG_MATERIAL_SHORTAGE;en-US;Shortage in raw material stock required for work order.
+v189-015;MFG_ORDER_COMPLETE_FROM_IN_PROGRESS_ONLY;ar-EG;يمكن إكمال أمر الإنتاج فقط إذا كان قيد التنفيذ.
+v189-016;MFG_ORDER_COMPLETE_FROM_IN_PROGRESS_ONLY;en-US;Production order can only be completed from IN_PROGRESS status.
+v189-017;MFG_ACTUAL_OUTPUT_POSITIVE;ar-EG;كمية الإنتاج الفعلية يجب أن تكون أكبر من صفر.
+v189-018;MFG_ACTUAL_OUTPUT_POSITIVE;en-US;Actual output quantity must be positive.
+v189-019;MFG_FINISHED_ITEM_REQUIRED;ar-EG;يجب ربط الصنف التام بأمر الإنتاج أو قائمة المواد لاستلام المنتجات.
+v189-020;MFG_FINISHED_ITEM_REQUIRED;en-US;Finished item identity is required to receive products.
+v189-021;MFG_ORDER_CANNOT_CANCEL_COMPLETED;ar-EG;لا يمكن إلغاء أمر إنتاج مكتمل.
+v189-022;MFG_ORDER_CANNOT_CANCEL_COMPLETED;en-US;Cannot cancel completed production order.
+v189-023;MFG_ORDER_ALREADY_CANCELLED;ar-EG;أمر الإنتاج ملغي بالفعل.
+v189-024;MFG_ORDER_ALREADY_CANCELLED;en-US;Production order is already cancelled.
+v189-025;mfg.boms;ar-EG;قوائم المواد (BOM)
+v189-026;mfg.boms;en-US;Bills of Materials
+v189-027;mfg.components;ar-EG;المكونات والمواد الخام
+v189-028;mfg.components;en-US;Components & Raw Materials
+v189-029;mfg.readiness;ar-EG;جاهزية المواد الخام
+v189-030;mfg.readiness;en-US;Raw Material Readiness
+v189-031;mfg.actualOutput;ar-EG;الكمية الفعلية المنتجة
+v189-032;mfg.actualOutput;en-US;Actual Output Quantity
+v189-033;mfg.scrapQuantity;ar-EG;كمية الهالك / الخردة
+v189-034;mfg.scrapQuantity;en-US;Scrap Quantity
+v189-035;mfg.materialCost;ar-EG;تكلفة المواد الفعلية
+v189-036;mfg.materialCost;en-US;Actual Material Cost
+v189-037;mfg.unitCost;ar-EG;تكلفة الوحدة المنتجة
+v189-038;mfg.unitCost;en-US;Unit Production Cost
+v189-039;mfg.startSuccess;ar-EG;تم بدء أمر الإنتاج وصرف المواد الخام بنجاح.
+v189-040;mfg.startSuccess;en-US;Production order started and raw materials issued successfully.
+v189-041;mfg.completeSuccess;ar-EG;تم إكمال أمر الإنتاج واستلام المنتج التام بنجاح.
+v189-042;mfg.completeSuccess;en-US;Production order completed and finished goods received successfully.

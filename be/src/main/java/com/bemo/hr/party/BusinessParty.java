@@ -38,6 +38,14 @@ public class BusinessParty {
     @Column(name = "payment_terms", nullable = false, length = 30) private String paymentTerms;
     @Column(name = "tax_id", length = 50) private String taxId;
     @Column(name = "bank_account", length = 100) private String bankAccount;
+    @Column(name = "onboarding_status", nullable = false, length = 30) private String onboardingStatus;
+    @Column(name = "supplier_category", length = 50) private String supplierCategory;
+    @Column(name = "risk_level", length = 20) private String riskLevel;
+    @Column(name = "owner_user_id", length = 100) private String ownerUserId;
+    @Column(name = "approval_instance_id", length = 36) private String approvalInstanceId;
+    @Column(name = "bank_verified", nullable = false) private boolean bankVerified;
+    @Column(name = "bank_verified_at") private Instant bankVerifiedAt;
+    @Column(name = "bank_verified_by", length = 100) private String bankVerifiedBy;
     @Column(nullable = false) private boolean active;
     @Version private long version;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
@@ -56,6 +64,8 @@ public class BusinessParty {
         update(code, name, nameEn, partyType, contactPerson, phone, email, address, notes, active,
                managedType, responsiblePartyId, relationshipStartDate, relationshipEndDate,
                currencyCode, invoicePolicy, paymentTerms, taxId, bankAccount);
+        this.onboardingStatus = active ? "ACTIVE" : "REQUESTED";
+        this.bankVerified = bankAccount != null && !bankAccount.isBlank();
     }
 
     public void update(String code, String name, String nameEn, String partyType,
@@ -74,7 +84,8 @@ public class BusinessParty {
         this.email = nullable(email);
         this.address = nullable(address);
         this.notes = nullable(notes);
-        this.active = active;
+        this.active = "SUPPLIER".equals(this.partyType) && onboardingStatus != null
+                ? "ACTIVE".equals(onboardingStatus) : active;
         this.managedType = managedType;
         this.responsiblePartyId = nullable(responsiblePartyId);
         this.relationshipStartDate = nullable(relationshipStartDate);
@@ -86,6 +97,71 @@ public class BusinessParty {
         this.bankAccount = nullable(bankAccount);
     }
 
+    public void updateSupplierProfile(String supplierCategory, String riskLevel, String ownerUserId) {
+        this.supplierCategory = nullable(supplierCategory);
+        this.riskLevel = nullable(riskLevel);
+        this.ownerUserId = nullable(ownerUserId);
+    }
+
+    public void beginSupplierRequest() {
+        requireSupplier();
+        this.onboardingStatus = "REQUESTED";
+        this.active = false;
+        this.approvalInstanceId = null;
+    }
+
+    public void submitForReview(String approvalInstanceId) {
+        requireStatus("REQUESTED");
+        this.onboardingStatus = "UNDER_REVIEW";
+        this.approvalInstanceId = nullable(approvalInstanceId);
+        this.active = false;
+    }
+
+    public void approveOnboarding() {
+        requireStatus("UNDER_REVIEW");
+        this.onboardingStatus = "APPROVED";
+        this.active = false;
+    }
+
+    public void activateSupplier() {
+        requireStatus("APPROVED");
+        this.onboardingStatus = "ACTIVE";
+        this.active = true;
+    }
+
+    public void suspendSupplier() {
+        requireSupplier();
+        this.onboardingStatus = "SUSPENDED";
+        this.active = false;
+    }
+
+    public void blacklistSupplier() {
+        requireSupplier();
+        this.onboardingStatus = "BLACKLISTED";
+        this.active = false;
+    }
+
+    public void closeSupplier() {
+        requireSupplier();
+        this.onboardingStatus = "CLOSED";
+        this.active = false;
+    }
+
+    public void verifyBank(String account, String actor, Instant verifiedAt) {
+        this.bankAccount = nullable(account);
+        this.bankVerified = true;
+        this.bankVerifiedBy = actor;
+        this.bankVerifiedAt = verifiedAt;
+    }
+
+    public boolean isProcurementAllowed() {
+        return active && "SUPPLIER".equals(partyType) && "ACTIVE".equals(onboardingStatus);
+    }
+
+    public boolean isPaymentAllowed() {
+        return isProcurementAllowed() && bankVerified;
+    }
+
     public void deactivate() { this.active = false; }
     public void clearPhone() { this.phone = null; }
 
@@ -94,5 +170,16 @@ public class BusinessParty {
 
     private String nullable(String value) {
         return value == null || value.isBlank() ? null : value.strip();
+    }
+
+    private void requireSupplier() {
+        if (!"SUPPLIER".equals(partyType)) throw new IllegalStateException("Supplier lifecycle applies only to suppliers.");
+    }
+
+    private void requireStatus(String expected) {
+        requireSupplier();
+        if (!expected.equals(onboardingStatus)) {
+            throw new IllegalStateException("Supplier must be " + expected + " for this transition.");
+        }
     }
 }

@@ -1,0 +1,131 @@
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+.valuation-total {
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--line));
+  background: linear-gradient(135deg, var(--surface), var(--gold-glow));
+}
+.valuation-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.warning-text { color: var(--warning); font-weight: 700; }
+.valuation-details {
+  margin-top: 0.75rem;
+  padding: 0;
+  overflow: hidden;
+  summary { cursor: pointer; padding: 0.8rem 1rem; color: var(--gold); font-weight: 700; }
+  .table-card { border: 0; border-top: 1px solid var(--line); border-radius: 0; box-shadow: none; }
+}
+.metric-card {
+  padding: 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  display: grid;
+  gap: 0.45rem;
+}
+.metric-card strong {
+  font-size: 1.8rem;
+}
+.two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+.negative {
+  color: var(--danger);
+}
+.form-note {
+  padding: 0.8rem;
+  border-radius: 0.7rem;
+  background: var(--surface-subtle);
+  margin-bottom: 1rem;
+}
+.field {
+  &.has-error {
+    input, select {
+      border-color: var(--danger) !important;
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15);
+    }
+  }
+
+  .field-error {
+    display: block;
+    margin-top: 4px;
+    font-size: 11.5px;
+    color: var(--danger);
+    font-weight: 600;
+  }
+}
+.block {
+  display: block;
+}
+.reference-section {
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  padding: 1rem;
+  background: var(--surface-subtle);
+}
+.reference-title {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  color: var(--heading);
+}
+.reference-hint {
+  margin: 0 0 0.85rem;
+  font-size: 12px;
+  color: var(--muted);
+}
+.reference-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+.required-flag label {
+  color: var(--danger);
+}
+.attachment-field {
+  grid-column: 1 / -1;
+}
+.attachment-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+  background: var(--surface);
+  font-size: 12.5px;
+}
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--danger);
+  font: inherit;
+  cursor: pointer;
+}
+@media (max-width: 640px) {
+  .reference-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1000px) {
+  .metric-grid,
+  .two-columns {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .metric-grid,
+  .two-columns {
+    grid-template-columns: 1fr;
+  }
+}

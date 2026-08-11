@@ -6,7 +6,7 @@
       <p>{{ i18n.t('parties.description') }}</p>
     </div>
     <div class="toolbar">
-      <button class="button secondary" (click)="store.export()">⇩ Excel</button
+      <button class="button secondary" (click)="store.export()">{{ i18n.t('common.export') }}</button
       ><button class="button primary" (click)="openNew()">＋ {{ i18n.t('parties.add') }}</button>
     </div>
   </header>
@@ -47,11 +47,11 @@
             <td>{{ item.contactPerson ?? '—' }}</td>
             <td class="ltr">{{ item.phone ?? '—' }}</td>
             <td>
-              <span class="status" [class.success]="item.active" [class.neutral]="!item.active">{{
-                i18n.t(item.active ? 'parties.active' : 'parties.inactive')
+              <span class="status" [class.success]="item.onboardingStatus === 'ACTIVE'" [class.neutral]="item.onboardingStatus !== 'ACTIVE'">{{
+                item.partyType === 'SUPPLIER' ? statusLabel(item.onboardingStatus) : i18n.t(item.active ? 'parties.active' : 'parties.inactive')
               }}</span>
             </td>
-            <td><button class="row-action" (click)="openEdit(item)">✎</button></td>
+            <td><button class="row-action" (click)="openSupplier360(item)">✎</button></td>
           </tr>
         } @empty {
           <tr>
@@ -81,6 +81,9 @@
         @if (submitted() && form.invalid) {
           <div class="alert error" role="alert">{{ i18n.t('parties.validation') }}</div>
         }
+        @if (duplicateWarning()) {
+          <div class="alert warning" role="alert">{{ duplicateWarning() }}</div>
+        }
         <div class="form-grid">
           <div class="field">
             <label>{{ i18n.t('parties.code') }} *</label>
@@ -103,62 +106,80 @@
             </select>
           </div>
           <div class="field">
-            <label>نوع التعامل</label>
+            <label>{{ i18n.t('parties.managedType') }}</label>
             <select formControlName="managedType">
-              <option value="DIRECT">مباشر (Direct Supplier)</option>
-              <option value="MANAGED">بالوساطة (Managed Supplier)</option>
+              <option value="DIRECT">{{ i18n.t('parties.managedDirect') }}</option>
+              <option value="MANAGED">{{ i18n.t('parties.managedBrokered') }}</option>
             </select>
           </div>
           @if (form.controls.managedType.value === 'MANAGED') {
             <div class="field">
-              <label>المسؤول / الشريك الإداري *</label>
+              <label>{{ i18n.t('parties.responsibleParty') }} *</label>
               <select formControlName="responsiblePartyId">
-                <option value="">-- اختر المسئول --</option>
+                <option value="">{{ i18n.t('parties.responsibleSelectPlaceholder') }}</option>
                 @for (p of store.items(); track p.id) {
                   <option [value]="p.id">{{ p.name }} ({{ p.code }})</option>
                 }
               </select>
             </div>
             <div class="field">
-              <label>تاريخ بدء العلاقة</label>
+              <label>{{ i18n.t('parties.relationshipStart') }}</label>
               <input class="ltr" formControlName="relationshipStartDate" type="date" />
             </div>
             <div class="field">
-              <label>تاريخ انتهاء العلاقة</label>
+              <label>{{ i18n.t('parties.relationshipEnd') }}</label>
               <input class="ltr" formControlName="relationshipEndDate" type="date" />
             </div>
           }
           <div class="field">
-            <label>العملة الأساسية</label>
+            <label>{{ i18n.t('parties.baseCurrency') }}</label>
             <select formControlName="currencyCode">
-              <option value="EGP">الجنيه المصري (ج.م)</option>
-              <option value="USD">الدولار الأمريكي ($)</option>
-              <option value="EUR">اليورو (€)</option>
+              <option value="EGP">{{ i18n.t('parties.currencyEgp') }}</option>
+              <option value="USD">{{ i18n.t('parties.currencyUsd') }}</option>
+              <option value="EUR">{{ i18n.t('parties.currencyEur') }}</option>
             </select>
           </div>
           <div class="field">
-            <label>شروط الدفع والتسوية</label>
+            <label>{{ i18n.t('parties.paymentTerms') }}</label>
             <select formControlName="paymentTerms">
-              <option value="CASH">نقدي (Cash on Delivery)</option>
-              <option value="NET_15">آجل 15 يوماً</option>
-              <option value="NET_30">آجل 30 يوماً</option>
-              <option value="NET_60">آجل 60 يوماً</option>
+              <option value="CASH">{{ i18n.t('parties.termsCash') }}</option>
+              <option value="NET_15">{{ i18n.t('parties.termsNet15') }}</option>
+              <option value="NET_30">{{ i18n.t('parties.termsNet30') }}</option>
+              <option value="NET_60">{{ i18n.t('parties.termsNet60') }}</option>
             </select>
           </div>
           <div class="field">
-            <label>سياسة الفاتورة والضرائب</label>
+            <label>{{ i18n.t('parties.invoicePolicy') }}</label>
             <select formControlName="invoicePolicy">
-              <option value="E_INVOICE">فاتورة إلكترونية ضريبية</option>
-              <option value="RECEIPT">إيصال استلام رسمي</option>
-              <option value="EXEMPT">معفى ضريبياً</option>
+              <option value="E_INVOICE">{{ i18n.t('parties.policyEInvoice') }}</option>
+              <option value="RECEIPT">{{ i18n.t('parties.policyReceipt') }}</option>
+              <option value="EXEMPT">{{ i18n.t('parties.policyExempt') }}</option>
             </select>
           </div>
           <div class="field">
-            <label>رقم التسجيل الضريبي</label>
+            <label>{{ i18n.t('parties.taxId') }}</label>
             <input class="ltr" formControlName="taxId" placeholder="123-456-789" />
           </div>
+          @if (form.controls.partyType.value === 'SUPPLIER') {
+            <div class="field">
+              <label>{{ i18n.t('parties.supplierCategory') }}</label>
+              <input formControlName="supplierCategory" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('parties.riskLevel') }}</label>
+              <select formControlName="riskLevel">
+                <option value="LOW">{{ i18n.t('parties.riskLow') }}</option>
+                <option value="MEDIUM">{{ i18n.t('parties.riskMedium') }}</option>
+                <option value="HIGH">{{ i18n.t('parties.riskHigh') }}</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('parties.ownerUser') }}</label>
+              <input formControlName="ownerUserId" />
+            </div>
+          }
           <div class="field">
-            <label>تفاصيل الحساب البنكي / IBAN</label>
+            <label>{{ i18n.t('parties.bankAccount') }}</label>
             <input class="ltr" formControlName="bankAccount" placeholder="EG123456789012345678901234" />
           </div>
           <div class="field">
@@ -200,6 +221,75 @@
           </button>
         </div>
       </form>
+    </app-modal-dialog>
+  }
+  @if (supplierModalOpen() && store.supplier360(); as view) {
+    <app-modal-dialog [isOpen]="true" [title]="i18n.t('parties.supplier360Title')" (close)="closeSupplier360()">
+      <div class="supplier-360">
+        <div class="supplier-summary">
+          <div><strong>{{ view.supplier.name }}</strong><small>{{ view.supplier.code }}</small></div>
+          <span class="status" [class.success]="view.supplier.onboardingStatus === 'ACTIVE'">{{ statusLabel(view.supplier.onboardingStatus) }}</span>
+        </div>
+        <div class="metric-grid compact">
+          <article><strong>{{ view.documentCount }}</strong><span>{{ i18n.t('parties.documents') }}</span></article>
+          <article><strong>{{ view.expiredDocumentCount }}</strong><span>{{ i18n.t('parties.expiredDocuments') }}</span></article>
+          <article><strong>{{ view.verifiedBankCount }}</strong><span>{{ i18n.t('parties.verifiedBanks') }}</span></article>
+        </div>
+        <section class="onboarding-section">
+          <h3>{{ i18n.t('parties.complianceChecklist') }}</h3>
+          <div class="checklist">
+            @for (item of view.compliance; track item.code) {
+              <div [class.passed]="item.passed"><span>{{ item.passed ? '✓' : '!' }}</span>{{ complianceLabel(item.code) }}</div>
+            }
+          </div>
+        </section>
+        <section class="onboarding-section">
+          <h3>{{ i18n.t('parties.documents') }}</h3>
+          @for (document of view.documents; track document.id) {
+            <div class="record-row">
+              <div><button class="link-button" (click)="store.downloadDocument(view.supplier.id, document.id, document.fileName)"><strong>{{ document.documentType }}</strong></button><small>{{ document.fileName }} · {{ document.expiryDate ?? '—' }}</small></div>
+              @if (!document.verified && !document.expired) {
+                <button class="button secondary" (click)="store.verifyDocument(view.supplier.id, document.id)">{{ i18n.t('parties.verify') }}</button>
+              } @else {
+                <span class="status" [class.success]="document.verified" [class.danger]="document.expired">{{ i18n.t(document.expired ? 'parties.expired' : 'parties.verified') }}</span>
+              }
+            </div>
+          }
+          <form class="inline-form" [formGroup]="documentForm" (ngSubmit)="addDocument()">
+            <select formControlName="documentType"><option value="TAX_CARD">{{ i18n.t('parties.documentTaxCard') }}</option><option value="COMMERCIAL_REGISTER">{{ i18n.t('parties.documentCommercialRegister') }}</option><option value="OTHER">{{ i18n.t('partyType.other') }}</option></select>
+            <input formControlName="documentNumber" [placeholder]="i18n.t('parties.documentNumber')" />
+            <input type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx" (change)="onDocumentFile($event)" />
+            <input type="date" formControlName="expiryDate" />
+            <label><input type="checkbox" formControlName="mandatory" /> {{ i18n.t('parties.mandatory') }}</label>
+            <button class="button secondary" type="submit">{{ i18n.t('parties.addDocument') }}</button>
+          </form>
+        </section>
+        <section class="onboarding-section">
+          <h3>{{ i18n.t('parties.bankVerification') }}</h3>
+          @for (account of view.bankAccounts; track account.id) {
+            <div class="record-row">
+              <div><strong>{{ account.bankName }}</strong><small class="ltr">{{ account.iban }}</small></div>
+              @if (account.verificationStatus !== 'VERIFIED') {
+                <button class="button secondary" (click)="store.verifyBankAccount(view.supplier.id, account.id)">{{ i18n.t('parties.verify') }}</button>
+              } @else { <span class="status success">{{ i18n.t('parties.verified') }}</span> }
+            </div>
+          }
+          <form class="inline-form" [formGroup]="bankForm" (ngSubmit)="addBankAccount()">
+            <input formControlName="accountName" [placeholder]="i18n.t('parties.accountName')" />
+            <input class="ltr" formControlName="iban" [placeholder]="i18n.t('parties.bankAccount')" />
+            <input formControlName="bankName" [placeholder]="i18n.t('parties.bankName')" />
+            <select formControlName="currencyCode"><option value="EGP">{{ i18n.t('parties.currencyEgp') }}</option><option value="USD">{{ i18n.t('parties.currencyUsd') }}</option><option value="EUR">{{ i18n.t('parties.currencyEur') }}</option></select>
+            <button class="button secondary" type="submit">{{ i18n.t('parties.addBank') }}</button>
+          </form>
+        </section>
+        <div class="lifecycle-actions">
+          @if (view.supplier.onboardingStatus === 'REQUESTED') { <button class="button primary" (click)="supplierTransition('submit')">{{ i18n.t('parties.submitReview') }}</button> }
+          @if (view.supplier.onboardingStatus === 'UNDER_REVIEW') { <button class="button primary" (click)="supplierTransition('approve')">{{ i18n.t('parties.approveSupplier') }}</button> }
+          @if (view.supplier.onboardingStatus === 'APPROVED') { <button class="button primary" (click)="supplierTransition('activate')">{{ i18n.t('parties.activateSupplier') }}</button> }
+          @if (view.supplier.onboardingStatus === 'ACTIVE') { <button class="button secondary" (click)="supplierTransition('suspend')">{{ i18n.t('parties.suspendSupplier') }}</button> }
+          @if (view.supplier.onboardingStatus !== 'BLACKLISTED' && view.supplier.onboardingStatus !== 'CLOSED') { <button class="button danger" (click)="supplierTransition('blacklist')">{{ i18n.t('parties.blacklistSupplier') }}</button> }
+        </div>
+      </div>
     </app-modal-dialog>
   }
 </section>

@@ -6,7 +6,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TranslationRepository extends JpaRepository<TranslationEntry, String> {
-    List<TranslationEntry> findAllByLocaleIgnoreCaseOrderByTranslationKeyAsc(String locale);
+    List<TranslationEntry> findAllByLocaleIgnoreCaseAndAppIdIsNullOrderByTranslationKeyAsc(String locale);
 
-    Optional<TranslationEntry> findByLocaleIgnoreCaseAndTranslationKey(String locale, String translationKey);
+    List<TranslationEntry> findAllByLocaleIgnoreCaseAndAppIdOrderByTranslationKeyAsc(String locale, String appId);
+
+    Optional<TranslationEntry> findByLocaleIgnoreCaseAndTranslationKeyAndAppIdIsNull(
+            String locale, String translationKey);
+
+    Optional<TranslationEntry> findByLocaleIgnoreCaseAndTranslationKeyAndAppId(
+            String locale, String translationKey, String appId);
 }
