@@ -17,6 +17,13 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
 
+
+  device-hub:
+    # Production: internal network only; never publish the adapter port.
+    ports: !reset []
+    environment:
+      DEVICE_HUB_REGISTRY_PATH: /data/devices.json
+      DEVICE_HUB_API_KEY: ${DEVICE_HUB_API_KEY:?DEVICE_HUB_API_KEY must be set}
   backend:
     ports: !reset []
     environment:
@@ -32,6 +39,9 @@ services:
       # IP through X-Forwarded-For and defeat login rate limiting.
       HR_SECURITY_TRUSTED_PROXIES: ${HR_SECURITY_TRUSTED_PROXIES:?HR_SECURITY_TRUSTED_PROXIES must be the internal network CIDR}
       HR_DEVICE_CREDENTIALS_SECRET: ${HR_DEVICE_CREDENTIALS_SECRET:?HR_DEVICE_CREDENTIALS_SECRET must be a Base64-encoded 32-byte key}
+      # Internal Spring Boot -> backend device module communication.
+      BEMO_DEVICE_HUB_BASE_URL: http://device-hub:8090
+      DEVICE_HUB_API_KEY: ${DEVICE_HUB_API_KEY:?DEVICE_HUB_API_KEY must be set}
       HR_BOOTSTRAP_APP_CODE: ${HR_BOOTSTRAP_APP_CODE:?HR_BOOTSTRAP_APP_CODE must be set}
       HR_BOOTSTRAP_APP_NAME: ${HR_BOOTSTRAP_APP_NAME:?HR_BOOTSTRAP_APP_NAME must be set}
       HR_BOOTSTRAP_ADMIN_USERNAME: ${HR_BOOTSTRAP_ADMIN_USERNAME:?HR_BOOTSTRAP_ADMIN_USERNAME must be set}

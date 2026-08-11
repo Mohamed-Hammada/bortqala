@@ -68,3 +68,20 @@ code { direction:ltr; unicode-bidi:embed; }
 }
 .route-actions { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:9px; }
 .route-actions a { margin-top:0; }
+
+
+.integration-communication-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-2);
+
+  strong { font-weight: 700; }
+  span { direction: ltr; unicode-bidi: plaintext; }
+  small { flex-basis: 100%; color: var(--secondary-text); }
+}

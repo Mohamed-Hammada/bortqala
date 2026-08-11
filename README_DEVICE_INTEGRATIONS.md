@@ -5,7 +5,7 @@ It integrates the version-aware supplier hub with Bortqala's existing Attendance
 
 ## What is included
 
-- `device-hub/` — all supplier packages and their integration/version profiles:
+- `be/modules/device-hub/` — all supplier packages and their integration/version profiles:
   - ZKTeco
   - Hikvision
   - Dahua
@@ -18,6 +18,22 @@ It integrates the version-aware supplier hub with Bortqala's existing Attendance
 - Angular 22 UI under `fe/src/app/features/device-integrations/`.
 - Docker Compose wiring for the persistent device hub.
 - `apply.sh` / `apply.ps1` — idempotent patching of the three existing project files that must be edited.
+
+
+## Backend-owned module layout
+
+```text
+be/
+├─ src/main/java/com/bemo/hr/attendance/
+│  ├─ api/                         # /api/v1/device-integrations
+│  ├─ application/                 # orchestration + attendance sync
+│  └─ infrastructure/VendorHubClient.java
+└─ modules/device-hub/             # Python vendor/protocol adapter runtime
+```
+
+Angular communicates only with Spring Boot. Spring Boot communicates with the
+Device Hub module over the internal service URL. Credentials remain encrypted
+and owned by Bortqala.
 
 ## Architecture
 
@@ -169,16 +185,16 @@ For native SDK routes, proprietary DLL/SO/JAR packages are **not redistributed**
 Each supplier contains:
 
 ```text
-device-hub/packages/suppliers/<supplier>/DOCUMENTATION.md
-device-hub/packages/suppliers/<supplier>/SDK_API_VERSIONING.md
-device-hub/packages/suppliers/<supplier>/profiles/integration_versions.json
-device-hub/packages/suppliers/<supplier>/integrations/<route>/README.md
+be/modules/device-hub/packages/suppliers/<supplier>/DOCUMENTATION.md
+be/modules/device-hub/packages/suppliers/<supplier>/SDK_API_VERSIONING.md
+be/modules/device-hub/packages/suppliers/<supplier>/profiles/integration_versions.json
+be/modules/device-hub/packages/suppliers/<supplier>/integrations/<route>/README.md
 ```
 
 The root index is:
 
 ```text
-device-hub/docs/OFFICIAL_DOCUMENTATION_INDEX.md
+be/modules/device-hub/docs/OFFICIAL_DOCUMENTATION_INDEX.md
 ```
 
 ## Credentials and security
