@@ -31,7 +31,7 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [x] Effective-dated attendance rules
 - [x] Exception catalogue/severity/block flag
 - [x] Payroll input snapshot
-- [ ] Payroll calendar/period
+- [x] Payroll calendar/period
 - [ ] Payroll run/status
 - [ ] Component catalog/evaluators
 - [ ] Approval
@@ -55,7 +55,7 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 ## O2C
 - [x] Sales order lines
 - [x] Pricing snapshot
-- [ ] Credit exposure
+- [x] Credit exposure
 - [x] Reservation
 - [x] Delivery/partial fulfillment
 - [ ] COGS posting
@@ -69,18 +69,18 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [x] Stock status
 - [x] Availability service
 - [x] Reservation concurrency
-- [ ] Transfer
-- [ ] Cycle count
-- [ ] Lot/serial/expiry
+- [x] Transfer
+- [x] Cycle count
+- [x] Lot/serial/expiry
 - [ ] Valuation reconciliation
 
 ## Manufacturing/Quality
 - [x] BOM snapshot
 - [ ] Material reservation
-- [ ] Actual issues/returns
+- [x] Actual issues/returns
 - [x] Partial production receipts
 - [x] Routing/work centers
-- [ ] Quality plan/disposition
+- [x] Quality plan/disposition
 - [ ] WIP posting
 - [ ] Variance/close
 
@@ -97,11 +97,11 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 ## Finance / Master Data / Rules
 - [ ] Journal source metadata and immutable system journals
 - [x] Journal dimensions/account validation
-- [ ] Manual journal approval/restricted accounts
+- [x] Manual journal approval/restricted accounts
 - [ ] Realized/unrealized FX process
 - [x] Trial Balance / GL detail
-- [ ] Balance Sheet / Income Statement / Cash Flow
-- [ ] Master-data effective dating
-- [ ] Supplier/contractor bank-change governance
+- [x] Balance Sheet / Income Statement / Cash Flow
+- [x] Master-data effective dating
+- [x] Supplier/contractor bank-change governance
 - [ ] Typed deterministic rule policies
 - [ ] Idempotent scheduled jobs

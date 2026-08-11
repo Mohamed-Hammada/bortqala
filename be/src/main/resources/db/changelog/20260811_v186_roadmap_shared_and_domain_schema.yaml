@@ -376,3 +376,172 @@ databaseChangeLog:
               - column: { name: project_id, type: VARCHAR(36) }
               - column: { name: department_id, type: VARCHAR(36) }
               - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+        - createTable:
+            tableName: stock_transfer_headers
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: transfer_number, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: source_warehouse_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: target_warehouse_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: transfer_date, type: DATE, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: stock_transfer_lines
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: transfer_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: item_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: quantity, type: DECIMAL(15, 4), constraints: { nullable: false } }
+        - createTable:
+            tableName: cycle_count_headers
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: count_number, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: warehouse_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: count_date, type: DATE, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: cycle_count_lines
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: count_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: item_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: system_quantity, type: DECIMAL(15, 4), constraints: { nullable: false } }
+              - column: { name: counted_quantity, type: DECIMAL(15, 4), constraints: { nullable: false } }
+              - column: { name: variance_quantity, type: DECIMAL(15, 4), constraints: { nullable: false } }
+        - createTable:
+            tableName: bank_change_requests
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: party_type, type: VARCHAR(30), constraints: { nullable: false } }
+              - column: { name: party_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: old_iban, type: VARCHAR(50) }
+              - column: { name: new_iban, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: old_bank_name, type: VARCHAR(100) }
+              - column: { name: new_bank_name, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: requested_by, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: approved_by, type: VARCHAR(100) }
+              - column: { name: reason, type: VARCHAR(500) }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: material_issue_headers
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: issue_number, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: production_order_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: issue_date, type: DATE, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: material_issue_lines
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: issue_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: item_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: quantity, type: DECIMAL(15, 4), constraints: { nullable: false } }
+              - column: { name: warehouse_id, type: VARCHAR(36), constraints: { nullable: false } }
+        - createTable:
+            tableName: quality_plan_headers
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: plan_code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: item_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: target_category, type: VARCHAR(30), constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: quality_dispositions
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: disposition_number, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: plan_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: inspection_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: disposition_result, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: notes, type: VARCHAR(500) }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: item_lots_serials
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: item_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: lot_number, type: VARCHAR(50) }
+              - column: { name: serial_number, type: VARCHAR(50) }
+              - column: { name: expiration_date, type: DATE }
+              - column: { name: manufacture_date, type: DATE }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: payroll_calendars
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: calendar_code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: frequency, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: pay_periods
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: calendar_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: period_number, type: INT, constraints: { nullable: false } }
+              - column: { name: start_date, type: DATE, constraints: { nullable: false } }
+              - column: { name: end_date, type: DATE, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: customer_credit_profiles
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: customer_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: credit_limit, type: DECIMAL(15, 2), constraints: { nullable: false } }
+              - column: { name: current_exposure, type: DECIMAL(15, 2), defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: journal_approval_rules
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: account_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: max_amount_without_approval, type: DECIMAL(15, 2), constraints: { nullable: false } }
+              - column: { name: requires_approval, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }

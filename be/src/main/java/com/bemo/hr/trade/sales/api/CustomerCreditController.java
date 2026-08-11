@@ -1,0 +1,33 @@
+package com.bemo.hr.trade.sales.api;
+
+import com.bemo.hr.trade.sales.application.CustomerCreditService;
+import com.bemo.hr.trade.sales.domain.CustomerCreditProfile;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+
+@RestController
+@RequestMapping("/api/v1/trade/sales/credit-profiles")
+public class CustomerCreditController {
+
+    private final CustomerCreditService creditService;
+
+    public CustomerCreditController(CustomerCreditService creditService) {
+        this.creditService = creditService;
+    }
+
+    public record SetCreditLimitPayload(String customerId, BigDecimal creditLimit) {}
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'FINANCE_MANAGER')")
+    public CustomerCreditProfile setCreditLimit(@RequestBody SetCreditLimitPayload payload) {
+        return creditService.setCreditLimit(payload.customerId(), payload.creditLimit());
+    }
+
+    @GetMapping("/customers/{customerId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
+    public CustomerCreditProfile getCreditProfile(@PathVariable String customerId) {
+        return creditService.getCreditProfile(customerId);
+    }
+}
