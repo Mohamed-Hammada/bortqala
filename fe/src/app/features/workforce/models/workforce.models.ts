@@ -328,3 +328,46 @@ export interface AdvanceEmployeeOption {
   categoryName: string;
   active: boolean;
 }
+
+export interface LaborDispatch {
+  id: string;
+  requestId: string;
+  contractorId: string;
+  dispatchDate: string;
+  status: 'DRAFT' | 'DISPATCHED' | 'ACCEPTED' | 'CANCELLED';
+  createdAt: number;
+  updatedAt: number;
+  version: number;
+}
+
+export interface WorkerAssignment {
+  id: string;
+  dispatchId: string;
+  workerId: string;
+  requestLineId?: string;
+  contractorId: string;
+  fromDate: string;
+  toDate: string;
+  agreedRateSnapshot: number;
+  agreedHoursSnapshot: number;
+  status: 'PROPOSED' | 'ACCEPTED' | 'REJECTED' | 'REPLACED' | 'COMPLETED';
+  rejectionReason?: string;
+  createdAt: number;
+  updatedAt: number;
+  version: number;
+}
+
+export interface WorkforceDispute {
+  id: string;
+  settlementPeriodId: string;
+  contractorId: string;
+  disputedAmount: number;
+  reason: string;
+  status: 'DRAFT' | 'UNDER_REVIEW' | 'RESOLVED' | 'REJECTED';
+  resolutionNotes?: string;
+  resolvedBy?: string;
+  createdAt: number;
+  updatedAt: number;
+  version: number;
+}
+

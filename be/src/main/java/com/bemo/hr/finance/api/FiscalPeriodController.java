@@ -20,9 +20,19 @@ import java.util.List;
 public class FiscalPeriodController {
 
     private final FiscalPeriodRepository repository;
+    private final com.bemo.hr.finance.application.CloseChecklistService closeChecklistService;
 
-    public FiscalPeriodController(FiscalPeriodRepository repository) {
+    public FiscalPeriodController(FiscalPeriodRepository repository,
+                                com.bemo.hr.finance.application.CloseChecklistService closeChecklistService) {
         this.repository = repository;
+        this.closeChecklistService = closeChecklistService;
+    }
+
+    @GetMapping("/{id}/precheck")
+    @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    public com.bemo.hr.finance.application.CloseChecklistSummary getClosePrecheck(@PathVariable String id) {
+        return closeChecklistService.computePrecheck(id);
     }
 
     @GetMapping

@@ -14,4 +14,5 @@ public interface JournalEntryRepository extends JpaRepository<JournalEntry, Stri
     List<JournalEntry> findByStatusOrderByEntryDateDesc(JournalEntry.Status status);
     boolean existsByAppIdAndEntryNumber(String appId, String entryNumber);
     boolean existsByAppIdAndEntryNumberAndIdNot(String appId, String entryNumber, String id);
+    long countByFiscalPeriodIdAndStatus(String fiscalPeriodId, JournalEntry.Status status);
 }
