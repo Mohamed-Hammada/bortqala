@@ -19,13 +19,15 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [ ] Request approval
 - [x] Dispatch
 - [x] Worker assignment/site acceptance/replacement
-- [ ] Attendance lock/correction
-- [ ] Settlement immutable calculation snapshot
+- [x] Attendance lock/correction
+- [x] Settlement immutable calculation snapshot
 - [x] Dispute workflow
 - [ ] Invoice match/tolerance
+- [x] Settlement review/approval
+- [x] Journal posting & partner ledger
 - [ ] GL posting
 - [ ] Treasury payment/bank match
-- [ ] Close provider
+- [x] Close provider
 
 ## Attendance/Payroll
 - [x] Effective-dated attendance rules
@@ -34,23 +36,27 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [x] Payroll calendar/period
 - [x] Payroll run/status
 - [x] Component catalog/evaluators
-- [ ] Approval
+- [x] Approval
 - [ ] GL posting
-- [ ] Payment batch
+- [x] Payment batch
 - [ ] Retro/off-cycle
-- [ ] Close/reconciliation
+- [x] Close/reconciliation
 
 ## P2P
 - [x] Purchase requisition/lines
+- [x] Purchase order/lines
 - [ ] Budget/approval
-- [x] RFQ/quotes/evaluation/award
-- [x] Award creates existing PO
+- [x] Goods receipt/lines
+- [x] Quality inspection
 - [ ] Quality stock disposition
-- [ ] Match tolerances/override
+- [x] 3-way matching
+- [x] Match tolerances/override
+- [x] Vendor invoice/lines
 - [ ] AP posting
+- [x] Vendor payment
 - [ ] Payment proposal
 - [ ] Treasury/bank
-- [x] AP/GRIR close reconciliation
+- [x] Close provider reconciliation
 
 ## O2C
 - [x] Sales order lines
@@ -58,8 +64,8 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [x] Credit exposure
 - [x] Reservation
 - [x] Delivery/partial fulfillment
-- [ ] COGS posting
-- [ ] Invoice delivered qty
+- [x] COGS posting
+- [x] Invoice delivered qty
 - [x] Returns/RMA/credit note
 - [ ] Receipt/bank integration
 - [ ] AR reconciliation/close
@@ -88,14 +94,14 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [x] Multi-source payment batch
 - [x] Maker/checker
 - [x] Difference posting
-- [ ] Budget versions
+- [x] Budget versions
 - [x] Budget revisions/transfers
 - [x] All module close providers
 - [ ] Workbenches
-- [ ] Financial/subledger reconciliation reports
+- [x] Financial/subledger reconciliation reports
 
 ## Finance / Master Data / Rules
-- [ ] Journal source metadata and immutable system journals
+- [x] Journal source metadata and immutable system journals
 - [x] Journal dimensions/account validation
 - [x] Manual journal approval/restricted accounts
 - [x] Realized/unrealized FX process
@@ -104,4 +110,4 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [x] Master-data effective dating
 - [x] Supplier/contractor bank-change governance
 - [x] Typed deterministic rule policies
-- [ ] Idempotent scheduled jobs
+- [x] Idempotent scheduled jobs

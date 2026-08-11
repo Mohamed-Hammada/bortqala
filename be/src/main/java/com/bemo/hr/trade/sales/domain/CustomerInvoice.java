@@ -1,41 +1,151 @@
 package com.bemo.hr.trade.sales.domain;
 
-import jakarta.persistence.*;
-import lombok.Getter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
+
 import java.math.BigDecimal;
-import java.time.*;
+import java.time.LocalDate;
 import java.util.UUID;
 
-@Entity @Table(name="customer_invoices") @Getter
+@Entity
+@Table(name = "customer_invoices")
 public class CustomerInvoice {
-    public enum Status { DRAFT, OPEN, PARTIALLY_PAID, PAID, CANCELLED }
-    @Id private String id;
-    @TenantId @Column(name="app_id",nullable=false) private String appId;
-    @Column(name="invoice_number",nullable=false,length=50) private String invoiceNumber;
-    @Column(name="customer_id",nullable=false,length=36) private String customerId;
-    @Column(name="sales_order_id",length=36) private String salesOrderId;
-    @Column(name="invoice_date",nullable=false) private LocalDate invoiceDate;
-    @Column(name="due_date",nullable=false) private LocalDate dueDate;
-    @Column(name="currency_code",nullable=false,length=10) private String currencyCode;
-    @Column(nullable=false,precision=19,scale=2) private BigDecimal amount;
-    @Column(name="outstanding_amount",nullable=false,precision=19,scale=2) private BigDecimal outstandingAmount;
-    @Enumerated(EnumType.STRING) @Column(nullable=false,length=20) private Status status;
-    @Column(name="issued_by",length=100) private String issuedBy;
-    @Column(name="issued_at") private Instant issuedAt;
-    @Version private long version;
-    @Column(name="created_at",nullable=false) private Instant createdAt;
-    @Column(name="updated_at",nullable=false) private Instant updatedAt;
-    protected CustomerInvoice() { }
-    public CustomerInvoice(String number,String customerId,String orderId,LocalDate date,LocalDate due,String currency,BigDecimal amount){
-        id=UUID.randomUUID().toString();invoiceNumber=number.strip();this.customerId=customerId;salesOrderId=blank(orderId);invoiceDate=date;dueDate=due;
-        currencyCode=currency.strip().toUpperCase();this.amount=amount;outstandingAmount=amount;status=Status.DRAFT;
+
+    public enum Status {
+        DRAFT, ISSUED, PAID, POSTED
     }
-    public void issue(String actor){if(status!=Status.DRAFT)throw new IllegalStateException("Invoice is not draft");status=Status.OPEN;issuedBy=actor;issuedAt=Instant.now();}
-    public void allocate(BigDecimal value){if(status!=Status.OPEN&&status!=Status.PARTIALLY_PAID)throw new IllegalStateException("Invoice is not open");
-        if(value.signum()<=0||value.compareTo(outstandingAmount)>0)throw new IllegalArgumentException("Allocation exceeds outstanding amount");
-        outstandingAmount=outstandingAmount.subtract(value);status=outstandingAmount.signum()==0?Status.PAID:Status.PARTIALLY_PAID;}
-    public boolean overdue(LocalDate on){return outstandingAmount.signum()>0&&dueDate.isBefore(on)&&(status==Status.OPEN||status==Status.PARTIALLY_PAID);}
-    private static String blank(String value){return value==null||value.isBlank()?null:value.strip();}
-    @PrePersist void create(){createdAt=Instant.now();updatedAt=createdAt;} @PreUpdate void update(){updatedAt=Instant.now();}
+
+    @Id
+    private String id;
+
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+
+    @Column(name = "invoice_number", length = 50)
+    private String invoiceNumber;
+
+    @Column(name = "customer_id", length = 36)
+    private String customerId;
+
+    @Column(name = "sales_order_id", length = 36)
+    private String salesOrderId;
+
+    @Column(name = "invoice_date")
+    private LocalDate invoiceDate;
+
+    @Column(name = "due_date")
+    private LocalDate dueDate;
+
+    @Column(name = "currency_code", length = 3)
+    private String currencyCode;
+
+    @Column(precision = 15, scale = 2)
+    private BigDecimal amount;
+
+    @Column(name = "outstanding_amount", precision = 15, scale = 2)
+    private BigDecimal outstandingAmount;
+
+    @Column(name = "delivered_quantity", precision = 15, scale = 4)
+    private BigDecimal deliveredQuantity;
+
+    @Column(name = "invoiced_amount", precision = 15, scale = 2)
+    private BigDecimal invoicedAmount;
+
+    @Column(name = "cogs_amount", precision = 15, scale = 2)
+    private BigDecimal cogsAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Status status = Status.DRAFT;
+
+    @Column(name = "created_at", nullable = false)
+    private long createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private long updatedAt;
+
+    @Version
+    @Column(nullable = false)
+    private long version;
+
+    protected CustomerInvoice() {}
+
+    public CustomerInvoice(String invoiceNumber, String customerId, String salesOrderId, LocalDate invoiceDate, LocalDate dueDate, String currencyCode, BigDecimal amount) {
+        this.id = UUID.randomUUID().toString();
+        this.invoiceNumber = invoiceNumber;
+        this.customerId = customerId;
+        this.salesOrderId = salesOrderId;
+        this.invoiceDate = invoiceDate;
+        this.dueDate = dueDate;
+        this.currencyCode = currencyCode;
+        this.amount = amount;
+        this.outstandingAmount = amount;
+        this.status = Status.DRAFT;
+    }
+
+    public CustomerInvoice(String salesOrderId, BigDecimal deliveredQuantity, BigDecimal unitPrice, BigDecimal unitCogs) {
+        this.id = UUID.randomUUID().toString();
+        this.invoiceNumber = "INV-" + System.currentTimeMillis();
+        this.salesOrderId = salesOrderId;
+        this.deliveredQuantity = deliveredQuantity;
+        this.invoicedAmount = deliveredQuantity.multiply(unitPrice);
+        this.cogsAmount = deliveredQuantity.multiply(unitCogs);
+        this.amount = this.invoicedAmount;
+        this.outstandingAmount = this.invoicedAmount;
+        this.invoiceDate = LocalDate.now();
+        this.dueDate = LocalDate.now().plusDays(30);
+        this.currencyCode = "EGP";
+        this.status = Status.POSTED;
+    }
+
+    public void issue(String actor) {
+        this.status = Status.ISSUED;
+    }
+
+    public void allocate(BigDecimal allocationAmount) {
+        if (allocationAmount.compareTo(this.outstandingAmount) > 0) {
+            throw new IllegalArgumentException("Allocation exceeds outstanding amount");
+        }
+        this.outstandingAmount = this.outstandingAmount.subtract(allocationAmount);
+        if (this.outstandingAmount.compareTo(BigDecimal.ZERO) == 0) {
+            this.status = Status.PAID;
+        }
+    }
+
+    public boolean overdue(LocalDate asOf) {
+        return this.status != Status.PAID && this.dueDate != null && this.dueDate.isBefore(asOf);
+    }
+
+    @PrePersist
+    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+
+    @PreUpdate
+    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+
+    public String getId() { return id; }
+    public String getAppId() { return appId; }
+    public String getInvoiceNumber() { return invoiceNumber; }
+    public String getCustomerId() { return customerId; }
+    public String getSalesOrderId() { return salesOrderId; }
+    public LocalDate getInvoiceDate() { return invoiceDate; }
+    public LocalDate getDueDate() { return dueDate; }
+    public String getCurrencyCode() { return currencyCode; }
+    public BigDecimal getAmount() { return amount; }
+    public BigDecimal getOutstandingAmount() { return outstandingAmount; }
+    public BigDecimal getDeliveredQuantity() { return deliveredQuantity; }
+    public BigDecimal getInvoicedAmount() { return invoicedAmount; }
+    public BigDecimal getCogsAmount() { return cogsAmount; }
+    public Status getStatus() { return status; }
+    public long getCreatedAt() { return createdAt; }
+    public long getUpdatedAt() { return updatedAt; }
+    public long getVersion() { return version; }
 }
