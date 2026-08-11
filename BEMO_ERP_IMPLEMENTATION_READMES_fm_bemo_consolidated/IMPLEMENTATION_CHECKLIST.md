@@ -32,7 +32,7 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [x] Exception catalogue/severity/block flag
 - [x] Payroll input snapshot
 - [x] Payroll calendar/period
-- [ ] Payroll run/status
+- [x] Payroll run/status
 - [ ] Component catalog/evaluators
 - [ ] Approval
 - [ ] GL posting
@@ -72,16 +72,16 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [x] Transfer
 - [x] Cycle count
 - [x] Lot/serial/expiry
-- [ ] Valuation reconciliation
+- [x] Valuation reconciliation
 
 ## Manufacturing/Quality
 - [x] BOM snapshot
-- [ ] Material reservation
+- [x] Material reservation
 - [x] Actual issues/returns
 - [x] Partial production receipts
 - [x] Routing/work centers
 - [x] Quality plan/disposition
-- [ ] WIP posting
+- [x] WIP posting
 - [ ] Variance/close
 
 ## Treasury/Budget/Close
@@ -98,7 +98,7 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [ ] Journal source metadata and immutable system journals
 - [x] Journal dimensions/account validation
 - [x] Manual journal approval/restricted accounts
-- [ ] Realized/unrealized FX process
+- [x] Realized/unrealized FX process
 - [x] Trial Balance / GL detail
 - [x] Balance Sheet / Income Statement / Cash Flow
 - [x] Master-data effective dating
