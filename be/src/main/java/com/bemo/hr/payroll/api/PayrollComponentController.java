@@ -1,0 +1,41 @@
+package com.bemo.hr.payroll.api;
+
+import com.bemo.hr.payroll.application.PayrollComponentEvaluatorService;
+import com.bemo.hr.payroll.domain.PayrollComponent;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/payroll/components")
+public class PayrollComponentController {
+
+    private final PayrollComponentEvaluatorService evaluatorService;
+
+    public PayrollComponentController(PayrollComponentEvaluatorService evaluatorService) {
+        this.evaluatorService = evaluatorService;
+    }
+
+    public record CreateComponentPayload(String code, String name, String type, String calculationFormula) {}
+    public record EvaluatePayload(String componentId, BigDecimal baseAmount, BigDecimal percentage) {}
+
+    @PostMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
+    public PayrollComponent createComponent(@RequestBody CreateComponentPayload payload) {
+        return evaluatorService.createComponent(payload.code(), payload.name(), PayrollComponent.Type.valueOf(payload.type()), payload.calculationFormula());
+    }
+
+    @PostMapping("/evaluate")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER', 'VIEWER')")
+    public PayrollComponentEvaluatorService.EvaluationResult evaluate(@RequestBody EvaluatePayload payload) {
+        return evaluatorService.evaluateComponent(payload.componentId(), payload.baseAmount(), payload.percentage());
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER', 'VIEWER')")
+    public List<PayrollComponent> getAllComponents() {
+        return evaluatorService.getAllComponents();
+    }
+}

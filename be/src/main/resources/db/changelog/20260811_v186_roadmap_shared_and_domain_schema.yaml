@@ -629,3 +629,82 @@ databaseChangeLog:
               - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
               - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
               - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: grir_reconciliation_records
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: goods_receipt_line_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: invoice_line_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: received_amount, type: DECIMAL(15, 2), constraints: { nullable: false } }
+              - column: { name: invoiced_amount, type: DECIMAL(15, 2), constraints: { nullable: false } }
+              - column: { name: variance_amount, type: DECIMAL(15, 2), constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: payroll_components
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: type, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: calculation_formula, type: VARCHAR(255) }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: production_variance_closes
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: work_order_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: standard_cost, type: DECIMAL(15, 2), constraints: { nullable: false } }
+              - column: { name: actual_cost, type: DECIMAL(15, 2), constraints: { nullable: false } }
+              - column: { name: variance_cost, type: DECIMAL(15, 2), constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: bank_difference_postings
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: statement_line_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: difference_type, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: amount, type: DECIMAL(15, 2), constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: period_close_execution_records
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: period_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: module_name, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: blocker_reason, type: VARCHAR(255) }
+              - column: { name: closed_at, type: BIGINT }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: accounting_rule_policies
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: policy_code, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: description, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: trigger_event, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: debit_account_pattern, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: credit_account_pattern, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }

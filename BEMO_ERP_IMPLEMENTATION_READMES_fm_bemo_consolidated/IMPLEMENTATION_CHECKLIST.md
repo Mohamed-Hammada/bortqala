@@ -33,7 +33,7 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [x] Payroll input snapshot
 - [x] Payroll calendar/period
 - [x] Payroll run/status
-- [ ] Component catalog/evaluators
+- [x] Component catalog/evaluators
 - [ ] Approval
 - [ ] GL posting
 - [ ] Payment batch
@@ -50,7 +50,7 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [ ] AP posting
 - [ ] Payment proposal
 - [ ] Treasury/bank
-- [ ] AP/GRIR close reconciliation
+- [x] AP/GRIR close reconciliation
 
 ## O2C
 - [x] Sales order lines
@@ -82,15 +82,15 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [x] Routing/work centers
 - [x] Quality plan/disposition
 - [x] WIP posting
-- [ ] Variance/close
+- [x] Variance/close
 
 ## Treasury/Budget/Close
 - [x] Multi-source payment batch
 - [x] Maker/checker
-- [ ] Difference posting
+- [x] Difference posting
 - [ ] Budget versions
 - [x] Budget revisions/transfers
-- [ ] All module close providers
+- [x] All module close providers
 - [ ] Workbenches
 - [ ] Financial/subledger reconciliation reports
 
@@ -103,5 +103,5 @@ Use this as a progress tracker. A checked box means code + tests + migration + U
 - [x] Balance Sheet / Income Statement / Cash Flow
 - [x] Master-data effective dating
 - [x] Supplier/contractor bank-change governance
-- [ ] Typed deterministic rule policies
+- [x] Typed deterministic rule policies
 - [ ] Idempotent scheduled jobs
