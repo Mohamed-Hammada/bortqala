@@ -85,6 +85,13 @@ public class Budget {
         this.active = active;
     }
 
+    public void updatePlannedAmount(BigDecimal plannedAmount) {
+        if (plannedAmount == null || plannedAmount.signum() < 0) {
+            throw new IllegalArgumentException("Planned amount must be non-negative.");
+        }
+        this.plannedAmount = plannedAmount;
+    }
+
     public void activate() { this.active = true; }
 
     public void deactivate() { this.active = false; }

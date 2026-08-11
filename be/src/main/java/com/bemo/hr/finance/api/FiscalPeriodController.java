@@ -79,6 +79,16 @@ public class FiscalPeriodController {
         }
 
         FiscalPeriod.Status newStatus = FiscalPeriod.Status.valueOf(payload.status().toUpperCase());
+        if (newStatus == FiscalPeriod.Status.CLOSED) {
+            com.bemo.hr.finance.application.CloseChecklistSummary summary = closeChecklistService.computePrecheck(id);
+            if (!summary.canClose()) {
+                throw new BusinessRuleException(
+                        "لا يمكن إغلاق الفترة المالية لوجود قيود مسودة أو معلقات غير محلولة",
+                        "FISCAL_PERIOD_PRECHECK_FAILED",
+                        HttpStatus.CONFLICT
+                );
+            }
+        }
         period.updateStatus(newStatus, authentication.getName());
         return toResponse(repository.save(period));
     }

@@ -82,4 +82,25 @@ public class BudgetController {
     public List<BudgetApi.EncumbranceResponse> encumbrances() {
         return budgetService.listEncumbrances();
     }
+
+    public record ReviseBudgetPayload(java.math.BigDecimal newAmount, String reason) {}
+    public record CreateTransferPayload(String transferNumber, String sourceBudgetId, String targetBudgetId, java.math.BigDecimal transferAmount, String reason) {}
+
+    @PostMapping("/budgets/{id}/revisions")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    public com.bemo.hr.budget.BudgetRevision reviseBudget(@PathVariable String id, @RequestBody ReviseBudgetPayload payload, Authentication auth) {
+        return budgetService.reviseBudget(id, payload.newAmount(), payload.reason(), auth.getName());
+    }
+
+    @PostMapping("/transfers")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    public com.bemo.hr.budget.BudgetTransfer createTransfer(@RequestBody CreateTransferPayload payload) {
+        return budgetService.createTransfer(payload.transferNumber(), payload.sourceBudgetId(), payload.targetBudgetId(), payload.transferAmount(), payload.reason());
+    }
+
+    @PostMapping("/transfers/{id}/approve")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    public com.bemo.hr.budget.BudgetTransfer approveTransfer(@PathVariable String id) {
+        return budgetService.approveTransfer(id);
+    }
 }

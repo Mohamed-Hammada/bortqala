@@ -1,6 +1,8 @@
 package com.bemo.hr.finance.domain.posting;
 
 import com.bemo.hr.finance.domain.JournalEntry;
+import com.bemo.hr.finance.domain.JournalEntryLine;
+import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.springframework.http.HttpStatus;
@@ -9,18 +11,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 @Service
 public class SubledgerPostingService {
 
     private final PostingProfileRepository postingProfileRepository;
     private final JournalEntryRepository journalEntryRepository;
+    private final JournalEntryLineRepository journalEntryLineRepository;
 
     public SubledgerPostingService(PostingProfileRepository postingProfileRepository,
-                                  JournalEntryRepository journalEntryRepository) {
+                                  JournalEntryRepository journalEntryRepository,
+                                  JournalEntryLineRepository journalEntryLineRepository) {
         this.postingProfileRepository = postingProfileRepository;
         this.journalEntryRepository = journalEntryRepository;
+        this.journalEntryLineRepository = journalEntryLineRepository;
     }
 
     @Transactional
@@ -41,8 +45,8 @@ public class SubledgerPostingService {
                     "SUBLEDGER_UNBALANCED_POSTING", HttpStatus.CONFLICT);
         }
 
-        List<PostingProfile> profiles = postingProfileRepository.findByBusinessEventAndActiveTrue(businessEvent);
-        PostingProfile profile = profiles.isEmpty() ? null : profiles.get(0);
+        String debitAccountId = "SYSTEM_DEBIT_ACCOUNT";
+        String creditAccountId = "SYSTEM_CREDIT_ACCOUNT";
 
         String entryNumber = "POST-" + System.currentTimeMillis();
         JournalEntry journalEntry = new JournalEntry(
@@ -55,6 +59,14 @@ public class SubledgerPostingService {
         journalEntry.setOperationId(operationId);
         journalEntry.post("SYSTEM");
 
-        return journalEntryRepository.save(journalEntry);
+        JournalEntry savedEntry = journalEntryRepository.save(journalEntry);
+
+        JournalEntryLine debitLine = new JournalEntryLine(savedEntry.getId(), debitAccountId, null, debitAmount, BigDecimal.ZERO, description);
+        JournalEntryLine creditLine = new JournalEntryLine(savedEntry.getId(), creditAccountId, null, BigDecimal.ZERO, creditAmount, description);
+
+        journalEntryLineRepository.save(debitLine);
+        journalEntryLineRepository.save(creditLine);
+
+        return savedEntry;
     }
 }

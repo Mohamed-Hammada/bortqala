@@ -24,10 +24,14 @@ public class SalesController {
 
     private final SalesOrderRepository salesOrderRepository;
     private final SalesReceivablesService receivablesService;
+    private final com.bemo.hr.trade.sales.application.SalesPricingSnapshotService pricingSnapshotService;
 
-    public SalesController(SalesOrderRepository salesOrderRepository, SalesReceivablesService receivablesService) {
+    public SalesController(SalesOrderRepository salesOrderRepository,
+                           SalesReceivablesService receivablesService,
+                           com.bemo.hr.trade.sales.application.SalesPricingSnapshotService pricingSnapshotService) {
         this.salesOrderRepository = salesOrderRepository;
         this.receivablesService = receivablesService;
+        this.pricingSnapshotService = pricingSnapshotService;
     }
 
     @GetMapping("/orders")
@@ -53,6 +57,7 @@ public class SalesController {
         if (so.getStatus() == SalesOrder.Status.CONFIRMED) return toResponse(so);
         if (so.getStatus() != SalesOrder.Status.DRAFT) throw new BusinessRuleException("SALE_ORDER_STATE_INVALID", "SALE_ORDER_STATE_INVALID", HttpStatus.CONFLICT);
         receivablesService.assertCreditAvailable(so.getCustomerId(), so.getTotalAmount());
+        pricingSnapshotService.freezePricingSnapshot(so.getId(), "DEFAULT_ITEM", so.getTotalAmount(), java.math.BigDecimal.ZERO);
         so.updateStatus(SalesOrder.Status.CONFIRMED);
         return toResponse(salesOrderRepository.save(so));
     }

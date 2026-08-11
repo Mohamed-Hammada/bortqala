@@ -52,6 +52,7 @@ class ManufacturingServiceTests {
     @Mock private QualityInspectionRepository qualityInspectionRepository;
     @Mock private OperationsService operationsService;
     @Mock private AuditService auditService;
+    @Mock private BomSnapshotService bomSnapshotService;
 
     @InjectMocks
     private ManufacturingService service;

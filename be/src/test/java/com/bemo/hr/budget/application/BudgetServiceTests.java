@@ -46,7 +46,9 @@ class BudgetServiceTests {
         encumbranceRepository = mock(EncumbranceRepository.class);
         departmentRepository = mock(DepartmentRepository.class);
         budgetService = new BudgetService(budgetRepository, encumbranceRepository, departmentRepository,
-                mock(AuditService.class), mock(TranslationService.class));
+                mock(AuditService.class), mock(TranslationService.class),
+                mock(com.bemo.hr.budget.BudgetRevisionRepository.class),
+                mock(com.bemo.hr.budget.BudgetTransferRepository.class));
         when(departmentRepository.findById(DEPARTMENT))
                 .thenReturn(Optional.of(new Department("company-1", "D1", "Production", null, true)));
     }

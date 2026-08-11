@@ -37,19 +37,22 @@ public class ManufacturingService {
     private final QualityInspectionRepository qualityInspectionRepository;
     private final OperationsService operationsService;
     private final AuditService auditService;
+    private final BomSnapshotService bomSnapshotService;
 
     public ManufacturingService(BomHeaderRepository bomHeaderRepository,
                                 BomLineRepository bomLineRepository,
                                 ProductionOrderRepository productionOrderRepository,
                                 QualityInspectionRepository qualityInspectionRepository,
                                 OperationsService operationsService,
-                                AuditService auditService) {
+                                AuditService auditService,
+                                BomSnapshotService bomSnapshotService) {
         this.bomHeaderRepository = bomHeaderRepository;
         this.bomLineRepository = bomLineRepository;
         this.productionOrderRepository = productionOrderRepository;
         this.qualityInspectionRepository = qualityInspectionRepository;
         this.operationsService = operationsService;
         this.auditService = auditService;
+        this.bomSnapshotService = bomSnapshotService;
     }
 
     // ─── BOM Management ─────────────────────────────────────────────
@@ -155,10 +158,13 @@ public class ManufacturingService {
         String actor = getCurrentUser();
         Instant occurredAt = Instant.now();
 
-        // Post raw material issue movements
+        // Post raw material issue movements & freeze BOM snapshot
         for (ManufacturingApi.MaterialRequirementView req : readiness.requirements()) {
             operationsService.recordProductionIssue(req.componentItemId(), req.requiredQuantity(),
                     order.getOrderNumber(), "Material issue for work order " + order.getOrderNumber(), occurredAt, actor);
+            int version = 1;
+            try { version = Integer.parseInt(bom.getRevision().replaceAll("[^0-9]", "")); } catch (Exception ignored) {}
+            bomSnapshotService.captureBomSnapshot(order.getId(), bom.getId(), version, req.componentItemId(), req.requiredQuantity());
         }
 
         order.start();

@@ -1,6 +1,8 @@
 package com.bemo.hr.finance.domain.posting;
 
 import com.bemo.hr.finance.domain.JournalEntry;
+import com.bemo.hr.finance.domain.JournalEntryLine;
+import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,7 +10,6 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -21,13 +22,15 @@ class SubledgerPostingServiceTests {
 
     private PostingProfileRepository postingProfileRepository;
     private JournalEntryRepository journalEntryRepository;
+    private JournalEntryLineRepository journalEntryLineRepository;
     private SubledgerPostingService subledgerPostingService;
 
     @BeforeEach
     void setUp() {
         postingProfileRepository = mock(PostingProfileRepository.class);
         journalEntryRepository = mock(JournalEntryRepository.class);
-        subledgerPostingService = new SubledgerPostingService(postingProfileRepository, journalEntryRepository);
+        journalEntryLineRepository = mock(JournalEntryLineRepository.class);
+        subledgerPostingService = new SubledgerPostingService(postingProfileRepository, journalEntryRepository, journalEntryLineRepository);
     }
 
     @Test
@@ -56,6 +59,7 @@ class SubledgerPostingServiceTests {
         assertThat(entry.getStatus()).isEqualTo(JournalEntry.Status.POSTED);
         assertThat(entry.getOperationId()).isEqualTo(opId);
         assertThat(entry.getReference()).isEqualTo("WORKFORCE:SETTLEMENT:SETTLE-100");
+        verify(journalEntryLineRepository, times(2)).save(any(JournalEntryLine.class));
     }
 
     @Test

@@ -49,6 +49,7 @@ public class PayrollService {
     private final PayrollExcelExporter payrollExcelExporter;
     private final com.bemo.hr.audit.application.AuditService auditService;
     private final com.bemo.hr.reporting.application.AttendanceExceptionService attendanceExceptionService;
+    private final PayrollSnapshotService payrollSnapshotService;
 
     public List<PayrollApi.ExplanationResponse> getPaymentExplanation(String paymentId) {
         var explanations = explanationRepository.findBySalaryPaymentIdOrderByCreatedAtAsc(paymentId);

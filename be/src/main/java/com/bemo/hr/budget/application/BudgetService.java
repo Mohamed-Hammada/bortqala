@@ -38,15 +38,21 @@ public class BudgetService {
     private final DepartmentRepository departmentRepository;
     private final AuditService auditService;
     private final TranslationService translationService;
+    private final com.bemo.hr.budget.BudgetRevisionRepository budgetRevisionRepository;
+    private final com.bemo.hr.budget.BudgetTransferRepository budgetTransferRepository;
 
     public BudgetService(BudgetRepository budgetRepository, EncumbranceRepository encumbranceRepository,
                          DepartmentRepository departmentRepository, AuditService auditService,
-                         TranslationService translationService) {
+                         TranslationService translationService,
+                         com.bemo.hr.budget.BudgetRevisionRepository budgetRevisionRepository,
+                         com.bemo.hr.budget.BudgetTransferRepository budgetTransferRepository) {
         this.budgetRepository = budgetRepository;
         this.encumbranceRepository = encumbranceRepository;
         this.departmentRepository = departmentRepository;
         this.auditService = auditService;
         this.translationService = translationService;
+        this.budgetRevisionRepository = budgetRevisionRepository;
+        this.budgetTransferRepository = budgetTransferRepository;
     }
 
     // ─── Budgets ──────────────────────────────────────────────────────
@@ -271,6 +277,45 @@ public class BudgetService {
                 budget.getPeriodMonth(), budget.getDepartmentId(), departmentName(budget.getDepartmentId()),
                 budget.getPlannedAmount(), budget.getCurrencyCode(), budget.isBlocking(), budget.isActive(),
                 budget.getCreatedAt(), budget.getUpdatedAt());
+    }
+
+    @Transactional
+    public com.bemo.hr.budget.BudgetRevision reviseBudget(String budgetId, BigDecimal newAmount, String reason, String approvedBy) {
+        Budget budget = budgetRepository.findById(budgetId)
+                .orElseThrow(() -> new NotFoundException("Budget not found: " + budgetId));
+        List<com.bemo.hr.budget.BudgetRevision> existingRevisions = budgetRevisionRepository.findByBudgetIdOrderByRevisionNumberDesc(budgetId);
+        int nextRevNo = existingRevisions.isEmpty() ? 1 : existingRevisions.get(0).getRevisionNumber() + 1;
+        com.bemo.hr.budget.BudgetRevision revision = new com.bemo.hr.budget.BudgetRevision(
+                budgetId, nextRevNo, budget.getPlannedAmount(), newAmount, reason, approvedBy
+        );
+        budget.updatePlannedAmount(newAmount);
+        budgetRepository.save(budget);
+        return budgetRevisionRepository.save(revision);
+    }
+
+    @Transactional
+    public com.bemo.hr.budget.BudgetTransfer createTransfer(String transferNumber, String sourceBudgetId, String targetBudgetId, BigDecimal transferAmount, String reason) {
+        com.bemo.hr.budget.BudgetTransfer transfer = new com.bemo.hr.budget.BudgetTransfer(transferNumber, sourceBudgetId, targetBudgetId, transferAmount, reason);
+        return budgetTransferRepository.save(transfer);
+    }
+
+    @Transactional
+    public com.bemo.hr.budget.BudgetTransfer approveTransfer(String transferId) {
+        com.bemo.hr.budget.BudgetTransfer transfer = budgetTransferRepository.findById(transferId)
+                .orElseThrow(() -> new NotFoundException("Budget transfer not found: " + transferId));
+        transfer.approve();
+
+        Budget source = budgetRepository.findById(transfer.getSourceBudgetId())
+                .orElseThrow(() -> new NotFoundException("Source budget not found: " + transfer.getSourceBudgetId()));
+        Budget target = budgetRepository.findById(transfer.getTargetBudgetId())
+                .orElseThrow(() -> new NotFoundException("Target budget not found: " + transfer.getTargetBudgetId()));
+
+        source.updatePlannedAmount(source.getPlannedAmount().subtract(transfer.getTransferAmount()));
+        target.updatePlannedAmount(target.getPlannedAmount().add(transfer.getTransferAmount()));
+
+        budgetRepository.save(source);
+        budgetRepository.save(target);
+        return budgetTransferRepository.save(transfer);
     }
 
     private BudgetApi.BudgetStatusResponse toStatusResponse(Budget budget) {
