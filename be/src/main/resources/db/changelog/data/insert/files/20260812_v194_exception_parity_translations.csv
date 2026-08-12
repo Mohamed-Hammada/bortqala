@@ -1,0 +1,91 @@
+id;key;locale;value
+v194-001;APPROVAL_RULE_NOT_FOUND;en-US;Approval rule was not found
+v194-002;APPROVAL_RULE_NOT_FOUND;ar-EG;لم يتم العثور على قاعدة الاعتماد
+v194-003;ASSIGNMENT_NOT_FOUND;en-US;Assignment was not found
+v194-004;ASSIGNMENT_NOT_FOUND;ar-EG;لم يتم العثور على التكليف
+v194-005;ATTENDANCE_LOCK_NOT_FOUND;en-US;Attendance lock was not found
+v194-006;ATTENDANCE_LOCK_NOT_FOUND;ar-EG;لم يتم العثور على قفل الحضور
+v194-007;BANK_CHANGE_REQUEST_NOT_FOUND;en-US;Bank change request was not found
+v194-008;BANK_CHANGE_REQUEST_NOT_FOUND;ar-EG;لم يتم العثور على طلب تغيير البنك
+v194-009;BATCH_NOT_DRAFT;en-US;Batch is not in draft status
+v194-010;BATCH_NOT_DRAFT;ar-EG;الدفعة ليست في حالة مسودة
+v194-011;BATCH_NOT_FOUND;en-US;Batch was not found
+v194-012;BATCH_NOT_FOUND;ar-EG;لم يتم العثور على الدفعة
+v194-013;BUDGET_APPROVAL_NOT_FOUND;en-US;Budget approval was not found
+v194-014;BUDGET_APPROVAL_NOT_FOUND;ar-EG;لم يتم العثور على اعتماد الموازنة
+v194-015;BUDGET_VERSION_NOT_FOUND;en-US;Budget version was not found
+v194-016;BUDGET_VERSION_NOT_FOUND;ar-EG;لم يتم العثور على إصدار الموازنة
+v194-017;CALENDAR_NOT_FOUND;en-US;Calendar was not found
+v194-018;CALENDAR_NOT_FOUND;ar-EG;لم يتم العثور على التقويم
+v194-019;CREDIT_LIMIT_EXCEEDED;en-US;Customer credit limit has been exceeded
+v194-020;CREDIT_LIMIT_EXCEEDED;ar-EG;تم تجاوز الحد الائتماني للعميل
+v194-021;CREDIT_PROFILE_NOT_FOUND;en-US;Credit profile was not found
+v194-022;CREDIT_PROFILE_NOT_FOUND;ar-EG;لم يتم العثور على ملف الائتمان
+v194-023;CUSTOMER_INVOICE_NOT_FOUND;en-US;Customer invoice was not found
+v194-024;CUSTOMER_INVOICE_NOT_FOUND;ar-EG;لم يتم العثور على فاتورة العميل
+v194-025;CYCLE_COUNT_NOT_FOUND;en-US;Cycle count was not found
+v194-026;CYCLE_COUNT_NOT_FOUND;ar-EG;لم يتم العثور على الجرد الدوري
+v194-027;DISPATCH_NOT_FOUND;en-US;Dispatch was not found
+v194-028;DISPATCH_NOT_FOUND;ar-EG;لم يتم العثور على عملية الإرسال
+v194-029;DISPUTE_NOT_FOUND;en-US;Dispute was not found
+v194-030;DISPUTE_NOT_FOUND;ar-EG;لم يتم العثور على النزاع
+v194-031;FISCAL_PERIOD_PRECHECK_FAILED;en-US;Fiscal period precheck failed
+v194-032;FISCAL_PERIOD_PRECHECK_FAILED;ar-EG;فشل التحقق المسبق من الفترة المالية
+v194-033;GRIR_RECORD_NOT_FOUND;en-US;Goods received invoice record was not found
+v194-034;GRIR_RECORD_NOT_FOUND;ar-EG;لم يتم العثور على سجل الاستلام والفاتورة
+v194-035;INSUFFICIENT_STOCK_RESERVATION;en-US;Reserved stock is insufficient
+v194-036;INSUFFICIENT_STOCK_RESERVATION;ar-EG;المخزون المحجوز غير كاف
+v194-037;JOURNAL_METADATA_NOT_FOUND;en-US;Journal metadata was not found
+v194-038;JOURNAL_METADATA_NOT_FOUND;ar-EG;لم يتم العثور على بيانات القيد
+v194-039;LOT_SERIAL_NOT_FOUND;en-US;Lot or serial record was not found
+v194-040;LOT_SERIAL_NOT_FOUND;ar-EG;لم يتم العثور على التشغيلة أو الرقم المسلسل
+v194-041;MATCH_OVERRIDE_NOT_FOUND;en-US;Matching override was not found
+v194-042;MATCH_OVERRIDE_NOT_FOUND;ar-EG;لم يتم العثور على تجاوز المطابقة
+v194-043;MATERIAL_ISSUE_NOT_FOUND;en-US;Material issue was not found
+v194-044;MATERIAL_ISSUE_NOT_FOUND;ar-EG;لم يتم العثور على صرف المواد
+v194-045;NOTIFICATION_APP_FORBIDDEN;en-US;Notification does not belong to this application
+v194-046;NOTIFICATION_APP_FORBIDDEN;ar-EG;الإشعار لا يتبع هذا التطبيق
+v194-047;PAYMENT_PROPOSAL_NOT_FOUND;en-US;Payment proposal was not found
+v194-048;PAYMENT_PROPOSAL_NOT_FOUND;ar-EG;لم يتم العثور على مقترح الدفع
+v194-049;PAYROLL_BATCH_NOT_FOUND;en-US;Payroll batch was not found
+v194-050;PAYROLL_BATCH_NOT_FOUND;ar-EG;لم يتم العثور على دفعة الرواتب
+v194-051;PAYROLL_COMPONENT_NOT_FOUND;en-US;Payroll component was not found
+v194-052;PAYROLL_COMPONENT_NOT_FOUND;ar-EG;لم يتم العثور على مكون الراتب
+v194-053;PAYROLL_GL_POSTING_NOT_FOUND;en-US;Payroll general-ledger posting was not found
+v194-054;PAYROLL_GL_POSTING_NOT_FOUND;ar-EG;لم يتم العثور على ترحيل الرواتب للأستاذ العام
+v194-055;PAYROLL_RETRO_NOT_FOUND;en-US;Retroactive payroll adjustment was not found
+v194-056;PAYROLL_RETRO_NOT_FOUND;ar-EG;لم يتم العثور على تسوية الرواتب بأثر رجعي
+v194-057;PAYROLL_RUN_NOT_FOUND;en-US;Payroll run was not found
+v194-058;PAYROLL_RUN_NOT_FOUND;ar-EG;لم يتم العثور على تشغيل الرواتب
+v194-059;PAY_PERIOD_NOT_FOUND;en-US;Pay period was not found
+v194-060;PAY_PERIOD_NOT_FOUND;ar-EG;لم يتم العثور على فترة الأجر
+v194-061;PERIOD_CLOSE_BLOCKED;en-US;Period close is blocked by unresolved controls
+v194-062;PERIOD_CLOSE_BLOCKED;ar-EG;إغلاق الفترة محظور بسبب ضوابط غير محلولة
+v194-063;POLICY_NOT_FOUND;en-US;Policy was not found
+v194-064;POLICY_NOT_FOUND;ar-EG;لم يتم العثور على السياسة
+v194-065;QUOTE_NOT_FOUND;en-US;Quotation was not found
+v194-066;QUOTE_NOT_FOUND;ar-EG;لم يتم العثور على عرض السعر
+v194-067;RECEIPT_BANK_MATCH_NOT_FOUND;en-US;Receipt bank match was not found
+v194-068;RECEIPT_BANK_MATCH_NOT_FOUND;ar-EG;لم يتم العثور على مطابقة التحصيل البنكية
+v194-069;REQUISITION_NOT_DRAFT;en-US;Requisition is not in draft status
+v194-070;REQUISITION_NOT_DRAFT;ar-EG;طلب الشراء ليس في حالة مسودة
+v194-071;REQUISITION_NOT_FOUND;en-US;Requisition was not found
+v194-072;REQUISITION_NOT_FOUND;ar-EG;لم يتم العثور على طلب الشراء
+v194-073;REQUISITION_NO_LINES;en-US;Requisition must contain at least one line
+v194-074;REQUISITION_NO_LINES;ar-EG;يجب أن يحتوي طلب الشراء على بند واحد على الأقل
+v194-075;RESERVATION_NOT_FOUND;en-US;Inventory reservation was not found
+v194-076;RESERVATION_NOT_FOUND;ar-EG;لم يتم العثور على حجز المخزون
+v194-077;RFQ_NOT_FOUND;en-US;Request for quotation was not found
+v194-078;RFQ_NOT_FOUND;ar-EG;لم يتم العثور على طلب عرض السعر
+v194-079;RFQ_NOT_ISSUED;en-US;Request for quotation has not been issued
+v194-080;RFQ_NOT_ISSUED;ar-EG;لم يتم إصدار طلب عرض السعر
+v194-081;SETTLEMENT_SNAPSHOT_NOT_FOUND;en-US;Settlement snapshot was not found
+v194-082;SETTLEMENT_SNAPSHOT_NOT_FOUND;ar-EG;لم يتم العثور على لقطة التسوية
+v194-083;SUBLEDGER_UNBALANCED_POSTING;en-US;Subledger posting is not balanced
+v194-084;SUBLEDGER_UNBALANCED_POSTING;ar-EG;ترحيل الأستاذ المساعد غير متوازن
+v194-085;TRANSFER_NOT_FOUND;en-US;Inventory transfer was not found
+v194-086;TRANSFER_NOT_FOUND;ar-EG;لم يتم العثور على تحويل المخزون
+v194-087;VARIANCE_CLOSE_NOT_FOUND;en-US;Variance close record was not found
+v194-088;VARIANCE_CLOSE_NOT_FOUND;ar-EG;لم يتم العثور على سجل إغلاق الفروقات
+v194-089;WORKFORCE_BUDGET_NOT_FOUND;en-US;Workforce budget was not found
+v194-090;WORKFORCE_BUDGET_NOT_FOUND;ar-EG;لم يتم العثور على موازنة القوى العاملة

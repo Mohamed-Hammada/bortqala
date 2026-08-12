@@ -82,6 +82,7 @@ Inside a feature, add only the layers the slice needs: `api`, `application`, `do
 - Calculation: effective schedule minutes, configurable workdays/grace/one-punch policy, manual versus biometric modes, first/last punch, worked/late/early/overtime, persisted decisions, confirmed holidays, and frozen approval snapshots.
 - DEMO bootstrap: reference categories, seasonal rules, employees, attendance edge cases, business parties, inventory movements, partner balances, and an eligible advance are created idempotently; existing codes are never overwritten.
 
-- Next safe extensions: pagination for large installations, audited device-identity mapping UI, bulk exception decisions, configurable rounding/overtime policies, refresh-token/session revocation, and vendor device adapters through the existing file-reader boundary.
+- Inventory control now includes FIFO/weighted-average valuation and GL posting, per-item reorder thresholds, a derived replenishment queue, and idempotent cycle counts that preserve system/count evidence and post valued variance movements.
+- Next safe extensions must be selected from verified source gaps and failing acceptance tests; roadmap/README status labels are historical hints only and are not implementation evidence.
 
 Do not add payment execution or a vendor-specific device SDK until the user selects those integrations. Do not invent packing/carton or payroll formulas from partially legible notes; signed ledgers preserve the known facts while later policies remain configurable. Design adapters so integrations do not change calculation rules.

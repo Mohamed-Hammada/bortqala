@@ -87,7 +87,7 @@ export class NotificationsSendPage {
         messageAr: this.messageAr().trim(), messageEn: this.messageEn().trim(), notificationType: this.notificationType().trim().toUpperCase() || 'GENERAL',
         priority: this.priority(), actionLink: this.actionLink().trim() || null,
       }));
-      this.result.set(result); this.review.set(false); this.toast.success(this.i18n.t('notificationsSend.sent', undefined, 'تم إرسال الإشعارات'));
+      this.result.set(result); this.review.set(false); this.toast.success(this.i18n.t('notificationsSend.sent'));
     } catch (e) { this.toast.error(apiErrorMessage(e, this.i18n)); } finally { this.sending.set(false); }
   }
 }

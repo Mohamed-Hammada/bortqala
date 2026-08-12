@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -68,18 +69,51 @@ public class InventoryMovementFullService {
 
     @Transactional
     public CycleCountLine addCycleCountLine(String countId, String itemId, BigDecimal systemQuantity, BigDecimal countedQuantity) {
-        CycleCountLine line = new CycleCountLine(countId, itemId, systemQuantity, countedQuantity);
+        CycleCountLine line = new CycleCountLine(countId, itemId, operationsService.stockBalance(itemId), countedQuantity);
         return cycleCountLineRepository.save(line);
     }
 
     @Transactional
-    public CycleCountHeader adjustCycleCount(String countId) {
+    public CycleCountHeader adjustCycleCount(String countId, String actor) {
         CycleCountHeader count = cycleCountHeaderRepository.findById(countId)
                 .orElseThrow(() -> new BusinessRuleException("Cycle count not found", "CYCLE_COUNT_NOT_FOUND", HttpStatus.NOT_FOUND));
+        if (count.getStatus() == CycleCountHeader.Status.ADJUSTED) return count;
         count.submit();
+        for (CycleCountLine line : cycleCountLineRepository.findByCountId(countId)) {
+            if (line.getVarianceQuantity().signum() != 0) {
+                operationsService.createStockAdjustment(new com.bemo.hr.operations.OperationsApi.AdjustmentRequest(
+                        line.getItemId(), line.getVarianceQuantity(), count.getCountNumber(),
+                        "Cycle count " + count.getCountNumber(), true,
+                        count.getCountDate().atStartOfDay().toInstant(ZoneOffset.UTC)), actor);
+            }
+        }
         count.adjust();
         return cycleCountHeaderRepository.save(count);
     }
+
+    @Transactional
+    public CycleCountHeader reconcile(String operationId, String warehouseId, String itemId,
+                                      BigDecimal countedQuantity, LocalDate countDate, String actor) {
+        var replay = cycleCountHeaderRepository.findByCountNumber(operationId);
+        if (replay.isPresent()) return replay.get();
+        CycleCountHeader count = createCycleCount(operationId, warehouseId, countDate);
+        addCycleCountLine(count.getId(), itemId, null, countedQuantity);
+        return adjustCycleCount(count.getId(), actor);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CycleCountSummary> cycleCounts() {
+        return cycleCountHeaderRepository.findAllByOrderByCountDateDescCreatedAtDesc().stream()
+                .flatMap(header -> cycleCountLineRepository.findByCountId(header.getId()).stream()
+                        .map(line -> new CycleCountSummary(header.getId(), header.getCountNumber(), header.getWarehouseId(),
+                                header.getCountDate(), header.getStatus().name(), line.getItemId(),
+                                line.getSystemQuantity(), line.getCountedQuantity(), line.getVarianceQuantity())))
+                .toList();
+    }
+
+    public record CycleCountSummary(String id, String countNumber, String warehouseId, LocalDate countDate,
+                                    String status, String itemId, BigDecimal systemQuantity,
+                                    BigDecimal countedQuantity, BigDecimal variance) { }
 
     private StockTransferHeader getTransfer(String id) {
         return transferHeaderRepository.findById(id)

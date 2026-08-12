@@ -488,8 +488,10 @@ export class UsersPage {
     if (!code) return;
 
     const current = this.form.controls.roles.value;
-    const extras = current.slice(1).filter((role) => role !== code);
-    const next: RoleCode[] = [code, ...extras];
+    // Role order is presentation-only: the backend persists a set. Keep every
+    // selected privilege when promoting a role so an edit cannot silently drop
+    // whichever role happened to be returned first.
+    const next: RoleCode[] = [code, ...current.filter((role) => role !== code)];
     this.form.controls.roles.setValue(next);
 
     if (!this.customMenuAccess()) {
@@ -500,7 +502,9 @@ export class UsersPage {
   toggleRole(code: RoleCode, event: Event) {
     const checked = (event.target as HTMLInputElement).checked;
     const current = this.form.controls.roles.value;
-    const next = checked ? [...current, code] : current.filter((item) => item !== code);
+    const next = checked
+      ? [...new Set([...current, code])]
+      : current.filter((item) => item !== code);
     this.form.controls.roles.setValue(next);
     if (!this.customMenuAccess()) {
       this.syncMenusToRoles(next);
@@ -677,8 +681,8 @@ export class UsersPage {
     this.validationError.set(null);
     try {
       const result = await this.access.validate(
-        this.form.controls.roles.value,
-        this.form.controls.allowedMenus.value,
+        [...new Set(this.form.controls.roles.value)],
+        [...new Set(this.form.controls.allowedMenus.value)],
         this.editingId(),
         this.ackReason().trim() || undefined,
       );
@@ -744,6 +748,8 @@ export class UsersPage {
     const payload: UserPayload = {
       ...raw,
       password: raw.password || null,
+      roles: [...new Set(raw.roles)],
+      allowedMenus: [...new Set(raw.allowedMenus)],
       accessChangeReason: this.ackReason().trim() || undefined,
     };
     if (await this.store.save(this.editingId(), payload)) {

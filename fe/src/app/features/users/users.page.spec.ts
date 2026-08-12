@@ -258,6 +258,51 @@ describe('UsersPage', () => {
     expect(page.form.controls.allowedMenus.value).not.toContain('workforce-workers');
   });
 
+  it('keeps every selected privilege when promoting an additional role', () => {
+    page.form.controls.roles.setValue(['VIEWER', 'WORKFORCE_MANAGER', 'HR_REVIEWER']);
+
+    page.setPrimaryRole(
+      { target: { value: 'WORKFORCE_MANAGER' } } as unknown as Event,
+    );
+
+    expect(page.form.controls.roles.value).toEqual([
+      'WORKFORCE_MANAGER',
+      'VIEWER',
+      'HR_REVIEWER',
+    ]);
+  });
+
+  it('does not duplicate a role when a checked event is replayed', () => {
+    page.form.controls.roles.setValue(['VIEWER', 'WORKFORCE_MANAGER']);
+
+    page.toggleRole(
+      'WORKFORCE_MANAGER',
+      { target: { checked: true } } as unknown as Event,
+    );
+
+    expect(page.form.controls.roles.value).toEqual(['VIEWER', 'WORKFORCE_MANAGER']);
+  });
+
+  it('normalizes multiple privilege and menu IDs while preserving the category ID', async () => {
+    page.form.patchValue({
+      username: 'multi-role-user',
+      displayName: 'Multi Role User',
+      password: 'password123',
+      roles: ['VIEWER', 'WORKFORCE_MANAGER', 'VIEWER'],
+      allowedMenus: ['dashboard', 'workforce-workers', 'dashboard'],
+      categoryId: 'category-both',
+    });
+    page.validationResult.set({ valid: true, warnings: [], conflicts: [], errors: [], sensitivePermissions: [] });
+    const save = vi.spyOn(page.store, 'save').mockResolvedValue(true);
+
+    await page.submit();
+
+    const payload = save.mock.calls[0][1] as UserPayload;
+    expect(payload.roles).toEqual(['VIEWER', 'WORKFORCE_MANAGER']);
+    expect(payload.allowedMenus).toEqual(['dashboard', 'workforce-workers']);
+    expect(payload.categoryId).toBe('category-both');
+  });
+
   it('carries the acknowledgment reason into the save payload', async () => {
     page.form.patchValue({
       username: 'worker',

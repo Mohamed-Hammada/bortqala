@@ -17,11 +17,14 @@ public final class OperationsApi {
     public record ItemRequest(@NotBlank @Size(max = 50) String code, @NotBlank @Size(max = 160) String name,
                               @NotBlank @Size(max = 50) String itemType, @NotBlank @Size(max = 30) String unitCode,
                               String categoryId, String uomId,
+                              @DecimalMin("0") BigDecimal reorderPoint, @DecimalMin("0") BigDecimal reorderQuantity,
                               boolean active, Long version) { }
     public record ItemView(String id, String code, String name, String itemType, String unitCode,
                            String categoryId, String categoryName, String uomId, String uomName,
-                           boolean active,
+                           boolean active, BigDecimal reorderPoint, BigDecimal reorderQuantity,
                            BigDecimal currentBalance, long version, Instant createdAt, Instant updatedAt) { }
+    public record ReorderAlertView(String itemId, String itemCode, String itemName, BigDecimal currentBalance,
+                                   BigDecimal reorderPoint, BigDecimal reorderQuantity, BigDecimal shortage) { }
     public record TransactionRequest(String itemId, String partyId, @NotBlank @Size(max = 50) String operationType,
                                      @NotNull @Digits(integer = 15, fraction = 4) BigDecimal quantityDelta,
                                      @NotNull @Digits(integer = 17, fraction = 2) BigDecimal amountDelta,

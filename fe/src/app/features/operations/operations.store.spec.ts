@@ -87,6 +87,9 @@ describe('OperationsStore', () => {
       ...store.valuation()!, policy: { ...store.valuation()!.policy, valuationMethod: 'FIFO', version: 1 },
     });
     httpMock.expectOne('/api/v1/finance/accounts').flush([]);
+    httpMock.expectOne('/api/v1/operations/reorder-alerts').flush([]);
+    httpMock.expectOne('/api/v1/operations/cycle-counts').flush([]);
+    httpMock.expectOne('/api/v1/inventory/warehouses').flush([]);
 
     expect(await promise).toBe(true);
     expect(store.valuation()?.policy.valuationMethod).toBe('FIFO');

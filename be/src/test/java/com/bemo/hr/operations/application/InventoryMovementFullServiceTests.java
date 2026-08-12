@@ -50,11 +50,14 @@ class InventoryMovementFullServiceTests {
         when(cycleCountHeaderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(cycleCountHeaderRepository.findById("cc-1")).thenReturn(Optional.of(count));
         when(cycleCountLineRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(operationsService.stockBalance("item-10")).thenReturn(new BigDecimal("10.00"));
 
-        CycleCountLine line = movementService.addCycleCountLine("cc-1", "item-10", new BigDecimal("10.00"), new BigDecimal("12.00"));
+        CycleCountLine line = movementService.addCycleCountLine("cc-1", "item-10", new BigDecimal("999.00"), new BigDecimal("12.00"));
         assertThat(line.getVarianceQuantity()).isEqualByComparingTo(new BigDecimal("2.00"));
 
-        movementService.adjustCycleCount("cc-1");
+        when(cycleCountLineRepository.findByCountId("cc-1")).thenReturn(java.util.List.of(line));
+        movementService.adjustCycleCount("cc-1", "inventory-manager");
         assertThat(count.getStatus()).isEqualTo(CycleCountHeader.Status.ADJUSTED);
+        verify(operationsService).createStockAdjustment(any(), eq("inventory-manager"));
     }
 }

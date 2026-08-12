@@ -26,9 +26,20 @@ export interface InventoryItem {
   uomId: string | null;
   uomName: string | null;
   active: boolean;
+  reorderPoint: number;
+  reorderQuantity: number;
   currentBalance: number;
   version: number;
 }
+export interface ReorderAlert {
+  itemId: string; itemCode: string; itemName: string; currentBalance: number;
+  reorderPoint: number; reorderQuantity: number; shortage: number;
+}
+export interface CycleCount {
+  id: string; countNumber: string; warehouseId: string; countDate: number; status: string; itemId: string;
+  systemQuantity: number; countedQuantity: number; variance: number;
+}
+export interface WarehouseOption { id: string; code: string; name: string; }
 export interface StockMovement {
   id: string;
   itemId: string;

@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260812-v192-inventory-reorder-cycle-count
+      author: codex
+      changes:
+        - addColumn:
+            tableName: inventory_items
+            columns:
+              - column: { name: reorder_point, type: DECIMAL(15,4), defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: reorder_quantity, type: DECIMAL(15,4), defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: cycle_count_headers, columnNames: app_id,count_number, constraintName: uq_cycle_count_app_number }
+      rollback:
+        - dropUniqueConstraint: { tableName: cycle_count_headers, constraintName: uq_cycle_count_app_number }
+        - dropColumn: { tableName: inventory_items, columnName: reorder_quantity }
+        - dropColumn: { tableName: inventory_items, columnName: reorder_point }

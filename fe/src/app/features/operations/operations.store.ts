@@ -5,6 +5,7 @@ import { apiErrorMessage } from '../../core/api-error';
 import {
   EmployeeOption, ItemCategory, NegativeBalance, OperationsSnapshot,
   AccountOption, PartyOption, StockMovement, UnitOfMeasure, ValuationPolicy, ValuationReport,
+  CycleCount, ReorderAlert, WarehouseOption,
 } from './operations.models';
 import { downloadBlob, timestampedExcelFileName } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
@@ -25,13 +26,16 @@ export class OperationsStore {
   readonly negativeBalances = signal<NegativeBalance[]>([]);
   readonly accounts = signal<AccountOption[]>([]);
   readonly valuation = signal<ValuationReport | null>(null);
+  readonly reorderAlerts = signal<ReorderAlert[]>([]);
+  readonly cycleCounts = signal<CycleCount[]>([]);
+  readonly warehouses = signal<WarehouseOption[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
   async load(): Promise<void> {
     this.loading.set(true); this.error.set(null);
     try {
-      const [snapshot, parties, employees, categories, uoms, negativeBalances, valuation, accounts] = await Promise.all([
+      const [snapshot, parties, employees, categories, uoms, negativeBalances, valuation, accounts, reorderAlerts, cycleCounts, warehouses] = await Promise.all([
         firstValueFrom(this.http.get<OperationsSnapshot>('/api/v1/operations')),
         firstValueFrom(this.http.get<PartyOption[]>('/api/v1/parties')),
         firstValueFrom(this.http.get<EmployeeOption[]>('/api/v1/employees')),
@@ -40,11 +44,16 @@ export class OperationsStore {
         firstValueFrom(this.http.get<NegativeBalance[]>('/api/v1/operations/negative-balances')),
         firstValueFrom(this.http.get<ValuationReport>('/api/v1/operations/valuation/report')),
         firstValueFrom(this.http.get<AccountOption[]>('/api/v1/finance/accounts')),
+        firstValueFrom(this.http.get<ReorderAlert[]>('/api/v1/operations/reorder-alerts')),
+        firstValueFrom(this.http.get<CycleCount[]>('/api/v1/operations/cycle-counts')),
+        firstValueFrom(this.http.get<WarehouseOption[]>('/api/v1/inventory/warehouses')),
       ]);
       this.snapshot.set(this.normalizeSnapshot(snapshot));
       this.parties.set(parties); this.employees.set(employees); this.categories.set(categories);
       this.uoms.set(uoms); this.negativeBalances.set(negativeBalances);
       this.valuation.set(valuation); this.accounts.set(accounts.filter((account) => account.active && !account.isHeader));
+      this.reorderAlerts.set(reorderAlerts); this.cycleCounts.set(cycleCounts);
+      this.warehouses.set(warehouses);
     } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
     finally { this.loading.set(false); }
   }
@@ -67,6 +76,7 @@ export class OperationsStore {
     finally { this.loading.set(false); }
   }
   async revalue(payload: object): Promise<boolean> { return this.post('/api/v1/operations/valuation/revaluations', payload, false); }
+  async recordCycleCount(payload: object): Promise<boolean> { return this.post('/api/v1/operations/cycle-counts/reconcile', payload, false); }
 
   async export(): Promise<void> {
     try {

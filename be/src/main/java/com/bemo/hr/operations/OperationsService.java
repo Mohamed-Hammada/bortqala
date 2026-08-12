@@ -49,6 +49,19 @@ public class OperationsService {
         return inventoryItemRepository.count();
     }
 
+    public List<OperationsApi.ReorderAlertView> reorderAlerts() {
+        return inventoryItemRepository.findAllByOrderByNameAsc().stream()
+                .filter(InventoryItem::isActive)
+                .map(item -> {
+                    BigDecimal balance = stockMovementRepository.balance(item.getId());
+                    return new OperationsApi.ReorderAlertView(item.getId(), item.getCode(), item.getName(), balance,
+                            item.getReorderPoint(), item.getReorderQuantity(), item.getReorderPoint().subtract(balance).max(BigDecimal.ZERO));
+                })
+                .filter(alert -> alert.reorderPoint().signum() > 0)
+                .filter(alert -> alert.currentBalance().compareTo(alert.reorderPoint()) <= 0)
+                .toList();
+    }
+
     public OperationsApi.ItemView inventoryItem(String id) {
         return itemView(requireItem(id), stockMovementRepository.balance(id));
     }
@@ -216,6 +229,7 @@ public class OperationsService {
     public OperationsApi.ItemView createItem(OperationsApi.ItemRequest request) {
         if (inventoryItemRepository.existsByCodeIgnoreCase(request.code())) throw new BusinessRuleException("Item code already exists.", "OPS_ITEM_CODE_EXISTS", HttpStatus.CONFLICT);
         var item = inventoryItemRepository.save(new InventoryItem(request.code(), request.name(), request.itemType(), request.unitCode()));
+        item.configureReorder(request.reorderPoint(), request.reorderQuantity());
         if (request.categoryId() != null || request.uomId() != null) {
             item.assignMasterData(request.categoryId(), request.uomId());
         }
@@ -228,6 +242,7 @@ public class OperationsService {
         if (request.version() == null || request.version() != item.getVersion()) throw new BusinessRuleException("This item changed. Refresh and retry.", "OPS_ITEM_VERSION_CONFLICT", HttpStatus.CONFLICT);
         if (inventoryItemRepository.existsByCodeIgnoreCaseAndIdNot(request.code(), id)) throw new BusinessRuleException("Item code already exists.", "OPS_ITEM_CODE_EXISTS", HttpStatus.CONFLICT);
         item.update(request.code(), request.name(), request.itemType(), request.unitCode(), request.active());
+        item.configureReorder(request.reorderPoint(), request.reorderQuantity());
         if (request.categoryId() != null || request.uomId() != null) {
             item.assignMasterData(request.categoryId(), request.uomId());
         }
@@ -409,7 +424,8 @@ public class OperationsService {
         return new OperationsApi.ItemView(item.getId(), item.getCode(), item.getName(), item.getItemType(), item.getUnitCode(),
                 item.getCategoryId(), cat == null ? null : cat.getName(),
                 item.getUomId(), uom == null ? null : uom.getName(),
-                item.isActive(), balance, item.getVersion(), item.getCreatedAt(), item.getUpdatedAt());
+                item.isActive(), item.getReorderPoint(), item.getReorderQuantity(), balance,
+                item.getVersion(), item.getCreatedAt(), item.getUpdatedAt());
     }
     private OperationsApi.ItemCategoryView categoryView(ItemCategory c) {
         return new OperationsApi.ItemCategoryView(c.getId(), c.getName(), c.getDescription(), c.isActive(),

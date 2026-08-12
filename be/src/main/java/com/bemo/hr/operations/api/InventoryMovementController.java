@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/v1/operations")
@@ -24,10 +26,12 @@ public class InventoryMovementController {
     public record CreateTransferPayload(String transferNumber, String sourceWarehouseId, String targetWarehouseId, String transferDate) {}
     public record AddTransferLinePayload(String itemId, BigDecimal quantity) {}
     public record CreateCycleCountPayload(String countNumber, String warehouseId, String countDate) {}
-    public record AddCycleCountLinePayload(String itemId, BigDecimal systemQuantity, BigDecimal countedQuantity) {}
+    public record AddCycleCountLinePayload(String itemId, BigDecimal countedQuantity) {}
+    public record ReconcileCycleCountPayload(String operationId, String warehouseId, String itemId,
+                                             BigDecimal countedQuantity, String countDate) {}
 
     @PostMapping("/transfers")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'OPERATIONS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
     public StockTransferHeader createTransfer(@RequestBody CreateTransferPayload payload) {
         return movementService.createTransfer(payload.transferNumber(), payload.sourceWarehouseId(), payload.targetWarehouseId(), LocalDate.parse(payload.transferDate()));
     }
@@ -51,20 +55,31 @@ public class InventoryMovementController {
     }
 
     @PostMapping("/cycle-counts")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'OPERATIONS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
     public CycleCountHeader createCycleCount(@RequestBody CreateCycleCountPayload payload) {
         return movementService.createCycleCount(payload.countNumber(), payload.warehouseId(), LocalDate.parse(payload.countDate()));
     }
 
     @PostMapping("/cycle-counts/{id}/lines")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'OPERATIONS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
     public CycleCountLine addCycleCountLine(@PathVariable String id, @RequestBody AddCycleCountLinePayload payload) {
-        return movementService.addCycleCountLine(id, payload.itemId(), payload.systemQuantity(), payload.countedQuantity());
+        return movementService.addCycleCountLine(id, payload.itemId(), null, payload.countedQuantity());
     }
 
     @PostMapping("/cycle-counts/{id}/adjust")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'OPERATIONS_MANAGER')")
-    public CycleCountHeader adjustCycleCount(@PathVariable String id) {
-        return movementService.adjustCycleCount(id);
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public CycleCountHeader adjustCycleCount(@PathVariable String id, Authentication authentication) {
+        return movementService.adjustCycleCount(id, authentication.getName());
+    }
+
+    @GetMapping("/cycle-counts")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public List<InventoryMovementFullService.CycleCountSummary> cycleCounts() { return movementService.cycleCounts(); }
+
+    @PostMapping("/cycle-counts/reconcile")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public CycleCountHeader reconcile(@RequestBody ReconcileCycleCountPayload payload, Authentication authentication) {
+        return movementService.reconcile(payload.operationId(), payload.warehouseId(), payload.itemId(),
+                payload.countedQuantity(), LocalDate.parse(payload.countDate()), authentication.getName());
     }
 }

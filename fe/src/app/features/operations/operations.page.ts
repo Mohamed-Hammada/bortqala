@@ -35,7 +35,7 @@ export class OperationsPage {
   readonly store = inject(OperationsStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
-  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | null>(null);
+  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | null>(null);
   readonly itemPagination = new TablePagination();
   readonly movementPagination = new TablePagination();
   readonly balancePagination = new TablePagination();
@@ -62,6 +62,8 @@ export class OperationsPage {
     unitCode: new FormControl('KG', { nonNullable: true, validators: Validators.required }),
     categoryId: new FormControl('', { nonNullable: true }),
     uomId: new FormControl('', { nonNullable: true }),
+    reorderPoint: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    reorderQuantity: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     active: new FormControl(true, { nonNullable: true }),
   });
   readonly transactionForm = new FormGroup({
@@ -145,11 +147,17 @@ export class OperationsPage {
     reason: new FormControl('', { nonNullable: true, validators: Validators.required }),
     occurredAt: new FormControl(this.nowInput(), { nonNullable: true, validators: Validators.required }),
   });
+  readonly cycleCountForm = new FormGroup({
+    warehouseId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    itemId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    countedQuantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    countedAt: new FormControl(this.nowInput(), { nonNullable: true, validators: Validators.required }),
+  });
 
   constructor() {
     void this.store.load();
   }
-  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation'): void {
+  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count'): void {
     if (kind === 'valuation') {
       const policy = this.store.valuation()?.policy;
       if (policy) this.valuationForm.reset({
@@ -183,6 +191,15 @@ export class OperationsPage {
       version: null,
     })) {
       this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.close();
+    }
+  }
+  async saveCycleCount(): Promise<void> {
+    if (this.cycleCountForm.invalid) return this.cycleCountForm.markAllAsTouched();
+    const value = this.cycleCountForm.getRawValue();
+    if (await this.store.recordCycleCount({ ...value, operationId: crypto.randomUUID(), countDate: new Date(value.countedAt).toISOString().slice(0, 10), countedAt: undefined })) {
+      this.notification.success(this.i18n.t('operations.cycleCountSaved'));
+      this.cycleCountForm.reset({ warehouseId: '', itemId: '', countedQuantity: 0, countedAt: this.nowInput() });
       this.close();
     }
   }

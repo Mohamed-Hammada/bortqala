@@ -255,3 +255,13 @@ databaseChangeLog:
       file: db/changelog/schema/create/20260812_push_001_web_push_subscriptions.yaml
   - include:
       file: db/changelog/data/insert/20260812_push_002_web_push_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260812_v192_inventory_reorder_cycle_count.yaml
+  - include:
+      file: db/changelog/data/insert/20260812_v193_inventory_control_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260812_v194_exception_parity_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260812_v195_frontend_translation_gaps.yaml
+  - include:
+      file: db/changelog/data/insert/20260812_v196_notification_send_translations.yaml

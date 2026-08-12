@@ -79,6 +79,16 @@ tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += ['-parameters']
 }
 
+tasks.register('checkTranslationCatalog', Exec) {
+    workingDir projectDir
+    commandLine System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3',
+            'tools/check-translation-catalog.py'
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('checkTranslationCatalog')
+}
+
 def frontendDirectory = file('../fe')
 def frontendOutput = layout.buildDirectory.dir('generated/frontend')
 
