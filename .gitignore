@@ -38,3 +38,4 @@ cloudflared-*
 /old_back_up/
 *.bak
 *.orig
+/framework
