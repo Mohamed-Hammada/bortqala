@@ -1,0 +1,13 @@
+id;key;locale;value
+v200-001;common.downloadTemplate;en-US;Download template
+v200-002;common.downloadTemplate;ar-EG;تنزيل القالب
+v200-003;BIO_ACCESS_TABLES_MISSING;en-US;The Access attendance backup must contain USERINFO and CHECKINOUT tables.
+v200-004;BIO_ACCESS_TABLES_MISSING;ar-EG;يجب أن تحتوي نسخة حضور Access على جدولي USERINFO وCHECKINOUT.
+v200-005;imports.supportedFormats;en-US;CSV · XLS · XLSX · MDB · ACCDB
+v200-006;imports.supportedFormats;ar-EG;CSV · XLS · XLSX · MDB · ACCDB
+v200-007;imports.templateHeaderDeviceUserId;en-US;deviceUserId
+v200-008;imports.templateHeaderDeviceUserId;ar-EG;deviceUserId
+v200-009;imports.templateHeaderPunchedAt;en-US;punchedAt
+v200-010;imports.templateHeaderPunchedAt;ar-EG;punchedAt
+v200-011;imports.templateHeaderEmployeeName;en-US;employeeName
+v200-012;imports.templateHeaderEmployeeName;ar-EG;employeeName

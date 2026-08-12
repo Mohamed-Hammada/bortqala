@@ -1,16 +1,16 @@
 package com.bemo.hr.attendance.infrastructure;
 
-import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class SpreadsheetBiometricFileReaderTests {
     private final ZoneId zone = ZoneId.of("Africa/Cairo");
@@ -94,13 +94,34 @@ class SpreadsheetBiometricFileReaderTests {
     }
 
     @Test
-    void rejectsLegacyOrIncompleteColumnSetsWithTheNewBilingualContract() {
-        String csv = "device_user_id,punched_at\n10,2026-07-24 08:00\n";
+    void readsTheSimpleCsvTemplateContract() {
+        String csv = "device_user_id,punched_at,employee_name\n10,2026-07-24 08:00:00,Ahmed\n";
 
-        assertThatThrownBy(() -> reader.read("attendance.csv",
-                new ByteArrayInputStream(csv.getBytes(java.nio.charset.StandardCharsets.UTF_8))))
-                .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("كود الموظف")
-                .hasMessageContaining("Employee");
+        var parsed = reader.read("attendance.csv",
+                new ByteArrayInputStream(csv.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+
+        assertThat(parsed.importedRows()).isEqualTo(1);
+        assertThat(parsed.errors()).isEmpty();
+        assertThat(parsed.rows().get(0).deviceUserId()).isEqualTo("10");
+        assertThat(parsed.rows().get(0).employeeName()).isEqualTo("Ahmed");
+        assertThat(parsed.rows().get(0).punchedAt())
+                .isEqualTo(LocalDate.of(2026, 7, 24).atTime(8, 0).atZone(zone).toInstant());
+    }
+
+    @Test
+    void readsTheProvidedZktecoAccessBackupWhenAvailable() throws Exception {
+        Path backup = Path.of("C:/Users/wolfn/Downloads/attBackup.mdb");
+        org.junit.jupiter.api.Assumptions.assumeTrue(Files.isRegularFile(backup));
+
+        try (var input = Files.newInputStream(backup)) {
+            var parsed = reader.read(backup.getFileName().toString(), input);
+            assertThat(parsed.totalRows()).isEqualTo(18_719);
+            assertThat(parsed.importedRows()).isEqualTo(18_719);
+            assertThat(parsed.errors()).isEmpty();
+            assertThat(parsed.rows()).allSatisfy(row -> {
+                assertThat(row.deviceUserId()).isNotBlank();
+                assertThat(row.punchedAt()).isNotNull();
+            });
+        }
     }
 }

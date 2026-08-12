@@ -53,14 +53,14 @@ export class ImportsPage {
 
   downloadTemplate(): void {
     const columns = [
-      { key: 'deviceUserId', label: this.i18n.t('imports.sampleColumnCode', {}) },
-      { key: 'punchedAt', label: this.i18n.t('imports.sampleColumnTime', {}) },
-      { key: 'deviceName', label: this.i18n.t('imports.sampleColumnDevice', {}) }
+      { key: 'deviceUserId', label: this.i18n.t('imports.templateHeaderDeviceUserId', {}) },
+      { key: 'punchedAt', label: this.i18n.t('imports.templateHeaderPunchedAt', {}) },
+      { key: 'employeeName', label: this.i18n.t('imports.templateHeaderEmployeeName', {}) }
     ];
     const sampleRows = [
-      { deviceUserId: '101', punchedAt: '2026-07-31 08:30:00', deviceName: this.i18n.t('imports.sampleDeviceGate', {}) },
-      { deviceUserId: '101', punchedAt: '2026-07-31 17:00:00', deviceName: this.i18n.t('imports.sampleDeviceGate', {}) },
-      { deviceUserId: '102', punchedAt: '2026-07-31 08:45:00', deviceName: this.i18n.t('imports.sampleDeviceMain', {}) }
+      { deviceUserId: '101', punchedAt: '2026-07-31 08:30:00', employeeName: '' },
+      { deviceUserId: '101', punchedAt: '2026-07-31 17:00:00', employeeName: '' },
+      { deviceUserId: '102', punchedAt: '2026-07-31 08:45:00', employeeName: '' }
     ];
     exportCsv(sampleRows, columns, this.i18n.t('imports.templateFileName', {}));
     this.notification.success(this.i18n.t('imports.templateDownloadSuccess', {}));

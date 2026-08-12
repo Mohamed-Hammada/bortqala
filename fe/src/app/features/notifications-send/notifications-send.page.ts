@@ -5,6 +5,7 @@ import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
 import { apiErrorMessage } from '../../core/api-error';
 import { BulkSendResult, ExcelPreview, NotificationAdminService, NotificationAppSummary, NotificationUserSummary } from './notification-admin.service';
+import { exportCsv } from '../../core/download';
 
 type TargetMode = 'USERS' | 'EXCEL' | 'APP';
 
@@ -73,6 +74,11 @@ export class NotificationsSendPage {
     this.preview.set(null); if (!file) return; this.loading.set(true);
     try { this.preview.set(await firstValueFrom(this.api.previewExcel(this.selectedAppId(), file))); }
     catch (e) { this.toast.error(apiErrorMessage(e, this.i18n)); } finally { this.loading.set(false); }
+  }
+
+  downloadRecipientTemplate(): void {
+    exportCsv([{ username: 'example.username' }], [{ key: 'username', label: 'username' }], 'notification-recipients-template.csv');
+    this.toast.success(this.i18n.t('imports.templateDownloadSuccess'));
   }
 
   openReview(): void { if (this.canReview()) this.review.set(true); }

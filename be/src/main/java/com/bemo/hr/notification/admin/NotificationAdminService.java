@@ -21,6 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -69,9 +72,11 @@ public class NotificationAdminService {
         if (file == null || file.isEmpty()) throw badRequest("Excel file is required", "NOTIFICATION_EXCEL_REQUIRED");
         if (file.getSize() > MAX_EXCEL_BYTES) throw badRequest("Excel file must be 5 MB or smaller", "NOTIFICATION_EXCEL_TOO_LARGE");
         String name = Optional.ofNullable(file.getOriginalFilename()).orElse("").toLowerCase(Locale.ROOT);
-        if (!(name.endsWith(".xlsx") || name.endsWith(".xls"))) throw badRequest("Only .xlsx and .xls files are supported", "NOTIFICATION_EXCEL_TYPE");
+        if (!(name.endsWith(".xlsx") || name.endsWith(".xls") || name.endsWith(".csv"))) {
+            throw badRequest("Only .xlsx, .xls, and .csv files are supported", "NOTIFICATION_EXCEL_TYPE");
+        }
 
-        List<String> rows = readUsernames(file);
+        List<String> rows = name.endsWith(".csv") ? readCsvUsernames(file) : readWorkbookUsernames(file);
         if (rows.size() > MAX_RECIPIENTS) throw badRequest("Excel recipient limit is 5000", "NOTIFICATION_RECIPIENT_LIMIT");
         Map<String, AppUser> users = userRepository.findAllByAppIdOrderByDisplayNameAsc(target).stream()
                 .collect(Collectors.toMap(u -> normalize(u.getUsername()), u -> u, (a,b) -> a, LinkedHashMap::new));
@@ -148,7 +153,7 @@ public class NotificationAdminService {
         return app.getId();
     }
 
-    private List<String> readUsernames(MultipartFile file) {
+    private List<String> readWorkbookUsernames(MultipartFile file) {
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
             Sheet sheet = workbook.getNumberOfSheets() == 0 ? null : workbook.getSheetAt(0);
             if (sheet == null) throw badRequest("Excel workbook has no sheets", "NOTIFICATION_EXCEL_EMPTY");
@@ -175,6 +180,55 @@ public class NotificationAdminService {
         } catch (Exception e) {
             throw badRequest("Unable to read Excel file", "NOTIFICATION_EXCEL_INVALID");
         }
+    }
+
+    private List<String> readCsvUsernames(MultipartFile file) {
+        try (var reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8))) {
+            String headerLine = reader.readLine();
+            if (headerLine == null) throw badRequest("CSV header is missing", "NOTIFICATION_EXCEL_HEADER");
+            List<String> header = parseCsvLine(headerLine.replace("\uFEFF", ""));
+            int usernameColumn = -1;
+            for (int index = 0; index < header.size(); index++) {
+                String value = normalizeHeader(header.get(index));
+                if (Set.of("username", "user", "login", "اسم المستخدم", "اسم_المستخدم").contains(value)) {
+                    usernameColumn = index;
+                    break;
+                }
+            }
+            if (usernameColumn < 0) throw badRequest("CSV must contain a username column", "NOTIFICATION_EXCEL_HEADER");
+            List<String> usernames = new ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                List<String> values = parseCsvLine(line);
+                if (usernameColumn < values.size() && !values.get(usernameColumn).isBlank()) usernames.add(values.get(usernameColumn).strip());
+                if (usernames.size() > MAX_RECIPIENTS) break;
+            }
+            return usernames;
+        } catch (BusinessRuleException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            throw badRequest("Unable to read CSV file", "NOTIFICATION_EXCEL_INVALID");
+        }
+    }
+
+    private static List<String> parseCsvLine(String line) {
+        List<String> values = new ArrayList<>();
+        StringBuilder value = new StringBuilder();
+        boolean quoted = false;
+        for (int index = 0; index < line.length(); index++) {
+            char current = line.charAt(index);
+            if (current == '"') {
+                if (quoted && index + 1 < line.length() && line.charAt(index + 1) == '"') {
+                    value.append('"');
+                    index++;
+                } else quoted = !quoted;
+            } else if (current == ',' && !quoted) {
+                values.add(value.toString().strip());
+                value.setLength(0);
+            } else value.append(current);
+        }
+        values.add(value.toString().strip());
+        return values;
     }
 
     private static String normalize(String v) { return v == null ? "" : v.strip().toLowerCase(Locale.ROOT); }
