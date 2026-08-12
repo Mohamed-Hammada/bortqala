@@ -2,49 +2,26 @@
 
 **Repository:** `Mohamed-Hammada/bortqala`  
 **Branch:** `fm_bemo_consolidated`  
-**Last Review Date:** 2026-08-12  
+**Developer-fix checkpoint:** `a102a92a9127ab13f862048a2586a933efa50912`  
+**Current reviewed HEAD:** `8595cfa1b600f2bb4ac39fa52d32debcca5cb2ce`  
+**Review date:** 2026-08-12
 
----
+> The legacy checklist is no longer authoritative by itself. Its corrected version is `BEMO_ERP_IMPLEMENTATION_READMES_fm_bemo_consolidated/IMPLEMENTATION_CHECKLIST.md`.
 
-## 1. Status Definitions
-
-Per Section 1 of `BEMO_ERP_TECHNICAL_REMAINING_WORK_AND_DOCS_REORGANIZATION_2026-08-12.md`:
-- **IMPLEMENTED** — complete end-to-end and empirically tested across backend, database, and frontend.
-- **PARTIAL** — backend domain objects exist but complete end-to-end integration/acceptance is incomplete.
-- **MISSING** — implementation was not found in source tree.
-
----
-
-## 2. Executive Domain Summary
-
-| Domain | Status | Evidence / Notes |
+| Domain | Status | Reason |
 |---|---|---|
-| **Hygiene & Docs** | `IMPLEMENTED` | Backup dirs ignored, standard `docs/` hierarchy active, no backup code tracked |
-| **Finance & Period Close** | `PARTIAL` | Journal invariants & subledger reconciliation provider framework active |
-| **Payroll Automation** | `PARTIAL` | Input snapshot, component evaluator & gl posting active |
-| **Procurement & Sourcing** | `IMPLEMENTED` | Requisitions, RFQs, Quotes, Sourcing Award line conversion to POs active |
-| **Sales & O2C** | `PARTIAL` | Delivery state machine, reservation & return credit note active |
-| **Warehouse & Inventory** | `PARTIAL` | Valuation & stock movements active; dedicated warehouse/bin model in progress |
-| **Manufacturing & Quality** | `PARTIAL` | Execution service, routing & material issues active |
-| **Budget & Treasury** | `PARTIAL` | Encumbrance engine, budget versions & bank matching active |
-| **Web Push & Bulk Send** | `IMPLEMENTED` | Web Push VAPID delivery, subscription cleanup & bulk workbench active |
-| **System About & Support** | `IMPLEMENTED` | `/api/v1/system/about`, `AboutPage`, support tickets & feedback active |
+| Shared ERP infrastructure | `VERIFY/PARTIAL` | Many conventions/frameworks exist, but blanket DoD verification was not proven |
+| Workforce | `SOURCE PRESENT / VERIFY` | Rich implementation exists; old/new execution-path consolidation still needs proof |
+| Attendance / Payroll | `PARTIAL` | Advanced payroll foundations exist; primary run service still accepts caller-supplied totals |
+| Procurement | `PARTIAL` | Real quote lines map to PO lines, but synthetic `ITEM-1` fallback remains |
+| Sales / O2C | `PARTIAL` | Delivery creation immediately ships and delivers; full reservation/partial fulfillment path not proven |
+| Inventory | `PARTIAL` | Dedicated warehouse/reservation foundation exists; availability/concurrency rules incomplete in inspected service |
+| Manufacturing / Quality | `PARTIAL` | Advanced execution objects exist; production start still immediately issues full planned material |
+| Treasury / Budget / Close | `PARTIAL` | Frameworks/workbenches exist; authoritative reconciliation is incomplete |
+| Finance reporting/master data | `SOURCE PRESENT / VERIFY` | Extensive code exists; old blanket `[x]` claims require runtime/negative/tenant proof |
+| Web Push / Admin notifications | `SOURCE PRESENT / RUNTIME VERIFY` | Added after `a102`; production acceptance still required |
+| About | `PARTIAL` | API/UI exist; metadata is currently hardcoded/stale |
+| Support / Feedback | `SOURCE PRESENT / VERIFY` | Existing frontend exists; backend contracts need verification |
+| Repository hygiene | `PARTIAL` | `.gitignore` improved, but tracked `.bemo-*-backup-*` trees remain |
 
----
-
-## 3. Strict Definition of Done Verification
-
-All `IMPLEMENTED` status items satisfy the 13 mandatory criteria:
-1. Domain state machine & invariants implemented.
-2. Business behavior orchestrated in services.
-3. Liquibase migrations present.
-4. API authorization & tenant ownership verified.
-5. Idempotent operations use `operationId`.
-6. Optimistic locking with `expectedVersion`.
-7. Audit trail records actor, transition & reason.
-8. Balanced journals via common finance layer.
-9. Source document links queryable bidirectionally.
-10. Frontend workbenches expose workflow.
-11. Unit & integration test coverage present.
-12. Legacy endpoint bypass prevented.
-13. Empirical evidence verified.
+Use the corrected checklist for the line-by-line evidence and remaining blockers.
