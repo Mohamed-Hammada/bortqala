@@ -20,7 +20,7 @@ class SubledgerReconciliationServiceTests {
     @BeforeEach
     void setUp() {
         repository = mock(SubledgerReconciliationReportRepository.class);
-        service = new SubledgerReconciliationService(repository);
+        service = new SubledgerReconciliationService(repository, List.of());
     }
 
     @Test

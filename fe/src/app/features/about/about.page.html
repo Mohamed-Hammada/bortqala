@@ -1,0 +1,40 @@
+<div class="about-container card">
+  <header class="about-header">
+    <div class="brand">
+      <span class="logo">🍊</span>
+      <h2>{{ aboutInfo()?.productName || 'BEMO ERP' }}</h2>
+    </div>
+    <p class="subtitle">{{ i18n.t('about.subtitle') || 'Enterprise Resource Planning & Business Operations System' }}</p>
+  </header>
+
+  <div class="about-body" *ngIf="aboutInfo() as info">
+    <div class="info-grid">
+      <div class="info-item">
+        <label>{{ i18n.t('about.version') || 'Version' }}</label>
+        <span>{{ info.version }}</span>
+      </div>
+      <div class="info-item">
+        <label>{{ i18n.t('about.buildNumber') || 'Build' }}</label>
+        <span>{{ info.buildNumber }}</span>
+      </div>
+      <div class="info-item">
+        <label>{{ i18n.t('about.gitCommit') || 'Git Commit' }}</label>
+        <code>{{ info.gitCommit }}</code>
+      </div>
+      <div class="info-item">
+        <label>{{ i18n.t('about.apiVersion') || 'API Version' }}</label>
+        <span>{{ info.apiVersion }}</span>
+      </div>
+      <div class="info-item">
+        <label>{{ i18n.t('about.environment') || 'Environment' }}</label>
+        <span class="badge">{{ info.environment }}</span>
+      </div>
+    </div>
+
+    <div class="about-actions">
+      <button class="btn btn-secondary" (click)="copyDiagnostics()">
+        📋 {{ i18n.t('about.copyDiagnostics') || 'Copy Diagnostics' }}
+      </button>
+    </div>
+  </div>
+</div>

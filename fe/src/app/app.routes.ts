@@ -246,6 +246,11 @@ export const routes: Routes = [
           import('./features/support/support.page').then((module) => module.SupportPage),
       },
       {
+        path: 'about',
+        loadComponent: () =>
+          import('./features/about/about.page').then((module) => module.AboutPage),
+      },
+      {
         path: 'users',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN'], menuId: 'users' },

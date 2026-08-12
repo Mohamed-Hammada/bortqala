@@ -7,6 +7,7 @@ import com.bemo.hr.trade.procurement.domain.SupplierQuoteHeader;
 import com.bemo.hr.trade.procurement.infrastructure.RfqHeaderRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SourcingAwardRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierQuoteHeaderRepository;
+import com.bemo.hr.trade.procurement.infrastructure.SupplierQuoteLineRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +24,7 @@ class SourcingServiceTests {
 
     private RfqHeaderRepository rfqHeaderRepository;
     private SupplierQuoteHeaderRepository quoteHeaderRepository;
+    private SupplierQuoteLineRepository quoteLineRepository;
     private SourcingAwardRepository awardRepository;
     private ProcurementService procurementService;
     private SourcingService sourcingService;
@@ -31,9 +33,10 @@ class SourcingServiceTests {
     void setUp() {
         rfqHeaderRepository = mock(RfqHeaderRepository.class);
         quoteHeaderRepository = mock(SupplierQuoteHeaderRepository.class);
+        quoteLineRepository = mock(SupplierQuoteLineRepository.class);
         awardRepository = mock(SourcingAwardRepository.class);
         procurementService = mock(ProcurementService.class);
-        sourcingService = new SourcingService(rfqHeaderRepository, quoteHeaderRepository, awardRepository, procurementService);
+        sourcingService = new SourcingService(rfqHeaderRepository, quoteHeaderRepository, quoteLineRepository, awardRepository, procurementService);
     }
 
     @Test

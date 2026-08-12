@@ -984,3 +984,27 @@ databaseChangeLog:
               - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
               - column: { name: updated_at, type: BIGINT, constraints: { nullable: false } }
               - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - createTable:
+            tableName: supplier_quote_lines
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: quote_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: rfq_line_id, type: VARCHAR(36) }
+              - column: { name: item_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: description, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: quantity, type: DECIMAL(15, 4), constraints: { nullable: false } }
+              - column: { name: uom, type: VARCHAR(20) }
+              - column: { name: unit_price, type: DECIMAL(15, 4), constraints: { nullable: false } }
+        - createTable:
+            tableName: inventory_reservations
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: source_type, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: source_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: item_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: warehouse_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: quantity, type: DECIMAL(15, 4), constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
