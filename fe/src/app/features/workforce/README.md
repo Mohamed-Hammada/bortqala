@@ -31,3 +31,9 @@
 **EN:** The settlement lifecycle strip now uses semantic BEMO theme surfaces and readable step chips instead of a hard-coded light bar.
 
 **AR:** شريط دورة التسوية يستخدم الآن ألوان BEMO الدلالية ويظل مقروءاً في الوضع الداكن والفاتح.
+
+## 2026-08-12 — Dispatch and dispute workbench
+
+**EN:** `/workforce/dispatch-disputes` closes the dispatch/dispute UI gap with guarded labor-dispatch creation and transitions, worker assignment entry/review, and settlement dispute submission/resolution. Loading, empty, error, permission, and success states use the shared services and bilingual database catalog.
+
+**AR:** تغلق شاشة `/workforce/dispatch-disputes` فجوة واجهة الإرسال والنزاعات، فتدعم إنشاء إرسالات العمالة وانتقالاتها المنضبطة، وإدخال ومراجعة تكليفات العمال، وإرسال نزاعات التسوية وحلها. وتستخدم حالات التحميل والفراغ والخطأ والصلاحيات والنجاح الخدمات المشتركة وكتالوج الترجمة الثنائي في قاعدة البيانات.

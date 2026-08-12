@@ -371,3 +371,25 @@ export interface WorkforceDispute {
   version: number;
 }
 
+export interface CreateLaborDispatchPayload {
+  requestId: string;
+  contractorId: string;
+  dispatchDate: string;
+}
+
+export interface CreateWorkerAssignmentPayload {
+  workerId: string;
+  requestLineId?: string;
+  contractorId: string;
+  fromDate: string;
+  toDate: string;
+  agreedRate: number;
+  agreedHours: number;
+}
+
+export interface CreateWorkforceDisputePayload {
+  contractorId: string;
+  disputedAmount: number;
+  reason: string;
+}
+

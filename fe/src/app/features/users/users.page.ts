@@ -37,6 +37,7 @@ export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = [
     { id: 'workforce-categories', labelKey: 'workforce.categories.title' },
     { id: 'workforce-requests', labelKey: 'workforce.laborRequests.title' },
     { id: 'workforce-attendance', labelKey: 'workforce.attendance.title' },
+    { id: 'workforce-dispatch-disputes', labelKey: 'workforce.dispatch.title' },
     { id: 'workforce-settlements', labelKey: 'workforce.settlements.title' },
     { id: 'workforce-advances', labelKey: 'workforce.advances.title' },
     { id: 'workforce-accounts', labelKey: 'workforce.accounts.title' },
@@ -152,7 +153,7 @@ export class UsersPage {
       ids: [
         'workforce-dashboard', 'workforce-contractors', 'workforce-workers',
         'workforce-categories', 'workforce-requests', 'workforce-attendance',
-        'workforce-settlements', 'workforce-advances', 'workforce-accounts', 'workforce-reports'
+        'workforce-dispatch-disputes', 'workforce-settlements', 'workforce-advances', 'workforce-accounts', 'workforce-reports'
       ]
     },
     {

@@ -161,6 +161,15 @@ export const NAV_ITEMS: NavItem[] = [
       roles: WORKFORCE_BASE_ROLES,
     },
     {
+      menuId: 'workforce-dispatch-disputes',
+      labelKey: 'workforce.dispatch.title',
+      descriptionKey: 'workforce.dispatch.hint',
+      path: '/workforce/dispatch-disputes',
+      icon: 'reports',
+      workspace: 'workspace.workforce',
+      roles: WORKFORCE_BASE_ROLES,
+    },
+    {
       menuId: 'workforce-settlements',
       labelKey: 'workforce.settlements.title',
       descriptionKey: 'nav.workforceHint',

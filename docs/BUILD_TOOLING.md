@@ -18,6 +18,9 @@ the toolchains change.
 
 ## Gradle (backend)
 
+- The Gradle Java toolchain, CI runner, Docker builder, and Docker runtime all use Temurin/OpenJDK **21**.
+- `options.release = 17` is intentional: it restricts compiled bytecode and Java API usage to Java 17 compatibility while the supported execution JDK remains 21.
+
 - Native Gradle on the WSL `/mnt/d` mount can be flaky (Windows-filesystem
   latency, symlink/gradle-cache issues). When `./gradlew` misbehaves, use the
   rsync mirror at `/tmp/opencode/be-build` (native ext4):

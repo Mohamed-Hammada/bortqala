@@ -11,9 +11,14 @@ below a recorded baseline or reports failures fails the release gate.
 |-------|----------|---------|----------------|
 | Backend (non-Docker, H2) | **391 tests / 78 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 391 AND failures = 0 |
 | Backend (full, incl. Testcontainers) | **310 tests** expected when Docker available | `./gradlew test` | failures = 0 |
-| Frontend (Angular + Vitest) | **269 tests / 49 files / 0 failures** | `npx ng test --watch=false` | count ≥ 269 AND failures = 0 |
+| Frontend (Angular + Vitest) | **278 tests / 50 files / 0 failures** | `npx ng test --watch=false` | count ≥ 278 AND failures = 0 |
 
 ## Evidence log
+
+### 2026-08-12 — Staff-audit confirmed gaps
+
+- Frontend: **278 tests / 50 files / 0 failures**. Added the guarded dispatch/assignment/dispute workbench and API-contract tests; route/catalog parity, bilingual DB i18n, hardcoded UI scan, and Angular development build pass.
+- Backend focused verification: dispatch/dispute lifecycle tests, access catalog, and H2 Spring/Liquibase context pass on the explicit Java 21 toolchain. V199 contains unique bilingual UI/error rows and an idempotent existing-user menu grant; translation-catalog, error-code, and authorization-contract gates pass.
 
 ### 2026-08-10 — Product Epic 12 second vertical pack
 

@@ -116,6 +116,12 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     requiredFeature: null,
   },
   {
+    menuId: 'workforce-dispatch-disputes',
+    route: '/workforce/dispatch-disputes',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE'],
+    requiredFeature: null,
+  },
+  {
     menuId: 'workforce-settlements',
     route: '/workforce/settlement-periods',
     roles: ['ADMIN', 'SUPER_ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE'],

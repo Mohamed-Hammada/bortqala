@@ -269,3 +269,5 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260812_v197_warehouse_transfer_integrity.yaml
   - include:
       file: db/changelog/data/insert/20260812_v198_warehouse_transfer_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260812_v199_workforce_dispatch_translations.yaml

@@ -1,6 +1,6 @@
 # Backend — HR & Factory Operations API (`be/`)
 
-Spring Boot 4.1 modular monolith for Bemo ERP, built with Java 26, Spring Data JPA, Hibernate ORM, PostgreSQL 18.4 (`jdbc:postgresql://localhost:5432/bemo_erp`), and Liquibase schema migrations.
+Spring Boot 4.1 modular monolith for Bemo ERP. The build, CI, and container runtime use Java 21 while `options.release = 17` preserves Java 17 bytecode/API compatibility. Persistence uses Spring Data JPA, Hibernate ORM, PostgreSQL 18.4 (`jdbc:postgresql://localhost:5432/bemo_erp`), and Liquibase schema migrations.
 
 ---
 

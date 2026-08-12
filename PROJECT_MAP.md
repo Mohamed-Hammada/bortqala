@@ -40,7 +40,7 @@
 - **GRN Reliability & Validation (P0)**: Fixed goods-receipt line persistence, server-calculated remaining PO quantities, partial/full PO transitions, accepted-quantity inventory posting, negative/over-receipt validation, explicit Arabic UI feedback, decimal quantity steps, and the responsive accessible GRN dialog.
 - **Live Biometric Device Integration (P0)**: Added tenant-owned IP/API device connections, immediate and scheduled synchronization, durable status/cursor state, batch and punch idempotency, identity matching, audit logging, and an Arabic responsive management UI alongside CSV/XLS/XLSX fallback.
 - **Production/Test Bootstrap Boundary (P0)**: Production always installs translations and platform roles, then idempotently ensures configured Admin and Super Admin accounts. Demo organization, attendance, currency, supplier, inventory, and legacy QA correction data is reachable only through the test changelog or an explicitly enabled `dev`/`demo` profile.
-- **Deployment & PostgreSQL Verification Hardening (P0/P1)**: Production Compose now clears inherited development ports with `!reset []` so PostgreSQL and the backend are never published to the host in production; CI renders the merged production Compose and asserts private ports are absent while the frontend stays public. The backend Docker builder/runtime now use Temurin Java 26, matching the Gradle toolchain, and CI builds the image and smoke-tests the container JVM version. Supplier-payment overpayment concurrency is verified against real PostgreSQL via Testcontainers (`PostgresIntegrationTest` uses the full production Liquibase changelog + `ddl-auto=validate`, `@RepeatedTest(10)` with a thread-safe operation-ID list). This surfaced and fixed two fresh-deploy blockers in the production migrations: V80 `addUniqueConstraint` used YAML list `columnNames` (Liquibase requires a comma-separated string), and the V81 translation CSV had an unquoted embedded semicolon.
+- **Deployment & PostgreSQL Verification Hardening (P0/P1)**: Production Compose clears inherited development ports with `!reset []` so PostgreSQL and the backend are never published to the host in production; CI renders the merged production Compose and asserts private ports are absent while the frontend stays public. Backend build/CI/container execution is standardized on Temurin Java 21, with Java 17 bytecode/API compatibility enforced by `options.release = 17`. Supplier-payment overpayment concurrency is verified against real PostgreSQL via Testcontainers (`PostgresIntegrationTest` uses the full production Liquibase changelog + `ddl-auto=validate`, `@RepeatedTest(10)` with a thread-safe operation-ID list). This surfaced and fixed two fresh-deploy blockers in the production migrations: V80 `addUniqueConstraint` used YAML list `columnNames` (Liquibase requires a comma-separated string), and the V81 translation CSV had an unquoted embedded semicolon.
 - **P0-08 (deferred, external)**: GitHub Actions still requires resolving the account/billing lock before the three CI jobs can produce independent evidence.
 - **Technical-Review Hardening Batch (P0)**:
   - **P0-1/P0-2/P0-4 — Tenant & Evidence Integrity**: Tenant-owned aggregates keep `@TenantId` app scoping with immutable audit timestamps on evidence; shared idempotency (`operationId`) handling verified across bulk decisions, payroll transitions, and supplier payments; API dates remain epoch-milliseconds.
@@ -207,10 +207,10 @@
 
 ---
 
-## [ORPHANS & PENDING]
-- **Roadmap Advanced Integration (Audit Result: 84 / 86 Items Pending End-to-End Wiring)**:
+## [SOURCE-VERIFIED OPEN WORK]
+- **Roadmap Advanced Integration** — counts were removed because the old 84/86 figure mixed implemented primitives with unverified wiring. Each remaining item must be closed by source/API/UI/test evidence rather than README status:
   - **P0 Shared**: Wire `DocumentTransitionService` and `SegregationOfDutiesService` across all document controllers; enforce `/precheck` before period close in `FiscalPeriodController`; construct balanced journal lines in `SubledgerPostingService`.
-  - **Workforce**: Add `LaborDispatchController` & `WorkforceDisputeController` REST APIs; wire dispatch, worker assignment, dispute, and settlement recalculation into workforce UI pages.
+  - **Workforce**: Dispatch, worker assignment, and settlement dispute APIs/UI are wired at `/workforce/dispatch-disputes` with guarded/audited transitions and authenticated dispute actors (V199). Settlement recalculation remains in the existing settlement-period workbench; add cross-flow E2E characterization before further changes.
   - **Attendance/Payroll**: Wire `PayrollInputSnapshot` as sole calculation source in `PayrollService`; add `PayrollRun` & `PayrollCalendar` aggregates; eliminate hard-coded calculation constants.
   - **Procure-to-Pay (P2P)**: Extend `PurchaseRequisition` with requisition lines; add RFQ/quotes/evaluation/award workflow & PO conversion; complete payment proposal.
   - **Order-to-Cash (O2C)**: Add `SalesOrderLine` items; inject `SalesPricingSnapshotService` into `SalesController`; implement reservation, delivery documents, COGS posting, and RMA/credit notes.
@@ -218,5 +218,7 @@
   - **Manufacturing/Quality**: Use `BomSnapshotService` as immutable source in `ManufacturingService`; add material reservation, partial production receipts, routing/work centers, WIP accounting, and variance close.
   - **Treasury/Budget/Close**: Implement multi-source payment batch, maker/checker, budget revision versioning, module close providers, and financial/subledger reconciliation reports.
   - **Finance / Master Data / Rules**: Implement journal dimensions, manual journal approval, realized/unrealized FX revaluation, Trial Balance / GL detail / Balance Sheet APIs, master-data effective dating, and bank-change governance.
+
+- **Operational hardening completed from the 2026-08-12 staff audit**: structured console output is wrapped in a non-blocking Logback `AsyncAppender`; Java 21 is the explicit Gradle toolchain matching CI and both Docker stages while release 17 remains the compatibility target.
 
 

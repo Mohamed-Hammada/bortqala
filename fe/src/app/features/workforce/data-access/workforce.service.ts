@@ -22,7 +22,13 @@ import {
   ContractorSettlementDetail,
   LinkInvoicePayload,
   SettlementPostingPayload,
-  RecordSettlementPaymentPayload
+  RecordSettlementPaymentPayload,
+  LaborDispatch,
+  WorkerAssignment,
+  WorkforceDispute,
+  CreateLaborDispatchPayload,
+  CreateWorkerAssignmentPayload,
+  CreateWorkforceDisputePayload,
 } from '../models/workforce.models';
 
 @Injectable({ providedIn: 'root' })
@@ -37,6 +43,7 @@ export class WorkforceService {
   settlementPeriods = signal<SettlementPeriod[]>([]);
   advances = signal<WorkforceAdvance[]>([]);
   advancePolicies = signal<AdvancePolicy[]>([]);
+  dispatches = signal<LaborDispatch[]>([]);
   loading = signal<boolean>(false);
 
   // Contractors
@@ -290,5 +297,49 @@ export class WorkforceService {
     return this.http.post('/api/v1/workforce/imports/analyze', null, {
       params: { summaryDays: summaryDays || 1550, settlementDays: settlementDays || 1635 }
     });
+  }
+
+  loadDispatches(): Observable<LaborDispatch[]> {
+    return this.http.get<LaborDispatch[]>('/api/v1/workforce/dispatches').pipe(
+      tap(items => this.dispatches.set(items)),
+    );
+  }
+
+  createDispatch(payload: CreateLaborDispatchPayload): Observable<LaborDispatch> {
+    return this.http.post<LaborDispatch>('/api/v1/workforce/dispatches', payload).pipe(
+      tap(() => this.loadDispatches().subscribe()),
+    );
+  }
+
+  transitionDispatch(id: string, action: 'dispatch' | 'accept' | 'cancel'): Observable<LaborDispatch> {
+    return this.http.post<LaborDispatch>(`/api/v1/workforce/dispatches/${id}/${action}`, {}).pipe(
+      tap(updated => this.dispatches.update(items => items.map(item => item.id === updated.id ? updated : item))),
+    );
+  }
+
+  loadAssignments(dispatchId: string): Observable<WorkerAssignment[]> {
+    return this.http.get<WorkerAssignment[]>(`/api/v1/workforce/dispatches/${dispatchId}/assignments`);
+  }
+
+  assignWorker(dispatchId: string, payload: CreateWorkerAssignmentPayload): Observable<WorkerAssignment> {
+    return this.http.post<WorkerAssignment>(`/api/v1/workforce/dispatches/${dispatchId}/assignments`, payload);
+  }
+
+  transitionAssignment(id: string, action: 'accept' | 'reject', reason?: string): Observable<WorkerAssignment> {
+    return this.http.post<WorkerAssignment>(`/api/v1/workforce/assignments/${id}/${action}`,
+      action === 'reject' ? { reason } : {});
+  }
+
+  loadDisputes(periodId: string): Observable<WorkforceDispute[]> {
+    return this.http.get<WorkforceDispute[]>(`/api/v1/workforce/settlements/${periodId}/disputes`);
+  }
+
+  createDispute(periodId: string, payload: CreateWorkforceDisputePayload): Observable<WorkforceDispute> {
+    return this.http.post<WorkforceDispute>(`/api/v1/workforce/settlements/${periodId}/disputes`, payload);
+  }
+
+  transitionDispute(id: string, action: 'submit' | 'resolve' | 'reject', notes?: string): Observable<WorkforceDispute> {
+    const payload = action === 'resolve' ? { resolutionNotes: notes } : action === 'reject' ? { reason: notes } : {};
+    return this.http.post<WorkforceDispute>(`/api/v1/workforce/disputes/${id}/${action}`, payload);
   }
 }

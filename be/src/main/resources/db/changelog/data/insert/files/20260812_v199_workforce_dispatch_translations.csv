@@ -1,0 +1,143 @@
+id;key;locale;value
+v199-001;workforce.dispatch.title;en-US;Dispatch & disputes
+v199-002;workforce.dispatch.title;ar-EG;الإرسال والنزاعات
+v199-003;workforce.dispatch.hint;en-US;Manage labor dispatches, worker assignments, and settlement disputes
+v199-004;workforce.dispatch.hint;ar-EG;إدارة إرسال العمال والتكليفات ونزاعات التسوية
+v199-005;workforce.dispatch.eyebrow;en-US;Workforce fulfilment
+v199-006;workforce.dispatch.eyebrow;ar-EG;تنفيذ طلبات العمالة
+v199-007;workforce.dispatch.list;en-US;Labor dispatches
+v199-008;workforce.dispatch.list;ar-EG;إرسالات العمالة
+v199-009;workforce.dispatch.request;en-US;Labor request
+v199-010;workforce.dispatch.request;ar-EG;طلب العمالة
+v199-011;workforce.dispatch.contractor;en-US;Contractor
+v199-012;workforce.dispatch.contractor;ar-EG;المقاول
+v199-013;workforce.dispatch.date;en-US;Dispatch date
+v199-014;workforce.dispatch.date;ar-EG;تاريخ الإرسال
+v199-015;workforce.dispatch.create;en-US;Create draft
+v199-016;workforce.dispatch.create;ar-EG;إنشاء مسودة
+v199-017;workforce.dispatch.send;en-US;Dispatch
+v199-018;workforce.dispatch.send;ar-EG;إرسال
+v199-019;workforce.dispatch.empty;en-US;No labor dispatches yet
+v199-020;workforce.dispatch.empty;ar-EG;لا توجد إرسالات عمالة بعد
+v199-021;workforce.dispatch.created;en-US;Dispatch draft created
+v199-022;workforce.dispatch.created;ar-EG;تم إنشاء مسودة الإرسال
+v199-023;workforce.dispatch.dispatched;en-US;Dispatch sent
+v199-024;workforce.dispatch.dispatched;ar-EG;تم إرسال العمالة
+v199-025;workforce.dispatch.accepted;en-US;Dispatch accepted
+v199-026;workforce.dispatch.accepted;ar-EG;تم قبول الإرسال
+v199-027;workforce.dispatch.cancelled;en-US;Dispatch cancelled
+v199-028;workforce.dispatch.cancelled;ar-EG;تم إلغاء الإرسال
+v199-029;workforce.dispatch.status.DRAFT;en-US;Draft
+v199-030;workforce.dispatch.status.DRAFT;ar-EG;مسودة
+v199-031;workforce.dispatch.status.DISPATCHED;en-US;Dispatched
+v199-032;workforce.dispatch.status.DISPATCHED;ar-EG;تم الإرسال
+v199-033;workforce.dispatch.status.ACCEPTED;en-US;Accepted
+v199-034;workforce.dispatch.status.ACCEPTED;ar-EG;مقبول
+v199-035;workforce.dispatch.status.CANCELLED;en-US;Cancelled
+v199-036;workforce.dispatch.status.CANCELLED;ar-EG;ملغي
+v199-037;workforce.assignment.title;en-US;Worker assignments
+v199-038;workforce.assignment.title;ar-EG;تكليفات العمال
+v199-039;workforce.assignment.worker;en-US;Worker
+v199-040;workforce.assignment.worker;ar-EG;العامل
+v199-041;workforce.assignment.fromDate;en-US;From date
+v199-042;workforce.assignment.fromDate;ar-EG;من تاريخ
+v199-043;workforce.assignment.toDate;en-US;To date
+v199-044;workforce.assignment.toDate;ar-EG;إلى تاريخ
+v199-045;workforce.assignment.rate;en-US;Agreed rate
+v199-046;workforce.assignment.rate;ar-EG;الأجر المتفق عليه
+v199-047;workforce.assignment.hours;en-US;Agreed hours
+v199-048;workforce.assignment.hours;ar-EG;الساعات المتفق عليها
+v199-049;workforce.assignment.add;en-US;Add assignment
+v199-050;workforce.assignment.add;ar-EG;إضافة تكليف
+v199-051;workforce.assignment.created;en-US;Worker assignment created
+v199-052;workforce.assignment.created;ar-EG;تم إنشاء تكليف العامل
+v199-053;workforce.assignment.period;en-US;Assignment period
+v199-054;workforce.assignment.period;ar-EG;فترة التكليف
+v199-055;workforce.assignment.terms;en-US;Rate / hours
+v199-056;workforce.assignment.terms;ar-EG;الأجر / الساعات
+v199-057;workforce.assignment.empty;en-US;No assignments for this dispatch
+v199-058;workforce.assignment.empty;ar-EG;لا توجد تكليفات لهذا الإرسال
+v199-059;workforce.assignment.selectDispatch;en-US;Select a dispatch to review its assignments
+v199-060;workforce.assignment.selectDispatch;ar-EG;اختر إرسالاً لمراجعة تكليفاته
+v199-061;workforce.assignment.rejectReason;en-US;Enter the assignment rejection reason
+v199-062;workforce.assignment.rejectReason;ar-EG;أدخل سبب رفض التكليف
+v199-063;workforce.assignment.status.PROPOSED;en-US;Proposed
+v199-064;workforce.assignment.status.PROPOSED;ar-EG;مقترح
+v199-065;workforce.assignment.status.ACCEPTED;en-US;Accepted
+v199-066;workforce.assignment.status.ACCEPTED;ar-EG;مقبول
+v199-067;workforce.assignment.status.REJECTED;en-US;Rejected
+v199-068;workforce.assignment.status.REJECTED;ar-EG;مرفوض
+v199-069;workforce.assignment.status.REPLACED;en-US;Replaced
+v199-070;workforce.assignment.status.REPLACED;ar-EG;تم الاستبدال
+v199-071;workforce.assignment.status.COMPLETED;en-US;Completed
+v199-072;workforce.assignment.status.COMPLETED;ar-EG;مكتمل
+v199-073;workforce.dispute.title;en-US;Settlement disputes
+v199-074;workforce.dispute.title;ar-EG;نزاعات التسوية
+v199-075;workforce.dispute.period;en-US;Settlement period
+v199-076;workforce.dispute.period;ar-EG;فترة التسوية
+v199-077;workforce.dispute.amount;en-US;Disputed amount
+v199-078;workforce.dispute.amount;ar-EG;المبلغ محل النزاع
+v199-079;workforce.dispute.reason;en-US;Reason
+v199-080;workforce.dispute.reason;ar-EG;السبب
+v199-081;workforce.dispute.open;en-US;Open dispute
+v199-082;workforce.dispute.open;ar-EG;فتح نزاع
+v199-083;workforce.dispute.created;en-US;Settlement dispute opened
+v199-084;workforce.dispute.created;ar-EG;تم فتح نزاع التسوية
+v199-085;workforce.dispute.submit;en-US;Submit for review
+v199-086;workforce.dispute.submit;ar-EG;إرسال للمراجعة
+v199-087;workforce.dispute.resolve;en-US;Resolve
+v199-088;workforce.dispute.resolve;ar-EG;حل النزاع
+v199-089;workforce.dispute.resolveNotes;en-US;Enter resolution notes
+v199-090;workforce.dispute.resolveNotes;ar-EG;أدخل ملاحظات الحل
+v199-091;workforce.dispute.rejectNotes;en-US;Enter rejection reason
+v199-092;workforce.dispute.rejectNotes;ar-EG;أدخل سبب الرفض
+v199-093;workforce.dispute.empty;en-US;No disputes for this period
+v199-094;workforce.dispute.empty;ar-EG;لا توجد نزاعات لهذه الفترة
+v199-095;workforce.dispute.status.DRAFT;en-US;Draft
+v199-096;workforce.dispute.status.DRAFT;ar-EG;مسودة
+v199-097;workforce.dispute.status.UNDER_REVIEW;en-US;Under review
+v199-098;workforce.dispute.status.UNDER_REVIEW;ar-EG;قيد المراجعة
+v199-099;workforce.dispute.status.RESOLVED;en-US;Resolved
+v199-100;workforce.dispute.status.RESOLVED;ar-EG;تم الحل
+v199-101;workforce.dispute.status.REJECTED;en-US;Rejected
+v199-102;workforce.dispute.status.REJECTED;ar-EG;مرفوض
+v199-103;DISPATCH_REQUEST_REQUIRED;en-US;Select a labor request.
+v199-104;DISPATCH_REQUEST_REQUIRED;ar-EG;اختر طلب عمالة.
+v199-105;DISPATCH_CONTRACTOR_REQUIRED;en-US;Select a contractor.
+v199-106;DISPATCH_CONTRACTOR_REQUIRED;ar-EG;اختر مقاولاً.
+v199-107;DISPATCH_DATE_REQUIRED;en-US;Select a dispatch date.
+v199-108;DISPATCH_DATE_REQUIRED;ar-EG;اختر تاريخ الإرسال.
+v199-109;DISPATCH_CANCELLED;en-US;Assignments cannot be added to a cancelled dispatch.
+v199-110;DISPATCH_CANCELLED;ar-EG;لا يمكن إضافة تكليفات إلى إرسال ملغي.
+v199-111;DISPATCH_WORKER_REQUIRED;en-US;Select a worker.
+v199-112;DISPATCH_WORKER_REQUIRED;ar-EG;اختر عاملاً.
+v199-113;DISPATCH_CONTRACTOR_MISMATCH;en-US;Assignment contractor must match the dispatch contractor.
+v199-114;DISPATCH_CONTRACTOR_MISMATCH;ar-EG;يجب أن يطابق مقاول التكليف مقاول الإرسال.
+v199-115;ASSIGNMENT_DATE_RANGE_INVALID;en-US;Assignment dates are invalid.
+v199-116;ASSIGNMENT_DATE_RANGE_INVALID;ar-EG;تواريخ التكليف غير صحيحة.
+v199-117;ASSIGNMENT_TERMS_INVALID;en-US;Assignment rate and hours are invalid.
+v199-118;ASSIGNMENT_TERMS_INVALID;ar-EG;الأجر أو الساعات المتفق عليها غير صحيحة.
+v199-119;DISPATCH_STATUS_INVALID;en-US;This dispatch transition is not allowed.
+v199-120;DISPATCH_STATUS_INVALID;ar-EG;لا يسمح بانتقال حالة الإرسال المطلوب.
+v199-121;DISPUTE_SCOPE_REQUIRED;en-US;Settlement period and contractor are required.
+v199-122;DISPUTE_SCOPE_REQUIRED;ar-EG;فترة التسوية والمقاول مطلوبان.
+v199-123;DISPUTE_AMOUNT_POSITIVE;en-US;Disputed amount must be positive.
+v199-124;DISPUTE_AMOUNT_POSITIVE;ar-EG;يجب أن يكون المبلغ محل النزاع موجباً.
+v199-125;DISPUTE_REASON_REQUIRED;en-US;Dispute reason is required.
+v199-126;DISPUTE_REASON_REQUIRED;ar-EG;سبب النزاع مطلوب.
+v199-127;DISPUTE_STATUS_INVALID;en-US;This dispute transition is not allowed.
+v199-128;DISPUTE_STATUS_INVALID;ar-EG;لا يسمح بانتقال حالة النزاع المطلوب.
+v199-129;common.select;en-US;Select
+v199-130;common.select;ar-EG;اختر
+v199-131;common.saved;en-US;Saved successfully
+v199-132;common.saved;ar-EG;تم الحفظ بنجاح
+v199-133;common.accept;en-US;Accept
+v199-134;common.accept;ar-EG;قبول
+v199-135;common.loadError;en-US;Could not load the requested data.
+v199-136;common.loadError;ar-EG;تعذر تحميل البيانات المطلوبة.
+v199-137;common.unknown;en-US;Unknown
+v199-138;common.unknown;ar-EG;غير معروف
+v199-139;ASSIGNMENT_REJECTION_REASON_REQUIRED;en-US;Assignment rejection reason is required.
+v199-140;ASSIGNMENT_REJECTION_REASON_REQUIRED;ar-EG;سبب رفض التكليف مطلوب.
+v199-141;ASSIGNMENT_STATUS_INVALID;en-US;This assignment transition is not allowed.
+v199-142;ASSIGNMENT_STATUS_INVALID;ar-EG;لا يسمح بانتقال حالة التكليف المطلوب.

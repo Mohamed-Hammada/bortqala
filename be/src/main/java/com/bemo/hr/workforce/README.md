@@ -36,3 +36,9 @@ This package implements the core business domain, data persistence, settlement c
 **EN:** Workforce Excel imports are hardened for safety. Uploads enforce a configurable max file size (20 MB default) and max rows (20 000 default); preview, validate, and reverse stay bounded to the target batch's own rows, preview caps results to 100 rows, and validation batches duplicate detection by normalized worker code. All import errors carry stable keys (`WORKFORCE_IMPORT_*`, `EXCEL_*`) resolved from the Liquibase translation tables (V88) instead of hard-coded Arabic text.
 
 **AR:** تم تحصين استيراد العمال عبر Excel للأمان. يفرض الرفع حداً أقصى لحجم الملف (20 ميجابايت) ولعدد الصفوف (20 000 صف) قابلين للتهيئة؛ وتقتصر المعاينة والتحقق والتراجع على صفوف الدفعة المستهدفة، وتُحدّ المعاينة بنتيجة 100 صف، ويكشف التحقق التكرار برمز العامل الموحد. وتحمل كل أخطاء الاستيراد مفاتيح ثابتة (`WORKFORCE_IMPORT_*`، `EXCEL_*`) تُترجم من جداول الترجمة في Liquibase (V88) بدلاً من نصوص عربية مدمجة.
+
+## Dispatches, assignments, and settlement disputes
+
+**EN:** Labor dispatches now expose an auditable list and guarded Draft → Dispatched → Accepted or Cancelled transitions. Assignments validate contractor ownership, dates, hours, and rates. Settlement disputes expose Draft → Under Review → Resolved/Rejected transitions, and the server always derives the deciding actor from authentication instead of trusting a client-supplied username.
+
+**AR:** تعرض إرسالات العمالة الآن قائمة قابلة للتدقيق وانتقالات منضبطة من مسودة إلى مرسل ثم مقبول أو ملغي. وتتحقق تكليفات العمال من المقاول والتواريخ والساعات والأجر. كما تدعم نزاعات التسوية الانتقال من مسودة إلى قيد المراجعة ثم محلول أو مرفوض، ويستخرج الخادم هوية صاحب القرار من المصادقة دائماً بدلاً من قبول اسم يرسله العميل.

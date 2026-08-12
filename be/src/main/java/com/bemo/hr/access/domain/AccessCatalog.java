@@ -90,6 +90,8 @@ public final class AccessCatalog {
     public static final String P_CONTRACTORS_MANAGE = "contractors.manage";
     public static final String P_LABOR_REQUESTS_READ = "laborRequests.read";
     public static final String P_LABOR_REQUESTS_MANAGE = "laborRequests.manage";
+    public static final String P_DISPATCH_DISPUTES_READ = "dispatchDisputes.read";
+    public static final String P_DISPATCH_DISPUTES_MANAGE = "dispatchDisputes.manage";
     public static final String P_ATTENDANCE_READ = "attendance.read";
     public static final String P_ATTENDANCE_ENTER = "attendance.enter";
     public static final String P_ATTENDANCE_REVIEW = "attendance.review";
@@ -125,7 +127,7 @@ public final class AccessCatalog {
             P_USERS_READ, P_USERS_MANAGE, P_ROLES_ASSIGN, P_SETTINGS_READ, P_SETTINGS_MANAGE,
             P_WORKFORCE_DASHBOARD, P_WORKERS_READ, P_WORKERS_CREATE, P_WORKERS_EDIT, P_WORKERS_DEACTIVATE,
             P_CONTRACTORS_READ, P_CONTRACTORS_MANAGE,
-            P_LABOR_REQUESTS_READ, P_LABOR_REQUESTS_MANAGE,
+            P_LABOR_REQUESTS_READ, P_LABOR_REQUESTS_MANAGE, P_DISPATCH_DISPUTES_READ, P_DISPATCH_DISPUTES_MANAGE,
             P_ATTENDANCE_READ, P_ATTENDANCE_ENTER, P_ATTENDANCE_REVIEW, P_ATTENDANCE_IMPORT,
             P_SETTLEMENTS_READ, P_SETTLEMENTS_PREPARE, P_SETTLEMENTS_FINALIZE,
             P_ADVANCES_READ, P_ADVANCES_MANAGE,
@@ -142,7 +144,7 @@ public final class AccessCatalog {
             P_PARTIES_MANAGE, P_REPORTS_DECIDE, P_REPORTS_APPROVE);
 
     private static final Set<String> WORKFORCE_READ = Set.of(
-            P_WORKFORCE_DASHBOARD, P_WORKERS_READ, P_CONTRACTORS_READ, P_LABOR_REQUESTS_READ,
+            P_WORKFORCE_DASHBOARD, P_WORKERS_READ, P_CONTRACTORS_READ, P_LABOR_REQUESTS_READ, P_DISPATCH_DISPUTES_READ,
             P_ATTENDANCE_READ, P_SETTLEMENTS_READ, P_ADVANCES_READ,
             P_CONTRACTOR_ACCOUNTS_READ, P_WORKFORCE_REPORTS_READ, P_CATEGORIES_READ);
 
@@ -257,7 +259,7 @@ public final class AccessCatalog {
                     RoleKind.OPERATIONAL,
                     union(WORKFORCE_READ, APPROVAL_PERMS,
                             Set.of(P_WORKERS_CREATE, P_WORKERS_EDIT, P_WORKERS_DEACTIVATE,
-                                    P_CONTRACTORS_MANAGE, P_LABOR_REQUESTS_MANAGE,
+                                    P_CONTRACTORS_MANAGE, P_LABOR_REQUESTS_MANAGE, P_DISPATCH_DISPUTES_MANAGE,
                                     P_ATTENDANCE_ENTER, P_ATTENDANCE_REVIEW, P_ATTENDANCE_IMPORT,
                                     P_SETTLEMENTS_PREPARE, P_SETTLEMENTS_FINALIZE,
                                     P_ADVANCES_MANAGE, P_CONTRACTOR_ACCOUNTS_MANAGE, P_CATEGORIES_MANAGE)),
@@ -373,6 +375,9 @@ public final class AccessCatalog {
                     "workforce.attendance.title", P_ATTENDANCE_READ, WORKFORCE_BASE_ROLES, null,
                     action("ENTER", P_ATTENDANCE_ENTER, false),
                     action("REVIEW", P_ATTENDANCE_REVIEW, true)),
+            page("WORKFORCE_DISPATCH_DISPUTES", "WORKFORCE", "/workforce/dispatch-disputes", "workforce-dispatch-disputes",
+                    "workforce.dispatch.title", P_DISPATCH_DISPUTES_READ, WORKFORCE_BASE_ROLES, null,
+                    action("MANAGE", P_DISPATCH_DISPUTES_MANAGE, false)),
             page("WORKFORCE_SETTLEMENTS", "WORKFORCE", "/workforce/settlement-periods", "workforce-settlements",
                     "workforce.settlements.title", P_SETTLEMENTS_READ, WORKFORCE_BASE_ROLES,
                     FEATURE_CONTRACTOR_ACCOUNTS,
