@@ -226,13 +226,6 @@ export const routes: Routes = [
           import('./features/reports/report-review.page').then((module) => module.ReportReviewPage),
       },
       {
-        path: 'notifications/send',
-        canActivate: [roleGuard, menuAccessGuard],
-        data: { roles: ['ADMIN'], menuId: 'notifications-send' },
-        loadComponent: () =>
-          import('./features/notifications-send/notifications-send.page').then((module) => module.NotificationsSendPage),
-      },
-      {
         path: 'settings',
         canActivate: [menuAccessGuard],
         canDeactivate: [unsavedChangesGuard],

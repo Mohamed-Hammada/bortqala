@@ -1,0 +1,48 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260812_push_001_web_push_subscriptions
+      author: OpenAI
+      preConditions:
+        - onFail: HALT
+        - not:
+            tableExists: { tableName: web_push_subscriptions }
+      changes:
+        - createTable:
+            tableName: web_push_subscriptions
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: username, type: VARCHAR(160), constraints: { nullable: false } }
+              - column: { name: endpoint, type: VARCHAR(2000), constraints: { nullable: false } }
+              - column: { name: endpoint_hash, type: VARCHAR(64), constraints: { nullable: false } }
+              - column: { name: p256dh_key, type: VARCHAR(512), constraints: { nullable: false } }
+              - column: { name: auth_key, type: VARCHAR(256), constraints: { nullable: false } }
+              - column: { name: locale, type: VARCHAR(10), defaultValue: "ar-EG", constraints: { nullable: false } }
+              - column: { name: push_approvals, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: push_payroll, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+              - column: { name: enabled, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: failure_count, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: last_success_at, type: timestamp }
+              - column: { name: last_failure_at, type: timestamp }
+              - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP, constraints: { nullable: false } }
+        - addForeignKeyConstraint:
+            baseTableName: web_push_subscriptions
+            baseColumnNames: app_id
+            referencedTableName: apps
+            referencedColumnNames: id
+            constraintName: fk_web_push_subscription_app
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: web_push_subscriptions
+            columnNames: app_id, endpoint_hash
+            constraintName: uq_web_push_subscription_app_endpoint
+        - createIndex:
+            tableName: web_push_subscriptions
+            indexName: idx_web_push_subscription_user
+            columns:
+              - column: { name: app_id }
+              - column: { name: username }
+              - column: { name: enabled }
+      rollback:
+        - dropTable: { tableName: web_push_subscriptions }

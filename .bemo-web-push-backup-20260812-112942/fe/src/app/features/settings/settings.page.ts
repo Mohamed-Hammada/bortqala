@@ -6,7 +6,6 @@ import { AuthService } from '../../core/auth/auth.service';
 import { ExcelTableStyle, NotificationPreferences, TableDensity, ThemePreference } from '../../core/auth/auth.models';
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
-import { WebPushService } from '../../core/notification-center/web-push.service';
 import { ActivatedRoute } from '@angular/router';
 import { ShortcutSettingsComponent } from './shortcuts/shortcut-settings.component';
 import { TranslationManagementComponent } from './translation-management.component';
@@ -46,7 +45,6 @@ export class SettingsPage {
   readonly authService = inject(AuthService);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
-  readonly webPush = inject(WebPushService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
 
@@ -104,23 +102,6 @@ export class SettingsPage {
 
   updateNotificationPrefs(key: keyof NotificationPreferences, value: boolean) {
     this.notificationPrefs.update((current) => ({ ...current, [key]: value }));
-  }
-
-  async toggleWebPush(enabled: boolean): Promise<void> {
-    try {
-      if (enabled) await this.webPush.enable(this.notificationPrefs());
-      else await this.webPush.disable();
-      this.notification.success(this.i18n.t(enabled ? 'settings.browserPushEnabled' : 'settings.browserPushDisabled'));
-    } catch (error) {
-      const key = this.webPush.permissionDenied() ? 'settings.browserPushPermissionDenied'
-        : error instanceof Error && error.message === 'WEB_PUSH_NOT_CONFIGURED' ? 'settings.browserPushNotConfigured' : 'common.error';
-      this.notification.error(this.i18n.t(key));
-    }
-  }
-
-  async sendTestPush(): Promise<void> {
-    try { await this.webPush.sendTest(); this.notification.success(this.i18n.t('settings.browserPushTest')); }
-    catch (error) { this.notification.error(apiErrorMessage(error, this.i18n)); }
   }
 
   readonly form = this.formBuilder.nonNullable.group({
@@ -210,7 +191,6 @@ export class SettingsPage {
     try {
       await firstValueFrom(this.authService.updatePreferences(this.form.getRawValue()));
       saveNotificationPrefs(this.notificationPrefs());
-      await this.webPush.syncPreferences(this.notificationPrefs());
       this.form.markAsPristine();
       this.notification.success(this.i18n.t('settings.saved'));
     } catch (error) {

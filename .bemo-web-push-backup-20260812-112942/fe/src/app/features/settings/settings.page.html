@@ -201,17 +201,6 @@
 
           <div class="field-stack settings-option-stack">
             <label class="selectable-card settings-toggle-card">
-              <input type="checkbox" [checked]="webPush.subscribed()" [disabled]="webPush.busy() || !webPush.supported() || !webPush.configured()" (change)="toggleWebPush($any($event.target).checked)" />
-              <span><strong>{{ i18n.t('settings.browserPushTitle') }}</strong><small class="settings-option-hint">{{ i18n.t('settings.browserPushHint') }}</small>
-                @if (!webPush.supported()) { <small class="settings-option-hint">{{ i18n.t('settings.browserPushUnsupported') }}</small> }
-                @else if (!webPush.configured()) { <small class="settings-option-hint">{{ i18n.t('settings.browserPushNotConfigured') }}</small> }
-                @else if (webPush.subscribed()) { <small class="settings-option-hint">{{ i18n.t('settings.browserPushEnabled') }}</small> }
-                @else { <small class="settings-option-hint">{{ i18n.t('settings.browserPushDisabled') }}</small> }
-              </span>
-            </label>
-            @if (webPush.subscribed()) { <div class="settings-inline-actions"><button type="button" class="button secondary btn-sm" [disabled]="webPush.busy()" (click)="sendTestPush()">{{ i18n.t('settings.browserPushTest') }}</button></div> }
-
-            <label class="selectable-card settings-toggle-card">
               <input type="checkbox" [checked]="notificationPrefs().emailApprovals" (change)="updateNotificationPrefs('emailApprovals', $any($event.target).checked)" />
               <span>
                 <strong>{{ i18n.t('settings.emailApprovalsLabel') }}</strong>

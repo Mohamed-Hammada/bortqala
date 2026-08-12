@@ -1,0 +1,23 @@
+id;key;locale;text
+push-20260812-001;settings.browserPushTitle;en-US;Browser push notifications
+push-20260812-002;settings.browserPushTitle;ar-EG;إشعارات المتصفح
+push-20260812-003;settings.browserPushHint;en-US;Receive BEMO notifications on this device even when the app is not open.
+push-20260812-004;settings.browserPushHint;ar-EG;استقبل إشعارات BEMO على هذا الجهاز حتى عندما لا يكون التطبيق مفتوحًا.
+push-20260812-005;settings.browserPushUnsupported;en-US;Push notifications are not supported in this browser or service workers are disabled.
+push-20260812-006;settings.browserPushUnsupported;ar-EG;هذا المتصفح لا يدعم إشعارات Push أو أن Service Worker غير مفعل.
+push-20260812-007;settings.browserPushNotConfigured;en-US;Web Push is not configured on the server yet.
+push-20260812-008;settings.browserPushNotConfigured;ar-EG;لم يتم إعداد Web Push على الخادم بعد.
+push-20260812-009;settings.browserPushEnabled;en-US;Push notifications are enabled on this device.
+push-20260812-010;settings.browserPushEnabled;ar-EG;تم تفعيل الإشعارات على هذا الجهاز.
+push-20260812-011;settings.browserPushDisabled;en-US;Push notifications are disabled on this device.
+push-20260812-012;settings.browserPushDisabled;ar-EG;الإشعارات غير مفعلة على هذا الجهاز.
+push-20260812-013;settings.browserPushTest;en-US;Send test notification
+push-20260812-014;settings.browserPushTest;ar-EG;إرسال إشعار تجريبي
+push-20260812-015;settings.browserPushPermissionDenied;en-US;Notification permission was denied by the browser. Enable it from site settings and try again.
+push-20260812-016;settings.browserPushPermissionDenied;ar-EG;تم رفض إذن الإشعارات من المتصفح. فعّله من إعدادات الموقع ثم حاول مرة أخرى.
+push-20260812-017;nav.notificationsSend;en-US;Send notifications
+push-20260812-018;nav.notificationsSend;ar-EG;إرسال الإشعارات
+push-20260812-019;nav.notificationsSendHint;en-US;Send in-app and push notifications to selected users, Excel recipients, or an application.
+push-20260812-020;nav.notificationsSendHint;ar-EG;إرسال إشعارات داخل النظام وPush لمستخدمين محددين أو ملف Excel أو جميع مستخدمي تطبيق.
+push-20260812-021;notificationsSend.sent;en-US;Notifications sent successfully
+push-20260812-022;notificationsSend.sent;ar-EG;تم إرسال الإشعارات بنجاح

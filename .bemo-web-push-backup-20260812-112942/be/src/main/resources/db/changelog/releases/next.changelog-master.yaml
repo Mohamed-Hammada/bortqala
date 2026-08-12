@@ -251,7 +251,3 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260810_v191_confirm_missing_ui_translations.yaml
   - include:
       file: db/changelog/20260811_v186_roadmap_shared_and_domain_schema.yaml
-  - include:
-      file: db/changelog/schema/create/20260812_push_001_web_push_subscriptions.yaml
-  - include:
-      file: db/changelog/data/insert/20260812_push_002_web_push_translations.yaml

@@ -59,6 +59,7 @@ export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = [
     { id: 'settings', labelKey: 'settings.title' },
     { id: 'approvals-my-tasks', labelKey: 'approvals.myTasks' },
     { id: 'approvals-workflows', labelKey: 'approvals.workflows' },
+    { id: 'notifications-send', labelKey: 'nav.notificationsSend' },
   ];
 
 @Component({
@@ -176,7 +177,7 @@ export class UsersPage {
     },
     {
       titleKey: 'users.groupAdministration',
-      ids: ['dashboard', 'reports', 'audit-logs', 'users', 'settings']
+      ids: ['dashboard', 'reports', 'audit-logs', 'users', 'settings', 'notifications-send']
     }
   ];
 

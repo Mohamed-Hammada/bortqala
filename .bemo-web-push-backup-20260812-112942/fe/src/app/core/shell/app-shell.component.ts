@@ -358,15 +358,6 @@ export const NAV_ITEMS: NavItem[] = [
       roles: ['ADMIN'],
     },
     {
-      menuId: 'notifications-send',
-      labelKey: 'nav.notificationsSend',
-      descriptionKey: 'nav.notificationsSendHint',
-      path: '/notifications/send',
-      icon: 'reports',
-      workspace: 'workspace.admin',
-      roles: ['ADMIN'],
-    },
-    {
       menuId: 'settings',
       labelKey: 'nav.settings',
       descriptionKey: 'nav.settingsHint',
@@ -382,7 +373,6 @@ export const SHELL_MENU_ROLES: Record<string, RoleCode[]> = Object.fromEntries(
 );
 
 import { NotificationCenterService } from '../notification-center/notification-center.service';
-import { WebPushService } from '../notification-center/web-push.service';
 
 @Component({
   selector: 'app-shell',
@@ -399,7 +389,6 @@ export class AppShellComponent {
   readonly network = inject(NetworkService);
   readonly router = inject(Router);
   readonly notificationCenter = inject(NotificationCenterService);
-  readonly webPush = inject(WebPushService);
   readonly screenShortcuts = inject(ScreenShortcutService);
   private readonly productAnalytics = inject(ProductAnalyticsClient);
 
@@ -499,7 +488,6 @@ export class AppShellComponent {
 
   constructor() {
     this.notificationCenter.loadUnreadCount();
-    void this.webPush.initialize();
     void this.screenShortcuts.load();
     effect(() => {
       const preferences = this.authService.preferences();
@@ -766,20 +754,18 @@ export class AppShellComponent {
     this.logoutError.set('');
   }
 
-  async logoutCurrentBrowser(): Promise<void> {
+  logoutCurrentBrowser(): void {
     if (this.logoutAllDevicesBusy()) return;
     this.logoutOptionsOpen.set(false);
-    await this.webPush.detachCurrentUser();
     this.authService.logoutCurrentBrowser();
     void this.router.navigate(['/login']);
   }
 
-  async logoutAllDevices(): Promise<void> {
+  logoutAllDevices(): void {
     if (this.logoutAllDevicesBusy()) return;
     this.logoutAllDevicesBusy.set(true);
     this.logoutError.set('');
 
-    await this.webPush.detachAllDevices();
     this.authService.logoutAllDevices().subscribe({
       next: () => {
         this.logoutAllDevicesBusy.set(false);

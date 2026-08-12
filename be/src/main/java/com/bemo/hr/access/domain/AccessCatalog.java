@@ -393,7 +393,9 @@ public final class AccessCatalog {
                     action("DECIDE", P_APPROVALS_DECIDE, false)),
             page("WORKFLOW_DEFINITIONS", "APPROVALS", "/approvals/definitions", "approvals-workflows",
                     "approvals.workflows", P_WORKFLOW_DEFINITIONS_READ, ADMIN_ONLY, null,
-                    action("MANAGE", P_WORKFLOW_DEFINITIONS_MANAGE, false)));
+                    action("MANAGE", P_WORKFLOW_DEFINITIONS_MANAGE, true)),
+            page("NOTIFICATIONS_SEND", "ADMINISTRATION", "/notifications/send", "notifications-send",
+                    "nav.notificationsSend", P_USERS_READ, ADMIN_ONLY, null));
 
     // ------------------------------------------------------------------
     // Segregation-of-duties rules.

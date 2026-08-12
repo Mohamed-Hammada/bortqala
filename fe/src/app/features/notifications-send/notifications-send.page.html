@@ -1,0 +1,39 @@
+<section class="page notification-send-page">
+  <header class="page-header"><div><p class="eyebrow">{{ i18n.t('notificationsSend.eyebrow', undefined, 'الإدارة') }}</p><h1>{{ i18n.t('notificationsSend.title', undefined, 'إرسال الإشعارات') }}</h1><p>{{ i18n.t('notificationsSend.description', undefined, 'إرسال إشعار داخل BEMO وPush لمستخدمين محددين أو ملف Excel أو جميع مستخدمي تطبيق.') }}</p></div></header>
+
+  <div class="card compose-card">
+    <div class="grid two">
+      <label class="field"><span>{{ i18n.t('notificationsSend.app', undefined, 'التطبيق') }}</span><select [value]="selectedAppId()" (change)="selectApp($any($event.target).value)" [disabled]="loading()"><option value="">--</option>@for (app of apps(); track app.id) {<option [value]="app.id">{{ app.name }} ({{ app.code }})</option>}</select></label>
+      <div class="field"><span>{{ i18n.t('notificationsSend.targetMethod', undefined, 'طريقة اختيار المستلمين') }}</span><div class="segmented">
+        <button type="button" [class.active]="mode()==='USERS'" (click)="setMode('USERS')">{{ i18n.t('notificationsSend.users', undefined, 'مستخدمون') }}</button>
+        <button type="button" [class.active]="mode()==='EXCEL'" (click)="setMode('EXCEL')">Excel</button>
+        <button type="button" [class.active]="mode()==='APP'" (click)="setMode('APP')">{{ i18n.t('notificationsSend.allApp', undefined, 'كل مستخدمي التطبيق') }}</button>
+      </div></div>
+    </div>
+
+    @if (mode() === 'USERS') {
+      <div class="recipient-box"><div class="toolbar"><input type="search" [value]="search()" (input)="search.set($any($event.target).value)" (keyup.enter)="loadUsers()" placeholder="Search username / display name" /><button class="button secondary" type="button" (click)="loadUsers()">بحث</button><button class="button secondary" type="button" (click)="selectAllVisible()">تحديد الكل</button><button class="button secondary" type="button" (click)="clearUsers()">مسح</button></div>
+        <div class="user-list">@for (user of users(); track user.username) {<label [class.disabled]="!user.active"><input type="checkbox" [disabled]="!user.active" [checked]="selectedUsers().includes(user.username)" (change)="toggleUser(user.username,$any($event.target).checked)" /><span><strong>{{ user.displayName }}</strong><small>{{ user.username }} @if (!user.active) { · inactive }</small></span></label>}</div></div>
+    } @else if (mode() === 'EXCEL') {
+      <div class="recipient-box"><label class="field"><span>{{ i18n.t('notificationsSend.excel', undefined, 'ملف Excel (.xlsx/.xls) — عمود username') }}</span><input type="file" accept=".xlsx,.xls" (change)="onExcel($any($event.target).files?.[0] ?? null)" /></label>
+      @if (preview(); as p) {<div class="stats"><span>Total <strong>{{p.totalRows}}</strong></span><span>Valid <strong>{{p.validCount}}</strong></span><span>Duplicates <strong>{{p.duplicateCount}}</strong></span><span>Not found <strong>{{p.notFoundCount}}</strong></span><span>Inactive <strong>{{p.inactiveCount}}</strong></span></div>
+        @if (p.notFoundUsernames.length || p.inactiveUsernames.length) {<details><summary>Preview issues</summary><p>Not found: {{p.notFoundUsernames.join(', ') || '-'}}</p><p>Inactive: {{p.inactiveUsernames.join(', ') || '-'}}</p><p>Duplicates: {{p.duplicateUsernames.join(', ') || '-'}}</p></details>} }
+      </div>
+    } @else {<div class="recipient-box app-target"><strong>{{ recipientCount() }}</strong><span>{{ i18n.t('notificationsSend.activeUsers', undefined, 'مستخدم نشط سيستلم الإشعار داخل التطبيق؛ Push يصل فقط للأجهزة المشتركة.') }}</span></div>}
+
+    <div class="grid two message-grid">
+      <label class="field"><span>العنوان بالعربية</span><input maxlength="255" [value]="titleAr()" (input)="titleAr.set($any($event.target).value)" /></label>
+      <label class="field"><span>English title</span><input maxlength="255" [value]="titleEn()" (input)="titleEn.set($any($event.target).value)" /></label>
+      <label class="field"><span>الرسالة بالعربية</span><textarea maxlength="1000" rows="5" [value]="messageAr()" (input)="messageAr.set($any($event.target).value)"></textarea></label>
+      <label class="field"><span>English message</span><textarea maxlength="1000" rows="5" [value]="messageEn()" (input)="messageEn.set($any($event.target).value)"></textarea></label>
+      <label class="field"><span>Type</span><input maxlength="50" [value]="notificationType()" (input)="notificationType.set($any($event.target).value.toUpperCase())" /></label>
+      <label class="field"><span>Priority</span><select [value]="priority()" (change)="priority.set($any($event.target).value)"><option>INFO</option><option>MEDIUM</option><option>HIGH</option><option>CRITICAL</option></select></label>
+      <label class="field full"><span>Deep link (optional, must start with /)</span><input maxlength="500" placeholder="/reports" [value]="actionLink()" (input)="actionLink.set($any($event.target).value)" /></label>
+    </div>
+    <div class="actions"><span class="recipient-count">{{ recipientCount() }} recipient(s)</span><button type="button" class="button primary" [disabled]="!canReview() || sending()" (click)="openReview()">مراجعة وإرسال</button></div>
+  </div>
+
+  @if (review()) {<div class="modal-backdrop"><div class="card review-dialog" role="dialog" aria-modal="true"><h2>تأكيد إرسال الإشعار</h2><p>App: <strong>{{ selectedAppId() }}</strong></p><p>Recipients: <strong>{{ recipientCount() }}</strong></p><p>Priority: <strong>{{ priority() }}</strong></p><h3>{{ titleAr() }}</h3><p>{{ messageAr() }}</p><div class="actions"><button type="button" class="button secondary" (click)="cancelReview()">إلغاء</button><button type="button" class="button primary" [disabled]="sending()" (click)="send()">{{ sending() ? 'جارٍ الإرسال…' : 'تأكيد الإرسال' }}</button></div></div></div>}
+
+  @if (result(); as r) {<div class="card result-card"><h2>نتيجة الإرسال</h2><div class="stats"><span>Requested <strong>{{r.requested}}</strong></span><span>Created <strong>{{r.created}}</strong></span><span>Missing <strong>{{r.skippedMissing}}</strong></span><span>Inactive <strong>{{r.skippedInactive}}</strong></span></div><small>Bulk ID: {{r.bulkId}}</small></div>}
+</section>

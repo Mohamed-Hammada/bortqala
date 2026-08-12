@@ -22,12 +22,13 @@ class NotificationServiceTests {
 
     @Mock private BusinessNotificationRepository notificationRepository;
     @Mock private AuditService auditService;
+    @Mock private org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     private NotificationService notificationService;
 
     @BeforeEach
     void setUp() {
-        notificationService = new NotificationService(notificationRepository, auditService);
+        notificationService = new NotificationService(notificationRepository, auditService, eventPublisher);
     }
 
     @Test

@@ -151,4 +151,10 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     roles: ['ADMIN', 'SUPER_ADMIN'],
     requiredFeature: null,
   },
+  {
+    menuId: 'notifications-send',
+    route: '/notifications/send',
+    roles: ['ADMIN', 'SUPER_ADMIN'],
+    requiredFeature: null,
+  },
 ];
