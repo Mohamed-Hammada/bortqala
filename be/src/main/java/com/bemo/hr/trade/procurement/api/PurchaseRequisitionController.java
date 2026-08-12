@@ -23,19 +23,19 @@ public class PurchaseRequisitionController {
     public record AddRequisitionLinePayload(String itemId, String itemName, BigDecimal requestedQuantity, BigDecimal unitPriceEstimate, String notes) {}
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PURCHASER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER')")
     public PurchaseRequisition createRequisition(@RequestBody CreateRequisitionPayload payload) {
         return requisitionService.createRequisition(payload.requisitionNumber(), payload.departmentId(), payload.requestedBy());
     }
 
     @PostMapping("/{id}/lines")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PURCHASER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER')")
     public PurchaseRequisitionLine addLine(@PathVariable String id, @RequestBody AddRequisitionLinePayload payload) {
         return requisitionService.addRequisitionLine(id, payload.itemId(), payload.itemName(), payload.requestedQuantity(), payload.unitPriceEstimate(), payload.notes());
     }
 
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PURCHASER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER')")
     public PurchaseRequisition submit(@PathVariable String id) {
         return requisitionService.submitRequisition(id);
     }
@@ -47,13 +47,13 @@ public class PurchaseRequisitionController {
     }
 
     @GetMapping("/approved")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PURCHASER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'VIEWER')")
     public List<PurchaseRequisition> getApprovedRequisitions() {
         return requisitionService.getApprovedRequisitions();
     }
 
     @GetMapping("/{id}/lines")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PURCHASER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'VIEWER')")
     public List<PurchaseRequisitionLine> getLines(@PathVariable String id) {
         return requisitionService.getRequisitionLines(id);
     }

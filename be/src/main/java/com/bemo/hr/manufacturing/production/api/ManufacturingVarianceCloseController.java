@@ -20,13 +20,13 @@ public class ManufacturingVarianceCloseController {
     public record CloseVariancePayload(String workOrderId, BigDecimal standardCost, BigDecimal actualCost) {}
 
     @PostMapping("/close")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PRODUCTION_MANAGER', 'FINANCE_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'FINANCE_MANAGER')")
     public ProductionVarianceClose calculateAndCloseVariance(@RequestBody CloseVariancePayload payload) {
         return varianceService.calculateAndCloseVariance(payload.workOrderId(), payload.standardCost(), payload.actualCost());
     }
 
     @GetMapping("/work-orders/{workOrderId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PRODUCTION_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public ProductionVarianceClose getVarianceClose(@PathVariable String workOrderId) {
         return varianceService.getVarianceClose(workOrderId);
     }

@@ -281,7 +281,7 @@ public class ProcurementService {
 
         String actor = getCurrentUser();
         lines.stream().filter(line -> line.getQuantity().signum() > 0).forEach(line ->
-                operationsService.recordGoodsReceipt(line.getItemId(), po.getSupplierId(), line.getQuantity(), line.getUnitPrice(),
+                operationsService.recordGoodsReceipt(line.getItemId(), po.getSupplierId(), payload.warehouseId(), line.getQuantity(), line.getUnitPrice(),
                         saved.getGrnNumber(), line.getQualityReason(),
                         receiptDate.atStartOfDay(ZoneOffset.UTC).toInstant(), actor));
         boolean fullyReceived = orderedLines.values().stream().allMatch(line ->

@@ -23,43 +23,43 @@ public class PaymentBatchController {
     public record AddItemPayload(String documentId, String payeeId, String payeeName, BigDecimal amount, String bankAccount) {}
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_MANAGER', 'ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_USER', 'ACCOUNTANT')")
     public PaymentBatchHeader createBatch(@RequestBody CreateBatchPayload payload) {
         return paymentBatchService.createBatch(payload.batchNumber(), PaymentBatchHeader.SourceCategory.valueOf(payload.sourceCategory()), payload.totalAmount());
     }
 
     @PostMapping("/{id}/items")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_MANAGER', 'ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_USER', 'ACCOUNTANT')")
     public PaymentBatchItem addItem(@PathVariable String id, @RequestBody AddItemPayload payload) {
         return paymentBatchService.addBatchItem(id, payload.documentId(), payload.payeeId(), payload.payeeName(), payload.amount(), payload.bankAccount());
     }
 
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_MANAGER', 'ACCOUNTANT')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_USER', 'ACCOUNTANT')")
     public PaymentBatchHeader submitBatch(@PathVariable String id) {
         return paymentBatchService.submitBatch(id);
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public PaymentBatchHeader approveBatch(@PathVariable String id) {
         return paymentBatchService.approveBatch(id);
     }
 
     @PostMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public PaymentBatchHeader rejectBatch(@PathVariable String id) {
         return paymentBatchService.rejectBatch(id);
     }
 
     @PostMapping("/{id}/disburse")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_USER', 'FINANCE_MANAGER')")
     public PaymentBatchHeader disburseBatch(@PathVariable String id) {
         return paymentBatchService.disburseBatch(id);
     }
 
     @GetMapping("/{id}/items")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_MANAGER', 'ACCOUNTANT', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_USER', 'ACCOUNTANT', 'FINANCE_MANAGER', 'VIEWER')")
     public List<PaymentBatchItem> getItems(@PathVariable String id) {
         return paymentBatchService.getBatchItems(id);
     }

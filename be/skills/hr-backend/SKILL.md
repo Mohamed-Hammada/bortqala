@@ -83,6 +83,7 @@ Inside a feature, add only the layers the slice needs: `api`, `application`, `do
 - DEMO bootstrap: reference categories, seasonal rules, employees, attendance edge cases, business parties, inventory movements, partner balances, and an eligible advance are created idempotently; existing codes are never overwritten.
 
 - Inventory control now includes FIFO/weighted-average valuation and GL posting, per-item reorder thresholds, a derived replenishment queue, and idempotent cycle counts that preserve system/count evidence and post valued variance movements.
+- Warehouse inventory now receives accepted procurement quantities into the selected warehouse and supports tenant-unique, auditable draft/ship/receive/cancel transfers with positive lines, stock validation, idempotent transitions, and source/target balance movement. Inventory, lot/serial, production-material, and quality endpoints use the real domain roles; the obsolete nonexistent `OPERATIONS_MANAGER` authority is not used.
 - Next safe extensions must be selected from verified source gaps and failing acceptance tests; roadmap/README status labels are historical hints only and are not implementation evidence.
 
 Do not add payment execution or a vendor-specific device SDK until the user selects those integrations. Do not invent packing/carton or payroll formulas from partially legible notes; signed ledgers preserve the known facts while later policies remain configurable. Design adapters so integrations do not change calculation rules.

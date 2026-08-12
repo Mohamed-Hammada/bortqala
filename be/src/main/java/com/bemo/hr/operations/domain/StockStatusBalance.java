@@ -32,7 +32,7 @@ public class StockStatusBalance {
     @Column(name = "warehouse_id", nullable = false, length = 36)
     private String warehouseId;
 
-    @Column(name = "bin_id", length = 36)
+    @Column(name = "bin_id", nullable = false, length = 36)
     private String binId;
 
     @Column(name = "item_id", nullable = false, length = 36)
@@ -60,7 +60,7 @@ public class StockStatusBalance {
     public StockStatusBalance(String warehouseId, String binId, String itemId, Status status, BigDecimal quantity) {
         this.id = UUID.randomUUID().toString();
         this.warehouseId = warehouseId;
-        this.binId = binId;
+        this.binId = binId == null ? "" : binId;
         this.itemId = itemId;
         this.status = status;
         this.quantity = quantity;

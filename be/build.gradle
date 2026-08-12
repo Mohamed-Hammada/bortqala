@@ -85,8 +85,15 @@ tasks.register('checkTranslationCatalog', Exec) {
             'tools/check-translation-catalog.py'
 }
 
+tasks.register('checkAuthorizationContract', Exec) {
+    workingDir projectDir
+    commandLine System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3',
+            'tools/check-authorization-contract.py'
+}
+
 tasks.named('check') {
     dependsOn tasks.named('checkTranslationCatalog')
+    dependsOn tasks.named('checkAuthorizationContract')
 }
 
 def frontendDirectory = file('../fe')

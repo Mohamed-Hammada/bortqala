@@ -40,6 +40,14 @@ export interface CycleCount {
   systemQuantity: number; countedQuantity: number; variance: number;
 }
 export interface WarehouseOption { id: string; code: string; name: string; }
+export interface StockTransferLine {
+  id: string; itemId: string; itemCode: string; itemName: string; quantity: number;
+}
+export interface StockTransfer {
+  id: string; transferNumber: string; sourceWarehouseId: string; sourceWarehouseName: string | null;
+  targetWarehouseId: string; targetWarehouseName: string | null; transferDate: number;
+  status: 'DRAFT' | 'SHIPPED' | 'RECEIVED' | 'CANCELLED'; version: number; lines: StockTransferLine[];
+}
 export interface StockMovement {
   id: string;
   itemId: string;

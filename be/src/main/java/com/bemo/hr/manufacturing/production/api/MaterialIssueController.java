@@ -24,25 +24,25 @@ public class MaterialIssueController {
     public record AddIssueLinePayload(String itemId, BigDecimal quantity, String warehouseId) {}
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'OPERATIONS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'INVENTORY_MANAGER')")
     public MaterialIssueHeader createIssue(@RequestBody CreateIssuePayload payload) {
         return issueService.createIssue(payload.issueNumber(), payload.productionOrderId(), LocalDate.parse(payload.issueDate()));
     }
 
     @PostMapping("/{id}/lines")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'OPERATIONS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'INVENTORY_MANAGER')")
     public MaterialIssueLine addIssueLine(@PathVariable String id, @RequestBody AddIssueLinePayload payload) {
         return issueService.addIssueLine(id, payload.itemId(), payload.quantity(), payload.warehouseId());
     }
 
     @PostMapping("/{id}/cancel")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'OPERATIONS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'INVENTORY_MANAGER')")
     public MaterialIssueHeader cancelIssue(@PathVariable String id) {
         return issueService.cancelIssue(id);
     }
 
     @GetMapping("/orders/{orderId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'OPERATIONS_MANAGER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'INVENTORY_MANAGER', 'VIEWER')")
     public List<MaterialIssueHeader> getIssuesByOrder(@PathVariable String orderId) {
         return issueService.getIssuesByProductionOrder(orderId);
     }

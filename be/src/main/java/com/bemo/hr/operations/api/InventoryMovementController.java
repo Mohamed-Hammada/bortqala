@@ -7,6 +7,10 @@ import com.bemo.hr.operations.domain.StockTransferHeader;
 import com.bemo.hr.operations.domain.StockTransferLine;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -23,8 +27,9 @@ public class InventoryMovementController {
         this.movementService = movementService;
     }
 
-    public record CreateTransferPayload(String transferNumber, String sourceWarehouseId, String targetWarehouseId, String transferDate) {}
-    public record AddTransferLinePayload(String itemId, BigDecimal quantity) {}
+    public record CreateTransferPayload(@NotBlank String transferNumber, @NotBlank String sourceWarehouseId,
+                                        @NotBlank String targetWarehouseId, @NotBlank String transferDate) {}
+    public record AddTransferLinePayload(@NotBlank String itemId, @NotNull @DecimalMin("0.0001") BigDecimal quantity) {}
     public record CreateCycleCountPayload(String countNumber, String warehouseId, String countDate) {}
     public record AddCycleCountLinePayload(String itemId, BigDecimal countedQuantity) {}
     public record ReconcileCycleCountPayload(String operationId, String warehouseId, String itemId,
@@ -32,26 +37,41 @@ public class InventoryMovementController {
 
     @PostMapping("/transfers")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
-    public StockTransferHeader createTransfer(@RequestBody CreateTransferPayload payload) {
-        return movementService.createTransfer(payload.transferNumber(), payload.sourceWarehouseId(), payload.targetWarehouseId(), LocalDate.parse(payload.transferDate()));
+    public InventoryMovementFullService.TransferView createTransfer(@Valid @RequestBody CreateTransferPayload payload) {
+        var transfer = movementService.createTransfer(payload.transferNumber(), payload.sourceWarehouseId(), payload.targetWarehouseId(), LocalDate.parse(payload.transferDate()));
+        return movementService.transfer(transfer.getId());
     }
 
+    @GetMapping("/transfers")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public List<InventoryMovementFullService.TransferView> transfers() { return movementService.transfers(); }
+
     @PostMapping("/transfers/{id}/lines")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'OPERATIONS_MANAGER')")
-    public StockTransferLine addTransferLine(@PathVariable String id, @RequestBody AddTransferLinePayload payload) {
-        return movementService.addTransferLine(id, payload.itemId(), payload.quantity());
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public InventoryMovementFullService.TransferView addTransferLine(@PathVariable String id, @Valid @RequestBody AddTransferLinePayload payload) {
+        movementService.addTransferLine(id, payload.itemId(), payload.quantity());
+        return movementService.transfer(id);
     }
 
     @PostMapping("/transfers/{id}/ship")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'OPERATIONS_MANAGER')")
-    public StockTransferHeader shipTransfer(@PathVariable String id) {
-        return movementService.shipTransfer(id);
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public InventoryMovementFullService.TransferView shipTransfer(@PathVariable String id, Authentication authentication) {
+        movementService.shipTransfer(id, authentication.getName());
+        return movementService.transfer(id);
     }
 
     @PostMapping("/transfers/{id}/receive")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'OPERATIONS_MANAGER')")
-    public StockTransferHeader receiveTransfer(@PathVariable String id) {
-        return movementService.receiveTransfer(id);
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public InventoryMovementFullService.TransferView receiveTransfer(@PathVariable String id, Authentication authentication) {
+        movementService.receiveTransfer(id, authentication.getName());
+        return movementService.transfer(id);
+    }
+
+    @PostMapping("/transfers/{id}/cancel")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public InventoryMovementFullService.TransferView cancelTransfer(@PathVariable String id, Authentication authentication) {
+        movementService.cancelTransfer(id, authentication.getName());
+        return movementService.transfer(id);
     }
 
     @PostMapping("/cycle-counts")

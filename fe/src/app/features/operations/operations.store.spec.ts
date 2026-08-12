@@ -90,8 +90,23 @@ describe('OperationsStore', () => {
     httpMock.expectOne('/api/v1/operations/reorder-alerts').flush([]);
     httpMock.expectOne('/api/v1/operations/cycle-counts').flush([]);
     httpMock.expectOne('/api/v1/inventory/warehouses').flush([]);
+    httpMock.expectOne('/api/v1/operations/transfers').flush([]);
 
     expect(await promise).toBe(true);
     expect(store.valuation()?.policy.valuationMethod).toBe('FIFO');
+  });
+
+  it('creates and transitions a warehouse transfer while updating local state', async () => {
+    const transfer = { id: 'tr-1', transferNumber: 'TR-001', sourceWarehouseId: 'wh-1', sourceWarehouseName: 'Main',
+      targetWarehouseId: 'wh-2', targetWarehouseName: 'Secondary', transferDate: 1785628800000,
+      status: 'DRAFT' as const, version: 0, lines: [] };
+    const create = store.createTransfer({ transferNumber: 'TR-001', sourceWarehouseId: 'wh-1', targetWarehouseId: 'wh-2', transferDate: '2026-08-02' });
+    httpMock.expectOne('/api/v1/operations/transfers').flush(transfer);
+    expect((await create)?.id).toBe('tr-1');
+
+    const ship = store.transitionTransfer('tr-1', 'ship');
+    httpMock.expectOne('/api/v1/operations/transfers/tr-1/ship').flush({ ...transfer, status: 'SHIPPED', version: 1 });
+    expect(await ship).toBe(true);
+    expect(store.transfers()[0].status).toBe('SHIPPED');
   });
 });

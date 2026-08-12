@@ -35,7 +35,8 @@ export class OperationsPage {
   readonly store = inject(OperationsStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
-  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | null>(null);
+  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | 'transfer' | null>(null);
+  readonly editingTransferId = signal<string | null>(null);
   readonly itemPagination = new TablePagination();
   readonly movementPagination = new TablePagination();
   readonly balancePagination = new TablePagination();
@@ -153,11 +154,19 @@ export class OperationsPage {
     countedQuantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
     countedAt: new FormControl(this.nowInput(), { nonNullable: true, validators: Validators.required }),
   });
+  readonly transferForm = new FormGroup({
+    transferNumber: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    sourceWarehouseId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    targetWarehouseId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    transferDate: new FormControl(new Date().toISOString().slice(0, 10), { nonNullable: true, validators: Validators.required }),
+    itemId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    quantity: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0.0001)] }),
+  });
 
   constructor() {
     void this.store.load();
   }
-  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count'): void {
+  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | 'transfer'): void {
     if (kind === 'valuation') {
       const policy = this.store.valuation()?.policy;
       if (policy) this.valuationForm.reset({
@@ -202,6 +211,47 @@ export class OperationsPage {
       this.cycleCountForm.reset({ warehouseId: '', itemId: '', countedQuantity: 0, countedAt: this.nowInput() });
       this.close();
     }
+  }
+  async saveTransfer(): Promise<void> {
+    if (this.transferForm.invalid) return this.transferForm.markAllAsTouched();
+    const value = this.transferForm.getRawValue();
+    if (value.sourceWarehouseId === value.targetWarehouseId) {
+      this.notification.error(this.i18n.t('TRANSFER_WAREHOUSES_DIFFERENT'));
+      return;
+    }
+    let transferId = this.editingTransferId();
+    if (!transferId) {
+      const created = await this.store.createTransfer({
+        transferNumber: value.transferNumber,
+        sourceWarehouseId: value.sourceWarehouseId,
+        targetWarehouseId: value.targetWarehouseId,
+        transferDate: value.transferDate,
+      });
+      if (!created) return;
+      transferId = created.id;
+      this.editingTransferId.set(created.id);
+    }
+    if (await this.store.addTransferLine(transferId, { itemId: value.itemId, quantity: value.quantity })) {
+      this.notification.success(this.i18n.t('operations.transferSaved'));
+      this.editingTransferId.set(null);
+      this.transferForm.reset({ transferNumber: '', sourceWarehouseId: '', targetWarehouseId: '',
+        transferDate: new Date().toISOString().slice(0, 10), itemId: '', quantity: 1 });
+      this.close();
+    }
+  }
+  async transitionTransfer(id: string, action: 'ship' | 'receive' | 'cancel'): Promise<void> {
+    if (await this.store.transitionTransfer(id, action)) {
+      this.notification.success(this.i18n.t(`operations.transfer.${action}Success`));
+    }
+  }
+  transferStatusLabel(status: 'DRAFT' | 'SHIPPED' | 'RECEIVED' | 'CANCELLED'): string {
+    const key = {
+      DRAFT: 'operations.transfer.status.DRAFT',
+      SHIPPED: 'operations.transfer.status.SHIPPED',
+      RECEIVED: 'operations.transfer.status.RECEIVED',
+      CANCELLED: 'operations.transfer.status.CANCELLED',
+    }[status];
+    return this.i18n.t(key);
   }
   async saveTransaction(): Promise<void> {
     if (this.transactionForm.invalid) {

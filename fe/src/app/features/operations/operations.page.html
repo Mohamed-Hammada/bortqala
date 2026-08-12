@@ -7,6 +7,7 @@
     </div>
     <div class="toolbar">
       <button class="button secondary" (click)="store.export()">{{ i18n.t('common.export') }}</button
+      ><button class="button secondary" (click)="open('transfer')">+ {{ i18n.t('operations.newTransfer') }}</button
       ><button class="button secondary" (click)="open('cycle-count')">+ {{ i18n.t('operations.newCycleCount') }}</button
       ><button class="button secondary" (click)="open('category')">+ {{ i18n.t('operations.newCategory') || 'تصنيف' }}</button
       ><button class="button secondary" (click)="open('uom')">+ {{ i18n.t('operations.newUom') || 'وحدة قياس' }}</button
@@ -87,6 +88,25 @@
     @for (count of store.cycleCounts(); track count.id) {
       <tr><td>{{ date(count.countDate) }}</td><td>{{ count.itemId }}</td><td>{{ count.systemQuantity }}</td><td>{{ count.countedQuantity }}</td><td [class.negative]="count.variance < 0">{{ count.variance }}</td><td>{{ count.countNumber }}</td></tr>
     } @empty { <tr><td colspan="6"><div class="empty-state">{{ i18n.t('operations.noCycleCounts') }}</div></td></tr> }
+  </tbody></table></div>
+
+  <div class="section-head"><div><h2>{{ i18n.t('operations.transfers') }}</h2><p>{{ i18n.t('operations.transfersHint') }}</p></div></div>
+  <div class="table-card"><table><thead><tr>
+    <th>{{ i18n.t('operations.reference') }}</th><th>{{ i18n.t('operations.date') }}</th>
+    <th>{{ i18n.t('operations.transferSource') }}</th><th>{{ i18n.t('operations.transferTarget') }}</th>
+    <th>{{ i18n.t('common.status') }}</th><th>{{ i18n.t('operations.items') }}</th><th>{{ i18n.t('common.actions') }}</th>
+  </tr></thead><tbody>
+    @for (transfer of store.transfers(); track transfer.id) {
+      <tr><td class="ltr">{{ transfer.transferNumber }}</td><td>{{ date(transfer.transferDate) }}</td>
+        <td>{{ transfer.sourceWarehouseName ?? transfer.sourceWarehouseId }}</td><td>{{ transfer.targetWarehouseName ?? transfer.targetWarehouseId }}</td>
+        <td><span class="status neutral">{{ transferStatusLabel(transfer.status) }}</span></td>
+        <td>@for (line of transfer.lines; track line.id) { <span class="chip">{{ line.itemCode }} × {{ line.quantity }}</span> }</td>
+        <td><div class="toolbar">
+          @if (transfer.status === 'DRAFT') { <button class="button secondary" type="button" (click)="transitionTransfer(transfer.id, 'ship')">{{ i18n.t('operations.transfer.ship') }}</button><button class="button danger" type="button" (click)="transitionTransfer(transfer.id, 'cancel')">{{ i18n.t('common.cancel') }}</button> }
+          @if (transfer.status === 'SHIPPED') { <button class="button primary" type="button" (click)="transitionTransfer(transfer.id, 'receive')">{{ i18n.t('operations.transfer.receive') }}</button> }
+        </div></td>
+      </tr>
+    } @empty { <tr><td colspan="7"><div class="empty-state">{{ i18n.t('operations.noTransfers') }}</div></td></tr> }
   </tbody></table></div>
 
   <div class="section-head valuation-head">
@@ -676,6 +696,22 @@
         <button class="button primary" type="submit">{{ i18n.t('common.save') || 'حفظ' }}</button>
         <button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') || 'إلغاء' }}</button>
       </div>
+    </form>
+  </app-modal-dialog>
+}
+
+@if (drawer() === 'transfer') {
+  <app-modal-dialog [isOpen]="true" title="{{ i18n.t('operations.newTransfer') }}" (close)="close()">
+    <form [formGroup]="transferForm" (ngSubmit)="saveTransfer()">
+      <div class="form-grid">
+        <div class="field"><label>{{ i18n.t('operations.transferNumber') }}</label><input class="ltr" formControlName="transferNumber" /></div>
+        <div class="field"><label>{{ i18n.t('operations.date') }}</label><input type="date" formControlName="transferDate" /></div>
+        <div class="field"><label>{{ i18n.t('operations.transferSource') }}</label><select formControlName="sourceWarehouseId"><option value="">—</option>@for (warehouse of store.warehouses(); track warehouse.id) { <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option> }</select></div>
+        <div class="field"><label>{{ i18n.t('operations.transferTarget') }}</label><select formControlName="targetWarehouseId"><option value="">—</option>@for (warehouse of store.warehouses(); track warehouse.id) { <option [value]="warehouse.id">{{ warehouse.code }} · {{ warehouse.name }}</option> }</select></div>
+        <div class="field"><label>{{ i18n.t('operations.item') }}</label><select formControlName="itemId"><option value="">—</option>@for (item of store.snapshot().items; track item.id) { <option [value]="item.id">{{ item.code }} · {{ item.name }}</option> }</select></div>
+        <div class="field"><label>{{ i18n.t('operations.quantity') }}</label><input type="number" min="0.0001" step="0.0001" formControlName="quantity" /></div>
+      </div>
+      <div modal-actions class="modal-actions-bar"><button class="button primary" type="submit">{{ i18n.t('common.save') }}</button><button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') }}</button></div>
     </form>
   </app-modal-dialog>
 }

@@ -25,25 +25,25 @@ public class ManufacturingWipController {
     public record PostWipPayload(String workOrderId, String workCenterId, BigDecimal laborHours, BigDecimal machineHours, BigDecimal totalWipCost) {}
 
     @PostMapping("/reservations")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PRODUCTION_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
     public MaterialReservationHeader createReservation(@RequestBody CreateReservationPayload payload) {
         return wipService.createReservation(payload.workOrderId());
     }
 
     @PostMapping("/reservations/{id}/lines")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PRODUCTION_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
     public MaterialReservationLine addReservationLine(@PathVariable String id, @RequestBody AddReservationLinePayload payload) {
         return wipService.addReservationLine(id, payload.itemId(), payload.reservedQuantity());
     }
 
     @PostMapping("/postings")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PRODUCTION_MANAGER', 'FINANCE_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'FINANCE_MANAGER')")
     public WipPostingRecord postWip(@RequestBody PostWipPayload payload) {
         return wipService.postWip(payload.workOrderId(), payload.workCenterId(), payload.laborHours(), payload.machineHours(), payload.totalWipCost());
     }
 
     @GetMapping("/postings/work-orders/{workOrderId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PRODUCTION_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public List<WipPostingRecord> getWipPostings(@PathVariable String workOrderId) {
         return wipService.getWipPostings(workOrderId);
     }

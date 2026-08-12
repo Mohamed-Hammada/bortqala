@@ -82,6 +82,51 @@ public class WarehouseInventoryService {
         return totalAvailable.subtract(totalReserved).max(BigDecimal.ZERO);
     }
 
+    @Transactional
+    public void receiveAvailableStock(String warehouseId, String itemId, BigDecimal quantity) {
+        requirePositive(quantity);
+        requireActiveWarehouse(warehouseId);
+        StockStatusBalance balance = balanceRepository
+                .findByWarehouseIdAndBinIdAndItemIdAndStatus(
+                        warehouseId, "", itemId, StockStatusBalance.Status.AVAILABLE)
+                .orElseGet(() -> new StockStatusBalance(warehouseId, "", itemId,
+                        StockStatusBalance.Status.AVAILABLE, BigDecimal.ZERO));
+        balance.adjustQuantity(quantity);
+        balanceRepository.save(balance);
+    }
+
+    @Transactional
+    public void issueAvailableStock(String warehouseId, String itemId, BigDecimal quantity) {
+        requirePositive(quantity);
+        requireActiveWarehouse(warehouseId);
+        if (getAvailableStock(warehouseId, itemId).compareTo(quantity) < 0) {
+            throw new BusinessRuleException("Insufficient available warehouse stock.",
+                    "WAREHOUSE_STOCK_INSUFFICIENT", HttpStatus.CONFLICT);
+        }
+        StockStatusBalance balance = balanceRepository
+                .findByWarehouseIdAndBinIdAndItemIdAndStatus(
+                        warehouseId, "", itemId, StockStatusBalance.Status.AVAILABLE)
+                .orElseThrow(() -> new BusinessRuleException("Warehouse stock balance was not found.",
+                        "WAREHOUSE_STOCK_BALANCE_NOT_FOUND", HttpStatus.CONFLICT));
+        balance.adjustQuantity(quantity.negate());
+        balanceRepository.save(balance);
+    }
+
+    private void requireActiveWarehouse(String warehouseId) {
+        if (warehouseId == null || warehouseId.isBlank()
+                || warehouseRepository.findById(warehouseId).filter(Warehouse::isActive).isEmpty()) {
+            throw new BusinessRuleException("Select an active warehouse.",
+                    "WAREHOUSE_ACTIVE_REQUIRED", HttpStatus.CONFLICT);
+        }
+    }
+
+    private void requirePositive(BigDecimal quantity) {
+        if (quantity == null || quantity.signum() <= 0) {
+            throw new BusinessRuleException("Warehouse stock quantity must be positive.",
+                    "WAREHOUSE_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+        }
+    }
+
     private StockReservation getReservation(String id) {
         return reservationRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("Reservation not found", "RESERVATION_NOT_FOUND", HttpStatus.NOT_FOUND));

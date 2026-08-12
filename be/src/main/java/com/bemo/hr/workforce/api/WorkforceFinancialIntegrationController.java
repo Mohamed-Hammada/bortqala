@@ -44,7 +44,7 @@ public class WorkforceFinancialIntegrationController {
     }
 
     @PostMapping("/treasury-matches")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'TREASURY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'TREASURY_USER')")
     public WorkforceTreasuryMatch matchTreasuryPayment(@RequestBody MatchTreasuryPayload payload) {
         return financialService.matchTreasuryPayment(payload.paymentId(), payload.bankTransactionId(), payload.matchedAmount());
     }

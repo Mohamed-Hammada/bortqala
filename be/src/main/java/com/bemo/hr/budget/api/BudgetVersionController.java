@@ -20,19 +20,19 @@ public class BudgetVersionController {
     public record CreateVersionPayload(String versionCode, String name, int fiscalYear) {}
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'BUDGET_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public BudgetVersion createVersion(@RequestBody CreateVersionPayload payload) {
         return versionService.createVersion(payload.versionCode(), payload.name(), payload.fiscalYear());
     }
 
     @PostMapping("/{id}/activate")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'BUDGET_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public BudgetVersion activateVersion(@PathVariable String id) {
         return versionService.activateVersion(id);
     }
 
     @GetMapping("/fiscal-years/{fiscalYear}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'BUDGET_MANAGER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR', 'VIEWER')")
     public List<BudgetVersion> getVersionsForYear(@PathVariable int fiscalYear) {
         return versionService.getVersionsForYear(fiscalYear);
     }

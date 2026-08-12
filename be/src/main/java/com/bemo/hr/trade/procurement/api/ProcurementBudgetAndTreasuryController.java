@@ -28,7 +28,7 @@ public class ProcurementBudgetAndTreasuryController {
     }
 
     @PostMapping("/treasury-matches")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'TREASURY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'TREASURY_USER')")
     public ProcurementTreasuryBankMatch matchTreasuryPayment(@RequestBody MatchTreasuryPayload payload) {
         return governanceService.matchTreasuryPayment(payload.paymentId(), payload.bankTransactionId(), payload.matchedAmount());
     }

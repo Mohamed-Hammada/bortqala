@@ -1,48 +1,30 @@
 # Bemo ERP
 
-BEMO ERP is a multi-tenant business platform covering HR/attendance, workforce, payroll, procurement, sales, inventory, manufacturing, finance, notifications and support.
+Bemo ERP is a multi-tenant operations platform covering HR and attendance, contractor workforce, payroll, procurement, sales, inventory, manufacturing, finance, notifications, and support.
 
-## Documentation accuracy
+The repository contains these active applications:
 
-The previous implementation checklist incorrectly presented all roadmap items as completed.
+- `be/` — Spring Boot backend and Liquibase database catalog.
+- `fe/` — Angular web application.
+- `desktop/` — Tauri desktop distribution that packages the web/backend stack with a local runtime and PostgreSQL.
+- `license-app/` — license activation service used by the desktop distribution.
 
-The corrected code-verified checklist is the primary handoff document:
+Implementation claims in historical notes are not authoritative. Verify behavior from source, automated tests, migrations, and exercised API/UI flows. Current architecture and operational evidence live in `PROJECT_MAP.md`, `docs/TECHNICAL_GUIDE_CHECKLIST.md`, and `docs/TEST_EVIDENCE.md`.
 
-[`BEMO_ERP_IMPLEMENTATION_READMES_fm_bemo_consolidated/IMPLEMENTATION_CHECKLIST.md`](BEMO_ERP_IMPLEMENTATION_READMES_fm_bemo_consolidated/IMPLEMENTATION_CHECKLIST.md)
-
-Audit baseline:
-- developer-fix checkpoint: `a102a92a9127ab13f862048a2586a933efa50912`
-- reviewed current HEAD: `8595cfa1b600f2bb4ac39fa52d32debcca5cb2ce`
-
-A checked item means **verified end-to-end**, not merely “class/controller/migration exists.”
-
-Current high-level state:
-- Payroll — PARTIAL
-- Procurement — PARTIAL
-- Sales/O2C — PARTIAL
-- Inventory — PARTIAL
-- Manufacturing/Quality — PARTIAL
-- Finance close/reconciliation — PARTIAL
-- Workforce — SOURCE PRESENT / VERIFY
-- Web Push — SOURCE PRESENT / RUNTIME VERIFY
-- About — PARTIAL
-- Support/Feedback — SOURCE PRESENT / VERIFY
-- Repository hygiene — PARTIAL
-
-See:
-- [`docs/implementation/IMPLEMENTATION_STATUS.md`](docs/implementation/IMPLEMENTATION_STATUS.md)
-- [`docs/implementation/REMAINING_WORK.md`](docs/implementation/REMAINING_WORK.md)
-- [`docs/README.md`](docs/README.md)
-
-## Verification commands
+## Local verification
 
 ```powershell
 cd be
-.\gradlew.bat clean test
+.\gradlew.bat test -PskipDockerTests
+python tools/check-error-codes.py
+python tools/check-translation-catalog.py
+python tools/check-authorization-contract.py
 
 cd ..\fe
 npm run check:i18n
+npm run check:hardcoded
+npm run test -- --watch=false
 npm run build
 ```
 
-Compilation/test success alone does not make a business workflow complete; exercise the full acceptance path and update the corrected checklist only when evidence supports `[x] VERIFIED`.
+Generated dependency/build folders and desktop runtime bundles are ignored and can be recreated from their lockfiles and `desktop/scripts/prepare-resources.ps1`.

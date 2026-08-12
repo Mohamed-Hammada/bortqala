@@ -36,6 +36,7 @@ public class OperationsService {
     private final OperationsExcelExporter operationsExcelExporter;
     private final com.bemo.hr.audit.application.AuditService auditService;
     private final InventoryValuationService inventoryValuationService;
+    private final com.bemo.hr.operations.application.WarehouseInventoryService warehouseInventoryService;
 
     public byte[] export(com.bemo.hr.reporting.application.ExcelExportOptions options) {
         return operationsExcelExporter.export(snapshot(), inventoryValuationService.report(), options);
@@ -296,6 +297,12 @@ public class OperationsService {
     @Transactional
     public void recordGoodsReceipt(String itemId, String supplierId, BigDecimal acceptedQuantity,
                                    BigDecimal unitCost, String grnNumber, String note, Instant occurredAt, String actor) {
+        recordGoodsReceipt(itemId, supplierId, null, acceptedQuantity, unitCost, grnNumber, note, occurredAt, actor);
+    }
+
+    @Transactional
+    public void recordGoodsReceipt(String itemId, String supplierId, String warehouseId, BigDecimal acceptedQuantity,
+                                   BigDecimal unitCost, String grnNumber, String note, Instant occurredAt, String actor) {
         requireItem(itemId);
         if (acceptedQuantity == null || acceptedQuantity.signum() <= 0) {
             throw new BusinessRuleException("Accepted goods-receipt quantity must be positive.", "OPS_GRN_ACCEPTED_POSITIVE", HttpStatus.CONFLICT);
@@ -304,6 +311,9 @@ public class OperationsService {
                 "PURCHASE_RECEIPT", acceptedQuantity, null, grnNumber, note, occurredAt, actor));
         movement.assignDocument("GOODS_RECEIPT", "Accepted quantity posted from supplier receipt");
         inventoryValuationService.valueMovement(movement, unitCost, actor);
+        if (warehouseId != null && !warehouseId.isBlank()) {
+            warehouseInventoryService.receiveAvailableStock(warehouseId, itemId, acceptedQuantity);
+        }
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Goods receipt " + grnNumber + " accepted qty: " + acceptedQuantity, null);
     }
