@@ -34,6 +34,12 @@ public class SalaryPayment {
     @Column(name = "report_id")
     private String reportId;
 
+    @Column(name = "payroll_run_id", length = 36)
+    private String payrollRunId;
+
+    @Column(name = "payroll_snapshot_id", length = 36)
+    private String payrollSnapshotId;
+
     @Column(name = "period_year", nullable = false)
     private int periodYear;
 
@@ -126,6 +132,14 @@ public class SalaryPayment {
         this.paymentStatus = nextStatus;
     }
 
+    public void attachCalculationEvidence(String payrollRunId, String payrollSnapshotId) {
+        if (this.payrollSnapshotId != null && !this.payrollSnapshotId.equals(payrollSnapshotId)) {
+            throw new IllegalStateException("Payroll calculation evidence is immutable once attached");
+        }
+        this.payrollRunId = payrollRunId;
+        this.payrollSnapshotId = payrollSnapshotId;
+    }
+
     public void markAsReversed(String reason, String actor) {
         this.paymentStatus = PaymentStatus.REVERSED;
         this.note = (this.note == null ? "" : this.note + " | ") + "تم التراجع: " + reason;
@@ -152,6 +166,8 @@ public class SalaryPayment {
     public String getTenantId() { return tenantId; }
     public String getEmployeeId() { return employeeId; }
     public String getReportId() { return reportId; }
+    public String getPayrollRunId() { return payrollRunId; }
+    public String getPayrollSnapshotId() { return payrollSnapshotId; }
     public int getPeriodYear() { return periodYear; }
     public int getPeriodMonth() { return periodMonth; }
     public String getPeriodKind() { return periodKind; }

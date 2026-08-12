@@ -42,6 +42,21 @@ public class VendorPaymentProposal {
     @Column(name = "proposed_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal proposedAmount;
 
+    @Column(name = "created_by", nullable = false, length = 100)
+    private String createdBy;
+
+    @Column(name = "approved_by", length = 100)
+    private String approvedBy;
+
+    @Column(name = "executed_by", length = 100)
+    private String executedBy;
+
+    @Column(name = "operation_id", length = 80)
+    private String operationId;
+
+    @Column(name = "supplier_payment_id", length = 36)
+    private String supplierPaymentId;
+
     @Column(name = "due_date", nullable = false)
     private LocalDate dueDate;
 
@@ -61,22 +76,29 @@ public class VendorPaymentProposal {
 
     protected VendorPaymentProposal() {}
 
-    public VendorPaymentProposal(String supplierId, String invoiceId, BigDecimal proposedAmount, LocalDate dueDate) {
+    public VendorPaymentProposal(String supplierId, String invoiceId, BigDecimal proposedAmount, LocalDate dueDate, String createdBy) {
         this.id = UUID.randomUUID().toString();
         this.proposalNumber = "PROP-" + System.currentTimeMillis();
         this.supplierId = supplierId;
         this.invoiceId = invoiceId;
         this.proposedAmount = proposedAmount;
         this.dueDate = dueDate;
+        this.createdBy = createdBy;
         this.status = Status.PROPOSED;
     }
 
-    public void approve() {
+    public void approve(String actor) {
+        if (status != Status.PROPOSED) throw new IllegalStateException("Only proposed payments can be approved");
         this.status = Status.APPROVED;
+        this.approvedBy = actor;
     }
 
-    public void execute() {
+    public void execute(String operationId, String supplierPaymentId, String actor) {
+        if (status != Status.APPROVED) throw new IllegalStateException("Only approved payments can be executed");
         this.status = Status.EXECUTED;
+        this.operationId = operationId;
+        this.supplierPaymentId = supplierPaymentId;
+        this.executedBy = actor;
     }
 
     @PrePersist
@@ -91,6 +113,11 @@ public class VendorPaymentProposal {
     public String getSupplierId() { return supplierId; }
     public String getInvoiceId() { return invoiceId; }
     public BigDecimal getProposedAmount() { return proposedAmount; }
+    public String getCreatedBy() { return createdBy; }
+    public String getApprovedBy() { return approvedBy; }
+    public String getExecutedBy() { return executedBy; }
+    public String getOperationId() { return operationId; }
+    public String getSupplierPaymentId() { return supplierPaymentId; }
     public LocalDate getDueDate() { return dueDate; }
     public Status getStatus() { return status; }
     public long getCreatedAt() { return createdAt; }

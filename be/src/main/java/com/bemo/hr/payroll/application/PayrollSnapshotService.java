@@ -31,9 +31,9 @@ public class PayrollSnapshotService {
         BigDecimal allowances = overtime.add(input.otherBonuses());
         BigDecimal gross = input.baseSalary().add(allowances);
         BigDecimal net = gross.subtract(deductions).subtract(input.advanceDeduction()).max(BigDecimal.ZERO);
-        return snapshotRepository.findByEmployeeIdAndPeriodId(input.employeeId(), input.periodId())
+        return snapshotRepository.findByPayrollRunIdAndEmployeeId(input.payrollRunId(), input.employeeId())
                 .orElseGet(() -> snapshotRepository.save(new PayrollInputSnapshot(
-                        input.employeeId(), input.periodId(), input.periodStart(), input.periodEnd(), input.baseSalary(),
+                        input.payrollRunId(), input.employeeId(), input.periodId(), input.periodStart(), input.periodEnd(), input.baseSalary(),
                         input.workedMinutes(), input.overtimeMinutes(), input.lateMinutes(), input.absenceDays(),
                         input.payrollPolicyId(), input.payrollPolicyVersion(), input.workingHourDivisor(),
                         input.overtimeMultiplier(), deductions, allowances, input.advanceBalance(),
@@ -42,12 +42,19 @@ public class PayrollSnapshotService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<PayrollInputSnapshot> find(String employeeId, String periodId) {
-        return snapshotRepository.findByEmployeeIdAndPeriodId(employeeId, periodId);
+    public Optional<PayrollInputSnapshot> find(String payrollRunId, String employeeId) {
+        if (payrollRunId == null || payrollRunId.isBlank()) return Optional.empty();
+        return snapshotRepository.findByPayrollRunIdAndEmployeeId(payrollRunId, employeeId);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<PayrollInputSnapshot> findById(String snapshotId) {
+        if (snapshotId == null || snapshotId.isBlank()) return Optional.empty();
+        return snapshotRepository.findById(snapshotId);
     }
 
     public record CalculationInputs(
-            String employeeId, String periodId, LocalDate periodStart, LocalDate periodEnd,
+            String payrollRunId, String employeeId, String periodId, LocalDate periodStart, LocalDate periodEnd,
             BigDecimal baseSalary, long workedMinutes, long overtimeMinutes, long lateMinutes, int absenceDays,
             String payrollPolicyId, long payrollPolicyVersion, BigDecimal workingHourDivisor,
             BigDecimal overtimeMultiplier, BigDecimal otherDeductions, BigDecimal otherBonuses,

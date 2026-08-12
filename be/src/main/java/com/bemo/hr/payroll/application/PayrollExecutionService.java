@@ -1,7 +1,9 @@
 package com.bemo.hr.payroll.application;
 
 import com.bemo.hr.payroll.domain.PayrollRunHeader;
+import com.bemo.hr.payroll.domain.PayrollInputSnapshot;
 import com.bemo.hr.payroll.domain.PayrollRunLine;
+import com.bemo.hr.payroll.infrastructure.PayrollInputSnapshotRepository;
 import com.bemo.hr.payroll.infrastructure.PayrollRunHeaderRepository;
 import com.bemo.hr.payroll.infrastructure.PayrollRunLineRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
@@ -18,11 +20,14 @@ public class PayrollExecutionService {
 
     private final PayrollRunHeaderRepository runHeaderRepository;
     private final PayrollRunLineRepository runLineRepository;
+    private final PayrollInputSnapshotRepository snapshotRepository;
 
     public PayrollExecutionService(PayrollRunHeaderRepository runHeaderRepository,
-                                   PayrollRunLineRepository runLineRepository) {
+                                   PayrollRunLineRepository runLineRepository,
+                                   PayrollInputSnapshotRepository snapshotRepository) {
         this.runHeaderRepository = runHeaderRepository;
         this.runLineRepository = runLineRepository;
+        this.snapshotRepository = snapshotRepository;
     }
 
     @Transactional
@@ -33,14 +38,27 @@ public class PayrollExecutionService {
 
     @Transactional
     public PayrollRunLine addRunLine(String runId, String employeeId, BigDecimal basicSalary, BigDecimal allowances, BigDecimal deductions) {
-        PayrollRunLine line = new PayrollRunLine(runId, employeeId, basicSalary, allowances, deductions);
-        return runLineRepository.save(line);
+        getRunForUpdate(runId);
+        throw new BusinessRuleException(
+                "Manual payroll inputs are disabled; calculate the register so inputs are frozen from source evidence.",
+                "PAYROLL_MANUAL_RUN_LINES_DISABLED", HttpStatus.CONFLICT);
     }
 
     @Transactional
     public PayrollRunHeader calculateRun(String runId) {
-        PayrollRunHeader run = getRun(runId);
+        PayrollRunHeader run = getRunForUpdate(runId);
+        if (run.getStatus() != PayrollRunHeader.Status.DRAFT && run.getStatus() != PayrollRunHeader.Status.CALCULATED) {
+            throw new BusinessRuleException("Approved or posted payroll runs cannot be recalculated", "PAYROLL_RUN_FROZEN", HttpStatus.CONFLICT);
+        }
         List<PayrollRunLine> lines = runLineRepository.findByRunId(runId);
+
+        List<PayrollInputSnapshot> snapshots = snapshotRepository.findByPayrollRunId(runId);
+        if (snapshots.isEmpty()) {
+            throw new BusinessRuleException("The payroll run has no frozen input snapshots",
+                    "PAYROLL_RUN_SNAPSHOTS_REQUIRED", HttpStatus.CONFLICT);
+        }
+        lines = snapshots.stream().map(s -> new PayrollRunLine(runId, s.getEmployeeId(), s.getId(),
+                s.getBaseSalary(), s.getAllowanceAmount(), s.getDeductionAmount().add(s.getAdvanceDeduction()))).toList();
 
         BigDecimal gross = lines.stream().map(l -> l.getBasicSalary().add(l.getAllowances())).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal deductions = lines.stream().map(PayrollRunLine::getDeductions).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -66,6 +84,11 @@ public class PayrollExecutionService {
 
     private PayrollRunHeader getRun(String id) {
         return runHeaderRepository.findById(id)
+                .orElseThrow(() -> new BusinessRuleException("Payroll run not found", "PAYROLL_RUN_NOT_FOUND", HttpStatus.NOT_FOUND));
+    }
+
+    private PayrollRunHeader getRunForUpdate(String id) {
+        return runHeaderRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new BusinessRuleException("Payroll run not found", "PAYROLL_RUN_NOT_FOUND", HttpStatus.NOT_FOUND));
     }
 }

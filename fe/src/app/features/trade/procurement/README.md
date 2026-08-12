@@ -35,4 +35,8 @@
 
 **EN:** On an existing draft purchase order, the exchange snapshot fields are visibly locked while supplier, terms, item, quantity, and unit price remain editable.
 
+## Vendor payment proposals
+
+**EN:** The proposals tab creates supplier-payment proposals from open invoices and exposes approval and execution actions. Execution reuses the validated supplier-payment flow, records the resulting payment reference, rejects self-approval/self-disbursement, and safely replays the same operation ID.
+
 **AR:** عند تعديل أمر شراء محفوظ تظهر حقول لقطة سعر الصرف مقفلة بوضوح، بينما تظل حقول المورد والشروط والصنف والكمية وسعر الوحدة قابلة للتعديل.

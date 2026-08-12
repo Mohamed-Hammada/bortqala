@@ -123,6 +123,11 @@ public class ManufacturingService {
         BomHeader bom = bomHeaderRepository.findById(order.getBomId())
                 .orElseThrow(() -> new NotFoundException("BOM not found", "MFG_BOM_NOT_FOUND"));
 
+        return readinessFromBom(order, bom);
+    }
+
+    private ManufacturingApi.MaterialReadinessResponse readinessFromBom(ProductionOrder order, BomHeader bom) {
+
         BigDecimal yield = bom.getYieldQuantity() == null || bom.getYieldQuantity().signum() <= 0 ? BigDecimal.ONE : bom.getYieldQuantity();
         BigDecimal scale = order.getTargetQuantity().divide(yield, 6, RoundingMode.HALF_UP);
 
@@ -143,7 +148,7 @@ public class ManufacturingService {
 
     @Transactional
     public ManufacturingApi.ProductionOrderResponse startProductionOrder(String id) {
-        ProductionOrder order = requireOrder(id);
+        ProductionOrder order = requireOrderForUpdate(id);
         if (order.getStatus() != ProductionOrder.Status.PLANNED) {
             throw new BusinessRuleException("يمكن بدء أمر الإنتاج فقط من حالة مخطط.", "MFG_ORDER_START_FROM_PLANNED_ONLY", HttpStatus.CONFLICT);
         }
@@ -154,7 +159,7 @@ public class ManufacturingService {
             throw new BusinessRuleException("لا يمكن بدء أمر إنتاج بقائمة مواد خالية من المكونات.", "MFG_BOM_NO_LINES", HttpStatus.CONFLICT);
         }
 
-        ManufacturingApi.MaterialReadinessResponse readiness = checkMaterialReadiness(id);
+        ManufacturingApi.MaterialReadinessResponse readiness = readinessFromBom(order, bom);
         if (!readiness.allMaterialsAvailable()) {
             throw new BusinessRuleException("نقص في الرصيد المتاح للمواد الخام المطلوبة لتنفيذ أمر الإنتاج.", "MFG_MATERIAL_SHORTAGE", HttpStatus.CONFLICT);
         }
@@ -181,7 +186,7 @@ public class ManufacturingService {
 
     @Transactional
     public ManufacturingApi.ProductionOrderResponse completeProductionOrder(String id, ManufacturingApi.CompleteProductionOrderPayload payload) {
-        ProductionOrder order = requireOrder(id);
+        ProductionOrder order = requireOrderForUpdate(id);
         if (order.getStatus() != ProductionOrder.Status.IN_PROGRESS) {
             throw new BusinessRuleException("يمكن إكمال أمر الإنتاج فقط إذا كان قيد التنفيذ.", "MFG_ORDER_COMPLETE_FROM_IN_PROGRESS_ONLY", HttpStatus.CONFLICT);
         }
@@ -221,7 +226,7 @@ public class ManufacturingService {
 
     @Transactional
     public ManufacturingApi.ProductionOrderResponse cancelProductionOrder(String id) {
-        ProductionOrder order = requireOrder(id);
+        ProductionOrder order = requireOrderForUpdate(id);
         if (order.getStatus() == ProductionOrder.Status.COMPLETED) {
             throw new BusinessRuleException("لا يمكن إلغاء أمر إنتاج م مكتمل.", "MFG_ORDER_CANNOT_CANCEL_COMPLETED", HttpStatus.CONFLICT);
         }
@@ -294,6 +299,11 @@ public class ManufacturingService {
     private ProductionOrder requireOrder(String id) {
         return productionOrderRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("أمر الإنتاج غير موجود", "MFG_PRODUCTION_ORDER_NOT_FOUND"));
+    }
+
+    private ProductionOrder requireOrderForUpdate(String id) {
+        return productionOrderRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new NotFoundException("Production order not found", "MFG_PRODUCTION_ORDER_NOT_FOUND"));
     }
 
     private List<BomLine> buildBomLines(List<ManufacturingApi.BomLinePayload> payloads) {

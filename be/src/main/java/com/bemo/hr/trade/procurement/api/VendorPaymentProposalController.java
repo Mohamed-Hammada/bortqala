@@ -20,23 +20,31 @@ public class VendorPaymentProposalController {
     }
 
     public record CreateProposalPayload(String supplierId, String invoiceId, BigDecimal proposedAmount, LocalDate dueDate) {}
+    public record ExecuteProposalPayload(String operationId, String paymentMethod) {}
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
+    public List<VendorPaymentProposal> getProposals() {
+        return proposalService.getProposals();
+    }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER')")
-    public VendorPaymentProposal createProposal(@RequestBody CreateProposalPayload payload) {
-        return proposalService.createProposal(payload.supplierId(), payload.invoiceId(), payload.proposedAmount(), payload.dueDate());
+    public VendorPaymentProposal createProposal(@RequestBody CreateProposalPayload payload, java.security.Principal principal) {
+        return proposalService.createProposal(payload.supplierId(), payload.invoiceId(), payload.proposedAmount(), payload.dueDate(), principal.getName());
     }
 
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
-    public VendorPaymentProposal approveProposal(@PathVariable String id) {
-        return proposalService.approveProposal(id);
+    public VendorPaymentProposal approveProposal(@PathVariable String id, java.security.Principal principal) {
+        return proposalService.approveProposal(id, principal.getName());
     }
 
     @PostMapping("/{id}/execute")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
-    public VendorPaymentProposal executeProposal(@PathVariable String id) {
-        return proposalService.executeProposal(id);
+    public VendorPaymentProposal executeProposal(@PathVariable String id, @RequestBody ExecuteProposalPayload payload,
+                                                 java.security.Principal principal) {
+        return proposalService.executeProposal(id, payload.operationId(), payload.paymentMethod(), principal.getName());
     }
 
     @GetMapping("/supplier/{supplierId}")

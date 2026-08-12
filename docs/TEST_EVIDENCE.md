@@ -1,5 +1,15 @@
 # Test Evidence — Bemo ERP
 
+## 2026-08-12 shutdown checkpoint
+
+- Parent baseline: `0c182021944f1b8d411deb72c83eaf45761d81a0`; evidence and implementation are recorded by this checkpoint commit.
+- Backend compile and focused payroll/manufacturing/P2P suites: PASS.
+- H2 application context and payroll snapshot replay/new-run/tenant isolation: PASS.
+- Broad non-Docker run: 478 tests, 472 passed; six operations tests exposed an H2-master omission of existing production migration V192. After restoring parity, the affected suite passed 6/6. Full post-fix rerun remains for the next release checkpoint.
+- Frontend procurement component: 13/13 PASS; i18n and hardcoded-UI gates PASS; production build PASS.
+- Error codes: 424/424 PASS. Translation catalog IDs and key/locale pairs are unique.
+- PostgreSQL/Testcontainers and Compose smoke remain blocked by the unavailable Docker daemon. External CI/billing remains blocked.
+
 Single source of truth for automated test counts and regression baselines. Every
 entry records the date, the repository HEAD SHA it was run against, the command,
 and the result. The CI pipeline enforces the baselines below: a run that drops

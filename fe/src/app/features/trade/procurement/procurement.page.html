@@ -22,6 +22,7 @@
     <button class="app-tab" [class.active]="activeTab() === 'po'" (click)="activeTab.set('po')">{{ i18n.t('procurement.tabPo') }}</button>
     <button class="app-tab" [class.active]="activeTab() === 'grn'" (click)="activeTab.set('grn')">{{ i18n.t('procurement.tabGrn') }}</button>
     <button class="app-tab" [class.active]="activeTab() === 'invoice'" (click)="activeTab.set('invoice')">{{ i18n.t('procurement.tabInvoice') }}</button>
+    <button class="app-tab" [class.active]="activeTab() === 'proposal'" (click)="activeTab.set('proposal')">{{ i18n.t('procurement.tabProposal') }}</button>
     <button class="app-tab" [class.active]="activeTab() === 'payment'" (click)="activeTab.set('payment')">{{ i18n.t('procurement.tabPayment') }}</button>
   </nav>
 
@@ -111,10 +112,35 @@
             <td><span class="status" [class.warning]="inv.status !== 'PAID'" [class.success]="inv.status === 'PAID'">{{ inv.status === 'PAID' ? i18n.t('procurement.invStatusPaid') : inv.status === 'PARTIALLY_PAID' ? i18n.t('procurement.invStatusPartiallyPaid') : i18n.t('procurement.invStatusUnpaid') }}</span></td>
             <td>
               <button class="button secondary btn-sm" type="button" (click)="performThreeWayMatch(inv)">🔍 {{ i18n.t('procurement.threeWayMatch', undefined, 'المطابقة الثلاثية') }}</button>
-              @if (inv.status !== 'PAID') {<button class="button primary btn-sm" type="button" (click)="openNewPayment(inv)">💰 {{ i18n.t('procurement.invPay') }}</button>}
+              @if (inv.status !== 'PAID') {
+                <button class="button secondary btn-sm" type="button" [disabled]="savingProposal()" (click)="createPaymentProposal(inv)">{{ i18n.t('procurement.createProposal') }}</button>
+                <button class="button primary btn-sm" type="button" (click)="openNewPayment(inv)">💰 {{ i18n.t('procurement.invPay') }}</button>
+              }
             </td>
           </tr>
           } @empty { <tr><td colspan="10"><div class="empty-state">{{ i18n.t('procurement.invEmpty') }}</div></td></tr> }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    @if (activeTab() === 'proposal') {
+    <div class="table-card">
+      <table>
+        <thead><tr><th>{{ i18n.t('procurement.proposalNumber') }}</th><th>{{ i18n.t('procurement.pmtColSupplier') }}</th><th>{{ i18n.t('procurement.pmtColInvoice') }}</th><th>{{ i18n.t('procurement.pmtColAmount') }}</th><th>{{ i18n.t('procurement.proposalStatus') }}</th><th>{{ i18n.t('procurement.poColActions') }}</th></tr></thead>
+        <tbody>
+          @for (proposal of paymentProposals(); track proposal.id) {
+          <tr>
+            <td><strong class="ltr">{{ proposal.proposalNumber }}</strong></td><td class="ltr">{{ proposal.supplierId }}</td><td class="ltr">{{ proposal.invoiceId }}</td>
+            <td class="ltr">{{ proposal.proposedAmount | number:'1.2-2' }}</td>
+            <td><span class="status" [class.warning]="proposal.status === 'PROPOSED'" [class.info]="proposal.status === 'APPROVED'" [class.success]="proposal.status === 'EXECUTED'">{{ proposal.status }}</span></td>
+            <td>
+              @if (proposal.status === 'PROPOSED') {<button class="button secondary btn-sm" [disabled]="savingProposal()" (click)="approvePaymentProposal(proposal)">{{ i18n.t('procurement.approveProposal') }}</button>}
+              @if (proposal.status === 'APPROVED') {<button class="button primary btn-sm" [disabled]="savingProposal()" (click)="executePaymentProposal(proposal)">{{ i18n.t('procurement.executeProposal') }}</button>}
+              @if (proposal.supplierPaymentId) {<small class="ltr">{{ proposal.supplierPaymentId }}</small>}
+            </td>
+          </tr>
+          } @empty { <tr><td colspan="6"><div class="empty-state">{{ i18n.t('procurement.proposalEmpty') }}</div></td></tr> }
         </tbody>
       </table>
     </div>

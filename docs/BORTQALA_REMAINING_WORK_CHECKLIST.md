@@ -7,24 +7,30 @@
 
 ## Repository status update — 2026-08-12
 
-**Reviewed baseline SHA:** `a9430d34fa6f52bd9968ced3e6baa3d718cfc3c8`  
-**Current changes:** working tree; no implementation commit SHA exists yet.  
+**Reviewed baseline SHA:** `0c182021944f1b8d411deb72c83eaf45761d81a0`
+**Current changes:** recorded by this checkpoint commit, based on parent `0c18202`.
 **Release status:** **NOT RELEASE READY** — final CI, PostgreSQL/Testcontainers, full-suite, smoke, reviewer, and final-SHA evidence remain.
 
 | Item | Current status | Evidence / remaining gate |
 |---|---|---|
 | DOC-001 | VERIFY | `README.md` and `PROJECT_MAP.md` now point here, contradictory “none/all complete” text is removed, status categories are explicit; reviewer/final commit SHA remain. |
-| PAY-001 | VERIFY | Snapshot is wired into calculation/payment/status paths; focused payroll suites pass. PostgreSQL, full-suite, frontend/API acceptance, concurrency, and final-SHA evidence remain. |
+| PAY-001 | VERIFY | Run-scoped snapshots are wired through calculation/payment/explanation evidence; focused and H2 persistence/tenant-isolation tests pass. PostgreSQL, full-suite, API acceptance, and final-SHA evidence remain. |
 | PAY-002 | VERIFY | Effective-dated tenant policy supplies divisor/multiplier and snapshot stores both; focused policy/snapshot tests pass. Policy UI and final release evidence remain. |
 | REL-001 | BLOCKED | GitHub Actions account/billing lock is external and unresolved. |
 | REL-002 | OPEN | Historical counts are not carried forward; all final candidate commands and smoke checks must be rerun. |
 | MFG-001 | VERIFY | `PLANNED → IN_PROGRESS` freezes requirements before issue; active readiness/completion/cancel use snapshots and completion reads issue valuation evidence. PostgreSQL, concurrency, full-suite, and final-SHA evidence remain. |
-| P2P-001 | VERIFY | Source/E2E characterization required before modification. |
-| O2C-001 | VERIFY | Source/E2E characterization required before modification. |
+| P2P-001 | VERIFY | Proposal approval/execution now calls the hardened supplier-payment lifecycle and the UI exposes the result. Multi-invoice and PostgreSQL concurrency acceptance remain. |
+| O2C-001 | CONFIRMED GAP | Sales lines, delivery, invoice, receipt-match, and return classes are disconnected; no stock/reservation/AR/GL/credit-note vertical slice exists. |
 | INV-001 | VERIFY | Reconcile existing delivered inventory functions; do not rebuild without a proven gap. |
 | SHARED-001…004 | VERIFY | Real command-path characterization required. |
-| TRS-001…004 | VERIFY | Real command-path characterization required. |
-| FIN-001…006 | VERIFY | Real command-path characterization required. |
+| TRS-001 | CONFIRMED GAP | Payment batches only mutate batch state; real disbursement, SoD, replay, and concurrent execution are absent. |
+| TRS-002 | CONFIRMED GAP | Budget revision/transfer persistence exists without an application/API lifecycle or immutable-version tests. |
+| TRS-003…004 | VERIFY | Close/reconciliation providers and tests exist; complete module/source coverage remains. |
+| FIN-001…002 | VERIFY | Dimension/approval primitives exist; real posting-path and reporting acceptance remain. |
+| FIN-003 | CONFIRMED GAP | FX service calculates gain/loss only; it does not post/reverse replay-safe journals. |
+| FIN-004 | VERIFY | Statement APIs/tests exist; tenant/export fixture acceptance remains. |
+| FIN-005 | CONFIRMED GAP | No unified effective-dated master-data lifecycle was found beyond domain-specific records. |
+| FIN-006 | CONFIRMED GAP | Bank-change approval does not apply the governed master-data change or enforce SoD in the service. |
 | Final ALL DONE gate | OPEN | Cannot pass while any P0 gate is open/blocked or evidence is not tied to the final SHA. |
 
 This table is a status index only. The detailed criteria below remain authoritative; unchecked criteria are still required.
@@ -180,7 +186,7 @@ Mark `DOC-001` complete only when:
 
 ```text
 Status: VERIFY — implementation complete; reviewer/final commit pending
-Commit SHA: N/A — working tree based on a9430d34fa6f52bd9968ced3e6baa3d718cfc3c8
+Commit SHA: this checkpoint commit; parent baseline `0c182021944f1b8d411deb72c83eaf45761d81a0`
 PROJECT_MAP section changed: [ORPHANS & PENDING] and [SOURCE-VERIFIED OPEN WORK]
 README section changed: authoritative documentation paragraph
 TEST_EVIDENCE section changed: 2026-08-12 release-checklist remediation entry
@@ -288,12 +294,12 @@ Approve / Post / Pay
 
 ```text
 Status: VERIFY — focused implementation/tests green; release acceptance incomplete
-Commit SHA: N/A — working tree based on a9430d34fa6f52bd9968ced3e6baa3d718cfc3c8
-Payroll calculation entry point: PayrollService.transitionStatus / recordPayment
+Commit SHA: this checkpoint commit; parent baseline `0c182021944f1b8d411deb72c83eaf45761d81a0`
+Payroll calculation entry point: PayrollService.transitionStatus / recordPayment; manual run-line inputs disabled
 Snapshot creation method: PayrollSnapshotService.captureSnapshot
 Calculation method: PayrollSnapshotService.captureSnapshot from frozen CalculationInputs
-Tests added: PayrollSnapshotServiceTests replay test; PayrollCalculationPolicyServiceTests
-PostgreSQL test result: NOT RUN
+Tests added: PayrollSnapshotServiceTests; PayrollCalculationPolicyServiceTests; PayrollSnapshotPersistenceTests; PayrollExecutionServiceTests
+Persistence result: H2 replay/new-run/tenant isolation PASS; PostgreSQL NOT RUN (Docker unavailable)
 UI/API scenario: NOT RUN; existing UI contract compiles in source but final frontend verification remains
 Reviewer: PENDING
 ```
@@ -349,7 +355,7 @@ These must not remain hidden magic constants in the production calculation path.
 
 ```text
 Status: VERIFY — active path policy-backed; release acceptance incomplete
-Commit SHA: N/A — working tree based on a9430d34fa6f52bd9968ced3e6baa3d718cfc3c8
+Commit SHA: this checkpoint commit; parent baseline `0c182021944f1b8d411deb72c83eaf45761d81a0`
 Policy/config source: effective-dated tenant-owned PayrollCalculationPolicy; /api/v1/payroll/calculation-policies
 Snapshot fields: payrollPolicyId/version, workingHourDivisor, overtimeMultiplier
 Tests: PayrollCalculationPolicyServiceTests and PayrollSnapshotServiceTests focused suite PASS
@@ -547,12 +553,12 @@ Do not create a separate microservice or rewrite the manufacturing module.
 
 ```text
 Status: VERIFY — focused implementation/tests green; release acceptance incomplete
-Commit SHA: N/A — working tree based on a9430d34fa6f52bd9968ced3e6baa3d718cfc3c8
+Commit SHA: this checkpoint commit; parent baseline `0c182021944f1b8d411deb72c83eaf45761d81a0`
 Freeze transition: ProductionOrder PLANNED → IN_PROGRESS
 Snapshot source: BomSnapshot rows captured from pre-start readiness before stock issue
 Methods changed: ManufacturingService.checkMaterialReadiness/startProductionOrder/completeProductionOrder/cancelProductionOrder
 Tests: ManufacturingServiceTests.activeOrderUsesFrozenBomAfterMasterBomChanges; focused suite PASS
-Stock-movement idempotency evidence: optimistic order transition + unique app/order/component snapshot constraint; PostgreSQL concurrency NOT RUN
+Stock-movement idempotency evidence: pessimistic order command lock + unique app/order/component snapshot constraint; PostgreSQL concurrency NOT RUN
 Reviewer: PENDING
 ```
 

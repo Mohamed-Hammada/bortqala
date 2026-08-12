@@ -20,6 +20,7 @@ interface GoodsReceiptLineResponse { id: string; purchaseOrderLineId: string; it
 interface GoodsReceipt { id: string; grnNumber: string; receiptDate: number; purchaseOrderId: string; supplierId: string; supplierName?: string; warehouseId?: string; status: string; currencyCode: string; notes?: string; lines: GoodsReceiptLineResponse[]; createdAt: number; }
 interface SupplierInvoice { id: string; invoiceNumber?: string; internalReference: string; missingInvoiceReason?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseNetAmount: number; supplierId: string; supplierName?: string; purchaseOrderId?: string; goodsReceiptId?: string; responsiblePartyId?: string; invoiceDate: number; totalAmount: number; discountAmount?: number; taxAmount?: number; netAmount: number; paidAmount: number; outstandingAmount: number; dueDate?: number; notes?: string; status: string; createdAt: number; updatedAt: number; }
 interface SupplierPayment { id: string; paymentNumber: string; paymentDate: number; supplierId: string; supplierName?: string; supplierInvoiceId: string; amount: number; currencyCode: string; paymentMethod: string; notes?: string; operationId: string; status: string; createdAt: number; }
+interface PaymentProposal { id: string; proposalNumber: string; supplierId: string; invoiceId: string; proposedAmount: number; dueDate: string; status: string; createdBy: string; approvedBy?: string; executedBy?: string; supplierPaymentId?: string; }
 interface ProcurementThreeWayMatch { id: string; purchaseOrderId: string; goodsReceiptId?: string; supplierInvoiceId: string; matchStatus: string; priceVarianceAmount: number; quantityVarianceAmount: number; tolerancePercentage: number; varianceReason?: string; resolvedBy?: string; resolvedAt?: number; createdAt: number; }
 interface Party { id: string; code: string; name: string; partyType: string; active: boolean; managedType?: 'DIRECT' | 'MANAGED'; responsiblePartyId?: string; currencyCode?: string; paymentTerms?: string; }
 interface InventoryItem { id: string; code: string; name: string; categoryName?: string; uomName?: string; unitCode?: string; active: boolean; }
@@ -74,6 +75,7 @@ export class ProcurementPage {
   readonly savingGrn = signal(false);
   readonly savingInvoice = signal(false);
   readonly savingPayment = signal(false);
+  readonly savingProposal = signal(false);
   readonly resolvingMatch = signal(false);
   readonly submitting = computed(
     () =>
@@ -81,6 +83,7 @@ export class ProcurementPage {
       this.savingGrn() ||
       this.savingInvoice() ||
       this.savingPayment() ||
+      this.savingProposal() ||
       this.resolvingMatch(),
   );
   readonly error = signal<string | null>(null);
@@ -88,11 +91,12 @@ export class ProcurementPage {
   readonly goodsReceipts = signal<GoodsReceipt[]>([]);
   readonly invoices = signal<SupplierInvoice[]>([]);
   readonly payments = signal<SupplierPayment[]>([]);
+  readonly paymentProposals = signal<PaymentProposal[]>([]);
   readonly suppliers = signal<Party[]>([]);
   readonly inventoryItems = signal<InventoryItem[]>([]);
   readonly currencies = signal<Currency[]>([]);
   readonly departments = signal<Department[]>([]);
-  readonly activeTab = signal<'po' | 'grn' | 'invoice' | 'payment'>('po');
+  readonly activeTab = signal<'po' | 'grn' | 'invoice' | 'proposal' | 'payment'>('po');
   readonly automaticNumbering = signal(true);
   readonly documentAutomaticNumbering = signal(true);
 
@@ -247,7 +251,7 @@ export class ProcurementPage {
   async loadAll() {
     this.loading.set(true);
     this.error.set(null);
-    try { await Promise.all([this.loadNumberingSettings(), this.loadDocumentNumberingSettings(), this.loadOrders(), this.loadSuppliers(), this.loadCurrencies(), this.loadInventoryItems(), this.loadDepartments(), this.loadGoodsReceipts(), this.loadInvoices(), this.loadPayments()]); }
+    try { await Promise.all([this.loadNumberingSettings(), this.loadDocumentNumberingSettings(), this.loadOrders(), this.loadSuppliers(), this.loadCurrencies(), this.loadInventoryItems(), this.loadDepartments(), this.loadGoodsReceipts(), this.loadInvoices(), this.loadPaymentProposals(), this.loadPayments()]); }
     catch (e) { this.error.set(apiErrorMessage(e, this.i18n)); }
     finally { this.loading.set(false); }
   }
@@ -256,6 +260,46 @@ export class ProcurementPage {
   async loadGoodsReceipts() { this.goodsReceipts.set(await firstValueFrom(this.http.get<GoodsReceipt[]>('/api/v1/trade/procurement/goods-receipts')) ?? []); }
   async loadInvoices() { this.invoices.set(await firstValueFrom(this.http.get<SupplierInvoice[]>('/api/v1/trade/procurement/invoices')) ?? []); }
   async loadPayments() { this.payments.set(await firstValueFrom(this.http.get<SupplierPayment[]>('/api/v1/trade/procurement/payments')) ?? []); }
+  async loadPaymentProposals() { this.paymentProposals.set(await firstValueFrom(this.http.get<PaymentProposal[]>('/api/v1/procurement/payment-proposals')) ?? []); }
+
+  async createPaymentProposal(invoice: SupplierInvoice): Promise<void> {
+    if (this.savingProposal()) return;
+    this.savingProposal.set(true);
+    try {
+      await firstValueFrom(this.http.post('/api/v1/procurement/payment-proposals', {
+        supplierId: invoice.supplierId, invoiceId: invoice.id, proposedAmount: invoice.outstandingAmount,
+        dueDate: invoice.dueDate ? epochToDateInput(invoice.dueDate) : new Date().toISOString().substring(0, 10),
+      }));
+      this.notification.success(this.i18n.t('procurement.proposalCreated'));
+      await this.loadPaymentProposals();
+      this.activeTab.set('proposal');
+    } catch (e) { this.notification.error(apiErrorMessage(e, this.i18n)); }
+    finally { this.savingProposal.set(false); }
+  }
+
+  async approvePaymentProposal(proposal: PaymentProposal): Promise<void> {
+    if (this.savingProposal()) return;
+    this.savingProposal.set(true);
+    try {
+      await firstValueFrom(this.http.post(`/api/v1/procurement/payment-proposals/${proposal.id}/approve`, {}));
+      this.notification.success(this.i18n.t('procurement.proposalApproved'));
+      await this.loadPaymentProposals();
+    } catch (e) { this.notification.error(apiErrorMessage(e, this.i18n)); }
+    finally { this.savingProposal.set(false); }
+  }
+
+  async executePaymentProposal(proposal: PaymentProposal): Promise<void> {
+    if (this.savingProposal()) return;
+    this.savingProposal.set(true);
+    try {
+      await firstValueFrom(this.http.post(`/api/v1/procurement/payment-proposals/${proposal.id}/execute`, {
+        operationId: crypto.randomUUID(), paymentMethod: 'BANK_TRANSFER',
+      }));
+      this.notification.success(this.i18n.t('procurement.proposalExecuted'));
+      await Promise.all([this.loadPaymentProposals(), this.loadPayments(), this.loadInvoices()]);
+    } catch (e) { this.notification.error(apiErrorMessage(e, this.i18n)); }
+    finally { this.savingProposal.set(false); }
+  }
   async loadNumberingSettings() {
     const settings = await firstValueFrom(this.http.get<NumberingSettings>('/api/v1/trade/procurement/numbering-settings'));
     this.automaticNumbering.set(settings?.automaticNumbering ?? true);

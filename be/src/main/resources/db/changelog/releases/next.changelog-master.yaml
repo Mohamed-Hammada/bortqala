@@ -281,3 +281,7 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260812_v203_payroll_snapshot_calculation.yaml
   - include:
       file: db/changelog/data/insert/20260812_v204_payroll_snapshot_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260812_v205_remaining_work_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260812_v206_run_scoped_payroll_and_payment_proposals.yaml

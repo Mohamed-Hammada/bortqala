@@ -24,6 +24,9 @@ public class PayrollInputSnapshot {
     @Column(name = "app_id", nullable = false)
     private String appId;
 
+    @Column(name = "payroll_run_id", nullable = false, length = 36)
+    private String payrollRunId;
+
     @Column(name = "employee_id", nullable = false, length = 36)
     private String employeeId;
 
@@ -105,13 +108,14 @@ public class PayrollInputSnapshot {
 
     protected PayrollInputSnapshot() {}
 
-    public PayrollInputSnapshot(String employeeId, String periodId, LocalDate periodStart, LocalDate periodEnd,
+    public PayrollInputSnapshot(String payrollRunId, String employeeId, String periodId, LocalDate periodStart, LocalDate periodEnd,
                                 BigDecimal baseSalary, long workedMinutes, long overtimeMinutes, long lateMinutes,
                                 int absenceDays, String payrollPolicyId, long payrollPolicyVersion,
                                 BigDecimal workingHourDivisor, BigDecimal overtimeMultiplier,
                                 BigDecimal deductionAmount, BigDecimal allowanceAmount, BigDecimal advanceBalance,
                                 BigDecimal advanceDeduction, BigDecimal grossPay, BigDecimal netPay, String lockedBy) {
         this.id = UUID.randomUUID().toString();
+        this.payrollRunId = payrollRunId;
         this.employeeId = employeeId;
         this.periodId = periodId;
         this.periodStart = periodStart;
@@ -145,6 +149,7 @@ public class PayrollInputSnapshot {
 
     public String getId() { return id; }
     public String getAppId() { return appId; }
+    public String getPayrollRunId() { return payrollRunId; }
     public String getEmployeeId() { return employeeId; }
     public String getPeriodId() { return periodId; }
     public LocalDate getPeriodStart() { return periodStart; }

@@ -83,7 +83,7 @@ class ManufacturingServiceTests {
         BomHeader bom = new BomHeader("BOM-001", "fg-1", "Finished Good 1", BigDecimal.ONE, "v1.0", null, null, null, true, List.of(line));
         ProductionOrder order = new ProductionOrder("WO-100", bom.getId(), "fg-1", "v1.0", BigDecimal.valueOf(5), LocalDate.now(), null);
 
-        when(productionOrderRepository.findById("wo-1")).thenReturn(Optional.of(order));
+        when(productionOrderRepository.findByIdForUpdate("wo-1")).thenReturn(Optional.of(order));
         when(bomHeaderRepository.findById(bom.getId())).thenReturn(Optional.of(bom));
         when(operationsService.stockBalance("rm-1")).thenReturn(BigDecimal.valueOf(100));
         when(productionOrderRepository.save(any(ProductionOrder.class))).thenAnswer(i -> i.getArgument(0));
@@ -100,7 +100,7 @@ class ManufacturingServiceTests {
         BomHeader bom = new BomHeader("BOM-001", "fg-1", "Finished Good 1", BigDecimal.ONE, "v1.0", null, null, null, true, List.of(line));
         ProductionOrder order = new ProductionOrder("WO-100", bom.getId(), "fg-1", "v1.0", BigDecimal.valueOf(5), LocalDate.now(), null);
 
-        when(productionOrderRepository.findById("wo-1")).thenReturn(Optional.of(order));
+        when(productionOrderRepository.findByIdForUpdate("wo-1")).thenReturn(Optional.of(order));
         when(bomHeaderRepository.findById(bom.getId())).thenReturn(Optional.of(bom));
         when(operationsService.stockBalance("rm-1")).thenReturn(BigDecimal.valueOf(2));
 
@@ -117,7 +117,7 @@ class ManufacturingServiceTests {
         ProductionOrder order = new ProductionOrder("WO-100", bom.getId(), "fg-1", "v1.0", BigDecimal.valueOf(5), LocalDate.now(), null);
         order.start();
 
-        when(productionOrderRepository.findById("wo-1")).thenReturn(Optional.of(order));
+        when(productionOrderRepository.findByIdForUpdate("wo-1")).thenReturn(Optional.of(order));
         when(bomSnapshotService.getSnapshotsForProductionOrder(order.getId())).thenReturn(List.of(
                 new BomSnapshot(order.getId(), bom.getId(), 1, "rm-1", BigDecimal.valueOf(10))));
         when(operationsService.productionIssueCost("WO-100", "rm-1")).thenReturn(BigDecimal.valueOf(150));
