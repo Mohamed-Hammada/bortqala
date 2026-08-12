@@ -273,3 +273,11 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260812_v199_workforce_dispatch_translations.yaml
   - include:
       file: db/changelog/data/insert/20260812_v200_access_import_templates_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260812_v201_deterministic_execution_snapshots.yaml
+  - include:
+      file: db/changelog/data/insert/20260812_v202_deterministic_execution_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260812_v203_payroll_snapshot_calculation.yaml
+  - include:
+      file: db/changelog/data/insert/20260812_v204_payroll_snapshot_translations.yaml

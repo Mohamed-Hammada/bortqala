@@ -2,9 +2,15 @@
 
 ## English
 
+Production issue posting returns the immutable inventory valuation assigned to the issue movement. Manufacturing uses persisted issue-cost evidence by work-order reference and item at completion; it does not substitute the current item cost for historical issue cost.
+
 This package owns inventory items, signed stock movements, signed partner ledger entries, and employee advances. A transaction may affect stock, a partner ledger, or both atomically. Positive and negative values are recorded as immutable movements; balances are derived, never overwritten.
 
 Employee advances are accepted only when the employee's category explicitly allows them.
+
+## العربية — إضافة تكلفة الإنتاج
+
+يعيد ترحيل صرف الإنتاج قيمة المخزون الثابتة المرتبطة بحركة الصرف. تستخدم وحدة التصنيع دليل تكلفة الصرف المحفوظ حسب مرجع أمر العمل والصنف عند إكمال الأمر، ولا تستبدل التكلفة التاريخية بتكلفة الصنف الحالية.
 
 `GET /api/v1/operations/export.xlsx` exports localized, typed and formatted sheets for stock balances, movements, party balances and advances using the authenticated user's Excel preferences.
 

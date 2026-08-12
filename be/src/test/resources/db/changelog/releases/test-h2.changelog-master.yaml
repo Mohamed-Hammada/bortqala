@@ -637,3 +637,13 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260810_v184_data_driven_industry_packs.yaml
   - include:
       file: db/changelog/data/insert/20260810_v185_food_distribution_pack_translations.yaml
+  - include:
+      file: db/changelog/20260811_v186_roadmap_shared_and_domain_schema.yaml
+  - include:
+      file: db/changelog/schema/update/20260812_v201_deterministic_execution_snapshots.yaml
+  - include:
+      file: db/changelog/data/insert/20260812_v202_deterministic_execution_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260812_v203_payroll_snapshot_calculation.yaml
+  - include:
+      file: db/changelog/data/insert/20260812_v204_payroll_snapshot_translations.yaml

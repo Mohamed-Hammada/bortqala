@@ -1,6 +1,7 @@
 package com.bemo.hr.payroll.api;
 
 import com.bemo.hr.payroll.application.PayrollService;
+import com.bemo.hr.payroll.application.PayrollCalculationPolicyService;
 import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.shared.security.AuthService;
 import jakarta.validation.Valid;
@@ -35,6 +36,7 @@ public class PayrollController {
 
     private final PayrollService payrollService;
     private final AuthService authService;
+    private final PayrollCalculationPolicyService payrollCalculationPolicyService;
 
     @GetMapping
     public PayrollApi.SheetResponse getSheet(
@@ -101,5 +103,30 @@ public class PayrollController {
     @GetMapping("/payments/{id}/explanation")
     public java.util.List<PayrollApi.ExplanationResponse> getExplanation(@PathVariable String id) {
         return payrollService.getPaymentExplanation(id);
+    }
+
+    @GetMapping("/calculation-policies")
+    public java.util.List<PayrollApi.CalculationPolicyResponse> calculationPolicies() {
+        return payrollCalculationPolicyService.list().stream().map(this::policyResponse).toList();
+    }
+
+    @PostMapping("/calculation-policies")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') and @salaryAuthorization.canView(authentication)")
+    public PayrollApi.CalculationPolicyResponse createCalculationPolicy(
+            @Valid @RequestBody PayrollApi.CalculationPolicyRequest request) {
+        var from = java.time.Instant.ofEpochMilli(request.effectiveFrom()).atZone(java.time.ZoneOffset.UTC).toLocalDate();
+        var to = request.effectiveTo() == null ? null
+                : java.time.Instant.ofEpochMilli(request.effectiveTo()).atZone(java.time.ZoneOffset.UTC).toLocalDate();
+        return policyResponse(payrollCalculationPolicyService.create(request.name(), from, to,
+                request.workingHourDivisor(), request.overtimeMultiplier()));
+    }
+
+    private PayrollApi.CalculationPolicyResponse policyResponse(
+            com.bemo.hr.payroll.domain.PayrollCalculationPolicy policy) {
+        return new PayrollApi.CalculationPolicyResponse(policy.getId(), policy.getName(),
+                policy.getEffectiveFrom().atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli(),
+                policy.getEffectiveTo() == null ? null
+                        : policy.getEffectiveTo().atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli(),
+                policy.getWorkingHourDivisor(), policy.getOvertimeMultiplier(), policy.getVersion());
     }
 }

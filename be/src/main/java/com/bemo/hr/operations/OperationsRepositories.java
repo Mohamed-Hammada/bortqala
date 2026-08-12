@@ -56,6 +56,8 @@ interface StockMovementRepository extends JpaRepository<StockMovement, String> {
     @Query("select m.itemId, coalesce(sum(m.quantityDelta), 0) from StockMovement m group by m.itemId having coalesce(sum(m.quantityDelta), 0) < 0")
     List<Object[]> findNegativeBalanceItemIds();
     boolean existsByPartyIdAndInvoiceNoIgnoreCase(String partyId, String invoiceNo);
+    List<StockMovement> findByOperationTypeAndReferenceCodeAndItemId(
+            String operationType, String referenceCode, String itemId);
 }
 
 interface EmployeeAdvanceEntryRepository extends JpaRepository<EmployeeAdvanceEntry, String> {

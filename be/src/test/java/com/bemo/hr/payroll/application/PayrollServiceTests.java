@@ -18,6 +18,7 @@ import com.bemo.hr.reporting.domain.AttendanceReport;
 import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.domain.EmploymentType;
 import com.bemo.hr.employee.domain.PayCycle;
+import com.bemo.hr.payroll.domain.PayrollCalculationPolicy;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +54,8 @@ class PayrollServiceTests {
     @Mock private PayrollExcelExporter payrollExcelExporter;
     @Mock private AuditService auditService;
     @Mock private AttendanceExceptionService attendanceExceptionService;
+    @Mock private PayrollSnapshotService payrollSnapshotService;
+    @Mock private PayrollCalculationPolicyService payrollCalculationPolicyService;
 
     @InjectMocks
     private PayrollService payrollService;
@@ -60,6 +63,10 @@ class PayrollServiceTests {
     @BeforeEach
     void setUp() {
         TenantContext.set("test-tenant");
+        lenient().when(payrollCalculationPolicyService.effectivePolicy(any())).thenReturn(
+                new PayrollCalculationPolicy("Test", LocalDate.of(2000, 1, 1), null,
+                        new BigDecimal("240"), new BigDecimal("1.5")));
+        lenient().when(payrollSnapshotService.find(anyString(), anyString())).thenReturn(Optional.empty());
     }
 
     @AfterEach

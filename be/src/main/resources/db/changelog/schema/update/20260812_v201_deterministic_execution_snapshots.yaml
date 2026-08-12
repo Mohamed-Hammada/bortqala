@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260812_v201_001_bom_snapshot_uniqueness
+      author: codex
+      changes:
+        - addUniqueConstraint:
+            tableName: bom_snapshots
+            columnNames: app_id, production_order_id, component_item_id
+            constraintName: uq_bom_snapshot_order_component
+

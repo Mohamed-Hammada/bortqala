@@ -15,6 +15,15 @@ below a recorded baseline or reports failures fails the release gate.
 
 ## Evidence log
 
+### 2026-08-12 — release-checklist remediation working tree (baseline `a9430d34fa6f52bd9968ced3e6baa3d718cfc3c8`)
+
+- Status: **VERIFY, not final release evidence**. Changes are uncommitted, so there is no candidate SHA or reviewer sign-off yet.
+- Backend compile: isolated workspace copy, `./gradlew.bat compileJava compileTestJava -PskipDockerTests` — **BUILD SUCCESSFUL**.
+- Focused backend: `./gradlew.bat test --tests 'com.bemo.hr.payroll.application.*' --tests 'com.bemo.hr.manufacturing.production.application.*' -PskipDockerTests` — **BUILD SUCCESSFUL**. Coverage includes snapshot replay after salary/attendance/policy changes, policy validation/effective selection, frozen-BOM active readiness, and issue-evidence completion costing.
+- H2/Liquibase context: `./gradlew.bat test --tests 'com.bemo.hr.shared.security.MeIdentityIntegrationTests' -PskipDockerTests` — **BUILD SUCCESSFUL** after adding V186 to the H2 mirror, quoting its 92 inline decimal types, making its 78 foundation creates idempotent against baseline tables, and loading V201–V204.
+- Static backend gates: `python tools/check-error-codes.py` — **420/420 PASS**; `python tools/check-translation-catalog.py` — **7214 rows PASS**; `python tools/check-authorization-contract.py` — **19/19 roles PASS**.
+- Not run for this working tree: complete backend suite/count refresh, PostgreSQL/Testcontainers, Liquibase PostgreSQL fresh/upgrade path, frontend suite/build, production-like Compose smoke, independent CI. These remain required by `REL-001`/`REL-002` and the release checklist.
+
 ### 2026-08-12 — Staff-audit confirmed gaps
 
 - Frontend: **278 tests / 50 files / 0 failures**. Added the guarded dispatch/assignment/dispute workbench and API-contract tests; route/catalog parity, bilingual DB i18n, hardcoded UI scan, and Angular development build pass.

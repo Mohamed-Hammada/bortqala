@@ -10,4 +10,8 @@
 
 **EN:** Payment recording and approval/posting transitions require an approved attendance report and no open payroll-blocking exception for the affected employee or report.
 
+**EN:** Calculation becomes deterministic when a period is calculated, reviewed, approved, posted, or paid. The service captures one tenant-scoped immutable `PayrollInputSnapshot` per employee/period before persisting results. Salary, attendance minutes, manual adjustments, advance deduction, and the effective policy version/divisor/overtime multiplier are frozen; replay reuses the same snapshot. Effective-dated policies are managed at `/api/v1/payroll/calculation-policies`.
+
+**AR:** يصبح احتساب الفترة حتمياً عند الانتقال إلى الاحتساب أو المراجعة أو الاعتماد أو الترحيل أو الصرف. تحفظ الخدمة لقطة `PayrollInputSnapshot` ثابتة ومعزولة للمستأجر لكل موظف وفترة قبل تثبيت النتائج، وتشمل الراتب ودقائق الحضور والتعديلات وخصم السلفة وإصدار سياسة الرواتب وقيم المقسوم ومعامل الإضافي. أي إعادة تنفيذ تستخدم اللقطة نفسها، وتدار السياسات المؤرخة عبر `/api/v1/payroll/calculation-policies`.
+
 **AR:** يتطلب تسجيل الصرف وانتقالات الاعتماد/الترحيل تقرير حضور معتمداً وألا توجد استثناءات حضور مفتوحة تمنع راتب الموظف أو التقرير.

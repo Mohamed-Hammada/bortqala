@@ -50,6 +50,7 @@ public class PayrollService {
     private final com.bemo.hr.audit.application.AuditService auditService;
     private final com.bemo.hr.reporting.application.AttendanceExceptionService attendanceExceptionService;
     private final PayrollSnapshotService payrollSnapshotService;
+    private final PayrollCalculationPolicyService payrollCalculationPolicyService;
 
     public List<PayrollApi.ExplanationResponse> getPaymentExplanation(String paymentId) {
         var explanations = explanationRepository.findBySalaryPaymentIdOrderByCreatedAtAsc(paymentId);
@@ -70,13 +71,21 @@ public class PayrollService {
     }
 
     private void saveDefaultExplanations(SalaryPayment payment) {
+        String periodId = payment.getPeriodYear() + "-" + String.format("%02d", payment.getPeriodMonth())
+                + ":" + payment.getPeriodKind();
+        var snapshot = payrollSnapshotService.find(payment.getEmployeeId(), periodId).orElse(null);
         BigDecimal gross = payment.getGrossAmount() != null ? payment.getGrossAmount() : BigDecimal.ZERO;
         BigDecimal adv = payment.getAdvancesDeducted() != null ? payment.getAdvancesDeducted() : BigDecimal.ZERO;
         BigDecimal otherDed = payment.getOtherDeductions() != null ? payment.getOtherDeductions() : BigDecimal.ZERO;
         BigDecimal net = payment.getNetAmount() != null ? payment.getNetAmount() : gross.subtract(adv).subtract(otherDed).max(BigDecimal.ZERO);
 
+        String calculationInputs = snapshot == null ? "{\"gross\":" + gross + "}"
+                : "{\"snapshotId\":\"" + snapshot.getId() + "\",\"baseSalary\":" + snapshot.getBaseSalary()
+                + ",\"overtimeMinutes\":" + snapshot.getOvertimeMinutes() + ",\"lateMinutes\":"
+                + snapshot.getLateMinutes() + ",\"workingHourDivisor\":" + snapshot.getWorkingHourDivisor()
+                + ",\"overtimeMultiplier\":" + snapshot.getOvertimeMultiplier() + "}";
         explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
-                payment.getId(), "BASIC_SALARY", "Gross Base Salary", "{\"gross\":" + gross + "}",
+                payment.getId(), "SNAPSHOT_CALCULATION", "base + overtime - lateness - advances + adjustments", calculationInputs,
                 gross, "إجمالي الراتب المستحق المستخرج من سجل الحضور والانصراف", "Gross base salary derived from locked attendance records"
         ));
         if (adv.compareTo(BigDecimal.ZERO) > 0) {
@@ -92,6 +101,11 @@ public class PayrollService {
     }
 
     public PayrollApi.SheetResponse getSheet(int year, int month, String categoryIdFilter) {
+        return buildSheet(year, month, categoryIdFilter, false, "system");
+    }
+
+    private PayrollApi.SheetResponse buildSheet(int year, int month, String categoryIdFilter,
+                                                boolean freezeMissingSnapshots, String actor) {
         var employees = employeeRepository.findAllByOrderByFullNameAsc();
         var categories = attendanceCategoryRepository.findAll().stream()
                 .collect(Collectors.toMap(AttendanceCategory::getId, Function.identity()));
@@ -105,6 +119,7 @@ public class PayrollService {
         var monthObj = YearMonth.of(year, month);
         LocalDate start = monthObj.atDay(1);
         LocalDate end = monthObj.atEndOfMonth();
+        var effectivePolicy = payrollCalculationPolicyService.effectivePolicy(end);
 
         var attendanceReport = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
                 com.bemo.hr.employee.domain.PayCycle.MONTHLY, start, end).orElse(null);
@@ -139,15 +154,19 @@ public class PayrollService {
             var activeAdvances = operationsService.getAdvanceBalance(emp.getId());
             if (activeAdvances == null) activeAdvances = BigDecimal.ZERO;
             var periodKind = "FULL_MONTH";
+            String periodId = year + "-" + String.format("%02d", month) + ":" + periodKind;
             var paymentKey = emp.getId() + ":" + periodKind;
             var payment = paymentMap.get(paymentKey);
 
             var empPunches = attendanceMap.getOrDefault(emp.getId(), List.of());
             long overtimeMins = empPunches.stream().mapToLong(DailyAttendanceResult::getOvertimeMinutes).sum();
             long lateMins = empPunches.stream().mapToLong(DailyAttendanceResult::getLateMinutes).sum();
+            long workedMins = empPunches.stream().mapToLong(DailyAttendanceResult::getWorkedMinutes).sum();
 
-            BigDecimal hourlyRate = base.signum() <= 0 ? BigDecimal.ZERO : base.divide(BigDecimal.valueOf(240), 2, RoundingMode.HALF_UP);
-            BigDecimal attendanceBonus = hourlyRate.multiply(BigDecimal.valueOf(overtimeMins)).multiply(BigDecimal.valueOf(1.5)).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
+            BigDecimal hourlyRate = base.signum() <= 0 ? BigDecimal.ZERO
+                    : base.divide(effectivePolicy.getWorkingHourDivisor(), 8, RoundingMode.HALF_UP);
+            BigDecimal attendanceBonus = hourlyRate.multiply(BigDecimal.valueOf(overtimeMins))
+                    .multiply(effectivePolicy.getOvertimeMultiplier()).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
             BigDecimal attendanceDeduction = hourlyRate.multiply(BigDecimal.valueOf(lateMins)).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
 
             BigDecimal gross = base.add(attendanceBonus);
@@ -186,6 +205,28 @@ public class PayrollService {
                 advances = workforceAdvanceService.calculateEmployeePayrollDeduction(
                         emp.getId(), end, availableForAdvance, activeAdvances);
                 net = gross.subtract(advances).subtract(deductions).max(BigDecimal.ZERO);
+            }
+
+            var snapshot = payrollSnapshotService.find(emp.getId(), periodId).orElse(null);
+            if (snapshot == null && freezeMissingSnapshots) {
+                snapshot = payrollSnapshotService.captureSnapshot(new PayrollSnapshotService.CalculationInputs(
+                        emp.getId(), periodId, start, end, base, workedMins, overtimeMins, lateMins, 0,
+                        effectivePolicy.getId(), effectivePolicy.getVersion(), effectivePolicy.getWorkingHourDivisor(),
+                        effectivePolicy.getOvertimeMultiplier(), BigDecimal.ZERO, BigDecimal.ZERO,
+                        activeAdvances, advances), actor);
+            }
+            if (snapshot != null) {
+                base = snapshot.getBaseSalary();
+                attendanceBonus = snapshot.getAllowanceAmount();
+                attendanceDeduction = snapshot.getDeductionAmount();
+                activeAdvances = snapshot.getAdvanceBalance();
+                if (payment == null) {
+                    gross = snapshot.getGrossPay();
+                    advances = snapshot.getAdvanceDeduction();
+                    deductions = snapshot.getDeductionAmount();
+                    bonuses = snapshot.getAllowanceAmount();
+                    net = snapshot.getNetPay();
+                }
             }
 
             if (status == PaymentStatus.PAID || status == PaymentStatus.POSTED) {
@@ -276,18 +317,34 @@ public class PayrollService {
                 com.bemo.hr.employee.domain.PayCycle.MONTHLY, pStart, pEnd).orElse(null);
         attendanceExceptionService.assertPayrollReady(payrollReport == null ? null : payrollReport.getId(), emp.getId());
 
-        // Immutably derive gross, deductions, advances, and net salary
+        // Freeze every calculation input before deriving or paying the result.
         BigDecimal base = emp.getBaseSalary() == null ? BigDecimal.ZERO : emp.getBaseSalary();
         var activeAdvances = operationsService.getAdvanceBalance(emp.getId());
         if (activeAdvances == null) activeAdvances = BigDecimal.ZERO;
 
-        BigDecimal gross = base;
-        BigDecimal deductions = request.otherDeductions() == null ? BigDecimal.ZERO : request.otherDeductions();
-        BigDecimal bonus = request.bonuses() == null ? BigDecimal.ZERO : request.bonuses();
-        BigDecimal availableForAdvance = gross.add(bonus).subtract(deductions).max(BigDecimal.ZERO);
-        BigDecimal advances = workforceAdvanceService.calculateEmployeePayrollDeduction(
+        BigDecimal requestedDeductions = request.otherDeductions() == null ? BigDecimal.ZERO : request.otherDeductions();
+        BigDecimal requestedBonus = request.bonuses() == null ? BigDecimal.ZERO : request.bonuses();
+        BigDecimal availableForAdvance = base.add(requestedBonus).subtract(requestedDeductions).max(BigDecimal.ZERO);
+        BigDecimal calculatedAdvance = workforceAdvanceService.calculateEmployeePayrollDeduction(
                 emp.getId(), pEnd, availableForAdvance, activeAdvances);
-        BigDecimal net = gross.add(bonus).subtract(advances).subtract(deductions).max(BigDecimal.ZERO);
+        var attendanceRows = payrollReport == null ? List.<DailyAttendanceResult>of()
+                : dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(payrollReport.getId())
+                .stream().filter(row -> row.getEmployeeId().equals(emp.getId())).toList();
+        long workedMinutes = attendanceRows.stream().mapToLong(DailyAttendanceResult::getWorkedMinutes).sum();
+        long overtimeMinutes = attendanceRows.stream().mapToLong(DailyAttendanceResult::getOvertimeMinutes).sum();
+        long lateMinutes = attendanceRows.stream().mapToLong(DailyAttendanceResult::getLateMinutes).sum();
+        String periodId = request.periodYear() + "-" + String.format("%02d", request.periodMonth()) + ":" + periodKind;
+        var policy = payrollCalculationPolicyService.effectivePolicy(pEnd);
+        var snapshot = payrollSnapshotService.captureSnapshot(new PayrollSnapshotService.CalculationInputs(
+                emp.getId(), periodId, pStart, pEnd, base, workedMinutes, overtimeMinutes, lateMinutes, 0,
+                policy.getId(), policy.getVersion(), policy.getWorkingHourDivisor(), policy.getOvertimeMultiplier(),
+                requestedDeductions, requestedBonus, activeAdvances, calculatedAdvance), actor);
+
+        BigDecimal gross = snapshot.getGrossPay();
+        BigDecimal advances = snapshot.getAdvanceDeduction();
+        BigDecimal deductions = snapshot.getDeductionAmount();
+        BigDecimal bonus = snapshot.getAllowanceAmount();
+        BigDecimal net = snapshot.getNetPay();
 
         SalaryPayment entity;
         if (existingOpt.isPresent()) {
@@ -325,7 +382,12 @@ public class PayrollService {
 
     @Transactional
     public PayrollApi.SheetResponse transitionStatus(PayrollApi.StatusTransitionRequest request, String actor) {
-        var sheet = getSheet(request.periodYear(), request.periodMonth(), request.categoryId());
+        boolean freezesCalculation = request.targetStatus() == PaymentStatus.CALCULATED
+                || request.targetStatus() == PaymentStatus.REVIEWED
+                || request.targetStatus() == PaymentStatus.APPROVED
+                || request.targetStatus() == PaymentStatus.POSTED
+                || request.targetStatus() == PaymentStatus.PAID;
+        var sheet = buildSheet(request.periodYear(), request.periodMonth(), request.categoryId(), freezesCalculation, actor);
         if (request.targetStatus() == PaymentStatus.APPROVED || request.targetStatus() == PaymentStatus.POSTED
                 || request.targetStatus() == PaymentStatus.PAID) {
             sheet.rows().stream().map(PayrollApi.PayrollRow::reportId).filter(java.util.Objects::nonNull).distinct()

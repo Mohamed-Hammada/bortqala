@@ -9,7 +9,7 @@ The repository contains these active applications:
 - `desktop/` — Tauri desktop distribution that packages the web/backend stack with a local runtime and PostgreSQL.
 - `license-app/` — license activation service used by the desktop distribution.
 
-Implementation claims in historical notes are not authoritative. Verify behavior from source, automated tests, migrations, and exercised API/UI flows. Current architecture and operational evidence live in `PROJECT_MAP.md`, `docs/TECHNICAL_GUIDE_CHECKLIST.md`, and `docs/TEST_EVIDENCE.md`.
+Implementation claims in historical notes are not authoritative. Verify behavior from source, automated tests, migrations, and exercised API/UI flows. Current architecture, release acceptance, and operational evidence live in `PROJECT_MAP.md`, `docs/BORTQALA_REMAINING_WORK_CHECKLIST.md`, `docs/TECHNICAL_GUIDE_CHECKLIST.md`, and `docs/TEST_EVIDENCE.md`. The project is not release-ready while that release checklist contains open or blocked P0 gates.
 
 ## Local verification
 

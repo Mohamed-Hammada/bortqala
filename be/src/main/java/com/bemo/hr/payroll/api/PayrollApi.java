@@ -115,4 +115,17 @@ public final class PayrollApi {
             @NotBlank String paymentId,
             @NotBlank String reason
     ) { }
+
+    public record CalculationPolicyRequest(
+            @NotBlank String name,
+            @NotNull Long effectiveFrom,
+            Long effectiveTo,
+            @NotNull BigDecimal workingHourDivisor,
+            @NotNull BigDecimal overtimeMultiplier
+    ) { }
+
+    public record CalculationPolicyResponse(
+            String id, String name, long effectiveFrom, Long effectiveTo,
+            BigDecimal workingHourDivisor, BigDecimal overtimeMultiplier, long version
+    ) { }
 }

@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 public class OperationsService {
     private final InventoryItemRepository inventoryItemRepository;
     private final StockMovementRepository stockMovementRepository;
+    private final InventoryMovementCostRepository inventoryMovementCostRepository;
     private final PartnerLedgerEntryRepository partnerLedgerEntryRepository;
     private final EmployeeAdvanceEntryRepository employeeAdvanceEntryRepository;
     private final BusinessPartyRepository businessPartyRepository;
@@ -338,7 +340,7 @@ public class OperationsService {
     }
 
     @Transactional
-    public void recordProductionIssue(String itemId, BigDecimal quantity, String orderNumber, String note, Instant occurredAt, String actor) {
+    public BigDecimal recordProductionIssue(String itemId, BigDecimal quantity, String orderNumber, String note, Instant occurredAt, String actor) {
         requireItem(itemId);
         if (quantity == null || quantity.signum() <= 0) {
             throw new BusinessRuleException("Production issue quantity must be positive.", "OPS_PROD_ISSUE_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
@@ -350,9 +352,10 @@ public class OperationsService {
         var movement = stockMovementRepository.save(new StockMovement(itemId, null,
                 "PRODUCTION_ISSUE", quantity.negate(), null, orderNumber, note, occurredAt, actor));
         movement.assignDocument("PRODUCTION_ISSUE", "Issued raw materials for work order");
-        inventoryValuationService.valueMovement(movement, null, actor);
+        var movementCost = inventoryValuationService.valueMovement(movement, null, actor);
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Production issue " + orderNumber + " qty: " + quantity, null);
+        return movementCost.getValueEffect().abs();
     }
 
     @Transactional
@@ -504,6 +507,17 @@ public class OperationsService {
 
     public BigDecimal latestUnitCost(String itemId) {
         return inventoryValuationService.getItemUnitCost(itemId);
+    }
+
+    public BigDecimal productionIssueCost(String orderNumber, String itemId) {
+        return stockMovementRepository.findByOperationTypeAndReferenceCodeAndItemId(
+                        "PRODUCTION_ISSUE", orderNumber, itemId).stream()
+                .map(StockMovement::getId)
+                .map(inventoryMovementCostRepository::findByMovementId)
+                .flatMap(Optional::stream)
+                .map(InventoryMovementCost::getValueEffect)
+                .map(BigDecimal::abs)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private static boolean isBlank(String value) {
