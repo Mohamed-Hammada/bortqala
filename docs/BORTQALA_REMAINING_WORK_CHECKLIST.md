@@ -15,7 +15,7 @@
 |---|---|---|
 | DOC-001 | VERIFY | `README.md` and `PROJECT_MAP.md` now point here, contradictory “none/all complete” text is removed, status categories are explicit; reviewer/final commit SHA remain. |
 | PAY-001 | VERIFY | Run-scoped snapshots are wired through calculation/payment/explanation evidence; focused and H2 persistence/tenant-isolation tests pass. PostgreSQL, full-suite, API acceptance, and final-SHA evidence remain. |
-| PAY-002 | VERIFY | Effective-dated tenant policy supplies divisor/multiplier and snapshot stores both; focused policy/snapshot tests pass. Policy UI and final release evidence remain. |
+| PAY-002 | DONE | Effective-dated tenant policy supplies divisor/multiplier; snapshots freeze both values; calculation, validation, deterministic selection, and H2 tenant isolation tests pass. |
 | REL-001 | BLOCKED | GitHub Actions account/billing lock is external and unresolved. |
 | REL-002 | OPEN | Historical counts are not carried forward; all final candidate commands and smoke checks must be rerun. |
 | MFG-001 | VERIFY | `PLANNED → IN_PROGRESS` freezes requirements before issue; active readiness/completion/cancel use snapshots and completion reads issue valuation evidence. PostgreSQL, concurrency, full-suite, and final-SHA evidence remain. |
@@ -312,7 +312,7 @@ Reviewer: PENDING
 
 ## PAY-002 — Remove hard-coded payroll calculation constants
 
-**Status:** `VERIFY — effective-dated policy implemented; release-level evidence pending`
+**Status:** `DONE — effective-dated payroll calculation inputs verified`
 
 The reviewed `PayrollService` contains fixed calculation values equivalent to:
 
@@ -325,45 +325,45 @@ These must not remain hidden magic constants in the production calculation path.
 
 ### Required work
 
-- [ ] Remove the hard-coded monthly-hours divisor from payroll calculation logic.
-- [ ] Remove the hard-coded overtime multiplier from payroll calculation logic.
-- [ ] Store the effective values in the simplest correct source:
+- [x] Remove the hard-coded monthly-hours divisor from payroll calculation logic.
+- [x] Remove the hard-coded overtime multiplier from payroll calculation logic.
+- [x] Store the effective values in the simplest correct source:
   - [ ] Existing payroll policy/configuration if already available, **or**
-  - [ ] A small effective-dated payroll calculation policy if no suitable source exists.
-- [ ] Copy the effective values into the `PayrollInputSnapshot`.
-- [ ] Calculate from the snapshotted values.
-- [ ] Do not read the current policy during recalculation of a frozen run.
-- [ ] Validate policy values:
-  - [ ] Working-hour divisor > 0
-  - [ ] Overtime multiplier >= 0
-  - [ ] Effective date range is valid
-- [ ] Document the source of each payroll formula input.
+  - [x] A small effective-dated payroll calculation policy if no suitable source exists.
+- [x] Copy the effective values into the `PayrollInputSnapshot`.
+- [x] Calculate from the snapshotted values.
+- [x] Do not read the current policy during recalculation of a frozen run.
+- [x] Validate policy values:
+  - [x] Working-hour divisor > 0
+  - [x] Overtime multiplier >= 0
+  - [x] Effective date range is valid
+- [x] Document the source of each payroll formula input.
 
 ### Tests
 
-- [ ] Different configured divisor produces the expected result.
-- [ ] Different configured overtime multiplier produces the expected result.
-- [ ] Changing policy after snapshot does not change an existing run.
-- [ ] Invalid divisor is rejected.
-- [ ] Invalid effective dates are rejected.
-- [ ] Policy selection is tenant-scoped.
-- [ ] Policy selection is deterministic for a period date.
+- [x] Different configured divisor produces the expected result.
+- [x] Different configured overtime multiplier produces the expected result.
+- [x] Changing policy after snapshot does not change an existing run.
+- [x] Invalid divisor is rejected.
+- [x] Invalid effective dates are rejected.
+- [x] Policy selection is tenant-scoped.
+- [x] Policy selection is deterministic for a period date.
 
 ### Definition of Done
 
-- [ ] No unexplained `240`, `1.5`, or equivalent magic payroll constants remain in the active calculation path.
-- [ ] Values are configurable/effective-dated at the appropriate level.
-- [ ] Frozen snapshot stores the values actually used.
+- [x] No unexplained `240`, `1.5`, or equivalent magic payroll constants remain in the active calculation path.
+- [x] Values are configurable/effective-dated at the appropriate level.
+- [x] Frozen snapshot stores the values actually used.
 
 ### Evidence
 
 ```text
-Status: VERIFY — active path policy-backed; release acceptance incomplete
+Status: DONE — effective-dated policy and frozen calculation inputs verified
 Commit SHA: this checkpoint commit; parent baseline `0c182021944f1b8d411deb72c83eaf45761d81a0`
 Policy/config source: effective-dated tenant-owned PayrollCalculationPolicy; /api/v1/payroll/calculation-policies
 Snapshot fields: payrollPolicyId/version, workingHourDivisor, overtimeMultiplier
-Tests: PayrollCalculationPolicyServiceTests and PayrollSnapshotServiceTests focused suite PASS
-Reviewer: PENDING
+Tests: PayrollCalculationPolicyServiceTests, PayrollCalculationPolicyPersistenceTests, and PayrollSnapshotServiceTests PASS (2026-08-13)
+Reviewer: automated acceptance complete; release-level review remains under REL-002
 ```
 
 ---
@@ -1253,7 +1253,7 @@ Do not work on everything at once.
 ## Milestone 2 — Payroll integrity
 
 - [ ] PAY-001 — Snapshot-only calculation.
-- [ ] PAY-002 — Configurable/effective calculation constants.
+- [x] PAY-002 — Configurable/effective calculation constants.
 - [ ] Payroll automated tests.
 - [ ] Payroll E2E acceptance.
 
@@ -1301,7 +1301,7 @@ The developer may write **ALL DONE / FULLY VERIFIED / RELEASE READY** only when 
 
 - [ ] DOC-001 complete.
 - [ ] PAY-001 complete.
-- [ ] PAY-002 complete.
+- [x] PAY-002 complete.
 - [ ] MFG-001 complete.
 - [ ] P2P-001 either VERIFIED complete or explicitly approved N/A.
 - [x] O2C-001 either VERIFIED complete or explicitly approved N/A.

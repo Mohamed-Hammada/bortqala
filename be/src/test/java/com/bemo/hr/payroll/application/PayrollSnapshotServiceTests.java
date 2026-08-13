@@ -71,4 +71,26 @@ class PayrollSnapshotServiceTests {
         assertThat(replay.getPayrollPolicyId()).isEqualTo("policy-1");
         verify(snapshotRepository, times(1)).save(any());
     }
+
+    @Test
+    void configuredDivisorAndOvertimeMultiplierDriveTheFrozenResult() {
+        when(snapshotRepository.findByPayrollRunIdAndEmployeeId(anyString(), anyString())).thenReturn(Optional.empty());
+        when(snapshotRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PayrollInputSnapshot standard = snapshotService.captureSnapshot(new PayrollSnapshotService.CalculationInputs(
+                "run-standard", "emp-1", "p-1", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31),
+                new BigDecimal("4800"), 9600, 600, 0, 0, "policy-standard", 1,
+                new BigDecimal("240"), new BigDecimal("1.5"), BigDecimal.ZERO, BigDecimal.ZERO,
+                BigDecimal.ZERO, BigDecimal.ZERO), "payroll");
+        PayrollInputSnapshot configured = snapshotService.captureSnapshot(new PayrollSnapshotService.CalculationInputs(
+                "run-configured", "emp-1", "p-1", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31),
+                new BigDecimal("4800"), 9600, 600, 0, 0, "policy-configured", 1,
+                new BigDecimal("200"), new BigDecimal("2"), BigDecimal.ZERO, BigDecimal.ZERO,
+                BigDecimal.ZERO, BigDecimal.ZERO), "payroll");
+
+        assertThat(standard.getAllowanceAmount()).isEqualByComparingTo("300.00");
+        assertThat(configured.getAllowanceAmount()).isEqualByComparingTo("480.00");
+        assertThat(configured.getWorkingHourDivisor()).isEqualByComparingTo("200");
+        assertThat(configured.getOvertimeMultiplier()).isEqualByComparingTo("2");
+    }
 }

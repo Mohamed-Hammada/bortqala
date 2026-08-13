@@ -35,6 +35,15 @@ class PayrollCalculationPolicyServiceTests {
     }
 
     @Test
+    void rejectsNegativeOvertimeMultiplier() {
+        assertThatThrownBy(() -> service.create("Bad multiplier", LocalDate.of(2026, 1, 1), null,
+                new BigDecimal("208"), new BigDecimal("-0.01")))
+                .isInstanceOf(BusinessRuleException.class)
+                .extracting(error -> ((BusinessRuleException) error).getCode())
+                .isEqualTo("PAYROLL_POLICY_MULTIPLIER_INVALID");
+    }
+
+    @Test
     void rejectsOverlappingEffectivePolicies() {
         when(repository.findByActiveTrueOrderByEffectiveFromDesc()).thenReturn(List.of(
                 new PayrollCalculationPolicy("Existing", LocalDate.of(2026, 1, 1),
