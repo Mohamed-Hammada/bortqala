@@ -121,6 +121,15 @@ public class CustomerInvoice {
         }
     }
 
+    public void applyCredit(BigDecimal creditAmount) {
+        if (creditAmount == null || creditAmount.signum() <= 0 || creditAmount.compareTo(amount) > 0) {
+            throw new IllegalArgumentException("Credit amount is invalid");
+        }
+        amount = amount.subtract(creditAmount);
+        outstandingAmount = outstandingAmount.subtract(creditAmount).max(BigDecimal.ZERO);
+        status = outstandingAmount.signum() == 0 ? Status.PAID : Status.ISSUED;
+    }
+
     public boolean overdue(LocalDate asOf) {
         return this.status != Status.PAID && this.dueDate != null && this.dueDate.isBefore(asOf);
     }

@@ -1,5 +1,13 @@
 # Test Evidence — Bemo ERP
 
+## 2026-08-13 O2C vertical-slice checkpoint
+
+- Working-tree evidence after parent `41a7f3b`; not final release-SHA evidence.
+- `SalesOrderToCashPersistenceTests`: **2/2 PASS** on the H2 application context. It proves persisted real lines, confirmation-time pricing snapshots, locked ATP reservation, valued delivery and COGS journal, linked issued invoice, partial/final receipts, customer ledger, partial return, original-cost stock/COGS reversal, linked credit note, operation replay, tenant isolation, and concurrent no-oversubscription.
+- Focused sales/AR/security tests: **PASS** for multi-invoice receipt allocation, idempotent cancellation release, and Sales-role-only delivery/return mutation.
+- Sales Angular suite: **6/6 PASS**; i18n **2,374 keys PASS**; hardcoded UI **0 findings across 49 HTML / 127 TS files**; production build **PASS**.
+- V209 also repairs upgrade-path gaps exposed by the persisted test: legacy sales-line/customer-credit/invoice columns and malformed historical composite uniqueness on valuation and AR tables.
+
 ## 2026-08-13 P2P multi-invoice verification checkpoint
 
 - Parent baseline: `1133e3431d170b50c202f881c31a0021ade75495`; this is working-tree evidence and not final release-SHA evidence.

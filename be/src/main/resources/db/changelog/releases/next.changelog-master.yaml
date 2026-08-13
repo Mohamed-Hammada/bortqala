@@ -289,3 +289,7 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260813_v207_payment_proposal_allocations.yaml
   - include:
       file: db/changelog/data/insert/20260813_v208_payment_proposal_allocation_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260813_v209_o2c_vertical_slice.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v210_o2c_translations.yaml

@@ -44,7 +44,14 @@ public class WarehouseInventoryService {
 
     @Transactional
     public StockReservation reserveStock(String reservationNumber, String sourceType, String sourceId, String itemId, String warehouseId, BigDecimal quantity) {
-        BigDecimal available = getAvailableStock(warehouseId, itemId);
+        requirePositive(quantity);
+        requireActiveWarehouse(warehouseId);
+        StockReservation replay = reservationRepository
+                .findBySourceTypeAndSourceIdAndItemIdAndWarehouseId(sourceType, sourceId, itemId, warehouseId)
+                .orElse(null);
+        if (replay != null) return replay;
+        List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemIdForUpdate(warehouseId, itemId);
+        BigDecimal available = availableStock(warehouseId, itemId, balances);
         if (available.compareTo(quantity) < 0) {
             throw new BusinessRuleException("Insufficient available stock for reservation", "INSUFFICIENT_STOCK_RESERVATION", HttpStatus.CONFLICT);
         }
@@ -69,6 +76,31 @@ public class WarehouseInventoryService {
     @Transactional(readOnly = true)
     public BigDecimal getAvailableStock(String warehouseId, String itemId) {
         List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemId(warehouseId, itemId);
+        return availableStock(warehouseId, itemId, balances);
+    }
+
+    @Transactional
+    public StockReservation consumeReservation(String reservationId) {
+        StockReservation reservation = getReservation(reservationId);
+        if (reservation.getStatus() == StockReservation.Status.FULFILLED) return reservation;
+        List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemIdForUpdate(
+                reservation.getWarehouseId(), reservation.getItemId());
+        StockStatusBalance available = balances.stream()
+                .filter(row -> row.getStatus() == StockStatusBalance.Status.AVAILABLE)
+                .findFirst()
+                .orElseThrow(() -> new BusinessRuleException("Warehouse stock balance was not found.",
+                        "WAREHOUSE_STOCK_BALANCE_NOT_FOUND", HttpStatus.CONFLICT));
+        if (available.getQuantity().compareTo(reservation.getReservedQuantity()) < 0) {
+            throw new BusinessRuleException("Insufficient physical stock for the reserved delivery.",
+                    "WAREHOUSE_STOCK_INSUFFICIENT", HttpStatus.CONFLICT);
+        }
+        reservation.fulfill();
+        available.adjustQuantity(reservation.getReservedQuantity().negate());
+        balanceRepository.save(available);
+        return reservationRepository.save(reservation);
+    }
+
+    private BigDecimal availableStock(String warehouseId, String itemId, List<StockStatusBalance> balances) {
         BigDecimal totalAvailable = balances.stream()
                 .filter(b -> b.getStatus() == StockStatusBalance.Status.AVAILABLE)
                 .map(StockStatusBalance::getQuantity)
@@ -80,6 +112,11 @@ public class WarehouseInventoryService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return totalAvailable.subtract(totalReserved).max(BigDecimal.ZERO);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StockReservation> reservationsForSource(String sourceType, String sourceId) {
+        return reservationRepository.findBySourceTypeAndSourceIdOrderByCreatedAtAsc(sourceType, sourceId);
     }
 
     @Transactional

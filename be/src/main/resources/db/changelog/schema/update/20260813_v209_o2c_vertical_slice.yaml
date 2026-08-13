@@ -1,0 +1,138 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v209_001_o2c_vertical_slice
+      author: codex
+      changes:
+        - addColumn:
+            tableName: sales_order_lines
+            columns:
+              - column: { name: item_id, type: VARCHAR(36), defaultValue: LEGACY_ITEM, constraints: { nullable: false } }
+              - column: { name: ordered_quantity, type: "DECIMAL(15,4)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: delivered_quantity, type: "DECIMAL(15,4)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: invoiced_quantity, type: "DECIMAL(15,4)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: discount_rate, type: "DECIMAL(5,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: net_price, type: "DECIMAL(15,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+        - sql:
+            sql: |
+              UPDATE sales_order_lines
+              SET ordered_quantity = quantity,
+                  net_price = unit_price
+              WHERE ordered_quantity = 0
+        - addDefaultValue: { tableName: sales_order_lines, columnName: quantity, columnDataType: "DECIMAL(12,2)", defaultValueNumeric: 0 }
+        - addColumn:
+            tableName: customer_credit_profiles
+            columns:
+              - column: { name: payment_terms_days, type: INT, defaultValueNumeric: 30, constraints: { nullable: false } }
+              - column: { name: credit_hold, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+        - addColumn:
+            tableName: customer_invoices
+            columns:
+              - column: { name: amount, type: "DECIMAL(19,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: due_date, type: DATE }
+              - column: { name: currency_code, type: VARCHAR(10), defaultValue: EGP, constraints: { nullable: false } }
+              - column: { name: outstanding_amount, type: "DECIMAL(19,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: delivered_quantity, type: "DECIMAL(15,4)" }
+              - column: { name: invoiced_amount, type: "DECIMAL(15,2)" }
+              - column: { name: cogs_amount, type: "DECIMAL(15,2)" }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - sql:
+            sql: |
+              UPDATE customer_invoices
+              SET amount = total_amount,
+                  outstanding_amount = total_amount,
+                  due_date = invoice_date,
+                  currency_code = 'EGP'
+              WHERE amount = 0
+        - addDefaultValue: { tableName: customer_invoices, columnName: total_amount, columnDataType: "DECIMAL(15,2)", defaultValueNumeric: 0 }
+        - addColumn:
+            tableName: sales_orders
+            columns:
+              - column: { name: warehouse_id, type: VARCHAR(36) }
+              - column: { name: currency_code, type: VARCHAR(3), defaultValue: EGP, constraints: { nullable: false } }
+        - addColumn:
+            tableName: sales_delivery_headers
+            columns:
+              - column: { name: warehouse_id, type: VARCHAR(36) }
+              - column: { name: operation_id, type: VARCHAR(100) }
+              - column: { name: invoice_id, type: VARCHAR(36) }
+        - addColumn:
+            tableName: customer_return_headers
+            columns:
+              - column: { name: delivery_id, type: VARCHAR(36) }
+              - column: { name: warehouse_id, type: VARCHAR(36) }
+              - column: { name: operation_id, type: VARCHAR(100) }
+              - column: { name: credit_note_id, type: VARCHAR(36) }
+        - sql:
+            sql: |
+              ALTER TABLE inventory_movement_costs DROP CONSTRAINT IF EXISTS uk_inv_movement_cost_app_movement;
+              ALTER TABLE customer_invoices DROP CONSTRAINT IF EXISTS uk_customer_invoice_number;
+              ALTER TABLE customer_receipts DROP CONSTRAINT IF EXISTS uk_customer_receipt_number;
+              ALTER TABLE customer_receipts DROP CONSTRAINT IF EXISTS uk_customer_receipt_operation;
+              ALTER TABLE customer_receipt_allocations DROP CONSTRAINT IF EXISTS uk_receipt_allocation_invoice;
+        - addUniqueConstraint: { tableName: inventory_movement_costs, columnNames: "app_id,movement_id", constraintName: uk_inv_movement_cost_app_movement }
+        - addUniqueConstraint: { tableName: customer_invoices, columnNames: "app_id,invoice_number", constraintName: uk_customer_invoice_number }
+        - addUniqueConstraint: { tableName: customer_receipts, columnNames: "app_id,receipt_number", constraintName: uk_customer_receipt_number }
+        - addUniqueConstraint: { tableName: customer_receipts, columnNames: "app_id,operation_id", constraintName: uk_customer_receipt_operation }
+        - addUniqueConstraint: { tableName: customer_receipt_allocations, columnNames: "app_id,receipt_id,invoice_id", constraintName: uk_receipt_allocation_invoice }
+        - addUniqueConstraint: { tableName: stock_reservations, columnNames: "app_id,source_type,source_id,item_id,warehouse_id", constraintName: uq_stock_reservation_source_item }
+        - addUniqueConstraint: { tableName: sales_pricing_snapshots, columnNames: "app_id,sales_order_id,item_id", constraintName: uq_sales_pricing_snapshot_order_item }
+        - addUniqueConstraint: { tableName: sales_delivery_headers, columnNames: "app_id,delivery_number", constraintName: uq_sales_delivery_number }
+        - addUniqueConstraint: { tableName: sales_delivery_headers, columnNames: "app_id,operation_id", constraintName: uq_sales_delivery_operation }
+        - addUniqueConstraint: { tableName: customer_return_headers, columnNames: "app_id,return_number", constraintName: uq_customer_return_number }
+        - addUniqueConstraint: { tableName: customer_return_headers, columnNames: "app_id,operation_id", constraintName: uq_customer_return_operation }
+        - createTable:
+            tableName: sales_delivery_lines
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: delivery_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: sales_order_line_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: item_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: quantity, type: "DECIMAL(15,4)", constraints: { nullable: false } }
+              - column: { name: unit_price, type: "DECIMAL(15,2)", constraints: { nullable: false } }
+              - column: { name: stock_movement_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: unit_cogs, type: "DECIMAL(19,6)", constraints: { nullable: false } }
+              - column: { name: cogs_amount, type: "DECIMAL(19,2)", constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: sales_delivery_lines, columnNames: "app_id,delivery_id,sales_order_line_id", constraintName: uq_sales_delivery_order_line }
+        - createTable:
+            tableName: customer_return_lines
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: return_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: delivery_line_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: item_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: quantity, type: "DECIMAL(15,4)", constraints: { nullable: false } }
+              - column: { name: disposition, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: stock_movement_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: credit_amount, type: "DECIMAL(19,2)", constraints: { nullable: false } }
+              - column: { name: cogs_amount, type: "DECIMAL(19,2)", constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+        - createTable:
+            tableName: customer_credit_notes
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: credit_note_number, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: customer_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: invoice_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: sales_order_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: delivery_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: return_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: credit_date, type: DATE, constraints: { nullable: false } }
+              - column: { name: currency_code, type: VARCHAR(3), constraints: { nullable: false } }
+              - column: { name: amount, type: "DECIMAL(19,2)", constraints: { nullable: false } }
+              - column: { name: operation_id, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: created_by, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: customer_credit_notes, columnNames: "app_id,credit_note_number", constraintName: uq_customer_credit_note_number }
+        - addUniqueConstraint: { tableName: customer_credit_notes, columnNames: "app_id,operation_id", constraintName: uq_customer_credit_note_operation }
+        - addUniqueConstraint: { tableName: customer_credit_notes, columnNames: "app_id,return_id", constraintName: uq_customer_credit_note_return }
+        - addForeignKeyConstraint: { baseTableName: sales_delivery_lines, baseColumnNames: delivery_id, referencedTableName: sales_delivery_headers, referencedColumnNames: id, constraintName: fk_sales_delivery_line_header }
+        - addForeignKeyConstraint: { baseTableName: customer_return_lines, baseColumnNames: return_id, referencedTableName: customer_return_headers, referencedColumnNames: id, constraintName: fk_customer_return_line_header }
+        - addForeignKeyConstraint: { baseTableName: customer_credit_notes, baseColumnNames: invoice_id, referencedTableName: customer_invoices, referencedColumnNames: id, constraintName: fk_customer_credit_note_invoice }
+      rollback:
+        - dropTable: { tableName: customer_credit_notes }
+        - dropTable: { tableName: customer_return_lines }
+        - dropTable: { tableName: sales_delivery_lines }

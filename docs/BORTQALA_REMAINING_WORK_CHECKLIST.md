@@ -20,7 +20,7 @@
 | REL-002 | OPEN | Historical counts are not carried forward; all final candidate commands and smoke checks must be rerun. |
 | MFG-001 | VERIFY | `PLANNED → IN_PROGRESS` freezes requirements before issue; active readiness/completion/cancel use snapshots and completion reads issue valuation evidence. PostgreSQL, concurrency, full-suite, and final-SHA evidence remain. |
 | P2P-001 | VERIFY | Multi-invoice allocation, SoD, atomic supplier payments, balance/ledger updates, replay, rollback, UI references, and H2 persistence are proven locally. The implemented PostgreSQL concurrency acceptance test still requires Docker. |
-| O2C-001 | CONFIRMED GAP | Sales lines, delivery, invoice, receipt-match, and return classes are disconnected; no stock/reservation/AR/GL/credit-note vertical slice exists. |
+| O2C-001 | DONE | Persisted order → reservation → valued delivery/COGS → invoice → partial/final receipts → return → credit-note, replay/cancellation, API roles, tenant isolation, and concurrent ATP reservation are proven locally. |
 | INV-001 | VERIFY | Reconcile existing delivered inventory functions; do not rebuild without a proven gap. |
 | SHARED-001…004 | VERIFY | Real command-path characterization required. |
 | TRS-001 | CONFIRMED GAP | Payment batches only mutate batch state; real disbursement, SoD, replay, and concurrent execution are absent. |
@@ -660,36 +660,36 @@ If the current implementation only changes proposal state to something like `EXE
 
 ## O2C-001 — Verify Sales Order → Cash + Return/Credit lifecycle
 
-**Status:** `VERIFY`
+**Status:** `DONE — local acceptance complete`
 
 Do not mark O2C complete because `SalesOrder`, reservation, invoice, receipt, or return services exist separately.
 
 ### Required vertical slice
 
-- [ ] Sales order contains real line items.
-- [ ] Price used by the order is frozen/versioned appropriately.
-- [ ] Reservation is created against available stock.
-- [ ] Reservation affects available-to-promise correctly.
-- [ ] Delivery consumes/releases reservation correctly.
-- [ ] Delivery creates the correct inventory movement.
-- [ ] COGS posting is generated once.
-- [ ] Customer invoice is created/linked.
-- [ ] Receipt can be allocated partially.
-- [ ] Receipt can be allocated across valid invoices according to current rules.
-- [ ] Customer balance/AR is updated correctly.
-- [ ] Return/RMA is linked to the original sale/delivery.
-- [ ] Returned stock disposition is correct.
-- [ ] Credit note is created/linked correctly.
-- [ ] Reversal/cancellation rules prevent double financial/stock effects.
-- [ ] Permissions are enforced at API level.
-- [ ] Tenant isolation is proven.
+- [x] Sales order contains real line items.
+- [x] Price used by the order is frozen/versioned appropriately.
+- [x] Reservation is created against available stock.
+- [x] Reservation affects available-to-promise correctly.
+- [x] Delivery consumes/releases reservation correctly.
+- [x] Delivery creates the correct inventory movement.
+- [x] COGS posting is generated once.
+- [x] Customer invoice is created/linked.
+- [x] Receipt can be allocated partially.
+- [x] Receipt can be allocated across valid invoices according to current rules.
+- [x] Customer balance/AR is updated correctly.
+- [x] Return/RMA is linked to the original sale/delivery.
+- [x] Returned stock disposition is correct.
+- [x] Credit note is created/linked correctly.
+- [x] Cancellation releases active order reservations once; delivery/return operation replay prevents duplicate financial or stock effects.
+- [x] Permissions are enforced at API level.
+- [x] Tenant isolation is proven.
 
 ### Pricing snapshot acceptance
 
-- [ ] Freeze pricing inputs at the correct order lifecycle state.
-- [ ] Later price-list/config changes do not alter an already-frozen order.
-- [ ] New orders can use the new price.
-- [ ] Pricing explanation/reference remains traceable.
+- [x] Freeze pricing inputs at the correct order lifecycle state.
+- [x] Later price-list/config changes do not alter an already-frozen order.
+- [x] New orders can use the new price.
+- [x] Pricing explanation/reference remains traceable.
 
 ### Required E2E test
 
@@ -709,15 +709,24 @@ Create item/customer
 → Verify stock + AR + GL consistency
 ```
 
-- [ ] Automated integration coverage exists for the critical path.
-- [ ] UI can execute/inspect each user-facing step.
-- [ ] Each document shows upstream/downstream references.
+- [x] Automated integration coverage exists for the critical path.
+- [x] UI can execute/inspect order, confirm, delivery/invoice, receipts, and return/credit-note steps.
+- [x] Delivery, invoice, stock movement, return, and credit-note references are returned and displayed.
 
 ### Definition of Done
 
-- [ ] One test or test family proves the entire chain.
-- [ ] Stock, AR, partner/customer balance, and GL remain balanced/traceable.
-- [ ] Retry/reversal paths do not duplicate effects.
+- [x] One test or test family proves the entire chain.
+- [x] Stock, AR, partner/customer balance, and GL remain balanced/traceable.
+- [x] Delivery/return replay and order-cancellation replay do not duplicate effects; over-return is rejected against cumulative delivery-line returns.
+
+### Evidence — 2026-08-13
+
+- `SalesOrderToCashPersistenceTests` passes on the H2 application context and proves the persisted order → reservation → delivery/COGS → issued invoice → two allocated receipts → partial return → credit-note chain, including stock/AR/partner-ledger/GL values and same-operation delivery/return replay.
+- The same persisted suite proves tenant isolation and concurrent reservation: two simultaneous 7-unit requests against 10 available yield one success and 3 ATP, with no oversubscription.
+- `SalesOrderFullServiceTests` and `SalesReceivablesServiceTests` pass for typed line creation, per-line price freeze/reservation, valued delivery, original-cost return, credit creation, partial allocation, and receipt replay.
+- Focused service coverage also proves allocation across two invoices and idempotent reservation release on order cancellation; `AuthSecurityIntegrationTests.salesDeliveryAndReturnMutationsRequireSalesRole` proves the mutation-role boundary.
+- The sales Angular suite passes 6/6 for AR, typed line/warehouse order submission, delivery/downstream-reference inspection, and partial return submission; i18n (2,374 keys), hardcoded-UI, and production-build gates pass.
+- V209 repairs real legacy upgrade gaps in sales lines, customer credit/invoices, inventory movement uniqueness, and AR composite uniqueness that the persisted test exposed.
 
 ---
 
@@ -1155,7 +1164,7 @@ Do not work on everything at once.
 ## Milestone 4 — Financial vertical slices
 
 - [ ] P2P-001 — Proposal to real payment.
-- [ ] O2C-001 — Order to cash and return.
+- [x] O2C-001 — Order to cash and return.
 - [ ] INV-001 — Verify inventory capability matrix.
 - [ ] SHARED-001..004 — Shared guards/posting.
 - [ ] TRS-001..004 — Treasury/close.
@@ -1185,7 +1194,7 @@ The developer may write **ALL DONE / FULLY VERIFIED / RELEASE READY** only when 
 - [ ] PAY-002 complete.
 - [ ] MFG-001 complete.
 - [ ] P2P-001 either VERIFIED complete or explicitly approved N/A.
-- [ ] O2C-001 either VERIFIED complete or explicitly approved N/A.
+- [x] O2C-001 either VERIFIED complete or explicitly approved N/A.
 - [ ] INV-001 applicable sub-items verified.
 - [ ] Shared control items verified.
 - [ ] Treasury/close applicable items verified.
@@ -1241,7 +1250,7 @@ P0 completed:
 P1 completed/verified:
 - MFG-001:
 - P2P-001:
-- O2C-001:
+- O2C-001: DONE — connected and persisted stock, COGS/GL, AR/ledger, receipts, returns/credit notes, roles, tenant isolation, replay/cancellation, and concurrent ATP evidence (`SalesOrderToCashPersistenceTests`; 2026-08-13).
 - INV-001:
 - SHARED:
 - TREASURY/CLOSE:

@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class OperationsService {
+    public record ValuedMovement(String movementId, BigDecimal unitCost, BigDecimal totalCost, String journalEntryId) { }
     private final InventoryItemRepository inventoryItemRepository;
     private final StockMovementRepository stockMovementRepository;
     private final InventoryMovementCostRepository inventoryMovementCostRepository;
@@ -439,6 +440,57 @@ public class OperationsService {
                 item.getUomId(), uom == null ? null : uom.getName(),
                 item.isActive(), item.getReorderPoint(), item.getReorderQuantity(), balance,
                 item.getVersion(), item.getCreatedAt(), item.getUpdatedAt());
+    }
+
+    @Transactional
+    public ValuedMovement recordSalesDelivery(String itemId, String customerId, String warehouseId,
+                                               String reservationId, BigDecimal quantity, String deliveryNumber,
+                                               Instant occurredAt, String actor) {
+        requireItem(itemId);
+        if (quantity == null || quantity.signum() <= 0) {
+            throw new BusinessRuleException("Sales delivery quantity must be positive.",
+                    "O2C_DELIVERY_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+        }
+        var reservation = warehouseInventoryService.consumeReservation(reservationId);
+        if (!reservation.getItemId().equals(itemId) || !reservation.getWarehouseId().equals(warehouseId)
+                || reservation.getReservedQuantity().compareTo(quantity) != 0) {
+            throw new BusinessRuleException("Delivery does not match its stock reservation.",
+                    "O2C_RESERVATION_MISMATCH", HttpStatus.CONFLICT);
+        }
+        var movement = stockMovementRepository.save(new StockMovement(itemId, normalizeId(customerId),
+                "EXPORT_SALE", quantity.negate(), null, deliveryNumber,
+                "Sales-order delivery", occurredAt, actor));
+        movement.assignDocument("DELIVERY_NOTE", "Reserved stock delivered to customer");
+        movement.assignReferences(null, null, deliveryNumber, null, null, null, warehouseId,
+                null, null, null);
+        var cost = inventoryValuationService.valueMovement(movement, null, actor);
+        auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
+                "Sales delivery " + deliveryNumber + " qty: " + quantity, null);
+        return new ValuedMovement(movement.getId(), cost.getUnitCost(), cost.getValueEffect().abs(), cost.getJournalEntryId());
+    }
+
+    @Transactional
+    public ValuedMovement recordCustomerReturn(String itemId, String customerId, String warehouseId,
+                                               BigDecimal quantity, BigDecimal originalUnitCost,
+                                               String returnNumber, String disposition, Instant occurredAt, String actor) {
+        requireItem(itemId);
+        if (quantity == null || quantity.signum() <= 0) {
+            throw new BusinessRuleException("Customer return quantity must be positive.",
+                    "O2C_RETURN_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+        }
+        if (!"AVAILABLE".equals(disposition)) {
+            throw new BusinessRuleException("Only inspected AVAILABLE returns can be received into sellable stock.",
+                    "O2C_RETURN_DISPOSITION_INVALID", HttpStatus.CONFLICT);
+        }
+        var movement = stockMovementRepository.save(new StockMovement(itemId, normalizeId(customerId),
+                "CUSTOMER_RETURN", quantity, null, returnNumber, "Customer return", occurredAt, actor));
+        movement.assignDocument("CUSTOMER_RETURN", "Returned customer stock received after inspection");
+        movement.assignReferences(null, returnNumber, null, null, null, null, warehouseId, null, null, null);
+        var cost = inventoryValuationService.valueMovement(movement, originalUnitCost, actor);
+        warehouseInventoryService.receiveAvailableStock(warehouseId, itemId, quantity);
+        auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
+                "Customer return " + returnNumber + " qty: " + quantity, null);
+        return new ValuedMovement(movement.getId(), cost.getUnitCost(), cost.getValueEffect().abs(), cost.getJournalEntryId());
     }
     private OperationsApi.ItemCategoryView categoryView(ItemCategory c) {
         return new OperationsApi.ItemCategoryView(c.getId(), c.getName(), c.getDescription(), c.isActive(),

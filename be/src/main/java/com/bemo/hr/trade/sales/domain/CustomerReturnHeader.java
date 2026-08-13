@@ -44,6 +44,18 @@ public class CustomerReturnHeader {
     @Column(length = 500)
     private String reason;
 
+    @Column(name = "delivery_id", nullable = false, length = 36)
+    private String deliveryId;
+
+    @Column(name = "warehouse_id", nullable = false, length = 36)
+    private String warehouseId;
+
+    @Column(name = "operation_id", nullable = false, length = 100)
+    private String operationId;
+
+    @Column(name = "credit_note_id", length = 36)
+    private String creditNoteId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status = Status.DRAFT;
@@ -60,13 +72,17 @@ public class CustomerReturnHeader {
 
     protected CustomerReturnHeader() {}
 
-    public CustomerReturnHeader(String returnNumber, String salesOrderId, String customerId, LocalDate returnDate, String reason) {
+    public CustomerReturnHeader(String returnNumber, String salesOrderId, String customerId, LocalDate returnDate,
+                                String reason, String deliveryId, String warehouseId, String operationId) {
         this.id = UUID.randomUUID().toString();
         this.returnNumber = returnNumber;
         this.salesOrderId = salesOrderId;
         this.customerId = customerId;
         this.returnDate = returnDate;
         this.reason = reason;
+        this.deliveryId = deliveryId;
+        this.warehouseId = warehouseId;
+        this.operationId = operationId;
         this.status = Status.DRAFT;
     }
 
@@ -82,6 +98,8 @@ public class CustomerReturnHeader {
         this.status = Status.REFUNDED;
     }
 
+    public void linkCreditNote(String creditNoteId) { this.creditNoteId = creditNoteId; }
+
     @PrePersist
     void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
 
@@ -95,6 +113,10 @@ public class CustomerReturnHeader {
     public String getCustomerId() { return customerId; }
     public LocalDate getReturnDate() { return returnDate; }
     public String getReason() { return reason; }
+    public String getDeliveryId() { return deliveryId; }
+    public String getWarehouseId() { return warehouseId; }
+    public String getOperationId() { return operationId; }
+    public String getCreditNoteId() { return creditNoteId; }
     public Status getStatus() { return status; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }

@@ -220,6 +220,7 @@ public class InventoryValuationService {
                                        FiscalPeriod period, String actor) {
         String offset = movement.getOperationType().contains("ADJUSTMENT")
                 ? policy.getAdjustmentAccountId()
+                : movement.getOperationType().equals("CUSTOMER_RETURN") ? policy.getCogsAccountId()
                 : valueEffect.signum() > 0 ? policy.getReceiptOffsetAccountId() : policy.getCogsAccountId();
         return postJournal(policy.getInventoryAccountId(), offset, valueEffect, movement.getPartyId(),
                 "Inventory movement " + movement.getId(), movement.getReferenceCode(), localDate(movement.getOccurredAt()), period, actor);

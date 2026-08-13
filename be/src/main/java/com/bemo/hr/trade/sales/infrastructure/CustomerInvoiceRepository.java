@@ -25,6 +25,10 @@ public interface CustomerInvoiceRepository extends JpaRepository<CustomerInvoice
     @Query("SELECT i FROM CustomerInvoice i WHERE i.id IN :ids")
     List<CustomerInvoice> findAllByIdForUpdate(@Param("ids") Collection<String> ids);
 
-    @Query("SELECT COALESCE(SUM(i.outstandingAmount), 0) FROM CustomerInvoice i WHERE i.customerId = :customerId")
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT i FROM CustomerInvoice i WHERE i.id = :id")
+    java.util.Optional<CustomerInvoice> findByIdForUpdate(@Param("id") String id);
+
+    @Query("SELECT COALESCE(SUM(i.outstandingAmount), 0) FROM CustomerInvoice i WHERE i.customerId = :customerId AND i.status <> com.bemo.hr.trade.sales.domain.CustomerInvoice.Status.DRAFT")
     BigDecimal outstanding(@Param("customerId") String customerId);
 }

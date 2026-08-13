@@ -68,6 +68,9 @@ public class SalesOrderLine {
     }
 
     public void recordDelivery(BigDecimal quantity) {
+        if (quantity == null || quantity.signum() <= 0 || deliveredQuantity.add(quantity).compareTo(orderedQuantity) > 0) {
+            throw new IllegalArgumentException("Delivered quantity exceeds the open order quantity");
+        }
         this.deliveredQuantity = this.deliveredQuantity.add(quantity);
     }
 

@@ -916,6 +916,26 @@ class AuthSecurityIntegrationTests {
     }
 
     @Test
+    void salesDeliveryAndReturnMutationsRequireSalesRole() throws Exception {
+        AppUser viewer = createUser("o2cviewer", Set.of(RoleCode.VIEWER));
+        AppUser finance = createUser("o2cfinance", Set.of(RoleCode.FINANCE_MANAGER));
+        AppUser sales = createUser("o2csales", Set.of(RoleCode.SALES_MANAGER));
+        String delivery = "{\"deliveryNumber\":\"D-1\",\"deliveryDate\":1,\"operationId\":\"d-op\"}";
+        String returned = "{\"returnNumber\":\"R-1\",\"deliveryId\":\"missing\",\"returnDate\":1,\"reason\":\"test\",\"operationId\":\"r-op\",\"lines\":[{\"deliveryLineId\":\"missing\",\"quantity\":1,\"disposition\":\"AVAILABLE\"}]}";
+        for (AppUser denied : List.of(viewer, finance)) {
+            mockMvc.perform(post("/api/v1/trade/sales/orders/missing/deliveries").contentType(MediaType.APPLICATION_JSON)
+                            .content(delivery).header("Authorization", "Bearer " + mintAccessToken(denied)))
+                    .andExpect(status().isForbidden());
+            mockMvc.perform(post("/api/v1/trade/sales/orders/missing/returns").contentType(MediaType.APPLICATION_JSON)
+                            .content(returned).header("Authorization", "Bearer " + mintAccessToken(denied)))
+                    .andExpect(status().isForbidden());
+        }
+        mockMvc.perform(post("/api/v1/trade/sales/orders/missing/deliveries").contentType(MediaType.APPLICATION_JSON)
+                        .content(delivery).header("Authorization", "Bearer " + mintAccessToken(sales)))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("SALE_ORDER_NOT_FOUND"));
+    }
+
+    @Test
     void createRejectsInvalidMenuRoleCombination() {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         var request = new AuthApi.UserUpsertRequest("badmenu-" + suffix, "Bad Menu", "Auth#Test1!",

@@ -75,10 +75,14 @@ public class StockReservation {
     }
 
     public void fulfill() {
+        if (status == Status.FULFILLED) return;
+        if (status != Status.ACTIVE) throw new IllegalStateException("Only active reservations can be fulfilled");
         this.status = Status.FULFILLED;
     }
 
     public void cancel() {
+        if (status == Status.CANCELLED) return;
+        if (status != Status.ACTIVE) throw new IllegalStateException("Only active reservations can be cancelled");
         this.status = Status.CANCELLED;
     }
 
