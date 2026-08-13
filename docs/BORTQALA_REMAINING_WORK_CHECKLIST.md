@@ -22,7 +22,8 @@
 | P2P-001 | VERIFY | Multi-invoice allocation, SoD, atomic supplier payments, balance/ledger updates, replay, rollback, UI references, and H2 persistence are proven locally. The implemented PostgreSQL concurrency acceptance test still requires Docker. |
 | O2C-001 | DONE | Persisted order → reservation → valued delivery/COGS → invoice → partial/final receipts → return → credit-note, replay/cancellation, API roles, tenant isolation, and concurrent ATP reservation are proven locally. |
 | INV-001 | DONE | Existing inventory source of truth reconciled and hardened across warehouse/bin, status, reservation, transfer, cycle count, and lot/serial controls; focused backend/UI and H2 migration evidence is green. |
-| SHARED-001…004 | VERIFY | Real command-path characterization required. |
+| SHARED-001–002 | VERIFY | Transition and SoD command-path characterization/repair remains. |
+| SHARED-003–004 | DONE | Fiscal close cannot bypass server precheck; subledger posting/reversal is balanced, period-guarded, traceable, and replay-safe. |
 | TRS-001 | CONFIRMED GAP | Payment batches only mutate batch state; real disbursement, SoD, replay, and concurrent execution are absent. |
 | TRS-002 | CONFIRMED GAP | Budget revision/transfer persistence exists without an application/API lifecycle or immutable-version tests. |
 | TRS-003…004 | VERIFY | Close/reconciliation providers and tests exist; complete module/source coverage remains. |
@@ -884,30 +885,43 @@ A `DocumentTransitionService` existing is not enough.
 
 ## SHARED-003 — Fiscal close precheck must block unsafe close
 
-**Status:** `VERIFY`
+**Status:** `DONE — server-side precheck enforcement verified`
 
-- [ ] `/precheck` returns real blockers.
-- [ ] Close command internally enforces the same conditions.
-- [ ] Calling close directly without first opening the UI precheck cannot bypass rules.
-- [ ] Open subledgers/unposted documents/reconciliation issues are included according to current scope.
-- [ ] Close is idempotent.
-- [ ] Reopen permissions are controlled.
-- [ ] Tests cover blocked and successful close.
+- [x] `/precheck` returns real blockers.
+- [x] Close command internally enforces the same conditions.
+- [x] Calling close directly without first opening the UI precheck cannot bypass rules.
+- [x] Open subledgers/unposted documents/reconciliation issues are included according to current scope.
+- [x] Close is idempotent.
+- [x] Reopen permissions are controlled.
+- [x] Tests cover blocked and successful close.
+
+### Evidence — 2026-08-13
+
+- `FiscalPeriodController.updateStatus` recomputes `CloseChecklistService.computePrecheck` whenever `CLOSED` is requested and rejects direct API closure with `FISCAL_PERIOD_PRECHECK_FAILED` when a blocker exists.
+- The checklist covers draft GL journals and every registered `SubledgerReconciliationProvider`; status changes use optimistic `expectedVersion`, locked periods cannot reopen, and all close/reopen commands require `FINANCE_MANAGER` or administrator roles.
+- `CloseChecklistServiceTests` passes both successful and blocked close precheck paths; the focused H2 application-context run is green.
 
 ---
 
 ## SHARED-004 — Subledger posting must create balanced accounting evidence
 
-**Status:** `VERIFY`
+**Status:** `DONE — posting and reversal integrity verified`
 
-- [ ] Subledger posting produces debit and credit lines.
-- [ ] Total debit = total credit.
-- [ ] Source document ID/type is retained.
-- [ ] Operation ID prevents duplicate posting.
-- [ ] Closed-period posting is rejected.
-- [ ] Currency handling follows finance rules.
-- [ ] Reversal references the original posting.
-- [ ] Tests prove balanced posting and replay safety.
+- [x] Subledger posting produces debit and credit lines.
+- [x] Total debit = total credit.
+- [x] Source document ID/type is retained.
+- [x] Operation ID prevents duplicate posting.
+- [x] Closed-period posting is rejected.
+- [x] Currency handling follows finance rules.
+- [x] Reversal references the original posting.
+- [x] Tests prove balanced posting and replay safety.
+
+### Evidence — 2026-08-13
+
+- `SubledgerPostingService` validates equal debit/credit amounts, retains `module:type:id` source evidence, enforces the fiscal-period guard, persists currency, writes both accounting lines, and audits posting.
+- Operation replay first returns the existing journal and V213 enforces tenant-operation uniqueness at the database boundary.
+- Reversal swaps every original debit/credit line, links both journal entries, uses an open reversal period, audits the actor, and replays safely.
+- `SubledgerPostingServiceTests` passes balanced posting, unbalanced rejection, replay-safe linked reversal, and the V213 H2 application-context migration is green.
 
 ---
 

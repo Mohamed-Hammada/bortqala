@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface JournalEntryRepository extends JpaRepository<JournalEntry, String> {
@@ -15,4 +16,5 @@ public interface JournalEntryRepository extends JpaRepository<JournalEntry, Stri
     boolean existsByAppIdAndEntryNumber(String appId, String entryNumber);
     boolean existsByAppIdAndEntryNumberAndIdNot(String appId, String entryNumber, String id);
     long countByFiscalPeriodIdAndStatus(String fiscalPeriodId, JournalEntry.Status status);
+    Optional<JournalEntry> findByOperationId(String operationId);
 }

@@ -297,3 +297,7 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260813_v211_inventory_traceability.yaml
   - include:
       file: db/changelog/data/insert/20260813_v212_inventory_control_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260813_v213_subledger_posting_integrity.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v214_subledger_translations.yaml
