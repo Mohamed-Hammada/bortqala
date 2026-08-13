@@ -38,6 +38,8 @@ public class PaymentBatchItem {
     @Column(name = "bank_account", length = 100)
     private String bankAccount;
 
+    @Column(name = "disbursement_id", length = 36) private String disbursementId;
+
     protected PaymentBatchItem() {}
 
     public PaymentBatchItem(String batchId, String documentId, String payeeId, String payeeName, BigDecimal amount, String bankAccount) {
@@ -58,4 +60,6 @@ public class PaymentBatchItem {
     public String getPayeeName() { return payeeName; }
     public BigDecimal getAmount() { return amount; }
     public String getBankAccount() { return bankAccount; }
+    public String getDisbursementId() { return disbursementId; }
+    public void linkDisbursement(String id) { if (disbursementId == null) disbursementId = id; }
 }

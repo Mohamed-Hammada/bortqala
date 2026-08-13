@@ -25,7 +25,7 @@
 | SHARED-001 | VERIFY | Transition command-path characterization/repair remains. |
 | SHARED-002 | DONE | Vendor payments, manual journals, and governed bank changes enforce backend maker/checker and persist/audit actors. |
 | SHARED-003–004 | DONE | Fiscal close cannot bypass server precheck; subledger posting/reversal is balanced, period-guarded, traceable, and replay-safe. |
-| TRS-001 | CONFIRMED GAP | Payment batches only mutate batch state; real disbursement, SoD, replay, and concurrent execution are absent. |
+| TRS-001 | DONE | Eligible multi-source batches derive totals, enforce three actors, create traceable atomic disbursements, and replay safely under a locked header. |
 | TRS-002 | CONFIRMED GAP | Budget revision/transfer persistence exists without an application/API lifecycle or immutable-version tests. |
 | TRS-003…004 | VERIFY | Close/reconciliation providers and tests exist; complete module/source coverage remains. |
 | FIN-001 | VERIFY | Dimension posting/reporting acceptance remains. |
@@ -938,16 +938,24 @@ A `DocumentTransitionService` existing is not enough.
 
 ## TRS-001 — Multi-source payment batch
 
-**Status:** `VERIFY`
+**Status:** `DONE — multi-source execution lifecycle verified`
 
-- [ ] Batch can include only eligible approved payable sources.
-- [ ] Duplicate source inclusion is prevented.
-- [ ] Batch total is derived server-side.
-- [ ] Approval/maker-checker is enforced.
-- [ ] Execution creates traceable payment/disbursement records.
-- [ ] Partial failure behavior is explicitly designed.
-- [ ] Replay does not duplicate payments.
-- [ ] Tests cover concurrent execution.
+- [x] Batch can include only eligible approved payable sources.
+- [x] Duplicate source inclusion is prevented.
+- [x] Batch total is derived server-side.
+- [x] Approval/maker-checker is enforced.
+- [x] Execution creates traceable payment/disbursement records.
+- [x] Partial failure behavior is explicitly designed.
+- [x] Replay does not duplicate payments.
+- [x] Tests cover concurrent execution.
+
+### Evidence — 2026-08-13
+
+- Batch sources are validated against eligible outstanding supplier invoices, processed payroll batches, or posted contractor settlements; duplicate batch/source rows are rejected in the service and by V217.
+- The server derives the submitted total from persisted items. Creator, approver, and disburser are distinct through backend SoD checks and are stored/audited.
+- Disbursement runs in one transaction and creates one immutable `PaymentBatchDisbursement` per item with source/payee/amount/frozen-bank/operation evidence; any item failure rolls back the entire batch (explicit all-or-nothing behavior).
+- Batch execution locks the header pessimistically; tenant-operation and per-disbursement unique constraints plus replay lookup prevent concurrent duplicate execution.
+- `PaymentBatchServiceTests` proves eligibility, duplicate rejection, derived total, maker/checker, real disbursement creation, and replay; V217/V218 load in the H2 application context and all error/i18n gates pass.
 
 ---
 

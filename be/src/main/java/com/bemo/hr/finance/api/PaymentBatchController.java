@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/v1/finance/treasury/payment-batches")
@@ -19,13 +20,14 @@ public class PaymentBatchController {
         this.paymentBatchService = paymentBatchService;
     }
 
-    public record CreateBatchPayload(String batchNumber, String sourceCategory, BigDecimal totalAmount) {}
+    public record CreateBatchPayload(String batchNumber, String sourceCategory) {}
+    public record DisbursePayload(String operationId) {}
     public record AddItemPayload(String documentId, String payeeId, String payeeName, BigDecimal amount, String bankAccount) {}
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_USER', 'ACCOUNTANT')")
-    public PaymentBatchHeader createBatch(@RequestBody CreateBatchPayload payload) {
-        return paymentBatchService.createBatch(payload.batchNumber(), PaymentBatchHeader.SourceCategory.valueOf(payload.sourceCategory()), payload.totalAmount());
+    public PaymentBatchHeader createBatch(@RequestBody CreateBatchPayload payload, Authentication authentication) {
+        return paymentBatchService.createBatch(payload.batchNumber(), PaymentBatchHeader.SourceCategory.valueOf(payload.sourceCategory()), authentication.getName());
     }
 
     @PostMapping("/{id}/items")
@@ -42,8 +44,8 @@ public class PaymentBatchController {
 
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
-    public PaymentBatchHeader approveBatch(@PathVariable String id) {
-        return paymentBatchService.approveBatch(id);
+    public PaymentBatchHeader approveBatch(@PathVariable String id, Authentication authentication) {
+        return paymentBatchService.approveBatch(id, authentication.getName());
     }
 
     @PostMapping("/{id}/reject")
@@ -54,8 +56,8 @@ public class PaymentBatchController {
 
     @PostMapping("/{id}/disburse")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'TREASURY_USER', 'FINANCE_MANAGER')")
-    public PaymentBatchHeader disburseBatch(@PathVariable String id) {
-        return paymentBatchService.disburseBatch(id);
+    public PaymentBatchHeader disburseBatch(@PathVariable String id, @RequestBody DisbursePayload payload, Authentication authentication) {
+        return paymentBatchService.disburseBatch(id,payload.operationId(),authentication.getName());
     }
 
     @GetMapping("/{id}/items")

@@ -673,3 +673,7 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260813_v215_finance_sod.yaml
   - include:
       file: db/changelog/data/insert/20260813_v216_finance_sod_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260813_v217_payment_batch_execution.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v218_payment_batch_translations.yaml
