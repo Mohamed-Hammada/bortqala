@@ -29,7 +29,7 @@
 | TRS-002 | DONE | Budget revisions are immutable, approval-aware versions with deterministic effective amounts, queryable history, mandatory reasons, SoD, audit, API/UI lifecycle, and focused tests. |
 | TRS-003 | DONE | Fiscal close aggregates deterministic Payroll, Workforce, Sales/AR, Procurement/AP, Inventory, and Treasury blockers and fails closed on provider errors. |
 | TRS-004 | DONE | AP, AR, Inventory, and Treasury reconciliation derives tenant/as-of balances from persisted subledgers and linked posted journals, retaining source differences and closed-period snapshots. |
-| FIN-001 | VERIFY | Dimension posting/reporting acceptance remains. |
+| FIN-001 | DONE | Journal-line cost center/project/department dimensions persist, validate for P&L accounts, survive reversal, and support tenant/date-filtered posted summaries. |
 | FIN-002 | DONE | Manual journals require distinct maker, approver, and poster; rejection reason and audit evidence persist. |
 | FIN-003 | CONFIRMED GAP | FX service calculates gain/loss only; it does not post/reverse replay-safe journals. |
 | FIN-004 | VERIFY | Statement APIs/tests exist; tenant/export fixture acceptance remains. |
@@ -1027,13 +1027,20 @@ A `DocumentTransitionService` existing is not enough.
 
 ## FIN-001 — Journal dimensions
 
-**Status:** `VERIFY`
+**Status:** `DONE — journal dimensions connected end to end`
 
-- [ ] Required dimensions are persisted on journal lines.
-- [ ] Dimension requirements are validated.
-- [ ] Reports can filter/group by dimensions.
-- [ ] Reversal preserves dimensions.
-- [ ] Tests exist.
+- [x] Required dimensions are persisted on journal lines.
+- [x] Dimension requirements are validated.
+- [x] Reports can filter/group by dimensions.
+- [x] Reversal preserves dimensions.
+- [x] Tests exist.
+
+### Evidence — 2026-08-13
+
+- Manual journal line DTOs and the Angular entry form now carry cost-center, project, and department IDs; `JournalEntryService` persists a tenant-owned `JournalDimension` beside each line.
+- Revenue and expense lines require at least one dimension in backend validation, preventing direct API bypass while allowing balance-sheet accounts without artificial dimensions.
+- `GET /api/v1/finance/reports/dimensions` groups only posted journals and supports date range plus cost-center/project/department filters under the active tenant.
+- Reversal copies every original line's dimensions to the reversed line. Focused journal tests, frontend production build, i18n, and hardcoded-UI gates pass; V222 supplies bilingual validation/UI keys.
 
 ---
 

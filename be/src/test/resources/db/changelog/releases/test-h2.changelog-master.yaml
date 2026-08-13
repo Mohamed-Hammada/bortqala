@@ -683,3 +683,5 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260813_v220_budget_revision_translations.yaml
   - include:
       file: db/changelog/schema/update/20260813_v221_reconciliation_evidence.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v222_journal_dimension_translations.yaml

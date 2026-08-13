@@ -5,8 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.Collection;
+import java.util.List;
 
 @Repository
 public interface JournalDimensionRepository extends JpaRepository<JournalDimension, String> {
     Optional<JournalDimension> findByJournalEntryLineId(String journalEntryLineId);
+    List<JournalDimension> findByJournalEntryLineIdIn(Collection<String> journalEntryLineIds);
 }

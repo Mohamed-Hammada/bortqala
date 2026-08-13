@@ -22,6 +22,9 @@ export interface JournalEntryLine {
   debit: number;
   credit: number;
   memo?: string;
+  costCenterId?: string;
+  projectId?: string;
+  departmentId?: string;
 }
 
 export interface JournalEntry {
@@ -100,9 +103,9 @@ export class JournalEntriesPage {
     reference: new FormControl('', { nonNullable: true }),
   });
 
-  readonly lines = signal<{ accountId: string; debit: number; credit: number; memo: string }[]>([
-    { accountId: '', debit: 0, credit: 0, memo: '' },
-    { accountId: '', debit: 0, credit: 0, memo: '' },
+  readonly lines = signal<{ accountId: string; debit: number; credit: number; memo: string; costCenterId: string; projectId: string; departmentId: string }[]>([
+    { accountId: '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '' },
+    { accountId: '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '' },
   ]);
 
   readonly lineErrors = computed(() => {
@@ -190,8 +193,8 @@ export class JournalEntriesPage {
     });
     this.applyNumberingValidators();
     this.lines.set([
-      { accountId: this.accounts()[0]?.id ?? '', debit: 0, credit: 0, memo: '' },
-      { accountId: this.accounts()[1]?.id ?? '', debit: 0, credit: 0, memo: '' },
+      { accountId: this.accounts()[0]?.id ?? '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '' },
+      { accountId: this.accounts()[1]?.id ?? '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '' },
     ]);
     this.dialogError.set(null);
     this.submitAttempted.set(false);
@@ -205,7 +208,7 @@ export class JournalEntriesPage {
   }
 
   addLine() {
-    this.lines.update((arr) => [...arr, { accountId: this.accounts()[0]?.id ?? '', debit: 0, credit: 0, memo: '' }]);
+    this.lines.update((arr) => [...arr, { accountId: this.accounts()[0]?.id ?? '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '' }]);
   }
 
   removeLine(index: number) {

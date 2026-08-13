@@ -62,7 +62,8 @@ class JournalEntryServiceTests {
         app = new TenantApplication("TEST", "Test App");
         service = new JournalEntryService(journalEntryRepository, journalEntryLineRepository,
                 accountRepository, fiscalPeriodGuard, idempotencyService, documentNumberService,
-                tenantApplicationRepository, new SegregationOfDutiesService(), auditService);
+                tenantApplicationRepository, new SegregationOfDutiesService(), auditService,
+                mock(com.bemo.hr.finance.infrastructure.JournalDimensionRepository.class));
         TenantContext.set(APP_ID);
         lenient().when(tenantApplicationRepository.findById(APP_ID)).thenReturn(Optional.of(app));
 
@@ -90,9 +91,9 @@ class JournalEntryServiceTests {
         return new AccountingApi.JournalEntryPayload(entryNumber, entryDate, "Test entry", null, null, "EGP",
                 List.of(
                         new AccountingApi.JournalEntryLinePayload("acc-dr", null, new java.math.BigDecimal("100.00"),
-                                new java.math.BigDecimal("0.00"), null),
+                                new java.math.BigDecimal("0.00"), null, null, null, null),
                         new AccountingApi.JournalEntryLinePayload("acc-cr", null, new java.math.BigDecimal("0.00"),
-                                new java.math.BigDecimal("100.00"), null)));
+                                new java.math.BigDecimal("100.00"), null, null, null, null)));
     }
 
     @Test

@@ -9,6 +9,8 @@ import com.bemo.hr.finance.domain.JournalEntryLine;
 import com.bemo.hr.finance.infrastructure.AccountRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
+import com.bemo.hr.finance.infrastructure.JournalDimensionRepository;
+import com.bemo.hr.finance.domain.posting.JournalDimension;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.shared.numbering.DocumentNumberService;
@@ -40,6 +42,7 @@ public class JournalEntryService {
     private final TenantApplicationRepository tenantApplicationRepository;
     private final SegregationOfDutiesService segregationOfDutiesService;
     private final AuditService auditService;
+    private final JournalDimensionRepository journalDimensionRepository;
 
     public JournalEntryService(JournalEntryRepository journalEntryRepository,
                                JournalEntryLineRepository journalEntryLineRepository,
@@ -49,7 +52,8 @@ public class JournalEntryService {
                                DocumentNumberService documentNumberService,
                                TenantApplicationRepository tenantApplicationRepository,
                                SegregationOfDutiesService segregationOfDutiesService,
-                               AuditService auditService) {
+                               AuditService auditService,
+                               JournalDimensionRepository journalDimensionRepository) {
         this.journalEntryRepository = journalEntryRepository;
         this.journalEntryLineRepository = journalEntryLineRepository;
         this.accountRepository = accountRepository;
@@ -59,6 +63,7 @@ public class JournalEntryService {
         this.tenantApplicationRepository = tenantApplicationRepository;
         this.segregationOfDutiesService = segregationOfDutiesService;
         this.auditService = auditService;
+        this.journalDimensionRepository = journalDimensionRepository;
     }
 
     @Transactional
@@ -78,7 +83,9 @@ public class JournalEntryService {
         for (var linePayload : payload.lines()) {
             JournalEntryLine line = new JournalEntryLine(entry.getId(), linePayload.accountId(),
                     linePayload.partyId(), linePayload.debit(), linePayload.credit(), linePayload.memo());
-            journalEntryLineRepository.save(line);
+            line = journalEntryLineRepository.save(line);
+            if (hasDimension(linePayload)) journalDimensionRepository.save(new JournalDimension(line.getId(),
+                    blank(linePayload.costCenterId()), blank(linePayload.projectId()), blank(linePayload.departmentId())));
         }
         return toResponse(entry);
     }
@@ -196,7 +203,11 @@ public class JournalEntryService {
             JournalEntryLine reversedLine = new JournalEntryLine(
                     reversal.getId(), originalLine.getAccountId(), originalLine.getPartyId(),
                     originalLine.getCredit(), originalLine.getDebit(), originalLine.getMemo());
-            journalEntryLineRepository.save(reversedLine);
+            reversedLine = journalEntryLineRepository.save(reversedLine);
+            String reversedLineId = reversedLine.getId();
+            journalDimensionRepository.findByJournalEntryLineId(originalLine.getId()).ifPresent(dimension ->
+                    journalDimensionRepository.save(new JournalDimension(reversedLineId, dimension.getCostCenterId(),
+                            dimension.getProjectId(), dimension.getDepartmentId())));
         }
 
         entry.markReversed(reversal.getId(), request.reason(), username, request.operationId());
@@ -243,6 +254,12 @@ public class JournalEntryService {
             if (debit.signum() == 0 && credit.signum() == 0) {
                 throw new BusinessRuleException("كل سطر يجب أن يحتوي على قيمة مدين أو دائن.", "JOURNAL_INVALID", HttpStatus.BAD_REQUEST);
             }
+            Account lineAccount = accounts.stream().filter(a -> a.getId().equals(line.accountId())).findFirst().orElseThrow();
+            if ((lineAccount.getType() == Account.Type.EXPENSE || lineAccount.getType() == Account.Type.REVENUE)
+                    && !hasDimension(line)) {
+                throw new BusinessRuleException("Income and expense journal lines require a dimension.",
+                        "JOURNAL_DIMENSION_REQUIRED", HttpStatus.BAD_REQUEST);
+            }
             totalDebit = totalDebit.add(debit);
             totalCredit = totalCredit.add(credit);
         }
@@ -278,9 +295,13 @@ public class JournalEntryService {
     }
 
     private AccountingApi.JournalEntryResponse toResponse(JournalEntry e) {
-        var lines = journalEntryLineRepository.findByJournalEntryId(e.getId()).stream()
-                .map(l -> new AccountingApi.JournalEntryLineResponse(l.getId(), l.getJournalEntryId(), l.getAccountId(),
-                        l.getPartyId(), l.getDebit(), l.getCredit(), l.getMemo()))
+        var storedLines = journalEntryLineRepository.findByJournalEntryId(e.getId());
+        var dimensions = journalDimensionRepository.findByJournalEntryLineIdIn(storedLines.stream().map(JournalEntryLine::getId).toList())
+                .stream().collect(java.util.stream.Collectors.toMap(JournalDimension::getJournalEntryLineId, d -> d));
+        var lines = storedLines.stream()
+                .map(l -> { var d = dimensions.get(l.getId()); return new AccountingApi.JournalEntryLineResponse(l.getId(), l.getJournalEntryId(), l.getAccountId(),
+                        l.getPartyId(), l.getDebit(), l.getCredit(), l.getMemo(), d == null ? null : d.getCostCenterId(),
+                        d == null ? null : d.getProjectId(), d == null ? null : d.getDepartmentId()); })
                 .toList();
         BigDecimal totalDebit = lines.stream().map(AccountingApi.JournalEntryLineResponse::debit).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalCredit = lines.stream().map(AccountingApi.JournalEntryLineResponse::credit).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -293,4 +314,10 @@ public class JournalEntryService {
                 e.getOperationId(), e.getVersion(),
                 lines, totalDebit, totalCredit, e.getCreatedAt(), e.getUpdatedAt());
     }
+
+    private boolean hasDimension(AccountingApi.JournalEntryLinePayload line) {
+        return blank(line.costCenterId()) != null || blank(line.projectId()) != null || blank(line.departmentId()) != null;
+    }
+
+    private String blank(String value) { return value == null || value.isBlank() ? null : value.strip(); }
 }

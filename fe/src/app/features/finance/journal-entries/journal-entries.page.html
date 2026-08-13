@@ -161,6 +161,9 @@
                   </td>
                   <td>
                     <input type="text" [value]="line.memo" (input)="updateLine($index, 'memo', $any($event.target).value)" [placeholder]="i18n.t('journal.lineNotesPlaceholder')" />
+                    <input type="text" [value]="line.costCenterId" (input)="updateLine($index, 'costCenterId', $any($event.target).value)" [placeholder]="i18n.t('journal.costCenter')" />
+                    <input type="text" [value]="line.projectId" (input)="updateLine($index, 'projectId', $any($event.target).value)" [placeholder]="i18n.t('journal.project')" />
+                    <input type="text" [value]="line.departmentId" (input)="updateLine($index, 'departmentId', $any($event.target).value)" [placeholder]="i18n.t('journal.department')" />
                   </td>
                   <td>
                     <button class="button secondary btn-sm danger-btn" type="button" (click)="removeLine($index)" [disabled]="lines().length <= 2" [attr.aria-label]="i18n.t('journal.removeLineAria')" [appTooltip]="i18n.t('journal.removeLineTooltip')">×</button>
