@@ -20,7 +20,9 @@ interface GoodsReceiptLineResponse { id: string; purchaseOrderLineId: string; it
 interface GoodsReceipt { id: string; grnNumber: string; receiptDate: number; purchaseOrderId: string; supplierId: string; supplierName?: string; warehouseId?: string; status: string; currencyCode: string; notes?: string; lines: GoodsReceiptLineResponse[]; createdAt: number; }
 interface SupplierInvoice { id: string; invoiceNumber?: string; internalReference: string; missingInvoiceReason?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseNetAmount: number; supplierId: string; supplierName?: string; purchaseOrderId?: string; goodsReceiptId?: string; responsiblePartyId?: string; invoiceDate: number; totalAmount: number; discountAmount?: number; taxAmount?: number; netAmount: number; paidAmount: number; outstandingAmount: number; dueDate?: number; notes?: string; status: string; createdAt: number; updatedAt: number; }
 interface SupplierPayment { id: string; paymentNumber: string; paymentDate: number; supplierId: string; supplierName?: string; supplierInvoiceId: string; amount: number; currencyCode: string; paymentMethod: string; notes?: string; operationId: string; status: string; createdAt: number; }
-interface PaymentProposal { id: string; proposalNumber: string; supplierId: string; invoiceId: string; proposedAmount: number; dueDate: string; status: string; createdBy: string; approvedBy?: string; executedBy?: string; supplierPaymentId?: string; }
+interface PaymentProposalAllocation { id: string; invoiceId: string; amount: number; supplierPaymentId?: string; paymentOperationId?: string; }
+interface PaymentProposal { id: string; proposalNumber: string; supplierId: string; invoiceId: string; proposedAmount: number; currencyCode: string; dueDate: string; status: string; createdBy: string; approvedBy?: string; executedBy?: string; supplierPaymentId?: string; allocations: PaymentProposalAllocation[]; }
+interface PaymentProposalDraftAllocation { invoiceId: string; amount: number; }
 interface ProcurementThreeWayMatch { id: string; purchaseOrderId: string; goodsReceiptId?: string; supplierInvoiceId: string; matchStatus: string; priceVarianceAmount: number; quantityVarianceAmount: number; tolerancePercentage: number; varianceReason?: string; resolvedBy?: string; resolvedAt?: number; createdAt: number; }
 interface Party { id: string; code: string; name: string; partyType: string; active: boolean; managedType?: 'DIRECT' | 'MANAGED'; responsiblePartyId?: string; currencyCode?: string; paymentTerms?: string; }
 interface InventoryItem { id: string; code: string; name: string; categoryName?: string; uomName?: string; unitCode?: string; active: boolean; }
@@ -92,6 +94,7 @@ export class ProcurementPage {
   readonly invoices = signal<SupplierInvoice[]>([]);
   readonly payments = signal<SupplierPayment[]>([]);
   readonly paymentProposals = signal<PaymentProposal[]>([]);
+  readonly proposalDraftAllocations = signal<PaymentProposalDraftAllocation[]>([]);
   readonly suppliers = signal<Party[]>([]);
   readonly inventoryItems = signal<InventoryItem[]>([]);
   readonly currencies = signal<Currency[]>([]);
@@ -226,6 +229,8 @@ export class ProcurementPage {
 
   readonly unpaidInvoices = computed(() => this.invoices().filter(i => i.status === 'UNPAID' || i.status === 'PARTIALLY_PAID'));
   readonly payableInvoices = computed(() => filterPayableInvoices(this.invoices(), this.selectedPaymentSupplierId()));
+  readonly proposalDraftTotal = computed(() => this.proposalDraftAllocations()
+    .reduce((total, allocation) => total + allocation.amount, 0));
 
   constructor() {
     void this.loadAll();
@@ -263,18 +268,74 @@ export class ProcurementPage {
   async loadPaymentProposals() { this.paymentProposals.set(await firstValueFrom(this.http.get<PaymentProposal[]>('/api/v1/procurement/payment-proposals')) ?? []); }
 
   async createPaymentProposal(invoice: SupplierInvoice): Promise<void> {
+    await this.submitPaymentProposal(invoice.supplierId, [{ invoiceId: invoice.id, amount: invoice.outstandingAmount }],
+      invoice.dueDate ? epochToDateInput(invoice.dueDate) : new Date().toISOString().substring(0, 10));
+  }
+
+  toggleProposalInvoice(invoice: SupplierInvoice, selected: boolean): void {
+    if (!selected) {
+      this.proposalDraftAllocations.update(allocations => allocations.filter(allocation => allocation.invoiceId !== invoice.id));
+      return;
+    }
+    const selectedInvoices = this.proposalDraftAllocations()
+      .map(allocation => this.invoices().find(candidate => candidate.id === allocation.invoiceId))
+      .filter((candidate): candidate is SupplierInvoice => candidate !== undefined);
+    if (selectedInvoices.some(candidate => candidate.supplierId !== invoice.supplierId
+      || candidate.currencyCode !== invoice.currencyCode)) {
+      this.notification.warning(this.i18n.t('procurement.proposalSameSupplierCurrency'));
+      return;
+    }
+    this.proposalDraftAllocations.update(allocations => [...allocations,
+      { invoiceId: invoice.id, amount: invoice.outstandingAmount }]);
+  }
+
+  isProposalInvoiceSelected(invoiceId: string): boolean {
+    return this.proposalDraftAllocations().some(allocation => allocation.invoiceId === invoiceId);
+  }
+
+  proposalAllocationAmount(invoiceId: string): number | undefined {
+    return this.proposalDraftAllocations().find(allocation => allocation.invoiceId === invoiceId)?.amount;
+  }
+
+  updateProposalAllocation(invoiceId: string, value: string): void {
+    const amount = Number(value);
+    this.proposalDraftAllocations.update(allocations => allocations.map(allocation =>
+      allocation.invoiceId === invoiceId ? { ...allocation, amount } : allocation));
+  }
+
+  async createSelectedPaymentProposal(): Promise<void> {
+    const allocations = this.proposalDraftAllocations();
+    if (allocations.length === 0 || allocations.some(allocation => !Number.isFinite(allocation.amount) || allocation.amount <= 0)) {
+      this.notification.warning(this.i18n.t('procurement.proposalSelectionRequired'));
+      return;
+    }
+    const firstInvoice = this.invoices().find(invoice => invoice.id === allocations[0].invoiceId);
+    if (!firstInvoice) return;
+    const dueDate = allocations
+      .map(allocation => this.invoices().find(invoice => invoice.id === allocation.invoiceId)?.dueDate)
+      .filter((date): date is number => date !== undefined)
+      .sort((left, right) => left - right)[0];
+    await this.submitPaymentProposal(firstInvoice.supplierId, allocations,
+      dueDate ? epochToDateInput(dueDate) : new Date().toISOString().substring(0, 10));
+  }
+
+  private async submitPaymentProposal(supplierId: string, allocations: PaymentProposalDraftAllocation[], dueDate: string): Promise<void> {
     if (this.savingProposal()) return;
     this.savingProposal.set(true);
     try {
       await firstValueFrom(this.http.post('/api/v1/procurement/payment-proposals', {
-        supplierId: invoice.supplierId, invoiceId: invoice.id, proposedAmount: invoice.outstandingAmount,
-        dueDate: invoice.dueDate ? epochToDateInput(invoice.dueDate) : new Date().toISOString().substring(0, 10),
+        supplierId, dueDate, allocations,
       }));
       this.notification.success(this.i18n.t('procurement.proposalCreated'));
+      this.proposalDraftAllocations.set([]);
       await this.loadPaymentProposals();
       this.activeTab.set('proposal');
     } catch (e) { this.notification.error(apiErrorMessage(e, this.i18n)); }
     finally { this.savingProposal.set(false); }
+  }
+
+  invoiceById(invoiceId: string): SupplierInvoice | undefined {
+    return this.invoices().find(invoice => invoice.id === invoiceId);
   }
 
   async approvePaymentProposal(proposal: PaymentProposal): Promise<void> {
@@ -693,7 +754,7 @@ export class ProcurementPage {
     const key = ({ DRAFT: 'procurement.poStatus.draft', ISSUED: 'procurement.poStatus.issued', PARTIALLY_RECEIVED: 'procurement.poStatus.partiallyReceived', RECEIVED: 'procurement.poStatus.received', CANCELLED: 'procurement.poStatus.cancelled' } as Record<string, string>)[status];
     return key ? this.i18n.t(key) : status;
   }
-  invoiceReference(invoice: SupplierInvoice): string { return invoice.invoiceNumber || invoice.internalReference; }
+  invoiceReference(invoice?: SupplierInvoice): string { return invoice?.invoiceNumber || invoice?.internalReference || '—'; }
   baseCurrencyCode(): string { return this.currencies().find(currency => currency.isBase)?.code ?? 'EGP'; }
   configuredRate(currencyCode: string): number {
     const currency = this.currencies().find(item => item.code === currencyCode);

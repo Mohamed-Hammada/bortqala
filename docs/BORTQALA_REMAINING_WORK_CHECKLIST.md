@@ -19,7 +19,7 @@
 | REL-001 | BLOCKED | GitHub Actions account/billing lock is external and unresolved. |
 | REL-002 | OPEN | Historical counts are not carried forward; all final candidate commands and smoke checks must be rerun. |
 | MFG-001 | VERIFY | `PLANNED → IN_PROGRESS` freezes requirements before issue; active readiness/completion/cancel use snapshots and completion reads issue valuation evidence. PostgreSQL, concurrency, full-suite, and final-SHA evidence remain. |
-| P2P-001 | VERIFY | Proposal approval/execution now calls the hardened supplier-payment lifecycle and the UI exposes the result. Multi-invoice and PostgreSQL concurrency acceptance remain. |
+| P2P-001 | VERIFY | Multi-invoice allocation, SoD, atomic supplier payments, balance/ledger updates, replay, rollback, UI references, and H2 persistence are proven locally. The implemented PostgreSQL concurrency acceptance test still requires Docker. |
 | O2C-001 | CONFIRMED GAP | Sales lines, delivery, invoice, receipt-match, and return classes are disconnected; no stock/reservation/AR/GL/credit-note vertical slice exists. |
 | INV-001 | VERIFY | Reconcile existing delivered inventory functions; do not rebuild without a proven gap. |
 | SHARED-001…004 | VERIFY | Real command-path characterization required. |
@@ -568,7 +568,7 @@ Reviewer: PENDING
 
 ## P2P-001 — Payment proposal execution must create/drive the real payment lifecycle
 
-**Status:** `VERIFY — do not mark DONE without E2E proof`
+**Status:** `VERIFY — local E2E proof green; PostgreSQL concurrency execution pending Docker`
 
 The repository contains many P2P foundations. Do **not** rebuild requisition/RFQ/PO/GRN/invoice capabilities that already exist.
 
@@ -576,17 +576,17 @@ The remaining acceptance question is whether a payment proposal is a real connec
 
 ### Required verification first
 
-- [ ] Locate the payment-proposal aggregate.
-- [ ] Locate the proposal application/service execution method.
-- [ ] Locate approval/maker-checker handling.
-- [ ] Locate supplier-payment creation.
-- [ ] Locate treasury/disbursement integration.
-- [ ] Locate invoice outstanding-balance update.
-- [ ] Locate partner-ledger posting.
-- [ ] Locate finance journal posting if required by current architecture.
-- [ ] Locate operation-ID/idempotency protection.
-- [ ] Locate UI action and user-visible execution result.
-- [ ] Locate tests proving the complete chain.
+- [x] Locate the payment-proposal aggregate.
+- [x] Locate the proposal application/service execution method.
+- [x] Locate approval/maker-checker handling.
+- [x] Locate supplier-payment creation.
+- [x] Locate treasury/disbursement integration (posted supplier payments feed the existing bank-reconciliation lifecycle).
+- [x] Locate invoice outstanding-balance update.
+- [x] Locate partner-ledger posting.
+- [x] Locate finance journal posting if required by current architecture (the current supplier-payment path posts the partner subledger; the proposal does not bypass it).
+- [x] Locate operation-ID/idempotency protection.
+- [x] Locate UI action and user-visible execution result.
+- [x] Locate tests proving the complete chain.
 
 ### Required end-to-end flow
 
@@ -612,33 +612,41 @@ Treasury / bank / accounting posting as applicable
 
 ### Acceptance criteria
 
-- [ ] Proposal contains traceable invoice/payment candidates.
-- [ ] Approval is enforced before execution when required.
-- [ ] Executor cannot bypass required SoD/maker-checker rules.
-- [ ] Execution creates or links the real supplier payment record.
-- [ ] Partial payment behaves correctly.
-- [ ] Multiple invoice allocation behaves correctly.
-- [ ] Overpayment is rejected.
-- [ ] Supplier bank validation remains enforced.
-- [ ] Invoice outstanding balance changes exactly once.
-- [ ] Ledger/posting changes exactly once.
-- [ ] Retrying the same operation ID does not duplicate money movement.
-- [ ] A failed posting does not leave the proposal marked successfully executed with missing downstream records.
-- [ ] Transaction boundaries keep proposal/payment/accounting consistent.
-- [ ] UI displays actual execution outcome and references.
+- [x] Proposal contains traceable invoice/payment candidates.
+- [x] Approval is enforced before execution when required.
+- [x] Executor cannot bypass required SoD/maker-checker rules.
+- [x] Execution creates or links the real supplier payment record.
+- [x] Partial payment behaves correctly.
+- [x] Multiple invoice allocation behaves correctly.
+- [x] Overpayment is rejected.
+- [x] Supplier bank validation remains enforced.
+- [x] Invoice outstanding balance changes exactly once.
+- [x] Ledger/posting changes exactly once.
+- [x] Retrying the same operation ID does not duplicate money movement.
+- [x] A failed posting does not leave the proposal marked successfully executed with missing downstream records.
+- [x] Transaction boundaries keep proposal/payment/accounting consistent.
+- [x] UI displays actual execution outcome and references.
 
 ### Required tests
 
-- [ ] Happy path proposal → approval → payment.
-- [ ] Partial invoice payment.
-- [ ] Multiple invoice allocation.
-- [ ] Overpayment rejection.
-- [ ] Missing/unverified bank rejection.
-- [ ] Unauthorized executor rejection.
-- [ ] Maker/checker self-approval rejection where applicable.
-- [ ] Same operation ID replay creates no duplicate payment.
-- [ ] Concurrent execution creates no duplicate payment.
-- [ ] Downstream posting failure rolls back or records a recoverable failed state correctly.
+- [x] Happy path proposal → approval → payment.
+- [x] Partial invoice payment.
+- [x] Multiple invoice allocation.
+- [x] Overpayment rejection.
+- [x] Missing/unverified bank rejection.
+- [x] Unauthorized executor rejection.
+- [x] Maker/checker self-approval rejection where applicable.
+- [x] Same operation ID replay creates no duplicate payment.
+- [ ] Concurrent execution creates no duplicate payment — PostgreSQL test is implemented and compiles; execution is blocked by the unavailable Docker daemon.
+- [x] Downstream posting failure rolls back or records a recoverable failed state correctly.
+
+### Evidence — 2026-08-13
+
+- `VendorPaymentProposalPersistenceTests` proves persisted two-invoice execution, partial balances, two linked payments, two partner-ledger entries, audit actors, and same-operation replay on the H2 application context.
+- `VendorPaymentProposalServiceTests` proves allocation validation, derived totals/currency, SoD, bank validation propagation, and atomic rollback on downstream failure.
+- `AuthSecurityIntegrationTests.paymentProposalExecutionCannotBeCalledByProcurementOrViewerRoles` proves the execution-role boundary.
+- `VendorPaymentProposalConcurrencyTests` provides repeated PostgreSQL two-thread acceptance coverage, but cannot be counted as passed until Testcontainers can start Docker.
+- Frontend procurement tests prove multi-invoice selection, same-supplier/currency eligibility, amount editing, and real payment references; the production build and i18n/hardcoded-copy gates pass.
 
 ### Completion rule
 

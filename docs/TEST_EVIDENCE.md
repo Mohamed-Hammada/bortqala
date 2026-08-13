@@ -1,5 +1,13 @@
 # Test Evidence — Bemo ERP
 
+## 2026-08-13 P2P multi-invoice verification checkpoint
+
+- Parent baseline: `1133e3431d170b50c202f881c31a0021ade75495`; this is working-tree evidence and not final release-SHA evidence.
+- Backend focused service, persistence, and authorization suites: **PASS**. The coverage proves ordered multi-invoice allocation, server-derived total/currency, partial balances, real supplier payments, partner-ledger entries, audit actors, SoD, bank validation propagation, same-operation replay, and atomic rollback.
+- Frontend procurement component: **15/15 PASS**; i18n and hardcoded-UI gates **PASS**; production build **PASS**.
+- Static backend gates: error codes **425/425 PASS**; **7,274** translation rows have unique IDs and key/locale pairs; authorization roles **19/19 PASS**.
+- `VendorPaymentProposalConcurrencyTests` is implemented and compiles, but was not executed because the Docker Desktop Linux engine is unavailable. P2P-001 therefore remains `VERIFY`, not `DONE`.
+
 ## 2026-08-12 shutdown checkpoint
 
 - Parent baseline: `0c182021944f1b8d411deb72c83eaf45761d81a0`; evidence and implementation are recorded by this checkpoint commit.

@@ -95,6 +95,14 @@
 
     <!-- ──── SUPPLIER INVOICES ──── -->
     @if (activeTab() === 'invoice') {
+    <section class="proposal-builder card" aria-labelledby="proposal-builder-title">
+      <div>
+        <h2 id="proposal-builder-title">{{ i18n.t('procurement.proposalAllocations') }}</h2>
+        <p>{{ i18n.t('procurement.proposalSelectionHint') }}</p>
+      </div>
+      <strong class="ltr">{{ proposalDraftTotal() | number:'1.2-2' }}</strong>
+      <button class="button primary" type="button" [disabled]="savingProposal() || proposalDraftAllocations().length === 0" (click)="createSelectedPaymentProposal()">{{ i18n.t('procurement.createSelectedProposal') }}</button>
+    </section>
     <div class="table-card">
       <table>
         <thead><tr><th>{{ i18n.t('procurement.invColReference') }}</th><th>{{ i18n.t('procurement.invColDate') }}</th><th>{{ i18n.t('procurement.invColSupplier') }}</th><th>{{ i18n.t('procurement.invColCurrency') }}</th><th>{{ i18n.t('procurement.invColTotal') }}</th><th>{{ i18n.t('procurement.invColDiscount') }}</th><th>{{ i18n.t('procurement.invColTax') }}</th><th>{{ i18n.t('procurement.invColNet') }}</th><th>{{ i18n.t('procurement.invColStatus') }}</th><th>{{ i18n.t('procurement.invColActions') }}</th></tr></thead>
@@ -111,6 +119,18 @@
             <td class="ltr"><strong>{{ inv.netAmount | number:'1.2-2' }}</strong><small> / {{ i18n.t('procurement.invOutstanding') }} {{ inv.outstandingAmount | number:'1.2-2' }}</small></td>
             <td><span class="status" [class.warning]="inv.status !== 'PAID'" [class.success]="inv.status === 'PAID'">{{ inv.status === 'PAID' ? i18n.t('procurement.invStatusPaid') : inv.status === 'PARTIALLY_PAID' ? i18n.t('procurement.invStatusPartiallyPaid') : i18n.t('procurement.invStatusUnpaid') }}</span></td>
             <td>
+              @if (inv.status !== 'PAID') {
+                <label class="proposal-select">
+                  <input type="checkbox" [checked]="isProposalInvoiceSelected(inv.id)" (change)="toggleProposalInvoice(inv, $any($event.target).checked)" />
+                  <span>{{ i18n.t('procurement.proposalSelectInvoice') }}</span>
+                </label>
+                @if (isProposalInvoiceSelected(inv.id)) {
+                  <input class="proposal-amount ltr" type="number" min="0.01" [max]="inv.outstandingAmount"
+                         [value]="proposalAllocationAmount(inv.id)"
+                         [attr.aria-label]="i18n.t('procurement.proposalAllocationAmount')"
+                         (input)="updateProposalAllocation(inv.id, $any($event.target).value)" />
+                }
+              }
               <button class="button secondary btn-sm" type="button" (click)="performThreeWayMatch(inv)">🔍 {{ i18n.t('procurement.threeWayMatch', undefined, 'المطابقة الثلاثية') }}</button>
               @if (inv.status !== 'PAID') {
                 <button class="button secondary btn-sm" type="button" [disabled]="savingProposal()" (click)="createPaymentProposal(inv)">{{ i18n.t('procurement.createProposal') }}</button>
@@ -127,17 +147,27 @@
     @if (activeTab() === 'proposal') {
     <div class="table-card">
       <table>
-        <thead><tr><th>{{ i18n.t('procurement.proposalNumber') }}</th><th>{{ i18n.t('procurement.pmtColSupplier') }}</th><th>{{ i18n.t('procurement.pmtColInvoice') }}</th><th>{{ i18n.t('procurement.pmtColAmount') }}</th><th>{{ i18n.t('procurement.proposalStatus') }}</th><th>{{ i18n.t('procurement.poColActions') }}</th></tr></thead>
+        <thead><tr><th>{{ i18n.t('procurement.proposalNumber') }}</th><th>{{ i18n.t('procurement.pmtColSupplier') }}</th><th>{{ i18n.t('procurement.proposalAllocations') }}</th><th>{{ i18n.t('procurement.pmtColAmount') }}</th><th>{{ i18n.t('procurement.proposalStatus') }}</th><th>{{ i18n.t('procurement.poColActions') }}</th></tr></thead>
         <tbody>
           @for (proposal of paymentProposals(); track proposal.id) {
           <tr>
-            <td><strong class="ltr">{{ proposal.proposalNumber }}</strong></td><td class="ltr">{{ proposal.supplierId }}</td><td class="ltr">{{ proposal.invoiceId }}</td>
-            <td class="ltr">{{ proposal.proposedAmount | number:'1.2-2' }}</td>
+            <td><strong class="ltr">{{ proposal.proposalNumber }}</strong></td><td class="ltr">{{ proposal.supplierId }}</td>
+            <td>
+              @for (allocation of proposal.allocations; track allocation.id) {
+                <small class="proposal-allocation"><span class="ltr">{{ invoiceReference(invoiceById(allocation.invoiceId)) }}</span><span class="ltr">{{ allocation.amount | number:'1.2-2' }}</span></small>
+              }
+            </td>
+            <td class="ltr">{{ proposal.proposedAmount | number:'1.2-2' }} {{ proposal.currencyCode }}</td>
             <td><span class="status" [class.warning]="proposal.status === 'PROPOSED'" [class.info]="proposal.status === 'APPROVED'" [class.success]="proposal.status === 'EXECUTED'">{{ proposal.status }}</span></td>
             <td>
               @if (proposal.status === 'PROPOSED') {<button class="button secondary btn-sm" [disabled]="savingProposal()" (click)="approvePaymentProposal(proposal)">{{ i18n.t('procurement.approveProposal') }}</button>}
               @if (proposal.status === 'APPROVED') {<button class="button primary btn-sm" [disabled]="savingProposal()" (click)="executePaymentProposal(proposal)">{{ i18n.t('procurement.executeProposal') }}</button>}
-              @if (proposal.supplierPaymentId) {<small class="ltr">{{ proposal.supplierPaymentId }}</small>}
+              @if (proposal.supplierPaymentId) {
+                <small>{{ i18n.t('procurement.proposalPaymentReferences') }}</small>
+                @for (allocation of proposal.allocations; track allocation.id) {
+                  @if (allocation.supplierPaymentId) {<small class="ltr">{{ allocation.supplierPaymentId }}</small>}
+                }
+              }
             </td>
           </tr>
           } @empty { <tr><td colspan="6"><div class="empty-state">{{ i18n.t('procurement.proposalEmpty') }}</div></td></tr> }

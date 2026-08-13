@@ -74,6 +74,7 @@ tasks.named('test') {
             '**/ReportingDecisionHistoryContractTests*',
             '**/ReportingGenerationContractTests*',
             '**/SupplierPaymentConcurrencyTests*',
+            '**/VendorPaymentProposalConcurrencyTests*',
             '**/GoodsReceiptPersistenceTests*',
             '**/WorkforceImportCommitConcurrencyTests*',
         ].each { exclude it }

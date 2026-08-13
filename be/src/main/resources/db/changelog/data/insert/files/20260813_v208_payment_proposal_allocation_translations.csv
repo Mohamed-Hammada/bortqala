@@ -1,0 +1,27 @@
+id;translation_key;locale;text_value
+v208-001;PAYMENT_PROPOSAL_ALLOCATIONS_REQUIRED;en-US;A payment proposal requires at least one invoice allocation
+v208-002;PAYMENT_PROPOSAL_ALLOCATIONS_REQUIRED;ar-EG;يتطلب مقترح الدفع تخصيص فاتورة واحدة على الأقل
+v208-003;PAYMENT_PROPOSAL_ALLOCATION_INVALID;en-US;Each allocation requires an invoice and a positive amount
+v208-004;PAYMENT_PROPOSAL_ALLOCATION_INVALID;ar-EG;يتطلب كل تخصيص فاتورة ومبلغاً موجباً
+v208-005;PAYMENT_PROPOSAL_INVOICE_DUPLICATE;en-US;An invoice cannot occur twice in one payment proposal
+v208-006;PAYMENT_PROPOSAL_INVOICE_DUPLICATE;ar-EG;لا يمكن تكرار الفاتورة في مقترح الدفع نفسه
+v208-007;PAYMENT_PROPOSAL_OVERPAYMENT;en-US;A proposal allocation exceeds the invoice outstanding balance
+v208-008;PAYMENT_PROPOSAL_OVERPAYMENT;ar-EG;يتجاوز تخصيص المقترح الرصيد المتبقي للفاتورة
+v208-009;PAYMENT_PROPOSAL_CURRENCY_MISMATCH;en-US;All invoices in a payment proposal must use the same currency
+v208-010;PAYMENT_PROPOSAL_CURRENCY_MISMATCH;ar-EG;يجب أن تستخدم جميع فواتير مقترح الدفع العملة نفسها
+v208-011;procurement.proposalAllocations;en-US;Invoice allocations
+v208-012;procurement.proposalAllocations;ar-EG;تخصيصات الفواتير
+v208-013;procurement.proposalPaymentReferences;en-US;Payment references
+v208-014;procurement.proposalPaymentReferences;ar-EG;مراجع الدفع
+v208-015;procurement.proposalSelectionHint;en-US;Select open invoices for one supplier and currency then adjust each payment amount
+v208-016;procurement.proposalSelectionHint;ar-EG;اختر الفواتير المفتوحة لمورد وعملة واحدة ثم عدل مبلغ دفع كل فاتورة
+v208-017;procurement.createSelectedProposal;en-US;Create selected proposal
+v208-018;procurement.createSelectedProposal;ar-EG;إنشاء مقترح للفواتير المحددة
+v208-019;procurement.proposalSelectInvoice;en-US;Select
+v208-020;procurement.proposalSelectInvoice;ar-EG;تحديد
+v208-021;procurement.proposalAllocationAmount;en-US;Proposed allocation amount
+v208-022;procurement.proposalAllocationAmount;ar-EG;مبلغ التخصيص المقترح
+v208-023;procurement.proposalSameSupplierCurrency;en-US;A proposal can include invoices for one supplier and currency only
+v208-024;procurement.proposalSameSupplierCurrency;ar-EG;يمكن أن يضم المقترح فواتير لمورد وعملة واحدة فقط
+v208-025;procurement.proposalSelectionRequired;en-US;Select at least one invoice and enter positive allocation amounts
+v208-026;procurement.proposalSelectionRequired;ar-EG;حدد فاتورة واحدة على الأقل وأدخل مبالغ تخصيص موجبة

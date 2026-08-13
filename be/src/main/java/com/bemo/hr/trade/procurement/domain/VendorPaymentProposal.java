@@ -42,6 +42,9 @@ public class VendorPaymentProposal {
     @Column(name = "proposed_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal proposedAmount;
 
+    @Column(name = "currency_code", nullable = false, length = 10)
+    private String currencyCode;
+
     @Column(name = "created_by", nullable = false, length = 100)
     private String createdBy;
 
@@ -76,12 +79,14 @@ public class VendorPaymentProposal {
 
     protected VendorPaymentProposal() {}
 
-    public VendorPaymentProposal(String supplierId, String invoiceId, BigDecimal proposedAmount, LocalDate dueDate, String createdBy) {
+    public VendorPaymentProposal(String supplierId, String invoiceId, BigDecimal proposedAmount,
+                                 String currencyCode, LocalDate dueDate, String createdBy) {
         this.id = UUID.randomUUID().toString();
         this.proposalNumber = "PROP-" + System.currentTimeMillis();
         this.supplierId = supplierId;
         this.invoiceId = invoiceId;
         this.proposedAmount = proposedAmount;
+        this.currencyCode = currencyCode;
         this.dueDate = dueDate;
         this.createdBy = createdBy;
         this.status = Status.PROPOSED;
@@ -113,6 +118,7 @@ public class VendorPaymentProposal {
     public String getSupplierId() { return supplierId; }
     public String getInvoiceId() { return invoiceId; }
     public BigDecimal getProposedAmount() { return proposedAmount; }
+    public String getCurrencyCode() { return currencyCode; }
     public String getCreatedBy() { return createdBy; }
     public String getApprovedBy() { return approvedBy; }
     public String getExecutedBy() { return executedBy; }

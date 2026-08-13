@@ -39,4 +39,8 @@
 
 **EN:** The proposals tab creates supplier-payment proposals from open invoices and exposes approval and execution actions. Execution reuses the validated supplier-payment flow, records the resulting payment reference, rejects self-approval/self-disbursement, and safely replays the same operation ID.
 
+**EN:** Operational users can select several open invoices for the same supplier and currency, edit each allocation up to its outstanding balance, and inspect every downstream supplier-payment reference from the proposal row. Loading, empty, validation error, busy, approved, and executed states remain explicit.
+
+**AR:** يمكن للمستخدم تحديد عدة فواتير مفتوحة للمورد والعملة نفسيهما، وتعديل تخصيص كل فاتورة ضمن رصيدها المتبقي، ثم مراجعة جميع مراجع دفعات المورد الناتجة من صف المقترح. تظل حالات التحميل والفراغ والخطأ والانشغال والاعتماد والتنفيذ واضحة.
+
 **AR:** عند تعديل أمر شراء محفوظ تظهر حقول لقطة سعر الصرف مقفلة بوضوح، بينما تظل حقول المورد والشروط والصنف والكمية وسعر الوحدة قابلة للتعديل.

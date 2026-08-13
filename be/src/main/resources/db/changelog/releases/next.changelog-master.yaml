@@ -285,3 +285,7 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260812_v205_remaining_work_translations.yaml
   - include:
       file: db/changelog/schema/update/20260812_v206_run_scoped_payroll_and_payment_proposals.yaml
+  - include:
+      file: db/changelog/schema/update/20260813_v207_payment_proposal_allocations.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v208_payment_proposal_allocation_translations.yaml

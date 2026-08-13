@@ -894,6 +894,28 @@ class AuthSecurityIntegrationTests {
     }
 
     @Test
+    void paymentProposalExecutionCannotBeCalledByProcurementOrViewerRoles() throws Exception {
+        AppUser procurement = createUser("propexecproc", Set.of(RoleCode.PROCUREMENT_MANAGER));
+        AppUser viewer = createUser("propexecview", Set.of(RoleCode.VIEWER));
+        AppUser finance = createUser("propexecfin", Set.of(RoleCode.FINANCE_MANAGER));
+        String payload = "{\"operationId\":\"security-op\",\"paymentMethod\":\"BANK_TRANSFER\"}";
+
+        mockMvc.perform(post("/api/v1/procurement/payment-proposals/missing/execute")
+                        .contentType(MediaType.APPLICATION_JSON).content(payload)
+                        .header("Authorization", "Bearer " + mintAccessToken(procurement)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/v1/procurement/payment-proposals/missing/execute")
+                        .contentType(MediaType.APPLICATION_JSON).content(payload)
+                        .header("Authorization", "Bearer " + mintAccessToken(viewer)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/v1/procurement/payment-proposals/missing/execute")
+                        .contentType(MediaType.APPLICATION_JSON).content(payload)
+                        .header("Authorization", "Bearer " + mintAccessToken(finance)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("PAYMENT_PROPOSAL_NOT_FOUND"));
+    }
+
+    @Test
     void createRejectsInvalidMenuRoleCombination() {
         String suffix = UUID.randomUUID().toString().substring(0, 8);
         var request = new AuthApi.UserUpsertRequest("badmenu-" + suffix, "Bad Menu", "Auth#Test1!",

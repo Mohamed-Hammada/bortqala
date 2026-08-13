@@ -372,6 +372,17 @@ public class ProcurementService {
                 this::replayPayment);
     }
 
+    /**
+     * Creates every allocation of one locked payment proposal in the caller's transaction.
+     * Proposal execution owns the operation-id replay guard, so these child payments must not
+     * independently complete idempotency reservations before the proposal transaction commits.
+     */
+    @Transactional
+    public List<ProcurementApi.SupplierPaymentResponse> createSupplierPaymentsForProposal(
+            List<ProcurementApi.SupplierPaymentPayload> allocations) {
+        return allocations.stream().map(this::createSupplierPaymentTransaction).toList();
+    }
+
     private ProcurementApi.SupplierPaymentResponse replayPayment(String paymentId) {
         SupplierPayment payment = supplierPaymentRepository.findById(paymentId)
                 .orElseThrow(() -> new BusinessRuleException("الدفعة غير موجودة.", "PROC_PAYMENT_NOT_FOUND", HttpStatus.CONFLICT));

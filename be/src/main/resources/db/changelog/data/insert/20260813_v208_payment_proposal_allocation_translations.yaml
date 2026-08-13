@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v208_001_payment_proposal_allocation_translations
+      author: codex
+      changes:
+        - loadData:
+            file: db/changelog/data/insert/files/20260813_v208_payment_proposal_allocation_translations.csv
+            separator: ;
+            tableName: translations
+            encoding: UTF-8
