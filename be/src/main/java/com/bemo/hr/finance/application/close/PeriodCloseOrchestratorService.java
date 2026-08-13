@@ -30,8 +30,15 @@ public class PeriodCloseOrchestratorService {
         boolean allReady = true;
 
         for (ModuleCloseProvider provider : closeProviders) {
-            boolean ready = provider.isPeriodCloseReady(periodId);
-            String blockerReason = ready ? null : provider.getBlockerReason(periodId).orElse("Unresolved period dependencies");
+            boolean ready;
+            String blockerReason;
+            try {
+                ready = provider.isPeriodCloseReady(periodId);
+                blockerReason = ready ? null : provider.getBlockerReason(periodId).orElse("Unresolved period dependencies");
+            } catch (RuntimeException ex) {
+                ready = false;
+                blockerReason = "Readiness check failed: " + ex.getClass().getSimpleName();
+            }
             if (!ready) {
                 allReady = false;
             }

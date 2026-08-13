@@ -27,7 +27,8 @@
 | SHARED-003–004 | DONE | Fiscal close cannot bypass server precheck; subledger posting/reversal is balanced, period-guarded, traceable, and replay-safe. |
 | TRS-001 | DONE | Eligible multi-source batches derive totals, enforce three actors, create traceable atomic disbursements, and replay safely under a locked header. |
 | TRS-002 | DONE | Budget revisions are immutable, approval-aware versions with deterministic effective amounts, queryable history, mandatory reasons, SoD, audit, API/UI lifecycle, and focused tests. |
-| TRS-003…004 | VERIFY | Close/reconciliation providers and tests exist; complete module/source coverage remains. |
+| TRS-003 | DONE | Fiscal close aggregates deterministic Payroll, Workforce, Sales/AR, Procurement/AP, Inventory, and Treasury blockers and fails closed on provider errors. |
+| TRS-004 | VERIFY | Reconciliation providers and tests exist; complete source-document and reproducibility coverage remains. |
 | FIN-001 | VERIFY | Dimension posting/reporting acceptance remains. |
 | FIN-002 | DONE | Manual journals require distinct maker, approver, and poster; rejection reason and audit evidence persist. |
 | FIN-003 | CONFIRMED GAP | FX service calculates gain/loss only; it does not post/reverse replay-safe journals. |
@@ -983,13 +984,20 @@ A `DocumentTransitionService` existing is not enough.
 
 ## TRS-003 — Module close providers
 
-**Status:** `VERIFY`
+**Status:** `DONE — financial module blockers fail closed`
 
-- [ ] Each in-scope module exposes deterministic close blockers.
-- [ ] Fiscal close aggregates module blockers.
-- [ ] No module silently reports green when unfinished transactions remain.
-- [ ] Provider failures do not incorrectly permit close.
-- [ ] Tests cover at least one blocker from each in-scope financial module.
+- [x] Each in-scope module exposes deterministic close blockers.
+- [x] Fiscal close aggregates module blockers.
+- [x] No module silently reports green when unfinished transactions remain.
+- [x] Provider failures do not incorrectly permit close.
+- [x] Tests cover at least one blocker from each in-scope financial module.
+
+### Evidence — 2026-08-13
+
+- The former always-green Payroll, Workforce, and Sales providers now query tenant/period-scoped unfinished documents. New Procurement, Inventory, and Treasury providers cover open POs, transfers/counts, and payment batches.
+- `CloseBlockerQueryService` resolves the authoritative fiscal period and applies tenant/date boundaries consistently; the existing orchestrator and fiscal precheck aggregate all registered providers.
+- Both the close orchestrator and workbench catch provider failures and publish a blocking status, preventing an unavailable or broken module check from permitting close.
+- `FinancialModuleCloseProvidersTests` exercises a blocker for all six in-scope modules, while `PeriodCloseOrchestratorServiceTests` proves aggregation, execution, and fail-closed exception behavior. The focused close suite passes.
 
 ---
 

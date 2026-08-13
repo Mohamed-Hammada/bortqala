@@ -36,8 +36,15 @@ public class PeriodCloseWorkbenchService {
 
         for (ModuleCloseProvider provider : providers) {
             String name = provider.getModuleName();
-            boolean isReady = provider.isPeriodCloseReady(periodId);
-            String blocker = provider.getBlockerReason(periodId).orElse(null);
+            boolean isReady;
+            String blocker;
+            try {
+                isReady = provider.isPeriodCloseReady(periodId);
+                blocker = isReady ? null : provider.getBlockerReason(periodId).orElse("Unresolved period dependencies");
+            } catch (RuntimeException ex) {
+                isReady = false;
+                blocker = "Readiness check failed: " + ex.getClass().getSimpleName();
+            }
             boolean isExecuted = executedMap.containsKey(name);
 
             if (isReady) readyCount++;
