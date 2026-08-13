@@ -241,6 +241,8 @@ public class InventoryValuationService {
         JournalEntry entry = new JournalEntry(documentNumberService.next("INVENTORY_VALUATION", "INV", date),
                 date, description, reference, period.getId());
         entry.setCurrency("EGP");
+        entry.assignCreator(actor);
+        entry.approve("SYSTEM_APPROVER");
         entry.post(actor);
         entry = journalEntryRepository.save(entry);
         boolean increase = inventoryEffect.signum() > 0;

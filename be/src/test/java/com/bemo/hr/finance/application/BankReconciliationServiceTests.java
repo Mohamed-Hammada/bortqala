@@ -175,7 +175,7 @@ class BankReconciliationServiceTests {
 
     private JournalEntry postedJournal(String number, String reference) {
         JournalEntry entry = new JournalEntry(number, LocalDate.of(2026, 8, 10), "Payment", reference, "period-1");
-        entry.post("tester"); return entry;
+        entry.approve("approver"); entry.post("tester"); return entry;
     }
     private FiscalPeriod openPeriod() { return new FiscalPeriod(2026, 8, "August", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), FiscalPeriod.Status.OPEN); }
 }
