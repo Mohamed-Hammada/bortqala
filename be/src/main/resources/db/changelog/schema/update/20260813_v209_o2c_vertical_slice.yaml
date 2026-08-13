@@ -27,23 +27,9 @@ databaseChangeLog:
         - addColumn:
             tableName: customer_invoices
             columns:
-              - column: { name: amount, type: "DECIMAL(19,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
-              - column: { name: due_date, type: DATE }
-              - column: { name: currency_code, type: VARCHAR(10), defaultValue: EGP, constraints: { nullable: false } }
-              - column: { name: outstanding_amount, type: "DECIMAL(19,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
               - column: { name: delivered_quantity, type: "DECIMAL(15,4)" }
               - column: { name: invoiced_amount, type: "DECIMAL(15,2)" }
               - column: { name: cogs_amount, type: "DECIMAL(15,2)" }
-              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
-        - sql:
-            sql: |
-              UPDATE customer_invoices
-              SET amount = total_amount,
-                  outstanding_amount = total_amount,
-                  due_date = invoice_date,
-                  currency_code = 'EGP'
-              WHERE amount = 0
-        - addDefaultValue: { tableName: customer_invoices, columnName: total_amount, columnDataType: "DECIMAL(15,2)", defaultValueNumeric: 0 }
         - addColumn:
             tableName: sales_orders
             columns:
@@ -136,3 +122,39 @@ databaseChangeLog:
         - dropTable: { tableName: customer_credit_notes }
         - dropTable: { tableName: customer_return_lines }
         - dropTable: { tableName: sales_delivery_lines }
+  - changeSet:
+      id: 20260813_v209_001_o2c_customer_invoices_legacy_compat
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - columnExists:
+                tableName: customer_invoices
+                columnName: amount
+      changes:
+        - addColumn:
+            tableName: customer_invoices
+            columns:
+              - column: { name: amount, type: "DECIMAL(19,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: due_date, type: DATE }
+              - column: { name: currency_code, type: VARCHAR(10), defaultValue: EGP, constraints: { nullable: false } }
+              - column: { name: outstanding_amount, type: "DECIMAL(19,2)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: version, type: BIGINT, defaultValueNumeric: 0, constraints: { nullable: false } }
+  - changeSet:
+      id: 20260813_v209_001_o2c_customer_invoices_sync_total_amount
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - columnExists:
+            tableName: customer_invoices
+            columnName: total_amount
+      changes:
+        - sql:
+            sql: |
+              UPDATE customer_invoices
+              SET amount = total_amount,
+                  outstanding_amount = total_amount,
+                  due_date = invoice_date,
+                  currency_code = 'EGP'
+              WHERE amount = 0
+        - addDefaultValue: { tableName: customer_invoices, columnName: total_amount, columnDataType: "DECIMAL(15,2)", defaultValueNumeric: 0 }

@@ -7,6 +7,11 @@ databaseChangeLog:
             file: db/changelog/data/insert/files/20260812_v199_workforce_dispatch_translations.csv
             separator: ";"
             tableName: translations
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: value, name: text_value, type: STRING }
         - sql:
             sql: "UPDATE app_users SET allowed_menus = CASE WHEN allowed_menus IS NULL OR TRIM(allowed_menus) = '' THEN 'workforce-dispatch-disputes' ELSE CONCAT(allowed_menus, ',workforce-dispatch-disputes') END WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%workforce-dispatch-disputes%'"
       rollback:

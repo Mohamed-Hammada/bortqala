@@ -9,8 +9,8 @@ databaseChangeLog:
             tableName: translations
             columns:
               - column: { header: id, name: id, type: STRING }
-              - column: { header: key, name: key, type: STRING }
+              - column: { header: key, name: translation_key, type: STRING }
               - column: { header: locale, name: locale, type: STRING }
-              - column: { header: value, name: value, type: STRING }
+              - column: { header: value, name: text_value, type: STRING }
       rollback:
         - delete: { tableName: translations, where: "id LIKE 'v193-%'" }
