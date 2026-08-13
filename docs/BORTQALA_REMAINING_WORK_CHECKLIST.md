@@ -22,7 +22,7 @@
 | P2P-001 | VERIFY | Multi-invoice allocation, SoD, atomic supplier payments, balance/ledger updates, replay, rollback, UI references, and H2 persistence are proven locally. The implemented PostgreSQL concurrency acceptance test still requires Docker. |
 | O2C-001 | DONE | Persisted order → reservation → valued delivery/COGS → invoice → partial/final receipts → return → credit-note, replay/cancellation, API roles, tenant isolation, and concurrent ATP reservation are proven locally. |
 | INV-001 | DONE | Existing inventory source of truth reconciled and hardened across warehouse/bin, status, reservation, transfer, cycle count, and lot/serial controls; focused backend/UI and H2 migration evidence is green. |
-| SHARED-001 | VERIFY | Transition command-path characterization/repair remains. |
+| SHARED-001 | DONE | Critical financial/stock lifecycles use role-protected application commands, guarded domain transitions, stable errors, audit, concurrency controls, and replay protection. |
 | SHARED-002 | DONE | Vendor payments, manual journals, and governed bank changes enforce backend maker/checker and persist/audit actors. |
 | SHARED-003–004 | DONE | Fiscal close cannot bypass server precheck; subledger posting/reversal is balanced, period-guarded, traceable, and replay-safe. |
 | TRS-001 | DONE | Eligible multi-source batches derive totals, enforce three actors, create traceable atomic disbursements, and replay safely under a locked header. |
@@ -848,22 +848,29 @@ Acceptance:
 
 ## SHARED-001 — Verify shared document transition wiring
 
-**Status:** `DONE — core financial statement APIs verified`
+**Status:** `DONE — controlled lifecycle command paths verified`
 
 A `DocumentTransitionService` existing is not enough.
 
-- [ ] Identify every financial/stock document with controlled lifecycle states.
-- [ ] Verify allowed transitions use the shared transition rules or an explicitly justified domain-specific equivalent.
-- [ ] Invalid transitions return stable business errors.
-- [ ] Transition authorization is enforced server-side.
-- [ ] Transition audit is recorded.
-- [ ] Optimistic/pessimistic concurrency protection is appropriate.
-- [ ] Repeated transition commands are idempotent where required.
-- [ ] Tests cover invalid state changes.
+- [x] Identify every financial/stock document with controlled lifecycle states.
+- [x] Verify allowed transitions use the shared transition rules or an explicitly justified domain-specific equivalent.
+- [x] Invalid transitions return stable business errors.
+- [x] Transition authorization is enforced server-side.
+- [x] Transition audit is recorded.
+- [x] Optimistic/pessimistic concurrency protection is appropriate.
+- [x] Repeated transition commands are idempotent where required.
+- [x] Tests cover invalid state changes.
 
 ### Done only when
 
-- [ ] No critical document controller/service bypasses the intended transition guardrails.
+- [x] No critical document controller/service bypasses the intended transition guardrails.
+
+### Evidence — 2026-08-13
+
+- Controlled financial/stock aggregates were traced across Purchase Order/GRN/invoice/payment, Sales Order/delivery/invoice/receipt/return, reservation/transfer/count/lot, journal/fiscal period, payment batch, budget revision, bank match/change, and FX posting.
+- Each critical command is routed through a role-protected application service and either `DocumentTransitionService` or an aggregate-specific state method with stable business errors. Direct generic status mutation is not exposed by controllers.
+- Mutable aggregates use `@Version`; oversell/overpay/execution paths additionally use pessimistic locks and database uniqueness. Financial/stock effect commands use operation IDs or deliberately idempotent terminal-state behavior.
+- Domain/application suites cover invalid transitions for journals, payments/batches, procurement/sales, reservations/transfers/counts, fiscal close, bank reconciliation, budget revisions, and FX. Sensitive transitions record audit events with request actors.
 
 ---
 
@@ -1086,7 +1093,7 @@ A `DocumentTransitionService` existing is not enough.
 
 ## FIN-004 — Core financial statements/APIs
 
-**Status:** `VERIFY`
+**Status:** `DONE — core financial statement APIs verified`
 
 Required according to current roadmap scope:
 
