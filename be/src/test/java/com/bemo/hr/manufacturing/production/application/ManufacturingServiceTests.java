@@ -86,6 +86,7 @@ class ManufacturingServiceTests {
         when(productionOrderRepository.findByIdForUpdate("wo-1")).thenReturn(Optional.of(order));
         when(bomHeaderRepository.findById(bom.getId())).thenReturn(Optional.of(bom));
         when(operationsService.stockBalance("rm-1")).thenReturn(BigDecimal.valueOf(100));
+        when(operationsService.latestUnitCost("rm-1")).thenReturn(new BigDecimal("15"));
         when(productionOrderRepository.save(any(ProductionOrder.class))).thenAnswer(i -> i.getArgument(0));
 
         ManufacturingApi.ProductionOrderResponse response = service.startProductionOrder("wo-1");
@@ -119,7 +120,7 @@ class ManufacturingServiceTests {
 
         when(productionOrderRepository.findByIdForUpdate("wo-1")).thenReturn(Optional.of(order));
         when(bomSnapshotService.getSnapshotsForProductionOrder(order.getId())).thenReturn(List.of(
-                new BomSnapshot(order.getId(), bom.getId(), 1, "rm-1", BigDecimal.valueOf(10))));
+                new BomSnapshot(order.getId(), bom.getId(), 1, "rm-1", BigDecimal.valueOf(10), new BigDecimal("15"))));
         when(operationsService.productionIssueCost("WO-100", "rm-1")).thenReturn(BigDecimal.valueOf(150));
         when(productionOrderRepository.save(any(ProductionOrder.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -141,7 +142,8 @@ class ManufacturingServiceTests {
         ProductionOrder order = new ProductionOrder("WO-100", changedBom.getId(), "fg-1", "v1.0",
                 BigDecimal.valueOf(5), LocalDate.now(), null);
         order.start();
-        BomSnapshot frozen = new BomSnapshot(order.getId(), changedBom.getId(), 1, "rm-1", BigDecimal.valueOf(10));
+        BomSnapshot frozen = new BomSnapshot(order.getId(), changedBom.getId(), 1, "rm-1",
+                BigDecimal.valueOf(10), new BigDecimal("15"));
 
         when(productionOrderRepository.findById("wo-1")).thenReturn(Optional.of(order));
         when(bomSnapshotService.getSnapshotsForProductionOrder(order.getId())).thenReturn(List.of(frozen));

@@ -5,8 +5,6 @@ import com.bemo.hr.manufacturing.production.domain.ProductionVarianceClose;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-
 @RestController
 @RequestMapping("/api/v1/manufacturing/variance")
 public class ManufacturingVarianceCloseController {
@@ -17,12 +15,12 @@ public class ManufacturingVarianceCloseController {
         this.varianceService = varianceService;
     }
 
-    public record CloseVariancePayload(String workOrderId, BigDecimal standardCost, BigDecimal actualCost) {}
+    public record CloseVariancePayload(String workOrderId) {}
 
     @PostMapping("/close")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'FINANCE_MANAGER')")
     public ProductionVarianceClose calculateAndCloseVariance(@RequestBody CloseVariancePayload payload) {
-        return varianceService.calculateAndCloseVariance(payload.workOrderId(), payload.standardCost(), payload.actualCost());
+        return varianceService.calculateAndCloseVariance(payload.workOrderId());
     }
 
     @GetMapping("/work-orders/{workOrderId}")

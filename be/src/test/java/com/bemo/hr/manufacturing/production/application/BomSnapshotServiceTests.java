@@ -27,11 +27,13 @@ class BomSnapshotServiceTests {
     void capturesBomSnapshotSuccessfully() {
         when(bomSnapshotRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        BomSnapshot snapshot = bomSnapshotService.captureBomSnapshot("po-100", "bom-1", 1, "comp-5", new BigDecimal("50.0000"));
+        BomSnapshot snapshot = bomSnapshotService.captureBomSnapshot("po-100", "bom-1", 1, "comp-5",
+                new BigDecimal("50.0000"), new BigDecimal("12.500000"));
 
         assertThat(snapshot).isNotNull();
         assertThat(snapshot.getProductionOrderId()).isEqualTo("po-100");
         assertThat(snapshot.getBomId()).isEqualTo("bom-1");
         assertThat(snapshot.getRequiredQuantity()).isEqualTo(new BigDecimal("50.0000"));
+        assertThat(snapshot.getStandardUnitCost()).isEqualByComparingTo("12.500000");
     }
 }

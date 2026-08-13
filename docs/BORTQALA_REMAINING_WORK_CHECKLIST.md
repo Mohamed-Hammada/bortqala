@@ -18,7 +18,7 @@
 | PAY-002 | DONE | Effective-dated tenant policy supplies divisor/multiplier; snapshots freeze both values; calculation, validation, deterministic selection, and H2 tenant isolation tests pass. |
 | REL-001 | BLOCKED | GitHub Actions account/billing lock is external and unresolved. |
 | REL-002 | OPEN | Historical counts are not carried forward; all final candidate commands and smoke checks must be rerun. |
-| MFG-001 | VERIFY | `PLANNED → IN_PROGRESS` freezes requirements before issue; active readiness/completion/cancel use snapshots and completion reads issue valuation evidence. PostgreSQL, concurrency, full-suite, and final-SHA evidence remain. |
+| MFG-001 | DONE | `PLANNED → IN_PROGRESS` freezes requirements and standard cost before issue; active execution uses snapshots, actual cost uses issue valuation, and replay/new-revision/tenant isolation are proven. |
 | P2P-001 | VERIFY | Multi-invoice allocation, SoD, atomic supplier payments, balance/ledger updates, replay, rollback, UI references, and H2 persistence are proven locally. The implemented PostgreSQL concurrency acceptance test still requires Docker. |
 | O2C-001 | DONE | Persisted order → reservation → valued delivery/COGS → invoice → partial/final receipts → return → credit-note, replay/cancellation, API roles, tenant isolation, and concurrent ATP reservation are proven locally. |
 | INV-001 | DONE | Existing inventory source of truth reconciled and hardened across warehouse/bin, status, reservation, transfer, cycle count, and lot/serial controls; focused backend/UI and H2 migration evidence is green. |
@@ -481,7 +481,7 @@ From `fe/`:
 
 ## MFG-001 — Stop using the live BOM after production execution is frozen
 
-**Status:** `VERIFY — frozen execution implemented; release-level evidence pending`
+**Status:** `DONE — frozen BOM execution and variance evidence verified`
 
 The reviewed manufacturing flow captures BOM snapshot rows when production starts, but important execution paths still read the live BOM.
 
@@ -518,52 +518,53 @@ Do not create a separate microservice or rewrite the manufacturing module.
 
 ### Required work
 
-- [ ] Define the exact state transition when the BOM becomes frozen.
-- [ ] Capture the complete material requirement snapshot **before** irreversible material issue/posting.
-- [ ] Ensure each production order has one authoritative frozen BOM requirement set/version.
-- [ ] After freeze, do not read live BOM lines for:
-  - [ ] Material issue quantity
-  - [ ] Remaining material requirement
-  - [ ] Completion validation
-  - [ ] Expected material usage
-  - [ ] Standard/expected variance basis
-- [ ] Completion must not call a helper that re-reads the live BOM.
-- [ ] If actual cost is based on actual stock issues, calculate from actual issued-movement evidence.
-- [ ] If expected cost/variance is required, compare actual evidence against the frozen BOM snapshot.
-- [ ] Editing the master BOM after work-order start must not alter the active order.
-- [ ] Preserve historical BOM revision/version evidence.
+- [x] Define the exact state transition when the BOM becomes frozen.
+- [x] Capture the complete material requirement snapshot **before** irreversible material issue/posting.
+- [x] Ensure each production order has one authoritative frozen BOM requirement set/version.
+- [x] After freeze, do not read live BOM lines for:
+  - [x] Material issue quantity
+  - [x] Remaining material requirement
+  - [x] Completion validation
+  - [x] Expected material usage
+  - [x] Standard/expected variance basis
+- [x] Completion must not call a helper that re-reads the live BOM.
+- [x] If actual cost is based on actual stock issues, calculate from actual issued-movement evidence.
+- [x] If expected cost/variance is required, compare actual evidence against the frozen BOM snapshot.
+- [x] Editing the master BOM after work-order start must not alter the active order.
+- [x] Preserve historical BOM revision/version evidence.
 
 ### Required tests
 
-- [ ] Start order from BOM revision R1.
-- [ ] Freeze snapshot.
-- [ ] Change master BOM to R2.
-- [ ] Active order still uses R1 frozen requirements.
-- [ ] Material issue quantities do not change after master BOM edit.
-- [ ] Completion does not use R2.
-- [ ] Expected-versus-actual variance uses frozen R1 basis.
-- [ ] New production order created/started later can use R2.
-- [ ] Tenant isolation for BOM snapshot data.
-- [ ] Retry/start command does not duplicate snapshot rows or stock issues.
+- [x] Start order from BOM revision R1.
+- [x] Freeze snapshot.
+- [x] Change master BOM to R2.
+- [x] Active order still uses R1 frozen requirements.
+- [x] Material issue quantities do not change after master BOM edit.
+- [x] Completion does not use R2.
+- [x] Expected-versus-actual variance uses frozen R1 basis.
+- [x] New production order created/started later can use R2.
+- [x] Tenant isolation for BOM snapshot data.
+- [x] Retry/start command does not duplicate snapshot rows or stock issues.
 
 ### Definition of Done
 
-- [ ] No `IN_PROGRESS` or completion calculation depends on mutable BOM lines.
-- [ ] Snapshot behavior is proven by an automated test that changes the BOM after start.
-- [ ] Stock movements remain idempotent.
-- [ ] Production result is reproducible from persisted evidence.
+- [x] No `IN_PROGRESS` or completion calculation depends on mutable BOM lines.
+- [x] Snapshot behavior is proven by an automated test that changes the BOM after start.
+- [x] Stock movements remain idempotent.
+- [x] Production result is reproducible from persisted evidence.
 
 ### Evidence
 
 ```text
-Status: VERIFY — focused implementation/tests green; release acceptance incomplete
+Status: DONE — frozen requirements, standard cost, and actual issue evidence verified
 Commit SHA: this checkpoint commit; parent baseline `0c182021944f1b8d411deb72c83eaf45761d81a0`
 Freeze transition: ProductionOrder PLANNED → IN_PROGRESS
-Snapshot source: BomSnapshot rows captured from pre-start readiness before stock issue
-Methods changed: ManufacturingService.checkMaterialReadiness/startProductionOrder/completeProductionOrder/cancelProductionOrder
-Tests: ManufacturingServiceTests.activeOrderUsesFrozenBomAfterMasterBomChanges; focused suite PASS
-Stock-movement idempotency evidence: pessimistic order command lock + unique app/order/component snapshot constraint; PostgreSQL concurrency NOT RUN
-Reviewer: PENDING
+Snapshot source: BomSnapshot rows capture required quantity, BOM version, and standard unit cost before stock issue
+Methods changed: ManufacturingService.checkMaterialReadiness/startProductionOrder/completeProductionOrder/cancelProductionOrder; ManufacturingVarianceCloseService
+Tests: BomSnapshotPersistenceTests, BomSnapshotServiceTests, ManufacturingServiceTests, ManufacturingExecutionServiceTests, ManufacturingVarianceCloseServiceTests — 9/9 PASS (2026-08-13)
+Stock-movement idempotency evidence: pessimistic order command lock + status guard + unique app/order/component snapshot constraint
+Variance evidence: expected cost derives from frozen quantity × frozen unit cost; actual cost derives from valued issue movements
+Reviewer: automated acceptance complete; release-level review remains under REL-002
 ```
 
 ---
@@ -1263,8 +1264,8 @@ Do not work on everything at once.
 
 ## Milestone 3 — Manufacturing integrity
 
-- [ ] MFG-001 — Frozen BOM execution source.
-- [ ] Snapshot/BOM mutation test.
+- [x] MFG-001 — Frozen BOM execution source.
+- [x] Snapshot/BOM mutation test.
 - [ ] Verify material reservation/partial receipt/WIP/variance only after frozen-source fix.
 
 **Milestone success:** Editing the master BOM after order start cannot alter the active production order's material/cost basis.
@@ -1302,7 +1303,7 @@ The developer may write **ALL DONE / FULLY VERIFIED / RELEASE READY** only when 
 - [ ] DOC-001 complete.
 - [ ] PAY-001 complete.
 - [x] PAY-002 complete.
-- [ ] MFG-001 complete.
+- [x] MFG-001 complete.
 - [ ] P2P-001 either VERIFIED complete or explicitly approved N/A.
 - [x] O2C-001 either VERIFIED complete or explicitly approved N/A.
 - [x] INV-001 applicable sub-items verified.

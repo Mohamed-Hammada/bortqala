@@ -171,7 +171,8 @@ public class ManufacturingService {
         for (ManufacturingApi.MaterialRequirementView req : readiness.requirements()) {
             int version = 1;
             try { version = Integer.parseInt(bom.getRevision().replaceAll("[^0-9]", "")); } catch (Exception ignored) {}
-            bomSnapshotService.captureBomSnapshot(order.getId(), bom.getId(), version, req.componentItemId(), req.requiredQuantity());
+            bomSnapshotService.captureBomSnapshot(order.getId(), bom.getId(), version, req.componentItemId(),
+                    req.requiredQuantity(), operationsService.latestUnitCost(req.componentItemId()));
         }
         for (ManufacturingApi.MaterialRequirementView requirement : readiness.requirements()) {
             operationsService.recordProductionIssue(requirement.componentItemId(), requirement.requiredQuantity(),
