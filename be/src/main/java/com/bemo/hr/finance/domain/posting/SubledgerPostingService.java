@@ -4,6 +4,8 @@ import com.bemo.hr.finance.domain.JournalEntry;
 import com.bemo.hr.finance.domain.JournalEntryLine;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
+import com.bemo.hr.finance.infrastructure.JournalSourceMetadataRepository;
+import com.bemo.hr.finance.domain.journal.JournalSourceMetadata;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.finance.domain.FiscalPeriodGuard;
 import com.bemo.hr.audit.application.AuditService;
@@ -22,17 +24,20 @@ public class SubledgerPostingService {
     private final JournalEntryLineRepository journalEntryLineRepository;
     private final FiscalPeriodGuard fiscalPeriodGuard;
     private final AuditService auditService;
+    private final JournalSourceMetadataRepository journalSourceMetadataRepository;
 
     public SubledgerPostingService(PostingProfileRepository postingProfileRepository,
                                   JournalEntryRepository journalEntryRepository,
                                   JournalEntryLineRepository journalEntryLineRepository,
                                   FiscalPeriodGuard fiscalPeriodGuard,
-                                  AuditService auditService) {
+                                  AuditService auditService,
+                                  JournalSourceMetadataRepository journalSourceMetadataRepository) {
         this.postingProfileRepository = postingProfileRepository;
         this.journalEntryRepository = journalEntryRepository;
         this.journalEntryLineRepository = journalEntryLineRepository;
         this.fiscalPeriodGuard = fiscalPeriodGuard;
         this.auditService = auditService;
+        this.journalSourceMetadataRepository = journalSourceMetadataRepository;
     }
 
     @Transactional
@@ -78,6 +83,7 @@ public class SubledgerPostingService {
         journalEntry.post("SYSTEM");
 
         JournalEntry savedEntry = journalEntryRepository.save(journalEntry);
+        journalSourceMetadataRepository.save(new JournalSourceMetadata(savedEntry.getId(), sourceDocumentType, sourceDocumentId));
 
         JournalEntryLine debitLine = new JournalEntryLine(savedEntry.getId(), debitAccountId, null, debitAmount, BigDecimal.ZERO, description);
         JournalEntryLine creditLine = new JournalEntryLine(savedEntry.getId(), creditAccountId, null, BigDecimal.ZERO, creditAmount, description);

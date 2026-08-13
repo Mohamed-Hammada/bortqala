@@ -28,7 +28,7 @@
 | TRS-001 | DONE | Eligible multi-source batches derive totals, enforce three actors, create traceable atomic disbursements, and replay safely under a locked header. |
 | TRS-002 | DONE | Budget revisions are immutable, approval-aware versions with deterministic effective amounts, queryable history, mandatory reasons, SoD, audit, API/UI lifecycle, and focused tests. |
 | TRS-003 | DONE | Fiscal close aggregates deterministic Payroll, Workforce, Sales/AR, Procurement/AP, Inventory, and Treasury blockers and fails closed on provider errors. |
-| TRS-004 | VERIFY | Reconciliation providers and tests exist; complete source-document and reproducibility coverage remains. |
+| TRS-004 | DONE | AP, AR, Inventory, and Treasury reconciliation derives tenant/as-of balances from persisted subledgers and linked posted journals, retaining source differences and closed-period snapshots. |
 | FIN-001 | VERIFY | Dimension posting/reporting acceptance remains. |
 | FIN-002 | DONE | Manual journals require distinct maker, approver, and poster; rejection reason and audit evidence persist. |
 | FIN-003 | CONFIRMED GAP | FX service calculates gain/loss only; it does not post/reverse replay-safe journals. |
@@ -1003,16 +1003,23 @@ A `DocumentTransitionService` existing is not enough.
 
 ## TRS-004 — Financial/subledger reconciliation
 
-**Status:** `VERIFY`
+**Status:** `DONE — persisted subledger-to-GL reconciliation verified`
 
-- [ ] Inventory-to-GL reconciliation is available if inventory posting is in scope.
-- [ ] AP-to-GL reconciliation is available.
-- [ ] AR-to-GL reconciliation is available.
-- [ ] Bank/Treasury-to-GL reconciliation is available.
-- [ ] Differences identify source documents.
-- [ ] Reports are tenant-scoped.
-- [ ] Closed-period reports are reproducible.
-- [ ] Tests verify balanced and intentionally mismatched examples.
+- [x] Inventory-to-GL reconciliation is available if inventory posting is in scope.
+- [x] AP-to-GL reconciliation is available.
+- [x] AR-to-GL reconciliation is available.
+- [x] Bank/Treasury-to-GL reconciliation is available.
+- [x] Differences identify source documents.
+- [x] Reports are tenant-scoped.
+- [x] Closed-period reports are reproducible.
+- [x] Tests verify balanced and intentionally mismatched examples.
+
+### Evidence — 2026-08-13
+
+- The placeholder zero/zero provider was removed. Registered AP, AR, Inventory, and Treasury providers derive balances from supplier/customer invoices, valuation snapshots, and bank statements and compare them with linked posted journal lines.
+- Provider SQL is explicitly tenant-scoped and bounded by the selected fiscal period end date. V221 persists the report `as_of_date` and serialized document-level differences, so a closed-period report remains reproducible even after later transactions.
+- Generic subledger posting now always creates immutable `JournalSourceMetadata`, closing the traceability link required by the control-account calculations.
+- `SubledgerReconciliationServiceTests` covers both balanced output and an intentional AR mismatch with invoice ID/number and period-end evidence. Focused posting/reconciliation/close-check tests and the H2 migration context pass.
 
 ---
 

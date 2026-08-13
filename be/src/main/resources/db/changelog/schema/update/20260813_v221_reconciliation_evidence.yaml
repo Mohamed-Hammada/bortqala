@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v221_001_reconciliation_evidence
+      author: codex
+      changes:
+        - addColumn:
+            tableName: subledger_reconciliation_reports
+            columns:
+              - column: { name: as_of_date, type: DATE, defaultValueComputed: CURRENT_DATE, constraints: { nullable: false } }
+              - column: { name: difference_details, type: VARCHAR(8000), defaultValue: "[]", constraints: { nullable: false } }
+      rollback:
+        - dropColumn: { tableName: subledger_reconciliation_reports, columnName: difference_details }
+        - dropColumn: { tableName: subledger_reconciliation_reports, columnName: as_of_date }

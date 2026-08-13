@@ -40,7 +40,7 @@ class SubledgerPostingServiceTests {
         FiscalPeriod period = new FiscalPeriod(2026, 2, "Feb", LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28), FiscalPeriod.Status.OPEN);
         when(fiscalPeriodGuard.requireOpen(any())).thenReturn(period);
         subledgerPostingService = new SubledgerPostingService(postingProfileRepository, journalEntryRepository, journalEntryLineRepository,
-                fiscalPeriodGuard, auditService);
+                fiscalPeriodGuard, auditService, mock(com.bemo.hr.finance.infrastructure.JournalSourceMetadataRepository.class));
     }
 
     @Test

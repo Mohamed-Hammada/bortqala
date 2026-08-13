@@ -4,6 +4,7 @@ import com.bemo.hr.finance.domain.reconciliation.SubledgerReconciliationReport;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 public interface SubledgerReconciliationProvider {
 
@@ -16,6 +17,9 @@ public interface SubledgerReconciliationProvider {
             BigDecimal glBalance,
             BigDecimal subledgerBalance,
             BigDecimal difference,
-            boolean isBalanced
+            boolean isBalanced,
+            List<SourceDifference> sourceDifferences
     ) {}
+
+    record SourceDifference(String documentId, String documentNumber, BigDecimal subledgerAmount, BigDecimal glAmount) {}
 }
