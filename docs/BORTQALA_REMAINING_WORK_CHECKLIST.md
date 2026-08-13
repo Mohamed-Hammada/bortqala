@@ -22,16 +22,18 @@
 | P2P-001 | VERIFY | Multi-invoice allocation, SoD, atomic supplier payments, balance/ledger updates, replay, rollback, UI references, and H2 persistence are proven locally. The implemented PostgreSQL concurrency acceptance test still requires Docker. |
 | O2C-001 | DONE | Persisted order → reservation → valued delivery/COGS → invoice → partial/final receipts → return → credit-note, replay/cancellation, API roles, tenant isolation, and concurrent ATP reservation are proven locally. |
 | INV-001 | DONE | Existing inventory source of truth reconciled and hardened across warehouse/bin, status, reservation, transfer, cycle count, and lot/serial controls; focused backend/UI and H2 migration evidence is green. |
-| SHARED-001–002 | VERIFY | Transition and SoD command-path characterization/repair remains. |
+| SHARED-001 | VERIFY | Transition command-path characterization/repair remains. |
+| SHARED-002 | DONE | Vendor payments, manual journals, and governed bank changes enforce backend maker/checker and persist/audit actors. |
 | SHARED-003–004 | DONE | Fiscal close cannot bypass server precheck; subledger posting/reversal is balanced, period-guarded, traceable, and replay-safe. |
 | TRS-001 | CONFIRMED GAP | Payment batches only mutate batch state; real disbursement, SoD, replay, and concurrent execution are absent. |
 | TRS-002 | CONFIRMED GAP | Budget revision/transfer persistence exists without an application/API lifecycle or immutable-version tests. |
 | TRS-003…004 | VERIFY | Close/reconciliation providers and tests exist; complete module/source coverage remains. |
-| FIN-001…002 | VERIFY | Dimension/approval primitives exist; real posting-path and reporting acceptance remain. |
+| FIN-001 | VERIFY | Dimension posting/reporting acceptance remains. |
+| FIN-002 | DONE | Manual journals require distinct maker, approver, and poster; rejection reason and audit evidence persist. |
 | FIN-003 | CONFIRMED GAP | FX service calculates gain/loss only; it does not post/reverse replay-safe journals. |
 | FIN-004 | VERIFY | Statement APIs/tests exist; tenant/export fixture acceptance remains. |
 | FIN-005 | CONFIRMED GAP | No unified effective-dated master-data lifecycle was found beyond domain-specific records. |
-| FIN-006 | CONFIRMED GAP | Bank-change approval does not apply the governed master-data change or enforce SoD in the service. |
+| FIN-006 | DONE | Bank approval enforces SoD, applies the governed master change, audits actors, and supplier payments freeze beneficiary bank data. |
 | Final ALL DONE gate | OPEN | Cannot pass while any P0 gate is open/blocked or evidence is not tied to the final SHA. |
 
 This table is a status index only. The detailed criteria below remain authoritative; unchecked criteria are still required.
@@ -866,20 +868,27 @@ A `DocumentTransitionService` existing is not enough.
 
 ## SHARED-002 — Verify Segregation of Duties is enforced in real command paths
 
-**Status:** `VERIFY`
+**Status:** `DONE — protected command paths verified`
 
-- [ ] Locate `SegregationOfDutiesService`.
-- [ ] List the business commands that require SoD.
-- [ ] Verify those commands call/enforce SoD in the actual execution path.
-- [ ] Approval UI restrictions are not the only protection.
-- [ ] Backend rejects forbidden self-approval/self-execution.
-- [ ] Maker/checker identity is persisted.
-- [ ] Audit records both actors.
-- [ ] Tests prove direct API bypass is impossible.
+- [x] Locate `SegregationOfDutiesService`.
+- [x] List the business commands that require SoD.
+- [x] Verify those commands call/enforce SoD in the actual execution path.
+- [x] Approval UI restrictions are not the only protection.
+- [x] Backend rejects forbidden self-approval/self-execution.
+- [x] Maker/checker identity is persisted.
+- [x] Audit records both actors.
+- [x] Tests prove direct API bypass is impossible.
 
 ### Done only when
 
-- [ ] A user cannot bypass SoD by calling the API directly.
+- [x] A user cannot bypass SoD by calling the API directly.
+
+### Evidence — 2026-08-13
+
+- Required SoD commands are vendor-payment proposal approval/execution, manual-journal posting, and governed bank-change approval; each calls `SegregationOfDutiesService` in its transactional backend command path.
+- Vendor proposals persist creator, approver, and executor. V215 adds the manual-journal maker, while posting persists the checker. Bank requests persist requester/approver and now apply the approved IBAN to the party master.
+- Audit evidence records both relevant identities for proposal approval/execution, journal posting, and bank-change approval.
+- Focused `VendorPaymentProposalServiceTests`, `JournalEntryServiceTests`, and `BankChangeGovernanceServiceTests` reject same-user direct service/API-equivalent calls; V215 loads in the H2 application context.
 
 ---
 
@@ -999,14 +1008,21 @@ A `DocumentTransitionService` existing is not enough.
 
 ## FIN-002 — Manual journal approval
 
-**Status:** `VERIFY`
+**Status:** `DONE — three-actor journal control enforced`
 
-- [ ] Draft manual journal cannot post before required approval.
-- [ ] Maker/checker rule is enforced.
-- [ ] Direct API posting cannot bypass approval.
-- [ ] Rejection reason is stored.
-- [ ] Audit contains maker, approver, poster.
-- [ ] Tests exist.
+- [x] Draft manual journal cannot post before required approval.
+- [x] Maker/checker rule is enforced.
+- [x] Direct API posting cannot bypass approval.
+- [x] Rejection reason is stored.
+- [x] Audit contains maker, approver, poster.
+- [x] Tests exist.
+
+### Evidence — 2026-08-13
+
+- V215 persists `created_by`, `approved_by`, and `rejection_reason`; manual journal state is `DRAFT → APPROVED → POSTED` or `DRAFT → REJECTED`.
+- Approval/rejection endpoints require finance-manager authority. Backend SoD rejects maker approval, maker posting, and approver posting, so a third actor performs the final post.
+- Posting still uses optimistic version checks, fiscal-period guard, and operation-id replay; audit entries retain maker/checker/poster evidence.
+- `JournalEntryServiceTests` proves direct command/API-equivalent bypass rejection and the approval/poster separation; the focused finance suite is green.
 
 ---
 
@@ -1058,13 +1074,20 @@ Acceptance:
 
 ## FIN-006 — Bank-change governance
 
-**Status:** `VERIFY`
+**Status:** `DONE — maker/checker and beneficiary snapshot enforced`
 
-- [ ] Sensitive bank-account changes require appropriate permission.
-- [ ] Before/after values are audited safely.
-- [ ] Approval is required if current business rules demand maker/checker.
-- [ ] Previously approved payments cannot silently switch beneficiary bank details.
-- [ ] Tests cover direct API bypass attempts.
+- [x] Sensitive bank-account changes require appropriate permission.
+- [x] Before/after values are audited safely.
+- [x] Approval is required if current business rules demand maker/checker.
+- [x] Previously approved payments cannot silently switch beneficiary bank details.
+- [x] Tests cover direct API bypass attempts.
+
+### Evidence — 2026-08-13
+
+- Bank-change creation and approval remain role-protected server-side; approval now invokes `SegregationOfDutiesService` and rejects requester self-approval before changing master data.
+- The request persistently retains old/new IBAN and bank values plus requester/approver; the approval audit identifies both actors without logging credentials.
+- Approval applies the governed IBAN to `BusinessParty`; V215 adds a beneficiary-bank snapshot to each supplier payment so a later master-data change cannot silently retarget an already-created payment.
+- `BankChangeGovernanceServiceTests` proves the applied change, audit, and direct self-approval rejection; the V215 H2 application context is green.
 
 ---
 

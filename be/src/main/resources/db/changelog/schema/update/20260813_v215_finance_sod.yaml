@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v215_001_finance_sod
+      author: codex
+      changes:
+        - addColumn:
+            tableName: journal_entries
+            columns:
+              - column: { name: created_by, type: VARCHAR(100) }
+              - column: { name: approved_by, type: VARCHAR(100) }
+              - column: { name: rejection_reason, type: VARCHAR(500) }
+        - sql: UPDATE journal_entries SET created_by = COALESCE(posted_by, 'LEGACY') WHERE created_by IS NULL
+        - addNotNullConstraint: { tableName: journal_entries, columnName: created_by, columnDataType: VARCHAR(100) }
+        - addColumn:
+            tableName: supplier_payments
+            columns:
+              - column: { name: beneficiary_bank_account, type: VARCHAR(100) }
+      rollback:
+        - dropColumn: { tableName: supplier_payments, columnName: beneficiary_bank_account }
+        - dropColumn: { tableName: journal_entries, columnName: rejection_reason }
+        - dropColumn: { tableName: journal_entries, columnName: approved_by }
+        - dropColumn: { tableName: journal_entries, columnName: created_by }

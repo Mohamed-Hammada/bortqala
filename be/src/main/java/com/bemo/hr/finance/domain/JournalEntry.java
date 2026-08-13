@@ -21,6 +21,8 @@ public class JournalEntry {
 
     public enum Status {
         DRAFT,
+        APPROVED,
+        REJECTED,
         POSTED,
         REVERSED
     }
@@ -75,6 +77,15 @@ public class JournalEntry {
     @Column(name = "posted_by", length = 100)
     private String postedBy;
 
+    @Column(name = "created_by", length = 100)
+    private String createdBy;
+
+    @Column(name = "approved_by", length = 100)
+    private String approvedBy;
+
+    @Column(name = "rejection_reason", length = 500)
+    private String rejectionReason;
+
     @Column(name = "posted_at")
     private Long postedAt;
 
@@ -101,7 +112,7 @@ public class JournalEntry {
     }
 
     public void post(String username) {
-        if (this.status != Status.DRAFT) {
+        if (this.status != Status.APPROVED) {
             throw new com.bemo.hr.shared.domain.BusinessRuleException(
                     "لا يمكن ترحيل قيد في حالة " + this.status + ". الترحيل مسموح فقط من حالة مسودة.",
                     "JOURNAL_STATE_INVALID", org.springframework.http.HttpStatus.CONFLICT);
@@ -111,9 +122,23 @@ public class JournalEntry {
         this.postedAt = System.currentTimeMillis();
     }
 
+    public void approve(String username) {
+        if (status != Status.DRAFT) throw new com.bemo.hr.shared.domain.BusinessRuleException(
+                "Only draft journals can be approved.", "JOURNAL_STATE_INVALID", org.springframework.http.HttpStatus.CONFLICT);
+        status = Status.APPROVED; approvedBy = username; rejectionReason = null;
+    }
+
+    public void reject(String username, String reason) {
+        if (status != Status.DRAFT) throw new com.bemo.hr.shared.domain.BusinessRuleException(
+                "Only draft journals can be rejected.", "JOURNAL_STATE_INVALID", org.springframework.http.HttpStatus.CONFLICT);
+        status = Status.REJECTED; approvedBy = username; rejectionReason = reason == null ? null : reason.strip();
+    }
+
     public void setOperationId(String operationId) {
         this.operationId = operationId;
     }
+
+    public void assignCreator(String username) { this.createdBy = username; }
 
     public void attachFiscalPeriod(String fiscalPeriodId) {
         this.fiscalPeriodId = fiscalPeriodId;
@@ -165,6 +190,9 @@ public class JournalEntry {
     public Long getReversedAt() { return reversedAt; }
     public String getOperationId() { return operationId; }
     public String getPostedBy() { return postedBy; }
+    public String getCreatedBy() { return createdBy; }
+    public String getApprovedBy() { return approvedBy; }
+    public String getRejectionReason() { return rejectionReason; }
     public Long getPostedAt() { return postedAt; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }

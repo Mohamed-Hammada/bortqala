@@ -301,3 +301,7 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260813_v213_subledger_posting_integrity.yaml
   - include:
       file: db/changelog/data/insert/20260813_v214_subledger_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260813_v215_finance_sod.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v216_finance_sod_translations.yaml

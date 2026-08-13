@@ -73,6 +73,8 @@ public class SubledgerPostingService {
         );
         journalEntry.setOperationId(operationId);
         journalEntry.setCurrency("EGP");
+        journalEntry.assignCreator("SYSTEM_SUBLEDGER");
+        journalEntry.approve("SYSTEM_APPROVER");
         journalEntry.post("SYSTEM");
 
         JournalEntry savedEntry = journalEntryRepository.save(journalEntry);

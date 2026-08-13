@@ -162,6 +162,8 @@ public class BusinessParty {
         return isProcurementAllowed() && bankVerified;
     }
 
+    public String getBankAccount() { return bankAccount; }
+
     public void deactivate() { this.active = false; }
     public void clearPhone() { this.phone = null; }
 

@@ -14,6 +14,8 @@ import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.shared.numbering.DocumentNumberService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
+import com.bemo.hr.approval.SegregationOfDutiesService;
+import com.bemo.hr.audit.application.AuditService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -36,6 +38,8 @@ public class JournalEntryService {
     private final IdempotencyService idempotencyService;
     private final DocumentNumberService documentNumberService;
     private final TenantApplicationRepository tenantApplicationRepository;
+    private final SegregationOfDutiesService segregationOfDutiesService;
+    private final AuditService auditService;
 
     public JournalEntryService(JournalEntryRepository journalEntryRepository,
                                JournalEntryLineRepository journalEntryLineRepository,
@@ -43,7 +47,9 @@ public class JournalEntryService {
                                FiscalPeriodGuard fiscalPeriodGuard,
                                IdempotencyService idempotencyService,
                                DocumentNumberService documentNumberService,
-                               TenantApplicationRepository tenantApplicationRepository) {
+                               TenantApplicationRepository tenantApplicationRepository,
+                               SegregationOfDutiesService segregationOfDutiesService,
+                               AuditService auditService) {
         this.journalEntryRepository = journalEntryRepository;
         this.journalEntryLineRepository = journalEntryLineRepository;
         this.accountRepository = accountRepository;
@@ -51,6 +57,8 @@ public class JournalEntryService {
         this.idempotencyService = idempotencyService;
         this.documentNumberService = documentNumberService;
         this.tenantApplicationRepository = tenantApplicationRepository;
+        this.segregationOfDutiesService = segregationOfDutiesService;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -63,6 +71,7 @@ public class JournalEntryService {
 
         JournalEntry entry = new JournalEntry(entryNumber, entryDate, payload.description(),
                 payload.reference(), payload.fiscalPeriodId());
+        entry.assignCreator(username);
         entry.setCurrency(normalizeCurrency(payload.currency()));
         entry = journalEntryRepository.save(entry);
 
@@ -111,15 +120,45 @@ public class JournalEntryService {
                 this::replayEntry);
     }
 
+    @Transactional
+    public AccountingApi.JournalEntryResponse approve(String id, AccountingApi.JournalActionRequest request, String username) {
+        JournalEntry entry = requireEntry(TenantContext.require(), id);
+        requireVersion(entry, request.expectedVersion());
+        segregationOfDutiesService.validateRequesterNotApprover(entry.getCreatedBy(), username, false);
+        entry.approve(username);
+        journalEntryRepository.save(entry);
+        auditService.record("JOURNAL_APPROVED", "JOURNAL_ENTRY", entry.getId(), username,
+                "{\"createdBy\":\"" + entry.getCreatedBy() + "\"}", null);
+        return toResponse(entry);
+    }
+
+    @Transactional
+    public AccountingApi.JournalEntryResponse reject(String id, AccountingApi.JournalActionRequest request, String username) {
+        JournalEntry entry = requireEntry(TenantContext.require(), id);
+        requireVersion(entry, request.expectedVersion());
+        segregationOfDutiesService.validateRequesterNotApprover(entry.getCreatedBy(), username, false);
+        if (request.reason() == null || request.reason().isBlank()) throw new BusinessRuleException(
+                "A rejection reason is required.", "JOURNAL_REJECTION_REASON_REQUIRED", HttpStatus.BAD_REQUEST);
+        entry.reject(username, request.reason());
+        journalEntryRepository.save(entry);
+        auditService.record("JOURNAL_REJECTED", "JOURNAL_ENTRY", entry.getId(), username,
+                "{\"createdBy\":\"" + entry.getCreatedBy() + "\",\"reason\":\"" + request.reason().strip() + "\"}", null);
+        return toResponse(entry);
+    }
+
     private AccountingApi.JournalEntryResponse postTransaction(String id, AccountingApi.JournalActionRequest request, String username) {
         String appId = TenantContext.require();
         JournalEntry entry = requireEntry(appId, id);
         requireVersion(entry, request.expectedVersion());
+        segregationOfDutiesService.validateCreatorNotPoster(entry.getCreatedBy(), username, "journal posting");
+        segregationOfDutiesService.validateCreatorNotPoster(entry.getApprovedBy(), username, "journal posting");
         FiscalPeriod period = fiscalPeriodGuard.requireOpen(entry.getEntryDate());
         entry.attachFiscalPeriod(period.getId());
         entry.post(username);
         entry.setOperationId(request.operationId());
         journalEntryRepository.save(entry);
+        auditService.record("JOURNAL_POSTED", "JOURNAL_ENTRY", entry.getId(), username,
+                "{\"createdBy\":\"" + entry.getCreatedBy() + "\",\"postedBy\":\"" + username + "\"}", null);
         return toResponse(entry);
     }
 

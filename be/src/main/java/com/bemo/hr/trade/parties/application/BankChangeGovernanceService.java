@@ -3,6 +3,9 @@ package com.bemo.hr.trade.parties.application;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.trade.parties.domain.BankChangeRequest;
 import com.bemo.hr.trade.parties.infrastructure.BankChangeRequestRepository;
+import com.bemo.hr.approval.SegregationOfDutiesService;
+import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.party.BusinessPartyRepository;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -14,9 +17,18 @@ import java.util.List;
 public class BankChangeGovernanceService {
 
     private final BankChangeRequestRepository bankChangeRequestRepository;
+    private final BusinessPartyRepository businessPartyRepository;
+    private final SegregationOfDutiesService segregationOfDutiesService;
+    private final AuditService auditService;
 
-    public BankChangeGovernanceService(BankChangeRequestRepository bankChangeRequestRepository) {
+    public BankChangeGovernanceService(BankChangeRequestRepository bankChangeRequestRepository,
+                                       BusinessPartyRepository businessPartyRepository,
+                                       SegregationOfDutiesService segregationOfDutiesService,
+                                       AuditService auditService) {
         this.bankChangeRequestRepository = bankChangeRequestRepository;
+        this.businessPartyRepository = businessPartyRepository;
+        this.segregationOfDutiesService = segregationOfDutiesService;
+        this.auditService = auditService;
     }
 
     @Transactional
@@ -28,8 +40,16 @@ public class BankChangeGovernanceService {
     @Transactional
     public BankChangeRequest approveBankChange(String requestId, String approverUsername) {
         BankChangeRequest request = getRequest(requestId);
+        segregationOfDutiesService.validateRequesterNotApprover(request.getRequestedBy(), approverUsername, false);
+        var party = businessPartyRepository.findById(request.getPartyId())
+                .orElseThrow(() -> new BusinessRuleException("Business party not found", "BUSINESS_PARTY_NOT_FOUND", HttpStatus.NOT_FOUND));
         request.approve(approverUsername);
-        return bankChangeRequestRepository.save(request);
+        party.verifyBank(request.getNewIban(), approverUsername, java.time.Instant.now());
+        businessPartyRepository.save(party);
+        BankChangeRequest saved = bankChangeRequestRepository.save(request);
+        auditService.record("BANK_CHANGE_APPROVED", "BUSINESS_PARTY", party.getId(), approverUsername,
+                "{\"requestId\":\"" + request.getId() + "\",\"requestedBy\":\"" + request.getRequestedBy() + "\"}", null);
+        return saved;
     }
 
     @Transactional

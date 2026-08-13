@@ -97,7 +97,7 @@ class SubledgerPostingServiceTests {
     void replaysOperationAndCreatesLinkedBalancedReversal() {
         String opId = UUID.randomUUID().toString();
         JournalEntry original = new JournalEntry("POST-1", LocalDate.of(2026, 2, 1), "Posting", "AP:INVOICE:I-1", null);
-        original.setCurrency("USD"); original.post("SYSTEM");
+        original.setCurrency("USD"); original.approve("approver"); original.post("SYSTEM");
         when(journalEntryRepository.findById(original.getId())).thenReturn(java.util.Optional.of(original));
         when(journalEntryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(journalEntryLineRepository.findByJournalEntryId(original.getId())).thenReturn(List.of(

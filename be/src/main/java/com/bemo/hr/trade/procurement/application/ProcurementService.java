@@ -419,6 +419,8 @@ public class ProcurementService {
         fiscalPeriodGuard.requireOpen(paymentDate);
         SupplierPayment pmt = new SupplierPayment(resolvePaymentNumber(payload, paymentDate), paymentDate, payload.supplierId(),
                 payload.supplierInvoiceId(), payload.operationId(), payload.amount(), payload.paymentMethod(), payload.notes());
+        pmt.freezeBeneficiaryBankAccount(businessPartyRepository.findById(payload.supplierId())
+                .map(com.bemo.hr.party.BusinessParty::getBankAccount).orElse(null));
         SupplierPayment saved = supplierPaymentRepository.save(pmt);
 
         inv.updatePaymentStatus(paidBefore.add(saved.getAmount()));

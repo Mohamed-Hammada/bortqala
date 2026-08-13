@@ -83,6 +83,20 @@ public class AccountingController {
         return journalEntryService.post(id, request, authentication.getName());
     }
 
+    @PostMapping("/journal-entries/{id}/approve")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    public AccountingApi.JournalEntryResponse approveJournalEntry(@PathVariable String id,
+            @Valid @RequestBody AccountingApi.JournalActionRequest request, Authentication authentication) {
+        return journalEntryService.approve(id, request, authentication.getName());
+    }
+
+    @PostMapping("/journal-entries/{id}/reject")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    public AccountingApi.JournalEntryResponse rejectJournalEntry(@PathVariable String id,
+            @Valid @RequestBody AccountingApi.JournalActionRequest request, Authentication authentication) {
+        return journalEntryService.reject(id, request, authentication.getName());
+    }
+
     @PostMapping("/journal-entries/{id}/reverse")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public AccountingApi.JournalEntryResponse reverseJournalEntry(@PathVariable String id,
