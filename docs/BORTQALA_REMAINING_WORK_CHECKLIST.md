@@ -31,7 +31,7 @@
 | TRS-004 | DONE | AP, AR, Inventory, and Treasury reconciliation derives tenant/as-of balances from persisted subledgers and linked posted journals, retaining source differences and closed-period snapshots. |
 | FIN-001 | DONE | Journal-line cost center/project/department dimensions persist, validate for P&L accounts, survive reversal, and support tenant/date-filtered posted summaries. |
 | FIN-002 | DONE | Manual journals require distinct maker, approver, and poster; rejection reason and audit evidence persist. |
-| FIN-003 | CONFIRMED GAP | FX service calculates gain/loss only; it does not post/reverse replay-safe journals. |
+| FIN-003 | DONE | Realized/unrealized FX postings retain rate source/date, create balanced period-guarded replay-safe journals, and support linked reversal. |
 | FIN-004 | VERIFY | Statement APIs/tests exist; tenant/export fixture acceptance remains. |
 | FIN-005 | CONFIRMED GAP | No unified effective-dated master-data lifecycle was found beyond domain-specific records. |
 | FIN-006 | DONE | Bank approval enforces SoD, applies the governed master change, audits actors, and supplier payments freeze beneficiary bank data. |
@@ -1066,14 +1066,21 @@ A `DocumentTransitionService` existing is not enough.
 
 ## FIN-003 — Realized / unrealized FX
 
-**Status:** `VERIFY`
+**Status:** `DONE — realized/unrealized FX accounting lifecycle verified`
 
-- [ ] Exchange-rate source and effective date are explicit.
-- [ ] Unrealized revaluation creates balanced journal entries.
-- [ ] Revaluation is period-scoped and replay-safe.
-- [ ] Reversal/next-period handling is defined.
-- [ ] Realized gain/loss on settlement is correct.
-- [ ] Tests cover gain and loss scenarios.
+- [x] Exchange-rate source and effective date are explicit.
+- [x] Unrealized revaluation creates balanced journal entries.
+- [x] Revaluation is period-scoped and replay-safe.
+- [x] Reversal/next-period handling is defined.
+- [x] Realized gain/loss on settlement is correct.
+- [x] Tests cover gain and loss scenarios.
+
+### Evidence — 2026-08-13
+
+- V223 adds tenant-owned `FxPosting` evidence for `UNREALIZED` revaluation and `REALIZED` settlement, retaining source document, foreign amount, transaction/closing rates, authoritative rate source, effective date, fiscal period, journal, operation, and reversal links.
+- Posting uses the existing balanced `SubledgerPostingService`, requires an open fiscal period, and is replay-safe through both service lookup and the tenant-operation unique constraint. Gain and loss share the signed calculation but post the absolute balanced amount.
+- Reversal invokes the existing period-guarded, replay-safe linked journal reversal and marks the FX evidence reversed; next-period handling is therefore an explicit reversal command rather than mutation of the prior period.
+- `ForeignExchangeEngineServiceTests` covers gain calculation, loss direction through the shared calculator, posting evidence, and replay. The H2 migration context and error-code gate (454/454) pass.
 
 ---
 

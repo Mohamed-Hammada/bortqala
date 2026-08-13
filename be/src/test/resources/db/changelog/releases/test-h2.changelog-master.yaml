@@ -685,3 +685,7 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260813_v221_reconciliation_evidence.yaml
   - include:
       file: db/changelog/data/insert/20260813_v222_journal_dimension_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260813_v223_fx_postings.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v224_fx_translations.yaml

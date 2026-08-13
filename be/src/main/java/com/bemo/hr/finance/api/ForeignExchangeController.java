@@ -20,6 +20,8 @@ public class ForeignExchangeController {
 
     public record SetRatePayload(String fromCurrency, String toCurrency, BigDecimal rate, String effectiveDate) {}
     public record CalculatePayload(BigDecimal foreignAmount, BigDecimal transactionRate, BigDecimal currentRate) {}
+    public record PostPayload(String type,String sourceDocumentId,BigDecimal foreignAmount,BigDecimal transactionRate,BigDecimal closingRate,String rateSource,String effectiveDate,String operationId) {}
+    public record ReversePayload(String operationId,String reversalDate,String reason) {}
 
     @PostMapping("/rates")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
@@ -32,4 +34,9 @@ public class ForeignExchangeController {
     public ForeignExchangeEngineService.FxCalculationResult calculate(@RequestBody CalculatePayload payload) {
         return fxService.calculateGainLoss(payload.foreignAmount(), payload.transactionRate(), payload.currentRate());
     }
+
+    @PostMapping("/postings") @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER')")
+    public com.bemo.hr.finance.domain.FxPosting post(@RequestBody PostPayload p){return fxService.post(com.bemo.hr.finance.domain.FxPosting.Type.valueOf(p.type()),p.sourceDocumentId(),p.foreignAmount(),p.transactionRate(),p.closingRate(),p.rateSource(),LocalDate.parse(p.effectiveDate()),p.operationId());}
+    @PostMapping("/postings/{id}/reverse") @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER')")
+    public com.bemo.hr.finance.domain.FxPosting reverse(@PathVariable String id,@RequestBody ReversePayload p,org.springframework.security.core.Authentication auth){return fxService.reverse(id,p.operationId(),LocalDate.parse(p.reversalDate()),p.reason(),auth.getName());}
 }
