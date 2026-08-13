@@ -33,7 +33,7 @@
 | FIN-002 | DONE | Manual journals require distinct maker, approver, and poster; rejection reason and audit evidence persist. |
 | FIN-003 | DONE | Realized/unrealized FX postings retain rate source/date, create balanced period-guarded replay-safe journals, and support linked reversal. |
 | FIN-004 | DONE | Trial Balance, GL Detail, Balance Sheet, Income Statement, and Cash Flow use posted journals with date filters; GL export shares the same calculation. |
-| FIN-005 | CONFIRMED GAP | No unified effective-dated master-data lifecycle was found beyond domain-specific records. |
+| FIN-005 | DONE | Shared tenant-owned effective master values resolve by document date, retain history/reason/actor, and reject invalid or overlapping ranges. |
 | FIN-006 | DONE | Bank approval enforces SoD, applies the governed master change, audits actors, and supplier payments freeze beneficiary bank data. |
 | Final ALL DONE gate | OPEN | Cannot pass while any P0 gate is open/blocked or evidence is not tied to the final SHA. |
 
@@ -1114,13 +1114,20 @@ Acceptance:
 
 ## FIN-005 — Effective-dated master data
 
-**Status:** `VERIFY`
+**Status:** `DONE — effective-dated master-value lifecycle verified`
 
-- [ ] Changes that affect historical financial calculations are effective-dated where required.
-- [ ] Historical documents resolve the historically applicable value.
-- [ ] New documents resolve the current effective value.
-- [ ] Overlapping invalid effective ranges are rejected.
-- [ ] Tests exist.
+- [x] Changes that affect historical financial calculations are effective-dated where required.
+- [x] Historical documents resolve the historically applicable value.
+- [x] New documents resolve the current effective value.
+- [x] Overlapping invalid effective ranges are rejected.
+- [x] Tests exist.
+
+### Evidence — 2026-08-13
+
+- V225 and `EffectiveMasterValue` provide an immutable tenant-owned history for financial master attributes keyed by master type/ID/value key, with value, inclusive effective range, mandatory reason, actor, and creation time.
+- The resolve API takes the business document date and deterministically returns the applicable historical/current value; the history API remains newest-first for audit and document snapshot use.
+- Backend validation rejects reversed ranges, overlapping open/closed ranges, and missing reasons. Writes are finance-manager protected, reads follow the finance authorization model, and every addition is audited.
+- `EffectiveMasterDataServiceTests` proves historical versus current resolution, ordered history, and overlap rejection. V225/V226 load successfully in the H2 application context.
 
 ---
 
