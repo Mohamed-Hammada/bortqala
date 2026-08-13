@@ -103,7 +103,7 @@ export class JournalEntriesPage {
     reference: new FormControl('', { nonNullable: true }),
   });
 
-  readonly lines = signal<{ accountId: string; debit: number; credit: number; memo: string; costCenterId: string; projectId: string; departmentId: string }[]>([
+  readonly lines = signal<{ accountId: string; debit: number; credit: number; memo: string; costCenterId?: string; projectId?: string; departmentId?: string }[]>([
     { accountId: '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '' },
     { accountId: '', debit: 0, credit: 0, memo: '', costCenterId: '', projectId: '', departmentId: '' },
   ]);
