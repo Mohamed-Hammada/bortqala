@@ -53,6 +53,12 @@ public class SalesOrder {
     @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal totalAmount;
 
+    @Column(name = "warehouse_id", length = 36)
+    private String warehouseId;
+
+    @Column(name = "currency_code", nullable = false, length = 3)
+    private String currencyCode = "EGP";
+
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
@@ -79,6 +85,27 @@ public class SalesOrder {
         this.status = status;
     }
 
+    public void configureFulfillment(String warehouseId, String currencyCode) {
+        if (status != Status.DRAFT) throw new IllegalStateException("Only draft orders can change fulfillment settings");
+        this.warehouseId = warehouseId == null || warehouseId.isBlank() ? null : warehouseId.strip();
+        this.currencyCode = currencyCode == null || currencyCode.isBlank() ? "EGP" : currencyCode.strip().toUpperCase();
+    }
+
+    public void replaceDerivedTotal(BigDecimal totalAmount) {
+        if (status != Status.DRAFT) throw new IllegalStateException("Only draft orders can change their derived total");
+        this.totalAmount = totalAmount;
+    }
+
+    public void confirm() {
+        if (status != Status.DRAFT) throw new IllegalStateException("Only draft orders can be confirmed");
+        status = Status.CONFIRMED;
+    }
+
+    public void deliver() {
+        if (status != Status.CONFIRMED) throw new IllegalStateException("Only confirmed orders can be delivered");
+        status = Status.DELIVERED;
+    }
+
     @PrePersist
     void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
 
@@ -92,6 +119,8 @@ public class SalesOrder {
     public String getQuotationId() { return quotationId; }
     public Status getStatus() { return status; }
     public BigDecimal getTotalAmount() { return totalAmount; }
+    public String getWarehouseId() { return warehouseId; }
+    public String getCurrencyCode() { return currencyCode; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
     public long getVersion() { return version; }

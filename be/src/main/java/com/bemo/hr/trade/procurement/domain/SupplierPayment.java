@@ -25,6 +25,7 @@ public class SupplierPayment {
     @Column(name = "operation_id", nullable = false, length = 80) private String operationId;
     @Column(nullable = false, precision = 15, scale = 2) private BigDecimal amount;
     @Column(name = "payment_method", nullable = false, length = 30) private String paymentMethod;
+    @Column(name = "beneficiary_bank_account", length = 100) private String beneficiaryBankAccount;
     @Column(length = 500) private String notes;
     @Column(nullable = false, length = 20) private String status;
     @Column(name = "created_at", nullable = false) private long createdAt;
@@ -48,6 +49,10 @@ public class SupplierPayment {
         this.status = "POSTED";
     }
 
+    public void freezeBeneficiaryBankAccount(String account) {
+        if (beneficiaryBankAccount == null) beneficiaryBankAccount = account == null || account.isBlank() ? null : account.strip();
+    }
+
     public String getId() { return id; }
     public String getPaymentNumber() { return paymentNumber; }
     public LocalDate getPaymentDate() { return paymentDate; }
@@ -56,6 +61,7 @@ public class SupplierPayment {
     public String getOperationId() { return operationId; }
     public BigDecimal getAmount() { return amount; }
     public String getPaymentMethod() { return paymentMethod; }
+    public String getBeneficiaryBankAccount() { return beneficiaryBankAccount; }
     public String getNotes() { return notes; }
     public String getStatus() { return status; }
     public long getCreatedAt() { return createdAt; }

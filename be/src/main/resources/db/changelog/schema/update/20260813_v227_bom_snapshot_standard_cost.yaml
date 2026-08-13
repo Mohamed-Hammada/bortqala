@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v227_001_bom_snapshot_standard_cost
+      author: codex
+      changes:
+        - addColumn:
+            tableName: bom_snapshots
+            columns:
+              - column:
+                  name: standard_unit_cost
+                  type: DECIMAL(19, 6)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropColumn:
+            tableName: bom_snapshots
+            columnName: standard_unit_cost

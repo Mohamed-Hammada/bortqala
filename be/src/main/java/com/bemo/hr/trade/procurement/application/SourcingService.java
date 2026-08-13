@@ -17,15 +17,18 @@ public class SourcingService {
 
     private final RfqHeaderRepository rfqHeaderRepository;
     private final SupplierQuoteHeaderRepository quoteHeaderRepository;
+    private final SupplierQuoteLineRepository quoteLineRepository;
     private final SourcingAwardRepository awardRepository;
     private final ProcurementService procurementService;
 
     public SourcingService(RfqHeaderRepository rfqHeaderRepository,
                            SupplierQuoteHeaderRepository quoteHeaderRepository,
+                           SupplierQuoteLineRepository quoteLineRepository,
                            SourcingAwardRepository awardRepository,
                            ProcurementService procurementService) {
         this.rfqHeaderRepository = rfqHeaderRepository;
         this.quoteHeaderRepository = quoteHeaderRepository;
+        this.quoteLineRepository = quoteLineRepository;
         this.awardRepository = awardRepository;
         this.procurementService = procurementService;
     }
@@ -65,7 +68,25 @@ public class SourcingService {
         quote.award();
         quoteHeaderRepository.save(quote);
 
-        // Convert award into Purchase Order
+        List<SupplierQuoteLine> quoteLines = quoteLineRepository.findByQuoteId(quoteId);
+        List<ProcurementApi.PurchaseOrderLinePayload> poLines;
+        if (quoteLines != null && !quoteLines.isEmpty()) {
+            poLines = quoteLines.stream()
+                    .map(ql -> new ProcurementApi.PurchaseOrderLinePayload(
+                            ql.getItemId(),
+                            ql.getDescription(),
+                            "GENERAL",
+                            ql.getQuantity(),
+                            ql.getUom() != null ? ql.getUom() : "PCS",
+                            ql.getUnitPrice()
+                    )).toList();
+        } else {
+            poLines = List.of(new ProcurementApi.PurchaseOrderLinePayload(
+                    "ITEM-1", "Awarded Item (" + quote.getQuoteNumber() + ")", "GENERAL",
+                    BigDecimal.ONE, "PCS", quote.getTotalAmount()));
+        }
+
+        // Convert award into Purchase Order with actual quote lines
         ProcurementApi.PurchaseOrderPayload poPayload = new ProcurementApi.PurchaseOrderPayload(
                 "PO-" + System.currentTimeMillis(),
                 System.currentTimeMillis(),
@@ -76,7 +97,7 @@ public class SourcingService {
                 "EGP",
                 BigDecimal.ONE,
                 null,
-                List.of(new ProcurementApi.PurchaseOrderLinePayload("ITEM-1", "Awarded Item", "GENERAL", BigDecimal.ONE, "PCS", quote.getTotalAmount()))
+                poLines
         );
         ProcurementApi.PurchaseOrderResponse poResponse = procurementService.create(poPayload);
 

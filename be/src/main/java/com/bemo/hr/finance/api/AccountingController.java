@@ -19,10 +19,13 @@ public class AccountingController {
 
     private final AccountRepository accountRepository;
     private final JournalEntryService journalEntryService;
+    private final com.bemo.hr.finance.application.JournalDimensionReportService journalDimensionReportService;
 
-    public AccountingController(AccountRepository accountRepository, JournalEntryService journalEntryService) {
+    public AccountingController(AccountRepository accountRepository, JournalEntryService journalEntryService,
+            com.bemo.hr.finance.application.JournalDimensionReportService journalDimensionReportService) {
         this.accountRepository = accountRepository;
         this.journalEntryService = journalEntryService;
+        this.journalDimensionReportService = journalDimensionReportService;
     }
 
     // --- Chart of Accounts ---
@@ -81,6 +84,28 @@ public class AccountingController {
                                                                @Valid @RequestBody AccountingApi.JournalActionRequest request,
                                                                Authentication authentication) {
         return journalEntryService.post(id, request, authentication.getName());
+    }
+
+    @GetMapping("/reports/dimensions")
+    public List<com.bemo.hr.finance.application.JournalDimensionReportService.DimensionSummary> dimensionReport(
+            @RequestParam java.time.LocalDate from, @RequestParam java.time.LocalDate to,
+            @RequestParam(required = false) String costCenterId, @RequestParam(required = false) String projectId,
+            @RequestParam(required = false) String departmentId) {
+        return journalDimensionReportService.summarize(from, to, costCenterId, projectId, departmentId);
+    }
+
+    @PostMapping("/journal-entries/{id}/approve")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    public AccountingApi.JournalEntryResponse approveJournalEntry(@PathVariable String id,
+            @Valid @RequestBody AccountingApi.JournalActionRequest request, Authentication authentication) {
+        return journalEntryService.approve(id, request, authentication.getName());
+    }
+
+    @PostMapping("/journal-entries/{id}/reject")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    public AccountingApi.JournalEntryResponse rejectJournalEntry(@PathVariable String id,
+            @Valid @RequestBody AccountingApi.JournalActionRequest request, Authentication authentication) {
+        return journalEntryService.reject(id, request, authentication.getName());
     }
 
     @PostMapping("/journal-entries/{id}/reverse")

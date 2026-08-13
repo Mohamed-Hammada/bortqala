@@ -25,19 +25,7 @@ databaseChangeLog:
               - column: { name: issued_by, type: varchar(100) }
               - column: { name: issued_at, type: timestamp with time zone }
               - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
-        - sql:
-            dbms: postgresql
-            sql: "ALTER TABLE customer_invoices ALTER COLUMN created_at TYPE TIMESTAMP WITH TIME ZONE USING CASE WHEN created_at IS NULL THEN NULL ELSE to_timestamp(created_at / 1000.0) END, ALTER COLUMN updated_at TYPE TIMESTAMP WITH TIME ZONE USING CASE WHEN updated_at IS NULL THEN NULL ELSE to_timestamp(updated_at / 1000.0) END;"
-        - modifyDataType:
-            dbms: h2
-            tableName: customer_invoices
-            columnName: created_at
-            newDataType: timestamp with time zone
-        - modifyDataType:
-            dbms: h2
-            tableName: customer_invoices
-            columnName: updated_at
-            newDataType: timestamp with time zone
+
         - dropDefaultValue:
             tableName: customer_invoices
             columnName: status

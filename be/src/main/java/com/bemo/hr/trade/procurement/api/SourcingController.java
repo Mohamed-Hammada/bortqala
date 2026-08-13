@@ -27,7 +27,7 @@ public class SourcingController {
     public record AwardQuotePayload(String quoteId) {}
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PURCHASER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER')")
     public RfqHeader createRfq(@RequestBody CreateRfqPayload payload) {
         return sourcingService.createRfq(payload.rfqNumber(), payload.requisitionId(), LocalDate.parse(payload.issueDate()), LocalDate.parse(payload.dueDate()));
     }
@@ -39,7 +39,7 @@ public class SourcingController {
     }
 
     @PostMapping("/{id}/quotes")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PURCHASER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER')")
     public SupplierQuoteHeader submitQuote(@PathVariable String id, @RequestBody SubmitQuotePayload payload) {
         return sourcingService.submitQuote(
                 id,
@@ -58,7 +58,7 @@ public class SourcingController {
     }
 
     @GetMapping("/{id}/quotes")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PURCHASER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'VIEWER')")
     public List<SupplierQuoteHeader> getQuotes(@PathVariable String id) {
         return sourcingService.getQuotesForRfq(id);
     }

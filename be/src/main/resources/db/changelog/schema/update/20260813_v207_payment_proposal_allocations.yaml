@@ -1,0 +1,70 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v207_001_payment_proposal_allocations
+      author: codex
+      changes:
+        - addColumn:
+            tableName: vendor_payment_proposals
+            columns:
+              - column: { name: currency_code, type: VARCHAR(10), defaultValue: EGP, constraints: { nullable: false } }
+        - sql:
+            sql: |
+              UPDATE vendor_payment_proposals
+              SET currency_code = COALESCE(
+                (SELECT invoice.currency_code FROM supplier_invoices invoice
+                 WHERE invoice.id = vendor_payment_proposals.invoice_id
+                   AND invoice.app_id = vendor_payment_proposals.app_id),
+                'EGP'
+              )
+        - createTable:
+            tableName: vendor_payment_proposal_allocations
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: proposal_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: line_no, type: INT, constraints: { nullable: false } }
+              - column: { name: invoice_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: amount, type: "DECIMAL(15,2)", constraints: { nullable: false } }
+              - column: { name: supplier_payment_id, type: VARCHAR(36) }
+              - column: { name: payment_operation_id, type: VARCHAR(80) }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: vendor_payment_proposal_allocations
+            columnNames: app_id, proposal_id, invoice_id
+            constraintName: uq_payment_proposal_allocation_invoice
+        - addUniqueConstraint:
+            tableName: vendor_payment_proposal_allocations
+            columnNames: app_id, payment_operation_id
+            constraintName: uq_payment_proposal_allocation_operation
+        - createIndex:
+            tableName: vendor_payment_proposal_allocations
+            indexName: ix_payment_proposal_allocations_proposal
+            columns:
+              - column: { name: app_id }
+              - column: { name: proposal_id }
+        - addForeignKeyConstraint:
+            baseTableName: vendor_payment_proposal_allocations
+            baseColumnNames: proposal_id
+            referencedTableName: vendor_payment_proposals
+            referencedColumnNames: id
+            constraintName: fk_payment_proposal_allocation_proposal
+        - addForeignKeyConstraint:
+            baseTableName: vendor_payment_proposal_allocations
+            baseColumnNames: invoice_id
+            referencedTableName: supplier_invoices
+            referencedColumnNames: id
+            constraintName: fk_payment_proposal_allocation_invoice
+        - sql:
+            sql: |
+              INSERT INTO vendor_payment_proposal_allocations
+                (id, app_id, proposal_id, line_no, invoice_id, amount, supplier_payment_id, payment_operation_id, created_at)
+              SELECT id, app_id, id, 1, invoice_id, proposed_amount,
+                     supplier_payment_id,
+                     CASE WHEN operation_id IS NULL THEN NULL ELSE CONCAT(operation_id, ':1') END,
+                     created_at
+              FROM vendor_payment_proposals
+              WHERE NOT EXISTS (
+                SELECT 1 FROM vendor_payment_proposal_allocations allocation
+                WHERE allocation.app_id = vendor_payment_proposals.app_id
+                  AND allocation.proposal_id = vendor_payment_proposals.id
+              )

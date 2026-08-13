@@ -32,7 +32,7 @@ public class DocumentNumberSequence {
     @Column(name = "document_type", nullable = false, length = 40)
     private String documentType;
 
-    @Column(nullable = false)
+    @Column(name = "\"year\"", nullable = false)
     private int year;
 
     @Column(name = "next_value", nullable = false)

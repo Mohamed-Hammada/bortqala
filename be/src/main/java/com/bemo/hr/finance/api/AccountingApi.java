@@ -39,7 +39,10 @@ public class AccountingApi {
             String partyId,
             BigDecimal debit,
             BigDecimal credit,
-            String memo
+            String memo,
+            String costCenterId,
+            String projectId,
+            String departmentId
     ) {}
 
     public record JournalEntryLinePayload(
@@ -47,7 +50,10 @@ public class AccountingApi {
             String partyId,
             BigDecimal debit,
             BigDecimal credit,
-            String memo
+            String memo,
+            String costCenterId,
+            String projectId,
+            String departmentId
     ) {}
 
     public record JournalEntryPayload(

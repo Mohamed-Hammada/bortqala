@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -42,5 +43,18 @@ class PeriodCloseOrchestratorServiceTests {
         assertThat(records).hasSize(1);
         assertThat(records.get(0).getStatus()).isEqualTo(PeriodCloseExecutionRecord.Status.CLOSED);
         verify(mockProvider).executeClose("2026-08");
+    }
+
+    @Test
+    void providerFailureFailsClosedAndPreventsExecution() {
+        when(mockProvider.isPeriodCloseReady("2026-08")).thenThrow(new IllegalStateException("database unavailable"));
+
+        PeriodCloseOrchestratorService.PeriodReadinessReport report = orchestratorService.checkReadiness("2026-08");
+
+        assertThat(report.allReady()).isFalse();
+        assertThat(report.modules().get(0).blockerReason()).contains("Readiness check failed");
+        assertThatThrownBy(() -> orchestratorService.executeClose("2026-08"))
+                .hasMessageContaining("blocked");
+        verify(mockProvider, never()).executeClose(anyString());
     }
 }

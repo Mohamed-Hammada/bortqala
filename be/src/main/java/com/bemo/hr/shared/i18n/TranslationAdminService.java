@@ -3,6 +3,7 @@ package com.bemo.hr.shared.i18n;
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +59,7 @@ public class TranslationAdminService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = "translationBundles", allEntries = true)
     public TranslationRow save(String key, TranslationUpdate request, String actor) {
         String normalizedKey = normalizeKey(key);
         String normalizedLocale = normalize(request.locale());
@@ -82,6 +84,7 @@ public class TranslationAdminService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = "translationBundles", allEntries = true)
     public TranslationRow restoreDefault(String key, String locale, String appId, String actor) {
         String normalizedAppId = normalizeAppId(appId);
         if (normalizedAppId == null) {

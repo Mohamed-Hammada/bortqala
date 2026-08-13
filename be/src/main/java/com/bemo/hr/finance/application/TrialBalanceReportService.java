@@ -4,6 +4,9 @@ import com.bemo.hr.finance.domain.Account;
 import com.bemo.hr.finance.domain.JournalEntryLine;
 import com.bemo.hr.finance.infrastructure.AccountRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
+import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
+import com.bemo.hr.finance.domain.JournalEntry;
+import java.time.LocalDate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,11 +22,20 @@ public class TrialBalanceReportService {
 
     private final AccountRepository accountRepository;
     private final JournalEntryLineRepository journalEntryLineRepository;
+    private final JournalEntryRepository journalEntryRepository;
 
     public TrialBalanceReportService(AccountRepository accountRepository,
                                     JournalEntryLineRepository journalEntryLineRepository) {
+        this(accountRepository, journalEntryLineRepository, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public TrialBalanceReportService(AccountRepository accountRepository,
+                                    JournalEntryLineRepository journalEntryLineRepository,
+                                    JournalEntryRepository journalEntryRepository) {
         this.accountRepository = accountRepository;
         this.journalEntryLineRepository = journalEntryLineRepository;
+        this.journalEntryRepository = journalEntryRepository;
     }
 
     public record TrialBalanceRow(
@@ -32,8 +44,18 @@ public class TrialBalanceReportService {
     ) {}
 
     public List<TrialBalanceRow> generateTrialBalance() {
+        return generateTrialBalance(LocalDate.MIN, LocalDate.MAX);
+    }
+
+    public List<TrialBalanceRow> generateTrialBalance(LocalDate from, LocalDate to) {
         List<Account> accounts = accountRepository.findAll();
-        List<JournalEntryLine> lines = journalEntryLineRepository.findAll();
+        List<JournalEntryLine> lines;
+        if (journalEntryRepository == null) lines = journalEntryLineRepository.findAll();
+        else {
+            var ids = journalEntryRepository.findByStatusOrderByEntryDateDesc(JournalEntry.Status.POSTED).stream()
+                    .filter(e -> !e.getEntryDate().isBefore(from) && !e.getEntryDate().isAfter(to)).map(JournalEntry::getId).toList();
+            lines = ids.isEmpty() ? List.of() : journalEntryLineRepository.findByJournalEntryIdIn(ids);
+        }
 
         Map<String, List<JournalEntryLine>> linesByAccount = lines.stream()
                 .collect(Collectors.groupingBy(JournalEntryLine::getAccountId));

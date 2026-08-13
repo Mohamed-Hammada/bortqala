@@ -80,6 +80,9 @@ public class OperationsController {
     @GetMapping("/negative-balances")
     List<OperationsApi.NegativeBalanceView> negativeBalances() { return operationsService.getNegativeBalances(); }
 
+    @GetMapping("/reorder-alerts")
+    List<OperationsApi.ReorderAlertView> reorderAlerts() { return operationsService.reorderAlerts(); }
+
     @PostMapping("/adjustments") @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.Snapshot adjustment(@Valid @RequestBody OperationsApi.AdjustmentRequest request, Authentication authentication) {

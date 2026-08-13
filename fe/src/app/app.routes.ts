@@ -226,6 +226,13 @@ export const routes: Routes = [
           import('./features/reports/report-review.page').then((module) => module.ReportReviewPage),
       },
       {
+        path: 'notifications/send',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN'], menuId: 'notifications-send' },
+        loadComponent: () =>
+          import('./features/notifications-send/notifications-send.page').then((module) => module.NotificationsSendPage),
+      },
+      {
         path: 'settings',
         canActivate: [menuAccessGuard],
         canDeactivate: [unsavedChangesGuard],
@@ -237,6 +244,11 @@ export const routes: Routes = [
         path: 'support',
         loadComponent: () =>
           import('./features/support/support.page').then((module) => module.SupportPage),
+      },
+      {
+        path: 'about',
+        loadComponent: () =>
+          import('./features/about/about.page').then((module) => module.AboutPage),
       },
       {
         path: 'users',

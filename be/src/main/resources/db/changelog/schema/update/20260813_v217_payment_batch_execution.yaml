@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v217_001_payment_batch_execution
+      author: codex
+      changes:
+        - addColumn:
+            tableName: payment_batch_headers
+            columns:
+              - column: { name: created_by, type: VARCHAR(100), defaultValue: LEGACY, constraints: { nullable: false } }
+              - column: { name: approved_by, type: VARCHAR(100) }
+              - column: { name: disbursed_by, type: VARCHAR(100) }
+              - column: { name: operation_id, type: VARCHAR(80) }
+        - addColumn:
+            tableName: payment_batch_items
+            columns:
+              - column: { name: disbursement_id, type: VARCHAR(36) }
+        - addUniqueConstraint: { tableName: payment_batch_items, columnNames: "app_id,batch_id,document_id", constraintName: uq_payment_batch_source }
+        - addUniqueConstraint: { tableName: payment_batch_headers, columnNames: "app_id,operation_id", constraintName: uq_payment_batch_operation }
+        - createTable:
+            tableName: payment_batch_disbursements
+            columns:
+              - column: { name: id, type: VARCHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: app_id, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: batch_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: item_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: source_document_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: payee_id, type: VARCHAR(36), constraints: { nullable: false } }
+              - column: { name: amount, type: "DECIMAL(15,2)", constraints: { nullable: false } }
+              - column: { name: bank_account, type: VARCHAR(100) }
+              - column: { name: operation_id, type: VARCHAR(100), constraints: { nullable: false } }
+              - column: { name: created_at, type: BIGINT, constraints: { nullable: false } }
+        - addUniqueConstraint: { tableName: payment_batch_disbursements, columnNames: "app_id,operation_id", constraintName: uq_payment_batch_disbursement_operation }
+      rollback:
+        - dropTable: { tableName: payment_batch_disbursements }
+        - dropUniqueConstraint: { tableName: payment_batch_headers, constraintName: uq_payment_batch_operation }
+        - dropUniqueConstraint: { tableName: payment_batch_items, constraintName: uq_payment_batch_source }
+        - dropColumn: { tableName: payment_batch_items, columnName: disbursement_id }
+        - dropColumn: { tableName: payment_batch_headers, columnName: operation_id }
+        - dropColumn: { tableName: payment_batch_headers, columnName: disbursed_by }
+        - dropColumn: { tableName: payment_batch_headers, columnName: approved_by }
+        - dropColumn: { tableName: payment_batch_headers, columnName: created_by }

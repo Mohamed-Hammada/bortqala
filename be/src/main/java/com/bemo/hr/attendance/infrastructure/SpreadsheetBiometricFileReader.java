@@ -11,6 +11,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import com.healthmarketscience.jackcess.DatabaseBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.nio.file.Files;
 
 @Component
 public class SpreadsheetBiometricFileReader implements BiometricFileReader {
@@ -51,10 +53,54 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
             return switch (extension) {
                 case "csv", "txt" -> readCsv(inputStream);
                 case "xlsx", "xls" -> readWorkbook(inputStream);
-                default -> throw new BusinessRuleException("Supported biometric files are CSV, XLSX, and XLS.", "BIO_UNSUPPORTED_FORMAT", HttpStatus.CONFLICT);
+                case "mdb", "accdb" -> readAccess(inputStream);
+                default -> throw new BusinessRuleException("Supported biometric files are CSV, XLSX, XLS, MDB, and ACCDB.", "BIO_UNSUPPORTED_FORMAT", HttpStatus.CONFLICT);
             };
         } catch (IOException exception) {
             throw new BusinessRuleException("Could not read the biometric file.", "BIO_FILE_READ_FAILED", HttpStatus.CONFLICT);
+        }
+    }
+
+    private ParsedFile readAccess(InputStream inputStream) throws IOException {
+        var temporaryFile = Files.createTempFile("bemo-attendance-", ".mdb");
+        try {
+            Files.copy(inputStream, temporaryFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            try (var database = DatabaseBuilder.open(temporaryFile.toFile())) {
+                if (!database.getTableNames().containsAll(Set.of("USERINFO", "CHECKINOUT"))) {
+                    throw new BusinessRuleException("Access attendance backup must contain USERINFO and CHECKINOUT tables.", "BIO_ACCESS_TABLES_MISSING", HttpStatus.CONFLICT);
+                }
+                var users = database.getTable("USERINFO");
+                var punches = database.getTable("CHECKINOUT");
+                var userCodes = new HashMap<String, String>();
+                var userNames = new HashMap<String, String>();
+                for (var row : users) {
+                    String userId = text(row.get("USERID"));
+                    userCodes.put(userId, text(row.get("Badgenumber")));
+                    userNames.put(userId, text(row.get("Name")));
+                }
+                var rows = new ArrayList<PunchRow>();
+                var errors = new ArrayList<RowError>();
+                int totalRows = 0;
+                int importedRows = 0;
+                for (var row : punches) {
+                    totalRows++;
+                    String userId = text(row.get("USERID"));
+                    String deviceUserId = userCodes.getOrDefault(userId, "");
+                    Object rawTime = row.get("CHECKTIME");
+                    String rawLine = "USERID=" + safeRaw(userId) + " | CHECKTIME=" + safeRaw(rawTime);
+                    try {
+                        requireDeviceId(deviceUserId);
+                        Instant punchedAt = accessInstant(rawTime);
+                        rows.add(new PunchRow(totalRows, deviceUserId.strip(), blankToNull(userNames.get(userId)), punchedAt, rawLine));
+                        importedRows++;
+                    } catch (RuntimeException exception) {
+                        errors.add(new RowError(totalRows, readableMessage(exception), rawLine));
+                    }
+                }
+                return new ParsedFile(List.copyOf(rows), List.copyOf(errors), totalRows, importedRows);
+            }
+        } finally {
+            Files.deleteIfExists(temporaryFile);
         }
     }
 
@@ -139,6 +185,13 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
             if (ACTUAL_IN_HEADERS.contains(normalized)) result.putIfAbsent("actualIn", index);
             if (ACTUAL_OUT_HEADERS.contains(normalized)) result.putIfAbsent("actualOut", index);
         }
+        for (int index = 0; index < headers.size(); index++) {
+            var normalized = normalize(headers.get(index));
+            if (Set.of("deviceuserid", "deviceuser", "badge", "badgenumber").contains(normalized)) result.putIfAbsent("deviceUserId", index);
+            if (Set.of("punchedat", "checktime", "timestamp", "datetime").contains(normalized)) result.putIfAbsent("punchedAt", index);
+            if (Set.of("employeename", "name", "username").contains(normalized)) result.putIfAbsent("employeeName", index);
+        }
+        if (result.containsKey("deviceUserId") && result.containsKey("punchedAt")) return result;
         var structuredKeys = Set.of("employeeCode", "day", "officialIn", "officialOut", "actualIn", "actualOut");
         if (!result.keySet().containsAll(structuredKeys)) {
             throw new BusinessRuleException(
@@ -152,6 +205,13 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
     private void parseStructuredWorkbookRow(int rowNumber, Row row, List<String> values,
                                             Map<String, Integer> headers, DataFormatter formatter,
                                             String rawLine, List<PunchRow> rows) {
+        if (headers.containsKey("deviceUserId")) {
+            String deviceUserId = value(values, headers.get("deviceUserId"));
+            requireDeviceId(deviceUserId);
+            Instant punchedAt = excelInstant(row.getCell(headers.get("punchedAt")), formatter);
+            rows.add(new PunchRow(rowNumber, deviceUserId.strip(), blankToNull(value(values, headers.get("employeeName"))), punchedAt, rawLine));
+            return;
+        }
         String employeeCode = value(values, headers.get("employeeCode"));
         requireDeviceId(employeeCode);
         LocalDate day = excelDate(row.getCell(headers.get("day")), formatter);
@@ -164,6 +224,13 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
 
     private void parseStructuredValues(int rowNumber, List<String> values, Map<String, Integer> headers,
                                        String rawLine, List<PunchRow> rows) {
+        if (headers.containsKey("deviceUserId")) {
+            String deviceUserId = value(values, headers.get("deviceUserId"));
+            requireDeviceId(deviceUserId);
+            rows.add(new PunchRow(rowNumber, deviceUserId.strip(), blankToNull(value(values, headers.get("employeeName"))),
+                    parseInstant(value(values, headers.get("punchedAt"))), rawLine));
+            return;
+        }
         String employeeCode = value(values, headers.get("employeeCode"));
         requireDeviceId(employeeCode);
         LocalDate day = parseDate(value(values, headers.get("day")));
@@ -205,6 +272,35 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
         }
         return parseTime(formatter.formatCellValue(cell), required);
     }
+
+    private Instant excelInstant(Cell cell, DataFormatter formatter) {
+        if (cell != null && cell.getCellType() == CellType.NUMERIC && DateUtil.isValidExcelDate(cell.getNumericCellValue())) {
+            return DateUtil.getLocalDateTime(cell.getNumericCellValue()).atZone(companyZone).toInstant();
+        }
+        return parseInstant(formatter.formatCellValue(cell));
+    }
+
+    private Instant parseInstant(String value) {
+        String normalized = value == null ? "" : value.strip();
+        for (var formatter : List.of(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+                DateTimeFormatter.ofPattern("yyyy-MM-dd H:mm:ss"), DateTimeFormatter.ofPattern("d/M/yyyy H:mm:ss"),
+                DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a", Locale.ENGLISH))) {
+            try { return java.time.LocalDateTime.parse(normalized, formatter).atZone(companyZone).toInstant(); }
+            catch (DateTimeParseException ignored) { }
+        }
+        try { return Instant.parse(normalized); }
+        catch (DateTimeParseException ignored) { throw new IllegalArgumentException("Invalid punch timestamp."); }
+    }
+
+    private Instant accessInstant(Object value) {
+        if (value instanceof java.time.LocalDateTime localDateTime) return localDateTime.atZone(companyZone).toInstant();
+        if (value instanceof java.util.Date date) return date.toInstant();
+        return parseInstant(text(value));
+    }
+
+    private static String text(Object value) { return value == null ? "" : value.toString(); }
+    private static String blankToNull(String value) { return value == null || value.isBlank() ? null : value.strip(); }
+    private static String safeRaw(Object value) { return text(value).replace('|', '/'); }
 
     private LocalDate parseDate(String value) {
         String normalized = value.strip();

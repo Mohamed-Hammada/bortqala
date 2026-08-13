@@ -18,6 +18,10 @@ import com.bemo.hr.reporting.domain.AttendanceReport;
 import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.domain.EmploymentType;
 import com.bemo.hr.employee.domain.PayCycle;
+import com.bemo.hr.payroll.domain.PayrollCalculationPolicy;
+import com.bemo.hr.payroll.domain.PayrollInputSnapshot;
+import com.bemo.hr.payroll.domain.SalaryPaymentExplanation;
+import com.bemo.hr.payroll.domain.SalaryPaymentExplanationRepository;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +48,7 @@ import static org.mockito.Mockito.*;
 class PayrollServiceTests {
 
     @Mock private SalaryPaymentRepository salaryPaymentRepository;
+    @Mock private SalaryPaymentExplanationRepository explanationRepository;
     @Mock private EmployeeRepository employeeRepository;
     @Mock private AttendanceCategoryRepository attendanceCategoryRepository;
     @Mock private AttendanceReportRepository attendanceReportRepository;
@@ -53,6 +58,8 @@ class PayrollServiceTests {
     @Mock private PayrollExcelExporter payrollExcelExporter;
     @Mock private AuditService auditService;
     @Mock private AttendanceExceptionService attendanceExceptionService;
+    @Mock private PayrollSnapshotService payrollSnapshotService;
+    @Mock private PayrollCalculationPolicyService payrollCalculationPolicyService;
 
     @InjectMocks
     private PayrollService payrollService;
@@ -60,6 +67,10 @@ class PayrollServiceTests {
     @BeforeEach
     void setUp() {
         TenantContext.set("test-tenant");
+        lenient().when(payrollCalculationPolicyService.effectivePolicy(any())).thenReturn(
+                new PayrollCalculationPolicy("Test", LocalDate.of(2000, 1, 1), null,
+                        new BigDecimal("240"), new BigDecimal("1.5")));
+        lenient().when(payrollSnapshotService.find(anyString(), anyString())).thenReturn(Optional.empty());
     }
 
     @AfterEach
@@ -106,6 +117,42 @@ class PayrollServiceTests {
                 .isInstanceOf(BusinessRuleException.class).hasMessageContaining("blocked");
         verify(attendanceExceptionService).assertPayrollReady(report.getId(), employee.getId());
         verify(salaryPaymentRepository, never()).save(any());
+    }
+
+    @Test
+    void paymentExplanationUsesThePersistedPayrollSnapshot() {
+        SalaryPayment payment = new SalaryPayment("emp-1", null, 2026, 8, "FULL_MONTH",
+                LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31),
+                new BigDecimal("5325.00"), BigDecimal.ZERO, new BigDecimal("50.00"),
+                new BigDecimal("375.00"), new BigDecimal("5275.00"), null,
+                null, null, null, null, "payroll");
+        PayrollInputSnapshot snapshot = new PayrollInputSnapshot("run-1", "emp-1", "2026-08:FULL_MONTH",
+                LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), new BigDecimal("5000.00"),
+                9600, 600, 60, 1, "policy-1", 3, new BigDecimal("200.00"),
+                new BigDecimal("1.25"), new BigDecimal("50.00"), new BigDecimal("375.00"),
+                BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("5375.00"), new BigDecimal("5325.00"), "payroll");
+        payment.attachCalculationEvidence("run-1", snapshot.getId());
+        List<SalaryPaymentExplanation> persisted = new java.util.ArrayList<>();
+
+        when(explanationRepository.findBySalaryPaymentIdOrderByCreatedAtAsc(payment.getId()))
+                .thenAnswer(invocation -> List.copyOf(persisted));
+        when(salaryPaymentRepository.findById(payment.getId())).thenReturn(Optional.of(payment));
+        when(payrollSnapshotService.findById(snapshot.getId())).thenReturn(Optional.of(snapshot));
+        when(explanationRepository.save(any(SalaryPaymentExplanation.class))).thenAnswer(invocation -> {
+            SalaryPaymentExplanation explanation = invocation.getArgument(0);
+            persisted.add(explanation);
+            return explanation;
+        });
+
+        var explanations = payrollService.getPaymentExplanation(payment.getId());
+
+        assertThat(explanations).hasSize(2);
+        assertThat(explanations.get(0).componentType()).isEqualTo("SNAPSHOT_CALCULATION");
+        assertThat(explanations.get(0).inputValuesJson())
+                .contains(snapshot.getId(), "\"baseSalary\":5000.00", "\"workingHourDivisor\":200.00",
+                        "\"overtimeMultiplier\":1.25");
+        assertThat(explanations.get(0).calculatedAmount()).isEqualByComparingTo(payment.getGrossAmount());
+        assertThat(explanations.get(1).calculatedAmount()).isEqualByComparingTo(payment.getNetAmount());
     }
 
     // A golden example for 8-hour category should ideally be a fully verified test using actual logic.

@@ -56,3 +56,9 @@ npm run build
 # Build Nginx frontend Docker image standalone
 docker build -t bemo-hr-frontend .
 ```
+
+## Inventory operations UI / واجهة عمليات المخزون
+
+The Operations workspace is the operational UI for warehouse-bin maintenance, stock transfers, cycle-count reconciliation, valuation, and document-linked stock movements. It uses typed APIs from the backend inventory source of truth and does not calculate ATP or stock valuation in the browser.
+
+مساحة العمليات هي الواجهة التشغيلية لإدارة مواقع المستودعات والتحويلات وتسويات الجرد والتقييم وحركات المخزون المرتبطة بالمستندات. تستخدم الواجهة عقود API معرفة الأنواع، ولا تعيد حساب المتاح للوعد أو تقييم المخزون في المتصفح.

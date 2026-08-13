@@ -11,6 +11,7 @@ import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -27,6 +28,8 @@ public class InventoryItem {
     @Column(name = "category_id", length = 36) private String categoryId;
     @Column(name = "uom_id", length = 36) private String uomId;
     @Column(nullable = false) private boolean active;
+    @Column(name = "reorder_point", nullable = false, precision = 15, scale = 4) private BigDecimal reorderPoint = BigDecimal.ZERO;
+    @Column(name = "reorder_quantity", nullable = false, precision = 15, scale = 4) private BigDecimal reorderQuantity = BigDecimal.ZERO;
     @Version private long version;
     @Column(name = "created_at", nullable = false) private Instant createdAt;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
@@ -51,7 +54,15 @@ public class InventoryItem {
         this.uomId = uomId;
     }
 
+    public void configureReorder(BigDecimal reorderPoint, BigDecimal reorderQuantity) {
+        this.reorderPoint = nonNegative(reorderPoint);
+        this.reorderQuantity = nonNegative(reorderQuantity);
+    }
+
     @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
     @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
     private String normalized(String value) { return value.strip().toUpperCase(Locale.ROOT).replace(' ', '_'); }
+    private BigDecimal nonNegative(BigDecimal value) {
+        return value == null || value.signum() < 0 ? BigDecimal.ZERO : value;
+    }
 }

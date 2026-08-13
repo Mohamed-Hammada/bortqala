@@ -24,6 +24,12 @@ jobs:
       - name: Backend error-code i18n parity gate (E-2)
         working-directory: be
         run: python3 tools/check-error-codes.py
+      - name: Translation catalog uniqueness and CSV structure gate
+        working-directory: be
+        run: python3 tools/check-translation-catalog.py
+      - name: Authorization role-contract gate
+        working-directory: be
+        run: python3 tools/check-authorization-contract.py
 
   frontend:
     name: Frontend (Angular)

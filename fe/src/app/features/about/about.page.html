@@ -1,0 +1,16 @@
+<div class="about-container card">
+  <header class="about-header">
+    <div class="brand"><span class="logo">🍊</span><h2>{{ aboutInfo()?.productName }}</h2></div>
+    <p class="subtitle">{{ i18n.t('about.subtitle') }}</p>
+  </header>
+  <div class="about-body" *ngIf="aboutInfo() as info">
+    <div class="info-grid">
+      <div class="info-item"><label>{{ i18n.t('about.version') }}</label><span>{{ info.version }}</span></div>
+      <div class="info-item"><label>{{ i18n.t('about.buildNumber') }}</label><span>{{ info.buildNumber }}</span></div>
+      <div class="info-item"><label>{{ i18n.t('about.gitCommit') }}</label><code>{{ info.gitCommit }}</code></div>
+      <div class="info-item"><label>{{ i18n.t('about.apiVersion') }}</label><span>{{ info.apiVersion }}</span></div>
+      <div class="info-item"><label>{{ i18n.t('about.environment') }}</label><span class="badge">{{ info.environment }}</span></div>
+    </div>
+    <div class="about-actions"><button class="btn btn-secondary" (click)="copyDiagnostics()">📋 {{ i18n.t('about.copyDiagnostics') }}</button></div>
+  </div>
+</div>

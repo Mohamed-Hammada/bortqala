@@ -28,8 +28,14 @@ describe('OperationsPage REM-005 document references', () => {
       categories: signal([]),
       uoms: signal([]),
       negativeBalances: signal([]),
+      reorderAlerts: signal([]),
+      cycleCounts: signal([]),
+      warehouses: signal([]),
+      valuation: signal(null),
+      accounts: signal([]),
       load: vi.fn(async () => {}),
       transaction,
+      recordCycleCount: vi.fn(async () => true),
       export: vi.fn(async () => {}),
     };
     await TestBed.configureTestingModule({

@@ -1,0 +1,51 @@
+<section class="page-shell">
+  <header class="page-header">
+    <div><span class="eyebrow">{{ i18n.t('workforce.dispatch.eyebrow') }}</span><h1>{{ i18n.t('workforce.dispatch.title') }}</h1><p>{{ i18n.t('workforce.dispatch.hint') }}</p></div>
+  </header>
+
+  @if (pageError()) { <div class="notice error" role="alert">{{ pageError() }}</div> }
+  @if (loading()) { <div class="card empty">{{ i18n.t('common.loading') }}</div> }
+  @else {
+    <div class="tabs-grid">
+      <section class="card">
+        <h2>{{ i18n.t('workforce.dispatch.list') }}</h2>
+        @if (canManageDispatch()) {
+          <form class="form-grid" (ngSubmit)="createDispatch()">
+            <label>{{ i18n.t('workforce.dispatch.request') }}<select name="requestId" [(ngModel)]="dispatchForm.requestId" required><option value="">{{ i18n.t('common.select') }}</option>@for (item of workforceService.laborRequests(); track item.id) {<option [value]="item.id">{{ item.requestNumber }}</option>}</select></label>
+            <label>{{ i18n.t('workforce.dispatch.contractor') }}<select name="contractorId" [(ngModel)]="dispatchForm.contractorId" required><option value="">{{ i18n.t('common.select') }}</option>@for (item of workforceService.contractors(); track item.id) {<option [value]="item.id">{{ item.name }}</option>}</select></label>
+            <label>{{ i18n.t('workforce.dispatch.date') }}<input name="dispatchDate" type="date" [(ngModel)]="dispatchForm.dispatchDate" required></label>
+            <button class="primary" [disabled]="saving()">{{ i18n.t('workforce.dispatch.create') }}</button>
+          </form>
+        }
+        <div class="table-wrap"><table><thead><tr><th>{{ i18n.t('workforce.dispatch.request') }}</th><th>{{ i18n.t('workforce.dispatch.contractor') }}</th><th>{{ i18n.t('workforce.dispatch.date') }}</th><th>{{ i18n.t('common.status') }}</th><th>{{ i18n.t('common.actions') }}</th></tr></thead><tbody>
+          @for (item of workforceService.dispatches(); track item.id) {<tr [class.selected]="selectedDispatchId() === item.id" (click)="selectDispatch(item.id)"><td>{{ requestLabel(item.requestId) }}</td><td>{{ contractorLabel(item.contractorId) }}</td><td>{{ item.dispatchDate }}</td><td><span class="badge">{{ dispatchStatusLabel(item.status) }}</span></td><td class="actions">@if (canManageDispatch() && item.status === 'DRAFT') {<button (click)="$event.stopPropagation(); transitionDispatch(item, 'dispatch')">{{ i18n.t('workforce.dispatch.send') }}</button>} @if (canManageDispatch() && item.status === 'DISPATCHED') {<button (click)="$event.stopPropagation(); transitionDispatch(item, 'accept')">{{ i18n.t('common.accept') }}</button>} @if (canManageDispatch() && item.status !== 'ACCEPTED' && item.status !== 'CANCELLED') {<button class="danger" (click)="$event.stopPropagation(); transitionDispatch(item, 'cancel')">{{ i18n.t('common.cancel') }}</button>}</td></tr>}
+          @empty {<tr><td colspan="5" class="empty">{{ i18n.t('workforce.dispatch.empty') }}</td></tr>}
+        </tbody></table></div>
+      </section>
+
+      <section class="card">
+        <h2>{{ i18n.t('workforce.assignment.title') }}</h2>
+        @if (selectedDispatch(); as dispatch) {
+          @if (canManageDispatch() && dispatch.status !== 'CANCELLED') {
+            <form class="form-grid" (ngSubmit)="addAssignment()">
+              <label>{{ i18n.t('workforce.assignment.worker') }}<select name="workerId" [(ngModel)]="assignmentForm.workerId" required><option value="">{{ i18n.t('common.select') }}</option>@for (item of workforceService.workers(); track item.id) {<option [value]="item.id">{{ item.fullName }}</option>}</select></label>
+              <label>{{ i18n.t('workforce.assignment.fromDate') }}<input name="fromDate" type="date" [(ngModel)]="assignmentForm.fromDate" required></label><label>{{ i18n.t('workforce.assignment.toDate') }}<input name="toDate" type="date" [(ngModel)]="assignmentForm.toDate" required></label>
+              <label>{{ i18n.t('workforce.assignment.rate') }}<input name="rate" type="number" min="0" step="0.01" [(ngModel)]="assignmentForm.agreedRate" required></label><label>{{ i18n.t('workforce.assignment.hours') }}<input name="hours" type="number" min="0.01" step="0.25" [(ngModel)]="assignmentForm.agreedHours" required></label>
+              <button class="primary" [disabled]="saving()">{{ i18n.t('workforce.assignment.add') }}</button>
+            </form>
+          }
+          <div class="table-wrap"><table><thead><tr><th>{{ i18n.t('workforce.assignment.worker') }}</th><th>{{ i18n.t('workforce.assignment.period') }}</th><th>{{ i18n.t('workforce.assignment.terms') }}</th><th>{{ i18n.t('common.status') }}</th><th>{{ i18n.t('common.actions') }}</th></tr></thead><tbody>@for (item of assignments(); track item.id) {<tr><td>{{ workerLabel(item.workerId) }}</td><td>{{ item.fromDate }} — {{ item.toDate }}</td><td>{{ item.agreedRateSnapshot }} · {{ item.agreedHoursSnapshot }}</td><td>{{ assignmentStatusLabel(item.status) }}</td><td class="actions">@if (canManageDispatch() && item.status === 'PROPOSED') {<button (click)="transitionAssignment(item, 'accept')">{{ i18n.t('common.accept') }}</button><button class="danger" (click)="transitionAssignment(item, 'reject')">{{ i18n.t('common.reject') }}</button>}</td></tr>} @empty {<tr><td colspan="5" class="empty">{{ i18n.t('workforce.assignment.empty') }}</td></tr>}</tbody></table></div>
+        } @else { <p class="empty">{{ i18n.t('workforce.assignment.selectDispatch') }}</p> }
+      </section>
+
+      <section class="card wide">
+        <h2>{{ i18n.t('workforce.dispute.title') }}</h2>
+        <label class="period-select">{{ i18n.t('workforce.dispute.period') }}<select [ngModel]="selectedPeriodId()" (ngModelChange)="selectPeriod($event)"><option value="">{{ i18n.t('common.select') }}</option>@for (period of workforceService.settlementPeriods(); track period.id) {<option [value]="period.id">{{ period.periodCode }}</option>}</select></label>
+        @if (selectedPeriodId()) {
+          @if (canManageDisputes()) {<form class="form-grid dispute-form" (ngSubmit)="createDispute()"><label>{{ i18n.t('workforce.dispatch.contractor') }}<select name="disputeContractor" [(ngModel)]="disputeForm.contractorId" required><option value="">{{ i18n.t('common.select') }}</option>@for (item of workforceService.contractors(); track item.id) {<option [value]="item.id">{{ item.name }}</option>}</select></label><label>{{ i18n.t('workforce.dispute.amount') }}<input name="amount" type="number" min="0.01" step="0.01" [(ngModel)]="disputeForm.disputedAmount" required></label><label class="grow">{{ i18n.t('workforce.dispute.reason') }}<input name="reason" [(ngModel)]="disputeForm.reason" required></label><button class="primary" [disabled]="saving()">{{ i18n.t('workforce.dispute.open') }}</button></form>}
+          <div class="table-wrap"><table><thead><tr><th>{{ i18n.t('workforce.dispatch.contractor') }}</th><th>{{ i18n.t('workforce.dispute.amount') }}</th><th>{{ i18n.t('workforce.dispute.reason') }}</th><th>{{ i18n.t('common.status') }}</th><th>{{ i18n.t('common.actions') }}</th></tr></thead><tbody>@for (item of disputes(); track item.id) {<tr><td>{{ contractorLabel(item.contractorId) }}</td><td>{{ item.disputedAmount }}</td><td>{{ item.reason }} @if (item.resolutionNotes) {<small>{{ item.resolutionNotes }}</small>}</td><td>{{ disputeStatusLabel(item.status) }}</td><td class="actions">@if (canManageDisputes() && item.status === 'DRAFT') {<button (click)="transitionDispute(item, 'submit')">{{ i18n.t('workforce.dispute.submit') }}</button>} @if (canResolveDisputes() && item.status === 'UNDER_REVIEW') {<button (click)="transitionDispute(item, 'resolve')">{{ i18n.t('workforce.dispute.resolve') }}</button><button class="danger" (click)="transitionDispute(item, 'reject')">{{ i18n.t('common.reject') }}</button>}</td></tr>} @empty {<tr><td colspan="5" class="empty">{{ i18n.t('workforce.dispute.empty') }}</td></tr>}</tbody></table></div>
+        }
+      </section>
+    </div>
+  }
+</section>

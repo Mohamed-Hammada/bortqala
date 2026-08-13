@@ -35,7 +35,8 @@ export class OperationsPage {
   readonly store = inject(OperationsStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
-  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | null>(null);
+  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | 'transfer' | 'bin' | null>(null);
+  readonly editingTransferId = signal<string | null>(null);
   readonly itemPagination = new TablePagination();
   readonly movementPagination = new TablePagination();
   readonly balancePagination = new TablePagination();
@@ -62,6 +63,8 @@ export class OperationsPage {
     unitCode: new FormControl('KG', { nonNullable: true, validators: Validators.required }),
     categoryId: new FormControl('', { nonNullable: true }),
     uomId: new FormControl('', { nonNullable: true }),
+    reorderPoint: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    reorderQuantity: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     active: new FormControl(true, { nonNullable: true }),
   });
   readonly transactionForm = new FormGroup({
@@ -145,11 +148,32 @@ export class OperationsPage {
     reason: new FormControl('', { nonNullable: true, validators: Validators.required }),
     occurredAt: new FormControl(this.nowInput(), { nonNullable: true, validators: Validators.required }),
   });
+  readonly cycleCountForm = new FormGroup({
+    warehouseId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    itemId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    countedQuantity: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    countedAt: new FormControl(this.nowInput(), { nonNullable: true, validators: Validators.required }),
+  });
+  readonly transferForm = new FormGroup({
+    transferNumber: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    sourceWarehouseId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    targetWarehouseId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    transferDate: new FormControl(new Date().toISOString().slice(0, 10), { nonNullable: true, validators: Validators.required }),
+    itemId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    quantity: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0.0001)] }),
+  });
+  readonly binForm = new FormGroup({
+    warehouseId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    binCode: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    aisle: new FormControl('', { nonNullable: true }),
+    rack: new FormControl('', { nonNullable: true }),
+    shelf: new FormControl('', { nonNullable: true }),
+  });
 
   constructor() {
     void this.store.load();
   }
-  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation'): void {
+  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | 'transfer' | 'bin'): void {
     if (kind === 'valuation') {
       const policy = this.store.valuation()?.policy;
       if (policy) this.valuationForm.reset({
@@ -185,6 +209,65 @@ export class OperationsPage {
       this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.close();
     }
+  }
+  async saveBin(): Promise<void> {
+    if (this.binForm.invalid) return this.binForm.markAllAsTouched();
+    const { warehouseId, ...payload } = this.binForm.getRawValue();
+    if (await this.store.createBin(warehouseId, payload)) {
+      this.notification.success(this.i18n.t('operations.binSaved'));
+      this.binForm.reset({ warehouseId: '', binCode: '', aisle: '', rack: '', shelf: '' });
+      this.close();
+    }
+  }
+  async saveCycleCount(): Promise<void> {
+    if (this.cycleCountForm.invalid) return this.cycleCountForm.markAllAsTouched();
+    const value = this.cycleCountForm.getRawValue();
+    if (await this.store.recordCycleCount({ ...value, operationId: crypto.randomUUID(), countDate: new Date(value.countedAt).toISOString().slice(0, 10), countedAt: undefined })) {
+      this.notification.success(this.i18n.t('operations.cycleCountSaved'));
+      this.cycleCountForm.reset({ warehouseId: '', itemId: '', countedQuantity: 0, countedAt: this.nowInput() });
+      this.close();
+    }
+  }
+  async saveTransfer(): Promise<void> {
+    if (this.transferForm.invalid) return this.transferForm.markAllAsTouched();
+    const value = this.transferForm.getRawValue();
+    if (value.sourceWarehouseId === value.targetWarehouseId) {
+      this.notification.error(this.i18n.t('TRANSFER_WAREHOUSES_DIFFERENT'));
+      return;
+    }
+    let transferId = this.editingTransferId();
+    if (!transferId) {
+      const created = await this.store.createTransfer({
+        transferNumber: value.transferNumber,
+        sourceWarehouseId: value.sourceWarehouseId,
+        targetWarehouseId: value.targetWarehouseId,
+        transferDate: value.transferDate,
+      });
+      if (!created) return;
+      transferId = created.id;
+      this.editingTransferId.set(created.id);
+    }
+    if (await this.store.addTransferLine(transferId, { itemId: value.itemId, quantity: value.quantity })) {
+      this.notification.success(this.i18n.t('operations.transferSaved'));
+      this.editingTransferId.set(null);
+      this.transferForm.reset({ transferNumber: '', sourceWarehouseId: '', targetWarehouseId: '',
+        transferDate: new Date().toISOString().slice(0, 10), itemId: '', quantity: 1 });
+      this.close();
+    }
+  }
+  async transitionTransfer(id: string, action: 'ship' | 'receive' | 'cancel'): Promise<void> {
+    if (await this.store.transitionTransfer(id, action)) {
+      this.notification.success(this.i18n.t(`operations.transfer.${action}Success`));
+    }
+  }
+  transferStatusLabel(status: 'DRAFT' | 'SHIPPED' | 'RECEIVED' | 'CANCELLED'): string {
+    const key = {
+      DRAFT: 'operations.transfer.status.DRAFT',
+      SHIPPED: 'operations.transfer.status.SHIPPED',
+      RECEIVED: 'operations.transfer.status.RECEIVED',
+      CANCELLED: 'operations.transfer.status.CANCELLED',
+    }[status];
+    return this.i18n.t(key);
   }
   async saveTransaction(): Promise<void> {
     if (this.transactionForm.invalid) {

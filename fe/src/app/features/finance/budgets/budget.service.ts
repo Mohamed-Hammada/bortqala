@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { BudgetPayload, BudgetResponse, BudgetStatusResponse, Department, EncumbranceResponse } from './budget.models';
+import { BudgetPayload, BudgetResponse, BudgetRevision, BudgetStatusResponse, Department, EncumbranceResponse } from './budget.models';
 
 @Injectable({ providedIn: 'root' })
 export class BudgetService {
@@ -30,6 +30,22 @@ export class BudgetService {
 
   listEncumbrances(): Promise<EncumbranceResponse[]> {
     return firstValueFrom(this.http.get<EncumbranceResponse[]>('/api/v1/budget/encumbrances'));
+  }
+
+  listRevisions(budgetId: string): Promise<BudgetRevision[]> {
+    return firstValueFrom(this.http.get<BudgetRevision[]>(`/api/v1/budget/budgets/${budgetId}/revisions`));
+  }
+
+  requestRevision(budgetId: string, newAmount: number, reason: string): Promise<BudgetRevision> {
+    return firstValueFrom(this.http.post<BudgetRevision>(`/api/v1/budget/budgets/${budgetId}/revisions`, { newAmount, reason }));
+  }
+
+  approveRevision(budgetId: string, revisionId: string): Promise<BudgetRevision> {
+    return firstValueFrom(this.http.post<BudgetRevision>(`/api/v1/budget/budgets/${budgetId}/revisions/${revisionId}/approve`, {}));
+  }
+
+  rejectRevision(budgetId: string, revisionId: string): Promise<BudgetRevision> {
+    return firstValueFrom(this.http.post<BudgetRevision>(`/api/v1/budget/budgets/${budgetId}/revisions/${revisionId}/reject`, {}));
   }
 
   listDepartments(): Promise<Department[]> {

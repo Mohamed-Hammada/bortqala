@@ -10,6 +10,13 @@
 .tab { padding: 10px 20px; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; font-size: 14px; color: var(--text-muted); }
 .tab.active { color: var(--gold); border-bottom-color: var(--gold); font-weight: 600; }
 .table-row-actions { display: flex; gap: 4px; flex-wrap: wrap; }
+.proposal-builder { display: flex; align-items: center; gap: 16px; justify-content: space-between; flex-wrap: wrap; }
+.proposal-builder h2, .proposal-builder p { margin: 0; }
+.proposal-builder p { color: var(--muted); font-size: 13px; }
+.proposal-builder > strong { margin-inline-start: auto; font-size: 18px; }
+.proposal-select { display: inline-flex; align-items: center; gap: 5px; min-height: 40px; cursor: pointer; }
+.proposal-amount { width: 120px; min-height: 40px; margin-inline: 4px; border: 1px solid var(--line); border-radius: 6px; background: var(--input-bg); color: var(--ink); padding: 6px 8px; }
+.proposal-allocation { display: flex; justify-content: space-between; gap: 12px; white-space: nowrap; }
 .po-items-section { margin-top: 1rem; border-top: 1px solid #e2e8f0; padding-top: 0.75rem; }
 .po-items-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
 .po-items-header h4 { margin: 0; font-weight: 700; color: #0f172a; font-size: 14px; }

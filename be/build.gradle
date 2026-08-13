@@ -9,6 +9,12 @@ group = 'com.bemo'
 version = '0.0.1-SNAPSHOT'
 description = 'Bemo ERP business operations platform'
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
 springBoot {
     buildInfo()
 }
@@ -19,6 +25,7 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-liquibase'
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -26,6 +33,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webmvc'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
     implementation 'org.apache.poi:poi-ooxml:5.5.1'
+    implementation 'com.healthmarketscience.jackcess:jackcess:4.0.11'
+    implementation 'nl.martijndwars:web-push:5.1.2'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.14'
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.80'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
+    implementation 'org.bitbucket.b_c:jose4j:0.9.6'
     compileOnly 'org.projectlombok:lombok:1.18.46'
     annotationProcessor 'org.projectlombok:lombok:1.18.46'
 
@@ -63,6 +76,7 @@ tasks.named('test') {
             '**/ReportingDecisionHistoryContractTests*',
             '**/ReportingGenerationContractTests*',
             '**/SupplierPaymentConcurrencyTests*',
+            '**/VendorPaymentProposalConcurrencyTests*',
             '**/GoodsReceiptPersistenceTests*',
             '**/WorkforceImportCommitConcurrencyTests*',
         ].each { exclude it }
@@ -73,6 +87,23 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     options.release = 17
     options.compilerArgs += ['-parameters']
+}
+
+tasks.register('checkTranslationCatalog', Exec) {
+    workingDir projectDir
+    commandLine System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3',
+            'tools/check-translation-catalog.py'
+}
+
+tasks.register('checkAuthorizationContract', Exec) {
+    workingDir projectDir
+    commandLine System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3',
+            'tools/check-authorization-contract.py'
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('checkTranslationCatalog')
+    dependsOn tasks.named('checkAuthorizationContract')
 }
 
 def frontendDirectory = file('../fe')

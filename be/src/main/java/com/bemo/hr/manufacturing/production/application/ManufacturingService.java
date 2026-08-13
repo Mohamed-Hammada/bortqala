@@ -4,6 +4,7 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.manufacturing.production.api.ManufacturingApi;
 import com.bemo.hr.manufacturing.production.domain.BomHeader;
 import com.bemo.hr.manufacturing.production.domain.BomLine;
+import com.bemo.hr.manufacturing.production.domain.BomSnapshot;
 import com.bemo.hr.manufacturing.production.domain.ProductionOrder;
 import com.bemo.hr.manufacturing.production.domain.QualityInspection;
 import com.bemo.hr.manufacturing.production.infrastructure.BomHeaderRepository;
@@ -116,8 +117,16 @@ public class ManufacturingService {
 
     public ManufacturingApi.MaterialReadinessResponse checkMaterialReadiness(String id) {
         ProductionOrder order = requireOrder(id);
+        if (order.getStatus() != ProductionOrder.Status.PLANNED) {
+            return readinessFromSnapshots(order);
+        }
         BomHeader bom = bomHeaderRepository.findById(order.getBomId())
                 .orElseThrow(() -> new NotFoundException("BOM not found", "MFG_BOM_NOT_FOUND"));
+
+        return readinessFromBom(order, bom);
+    }
+
+    private ManufacturingApi.MaterialReadinessResponse readinessFromBom(ProductionOrder order, BomHeader bom) {
 
         BigDecimal yield = bom.getYieldQuantity() == null || bom.getYieldQuantity().signum() <= 0 ? BigDecimal.ONE : bom.getYieldQuantity();
         BigDecimal scale = order.getTargetQuantity().divide(yield, 6, RoundingMode.HALF_UP);
@@ -139,7 +148,7 @@ public class ManufacturingService {
 
     @Transactional
     public ManufacturingApi.ProductionOrderResponse startProductionOrder(String id) {
-        ProductionOrder order = requireOrder(id);
+        ProductionOrder order = requireOrderForUpdate(id);
         if (order.getStatus() != ProductionOrder.Status.PLANNED) {
             throw new BusinessRuleException("يمكن بدء أمر الإنتاج فقط من حالة مخطط.", "MFG_ORDER_START_FROM_PLANNED_ONLY", HttpStatus.CONFLICT);
         }
@@ -150,7 +159,7 @@ public class ManufacturingService {
             throw new BusinessRuleException("لا يمكن بدء أمر إنتاج بقائمة مواد خالية من المكونات.", "MFG_BOM_NO_LINES", HttpStatus.CONFLICT);
         }
 
-        ManufacturingApi.MaterialReadinessResponse readiness = checkMaterialReadiness(id);
+        ManufacturingApi.MaterialReadinessResponse readiness = readinessFromBom(order, bom);
         if (!readiness.allMaterialsAvailable()) {
             throw new BusinessRuleException("نقص في الرصيد المتاح للمواد الخام المطلوبة لتنفيذ أمر الإنتاج.", "MFG_MATERIAL_SHORTAGE", HttpStatus.CONFLICT);
         }
@@ -158,13 +167,16 @@ public class ManufacturingService {
         String actor = getCurrentUser();
         Instant occurredAt = Instant.now();
 
-        // Post raw material issue movements & freeze BOM snapshot
+        // Freeze the authoritative requirements before the first irreversible stock issue.
         for (ManufacturingApi.MaterialRequirementView req : readiness.requirements()) {
-            operationsService.recordProductionIssue(req.componentItemId(), req.requiredQuantity(),
-                    order.getOrderNumber(), "Material issue for work order " + order.getOrderNumber(), occurredAt, actor);
             int version = 1;
             try { version = Integer.parseInt(bom.getRevision().replaceAll("[^0-9]", "")); } catch (Exception ignored) {}
-            bomSnapshotService.captureBomSnapshot(order.getId(), bom.getId(), version, req.componentItemId(), req.requiredQuantity());
+            bomSnapshotService.captureBomSnapshot(order.getId(), bom.getId(), version, req.componentItemId(),
+                    req.requiredQuantity(), operationsService.latestUnitCost(req.componentItemId()));
+        }
+        for (ManufacturingApi.MaterialRequirementView requirement : readiness.requirements()) {
+            operationsService.recordProductionIssue(requirement.componentItemId(), requirement.requiredQuantity(),
+                    order.getOrderNumber(), "Material issue for work order " + order.getOrderNumber(), occurredAt, actor);
         }
 
         order.start();
@@ -175,7 +187,7 @@ public class ManufacturingService {
 
     @Transactional
     public ManufacturingApi.ProductionOrderResponse completeProductionOrder(String id, ManufacturingApi.CompleteProductionOrderPayload payload) {
-        ProductionOrder order = requireOrder(id);
+        ProductionOrder order = requireOrderForUpdate(id);
         if (order.getStatus() != ProductionOrder.Status.IN_PROGRESS) {
             throw new BusinessRuleException("يمكن إكمال أمر الإنتاج فقط إذا كان قيد التنفيذ.", "MFG_ORDER_COMPLETE_FROM_IN_PROGRESS_ONLY", HttpStatus.CONFLICT);
         }
@@ -184,8 +196,7 @@ public class ManufacturingService {
             throw new BusinessRuleException("كمية الإنتاج الفعلية يجب أن تكون أكبر من صفر.", "MFG_ACTUAL_OUTPUT_POSITIVE", HttpStatus.CONFLICT);
         }
 
-        BomHeader bom = bomHeaderRepository.findById(order.getBomId()).orElse(null);
-        String finishedItemId = order.getFinishedItemId() != null ? order.getFinishedItemId() : (bom != null ? bom.getFinishedItemId() : null);
+        String finishedItemId = order.getFinishedItemId();
         if (finishedItemId == null || finishedItemId.isBlank()) {
             throw new BusinessRuleException("يجب ربط الصنف التام بأمر الإنتاج أو قائمة المواد لاستلام المنتجات.", "MFG_FINISHED_ITEM_REQUIRED", HttpStatus.CONFLICT);
         }
@@ -194,13 +205,12 @@ public class ManufacturingService {
         String actor = getCurrentUser();
         Instant occurredAt = completionDate.atStartOfDay(ZoneOffset.UTC).toInstant();
 
-        // Derive actual material cost from issued components
-        ManufacturingApi.MaterialReadinessResponse readiness = checkMaterialReadiness(id);
+        // The active order is based only on frozen requirements. The issue valuation is the actual cost evidence.
+        List<BomSnapshot> requirements = requireFrozenRequirements(order);
         BigDecimal totalMaterialCost = BigDecimal.ZERO;
-        for (ManufacturingApi.MaterialRequirementView req : readiness.requirements()) {
-            BigDecimal unitCost = resolveLatestUnitCost(req.componentItemId());
-            BigDecimal itemCost = req.requiredQuantity().multiply(unitCost == null ? BigDecimal.ZERO : unitCost);
-            totalMaterialCost = totalMaterialCost.add(itemCost);
+        for (BomSnapshot requirement : requirements) {
+            totalMaterialCost = totalMaterialCost.add(
+                    operationsService.productionIssueCost(order.getOrderNumber(), requirement.getComponentItemId()));
         }
 
         BigDecimal unitCost = totalMaterialCost.divide(payload.actualOutputQuantity(), 2, RoundingMode.HALF_UP);
@@ -217,7 +227,7 @@ public class ManufacturingService {
 
     @Transactional
     public ManufacturingApi.ProductionOrderResponse cancelProductionOrder(String id) {
-        ProductionOrder order = requireOrder(id);
+        ProductionOrder order = requireOrderForUpdate(id);
         if (order.getStatus() == ProductionOrder.Status.COMPLETED) {
             throw new BusinessRuleException("لا يمكن إلغاء أمر إنتاج م مكتمل.", "MFG_ORDER_CANNOT_CANCEL_COMPLETED", HttpStatus.CONFLICT);
         }
@@ -228,10 +238,9 @@ public class ManufacturingService {
         String actor = getCurrentUser();
         if (order.getStatus() == ProductionOrder.Status.IN_PROGRESS) {
             // Reverse raw material issues
-            ManufacturingApi.MaterialReadinessResponse readiness = checkMaterialReadiness(id);
-            for (ManufacturingApi.MaterialRequirementView req : readiness.requirements()) {
-                BigDecimal unitCost = resolveLatestUnitCost(req.componentItemId());
-                operationsService.recordProductionReceipt(req.componentItemId(), req.requiredQuantity(), unitCost,
+            for (BomSnapshot requirement : requireFrozenRequirements(order)) {
+                BigDecimal unitCost = resolveLatestUnitCost(requirement.getComponentItemId());
+                operationsService.recordProductionReceipt(requirement.getComponentItemId(), requirement.getRequiredQuantity(), unitCost,
                         order.getOrderNumber(), "Reversal of raw material issue for cancelled WO " + order.getOrderNumber(), Instant.now(), actor);
             }
         }
@@ -264,9 +273,38 @@ public class ManufacturingService {
         return operationsService.latestUnitCost(itemId);
     }
 
+    private ManufacturingApi.MaterialReadinessResponse readinessFromSnapshots(ProductionOrder order) {
+        List<BomSnapshot> requirements = requireFrozenRequirements(order);
+        boolean allAvailable = true;
+        List<ManufacturingApi.MaterialRequirementView> views = new ArrayList<>();
+        for (BomSnapshot requirement : requirements) {
+            BigDecimal stock = operationsService.stockBalance(requirement.getComponentItemId());
+            BigDecimal shortage = requirement.getRequiredQuantity().subtract(stock).max(BigDecimal.ZERO);
+            boolean ready = stock.compareTo(requirement.getRequiredQuantity()) >= 0;
+            allAvailable &= ready;
+            views.add(new ManufacturingApi.MaterialRequirementView(requirement.getComponentItemId(),
+                    requirement.getComponentItemId(), requirement.getRequiredQuantity(), stock, shortage, ready));
+        }
+        return new ManufacturingApi.MaterialReadinessResponse(order.getId(), order.getOrderNumber(), allAvailable, views);
+    }
+
+    private List<BomSnapshot> requireFrozenRequirements(ProductionOrder order) {
+        List<BomSnapshot> requirements = bomSnapshotService.getSnapshotsForProductionOrder(order.getId());
+        if (requirements.isEmpty()) {
+            throw new BusinessRuleException("The production order has no frozen BOM requirements.",
+                    "MFG_BOM_SNAPSHOT_REQUIRED", HttpStatus.CONFLICT);
+        }
+        return requirements;
+    }
+
     private ProductionOrder requireOrder(String id) {
         return productionOrderRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("أمر الإنتاج غير موجود", "MFG_PRODUCTION_ORDER_NOT_FOUND"));
+    }
+
+    private ProductionOrder requireOrderForUpdate(String id) {
+        return productionOrderRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new NotFoundException("Production order not found", "MFG_PRODUCTION_ORDER_NOT_FOUND"));
     }
 
     private List<BomLine> buildBomLines(List<ManufacturingApi.BomLinePayload> payloads) {

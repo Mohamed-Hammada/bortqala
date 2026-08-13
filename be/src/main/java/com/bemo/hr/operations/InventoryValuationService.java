@@ -220,6 +220,7 @@ public class InventoryValuationService {
                                        FiscalPeriod period, String actor) {
         String offset = movement.getOperationType().contains("ADJUSTMENT")
                 ? policy.getAdjustmentAccountId()
+                : movement.getOperationType().equals("CUSTOMER_RETURN") ? policy.getCogsAccountId()
                 : valueEffect.signum() > 0 ? policy.getReceiptOffsetAccountId() : policy.getCogsAccountId();
         return postJournal(policy.getInventoryAccountId(), offset, valueEffect, movement.getPartyId(),
                 "Inventory movement " + movement.getId(), movement.getReferenceCode(), localDate(movement.getOccurredAt()), period, actor);
@@ -240,6 +241,8 @@ public class InventoryValuationService {
         JournalEntry entry = new JournalEntry(documentNumberService.next("INVENTORY_VALUATION", "INV", date),
                 date, description, reference, period.getId());
         entry.setCurrency("EGP");
+        entry.assignCreator(actor);
+        entry.approve("SYSTEM_APPROVER");
         entry.post(actor);
         entry = journalEntryRepository.save(entry);
         boolean increase = inventoryEffect.signum() > 0;

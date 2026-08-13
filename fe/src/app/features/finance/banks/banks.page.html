@@ -152,7 +152,7 @@
       <div class="field"><label>{{ i18n.t('banks.reconciliation.closing') }}</label><input type="number" formControlName="closingBalance" /></div>
       <div class="field span-2"><label>{{ i18n.t('banks.reconciliation.csvFile') }}</label><input type="file" accept=".csv,text/csv" (change)="onImportFile($event)" /><small>{{ i18n.t('banks.reconciliation.csvHint') }}</small></div>
     </div></form>
-    <div modal-actions><button class="button secondary" (click)="importOpen.set(false)">{{ i18n.t('common.cancel') }}</button><button class="button primary" (click)="importStatement()">{{ i18n.t('banks.reconciliation.import') }}</button></div>
+    <div modal-actions><button class="button secondary" type="button" (click)="downloadStatementTemplate()">{{ i18n.t('common.downloadTemplate') }}</button><button class="button secondary" (click)="importOpen.set(false)">{{ i18n.t('common.cancel') }}</button><button class="button primary" (click)="importStatement()">{{ i18n.t('banks.reconciliation.import') }}</button></div>
   </app-modal-dialog>
 
   <app-modal-dialog [isOpen]="matchOpen()" [title]="i18n.t('banks.reconciliation.matchTitle')" (close)="matchOpen.set(false)">

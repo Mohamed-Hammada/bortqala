@@ -26,6 +26,29 @@ services:
     networks:
       - internal
 
+
+  # Backend-owned vendor/protocol adapter. Angular never calls this directly.
+  device-hub:
+    build:
+      context: ./be/modules/device-hub
+      dockerfile: Dockerfile.bortqala
+    container_name: bemo-erp-device-hub
+    restart: unless-stopped
+    environment:
+      DEVICE_HUB_REGISTRY_PATH: /data/devices.json
+      DEVICE_HUB_API_KEY: ${DEVICE_HUB_API_KEY:-}
+    ports:
+      - "${DEVICE_HUB_PORT:-8090}:8090"
+    volumes:
+      - device_hub_data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health', timeout=2)"]
+      interval: 10s
+      timeout: 4s
+      retries: 10
+      start_period: 10s
+    networks:
+      - internal
   # 2. Spring Boot Backend Service
   backend:
     build:
@@ -36,6 +59,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      device-hub:
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-bemo_erp}
@@ -44,6 +69,9 @@ services:
       HR_JWT_SECRET: ${HR_JWT_SECRET:-dev-only-jwt-secret-key-32bytes-minimum}
       HR_JWT_ISSUER: ${HR_JWT_ISSUER:-bemo-erp}
       HR_CORS_ALLOWED_ORIGINS: ${HR_CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200,http://localhost:80}
+      # Internal Spring Boot -> backend device module communication.
+      BEMO_DEVICE_HUB_BASE_URL: http://device-hub:8090
+      DEVICE_HUB_API_KEY: ${DEVICE_HUB_API_KEY:-}
       # Only the frontend proxy (on the internal network) may supply X-Forwarded-For.
       # Never use 0.0.0.0/0 here: it would let any client spoof its IP address.
       HR_SECURITY_TRUSTED_PROXIES: ${HR_SECURITY_TRUSTED_PROXIES:-10.42.0.0/24}
@@ -68,6 +96,7 @@ services:
       - public
 
 volumes:
+  device_hub_data:
   postgres_data:
 
 networks:

@@ -220,7 +220,8 @@ public class BankReconciliationService {
         FiscalPeriod period = fiscalPeriodGuard.requireAdjustment(line.getTransactionDate());
         JournalEntry entry = new JournalEntry(documentNumberService.next("JOURNAL_ENTRY", "JV", line.getTransactionDate()),
                 line.getTransactionDate(), "Bank fee — " + line.getDescription(), line.getBankReference(), period.getId());
-        entry.setCurrency(statement.getCurrencyCode()); entry.setOperationId(operationId + ":FEE"); entry.post(actor());
+        entry.setCurrency(statement.getCurrencyCode()); entry.setOperationId(operationId + ":FEE"); entry.assignCreator(actor());
+        entry.approve("SYSTEM_APPROVER"); entry.post(actor());
         entry = journalEntryRepository.save(entry);
         journalEntryLineRepository.save(new JournalEntryLine(entry.getId(), expenseAccountId, null, fee, BigDecimal.ZERO, "Bank fee"));
         journalEntryLineRepository.save(new JournalEntryLine(entry.getId(), bank.getAccountId(), null, BigDecimal.ZERO, fee, "Bank fee"));

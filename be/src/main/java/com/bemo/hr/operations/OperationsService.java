@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -23,8 +24,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class OperationsService {
+    public record ValuedMovement(String movementId, BigDecimal unitCost, BigDecimal totalCost, String journalEntryId) { }
     private final InventoryItemRepository inventoryItemRepository;
     private final StockMovementRepository stockMovementRepository;
+    private final InventoryMovementCostRepository inventoryMovementCostRepository;
     private final PartnerLedgerEntryRepository partnerLedgerEntryRepository;
     private final EmployeeAdvanceEntryRepository employeeAdvanceEntryRepository;
     private final BusinessPartyRepository businessPartyRepository;
@@ -36,6 +39,8 @@ public class OperationsService {
     private final OperationsExcelExporter operationsExcelExporter;
     private final com.bemo.hr.audit.application.AuditService auditService;
     private final InventoryValuationService inventoryValuationService;
+    private final com.bemo.hr.operations.application.WarehouseInventoryService warehouseInventoryService;
+    private final com.bemo.hr.operations.application.ItemLotSerialService itemLotSerialService;
 
     public byte[] export(com.bemo.hr.reporting.application.ExcelExportOptions options) {
         return operationsExcelExporter.export(snapshot(), inventoryValuationService.report(), options);
@@ -47,6 +52,19 @@ public class OperationsService {
 
     public long countInventoryItems() {
         return inventoryItemRepository.count();
+    }
+
+    public List<OperationsApi.ReorderAlertView> reorderAlerts() {
+        return inventoryItemRepository.findAllByOrderByNameAsc().stream()
+                .filter(InventoryItem::isActive)
+                .map(item -> {
+                    BigDecimal balance = stockMovementRepository.balance(item.getId());
+                    return new OperationsApi.ReorderAlertView(item.getId(), item.getCode(), item.getName(), balance,
+                            item.getReorderPoint(), item.getReorderQuantity(), item.getReorderPoint().subtract(balance).max(BigDecimal.ZERO));
+                })
+                .filter(alert -> alert.reorderPoint().signum() > 0)
+                .filter(alert -> alert.currentBalance().compareTo(alert.reorderPoint()) <= 0)
+                .toList();
     }
 
     public OperationsApi.ItemView inventoryItem(String id) {
@@ -216,6 +234,7 @@ public class OperationsService {
     public OperationsApi.ItemView createItem(OperationsApi.ItemRequest request) {
         if (inventoryItemRepository.existsByCodeIgnoreCase(request.code())) throw new BusinessRuleException("Item code already exists.", "OPS_ITEM_CODE_EXISTS", HttpStatus.CONFLICT);
         var item = inventoryItemRepository.save(new InventoryItem(request.code(), request.name(), request.itemType(), request.unitCode()));
+        item.configureReorder(request.reorderPoint(), request.reorderQuantity());
         if (request.categoryId() != null || request.uomId() != null) {
             item.assignMasterData(request.categoryId(), request.uomId());
         }
@@ -228,6 +247,7 @@ public class OperationsService {
         if (request.version() == null || request.version() != item.getVersion()) throw new BusinessRuleException("This item changed. Refresh and retry.", "OPS_ITEM_VERSION_CONFLICT", HttpStatus.CONFLICT);
         if (inventoryItemRepository.existsByCodeIgnoreCaseAndIdNot(request.code(), id)) throw new BusinessRuleException("Item code already exists.", "OPS_ITEM_CODE_EXISTS", HttpStatus.CONFLICT);
         item.update(request.code(), request.name(), request.itemType(), request.unitCode(), request.active());
+        item.configureReorder(request.reorderPoint(), request.reorderQuantity());
         if (request.categoryId() != null || request.uomId() != null) {
             item.assignMasterData(request.categoryId(), request.uomId());
         }
@@ -281,6 +301,18 @@ public class OperationsService {
     @Transactional
     public void recordGoodsReceipt(String itemId, String supplierId, BigDecimal acceptedQuantity,
                                    BigDecimal unitCost, String grnNumber, String note, Instant occurredAt, String actor) {
+        recordGoodsReceipt(itemId, supplierId, null, acceptedQuantity, unitCost, grnNumber, note, occurredAt, actor);
+    }
+
+    @Transactional
+    public void recordGoodsReceipt(String itemId, String supplierId, String warehouseId, BigDecimal acceptedQuantity,
+                                   BigDecimal unitCost, String grnNumber, String note, Instant occurredAt, String actor) {
+        recordGoodsReceipt(itemId, supplierId, warehouseId, acceptedQuantity, unitCost, grnNumber, null, note, occurredAt, actor);
+    }
+
+    @Transactional
+    public void recordGoodsReceipt(String itemId, String supplierId, String warehouseId, BigDecimal acceptedQuantity,
+                                   BigDecimal unitCost, String grnNumber, String lotNumber, String note, Instant occurredAt, String actor) {
         requireItem(itemId);
         if (acceptedQuantity == null || acceptedQuantity.signum() <= 0) {
             throw new BusinessRuleException("Accepted goods-receipt quantity must be positive.", "OPS_GRN_ACCEPTED_POSITIVE", HttpStatus.CONFLICT);
@@ -289,6 +321,12 @@ public class OperationsService {
                 "PURCHASE_RECEIPT", acceptedQuantity, null, grnNumber, note, occurredAt, actor));
         movement.assignDocument("GOODS_RECEIPT", "Accepted quantity posted from supplier receipt");
         inventoryValuationService.valueMovement(movement, unitCost, actor);
+        if (warehouseId != null && !warehouseId.isBlank()) {
+            warehouseInventoryService.receiveAvailableStock(warehouseId, itemId, acceptedQuantity);
+            if (lotNumber != null && !lotNumber.isBlank()) {
+                itemLotSerialService.receive(itemId, warehouseId, lotNumber, null, acceptedQuantity, grnNumber, null, null);
+            }
+        }
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Goods receipt " + grnNumber + " accepted qty: " + acceptedQuantity, null);
     }
@@ -313,7 +351,7 @@ public class OperationsService {
     }
 
     @Transactional
-    public void recordProductionIssue(String itemId, BigDecimal quantity, String orderNumber, String note, Instant occurredAt, String actor) {
+    public BigDecimal recordProductionIssue(String itemId, BigDecimal quantity, String orderNumber, String note, Instant occurredAt, String actor) {
         requireItem(itemId);
         if (quantity == null || quantity.signum() <= 0) {
             throw new BusinessRuleException("Production issue quantity must be positive.", "OPS_PROD_ISSUE_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
@@ -325,9 +363,10 @@ public class OperationsService {
         var movement = stockMovementRepository.save(new StockMovement(itemId, null,
                 "PRODUCTION_ISSUE", quantity.negate(), null, orderNumber, note, occurredAt, actor));
         movement.assignDocument("PRODUCTION_ISSUE", "Issued raw materials for work order");
-        inventoryValuationService.valueMovement(movement, null, actor);
+        var movementCost = inventoryValuationService.valueMovement(movement, null, actor);
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Production issue " + orderNumber + " qty: " + quantity, null);
+        return movementCost.getValueEffect().abs();
     }
 
     @Transactional
@@ -409,7 +448,59 @@ public class OperationsService {
         return new OperationsApi.ItemView(item.getId(), item.getCode(), item.getName(), item.getItemType(), item.getUnitCode(),
                 item.getCategoryId(), cat == null ? null : cat.getName(),
                 item.getUomId(), uom == null ? null : uom.getName(),
-                item.isActive(), balance, item.getVersion(), item.getCreatedAt(), item.getUpdatedAt());
+                item.isActive(), item.getReorderPoint(), item.getReorderQuantity(), balance,
+                item.getVersion(), item.getCreatedAt(), item.getUpdatedAt());
+    }
+
+    @Transactional
+    public ValuedMovement recordSalesDelivery(String itemId, String customerId, String warehouseId,
+                                               String reservationId, BigDecimal quantity, String deliveryNumber,
+                                               Instant occurredAt, String actor) {
+        requireItem(itemId);
+        if (quantity == null || quantity.signum() <= 0) {
+            throw new BusinessRuleException("Sales delivery quantity must be positive.",
+                    "O2C_DELIVERY_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+        }
+        var reservation = warehouseInventoryService.consumeReservation(reservationId);
+        if (!reservation.getItemId().equals(itemId) || !reservation.getWarehouseId().equals(warehouseId)
+                || reservation.getReservedQuantity().compareTo(quantity) != 0) {
+            throw new BusinessRuleException("Delivery does not match its stock reservation.",
+                    "O2C_RESERVATION_MISMATCH", HttpStatus.CONFLICT);
+        }
+        var movement = stockMovementRepository.save(new StockMovement(itemId, normalizeId(customerId),
+                "EXPORT_SALE", quantity.negate(), null, deliveryNumber,
+                "Sales-order delivery", occurredAt, actor));
+        movement.assignDocument("DELIVERY_NOTE", "Reserved stock delivered to customer");
+        movement.assignReferences(null, null, deliveryNumber, null, null, null, warehouseId,
+                null, null, null);
+        var cost = inventoryValuationService.valueMovement(movement, null, actor);
+        auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
+                "Sales delivery " + deliveryNumber + " qty: " + quantity, null);
+        return new ValuedMovement(movement.getId(), cost.getUnitCost(), cost.getValueEffect().abs(), cost.getJournalEntryId());
+    }
+
+    @Transactional
+    public ValuedMovement recordCustomerReturn(String itemId, String customerId, String warehouseId,
+                                               BigDecimal quantity, BigDecimal originalUnitCost,
+                                               String returnNumber, String disposition, Instant occurredAt, String actor) {
+        requireItem(itemId);
+        if (quantity == null || quantity.signum() <= 0) {
+            throw new BusinessRuleException("Customer return quantity must be positive.",
+                    "O2C_RETURN_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
+        }
+        if (!"AVAILABLE".equals(disposition)) {
+            throw new BusinessRuleException("Only inspected AVAILABLE returns can be received into sellable stock.",
+                    "O2C_RETURN_DISPOSITION_INVALID", HttpStatus.CONFLICT);
+        }
+        var movement = stockMovementRepository.save(new StockMovement(itemId, normalizeId(customerId),
+                "CUSTOMER_RETURN", quantity, null, returnNumber, "Customer return", occurredAt, actor));
+        movement.assignDocument("CUSTOMER_RETURN", "Returned customer stock received after inspection");
+        movement.assignReferences(null, returnNumber, null, null, null, null, warehouseId, null, null, null);
+        var cost = inventoryValuationService.valueMovement(movement, originalUnitCost, actor);
+        warehouseInventoryService.receiveAvailableStock(warehouseId, itemId, quantity);
+        auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
+                "Customer return " + returnNumber + " qty: " + quantity, null);
+        return new ValuedMovement(movement.getId(), cost.getUnitCost(), cost.getValueEffect().abs(), cost.getJournalEntryId());
     }
     private OperationsApi.ItemCategoryView categoryView(ItemCategory c) {
         return new OperationsApi.ItemCategoryView(c.getId(), c.getName(), c.getDescription(), c.isActive(),
@@ -478,6 +569,17 @@ public class OperationsService {
 
     public BigDecimal latestUnitCost(String itemId) {
         return inventoryValuationService.getItemUnitCost(itemId);
+    }
+
+    public BigDecimal productionIssueCost(String orderNumber, String itemId) {
+        return stockMovementRepository.findByOperationTypeAndReferenceCodeAndItemId(
+                        "PRODUCTION_ISSUE", orderNumber, itemId).stream()
+                .map(StockMovement::getId)
+                .map(inventoryMovementCostRepository::findByMovementId)
+                .flatMap(Optional::stream)
+                .map(InventoryMovementCost::getValueEffect)
+                .map(BigDecimal::abs)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private static boolean isBlank(String value) {

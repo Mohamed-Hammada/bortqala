@@ -9,7 +9,7 @@ export interface UserCategory {
   id: string;
   code: string;
   name: string;
-  scope: 'EMPLOYEE' | 'WORKER';
+  scope: 'EMPLOYEE' | 'WORKER' | 'BOTH';
 }
 
 export interface UserPayload {

@@ -1,0 +1,27 @@
+id;key;locale;value
+v193-001;operations.reorderAlerts;en-US;Reorder alerts
+v193-002;operations.reorderAlerts;ar-EG;تنبيهات إعادة الطلب
+v193-003;operations.reorderPoint;en-US;Reorder point
+v193-004;operations.reorderPoint;ar-EG;حد إعادة الطلب
+v193-005;operations.reorderQuantity;en-US;Suggested order quantity
+v193-006;operations.reorderQuantity;ar-EG;كمية الطلب المقترحة
+v193-007;operations.shortage;en-US;Shortage to threshold
+v193-008;operations.shortage;ar-EG;العجز عن الحد
+v193-009;operations.noReorderAlerts;en-US;No items currently require replenishment
+v193-010;operations.noReorderAlerts;ar-EG;لا توجد أصناف تحتاج إلى إعادة طلب حاليا
+v193-011;operations.cycleCounts;en-US;Cycle counts
+v193-012;operations.cycleCounts;ar-EG;الجرد الدوري
+v193-013;operations.newCycleCount;en-US;Record cycle count
+v193-014;operations.newCycleCount;ar-EG;تسجيل جرد دوري
+v193-015;operations.systemQuantity;en-US;System quantity
+v193-016;operations.systemQuantity;ar-EG;كمية النظام
+v193-017;operations.countedQuantity;en-US;Counted quantity
+v193-018;operations.countedQuantity;ar-EG;الكمية الفعلية
+v193-019;operations.variance;en-US;Variance
+v193-020;operations.variance;ar-EG;الفرق
+v193-021;operations.countReason;en-US;Count reason
+v193-022;operations.countReason;ar-EG;سبب الجرد
+v193-023;operations.cycleCountSaved;en-US;Cycle count posted and inventory reconciled
+v193-024;operations.cycleCountSaved;ar-EG;تم ترحيل الجرد وتسوية المخزون
+v193-025;operations.noCycleCounts;en-US;No cycle counts recorded
+v193-026;operations.noCycleCounts;ar-EG;لم يتم تسجيل جرد دوري

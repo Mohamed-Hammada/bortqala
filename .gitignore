@@ -30,3 +30,12 @@ license-installation.json
 
 # Cloudflare tunnel client binaries
 cloudflared-*
+
+# Backup and compare directories
+/.bemo-*-backup-*/
+/.release-backups/
+/_compare/
+/old_back_up/
+*.bak
+*.orig
+/framework

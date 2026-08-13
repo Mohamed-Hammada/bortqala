@@ -159,4 +159,39 @@ describe('ProcurementPage invoice adjustments', () => {
     page.applyNumberingValidators();
     expect(page.grnForm.controls.grnNumber.valid).toBe(true);
   });
+
+  it('builds a multi-invoice proposal only for one supplier and currency', () => {
+    const page = createPage();
+    const base = {
+      invoiceNumber: 'INV-1', internalReference: 'REF-1', currencyCode: 'EGP', baseCurrencyCode: 'EGP',
+      exchangeRate: 1, exchangeRateDate: 0, exchangeRateSource: 'BASE', baseNetAmount: 100,
+      supplierId: 'supplier-a', invoiceDate: 0, totalAmount: 100, netAmount: 100,
+      paidAmount: 0, outstandingAmount: 100, status: 'UNPAID', createdAt: 0, updatedAt: 0,
+    };
+    const first = { ...base, id: 'invoice-a', outstandingAmount: 60 };
+    const second = { ...base, id: 'invoice-b', invoiceNumber: 'INV-2', outstandingAmount: 40 };
+    const otherSupplier = { ...base, id: 'invoice-c', supplierId: 'supplier-b' };
+    page.invoices.set([first, second, otherSupplier]);
+    vi.spyOn(page.notification, 'warning');
+
+    page.toggleProposalInvoice(first, true);
+    page.toggleProposalInvoice(second, true);
+
+    expect(page.proposalDraftAllocations()).toEqual([
+      { invoiceId: 'invoice-a', amount: 60 }, { invoiceId: 'invoice-b', amount: 40 },
+    ]);
+    expect(page.proposalDraftTotal()).toBe(100);
+
+    page.toggleProposalInvoice(otherSupplier, true);
+    expect(page.proposalDraftAllocations()).toHaveLength(2);
+    expect(page.notification.warning).toHaveBeenCalledWith('procurement.proposalSameSupplierCurrency');
+  });
+
+  it('updates a selected proposal allocation without frontend financial recalculation', () => {
+    const page = createPage();
+    page.proposalDraftAllocations.set([{ invoiceId: 'invoice-a', amount: 60 }]);
+    page.updateProposalAllocation('invoice-a', '25.50');
+    expect(page.proposalDraftAllocations()).toEqual([{ invoiceId: 'invoice-a', amount: 25.5 }]);
+    expect(page.proposalDraftTotal()).toBe(25.5);
+  });
 });

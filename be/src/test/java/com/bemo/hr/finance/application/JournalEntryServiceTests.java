@@ -13,6 +13,8 @@ import com.bemo.hr.shared.numbering.DocumentNumberService;
 import com.bemo.hr.shared.security.TenantApplication;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
+import com.bemo.hr.approval.SegregationOfDutiesService;
+import com.bemo.hr.audit.application.AuditService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +50,7 @@ class JournalEntryServiceTests {
     @Mock private IdempotencyService idempotencyService;
     @Mock private DocumentNumberService documentNumberService;
     @Mock private TenantApplicationRepository tenantApplicationRepository;
+    @Mock private AuditService auditService;
 
     private TenantApplication app;
     private JournalEntryService service;
@@ -59,9 +62,10 @@ class JournalEntryServiceTests {
         app = new TenantApplication("TEST", "Test App");
         service = new JournalEntryService(journalEntryRepository, journalEntryLineRepository,
                 accountRepository, fiscalPeriodGuard, idempotencyService, documentNumberService,
-                tenantApplicationRepository);
+                tenantApplicationRepository, new SegregationOfDutiesService(), auditService,
+                mock(com.bemo.hr.finance.infrastructure.JournalDimensionRepository.class));
         TenantContext.set(APP_ID);
-        when(tenantApplicationRepository.findById(APP_ID)).thenReturn(Optional.of(app));
+        lenient().when(tenantApplicationRepository.findById(APP_ID)).thenReturn(Optional.of(app));
 
         debitAccount = mock(Account.class);
         lenient().when(debitAccount.getId()).thenReturn("acc-dr");
@@ -87,9 +91,9 @@ class JournalEntryServiceTests {
         return new AccountingApi.JournalEntryPayload(entryNumber, entryDate, "Test entry", null, null, "EGP",
                 List.of(
                         new AccountingApi.JournalEntryLinePayload("acc-dr", null, new java.math.BigDecimal("100.00"),
-                                new java.math.BigDecimal("0.00"), null),
+                                new java.math.BigDecimal("0.00"), null, null, null, null),
                         new AccountingApi.JournalEntryLinePayload("acc-cr", null, new java.math.BigDecimal("0.00"),
-                                new java.math.BigDecimal("100.00"), null)));
+                                new java.math.BigDecimal("100.00"), null, null, null, null)));
     }
 
     @Test
@@ -132,5 +136,38 @@ class JournalEntryServiceTests {
         assertThatThrownBy(() -> service.create(payload("JV-1001"), "admin"))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("مستخدم بالفعل");
+    }
+
+    @Test
+    void manualJournalCreatorCannotPostThroughDirectCommandPath() {
+        JournalEntry entry = new JournalEntry("JV-1", LocalDate.of(2026, 8, 6), "Manual", null, null);
+        entry.assignCreator("maker");
+        org.springframework.test.util.ReflectionTestUtils.setField(entry, "appId", APP_ID);
+        when(journalEntryRepository.findById(entry.getId())).thenReturn(Optional.of(entry));
+        when(idempotencyService.execute(any(), any(), any(), any(), any(), any())).thenAnswer(inv -> {
+            java.util.function.Supplier<?> supplier = inv.getArgument(3); return supplier.get();
+        });
+        var request = new AccountingApi.JournalActionRequest(java.util.UUID.randomUUID().toString(), 0L, null);
+
+        assertThatThrownBy(() -> service.post(entry.getId(), request, "maker"))
+                .isInstanceOf(com.bemo.hr.approval.SegregationOfDutiesViolationException.class);
+        verify(fiscalPeriodGuard, never()).requireOpen(any());
+    }
+
+    @Test
+    void approvalRequiresDifferentCheckerAndPostingRequiresThirdActor() {
+        JournalEntry entry = new JournalEntry("JV-2", LocalDate.of(2026, 8, 6), "Manual", null, null);
+        entry.assignCreator("maker");
+        org.springframework.test.util.ReflectionTestUtils.setField(entry, "appId", APP_ID);
+        when(journalEntryRepository.findById(entry.getId())).thenReturn(Optional.of(entry));
+        var approve = new AccountingApi.JournalActionRequest(java.util.UUID.randomUUID().toString(), 0L, null);
+
+        service.approve(entry.getId(), approve, "checker");
+        assertThat(entry.getStatus()).isEqualTo(JournalEntry.Status.APPROVED);
+        when(idempotencyService.execute(any(), any(), any(), any(), any(), any())).thenAnswer(inv -> {
+            java.util.function.Supplier<?> supplier = inv.getArgument(3); return supplier.get();
+        });
+        assertThatThrownBy(() -> service.post(entry.getId(), approve, "checker"))
+                .isInstanceOf(com.bemo.hr.approval.SegregationOfDutiesViolationException.class);
     }
 }

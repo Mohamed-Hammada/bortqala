@@ -19,6 +19,9 @@ public class SalesApi {
             String quotationId,
             String status,
             BigDecimal totalAmount,
+            String warehouseId,
+            String currencyCode,
+            List<SalesOrderLineResponse> lines,
             long createdAt,
             long updatedAt
     ) {}
@@ -28,8 +31,29 @@ public class SalesApi {
             long soDate,
             @NotBlank String customerId,
             String quotationId,
-            @NotNull BigDecimal totalAmount
+            BigDecimal totalAmount,
+            String warehouseId,
+            String currencyCode,
+            List<SalesOrderLineRequest> lines
     ) {}
+
+    public record SalesOrderLineRequest(@NotBlank String itemId,@NotBlank String itemName,
+            @NotNull @Positive BigDecimal quantity,@NotNull @Positive BigDecimal unitPrice,@NotNull @Min(0) BigDecimal discountRate) {}
+    public record SalesOrderLineResponse(String id,String itemId,String itemName,BigDecimal orderedQuantity,
+            BigDecimal deliveredQuantity,BigDecimal unitPrice,BigDecimal discountRate,BigDecimal netPrice,BigDecimal lineTotal) {}
+
+    public record DeliveryRequest(@NotBlank String deliveryNumber,long deliveryDate,@NotBlank String operationId) {}
+    public record DeliveryLineResponse(String id,String salesOrderLineId,String itemId,BigDecimal quantity,
+            BigDecimal unitPrice,String stockMovementId,BigDecimal unitCogs,BigDecimal cogsAmount) {}
+    public record DeliveryResponse(String id,String deliveryNumber,String salesOrderId,String customerId,long deliveryDate,
+            String warehouseId,String operationId,String invoiceId,String invoiceNumber,String status,List<DeliveryLineResponse> lines) {}
+    public record ReturnLineRequest(@NotBlank String deliveryLineId,@NotNull @Positive BigDecimal quantity,@NotBlank String disposition) {}
+    public record ReturnRequest(@NotBlank String returnNumber,@NotBlank String deliveryId,long returnDate,@NotBlank String reason,
+            @NotBlank String operationId,@NotEmpty List<ReturnLineRequest> lines) {}
+    public record ReturnLineResponse(String id,String deliveryLineId,String itemId,BigDecimal quantity,String disposition,
+            String stockMovementId,BigDecimal creditAmount,BigDecimal cogsAmount) {}
+    public record ReturnResponse(String id,String returnNumber,String salesOrderId,String customerId,long returnDate,String reason,
+            String deliveryId,String warehouseId,String operationId,String creditNoteId,String creditNoteNumber,String status,List<ReturnLineResponse> lines) {}
 
     public record CreditProfileRequest(@NotNull @Min(0) BigDecimal creditLimit,@Min(0) int paymentTermsDays,boolean creditHold) {}
     public record CreditProfileResponse(String customerId,BigDecimal creditLimit,int paymentTermsDays,boolean creditHold,BigDecimal outstanding,BigDecimal available,long version) {}

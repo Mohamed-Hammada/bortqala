@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260812-v197-warehouse-transfer-integrity
+      author: codex
+      changes:
+        - update:
+            tableName: stock_status_balances
+            columns:
+              - column: { name: bin_id, value: "" }
+            where: bin_id IS NULL
+        - addDefaultValue:
+            tableName: stock_status_balances
+            columnName: bin_id
+            columnDataType: VARCHAR(36)
+            defaultValue: ""
+        - addNotNullConstraint:
+            tableName: stock_status_balances
+            columnName: bin_id
+            columnDataType: VARCHAR(36)
+        - addUniqueConstraint:
+            tableName: stock_status_balances
+            columnNames: app_id, warehouse_id, bin_id, item_id, status
+            constraintName: uq_stock_status_balance_location
+        - addUniqueConstraint:
+            tableName: stock_transfer_headers
+            columnNames: app_id, transfer_number
+            constraintName: uq_stock_transfer_app_number
+        - createIndex:
+            tableName: stock_transfer_headers
+            indexName: ix_stock_transfer_app_date_status
+            columns:
+              - column: { name: app_id }
+              - column: { name: transfer_date }
+              - column: { name: status }
+        - createIndex:
+            tableName: stock_transfer_lines
+            indexName: ix_stock_transfer_lines_transfer
+            columns:
+              - column: { name: app_id }
+              - column: { name: transfer_id }
+      rollback:
+        - dropIndex: { tableName: stock_transfer_lines, indexName: ix_stock_transfer_lines_transfer }
+        - dropIndex: { tableName: stock_transfer_headers, indexName: ix_stock_transfer_app_date_status }
+        - dropUniqueConstraint: { tableName: stock_transfer_headers, constraintName: uq_stock_transfer_app_number }
+        - dropUniqueConstraint: { tableName: stock_status_balances, constraintName: uq_stock_status_balance_location }
+        - dropNotNullConstraint: { tableName: stock_status_balances, columnName: bin_id, columnDataType: VARCHAR(36) }
+        - dropDefaultValue: { tableName: stock_status_balances, columnName: bin_id, columnDataType: VARCHAR(36) }

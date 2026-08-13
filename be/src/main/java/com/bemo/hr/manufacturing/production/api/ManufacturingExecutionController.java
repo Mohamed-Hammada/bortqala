@@ -26,25 +26,25 @@ public class ManufacturingExecutionController {
     public record RecordReceiptPayload(String receiptNumber, String finishedItemId, BigDecimal receivedQuantity, String receiptDate, String warehouseId) {}
 
     @PostMapping("/work-centers")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PRODUCTION_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
     public WorkCenter createWorkCenter(@RequestBody CreateWorkCenterPayload payload) {
         return manufacturingExecutionService.createWorkCenter(payload.code(), payload.name(), payload.hourlyRate(), payload.capacityHoursPerDay());
     }
 
     @PostMapping("/routings")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PRODUCTION_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
     public RoutingHeader createRouting(@RequestBody CreateRoutingPayload payload) {
         return manufacturingExecutionService.createRouting(payload.routingCode(), payload.name(), payload.itemId());
     }
 
     @PostMapping("/orders/{id}/receipts")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PRODUCTION_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
     public ProductionReceipt recordReceipt(@PathVariable String id, @RequestBody RecordReceiptPayload payload) {
         return manufacturingExecutionService.recordReceipt(payload.receiptNumber(), id, payload.finishedItemId(), payload.receivedQuantity(), LocalDate.parse(payload.receiptDate()), payload.warehouseId());
     }
 
     @GetMapping("/orders/{id}/receipts")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PRODUCTION_MANAGER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'VIEWER')")
     public List<ProductionReceipt> getReceipts(@PathVariable String id) {
         return manufacturingExecutionService.getReceiptsForOrder(id);
     }

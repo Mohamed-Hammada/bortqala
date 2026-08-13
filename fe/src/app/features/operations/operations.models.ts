@@ -26,8 +26,31 @@ export interface InventoryItem {
   uomId: string | null;
   uomName: string | null;
   active: boolean;
+  reorderPoint: number;
+  reorderQuantity: number;
   currentBalance: number;
   version: number;
+}
+export interface ReorderAlert {
+  itemId: string; itemCode: string; itemName: string; currentBalance: number;
+  reorderPoint: number; reorderQuantity: number; shortage: number;
+}
+export interface CycleCount {
+  id: string; countNumber: string; warehouseId: string; countDate: number; status: string; itemId: string;
+  systemQuantity: number; countedQuantity: number; variance: number;
+}
+export interface WarehouseOption { id: string; code: string; name: string; }
+export interface WarehouseBin {
+  id: string; warehouseId: string; binCode: string; aisle: string | null; rack: string | null;
+  shelf: string | null; active: boolean; version: number;
+}
+export interface StockTransferLine {
+  id: string; itemId: string; itemCode: string; itemName: string; quantity: number;
+}
+export interface StockTransfer {
+  id: string; transferNumber: string; sourceWarehouseId: string; sourceWarehouseName: string | null;
+  targetWarehouseId: string; targetWarehouseName: string | null; transferDate: number;
+  status: 'DRAFT' | 'SHIPPED' | 'RECEIVED' | 'CANCELLED'; version: number; lines: StockTransferLine[];
 }
 export interface StockMovement {
   id: string;

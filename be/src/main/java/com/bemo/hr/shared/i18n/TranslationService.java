@@ -2,6 +2,7 @@ package com.bemo.hr.shared.i18n;
 
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantContext;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,8 @@ public class TranslationService {
         this.translationRepository = translationRepository;
     }
 
+    @Cacheable(cacheNames = "translationBundles",
+            key = "#locale.toLowerCase() + '|' + T(com.bemo.hr.shared.security.TenantContext).currentOrSystem()")
     public TranslationBundle bundle(String locale) {
         String normalized = SUPPORTED_LOCALES.stream().filter(item -> item.equalsIgnoreCase(locale))
                 .findFirst().orElseThrow(() -> new BusinessRuleException("Unsupported locale.",

@@ -10,6 +10,8 @@ The movement form records separate business document references (purchase order,
 
 The valuation workspace shows on-hand quantity, weighted/FIFO unit cost, inventory value, opening quantity gaps, and a movement-cost drill-down. Admins configure the valuation method and posting accounts, record idempotent revaluations, and supply receipt unit cost. Calculations, fiscal-period checks, locking, and journals remain backend-owned; the page only formats the returned evidence.
 
+The same workbench exposes backend-derived reorder alerts and immutable cycle-count history. Item creation captures reorder thresholds and suggested replenishment quantities. Recording a physical count sends a one-use operation ID; the backend owns the system quantity, variance, movement, valuation, and audit calculations.
+
 ## العربية — تقييم المخزون
 
 تعرض مساحة التقييم الكمية المتاحة وتكلفة الوحدة بطريقة المتوسط المرجح أو FIFO وقيمة المخزون وفروق الكميات الافتتاحية، مع تفاصيل تكلفة كل حركة وشرحها وقيد اليومية المرتبط. يضبط المدير طريقة التقييم وحسابات الترحيل ويسجل إعادة تقييم آمنة من التكرار ويدخل تكلفة الاستلام. تبقى الحسابات والتحقق من الفترة والأقفال والقيود مسؤولية الخادم، وتكتفي الواجهة بعرض الدليل وتنسيقه.

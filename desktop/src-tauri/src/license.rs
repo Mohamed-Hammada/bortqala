@@ -9,6 +9,7 @@ use std::{
     fs,
     path::{Path, PathBuf},
     process::Command,
+    time::Duration,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -116,7 +117,7 @@ impl LicenseClient {
     pub fn activate(&mut self, license_key: String) -> Result<LicenseCertificate, String> {
         let key = self.key()?;
         let timestamp = now();
-        let fingerprint = self.fingerprint(&key);
+        let fingerprint = self.fingerprint(&key)?;
         let canonical = format!(
             "activate|{}|{}|{}",
             self.installation.installation_id, fingerprint, timestamp
@@ -136,11 +137,28 @@ impl LicenseClient {
         self.save()?;
         Ok(certificate)
     }
-    pub fn validate(&mut self) -> Result<LicenseCertificate, String> {
-        let certificate = self.proof("/public/v1/activations/validate")?;
+    pub fn validate_local(&self) -> Result<LicenseCertificate, String> {
+        let certificate = self
+            .installation
+            .certificate
+            .clone()
+            .ok_or("No signed license certificate is stored on this device.")?;
         self.verify_certificate(&certificate)?;
-        self.installation.certificate = Some(certificate.clone());
-        self.save()?;
+        let now = Utc::now();
+        let issued_at = chrono::DateTime::parse_from_rfc3339(&certificate.issued_at)
+            .map_err(|_| "The stored license issue time is invalid.")?
+            .with_timezone(&Utc);
+        if issued_at > now + chrono::Duration::minutes(5) {
+            return Err("The system clock is earlier than the license issue time.".into());
+        }
+        if let Some(expires_at) = certificate.expires_at.as_deref() {
+            let expires_at = chrono::DateTime::parse_from_rfc3339(expires_at)
+                .map_err(|_| "The stored license expiry time is invalid.")?
+                .with_timezone(&Utc);
+            if now >= expires_at {
+                return Err("License has expired.".into());
+            }
+        }
         Ok(certificate)
     }
     pub fn deactivate(&mut self) -> Result<(), String> {
@@ -174,7 +192,14 @@ impl LicenseClient {
         path: &str,
         body: &T,
     ) -> Result<R, String> {
-        let response = Client::new()
+        if self.base_url.is_empty() {
+            return Err("License service URL is not configured.".into());
+        }
+        let response = Client::builder()
+            .connect_timeout(Duration::from_secs(5))
+            .timeout(Duration::from_secs(12))
+            .build()
+            .map_err(|e| e.to_string())?
             .post(format!("{}{}", self.base_url, path))
             .json(body)
             .send()
@@ -223,16 +248,32 @@ impl LicenseClient {
         );
         public
             .verify_strict(canonical.as_bytes(), &signature)
-            .map_err(|_| "License certificate signature is invalid.".into())
+            .map_err(|_| "License certificate signature is invalid.".to_string())?;
+        if certificate.installation_id != self.installation.installation_id {
+            return Err("License certificate belongs to another installation.".into());
+        }
+        let fingerprint = self.fingerprint(&self.key()?)?;
+        if certificate.device_fingerprint_hash != fingerprint {
+            return Err("License certificate belongs to another device.".into());
+        }
+        if self
+            .installation
+            .activation_id
+            .as_deref()
+            .is_some_and(|id| id != certificate.activation_id)
+        {
+            return Err("License certificate activation does not match this installation.".into());
+        }
+        Ok(())
     }
-    fn fingerprint(&self, key: &SigningKey) -> String {
-        let machine = machine_guid();
+    fn fingerprint(&self, key: &SigningKey) -> Result<String, String> {
+        let machine = machine_guid()?;
         let mut hash = Sha256::new();
         hash.update(b"bemo-hr-device-v1|");
         hash.update(machine.as_bytes());
         hash.update(std::env::consts::ARCH.as_bytes());
         hash.update(key.verifying_key().as_bytes());
-        format!("{:x}", hash.finalize())
+        Ok(format!("{:x}", hash.finalize()))
     }
     fn key(&self) -> Result<SigningKey, String> {
         let bytes = BASE64
@@ -250,7 +291,26 @@ impl LicenseClient {
             serde_json::to_vec_pretty(&self.installation).map_err(|e| e.to_string())?,
         )
         .map_err(|e| e.to_string())?;
-        fs::rename(temporary, &self.path).map_err(|e| e.to_string())
+        replace_file(&temporary, &self.path)
+    }
+}
+
+fn replace_file(temporary: &Path, destination: &Path) -> Result<(), String> {
+    if !destination.exists() {
+        return fs::rename(temporary, destination).map_err(|e| e.to_string());
+    }
+    let backup = destination.with_extension("bak");
+    let _ = fs::remove_file(&backup);
+    fs::rename(destination, &backup).map_err(|e| e.to_string())?;
+    match fs::rename(temporary, destination) {
+        Ok(()) => {
+            let _ = fs::remove_file(backup);
+            Ok(())
+        }
+        Err(error) => {
+            let _ = fs::rename(backup, destination);
+            Err(error.to_string())
+        }
     }
 }
 fn now() -> String {
@@ -267,7 +327,7 @@ fn hex_to_bytes(value: &str) -> Vec<u8> {
         .map(|i| u8::from_str_radix(&value[i..i + 2], 16).unwrap())
         .collect()
 }
-fn machine_guid() -> String {
+fn machine_guid() -> Result<String, String> {
     Command::new("reg")
         .args([
             "query",
@@ -284,7 +344,86 @@ fn machine_guid() -> String {
                 .and_then(|l| l.split_whitespace().last())
                 .map(str::to_owned)
         })
-        .unwrap_or_else(|| {
-            std::env::var("COMPUTERNAME").unwrap_or_else(|_| "unknown-device".into())
+        .filter(|value| !value.trim().is_empty())
+        .ok_or_else(|| {
+            "Windows MachineGuid is unavailable; device-bound licensing cannot continue.".into()
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{LicenseCertificate, LicenseClient, now, replace_file, x509_public_key};
+    use base64::{Engine, engine::general_purpose::STANDARD as BASE64};
+    use ed25519_dalek::{Signer, SigningKey};
+    use rand_core::OsRng;
+    use std::fs;
+
+    #[test]
+    fn replaces_existing_license_state_file() {
+        let directory =
+            std::env::temp_dir().join(format!("bemo-license-save-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&directory).unwrap();
+        let destination = directory.join("license-installation.json");
+        let temporary = directory.join("license-installation.tmp");
+        fs::write(&destination, b"old").unwrap();
+        fs::write(&temporary, b"new").unwrap();
+
+        replace_file(&temporary, &destination).unwrap();
+
+        assert_eq!(fs::read(&destination).unwrap(), b"new");
+        assert!(!temporary.exists());
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    #[test]
+    fn rejects_certificate_with_a_different_device_fingerprint() {
+        let directory =
+            std::env::temp_dir().join(format!("bemo-license-bind-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&directory).unwrap();
+        let server_key = SigningKey::generate(&mut OsRng);
+        let mut client = LicenseClient::load(
+            &directory,
+            "https://license.invalid".into(),
+            x509_public_key(&server_key),
+        )
+        .unwrap();
+        let fingerprint = client.fingerprint(&client.key().unwrap()).unwrap();
+        let mut certificate = LicenseCertificate {
+            activation_id: "activation-1".into(),
+            license_id: "license-1".into(),
+            customer_reference: "Customer".into(),
+            installation_id: client.installation.installation_id.clone(),
+            device_fingerprint_hash: fingerprint,
+            issued_at: now(),
+            expires_at: None,
+            perpetual: true,
+            signature: String::new(),
+        };
+        certificate.signature = sign_certificate(&server_key, &certificate);
+        client.installation.activation_id = Some(certificate.activation_id.clone());
+        client.installation.certificate = Some(certificate.clone());
+        assert!(client.validate_local().is_ok());
+
+        certificate.device_fingerprint_hash = "0".repeat(64);
+        certificate.signature = sign_certificate(&server_key, &certificate);
+        client.installation.certificate = Some(certificate);
+
+        assert!(client.validate_local().is_err());
+        fs::remove_dir_all(directory).unwrap();
+    }
+
+    fn sign_certificate(key: &SigningKey, certificate: &LicenseCertificate) -> String {
+        let canonical = format!(
+            "{}|{}|{}|{}|{}|{}|{}|{}",
+            certificate.activation_id,
+            certificate.license_id,
+            certificate.customer_reference,
+            certificate.installation_id,
+            certificate.device_fingerprint_hash,
+            certificate.issued_at,
+            certificate.expires_at.as_deref().unwrap_or("null"),
+            certificate.perpetual
+        );
+        BASE64.encode(key.sign(canonical.as_bytes()).to_bytes())
+    }
 }

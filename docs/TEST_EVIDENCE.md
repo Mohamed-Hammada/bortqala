@@ -1,5 +1,40 @@
 # Test Evidence — Bemo ERP
 
+## 2026-08-13 final local release-candidate verification
+
+- Candidate code SHA: `6e4bc88a86fec54cfc1c71c031f3145bb6b28f47` (`fm_bemo_consolidated`). Documentation updates follow this code checkpoint.
+- Backend: `./gradlew test -PskipDockerTests` — **516 tests / 144 suites / 0 failures / 0 errors / 0 skipped**. The XML result set was generated at 2026-08-13 14:58 Africa/Cairo; the command wrapper timed out after the Java worker completed, so counts were read from all `be/build/test-results/test/TEST-*.xml` files.
+- Backend static gates: `python tools/check-error-codes.py` — **454/454 PASS**; `python tools/check-translation-catalog.py` — **7,440 rows PASS**; `python tools/check-authorization-contract.py` — **19/19 roles PASS**.
+- Frontend under Node `v24.18.0`: `npm ci` — **PASS** (460 packages audited; 2 moderate and 5 high dependency audit findings reported); `npm run check:i18n` — **2,396 keys PASS**; `npm run check:hardcoded` — **49 HTML + 127 TypeScript files PASS**; `npm run test -- --watch=false` — **284 tests / 50 files / 0 failures**; `npm run build` — **PASS**.
+- Docker/PostgreSQL/Compose: **BLOCKED, not run**. `docker info` cannot connect to `npipe:////./pipe/dockerDesktopLinuxEngine` because the Docker daemon is unavailable. This blocks Testcontainers concurrency, PostgreSQL fresh/upgrade migration, `ddl-auto=validate` on PostgreSQL, and production-like Compose smoke.
+- CI: **BLOCKED, not run**. The known GitHub Actions account/billing lock remains external; no green exact-SHA CI URL exists.
+
+## 2026-08-13 O2C vertical-slice checkpoint
+
+- Working-tree evidence after parent `41a7f3b`; not final release-SHA evidence.
+- `SalesOrderToCashPersistenceTests`: **2/2 PASS** on the H2 application context. It proves persisted real lines, confirmation-time pricing snapshots, locked ATP reservation, valued delivery and COGS journal, linked issued invoice, partial/final receipts, customer ledger, partial return, original-cost stock/COGS reversal, linked credit note, operation replay, tenant isolation, and concurrent no-oversubscription.
+- Focused sales/AR/security tests: **PASS** for multi-invoice receipt allocation, idempotent cancellation release, and Sales-role-only delivery/return mutation.
+- Sales Angular suite: **6/6 PASS**; i18n **2,374 keys PASS**; hardcoded UI **0 findings across 49 HTML / 127 TS files**; production build **PASS**.
+- V209 also repairs upgrade-path gaps exposed by the persisted test: legacy sales-line/customer-credit/invoice columns and malformed historical composite uniqueness on valuation and AR tables.
+
+## 2026-08-13 P2P multi-invoice verification checkpoint
+
+- Parent baseline: `1133e3431d170b50c202f881c31a0021ade75495`; this is working-tree evidence and not final release-SHA evidence.
+- Backend focused service, persistence, and authorization suites: **PASS**. The coverage proves ordered multi-invoice allocation, server-derived total/currency, partial balances, real supplier payments, partner-ledger entries, audit actors, SoD, bank validation propagation, same-operation replay, and atomic rollback.
+- Frontend procurement component: **15/15 PASS**; i18n and hardcoded-UI gates **PASS**; production build **PASS**.
+- Static backend gates: error codes **425/425 PASS**; **7,274** translation rows have unique IDs and key/locale pairs; authorization roles **19/19 PASS**.
+- `VendorPaymentProposalConcurrencyTests` is implemented and compiles, but was not executed because the Docker Desktop Linux engine is unavailable. P2P-001 therefore remains `VERIFY`, not `DONE`.
+
+## 2026-08-12 shutdown checkpoint
+
+- Parent baseline: `0c182021944f1b8d411deb72c83eaf45761d81a0`; evidence and implementation are recorded by this checkpoint commit.
+- Backend compile and focused payroll/manufacturing/P2P suites: PASS.
+- H2 application context and payroll snapshot replay/new-run/tenant isolation: PASS.
+- Broad non-Docker run: 478 tests, 472 passed; six operations tests exposed an H2-master omission of existing production migration V192. After restoring parity, the affected suite passed 6/6. Full post-fix rerun remains for the next release checkpoint.
+- Frontend procurement component: 13/13 PASS; i18n and hardcoded-UI gates PASS; production build PASS.
+- Error codes: 424/424 PASS. Translation catalog IDs and key/locale pairs are unique.
+- PostgreSQL/Testcontainers and Compose smoke remain blocked by the unavailable Docker daemon. External CI/billing remains blocked.
+
 Single source of truth for automated test counts and regression baselines. Every
 entry records the date, the repository HEAD SHA it was run against, the command,
 and the result. The CI pipeline enforces the baselines below: a run that drops
@@ -9,11 +44,25 @@ below a recorded baseline or reports failures fails the release gate.
 
 | Suite | Baseline | Command | Threshold rule |
 |-------|----------|---------|----------------|
-| Backend (non-Docker, H2) | **391 tests / 78 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 391 AND failures = 0 |
+| Backend (non-Docker, H2) | **516 tests / 144 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 516 AND failures = 0 |
 | Backend (full, incl. Testcontainers) | **310 tests** expected when Docker available | `./gradlew test` | failures = 0 |
-| Frontend (Angular + Vitest) | **269 tests / 49 files / 0 failures** | `npx ng test --watch=false` | count ≥ 269 AND failures = 0 |
+| Frontend (Angular + Vitest) | **284 tests / 50 files / 0 failures** | `npx ng test --watch=false` | count ≥ 284 AND failures = 0 |
 
 ## Evidence log
+
+### 2026-08-12 — release-checklist remediation working tree (baseline `a9430d34fa6f52bd9968ced3e6baa3d718cfc3c8`)
+
+- Status: **VERIFY, not final release evidence**. Changes are uncommitted, so there is no candidate SHA or reviewer sign-off yet.
+- Backend compile: isolated workspace copy, `./gradlew.bat compileJava compileTestJava -PskipDockerTests` — **BUILD SUCCESSFUL**.
+- Focused backend: `./gradlew.bat test --tests 'com.bemo.hr.payroll.application.*' --tests 'com.bemo.hr.manufacturing.production.application.*' -PskipDockerTests` — **BUILD SUCCESSFUL**. Coverage includes snapshot replay after salary/attendance/policy changes, policy validation/effective selection, frozen-BOM active readiness, and issue-evidence completion costing.
+- H2/Liquibase context: `./gradlew.bat test --tests 'com.bemo.hr.shared.security.MeIdentityIntegrationTests' -PskipDockerTests` — **BUILD SUCCESSFUL** after adding V186 to the H2 mirror, quoting its 92 inline decimal types, making its 78 foundation creates idempotent against baseline tables, and loading V201–V204.
+- Static backend gates: `python tools/check-error-codes.py` — **420/420 PASS**; `python tools/check-translation-catalog.py` — **7214 rows PASS**; `python tools/check-authorization-contract.py` — **19/19 roles PASS**.
+- Not run for this working tree: complete backend suite/count refresh, PostgreSQL/Testcontainers, Liquibase PostgreSQL fresh/upgrade path, frontend suite/build, production-like Compose smoke, independent CI. These remain required by `REL-001`/`REL-002` and the release checklist.
+
+### 2026-08-12 — Staff-audit confirmed gaps
+
+- Frontend: **278 tests / 50 files / 0 failures**. Added the guarded dispatch/assignment/dispute workbench and API-contract tests; route/catalog parity, bilingual DB i18n, hardcoded UI scan, and Angular development build pass.
+- Backend focused verification: dispatch/dispute lifecycle tests, access catalog, and H2 Spring/Liquibase context pass on the explicit Java 21 toolchain. V199 contains unique bilingual UI/error rows and an idempotent existing-user menu grant; translation-catalog, error-code, and authorization-contract gates pass.
 
 ### 2026-08-10 — Product Epic 12 second vertical pack
 

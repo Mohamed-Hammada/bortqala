@@ -2,9 +2,15 @@
 
 ## English
 
+Production issue posting returns the immutable inventory valuation assigned to the issue movement. Manufacturing uses persisted issue-cost evidence by work-order reference and item at completion; it does not substitute the current item cost for historical issue cost.
+
 This package owns inventory items, signed stock movements, signed partner ledger entries, and employee advances. A transaction may affect stock, a partner ledger, or both atomically. Positive and negative values are recorded as immutable movements; balances are derived, never overwritten.
 
 Employee advances are accepted only when the employee's category explicitly allows them.
+
+## العربية — إضافة تكلفة الإنتاج
+
+يعيد ترحيل صرف الإنتاج قيمة المخزون الثابتة المرتبطة بحركة الصرف. تستخدم وحدة التصنيع دليل تكلفة الصرف المحفوظ حسب مرجع أمر العمل والصنف عند إكمال الأمر، ولا تستبدل التكلفة التاريخية بتكلفة الصنف الحالية.
 
 `GET /api/v1/operations/export.xlsx` exports localized, typed and formatted sheets for stock balances, movements, party balances and advances using the authenticated user's Excel preferences.
 
@@ -17,6 +23,12 @@ Every stock movement may carry separate business document references: purchase-o
 Demo employees, punches, parties, inventory movements, ledger entries, and advances are opt-in development fixtures. Production startup never creates them.
 
 Inventory valuation is recorded separately from immutable quantity evidence. Each tenant selects FIFO or weighted-average costing, may enable controlled backdated posting, and maps inventory, receipt-offset, COGS, and variance accounts. Every new quantity movement receives an immutable cost explanation; FIFO layers and item locks prevent concurrent double consumption. When GL posting is enabled, the service validates the fiscal period and creates a balanced posted journal. Revaluation is idempotent by `operationId`, audited, and posts only the value difference. `GET /api/v1/operations/valuation/report` exposes item totals and movement drill-down, and the operations workbook includes valuation and movement-cost sheets.
+
+Items also carry non-negative reorder points and suggested order quantities. `GET /api/v1/operations/reorder-alerts` derives the replenishment queue from current signed balances. Cycle counts use an idempotent `operationId`; `POST /api/v1/operations/cycle-counts` locks the item, records immutable system/count evidence, posts only the variance as a valued `CYCLE_COUNT` movement, and writes an audit event. Replays return the original count without posting another movement.
+
+Warehouse transfers are a stateful inventory workflow: `DRAFT -> SHIPPED -> RECEIVED`, with draft cancellation. Transfer numbers are tenant-unique, lines accept positive quantities only, and the same item cannot be added twice. Shipping validates every line before changing anything, removes stock from the source warehouse once, and receiving adds it to the target once. Replayed ship/receive/cancel commands return the existing state without duplicating quantities. Procurement goods receipts populate the selected warehouse balance, making received stock immediately available for reservation and transfer. Every state transition is audited, and `GET /api/v1/operations/transfers` returns headers with resolved warehouses, items, and lines without exposing JPA entities.
+
+**AR:** تحويلات المخزون تتبع دورة واضحة: مسودة ثم شحن ثم استلام، مع إمكانية إلغاء المسودة. رقم التحويل فريد داخل الشركة، والكميات موجبة، ولا يمكن تكرار الصنف في التحويل نفسه. يتحقق الشحن من جميع البنود قبل خصم أي كمية، ثم يخصم من مخزن المصدر مرة واحدة، ويضيف الاستلام الكمية إلى مخزن الوجهة مرة واحدة. إعادة إرسال أوامر الشحن أو الاستلام أو الإلغاء آمنة ولا تكرر الأرصدة. كما تضيف أذون استلام المشتريات الكميات المقبولة إلى المخزن المحدد، وتُسجل كل انتقالات الحالة في سجل التدقيق.
 
 ## العربية — تقييم المخزون
 

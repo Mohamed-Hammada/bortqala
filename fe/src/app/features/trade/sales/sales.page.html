@@ -83,6 +83,10 @@
                   @if (so.status === 'DRAFT') {
                     <button class="button primary btn-sm" (click)="confirmSo(so)">✔ {{ i18n.t('sales.confirm') }}</button>
                   }
+                  @if (so.status === 'CONFIRMED') {
+                    <button class="button primary btn-sm" (click)="deliverOrder(so)" [disabled]="savingFulfillment()">{{ i18n.t('sales.deliver') }}</button>
+                  }
+                  <button class="button secondary btn-sm" (click)="inspectFulfillment(so)">{{ i18n.t('sales.inspect') }}</button>
                 </div>
               </td>
             </tr>
@@ -175,15 +179,35 @@
           <input formControlName="customerId" [placeholder]="i18n.t('sales.customerPlaceholder')" />
         </div>
         <div class="field span-2">
-          <label>{{ i18n.t('sales.totalAmountLabel') }} *</label>
-          <input type="number" class="ltr" formControlName="totalAmount" [placeholder]="i18n.t('sales.totalAmountPlaceholder')" />
+          <label>{{ i18n.t('sales.warehouse') }} *</label>
+          <input class="ltr" formControlName="warehouseId" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('sales.currency') }} *</label>
+          <input class="ltr" formControlName="currencyCode" />
         </div>
       </div>
+      <section class="line-builder" [formGroup]="lineForm">
+        <h3>{{ i18n.t('sales.lines') }}</h3>
+        <div class="line-inputs"><input formControlName="itemId" [placeholder]="i18n.t('sales.itemId')" /><input formControlName="itemName" [placeholder]="i18n.t('sales.itemName')" /><input type="number" formControlName="quantity" [placeholder]="i18n.t('sales.quantity')" /><input type="number" formControlName="unitPrice" [placeholder]="i18n.t('sales.unitPrice')" /><input type="number" formControlName="discountRate" [placeholder]="i18n.t('sales.discount')" /><button type="button" class="button secondary" (click)="addOrderLine()" [disabled]="lineForm.invalid">{{ i18n.t('sales.addLine') }}</button></div>
+        @for(line of orderLines();track line.itemId;let index=$index){<div class="line-row"><span>{{ line.itemName }} · {{ line.quantity }} × {{ line.unitPrice }}</span><button type="button" class="button danger btn-sm" (click)="removeOrderLine(index)">{{ i18n.t('sales.removeLine') }}</button></div>}
+      </section>
     </form>
 
     <div modal-actions>
       <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
-      <button class="button primary" type="button" (click)="submitSo()" [disabled]="soForm.invalid">{{ i18n.t('sales.save') }}</button>
+      <button class="button primary" type="button" (click)="submitSo()" [disabled]="soForm.invalid||orderLines().length===0">{{ i18n.t('sales.save') }}</button>
     </div>
   </app-modal-dialog>
+
+  @if(fulfillmentOrder();as so){
+    <section class="fulfillment-card">
+      <div class="section-title"><div><h2>{{ so.soNumber }}</h2><p>{{ i18n.t('sales.deliveryRef') }}</p></div><button class="button secondary btn-sm" (click)="fulfillmentOrder.set(null)">{{ i18n.t('common.close') }}</button></div>
+      @for(delivery of deliveriesByOrder()[so.id]??[];track delivery.id){<article><strong>{{ delivery.deliveryNumber }} → {{ delivery.invoiceNumber }}</strong><small>{{ delivery.status }} · {{ delivery.warehouseId }}</small>@for(line of delivery.lines;track line.id){<span>{{ line.itemId }} · {{ line.quantity }} · {{ i18n.t('sales.cogs') }} {{ line.cogsAmount|number:'1.2-2' }}</span>}</article>}
+      @for(row of returnsByOrder()[so.id]??[];track row.id){<article><strong>{{ row.returnNumber }} → {{ i18n.t('sales.creditNote') }} {{ row.creditNoteNumber }}</strong><small>{{ row.status }}</small></article>}
+      @if(so.status==='DELIVERED'){
+        <form class="return-command" [formGroup]="returnForm" (ngSubmit)="receiveReturn()"><input formControlName="deliveryId" readonly /><input formControlName="deliveryLineId" readonly /><input type="number" formControlName="quantity" [placeholder]="i18n.t('sales.returnQuantity')" /><input formControlName="reason" [placeholder]="i18n.t('sales.reason')" /><button class="button primary" [disabled]="returnForm.invalid||savingFulfillment()">{{ i18n.t('sales.return') }}</button></form>
+      }
+    </section>
+  }
 </section>

@@ -1,66 +1,30 @@
 package com.bemo.hr.trade.sales.api;
 
-import com.bemo.hr.trade.sales.domain.SalesOrder;
-import com.bemo.hr.trade.sales.infrastructure.SalesOrderRepository;
+import com.bemo.hr.trade.sales.application.SalesOrderFullService;
 import com.bemo.hr.trade.sales.application.SalesReceivablesService;
-import com.bemo.hr.shared.domain.BusinessRuleException;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
-
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.util.List;
-import java.time.LocalDate;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import java.time.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/trade/sales")
 @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'HR_MANAGER')")
+@RequiredArgsConstructor
 public class SalesController {
-
-    private final SalesOrderRepository salesOrderRepository;
+    private final SalesOrderFullService salesOrderFullService;
     private final SalesReceivablesService receivablesService;
-    private final com.bemo.hr.trade.sales.application.SalesPricingSnapshotService pricingSnapshotService;
 
-    public SalesController(SalesOrderRepository salesOrderRepository,
-                           SalesReceivablesService receivablesService,
-                           com.bemo.hr.trade.sales.application.SalesPricingSnapshotService pricingSnapshotService) {
-        this.salesOrderRepository = salesOrderRepository;
-        this.receivablesService = receivablesService;
-        this.pricingSnapshotService = pricingSnapshotService;
-    }
-
-    @GetMapping("/orders")
-    public List<SalesApi.SalesOrderResponse> listSalesOrders() {
-        return salesOrderRepository.findAllByOrderBySoDateDescCreatedAtDesc().stream().map(this::toResponse).toList();
-    }
-
-    @PostMapping("/orders")
-    @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER')")
-    public SalesApi.SalesOrderResponse createSalesOrder(@Valid @RequestBody SalesApi.SalesOrderPayload payload) {
-        LocalDate soDate = Instant.ofEpochMilli(payload.soDate()).atZone(ZoneOffset.UTC).toLocalDate();
-        SalesOrder so = new SalesOrder(payload.soNumber(), soDate, payload.customerId(), payload.quotationId(), payload.totalAmount());
-        return toResponse(salesOrderRepository.save(so));
-    }
-
-    @PostMapping("/orders/{id}/confirm")
-    @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER')")
-    public SalesApi.SalesOrderResponse confirmSalesOrder(@PathVariable String id) {
-        SalesOrder so = salesOrderRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("أمر البيع غير موجود", "SALE_ORDER_NOT_FOUND", HttpStatus.CONFLICT));
-        if (so.getStatus() == SalesOrder.Status.CONFIRMED) return toResponse(so);
-        if (so.getStatus() != SalesOrder.Status.DRAFT) throw new BusinessRuleException("SALE_ORDER_STATE_INVALID", "SALE_ORDER_STATE_INVALID", HttpStatus.CONFLICT);
-        receivablesService.assertCreditAvailable(so.getCustomerId(), so.getTotalAmount());
-        pricingSnapshotService.freezePricingSnapshot(so.getId(), "DEFAULT_ITEM", so.getTotalAmount(), java.math.BigDecimal.ZERO);
-        so.updateStatus(SalesOrder.Status.CONFIRMED);
-        return toResponse(salesOrderRepository.save(so));
-    }
+    @GetMapping("/orders") public List<SalesApi.SalesOrderResponse> listSalesOrders(){return salesOrderFullService.orders();}
+    @PostMapping("/orders") @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')")
+    public SalesApi.SalesOrderResponse createSalesOrder(@Valid @RequestBody SalesApi.SalesOrderPayload payload,Authentication auth){return salesOrderFullService.createOrder(payload,auth.getName());}
+    @PostMapping("/orders/{id}/confirm") @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')")
+    public SalesApi.SalesOrderResponse confirmSalesOrder(@PathVariable String id,Authentication auth){return salesOrderFullService.confirmOrder(id,auth.getName());}
+    @PostMapping("/orders/{id}/cancel") @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')")
+    public SalesApi.SalesOrderResponse cancelSalesOrder(@PathVariable String id,Authentication auth){return salesOrderFullService.cancelOrder(id,auth.getName());}
 
     @GetMapping("/receivables/invoices") public List<SalesApi.InvoiceResponse> invoices(){return receivablesService.invoices();}
     @PostMapping("/receivables/invoices") @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')") public SalesApi.InvoiceResponse createInvoice(@Valid @RequestBody SalesApi.InvoiceRequest request,Authentication auth){return receivablesService.createInvoice(request,auth.getName());}
@@ -72,13 +36,4 @@ public class SalesController {
     @PutMapping("/customers/{customerId}/credit") @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')") public SalesApi.CreditProfileResponse updateCredit(@PathVariable String customerId,@Valid @RequestBody SalesApi.CreditProfileRequest request,Authentication auth){return receivablesService.updateCredit(customerId,request,auth.getName());}
     @GetMapping("/receivables/collections") public List<SalesApi.CollectionTaskResponse> collections(@RequestParam(required=false) Long asOf){LocalDate date=asOf==null?LocalDate.now():Instant.ofEpochMilli(asOf).atZone(ZoneOffset.UTC).toLocalDate();return receivablesService.collections(date);}
     @PutMapping("/receivables/collections/{id}") @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')") public SalesApi.CollectionTaskResponse updateCollection(@PathVariable String id,@Valid @RequestBody SalesApi.CollectionTaskRequest request,Authentication auth){return receivablesService.updateTask(id,request,auth.getName());}
-
-    private SalesApi.SalesOrderResponse toResponse(SalesOrder so) {
-        long soDateMs = so.getSoDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
-        return new SalesApi.SalesOrderResponse(
-                so.getId(), so.getSoNumber(), soDateMs, so.getCustomerId(),
-                so.getQuotationId(), so.getStatus().name(),
-                so.getTotalAmount(), so.getCreatedAt(), so.getUpdatedAt()
-        );
-    }
 }

@@ -9,6 +9,6 @@ import java.util.Optional;
 
 @Repository
 public interface PayrollInputSnapshotRepository extends JpaRepository<PayrollInputSnapshot, String> {
-    Optional<PayrollInputSnapshot> findByEmployeeIdAndPeriodId(String employeeId, String periodId);
-    List<PayrollInputSnapshot> findByPeriodId(String periodId);
+    Optional<PayrollInputSnapshot> findByPayrollRunIdAndEmployeeId(String payrollRunId, String employeeId);
+    List<PayrollInputSnapshot> findByPayrollRunId(String payrollRunId);
 }

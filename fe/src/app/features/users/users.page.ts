@@ -37,6 +37,7 @@ export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = [
     { id: 'workforce-categories', labelKey: 'workforce.categories.title' },
     { id: 'workforce-requests', labelKey: 'workforce.laborRequests.title' },
     { id: 'workforce-attendance', labelKey: 'workforce.attendance.title' },
+    { id: 'workforce-dispatch-disputes', labelKey: 'workforce.dispatch.title' },
     { id: 'workforce-settlements', labelKey: 'workforce.settlements.title' },
     { id: 'workforce-advances', labelKey: 'workforce.advances.title' },
     { id: 'workforce-accounts', labelKey: 'workforce.accounts.title' },
@@ -59,6 +60,7 @@ export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = [
     { id: 'settings', labelKey: 'settings.title' },
     { id: 'approvals-my-tasks', labelKey: 'approvals.myTasks' },
     { id: 'approvals-workflows', labelKey: 'approvals.workflows' },
+    { id: 'notifications-send', labelKey: 'nav.notificationsSend' },
   ];
 
 @Component({
@@ -151,7 +153,7 @@ export class UsersPage {
       ids: [
         'workforce-dashboard', 'workforce-contractors', 'workforce-workers',
         'workforce-categories', 'workforce-requests', 'workforce-attendance',
-        'workforce-settlements', 'workforce-advances', 'workforce-accounts', 'workforce-reports'
+        'workforce-dispatch-disputes', 'workforce-settlements', 'workforce-advances', 'workforce-accounts', 'workforce-reports'
       ]
     },
     {
@@ -176,7 +178,7 @@ export class UsersPage {
     },
     {
       titleKey: 'users.groupAdministration',
-      ids: ['dashboard', 'reports', 'audit-logs', 'users', 'settings']
+      ids: ['dashboard', 'reports', 'audit-logs', 'users', 'settings', 'notifications-send']
     }
   ];
 
@@ -487,8 +489,10 @@ export class UsersPage {
     if (!code) return;
 
     const current = this.form.controls.roles.value;
-    const extras = current.slice(1).filter((role) => role !== code);
-    const next: RoleCode[] = [code, ...extras];
+    // Role order is presentation-only: the backend persists a set. Keep every
+    // selected privilege when promoting a role so an edit cannot silently drop
+    // whichever role happened to be returned first.
+    const next: RoleCode[] = [code, ...current.filter((role) => role !== code)];
     this.form.controls.roles.setValue(next);
 
     if (!this.customMenuAccess()) {
@@ -499,7 +503,9 @@ export class UsersPage {
   toggleRole(code: RoleCode, event: Event) {
     const checked = (event.target as HTMLInputElement).checked;
     const current = this.form.controls.roles.value;
-    const next = checked ? [...current, code] : current.filter((item) => item !== code);
+    const next = checked
+      ? [...new Set([...current, code])]
+      : current.filter((item) => item !== code);
     this.form.controls.roles.setValue(next);
     if (!this.customMenuAccess()) {
       this.syncMenusToRoles(next);
@@ -676,8 +682,8 @@ export class UsersPage {
     this.validationError.set(null);
     try {
       const result = await this.access.validate(
-        this.form.controls.roles.value,
-        this.form.controls.allowedMenus.value,
+        [...new Set(this.form.controls.roles.value)],
+        [...new Set(this.form.controls.allowedMenus.value)],
         this.editingId(),
         this.ackReason().trim() || undefined,
       );
@@ -743,6 +749,8 @@ export class UsersPage {
     const payload: UserPayload = {
       ...raw,
       password: raw.password || null,
+      roles: [...new Set(raw.roles)],
+      allowedMenus: [...new Set(raw.allowedMenus)],
       accessChangeReason: this.ackReason().trim() || undefined,
     };
     if (await this.store.save(this.editingId(), payload)) {

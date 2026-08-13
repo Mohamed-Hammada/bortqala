@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface SalesPricingSnapshotRepository extends JpaRepository<SalesPricingSnapshot, String> {
     List<SalesPricingSnapshot> findBySalesOrderId(String salesOrderId);
+    boolean existsBySalesOrderIdAndItemId(String salesOrderId, String itemId);
 }

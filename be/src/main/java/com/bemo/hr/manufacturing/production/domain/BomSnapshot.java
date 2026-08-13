@@ -36,18 +36,23 @@ public class BomSnapshot {
     @Column(name = "required_quantity", nullable = false, precision = 15, scale = 4)
     private BigDecimal requiredQuantity;
 
+    @Column(name = "standard_unit_cost", nullable = false, precision = 19, scale = 6)
+    private BigDecimal standardUnitCost;
+
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
     protected BomSnapshot() {}
 
-    public BomSnapshot(String productionOrderId, String bomId, int bomVersion, String componentItemId, BigDecimal requiredQuantity) {
+    public BomSnapshot(String productionOrderId, String bomId, int bomVersion, String componentItemId,
+                       BigDecimal requiredQuantity, BigDecimal standardUnitCost) {
         this.id = UUID.randomUUID().toString();
         this.productionOrderId = productionOrderId;
         this.bomId = bomId;
         this.bomVersion = bomVersion;
         this.componentItemId = componentItemId;
         this.requiredQuantity = requiredQuantity;
+        this.standardUnitCost = standardUnitCost;
     }
 
     @PrePersist
@@ -60,5 +65,6 @@ public class BomSnapshot {
     public int getBomVersion() { return bomVersion; }
     public String getComponentItemId() { return componentItemId; }
     public BigDecimal getRequiredQuantity() { return requiredQuantity; }
+    public BigDecimal getStandardUnitCost() { return standardUnitCost; }
     public long getCreatedAt() { return createdAt; }
 }

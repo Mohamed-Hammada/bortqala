@@ -281,8 +281,8 @@ public class ProcurementService {
 
         String actor = getCurrentUser();
         lines.stream().filter(line -> line.getQuantity().signum() > 0).forEach(line ->
-                operationsService.recordGoodsReceipt(line.getItemId(), po.getSupplierId(), line.getQuantity(), line.getUnitPrice(),
-                        saved.getGrnNumber(), line.getQualityReason(),
+                operationsService.recordGoodsReceipt(line.getItemId(), po.getSupplierId(), payload.warehouseId(), line.getQuantity(), line.getUnitPrice(),
+                        saved.getGrnNumber(), line.getLotNumber(), line.getQualityReason(),
                         receiptDate.atStartOfDay(ZoneOffset.UTC).toInstant(), actor));
         boolean fullyReceived = orderedLines.values().stream().allMatch(line ->
                 previouslyAccepted.getOrDefault(line.getId(), BigDecimal.ZERO).compareTo(line.getQuantity()) >= 0);
@@ -372,6 +372,17 @@ public class ProcurementService {
                 this::replayPayment);
     }
 
+    /**
+     * Creates every allocation of one locked payment proposal in the caller's transaction.
+     * Proposal execution owns the operation-id replay guard, so these child payments must not
+     * independently complete idempotency reservations before the proposal transaction commits.
+     */
+    @Transactional
+    public List<ProcurementApi.SupplierPaymentResponse> createSupplierPaymentsForProposal(
+            List<ProcurementApi.SupplierPaymentPayload> allocations) {
+        return allocations.stream().map(this::createSupplierPaymentTransaction).toList();
+    }
+
     private ProcurementApi.SupplierPaymentResponse replayPayment(String paymentId) {
         SupplierPayment payment = supplierPaymentRepository.findById(paymentId)
                 .orElseThrow(() -> new BusinessRuleException("الدفعة غير موجودة.", "PROC_PAYMENT_NOT_FOUND", HttpStatus.CONFLICT));
@@ -408,6 +419,8 @@ public class ProcurementService {
         fiscalPeriodGuard.requireOpen(paymentDate);
         SupplierPayment pmt = new SupplierPayment(resolvePaymentNumber(payload, paymentDate), paymentDate, payload.supplierId(),
                 payload.supplierInvoiceId(), payload.operationId(), payload.amount(), payload.paymentMethod(), payload.notes());
+        pmt.freezeBeneficiaryBankAccount(businessPartyRepository.findById(payload.supplierId())
+                .map(com.bemo.hr.party.BusinessParty::getBankAccount).orElse(null));
         SupplierPayment saved = supplierPaymentRepository.save(pmt);
 
         inv.updatePaymentStatus(paidBefore.add(saved.getAmount()));

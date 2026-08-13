@@ -185,7 +185,7 @@
       #fileInput
       type="file"
       class="hidden-file-input"
-      accept=".csv,.txt,.xlsx,.xls"
+      accept=".csv,.txt,.xlsx,.xls,.mdb,.accdb"
       (change)="choose($event)"
     />
 
@@ -204,7 +204,7 @@
           <p class="drop-prompt">
             {{ i18n.t('imports.dropPrompt') }}
           </p>
-          <span class="file-types-hint">CSV • XLS • XLSX ({{ i18n.t('imports.requiredColumns') }})</span>
+          <span class="file-types-hint">{{ i18n.t('imports.supportedFormats') }} ({{ i18n.t('imports.requiredColumns') }})</span>
         </div>
       } @else {
         <div class="selected-file-badge">

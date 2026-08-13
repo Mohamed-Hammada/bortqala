@@ -60,6 +60,7 @@
                 <td><span class="status" [class.success]="budget.active">{{ yesNo(budget.active) }}</span></td>
                 <td>
                   <button class="button secondary btn-sm" (click)="openEdit(budget)">✏️ {{ i18n.t('common.edit') }}</button>
+                  <button class="button secondary btn-sm" (click)="openRevisions(budget)">{{ i18n.t('budget.revisions') }}</button>
                   <button class="button danger btn-sm" (click)="deleteBudget(budget)">🗑️ {{ i18n.t('common.delete') }}</button>
                 </td>
               </tr>
@@ -231,6 +232,12 @@
               <span><strong>{{ i18n.t('budget.active') }}</strong></span>
             </label>
           </div>
+          <div class="field span-2">
+            <label class="dialog-toggle">
+              <input type="checkbox" formControlName="revisionApprovalRequired" />
+              <span><strong>{{ i18n.t('budget.revisionApprovalRequired') }}</strong></span>
+            </label>
+          </div>
         </div>
         <div class="modal-form-actions">
           <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('budget.cancel') }}</button>
@@ -239,5 +246,28 @@
           </button>
         </div>
       </form>
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="revisionOpen()" [title]="i18n.t('budget.revisions')" size="wide" [showFooter]="false" (close)="revisionOpen.set(false)">
+    @if (revisionBudget(); as budget) {
+      <form class="budget-dialog-form" [formGroup]="revisionForm" (ngSubmit)="requestRevision()">
+        <div class="form-grid dialog-form-grid">
+          <div class="field"><label>{{ i18n.t('budget.currentAmount') }}</label><input [value]="budget.plannedAmount" disabled /></div>
+          <div class="field"><label>{{ i18n.t('budget.newAmount') }} *</label><input type="number" min="0" step="0.01" formControlName="newAmount" /></div>
+          <div class="field span-2"><label>{{ i18n.t('budget.revisionReason') }} *</label><textarea formControlName="reason"></textarea></div>
+        </div>
+        <div class="modal-form-actions"><button class="button primary" type="submit" [disabled]="revisionForm.invalid || submitting()">{{ i18n.t('budget.requestRevision') }}</button></div>
+      </form>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>{{ i18n.t('budget.revisionNumber') }}</th><th>{{ i18n.t('budget.previousAmount') }}</th><th>{{ i18n.t('budget.newAmount') }}</th><th>{{ i18n.t('budget.revisionReason') }}</th><th>{{ i18n.t('common.status') }}</th><th>{{ i18n.t('common.actions') }}</th></tr></thead>
+          <tbody>
+            @for (revision of revisions(); track revision.id) {
+              <tr><td>{{ revision.revisionNumber }}</td><td>{{ formatAmount(revision.previousAmount) }}</td><td>{{ formatAmount(revision.newAmount) }}</td><td>{{ revision.reason }}</td><td>{{ revision.status }}</td><td>@if (revision.status === 'PENDING') { <button class="button primary btn-sm" (click)="decideRevision(revision, true)">{{ i18n.t('common.approve') }}</button> <button class="button danger btn-sm" (click)="decideRevision(revision, false)">{{ i18n.t('common.reject') }}</button> }</td></tr>
+            } @empty { <tr><td colspan="6">{{ i18n.t('budget.noRevisions') }}</td></tr> }
+          </tbody>
+        </table>
+      </div>
+    }
   </app-modal-dialog>
 </section>

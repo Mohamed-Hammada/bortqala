@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260812_v206_001_run_scoped_payroll_snapshots
+      author: codex
+      changes:
+        - dropUniqueConstraint:
+            tableName: payroll_input_snapshots
+            constraintName: uq_payroll_snapshot_employee_period
+        - addColumn:
+            tableName: payroll_input_snapshots
+            columns:
+              - column: { name: payroll_run_id, type: VARCHAR(36), defaultValue: legacy-run, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: payroll_input_snapshots
+            columnNames: app_id, payroll_run_id, employee_id
+            constraintName: uq_payroll_snapshot_run_employee
+        - addColumn:
+            tableName: payroll_run_lines
+            columns:
+              - column: { name: snapshot_id, type: VARCHAR(36) }
+        - addUniqueConstraint:
+            tableName: payroll_run_lines
+            columnNames: app_id, run_id, employee_id
+            constraintName: uq_payroll_run_line_employee
+        - addColumn:
+            tableName: salary_payment
+            columns:
+              - column: { name: payroll_run_id, type: VARCHAR(36) }
+              - column: { name: payroll_snapshot_id, type: VARCHAR(36) }
+
+  - changeSet:
+      id: 20260812_v206_002_connect_payment_proposals
+      author: codex
+      changes:
+        - addColumn:
+            tableName: vendor_payment_proposals
+            columns:
+              - column: { name: created_by, type: VARCHAR(100), defaultValue: legacy, constraints: { nullable: false } }
+              - column: { name: approved_by, type: VARCHAR(100) }
+              - column: { name: executed_by, type: VARCHAR(100) }
+              - column: { name: operation_id, type: VARCHAR(80) }
+              - column: { name: supplier_payment_id, type: VARCHAR(36) }
+        - addUniqueConstraint:
+            tableName: vendor_payment_proposals
+            columnNames: app_id, operation_id
+            constraintName: uq_payment_proposal_operation

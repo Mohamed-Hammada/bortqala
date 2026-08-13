@@ -20,7 +20,7 @@ public class BankDifferencePostingController {
     public record PostDifferencePayload(String statementLineId, String differenceType, BigDecimal amount) {}
 
     @PostMapping("/post")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'TREASURY_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'TREASURY_USER')")
     public BankDifferencePosting postDifference(@RequestBody PostDifferencePayload payload) {
         return service.postDifference(payload.statementLineId(), BankDifferencePosting.DifferenceType.valueOf(payload.differenceType()), payload.amount());
     }

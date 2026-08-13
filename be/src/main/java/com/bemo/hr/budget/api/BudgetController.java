@@ -83,13 +83,31 @@ public class BudgetController {
         return budgetService.listEncumbrances();
     }
 
-    public record ReviseBudgetPayload(java.math.BigDecimal newAmount, String reason) {}
+    public record ReviseBudgetPayload(@jakarta.validation.constraints.NotNull @jakarta.validation.constraints.DecimalMin("0") java.math.BigDecimal newAmount,
+                                      @jakarta.validation.constraints.NotBlank String reason) {}
     public record CreateTransferPayload(String transferNumber, String sourceBudgetId, String targetBudgetId, java.math.BigDecimal transferAmount, String reason) {}
 
     @PostMapping("/budgets/{id}/revisions")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
-    public com.bemo.hr.budget.BudgetRevision reviseBudget(@PathVariable String id, @RequestBody ReviseBudgetPayload payload, Authentication auth) {
+    public com.bemo.hr.budget.BudgetRevision reviseBudget(@PathVariable String id, @Valid @RequestBody ReviseBudgetPayload payload, Authentication auth) {
         return budgetService.reviseBudget(id, payload.newAmount(), payload.reason(), auth.getName());
+    }
+
+    @GetMapping("/budgets/{id}/revisions")
+    public List<com.bemo.hr.budget.BudgetRevision> listRevisions(@PathVariable String id) {
+        return budgetService.listRevisions(id);
+    }
+
+    @PostMapping("/budgets/{id}/revisions/{revisionId}/approve")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    public com.bemo.hr.budget.BudgetRevision approveRevision(@PathVariable String id, @PathVariable String revisionId, Authentication auth) {
+        return budgetService.approveRevision(id, revisionId, auth.getName());
+    }
+
+    @PostMapping("/budgets/{id}/revisions/{revisionId}/reject")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    public com.bemo.hr.budget.BudgetRevision rejectRevision(@PathVariable String id, @PathVariable String revisionId, Authentication auth) {
+        return budgetService.rejectRevision(id, revisionId, auth.getName());
     }
 
     @PostMapping("/transfers")

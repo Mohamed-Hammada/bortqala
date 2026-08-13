@@ -22,7 +22,7 @@ class CloseChecklistServiceTests {
     void setUp() {
         fiscalPeriodRepository = mock(FiscalPeriodRepository.class);
         journalEntryRepository = mock(JournalEntryRepository.class);
-        closeChecklistService = new CloseChecklistService(fiscalPeriodRepository, journalEntryRepository);
+        closeChecklistService = new CloseChecklistService(fiscalPeriodRepository, journalEntryRepository, java.util.List.of());
     }
 
     @Test

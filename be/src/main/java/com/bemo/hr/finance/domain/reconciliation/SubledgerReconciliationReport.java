@@ -19,7 +19,7 @@ import java.util.UUID;
 public class SubledgerReconciliationReport {
 
     public enum SubledgerType {
-        AR, AP, INVENTORY, PAYROLL
+        AR, AP, INVENTORY, TREASURY, PAYROLL
     }
 
     @Id
@@ -48,6 +48,12 @@ public class SubledgerReconciliationReport {
     @Column(name = "reconciled_at", nullable = false)
     private long reconciledAt;
 
+    @Column(name = "as_of_date", nullable = false)
+    private java.time.LocalDate asOfDate;
+
+    @Column(name = "difference_details", nullable = false, length = 8000)
+    private String differenceDetails;
+
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
@@ -61,6 +67,11 @@ public class SubledgerReconciliationReport {
     protected SubledgerReconciliationReport() {}
 
     public SubledgerReconciliationReport(String periodId, SubledgerType subledgerType, BigDecimal glBalance, BigDecimal subledgerBalance) {
+        this(periodId, subledgerType, glBalance, subledgerBalance, java.time.LocalDate.now(), "[]");
+    }
+
+    public SubledgerReconciliationReport(String periodId, SubledgerType subledgerType, BigDecimal glBalance, BigDecimal subledgerBalance,
+                                         java.time.LocalDate asOfDate, String differenceDetails) {
         this.id = UUID.randomUUID().toString();
         this.periodId = periodId;
         this.subledgerType = subledgerType;
@@ -68,6 +79,8 @@ public class SubledgerReconciliationReport {
         this.subledgerBalance = subledgerBalance;
         this.varianceAmount = glBalance.subtract(subledgerBalance);
         this.reconciledAt = System.currentTimeMillis();
+        this.asOfDate = asOfDate;
+        this.differenceDetails = differenceDetails;
     }
 
     @PrePersist
@@ -84,6 +97,8 @@ public class SubledgerReconciliationReport {
     public BigDecimal getSubledgerBalance() { return subledgerBalance; }
     public BigDecimal getVarianceAmount() { return varianceAmount; }
     public long getReconciledAt() { return reconciledAt; }
+    public java.time.LocalDate getAsOfDate() { return asOfDate; }
+    public String getDifferenceDetails() { return differenceDetails; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
     public long getVersion() { return version; }

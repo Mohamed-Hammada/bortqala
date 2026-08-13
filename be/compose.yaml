@@ -17,7 +17,7 @@ services:
 
   device-hub:
     build:
-      context: ../device-hub
+      context: ./modules/device-hub
       dockerfile: Dockerfile.bortqala
     environment:
       DEVICE_HUB_REGISTRY_PATH: /data/devices.json

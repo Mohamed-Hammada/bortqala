@@ -131,6 +131,7 @@ describe('BudgetsPage', () => {
       currencyCode: 'EGP',
       blocking: true,
       active: true,
+      revisionApprovalRequired: true,
     });
     const submitting = page.submitBudget();
 
@@ -144,6 +145,7 @@ describe('BudgetsPage', () => {
       currencyCode: 'EGP',
       blocking: true,
       active: true,
+      revisionApprovalRequired: true,
     });
     req.flush(budget({ id: 'budget-2', fiscalYear: 2027, plannedAmount: 50000 }));
     await yieldMicrotasks();

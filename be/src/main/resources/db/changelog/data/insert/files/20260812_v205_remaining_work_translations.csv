@@ -1,0 +1,35 @@
+id;translation_key;locale;text_value
+v205-001;PAYROLL_RUN_FROZEN;en-US;Approved or posted payroll runs cannot be changed
+v205-002;PAYROLL_RUN_FROZEN;ar-EG;لا يمكن تعديل تشغيل رواتب معتمد أو مرحّل
+v205-003;PAYROLL_RUN_EMPLOYEE_EXISTS;en-US;The employee already exists in this payroll run
+v205-004;PAYROLL_RUN_EMPLOYEE_EXISTS;ar-EG;الموظف موجود بالفعل في تشغيل الرواتب هذا
+v205-005;PAYMENT_PROPOSAL_APPROVAL_REQUIRED;en-US;The payment proposal must be approved before execution
+v205-006;PAYMENT_PROPOSAL_APPROVAL_REQUIRED;ar-EG;يجب اعتماد مقترح الدفع قبل التنفيذ
+v205-007;PAYMENT_PROPOSAL_ALREADY_EXECUTED;en-US;The payment proposal has already been executed
+v205-008;PAYMENT_PROPOSAL_ALREADY_EXECUTED;ar-EG;تم تنفيذ مقترح الدفع بالفعل
+v205-009;procurement.tabProposal;en-US;Payment Proposals
+v205-010;procurement.tabProposal;ar-EG;مقترحات الدفع
+v205-011;procurement.createProposal;en-US;Create proposal
+v205-012;procurement.createProposal;ar-EG;إنشاء مقترح
+v205-013;procurement.proposalCreated;en-US;Payment proposal created
+v205-014;procurement.proposalCreated;ar-EG;تم إنشاء مقترح الدفع
+v205-015;procurement.proposalApproved;en-US;Payment proposal approved
+v205-016;procurement.proposalApproved;ar-EG;تم اعتماد مقترح الدفع
+v205-017;procurement.proposalExecuted;en-US;Payment proposal executed and supplier payment posted
+v205-018;procurement.proposalExecuted;ar-EG;تم تنفيذ مقترح الدفع وترحيل دفعة المورد
+v205-019;procurement.proposalNumber;en-US;Proposal number
+v205-020;procurement.proposalNumber;ar-EG;رقم المقترح
+v205-021;procurement.proposalStatus;en-US;Proposal status
+v205-022;procurement.proposalStatus;ar-EG;حالة المقترح
+v205-023;procurement.approveProposal;en-US;Approve
+v205-024;procurement.approveProposal;ar-EG;اعتماد
+v205-025;procurement.executeProposal;en-US;Execute payment
+v205-026;procurement.executeProposal;ar-EG;تنفيذ الدفع
+v205-027;procurement.proposalEmpty;en-US;No payment proposals found
+v205-028;procurement.proposalEmpty;ar-EG;لا توجد مقترحات دفع
+v205-029;PAYROLL_MANUAL_RUN_LINES_DISABLED;en-US;Manual payroll inputs are disabled - calculate the payroll register to freeze source evidence
+v205-030;PAYROLL_MANUAL_RUN_LINES_DISABLED;ar-EG;تم تعطيل إدخال بنود تشغيل الرواتب يدويا - احسب كشف الرواتب لتجميد بيانات المصدر
+v205-031;PAYROLL_RUN_SNAPSHOTS_REQUIRED;en-US;The payroll run has no frozen input snapshots
+v205-032;PAYROLL_RUN_SNAPSHOTS_REQUIRED;ar-EG;لا يحتوي تشغيل الرواتب على لقطات مدخلات مجمدة
+v205-033;PAYMENT_PROPOSAL_STATE_INVALID;en-US;The payment proposal state does not allow this action
+v205-034;PAYMENT_PROPOSAL_STATE_INVALID;ar-EG;حالة مقترح الدفع لا تسمح بهذا الإجراء

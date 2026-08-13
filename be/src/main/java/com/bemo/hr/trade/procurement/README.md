@@ -39,4 +39,10 @@
 
 **EN:** Once a purchase order is first saved, its document date, transaction currency, exchange rate, source, and override reason are immutable. Draft editing still permits supplier, terms, item, quantity, and price changes, and recomputes the base total with the frozen rate.
 
+## Vendor payment proposals / مقترحات دفع الموردين
+
+**EN:** A proposal can allocate positive amounts across multiple open invoices for one supplier and currency. Its total is derived server-side. Maker/checker/disburser separation is enforced, execution locks the proposal and creates one real supplier payment per allocation in one transaction, and the proposal operation ID makes replay deterministic without duplicate invoice, ledger, or audit effects.
+
+**AR:** يمكن لمقترح الدفع توزيع مبالغ موجبة على عدة فواتير مفتوحة لمورد وعملة واحدة، ويحسب الخادم الإجمالي. يفرض النظام فصل المنشئ والمراجع ومنفذ الصرف، ويقفل المقترح عند التنفيذ وينشئ دفعة مورد فعلية لكل تخصيص داخل معاملة واحدة، مع منع التكرار بواسطة معرف العملية دون مضاعفة أثر الفاتورة أو دفتر المورد أو التدقيق.
+
 **AR:** بعد أول حفظ لأمر الشراء يثبت تاريخ المستند وعملة العملية وسعر الصرف ومصدره وسبب التعديل. يظل تعديل المورد والشروط والصنف والكمية والسعر متاحاً للمسودة، ويعاد حساب الإجمالي الأساسي بالسعر المثبت.

@@ -5,6 +5,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import java.time.LocalDate;
 
 import java.util.List;
 
@@ -20,7 +22,8 @@ public class TrialBalanceController {
 
     @GetMapping("/trial-balance")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR', 'VIEWER')")
-    public List<TrialBalanceReportService.TrialBalanceRow> getTrialBalance() {
-        return trialBalanceReportService.generateTrialBalance();
+    public List<TrialBalanceReportService.TrialBalanceRow> getTrialBalance(
+            @RequestParam(required=false) LocalDate from,@RequestParam(required=false) LocalDate to) {
+        return trialBalanceReportService.generateTrialBalance(from==null?LocalDate.MIN:from,to==null?LocalDate.MAX:to);
     }
 }

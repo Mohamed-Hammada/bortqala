@@ -47,6 +47,12 @@ export const WORKFORCE_ROUTES: Routes = [
     loadComponent: () => import('./pages/manual-attendance/manual-attendance.component').then(m => m.ManualAttendanceComponent)
   },
   {
+    path: 'dispatch-disputes',
+    canActivate: [workforceRoleGuard, menuAccessGuard],
+    data: { roles: WORKFORCE_BASE_ROLES, menuId: 'workforce-dispatch-disputes' },
+    loadComponent: () => import('./pages/dispatch-disputes/dispatch-disputes.component').then(m => m.DispatchDisputesComponent)
+  },
+  {
     path: 'settlement-periods',
     canActivate: [workforceRoleGuard, menuAccessGuard],
     data: { roles: WORKFORCE_BASE_ROLES, menuId: 'workforce-settlements' },

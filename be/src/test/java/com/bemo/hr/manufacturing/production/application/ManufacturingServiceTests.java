@@ -5,6 +5,7 @@ import com.bemo.hr.manufacturing.production.api.ManufacturingApi;
 import com.bemo.hr.manufacturing.production.domain.BomHeader;
 import com.bemo.hr.manufacturing.production.domain.BomLine;
 import com.bemo.hr.manufacturing.production.domain.ProductionOrder;
+import com.bemo.hr.manufacturing.production.domain.BomSnapshot;
 import com.bemo.hr.manufacturing.production.infrastructure.BomHeaderRepository;
 import com.bemo.hr.manufacturing.production.infrastructure.BomLineRepository;
 import com.bemo.hr.manufacturing.production.infrastructure.ProductionOrderRepository;
@@ -32,6 +33,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
 
 @ExtendWith(MockitoExtension.class)
 class ManufacturingServiceTests {
@@ -81,9 +83,10 @@ class ManufacturingServiceTests {
         BomHeader bom = new BomHeader("BOM-001", "fg-1", "Finished Good 1", BigDecimal.ONE, "v1.0", null, null, null, true, List.of(line));
         ProductionOrder order = new ProductionOrder("WO-100", bom.getId(), "fg-1", "v1.0", BigDecimal.valueOf(5), LocalDate.now(), null);
 
-        when(productionOrderRepository.findById("wo-1")).thenReturn(Optional.of(order));
+        when(productionOrderRepository.findByIdForUpdate("wo-1")).thenReturn(Optional.of(order));
         when(bomHeaderRepository.findById(bom.getId())).thenReturn(Optional.of(bom));
         when(operationsService.stockBalance("rm-1")).thenReturn(BigDecimal.valueOf(100));
+        when(operationsService.latestUnitCost("rm-1")).thenReturn(new BigDecimal("15"));
         when(productionOrderRepository.save(any(ProductionOrder.class))).thenAnswer(i -> i.getArgument(0));
 
         ManufacturingApi.ProductionOrderResponse response = service.startProductionOrder("wo-1");
@@ -98,7 +101,7 @@ class ManufacturingServiceTests {
         BomHeader bom = new BomHeader("BOM-001", "fg-1", "Finished Good 1", BigDecimal.ONE, "v1.0", null, null, null, true, List.of(line));
         ProductionOrder order = new ProductionOrder("WO-100", bom.getId(), "fg-1", "v1.0", BigDecimal.valueOf(5), LocalDate.now(), null);
 
-        when(productionOrderRepository.findById("wo-1")).thenReturn(Optional.of(order));
+        when(productionOrderRepository.findByIdForUpdate("wo-1")).thenReturn(Optional.of(order));
         when(bomHeaderRepository.findById(bom.getId())).thenReturn(Optional.of(bom));
         when(operationsService.stockBalance("rm-1")).thenReturn(BigDecimal.valueOf(2));
 
@@ -115,10 +118,10 @@ class ManufacturingServiceTests {
         ProductionOrder order = new ProductionOrder("WO-100", bom.getId(), "fg-1", "v1.0", BigDecimal.valueOf(5), LocalDate.now(), null);
         order.start();
 
-        when(productionOrderRepository.findById("wo-1")).thenReturn(Optional.of(order));
-        when(bomHeaderRepository.findById(bom.getId())).thenReturn(Optional.of(bom));
-        when(operationsService.stockBalance("rm-1")).thenReturn(BigDecimal.valueOf(100));
-        when(operationsService.latestUnitCost("rm-1")).thenReturn(BigDecimal.valueOf(15));
+        when(productionOrderRepository.findByIdForUpdate("wo-1")).thenReturn(Optional.of(order));
+        when(bomSnapshotService.getSnapshotsForProductionOrder(order.getId())).thenReturn(List.of(
+                new BomSnapshot(order.getId(), bom.getId(), 1, "rm-1", BigDecimal.valueOf(10), new BigDecimal("15"))));
+        when(operationsService.productionIssueCost("WO-100", "rm-1")).thenReturn(BigDecimal.valueOf(150));
         when(productionOrderRepository.save(any(ProductionOrder.class))).thenAnswer(i -> i.getArgument(0));
 
         ManufacturingApi.CompleteProductionOrderPayload payload = new ManufacturingApi.CompleteProductionOrderPayload(
@@ -129,5 +132,29 @@ class ManufacturingServiceTests {
         assertThat(response.status()).isEqualTo("COMPLETED");
         assertThat(response.actualOutputQuantity()).isEqualTo(BigDecimal.valueOf(5));
         verify(operationsService).recordProductionReceipt(eq("fg-1"), eq(BigDecimal.valueOf(5)), eq(BigDecimal.valueOf(30.00).setScale(2)), eq("WO-100"), anyString(), any(), any());
+    }
+
+    @Test
+    void activeOrderUsesFrozenBomAfterMasterBomChanges() {
+        BomLine changedLine = new BomLine("rm-2", "Changed Material", BigDecimal.valueOf(99), "KG", BigDecimal.ZERO, 1);
+        BomHeader changedBom = new BomHeader("BOM-001", "fg-1", "Finished Good 1", BigDecimal.ONE,
+                "v2.0", null, null, null, true, List.of(changedLine));
+        ProductionOrder order = new ProductionOrder("WO-100", changedBom.getId(), "fg-1", "v1.0",
+                BigDecimal.valueOf(5), LocalDate.now(), null);
+        order.start();
+        BomSnapshot frozen = new BomSnapshot(order.getId(), changedBom.getId(), 1, "rm-1",
+                BigDecimal.valueOf(10), new BigDecimal("15"));
+
+        when(productionOrderRepository.findById("wo-1")).thenReturn(Optional.of(order));
+        when(bomSnapshotService.getSnapshotsForProductionOrder(order.getId())).thenReturn(List.of(frozen));
+        when(operationsService.stockBalance("rm-1")).thenReturn(BigDecimal.valueOf(7));
+
+        ManufacturingApi.MaterialReadinessResponse readiness = service.checkMaterialReadiness("wo-1");
+
+        assertThat(readiness.requirements()).singleElement().satisfies(requirement -> {
+            assertThat(requirement.componentItemId()).isEqualTo("rm-1");
+            assertThat(requirement.requiredQuantity()).isEqualByComparingTo("10");
+        });
+        verify(bomHeaderRepository, never()).findById(anyString());
     }
 }

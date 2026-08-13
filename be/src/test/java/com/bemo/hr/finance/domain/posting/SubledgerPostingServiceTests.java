@@ -5,6 +5,9 @@ import com.bemo.hr.finance.domain.JournalEntryLine;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.finance.domain.FiscalPeriod;
+import com.bemo.hr.finance.domain.FiscalPeriodGuard;
+import com.bemo.hr.audit.application.AuditService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,13 +27,20 @@ class SubledgerPostingServiceTests {
     private JournalEntryRepository journalEntryRepository;
     private JournalEntryLineRepository journalEntryLineRepository;
     private SubledgerPostingService subledgerPostingService;
+    private FiscalPeriodGuard fiscalPeriodGuard;
+    private AuditService auditService;
 
     @BeforeEach
     void setUp() {
         postingProfileRepository = mock(PostingProfileRepository.class);
         journalEntryRepository = mock(JournalEntryRepository.class);
         journalEntryLineRepository = mock(JournalEntryLineRepository.class);
-        subledgerPostingService = new SubledgerPostingService(postingProfileRepository, journalEntryRepository, journalEntryLineRepository);
+        fiscalPeriodGuard = mock(FiscalPeriodGuard.class);
+        auditService = mock(AuditService.class);
+        FiscalPeriod period = new FiscalPeriod(2026, 2, "Feb", LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28), FiscalPeriod.Status.OPEN);
+        when(fiscalPeriodGuard.requireOpen(any())).thenReturn(period);
+        subledgerPostingService = new SubledgerPostingService(postingProfileRepository, journalEntryRepository, journalEntryLineRepository,
+                fiscalPeriodGuard, auditService, mock(com.bemo.hr.finance.infrastructure.JournalSourceMetadataRepository.class));
     }
 
     @Test
@@ -52,7 +62,7 @@ class SubledgerPostingServiceTests {
                 "Contractor Settlement Posting",
                 new BigDecimal("5000.00"),
                 new BigDecimal("5000.00"),
-                "fp-1"
+                null
         );
 
         assertThat(entry).isNotNull();
@@ -60,6 +70,8 @@ class SubledgerPostingServiceTests {
         assertThat(entry.getOperationId()).isEqualTo(opId);
         assertThat(entry.getReference()).isEqualTo("WORKFORCE:SETTLEMENT:SETTLE-100");
         verify(journalEntryLineRepository, times(2)).save(any(JournalEntryLine.class));
+        verify(fiscalPeriodGuard).requireOpen(LocalDate.of(2026, 2, 1));
+        verify(auditService).record(eq("SUBLEDGER_POSTED"), eq("JOURNAL_ENTRY"), eq(entry.getId()), eq("SYSTEM"), anyString(), isNull());
     }
 
     @Test
@@ -79,5 +91,26 @@ class SubledgerPostingServiceTests {
                 "fp-1"
         )).isInstanceOf(BusinessRuleException.class)
           .hasMessageContaining("Debit and credit amounts must be equal");
+    }
+
+    @Test
+    void replaysOperationAndCreatesLinkedBalancedReversal() {
+        String opId = UUID.randomUUID().toString();
+        JournalEntry original = new JournalEntry("POST-1", LocalDate.of(2026, 2, 1), "Posting", "AP:INVOICE:I-1", null);
+        original.setCurrency("USD"); original.approve("approver"); original.post("SYSTEM");
+        when(journalEntryRepository.findById(original.getId())).thenReturn(java.util.Optional.of(original));
+        when(journalEntryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(journalEntryLineRepository.findByJournalEntryId(original.getId())).thenReturn(List.of(
+                new JournalEntryLine(original.getId(), "DR", null, new BigDecimal("100"), BigDecimal.ZERO, "DR"),
+                new JournalEntryLine(original.getId(), "CR", null, BigDecimal.ZERO, new BigDecimal("100"), "CR")));
+
+        JournalEntry reversal = subledgerPostingService.reverse(original.getId(), opId, LocalDate.of(2026, 2, 2), "Correction", "checker");
+        when(journalEntryRepository.findByOperationId(opId)).thenReturn(java.util.Optional.of(reversal));
+        JournalEntry replay = subledgerPostingService.reverse(original.getId(), opId, LocalDate.of(2026, 2, 2), "Correction", "checker");
+
+        assertThat(reversal.getReversedEntryId()).isEqualTo(original.getId());
+        assertThat(original.getReversalEntryId()).isEqualTo(reversal.getId());
+        assertThat(replay).isSameAs(reversal);
+        verify(journalEntryLineRepository, times(2)).save(any(JournalEntryLine.class));
     }
 }

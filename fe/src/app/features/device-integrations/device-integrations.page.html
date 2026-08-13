@@ -15,6 +15,12 @@
     <div class="alert error">{{ store.error() }}</div>
   }
 
+  <div class="integration-communication-note">
+    <strong>{{ i18n.t('deviceIntegrations.communicationTitle', {}, 'Secure communication path') }}</strong>
+    <span>{{ i18n.t('deviceIntegrations.communicationPath', {}, 'Browser → Bortqala API → backend device module → vendor device/platform') }}</span>
+    <small>{{ i18n.t('deviceIntegrations.communicationHint', {}, 'The browser never connects directly to device credentials or Device Hub.') }}</small>
+  </div>
+
   <section class="summary-grid">
     <article class="summary-card">
       <span>{{ i18n.t('deviceIntegrations.hubStatus', {}, 'Integration hub') }}</span>

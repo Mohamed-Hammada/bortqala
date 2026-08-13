@@ -24,6 +24,7 @@ public class SalesReceivablesService {
     private final CustomerInvoiceRepository invoiceRepository;
     private final CustomerReceiptRepository receiptRepository;
     private final CustomerReceiptAllocationRepository allocationRepository;
+    private final CustomerCreditNoteRepository creditNoteRepository;
     private final CollectionTaskRepository taskRepository;
     private final BusinessPartyRepository partyRepository;
     private final PartnerLedgerEntryRepository ledgerRepository;
@@ -60,6 +61,32 @@ public class SalesReceivablesService {
     }
 
     @Transactional
+    public CustomerInvoice createAndIssueDeliveryInvoice(String invoiceNumber,String customerId,String salesOrderId,
+                                                         LocalDate invoiceDate,String currencyCode,BigDecimal amount,String actor){
+        SalesApi.InvoiceResponse created=createInvoice(new SalesApi.InvoiceRequest(invoiceNumber,customerId,salesOrderId,
+                ms(invoiceDate),ms(invoiceDate.plusDays(creditRepository.findByCustomerId(customerId)
+                .map(CustomerCreditProfile::getPaymentTermsDays).orElse(30))),currencyCode,amount),actor);
+        issueInvoice(created.id(),actor);
+        return invoiceRepository.findById(created.id()).orElseThrow(()->error("AR_INVOICE_NOT_FOUND",HttpStatus.NOT_FOUND));
+    }
+
+    @Transactional
+    public CustomerCreditNote applyReturnCredit(String operationId,String creditNoteNumber,String invoiceId,
+                                                String salesOrderId,String deliveryId,String returnId,LocalDate creditDate,
+                                                BigDecimal amount,String actor){
+        CustomerCreditNote replay=creditNoteRepository.findByOperationId(operationId).orElse(null);if(replay!=null)return replay;
+        CustomerInvoice invoice=invoiceRepository.findByIdForUpdate(invoiceId).orElseThrow(()->error("AR_INVOICE_NOT_FOUND",HttpStatus.NOT_FOUND));
+        try{invoice.applyCredit(amount);}catch(IllegalArgumentException ex){throw error("O2C_CREDIT_AMOUNT_INVALID",HttpStatus.CONFLICT);}
+        CustomerCreditNote note=creditNoteRepository.save(new CustomerCreditNote(creditNoteNumber,invoice.getCustomerId(),
+                invoice.getId(),salesOrderId,deliveryId,returnId,creditDate,invoice.getCurrencyCode(),amount,operationId,actor));
+        invoiceRepository.save(invoice);
+        ledgerRepository.save(new PartnerLedgerEntry(invoice.getCustomerId(),"CUSTOMER_CREDIT_NOTE",amount.negate(),
+                creditNoteNumber,"Customer return credit",creditDate.atStartOfDay(ZoneOffset.UTC).toInstant(),actor));
+        auditService.record("CREATE","CUSTOMER_CREDIT_NOTE",note.getId(),actor,
+                "{\"returnId\":\""+returnId+"\",\"amount\":"+amount+"}",null);return note;
+    }
+
+    @Transactional
     public SalesApi.InvoiceResponse issueInvoice(String id,String actor){
         CustomerInvoice invoice=invoiceRepository.findById(id).orElseThrow(()->error("AR_INVOICE_NOT_FOUND",HttpStatus.NOT_FOUND));
         if(invoice.getStatus()!=CustomerInvoice.Status.DRAFT)return invoice(invoice);
@@ -78,14 +105,15 @@ public class SalesReceivablesService {
         if(allocated.compareTo(request.amount())>0)throw error("AR_ALLOCATION_EXCEEDS_RECEIPT",HttpStatus.CONFLICT);
         Map<String,CustomerInvoice> invoices=requested.isEmpty()?Map.of():invoiceRepository.findAllByIdForUpdate(requested.stream().map(SalesApi.AllocationRequest::invoiceId).toList()).stream().collect(Collectors.toMap(CustomerInvoice::getId,Function.identity()));
         if(invoices.size()!=requested.size())throw error("AR_INVOICE_NOT_FOUND",HttpStatus.NOT_FOUND);
-        CustomerReceipt receipt=new CustomerReceipt(request.receiptNumber(),request.customerId(),date(request.receiptDate()),request.currencyCode(),request.amount(),request.operationId(),actor);receiptRepository.save(receipt);
+        CustomerReceipt receipt=new CustomerReceipt(request.receiptNumber(),request.customerId(),date(request.receiptDate()),request.currencyCode(),request.amount(),request.operationId(),actor);
+        List<CustomerReceiptAllocation> allocations=new ArrayList<>();
         for(SalesApi.AllocationRequest row:requested){CustomerInvoice invoice=invoices.get(row.invoiceId());
             if(!invoice.getCustomerId().equals(request.customerId())||!invoice.getCurrencyCode().equalsIgnoreCase(request.currencyCode()))throw error("AR_ALLOCATION_CUSTOMER_CURRENCY_MISMATCH",HttpStatus.CONFLICT);
             try{invoice.allocate(row.amount());receipt.allocate(row.amount());}catch(IllegalArgumentException|IllegalStateException ex){throw error("AR_ALLOCATION_EXCEEDS_OUTSTANDING",HttpStatus.CONFLICT);}
-            invoiceRepository.save(invoice);allocationRepository.save(new CustomerReceiptAllocation(receipt.getId(),invoice.getId(),row.amount()));
+            invoiceRepository.save(invoice);allocations.add(new CustomerReceiptAllocation(receipt.getId(),invoice.getId(),row.amount()));
             if(invoice.getStatus()==CustomerInvoice.Status.PAID)taskRepository.findByInvoiceId(invoice.getId()).ifPresent(CollectionTask::close);
         }
-        receiptRepository.save(receipt);ledgerRepository.save(new PartnerLedgerEntry(request.customerId(),"CUSTOMER_RECEIPT",request.amount().negate(),request.receiptNumber(),"Customer receipt",receipt.getReceiptDate().atStartOfDay(ZoneOffset.UTC).toInstant(),actor));
+        receipt=receiptRepository.save(receipt);allocationRepository.saveAll(allocations);ledgerRepository.save(new PartnerLedgerEntry(request.customerId(),"CUSTOMER_RECEIPT",request.amount().negate(),request.receiptNumber(),"Customer receipt",receipt.getReceiptDate().atStartOfDay(ZoneOffset.UTC).toInstant(),actor));
         auditService.record("RECEIPT","CUSTOMER_RECEIPT",receipt.getId(),actor,"{\"operationId\":\""+request.operationId()+"\",\"amount\":"+request.amount()+"}",null);return receipt(receipt);
     }
 

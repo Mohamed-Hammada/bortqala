@@ -40,7 +40,7 @@
 - **GRN Reliability & Validation (P0)**: Fixed goods-receipt line persistence, server-calculated remaining PO quantities, partial/full PO transitions, accepted-quantity inventory posting, negative/over-receipt validation, explicit Arabic UI feedback, decimal quantity steps, and the responsive accessible GRN dialog.
 - **Live Biometric Device Integration (P0)**: Added tenant-owned IP/API device connections, immediate and scheduled synchronization, durable status/cursor state, batch and punch idempotency, identity matching, audit logging, and an Arabic responsive management UI alongside CSV/XLS/XLSX fallback.
 - **Production/Test Bootstrap Boundary (P0)**: Production always installs translations and platform roles, then idempotently ensures configured Admin and Super Admin accounts. Demo organization, attendance, currency, supplier, inventory, and legacy QA correction data is reachable only through the test changelog or an explicitly enabled `dev`/`demo` profile.
-- **Deployment & PostgreSQL Verification Hardening (P0/P1)**: Production Compose now clears inherited development ports with `!reset []` so PostgreSQL and the backend are never published to the host in production; CI renders the merged production Compose and asserts private ports are absent while the frontend stays public. The backend Docker builder/runtime now use Temurin Java 26, matching the Gradle toolchain, and CI builds the image and smoke-tests the container JVM version. Supplier-payment overpayment concurrency is verified against real PostgreSQL via Testcontainers (`PostgresIntegrationTest` uses the full production Liquibase changelog + `ddl-auto=validate`, `@RepeatedTest(10)` with a thread-safe operation-ID list). This surfaced and fixed two fresh-deploy blockers in the production migrations: V80 `addUniqueConstraint` used YAML list `columnNames` (Liquibase requires a comma-separated string), and the V81 translation CSV had an unquoted embedded semicolon.
+- **Deployment & PostgreSQL Verification Hardening (P0/P1)**: Production Compose clears inherited development ports with `!reset []` so PostgreSQL and the backend are never published to the host in production; CI renders the merged production Compose and asserts private ports are absent while the frontend stays public. Backend build/CI/container execution is standardized on Temurin Java 21, with Java 17 bytecode/API compatibility enforced by `options.release = 17`. Supplier-payment overpayment concurrency is verified against real PostgreSQL via Testcontainers (`PostgresIntegrationTest` uses the full production Liquibase changelog + `ddl-auto=validate`, `@RepeatedTest(10)` with a thread-safe operation-ID list). This surfaced and fixed two fresh-deploy blockers in the production migrations: V80 `addUniqueConstraint` used YAML list `columnNames` (Liquibase requires a comma-separated string), and the V81 translation CSV had an unquoted embedded semicolon.
 - **P0-08 (deferred, external)**: GitHub Actions still requires resolving the account/billing lock before the three CI jobs can produce independent evidence.
 - **Technical-Review Hardening Batch (P0)**:
   - **P0-1/P0-2/P0-4 — Tenant & Evidence Integrity**: Tenant-owned aggregates keep `@TenantId` app scoping with immutable audit timestamps on evidence; shared idempotency (`operationId`) handling verified across bulk decisions, payroll transitions, and supplier payments; API dates remain epoch-milliseconds.
@@ -112,7 +112,15 @@
 - **EPIC-SUB-01 — Atomic Trial Conversion (DONE 2026-08-10)**: Whitelisted subscription management endpoints in `TrialWriteInterceptor.java` to prevent read-only trial blocks. Unified commercial state conversion (`PAID`), subscription status (`ACTIVE`), tenant lock, and operation ID idempotency in `SubscriptionService.change(...)`.
 
 ## [ORPHANS & PENDING]
-*(None - All feature epics, missing items, and vertical slices are fully implemented, tested, verified, and mapped.)*
+
+This is the current release-status summary. Historical `DONE` entries describe delivery milestones and are not release acceptance by themselves. The authoritative acceptance criteria and evidence fields are in [`docs/BORTQALA_REMAINING_WORK_CHECKLIST.md`](docs/BORTQALA_REMAINING_WORK_CHECKLIST.md).
+
+- **VERIFY** — payroll snapshot determinism and configurable formula inputs are implemented in the current working tree (V203/V204), but PostgreSQL, full-suite, UI/API scenario, final-SHA, and reviewer evidence remain.
+- **VERIFY** — manufacturing execution uses the frozen BOM after start in the current working tree (V201/V202), but PostgreSQL, concurrency/idempotency, full-suite, final-SHA, and reviewer evidence remain.
+- **VERIFY** — P2P, O2C, inventory, shared document controls, treasury/budget/close, finance, master-data, and governance claims require the connected E2E evidence specified in the release checklist. Existing primitives must be characterized before any rewrite.
+- **OPEN** — refresh all release evidence on the final candidate SHA (`REL-002`).
+- **BLOCKED** — independent CI on the exact release SHA remains blocked by the GitHub Actions account/billing lock (`REL-001`).
+- **OPEN** — final release sign-off; the repository must not be described as fully complete or release-ready until every P0 item and the Final Release Gate pass.
 
 ---
 
@@ -171,7 +179,7 @@
 - [x] Imports UI manages biometric sources (CRUD, active toggle) and selects the source on the upload dropzone; 17 new bilingual keys (V95)
 - [x] Super Admin authorization parity: `SUPER_ADMIN` explicitly present on every `@PreAuthorize` that admits `ADMIN`; no role hierarchy introduced; 4-test audit suite green
 - [x] Every backend exception message carries a stable key with DB-localized ar-EG/en-US rows (V91); dynamic concatenated messages stay single-arg
-- [x] Release verification gate green: 209 backend tests (incl. 24 PostgreSQL concurrency tests + Liquibase upgrade-path test), 46 frontend tests, 1103 i18n keys, production build, and prod Compose up with healthy containers
+- [x] Historical release verification for SHA `ee8356e`: 209 backend tests (incl. 24 PostgreSQL concurrency tests + Liquibase upgrade-path test), 46 frontend tests, 1103 i18n keys, production build, and prod Compose up with healthy containers. This does not satisfy the current final-SHA release gate.
 - [x] One-time `fix_*.py` repair scripts removed from repo root (changes verified in source; no reusable utilities)
 - [x] Demo-only no-login SUPER_ADMIN access: backend generates a random secret per startup, logs it once when enabled, and exchanges it via public `POST /api/v1/auth/demo-login` (404 `DEMO_NO_LOGIN_LINK_INVALID` when disabled/expired, v97 translations). Frontend auto-login from `?my_secret=` with query preservation in `authGuard` and secret stripping after use. Split launchers: `start-backend-dev.bat` (bemo_erp_dev, feature on) and `start-backend-prod.bat` (bemo_erp_prod, feature off). Backend demo tests green (3/3); frontend suite green (52 tests) and build succeeds.
 - [x] Journal posting idempotency: per-entry UUID `operationId` + `expectedVersion` on `POST .../journal-entries/{id}/post`, reuse after network timeout, clearing on success/deterministic failure (V98 keys).
@@ -207,16 +215,18 @@
 
 ---
 
-## [ORPHANS & PENDING]
-- **Roadmap Advanced Integration (Audit Result: 84 / 86 Items Pending End-to-End Wiring)**:
-  - **P0 Shared**: Wire `DocumentTransitionService` and `SegregationOfDutiesService` across all document controllers; enforce `/precheck` before period close in `FiscalPeriodController`; construct balanced journal lines in `SubledgerPostingService`.
-  - **Workforce**: Add `LaborDispatchController` & `WorkforceDisputeController` REST APIs; wire dispatch, worker assignment, dispute, and settlement recalculation into workforce UI pages.
-  - **Attendance/Payroll**: Wire `PayrollInputSnapshot` as sole calculation source in `PayrollService`; add `PayrollRun` & `PayrollCalendar` aggregates; eliminate hard-coded calculation constants.
-  - **Procure-to-Pay (P2P)**: Extend `PurchaseRequisition` with requisition lines; add RFQ/quotes/evaluation/award workflow & PO conversion; complete payment proposal.
-  - **Order-to-Cash (O2C)**: Add `SalesOrderLine` items; inject `SalesPricingSnapshotService` into `SalesController`; implement reservation, delivery documents, COGS posting, and RMA/credit notes.
-  - **Inventory**: Implement warehouse/bin hierarchy, stock status balances (`AVAILABLE`, `QUARANTINE`, `BLOCKED`), reservation aggregate, transfer, cycle count, and lot/serial tracking.
-  - **Manufacturing/Quality**: Use `BomSnapshotService` as immutable source in `ManufacturingService`; add material reservation, partial production receipts, routing/work centers, WIP accounting, and variance close.
-  - **Treasury/Budget/Close**: Implement multi-source payment batch, maker/checker, budget revision versioning, module close providers, and financial/subledger reconciliation reports.
-  - **Finance / Master Data / Rules**: Implement journal dimensions, manual journal approval, realized/unrealized FX revaluation, Trial Balance / GL detail / Balance Sheet APIs, master-data effective dating, and bank-change governance.
+## [SOURCE-VERIFIED OPEN WORK]
+- **Roadmap Advanced Integration** — counts were removed because the old 84/86 figure mixed implemented primitives with unverified wiring. Each remaining item must be closed by source/API/UI/test evidence rather than README status:
+  - **Shared controls — VERIFY**: characterize real command-path wiring for `DocumentTransitionService`, segregation of duties, fiscal close precheck, and balanced subledger posting before changing code.
+  - **Workforce**: Dispatch, worker assignment, and settlement dispute APIs/UI are wired at `/workforce/dispatch-disputes` with guarded/audited transitions and authenticated dispute actors (V199). Settlement recalculation remains in the existing settlement-period workbench; add cross-flow E2E characterization before further changes.
+  - **P0 Payroll — VERIFY**: `PayrollInputSnapshot` is wired as the frozen calculation source and effective-dated policy values replace active-path magic constants in the current working tree. Full PostgreSQL/E2E/final-SHA evidence remains.
+  - **Procure-to-Pay (P2P) — VERIFY**: prove payment-proposal approval/execution through real payment, invoice balance, partner ledger, treasury/accounting, idempotency, authorization, and UI result.
+  - **Order-to-Cash (O2C) — VERIFY**: prove the connected order → reservation → delivery → invoice → receipt/allocation → return/credit lifecycle and frozen pricing.
+  - **Inventory — VERIFY**: reconcile warehouse/bin, stock status, reservation, transfer, cycle count, and lot/serial behavior against the checklist; do not rebuild delivered capabilities.
+  - **Manufacturing/Quality — VERIFY**: production start now freezes BOM requirements and active execution uses the snapshot. Verify PostgreSQL/concurrency evidence and characterize the remaining reservation, partial receipt, routing, WIP, and variance-close flows before changes.
+  - **Treasury/Budget/Close — VERIFY**: characterize multi-source batches, maker/checker, budget revision history, module close providers, and reconciliation reports against real paths.
+  - **Finance / Master Data / Rules — VERIFY**: characterize dimensions, manual journal approval, FX, financial statements, effective dating, and bank-change governance against real paths.
+
+- **Operational hardening completed from the 2026-08-12 staff audit**: structured console output is wrapped in a non-blocking Logback `AsyncAppender`; Java 21 is the explicit Gradle toolchain matching CI and both Docker stages while release 17 remains the compatibility target.
 
 

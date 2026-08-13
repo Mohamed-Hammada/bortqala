@@ -22,11 +22,12 @@ import static org.mockito.Mockito.*;
 class SalesReceivablesServiceTests {
     @Mock CustomerCreditProfileRepository creditRepository; @Mock CustomerInvoiceRepository invoiceRepository;
     @Mock CustomerReceiptRepository receiptRepository; @Mock CustomerReceiptAllocationRepository allocationRepository;
+    @Mock CustomerCreditNoteRepository creditNoteRepository;
     @Mock CollectionTaskRepository taskRepository; @Mock BusinessPartyRepository partyRepository;
     @Mock PartnerLedgerEntryRepository ledgerRepository; @Mock AuditService auditService;
     SalesReceivablesService service; BusinessParty customer;
 
-    @BeforeEach void setup(){service=new SalesReceivablesService(creditRepository,invoiceRepository,receiptRepository,allocationRepository,taskRepository,partyRepository,ledgerRepository,auditService);
+    @BeforeEach void setup(){service=new SalesReceivablesService(creditRepository,invoiceRepository,receiptRepository,allocationRepository,creditNoteRepository,taskRepository,partyRepository,ledgerRepository,auditService);
         customer=new BusinessParty("C-1","Customer",null,"PROCESSING_CUSTOMER",null,null,null,null,null,true,"DIRECT",null,null,null,"EGP","PER_DELIVERY","NET_30",null,null);
         lenient().when(partyRepository.findById(customer.getId())).thenReturn(Optional.of(customer));lenient().when(invoiceRepository.save(any())).thenAnswer(i->i.getArgument(0));
         lenient().when(receiptRepository.save(any())).thenAnswer(i->i.getArgument(0));lenient().when(allocationRepository.save(any())).thenAnswer(i->i.getArgument(0));
@@ -46,6 +47,11 @@ class SalesReceivablesServiceTests {
     @Test void receiptOperationReplayDoesNotWriteAgain(){CustomerReceipt receipt=new CustomerReceipt("RC-1",customer.getId(),LocalDate.now(),"EGP",new BigDecimal("100"),"same-op","user");
         when(receiptRepository.findByOperationId("same-op")).thenReturn(Optional.of(receipt));service.recordReceipt(new SalesApi.ReceiptRequest("RC-OTHER",customer.getId(),ms(LocalDate.now()),"EGP",new BigDecimal("100"),"same-op",List.of()),"user");
         verify(receiptRepository,never()).save(any());verify(ledgerRepository,never()).save(any());}
+
+    @Test void receiptAllocatesAcrossTwoCustomerInvoices(){CustomerInvoice first=openInvoice("I-1",new BigDecimal("100"),LocalDate.now());CustomerInvoice second=openInvoice("I-2",new BigDecimal("80"),LocalDate.now());
+        when(receiptRepository.findByOperationId("multi-op")).thenReturn(Optional.empty());when(invoiceRepository.findAllByIdForUpdate(List.of(first.getId(),second.getId()))).thenReturn(List.of(first,second));
+        service.recordReceipt(new SalesApi.ReceiptRequest("RC-M",customer.getId(),ms(LocalDate.now()),"EGP",new BigDecimal("150"),"multi-op",List.of(new SalesApi.AllocationRequest(first.getId(),new BigDecimal("100")),new SalesApi.AllocationRequest(second.getId(),new BigDecimal("50")))),"user");
+        assertThat(first.getOutstandingAmount()).isZero();assertThat(second.getOutstandingAmount()).isEqualByComparingTo("30");verify(allocationRepository).saveAll(argThat(rows->{int count=0;for(CustomerReceiptAllocation ignored:rows)count++;return count==2;}));}
 
     @Test void agingUsesOutstandingOnlyAcrossDeterministicBuckets(){LocalDate asOf=LocalDate.of(2026,8,31);CustomerInvoice current=openInvoice("I-0",new BigDecimal("10"),asOf.plusDays(1));CustomerInvoice d20=openInvoice("I-20",new BigDecimal("20"),asOf.minusDays(20));CustomerInvoice d70=openInvoice("I-70",new BigDecimal("70"),asOf.minusDays(70));
         when(invoiceRepository.findAllByOrderByInvoiceDateDescCreatedAtDesc()).thenReturn(List.of(current,d20,d70));SalesApi.AgingResponse result=service.aging(ms(asOf));

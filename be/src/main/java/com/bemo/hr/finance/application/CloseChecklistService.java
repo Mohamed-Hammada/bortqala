@@ -1,5 +1,6 @@
 package com.bemo.hr.finance.application;
 
+import com.bemo.hr.finance.application.close.SubledgerReconciliationProvider;
 import com.bemo.hr.finance.domain.FiscalPeriod;
 import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,11 +18,14 @@ public class CloseChecklistService {
 
     private final FiscalPeriodRepository fiscalPeriodRepository;
     private final JournalEntryRepository journalEntryRepository;
+    private final List<SubledgerReconciliationProvider> reconciliationProviders;
 
     public CloseChecklistService(FiscalPeriodRepository fiscalPeriodRepository,
-                                JournalEntryRepository journalEntryRepository) {
+                                 JournalEntryRepository journalEntryRepository,
+                                 List<SubledgerReconciliationProvider> reconciliationProviders) {
         this.fiscalPeriodRepository = fiscalPeriodRepository;
         this.journalEntryRepository = journalEntryRepository;
+        this.reconciliationProviders = reconciliationProviders;
     }
 
     public CloseChecklistSummary computePrecheck(String periodId) {
@@ -51,15 +56,33 @@ public class CloseChecklistService {
             ));
         }
 
-        // Check 2: All Subledgers Active Status
-        checks.add(new CloseCheckItem(
-                "SUBLEDGER_RECONCILIATION",
-                "FINANCE",
-                CloseCheckItem.Severity.PASS,
-                0,
-                BigDecimal.ZERO,
-                "Subledger balances are reconciled with GL control accounts."
-        ));
+        // Check 2: Evaluate All Registered Subledger Reconciliation Providers
+        boolean subledgerPass = true;
+        for (SubledgerReconciliationProvider provider : reconciliationProviders) {
+            var calc = provider.calculate(periodId, LocalDate.now());
+            if (!calc.isBalanced() && calc.difference().compareTo(new BigDecimal("10.00")) > 0) {
+                subledgerPass = false;
+                checks.add(new CloseCheckItem(
+                        "SUBLEDGER_RECONCILIATION_" + provider.type().name(),
+                        provider.type().name(),
+                        CloseCheckItem.Severity.BLOCKER,
+                        1,
+                        calc.difference(),
+                        String.format("%s subledger imbalance of %s exceeds tolerance.", provider.type().name(), calc.difference())
+                ));
+            }
+        }
+
+        if (subledgerPass) {
+            checks.add(new CloseCheckItem(
+                    "SUBLEDGER_RECONCILIATION",
+                    "FINANCE",
+                    CloseCheckItem.Severity.PASS,
+                    0,
+                    BigDecimal.ZERO,
+                    "Subledger balances are reconciled with GL control accounts."
+            ));
+        }
 
         boolean canClose = checks.stream().noneMatch(c -> c.severity() == CloseCheckItem.Severity.BLOCKER);
 

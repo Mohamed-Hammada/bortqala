@@ -5,6 +5,7 @@ import { apiErrorMessage } from '../../core/api-error';
 import {
   EmployeeOption, ItemCategory, NegativeBalance, OperationsSnapshot,
   AccountOption, PartyOption, StockMovement, UnitOfMeasure, ValuationPolicy, ValuationReport,
+  CycleCount, ReorderAlert, StockTransfer, WarehouseBin, WarehouseOption,
 } from './operations.models';
 import { downloadBlob, timestampedExcelFileName } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
@@ -25,13 +26,18 @@ export class OperationsStore {
   readonly negativeBalances = signal<NegativeBalance[]>([]);
   readonly accounts = signal<AccountOption[]>([]);
   readonly valuation = signal<ValuationReport | null>(null);
+  readonly reorderAlerts = signal<ReorderAlert[]>([]);
+  readonly cycleCounts = signal<CycleCount[]>([]);
+  readonly warehouses = signal<WarehouseOption[]>([]);
+  readonly bins = signal<WarehouseBin[]>([]);
+  readonly transfers = signal<StockTransfer[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
   async load(): Promise<void> {
     this.loading.set(true); this.error.set(null);
     try {
-      const [snapshot, parties, employees, categories, uoms, negativeBalances, valuation, accounts] = await Promise.all([
+      const [snapshot, parties, employees, categories, uoms, negativeBalances, valuation, accounts, reorderAlerts, cycleCounts, warehouses, transfers] = await Promise.all([
         firstValueFrom(this.http.get<OperationsSnapshot>('/api/v1/operations')),
         firstValueFrom(this.http.get<PartyOption[]>('/api/v1/parties')),
         firstValueFrom(this.http.get<EmployeeOption[]>('/api/v1/employees')),
@@ -40,11 +46,22 @@ export class OperationsStore {
         firstValueFrom(this.http.get<NegativeBalance[]>('/api/v1/operations/negative-balances')),
         firstValueFrom(this.http.get<ValuationReport>('/api/v1/operations/valuation/report')),
         firstValueFrom(this.http.get<AccountOption[]>('/api/v1/finance/accounts')),
+        firstValueFrom(this.http.get<ReorderAlert[]>('/api/v1/operations/reorder-alerts')),
+        firstValueFrom(this.http.get<CycleCount[]>('/api/v1/operations/cycle-counts')),
+        firstValueFrom(this.http.get<WarehouseOption[]>('/api/v1/inventory/warehouses')),
+        firstValueFrom(this.http.get<StockTransfer[]>('/api/v1/operations/transfers')),
       ]);
       this.snapshot.set(this.normalizeSnapshot(snapshot));
       this.parties.set(parties); this.employees.set(employees); this.categories.set(categories);
       this.uoms.set(uoms); this.negativeBalances.set(negativeBalances);
       this.valuation.set(valuation); this.accounts.set(accounts.filter((account) => account.active && !account.isHeader));
+      this.reorderAlerts.set(reorderAlerts); this.cycleCounts.set(cycleCounts);
+      this.warehouses.set(warehouses);
+      const bins = await Promise.all(warehouses.map((warehouse) => firstValueFrom(
+        this.http.get<WarehouseBin[]>(`/api/v1/operations/warehouses/${warehouse.id}/bins`),
+      )));
+      this.bins.set(bins.flat());
+      this.transfers.set(transfers);
     } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
     finally { this.loading.set(false); }
   }
@@ -67,6 +84,21 @@ export class OperationsStore {
     finally { this.loading.set(false); }
   }
   async revalue(payload: object): Promise<boolean> { return this.post('/api/v1/operations/valuation/revaluations', payload, false); }
+  async recordCycleCount(payload: object): Promise<boolean> { return this.post('/api/v1/operations/cycle-counts/reconcile', payload, false); }
+  async createTransfer(payload: object): Promise<StockTransfer | null> { return this.transferPost('/api/v1/operations/transfers', payload); }
+  async createBin(warehouseId: string, payload: object): Promise<boolean> {
+    this.loading.set(true); this.error.set(null);
+    try {
+      const bin = await firstValueFrom(this.http.post<WarehouseBin>(`/api/v1/operations/warehouses/${warehouseId}/bins`, payload));
+      this.bins.update((items) => [...items, bin]);
+      return true;
+    } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); return false; }
+    finally { this.loading.set(false); }
+  }
+  async addTransferLine(id: string, payload: object): Promise<StockTransfer | null> { return this.transferPost(`/api/v1/operations/transfers/${id}/lines`, payload); }
+  async transitionTransfer(id: string, action: 'ship' | 'receive' | 'cancel'): Promise<boolean> {
+    return (await this.transferPost(`/api/v1/operations/transfers/${id}/${action}`, {})) !== null;
+  }
 
   async export(): Promise<void> {
     try {
@@ -98,6 +130,16 @@ export class OperationsStore {
       else await this.load();
       return true;
     } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); return false; }
+    finally { this.loading.set(false); }
+  }
+
+  private async transferPost(url: string, payload: object): Promise<StockTransfer | null> {
+    this.loading.set(true); this.error.set(null);
+    try {
+      const transfer = await firstValueFrom(this.http.post<StockTransfer>(url, payload));
+      this.transfers.update((items) => [transfer, ...items.filter((item) => item.id !== transfer.id)]);
+      return transfer;
+    } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); return null; }
     finally { this.loading.set(false); }
   }
 }

@@ -10,6 +10,7 @@ import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -23,11 +24,50 @@ public class PayrollInputSnapshot {
     @Column(name = "app_id", nullable = false)
     private String appId;
 
+    @Column(name = "payroll_run_id", nullable = false, length = 36)
+    private String payrollRunId;
+
     @Column(name = "employee_id", nullable = false, length = 36)
     private String employeeId;
 
     @Column(name = "period_id", nullable = false, length = 36)
     private String periodId;
+
+    @Column(name = "period_start", nullable = false)
+    private LocalDate periodStart;
+
+    @Column(name = "period_end", nullable = false)
+    private LocalDate periodEnd;
+
+    @Column(name = "base_salary", nullable = false, precision = 15, scale = 2)
+    private BigDecimal baseSalary;
+
+    @Column(name = "worked_minutes", nullable = false)
+    private long workedMinutes;
+
+    @Column(name = "overtime_minutes", nullable = false)
+    private long overtimeMinutes;
+
+    @Column(name = "late_minutes", nullable = false)
+    private long lateMinutes;
+
+    @Column(name = "payroll_policy_id", nullable = false, length = 36)
+    private String payrollPolicyId;
+
+    @Column(name = "payroll_policy_version", nullable = false)
+    private long payrollPolicyVersion;
+
+    @Column(name = "working_hour_divisor", nullable = false, precision = 10, scale = 2)
+    private BigDecimal workingHourDivisor;
+
+    @Column(name = "overtime_multiplier", nullable = false, precision = 10, scale = 4)
+    private BigDecimal overtimeMultiplier;
+
+    @Column(name = "advance_balance", nullable = false, precision = 15, scale = 2)
+    private BigDecimal advanceBalance;
+
+    @Column(name = "advance_deduction", nullable = false, precision = 15, scale = 2)
+    private BigDecimal advanceDeduction;
 
     @Column(name = "worked_hours", nullable = false, precision = 10, scale = 2)
     private BigDecimal workedHours;
@@ -68,17 +108,33 @@ public class PayrollInputSnapshot {
 
     protected PayrollInputSnapshot() {}
 
-    public PayrollInputSnapshot(String employeeId, String periodId, BigDecimal workedHours, BigDecimal overtimeHours,
-                                int absenceDays, BigDecimal deductionAmount, BigDecimal allowanceAmount,
-                                BigDecimal grossPay, BigDecimal netPay, String lockedBy) {
+    public PayrollInputSnapshot(String payrollRunId, String employeeId, String periodId, LocalDate periodStart, LocalDate periodEnd,
+                                BigDecimal baseSalary, long workedMinutes, long overtimeMinutes, long lateMinutes,
+                                int absenceDays, String payrollPolicyId, long payrollPolicyVersion,
+                                BigDecimal workingHourDivisor, BigDecimal overtimeMultiplier,
+                                BigDecimal deductionAmount, BigDecimal allowanceAmount, BigDecimal advanceBalance,
+                                BigDecimal advanceDeduction, BigDecimal grossPay, BigDecimal netPay, String lockedBy) {
         this.id = UUID.randomUUID().toString();
+        this.payrollRunId = payrollRunId;
         this.employeeId = employeeId;
         this.periodId = periodId;
-        this.workedHours = workedHours;
-        this.overtimeHours = overtimeHours;
+        this.periodStart = periodStart;
+        this.periodEnd = periodEnd;
+        this.baseSalary = baseSalary;
+        this.workedMinutes = workedMinutes;
+        this.overtimeMinutes = overtimeMinutes;
+        this.lateMinutes = lateMinutes;
+        this.workedHours = BigDecimal.valueOf(workedMinutes).divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
+        this.overtimeHours = BigDecimal.valueOf(overtimeMinutes).divide(BigDecimal.valueOf(60), 2, java.math.RoundingMode.HALF_UP);
         this.absenceDays = absenceDays;
+        this.payrollPolicyId = payrollPolicyId;
+        this.payrollPolicyVersion = payrollPolicyVersion;
+        this.workingHourDivisor = workingHourDivisor;
+        this.overtimeMultiplier = overtimeMultiplier;
         this.deductionAmount = deductionAmount;
         this.allowanceAmount = allowanceAmount;
+        this.advanceBalance = advanceBalance;
+        this.advanceDeduction = advanceDeduction;
         this.grossPay = grossPay;
         this.netPay = netPay;
         this.lockedBy = lockedBy;
@@ -93,8 +149,21 @@ public class PayrollInputSnapshot {
 
     public String getId() { return id; }
     public String getAppId() { return appId; }
+    public String getPayrollRunId() { return payrollRunId; }
     public String getEmployeeId() { return employeeId; }
     public String getPeriodId() { return periodId; }
+    public LocalDate getPeriodStart() { return periodStart; }
+    public LocalDate getPeriodEnd() { return periodEnd; }
+    public BigDecimal getBaseSalary() { return baseSalary; }
+    public long getWorkedMinutes() { return workedMinutes; }
+    public long getOvertimeMinutes() { return overtimeMinutes; }
+    public long getLateMinutes() { return lateMinutes; }
+    public String getPayrollPolicyId() { return payrollPolicyId; }
+    public long getPayrollPolicyVersion() { return payrollPolicyVersion; }
+    public BigDecimal getWorkingHourDivisor() { return workingHourDivisor; }
+    public BigDecimal getOvertimeMultiplier() { return overtimeMultiplier; }
+    public BigDecimal getAdvanceBalance() { return advanceBalance; }
+    public BigDecimal getAdvanceDeduction() { return advanceDeduction; }
     public BigDecimal getWorkedHours() { return workedHours; }
     public BigDecimal getOvertimeHours() { return overtimeHours; }
     public int getAbsenceDays() { return absenceDays; }

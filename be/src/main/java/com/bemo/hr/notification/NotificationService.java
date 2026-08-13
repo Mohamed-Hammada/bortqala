@@ -1,8 +1,11 @@
 package com.bemo.hr.notification;
 
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.notification.push.NotificationCreatedEvent;
+import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.shared.domain.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +20,7 @@ public class NotificationService {
 
     private final BusinessNotificationRepository notificationRepository;
     private final AuditService auditService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public List<NotificationApi.NotificationResponse> getNotificationsForUser(String username) {
         return getNotificationsForUser(username,Set.of());
@@ -43,6 +47,8 @@ public class NotificationService {
         notification = notificationRepository.save(notification);
         auditService.record("SEND_NOTIFICATION", "NOTIFICATION", notification.getId(), senderUsername,
                 "{\"recipient\":\"" + payload.recipientUsername() + "\",\"type\":\"" + payload.notificationType() + "\"}", null);
+        String tenantAppId = com.bemo.hr.shared.security.TenantContext.currentOrSystem();
+        eventPublisher.publishEvent(NotificationCreatedEvent.from(notification, tenantAppId));
         return toResponse(notification,Set.of());
     }
 

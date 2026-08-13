@@ -1,0 +1,9 @@
+id;translation_key;locale;text_value
+v226-001;MASTER_VALUE_REASON_REQUIRED;en-US;A reason is required for an effective master-data change.
+v226-002;MASTER_VALUE_REASON_REQUIRED;ar-EG;سبب تغيير البيانات الرئيسية الفعالة مطلوب.
+v226-003;MASTER_VALUE_RANGE_INVALID;en-US;The effective date range is invalid.
+v226-004;MASTER_VALUE_RANGE_INVALID;ar-EG;نطاق تواريخ السريان غير صالح.
+v226-005;MASTER_VALUE_RANGE_OVERLAP;en-US;The effective date range overlaps an existing value.
+v226-006;MASTER_VALUE_RANGE_OVERLAP;ar-EG;يتداخل نطاق السريان مع قيمة موجودة.
+v226-007;MASTER_VALUE_NOT_FOUND;en-US;No master value applies on the requested date.
+v226-008;MASTER_VALUE_NOT_FOUND;ar-EG;لا توجد قيمة رئيسية سارية في التاريخ المطلوب.

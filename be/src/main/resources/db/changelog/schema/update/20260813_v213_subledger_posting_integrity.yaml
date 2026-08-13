@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v213_001_subledger_posting_integrity
+      author: codex
+      changes:
+        - addUniqueConstraint:
+            tableName: journal_entries
+            columnNames: app_id, operation_id
+            constraintName: uq_journal_entry_app_operation
+      rollback:
+        - dropUniqueConstraint: { tableName: journal_entries, constraintName: uq_journal_entry_app_operation }
