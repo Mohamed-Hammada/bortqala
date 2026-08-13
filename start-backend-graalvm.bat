@@ -18,7 +18,7 @@ if not defined SPRING_PROFILES_ACTIVE set "SPRING_PROFILES_ACTIVE=dev"
 echo [INFO] Runtime: 
 "%JAVA_HOME%\bin\java.exe" -version
 pushd "%~dp0be"
-call gradlew.bat bootJar
+call gradlew.bat "-Dorg.gradle.java.home=%JAVA_HOME%" bootJar
 if errorlevel 1 (
   popd
   exit /b 1

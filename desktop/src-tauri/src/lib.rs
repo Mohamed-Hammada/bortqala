@@ -199,14 +199,19 @@ fn start_backend(
     navigation_allowed: Arc<AtomicBool>,
     backend_port: Arc<Mutex<Option<u16>>>,
 ) -> Result<Arc<Mutex<Option<Child>>>, String> {
+    let native_backend = resources.join("backend").join("bemo-erp.exe");
     let java = resources.join("runtime").join("bin").join("java.exe");
     let jar = resources.join("backend").join("bemo-erp.jar");
-    if !java.exists() || !jar.exists() {
-        return Err("The packaged Java runtime or backend jar is missing.".into());
-    }
-    let mut command = Command::new(java);
+    let mut command = if native_backend.exists() {
+        Command::new(native_backend)
+    } else if java.exists() && jar.exists() {
+        let mut java_command = Command::new(java);
+        java_command.args(["-jar", jar.to_str().unwrap()]);
+        java_command
+    } else {
+        return Err("The packaged native backend executable is missing.".into());
+    };
     command
-        .args(["-jar", jar.to_str().unwrap()])
         .env("SPRING_PROFILES_ACTIVE", "desktop")
         .env("DB_URL", db_url)
         .env("DB_USERNAME", &secrets.database_username)

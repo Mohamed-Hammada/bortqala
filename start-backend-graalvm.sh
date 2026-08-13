@@ -17,5 +17,5 @@ export SPRING_PROFILES_ACTIVE="${SPRING_PROFILES_ACTIVE:-dev}"
 
 "$JAVA_HOME/bin/java" -version
 cd "$SCRIPT_DIR/be"
-./gradlew bootJar
+./gradlew "-Dorg.gradle.java.home=$JAVA_HOME" bootJar
 exec "$JAVA_HOME/bin/java" -Xms512m -Xmx2g -jar build/libs/bemo-erp-0.0.1-SNAPSHOT.jar "$@"

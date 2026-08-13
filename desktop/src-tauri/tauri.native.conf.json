@@ -1,0 +1,19 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "bundle": {
+    "resources": [
+      "resources/backend/bemo-erp.exe",
+      "resources/backend/awt.dll",
+      "resources/backend/fontmanager.dll",
+      "resources/backend/freetype.dll",
+      "resources/backend/java.dll",
+      "resources/backend/javaaccessbridge.dll",
+      "resources/backend/javajpeg.dll",
+      "resources/backend/jawt.dll",
+      "resources/backend/jvm.dll",
+      "resources/backend/lcms.dll",
+      "resources/backend/management_ext.dll",
+      "resources/postgres"
+    ]
+  }
+}
