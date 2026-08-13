@@ -5,7 +5,7 @@ import { apiErrorMessage } from '../../core/api-error';
 import {
   EmployeeOption, ItemCategory, NegativeBalance, OperationsSnapshot,
   AccountOption, PartyOption, StockMovement, UnitOfMeasure, ValuationPolicy, ValuationReport,
-  CycleCount, ReorderAlert, StockTransfer, WarehouseOption,
+  CycleCount, ReorderAlert, StockTransfer, WarehouseBin, WarehouseOption,
 } from './operations.models';
 import { downloadBlob, timestampedExcelFileName } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
@@ -29,6 +29,7 @@ export class OperationsStore {
   readonly reorderAlerts = signal<ReorderAlert[]>([]);
   readonly cycleCounts = signal<CycleCount[]>([]);
   readonly warehouses = signal<WarehouseOption[]>([]);
+  readonly bins = signal<WarehouseBin[]>([]);
   readonly transfers = signal<StockTransfer[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
@@ -56,6 +57,10 @@ export class OperationsStore {
       this.valuation.set(valuation); this.accounts.set(accounts.filter((account) => account.active && !account.isHeader));
       this.reorderAlerts.set(reorderAlerts); this.cycleCounts.set(cycleCounts);
       this.warehouses.set(warehouses);
+      const bins = await Promise.all(warehouses.map((warehouse) => firstValueFrom(
+        this.http.get<WarehouseBin[]>(`/api/v1/operations/warehouses/${warehouse.id}/bins`),
+      )));
+      this.bins.set(bins.flat());
       this.transfers.set(transfers);
     } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
     finally { this.loading.set(false); }
@@ -81,6 +86,15 @@ export class OperationsStore {
   async revalue(payload: object): Promise<boolean> { return this.post('/api/v1/operations/valuation/revaluations', payload, false); }
   async recordCycleCount(payload: object): Promise<boolean> { return this.post('/api/v1/operations/cycle-counts/reconcile', payload, false); }
   async createTransfer(payload: object): Promise<StockTransfer | null> { return this.transferPost('/api/v1/operations/transfers', payload); }
+  async createBin(warehouseId: string, payload: object): Promise<boolean> {
+    this.loading.set(true); this.error.set(null);
+    try {
+      const bin = await firstValueFrom(this.http.post<WarehouseBin>(`/api/v1/operations/warehouses/${warehouseId}/bins`, payload));
+      this.bins.update((items) => [...items, bin]);
+      return true;
+    } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); return false; }
+    finally { this.loading.set(false); }
+  }
   async addTransferLine(id: string, payload: object): Promise<StockTransfer | null> { return this.transferPost(`/api/v1/operations/transfers/${id}/lines`, payload); }
   async transitionTransfer(id: string, action: 'ship' | 'receive' | 'cancel'): Promise<boolean> {
     return (await this.transferPost(`/api/v1/operations/transfers/${id}/${action}`, {})) !== null;

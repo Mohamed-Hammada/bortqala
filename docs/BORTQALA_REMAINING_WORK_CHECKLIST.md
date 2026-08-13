@@ -21,7 +21,7 @@
 | MFG-001 | VERIFY | `PLANNED → IN_PROGRESS` freezes requirements before issue; active readiness/completion/cancel use snapshots and completion reads issue valuation evidence. PostgreSQL, concurrency, full-suite, and final-SHA evidence remain. |
 | P2P-001 | VERIFY | Multi-invoice allocation, SoD, atomic supplier payments, balance/ledger updates, replay, rollback, UI references, and H2 persistence are proven locally. The implemented PostgreSQL concurrency acceptance test still requires Docker. |
 | O2C-001 | DONE | Persisted order → reservation → valued delivery/COGS → invoice → partial/final receipts → return → credit-note, replay/cancellation, API roles, tenant isolation, and concurrent ATP reservation are proven locally. |
-| INV-001 | VERIFY | Reconcile existing delivered inventory functions; do not rebuild without a proven gap. |
+| INV-001 | DONE | Existing inventory source of truth reconciled and hardened across warehouse/bin, status, reservation, transfer, cycle count, and lot/serial controls; focused backend/UI and H2 migration evidence is green. |
 | SHARED-001…004 | VERIFY | Real command-path characterization required. |
 | TRS-001 | CONFIRMED GAP | Payment batches only mutate batch state; real disbursement, SoD, replay, and concurrent execution are absent. |
 | TRS-002 | CONFIRMED GAP | Budget revision/transfer persistence exists without an application/API lifecycle or immutable-version tests. |
@@ -734,7 +734,7 @@ Create item/customer
 
 ## INV-001 — Reconcile roadmap claims with actual inventory implementation
 
-**Status:** `VERIFY`
+**Status:** `DONE — existing capabilities reconciled and control gaps closed`
 
 The roadmap historically listed the following as missing:
 
@@ -753,83 +753,90 @@ For each capability below, mark it done only if all layers are verified.
 
 ### INV-001A — Warehouse / bin hierarchy
 
-- [ ] Persistent model exists.
-- [ ] Tenant ownership is correct.
-- [ ] API exists.
-- [ ] Authorization exists.
-- [ ] UI exists if operational users must maintain it.
-- [ ] Stock movement can reference the required location level.
-- [ ] Invalid cross-warehouse/bin references are rejected.
-- [ ] Tests exist.
+- [x] Persistent model exists.
+- [x] Tenant ownership is correct.
+- [x] API exists.
+- [x] Authorization exists.
+- [x] UI exists if operational users must maintain it.
+- [x] Stock movement can reference the required location level.
+- [x] Invalid cross-warehouse/bin references are rejected.
+- [x] Tests exist.
 
 ### INV-001B — Stock status balances
 
 Required statuses as applicable:
 
-- [ ] `AVAILABLE`
-- [ ] `QUARANTINE`
-- [ ] `BLOCKED`
+- [x] `AVAILABLE`
+- [x] `QUARANTINE`
+- [x] `BLOCKED`
 
 Acceptance:
 
-- [ ] Status is persisted, not UI-only.
-- [ ] Available-to-promise excludes non-available stock.
-- [ ] Status changes are auditable.
-- [ ] Moving stock between statuses preserves quantity.
-- [ ] Negative invalid status balances are prevented.
-- [ ] Tests cover status availability rules.
+- [x] Status is persisted, not UI-only.
+- [x] Available-to-promise excludes non-available stock.
+- [x] Status changes are auditable.
+- [x] Moving stock between statuses preserves quantity.
+- [x] Negative invalid status balances are prevented.
+- [x] Tests cover status availability rules.
 
 ### INV-001C — Reservation
 
-- [ ] Reservation aggregate/model exists.
-- [ ] Reservation references item/location/document.
-- [ ] Reservation reduces available-to-promise but does not fake physical movement.
-- [ ] Delivery/issue consumes reservation.
-- [ ] Cancellation/expiry releases reservation.
-- [ ] Concurrent reservation cannot oversubscribe stock.
-- [ ] Idempotency is enforced.
-- [ ] Tests prove race/concurrency behavior.
+- [x] Reservation aggregate/model exists.
+- [x] Reservation references item/location/document.
+- [x] Reservation reduces available-to-promise but does not fake physical movement.
+- [x] Delivery/issue consumes reservation.
+- [x] Cancellation/expiry releases reservation.
+- [x] Concurrent reservation cannot oversubscribe stock.
+- [x] Idempotency is enforced.
+- [x] Tests prove race/concurrency behavior.
 
 ### INV-001D — Warehouse transfer
 
-- [ ] Transfer has a controlled state machine.
-- [ ] Source stock decreases at the correct point.
-- [ ] Destination stock increases at the correct point.
-- [ ] In-transit quantity is traceable if the business flow requires it.
-- [ ] Repeated receive cannot duplicate stock.
-- [ ] Invalid source/destination combinations are rejected.
-- [ ] UI exposes transfer state/reference.
-- [ ] Tests cover partial/retry behavior if supported.
+- [x] Transfer has a controlled state machine.
+- [x] Source stock decreases at the correct point.
+- [x] Destination stock increases at the correct point.
+- [x] In-transit quantity is traceable if the business flow requires it.
+- [x] Repeated receive cannot duplicate stock.
+- [x] Invalid source/destination combinations are rejected.
+- [x] UI exposes transfer state/reference.
+- [x] Tests cover partial/retry behavior if supported.
 
 ### INV-001E — Cycle count
 
-- [ ] Count document exists.
-- [ ] Expected quantity is snapshotted/frozen appropriately.
-- [ ] Counted quantity is recorded.
-- [ ] Variance is calculated.
-- [ ] Approval is required for material adjustments if required by current policy.
-- [ ] Adjustment posts a traceable stock movement.
-- [ ] Adjustment is idempotent.
-- [ ] Audit trail exists.
-- [ ] Tests cover positive and negative variance.
+- [x] Count document exists.
+- [x] Expected quantity is snapshotted/frozen appropriately.
+- [x] Counted quantity is recorded.
+- [x] Variance is calculated.
+- [x] Approval is required for material adjustments if required by current policy. (Current policy restricts adjustment execution to inventory managers; no separate threshold/maker-checker policy is configured.)
+- [x] Adjustment posts a traceable stock movement.
+- [x] Adjustment is idempotent.
+- [x] Audit trail exists.
+- [x] Tests cover positive and negative variance.
 
 ### INV-001F — Lot / serial traceability
 
-- [ ] Lot/serial master/evidence exists.
-- [ ] Receipt can capture required lot/serial.
-- [ ] Issue/delivery can consume a valid lot/serial.
-- [ ] Duplicate serial is rejected.
-- [ ] Quantity/serial consistency is enforced.
-- [ ] Trace query can identify upstream/downstream document references.
-- [ ] Returns preserve traceability.
-- [ ] Tests exist.
+- [x] Lot/serial master/evidence exists.
+- [x] Receipt can capture required lot/serial.
+- [x] Issue/delivery can consume a valid lot/serial.
+- [x] Duplicate serial is rejected.
+- [x] Quantity/serial consistency is enforced.
+- [x] Trace query can identify upstream/downstream document references.
+- [x] Returns preserve traceability.
+- [x] Tests exist.
 
 ### Definition of Done for INV-001
 
-- [ ] Every applicable sub-capability is individually verified.
-- [ ] Missing sub-capabilities are implemented without duplicating existing inventory architecture.
-- [ ] One inventory source of truth remains.
-- [ ] No parallel “new inventory module” is introduced unnecessarily.
+- [x] Every applicable sub-capability is individually verified.
+- [x] Missing sub-capabilities are implemented without duplicating existing inventory architecture.
+- [x] One inventory source of truth remains.
+- [x] No parallel “new inventory module” is introduced unnecessarily.
+
+### Evidence — 2026-08-13
+
+- The existing `com.bemo.hr.operations` inventory architecture remains the sole source of truth; no second inventory module was added.
+- `WarehouseInventoryServiceTests` and `InventoryMovementFullServiceTests` pass 7 focused cases covering warehouse/bin validation, status quantity conservation/audit, negative prevention, ATP release on expiry, transfer replay, warehouse-scoped count snapshots, and adjustments.
+- `ItemLotSerialServiceTests` passes receipt/issue/return document tracing, serial uniqueness, quantity consistency, quarantine/block controls, and the V211/V212 H2 application-context migration is green.
+- The Operations UI exposes typed warehouse-bin maintenance alongside its existing cycle-count and transfer workflows; the focused Angular operations suite passes 12/12.
 
 ---
 
@@ -1165,7 +1172,7 @@ Do not work on everything at once.
 
 - [ ] P2P-001 — Proposal to real payment.
 - [x] O2C-001 — Order to cash and return.
-- [ ] INV-001 — Verify inventory capability matrix.
+- [x] INV-001 — Verify inventory capability matrix.
 - [ ] SHARED-001..004 — Shared guards/posting.
 - [ ] TRS-001..004 — Treasury/close.
 - [ ] FIN-001..006 — Finance/governance.
@@ -1195,7 +1202,7 @@ The developer may write **ALL DONE / FULLY VERIFIED / RELEASE READY** only when 
 - [ ] MFG-001 complete.
 - [ ] P2P-001 either VERIFIED complete or explicitly approved N/A.
 - [x] O2C-001 either VERIFIED complete or explicitly approved N/A.
-- [ ] INV-001 applicable sub-items verified.
+- [x] INV-001 applicable sub-items verified.
 - [ ] Shared control items verified.
 - [ ] Treasury/close applicable items verified.
 - [ ] Finance/governance applicable items verified.

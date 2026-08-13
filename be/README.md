@@ -60,3 +60,15 @@ docker build -t bemo-hr-backend .
 | `DB_PASSWORD` | PostgreSQL password (`root`) |
 | `HR_JWT_SECRET` | HS256 secret (minimum 32 bytes) |
 | `HR_COMPANY_ZONE` | Time zone (`Africa/Cairo`) |
+
+## Inventory control contract / عقد ضوابط المخزون
+
+- `com.bemo.hr.operations` is the single inventory source of truth for warehouse/bin balances, stock statuses, reservations, transfers, cycle counts, valuation movements, and lot/serial evidence.
+- Available-to-promise uses only `AVAILABLE` balances and subtracts active reservations. Delivery consumes the locked reservation and physical balance; cancellation or expiry releases ATP without creating a stock movement.
+- Status movements preserve physical quantity and are audited. Transfer ship/receive and cycle-count reconciliation are idempotent state transitions.
+- Lot/serial records preserve receipt, issue, and return document references; serial numbers are tenant-unique and serial quantities are always one.
+
+- الحزمة `com.bemo.hr.operations` هي مصدر الحقيقة الوحيد للمستودعات والمواقع والأرصدة والحجوزات والتحويلات والجرد والتقييم وتتبع التشغيلات والأرقام المسلسلة.
+- المتاح للوعد يحتسب الرصيد المتاح فقط بعد خصم الحجوزات النشطة، بينما الإلغاء أو الانتهاء يحرر الحجز دون حركة مخزنية وهمية.
+- نقل حالة المخزون يحافظ على إجمالي الكمية ويسجل تدقيقاً، كما أن شحن/استلام التحويل وتسوية الجرد عمليتان آمنتان عند إعادة الطلب.
+- يحتفظ سجل التشغيلة/الرقم المسلسل بمراجع الاستلام والصرف والمرتجع، مع منع تكرار الرقم المسلسل داخل المستأجر.

@@ -661,3 +661,7 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260813_v209_o2c_vertical_slice.yaml
   - include:
       file: db/changelog/data/insert/20260813_v210_o2c_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260813_v211_inventory_traceability.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v212_inventory_control_translations.yaml

@@ -109,4 +109,13 @@ describe('OperationsStore', () => {
     expect(await ship).toBe(true);
     expect(store.transfers()[0].status).toBe('SHIPPED');
   });
+
+  it('creates a warehouse bin and updates the typed local collection', async () => {
+    const promise = store.createBin('wh-1', { binCode: 'A-01', aisle: 'A', rack: '1', shelf: '2' });
+    httpMock.expectOne('/api/v1/operations/warehouses/wh-1/bins').flush({
+      id: 'bin-1', warehouseId: 'wh-1', binCode: 'A-01', aisle: 'A', rack: '1', shelf: '2', active: true, version: 0,
+    });
+    expect(await promise).toBe(true);
+    expect(store.bins()[0].binCode).toBe('A-01');
+  });
 });

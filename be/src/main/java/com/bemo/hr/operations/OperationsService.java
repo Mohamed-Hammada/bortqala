@@ -40,6 +40,7 @@ public class OperationsService {
     private final com.bemo.hr.audit.application.AuditService auditService;
     private final InventoryValuationService inventoryValuationService;
     private final com.bemo.hr.operations.application.WarehouseInventoryService warehouseInventoryService;
+    private final com.bemo.hr.operations.application.ItemLotSerialService itemLotSerialService;
 
     public byte[] export(com.bemo.hr.reporting.application.ExcelExportOptions options) {
         return operationsExcelExporter.export(snapshot(), inventoryValuationService.report(), options);
@@ -306,6 +307,12 @@ public class OperationsService {
     @Transactional
     public void recordGoodsReceipt(String itemId, String supplierId, String warehouseId, BigDecimal acceptedQuantity,
                                    BigDecimal unitCost, String grnNumber, String note, Instant occurredAt, String actor) {
+        recordGoodsReceipt(itemId, supplierId, warehouseId, acceptedQuantity, unitCost, grnNumber, null, note, occurredAt, actor);
+    }
+
+    @Transactional
+    public void recordGoodsReceipt(String itemId, String supplierId, String warehouseId, BigDecimal acceptedQuantity,
+                                   BigDecimal unitCost, String grnNumber, String lotNumber, String note, Instant occurredAt, String actor) {
         requireItem(itemId);
         if (acceptedQuantity == null || acceptedQuantity.signum() <= 0) {
             throw new BusinessRuleException("Accepted goods-receipt quantity must be positive.", "OPS_GRN_ACCEPTED_POSITIVE", HttpStatus.CONFLICT);
@@ -316,6 +323,9 @@ public class OperationsService {
         inventoryValuationService.valueMovement(movement, unitCost, actor);
         if (warehouseId != null && !warehouseId.isBlank()) {
             warehouseInventoryService.receiveAvailableStock(warehouseId, itemId, acceptedQuantity);
+            if (lotNumber != null && !lotNumber.isBlank()) {
+                itemLotSerialService.receive(itemId, warehouseId, lotNumber, null, acceptedQuantity, grnNumber, null, null);
+            }
         }
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Goods receipt " + grnNumber + " accepted qty: " + acceptedQuantity, null);

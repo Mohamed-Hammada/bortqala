@@ -35,7 +35,7 @@ export class OperationsPage {
   readonly store = inject(OperationsStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
-  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | 'transfer' | null>(null);
+  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | 'transfer' | 'bin' | null>(null);
   readonly editingTransferId = signal<string | null>(null);
   readonly itemPagination = new TablePagination();
   readonly movementPagination = new TablePagination();
@@ -162,11 +162,18 @@ export class OperationsPage {
     itemId: new FormControl('', { nonNullable: true, validators: Validators.required }),
     quantity: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0.0001)] }),
   });
+  readonly binForm = new FormGroup({
+    warehouseId: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    binCode: new FormControl('', { nonNullable: true, validators: Validators.required }),
+    aisle: new FormControl('', { nonNullable: true }),
+    rack: new FormControl('', { nonNullable: true }),
+    shelf: new FormControl('', { nonNullable: true }),
+  });
 
   constructor() {
     void this.store.load();
   }
-  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | 'transfer'): void {
+  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | 'transfer' | 'bin'): void {
     if (kind === 'valuation') {
       const policy = this.store.valuation()?.policy;
       if (policy) this.valuationForm.reset({
@@ -200,6 +207,15 @@ export class OperationsPage {
       version: null,
     })) {
       this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.close();
+    }
+  }
+  async saveBin(): Promise<void> {
+    if (this.binForm.invalid) return this.binForm.markAllAsTouched();
+    const { warehouseId, ...payload } = this.binForm.getRawValue();
+    if (await this.store.createBin(warehouseId, payload)) {
+      this.notification.success(this.i18n.t('operations.binSaved'));
+      this.binForm.reset({ warehouseId: '', binCode: '', aisle: '', rack: '', shelf: '' });
       this.close();
     }
   }

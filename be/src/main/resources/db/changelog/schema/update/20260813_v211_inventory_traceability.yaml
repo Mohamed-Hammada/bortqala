@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v211_001_inventory_traceability
+      author: codex
+      changes:
+        - addColumn:
+            tableName: item_lots_serials
+            columns:
+              - column: { name: warehouse_id, type: VARCHAR(36) }
+              - column: { name: quantity, type: "DECIMAL(15, 4)", defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: receipt_reference, type: VARCHAR(100) }
+              - column: { name: issue_reference, type: VARCHAR(100) }
+              - column: { name: return_reference, type: VARCHAR(100) }
+        - addUniqueConstraint:
+            tableName: item_lots_serials
+            columnNames: app_id, serial_number
+            constraintName: uq_item_lot_serial_app_serial
+        - addUniqueConstraint:
+            tableName: warehouse_bins
+            columnNames: app_id, warehouse_id, bin_code
+            constraintName: uq_warehouse_bin_app_code
+        - createIndex:
+            tableName: item_lots_serials
+            indexName: ix_item_lot_trace
+            columns:
+              - column: { name: app_id }
+              - column: { name: item_id }
+              - column: { name: warehouse_id }
+              - column: { name: lot_number }
+      rollback:
+        - dropIndex: { tableName: item_lots_serials, indexName: ix_item_lot_trace }
+        - dropUniqueConstraint: { tableName: warehouse_bins, constraintName: uq_warehouse_bin_app_code }
+        - dropUniqueConstraint: { tableName: item_lots_serials, constraintName: uq_item_lot_serial_app_serial }
+        - dropColumn: { tableName: item_lots_serials, columnName: return_reference }
+        - dropColumn: { tableName: item_lots_serials, columnName: issue_reference }
+        - dropColumn: { tableName: item_lots_serials, columnName: receipt_reference }
+        - dropColumn: { tableName: item_lots_serials, columnName: quantity }
+        - dropColumn: { tableName: item_lots_serials, columnName: warehouse_id }

@@ -40,6 +40,10 @@ export interface CycleCount {
   systemQuantity: number; countedQuantity: number; variance: number;
 }
 export interface WarehouseOption { id: string; code: string; name: string; }
+export interface WarehouseBin {
+  id: string; warehouseId: string; binCode: string; aisle: string | null; rack: string | null;
+  shelf: string | null; active: boolean; version: number;
+}
 export interface StockTransferLine {
   id: string; itemId: string; itemCode: string; itemName: string; quantity: number;
 }

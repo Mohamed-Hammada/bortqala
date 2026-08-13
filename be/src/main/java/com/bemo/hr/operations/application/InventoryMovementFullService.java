@@ -165,6 +165,7 @@ public class InventoryMovementFullService {
 
     @Transactional
     public CycleCountHeader createCycleCount(String countNumber, String warehouseId, LocalDate countDate) {
+        requireWarehouse(warehouseId);
         CycleCountHeader count = new CycleCountHeader(countNumber, warehouseId, countDate);
         count.start();
         return cycleCountHeaderRepository.save(count);
@@ -172,7 +173,14 @@ public class InventoryMovementFullService {
 
     @Transactional
     public CycleCountLine addCycleCountLine(String countId, String itemId, BigDecimal systemQuantity, BigDecimal countedQuantity) {
-        CycleCountLine line = new CycleCountLine(countId, itemId, operationsService.stockBalance(itemId), countedQuantity);
+        CycleCountHeader count = cycleCountHeaderRepository.findById(countId)
+                .orElseThrow(() -> new BusinessRuleException("Cycle count not found", "CYCLE_COUNT_NOT_FOUND", HttpStatus.NOT_FOUND));
+        if (count.getStatus() != CycleCountHeader.Status.IN_PROGRESS) {
+            throw new BusinessRuleException("Lines can only be added to an active cycle count.", "CYCLE_COUNT_NOT_IN_PROGRESS", HttpStatus.CONFLICT);
+        }
+        operationsService.inventoryItem(itemId);
+        CycleCountLine line = new CycleCountLine(countId, itemId,
+                warehouseInventoryService.getPhysicalStock(count.getWarehouseId(), itemId), countedQuantity);
         return cycleCountLineRepository.save(line);
     }
 
@@ -188,10 +196,14 @@ public class InventoryMovementFullService {
                         line.getItemId(), line.getVarianceQuantity(), count.getCountNumber(),
                         "Cycle count " + count.getCountNumber(), true,
                         count.getCountDate().atStartOfDay().toInstant(ZoneOffset.UTC)), actor);
+                warehouseInventoryService.adjustAvailableStock(count.getWarehouseId(), line.getItemId(), line.getVarianceQuantity());
             }
         }
         count.adjust();
-        return cycleCountHeaderRepository.save(count);
+        CycleCountHeader saved = cycleCountHeaderRepository.save(count);
+        auditService.record("CYCLE_COUNT_ADJUSTED", "CYCLE_COUNT", saved.getId(), actor,
+                "Adjusted cycle count " + saved.getCountNumber(), null);
+        return saved;
     }
 
     @Transactional

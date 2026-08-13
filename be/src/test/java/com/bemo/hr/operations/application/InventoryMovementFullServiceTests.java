@@ -66,7 +66,7 @@ class InventoryMovementFullServiceTests {
         when(cycleCountHeaderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(cycleCountHeaderRepository.findById("cc-1")).thenReturn(Optional.of(count));
         when(cycleCountLineRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        when(operationsService.stockBalance("item-10")).thenReturn(new BigDecimal("10.00"));
+        when(warehouseInventoryService.getPhysicalStock("wh-1", "item-10")).thenReturn(new BigDecimal("10.00"));
 
         CycleCountLine line = movementService.addCycleCountLine("cc-1", "item-10", new BigDecimal("999.00"), new BigDecimal("12.00"));
         assertThat(line.getVarianceQuantity()).isEqualByComparingTo(new BigDecimal("2.00"));
@@ -75,6 +75,7 @@ class InventoryMovementFullServiceTests {
         movementService.adjustCycleCount("cc-1", "inventory-manager");
         assertThat(count.getStatus()).isEqualTo(CycleCountHeader.Status.ADJUSTED);
         verify(operationsService).createStockAdjustment(any(), eq("inventory-manager"));
+        verify(warehouseInventoryService).adjustAvailableStock("wh-1", "item-10", new BigDecimal("2.00"));
     }
 
     @Test
@@ -110,5 +111,22 @@ class InventoryMovementFullServiceTests {
 
         verify(warehouseInventoryService, times(1)).issueAvailableStock("wh-1", "item-10", new BigDecimal("2.00"));
         verify(warehouseInventoryService, times(1)).receiveAvailableStock("wh-2", "item-10", new BigDecimal("2.00"));
+    }
+
+    @Test
+    void cycleCountPostsNegativeWarehouseVariance() {
+        CycleCountHeader count = new CycleCountHeader("CC-NEG", "wh-1", LocalDate.of(2026, 3, 6));
+        count.start();
+        when(cycleCountHeaderRepository.findById("cc-neg")).thenReturn(Optional.of(count));
+        when(cycleCountHeaderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(cycleCountLineRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(warehouseInventoryService.getPhysicalStock("wh-1", "item-10")).thenReturn(new BigDecimal("10"));
+        CycleCountLine line = movementService.addCycleCountLine("cc-neg", "item-10", null, new BigDecimal("7"));
+        when(cycleCountLineRepository.findByCountId("cc-neg")).thenReturn(java.util.List.of(line));
+
+        movementService.adjustCycleCount("cc-neg", "manager");
+
+        assertThat(line.getVarianceQuantity()).isEqualByComparingTo("-3");
+        verify(warehouseInventoryService).adjustAvailableStock("wh-1", "item-10", new BigDecimal("-3"));
     }
 }

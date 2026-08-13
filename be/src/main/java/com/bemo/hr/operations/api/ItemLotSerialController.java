@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/v1/operations/lots-serials")
@@ -19,6 +20,7 @@ public class ItemLotSerialController {
     }
 
     public record CreateLotSerialPayload(String itemId, String lotNumber, String serialNumber, String expirationDate, String manufactureDate) {}
+    public record LotSerialMovementPayload(BigDecimal quantity, String documentReference) {}
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
@@ -44,5 +46,21 @@ public class ItemLotSerialController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'VIEWER')")
     public List<ItemLotSerial> getAvailableLotsByItem(@PathVariable String itemId) {
         return service.getAvailableLotsByItem(itemId);
+    }
+
+    @GetMapping("/{id}/trace")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'SALES_MANAGER', 'VIEWER')")
+    public ItemLotSerial trace(@PathVariable String id) { return service.trace(id); }
+
+    @PostMapping("/{id}/issue")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public ItemLotSerial issue(@PathVariable String id, @RequestBody LotSerialMovementPayload payload) {
+        return service.issue(id, payload.quantity(), payload.documentReference());
+    }
+
+    @PostMapping("/{id}/return")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    public ItemLotSerial receiveReturn(@PathVariable String id, @RequestBody LotSerialMovementPayload payload) {
+        return service.receiveReturn(id, payload.quantity(), payload.documentReference());
     }
 }

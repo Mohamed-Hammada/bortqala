@@ -15,6 +15,7 @@ import java.util.Optional;
 @Repository
 public interface StockStatusBalanceRepository extends JpaRepository<StockStatusBalance, String> {
     List<StockStatusBalance> findByWarehouseIdAndItemId(String warehouseId, String itemId);
+    List<StockStatusBalance> findByWarehouseId(String warehouseId);
     Optional<StockStatusBalance> findByWarehouseIdAndBinIdAndItemIdAndStatus(String warehouseId, String binId, String itemId, StockStatusBalance.Status status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

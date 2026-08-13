@@ -19,7 +19,7 @@ import java.util.UUID;
 public class StockReservation {
 
     public enum Status {
-        ACTIVE, FULFILLED, CANCELLED
+        ACTIVE, FULFILLED, CANCELLED, EXPIRED
     }
 
     @Id
@@ -84,6 +84,12 @@ public class StockReservation {
         if (status == Status.CANCELLED) return;
         if (status != Status.ACTIVE) throw new IllegalStateException("Only active reservations can be cancelled");
         this.status = Status.CANCELLED;
+    }
+
+    public void expire() {
+        if (status == Status.EXPIRED) return;
+        if (status != Status.ACTIVE) throw new IllegalStateException("Only active reservations can expire");
+        this.status = Status.EXPIRED;
     }
 
     @PrePersist

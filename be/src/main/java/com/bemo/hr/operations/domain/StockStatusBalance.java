@@ -67,7 +67,11 @@ public class StockStatusBalance {
     }
 
     public void adjustQuantity(BigDecimal delta) {
-        this.quantity = this.quantity.add(delta);
+        BigDecimal adjusted = this.quantity.add(delta);
+        if (adjusted.signum() < 0) {
+            throw new IllegalArgumentException("Stock status balance cannot be negative");
+        }
+        this.quantity = adjusted;
     }
 
     @PrePersist
