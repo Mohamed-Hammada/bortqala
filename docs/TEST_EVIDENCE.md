@@ -1,5 +1,14 @@
 # Test Evidence — Bemo ERP
 
+## 2026-08-13 final local release-candidate verification
+
+- Candidate code SHA: `6e4bc88a86fec54cfc1c71c031f3145bb6b28f47` (`fm_bemo_consolidated`). Documentation updates follow this code checkpoint.
+- Backend: `./gradlew test -PskipDockerTests` — **516 tests / 144 suites / 0 failures / 0 errors / 0 skipped**. The XML result set was generated at 2026-08-13 14:58 Africa/Cairo; the command wrapper timed out after the Java worker completed, so counts were read from all `be/build/test-results/test/TEST-*.xml` files.
+- Backend static gates: `python tools/check-error-codes.py` — **454/454 PASS**; `python tools/check-translation-catalog.py` — **7,440 rows PASS**; `python tools/check-authorization-contract.py` — **19/19 roles PASS**.
+- Frontend under Node `v24.18.0`: `npm ci` — **PASS** (460 packages audited; 2 moderate and 5 high dependency audit findings reported); `npm run check:i18n` — **2,396 keys PASS**; `npm run check:hardcoded` — **49 HTML + 127 TypeScript files PASS**; `npm run test -- --watch=false` — **284 tests / 50 files / 0 failures**; `npm run build` — **PASS**.
+- Docker/PostgreSQL/Compose: **BLOCKED, not run**. `docker info` cannot connect to `npipe:////./pipe/dockerDesktopLinuxEngine` because the Docker daemon is unavailable. This blocks Testcontainers concurrency, PostgreSQL fresh/upgrade migration, `ddl-auto=validate` on PostgreSQL, and production-like Compose smoke.
+- CI: **BLOCKED, not run**. The known GitHub Actions account/billing lock remains external; no green exact-SHA CI URL exists.
+
 ## 2026-08-13 O2C vertical-slice checkpoint
 
 - Working-tree evidence after parent `41a7f3b`; not final release-SHA evidence.
@@ -35,9 +44,9 @@ below a recorded baseline or reports failures fails the release gate.
 
 | Suite | Baseline | Command | Threshold rule |
 |-------|----------|---------|----------------|
-| Backend (non-Docker, H2) | **391 tests / 78 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 391 AND failures = 0 |
+| Backend (non-Docker, H2) | **516 tests / 144 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 516 AND failures = 0 |
 | Backend (full, incl. Testcontainers) | **310 tests** expected when Docker available | `./gradlew test` | failures = 0 |
-| Frontend (Angular + Vitest) | **278 tests / 50 files / 0 failures** | `npx ng test --watch=false` | count ≥ 278 AND failures = 0 |
+| Frontend (Angular + Vitest) | **284 tests / 50 files / 0 failures** | `npx ng test --watch=false` | count ≥ 284 AND failures = 0 |
 
 ## Evidence log
 

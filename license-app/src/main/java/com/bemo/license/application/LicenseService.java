@@ -35,18 +35,26 @@ public class LicenseService {
         requireFresh(request.timestamp());
         String canonical = "activate|" + request.installationId() + '|' + request.deviceFingerprintHash().toLowerCase() + '|' + request.timestamp();
         if (!licenseCryptoService.verifyDevice(request.devicePublicKey(), canonical, request.signature())) throw new LicenseException("DEVICE_PROOF_INVALID", "Device proof is invalid.");
-        var license = licenseKeyRepository.findByKeyHash(hash(normalize(request.licenseKey())))
+        var license = licenseKeyRepository.findByKeyHashForUpdate(hash(normalize(request.licenseKey())))
                 .orElseThrow(() -> new LicenseException("LICENSE_NOT_FOUND", "License key is invalid."));
         requireUsable(license, Instant.now());
-        var existing = licenseActivationRepository.findByLicenseIdAndInstallationIdAndActiveTrue(license.getId(), request.installationId());
+        var existing = licenseActivationRepository.findByLicenseIdAndInstallationId(license.getId(), request.installationId());
         var activation = existing.orElseGet(() -> {
             if (licenseActivationRepository.countByLicenseIdAndActiveTrue(license.getId()) >= license.getMaxActivations())
                 throw new LicenseException("ACTIVATION_LIMIT_REACHED", "License is already active on the allowed number of devices.");
             Instant now=Instant.now(); return licenseActivationRepository.save(new LicenseActivation(license.getId(), request.installationId(),
                     request.deviceFingerprintHash().toLowerCase(), request.devicePublicKey(), now, license.expiryFrom(now)));
         });
+        if (!activation.isActive()) {
+            if (licenseActivationRepository.countByLicenseIdAndActiveTrue(license.getId()) >= license.getMaxActivations())
+                throw new LicenseException("ACTIVATION_LIMIT_REACHED", "License is already active on the allowed number of devices.");
+            Instant now=Instant.now();
+            activation.reactivate(request.deviceFingerprintHash().toLowerCase(), request.devicePublicKey(), now, license.expiryFrom(now));
+        }
         if (!MessageDigest.isEqual(activation.getDeviceFingerprintHash().getBytes(StandardCharsets.UTF_8), request.deviceFingerprintHash().toLowerCase().getBytes(StandardCharsets.UTF_8)))
             throw new LicenseException("DEVICE_MISMATCH", "This installation id is bound to another device.");
+        if (!MessageDigest.isEqual(activation.getDevicePublicKey().getBytes(StandardCharsets.UTF_8), request.devicePublicKey().getBytes(StandardCharsets.UTF_8)))
+            throw new LicenseException("DEVICE_MISMATCH", "This installation id is bound to another device key.");
         return certificate(license, activation);
     }
 

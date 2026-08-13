@@ -25,4 +25,13 @@ public class LicenseActivation {
     }
     public void validated(Instant at){this.lastValidatedAt=at;}
     public void deactivate(Instant at){this.active=false;this.deactivatedAt=at;}
+    public void reactivate(String fingerprint, String publicKey, Instant at, Instant expiresAt) {
+        this.deviceFingerprintHash=fingerprint;
+        this.devicePublicKey=publicKey;
+        this.expiresAt=expiresAt;
+        this.active=true;
+        this.activatedAt=at;
+        this.lastValidatedAt=at;
+        this.deactivatedAt=null;
+    }
 }

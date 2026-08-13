@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813-v228-dynamic-translation-ids-postgresql
+      author: bemo-erp
+      dbms: postgresql
+      comment: New translation seed CSV files can omit the technical id; PostgreSQL creates it at insert time.
+      changes:
+        - addDefaultValue:
+            tableName: translations
+            columnName: id
+            columnDataType: VARCHAR(36)
+            defaultValueComputed: "CAST(gen_random_uuid() AS VARCHAR)"
+      rollback:
+        - dropDefaultValue: { tableName: translations, columnName: id, columnDataType: VARCHAR(36) }
+
+  - changeSet:
+      id: 20260813-v228-dynamic-translation-ids-h2
+      author: bemo-erp
+      dbms: h2
+      comment: H2 equivalent used by the complete migration test catalog.
+      changes:
+        - addDefaultValue:
+            tableName: translations
+            columnName: id
+            columnDataType: VARCHAR(36)
+            defaultValueComputed: "CAST(RANDOM_UUID() AS VARCHAR)"
+      rollback:
+        - dropDefaultValue: { tableName: translations, columnName: id, columnDataType: VARCHAR(36) }

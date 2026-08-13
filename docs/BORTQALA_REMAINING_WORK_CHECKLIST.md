@@ -412,7 +412,7 @@ Reviewer:
 
 ## REL-002 — Refresh full release evidence on the final SHA
 
-**Status:** `OPEN`
+**Status:** `BLOCKED — all local gates pass; Docker/PostgreSQL/Compose and CI remain unavailable`
 
 Historical green test counts are useful but do not replace a final verification run after the last fixes.
 
@@ -420,10 +420,10 @@ Historical green test counts are useful but do not replace a final verification 
 
 From `be/`:
 
-- [ ] `./gradlew test -PskipDockerTests`
-- [ ] `python tools/check-error-codes.py`
-- [ ] `python tools/check-translation-catalog.py`
-- [ ] `python tools/check-authorization-contract.py`
+- [x] `./gradlew test -PskipDockerTests`
+- [x] `python tools/check-error-codes.py`
+- [x] `python tools/check-translation-catalog.py`
+- [x] `python tools/check-authorization-contract.py`
 
 For release sign-off:
 
@@ -431,19 +431,19 @@ For release sign-off:
 - [ ] Verify fresh Liquibase migration on PostgreSQL.
 - [ ] Verify upgrade-path migration if the project release gate requires it.
 - [ ] Verify `ddl-auto=validate` succeeds against the migrated schema.
-- [ ] Do not reduce a test-count baseline to hide a regression.
+- [x] Do not reduce a test-count baseline to hide a regression.
 
 ### Mandatory frontend verification
 
 From `fe/`:
 
-- [ ] `npm ci`
-- [ ] `npm run check:i18n`
-- [ ] `npm run check:hardcoded`
-- [ ] `npm run test -- --watch=false`
-- [ ] `npm run build`
-- [ ] Use the Node version required by `.nvmrc` / package engines.
-- [ ] No new ignored/focused/disabled tests are introduced to force green.
+- [x] `npm ci`
+- [x] `npm run check:i18n`
+- [x] `npm run check:hardcoded`
+- [x] `npm run test -- --watch=false`
+- [x] `npm run build`
+- [x] Use the Node version required by `.nvmrc` / package engines.
+- [x] No new ignored/focused/disabled tests are introduced to force green.
 
 ### Mandatory release smoke verification
 
@@ -459,15 +459,15 @@ From `fe/`:
 
 ### `docs/TEST_EVIDENCE.md` rules
 
-- [ ] Add current date.
-- [ ] Add exact final HEAD SHA.
-- [ ] Record exact commands.
-- [ ] Record exact pass/fail counts observed.
+- [x] Add current date.
+- [x] Add exact final code SHA.
+- [x] Record exact commands.
+- [x] Record exact pass/fail counts observed.
 - [ ] Record PostgreSQL/Testcontainers result.
-- [ ] Record frontend build result.
+- [x] Record frontend build result.
 - [ ] Record CI URL.
-- [ ] Do not copy old counts forward without rerunning.
-- [ ] Do not call a run verified if it did not execute.
+- [x] Do not copy old counts forward without rerunning.
+- [x] Do not call a run verified if it did not execute.
 
 ### Definition of Done
 
@@ -1310,22 +1310,22 @@ The developer may write **ALL DONE / FULLY VERIFIED / RELEASE READY** only when 
 - [ ] Shared control items verified.
 - [ ] Treasury/close applicable items verified.
 - [ ] Finance/governance applicable items verified.
-- [ ] Backend unit/service tests green.
+- [x] Backend unit/service tests green.
 - [ ] Backend PostgreSQL/Testcontainers tests green.
 - [ ] Liquibase fresh migration green.
 - [ ] Liquibase upgrade-path verification green when required.
-- [ ] Error-code validation green.
-- [ ] Translation-catalog validation green.
-- [ ] Authorization-contract validation green.
-- [ ] Frontend i18n validation green.
-- [ ] Frontend hardcoded-string validation green.
-- [ ] Frontend tests green.
-- [ ] Frontend production build green.
+- [x] Error-code validation green.
+- [x] Translation-catalog validation green.
+- [x] Authorization-contract validation green.
+- [x] Frontend i18n validation green.
+- [x] Frontend hardcoded-string validation green.
+- [x] Frontend tests green.
+- [x] Frontend production build green.
 - [ ] Production-like Compose validation green.
 - [ ] Critical business-flow smoke tests green.
 - [ ] GitHub/approved CI is green on the exact release SHA.
-- [ ] `docs/TEST_EVIDENCE.md` contains the exact SHA and observed results.
-- [ ] `PROJECT_MAP.md` has no contradictory open-work statement.
+- [x] `docs/TEST_EVIDENCE.md` contains the exact code SHA and observed results.
+- [x] `PROJECT_MAP.md` has no contradictory open-work statement.
 - [ ] No known P0 blocker remains.
 
 Only after all applicable items above are `[x]` may this line be changed:

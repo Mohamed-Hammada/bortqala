@@ -1,6 +1,6 @@
 ---
 name: no-static-labels
-description: Enforces a zero-static-labels policy in UI components. Ensures all user-facing text (labels, headings, buttons, tooltips, dialogs, toasts, placeholders, badges, status messages) are localized using I18nService keys (i18n.t) and registered in fallback dictionaries and translation bundles instead of hardcoded inline text.
+description: Enforces a zero-static-labels policy in UI components. Use whenever adding or changing user-facing labels, headings, buttons, tooltips, dialogs, toasts, placeholders, badges, status messages, or backend error copy; it requires bilingual, duplicate-safe database translations and repository validation.
 ---
 
 # Zero Static Labels & Mandatory Localization Skill
@@ -20,9 +20,11 @@ When developing UI components or modifying features in the frontend, **never har
 
 3. **Bilingual Key Registration Protocol**:
    Whenever a new key is introduced or refactored:
-   - **Step 1**: Register the key in `DEFAULT_FALLBACKS['ar-EG']` AND `DEFAULT_FALLBACKS['en-US']` inside `src/app/core/i18n.service.ts`.
-   - **Step 2**: Add translation rows to the backend database Liquibase CSV file (`be/src/main/resources/db/changelog/csv/i18n_translations.csv`) for both `ar-EG` and `en-US`.
-   - **Step 3**: Run `npm run check:i18n` to verify that 100% of literal keys used in `.ts` and `.html` files exist in both locales in the database changelog.
+   - **Step 1**: Search the complete catalog before adding anything: `python be/tools/check-translation-catalog.py`. Reuse an existing semantic key; never duplicate a key/locale pair in a later CSV.
+   - **Step 2**: For exceptional copy required before the first HTTP translation bundle, register the key in `REQUIRED_COPY['ar-EG']` and `REQUIRED_COPY['en-US']` in `fe/src/app/core/i18n.service.ts`. Ordinary feature copy belongs only in the database catalog.
+   - **Step 3**: Add both locales with `python be/tools/add-translation.py --file <new-file>.csv --key <key> --ar <arabic> --en <english>`. New seed CSVs omit the technical `id`; Liquibase v228 lets the database generate UUIDs.
+   - **Step 4**: Register the CSV in a new versioned `loadData` changeset and in both production and H2 release masters. Roll back by the exact translation key plus `app_id IS NULL`, not by an id prefix.
+   - **Step 5**: Run `python be/tools/check-translation-catalog.py`, `npm run check:i18n`, and `npm run check:hardcoded`. The Python gate checks the entire historical catalog for malformed rows, duplicates, and missing Arabic/English pairs.
 
 ## 2. Parameterized & Dynamic Translations
 

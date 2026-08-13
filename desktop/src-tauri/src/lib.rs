@@ -33,12 +33,26 @@ struct InitialCredentials {
 
 struct ManagedProcesses {
     backend: Arc<Mutex<Option<Child>>>,
-    pg_ctl: PathBuf,
-    postgres_data: PathBuf,
+    pg_ctl: Mutex<Option<PathBuf>>,
+    postgres_data: Mutex<Option<PathBuf>>,
+    resources: PathBuf,
+    secrets: InstallSecrets,
     license: Mutex<LicenseClient>,
     navigation_allowed: Arc<AtomicBool>,
     backend_port: Arc<Mutex<Option<u16>>>,
     initial_credentials: InitialCredentials,
+}
+
+fn configured(runtime_name: &str, compiled: Option<&'static str>, default: &str) -> String {
+    compiled
+        .map(str::to_owned)
+        .filter(|value| !value.trim().is_empty())
+        .or_else(|| {
+            std::env::var(runtime_name)
+                .ok()
+                .filter(|value| !value.trim().is_empty())
+        })
+        .unwrap_or_else(|| default.to_owned())
 }
 
 #[cfg(target_os = "windows")]
@@ -213,11 +227,16 @@ fn start_backend(
         .stdout
         .take()
         .ok_or("Could not read backend output.")?;
+    let stderr = child
+        .stderr
+        .take()
+        .ok_or("Could not read backend error output.")?;
     let managed = Arc::new(Mutex::new(Some(child)));
     let app_handle = app.clone();
     std::thread::spawn(move || {
+        let mut published = false;
         for line in BufReader::new(stdout).lines().map_while(Result::ok) {
-            if let Some(value) = line.strip_prefix("BEMO_BACKEND_PORT=") {
+            if !published && let Some(value) = line.strip_prefix("BEMO_BACKEND_PORT=") {
                 if let Ok(port) = value.parse::<u16>() {
                     if let Ok(mut current) = backend_port.lock() {
                         *current = Some(port);
@@ -229,12 +248,65 @@ fn start_backend(
                             let _ = window.show();
                         }
                     }
-                    break;
+                    published = true;
                 }
             }
         }
     });
+    std::thread::spawn(move || {
+        for _ in BufReader::new(stderr).lines().map_while(Result::ok) {
+            // Drain the hidden backend stream so a full pipe cannot stall Spring Boot.
+        }
+    });
     Ok(managed)
+}
+
+fn start_owned_services(app: &tauri::AppHandle, state: &ManagedProcesses) -> Result<(), String> {
+    let mut state_backend = state
+        .backend
+        .lock()
+        .map_err(|_| "Backend state is unavailable.")?;
+    if state_backend.is_some() {
+        return Ok(());
+    }
+    let (db_url, pg_ctl, postgres_data) = ensure_postgres(app, &state.resources, &state.secrets)?;
+    let started = start_backend(
+        app,
+        &state.resources,
+        &db_url,
+        &state.secrets,
+        state.navigation_allowed.clone(),
+        state.backend_port.clone(),
+    );
+    match started {
+        Ok(backend) => {
+            let mut backend_guard = backend
+                .lock()
+                .map_err(|_| "Backend state is unavailable.")?;
+            *state_backend = backend_guard.take();
+            *state
+                .pg_ctl
+                .lock()
+                .map_err(|_| "PostgreSQL state is unavailable.")? = Some(pg_ctl);
+            *state
+                .postgres_data
+                .lock()
+                .map_err(|_| "PostgreSQL state is unavailable.")? = Some(postgres_data);
+            Ok(())
+        }
+        Err(error) => {
+            let _ = hidden(Command::new(&pg_ctl).args([
+                "-D",
+                postgres_data.to_str().unwrap(),
+                "-m",
+                "fast",
+                "-w",
+                "stop",
+            ]))
+            .output();
+            Err(error)
+        }
+    }
 }
 
 #[tauri::command]
@@ -260,6 +332,10 @@ fn activate_license(
         .activate(license_key)?
         .customer_reference;
     state.navigation_allowed.store(true, Ordering::SeqCst);
+    if let Err(error) = start_owned_services(&app, &state) {
+        state.navigation_allowed.store(false, Ordering::SeqCst);
+        return Err(error);
+    }
     if let Some(port) = *state
         .backend_port
         .lock()
@@ -324,31 +400,32 @@ pub fn run() {
                 .app_local_data_dir()
                 .map_err(|error| error.to_string())?;
             fs::create_dir_all(&app_data).map_err(|error| error.to_string())?;
-            let license_url = std::env::var("BEMO_LICENSE_URL")
-                .unwrap_or_else(|_| "http://127.0.0.1:8091".into());
-            let license_public_key = std::env::var("BEMO_LICENSE_PUBLIC_KEY").unwrap_or_default();
-            let enforced = std::env::var("BEMO_LICENSE_ENFORCED")
-                .map(|value| value.eq_ignore_ascii_case("true"))
-                .unwrap_or(false);
-            let mut license = LicenseClient::load(&app_data, license_url, license_public_key)?;
+            let license_url = configured(
+                "BEMO_LICENSE_URL",
+                option_env!("BEMO_LICENSE_URL"),
+                "http://127.0.0.1:8091",
+            );
+            let license_public_key = configured(
+                "BEMO_LICENSE_PUBLIC_KEY",
+                option_env!("BEMO_LICENSE_PUBLIC_KEY"),
+                "",
+            );
+            let enforced = configured(
+                "BEMO_LICENSE_ENFORCED",
+                option_env!("BEMO_LICENSE_ENFORCED"),
+                "false",
+            )
+            .eq_ignore_ascii_case("true");
+            let license = LicenseClient::load(&app_data, license_url, license_public_key)?;
             let valid = if enforced {
-                license.activated() && license.validate().is_ok()
+                license.activated() && license.validate_local().is_ok()
             } else {
                 true
             };
             let navigation_allowed = Arc::new(AtomicBool::new(valid));
             let backend_port = Arc::new(Mutex::new(None));
             let secrets = load_or_create_secrets(app.handle())?;
-            let (db_url, pg_ctl, postgres_data) =
-                ensure_postgres(app.handle(), &resources, &secrets)?;
-            let backend = start_backend(
-                app.handle(),
-                &resources,
-                &db_url,
-                &secrets,
-                navigation_allowed.clone(),
-                backend_port.clone(),
-            )?;
+            let backend = Arc::new(Mutex::new(None));
             let initial_credentials = InitialCredentials {
                 app_code: "DEMO".into(),
                 username: "admin".into(),
@@ -356,13 +433,19 @@ pub fn run() {
             };
             app.manage(ManagedProcesses {
                 backend,
-                pg_ctl,
-                postgres_data,
+                pg_ctl: Mutex::new(None),
+                postgres_data: Mutex::new(None),
+                resources,
+                secrets,
                 license: Mutex::new(license),
                 navigation_allowed,
                 backend_port,
                 initial_credentials,
             });
+            if valid {
+                let state = app.state::<ManagedProcesses>();
+                start_owned_services(app.handle(), &state)?;
+            }
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -373,15 +456,23 @@ pub fn run() {
                         let _ = child.kill();
                     }
                 }
-                let _ = hidden(Command::new(&state.pg_ctl).args([
-                    "-D",
-                    state.postgres_data.to_str().unwrap(),
-                    "-m",
-                    "fast",
-                    "-w",
-                    "stop",
-                ]))
-                .output();
+                let pg_ctl = state.pg_ctl.lock().ok().and_then(|value| value.clone());
+                let postgres_data = state
+                    .postgres_data
+                    .lock()
+                    .ok()
+                    .and_then(|value| value.clone());
+                if let (Some(pg_ctl), Some(postgres_data)) = (pg_ctl, postgres_data) {
+                    let _ = hidden(Command::new(pg_ctl).args([
+                        "-D",
+                        postgres_data.to_str().unwrap(),
+                        "-m",
+                        "fast",
+                        "-w",
+                        "stop",
+                    ]))
+                    .output();
+                }
             }
         })
         .run(tauri::generate_context!())

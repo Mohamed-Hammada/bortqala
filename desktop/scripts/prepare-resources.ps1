@@ -25,7 +25,7 @@ Copy-Item -LiteralPath $jar.FullName -Destination (Join-Path $backendResources '
 
 if (Test-Path -LiteralPath $runtimeResources) { Remove-Item -LiteralPath $runtimeResources -Recurse -Force }
 $jlink = Join-Path $env:JAVA_HOME 'bin\jlink.exe'
-if (-not (Test-Path -LiteralPath $jlink)) { throw 'JAVA_HOME must point to JDK 26 with jlink.' }
+if (-not (Test-Path -LiteralPath $jlink)) { throw 'JAVA_HOME must point to JDK 21 or newer (GraalVM is supported) with jlink.' }
 & $jlink --add-modules java.base,java.compiler,java.desktop,java.instrument,java.management,java.naming,java.net.http,java.prefs,java.rmi,java.scripting,java.security.jgss,java.sql,java.transaction.xa,java.xml,jdk.crypto.ec,jdk.unsupported --strip-debug --no-header-files --no-man-pages --compress zip-6 --output $runtimeResources
 if ($LASTEXITCODE -ne 0) { throw 'Java runtime creation failed.' }
 
