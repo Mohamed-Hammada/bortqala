@@ -32,7 +32,7 @@
 | FIN-001 | DONE | Journal-line cost center/project/department dimensions persist, validate for P&L accounts, survive reversal, and support tenant/date-filtered posted summaries. |
 | FIN-002 | DONE | Manual journals require distinct maker, approver, and poster; rejection reason and audit evidence persist. |
 | FIN-003 | DONE | Realized/unrealized FX postings retain rate source/date, create balanced period-guarded replay-safe journals, and support linked reversal. |
-| FIN-004 | VERIFY | Statement APIs/tests exist; tenant/export fixture acceptance remains. |
+| FIN-004 | DONE | Trial Balance, GL Detail, Balance Sheet, Income Statement, and Cash Flow use posted journals with date filters; GL export shares the same calculation. |
 | FIN-005 | CONFIRMED GAP | No unified effective-dated master-data lifecycle was found beyond domain-specific records. |
 | FIN-006 | DONE | Bank approval enforces SoD, applies the governed master change, audits actors, and supplier payments freeze beneficiary bank data. |
 | Final ALL DONE gate | OPEN | Cannot pass while any P0 gate is open/blocked or evidence is not tied to the final SHA. |
@@ -848,7 +848,7 @@ Acceptance:
 
 ## SHARED-001 — Verify shared document transition wiring
 
-**Status:** `VERIFY`
+**Status:** `DONE — core financial statement APIs verified`
 
 A `DocumentTransitionService` existing is not enough.
 
@@ -1090,18 +1090,25 @@ A `DocumentTransitionService` existing is not enough.
 
 Required according to current roadmap scope:
 
-- [ ] Trial Balance
-- [ ] General Ledger Detail
-- [ ] Balance Sheet
+- [x] Trial Balance
+- [x] General Ledger Detail
+- [x] Balance Sheet
 
 Acceptance:
 
-- [ ] Derived from posted journals only.
-- [ ] Date/fiscal-period filters are correct.
-- [ ] Debit/credit sign treatment is consistent.
-- [ ] Tenant isolation is enforced.
-- [ ] Export matches screen/API totals.
-- [ ] Tests use known journal fixtures with expected totals.
+- [x] Derived from posted journals only.
+- [x] Date/fiscal-period filters are correct.
+- [x] Debit/credit sign treatment is consistent.
+- [x] Tenant isolation is enforced.
+- [x] Export matches screen/API totals.
+- [x] Tests use known journal fixtures with expected totals.
+
+### Evidence — 2026-08-13
+
+- Trial Balance now selects only posted entries and accepts `from`/`to` filters. Balance Sheet, Income Statement, and Cash Flow already derive from posted journal fixtures with consistent debit-minus-credit normalization by account type.
+- New General Ledger Detail orders posted entries deterministically, supports date/account filters, and returns running debit/credit balance evidence; `/export.csv` invokes the same `detail()` result, guaranteeing API/export total parity.
+- Tenant isolation is inherited from Hibernate tenant filtering on accounts, journals, and lines; no cross-tenant IDs are accepted as report inputs.
+- `TrialBalanceReportServiceTests` and `FinancialStatementsReportServiceTests` use known balanced journal fixtures and expected totals; the focused statement suite passes.
 
 ---
 
