@@ -50,6 +50,12 @@ public class Budget {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column(name = "revision_approval_required", nullable = false)
+    private boolean revisionApprovalRequired = true;
+
+    @Column(name = "current_revision_number", nullable = false)
+    private int currentRevisionNumber;
+
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
@@ -92,6 +98,14 @@ public class Budget {
         this.plannedAmount = plannedAmount;
     }
 
+    public void applyApprovedRevision(int revisionNumber, BigDecimal plannedAmount) {
+        if (revisionNumber <= currentRevisionNumber) throw new IllegalArgumentException("Revision must be newer than the current version.");
+        updatePlannedAmount(plannedAmount);
+        this.currentRevisionNumber = revisionNumber;
+    }
+
+    public void configureRevisionApproval(boolean required) { this.revisionApprovalRequired = required; }
+
     public void activate() { this.active = true; }
 
     public void deactivate() { this.active = false; }
@@ -111,6 +125,8 @@ public class Budget {
     public String getCurrencyCode() { return currencyCode; }
     public boolean isBlocking() { return blocking; }
     public boolean isActive() { return active; }
+    public boolean isRevisionApprovalRequired() { return revisionApprovalRequired; }
+    public int getCurrentRevisionNumber() { return currentRevisionNumber; }
     public long getCreatedAt() { return createdAt; }
     public long getUpdatedAt() { return updatedAt; }
     public long getVersion() { return version; }

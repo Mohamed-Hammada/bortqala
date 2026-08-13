@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v219_001_budget_revision_lifecycle
+      author: codex
+      changes:
+        - addColumn:
+            tableName: budgets
+            columns:
+              - column: { name: revision_approval_required, type: BOOLEAN, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: current_revision_number, type: INT, defaultValueNumeric: 0, constraints: { nullable: false } }
+        - addColumn:
+            tableName: budget_revisions
+            columns:
+              - column: { name: requested_by, type: VARCHAR(100), defaultValue: LEGACY, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(20), defaultValue: APPROVED, constraints: { nullable: false } }
+              - column: { name: decided_at, type: BIGINT }
+        - dropNotNullConstraint: { tableName: budget_revisions, columnName: approved_by, columnDataType: VARCHAR(100) }
+        - addUniqueConstraint: { tableName: budget_revisions, columnNames: "app_id,budget_id,revision_number", constraintName: uq_budget_revision_number }
+        - createIndex:
+            tableName: budget_revisions
+            indexName: ix_budget_revision_status
+            columns:
+              - column: { name: app_id }
+              - column: { name: budget_id }
+              - column: { name: status }
+      rollback:
+        - dropIndex: { tableName: budget_revisions, indexName: ix_budget_revision_status }
+        - dropUniqueConstraint: { tableName: budget_revisions, constraintName: uq_budget_revision_number }
+        - addNotNullConstraint: { tableName: budget_revisions, columnName: approved_by, columnDataType: VARCHAR(100), defaultNullValue: LEGACY }
+        - dropColumn: { tableName: budget_revisions, columnName: decided_at }
+        - dropColumn: { tableName: budget_revisions, columnName: status }
+        - dropColumn: { tableName: budget_revisions, columnName: requested_by }
+        - dropColumn: { tableName: budgets, columnName: current_revision_number }
+        - dropColumn: { tableName: budgets, columnName: revision_approval_required }

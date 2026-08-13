@@ -216,7 +216,7 @@ class BudgetServiceTests {
         when(departmentRepository.findById(anyString())).thenReturn(Optional.empty());
 
         BudgetApi.BudgetPayload payload = new BudgetApi.BudgetPayload(2026, BudgetPeriodType.ANNUAL, null,
-                "unknown", new BigDecimal("100.00"), "EGP", true, true);
+                "unknown", new BigDecimal("100.00"), "EGP", true, true, true);
 
         assertThatThrownBy(() -> budgetService.createBudget(payload))
                 .isInstanceOf(BusinessRuleException.class)
@@ -226,7 +226,7 @@ class BudgetServiceTests {
     @Test
     void createBudget_rejectsInvalidMonthlyPeriodMonth() {
         BudgetApi.BudgetPayload payload = new BudgetApi.BudgetPayload(2026, BudgetPeriodType.MONTHLY, 13,
-                DEPARTMENT, new BigDecimal("100.00"), "EGP", true, true);
+                DEPARTMENT, new BigDecimal("100.00"), "EGP", true, true, true);
 
         assertThatThrownBy(() -> budgetService.createBudget(payload))
                 .isInstanceOf(BusinessRuleException.class)
@@ -265,17 +265,18 @@ class BudgetServiceTests {
     }
 
     @Test
-    void updateBudget_preservesActiveFlagAndPlannedAmount() {
+    void updateBudget_preservesActiveFlagAndRevisionPolicy() {
         Budget budget = annualBudget(new BigDecimal("100.00"));
         when(budgetRepository.findById(BUDGET_ID)).thenReturn(Optional.of(budget));
         when(budgetRepository.save(any(Budget.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         BudgetApi.BudgetPayload payload = new BudgetApi.BudgetPayload(2026, BudgetPeriodType.ANNUAL, null,
-                DEPARTMENT, new BigDecimal("200.00"), "EGP", true, false);
+                DEPARTMENT, new BigDecimal("100.00"), "EGP", true, false, false);
 
         var response = budgetService.updateBudget(BUDGET_ID, payload);
 
-        assertThat(response.plannedAmount()).isEqualByComparingTo("200.00");
+        assertThat(response.plannedAmount()).isEqualByComparingTo("100.00");
         assertThat(response.active()).isFalse();
+        assertThat(response.revisionApprovalRequired()).isFalse();
     }
 }

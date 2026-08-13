@@ -18,7 +18,8 @@ public class BudgetApi {
             @NotNull @DecimalMin(value = "0", inclusive = true) BigDecimal plannedAmount,
             String currencyCode,
             Boolean blocking,
-            Boolean active
+            Boolean active,
+            Boolean revisionApprovalRequired
     ) {}
 
     public record BudgetResponse(
@@ -32,6 +33,8 @@ public class BudgetApi {
             String currencyCode,
             boolean blocking,
             boolean active,
+            boolean revisionApprovalRequired,
+            int currentRevisionNumber,
             long createdAt,
             long updatedAt
     ) {}

@@ -26,7 +26,7 @@
 | SHARED-002 | DONE | Vendor payments, manual journals, and governed bank changes enforce backend maker/checker and persist/audit actors. |
 | SHARED-003–004 | DONE | Fiscal close cannot bypass server precheck; subledger posting/reversal is balanced, period-guarded, traceable, and replay-safe. |
 | TRS-001 | DONE | Eligible multi-source batches derive totals, enforce three actors, create traceable atomic disbursements, and replay safely under a locked header. |
-| TRS-002 | CONFIRMED GAP | Budget revision/transfer persistence exists without an application/API lifecycle or immutable-version tests. |
+| TRS-002 | DONE | Budget revisions are immutable, approval-aware versions with deterministic effective amounts, queryable history, mandatory reasons, SoD, audit, API/UI lifecycle, and focused tests. |
 | TRS-003…004 | VERIFY | Close/reconciliation providers and tests exist; complete module/source coverage remains. |
 | FIN-001 | VERIFY | Dimension posting/reporting acceptance remains. |
 | FIN-002 | DONE | Manual journals require distinct maker, approver, and poster; rejection reason and audit evidence persist. |
@@ -961,15 +961,23 @@ A `DocumentTransitionService` existing is not enough.
 
 ## TRS-002 — Budget revision versioning
 
-**Status:** `VERIFY`
+**Status:** `DONE â€” immutable revision lifecycle verified`
 
-- [ ] Revision produces a new version instead of mutating approved historical evidence.
-- [ ] Effective/current version is deterministic.
-- [ ] Approval is required where configured.
-- [ ] Old versions remain queryable.
-- [ ] Encumbrance/available-budget calculations use the correct version.
-- [ ] Audit reason is mandatory.
-- [ ] Tests prove historical immutability.
+- [x] Revision produces a new version instead of mutating approved historical evidence.
+- [x] Effective/current version is deterministic.
+- [x] Approval is required where configured.
+- [x] Old versions remain queryable.
+- [x] Encumbrance/available-budget calculations use the correct version.
+- [x] Audit reason is mandatory.
+- [x] Tests prove historical immutability.
+
+### Evidence â€” 2026-08-13
+
+- A revision is now a tenant-owned immutable evidence row with monotonic revision number, previous/new amount, reason, requester, status, decision actor/timestamp; V219 adds lifecycle columns and tenant-budget-version uniqueness.
+- Approval-required budgets keep the effective `Budget.plannedAmount` unchanged while a revision is pending. Approval applies exactly that persisted version under a pessimistic budget lock and advances `currentRevisionNumber`; status/encumbrance availability therefore always reads the deterministic effective amount.
+- Direct budget edits cannot bypass the revision path when changing an amount. Blank reasons, negative amounts, duplicate pending requests, self-approval, and invalid repeat decisions are rejected with bilingual V220 error keys.
+- `GET /budgets/{id}/revisions` preserves/query history; request/approve/reject endpoints and the typed Angular revision dialog expose the complete workflow, including configurable approval policy.
+- `BudgetServiceRevisionTests` proves pending immutability, independent approval, effective-version advancement, mandatory reason, and newest-first historical evidence. Budget focused tests, H2 application-context migration, frontend production build, i18n, and hardcoded-UI gates pass.
 
 ---
 

@@ -69,6 +69,7 @@ public class BudgetService {
         Budget budget = new Budget(payload.fiscalYear(), payload.periodType(), payload.periodMonth(),
                 payload.departmentId().strip(), payload.plannedAmount(), payload.currencyCode(),
                 payload.blocking() == null || payload.blocking(), payload.active() == null || payload.active());
+        budget.configureRevisionApproval(payload.revisionApprovalRequired() == null || payload.revisionApprovalRequired());
         Budget saved = budgetRepository.save(budget);
         auditService.record("CREATE", "BUDGET", saved.getId(), getCurrentUser(),
                 "{\"year\":" + saved.getFiscalYear() + ",\"department\":\"" + saved.getDepartmentId()
@@ -81,9 +82,13 @@ public class BudgetService {
         validatePeriod(payload);
         requireDepartment(payload.departmentId());
         Budget budget = requireBudget(id);
+        if (budget.getPlannedAmount().compareTo(payload.plannedAmount()) != 0) {
+            throw new BusinessRuleException("Budget amount changes require a revision.", "BUDGET_REVISION_REQUIRED", HttpStatus.CONFLICT);
+        }
         budget.update(payload.fiscalYear(), payload.periodType(), payload.periodMonth(),
                 payload.departmentId().strip(), payload.plannedAmount(), payload.currencyCode(),
                 payload.blocking() == null || payload.blocking(), payload.active() == null || payload.active());
+        budget.configureRevisionApproval(payload.revisionApprovalRequired() == null || payload.revisionApprovalRequired());
         Budget saved = budgetRepository.save(budget);
         auditService.record("UPDATE", "BUDGET", saved.getId(), getCurrentUser(),
                 "{\"year\":" + saved.getFiscalYear() + ",\"planned\":" + saved.getPlannedAmount() + "}", null);
@@ -276,21 +281,76 @@ public class BudgetService {
         return new BudgetApi.BudgetResponse(budget.getId(), budget.getFiscalYear(), budget.getPeriodType(),
                 budget.getPeriodMonth(), budget.getDepartmentId(), departmentName(budget.getDepartmentId()),
                 budget.getPlannedAmount(), budget.getCurrencyCode(), budget.isBlocking(), budget.isActive(),
+                budget.isRevisionApprovalRequired(), budget.getCurrentRevisionNumber(),
                 budget.getCreatedAt(), budget.getUpdatedAt());
     }
 
     @Transactional
-    public com.bemo.hr.budget.BudgetRevision reviseBudget(String budgetId, BigDecimal newAmount, String reason, String approvedBy) {
-        Budget budget = budgetRepository.findById(budgetId)
+    public com.bemo.hr.budget.BudgetRevision reviseBudget(String budgetId, BigDecimal newAmount, String reason, String requestedBy) {
+        if (newAmount == null || newAmount.signum() < 0) {
+            throw new BusinessRuleException("Budget revision amount must be non-negative.", "BUDGET_REVISION_AMOUNT_INVALID", HttpStatus.BAD_REQUEST);
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new BusinessRuleException("Budget revision reason is required.", "BUDGET_REVISION_REASON_REQUIRED", HttpStatus.BAD_REQUEST);
+        }
+        Budget budget = budgetRepository.findByIdForUpdate(budgetId)
                 .orElseThrow(() -> new NotFoundException("Budget not found: " + budgetId));
+        if (budgetRevisionRepository.existsByBudgetIdAndStatus(budgetId, com.bemo.hr.budget.BudgetRevision.Status.PENDING)) {
+            throw new BusinessRuleException("A budget revision is already pending.", "BUDGET_REVISION_PENDING", HttpStatus.CONFLICT);
+        }
         List<com.bemo.hr.budget.BudgetRevision> existingRevisions = budgetRevisionRepository.findByBudgetIdOrderByRevisionNumberDesc(budgetId);
         int nextRevNo = existingRevisions.isEmpty() ? 1 : existingRevisions.get(0).getRevisionNumber() + 1;
         com.bemo.hr.budget.BudgetRevision revision = new com.bemo.hr.budget.BudgetRevision(
-                budgetId, nextRevNo, budget.getPlannedAmount(), newAmount, reason, approvedBy
+                budgetId, nextRevNo, budget.getPlannedAmount(), newAmount, reason, requestedBy,
+                budget.isRevisionApprovalRequired()
         );
-        budget.updatePlannedAmount(newAmount);
+        if (revision.getStatus() == com.bemo.hr.budget.BudgetRevision.Status.APPROVED) {
+            budget.applyApprovedRevision(nextRevNo, newAmount);
+            budgetRepository.save(budget);
+        }
+        com.bemo.hr.budget.BudgetRevision saved = budgetRevisionRepository.save(revision);
+        auditService.record("REQUEST_REVISION", "BUDGET", budgetId, requestedBy,
+                "{\"revision\":" + nextRevNo + ",\"reason\":\"" + reason.replace("\"", "'") + "\"}", null);
+        return saved;
+    }
+
+    public List<com.bemo.hr.budget.BudgetRevision> listRevisions(String budgetId) {
+        requireBudget(budgetId);
+        return budgetRevisionRepository.findByBudgetIdOrderByRevisionNumberDesc(budgetId);
+    }
+
+    @Transactional
+    public com.bemo.hr.budget.BudgetRevision approveRevision(String budgetId, String revisionId, String actor) {
+        Budget budget = budgetRepository.findByIdForUpdate(budgetId)
+                .orElseThrow(() -> new NotFoundException("Budget not found: " + budgetId));
+        com.bemo.hr.budget.BudgetRevision revision = budgetRevisionRepository.findById(revisionId)
+                .filter(item -> item.getBudgetId().equals(budgetId))
+                .orElseThrow(() -> new NotFoundException("Budget revision not found: " + revisionId));
+        if (actor.equals(revision.getRequestedBy())) {
+            throw new BusinessRuleException("Requester cannot approve the same budget revision.", "BUDGET_REVISION_SOD", HttpStatus.CONFLICT);
+        }
+        try { revision.approve(actor); }
+        catch (IllegalStateException ex) { throw new BusinessRuleException(ex.getMessage(), "BUDGET_REVISION_STATE_INVALID", HttpStatus.CONFLICT); }
+        budget.applyApprovedRevision(revision.getRevisionNumber(), revision.getNewAmount());
         budgetRepository.save(budget);
-        return budgetRevisionRepository.save(revision);
+        com.bemo.hr.budget.BudgetRevision saved = budgetRevisionRepository.save(revision);
+        auditService.record("APPROVE_REVISION", "BUDGET", budgetId, actor,
+                "{\"revision\":" + revision.getRevisionNumber() + ",\"reason\":\"" + revision.getReason().replace("\"", "'") + "\"}", null);
+        return saved;
+    }
+
+    @Transactional
+    public com.bemo.hr.budget.BudgetRevision rejectRevision(String budgetId, String revisionId, String actor) {
+        requireBudget(budgetId);
+        com.bemo.hr.budget.BudgetRevision revision = budgetRevisionRepository.findById(revisionId)
+                .filter(item -> item.getBudgetId().equals(budgetId))
+                .orElseThrow(() -> new NotFoundException("Budget revision not found: " + revisionId));
+        try { revision.reject(actor); }
+        catch (IllegalStateException ex) { throw new BusinessRuleException(ex.getMessage(), "BUDGET_REVISION_STATE_INVALID", HttpStatus.CONFLICT); }
+        com.bemo.hr.budget.BudgetRevision saved = budgetRevisionRepository.save(revision);
+        auditService.record("REJECT_REVISION", "BUDGET", budgetId, actor,
+                "{\"revision\":" + revision.getRevisionNumber() + ",\"reason\":\"" + revision.getReason().replace("\"", "'") + "\"}", null);
+        return saved;
     }
 
     @Transactional

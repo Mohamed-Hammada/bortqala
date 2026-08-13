@@ -12,6 +12,8 @@ export interface BudgetResponse {
   currencyCode: string;
   blocking: boolean;
   active: boolean;
+  revisionApprovalRequired?: boolean;
+  currentRevisionNumber?: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -25,6 +27,23 @@ export interface BudgetPayload {
   currencyCode: string;
   blocking: boolean;
   active: boolean;
+  revisionApprovalRequired?: boolean;
+}
+
+export type BudgetRevisionStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface BudgetRevision {
+  id: string;
+  budgetId: string;
+  revisionNumber: number;
+  previousAmount: number;
+  newAmount: number;
+  reason: string;
+  requestedBy: string;
+  status: BudgetRevisionStatus;
+  approvedBy: string | null;
+  decidedAt: number | null;
+  createdAt: number;
 }
 
 export interface BudgetStatusResponse {

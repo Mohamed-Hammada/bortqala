@@ -16,6 +16,7 @@ import {
   BudgetPayload,
   BudgetPeriodType,
   BudgetResponse,
+  BudgetRevision,
   BudgetStatusResponse,
   Currency,
   Department,
@@ -43,6 +44,9 @@ export class BudgetsPage {
   readonly yearFilter = signal<number | null>(null);
   readonly drawerOpen = signal(false);
   readonly editingId = signal<string | null>(null);
+  readonly revisionBudget = signal<BudgetResponse | null>(null);
+  readonly revisions = signal<BudgetRevision[]>([]);
+  readonly revisionOpen = signal(false);
 
   readonly budgets = signal<BudgetResponse[]>([]);
   readonly status = signal<BudgetStatusResponse[]>([]);
@@ -59,6 +63,12 @@ export class BudgetsPage {
     currencyCode: new FormControl('EGP', { nonNullable: true, validators: [Validators.required] }),
     blocking: new FormControl(true, { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
+    revisionApprovalRequired: new FormControl(true, { nonNullable: true }),
+  });
+
+  readonly revisionForm = new FormGroup({
+    newAmount: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    reason: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
   readonly yearOptions = computed(() => {
@@ -133,6 +143,7 @@ export class BudgetsPage {
       currencyCode: this.currencies().find((currency) => currency.isBase)?.code ?? 'EGP',
       blocking: true,
       active: true,
+      revisionApprovalRequired: true,
     });
     this.drawerOpen.set(true);
   }
@@ -148,6 +159,7 @@ export class BudgetsPage {
       currencyCode: budget.currencyCode,
       blocking: budget.blocking,
       active: budget.active,
+      revisionApprovalRequired: budget.revisionApprovalRequired ?? true,
     });
     this.drawerOpen.set(true);
   }
@@ -188,6 +200,7 @@ export class BudgetsPage {
       currencyCode: value.currencyCode,
       blocking: value.blocking,
       active: value.active,
+      revisionApprovalRequired: value.revisionApprovalRequired,
     };
     this.submitting.set(true);
     try {
@@ -233,6 +246,42 @@ export class BudgetsPage {
         }
       },
     );
+  }
+
+  async openRevisions(budget: BudgetResponse) {
+    this.revisionBudget.set(budget);
+    this.revisionForm.reset({ newAmount: budget.plannedAmount, reason: '' });
+    this.revisionOpen.set(true);
+    try { this.revisions.set(await this.budgetService.listRevisions(budget.id) ?? []); }
+    catch (e) { this.notification.error(apiErrorMessage(e, this.i18n)); }
+  }
+
+  async requestRevision() {
+    const budget = this.revisionBudget();
+    if (!budget || this.revisionForm.invalid || this.submitting()) return;
+    this.submitting.set(true);
+    try {
+      const value = this.revisionForm.getRawValue();
+      await this.budgetService.requestRevision(budget.id, value.newAmount, value.reason);
+      this.notification.success(this.i18n.t('budget.revisionRequested'));
+      this.revisions.set(await this.budgetService.listRevisions(budget.id));
+      await Promise.all([this.loadBudgets(), this.loadStatus()]);
+    } catch (e) { this.notification.error(apiErrorMessage(e, this.i18n)); }
+    finally { this.submitting.set(false); }
+  }
+
+  async decideRevision(revision: BudgetRevision, approve: boolean) {
+    const budget = this.revisionBudget();
+    if (!budget || this.submitting()) return;
+    this.submitting.set(true);
+    try {
+      if (approve) await this.budgetService.approveRevision(budget.id, revision.id);
+      else await this.budgetService.rejectRevision(budget.id, revision.id);
+      this.notification.success(this.i18n.t(approve ? 'budget.revisionApproved' : 'budget.revisionRejected'));
+      this.revisions.set(await this.budgetService.listRevisions(budget.id));
+      await Promise.all([this.loadBudgets(), this.loadStatus()]);
+    } catch (e) { this.notification.error(apiErrorMessage(e, this.i18n)); }
+    finally { this.submitting.set(false); }
   }
 
   async exportExcel(): Promise<void> {
