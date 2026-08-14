@@ -337,6 +337,20 @@ body:has(.modal-backdrop) .page > .alert {
 }
 
 /* Shared data-entry modal grids. */
+.form-grid > .field,
+.dialog-form-grid > .field {
+  min-width: 0;
+}
+
+.form-grid .field input,
+.form-grid .field select,
+.form-grid .field textarea,
+.dialog-form-grid .field input,
+.dialog-form-grid .field select,
+.dialog-form-grid .field textarea {
+  max-width: 100%;
+}
+
 .dialog-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -433,6 +447,11 @@ body:has(.modal-backdrop) .page > .alert {
 [dir='rtl'] textarea,
 [dir='rtl'] select {
   text-align: right;
+}
+
+:root[dir='rtl'] select:not([multiple]),
+[dir='rtl'] select:not([multiple]) {
+  background-position: left 10px center;
 }
 
 :root[dir='ltr'] input:not([type='checkbox']):not([type='radio']):not([type='range']),
