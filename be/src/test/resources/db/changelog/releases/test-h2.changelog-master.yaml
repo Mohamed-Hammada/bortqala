@@ -727,3 +727,5 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260814_v242_consolidated_review_fixes.yaml
   - include:
       file: db/changelog/schema/update/20260814_v243_payment_accounting_evidence.yaml
+  - include:
+      file: db/changelog/data/update/20260814_v244_customer_success_support_ux.yaml
