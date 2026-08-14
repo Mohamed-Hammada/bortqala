@@ -1,0 +1,256 @@
+/*
+ * UI/UX stabilization layer.
+ * Loaded after styles.scss so it can normalize legacy feature CSS without
+ * forcing page-by-page rewrites. Keep business behavior out of this file.
+ */
+
+/* ---------- Layout & overflow ---------- */
+.page,
+.page-header,
+.card,
+.table-card,
+.form-grid,
+.dialog-form-grid {
+  min-width: 0;
+}
+
+.page {
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.page-header {
+  flex-wrap: wrap;
+}
+
+.page-header > :first-child,
+.page-header h1,
+.page-header p {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.table-card {
+  max-width: 100%;
+  overflow: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-gutter: stable;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ---------- Form consistency ---------- */
+.field {
+  min-width: 0;
+}
+
+.modal-dialog-box .field input,
+.modal-dialog-box .field select,
+.modal-dialog-box .field textarea,
+.drawer .field input,
+.drawer .field select,
+.drawer .field textarea,
+.card form .field input,
+.card form .field select,
+.card form .field textarea,
+.form-grid .field input,
+.form-grid .field select,
+.form-grid .field textarea,
+.dialog-form-grid .field input,
+.dialog-form-grid .field select,
+.dialog-form-grid .field textarea {
+  width: 100%;
+  max-width: 100% !important;
+}
+
+select:disabled,
+input:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+select:disabled {
+  opacity: 0.72;
+}
+
+.required {
+  margin-right: 0;
+  margin-inline-start: 3px;
+}
+
+.field small,
+.alert,
+.confirm-message,
+.confirm-danger,
+.confirm-error {
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Semantic colors in both themes ---------- */
+.button.danger {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 50%, var(--line));
+}
+
+.button.danger:hover:not(:disabled) {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 16%, var(--surface));
+  border-color: var(--danger);
+}
+
+.alert.error {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--line));
+}
+
+.alert.success {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 55%, var(--line));
+}
+
+.status.success {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 38%, var(--line));
+}
+
+.status.warning {
+  color: var(--warning-text);
+  border-color: var(--warning-border);
+}
+
+.status.danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 38%, var(--line));
+}
+
+/* ---------- Confirmation dialogs ---------- */
+.confirm-overlay {
+  z-index: var(--z-modal, 10000);
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  overflow: auto;
+  background: rgb(15 23 42 / 62%);
+  backdrop-filter: blur(4px);
+}
+
+.confirm-dialog {
+  width: min(100%, 480px);
+  min-width: 0;
+  max-width: 480px;
+  max-height: calc(100dvh - 32px);
+  padding: clamp(18px, 4vw, 32px);
+  overflow: auto;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-modal);
+}
+
+.confirm-title,
+.confirm-detail-row dd {
+  color: var(--ink);
+}
+
+.confirm-message,
+.confirm-detail-row dt,
+.confirm-busy {
+  color: var(--secondary-text);
+}
+
+.confirm-details {
+  border-color: var(--line);
+  background: var(--surface-muted);
+}
+
+.confirm-danger,
+.confirm-error {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--line));
+}
+
+.confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ---------- Legacy overlay normalization ---------- */
+.drawer {
+  z-index: var(--z-modal, 10000);
+}
+
+.drawer-backdrop {
+  inset-block: 0;
+  inset-inline-start: var(--current-sidebar-width, 0px);
+  inset-inline-end: 0;
+  z-index: var(--z-overlay, 9000);
+}
+
+.modal-backdrop,
+.dialog-overlay,
+.modal-overlay {
+  inset: 0;
+  z-index: var(--z-overlay, 9000);
+  cursor: default;
+}
+
+.drawer-actions,
+.modal-actions,
+.modal-actions-bar {
+  max-width: 100%;
+}
+
+.modal-actions,
+.modal-actions-bar {
+  justify-content: flex-end;
+}
+
+/* ---------- Responsive/touch behavior ---------- */
+@media (max-width: 700px) {
+  .page {
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+
+  .header-actions,
+  .page-actions,
+  .toolbar {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .header-actions > .button,
+  .page-actions > .button,
+  .modal-actions .button,
+  .modal-actions-bar .button,
+  .confirm-actions .button {
+    flex: 1 1 140px;
+  }
+
+  .button,
+  .icon-button {
+    min-height: 44px;
+  }
+
+  .icon-button {
+    min-width: 44px;
+  }
+
+  .confirm-overlay {
+    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right))
+      max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  }
+
+  .confirm-dialog {
+    max-height: calc(100dvh - 16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
