@@ -18,17 +18,17 @@
   flex-direction: column;
   gap: 1.25rem;
   padding: 1.5rem;
-  background: var(--surface-card, #ffffff);
-  border: 1px solid var(--border-color, #e5e7eb);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-xs);
 }
 
 .skeleton-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px dashed var(--border-color, #e5e7eb);
+  border-bottom: 1px dashed var(--line);
   padding-bottom: 1rem;
 }
 
@@ -42,8 +42,8 @@
   font-weight: 900;
   font-size: 1.1rem;
   letter-spacing: 2px;
-  color: var(--primary, #b8860b);
-  background: linear-gradient(90deg, #b8860b 0%, #e2b714 50%, #b8860b 100%);
+  color: var(--gold);
+  background: linear-gradient(90deg, var(--gold-dark) 0%, var(--gold-hover) 50%, var(--gold-dark) 100%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 2s infinite linear;
   -webkit-background-clip: text;
@@ -53,7 +53,7 @@
 .skeleton-line {
   height: 12px;
   border-radius: 6px;
-  background: linear-gradient(90deg, #f0f2f5 25%, #e2e8f0 37%, #f0f2f5 63%);
+  background: linear-gradient(90deg, var(--surface-hover) 25%, var(--row-hover) 37%, var(--surface-hover) 63%);
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.8s infinite ease-in-out;
 
@@ -79,7 +79,7 @@
   align-items: center;
   gap: 1rem;
   padding: 0.75rem;
-  background: var(--surface-bg, #f8fafc);
+  background: var(--surface-muted);
   border-radius: 8px;
 }
 
@@ -88,7 +88,7 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(90deg, #f0f2f5 25%, #e2e8f0 37%, #f0f2f5 63%);
+    background: linear-gradient(90deg, var(--surface-hover) 25%, var(--row-hover) 37%, var(--surface-hover) 63%);
     background-size: 200% 100%;
     animation: skeleton-shimmer 1.8s infinite ease-in-out;
   }
@@ -102,7 +102,7 @@
     width: 120px;
     height: 14px;
     border-radius: 4px;
-    background: linear-gradient(90deg, #f0f2f5 25%, #e2e8f0 37%, #f0f2f5 63%);
+    background: linear-gradient(90deg, var(--surface-hover) 25%, var(--row-hover) 37%, var(--surface-hover) 63%);
     background-size: 200% 100%;
     animation: skeleton-shimmer 1.8s infinite ease-in-out;
   }
@@ -110,7 +110,7 @@
     width: 70px;
     height: 14px;
     border-radius: 4px;
-    background: linear-gradient(90deg, #f0f2f5 25%, #e2e8f0 37%, #f0f2f5 63%);
+    background: linear-gradient(90deg, var(--surface-hover) 25%, var(--row-hover) 37%, var(--surface-hover) 63%);
     background-size: 200% 100%;
     animation: skeleton-shimmer 1.8s infinite ease-in-out;
   }
@@ -123,8 +123,8 @@
   justify-content: center;
   text-align: center;
   padding: 2.5rem 1.5rem;
-  background: #fff5f5;
-  border: 1px solid #fed7d7;
+  background: var(--danger-soft);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, var(--line));
   border-radius: 12px;
   gap: 1.25rem;
   margin: 1.5rem 0;
@@ -133,15 +133,15 @@
     display: inline-flex;
     flex-direction: column;
     align-items: center;
-    background: #2d3748;
-    color: #fff;
+    background: var(--surface-hover);
+    color: var(--ink);
     padding: 0.5rem 1.25rem;
     border-radius: 8px;
 
     .logo-mark {
       font-weight: 800;
       font-size: 1.2rem;
-      color: #ecc94b;
+      color: var(--gold);
       letter-spacing: 2px;
     }
     .logo-subtitle {
@@ -158,13 +158,13 @@
 
     h3 {
       margin: 0;
-      color: #c53030;
+      color: var(--danger);
       font-size: 1.15rem;
     }
 
     p {
       margin: 0;
-      color: #4a5568;
+      color: var(--secondary-text);
       max-width: 460px;
       font-size: 0.95rem;
     }

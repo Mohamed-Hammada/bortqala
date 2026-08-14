@@ -54,7 +54,7 @@ code { font-family: monospace; font-size: 12px; color: var(--gold); }
 .filter-row .btn.primary {
   background: var(--gold);
   border: none;
-  color: #1a1204;
+  color: #0F172A;
   font-weight: 600;
   padding: 8px 16px;
   border-radius: 8px;
@@ -84,7 +84,7 @@ code { font-family: monospace; font-size: 12px; color: var(--gold); }
   border: 1px solid var(--danger);
   border-radius: 10px;
   padding: 20px;
-  color: #FCA5A5;
+  color: var(--danger);
 }
 
 .load-error strong {
@@ -104,7 +104,7 @@ code { font-family: monospace; font-size: 12px; color: var(--gold); }
 .load-error .btn.primary {
   background: var(--gold);
   border: none;
-  color: #1a1204;
+  color: #0F172A;
   font-weight: 600;
   padding: 8px 18px;
   border-radius: 8px;

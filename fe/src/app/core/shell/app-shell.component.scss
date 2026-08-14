@@ -9,8 +9,8 @@
 }
 
 .offline-banner {
-  background: #f59e0b;
-  color: #000;
+  background: var(--warning);
+  color: #0F172A;
   font-weight: bold;
   font-size: 13px;
   text-align: center;
@@ -151,13 +151,13 @@
   height: 9px;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: #94a3b8;
-  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.16);
+  background: var(--muted);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--muted) 16%, transparent);
 }
 
 .server-status.online .server-status-dot {
-  background: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16);
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 16%, transparent);
 }
 
 .server-status.offline {
@@ -165,8 +165,8 @@
 }
 
 .server-status.offline .server-status-dot {
-  background: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
+  background: var(--danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 16%, transparent);
 }
 
 .server-status.checking .server-status-dot {
@@ -744,8 +744,8 @@ kbd {
   top: 50%;
   transform: translateY(-50%);
   padding: 6px 12px;
-  background: #0F172A;
-  color: #F8FAFC;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-ink);
   font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;

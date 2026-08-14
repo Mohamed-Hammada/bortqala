@@ -29,11 +29,27 @@
 
   /* Compatibility aliases used by older feature CSS */
   --border-color: var(--line);
+  --border: var(--line);
   --text-color: var(--ink);
   --text: var(--ink);
   --text-muted: var(--muted);
+  --text-heading: var(--ink);
+  --text-body: var(--muted);
+  --heading: var(--ink);
   --card: var(--surface);
   --gold-soft: var(--gold-glow);
+  --gold-strong: var(--gold);
+  --primary: var(--gold);
+  --surface-card: var(--surface);
+  --surface-bg: var(--surface);
+  --surface-subtle: var(--surface-muted);
+  --surface-soft: var(--surface-muted);
+  --surface-2: var(--surface-muted);
+  --danger-text: var(--danger);
+  --danger-bg: var(--danger-soft);
+  --success-text: var(--success);
+  --success-border: color-mix(in srgb, var(--success) 35%, var(--line));
+  --accent-emerald: var(--success);
   --warning-border: color-mix(in srgb, var(--warning) 45%, var(--line));
 
   /* Layering contract */

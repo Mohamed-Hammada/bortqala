@@ -24,15 +24,15 @@ th { font-size:.77rem; color:var(--secondary-text); font-weight:700; white-space
 td strong, td small { display:block; }
 td small { margin-top:4px; color:var(--secondary-text); max-width:320px; }
 .vendor-badge, .status { display:inline-flex; align-items:center; border:1px solid var(--line); border-radius:999px; padding:3px 8px; font-size:.72rem; font-weight:700; }
-.status.ok { background:rgba(33,145,94,.1); border-color:rgba(33,145,94,.3); }
-.status.warn { background:rgba(216,153,24,.12); border-color:rgba(216,153,24,.34); }
-.status.bad { background:rgba(190,55,55,.1); border-color:rgba(190,55,55,.3); }
+.status.ok { background: var(--success-soft); border-color: color-mix(in srgb, var(--success) 30%, var(--line)); }
+.status.warn { background: var(--warning-soft); border-color: color-mix(in srgb, var(--warning) 34%, var(--line)); }
+.status.bad { background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 30%, var(--line)); }
 .status.muted { opacity:.75; }
 code { direction:ltr; unicode-bidi:embed; }
 .row-actions { display:flex; gap:6px; flex-wrap:wrap; }
 .btn-sm { padding:6px 9px; font-size:.76rem; }
 .docs-link { display:inline-block; margin-top:7px; font-size:.76rem; }
-.warning-copy { color:#a16b00 !important; }
+.warning-copy { color: var(--warning-text) !important; }
 .empty { text-align:center; padding:36px; color:var(--secondary-text); }
 .device-form { display:grid; gap:16px; }
 .form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
@@ -58,7 +58,7 @@ code { direction:ltr; unicode-bidi:embed; }
 .toggle { display:flex !important; align-items:center; gap:8px; }
 .toggle input { width:auto; }
 .footer-actions { display:flex; gap:8px; }
-.alert.error { border:1px solid rgba(190,55,55,.35); padding:10px 12px; border-radius:10px; }
+.alert.error { border:1px solid color-mix(in srgb, var(--danger) 35%, var(--line)); padding:10px 12px; border-radius:10px; }
 @media (max-width: 900px) {
   .page-header, .list-head, .resolve-bar { flex-direction:column; align-items:stretch; }
   .summary-grid, .form-grid, .route-results { grid-template-columns:1fr; }

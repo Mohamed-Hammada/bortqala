@@ -362,8 +362,8 @@ td small {
   height: 11px;
   margin-top: 9px;
   border-radius: 50%;
-  background: #16a36a;
-  box-shadow: 0 0 0 5px rgba(22, 163, 106, .12);
+  background: var(--success);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--success) 12%, transparent);
   animation: live-pulse 2s ease-in-out infinite;
 }
 
@@ -468,8 +468,8 @@ td small {
   width: 36px;
   height: 36px;
   border-radius: 9px;
-  background: rgba(22, 163, 106, .1);
-  color: #0a8a55;
+  background: color-mix(in srgb, var(--success) 10%, transparent);
+  color: var(--success);
   font-size: 19px;
 }
 
@@ -505,8 +505,8 @@ td small {
 }
 
 .connection-state.online {
-  background: rgba(22, 163, 106, .1);
-  color: #087647;
+  background: color-mix(in srgb, var(--success) 10%, transparent);
+  color: var(--success);
 }
 
 .connection-state.failed {
@@ -636,7 +636,7 @@ td small {
 }
 
 .preview-stats .stat-error {
-  color: #F87171;
+  color: var(--danger);
   font-weight: 700;
 }
 
