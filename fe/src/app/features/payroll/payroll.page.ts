@@ -87,9 +87,9 @@ export class PayrollPage {
 
   readonly payForm = this.formBuilder.nonNullable.group({
     grossAmount: [{ value: 0, disabled: true }],
-    advancesDeducted: [0, [Validators.required, Validators.min(0)]],
-    otherDeductions: [0, [Validators.required, Validators.min(0)]],
-    bonuses: [0, [Validators.required, Validators.min(0)]],
+    advancesDeducted: [{ value: 0, disabled: true }],
+    otherDeductions: [{ value: 0, disabled: true }],
+    bonuses: [{ value: 0, disabled: true }],
     netAmount: [{ value: 0, disabled: true }],
     paymentMethod: ['CASH' as PaymentMethod, Validators.required],
     referenceCode: [''],
@@ -138,17 +138,6 @@ export class PayrollPage {
     this.selectedRow.set(null);
   }
 
-  recalculateNet(): void {
-    const row = this.selectedRow();
-    if (!row) return;
-    const gross = row.grossAmount;
-    const advances = this.payForm.controls.advancesDeducted.value || 0;
-    const deductions = this.payForm.controls.otherDeductions.value || 0;
-    const bonuses = this.payForm.controls.bonuses.value || 0;
-    const net = Math.max(0, gross - advances - deductions + bonuses);
-    this.payForm.patchValue({ netAmount: net }, { emitEvent: false });
-  }
-
   submitPayment(): void {
     const row = this.selectedRow();
     if (!row || this.payForm.invalid) return;
@@ -171,13 +160,6 @@ export class PayrollPage {
       periodYear: row.periodYear,
       periodMonth: row.periodMonth,
       periodKind: row.periodKind,
-      periodStart: row.periodStart,
-      periodEnd: row.periodEnd,
-      grossAmount: row.grossAmount,
-      advancesDeducted: raw.advancesDeducted,
-      otherDeductions: raw.otherDeductions,
-      bonuses: raw.bonuses,
-      netAmount: Math.max(0, row.grossAmount - raw.advancesDeducted - raw.otherDeductions + raw.bonuses),
       paymentMethod: raw.paymentMethod,
       referenceCode: raw.referenceCode,
       note: raw.note,
@@ -204,7 +186,7 @@ export class PayrollPage {
 
     if (titleKey && msgKey) {
       this.confirmAction.set({
-        message: `${this.i18n.t(titleKey)}\n\n${this.i18n.t(msgKey)}`,
+        message: `${this.i18n.t(titleKey)}\n\n${this.i18n.t(msgKey)}\n\n${this.i18n.t('payroll.fullMonthLifecycleNotice')}`,
         onConfirm: () => {
           this.confirmAction.set(null);
           this.executeTransitionPeriod(targetStatus);
@@ -220,10 +202,11 @@ export class PayrollPage {
       periodYear: this.year(),
       periodMonth: this.month(),
       targetStatus,
-      categoryId: this.selectedCategory(),
     });
 
     if (ok) {
+      if (targetStatus === 'POSTED') await this.store.loadGlPosting(this.year(), this.month());
+      await this.reload();
       this.notification.success(this.i18n.t('payroll.statusUpdated', { status: targetStatus }));
     }
   }

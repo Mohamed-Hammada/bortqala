@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260814_v242_001_consolidated_review_fixes
+      author: codex
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM translations WHERE translation_key = 'PAYROLL_GL_POSTING_SERVER_MANAGED'
+      changes:
+        - loadData:
+            file: db/changelog/data/insert/files/20260814_v242_consolidated_review_fixes.csv
+            separator: ";"
+            tableName: translations
+            encoding: UTF-8
+      rollback:
+        - delete:
+            tableName: translations
+            where: "translation_key IN ('PAYROLL_GL_POSTING_SERVER_MANAGED','RESERVATION_REPLAY_CONFLICT','INVENTORY_VALUATION_LEGACY_DISABLED','payroll.glPostingReference','payroll.glPostingAmounts','financeWorkbench.reportReference','payroll.fullMonthLifecycleNotice')"

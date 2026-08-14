@@ -114,7 +114,7 @@ public class JournalEntry {
     public void post(String username) {
         if (this.status != Status.APPROVED) {
             throw new com.bemo.hr.shared.domain.BusinessRuleException(
-                    "لا يمكن ترحيل قيد في حالة " + this.status + ". الترحيل مسموح فقط من حالة مسودة.",
+                    "Journal posting is allowed only from APPROVED status; current status is " + this.status + ".",
                     "JOURNAL_STATE_INVALID", org.springframework.http.HttpStatus.CONFLICT);
         }
         this.status = Status.POSTED;

@@ -84,13 +84,6 @@ export interface PaymentRequest {
   periodYear: number;
   periodMonth: number;
   periodKind?: string;
-  periodStart?: string;
-  periodEnd?: string;
-  grossAmount?: number;
-  advancesDeducted?: number;
-  otherDeductions?: number;
-  bonuses?: number;
-  netAmount?: number;
   paymentMethod?: PaymentMethod;
   referenceCode?: string;
   note?: string;
@@ -111,7 +104,14 @@ export interface StatusTransitionRequest {
   periodYear: number;
   periodMonth: number;
   targetStatus: PaymentStatus;
-  categoryId?: string;
+}
+
+export interface PayrollGlPosting {
+  payrollPeriodId: string;
+  journalId: string;
+  grossAmount: number;
+  netAmount: number;
+  postedAt: number;
 }
 
 export interface ReversePaymentRequest {

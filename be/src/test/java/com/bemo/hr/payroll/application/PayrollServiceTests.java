@@ -65,6 +65,7 @@ class PayrollServiceTests {
     @Mock private PayrollCalculationPolicyService payrollCalculationPolicyService;
     @Mock private PayrollRunHeaderRepository payrollRunHeaderRepository;
     @Mock private PayrollRunLineRepository payrollRunLineRepository;
+    @Mock private PayrollGlPostingService payrollGlPostingService;
 
     @InjectMocks
     private PayrollService payrollService;
@@ -135,7 +136,7 @@ class PayrollServiceTests {
         doThrow(new BusinessRuleException("blocked", "PAYROLL_ATTENDANCE_EXCEPTIONS_OPEN", HttpStatus.CONFLICT))
                 .when(attendanceExceptionService).assertPayrollReady(report.getId(), employee.getId());
         PayrollApi.PaymentRequest request = new PayrollApi.PaymentRequest(employee.getId(), 2026, 8, "FULL_MONTH",
-                null, null, null, null, BigDecimal.ZERO, BigDecimal.ZERO, null, null, null, null, null, 0L);
+                null, null, null, null, 0L);
         assertThatThrownBy(() -> payrollService.recordPayment(request, "payroll"))
                 .isInstanceOf(BusinessRuleException.class).hasMessageContaining("blocked");
         verify(attendanceExceptionService).assertPayrollReady(report.getId(), employee.getId());

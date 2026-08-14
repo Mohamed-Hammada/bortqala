@@ -45,6 +45,11 @@ export interface CloseCheckItem {
   count: number;
   amount: number;
   message: string;
+  glBalance?: number;
+  subledgerBalance?: number;
+  tolerance?: number;
+  asOfDate?: string;
+  reportReference?: string;
 }
 
 export interface ClosePrecheck {

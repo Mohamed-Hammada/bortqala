@@ -111,6 +111,32 @@ class SubledgerPostingServiceTests {
     }
 
     @Test
+    void profileEventPostsGrossAgainstNetAndDeductions() {
+        PostingProfile profile = new PostingProfile("PAYROLL", "PAYROLL_ACCRUAL", LocalDate.of(2026, 1, 1), null);
+        when(postingProfileRepository.findByBusinessEventAndActiveTrueOrderByEffectiveFromDesc("PAYROLL_ACCRUAL"))
+                .thenReturn(List.of(profile));
+        when(postingProfileLineRepository.findByProfileIdOrderByLineNoAsc(profile.getId())).thenReturn(List.of(
+                new PostingProfileLine(profile.getId(), 1, "DEBIT", "FIXED", "EXPENSE", "TOTAL_GROSS"),
+                new PostingProfileLine(profile.getId(), 2, "CREDIT", "FIXED", "PAYABLE", "TOTAL_NET"),
+                new PostingProfileLine(profile.getId(), 3, "CREDIT", "FIXED", "DEDUCTIONS", "TOTAL_DEDUCTIONS")));
+        when(journalEntryRepository.save(any(JournalEntry.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        JournalEntry entry = subledgerPostingService.postProfileEvent("PAYROLL", "PAYROLL_RUN", "run-1",
+                "PAYROLL_ACCRUAL", "PAYROLL-ACCRUAL:run-1", LocalDate.of(2026, 2, 28), "Payroll accrual",
+                java.util.Map.of("TOTAL_GROSS", new BigDecimal("120"), "TOTAL_NET", new BigDecimal("100"),
+                        "TOTAL_DEDUCTIONS", new BigDecimal("20")), null, null, null, "payroll-admin");
+
+        var lineCaptor = org.mockito.ArgumentCaptor.forClass(JournalEntryLine.class);
+        verify(journalEntryLineRepository, times(3)).save(lineCaptor.capture());
+        assertThat(lineCaptor.getAllValues().stream().map(JournalEntryLine::getDebit)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)).isEqualByComparingTo("120");
+        assertThat(lineCaptor.getAllValues().stream().map(JournalEntryLine::getCredit)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)).isEqualByComparingTo("120");
+        assertThat(entry.getStatus()).isEqualTo(JournalEntry.Status.POSTED);
+        assertThat(entry.getPostedBy()).isEqualTo("payroll-admin");
+    }
+
+    @Test
     void replaysOperationAndCreatesLinkedBalancedReversal() {
         String opId = UUID.randomUUID().toString();
         JournalEntry original = new JournalEntry("POST-1", LocalDate.of(2026, 2, 1), "Posting", "AP:INVOICE:I-1", null);

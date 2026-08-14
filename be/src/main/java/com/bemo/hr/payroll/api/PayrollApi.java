@@ -87,13 +87,6 @@ public final class PayrollApi {
             @NotNull @Min(2000) Integer periodYear,
             @NotNull @Min(1) Integer periodMonth,
             String periodKind,
-            LocalDate periodStart,
-            LocalDate periodEnd,
-            BigDecimal grossAmount,
-            BigDecimal advancesDeducted,
-            BigDecimal otherDeductions,
-            BigDecimal bonuses,
-            BigDecimal netAmount,
             PaymentMethod paymentMethod,
             String referenceCode,
             String note,
@@ -113,8 +106,7 @@ public final class PayrollApi {
     public record StatusTransitionRequest(
             @NotNull @Min(2000) Integer periodYear,
             @NotNull @Min(1) Integer periodMonth,
-            @NotNull PaymentStatus targetStatus,
-            String categoryId
+            @NotNull PaymentStatus targetStatus
     ) { }
 
     public record ReversePaymentRequest(

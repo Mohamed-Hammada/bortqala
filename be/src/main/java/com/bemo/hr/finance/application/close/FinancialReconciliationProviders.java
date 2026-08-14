@@ -9,6 +9,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
@@ -24,9 +26,41 @@ public class FinancialReconciliationProviders {
                 "CUSTOMER_INVOICE", 1);
     }
     @Bean SubledgerReconciliationProvider inventoryReconciliation(JdbcTemplate jdbc, FiscalPeriodRepository periods) {
-        return provider(SubledgerReconciliationReport.SubledgerType.INVENTORY, jdbc, periods,
-                "select id, item_id, total_value from stock_valuation_records where app_id=? and as_of_date=(select max(as_of_date) from stock_valuation_records where app_id=? and as_of_date<=?)",
-                "INVENTORY_VALUATION", 1, true);
+        return new SubledgerReconciliationProvider() {
+            public SubledgerReconciliationReport.SubledgerType type() {
+                return SubledgerReconciliationReport.SubledgerType.INVENTORY;
+            }
+
+            public ReconciliationCalculation calculate(String periodId, LocalDate ignored) {
+                LocalDate end = periods.findById(periodId).orElseThrow().getEndDate();
+                LocalDateTime cutoff = end.plusDays(1).atStartOfDay();
+                String tenant = TenantContext.require();
+                String inventoryAccountId = jdbc.query(
+                        "select inventory_account_id from inventory_valuation_policies where app_id=?",
+                        (rs, n) -> rs.getString(1), tenant).stream().findFirst().orElse(null);
+                List<InventorySource> sourceRows = new ArrayList<>();
+                sourceRows.addAll(jdbc.query(
+                        "select id,movement_id,value_effect,journal_entry_id from inventory_movement_costs where app_id=? and occurred_at<?",
+                        (rs, n) -> new InventorySource(rs.getString(1), rs.getString(2), rs.getBigDecimal(3), rs.getString(4)),
+                        tenant, cutoff));
+                sourceRows.addAll(jdbc.query(
+                        "select id,operation_id,value_difference,journal_entry_id from inventory_revaluations where app_id=? and occurred_at<?",
+                        (rs, n) -> new InventorySource(rs.getString(1), rs.getString(2), rs.getBigDecimal(3), rs.getString(4)),
+                        tenant, cutoff));
+                BigDecimal subledger = sourceRows.stream().map(InventorySource::amount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                List<SourceDifference> differences = sourceRows.stream().map(source -> {
+                    BigDecimal sourceGl = inventoryJournalAmount(jdbc, tenant, source.journalId(), inventoryAccountId);
+                    return new SourceDifference(source.id(), source.reference(), source.amount(), sourceGl);
+                }).filter(source -> source.subledgerAmount().compareTo(source.glAmount()) != 0).toList();
+                BigDecimal gl = sourceRows.stream()
+                        .map(source -> inventoryJournalAmount(jdbc, tenant, source.journalId(), inventoryAccountId))
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal difference = gl.subtract(subledger);
+                return new ReconciliationCalculation(type(), gl, subledger, difference,
+                        difference.signum() == 0, differences);
+            }
+        };
     }
     @Bean SubledgerReconciliationProvider treasuryReconciliation(JdbcTemplate jdbc, FiscalPeriodRepository periods) {
         return provider(SubledgerReconciliationReport.SubledgerType.TREASURY, jdbc, periods,
@@ -66,4 +100,14 @@ public class FinancialReconciliationProviders {
                 BigDecimal.class, sign, tenant, type, id, end);
         return value == null ? BigDecimal.ZERO : value;
     }
+
+    private BigDecimal inventoryJournalAmount(JdbcTemplate jdbc, String tenant, String journalId, String accountId) {
+        if (journalId == null || accountId == null) return BigDecimal.ZERO;
+        BigDecimal value = jdbc.queryForObject(
+                "select coalesce(sum(l.debit-l.credit),0) from journal_entries j join journal_entry_lines l on l.journal_entry_id=j.id where j.app_id=? and j.id=? and j.status='POSTED' and l.account_id=?",
+                BigDecimal.class, tenant, journalId, accountId);
+        return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private record InventorySource(String id, String reference, BigDecimal amount, String journalId) {}
 }

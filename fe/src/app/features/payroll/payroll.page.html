@@ -64,6 +64,14 @@
     [currentStatus]="store.data()?.periodStatus || 'DRAFT'"
   />
 
+  @if (store.glPosting(); as posting) {
+    <div class="card gl-posting-card">
+      <strong>{{ i18n.t('payroll.glPostingReference') }}</strong>
+      <span class="ltr-text">{{ posting.journalId }}</span>
+      <small>{{ i18n.t('payroll.glPostingAmounts', { gross: posting.grossAmount, net: posting.netAmount }) }}</small>
+    </div>
+  }
+
   <!-- Period & Year Selector & Status Filter -->
   <div class="card filter-card">
     <div class="period-selectors">
@@ -99,6 +107,7 @@
         </div>
       }
     </div>
+    <small>{{ i18n.t('payroll.fullMonthLifecycleNotice') }}</small>
   </div>
 
   <!-- Loading Skeleton State -->
@@ -318,7 +327,7 @@
             class="ltr"
             type="number"
             formControlName="advancesDeducted"
-            (input)="recalculateNet()"
+            readonly
           />
         </div>
 
@@ -329,7 +338,7 @@
             class="ltr"
             type="number"
             formControlName="otherDeductions"
-            (input)="recalculateNet()"
+            readonly
           />
         </div>
 
@@ -340,7 +349,7 @@
             class="ltr"
             type="number"
             formControlName="bonuses"
-            (input)="recalculateNet()"
+            readonly
           />
         </div>
 

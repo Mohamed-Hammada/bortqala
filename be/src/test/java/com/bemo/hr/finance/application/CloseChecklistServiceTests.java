@@ -6,6 +6,7 @@ import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
 
@@ -71,6 +72,13 @@ class CloseChecklistServiceTests {
         assertThat(summary.canClose()).isFalse();
         assertThat(summary.checks()).filteredOn(item -> item.code().equals("SUBLEDGER_RECONCILIATION_AP"))
                 .singleElement().extracting(CloseCheckItem::amount).isEqualTo(new java.math.BigDecimal("12"));
+        CloseCheckItem evidence = summary.checks().stream()
+                .filter(item -> item.code().equals("SUBLEDGER_RECONCILIATION_AP")).findFirst().orElseThrow();
+        assertThat(evidence.glBalance()).isEqualByComparingTo("88");
+        assertThat(evidence.subledgerBalance()).isEqualByComparingTo("100");
+        assertThat(evidence.tolerance()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(evidence.asOfDate()).isEqualTo(LocalDate.of(2026, 1, 31));
+        assertThat(evidence.reportReference()).isEqualTo("p-1:AP");
         verify(provider).calculate("p-1", LocalDate.of(2026, 1, 31));
     }
 }

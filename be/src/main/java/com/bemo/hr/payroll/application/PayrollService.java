@@ -57,6 +57,7 @@ public class PayrollService {
     private final PayrollCalculationPolicyService payrollCalculationPolicyService;
     private final PayrollRunHeaderRepository payrollRunHeaderRepository;
     private final PayrollRunLineRepository payrollRunLineRepository;
+    private final PayrollGlPostingService payrollGlPostingService;
 
     public List<PayrollApi.ExplanationResponse> getPaymentExplanation(String paymentId) {
         var explanations = explanationRepository.findBySalaryPaymentIdOrderByCreatedAtAsc(paymentId);
@@ -139,10 +140,19 @@ public class PayrollService {
         BigDecimal totalPending = BigDecimal.ZERO;
         BigDecimal totalAdvancesDeducted = BigDecimal.ZERO;
 
-        PaymentStatus overallPeriodStatus = PaymentStatus.DRAFT;
-        if (!payments.isEmpty()) {
-            overallPeriodStatus = payments.get(0).getPaymentStatus();
-        }
+        String runPeriodId = year + "-" + String.format("%02d", month) + ":FULL_MONTH";
+        PaymentStatus overallPeriodStatus = payrollRunHeaderRepository
+                .findFirstByPeriodIdOrderByCreatedAtDesc(runPeriodId)
+                .map(run -> switch (run.getStatus()) {
+                    case DRAFT -> PaymentStatus.DRAFT;
+                    case CALCULATED -> PaymentStatus.CALCULATED;
+                    case REVIEWED -> PaymentStatus.REVIEWED;
+                    case APPROVED -> PaymentStatus.APPROVED;
+                    case POSTED -> PaymentStatus.POSTED;
+                    case PAID -> PaymentStatus.PAID;
+                    case CANCELLED -> PaymentStatus.REVERSED;
+                })
+                .orElse(PaymentStatus.DRAFT);
 
         for (var emp : employees) {
             if (!emp.isActive()) continue;
@@ -394,6 +404,10 @@ public class PayrollService {
         };
         String periodId = request.periodYear() + "-" + String.format("%02d", request.periodMonth()) + ":FULL_MONTH";
         PayrollRunHeader run = resolveRun(periodId, YearMonth.of(request.periodYear(), request.periodMonth()).atEndOfMonth());
+        if (request.targetStatus() == PaymentStatus.POSTED && run.getStatus() == PayrollRunHeader.Status.POSTED) {
+            payrollGlPostingService.getGlPosting(periodId);
+            return getSheet(request.periodYear(), request.periodMonth(), null);
+        }
         boolean freezeSnapshots = request.targetStatus() == PaymentStatus.CALCULATED;
         var sheet = buildSheet(request.periodYear(), request.periodMonth(), null, freezeSnapshots, actor, run.getId());
         if (sheet.rows().isEmpty()) {
@@ -436,6 +450,9 @@ public class PayrollService {
                     sheet.rows().stream().map(PayrollApi.PayrollRow::netAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add));
         } else {
+            if (request.targetStatus() == PaymentStatus.POSTED) {
+                payrollGlPostingService.postApprovedRun(run, actor);
+            }
             run.transitionTo(PayrollRunHeader.Status.valueOf(request.targetStatus().name()));
         }
         payrollRunHeaderRepository.save(run);
@@ -445,7 +462,7 @@ public class PayrollService {
                         + ",\"previousStatus\":\"" + requiredCurrent + "\",\"newStatus\":\""
                         + request.targetStatus().name() + "\",\"actor\":\"" + actor + "\"}", null);
 
-        return getSheet(request.periodYear(), request.periodMonth(), request.categoryId());
+        return getSheet(request.periodYear(), request.periodMonth(), null);
     }
 
     private PayrollRunHeader resolveRun(String periodId, LocalDate runDate) {
@@ -517,13 +534,6 @@ public class PayrollService {
                         request.periodYear(),
                         request.periodMonth(),
                         row.periodKind(),
-                        row.periodStart(),
-                        row.periodEnd(),
-                        row.grossAmount(),
-                        row.advancesDeducted(),
-                        row.otherDeductions(),
-                        row.bonuses(),
-                        row.netAmount(),
                         request.paymentMethod() == null ? PaymentMethod.CASH : request.paymentMethod(),
                         request.referenceCode(),
                         request.note(),

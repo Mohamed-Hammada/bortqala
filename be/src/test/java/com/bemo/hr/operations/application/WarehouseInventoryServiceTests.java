@@ -155,4 +155,43 @@ class WarehouseInventoryServiceTests {
                 .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class)
                 .extracting("code").isEqualTo("WAREHOUSE_BRANCH_REQUIRED");
     }
+
+    @Test
+    void reservationReplayIsCheckedUnderBalanceLockAndRejectsChangedQuantity() {
+        StockStatusBalance balance = new StockStatusBalance("wh-1", "bin-1", "item-1",
+                StockStatusBalance.Status.AVAILABLE, new BigDecimal("10"));
+        StockReservation original = new StockReservation("R-1", "ORDER", "o-1", "item-1", "wh-1",
+                new BigDecimal("4"));
+        when(balanceRepository.findByWarehouseIdAndItemIdForUpdate("wh-1", "item-1")).thenReturn(List.of(balance));
+        when(reservationRepository.findBySourceTypeAndSourceIdAndItemIdAndWarehouseId(
+                "ORDER", "o-1", "item-1", "wh-1")).thenReturn(java.util.Optional.of(original));
+
+        assertThatThrownBy(() -> inventoryService.reserveStock("R-RETRY", "ORDER", "o-1",
+                "item-1", "wh-1", new BigDecimal("5")))
+                .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class)
+                .extracting("code").isEqualTo("RESERVATION_REPLAY_CONFLICT");
+        verify(balanceRepository).findByWarehouseIdAndItemIdForUpdate("wh-1", "item-1");
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    void consumesAReservationAcrossMultipleBinsInStableOrder() {
+        StockStatusBalance first = new StockStatusBalance("wh-1", "A", "item-1",
+                StockStatusBalance.Status.AVAILABLE, new BigDecimal("3"));
+        StockStatusBalance second = new StockStatusBalance("wh-1", "B", "item-1",
+                StockStatusBalance.Status.AVAILABLE, new BigDecimal("4"));
+        StockReservation reservation = new StockReservation("R-1", "ORDER", "o-1", "item-1", "wh-1",
+                new BigDecimal("5"));
+        when(reservationRepository.findById(reservation.getId())).thenReturn(java.util.Optional.of(reservation));
+        when(balanceRepository.findByWarehouseIdAndItemIdForUpdate("wh-1", "item-1"))
+                .thenReturn(List.of(second, first));
+        when(reservationRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        inventoryService.consumeReservation(reservation.getId());
+
+        assertThat(first.getQuantity()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(second.getQuantity()).isEqualByComparingTo("2");
+        assertThat(reservation.getStatus()).isEqualTo(StockReservation.Status.FULFILLED);
+        verify(balanceRepository, times(2)).save(any(StockStatusBalance.class));
+    }
 }

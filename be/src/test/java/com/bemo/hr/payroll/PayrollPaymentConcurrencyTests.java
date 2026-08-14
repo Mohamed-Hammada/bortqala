@@ -174,8 +174,7 @@ class PayrollPaymentConcurrencyTests extends PostgresIntegrationTest {
                 ready.countDown();
                 start.await();
                 PayrollApi.PaymentRequest request = new PayrollApi.PaymentRequest(
-                        employeeId, 2026, 8, "FULL_MONTH", null, null, null, null,
-                        BigDecimal.ZERO, BigDecimal.ZERO, null, PaymentMethod.BANK_TRANSFER,
+                        employeeId, 2026, 8, "FULL_MONTH", PaymentMethod.BANK_TRANSFER,
                         "PAYCON", null, null, expectedVersion);
                 try {
                     payrollService.recordPayment(request, actor);
