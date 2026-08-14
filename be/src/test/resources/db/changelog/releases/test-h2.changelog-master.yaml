@@ -725,3 +725,5 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260813_v241_business_date_translation.yaml
   - include:
       file: db/changelog/data/insert/20260814_v242_consolidated_review_fixes.yaml
+  - include:
+      file: db/changelog/schema/update/20260814_v243_payment_accounting_evidence.yaml

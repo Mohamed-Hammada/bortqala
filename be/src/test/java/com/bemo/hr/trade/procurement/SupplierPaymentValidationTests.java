@@ -12,6 +12,7 @@ import com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.trade.procurement.api.ProcurementApi;
+import com.bemo.hr.trade.procurement.application.ProcurementAccountingService;
 import com.bemo.hr.trade.procurement.application.ProcurementExcelExporter;
 import com.bemo.hr.trade.procurement.application.ProcurementService;
 import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
@@ -71,7 +72,8 @@ class SupplierPaymentValidationTests {
                 new IdempotencyService(idempotencyKeyRepository), mock(FiscalPeriodGuard.class),
                 documentNumberService,
                 mock(com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository.class),
-                mock(com.bemo.hr.budget.application.BudgetService.class));
+                mock(com.bemo.hr.budget.application.BudgetService.class),
+                mock(ProcurementAccountingService.class));
         invoice = new SupplierInvoice("INV-100", "INV-100", null, "EGP", "supplier-a", null,
                 null, null, LocalDate.of(2026, 7, 29), new BigDecimal("100.00"),
                 BigDecimal.ZERO, BigDecimal.ZERO, null, null);

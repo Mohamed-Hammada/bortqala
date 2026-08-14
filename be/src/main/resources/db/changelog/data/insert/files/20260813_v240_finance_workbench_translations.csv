@@ -5,8 +5,8 @@ v240-003;financeWorkbench.description;en-US;Review statements, reconcile subledg
 v240-004;financeWorkbench.description;ar-EG;راجع القوائم وطابق الدفاتر المساعدة وأقفل الفترات مع أدلة التنفيذ.
 v240-005;financeWorkbench.open;en-US;Open workbench
 v240-006;financeWorkbench.open;ar-EG;فتح مساحة العمل
-v240-007;financeWorkbench.periodTitle;en-US;Period: {{period}}
-v240-008;financeWorkbench.periodTitle;ar-EG;الفترة: {{period}}
+v240-007;financeWorkbench.periodTitle;en-US;"Period: {{period}}"
+v240-008;financeWorkbench.periodTitle;ar-EG;"الفترة: {{period}}"
 v240-009;financeWorkbench.periodHint;en-US;All figures and close checks use this period's dates.
 v240-010;financeWorkbench.periodHint;ar-EG;تستخدم جميع الأرقام وفحوصات الإقفال تواريخ هذه الفترة.
 v240-011;financeWorkbench.balanceSheet;en-US;Balance Sheet

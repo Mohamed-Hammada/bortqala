@@ -58,6 +58,7 @@ public class PayrollService {
     private final PayrollRunHeaderRepository payrollRunHeaderRepository;
     private final PayrollRunLineRepository payrollRunLineRepository;
     private final PayrollGlPostingService payrollGlPostingService;
+    private final PayrollPaymentAccountingService payrollPaymentAccountingService;
 
     public List<PayrollApi.ExplanationResponse> getPaymentExplanation(String paymentId) {
         var explanations = explanationRepository.findBySalaryPaymentIdOrderByCreatedAtAsc(paymentId);
@@ -336,8 +337,9 @@ public class PayrollService {
             throw new BusinessRuleException("This salary has already been paid.",
                     "PAYROLL_DUPLICATE_PAYMENT", HttpStatus.CONFLICT);
         }
-        if (entity.getPaymentStatus() != PaymentStatus.POSTED) {
-            throw new BusinessRuleException("Only a posted salary can be paid.",
+        if (entity.getPaymentStatus() != PaymentStatus.POSTED
+                && entity.getPaymentStatus() != PaymentStatus.REVERSED) {
+            throw new BusinessRuleException("Only a posted or reversed salary can be paid.",
                     "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT);
         }
         if (entity.getPayrollRunId() == null || entity.getPayrollSnapshotId() == null
@@ -361,7 +363,8 @@ public class PayrollService {
 
         Instant paidAtInstant = request.paidAtEpochMs() == null ? Instant.now() : Instant.ofEpochMilli(request.paidAtEpochMs());
         entity.markAsPaid(request.paymentMethod(), paidAtInstant, request.referenceCode(), request.note(), actor);
-
+        var disbursementJournal = payrollPaymentAccountingService.postDisbursement(entity, actor);
+        entity.attachPaymentJournal(disbursementJournal.getId());
         salaryPaymentRepository.save(entity);
 
         BigDecimal advances = entity.getAdvancesDeducted();
@@ -495,6 +498,12 @@ public class PayrollService {
                     "PAYROLL_REVERSAL_STATE_INVALID", HttpStatus.CONFLICT);
         }
 
+        PayrollRunHeader run = payrollRunHeaderRepository.findByIdForUpdate(payment.getPayrollRunId())
+                .orElseThrow(() -> new BusinessRuleException("Payroll run not found",
+                        "PAYROLL_RUN_NOT_FOUND", HttpStatus.NOT_FOUND));
+        var reversalJournal = payrollPaymentAccountingService.reverseDisbursement(
+                payment, LocalDate.now(), request.reason(), actor);
+
         BigDecimal deductedAdvances = payment.getAdvancesDeducted();
         if (deductedAdvances != null && deductedAdvances.signum() > 0) {
             String periodReference = payment.getPeriodYear() + "/" + payment.getPeriodMonth();
@@ -510,7 +519,10 @@ public class PayrollService {
         }
 
         payment.markAsReversed(request.reason(), actor);
+        payment.attachReversalJournal(reversalJournal.getId());
         salaryPaymentRepository.save(payment);
+        run.reopenAfterPaymentReversal();
+        payrollRunHeaderRepository.save(run);
 
         auditService.record("PAYROLL_REVERSE", "SALARY_PAYMENT", payment.getId(), actor,
                 "{\"paymentId\":\"" + payment.getId() + "\",\"previousStatus\":\"PAID\","

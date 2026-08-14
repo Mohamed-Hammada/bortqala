@@ -70,6 +70,7 @@ public class ProcurementService {
     private final DocumentNumberService documentNumberService;
     private final com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository threeWayMatchRepository;
     private final BudgetService budgetService;
+    private final ProcurementAccountingService procurementAccountingService;
 
     public ProcurementService(PurchaseOrderRepository purchaseOrderRepository,
                               PurchaseOrderLineRepository purchaseOrderLineRepository,
@@ -89,7 +90,8 @@ public class ProcurementService {
                               FiscalPeriodGuard fiscalPeriodGuard,
                               DocumentNumberService documentNumberService,
                               com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository threeWayMatchRepository,
-                              BudgetService budgetService) {
+                              BudgetService budgetService,
+                              ProcurementAccountingService procurementAccountingService) {
         this.purchaseOrderRepository = purchaseOrderRepository;
         this.purchaseOrderLineRepository = purchaseOrderLineRepository;
         this.procurementDocumentSequenceRepository = procurementDocumentSequenceRepository;
@@ -109,6 +111,7 @@ public class ProcurementService {
         this.documentNumberService = documentNumberService;
         this.threeWayMatchRepository = threeWayMatchRepository;
         this.budgetService = budgetService;
+        this.procurementAccountingService = procurementAccountingService;
     }
 
     public ProcurementApi.NumberingSettings numberingSettings() {
@@ -348,6 +351,7 @@ public class ProcurementService {
                 saved.getDocumentReference(), "فاتورة مشتريات: " + saved.getDocumentReference(),
                 saved.getInvoiceDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
 
+        procurementAccountingService.postSupplierInvoice(saved, getCurrentUser());
         budgetService.liquidateForInvoice(saved.getPurchaseOrderId(), saved.getBaseNetAmount(), getCurrentUser());
         auditService.record("CREATE", "SUPPLIER_INVOICE", saved.getId(), getCurrentUser(),
                 "{\"invoiceNumber\":\"" + saved.getDocumentReference() + "\",\"amount\":" + saved.getNetAmount() + "}", null);
@@ -431,6 +435,7 @@ public class ProcurementService {
                 saved.getPaymentNumber(), "دفعة مورد: " + saved.getPaymentNumber(),
                 saved.getPaymentDate().atStartOfDay(ZoneOffset.UTC).toInstant(), getCurrentUser()));
 
+        procurementAccountingService.postSupplierPayment(saved, inv, getCurrentUser());
         auditService.record("CREATE", "SUPPLIER_PAYMENT", saved.getId(), getCurrentUser(),
                 "{\"paymentNumber\":\"" + saved.getPaymentNumber() + "\",\"operationId\":\""
                         + saved.getOperationId() + "\",\"amount\":" + saved.getAmount() + "}", null);

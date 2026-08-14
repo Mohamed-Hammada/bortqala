@@ -2,6 +2,7 @@ package com.bemo.hr.finance.application.close;
 
 import com.bemo.hr.finance.domain.reconciliation.SubledgerReconciliationReport;
 import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
+import com.bemo.hr.finance.application.close.SubledgerReconciliationProvider.SourceDifference;
 import com.bemo.hr.shared.security.TenantContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,17 +16,117 @@ import java.util.List;
 
 @Configuration
 public class FinancialReconciliationProviders {
-    @Bean SubledgerReconciliationProvider apReconciliation(JdbcTemplate jdbc, FiscalPeriodRepository periods) {
-        return provider(SubledgerReconciliationReport.SubledgerType.AP, jdbc, periods,
-                "select id, invoice_number, (base_net_amount-paid_amount) from supplier_invoices where app_id=? and invoice_date<=? and status<>'CANCELLED'",
-                "SUPPLIER_INVOICE", -1);
+
+    @Bean
+    SubledgerReconciliationProvider apReconciliation(
+            JdbcTemplate jdbc,
+            FiscalPeriodRepository periods,
+            FinancialControlAccountResolver accounts) {
+        return new SubledgerReconciliationProvider() {
+            public SubledgerReconciliationReport.SubledgerType type() {
+                return SubledgerReconciliationReport.SubledgerType.AP;
+            }
+
+            public ReconciliationCalculation calculate(String periodId, LocalDate ignored) {
+                LocalDate end = periods.findById(periodId).orElseThrow().getEndDate();
+                String tenant = TenantContext.require();
+                String control = accounts.fixedControlAccount("SUPPLIER_INVOICE_RECORDED", end, "CREDIT");
+
+                List<SourceDifference> sources = jdbc.query("""
+                        select i.id,
+                               coalesce(i.invoice_number, i.internal_reference),
+                               i.base_net_amount - coalesce((
+                                   select sum(p.amount * i.exchange_rate)
+                                   from supplier_payments p
+                                   where p.app_id=i.app_id
+                                     and p.supplier_invoice_id=i.id
+                                     and p.payment_date<=?
+                               ),0)
+                        from supplier_invoices i
+                        where i.app_id=? and i.invoice_date<=? and i.status<>'CANCELLED'
+                        """,
+                        (rs, n) -> new SourceDifference(
+                                rs.getString(1), rs.getString(2), rs.getBigDecimal(3), BigDecimal.ZERO),
+                        end, tenant, end);
+
+                BigDecimal subledger = totalSources(sources);
+                BigDecimal gl = accountBalance(jdbc, tenant, control, end, -1);
+                List<SourceDifference> differences = sources.stream()
+                        .map(source -> new SourceDifference(
+                                source.documentId(),
+                                source.documentNumber(),
+                                source.subledgerAmount(),
+                                apSourceGl(jdbc, tenant, source.documentId(), control, end)))
+                        .filter(source -> source.subledgerAmount().compareTo(source.glAmount()) != 0)
+                        .toList();
+
+                BigDecimal difference = gl.subtract(subledger);
+                return new ReconciliationCalculation(type(), gl, subledger, difference,
+                        difference.signum() == 0, differences);
+            }
+        };
     }
-    @Bean SubledgerReconciliationProvider arReconciliation(JdbcTemplate jdbc, FiscalPeriodRepository periods) {
-        return provider(SubledgerReconciliationReport.SubledgerType.AR, jdbc, periods,
-                "select id, invoice_number, outstanding_amount from customer_invoices where app_id=? and invoice_date<=? and status<>'DRAFT'",
-                "CUSTOMER_INVOICE", 1);
+
+    @Bean
+    SubledgerReconciliationProvider arReconciliation(
+            JdbcTemplate jdbc,
+            FiscalPeriodRepository periods,
+            FinancialControlAccountResolver accounts) {
+        return new SubledgerReconciliationProvider() {
+            public SubledgerReconciliationReport.SubledgerType type() {
+                return SubledgerReconciliationReport.SubledgerType.AR;
+            }
+
+            public ReconciliationCalculation calculate(String periodId, LocalDate ignored) {
+                LocalDate end = periods.findById(periodId).orElseThrow().getEndDate();
+                String tenant = TenantContext.require();
+                String control = accounts.fixedControlAccount("CUSTOMER_INVOICE_ISSUED", end, "DEBIT");
+
+                List<SourceDifference> sources = jdbc.query("""
+                        select i.id,
+                               i.invoice_number,
+                               i.amount
+                                 + coalesce((select sum(ca.amount)
+                                             from customer_credit_notes ca
+                                             where ca.app_id=i.app_id and ca.invoice_id=i.id),0)
+                                 - coalesce((select sum(c.amount)
+                                             from customer_credit_notes c
+                                             where c.app_id=i.app_id and c.invoice_id=i.id
+                                               and c.credit_date<=?),0)
+                                 - coalesce((select sum(a.amount)
+                                             from customer_receipt_allocations a
+                                             join customer_receipts r on r.id=a.receipt_id
+                                             where a.app_id=i.app_id and a.invoice_id=i.id
+                                               and r.app_id=i.app_id and r.receipt_date<=?),0)
+                        from customer_invoices i
+                        where i.app_id=? and i.invoice_date<=? and i.status<>'DRAFT'
+                        """,
+                        (rs, n) -> new SourceDifference(
+                                rs.getString(1), rs.getString(2), rs.getBigDecimal(3), BigDecimal.ZERO),
+                        end, end, tenant, end);
+
+                BigDecimal subledger = totalSources(sources);
+                BigDecimal gl = accountBalance(jdbc, tenant, control, end, 1);
+                List<SourceDifference> differences = sources.stream()
+                        .map(source -> new SourceDifference(
+                                source.documentId(),
+                                source.documentNumber(),
+                                source.subledgerAmount(),
+                                arSourceGl(jdbc, tenant, source.documentId(), control, end)))
+                        .filter(source -> source.subledgerAmount().compareTo(source.glAmount()) != 0)
+                        .toList();
+
+                BigDecimal difference = gl.subtract(subledger);
+                return new ReconciliationCalculation(type(), gl, subledger, difference,
+                        difference.signum() == 0, differences);
+            }
+        };
     }
-    @Bean SubledgerReconciliationProvider inventoryReconciliation(JdbcTemplate jdbc, FiscalPeriodRepository periods) {
+
+    @Bean
+    SubledgerReconciliationProvider inventoryReconciliation(
+            JdbcTemplate jdbc,
+            FiscalPeriodRepository periods) {
         return new SubledgerReconciliationProvider() {
             public SubledgerReconciliationReport.SubledgerType type() {
                 return SubledgerReconciliationReport.SubledgerType.INVENTORY;
@@ -38,73 +139,195 @@ public class FinancialReconciliationProviders {
                 String inventoryAccountId = jdbc.query(
                         "select inventory_account_id from inventory_valuation_policies where app_id=?",
                         (rs, n) -> rs.getString(1), tenant).stream().findFirst().orElse(null);
+
                 List<InventorySource> sourceRows = new ArrayList<>();
                 sourceRows.addAll(jdbc.query(
                         "select id,movement_id,value_effect,journal_entry_id from inventory_movement_costs where app_id=? and occurred_at<?",
-                        (rs, n) -> new InventorySource(rs.getString(1), rs.getString(2), rs.getBigDecimal(3), rs.getString(4)),
+                        (rs, n) -> new InventorySource(
+                                rs.getString(1), rs.getString(2), rs.getBigDecimal(3), rs.getString(4)),
                         tenant, cutoff));
                 sourceRows.addAll(jdbc.query(
                         "select id,operation_id,value_difference,journal_entry_id from inventory_revaluations where app_id=? and occurred_at<?",
-                        (rs, n) -> new InventorySource(rs.getString(1), rs.getString(2), rs.getBigDecimal(3), rs.getString(4)),
+                        (rs, n) -> new InventorySource(
+                                rs.getString(1), rs.getString(2), rs.getBigDecimal(3), rs.getString(4)),
                         tenant, cutoff));
-                BigDecimal subledger = sourceRows.stream().map(InventorySource::amount)
+
+                BigDecimal subledger = sourceRows.stream()
+                        .map(InventorySource::amount)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
-                List<SourceDifference> differences = sourceRows.stream().map(source -> {
-                    BigDecimal sourceGl = inventoryJournalAmount(jdbc, tenant, source.journalId(), inventoryAccountId);
-                    return new SourceDifference(source.id(), source.reference(), source.amount(), sourceGl);
-                }).filter(source -> source.subledgerAmount().compareTo(source.glAmount()) != 0).toList();
-                BigDecimal gl = sourceRows.stream()
-                        .map(source -> inventoryJournalAmount(jdbc, tenant, source.journalId(), inventoryAccountId))
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal gl = inventoryAccountId == null
+                        ? BigDecimal.ZERO
+                        : accountBalance(jdbc, tenant, inventoryAccountId, end, 1);
+
+                List<SourceDifference> differences = sourceRows.stream()
+                        .map(source -> new SourceDifference(
+                                source.id(),
+                                source.reference(),
+                                source.amount(),
+                                inventoryJournalAmount(jdbc, tenant, source.journalId(), inventoryAccountId)))
+                        .filter(source -> source.subledgerAmount().compareTo(source.glAmount()) != 0)
+                        .toList();
+
                 BigDecimal difference = gl.subtract(subledger);
                 return new ReconciliationCalculation(type(), gl, subledger, difference,
                         difference.signum() == 0, differences);
             }
         };
     }
-    @Bean SubledgerReconciliationProvider treasuryReconciliation(JdbcTemplate jdbc, FiscalPeriodRepository periods) {
-        return provider(SubledgerReconciliationReport.SubledgerType.TREASURY, jdbc, periods,
+
+    @Bean
+    SubledgerReconciliationProvider treasuryReconciliation(
+            JdbcTemplate jdbc,
+            FiscalPeriodRepository periods) {
+        // Intentionally left on the legacy source-linked behavior until a real
+        // bank-statement -> GL bank-account mapping is defined.
+        return genericSourceProvider(
+                SubledgerReconciliationReport.SubledgerType.TREASURY,
+                jdbc,
+                periods,
                 "select id, statement_reference, closing_balance from bank_statements where app_id=? and period_end<=?",
-                "BANK_STATEMENT", 1);
+                "BANK_STATEMENT",
+                1);
     }
 
-    private SubledgerReconciliationProvider provider(SubledgerReconciliationReport.SubledgerType type, JdbcTemplate jdbc,
-            FiscalPeriodRepository periods, String sourceSql, String sourceType, int sign) {
-        return provider(type, jdbc, periods, sourceSql, sourceType, sign, false);
-    }
-    private SubledgerReconciliationProvider provider(SubledgerReconciliationReport.SubledgerType type, JdbcTemplate jdbc,
-            FiscalPeriodRepository periods, String sourceSql, String sourceType, int sign, boolean repeatedTenant) {
+    private SubledgerReconciliationProvider genericSourceProvider(
+            SubledgerReconciliationReport.SubledgerType type,
+            JdbcTemplate jdbc,
+            FiscalPeriodRepository periods,
+            String sourceSql,
+            String sourceType,
+            int sign) {
         return new SubledgerReconciliationProvider() {
             public SubledgerReconciliationReport.SubledgerType type() { return type; }
+
             public ReconciliationCalculation calculate(String periodId, LocalDate ignored) {
                 LocalDate end = periods.findById(periodId).orElseThrow().getEndDate();
                 String tenant = TenantContext.require();
-                Object[] args = repeatedTenant ? new Object[]{tenant, tenant, end} : new Object[]{tenant, end};
-                List<SourceDifference> sources = jdbc.query(sourceSql, (rs, n) -> new SourceDifference(
-                        rs.getString(1), rs.getString(2), rs.getBigDecimal(3), BigDecimal.ZERO), args);
-                BigDecimal sub = sources.stream().map(SourceDifference::subledgerAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-                BigDecimal gl = jdbc.queryForObject("select coalesce(sum((l.debit-l.credit)*?),0) from journal_source_metadata m join journal_entries j on j.id=m.journal_id join journal_entry_lines l on l.journal_entry_id=j.id where m.app_id=? and m.source_document_type=? and j.status='POSTED' and j.entry_date<=?",
+                List<SourceDifference> sources = jdbc.query(sourceSql,
+                        (rs, n) -> new SourceDifference(
+                                rs.getString(1), rs.getString(2), rs.getBigDecimal(3), BigDecimal.ZERO),
+                        tenant, end);
+                BigDecimal subledger = totalSources(sources);
+                BigDecimal gl = jdbc.queryForObject("""
+                        select coalesce(sum((l.debit-l.credit)*?),0)
+                        from journal_source_metadata m
+                        join journal_entries j on j.id=m.journal_id
+                        join journal_entry_lines l on l.journal_entry_id=j.id
+                        where m.app_id=? and m.source_document_type=?
+                          and j.status in ('POSTED','REVERSED') and j.entry_date<=?
+                        """,
                         BigDecimal.class, sign, tenant, sourceType, end);
                 if (gl == null) gl = BigDecimal.ZERO;
-                BigDecimal difference = gl.subtract(sub);
-                BigDecimal finalGl = gl;
-                List<SourceDifference> differences = sources.stream().filter(s -> s.subledgerAmount().signum() != 0)
-                        .map(s -> new SourceDifference(s.documentId(), s.documentNumber(), s.subledgerAmount(),
-                                sourceGl(jdbc, tenant, sourceType, s.documentId(), end, sign))).filter(s -> s.subledgerAmount().compareTo(s.glAmount()) != 0).toList();
-                return new ReconciliationCalculation(type, finalGl, sub, difference, difference.signum() == 0, differences);
+                BigDecimal difference = gl.subtract(subledger);
+                return new ReconciliationCalculation(type, gl, subledger, difference,
+                        difference.signum() == 0, List.of());
             }
         };
     }
-    private BigDecimal sourceGl(JdbcTemplate jdbc, String tenant, String type, String id, LocalDate end, int sign) {
-        BigDecimal value = jdbc.queryForObject("select coalesce(sum((l.debit-l.credit)*?),0) from journal_source_metadata m join journal_entries j on j.id=m.journal_id join journal_entry_lines l on l.journal_entry_id=j.id where m.app_id=? and m.source_document_type=? and m.source_document_id=? and j.status='POSTED' and j.entry_date<=?",
-                BigDecimal.class, sign, tenant, type, id, end);
+
+    private BigDecimal totalSources(List<SourceDifference> sources) {
+        return sources.stream()
+                .map(SourceDifference::subledgerAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private BigDecimal accountBalance(
+            JdbcTemplate jdbc, String tenant, String accountId, LocalDate end, int sign) {
+        BigDecimal value = jdbc.queryForObject("""
+                select coalesce(sum((l.debit-l.credit)*?),0)
+                from journal_entries j
+                join journal_entry_lines l on l.journal_entry_id=j.id
+                where j.app_id=? and l.account_id=?
+                  and j.status in ('POSTED','REVERSED')
+                  and j.entry_date<=?
+                """,
+                BigDecimal.class, sign, tenant, accountId, end);
         return value == null ? BigDecimal.ZERO : value;
     }
 
-    private BigDecimal inventoryJournalAmount(JdbcTemplate jdbc, String tenant, String journalId, String accountId) {
+    private BigDecimal sourceDocumentControlAmount(
+            JdbcTemplate jdbc, String tenant, String sourceType, String sourceId,
+            String accountId, LocalDate end, int sign) {
+        BigDecimal value = jdbc.queryForObject("""
+                select coalesce(sum((l.debit-l.credit)*?),0)
+                from journal_source_metadata m
+                join journal_entries j on j.id=m.journal_id
+                join journal_entry_lines l on l.journal_entry_id=j.id
+                where m.app_id=? and m.source_document_type=? and m.source_document_id=?
+                  and j.status in ('POSTED','REVERSED') and j.entry_date<=?
+                  and l.account_id=?
+                """,
+                BigDecimal.class, sign, tenant, sourceType, sourceId, end, accountId);
+        return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private BigDecimal apSourceGl(
+            JdbcTemplate jdbc, String tenant, String invoiceId, String accountId, LocalDate end) {
+        BigDecimal invoice = sourceDocumentControlAmount(
+                jdbc, tenant, "SUPPLIER_INVOICE", invoiceId, accountId, end, -1);
+        BigDecimal payments = jdbc.queryForObject("""
+                select coalesce(sum((l.debit-l.credit)*-1),0)
+                from supplier_payments p
+                join journal_source_metadata m
+                  on m.source_document_type='SUPPLIER_PAYMENT' and m.source_document_id=p.id
+                join journal_entries j on j.id=m.journal_id
+                join journal_entry_lines l on l.journal_entry_id=j.id
+                where p.app_id=? and p.supplier_invoice_id=?
+                  and m.app_id=? and j.status in ('POSTED','REVERSED')
+                  and j.entry_date<=? and l.account_id=?
+                """,
+                BigDecimal.class, tenant, invoiceId, tenant, end, accountId);
+        return invoice.add(payments == null ? BigDecimal.ZERO : payments);
+    }
+
+    private BigDecimal arSourceGl(
+            JdbcTemplate jdbc, String tenant, String invoiceId, String accountId, LocalDate end) {
+        BigDecimal invoice = sourceDocumentControlAmount(
+                jdbc, tenant, "CUSTOMER_INVOICE", invoiceId, accountId, end, 1);
+
+        BigDecimal receipts = jdbc.queryForObject("""
+                select coalesce(sum(l.debit-l.credit),0)
+                from customer_receipt_allocations a
+                join customer_receipts r on r.id=a.receipt_id
+                join journal_source_metadata m
+                  on m.source_document_type='CUSTOMER_RECEIPT' and m.source_document_id=r.id
+                join journal_entries j on j.id=m.journal_id
+                join journal_entry_lines l on l.journal_entry_id=j.id
+                where a.app_id=? and a.invoice_id=? and r.app_id=?
+                  and m.app_id=? and j.status in ('POSTED','REVERSED')
+                  and j.entry_date<=? and l.account_id=?
+                """,
+                BigDecimal.class, tenant, invoiceId, tenant, tenant, end, accountId);
+
+        BigDecimal credits = jdbc.queryForObject("""
+                select coalesce(sum(l.debit-l.credit),0)
+                from customer_credit_notes c
+                join journal_source_metadata m
+                  on m.source_document_type='CUSTOMER_CREDIT_NOTE' and m.source_document_id=c.id
+                join journal_entries j on j.id=m.journal_id
+                join journal_entry_lines l on l.journal_entry_id=j.id
+                where c.app_id=? and c.invoice_id=? and m.app_id=?
+                  and j.status in ('POSTED','REVERSED')
+                  and j.entry_date<=? and l.account_id=?
+                """,
+                BigDecimal.class, tenant, invoiceId, tenant, end, accountId);
+
+        return invoice
+                .add(receipts == null ? BigDecimal.ZERO : receipts)
+                .add(credits == null ? BigDecimal.ZERO : credits);
+    }
+
+    private BigDecimal inventoryJournalAmount(
+            JdbcTemplate jdbc, String tenant, String journalId, String accountId) {
         if (journalId == null || accountId == null) return BigDecimal.ZERO;
-        BigDecimal value = jdbc.queryForObject(
-                "select coalesce(sum(l.debit-l.credit),0) from journal_entries j join journal_entry_lines l on l.journal_entry_id=j.id where j.app_id=? and j.id=? and j.status='POSTED' and l.account_id=?",
+        BigDecimal value = jdbc.queryForObject("""
+                select coalesce(sum(l.debit-l.credit),0)
+                from journal_entries j
+                join journal_entry_lines l on l.journal_entry_id=j.id
+                where j.app_id=? and j.id=?
+                  and j.status in ('POSTED','REVERSED')
+                  and l.account_id=?
+                """,
                 BigDecimal.class, tenant, journalId, accountId);
         return value == null ? BigDecimal.ZERO : value;
     }

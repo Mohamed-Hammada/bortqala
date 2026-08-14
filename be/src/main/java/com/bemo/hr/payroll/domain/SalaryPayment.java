@@ -105,6 +105,12 @@ public class SalaryPayment {
     @Column(name = "reversal_reason", length = 500)
     private String reversalReason;
 
+    @Column(name = "payment_journal_id", length = 36)
+    private String paymentJournalId;
+
+    @Column(name = "reversal_journal_id", length = 36)
+    private String reversalJournalId;
+
     @Version
     private long version;
 
@@ -180,8 +186,8 @@ public class SalaryPayment {
 
     public void markAsPaid(PaymentMethod method, Instant paidAtInstant, String refCode,
                            String noteText, String actor) {
-        if (this.paymentStatus != PaymentStatus.POSTED) {
-            throw new BusinessRuleException("Only a posted salary can be paid.",
+        if (this.paymentStatus != PaymentStatus.POSTED && this.paymentStatus != PaymentStatus.REVERSED) {
+            throw new BusinessRuleException("Only a posted or reversed salary can be paid.",
                     "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT);
         }
         this.paymentStatus = PaymentStatus.PAID;
@@ -190,6 +196,16 @@ public class SalaryPayment {
         this.referenceCode = refCode;
         this.note = noteText;
         this.paidBy = actor;
+    }
+
+    public void attachPaymentJournal(String journalId) {
+        if (journalId == null || journalId.isBlank()) throw new IllegalArgumentException("Payment journal is required");
+        this.paymentJournalId = journalId;
+    }
+
+    public void attachReversalJournal(String journalId) {
+        if (journalId == null || journalId.isBlank()) throw new IllegalArgumentException("Reversal journal is required");
+        this.reversalJournalId = journalId;
     }
 
     public String getId() { return id; }
@@ -218,6 +234,8 @@ public class SalaryPayment {
     public String getReversedBy() { return reversedBy; }
     public Instant getReversedAt() { return reversedAt; }
     public String getReversalReason() { return reversalReason; }
+    public String getPaymentJournalId() { return paymentJournalId; }
+    public String getReversalJournalId() { return reversalJournalId; }
     public long getVersion() { return version; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

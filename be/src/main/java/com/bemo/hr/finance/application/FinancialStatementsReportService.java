@@ -38,7 +38,7 @@ public class FinancialStatementsReportService {
     @Transactional(readOnly = true)
     public BalanceSheetReport getBalanceSheet(LocalDate asOfDate) {
         List<Account> accounts = accountRepository.findAll();
-        List<JournalEntry> postedEntries = journalEntryRepository.findByStatusOrderByEntryDateDesc(JournalEntry.Status.POSTED).stream()
+        List<JournalEntry> postedEntries = journalEntryRepository.findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED)).stream()
                 .filter(je -> !je.getEntryDate().isAfter(asOfDate))
                 .toList();
 
@@ -82,7 +82,7 @@ public class FinancialStatementsReportService {
     @Transactional(readOnly = true)
     public IncomeStatementReport getIncomeStatement(LocalDate startDate, LocalDate endDate) {
         List<Account> accounts = accountRepository.findAll();
-        List<JournalEntry> postedEntries = journalEntryRepository.findByStatusOrderByEntryDateDesc(JournalEntry.Status.POSTED).stream()
+        List<JournalEntry> postedEntries = journalEntryRepository.findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED)).stream()
                 .filter(je -> !je.getEntryDate().isBefore(startDate) && !je.getEntryDate().isAfter(endDate))
                 .toList();
 

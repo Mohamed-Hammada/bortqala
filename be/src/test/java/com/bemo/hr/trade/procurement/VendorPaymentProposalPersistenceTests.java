@@ -41,6 +41,9 @@ class VendorPaymentProposalPersistenceTests {
     @Autowired private FiscalPeriodRepository fiscalPeriodRepository;
     @Autowired private TenantApplicationRepository tenantApplicationRepository;
     @Autowired private AuditLogRepository auditLogRepository;
+    @Autowired private com.bemo.hr.finance.infrastructure.AccountRepository accountRepository;
+    @Autowired private com.bemo.hr.finance.domain.posting.PostingProfileRepository postingProfileRepository;
+    @Autowired private com.bemo.hr.finance.domain.posting.PostingProfileLineRepository postingProfileLineRepository;
 
     private BusinessParty supplier;
     private SupplierInvoice firstInvoice;
@@ -59,6 +62,12 @@ class VendorPaymentProposalPersistenceTests {
                     FiscalPeriod.Status.OPEN));
         }
         String suffix = Long.toString(System.nanoTime());
+        var ap = accountRepository.save(new com.bemo.hr.finance.domain.Account("AP" + suffix, "AP Payable", com.bemo.hr.finance.domain.Account.Type.LIABILITY, null, false, "EGP", true));
+        var bank = accountRepository.save(new com.bemo.hr.finance.domain.Account("BANK" + suffix, "Bank Account", com.bemo.hr.finance.domain.Account.Type.ASSET, null, false, "EGP", true));
+        var profile = postingProfileRepository.save(new com.bemo.hr.finance.domain.posting.PostingProfile("PROP-PMT-" + suffix, "SUPPLIER_PAYMENT_BANK_TRANSFER", today.minusDays(10), null));
+        postingProfileLineRepository.save(new com.bemo.hr.finance.domain.posting.PostingProfileLine(profile.getId(), 1, "DEBIT", "FIXED", ap.getId(), "AMOUNT"));
+        postingProfileLineRepository.save(new com.bemo.hr.finance.domain.posting.PostingProfileLine(profile.getId(), 2, "CREDIT", "FIXED", bank.getId(), "AMOUNT"));
+
         supplier = businessPartyRepository.save(new BusinessParty(
                 "PROP-" + suffix, "Proposal Supplier", null, "SUPPLIER", null, null, null, null, null, true,
                 "DIRECT", null, null, null, "EGP", "E_INVOICE", "CASH", null,

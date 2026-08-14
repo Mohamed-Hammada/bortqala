@@ -44,7 +44,7 @@ class FinancialStatementsReportServiceTests {
         JournalEntry je = new JournalEntry("JE-2026-001", LocalDate.of(2026, 3, 1), "Sale and Rent", "REF-01", "FP-01");
         je.approve("manager");
         je.post("admin");
-        when(journalEntryRepository.findByStatusOrderByEntryDateDesc(JournalEntry.Status.POSTED)).thenReturn(List.of(je));
+        when(journalEntryRepository.findByStatusInOrderByEntryDateDesc(anyList())).thenReturn(List.of(je));
 
         JournalEntryLine l1 = new JournalEntryLine(je.getId(), cash.getId(), null, new BigDecimal("1000.00"), BigDecimal.ZERO, "Cash in");
         JournalEntryLine l2 = new JournalEntryLine(je.getId(), revenue.getId(), null, BigDecimal.ZERO, new BigDecimal("1000.00"), "Revenue");

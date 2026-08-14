@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260814_v243_001_payment_accounting_evidence
+      author: codex
+      changes:
+        - addColumn:
+            tableName: salary_payment
+            columns:
+              - column:
+                  name: payment_journal_id
+                  type: varchar(36)
+              - column:
+                  name: reversal_journal_id
+                  type: varchar(36)
+        - createIndex:
+            tableName: salary_payment
+            indexName: idx_salary_payment_payment_journal
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: payment_journal_id
+      rollback:
+        - dropIndex:
+            tableName: salary_payment
+            indexName: idx_salary_payment_payment_journal
+        - dropColumn:
+            tableName: salary_payment
+            columnName: reversal_journal_id
+        - dropColumn:
+            tableName: salary_payment
+            columnName: payment_journal_id

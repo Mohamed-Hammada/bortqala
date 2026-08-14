@@ -107,6 +107,14 @@ public class PayrollRunHeader {
         transitionTo(Status.POSTED);
     }
 
+    public void reopenAfterPaymentReversal() {
+        if (this.status == Status.POSTED) return;
+        if (this.status != Status.PAID) {
+            throw invalidTransition(Status.POSTED);
+        }
+        this.status = Status.POSTED;
+    }
+
     private BusinessRuleException invalidTransition(Status nextStatus) {
         return new BusinessRuleException("Payroll run cannot transition from " + this.status + " to " + nextStatus + ".",
                 "PAYROLL_STATE_TRANSITION_INVALID", HttpStatus.CONFLICT);

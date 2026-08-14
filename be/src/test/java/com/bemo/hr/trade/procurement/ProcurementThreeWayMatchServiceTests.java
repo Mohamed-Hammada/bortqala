@@ -9,6 +9,7 @@ import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.trade.procurement.api.ProcurementApi;
+import com.bemo.hr.trade.procurement.application.ProcurementAccountingService;
 import com.bemo.hr.trade.procurement.application.ProcurementExcelExporter;
 import com.bemo.hr.trade.procurement.application.ProcurementService;
 import com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatch;
@@ -70,7 +71,8 @@ class ProcurementThreeWayMatchServiceTests {
                 currencyRepository, idempotencyService, fiscalPeriodGuard,
                 new com.bemo.hr.shared.numbering.DocumentNumberService(
                         mock(com.bemo.hr.shared.numbering.DocumentNumberSequenceRepository.class)),
-                threeWayMatchRepository, budgetService
+                threeWayMatchRepository, budgetService,
+                mock(ProcurementAccountingService.class)
         );
     }
 

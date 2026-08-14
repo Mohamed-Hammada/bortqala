@@ -50,7 +50,7 @@ rem set "HR_DEMO_SECRET=optional-fixed-secret"
 
 cd /d "%~dp0be"
 
-call gradlew.bat bootJar
+call gradlew.bat clean bootJar
 if errorlevel 1 (
  echo.
  echo [ERROR] Backend build failed. The previous JAR will NOT be started.

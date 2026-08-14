@@ -221,6 +221,9 @@ public class SubledgerPostingService {
         reversal.setCurrency(original.getCurrency());
         reversal.linkReversalOf(original.getId(), operationId, actor);
         JournalEntry saved = journalEntryRepository.save(reversal);
+        journalSourceMetadataRepository.findByJournalId(originalEntryId).ifPresent(source ->
+                journalSourceMetadataRepository.save(new JournalSourceMetadata(
+                        saved.getId(), source.getSourceDocumentType(), source.getSourceDocumentId())));
         originalLines.forEach(line -> journalEntryLineRepository.save(new JournalEntryLine(saved.getId(), line.getAccountId(),
                 line.getPartyId(), line.getCredit(), line.getDebit(), "Reversal: " + reason)));
         original.markReversed(saved.getId(), reason, actor, original.getOperationId());
