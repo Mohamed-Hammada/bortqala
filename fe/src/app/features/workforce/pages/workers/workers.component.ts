@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { I18nService } from '../../../../core/i18n.service';
 import { WorkforceService } from '../../data-access/workforce.service';
@@ -12,7 +13,7 @@ import { NotificationService } from '../../../../core/notification.service';
 @Component({
   selector: 'app-workers',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ModalDialogComponent],
   template: `
     <div class="workforce-container">
       <header class="page-header">
@@ -57,11 +58,40 @@ import { NotificationService } from '../../../../core/notification.service';
             </div>
             <div class="form-group">
               <label>فئة العامل *</label>
-              <select [(ngModel)]="form.categoryId" name="categoryId" required class="form-input" [disabled]="saving()" (ngModelChange)="onCategoryChange($event)">
-                <option value="" disabled>اختر الفئة</option>
-                <option *ngFor="let cat of workforceService.categories()" [value]="cat.id">{{ cat.name }} — {{ cat.defaultDailyRate | number:'1.2-2' }} ج.م</option>
+              <select
+                [(ngModel)]="form.categoryId"
+                name="categoryId"
+                required
+                class="form-input"
+                [disabled]="saving() || categoriesLoading()"
+                (ngModelChange)="onCategoryChange($event)">
+                @if (categoriesLoading()) {
+                  <option value="" disabled>جارٍ تحميل الفئات...</option>
+                } @else if (categoriesLoadError()) {
+                  <option value="" disabled>تعذر تحميل الفئات</option>
+                } @else if (workforceService.categories().length === 0) {
+                  <option value="" disabled>لا توجد فئات عمال متاحة</option>
+                } @else {
+                  <option value="" disabled>اختر الفئة</option>
+                  <option *ngFor="let cat of workforceService.categories()" [value]="cat.id">{{ cat.name }} — {{ cat.defaultDailyRate | number:'1.2-2' }} ج.م</option>
+                }
               </select>
-              <small>عند إنشاء عامل جديد تُورث اليومية وساعات العمل من الفئة المختارة ويمكن تعديلهما بعد ذلك.</small>
+
+              @if (categoriesLoadError()) {
+                <div class="category-helper category-helper-error">
+                  <span>{{ categoriesLoadError() }}</span>
+                  <button type="button" class="inline-action-button" (click)="loadWorkerCategories()" [disabled]="categoriesLoading()">
+                    إعادة المحاولة
+                  </button>
+                </div>
+              } @else if (!categoriesLoading() && workforceService.categories().length === 0) {
+                <div class="category-helper category-helper-warning">
+                  <span>لا توجد فئات عمال متاحة حالياً. أنشئ فئة أولاً حتى تتمكن من إضافة العامل.</span>
+                  <a routerLink="/workforce/categories" class="inline-action-link">+ إنشاء فئة عمال</a>
+                </div>
+              } @else {
+                <small>عند إنشاء عامل جديد تُورث اليومية وساعات العمل من الفئة المختارة ويمكن تعديلهما بعد ذلك.</small>
+              }
             </div>
             <div class="form-group"><label>اليومية الافتراضية (ج.م) *</label><input type="number" min="0" [(ngModel)]="form.defaultDailyRate" name="defaultDailyRate" required class="form-input" [disabled]="saving()" /></div>
             <div class="form-group"><label>ساعات اليوم القياسية *</label><input type="number" min="0" step="0.5" [(ngModel)]="form.standardDailyHours" name="standardDailyHours" required class="form-input" [disabled]="saving()" /></div>
@@ -93,8 +123,13 @@ import { NotificationService } from '../../../../core/notification.service';
     .form-grid { display: grid;grid-template-columns: repeat(2,minmax(0,1fr));gap: 1rem; }.form-group { display: flex;flex-direction: column;gap: .5rem; }
     .form-group label { font-weight: 600;font-size: .875rem;color: var(--secondary-text); }.form-group small { color: var(--muted); }
     .form-input { padding: .625rem;border: 1px solid var(--line);border-radius: 8px;font-size: .875rem; }.modal-actions-bar { width: 100%;display: flex;gap: .75rem;justify-content: flex-end; }
+    .category-helper { display: flex;align-items: center;justify-content: space-between;gap: .75rem;padding: .625rem .75rem;border: 1px solid var(--line);border-radius: 8px;font-size: .8125rem; }
+    .category-helper-warning { background: color-mix(in srgb, #f59e0b 10%, var(--surface)); }
+    .category-helper-error { background: var(--danger-soft);color: var(--danger);border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); }
+    .inline-action-link,.inline-action-button { font: inherit;font-weight: 700;white-space: nowrap;text-decoration: none;color: #b45309;background: transparent;border: 0;padding: 0;cursor: pointer; }
+    .inline-action-button:disabled { opacity: .65;cursor: not-allowed; }
     .save-error { margin-top: 1rem;padding: .75rem 1rem;border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line));border-radius: 8px;background: var(--danger-soft);color: var(--danger); }
-    @media (max-width: 760px){.page-header{align-items: stretch;flex-direction: column;gap: 1rem}.form-grid{grid-template-columns: 1fr}}
+    @media (max-width: 760px){.page-header{align-items: stretch;flex-direction: column;gap: 1rem}.form-grid{grid-template-columns: 1fr}.category-helper{align-items:flex-start;flex-direction:column}}
   `]
 })
 export class WorkersComponent implements OnInit {
@@ -103,6 +138,8 @@ export class WorkersComponent implements OnInit {
   notification = inject(NotificationService);
   readonly saving = signal(false);
   readonly saveError = signal<string | null>(null);
+  readonly categoriesLoading = signal(true);
+  readonly categoriesLoadError = signal<string | null>(null);
 
   workerStatusLabel(s: string): string {
     return s === 'ACTIVE' ? this.i18n.t('common.active') : this.i18n.t('common.inactive');
@@ -118,7 +155,24 @@ export class WorkersComponent implements OnInit {
   ngOnInit() {
     this.workforceService.loadWorkers().subscribe();
     this.workforceService.loadContractors().subscribe();
-    this.workforceService.loadCategories().subscribe();
+    this.loadWorkerCategories();
+  }
+
+  loadWorkerCategories(): void {
+    this.categoriesLoading.set(true);
+    this.categoriesLoadError.set(null);
+
+    this.workforceService.loadCategories().subscribe({
+      next: () => this.categoriesLoading.set(false),
+      error: (error: any) => {
+        this.categoriesLoading.set(false);
+        this.categoriesLoadError.set(
+          error?.error?.message ??
+          error?.error?.detail ??
+          'تعذر تحميل فئات العمال. أعد المحاولة.'
+        );
+      }
+    });
   }
 
   exportExcel(): void {
