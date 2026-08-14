@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import org.springframework.http.HttpStatus;
+
 @Entity
 @Table(name = "boms")
 public class BomHeader {
@@ -77,6 +80,10 @@ public class BomHeader {
     public void update(String bomCode, String finishedItemId, String finishedGoodName,
                        BigDecimal yieldQuantity, String revision, LocalDate effectiveFrom,
                        LocalDate effectiveTo, String notes, boolean active, List<BomLine> lines) {
+        if (effectiveFrom != null && effectiveTo != null && effectiveTo.isBefore(effectiveFrom)) {
+            throw new BusinessRuleException("BOM effective dates are invalid.",
+                    "MFG_BOM_EFFECTIVE_DATES_INVALID", HttpStatus.CONFLICT);
+        }
         this.bomCode = bomCode.strip();
         this.finishedItemId = finishedItemId;
         this.finishedGoodName = finishedGoodName.strip();
@@ -97,6 +104,12 @@ public class BomHeader {
     public void addLine(BomLine line) {
         line.attachTo(this);
         this.lines.add(line);
+    }
+
+    public boolean appliesOn(LocalDate date) {
+        return active && date != null
+                && (effectiveFrom == null || !date.isBefore(effectiveFrom))
+                && (effectiveTo == null || !date.isAfter(effectiveTo));
     }
 
     @PrePersist

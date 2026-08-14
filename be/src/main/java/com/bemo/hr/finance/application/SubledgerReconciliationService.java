@@ -6,11 +6,12 @@ import com.bemo.hr.finance.infrastructure.SubledgerReconciliationReportRepositor
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
 import tools.jackson.databind.ObjectMapper;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import org.springframework.http.HttpStatus;
 
 @Service
 public class SubledgerReconciliationService {
@@ -36,28 +37,34 @@ public class SubledgerReconciliationService {
     }
 
     @Transactional
-    public SubledgerReconciliationReport generateReport(String periodId, SubledgerReconciliationReport.SubledgerType subledgerType, BigDecimal glBalance, BigDecimal subledgerBalance) {
-        BigDecimal finalGl = glBalance;
-        BigDecimal finalSub = subledgerBalance;
-        LocalDate asOf = fiscalPeriodRepository == null ? LocalDate.now() : fiscalPeriodRepository.findById(periodId).orElseThrow().getEndDate();
-        String details = "[]";
-
-        for (SubledgerReconciliationProvider provider : providers) {
-            if (provider.type() == subledgerType) {
-                var calc = provider.calculate(periodId, asOf);
-                if (finalGl == null) finalGl = calc.glBalance();
-                if (finalSub == null) finalSub = calc.subledgerBalance();
-                try { details = objectMapper.writeValueAsString(calc.sourceDifferences()); }
-                catch (Exception ex) { throw new IllegalStateException("Cannot serialize reconciliation differences", ex); }
-                break;
-            }
+    public SubledgerReconciliationReport generateReport(String periodId,
+                                                         SubledgerReconciliationReport.SubledgerType subledgerType) {
+        if (fiscalPeriodRepository == null) {
+            throw unavailable(subledgerType);
         }
+        LocalDate asOf = fiscalPeriodRepository.findById(periodId)
+                .orElseThrow(() -> new BusinessRuleException("Fiscal period not found.",
+                        "FIN_FISCAL_PERIOD_NOT_FOUND", HttpStatus.NOT_FOUND))
+                .getEndDate();
+        SubledgerReconciliationProvider provider = providers.stream()
+                .filter(candidate -> candidate.type() == subledgerType)
+                .findFirst().orElseThrow(() -> unavailable(subledgerType));
+        var calculation = provider.calculate(periodId, asOf);
+        if (calculation == null || calculation.glBalance() == null || calculation.subledgerBalance() == null) {
+            throw unavailable(subledgerType);
+        }
+        String details;
+        try { details = objectMapper.writeValueAsString(calculation.sourceDifferences()); }
+        catch (Exception ex) { throw new IllegalStateException("Cannot serialize reconciliation differences", ex); }
 
-        if (finalGl == null) finalGl = BigDecimal.ZERO;
-        if (finalSub == null) finalSub = BigDecimal.ZERO;
-
-        SubledgerReconciliationReport report = new SubledgerReconciliationReport(periodId, subledgerType, finalGl, finalSub, asOf, details);
+        SubledgerReconciliationReport report = new SubledgerReconciliationReport(periodId, subledgerType,
+                calculation.glBalance(), calculation.subledgerBalance(), asOf, details);
         return repository.save(report);
+    }
+
+    private BusinessRuleException unavailable(SubledgerReconciliationReport.SubledgerType type) {
+        return new BusinessRuleException("No authoritative reconciliation provider is configured for " + type + ".",
+                "FIN_RECONCILIATION_PROVIDER_REQUIRED", HttpStatus.UNPROCESSABLE_CONTENT);
     }
 
     @Transactional(readOnly = true)

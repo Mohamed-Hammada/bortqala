@@ -38,5 +38,17 @@ class JournalApprovalServiceTests {
 
         boolean requiresAbove = service.isApprovalRequired("acc-1", new BigDecimal("10000.00"));
         assertThat(requiresAbove).isTrue();
+        assertThat(service.isApprovalRequired("unconfigured-account", new BigDecimal("1.00"))).isTrue();
+    }
+
+    @Test
+    void journalRequiresApprovalWhenAnyAccountRuleRequiresIt() {
+        JournalApprovalRule exempt = new JournalApprovalRule("acc-1", new BigDecimal("5000.00"), true);
+        JournalApprovalRule controlled = new JournalApprovalRule("acc-2", new BigDecimal("100.00"), true);
+        when(repository.findByAccountId("acc-1")).thenReturn(Optional.of(exempt));
+        when(repository.findByAccountId("acc-2")).thenReturn(Optional.of(controlled));
+
+        assertThat(service.isApprovalRequired(java.util.Map.of(
+                "acc-1", new BigDecimal("50.00"), "acc-2", new BigDecimal("150.00")))).isTrue();
     }
 }

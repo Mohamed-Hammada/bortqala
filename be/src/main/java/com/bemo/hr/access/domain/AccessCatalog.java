@@ -169,6 +169,8 @@ public final class AccessCatalog {
     private static final Set<String> PAYROLL_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "PAYROLL_MANAGER", "HR_MANAGER", "HR_REVIEWER");
     private static final Set<String> FINANCE_ROLES = Set.of(
             "ADMIN", "SUPER_ADMIN", "FINANCE_MANAGER", "ACCOUNTANT", "TREASURY_USER", "AUDITOR");
+    private static final Set<String> FINANCE_REPORT_ROLES = Set.of(
+            "ADMIN", "SUPER_ADMIN", "FINANCE_MANAGER", "ACCOUNTANT", "AUDITOR");
     private static final Set<String> WORKFORCE_BASE_ROLES = Set.of(
             "ADMIN", "SUPER_ADMIN", "WORKFORCE_MANAGER", "WORKFORCE_REVIEWER", "WORKFORCE_FINANCE");
     private static final Set<String> WORKFORCE_IMPORT_ROLES = Set.of(
@@ -338,7 +340,7 @@ public final class AccessCatalog {
                     FINANCE_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_FINANCE_MANAGE, false)),
             page("FISCAL_PERIODS", "FINANCE", "/fiscal-periods", "fiscal-periods", "nav.fiscalPeriods", P_FINANCE_READ,
-                    FINANCE_ROLES, FEATURE_FINANCE,
+                    FINANCE_REPORT_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_FINANCE_MANAGE, false)),
             page("BUDGETS", "FINANCE", "/finance/budgets", "budgets", "nav.budgets", P_BUDGET_READ,
                     FINANCE_ROLES, FEATURE_FINANCE,

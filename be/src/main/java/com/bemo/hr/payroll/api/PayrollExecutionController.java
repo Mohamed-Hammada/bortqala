@@ -40,6 +40,12 @@ public class PayrollExecutionController {
         return executionService.calculateRun(id);
     }
 
+    @PostMapping("/{id}/review")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER')")
+    public PayrollRunHeader reviewRun(@PathVariable String id) {
+        return executionService.reviewRun(id);
+    }
+
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
     public PayrollRunHeader approveRun(@PathVariable String id) {

@@ -1,5 +1,22 @@
 # Test Evidence — Bemo ERP
 
+## 2026-08-13 completed local remediation verification
+
+- Canonical implementation items through `SEC-002` are implemented or explicitly classified; see `docs/BORTQALA_CURRENT_CODE_REVIEW_REMAINING_WORK_2026-08-13.md`.
+- Backend non-Docker/H2: **535 tests / 146 suites / 0 failures / 0 errors / 0 skipped**.
+- Backend catalogs: exception codes **468/468 PASS**; translation catalog **7,560 rows PASS**; authorization roles **19/19 PASS**. H2 loads V229 through V241.
+- Frontend on Node `v24.18.0`: **284 tests / 50 files PASS**; i18n **2,437 keys PASS**; hardcoded scan **49 HTML + 127 TypeScript PASS**; production build **PASS**.
+- CSP bundle scan: no `eval` or `new Function` in generated JavaScript.
+- PostgreSQL payroll concurrency remains blocked by unavailable Docker Desktop, so `PAY-001` remains open and release readiness is not claimed.
+
+## Earlier 2026-08-13 review-remediation verification
+
+- Working-tree verification for `FIN-001`…`FIN-004`, `INV-001`, `MFG-001`, `PAY-001`, and `PAY-002`; the canonical item status is in `docs/BORTQALA_CURRENT_CODE_REVIEW_REMAINING_WORK_2026-08-13.md`.
+- Backend: `./gradlew test -PskipDockerTests -x processTestAot -x compileAotTestJava -x processAotTestResources -x aotTestClasses` — **528 tests / 146 suites / 0 failures / 0 errors / 0 skipped**. GraalVM/native work remains paused; AOT tasks were excluded only to exercise the JVM suite.
+- Backend catalogs: exception codes **463/463 PASS**; translation catalog **7,466 rows PASS**. The H2 production-changelog context includes V229…V235.
+- Frontend under Node `v24.18.0`: i18n **2,398 keys PASS**; hardcoded UI scan **49 HTML + 127 TypeScript PASS**; **284 tests / 50 files / 0 failures**; production build **PASS**.
+- PostgreSQL payroll concurrency: `PayrollPaymentConcurrencyTests` was added and `compileTestJava` passes. Execution remains **BLOCKED** because Docker Desktop is unavailable (`dockerDesktopLinuxEngine` pipe missing), so `PAY-001` remains open rather than being inferred complete.
+
 ## 2026-08-13 final local release-candidate verification
 
 - Candidate code SHA: `6e4bc88a86fec54cfc1c71c031f3145bb6b28f47` (`fm_bemo_consolidated`). Documentation updates follow this code checkpoint.
@@ -44,7 +61,7 @@ below a recorded baseline or reports failures fails the release gate.
 
 | Suite | Baseline | Command | Threshold rule |
 |-------|----------|---------|----------------|
-| Backend (non-Docker, H2) | **516 tests / 144 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 516 AND failures = 0 |
+| Backend (non-Docker, H2) | **535 tests / 146 suites / 0 failures** | `./gradlew test -PskipDockerTests` | count ≥ 535 AND failures = 0 |
 | Backend (full, incl. Testcontainers) | **310 tests** expected when Docker available | `./gradlew test` | failures = 0 |
 | Frontend (Angular + Vitest) | **284 tests / 50 files / 0 failures** | `npx ng test --watch=false` | count ≥ 284 AND failures = 0 |
 

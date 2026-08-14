@@ -57,6 +57,7 @@ export class SalesPage {
   readonly credit = signal<CreditProfile | null>(null);
   readonly receivablesTab = signal<'INVOICES'|'RECEIPTS'|'COLLECTIONS'|'CREDIT'>('INVOICES');
   readonly savingAr = signal(false);
+  readonly arAsOfDate = signal(new Date().toISOString().slice(0, 10));
   readonly openInvoiceCount = computed(() => this.invoices().filter((row) => row.status === 'OPEN' || row.status === 'PARTIALLY_PAID').length);
 
   readonly drawerOpen = signal(false);
@@ -116,8 +117,8 @@ export class SalesPage {
         firstValueFrom(this.http.get<SalesOrder[]>('/api/v1/trade/sales/orders')),
         firstValueFrom(this.http.get<CustomerInvoice[]>('/api/v1/trade/sales/receivables/invoices')),
         firstValueFrom(this.http.get<CustomerReceipt[]>('/api/v1/trade/sales/receivables/receipts')),
-        firstValueFrom(this.http.get<Aging>('/api/v1/trade/sales/receivables/aging')),
-        firstValueFrom(this.http.get<CollectionTask[]>('/api/v1/trade/sales/receivables/collections')),
+        firstValueFrom(this.http.get<Aging>('/api/v1/trade/sales/receivables/aging', { params: { asOf: this.businessDate() } })),
+        firstValueFrom(this.http.get<CollectionTask[]>('/api/v1/trade/sales/receivables/collections', { params: { asOf: this.businessDate() } })),
       ]);
       this.orders.set(orders); this.invoices.set(invoices); this.receipts.set(receipts); this.aging.set(aging); this.collections.set(collections);
     } catch (e) {
@@ -164,6 +165,11 @@ export class SalesPage {
     }
   }
 
+  businessDate(): number {
+    const value = this.arAsOfDate();
+    return new Date(`${value}T00:00:00Z`).getTime();
+  }
+
   addOrderLine(){if(this.lineForm.invalid)return;const row=this.lineForm.getRawValue();if(this.orderLines().some(line=>line.itemId===row.itemId))return;this.orderLines.update(lines=>[...lines,row]);this.lineForm.reset({itemId:'',itemName:'',quantity:1,unitPrice:0,discountRate:0});}
   removeOrderLine(index:number){this.orderLines.update(lines=>lines.filter((_,i)=>i!==index));}
 
@@ -208,7 +214,7 @@ export class SalesPage {
 
   async loadCredit(){if(this.creditForm.controls.customerId.invalid)return;this.error.set(null);try{const profile=await firstValueFrom(this.http.get<CreditProfile>(`/api/v1/trade/sales/customers/${this.creditForm.controls.customerId.value}/credit`));this.credit.set(profile);this.creditForm.patchValue({creditLimit:profile.creditLimit,paymentTermsDays:profile.paymentTermsDays,creditHold:profile.creditHold});}catch(e){this.error.set(apiErrorMessage(e,this.i18n));}}
   async saveCredit(){if(this.creditForm.invalid||this.savingAr())return;const value=this.creditForm.getRawValue();this.savingAr.set(true);try{const profile=await firstValueFrom(this.http.put<CreditProfile>(`/api/v1/trade/sales/customers/${value.customerId}/credit`,{creditLimit:value.creditLimit,paymentTermsDays:value.paymentTermsDays,creditHold:value.creditHold}));this.credit.set(profile);this.notification.success(this.i18n.t('sales.ar.creditSaved'));}catch(e){this.error.set(apiErrorMessage(e,this.i18n));}finally{this.savingAr.set(false);}}
-  async markContacted(task:CollectionTask){if(this.savingAr())return;this.savingAr.set(true);try{await firstValueFrom(this.http.put(`/api/v1/trade/sales/receivables/collections/${task.id}`,{status:'CONTACTED',ownerUserId:task.ownerUserId??'',nextActionDate:new Date(Date.now()+7*86400000).setUTCHours(0,0,0,0),note:task.note??'',version:task.version}));this.notification.success(this.i18n.t('sales.ar.collectionUpdated'));await this.load();}catch(e){this.error.set(apiErrorMessage(e,this.i18n));}finally{this.savingAr.set(false);}}
+  async markContacted(task:CollectionTask){if(this.savingAr())return;this.savingAr.set(true);try{await firstValueFrom(this.http.put(`/api/v1/trade/sales/receivables/collections/${task.id}`,{status:'CONTACTED',ownerUserId:task.ownerUserId??'',nextActionDate:this.businessDate()+7*86400000,note:task.note??'',version:task.version,asOf:this.businessDate()}));this.notification.success(this.i18n.t('sales.ar.collectionUpdated'));await this.load();}catch(e){this.error.set(apiErrorMessage(e,this.i18n));}finally{this.savingAr.set(false);}}
 
   date(ms: number) {
     return formatDate(ms);

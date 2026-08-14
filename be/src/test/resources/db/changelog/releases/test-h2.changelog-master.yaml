@@ -697,3 +697,29 @@ databaseChangeLog:
       file: db/changelog/schema/update/20260813_v227_bom_snapshot_standard_cost.yaml
   - include:
       file: db/changelog/schema/update/20260813_v228_dynamic_translation_ids.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v229_cash_flow_disabled_translation.yaml
+  - include:
+      file: db/changelog/schema/update/20260813_v230_payroll_state_audit.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v231_payroll_integrity_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260813_v232_inventory_reservation_consolidation.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v233_inventory_reservation_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v234_reconciliation_provider_translation.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v235_manufacturing_reversal_translation.yaml
+  - include:
+      file: db/changelog/schema/update/20260813_v236_exact_bom_revision.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v237_bom_applicability_translations.yaml
+  - include:
+      file: db/changelog/schema/update/20260813_v238_posting_profile_line_tenant.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v239_subledger_profile_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v240_finance_workbench_translations.yaml
+  - include:
+      file: db/changelog/data/insert/20260813_v241_business_date_translation.yaml

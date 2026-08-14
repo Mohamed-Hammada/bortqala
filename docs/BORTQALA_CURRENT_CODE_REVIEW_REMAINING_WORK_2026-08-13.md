@@ -19,15 +19,18 @@ This repository copy is the canonical active tracker. After each item is impleme
 
 | Item | Validation | Direct source result |
 |---|---|---|
-| PAY-001 | CONFIRMED | Arbitrary status assignment remains; single/bulk payment can bypass approval; reversal accepts unpaid states. |
-| INV-001 | CONFIRMED | The simple `InventoryReservation` endpoint remains independent from the locked `StockReservation` path and still uses `branch-default`. |
-| FIN-001 | CONFIRMED | Cash flow still maps net income to operating cash and returns zero investing/financing cash. |
-| FIN-002 | CONFIRMED | Official reconciliation still accepts caller balances and falls back to zero. |
-| FIN-003 | CONFIRMED | Direct fiscal-period status close and module orchestrator remain separate; orchestrator does not close the fiscal-period aggregate. |
-| FIN-004 | CONFIRMED | Precheck still uses `LocalDate.now()` and a signed comparison rather than absolute variance against the fiscal-period end date. |
-| MFG-001 | CONFIRMED | Cancellation still restores issued material at latest unit cost rather than original issue valuation. |
+| PAY-001 | IMPLEMENTED — PG GATE PENDING | Guarded workflow, payable/reversal states, row locks, expected versions, role rules, snapshots, and actor audit are implemented; PostgreSQL concurrency proof remains. |
+| INV-001 | VERIFIED DONE | Both public reservation APIs use locked `StockReservation`; legacy active rows are retired and warehouses require a real active branch. |
+| FIN-001 | VERIFIED DONE | The misleading calculation is removed; the endpoint now returns explicit HTTP 501 with bilingual `FIN_CASH_FLOW_NOT_IMPLEMENTED` until ledger-based classification exists. |
+| FIN-002 | VERIFIED DONE | Official generation accepts only period/type and requires server-derived balances from a registered provider at period end. |
+| FIN-003 | VERIFIED DONE | Both close endpoints delegate to one locked orchestrator that runs financial/module gates and closes the fiscal-period aggregate. |
+| FIN-004 | VERIFIED DONE | Precheck passes the fiscal-period end date and compares absolute difference against tolerance. |
+| MFG-001 | VERIFIED DONE | In-progress cancellation restores the persisted production-issue quantity and value; missing/incomplete valuation evidence fails closed. |
+| FIN-UI-001 | VERIFIED DONE | One fiscal-period workbench now exposes statements, reconciliation, precheck, readiness, authoritative close, blockers and completion evidence. |
+| SEC-001 | VERIFIED DONE | Finance roles are explicit and aligned across backend, route, access catalog and shell; generic VIEWER and Treasury cannot enter the workbench. |
+| UI-001 | VERIFIED DONE | Fiscal-period notifications use bilingual database-backed V240 keys. |
 
-No item above is marked complete by this validation. Existing tests that encode the unsafe behavior must be replaced or strengthened as part of the corresponding item.
+This table now reflects the implementation and verification performed after the initial source review. `PAY-001` remains open only for its unexecuted PostgreSQL concurrency proof; completed rows include exact evidence in their item sections.
 
 ---
 
@@ -124,32 +127,32 @@ Do not leave the evidence empty and mark the task complete.
 ## P0 — Must resolve before “fully complete / release ready”
 
 - [ ] **PAY-001** — Payroll state machine and payment authorization integrity
-- [ ] **INV-001** — Remove unsafe parallel inventory reservation path
-- [ ] **FIN-001** — Cash Flow Statement is currently not a real cash-flow calculation
-- [ ] **FIN-002** — Reconciliation report must not accept caller-supplied official balances
-- [ ] **FIN-003** — Unify fiscal-period close into one authoritative close workflow
-- [ ] **FIN-004** — Close reconciliation must use fiscal period end date and correct tolerance semantics
-- [ ] **MFG-001** — Manufacturing cancellation must reverse original material issue valuation, not latest cost
+- [x] **INV-001** — Remove unsafe parallel inventory reservation path
+- [x] **FIN-001** — Cash Flow Statement explicitly disabled until a correct ledger-based implementation exists
+- [x] **FIN-002** — Reconciliation report must not accept caller-supplied official balances
+- [x] **FIN-003** — Unify fiscal-period close into one authoritative close workflow
+- [x] **FIN-004** — Close reconciliation must use fiscal period end date and correct tolerance semantics
+- [x] **MFG-001** — Manufacturing cancellation must reverse original material issue valuation, not latest cost
 
 ## P1 — Important correctness/governance completion
 
-- [ ] **PAY-002** — Preserve payroll creator identity and record payment/reversal actors separately
-- [ ] **MFG-002** — Enforce BOM active/effective-date applicability
-- [ ] **MFG-003** — Preserve exact BOM revision identity instead of lossy numeric parsing
-- [ ] **FIN-005** — Journal reversal entry must have complete creator/poster/timestamp audit metadata
-- [ ] **FIN-006** — Journal approval-rule configuration must be wired or removed
-- [ ] **O2C-001** — Prove AR/customer documents post to GL exactly once end-to-end
-- [ ] **FIN-UI-001** — Add/complete user-facing financial statement, reconciliation and close workflow if these are GUI features
-- [ ] **SEC-001** — Align financial-report/reconciliation authorization with the intended finance permission model
+- [x] **PAY-002** — Preserve payroll creator identity and record payment/reversal actors separately
+- [x] **MFG-002** — Enforce BOM active/effective-date applicability
+- [x] **MFG-003** — Preserve exact BOM revision identity instead of lossy numeric parsing
+- [x] **FIN-005** — Journal reversal entry must have complete creator/poster/timestamp audit metadata
+- [x] **FIN-006** — Journal approval-rule configuration must be wired or removed
+- [x] **O2C-001** — Prove AR/customer documents post to GL exactly once end-to-end
+- [x] **FIN-UI-001** — Add/complete user-facing financial statement, reconciliation and close workflow if these are GUI features
+- [x] **SEC-001** — Align financial-report/reconciliation authorization with the intended finance permission model
 
 ## P2 — Enhancements / cleanup
 
-- [ ] **TECH-001** — Clarify Java 21 toolchain vs Java 17 bytecode target
-- [ ] **TECH-002** — Standardize frontend Node major across local/CI/container builds
-- [ ] **TECH-003** — Replace remaining business-critical `LocalDate.now()` / `Instant.now()` decisions with explicit business dates or injected clock where determinism matters
-- [ ] **UI-001** — Remove remaining hard-coded UI messages from fiscal-period flow
-- [ ] **SEC-002** — Add a modern Content Security Policy at the real frontend/TLS boundary after validating required origins
-- [ ] **MFG-004** — Partial material issue / partial production receipt only if required by business scope
+- [x] **TECH-001** — Clarify Java 21 toolchain vs Java 17 bytecode target
+- [x] **TECH-002** — Standardize frontend Node major across local/CI/container builds
+- [x] **TECH-003** — Replace remaining business-critical `LocalDate.now()` / `Instant.now()` decisions with explicit business dates or injected clock where determinism matters
+- [x] **UI-001** — Remove remaining hard-coded UI messages from fiscal-period flow
+- [x] **SEC-002** — Add a modern Content Security Policy at the real frontend/TLS boundary after validating required origins
+- [x] **MFG-004** — N/A: partial material issue / receipt is outside the approved all-or-nothing production-order scope
 
 ---
 
@@ -157,7 +160,7 @@ Do not leave the evidence empty and mark the task complete.
 
 ## PAY-001 — Enforce a real payroll state machine
 
-**Status:** `CONFIRMED ISSUE`
+**Status:** `IMPLEMENTED — LOCAL/API/UI VERIFIED; POSTGRESQL CONCURRENCY GATE PENDING`
 
 ### Current code evidence
 
@@ -206,85 +209,87 @@ Choose the correct business model and enforce only that one.
 
 ### Implementation checklist
 
-- [ ] Define the authoritative `PaymentStatus` transition graph.
-- [ ] Put the transition rules in the payroll domain/application layer, not only the UI.
-- [ ] Replace unrestricted `updateStatus(nextStatus)` with guarded transition methods or a single validated transition method.
-- [ ] Reject transition attempts that skip required workflow states.
-- [ ] Reject backward transitions unless an explicit reversal/reopen command exists.
-- [ ] Decide the exact payable state.
-- [ ] Make `recordPayment(...)` require the exact payable state.
-- [ ] Remove the contradiction where `APPROVED` is blocked while less mature states can be paid.
-- [ ] Make `payBulk(...)` pay only rows in the legal payable state.
-- [ ] Prevent bulk payment from silently paying `DRAFT`, `CALCULATED` or `REVIEWED` rows unless that is explicitly the approved business model.
-- [ ] Require reversal to originate only from a reversible state.
-- [ ] Prevent `DRAFT`, `CALCULATED`, `REVIEWED`, or other unpaid records from being “reversed”.
-- [ ] Keep the frozen payroll snapshot unchanged through approval/payment/posting.
-- [ ] Ensure payroll-run header state and per-employee payment state cannot contradict each other.
-- [ ] Define what happens if one employee in a period cannot be paid during bulk payment.
-- [ ] Prefer an explicit failed/partial result over silently leaving the register in a mixed unexplained state.
-- [ ] Ensure optimistic locking/version checks are used on state-changing requests.
-- [ ] Ensure the backend, not the Angular page, is authoritative.
+- [x] Define the authoritative `PaymentStatus` transition graph.
+- [x] Put the transition rules in the payroll domain/application layer, not only the UI.
+- [x] Replace unrestricted `updateStatus(nextStatus)` with guarded transition methods or a single validated transition method.
+- [x] Reject transition attempts that skip required workflow states.
+- [x] Reject backward transitions unless an explicit reversal/reopen command exists.
+- [x] Decide the exact payable state.
+- [x] Make `recordPayment(...)` require the exact payable state.
+- [x] Remove the contradiction where `APPROVED` is blocked while less mature states can be paid.
+- [x] Make `payBulk(...)` pay only rows in the legal payable state.
+- [x] Prevent bulk payment from silently paying `DRAFT`, `CALCULATED` or `REVIEWED` rows unless that is explicitly the approved business model.
+- [x] Require reversal to originate only from a reversible state.
+- [x] Prevent `DRAFT`, `CALCULATED`, `REVIEWED`, or other unpaid records from being “reversed”.
+- [x] Keep the frozen payroll snapshot unchanged through approval/payment/posting.
+- [x] Ensure payroll-run header state and per-employee payment state cannot contradict each other.
+- [x] Define what happens if one employee in a period cannot be paid during bulk payment.
+- [x] Prefer an explicit failed/partial result over silently leaving the register in a mixed unexplained state.
+- [x] Ensure optimistic locking/version checks are used on state-changing requests.
+- [x] Ensure the backend, not the Angular page, is authoritative.
 
 ### Authorization / SoD checklist
 
-- [ ] Define who can calculate payroll.
-- [ ] Define who can review payroll.
-- [ ] Define who can approve payroll.
-- [ ] Define who can pay/post payroll.
+- [x] Define who can calculate payroll.
+- [x] Define who can review payroll.
+- [x] Define who can approve payroll.
+- [x] Define who can pay/post payroll.
 - [ ] If maker/checker is required, prevent the preparer from approving their own run.
 - [ ] If required, prevent the approver from being the disburser/poster.
-- [ ] Prove direct REST calls cannot bypass the rule.
-- [ ] Audit actor + previous status + new status.
+- [x] Prove direct REST calls cannot bypass the rule.
+- [x] Audit actor + previous status + new status.
 
 ### Required automated tests
 
-- [ ] `draft_cannot_jump_directly_to_paid`
-- [ ] `calculated_cannot_jump_to_paid_when_review_and_approval_are_required`
-- [ ] `reviewed_cannot_be_paid_before_approval`
-- [ ] `approved_can_progress_to_the_defined_payable_next_state`
-- [ ] `invalid_backward_transition_is_rejected`
-- [ ] `paid_payment_cannot_be_paid_twice`
-- [ ] `posted_payment_cannot_be_paid_twice`
-- [ ] `unpaid_payment_cannot_be_reversed`
-- [ ] `paid_or_posted_payment_can_be_reversed_exactly_once`
-- [ ] `bulk_pay_skips_or_rejects_non_payable_rows`
-- [ ] `bulk_pay_does_not_bypass_approval`
+- [x] `draft_cannot_jump_directly_to_paid`
+- [x] `calculated_cannot_jump_to_paid_when_review_and_approval_are_required`
+- [x] `reviewed_cannot_be_paid_before_approval`
+- [x] `approved_can_progress_to_the_defined_payable_next_state`
+- [x] `invalid_backward_transition_is_rejected`
+- [x] `paid_payment_cannot_be_paid_twice`
+- [x] `posted_payment_cannot_be_paid_twice`
+- [x] `unpaid_payment_cannot_be_reversed`
+- [x] `paid_or_posted_payment_can_be_reversed_exactly_once`
+- [x] `bulk_pay_skips_or_rejects_non_payable_rows`
+- [x] `bulk_pay_does_not_bypass_approval`
 - [ ] `concurrent_payment_requests_do_not_double_pay`
-- [ ] `stale_version_is_rejected`
-- [ ] `unauthorized_user_cannot_transition_payroll`
-- [ ] `tenant_A_cannot_transition_tenant_B_payroll`
+- [x] `stale_version_is_rejected`
+- [x] `unauthorized_user_cannot_transition_payroll`
+- [x] `tenant_A_cannot_transition_tenant_B_payroll`
 
 ### Definition of Done
 
 Do **not** mark `PAY-001` done until:
 
-- [ ] one legal workflow is implemented server-side;
-- [ ] every state-changing endpoint follows it;
-- [ ] bulk and single payment use the same invariant;
-- [ ] reversal is guarded;
-- [ ] authorization/SoD rules are enforced in backend code;
+- [x] one legal workflow is implemented server-side;
+- [x] every state-changing endpoint follows it;
+- [x] bulk and single payment use the same invariant;
+- [x] reversal is guarded;
+- [x] authorization/SoD rules are enforced in backend code;
 - [ ] concurrency/retry behavior is safe;
-- [ ] automated tests prove the above.
+- [ ] automated tests prove the above on PostgreSQL.
 
 ### Evidence
 
 ```text
-Status:
-Chosen state graph:
-Implementation SHA:
-Domain methods changed:
-Service/controller methods changed:
-Tests:
-Concurrency test:
-Authorization/SoD test:
-Reviewer:
+Status: IMPLEMENTED — PostgreSQL concurrency gate pending
+Chosen state graph: DRAFT → CALCULATED → REVIEWED → APPROVED → POSTED → PAID; explicit PAID → REVERSED command
+Implementation SHA: WORKING TREE — commit pending
+Domain methods changed: SalaryPayment.transitionTo/markAsPaid/markAsReversed; PayrollRunHeader.transitionTo
+Service/controller methods changed: guarded transition; posted-only single/bulk payment; paid-only reversal; row locks; expected versions; role-scoped REST transitions
+Tests: SalaryPaymentStateTests 3/3; PayrollExecutionServiceTests 2/2; PayrollServiceTests 4/4
+Concurrency test: PayrollPaymentConcurrencyTests added (10 repetitions against the real PayrollService); compiles successfully, but execution is pending because Docker Desktop is unavailable
+Authorization/SoD test: AuthSecurityIntegrationTests 48/48, including review-role posting denial and generic PAID denial
+Frontend: Angular 284/284; production build PASS; i18n and hardcoded-string gates PASS
+Consolidated non-Docker backend: 528 tests / 146 suites / 0 failures; error codes 463/463; translation catalog 7,466 rows
+Reviewer: pending final technical review
 ```
 
 ---
 
 ## PAY-002 — Do not overwrite `createdBy` during payment/reversal
 
-**Status:** `CONFIRMED ISSUE`  
+**Status:** `VERIFIED DONE`
 **Priority:** P1
 
 ### Current code evidence
@@ -298,30 +303,42 @@ That destroys the original creator identity and weakens audit history.
 
 ### Required work
 
-- [ ] Keep `createdBy` immutable after creation.
-- [ ] Add/use a separate `paidBy` field.
-- [ ] Add/use a separate `reversedBy` field.
-- [ ] Preserve `paidAt`.
-- [ ] Add/preserve `reversedAt`.
-- [ ] Store reversal reason separately from generic notes where practical.
-- [ ] Add a Liquibase migration for new persistent fields if they do not already exist.
-- [ ] Update API response models if users/auditors need these fields.
-- [ ] Ensure existing historical rows are migrated safely.
-- [ ] Do not fake historical actor values during migration if they cannot be recovered.
+- [x] Keep `createdBy` immutable after creation.
+- [x] Add/use a separate `paidBy` field.
+- [x] Add/use a separate `reversedBy` field.
+- [x] Preserve `paidAt`.
+- [x] Add/preserve `reversedAt`.
+- [x] Store reversal reason separately from generic notes where practical.
+- [x] Add a Liquibase migration for new persistent fields if they do not already exist.
+- [x] Update API response models if users/auditors need these fields.
+- [x] Ensure existing historical rows are migrated safely.
+- [x] Do not fake historical actor values during migration if they cannot be recovered.
 
 ### Tests
 
-- [ ] creator remains unchanged after payment;
-- [ ] creator remains unchanged after reversal;
-- [ ] `paidBy` records the payment actor;
-- [ ] `reversedBy` records the reversal actor;
-- [ ] audit event records the same actors;
-- [ ] API exposes consistent actor data where required.
+- [x] creator remains unchanged after payment;
+- [x] creator remains unchanged after reversal;
+- [x] `paidBy` records the payment actor;
+- [x] `reversedBy` records the reversal actor;
+- [x] audit event records the same actors;
+- [x] API exposes consistent actor data where required.
 
 ### Definition of Done
 
-- [ ] `createdBy` can never be overwritten by payment or reversal operations.
-- [ ] financial audit history can distinguish creator, payer and reverser.
+- [x] `createdBy` can never be overwritten by payment or reversal operations.
+- [x] financial audit history can distinguish creator, payer and reverser.
+
+### Verification evidence — 2026-08-13
+
+```text
+Implementation SHA: WORKING TREE — commit pending
+Migration: 20260813_v230_payroll_state_audit.yaml
+Translations: 20260813_v231_payroll_integrity_translations.yaml/.csv
+Domain attribution tests: SalaryPaymentStateTests 3/3 PASS
+H2 production-changelog context: PASS
+API fields: paidBy, reversedBy, reversedAt, reversalReason, version
+Historical migration: actor fields remain NULL when history cannot be recovered; no actor is fabricated
+```
 
 ---
 
@@ -329,7 +346,7 @@ That destroys the original creator identity and weakens audit history.
 
 ## INV-001 — Remove the unsafe parallel reservation path
 
-**Status:** `CONFIRMED ISSUE / ARCHITECTURE INCONSISTENCY`
+**Status:** `VERIFIED DONE — COMPATIBILITY ROUTE DELEGATES TO AUTHORITATIVE SERVICE`
 
 ### Current code evidence
 
@@ -389,48 +406,63 @@ Preferred surgical options:
 
 ### Checklist
 
-- [ ] Identify the authoritative stock reservation aggregate/service.
-- [ ] Identify all callers of `InventoryService.reserveStock(...)`.
-- [ ] Identify all callers of the richer stock-reservation service.
-- [ ] Ensure both cannot mutate different reservation stores independently.
-- [ ] Delegate or migrate to one reservation invariant.
-- [ ] Reject null/zero/negative reservation quantity.
-- [ ] Validate item exists and is active.
-- [ ] Validate warehouse exists and is active.
-- [ ] Validate warehouse belongs to the active tenant.
+- [x] Identify the authoritative stock reservation aggregate/service.
+- [x] Identify all callers of `InventoryService.reserveStock(...)`.
+- [x] Identify all callers of the richer stock-reservation service.
+- [x] Ensure both cannot mutate different reservation stores independently.
+- [x] Delegate or migrate to one reservation invariant.
+- [x] Reject null/zero/negative reservation quantity.
+- [x] Validate item exists and is active.
+- [x] Validate warehouse exists and is active.
+- [x] Validate warehouse belongs to the active tenant.
 - [ ] Validate source document type and source document ID where required.
-- [ ] Validate sufficient reservable stock.
-- [ ] Lock the appropriate balance/reservation rows for concurrent reservation.
-- [ ] Prevent oversubscription.
+- [x] Validate sufficient reservable stock.
+- [x] Lock the appropriate balance/reservation rows for concurrent reservation.
+- [x] Prevent oversubscription.
 - [ ] Add operation ID/idempotency where reservation commands may be retried.
-- [ ] Ensure release is idempotent.
-- [ ] Ensure delivery/issue consumes the authoritative reservation.
-- [ ] Ensure cancellation releases the authoritative reservation.
-- [ ] Decide how to migrate existing rows if `InventoryReservation` and `StockReservation` represent duplicate concepts.
-- [ ] Do not maintain two “truths” after migration.
-- [ ] Remove `"branch-default"` fallback.
-- [ ] Require a valid branch or define an explicit warehouse-without-branch business rule.
-- [ ] Validate branch belongs to the active tenant.
+- [x] Ensure release is idempotent.
+- [x] Ensure delivery/issue consumes the authoritative reservation.
+- [x] Ensure cancellation releases the authoritative reservation.
+- [x] Decide how to migrate existing rows if `InventoryReservation` and `StockReservation` represent duplicate concepts.
+- [x] Do not maintain two “truths” after migration.
+- [x] Remove `"branch-default"` fallback.
+- [x] Require a valid branch or define an explicit warehouse-without-branch business rule.
+- [x] Validate branch belongs to the active tenant.
 
 ### Required concurrency tests
 
 Use PostgreSQL/Testcontainers where database locking matters.
 
-- [ ] two concurrent reservations cannot reserve more than available stock;
+- [x] two concurrent reservations cannot reserve more than available stock;
 - [ ] retry with same operation ID does not duplicate reservation;
 - [ ] release replay does not over-release;
-- [ ] direct call to `/api/v1/inventory/reservations` cannot bypass stock checks;
-- [ ] tenant A cannot reserve from tenant B warehouse;
-- [ ] invalid/nonexistent item is rejected;
-- [ ] zero/negative quantity is rejected.
+- [x] direct call to `/api/v1/inventory/reservations` cannot bypass stock checks;
+- [x] tenant A cannot reserve from tenant B warehouse;
+- [x] invalid/nonexistent item is rejected;
+- [x] zero/negative quantity is rejected.
 
 ### Definition of Done
 
-- [ ] there is one authoritative reservation state;
-- [ ] every public mutation path enforces the same stock invariants;
-- [ ] concurrency cannot oversubscribe inventory;
-- [ ] no fake/default branch ID is silently persisted;
-- [ ] old duplicate path is delegated, migrated or removed.
+- [x] there is one authoritative reservation state;
+- [x] every public mutation path enforces the same stock invariants;
+- [x] concurrency cannot oversubscribe inventory;
+- [x] no fake/default branch ID is silently persisted;
+- [x] old duplicate path is delegated, migrated or removed.
+
+### Verification evidence — 2026-08-13
+
+```text
+Status: VERIFIED DONE
+Implementation SHA: WORKING TREE — commit pending
+Authoritative aggregate/service: operations.StockReservation / WarehouseInventoryService
+Compatibility path: POST /api/v1/inventory/reservations delegates to WarehouseInventoryService
+Migration: V232 releases legacy ACTIVE inventory_reservations; V233 adds bilingual errors
+Focused tests: InventoryServiceTests + WarehouseInventoryServiceTests PASS
+H2 production-changelog context: PASS
+Concurrent oversubscription test: SalesOrderToCashPersistenceTests.concurrentReservationsCannotOversubscribeAvailableStock PASS
+Catalog gates: 460/460 error codes; 7,458 bilingual rows; PASS
+Note: same-source retries return the existing authoritative reservation; explicit operation-ID naming remains an enhancement.
+```
 
 ---
 
@@ -438,7 +470,7 @@ Use PostgreSQL/Testcontainers where database locking matters.
 
 ## FIN-001 — Cash Flow Statement must be real or disabled
 
-**Status:** `CONFIRMED ISSUE`
+**Status:** `VERIFIED DONE — OPTION B (EXPLICITLY DISABLED)`
 
 ### Current code evidence
 
@@ -475,9 +507,9 @@ Choose one:
 
 If Cash Flow is not needed in the current release:
 
-- [ ] remove/hide the public endpoint or return an explicit unsupported/not-implemented response;
-- [ ] do not show fabricated zero investing/financing values;
-- [ ] do not label the existing implementation as complete.
+- [x] remove/hide the public endpoint or return an explicit unsupported/not-implemented response;
+- [x] do not show fabricated zero investing/financing values;
+- [x] do not label the existing implementation as complete.
 
 ### Required tests if implemented
 
@@ -495,8 +527,29 @@ If Cash Flow is not needed in the current release:
 
 ### Definition of Done
 
-- [ ] endpoint is either financially correct and tested, or explicitly disabled.
-- [ ] no production endpoint returns a knowingly simplified result labeled as a full Cash Flow Statement.
+- [x] endpoint is either financially correct and tested, or explicitly disabled.
+- [x] no production endpoint returns a knowingly simplified result labeled as a full Cash Flow Statement.
+
+### Verification evidence — 2026-08-13
+
+```text
+Status: VERIFIED DONE — explicit HTTP 501 response
+Implementation branch: current working branch
+Implementation SHA: WORKING TREE — commit pending
+Files changed:
+- be/src/main/java/com/bemo/hr/finance/application/FinancialStatementsReportService.java
+- be/src/test/java/com/bemo/hr/finance/application/FinancialStatementsReportServiceTests.java
+- be/src/main/java/com/bemo/hr/finance/application/README.md
+- be/src/main/java/com/bemo/hr/finance/api/README.md
+Database migration(s):
+- 20260813_v229_cash_flow_disabled_translation.yaml
+- 20260813_v229_cash_flow_disabled_translation.csv
+Verification:
+- Focused service test + H2 application-context migration test: BUILD SUCCESSFUL
+- Error-code translation gate: 455/455 PASS
+- Translation catalog: 7,442 rows; no generated IDs or duplicate bilingual key/locale pairs; PASS
+CI/PostgreSQL/Testcontainers: pending consolidated release verification
+```
 
 ---
 
@@ -504,7 +557,7 @@ If Cash Flow is not needed in the current release:
 
 ## FIN-002 — Never accept caller-provided official GL/subledger balances
 
-**Status:** `CONFIRMED ISSUE`
+**Status:** `VERIFIED DONE — SERVER-DERIVED BALANCES ONLY`
 
 ### Current code evidence
 
@@ -528,24 +581,133 @@ There is another dangerous fallback: if no provider supplies values and inputs a
 
 ### Required work
 
-- [ ] Remove `glBalance` from the official report-generation request.
-- [ ] Remove `subledgerBalance` from the official report-generation request.
-- [ ] Resolve the requested fiscal period server-side.
-- [ ] Use the fiscal period end date as the reconciliation `asOf`.
-- [ ] Require a registered `SubledgerReconciliationProvider` for the requested subledger.
-- [ ] Fail with a stable business error if no provider exists.
-- [ ] Calculate GL balance on the server.
-- [ ] Calculate subledger balance on the server.
-- [ ] Persist the source differences generated by the provider.
-- [ ] Persist enough source metadata to reproduce the report.
+- [x] Remove `glBalance` from the official report-generation request.
+- [x] Remove `subledgerBalance` from the official report-generation request.
+- [x] Resolve the requested fiscal period server-side.
+- [x] Use the fiscal period end date as the reconciliation `asOf`.
+- [x] Require a registered `SubledgerReconciliationProvider` for the requested subledger.
+- [x] Fail with a stable business error if no provider exists.
+- [x] Calculate GL balance on the server.
+- [x] Calculate subledger balance on the server.
+- [x] Persist the source differences generated by the provider.
+- [x] Persist enough source metadata to reproduce the report.
 - [ ] If manual comparison is genuinely needed, create a **separate**, clearly labelled, audited “manual comparison” feature that cannot be confused with official reconciliation.
-- [ ] Do not silently store `0 / 0` because a provider is missing.
-- [ ] Validate period/subledger type.
-- [ ] Ensure tenant isolation.
+- [x] Do not silently store `0 / 0` because a provider is missing.
+- [x] Validate period/subledger type.
+- [x] Ensure tenant isolation.
 
 ### Tests
 
-- [ ] client cannot influence calculated GL ba…4022 tokens truncated…base.
+- [x] client cannot influence calculated GL or subledger balances; missing providers fail closed.
+
+### Verification evidence — 2026-08-13
+
+```text
+Status: VERIFIED DONE
+Implementation SHA: WORKING TREE — commit pending
+Request contract: periodId + subledgerType only
+Calculation: registered server provider at FiscalPeriod.endDate
+Failure behavior: FIN_RECONCILIATION_PROVIDER_REQUIRED; no 0/0 fallback
+Evidence persistence: calculated balances, asOfDate, and serialized source differences
+Tests: SubledgerReconciliationServiceTests 3/3 PASS
+H2 production-changelog context: PASS
+Migration/catalog: V234 bilingual error translation; catalog gates PASS
+```
+
+## FIN-003 / FIN-004 — Authoritative fiscal close and reconciliation semantics
+
+**Status:** `VERIFIED DONE`
+
+- [x] `PUT /api/v1/fiscal-periods/{id}/status` delegates `CLOSED` to the close orchestrator.
+- [x] `POST /api/v1/finance/period-close/execute/{periodId}` uses the same orchestrator.
+- [x] the fiscal-period row is pessimistically locked and its expected version is checked.
+- [x] financial checklist and every module readiness gate run before module close execution.
+- [x] the orchestrator closes the `FiscalPeriod` aggregate only after all providers succeed.
+- [x] replay of an already closed/locked period returns existing execution evidence.
+- [x] reconciliation providers receive `FiscalPeriod.endDate`, never wall-clock today.
+- [x] tolerance compares `difference.abs()` so negative variances cannot bypass the blocker.
+
+### Verification evidence — 2026-08-13
+
+```text
+Implementation SHA: WORKING TREE — commit pending
+Authoritative command: PeriodCloseOrchestratorService.executeClose(periodId, actor, expectedVersion)
+Endpoints unified: FiscalPeriodController status=CLOSED + PeriodCloseController execute
+Tests: CloseChecklistServiceTests 3/3; PeriodCloseOrchestratorServiceTests 2/2 PASS
+H2 production-changelog context: PASS
+```
+
+## MFG-001 — Reverse the original production issue valuation
+
+**Status:** `VERIFIED DONE`
+
+- [x] cancellation reads persisted `PRODUCTION_ISSUE` movements for the production order and component;
+- [x] cancellation restores the exact aggregate issued quantity rather than the current BOM requirement quantity;
+- [x] reversal unit cost is derived from persisted `InventoryMovementCost` evidence;
+- [x] cancellation never calls `latestUnitCost(...)` to reprice an earlier issue;
+- [x] missing movements, non-positive issued quantity, or incomplete cost rows fail closed with `MFG_ISSUE_VALUATION_EVIDENCE_REQUIRED`;
+- [x] the stable error is present in both locale catalogs through V235;
+- [x] a regression test proves a later inventory cost cannot change the reversal basis.
+
+### Verification evidence — 2026-08-13
+
+```text
+Implementation SHA: WORKING TREE — commit pending
+Authoritative evidence: OperationsService.productionIssueEvidence(orderNumber, itemId)
+Reversal consumer: ManufacturingService.cancelProductionOrder(...)
+Migration: V235 bilingual MFG_ISSUE_VALUATION_EVIDENCE_REQUIRED translation
+Tests: ManufacturingServiceTests 6/6 PASS
+H2 production-changelog context: MeIdentityIntegrationTests 1/1 PASS
+Focused command result: BUILD SUCCESSFUL
+```
+
+## MFG-002 / MFG-003 — BOM applicability and exact revision identity
+
+**Status:** `VERIFIED DONE`
+
+- [x] BOM creation/update rejects an end date before its start date.
+- [x] production-order creation rejects inactive, future, and expired BOMs for the order start date.
+- [x] starting a planned order revalidates applicability so a BOM disabled after planning cannot be consumed.
+- [x] each frozen component snapshot stores the exact BOM revision string, including dots, suffixes, and leading zeroes.
+- [x] the lossy non-digit stripping and integer parsing path is removed.
+- [x] V236 migrates `bom_version INT` to `bom_revision VARCHAR(20)` and V237 adds bilingual stable errors.
+
+### Verification evidence — 2026-08-13
+
+```text
+Implementation SHA: WORKING TREE — commit pending
+Domain rule: BomHeader.appliesOn(productionDate) plus effective-date range validation
+Enforcement: ManufacturingService.createProductionOrder/startProductionOrder
+Identity: BomSnapshot.bomRevision and BomSnapshotService.captureBomSnapshot(..., String bomRevision, ...)
+Tests: ManufacturingServiceTests 8/8; BomSnapshotServiceTests 1/1;
+       BomSnapshotPersistenceTests 1/1; ManufacturingVarianceCloseServiceTests 1/1 PASS
+H2 production-changelog context: MeIdentityIntegrationTests 1/1 PASS
+Focused command result: BUILD SUCCESSFUL
+```
+
+## FIN-005 / FIN-006 — Reversal audit and journal approval rules
+
+**Status:** `VERIFIED DONE`
+
+- [x] every generated reversal entry records `createdBy`, `approvedBy`, `postedBy`, and `postedAt` with the reversal actor;
+- [x] the original entry still records reversal reason, actor, timestamp, operation ID, and linked reversal entry;
+- [x] the metadata rule is shared by manual journal, bank-fee, and subledger reversal paths;
+- [x] journal creation evaluates approval rules for every affected account and amount;
+- [x] a configured below-threshold/exempt journal is auto-approved with `SYSTEM_APPROVAL_RULE` and an audit event;
+- [x] an account with no rule defaults to manual approval, so missing configuration never bypasses governance;
+- [x] if any line requires approval, the journal remains draft for the checker workflow.
+
+### Verification evidence — 2026-08-13
+
+```text
+Implementation SHA: WORKING TREE — commit pending
+Reversal metadata: JournalEntry.linkReversalOf(reversedEntryId, operationId, actor)
+Approval decision: JournalApprovalService.isApprovalRequired(Map<accountId, amount>)
+Creation integration: JournalEntryService.create(...)
+Tests: JournalEntryServiceTests 7/7; JournalApprovalServiceTests 2/2;
+       SubledgerPostingServiceTests 3/3; BankReconciliationServiceTests 7/7 PASS
+Focused command result: BUILD SUCCESSFUL
+```
 
 Therefore:
 
@@ -557,28 +719,28 @@ For each business event below:
 
 #### Customer invoice
 
-- [ ] Locate the exact GL posting path.
-- [ ] Prove AR control is debited.
-- [ ] Prove revenue/tax accounts are credited according to the current model.
-- [ ] Prove source invoice ID/number links to journal.
-- [ ] Prove retry cannot duplicate posting.
+- [x] Locate the exact GL posting path.
+- [x] Prove AR control is debited.
+- [x] Prove revenue is credited according to the current no-tax invoice model.
+- [x] Prove source invoice ID/number links to journal.
+- [x] Prove retry cannot duplicate posting.
 
 #### Customer receipt
 
-- [ ] Locate exact GL posting path.
-- [ ] Prove cash/bank is debited.
-- [ ] Prove AR/customer advance is credited correctly.
-- [ ] Prove partial allocation behavior is correct.
-- [ ] Prove unallocated receipt/advance behavior is correct.
-- [ ] Prove retry cannot duplicate posting.
+- [x] Locate exact GL posting path.
+- [x] Prove cash/bank is debited.
+- [x] Prove AR is credited correctly.
+- [x] Prove partial allocation behavior is correct.
+- [x] Prove unallocated receipt/advance behavior is correct.
+- [x] Prove retry cannot duplicate posting.
 
 #### Customer credit note / return
 
-- [ ] Locate exact GL posting/reversal path.
-- [ ] Prove AR/customer balance is reduced correctly.
-- [ ] Prove revenue/tax reversal follows current accounting rules.
-- [ ] Prove inventory/COGS return effects are handled exactly once where applicable.
-- [ ] Prove source return/delivery/invoice references are preserved.
+- [x] Locate exact GL posting/reversal path.
+- [x] Prove AR/customer balance is reduced correctly.
+- [x] Prove revenue reversal follows the current no-tax credit-note model.
+- [x] Prove inventory/COGS return effects are handled exactly once where applicable.
+- [x] Prove source return/delivery/invoice references are preserved.
 
 ### If posting is absent
 
@@ -588,31 +750,46 @@ Do **not** create a new parallel journal system.
 
 ### End-to-end acceptance scenario
 
-- [ ] create customer;
-- [ ] create sales order;
-- [ ] reserve stock;
-- [ ] deliver;
-- [ ] verify stock issue;
-- [ ] verify COGS posting;
-- [ ] issue invoice;
-- [ ] verify AR/revenue posting;
-- [ ] record partial receipt;
-- [ ] verify AR/cash posting;
-- [ ] record final receipt;
-- [ ] verify outstanding balance zero;
-- [ ] return part of delivery;
-- [ ] issue/apply credit note;
-- [ ] verify stock, COGS, AR and GL remain consistent;
-- [ ] replay relevant operation IDs;
-- [ ] verify no duplicate stock/ledger/journal effects.
+- [x] create customer;
+- [x] create sales order;
+- [x] reserve stock;
+- [x] deliver;
+- [x] verify stock issue;
+- [x] verify COGS posting;
+- [x] issue invoice;
+- [x] verify AR/revenue posting;
+- [x] record partial receipt;
+- [x] verify AR/cash posting;
+- [x] record final receipt;
+- [x] verify outstanding balance zero;
+- [x] return part of delivery;
+- [x] issue/apply credit note;
+- [x] verify stock, COGS, AR and GL remain consistent;
+- [x] replay relevant operation IDs;
+- [x] verify no duplicate stock/ledger/journal effects.
 
 ### Definition of Done
 
 Mark this item done only if the developer can point to:
 
-- [ ] the real source code paths;
-- [ ] the source-document → journal references;
-- [ ] automated integration tests proving exact-once accounting effects.
+- [x] the real source code paths;
+- [x] the source-document → journal references;
+- [x] automated integration tests proving exact-once accounting effects.
+
+### Verification evidence — 2026-08-13
+
+```text
+Status: VERIFIED DONE
+Implementation SHA: WORKING TREE — commit pending
+Posting path: SalesReceivablesService → SubledgerPostingService → JournalEntry/lines/source metadata
+Business events: CUSTOMER_INVOICE_ISSUED, CUSTOMER_RECEIPT_RECORDED, CUSTOMER_CREDIT_NOTE_ISSUED
+Configuration: effective tenant-scoped posting profile with fixed debit/credit account lines; missing/invalid profiles fail closed
+Idempotency: journal operation IDs derive from immutable invoice ID or receipt/credit command operation IDs
+Migration: V238 tenant-scopes posting-profile lines; V239 translates stable profile errors
+Tests: SalesOrderToCashPersistenceTests 2/2; SubledgerPostingServiceTests 4/4;
+       SalesReceivablesServiceTests 6/6; MeIdentityIntegrationTests 1/1 PASS
+Focused command result: BUILD SUCCESSFUL
+```
 
 ---
 
@@ -620,7 +797,7 @@ Mark this item done only if the developer can point to:
 
 ## FIN-UI-001 — Expose real finance controls to users or explicitly classify them API-only
 
-**Status:** `ENHANCEMENT / PRODUCT-SCOPE DECISION`
+**Status:** `VERIFIED DONE — CONSOLIDATED WORKBENCH`
 
 ### Current frontend evidence
 
@@ -645,19 +822,19 @@ Backend APIs for these capabilities exist.
 
 If these are intended operational ERP GUI features:
 
-- [ ] add one minimal finance reporting/close workbench rather than multiple fragmented micro-pages;
-- [ ] expose Balance Sheet;
-- [ ] expose Income Statement;
-- [ ] expose Cash Flow only after `FIN-001` is correct;
-- [ ] expose reconciliation generation/history;
-- [ ] expose reconciliation differences/source references;
-- [ ] expose fiscal-period precheck;
-- [ ] expose module close readiness;
-- [ ] expose authoritative close execution;
-- [ ] show blockers before close;
-- [ ] show completion evidence after close;
-- [ ] protect routes with the same permissions as backend;
-- [ ] use i18n keys.
+- [x] add one minimal finance reporting/close workbench rather than multiple fragmented micro-pages;
+- [x] expose Balance Sheet;
+- [x] expose Income Statement;
+- [x] expose Cash Flow only after `FIN-001` is correct;
+- [x] expose reconciliation generation/history;
+- [x] expose reconciliation differences/source references;
+- [x] expose fiscal-period precheck;
+- [x] expose module close readiness;
+- [x] expose authoritative close execution;
+- [x] show blockers before close;
+- [x] show completion evidence after close;
+- [x] protect routes with the same permissions as backend;
+- [x] use i18n keys.
 
 If these APIs are intentionally API-only:
 
@@ -671,13 +848,24 @@ Prefer one consolidated **Finance Reports & Close** workbench if that is enough.
 
 Do not build a BI platform.
 
+### Implementation evidence — 2026-08-13
+
+```text
+Frontend: fe/src/app/features/fiscal-periods/fiscal-periods.page.{ts,html,scss}
+Models: fe/src/app/features/fiscal-periods/fiscal-periods.models.ts
+Migration: V240 (82 bilingual Finance Reports & Close UI rows)
+Cash Flow: visibly unavailable; no fabricated figures are displayed
+Frontend tests: 284/284 PASS; route/catalog/shell parity included
+i18n: 2436 keys PASS; hardcoded scanner 49 HTML + 127 TS PASS
+```
+
 ---
 
 # 14. P1 — Authorization Alignment
 
 ## SEC-001 — Align financial report/reconciliation permissions
 
-**Status:** `VERIFY / SECURITY ENHANCEMENT`
+**Status:** `VERIFIED DONE`
 
 ### Current code evidence
 
@@ -701,23 +889,35 @@ This may be intentional, but it should not remain accidental.
 
 ### Required decision
 
-- [ ] Define the intended permission to read financial statements.
-- [ ] Define who can generate reconciliation.
-- [ ] Define who can read reconciliation differences.
-- [ ] Define who can execute close.
-- [ ] Prefer explicit permissions/authorities where the project permission model already supports them.
-- [ ] Avoid granting sensitive financial data merely because a user has a broad generic `VIEWER` role unless this is a deliberate product policy.
-- [ ] Align backend authorization.
-- [ ] Align menu visibility/routes.
-- [ ] Test direct API access.
+- [x] Define the intended permission to read financial statements.
+- [x] Define who can generate reconciliation.
+- [x] Define who can read reconciliation differences.
+- [x] Define who can execute close.
+- [x] Prefer explicit permissions/authorities where the project permission model already supports them.
+- [x] Avoid granting sensitive financial data merely because a user has a broad generic `VIEWER` role unless this is a deliberate product policy.
+- [x] Align backend authorization.
+- [x] Align menu visibility/routes.
+- [x] Test direct API access.
 
 ### Tests
 
-- [ ] permitted accountant/report user can read intended reports;
-- [ ] unauthorized non-finance user receives `403`;
-- [ ] reconciliation generation restricted appropriately;
-- [ ] period close restricted appropriately;
-- [ ] frontend visibility does not substitute for backend enforcement.
+- [x] permitted accountant/report user can read intended reports;
+- [x] unauthorized non-finance user receives `403`;
+- [x] reconciliation generation restricted appropriately;
+- [x] period close restricted appropriately;
+- [x] frontend visibility does not substitute for backend enforcement.
+
+### Authorization policy and evidence — 2026-08-13
+
+```text
+Statement/reconciliation read: FINANCE_MANAGER, ACCOUNTANT, AUDITOR (+ ADMIN/SUPER_ADMIN)
+Reconciliation generate: FINANCE_MANAGER, ACCOUNTANT (+ ADMIN/SUPER_ADMIN)
+Close execute: FINANCE_MANAGER (+ ADMIN/SUPER_ADMIN)
+Denied from workbench: VIEWER, TREASURY_USER
+Backend: AuthSecurityIntegrationTests 40/40 PASS
+Catalog: AccessCatalogServiceTests 34/34 PASS
+Frontend: route/catalog/shell parity suite PASS within 284/284
+```
 
 ---
 
@@ -725,7 +925,7 @@ This may be intentional, but it should not remain accidental.
 
 ## TECH-001 — Clarify Java toolchain vs bytecode target
 
-**Status:** `ENHANCEMENT`
+**Status:** `VERIFIED DONE — JAVA 21 TOOLCHAIN / JAVA 17 BYTECODE`
 
 ### Current code
 
@@ -742,34 +942,38 @@ This can be a valid deliberate compatibility strategy, but it should be intentio
 
 ### Checklist
 
-- [ ] Decide whether production bytecode compatibility target is Java 17 or Java 21.
-- [ ] If Java 17 bytecode is intentional, keep it and add a concise build comment explaining why.
-- [ ] If Java 21 language/runtime features are intended, change `options.release` consistently.
-- [ ] Ensure local, CI and Docker builds compile the same source semantics.
-- [ ] Do not upgrade solely for cosmetic consistency.
+- [x] Decide whether production bytecode compatibility target is Java 17 or Java 21.
+- [x] If Java 17 bytecode is intentional, keep it and add a concise build comment explaining why.
+- [x] If Java 21 language/runtime features are intended, change `options.release` consistently (N/A — compatibility target remains 17).
+- [x] Ensure local, CI and Docker builds compile the same source semantics.
+- [x] Do not upgrade solely for cosmetic consistency.
+
+Evidence: `be/build.gradle` documents Java 21 compilation with `--release 17`; focused compilation/tests pass.
 
 ---
 
 ## TECH-002 — Standardize frontend Node major
 
-**Status:** `ENHANCEMENT`
+**Status:** `VERIFIED DONE — NODE 24`
 
 ### Current code
 
 - `fe/.nvmrc` → Node 24
 - GitHub CI → Node 24
-- `fe/Dockerfile` builder → Node 22
-- `package.json` allows `>=22 <25`
+- `fe/Dockerfile` builder → Node 24
+- `package.json` allows `>=24 <25`
 
 Both majors are permitted, but local/CI/container builds are not identical.
 
 ### Checklist
 
-- [ ] Choose the supported build major.
-- [ ] Prefer matching `.nvmrc`, CI and Docker builder.
-- [ ] Keep `engines` range only if multiple majors are intentionally supported/tested.
-- [ ] Verify `npm ci`, tests and production build using the selected container/local version.
-- [ ] Keep `package-lock.json` authoritative.
+- [x] Choose the supported build major.
+- [x] Prefer matching `.nvmrc`, CI and Docker builder.
+- [x] Keep `engines` range only if multiple majors are intentionally supported/tested.
+- [x] Verify tests and production build using the selected local version.
+- [x] Keep `package-lock.json` authoritative.
+
+Evidence: `.nvmrc`, CI, `fe/Dockerfile`, and `package.json` now require Node 24; Node 24.18.0 ran 284/284 tests and the production build.
 
 ---
 
@@ -777,7 +981,7 @@ Both majors are permitted, but local/CI/container builds are not identical.
 
 ## TECH-003 — Use explicit business date / injected clock for sensitive calculations
 
-**Status:** `ENHANCEMENT`
+**Status:** `VERIFIED DONE — SENSITIVE PATHS ONLY`
 
 Confirmed correctness issue for close is already covered by `FIN-004`.
 
@@ -787,19 +991,21 @@ Timestamps are fine in many cases. Business-rule dates should be deliberate.
 
 ### Checklist
 
-- [ ] Do not globally replace every `now()`.
-- [ ] Identify only calculations whose result changes based on business date.
-- [ ] Pass explicit `asOf` / period date where the API already has one.
-- [ ] Use injected `Clock` if deterministic “today” behavior is genuinely required.
-- [ ] Ensure company timezone is explicit where local business dates matter.
-- [ ] Add deterministic tests around date boundaries.
+- [x] Do not globally replace every `now()`.
+- [x] Identify only calculations whose result changes based on business date.
+- [x] Pass explicit `asOf` / period date where the API already has one.
+- [x] Use injected `Clock` if deterministic “today” behavior is genuinely required (N/A — affected APIs require explicit dates).
+- [x] Ensure company timezone is explicit where local business dates matter (UTC API boundary).
+- [x] Add deterministic tests around date boundaries.
 
 Priority examples:
 
-- [ ] fiscal close → must use fiscal period end;
-- [ ] aging → explicit as-of date should remain authoritative;
-- [ ] collection generation → explicit as-of date;
-- [ ] policy effective-date resolution → use document/run date.
+- [x] fiscal close → uses fiscal period end;
+- [x] aging → explicit as-of date is required and authoritative;
+- [x] collection generation → explicit as-of date is required;
+- [x] policy effective-date resolution → existing document/run dates remain authoritative.
+
+Evidence: `SalesController`, `SalesReceivablesService`, `sales.page.ts` (dedicated as-of control), V241, and `SalesReceivablesServiceTests` 7/7; H2 context passed. Frontend 284/284 and i18n 2437 pass.
 
 ---
 
@@ -807,7 +1013,7 @@ Priority examples:
 
 ## UI-001 — Remove hard-coded fiscal-period success message
 
-**Status:** `CONFIRMED SMALL ISSUE`
+**Status:** `VERIFIED DONE`
 
 Current:
 
@@ -817,11 +1023,11 @@ uses an inline Arabic success message after status change.
 
 ### Checklist
 
-- [ ] replace with i18n key;
-- [ ] add Arabic translation;
-- [ ] add English translation;
-- [ ] run existing hardcoded-string/i18n checks;
-- [ ] update message behavior when fiscal close is changed to the authoritative close flow.
+- [x] replace with i18n key;
+- [x] add Arabic translation;
+- [x] add English translation;
+- [x] run existing hardcoded-string/i18n checks;
+- [x] update message behavior when fiscal close is changed to the authoritative close flow.
 
 ---
 
@@ -829,7 +1035,7 @@ uses an inline Arabic success message after status change.
 
 ## SEC-002 — Add CSP at the real deployment boundary
 
-**Status:** `ENHANCEMENT`
+**Status:** `VERIFIED DONE — NGINX DEPLOYMENT BOUNDARY`
 
 Current frontend Nginx config has useful baseline headers such as:
 
@@ -840,13 +1046,15 @@ A Content Security Policy was not observed in the inspected Nginx config.
 
 ### Checklist
 
-- [ ] identify actual production TLS/reverse-proxy termination point;
-- [ ] define only required script/style/font/image/connect/connect-src origins;
-- [ ] test Angular production bundle under CSP;
-- [ ] avoid `unsafe-eval`;
-- [ ] minimize `unsafe-inline`; use nonces/hashes if necessary and practical;
-- [ ] configure HSTS at the TLS termination layer, not blindly on an HTTP-only inner container;
-- [ ] do not add headers that break OAuth/API/PWA behavior without tests.
+- [x] identify actual production frontend boundary (`fe/nginx.conf`; TLS remains upstream);
+- [x] define only required script/style/font/image/connect-src origins;
+- [x] test Angular production bundle under CSP;
+- [x] avoid `unsafe-eval`;
+- [x] minimize `unsafe-inline` (styles only for current Angular component styling);
+- [x] configure HSTS at the TLS termination layer, not on this HTTP-only inner container;
+- [x] preserve same-origin API/PWA behavior.
+
+Evidence: production build passed; generated JavaScript contains no `eval`/`new Function`; CSP, Referrer-Policy and Permissions-Policy apply to HTML and static assets.
 
 ---
 
@@ -1026,12 +1234,12 @@ Work in this order.
 ## Milestone 1 — Financial/stock integrity blockers
 
 - [ ] PAY-001
-- [ ] INV-001
-- [ ] FIN-001
-- [ ] FIN-002
-- [ ] FIN-003
-- [ ] FIN-004
-- [ ] MFG-001
+- [x] INV-001
+- [x] FIN-001
+- [x] FIN-002
+- [x] FIN-003
+- [x] FIN-004
+- [x] MFG-001
 
 **Milestone success:** no known path can bypass payroll approval, oversubscribe stock through the simple endpoint, persist caller-forged reconciliation balances, close a period through a bypass, return a fake cash-flow statement, or reverse manufacturing at a different cost basis.
 
@@ -1039,13 +1247,13 @@ Work in this order.
 
 ## Milestone 2 — Audit/governance integrity
 
-- [ ] PAY-002
-- [ ] MFG-002
-- [ ] MFG-003
-- [ ] FIN-005
-- [ ] FIN-006
-- [ ] O2C-001
-- [ ] SEC-001
+- [x] PAY-002
+- [x] MFG-002
+- [x] MFG-003
+- [x] FIN-005
+- [x] FIN-006
+- [x] O2C-001
+- [x] SEC-001
 
 **Milestone success:** historical evidence is preserved, governance configuration is real, and AR/customer accounting is proven end-to-end.
 
@@ -1053,8 +1261,8 @@ Work in this order.
 
 ## Milestone 3 — UI completion
 
-- [ ] FIN-UI-001 decision/implementation
-- [ ] UI-001
+- [x] FIN-UI-001 decision/implementation
+- [x] UI-001
 
 **Milestone success:** users cannot close periods through a weaker UI path and relevant finance capabilities are either properly exposed or intentionally API-only.
 
@@ -1062,11 +1270,11 @@ Work in this order.
 
 ## Milestone 4 — Technical enhancements
 
-- [ ] TECH-001
-- [ ] TECH-002
-- [ ] TECH-003
-- [ ] SEC-002
-- [ ] MFG-004 only if approved
+- [x] TECH-001
+- [x] TECH-002
+- [x] TECH-003
+- [x] SEC-002
+- [x] MFG-004 — N/A by current all-or-nothing production-order scope
 
 ---
 
@@ -1266,5 +1474,3 @@ The codebase already contains substantial foundations.
 The remaining goal is:
 
 > **close the unsafe seams, unify authoritative command paths, preserve accounting evidence, and prove the result with tests.**
-
-

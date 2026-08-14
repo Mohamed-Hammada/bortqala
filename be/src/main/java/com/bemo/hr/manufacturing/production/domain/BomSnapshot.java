@@ -27,8 +27,8 @@ public class BomSnapshot {
     @Column(name = "bom_id", nullable = false, length = 36)
     private String bomId;
 
-    @Column(name = "bom_version", nullable = false)
-    private int bomVersion;
+    @Column(name = "bom_revision", nullable = false, length = 20)
+    private String bomRevision;
 
     @Column(name = "component_item_id", nullable = false, length = 36)
     private String componentItemId;
@@ -44,12 +44,12 @@ public class BomSnapshot {
 
     protected BomSnapshot() {}
 
-    public BomSnapshot(String productionOrderId, String bomId, int bomVersion, String componentItemId,
+    public BomSnapshot(String productionOrderId, String bomId, String bomRevision, String componentItemId,
                        BigDecimal requiredQuantity, BigDecimal standardUnitCost) {
         this.id = UUID.randomUUID().toString();
         this.productionOrderId = productionOrderId;
         this.bomId = bomId;
-        this.bomVersion = bomVersion;
+        this.bomRevision = bomRevision;
         this.componentItemId = componentItemId;
         this.requiredQuantity = requiredQuantity;
         this.standardUnitCost = standardUnitCost;
@@ -62,7 +62,7 @@ public class BomSnapshot {
     public String getAppId() { return appId; }
     public String getProductionOrderId() { return productionOrderId; }
     public String getBomId() { return bomId; }
-    public int getBomVersion() { return bomVersion; }
+    public String getBomRevision() { return bomRevision; }
     public String getComponentItemId() { return componentItemId; }
     public BigDecimal getRequiredQuantity() { return requiredQuantity; }
     public BigDecimal getStandardUnitCost() { return standardUnitCost; }

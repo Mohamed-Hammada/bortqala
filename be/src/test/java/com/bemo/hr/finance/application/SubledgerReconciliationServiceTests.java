@@ -26,14 +26,24 @@ class SubledgerReconciliationServiceTests {
     @BeforeEach
     void setUp() {
         repository = mock(SubledgerReconciliationReportRepository.class);
-        service = new SubledgerReconciliationService(repository, List.of());
     }
 
     @Test
-    void generatesSubledgerReconciliationReportSuccessfully() {
+    void generatesReportOnlyFromServerProviderBalances() {
+        FiscalPeriodRepository periods = mock(FiscalPeriodRepository.class);
+        FiscalPeriod period = new FiscalPeriod(2026, 8, "August", LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 31), FiscalPeriod.Status.OPEN);
+        when(periods.findById("2026-08")).thenReturn(Optional.of(period));
+        SubledgerReconciliationProvider provider = mock(SubledgerReconciliationProvider.class);
+        when(provider.type()).thenReturn(SubledgerReconciliationReport.SubledgerType.AP);
+        when(provider.calculate("2026-08", LocalDate.of(2026, 8, 31))).thenReturn(
+                new SubledgerReconciliationProvider.ReconciliationCalculation(
+                        SubledgerReconciliationReport.SubledgerType.AP, new BigDecimal("50000.00"),
+                        new BigDecimal("50000.00"), BigDecimal.ZERO, true, List.of()));
+        service = new SubledgerReconciliationService(repository, List.of(provider), periods, new ObjectMapper());
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        SubledgerReconciliationReport report = service.generateReport("2026-08", SubledgerReconciliationReport.SubledgerType.AP, new BigDecimal("50000.00"), new BigDecimal("50000.00"));
+        SubledgerReconciliationReport report = service.generateReport("2026-08", SubledgerReconciliationReport.SubledgerType.AP);
         assertThat(report).isNotNull();
         assertThat(report.getVarianceAmount()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(report.getSubledgerType()).isEqualTo(SubledgerReconciliationReport.SubledgerType.AP);
@@ -57,10 +67,25 @@ class SubledgerReconciliationServiceTests {
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         service = new SubledgerReconciliationService(repository, List.of(provider), periods, new ObjectMapper());
 
-        SubledgerReconciliationReport report = service.generateReport("period-8", SubledgerReconciliationReport.SubledgerType.AR, null, null);
+        SubledgerReconciliationReport report = service.generateReport("period-8", SubledgerReconciliationReport.SubledgerType.AR);
 
         assertThat(report.getAsOfDate()).isEqualTo(LocalDate.of(2026, 8, 31));
         assertThat(report.getVarianceAmount()).isEqualByComparingTo("-10");
         assertThat(report.getDifferenceDetails()).contains("INV-1", "100", "90");
+    }
+
+    @Test
+    void rejectsMissingProviderInsteadOfPersistingZeroBalances() {
+        FiscalPeriodRepository periods = mock(FiscalPeriodRepository.class);
+        FiscalPeriod period = new FiscalPeriod(2026, 8, "August", LocalDate.of(2026, 8, 1),
+                LocalDate.of(2026, 8, 31), FiscalPeriod.Status.OPEN);
+        when(periods.findById("period-8")).thenReturn(Optional.of(period));
+        service = new SubledgerReconciliationService(repository, List.of(), periods, new ObjectMapper());
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.generateReport(
+                        "period-8", SubledgerReconciliationReport.SubledgerType.PAYROLL))
+                .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class)
+                .extracting("code").isEqualTo("FIN_RECONCILIATION_PROVIDER_REQUIRED");
+        verify(repository, never()).save(any());
     }
 }

@@ -7,6 +7,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.trade.sales.api.SalesApi;
 import com.bemo.hr.trade.sales.domain.*;
 import com.bemo.hr.trade.sales.infrastructure.*;
+import com.bemo.hr.finance.domain.posting.SubledgerPostingService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -25,9 +26,10 @@ class SalesReceivablesServiceTests {
     @Mock CustomerCreditNoteRepository creditNoteRepository;
     @Mock CollectionTaskRepository taskRepository; @Mock BusinessPartyRepository partyRepository;
     @Mock PartnerLedgerEntryRepository ledgerRepository; @Mock AuditService auditService;
+    @Mock SubledgerPostingService subledgerPostingService;
     SalesReceivablesService service; BusinessParty customer;
 
-    @BeforeEach void setup(){service=new SalesReceivablesService(creditRepository,invoiceRepository,receiptRepository,allocationRepository,creditNoteRepository,taskRepository,partyRepository,ledgerRepository,auditService);
+    @BeforeEach void setup(){service=new SalesReceivablesService(creditRepository,invoiceRepository,receiptRepository,allocationRepository,creditNoteRepository,taskRepository,partyRepository,ledgerRepository,auditService,subledgerPostingService);
         customer=new BusinessParty("C-1","Customer",null,"PROCESSING_CUSTOMER",null,null,null,null,null,true,"DIRECT",null,null,null,"EGP","PER_DELIVERY","NET_30",null,null);
         lenient().when(partyRepository.findById(customer.getId())).thenReturn(Optional.of(customer));lenient().when(invoiceRepository.save(any())).thenAnswer(i->i.getArgument(0));
         lenient().when(receiptRepository.save(any())).thenAnswer(i->i.getArgument(0));lenient().when(allocationRepository.save(any())).thenAnswer(i->i.getArgument(0));
@@ -56,6 +58,8 @@ class SalesReceivablesServiceTests {
     @Test void agingUsesOutstandingOnlyAcrossDeterministicBuckets(){LocalDate asOf=LocalDate.of(2026,8,31);CustomerInvoice current=openInvoice("I-0",new BigDecimal("10"),asOf.plusDays(1));CustomerInvoice d20=openInvoice("I-20",new BigDecimal("20"),asOf.minusDays(20));CustomerInvoice d70=openInvoice("I-70",new BigDecimal("70"),asOf.minusDays(70));
         when(invoiceRepository.findAllByOrderByInvoiceDateDescCreatedAtDesc()).thenReturn(List.of(current,d20,d70));SalesApi.AgingResponse result=service.aging(ms(asOf));
         assertThat(result.current()).isEqualByComparingTo("10");assertThat(result.days1To30()).isEqualByComparingTo("20");assertThat(result.days61To90()).isEqualByComparingTo("70");assertThat(result.total()).isEqualByComparingTo("100");}
+
+    @Test void agingRequiresExplicitBusinessDate(){assertThatThrownBy(()->service.aging(0)).isInstanceOfSatisfying(BusinessRuleException.class,e->assertThat(e.getCode()).isEqualTo("AR_AS_OF_DATE_REQUIRED"));}
 
     @Test void overdueInvoiceCreatesCollectionTask(){LocalDate asOf=LocalDate.of(2026,8,31);CustomerInvoice invoice=openInvoice("OVERDUE",new BigDecimal("150"),asOf.minusDays(12));CollectionTask task=new CollectionTask(invoice.getId());
         when(invoiceRepository.findAllByOrderByInvoiceDateDescCreatedAtDesc()).thenReturn(List.of(invoice));when(taskRepository.findByInvoiceId(invoice.getId())).thenReturn(Optional.empty());when(taskRepository.save(any())).thenReturn(task);when(taskRepository.findAllByOrderByNextActionDateAscCreatedAtAsc()).thenReturn(List.of(task));

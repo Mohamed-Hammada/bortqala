@@ -18,7 +18,7 @@ import { SkeletonComponent } from '../../shared/ui/skeleton/skeleton.component';
 import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.component';
 import { PayrollStepperComponent } from './ui/payroll-stepper.component';
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
-import { PaymentMethod, PayrollRow, SalaryPaymentExplanation } from './payroll.models';
+import { PaymentMethod, PaymentStatus, PayrollRow, SalaryPaymentExplanation } from './payroll.models';
 import { PayrollStore } from './payroll.store';
 
 @Component({
@@ -181,6 +181,7 @@ export class PayrollPage {
       paymentMethod: raw.paymentMethod,
       referenceCode: raw.referenceCode,
       note: raw.note,
+      expectedVersion: row.version,
     });
 
     if (ok) {
@@ -189,7 +190,7 @@ export class PayrollPage {
     }
   }
 
-  transitionPeriod(targetStatus: string): void {
+  transitionPeriod(targetStatus: PaymentStatus): void {
     let titleKey = '';
     let msgKey = '';
 
@@ -214,7 +215,7 @@ export class PayrollPage {
     }
   }
 
-  private async executeTransitionPeriod(targetStatus: string): Promise<void> {
+  private async executeTransitionPeriod(targetStatus: PaymentStatus): Promise<void> {
     const ok = await this.store.transitionStatus({
       periodYear: this.year(),
       periodMonth: this.month(),
@@ -237,6 +238,7 @@ export class PayrollPage {
         this.store.reversePayment({
           paymentId: row.id!,
           reason: reason.trim(),
+          expectedVersion: row.version,
         }).then((ok) => {
           if (ok) {
             this.notification.success(this.i18n.t('payroll.reverseSuccess'));

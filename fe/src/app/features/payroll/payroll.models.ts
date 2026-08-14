@@ -54,6 +54,11 @@ export interface PayrollRow {
   incompleteProfile: boolean;
   createdBy: string;
   createdAt: string;
+  paidBy: string | null;
+  reversedBy: string | null;
+  reversedAt: string | null;
+  reversalReason: string | null;
+  version: number;
 }
 
 export interface PayrollSummary {
@@ -90,6 +95,7 @@ export interface PaymentRequest {
   referenceCode?: string;
   note?: string;
   paidAtEpochMs?: number;
+  expectedVersion: number;
 }
 
 export interface BulkPaymentRequest {
@@ -111,4 +117,5 @@ export interface StatusTransitionRequest {
 export interface ReversePaymentRequest {
   paymentId: string;
   reason: string;
+  expectedVersion: number;
 }

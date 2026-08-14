@@ -2,10 +2,15 @@ package com.bemo.hr.operations;
 
 import com.bemo.hr.finance.domain.*;
 import com.bemo.hr.finance.infrastructure.*;
+import com.bemo.hr.finance.domain.posting.*;
 import com.bemo.hr.operations.application.WarehouseInventoryService;
 import com.bemo.hr.operations.domain.StockStatusBalance;
 import com.bemo.hr.operations.infrastructure.StockStatusBalanceRepository;
 import com.bemo.hr.organization.infrastructure.WarehouseRepository;
+import com.bemo.hr.organization.infrastructure.BranchRepository;
+import com.bemo.hr.organization.infrastructure.CompanyRepository;
+import com.bemo.hr.organization.domain.Branch;
+import com.bemo.hr.organization.domain.Company;
 import com.bemo.hr.party.*;
 import com.bemo.hr.shared.security.*;
 import com.bemo.hr.trade.sales.api.SalesApi;
@@ -30,6 +35,8 @@ class SalesOrderToCashPersistenceTests {
     @Autowired InventoryValuationService inventoryValuationService;
     @Autowired WarehouseInventoryService warehouseInventoryService;
     @Autowired WarehouseRepository warehouseRepository;
+    @Autowired BranchRepository branchRepository;
+    @Autowired CompanyRepository companyRepository;
     @Autowired StockStatusBalanceRepository stockStatusBalanceRepository;
     @Autowired SalesOrderFullService salesOrderFullService;
     @Autowired SalesReceivablesService salesReceivablesService;
@@ -44,6 +51,10 @@ class SalesOrderToCashPersistenceTests {
     @Autowired JournalEntryRepository journalEntryRepository;
     @Autowired AccountRepository accountRepository;
     @Autowired FiscalPeriodRepository fiscalPeriodRepository;
+    @Autowired PostingProfileRepository postingProfileRepository;
+    @Autowired PostingProfileLineRepository postingProfileLineRepository;
+    @Autowired JournalEntryLineRepository journalEntryLineRepository;
+    @Autowired JournalSourceMetadataRepository journalSourceMetadataRepository;
     @Autowired BusinessPartyRepository businessPartyRepository;
 
     @BeforeEach void tenant(){TenantContext.set(tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue("TEST").orElseThrow().getId());}
@@ -57,10 +68,16 @@ class SalesOrderToCashPersistenceTests {
         Account receiptOffset=accountRepository.save(new Account("R"+suffix,"Receipt offset",Account.Type.LIABILITY,null,false,"EGP",true));
         Account cogs=accountRepository.save(new Account("C"+suffix,"COGS",Account.Type.EXPENSE,null,false,"EGP",true));
         Account adjustment=accountRepository.save(new Account("A"+suffix,"Adjustment",Account.Type.EXPENSE,null,false,"EGP",true));
+        Account receivable=accountRepository.save(new Account("AR"+suffix,"Accounts receivable",Account.Type.ASSET,null,false,"EGP",true));
+        Account revenue=accountRepository.save(new Account("REV"+suffix,"Sales revenue",Account.Type.REVENUE,null,false,"EGP",true));
+        Account cash=accountRepository.save(new Account("CASH"+suffix,"Cash",Account.Type.ASSET,null,false,"EGP",true));
+        postingProfile("CUSTOMER_INVOICE_ISSUED", receivable.getId(), revenue.getId(), today);
+        postingProfile("CUSTOMER_RECEIPT_RECORDED", cash.getId(), receivable.getId(), today);
+        postingProfile("CUSTOMER_CREDIT_NOTE_ISSUED", revenue.getId(), receivable.getId(), today);
         inventoryValuationService.updatePolicy(new OperationsApi.ValuationPolicyRequest(InventoryValuationPolicy.Method.WEIGHTED_AVERAGE,
                 inventory.getId(),receiptOffset.getId(),cogs.getId(),adjustment.getId(),true,false,null),"admin");
         var item=operationsService.createItem(new OperationsApi.ItemRequest("O2C-"+suffix,"O2C Item","PRODUCT","EA",null,null,BigDecimal.ZERO,BigDecimal.ZERO,true,null));
-        var warehouse=warehouseInventoryService.createWarehouse("branch-default","O2C-WH-"+suffix,"O2C warehouse",null);
+        var warehouse=warehouseInventoryService.createWarehouse(createBranch(suffix).getId(),"O2C-WH-"+suffix,"O2C warehouse",null);
         BusinessParty customer=businessPartyRepository.save(new BusinessParty("CUST-"+suffix,"O2C Customer",null,"PROCESSING_CUSTOMER",null,null,null,null,null,true,"DIRECT",null,null,null,"EGP","PER_DELIVERY","NET_30",null,null));
         operationsService.recordGoodsReceipt(item.id(),null,warehouse.getId(),new BigDecimal("10"),new BigDecimal("60"),"OPEN-"+suffix,null,today.atStartOfDay(ZoneOffset.UTC).toInstant(),"admin");
 
@@ -94,6 +111,12 @@ class SalesOrderToCashPersistenceTests {
                 .containsExactlyInAnyOrder(new BigDecimal("200.00"),new BigDecimal("-100.00"),new BigDecimal("-100.00"),new BigDecimal("-100.00"));
         assertThat(movementCostRepository.findByItemIdOrderByOccurredAtAsc(item.id())).hasSize(3).allSatisfy(cost->assertThat(cost.getJournalEntryId()).isNotBlank());
         assertThat(journalEntryRepository.count()).isGreaterThanOrEqualTo(3);
+        assertPostedSource("CUSTOMER_INVOICE", invoice.getId(), receivable.getId(), revenue.getId(), "200.00");
+        CustomerReceipt firstReceipt=receiptRepository.findByOperationId("receipt-1-"+suffix).orElseThrow();
+        CustomerReceipt secondReceipt=receiptRepository.findByOperationId("receipt-2-"+suffix).orElseThrow();
+        assertPostedSource("CUSTOMER_RECEIPT", firstReceipt.getId(), cash.getId(), receivable.getId(), "100.00");
+        assertPostedSource("CUSTOMER_RECEIPT", secondReceipt.getId(), cash.getId(), receivable.getId(), "100.00");
+        assertPostedSource("CUSTOMER_CREDIT_NOTE", returned.creditNoteId(), revenue.getId(), receivable.getId(), "100.00");
 
         String originalTenant=TenantContext.require();TenantApplication other=tenantApplicationRepository.save(new TenantApplication("O2C-ISO-"+suffix,"O2C isolation"));
         TenantContext.set(other.getId());
@@ -104,7 +127,7 @@ class SalesOrderToCashPersistenceTests {
     @Test void concurrentReservationsCannotOversubscribeAvailableStock() throws Exception {
         String suffix=Long.toString(System.nanoTime());String tenant=TenantContext.require();
         var item=operationsService.createItem(new OperationsApi.ItemRequest("RSV-"+suffix,"Reserved Item","PRODUCT","EA",null,null,BigDecimal.ZERO,BigDecimal.ZERO,true,null));
-        var warehouse=warehouseInventoryService.createWarehouse("branch-default","RSV-WH-"+suffix,"Reservation warehouse",null);
+        var warehouse=warehouseInventoryService.createWarehouse(createBranch(suffix).getId(),"RSV-WH-"+suffix,"Reservation warehouse",null);
         warehouseInventoryService.receiveAvailableStock(warehouse.getId(),item.id(),new BigDecimal("10"));
         ExecutorService pool=Executors.newFixedThreadPool(2);CyclicBarrier barrier=new CyclicBarrier(2);
         Callable<Boolean> first=()->reserveConcurrently(tenant,barrier,"SO-A-"+suffix,item.id(),warehouse.getId());
@@ -117,6 +140,30 @@ class SalesOrderToCashPersistenceTests {
     private boolean reserveConcurrently(String tenant,CyclicBarrier barrier,String sourceId,String itemId,String warehouseId){
         TenantContext.set(tenant);try{barrier.await(10,TimeUnit.SECONDS);warehouseInventoryService.reserveStock("R-"+sourceId,"SALES_ORDER",sourceId,itemId,warehouseId,new BigDecimal("7"));return true;}
         catch(Exception ex){return false;}finally{TenantContext.clear();}
+    }
+
+    private Branch createBranch(String suffix) {
+        Company company = companyRepository.save(new Company("CO-" + suffix, "Test Company", null, null, true));
+        return branchRepository.save(new Branch(company.getId(), "BR-" + suffix, "Test Branch", null, true));
+    }
+
+    private void postingProfile(String event, String debitAccountId, String creditAccountId, LocalDate effectiveFrom) {
+        PostingProfile profile=postingProfileRepository.save(new PostingProfile("O2C-"+event, event, effectiveFrom, null));
+        postingProfileLineRepository.save(new PostingProfileLine(profile.getId(),1,"DEBIT","FIXED",debitAccountId,"AMOUNT"));
+        postingProfileLineRepository.save(new PostingProfileLine(profile.getId(),2,"CREDIT","FIXED",creditAccountId,"AMOUNT"));
+    }
+
+    private void assertPostedSource(String type,String sourceId,String debitAccountId,String creditAccountId,String amount){
+        var metadata=journalSourceMetadataRepository.findAll().stream()
+                .filter(row->type.equals(row.getSourceDocumentType())&&sourceId.equals(row.getSourceDocumentId()))
+                .toList();
+        assertThat(metadata).singleElement().satisfies(row->{
+            JournalEntry journal=journalEntryRepository.findById(row.getJournalId()).orElseThrow();
+            assertThat(journal.getStatus()).isEqualTo(JournalEntry.Status.POSTED);
+            assertThat(journalEntryLineRepository.findByJournalEntryId(journal.getId()))
+                    .anySatisfy(line->{assertThat(line.getAccountId()).isEqualTo(debitAccountId);assertThat(line.getDebit()).isEqualByComparingTo(amount);})
+                    .anySatisfy(line->{assertThat(line.getAccountId()).isEqualTo(creditAccountId);assertThat(line.getCredit()).isEqualByComparingTo(amount);});
+        });
     }
 
     private static long ms(LocalDate date){return date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();}

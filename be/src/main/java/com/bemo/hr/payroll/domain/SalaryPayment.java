@@ -16,6 +16,9 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import org.hibernate.annotations.TenantId;
+import org.springframework.http.HttpStatus;
+
+import com.bemo.hr.shared.domain.BusinessRuleException;
 
 @Entity
 @Table(name = "salary_payment")
@@ -90,6 +93,18 @@ public class SalaryPayment {
     @Column(name = "created_by", nullable = false)
     private String createdBy;
 
+    @Column(name = "paid_by")
+    private String paidBy;
+
+    @Column(name = "reversed_by")
+    private String reversedBy;
+
+    @Column(name = "reversed_at")
+    private Instant reversedAt;
+
+    @Column(name = "reversal_reason", length = 500)
+    private String reversalReason;
+
     @Version
     private long version;
 
@@ -120,7 +135,7 @@ public class SalaryPayment {
         this.otherDeductions = otherDeductions == null ? BigDecimal.ZERO : otherDeductions;
         this.bonuses = bonuses == null ? BigDecimal.ZERO : bonuses;
         this.netAmount = netAmount == null ? BigDecimal.ZERO : netAmount;
-        this.paymentStatus = paymentStatus == null ? PaymentStatus.PENDING : paymentStatus;
+        this.paymentStatus = paymentStatus == null ? PaymentStatus.DRAFT : paymentStatus;
         this.paidAt = paidAt;
         this.paymentMethod = paymentMethod;
         this.referenceCode = referenceCode;
@@ -128,7 +143,19 @@ public class SalaryPayment {
         this.createdBy = createdBy;
     }
 
-    public void updateStatus(PaymentStatus nextStatus) {
+    public void transitionTo(PaymentStatus nextStatus) {
+        PaymentStatus expected = switch (this.paymentStatus) {
+            case DRAFT, PENDING -> PaymentStatus.CALCULATED;
+            case CALCULATED -> PaymentStatus.REVIEWED;
+            case REVIEWED -> PaymentStatus.APPROVED;
+            case APPROVED -> PaymentStatus.POSTED;
+            default -> null;
+        };
+        if (nextStatus == null || nextStatus != expected) {
+            throw new BusinessRuleException(
+                    "Payroll status cannot transition from " + this.paymentStatus + " to " + nextStatus + ".",
+                    "PAYROLL_STATE_TRANSITION_INVALID", HttpStatus.CONFLICT);
+        }
         this.paymentStatus = nextStatus;
     }
 
@@ -141,25 +168,28 @@ public class SalaryPayment {
     }
 
     public void markAsReversed(String reason, String actor) {
+        if (this.paymentStatus != PaymentStatus.PAID) {
+            throw new BusinessRuleException("Only a paid salary can be reversed.",
+                    "PAYROLL_REVERSAL_STATE_INVALID", HttpStatus.CONFLICT);
+        }
         this.paymentStatus = PaymentStatus.REVERSED;
-        this.note = (this.note == null ? "" : this.note + " | ") + "تم التراجع: " + reason;
-        this.createdBy = actor;
+        this.reversalReason = reason;
+        this.reversedBy = actor;
+        this.reversedAt = Instant.now();
     }
 
-    public void markAsPaid(BigDecimal gross, BigDecimal advances, BigDecimal deductions,
-                           BigDecimal bonus, BigDecimal net, PaymentMethod method,
-                           Instant paidAtInstant, String refCode, String noteText, String actor) {
-        this.grossAmount = gross == null ? this.grossAmount : gross;
-        this.advancesDeducted = advances == null ? this.advancesDeducted : advances;
-        this.otherDeductions = deductions == null ? this.otherDeductions : deductions;
-        this.bonuses = bonus == null ? this.bonuses : bonus;
-        this.netAmount = net == null ? this.grossAmount.subtract(this.advancesDeducted).subtract(this.otherDeductions).add(this.bonuses) : net;
+    public void markAsPaid(PaymentMethod method, Instant paidAtInstant, String refCode,
+                           String noteText, String actor) {
+        if (this.paymentStatus != PaymentStatus.POSTED) {
+            throw new BusinessRuleException("Only a posted salary can be paid.",
+                    "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT);
+        }
         this.paymentStatus = PaymentStatus.PAID;
         this.paymentMethod = method == null ? PaymentMethod.CASH : method;
         this.paidAt = paidAtInstant == null ? Instant.now() : paidAtInstant;
         this.referenceCode = refCode;
         this.note = noteText;
-        this.createdBy = actor;
+        this.paidBy = actor;
     }
 
     public String getId() { return id; }
@@ -184,6 +214,10 @@ public class SalaryPayment {
     public String getReferenceCode() { return referenceCode; }
     public String getNote() { return note; }
     public String getCreatedBy() { return createdBy; }
+    public String getPaidBy() { return paidBy; }
+    public String getReversedBy() { return reversedBy; }
+    public Instant getReversedAt() { return reversedAt; }
+    public String getReversalReason() { return reversalReason; }
     public long getVersion() { return version; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

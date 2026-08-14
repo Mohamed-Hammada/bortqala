@@ -43,6 +43,7 @@ public class JournalEntryService {
     private final SegregationOfDutiesService segregationOfDutiesService;
     private final AuditService auditService;
     private final JournalDimensionRepository journalDimensionRepository;
+    private final JournalApprovalService journalApprovalService;
 
     public JournalEntryService(JournalEntryRepository journalEntryRepository,
                                JournalEntryLineRepository journalEntryLineRepository,
@@ -53,7 +54,8 @@ public class JournalEntryService {
                                TenantApplicationRepository tenantApplicationRepository,
                                SegregationOfDutiesService segregationOfDutiesService,
                                AuditService auditService,
-                               JournalDimensionRepository journalDimensionRepository) {
+                               JournalDimensionRepository journalDimensionRepository,
+                               JournalApprovalService journalApprovalService) {
         this.journalEntryRepository = journalEntryRepository;
         this.journalEntryLineRepository = journalEntryLineRepository;
         this.accountRepository = accountRepository;
@@ -64,6 +66,7 @@ public class JournalEntryService {
         this.segregationOfDutiesService = segregationOfDutiesService;
         this.auditService = auditService;
         this.journalDimensionRepository = journalDimensionRepository;
+        this.journalApprovalService = journalApprovalService;
     }
 
     @Transactional
@@ -86,6 +89,17 @@ public class JournalEntryService {
             line = journalEntryLineRepository.save(line);
             if (hasDimension(linePayload)) journalDimensionRepository.save(new JournalDimension(line.getId(),
                     blank(linePayload.costCenterId()), blank(linePayload.projectId()), blank(linePayload.departmentId())));
+        }
+        var amountsByAccount = payload.lines().stream().collect(java.util.stream.Collectors.toMap(
+                AccountingApi.JournalEntryLinePayload::accountId,
+                line -> (line.debit() == null ? BigDecimal.ZERO : line.debit())
+                        .add(line.credit() == null ? BigDecimal.ZERO : line.credit()),
+                BigDecimal::add));
+        if (!journalApprovalService.isApprovalRequired(amountsByAccount)) {
+            entry.approve("SYSTEM_APPROVAL_RULE");
+            entry = journalEntryRepository.save(entry);
+            auditService.record("JOURNAL_AUTO_APPROVED", "JOURNAL_ENTRY", entry.getId(), username,
+                    "{\"createdBy\":\"" + username + "\",\"ruleDecision\":\"NO_MANUAL_APPROVAL_REQUIRED\"}", null);
         }
         return toResponse(entry);
     }
@@ -196,7 +210,7 @@ public class JournalEntryService {
                         + (request.reason() == null || request.reason().isBlank() ? "" : " — " + request.reason().strip()),
                 entry.getReference(), entry.getFiscalPeriodId());
         reversal.setCurrency(entry.getCurrency());
-        reversal.linkReversalOf(entry.getId(), request.operationId());
+        reversal.linkReversalOf(entry.getId(), request.operationId(), username);
         reversal = journalEntryRepository.save(reversal);
 
         for (var originalLine : originalLines) {

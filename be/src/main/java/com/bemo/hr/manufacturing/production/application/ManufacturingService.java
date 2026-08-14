@@ -108,6 +108,7 @@ public class ManufacturingService {
                 .orElseThrow(() -> new NotFoundException("قائمة المواد غير موجودة", "MFG_BOM_NOT_FOUND"));
 
         LocalDate startDate = Instant.ofEpochMilli(payload.startDate()).atZone(ZoneOffset.UTC).toLocalDate();
+        requireApplicableBom(bom, startDate);
         ProductionOrder order = new ProductionOrder(payload.orderNumber(), bom.getId(), bom.getFinishedItemId(),
                 bom.getRevision(), payload.targetQuantity(), startDate, payload.notes());
         ProductionOrder saved = productionOrderRepository.save(order);
@@ -122,6 +123,7 @@ public class ManufacturingService {
         }
         BomHeader bom = bomHeaderRepository.findById(order.getBomId())
                 .orElseThrow(() -> new NotFoundException("BOM not found", "MFG_BOM_NOT_FOUND"));
+        requireApplicableBom(bom, order.getStartDate());
 
         return readinessFromBom(order, bom);
     }
@@ -154,6 +156,7 @@ public class ManufacturingService {
         }
         BomHeader bom = bomHeaderRepository.findById(order.getBomId())
                 .orElseThrow(() -> new NotFoundException("BOM not found", "MFG_BOM_NOT_FOUND"));
+        requireApplicableBom(bom, order.getStartDate());
 
         if (bom.getLines().isEmpty()) {
             throw new BusinessRuleException("لا يمكن بدء أمر إنتاج بقائمة مواد خالية من المكونات.", "MFG_BOM_NO_LINES", HttpStatus.CONFLICT);
@@ -169,9 +172,7 @@ public class ManufacturingService {
 
         // Freeze the authoritative requirements before the first irreversible stock issue.
         for (ManufacturingApi.MaterialRequirementView req : readiness.requirements()) {
-            int version = 1;
-            try { version = Integer.parseInt(bom.getRevision().replaceAll("[^0-9]", "")); } catch (Exception ignored) {}
-            bomSnapshotService.captureBomSnapshot(order.getId(), bom.getId(), version, req.componentItemId(),
+            bomSnapshotService.captureBomSnapshot(order.getId(), bom.getId(), bom.getRevision(), req.componentItemId(),
                     req.requiredQuantity(), operationsService.latestUnitCost(req.componentItemId()));
         }
         for (ManufacturingApi.MaterialRequirementView requirement : readiness.requirements()) {
@@ -239,8 +240,11 @@ public class ManufacturingService {
         if (order.getStatus() == ProductionOrder.Status.IN_PROGRESS) {
             // Reverse raw material issues
             for (BomSnapshot requirement : requireFrozenRequirements(order)) {
-                BigDecimal unitCost = resolveLatestUnitCost(requirement.getComponentItemId());
-                operationsService.recordProductionReceipt(requirement.getComponentItemId(), requirement.getRequiredQuantity(), unitCost,
+                var issue = operationsService.productionIssueEvidence(
+                        order.getOrderNumber(), requirement.getComponentItemId());
+                BigDecimal originalUnitCost = issue.totalCost().divide(
+                        issue.issuedQuantity(), 6, RoundingMode.HALF_UP);
+                operationsService.recordProductionReceipt(requirement.getComponentItemId(), issue.issuedQuantity(), originalUnitCost,
                         order.getOrderNumber(), "Reversal of raw material issue for cancelled WO " + order.getOrderNumber(), Instant.now(), actor);
             }
         }
@@ -269,10 +273,6 @@ public class ManufacturingService {
 
     // ─── Helpers & Mappers ──────────────────────────────────────────
 
-    private BigDecimal resolveLatestUnitCost(String itemId) {
-        return operationsService.latestUnitCost(itemId);
-    }
-
     private ManufacturingApi.MaterialReadinessResponse readinessFromSnapshots(ProductionOrder order) {
         List<BomSnapshot> requirements = requireFrozenRequirements(order);
         boolean allAvailable = true;
@@ -286,6 +286,13 @@ public class ManufacturingService {
                     requirement.getComponentItemId(), requirement.getRequiredQuantity(), stock, shortage, ready));
         }
         return new ManufacturingApi.MaterialReadinessResponse(order.getId(), order.getOrderNumber(), allAvailable, views);
+    }
+
+    private void requireApplicableBom(BomHeader bom, LocalDate productionDate) {
+        if (!bom.appliesOn(productionDate)) {
+            throw new BusinessRuleException("The BOM is inactive or outside its effective dates.",
+                    "MFG_BOM_NOT_APPLICABLE", HttpStatus.CONFLICT);
+        }
     }
 
     private List<BomSnapshot> requireFrozenRequirements(ProductionOrder order) {

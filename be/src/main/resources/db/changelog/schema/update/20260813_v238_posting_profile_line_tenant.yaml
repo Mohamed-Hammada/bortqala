@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v238_001_posting_profile_line_tenant
+      author: Mohamed-Hammada
+      changes:
+        - addColumn:
+            tableName: posting_profile_lines
+            columns:
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+        - sql:
+            sql: >-
+              UPDATE posting_profile_lines
+              SET app_id = (SELECT p.app_id FROM posting_profiles p WHERE p.id = posting_profile_lines.profile_id)
+              WHERE app_id IS NULL
+        - addNotNullConstraint:
+            tableName: posting_profile_lines
+            columnName: app_id
+            columnDataType: VARCHAR(50)
+        - addForeignKeyConstraint:
+            baseTableName: posting_profile_lines
+            baseColumnNames: app_id
+            referencedTableName: apps
+            referencedColumnNames: id
+            constraintName: fk_posting_profile_lines_app
+            onDelete: CASCADE
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: posting_profile_lines
+            constraintName: fk_posting_profile_lines_app
+        - dropColumn:
+            tableName: posting_profile_lines
+            columnName: app_id

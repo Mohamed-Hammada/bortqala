@@ -206,7 +206,7 @@ export const routes: Routes = [
         canActivate: [roleGuard, menuAccessGuard],
         data: {
           menuId: 'fiscal-periods',
-          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'],
         },
         loadComponent: () =>
           import('./features/fiscal-periods/fiscal-periods.page').then((module) => module.FiscalPeriodsPage),

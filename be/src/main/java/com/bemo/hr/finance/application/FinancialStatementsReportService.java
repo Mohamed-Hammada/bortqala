@@ -6,6 +6,8 @@ import com.bemo.hr.finance.domain.JournalEntryLine;
 import com.bemo.hr.finance.infrastructure.AccountRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -111,12 +113,9 @@ public class FinancialStatementsReportService {
 
     @Transactional(readOnly = true)
     public CashFlowReport getCashFlowStatement(LocalDate startDate, LocalDate endDate) {
-        IncomeStatementReport inc = getIncomeStatement(startDate, endDate);
-        BigDecimal operating = inc.netIncome();
-        BigDecimal investing = BigDecimal.ZERO;
-        BigDecimal financing = BigDecimal.ZERO;
-        BigDecimal netCashFlow = operating.add(investing).add(financing);
-
-        return new CashFlowReport(operating, investing, financing, netCashFlow);
+        throw new BusinessRuleException(
+                "Cash Flow Statement is unavailable until ledger-based cash classification is configured.",
+                "FIN_CASH_FLOW_NOT_IMPLEMENTED",
+                HttpStatus.NOT_IMPLEMENTED);
     }
 }

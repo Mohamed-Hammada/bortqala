@@ -10,6 +10,9 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.TenantId;
+import org.springframework.http.HttpStatus;
+
+import com.bemo.hr.shared.domain.BusinessRuleException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,7 +23,7 @@ import java.util.UUID;
 public class PayrollRunHeader {
 
     public enum Status {
-        DRAFT, CALCULATED, APPROVED, POSTED, CANCELLED
+        DRAFT, CALCULATED, REVIEWED, APPROVED, POSTED, PAID, CANCELLED
     }
 
     @Id
@@ -73,24 +76,40 @@ public class PayrollRunHeader {
     }
 
     public void updateTotals(BigDecimal gross, BigDecimal deductions, BigDecimal net) {
+        if (this.status != Status.DRAFT && this.status != Status.CALCULATED) {
+            throw invalidTransition(Status.CALCULATED);
+        }
         this.totalGross = gross;
         this.totalDeductions = deductions;
         this.totalNet = net;
         this.status = Status.CALCULATED;
     }
 
-    public void approve() {
-        if (this.status != Status.CALCULATED) {
-            throw new IllegalStateException("Only CALCULATED payroll runs can be approved");
+    public void transitionTo(Status nextStatus) {
+        Status expected = switch (this.status) {
+            case CALCULATED -> Status.REVIEWED;
+            case REVIEWED -> Status.APPROVED;
+            case APPROVED -> Status.POSTED;
+            case POSTED -> Status.PAID;
+            default -> null;
+        };
+        if (nextStatus == null || nextStatus != expected) {
+            throw invalidTransition(nextStatus);
         }
-        this.status = Status.APPROVED;
+        this.status = nextStatus;
+    }
+
+    public void approve() {
+        transitionTo(Status.APPROVED);
     }
 
     public void post() {
-        if (this.status != Status.APPROVED) {
-            throw new IllegalStateException("Only APPROVED payroll runs can be posted");
-        }
-        this.status = Status.POSTED;
+        transitionTo(Status.POSTED);
+    }
+
+    private BusinessRuleException invalidTransition(Status nextStatus) {
+        return new BusinessRuleException("Payroll run cannot transition from " + this.status + " to " + nextStatus + ".",
+                "PAYROLL_STATE_TRANSITION_INVALID", HttpStatus.CONFLICT);
     }
 
     @PrePersist

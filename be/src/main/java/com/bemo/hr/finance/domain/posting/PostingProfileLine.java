@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.TenantId;
 
 import java.util.UUID;
 
@@ -13,6 +14,10 @@ public class PostingProfileLine {
 
     @Id
     private String id;
+
+    @TenantId
+    @Column(name = "app_id", nullable = false, length = 50)
+    private String appId;
 
     @Column(name = "profile_id", nullable = false, length = 36)
     private String profileId;

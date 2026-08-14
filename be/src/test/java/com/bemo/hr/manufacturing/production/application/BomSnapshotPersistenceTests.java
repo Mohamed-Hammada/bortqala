@@ -45,18 +45,18 @@ class BomSnapshotPersistenceTests {
         String tenantB = tenant("MFG-B");
 
         TenantContext.set(tenantA);
-        var r1 = bomSnapshotService.captureBomSnapshot("wo-1", "bom-1", 1, "rm-1",
+        var r1 = bomSnapshotService.captureBomSnapshot("wo-1", "bom-1", "v1.10-beta", "rm-1",
                 new BigDecimal("10"), new BigDecimal("15"));
-        var replay = bomSnapshotService.captureBomSnapshot("wo-1", "bom-1", 2, "rm-1",
+        var replay = bomSnapshotService.captureBomSnapshot("wo-1", "bom-1", "v2", "rm-1",
                 new BigDecimal("99"), new BigDecimal("40"));
-        var r2 = bomSnapshotService.captureBomSnapshot("wo-2", "bom-1", 2, "rm-1",
+        var r2 = bomSnapshotService.captureBomSnapshot("wo-2", "bom-1", "v2", "rm-1",
                 new BigDecimal("99"), new BigDecimal("40"));
 
         assertThat(replay.getId()).isEqualTo(r1.getId());
-        assertThat(replay.getBomVersion()).isEqualTo(1);
+        assertThat(replay.getBomRevision()).isEqualTo("v1.10-beta");
         assertThat(replay.getRequiredQuantity()).isEqualByComparingTo("10");
         assertThat(replay.getStandardUnitCost()).isEqualByComparingTo("15");
-        assertThat(r2.getBomVersion()).isEqualTo(2);
+        assertThat(r2.getBomRevision()).isEqualTo("v2");
         assertThat(r2.getRequiredQuantity()).isEqualByComparingTo("99");
 
         TenantContext.set(tenantB);

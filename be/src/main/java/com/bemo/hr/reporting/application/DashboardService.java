@@ -158,7 +158,7 @@ public class DashboardService {
             BigDecimal gross = p.getGrossAmount() == null ? BigDecimal.ZERO : p.getGrossAmount();
             BigDecimal net = p.getNetAmount() == null ? BigDecimal.ZERO : p.getNetAmount();
             totalGross = totalGross.add(gross);
-            if (p.getPaymentStatus() == PaymentStatus.PAID || p.getPaymentStatus() == PaymentStatus.POSTED) {
+            if (p.getPaymentStatus() == PaymentStatus.PAID) {
                 paidCount++;
                 totalPaid = totalPaid.add(net);
             } else {
@@ -229,7 +229,7 @@ public class DashboardService {
             var gross = payment.getGrossAmount() == null ? BigDecimal.ZERO : payment.getGrossAmount();
             var net = payment.getNetAmount() == null ? BigDecimal.ZERO : payment.getNetAmount();
             totalGross = totalGross.add(gross);
-            if (payment.getPaymentStatus() == PaymentStatus.PAID || payment.getPaymentStatus() == PaymentStatus.POSTED) {
+            if (payment.getPaymentStatus() == PaymentStatus.PAID) {
                 paid++;
                 totalPaid = totalPaid.add(net);
             } else {

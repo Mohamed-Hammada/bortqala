@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v236_001_exact_bom_revision
+      author: Mohamed-Hammada
+      changes:
+        - renameColumn:
+            tableName: bom_snapshots
+            oldColumnName: bom_version
+            newColumnName: bom_revision
+            columnDataType: INT
+        - modifyDataType:
+            tableName: bom_snapshots
+            columnName: bom_revision
+            newDataType: VARCHAR(20)
+      rollback:
+        - modifyDataType:
+            tableName: bom_snapshots
+            columnName: bom_revision
+            newDataType: INT
+        - renameColumn:
+            tableName: bom_snapshots
+            oldColumnName: bom_revision
+            newColumnName: bom_version
+            columnDataType: INT

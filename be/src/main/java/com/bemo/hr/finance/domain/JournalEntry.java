@@ -162,10 +162,14 @@ public class JournalEntry {
         this.operationId = operationId;
     }
 
-    public void linkReversalOf(String reversedEntryId, String operationId) {
+    public void linkReversalOf(String reversedEntryId, String operationId, String actor) {
         this.reversedEntryId = reversedEntryId;
         this.operationId = operationId;
         this.status = Status.POSTED;
+        this.createdBy = actor;
+        this.approvedBy = actor;
+        this.postedBy = actor;
+        this.postedAt = System.currentTimeMillis();
     }
 
     @PrePersist

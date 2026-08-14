@@ -3,6 +3,8 @@ package com.bemo.hr.payroll.application;
 import com.bemo.hr.payroll.api.PayrollApi;
 import com.bemo.hr.payroll.domain.SalaryPayment;
 import com.bemo.hr.payroll.infrastructure.SalaryPaymentRepository;
+import com.bemo.hr.payroll.infrastructure.PayrollRunHeaderRepository;
+import com.bemo.hr.payroll.infrastructure.PayrollRunLineRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
@@ -20,6 +22,7 @@ import com.bemo.hr.employee.domain.EmploymentType;
 import com.bemo.hr.employee.domain.PayCycle;
 import com.bemo.hr.payroll.domain.PayrollCalculationPolicy;
 import com.bemo.hr.payroll.domain.PayrollInputSnapshot;
+import com.bemo.hr.payroll.domain.PayrollRunHeader;
 import com.bemo.hr.payroll.domain.SalaryPaymentExplanation;
 import com.bemo.hr.payroll.domain.SalaryPaymentExplanationRepository;
 
@@ -60,6 +63,8 @@ class PayrollServiceTests {
     @Mock private AttendanceExceptionService attendanceExceptionService;
     @Mock private PayrollSnapshotService payrollSnapshotService;
     @Mock private PayrollCalculationPolicyService payrollCalculationPolicyService;
+    @Mock private PayrollRunHeaderRepository payrollRunHeaderRepository;
+    @Mock private PayrollRunLineRepository payrollRunLineRepository;
 
     @InjectMocks
     private PayrollService payrollService;
@@ -89,9 +94,10 @@ class PayrollServiceTests {
 
     @Test
     void reversePayment_throwsWhenPaymentNotFound() {
-        var req = new PayrollApi.ReversePaymentRequest("missing-id", "reason");
+        var req = new PayrollApi.ReversePaymentRequest("missing-id", "reason", 0L);
         
         
+        when(salaryPaymentRepository.findByIdForUpdate("missing-id")).thenReturn(Optional.empty());
         assertThatThrownBy(() -> payrollService.reversePayment(req, "admin"))
                 .isInstanceOf(com.bemo.hr.shared.domain.NotFoundException.class)
                 .hasMessageContaining("قيد الراتب غير موجود.");
@@ -105,14 +111,31 @@ class PayrollServiceTests {
                 PayCycle.MONTHLY, "cfg", "admin");
         report.startReview(0); report.approve("admin");
         when(employeeRepository.findById(employee.getId())).thenReturn(Optional.of(employee));
-        when(salaryPaymentRepository.findByEmployeeIdAndPeriodYearAndPeriodMonthAndPeriodKind(employee.getId(), 2026, 8, "FULL_MONTH"))
-                .thenReturn(Optional.empty());
+        SalaryPayment payment = new SalaryPayment(employee.getId(), report.getId(), 2026, 8, "FULL_MONTH",
+                LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), new BigDecimal("5000"),
+                BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("5000"),
+                com.bemo.hr.payroll.domain.PaymentStatus.DRAFT, null, null, null, null, "maker");
+        payment.transitionTo(com.bemo.hr.payroll.domain.PaymentStatus.CALCULATED);
+        payment.transitionTo(com.bemo.hr.payroll.domain.PaymentStatus.REVIEWED);
+        payment.transitionTo(com.bemo.hr.payroll.domain.PaymentStatus.APPROVED);
+        payment.transitionTo(com.bemo.hr.payroll.domain.PaymentStatus.POSTED);
+        PayrollRunHeader run = new PayrollRunHeader("PAY-2026-08", "2026-08:FULL_MONTH", LocalDate.of(2026, 8, 31));
+        run.updateTotals(new BigDecimal("5000"), BigDecimal.ZERO, new BigDecimal("5000"));
+        run.transitionTo(PayrollRunHeader.Status.REVIEWED);
+        run.transitionTo(PayrollRunHeader.Status.APPROVED);
+        run.transitionTo(PayrollRunHeader.Status.POSTED);
+        PayrollInputSnapshot snapshot = mock(PayrollInputSnapshot.class);
+        payment.attachCalculationEvidence(run.getId(), "snapshot-1");
+        when(salaryPaymentRepository.findForUpdate(employee.getId(), 2026, 8, "FULL_MONTH"))
+                .thenReturn(Optional.of(payment));
+        when(payrollSnapshotService.findById("snapshot-1")).thenReturn(Optional.of(snapshot));
+        when(payrollRunHeaderRepository.findByIdForUpdate(run.getId())).thenReturn(Optional.of(run));
         when(attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(PayCycle.MONTHLY,
                 LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31))).thenReturn(Optional.of(report));
         doThrow(new BusinessRuleException("blocked", "PAYROLL_ATTENDANCE_EXCEPTIONS_OPEN", HttpStatus.CONFLICT))
                 .when(attendanceExceptionService).assertPayrollReady(report.getId(), employee.getId());
         PayrollApi.PaymentRequest request = new PayrollApi.PaymentRequest(employee.getId(), 2026, 8, "FULL_MONTH",
-                null, null, null, null, BigDecimal.ZERO, BigDecimal.ZERO, null, null, null, null, null);
+                null, null, null, null, BigDecimal.ZERO, BigDecimal.ZERO, null, null, null, null, null, 0L);
         assertThatThrownBy(() -> payrollService.recordPayment(request, "payroll"))
                 .isInstanceOf(BusinessRuleException.class).hasMessageContaining("blocked");
         verify(attendanceExceptionService).assertPayrollReady(report.getId(), employee.getId());

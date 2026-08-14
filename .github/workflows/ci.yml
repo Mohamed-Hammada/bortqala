@@ -41,9 +41,9 @@ jobs:
           node-version: '24'
           cache: npm
           cache-dependency-path: fe/package-lock.json
-      - name: Node version guard (engines >=22 <25)
+      - name: Node version guard (engines >=24 <25)
         working-directory: fe
-        run: node -e "const e=require('./package.json').engines;const ok=process.version.match(/^v(\d+)\./);console.log('node',process.version,'| engines',JSON.stringify(e));if(!ok||Number(ok[1])>=25||Number(ok[1])<22){console.error('Node version outside engines range');process.exit(1)}"
+        run: node -e "const e=require('./package.json').engines;const ok=process.version.match(/^v(\d+)\./);console.log('node',process.version,'| engines',JSON.stringify(e));if(!ok||Number(ok[1])!==24){console.error('Node major must be 24');process.exit(1)}"
       - name: Install dependencies
         working-directory: fe
         run: npm ci

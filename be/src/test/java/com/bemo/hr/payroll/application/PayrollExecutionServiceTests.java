@@ -35,7 +35,7 @@ class PayrollExecutionServiceTests {
     }
 
     @Test
-    void createsCalculatesApprovesAndPostsPayrollRunSuccessfully() {
+    void createsCalculatesReviewsApprovesAndPostsPayrollRunSuccessfully() {
         when(runHeaderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         PayrollRunHeader run = executionService.createRun("RUN-2026-03", "period-1", LocalDate.of(2026, 3, 31));
@@ -56,6 +56,9 @@ class PayrollExecutionServiceTests {
         assertThat(run.getStatus()).isEqualTo(PayrollRunHeader.Status.CALCULATED);
         assertThat(run.getTotalGross()).isEqualByComparingTo(new BigDecimal("6000.00"));
         assertThat(run.getTotalNet()).isEqualByComparingTo(new BigDecimal("5500.00"));
+
+        executionService.reviewRun(run.getId());
+        assertThat(run.getStatus()).isEqualTo(PayrollRunHeader.Status.REVIEWED);
 
         executionService.approveRun(run.getId());
         assertThat(run.getStatus()).isEqualTo(PayrollRunHeader.Status.APPROVED);

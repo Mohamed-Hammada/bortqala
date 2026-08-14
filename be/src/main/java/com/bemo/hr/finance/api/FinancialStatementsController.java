@@ -20,19 +20,19 @@ public class FinancialStatementsController {
     }
 
     @GetMapping("/balance-sheet")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR')")
     public BalanceSheetReport getBalanceSheet(@RequestParam String asOfDate) {
         return statementsService.getBalanceSheet(LocalDate.parse(asOfDate));
     }
 
     @GetMapping("/income-statement")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR')")
     public IncomeStatementReport getIncomeStatement(@RequestParam String startDate, @RequestParam String endDate) {
         return statementsService.getIncomeStatement(LocalDate.parse(startDate), LocalDate.parse(endDate));
     }
 
     @GetMapping("/cash-flow")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR')")
     public CashFlowReport getCashFlowStatement(@RequestParam String startDate, @RequestParam String endDate) {
         return statementsService.getCashFlowStatement(LocalDate.parse(startDate), LocalDate.parse(endDate));
     }

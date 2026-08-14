@@ -53,3 +53,9 @@ Warehouse transfers are a stateful inventory workflow: `DRAFT -> SHIPPED -> RECE
 **EN:** The employee advance ledger remains the financial source used by payroll. Scheduled employee advances and manual repayments from the workforce module mirror their signed entries here in the same backend transaction.
 
 **AR:** يظل دفتر سلف الموظفين المصدر المالي الذي تستخدمه الرواتب. وتعكس سلف الموظفين المجدولة وعمليات سدادها اليدوي قيودها الموقعة هنا داخل معاملة الخادم نفسها.
+
+## Authoritative stock reservations / حجوزات المخزون المعتمدة
+
+`StockReservation` is the only mutable reservation model. Both `/api/v1/operations/reservations` and the compatibility route `/api/v1/inventory/reservations` call `WarehouseInventoryService`, which validates positive quantity, an active tenant warehouse, an active tenant item, locks the warehouse/item balance, and subtracts existing active reservations before saving. Warehouse creation requires a real active branch; no default branch identifier is generated. Migration V232 releases legacy active rows in the retired `inventory_reservations` table so they cannot remain a second hidden availability state.
+
+يمثل `StockReservation` نموذج الحجز الوحيد القابل للتعديل. يستخدم مسارا العمليات والتوافق نفس خدمة المخزون التي تتحقق من كمية موجبة ومخزن وصنف نشطين داخل الشركة، وتقفل رصيد المخزن والصنف، وتخصم الحجوزات النشطة قبل الحفظ. يتطلب إنشاء المخزن فرعاً نشطاً حقيقياً ولا يتم إنشاء معرف فرع افتراضي. تقوم الترقية V232 بتحرير الصفوف النشطة القديمة في جدول الحجوزات المتقاعد حتى لا تبقى حالة مخفية ثانية للمتاح.

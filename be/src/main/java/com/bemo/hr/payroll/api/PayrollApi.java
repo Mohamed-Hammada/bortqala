@@ -44,7 +44,12 @@ public final class PayrollApi {
             String note,
             boolean incompleteProfile,
             String createdBy,
-            Instant createdAt
+            Instant createdAt,
+            String paidBy,
+            String reversedBy,
+            Instant reversedAt,
+            String reversalReason,
+            long version
     ) { }
 
     public record Summary(
@@ -92,7 +97,8 @@ public final class PayrollApi {
             PaymentMethod paymentMethod,
             String referenceCode,
             String note,
-            Long paidAtEpochMs
+            Long paidAtEpochMs,
+            @NotNull Long expectedVersion
     ) { }
 
     public record BulkPaymentRequest(
@@ -113,7 +119,8 @@ public final class PayrollApi {
 
     public record ReversePaymentRequest(
             @NotBlank String paymentId,
-            @NotBlank String reason
+            @NotBlank String reason,
+            @NotNull Long expectedVersion
     ) { }
 
     public record CalculationPolicyRequest(

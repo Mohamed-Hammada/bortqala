@@ -7,6 +7,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.trade.sales.api.SalesApi;
 import com.bemo.hr.trade.sales.domain.*;
 import com.bemo.hr.trade.sales.infrastructure.*;
+import com.bemo.hr.finance.domain.posting.SubledgerPostingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class SalesReceivablesService {
     private final BusinessPartyRepository partyRepository;
     private final PartnerLedgerEntryRepository ledgerRepository;
     private final AuditService auditService;
+    private final SubledgerPostingService subledgerPostingService;
 
     @Transactional(readOnly=true) public List<SalesApi.InvoiceResponse> invoices(){return invoiceRepository.findAllByOrderByInvoiceDateDescCreatedAtDesc().stream().map(this::invoice).toList();}
     @Transactional(readOnly=true) public List<SalesApi.ReceiptResponse> receipts(){return receiptRepository.findAllByOrderByReceiptDateDescCreatedAtDesc().stream().map(this::receipt).toList();}
@@ -82,6 +84,10 @@ public class SalesReceivablesService {
         invoiceRepository.save(invoice);
         ledgerRepository.save(new PartnerLedgerEntry(invoice.getCustomerId(),"CUSTOMER_CREDIT_NOTE",amount.negate(),
                 creditNoteNumber,"Customer return credit",creditDate.atStartOfDay(ZoneOffset.UTC).toInstant(),actor));
+        subledgerPostingService.postSubledgerEvent("SALES", "CUSTOMER_CREDIT_NOTE", note.getId(),
+                "CUSTOMER_CREDIT_NOTE_ISSUED", "AR:CREDIT_NOTE:" + operationId, creditDate,
+                "Customer credit note " + creditNoteNumber, amount, amount, null,
+                invoice.getCustomerId(), invoice.getCurrencyCode(), actor);
         auditService.record("CREATE","CUSTOMER_CREDIT_NOTE",note.getId(),actor,
                 "{\"returnId\":\""+returnId+"\",\"amount\":"+amount+"}",null);return note;
     }
@@ -92,6 +98,10 @@ public class SalesReceivablesService {
         if(invoice.getStatus()!=CustomerInvoice.Status.DRAFT)return invoice(invoice);
         assertCreditAvailable(invoice.getCustomerId(),invoice.getAmount());invoice.issue(actor);invoiceRepository.save(invoice);
         ledgerRepository.save(new PartnerLedgerEntry(invoice.getCustomerId(),"CUSTOMER_INVOICE",invoice.getAmount(),invoice.getInvoiceNumber(),"Customer invoice",invoice.getInvoiceDate().atStartOfDay(ZoneOffset.UTC).toInstant(),actor));
+        subledgerPostingService.postSubledgerEvent("SALES", "CUSTOMER_INVOICE", invoice.getId(),
+                "CUSTOMER_INVOICE_ISSUED", "AR:INVOICE:" + invoice.getId(), invoice.getInvoiceDate(),
+                "Customer invoice " + invoice.getInvoiceNumber(), invoice.getAmount(), invoice.getAmount(), null,
+                invoice.getCustomerId(), invoice.getCurrencyCode(), actor);
         auditService.record("ISSUE","CUSTOMER_INVOICE",id,actor,"{\"amount\":"+invoice.getAmount()+"}",null);return invoice(invoice);
     }
 
@@ -114,11 +124,15 @@ public class SalesReceivablesService {
             if(invoice.getStatus()==CustomerInvoice.Status.PAID)taskRepository.findByInvoiceId(invoice.getId()).ifPresent(CollectionTask::close);
         }
         receipt=receiptRepository.save(receipt);allocationRepository.saveAll(allocations);ledgerRepository.save(new PartnerLedgerEntry(request.customerId(),"CUSTOMER_RECEIPT",request.amount().negate(),request.receiptNumber(),"Customer receipt",receipt.getReceiptDate().atStartOfDay(ZoneOffset.UTC).toInstant(),actor));
+        subledgerPostingService.postSubledgerEvent("SALES", "CUSTOMER_RECEIPT", receipt.getId(),
+                "CUSTOMER_RECEIPT_RECORDED", "AR:RECEIPT:" + request.operationId(), receipt.getReceiptDate(),
+                "Customer receipt " + receipt.getReceiptNumber(), receipt.getAmount(), receipt.getAmount(), null,
+                request.customerId(), request.currencyCode(), actor);
         auditService.record("RECEIPT","CUSTOMER_RECEIPT",receipt.getId(),actor,"{\"operationId\":\""+request.operationId()+"\",\"amount\":"+request.amount()+"}",null);return receipt(receipt);
     }
 
     @Transactional(readOnly=true)
-    public SalesApi.AgingResponse aging(long asOfMillis){LocalDate asOf=asOfMillis>0?date(asOfMillis):LocalDate.now();BigDecimal current=BigDecimal.ZERO,b1=BigDecimal.ZERO,b2=BigDecimal.ZERO,b3=BigDecimal.ZERO,b4=BigDecimal.ZERO;
+    public SalesApi.AgingResponse aging(long asOfMillis){if(asOfMillis<=0)throw error("AR_AS_OF_DATE_REQUIRED",HttpStatus.BAD_REQUEST);LocalDate asOf=date(asOfMillis);BigDecimal current=BigDecimal.ZERO,b1=BigDecimal.ZERO,b2=BigDecimal.ZERO,b3=BigDecimal.ZERO,b4=BigDecimal.ZERO;
         for(CustomerInvoice invoice:invoiceRepository.findAllByOrderByInvoiceDateDescCreatedAtDesc()){if(invoice.getOutstandingAmount().signum()==0)continue;long days=ChronoUnit.DAYS.between(invoice.getDueDate(),asOf);
             if(days<=0)current=current.add(invoice.getOutstandingAmount());else if(days<=30)b1=b1.add(invoice.getOutstandingAmount());else if(days<=60)b2=b2.add(invoice.getOutstandingAmount());else if(days<=90)b3=b3.add(invoice.getOutstandingAmount());else b4=b4.add(invoice.getOutstandingAmount());}
         return new SalesApi.AgingResponse(ms(asOf),current,b1,b2,b3,b4,current.add(b1).add(b2).add(b3).add(b4));}
@@ -133,7 +147,7 @@ public class SalesReceivablesService {
     public SalesApi.CollectionTaskResponse updateTask(String id,SalesApi.CollectionTaskRequest request,String actor){CollectionTask task=taskRepository.findById(id).orElseThrow(()->error("AR_COLLECTION_TASK_NOT_FOUND",HttpStatus.NOT_FOUND));
         if(task.getVersion()!=request.version())throw error("STALE_STATE",HttpStatus.CONFLICT);CollectionTask.Status status;try{status=CollectionTask.Status.valueOf(request.status());}catch(Exception ex){throw error("AR_COLLECTION_STATUS_INVALID",HttpStatus.BAD_REQUEST);}
         task.update(status,request.ownerUserId(),request.nextActionDate()>0?date(request.nextActionDate()):null,request.note());taskRepository.save(task);auditService.record("UPDATE","AR_COLLECTION_TASK",id,actor,"{\"status\":\""+status+"\"}",null);
-        CustomerInvoice invoice=invoiceRepository.findById(task.getInvoiceId()).orElseThrow(()->error("AR_INVOICE_NOT_FOUND",HttpStatus.NOT_FOUND));return task(task,invoice,LocalDate.now());}
+        CustomerInvoice invoice=invoiceRepository.findById(task.getInvoiceId()).orElseThrow(()->error("AR_INVOICE_NOT_FOUND",HttpStatus.NOT_FOUND));return task(task,invoice,date(request.asOf()));}
 
     private BusinessParty requireCustomer(String id){BusinessParty party=partyRepository.findById(id).orElseThrow(()->error("AR_CUSTOMER_NOT_FOUND",HttpStatus.NOT_FOUND));if("SUPPLIER".equals(party.getPartyType())||!party.isActive())throw error("AR_CUSTOMER_INACTIVE",HttpStatus.CONFLICT);return party;}
     private SalesApi.CreditProfileResponse creditResponse(CustomerCreditProfile p,String customer){BigDecimal outstanding=invoiceRepository.outstanding(customer),limit=p==null?BigDecimal.ZERO:p.getCreditLimit();return new SalesApi.CreditProfileResponse(customer,limit,p==null?30:p.getPaymentTermsDays(),p!=null&&p.isCreditHold(),outstanding,p==null?BigDecimal.ZERO:limit.subtract(outstanding),p==null?0:p.getVersion());}

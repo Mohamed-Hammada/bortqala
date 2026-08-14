@@ -51,6 +51,7 @@ class JournalEntryServiceTests {
     @Mock private DocumentNumberService documentNumberService;
     @Mock private TenantApplicationRepository tenantApplicationRepository;
     @Mock private AuditService auditService;
+    @Mock private JournalApprovalService journalApprovalService;
 
     private TenantApplication app;
     private JournalEntryService service;
@@ -63,7 +64,7 @@ class JournalEntryServiceTests {
         service = new JournalEntryService(journalEntryRepository, journalEntryLineRepository,
                 accountRepository, fiscalPeriodGuard, idempotencyService, documentNumberService,
                 tenantApplicationRepository, new SegregationOfDutiesService(), auditService,
-                mock(com.bemo.hr.finance.infrastructure.JournalDimensionRepository.class));
+                mock(com.bemo.hr.finance.infrastructure.JournalDimensionRepository.class), journalApprovalService);
         TenantContext.set(APP_ID);
         lenient().when(tenantApplicationRepository.findById(APP_ID)).thenReturn(Optional.of(app));
 
@@ -79,6 +80,7 @@ class JournalEntryServiceTests {
         lenient().when(creditAccount.isActive()).thenReturn(true);
         lenient().when(accountRepository.findAllById(anySet())).thenReturn(List.of(debitAccount, creditAccount));
         lenient().when(journalEntryRepository.save(any(JournalEntry.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(journalApprovalService.isApprovalRequired(any(java.util.Map.class))).thenReturn(true);
     }
 
     @AfterEach
@@ -136,6 +138,20 @@ class JournalEntryServiceTests {
         assertThatThrownBy(() -> service.create(payload("JV-1001"), "admin"))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("مستخدم بالفعل");
+    }
+
+    @Test
+    void configuredRuleCanAutoApproveAtCreationWhileMissingRulesRemainManual() {
+        app.updateDocumentNumbering(false);
+        when(journalEntryRepository.existsByAppIdAndEntryNumber(APP_ID, "JV-1002")).thenReturn(false);
+        when(journalApprovalService.isApprovalRequired(any(java.util.Map.class))).thenReturn(false);
+
+        AccountingApi.JournalEntryResponse response = service.create(payload("JV-1002"), "maker");
+
+        assertThat(response.status()).isEqualTo("APPROVED");
+        verify(auditService).record(org.mockito.ArgumentMatchers.eq("JOURNAL_AUTO_APPROVED"),
+                org.mockito.ArgumentMatchers.eq("JOURNAL_ENTRY"), any(),
+                org.mockito.ArgumentMatchers.eq("maker"), any(), org.mockito.ArgumentMatchers.isNull());
     }
 
     @Test

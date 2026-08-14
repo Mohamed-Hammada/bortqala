@@ -6,6 +6,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/v1/finance/period-close")
@@ -18,14 +19,16 @@ public class PeriodCloseController {
     }
 
     @GetMapping("/readiness/{periodId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR')")
     public PeriodCloseOrchestratorService.PeriodReadinessReport checkReadiness(@PathVariable String periodId) {
         return orchestratorService.checkReadiness(periodId);
     }
 
     @PostMapping("/execute/{periodId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
-    public List<PeriodCloseExecutionRecord> executeClose(@PathVariable String periodId) {
-        return orchestratorService.executeClose(periodId);
+    public List<PeriodCloseExecutionRecord> executeClose(@PathVariable String periodId,
+                                                          @RequestParam(required = false) Long expectedVersion,
+                                                          Authentication authentication) {
+        return orchestratorService.executeClose(periodId, authentication.getName(), expectedVersion);
     }
 }

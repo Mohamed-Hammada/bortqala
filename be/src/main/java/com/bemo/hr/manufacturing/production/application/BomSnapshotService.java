@@ -18,11 +18,11 @@ public class BomSnapshotService {
     }
 
     @Transactional
-    public BomSnapshot captureBomSnapshot(String productionOrderId, String bomId, int bomVersion, String componentItemId,
+    public BomSnapshot captureBomSnapshot(String productionOrderId, String bomId, String bomRevision, String componentItemId,
                                           BigDecimal requiredQuantity, BigDecimal standardUnitCost) {
         return bomSnapshotRepository.findByProductionOrderIdAndComponentItemId(productionOrderId, componentItemId)
                 .orElseGet(() -> bomSnapshotRepository.save(
-                        new BomSnapshot(productionOrderId, bomId, bomVersion, componentItemId, requiredQuantity,
+                        new BomSnapshot(productionOrderId, bomId, bomRevision, componentItemId, requiredQuantity,
                                 standardUnitCost)));
     }
 

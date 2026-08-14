@@ -68,7 +68,7 @@ public class SalesApi {
     public record ReceiptResponse(String id,String receiptNumber,String customerId,long receiptDate,String currencyCode,BigDecimal amount,
             BigDecimal unallocatedAmount,String operationId,List<AllocationResponse> allocations) {}
     public record AgingResponse(long asOf,BigDecimal current,BigDecimal days1To30,BigDecimal days31To60,BigDecimal days61To90,BigDecimal over90,BigDecimal total) {}
-    public record CollectionTaskRequest(@NotNull String status,String ownerUserId,long nextActionDate,String note,long version) {}
+    public record CollectionTaskRequest(@NotNull String status,String ownerUserId,long nextActionDate,String note,long version,@Positive long asOf) {}
     public record CollectionTaskResponse(String id,String invoiceId,String invoiceNumber,String customerId,BigDecimal outstandingAmount,long dueDate,
             int daysOverdue,String status,String ownerUserId,long nextActionDate,String note,long version) {}
 }

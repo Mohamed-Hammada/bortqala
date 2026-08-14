@@ -233,7 +233,7 @@ public class BankReconciliationService {
         FiscalPeriod period = fiscalPeriodGuard.requireOpen(original.getEntryDate());
         JournalEntry reversal = new JournalEntry(original.getEntryNumber() + "-R", original.getEntryDate(),
                 "Reverse bank fee — " + request.reason(), original.getReference(), period.getId());
-        reversal.setCurrency(original.getCurrency()); reversal.linkReversalOf(original.getId(), request.operationId());
+        reversal.setCurrency(original.getCurrency()); reversal.linkReversalOf(original.getId(), request.operationId(), actor());
         reversal = journalEntryRepository.save(reversal);
         for (JournalEntryLine source : journalEntryLineRepository.findByJournalEntryId(original.getId()))
             journalEntryLineRepository.save(new JournalEntryLine(reversal.getId(), source.getAccountId(), source.getPartyId(),

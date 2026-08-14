@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,16 +58,17 @@ public class CloseChecklistService {
         // Check 2: Evaluate All Registered Subledger Reconciliation Providers
         boolean subledgerPass = true;
         for (SubledgerReconciliationProvider provider : reconciliationProviders) {
-            var calc = provider.calculate(periodId, LocalDate.now());
-            if (!calc.isBalanced() && calc.difference().compareTo(new BigDecimal("10.00")) > 0) {
+            var calc = provider.calculate(periodId, period.getEndDate());
+            BigDecimal absoluteDifference = calc.difference().abs();
+            if (absoluteDifference.compareTo(new BigDecimal("10.00")) > 0) {
                 subledgerPass = false;
                 checks.add(new CloseCheckItem(
                         "SUBLEDGER_RECONCILIATION_" + provider.type().name(),
                         provider.type().name(),
                         CloseCheckItem.Severity.BLOCKER,
                         1,
-                        calc.difference(),
-                        String.format("%s subledger imbalance of %s exceeds tolerance.", provider.type().name(), calc.difference())
+                        absoluteDifference,
+                        String.format("%s subledger absolute imbalance of %s exceeds tolerance.", provider.type().name(), absoluteDifference)
                 ));
             }
         }

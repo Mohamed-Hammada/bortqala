@@ -104,7 +104,7 @@
 
   @if (!loading()) {
     <section class="ar-workbench">
-      <div class="section-title"><div><h2>{{ i18n.t('sales.ar.title') }}</h2><p>{{ i18n.t('sales.ar.description') }}</p></div></div>
+      <div class="section-title"><div><h2>{{ i18n.t('sales.ar.title') }}</h2><p>{{ i18n.t('sales.ar.description') }}</p></div><label class="field"><span>{{ i18n.t('sales.ar.asOfDate') }}</span><input #arDate type="date" [value]="arAsOfDate()" (change)="arAsOfDate.set(arDate.value); load()" /></label></div>
       <div class="ar-kpis">
         <article><small>{{ i18n.t('sales.ar.totalOutstanding') }}</small><strong>{{ (aging()?.total ?? 0) | number:'1.2-2' }}</strong></article>
         <article><small>{{ i18n.t('sales.ar.openInvoices') }}</small><strong>{{ openInvoiceCount() }}</strong></article>

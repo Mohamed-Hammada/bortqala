@@ -39,16 +39,26 @@ class MandatoryBootstrapIntegrationTests {
 
     @Test
     void testOnlyMasterLoadsFixturesIntoTheIsolatedTestTenant() {
-        assertThat(count("attendance_categories")).isEqualTo(9);
-        assertThat(count("companies")).isEqualTo(1);
-        assertThat(count("currencies")).isEqualTo(3);
+        String appId = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue("TEST").orElseThrow().getId();
+        assertThat(countForApp("attendance_categories", appId)).isEqualTo(9);
+        assertThat(countForAppAndCode("companies", appId, "DEMO-CO")).isEqualTo(1);
+        assertThat(countForAppAndCode("currencies", appId, "EGP")).isEqualTo(1);
+        assertThat(countForAppAndCode("currencies", appId, "USD")).isEqualTo(1);
+        assertThat(countForAppAndCode("currencies", appId, "EUR")).isEqualTo(1);
     }
 
     private Set<RoleCode> roleCodes(AppUser user) {
         return user.getRoles().stream().map(Role::getCode).collect(Collectors.toSet());
     }
 
-    private long count(String table) {
-        return jdbcTemplate.queryForObject("SELECT COUNT(*) FROM " + table, Long.class);
+    private long countForApp(String table, String appId) {
+        return jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM " + table + " WHERE app_id = ?", Long.class, appId);
+    }
+
+    private long countForAppAndCode(String table, String appId, String code) {
+        return jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM " + table + " WHERE app_id = ? AND code = ?",
+                Long.class, appId, code);
     }
 }

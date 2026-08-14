@@ -572,14 +572,35 @@ public class OperationsService {
     }
 
     public BigDecimal productionIssueCost(String orderNumber, String itemId) {
-        return stockMovementRepository.findByOperationTypeAndReferenceCodeAndItemId(
-                        "PRODUCTION_ISSUE", orderNumber, itemId).stream()
+        return productionIssueEvidence(orderNumber, itemId).totalCost();
+    }
+
+    public record ProductionIssueEvidence(BigDecimal issuedQuantity, BigDecimal totalCost) { }
+
+    public ProductionIssueEvidence productionIssueEvidence(String orderNumber, String itemId) {
+        var issues = stockMovementRepository.findByOperationTypeAndReferenceCodeAndItemId(
+                "PRODUCTION_ISSUE", orderNumber, itemId);
+        if (issues.isEmpty()) {
+            throw new BusinessRuleException("Original production issue valuation evidence was not found.",
+                    "MFG_ISSUE_VALUATION_EVIDENCE_REQUIRED", HttpStatus.CONFLICT);
+        }
+        BigDecimal quantity = issues.stream().map(StockMovement::getQuantityDelta).map(BigDecimal::abs)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        var issueCosts = issues.stream()
                 .map(StockMovement::getId)
                 .map(inventoryMovementCostRepository::findByMovementId)
+                .toList();
+        BigDecimal totalCost = issueCosts.stream()
                 .flatMap(Optional::stream)
                 .map(InventoryMovementCost::getValueEffect)
                 .map(BigDecimal::abs)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long valuedMovements = issueCosts.stream().filter(Optional::isPresent).count();
+        if (quantity.signum() <= 0 || valuedMovements != issues.size()) {
+            throw new BusinessRuleException("Original production issue valuation evidence is incomplete.",
+                    "MFG_ISSUE_VALUATION_EVIDENCE_REQUIRED", HttpStatus.CONFLICT);
+        }
+        return new ProductionIssueEvidence(quantity, totalCost);
     }
 
     private static boolean isBlank(String value) {

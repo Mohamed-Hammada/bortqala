@@ -1,7 +1,7 @@
 package com.bemo.hr.inventory.api;
 
 import com.bemo.hr.inventory.application.InventoryService;
-import com.bemo.hr.inventory.domain.InventoryReservation;
+import com.bemo.hr.operations.domain.StockReservation;
 import com.bemo.hr.organization.domain.Warehouse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +36,7 @@ public class InventoryController {
 
     @PostMapping("/reservations")
     @PreAuthorize("hasAuthority('P_INVENTORY_MANAGE') or hasAnyRole('ADMIN','SUPER_ADMIN')")
-    public InventoryReservation reserveStock(@RequestBody ReserveStockRequest request) {
+    public StockReservation reserveStock(@RequestBody ReserveStockRequest request) {
         return inventoryService.reserveStock(request.sourceType(), request.sourceId(), request.itemId(), request.warehouseId(), request.quantity());
     }
 

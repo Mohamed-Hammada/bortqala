@@ -66,7 +66,7 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
   {
     menuId: 'fiscal-periods',
     route: '/fiscal-periods',
-    roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+    roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'],
     requiredFeature: 'finance.enabled',
   },
   {

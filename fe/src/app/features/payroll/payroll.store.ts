@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { downloadBlob } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
-import { BulkPaymentRequest, PaymentRequest, SheetResponse, SalaryPaymentExplanation } from './payroll.models';
+import { BulkPaymentRequest, PaymentRequest, ReversePaymentRequest, SheetResponse, SalaryPaymentExplanation, StatusTransitionRequest } from './payroll.models';
 
 @Injectable()
 export class PayrollStore {
@@ -80,7 +80,7 @@ export class PayrollStore {
     }
   }
 
-  async transitionStatus(payload: { periodYear: number; periodMonth: number; targetStatus: any; categoryId?: string }): Promise<boolean> {
+  async transitionStatus(payload: StatusTransitionRequest): Promise<boolean> {
     this.saving.set(true);
     this.error.set(null);
     try {
@@ -98,7 +98,7 @@ export class PayrollStore {
     }
   }
 
-  async reversePayment(payload: { paymentId: string; reason: string }): Promise<boolean> {
+  async reversePayment(payload: ReversePaymentRequest): Promise<boolean> {
     this.saving.set(true);
     this.error.set(null);
     try {

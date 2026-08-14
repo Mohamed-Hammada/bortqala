@@ -70,14 +70,14 @@ public class PayrollExecutionService {
 
     @Transactional
     public PayrollRunHeader approveRun(String runId) {
-        PayrollRunHeader run = getRun(runId);
+        PayrollRunHeader run = getRunForUpdate(runId);
         run.approve();
         return runHeaderRepository.save(run);
     }
 
     @Transactional
     public PayrollRunHeader postRun(String runId) {
-        PayrollRunHeader run = getRun(runId);
+        PayrollRunHeader run = getRunForUpdate(runId);
         run.post();
         return runHeaderRepository.save(run);
     }
@@ -85,6 +85,13 @@ public class PayrollExecutionService {
     private PayrollRunHeader getRun(String id) {
         return runHeaderRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("Payroll run not found", "PAYROLL_RUN_NOT_FOUND", HttpStatus.NOT_FOUND));
+    }
+
+    @Transactional
+    public PayrollRunHeader reviewRun(String runId) {
+        PayrollRunHeader run = getRunForUpdate(runId);
+        run.transitionTo(PayrollRunHeader.Status.REVIEWED);
+        return runHeaderRepository.save(run);
     }
 
     private PayrollRunHeader getRunForUpdate(String id) {

@@ -4,6 +4,8 @@ import com.bemo.hr.operations.domain.*;
 import com.bemo.hr.operations.infrastructure.*;
 import com.bemo.hr.organization.domain.Warehouse;
 import com.bemo.hr.organization.infrastructure.WarehouseRepository;
+import com.bemo.hr.organization.infrastructure.BranchRepository;
+import com.bemo.hr.operations.InventoryItemRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.audit.application.AuditService;
 import org.springframework.http.HttpStatus;
@@ -21,21 +23,32 @@ public class WarehouseInventoryService {
     private final StockStatusBalanceRepository balanceRepository;
     private final StockReservationRepository reservationRepository;
     private final AuditService auditService;
+    private final BranchRepository branchRepository;
+    private final InventoryItemRepository inventoryItemRepository;
 
     public WarehouseInventoryService(WarehouseRepository warehouseRepository,
                                      WarehouseBinRepository binRepository,
                                      StockStatusBalanceRepository balanceRepository,
                                      StockReservationRepository reservationRepository,
-                                     AuditService auditService) {
+                                     AuditService auditService,
+                                     BranchRepository branchRepository,
+                                     InventoryItemRepository inventoryItemRepository) {
         this.warehouseRepository = warehouseRepository;
         this.binRepository = binRepository;
         this.balanceRepository = balanceRepository;
         this.reservationRepository = reservationRepository;
         this.auditService = auditService;
+        this.branchRepository = branchRepository;
+        this.inventoryItemRepository = inventoryItemRepository;
     }
 
     @Transactional
     public Warehouse createWarehouse(String branchId, String code, String name, String location) {
+        if (branchId == null || branchId.isBlank()
+                || branchRepository.findById(branchId).filter(branch -> branch.isActive()).isEmpty()) {
+            throw new BusinessRuleException("Select an active branch.",
+                    "WAREHOUSE_BRANCH_REQUIRED", HttpStatus.CONFLICT);
+        }
         Warehouse warehouse = new Warehouse(branchId, code, name, location, true);
         return warehouseRepository.save(warehouse);
     }
@@ -100,6 +113,11 @@ public class WarehouseInventoryService {
     public StockReservation reserveStock(String reservationNumber, String sourceType, String sourceId, String itemId, String warehouseId, BigDecimal quantity) {
         requirePositive(quantity);
         requireActiveWarehouse(warehouseId);
+        if (itemId == null || itemId.isBlank()
+                || inventoryItemRepository.findById(itemId).filter(com.bemo.hr.operations.InventoryItem::isActive).isEmpty()) {
+            throw new BusinessRuleException("Select an active inventory item.",
+                    "WAREHOUSE_ITEM_ACTIVE_REQUIRED", HttpStatus.CONFLICT);
+        }
         StockReservation replay = reservationRepository
                 .findBySourceTypeAndSourceIdAndItemIdAndWarehouseId(sourceType, sourceId, itemId, warehouseId)
                 .orElse(null);

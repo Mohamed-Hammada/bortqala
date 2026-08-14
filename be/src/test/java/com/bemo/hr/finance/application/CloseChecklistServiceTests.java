@@ -50,4 +50,27 @@ class CloseChecklistServiceTests {
                 .extracting(CloseCheckItem::severity)
                 .containsExactly(CloseCheckItem.Severity.BLOCKER);
     }
+
+    @Test
+    void usesPeriodEndAndAbsoluteDifferenceForReconciliationTolerance() {
+        FiscalPeriod period = new FiscalPeriod(2026, 1, "Jan 2026", LocalDate.of(2026, 1, 1),
+                LocalDate.of(2026, 1, 31), FiscalPeriod.Status.OPEN);
+        when(fiscalPeriodRepository.findById("p-1")).thenReturn(Optional.of(period));
+        var provider = mock(com.bemo.hr.finance.application.close.SubledgerReconciliationProvider.class);
+        when(provider.type()).thenReturn(com.bemo.hr.finance.domain.reconciliation.SubledgerReconciliationReport.SubledgerType.AP);
+        when(provider.calculate("p-1", period.getEndDate())).thenReturn(
+                new com.bemo.hr.finance.application.close.SubledgerReconciliationProvider.ReconciliationCalculation(
+                        com.bemo.hr.finance.domain.reconciliation.SubledgerReconciliationReport.SubledgerType.AP,
+                        new java.math.BigDecimal("88"), new java.math.BigDecimal("100"),
+                        new java.math.BigDecimal("-12"), false, java.util.List.of()));
+        closeChecklistService = new CloseChecklistService(fiscalPeriodRepository, journalEntryRepository,
+                java.util.List.of(provider));
+
+        CloseChecklistSummary summary = closeChecklistService.computePrecheck("p-1");
+
+        assertThat(summary.canClose()).isFalse();
+        assertThat(summary.checks()).filteredOn(item -> item.code().equals("SUBLEDGER_RECONCILIATION_AP"))
+                .singleElement().extracting(CloseCheckItem::amount).isEqualTo(new java.math.BigDecimal("12"));
+        verify(provider).calculate("p-1", LocalDate.of(2026, 1, 31));
+    }
 }

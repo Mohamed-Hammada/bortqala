@@ -35,6 +35,7 @@ describe('SalesPage accounts receivable',()=>{
     http.expectOne('/api/v1/trade/sales/orders/so-1/deliveries').flush([]);http.expectOne('/api/v1/trade/sales/orders/so-1/returns').flush([{id:'r1',returnNumber:'RET-1',deliveryId:'d1',creditNoteId:'c1',creditNoteNumber:'CN-1',status:'REFUNDED'}]);await promise;expect(component.returnsByOrder()['so-1'][0].creditNoteNumber).toBe('CN-1');});
 
   function flushLoad(orders:SalesOrder[]=[]){http.expectOne('/api/v1/trade/sales/orders').flush(orders);http.expectOne('/api/v1/trade/sales/receivables/invoices').flush([{id:'invoice-1',invoiceNumber:'INV-1',customerId:'customer-1',invoiceDate:1,dueDate:2,currencyCode:'EGP',amount:500,outstandingAmount:500,status:'OPEN',version:0}]);
-    http.expectOne('/api/v1/trade/sales/receivables/receipts').flush([]);http.expectOne('/api/v1/trade/sales/receivables/aging').flush({asOf:1,current:0,days1To30:500,days31To60:0,days61To90:0,over90:0,total:500});
-    http.expectOne('/api/v1/trade/sales/receivables/collections').flush([{id:'task-1',invoiceNumber:'INV-1',customerId:'customer-1',outstandingAmount:500,dueDate:2,daysOverdue:10,status:'OPEN',nextActionDate:0,version:0}]);}
+    http.expectOne('/api/v1/trade/sales/receivables/receipts').flush([]);
+    http.expectOne(r=>r.url==='/api/v1/trade/sales/receivables/aging'&&r.params.has('asOf')).flush({asOf:1,current:0,days1To30:500,days31To60:0,days61To90:0,over90:0,total:500});
+    http.expectOne(r=>r.url==='/api/v1/trade/sales/receivables/collections'&&r.params.has('asOf')).flush([{id:'task-1',invoiceNumber:'INV-1',customerId:'customer-1',outstandingAmount:500,dueDate:2,daysOverdue:10,status:'OPEN',nextActionDate:0,version:0}]);}
 });
