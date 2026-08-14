@@ -1,0 +1,170 @@
+/*
+ * Unified form-control styling.
+ *
+ * Loaded after the legacy/global UI styles. The deliberately strong :is()
+ * selector lets these product-level rules win over older Angular component
+ * selectors without scattering !important declarations.
+ *
+ * Native <select> option popups remain browser/OS rendered; the closed control
+ * itself follows the product design system.
+ */
+
+/* Normal text/data-entry controls share one product-level visual contract. */
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled]) {
+  box-sizing: border-box;
+  min-height: var(--control-height, 40px);
+  max-width: 100%;
+  padding-block: 8px;
+  padding-inline: 12px;
+  color: var(--ink);
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm, 8px);
+  font: inherit;
+  line-height: 1.35;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+/* Field-based forms stay fluid, including controls nested in password wrappers. */
+:root body :is(
+  .field,
+  .form-grid .field,
+  .dialog-form-grid .field,
+  .modal-dialog-box .field,
+  .drawer .field,
+  .card form .field
+) :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea
+):not([data-unstyled]) {
+  width: 100%;
+}
+
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled]):hover:not(:disabled):not([readonly]) {
+  border-color: color-mix(in srgb, var(--gold) 48%, var(--line));
+}
+
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled]):focus,
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled]):focus-visible {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 22%, transparent);
+}
+
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  textarea,
+  .search-input
+):not([data-unstyled])::placeholder {
+  color: var(--muted);
+  opacity: 0.78;
+}
+
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled]):disabled {
+  cursor: not-allowed;
+  color: var(--secondary-text);
+  background-color: var(--surface-muted);
+  opacity: 0.72;
+}
+
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  textarea
+):not([data-unstyled])[readonly] {
+  color: var(--secondary-text);
+  background-color: var(--surface-muted);
+}
+
+:root body textarea:not([data-unstyled]) {
+  min-height: 96px;
+  resize: vertical;
+}
+
+/* Keep native select behavior/keyboard accessibility and only normalize the shell. */
+:root body select:not([multiple]):not([data-unstyled]) {
+  padding-inline-end: 36px;
+  cursor: pointer;
+}
+
+:root body select:not([multiple]):not([data-unstyled]):disabled {
+  cursor: not-allowed;
+}
+
+/* Search controls are identical whether implemented by type or shared class. */
+:root body :is(input[type='search'], .search-input):not([data-unstyled]) {
+  min-height: var(--control-height, 40px);
+  border-radius: var(--radius-sm, 8px);
+}
+
+/* Shared validation state. */
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled])[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled])[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+/* Logical padding keeps Arabic RTL and English LTR layouts aligned correctly.
+ * Existing technical/password direction rules are intentionally left untouched.
+ */
+@media (max-width: 700px) {
+  :root body :is(
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+    select:not([multiple]),
+    textarea,
+    .search-input
+  ):not([data-unstyled]) {
+    min-height: var(--control-height-lg, 44px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root body :is(
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+    select:not([multiple]),
+    textarea,
+    .search-input
+  ):not([data-unstyled]) {
+    transition: none;
+  }
+}
