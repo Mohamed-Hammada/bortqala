@@ -2,17 +2,24 @@ package com.bemo.hr.shared.i18n;
 
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.mock.web.MockMultipartFile;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -101,6 +108,33 @@ class TranslationAdminServiceTests {
     }
 
     @Test
+    void importSpreadsheetUpsertsRowsAndReturnsSummary() throws Exception {
+        when(appRepository.existsById("app-1")).thenReturn(true);
+        TranslationEntry existing = new TranslationEntry("nav.title", "ar-EG", "عنوان قديم", "app-1");
+
+        when(translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppId("ar-EG", "common.save", "app-1"))
+                .thenReturn(Optional.empty());
+        when(translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppId("ar-EG", "nav.title", "app-1"))
+                .thenReturn(Optional.of(existing));
+
+        var file = workbookFile(List.of(
+                new String[]{"common.save", "حفظ"},
+                new String[]{"nav.title", "عنوان جديد"}
+        ));
+
+        var result = service().importSpreadsheet("ar-EG", "app-1", file, "superadmin");
+
+        assertThat(result.importedCount()).isEqualTo(2);
+        assertThat(result.createdCount()).isEqualTo(1);
+        assertThat(result.updatedCount()).isEqualTo(1);
+        assertThat(result.unchangedCount()).isZero();
+        assertThat(existing.getTextValue()).isEqualTo("عنوان جديد");
+        verify(translationRepository, times(2)).save(any(TranslationEntry.class));
+        verify(auditService, times(2)).record(eq("TRANSLATION_IMPORT_UPSERT"), eq("TRANSLATION"),
+                any(), eq("superadmin"), any(), eq(null));
+    }
+
+    @Test
     void saveUpdatesOnlySelectedApplicationAndWritesAuditEvent() {
         TranslationEntry defaultEntry = new TranslationEntry("nav.title", "en-US", "Default title", null);
         TranslationEntry overrideEntry = new TranslationEntry("nav.title", "en-US", "Old title", "app-1");
@@ -139,5 +173,25 @@ class TranslationAdminServiceTests {
         assertThat(row.overrideValue()).isNull();
         assertThat(row.effectiveValue()).isEqualTo("Default title");
         assertThat(row.overridden()).isFalse();
+    }
+
+    private MockMultipartFile workbookFile(List<String[]> rows) throws IOException {
+        try (var workbook = new XSSFWorkbook(); var output = new ByteArrayOutputStream()) {
+            var sheet = workbook.createSheet("translations");
+            var header = sheet.createRow(0);
+            header.createCell(0).setCellValue("key");
+            header.createCell(1).setCellValue("value");
+            for (int i = 0; i < rows.size(); i++) {
+                var row = sheet.createRow(i + 1);
+                row.createCell(0).setCellValue(rows.get(i)[0]);
+                row.createCell(1).setCellValue(rows.get(i)[1]);
+            }
+            workbook.write(output);
+            return new MockMultipartFile(
+                    "file",
+                    "translations.xlsx",
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    output.toByteArray());
+        }
     }
 }

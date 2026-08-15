@@ -28,6 +28,13 @@ interface TranslationPage {
   overriddenCount: number;
 }
 
+interface TranslationImportResult {
+  importedCount: number;
+  createdCount: number;
+  updatedCount: number;
+  unchangedCount: number;
+}
+
 @Component({
   selector: 'app-translation-management',
   standalone: true,
@@ -38,6 +45,7 @@ interface TranslationPage {
 })
 export class TranslationManagementComponent implements OnDestroy {
   private static readonly SEARCH_DEBOUNCE_MS = 300;
+  private static readonly MAX_IMPORT_FILE_BYTES = 5 * 1024 * 1024;
 
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
@@ -52,10 +60,13 @@ export class TranslationManagementComponent implements OnDestroy {
   readonly total = signal(0);
   readonly overriddenCount = signal(0);
   readonly loading = signal(false);
+  readonly importing = signal(false);
   readonly savingKey = signal<string | null>(null);
   readonly drafts = signal<Record<string, string>>({});
   readonly newKey = signal('');
   readonly newValue = signal('');
+  readonly importFile = signal<File | null>(null);
+  readonly importFileName = signal('');
   readonly pagination = new TablePagination(25);
 
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
@@ -113,6 +124,84 @@ export class TranslationManagementComponent implements OnDestroy {
     return this.drafts()[row.key]
       ?? (this.appId() ? row.overrideValue ?? row.effectiveValue : row.defaultValue)
       ?? '';
+  }
+
+  onImportFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0] ?? null;
+    if (!file) {
+      this.clearImportFile(input ?? undefined);
+      return;
+    }
+
+    if (!/\.(xlsx|xls)$/i.test(file.name)) {
+      this.notification.error(this.i18n.t(
+        'translations.invalidExcelFile',
+        undefined,
+        'اختر ملف Excel بصيغة XLSX أو XLS.',
+      ));
+      this.clearImportFile(input ?? undefined);
+      return;
+    }
+
+    if (file.size > TranslationManagementComponent.MAX_IMPORT_FILE_BYTES) {
+      this.notification.error(this.i18n.t(
+        'translations.excelFileTooLarge',
+        undefined,
+        'حجم ملف Excel يجب ألا يتجاوز 5 ميجابايت.',
+      ));
+      this.clearImportFile(input ?? undefined);
+      return;
+    }
+
+    this.importFile.set(file);
+    this.importFileName.set(file.name);
+  }
+
+  clearImportFile(input?: HTMLInputElement): void {
+    this.importFile.set(null);
+    this.importFileName.set('');
+    if (input) input.value = '';
+  }
+
+  async uploadImport(input?: HTMLInputElement): Promise<void> {
+    const file = this.importFile();
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    formData.append('locale', this.locale());
+    const appId = this.appId();
+    if (appId) formData.append('appId', appId);
+
+    this.cancelSearchReload();
+    this.importing.set(true);
+    try {
+      const result = await firstValueFrom(this.http.post<TranslationImportResult>(
+        '/api/v1/i18n/admin/translations/import',
+        formData,
+      ));
+      await this.refreshActiveBundle();
+      this.pagination.page.set(1);
+      await this.loadRows();
+      this.clearImportFile(input);
+      this.notification.success(
+        this.i18n.t(
+          'translations.importSuccess',
+          {
+            imported: result.importedCount,
+            created: result.createdCount,
+            updated: result.updatedCount,
+            unchanged: result.unchangedCount,
+          },
+          `تم استيراد ${result.importedCount} ترجمة: ${result.createdCount} جديدة، ${result.updatedCount} محدثة، ${result.unchangedCount} بدون تغيير.`,
+        ),
+      );
+    } catch (error) {
+      this.notification.error(apiErrorMessage(error, this.i18n));
+    } finally {
+      this.importing.set(false);
+    }
   }
 
   async save(row: TranslationRow): Promise<void> {

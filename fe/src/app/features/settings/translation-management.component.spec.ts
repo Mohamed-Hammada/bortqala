@@ -187,6 +187,29 @@ describe('TranslationManagementComponent', () => {
     expect(component.rows().map((row) => row.key)).toEqual(['nav.title']);
   });
 
+  it('uploads an excel file then refreshes the current page', async () => {
+    const file = new File(['binary'], 'translations.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    component.onImportFileSelected({
+      target: { files: [file] },
+    } as unknown as Event);
+
+    const promise = component.uploadImport();
+    const request = http.expectOne('/api/v1/i18n/admin/translations/import');
+    expect(request.request.method).toBe('POST');
+    const body = request.request.body as FormData;
+    expect(body.get('locale')).toBe('ar-EG');
+    expect(body.get('file')).toBe(file);
+    request.flush({ importedCount: 2, createdCount: 1, updatedCount: 1, unchangedCount: 0 });
+
+    expectTranslationRequest().flush(pageResponse());
+    await promise;
+
+    expect(component.importFile()).toBeNull();
+    expect(notification.success).toHaveBeenCalled();
+  });
+
   it('surfaces server-page load errors through the notification service', async () => {
     const promise = component.changeLocale('en-US');
     expectTranslationRequest({ locale: 'en-US' })

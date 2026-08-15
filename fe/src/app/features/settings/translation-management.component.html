@@ -45,6 +45,66 @@
     }
   </section>
 
+  <section class="translation-import" aria-label="Translation import">
+    <div class="import-copy">
+      <span class="import-icon" aria-hidden="true">⇧</span>
+      <div>
+        <h3>{{ i18n.t('translations.importTitle', undefined, 'استيراد الترجمات من Excel') }}</h3>
+        <p>{{ i18n.t('translations.importDescription', undefined, 'استورد مجموعة ترجمات إلى اللغة والنطاق المحددين أعلاه دون الحاجة إلى تعديل كل صف يدويًا.') }}</p>
+      </div>
+    </div>
+
+    <input
+      #importFileInput
+      class="visually-hidden-file"
+      type="file"
+      accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+      (change)="onImportFileSelected($event)"
+      [disabled]="importing()"
+    />
+
+    <div class="import-controls">
+      <button
+        type="button"
+        class="button secondary choose-file-button"
+        (click)="importFileInput.click()"
+        [disabled]="importing()"
+      >
+        {{ i18n.t('translations.chooseExcelFile', undefined, 'اختيار ملف Excel') }}
+      </button>
+
+      <div class="selected-file" [class.empty]="!importFileName()" aria-live="polite">
+        @if (importFileName()) {
+          <span class="file-type-badge">Excel</span>
+          <strong [title]="importFileName()">{{ importFileName() }}</strong>
+          <button
+            type="button"
+            class="file-clear"
+            (click)="clearImportFile(importFileInput)"
+            [disabled]="importing()"
+            [attr.aria-label]="i18n.t('translations.clearSelectedFile', undefined, 'مسح الملف المحدد')"
+          >×</button>
+        } @else {
+          <span>{{ i18n.t('translations.noFileSelected', undefined, 'لم يتم اختيار ملف بعد') }}</span>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="button primary import-submit"
+        (click)="uploadImport(importFileInput)"
+        [disabled]="importing() || !importFile()"
+      >
+        {{ importing() ? i18n.t('translations.importing', undefined, 'جارٍ الاستيراد...') : i18n.t('translations.importAction', undefined, 'استيراد الملف') }}
+      </button>
+    </div>
+
+    <p class="import-note">
+      <strong>{{ i18n.t('translations.excelColumns', undefined, 'تنسيق الملف:') }}</strong>
+      {{ i18n.t('translations.importNote', undefined, 'أول ورقة يجب أن تحتوي على العمودين key و value. الصفوف الحالية تُحدّث، والمفاتيح الجديدة تُنشأ ضمن اللغة والنطاق الحاليين.') }}
+    </p>
+  </section>
+
   <details class="add-translation">
     <summary>＋ {{ i18n.t('translations.add', undefined, 'إضافة مفتاح') }}</summary>
     <div class="add-row">
@@ -75,7 +135,7 @@
               @if (appId()) {
                 <th class="default-column">{{ i18n.t('translations.defaultValue', undefined, 'الافتراضي') }}</th>
               }
-              <th>{{ i18n.t('translations.value', undefined, 'الترجمة') }}</th>
+              <th class="value-column">{{ i18n.t('translations.value', undefined, 'الترجمة') }}</th>
               <th class="status-column">{{ i18n.t('common.status', undefined, 'الحالة') }}</th>
               <th class="actions-column">{{ i18n.t('common.actions', undefined, 'الإجراءات') }}</th>
             </tr>
@@ -91,7 +151,7 @@
                 }
                 <td class="value-cell">
                   <textarea
-                    rows="1"
+                    rows="2"
                     [ngModel]="displayValue(row)"
                     (ngModelChange)="updateDraft(row.key, $event)"
                     [attr.aria-label]="row.key"
@@ -104,26 +164,28 @@
                     <span class="default-badge">{{ i18n.t('translations.defaultValue', undefined, 'افتراضي') }}</span>
                   }
                 </td>
-                <td class="row-actions">
-                  @if (appId() && row.overridden) {
+                <td class="actions-cell">
+                  <div class="row-actions">
+                    @if (appId() && row.overridden) {
+                      <button
+                        type="button"
+                        class="button secondary btn-sm"
+                        (click)="restore(row)"
+                        [disabled]="savingKey() === row.key"
+                        [attr.title]="i18n.t('translations.restoreDefault', undefined, 'العودة للافتراضي')"
+                      >
+                        ↶ {{ i18n.t('translations.restoreDefault', undefined, 'العودة للافتراضي') }}
+                      </button>
+                    }
                     <button
                       type="button"
-                      class="button secondary btn-sm"
-                      (click)="restore(row)"
-                      [disabled]="savingKey() === row.key"
-                      [attr.title]="i18n.t('translations.restoreDefault', undefined, 'العودة للافتراضي')"
+                      class="button primary btn-sm"
+                      (click)="save(row)"
+                      [disabled]="savingKey() === row.key || !displayValue(row).trim()"
                     >
-                      ↶ {{ i18n.t('translations.restoreDefault', undefined, 'العودة للافتراضي') }}
+                      {{ savingKey() === row.key ? i18n.t('common.saving', undefined, 'جارٍ الحفظ...') : i18n.t('common.save', undefined, 'حفظ') }}
                     </button>
-                  }
-                  <button
-                    type="button"
-                    class="button primary btn-sm"
-                    (click)="save(row)"
-                    [disabled]="savingKey() === row.key || !displayValue(row).trim()"
-                  >
-                    {{ savingKey() === row.key ? i18n.t('common.saving', undefined, 'جارٍ الحفظ...') : i18n.t('common.save', undefined, 'حفظ') }}
-                  </button>
+                  </div>
                 </td>
               </tr>
             } @empty {

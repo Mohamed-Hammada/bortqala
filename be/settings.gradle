@@ -1,1 +1,5 @@
 rootProject.name = 'bemo-erp'
+
+// Composite build: the shared framework module (com.bemo:shared) lives one level up.
+includeBuild('../shared')
+

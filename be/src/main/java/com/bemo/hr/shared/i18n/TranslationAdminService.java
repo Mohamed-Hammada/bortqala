@@ -3,21 +3,36 @@ package com.bemo.hr.shared.i18n;
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
+import org.apache.poi.EncryptedDocumentException;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class TranslationAdminService {
     private static final List<String> SUPPORTED_LOCALES = List.of("ar-EG", "en-US");
     private static final List<Integer> ALLOWED_PAGE_SIZES = List.of(10, 25, 50, 100);
+    private static final int MAX_IMPORT_ROWS = 5_000;
+    private static final long MAX_IMPORT_FILE_BYTES = 5L * 1024 * 1024;
 
     private final TranslationRepository translationRepository;
     private final TenantApplicationRepository appRepository;
@@ -119,6 +134,68 @@ public class TranslationAdminService {
 
     @Transactional
     @CacheEvict(cacheNames = "translationBundles", allEntries = true)
+    public TranslationImportResult importSpreadsheet(String locale, String appId, MultipartFile file, String actor) {
+        String normalizedLocale = normalize(locale);
+        String normalizedAppId = normalizeAppId(appId);
+        validateApp(normalizedAppId);
+
+        if (file == null || file.isEmpty()) {
+            throw new BusinessRuleException("Translation file is required.",
+                    "I18N_IMPORT_FILE_REQUIRED", HttpStatus.CONFLICT);
+        }
+        if (file.getSize() > MAX_IMPORT_FILE_BYTES) {
+            throw new BusinessRuleException("Translation Excel file must not exceed 5 MB.",
+                    "I18N_IMPORT_FILE_TOO_LARGE", HttpStatus.CONFLICT);
+        }
+
+        String filename = file.getOriginalFilename() == null ? "translations.xlsx" : file.getOriginalFilename();
+        if (!filename.toLowerCase(Locale.ROOT).matches(".*\\.(xlsx|xls)$")) {
+            throw new BusinessRuleException("Translation file must be an XLSX or XLS workbook.",
+                    "I18N_IMPORT_INVALID_FILE_TYPE", HttpStatus.CONFLICT);
+        }
+        Map<String, String> importedValues = parseWorkbook(file);
+
+        int createdCount = 0;
+        int updatedCount = 0;
+        int unchangedCount = 0;
+
+        for (var imported : importedValues.entrySet()) {
+            String normalizedKey = normalizeKey(imported.getKey());
+            String normalizedText = normalizeText(imported.getValue());
+
+            TranslationEntry entry = normalizedAppId == null
+                    ? translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppIdIsNull(
+                            normalizedLocale, normalizedKey).orElse(null)
+                    : translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppId(
+                            normalizedLocale, normalizedKey, normalizedAppId).orElse(null);
+
+            if (entry == null) {
+                entry = new TranslationEntry(normalizedKey, normalizedLocale, normalizedText, normalizedAppId);
+                translationRepository.save(entry);
+                createdCount++;
+            } else if (!Objects.equals(entry.getTextValue(), normalizedText)) {
+                entry.updateTextValue(normalizedText);
+                translationRepository.save(entry);
+                updatedCount++;
+            } else {
+                unchangedCount++;
+            }
+
+            auditService.record("TRANSLATION_IMPORT_UPSERT", "TRANSLATION",
+                    entry.getId(), actor,
+                    importAuditDetails(normalizedKey, normalizedLocale, normalizedAppId, filename),
+                    null);
+        }
+
+        return new TranslationImportResult(
+                importedValues.size(),
+                createdCount,
+                updatedCount,
+                unchangedCount);
+    }
+
+    @Transactional
+    @CacheEvict(cacheNames = "translationBundles", allEntries = true)
     public TranslationRow save(String key, TranslationUpdate request, String actor) {
         String normalizedKey = normalizeKey(key);
         String normalizedLocale = normalize(request.locale());
@@ -164,6 +241,99 @@ public class TranslationAdminService {
                             auditDetails(normalizedKey, normalizedLocale, normalizedAppId), null);
                 });
         return row(normalizedKey, normalizedLocale, normalizedAppId);
+    }
+
+    private Map<String, String> parseWorkbook(MultipartFile file) {
+        try (InputStream inputStream = file.getInputStream(); Workbook workbook = WorkbookFactory.create(inputStream)) {
+            Sheet sheet = workbook.getNumberOfSheets() > 0 ? workbook.getSheetAt(0) : null;
+            if (sheet == null) {
+                throw new BusinessRuleException("The uploaded Excel file is empty.",
+                        "I18N_IMPORT_EMPTY_FILE", HttpStatus.CONFLICT);
+            }
+
+            Row header = sheet.getRow(sheet.getFirstRowNum());
+            if (header == null) {
+                throw new BusinessRuleException("The uploaded Excel file is missing a header row.",
+                        "I18N_IMPORT_MISSING_HEADER", HttpStatus.CONFLICT);
+            }
+
+            int keyColumn = -1;
+            int valueColumn = -1;
+            DataFormatter formatter = new DataFormatter();
+            for (Cell cell : header) {
+                String headerValue = normalizeHeader(formatter.formatCellValue(cell));
+                if ("key".equals(headerValue) || "translationkey".equals(headerValue)) {
+                    keyColumn = cell.getColumnIndex();
+                }
+                if ("value".equals(headerValue)
+                        || "textvalue".equals(headerValue)
+                        || "translation".equals(headerValue)
+                        || "translationvalue".equals(headerValue)) {
+                    valueColumn = cell.getColumnIndex();
+                }
+            }
+
+            if (keyColumn < 0 || valueColumn < 0) {
+                throw new BusinessRuleException("Excel header must include key and value columns.",
+                        "I18N_IMPORT_INVALID_HEADER", HttpStatus.CONFLICT);
+            }
+
+            Map<String, String> result = new LinkedHashMap<>();
+            List<Integer> duplicateRows = new ArrayList<>();
+            int importedRowCount = 0;
+            for (int rowIndex = sheet.getFirstRowNum() + 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+                Row row = sheet.getRow(rowIndex);
+                if (row == null) {
+                    continue;
+                }
+
+                String key = formatter.formatCellValue(row.getCell(keyColumn)).strip();
+                String value = formatter.formatCellValue(row.getCell(valueColumn)).strip();
+                if (key.isEmpty() && value.isEmpty()) {
+                    continue;
+                }
+                if (key.isEmpty() || value.isEmpty()) {
+                    throw new BusinessRuleException("Excel import row " + (rowIndex + 1) + " must contain both key and value.",
+                            "I18N_IMPORT_INVALID_ROW", HttpStatus.CONFLICT);
+                }
+
+                importedRowCount++;
+                if (importedRowCount > MAX_IMPORT_ROWS) {
+                    throw new BusinessRuleException("Excel import exceeds the maximum allowed 5000 rows.",
+                            "I18N_IMPORT_ROW_LIMIT", HttpStatus.CONFLICT);
+                }
+
+                String dedupeKey = key.toLowerCase(Locale.ROOT);
+                if (result.containsKey(dedupeKey)) {
+                    duplicateRows.add(rowIndex + 1);
+                }
+                result.put(dedupeKey, value);
+            }
+
+            if (result.isEmpty()) {
+                throw new BusinessRuleException("The uploaded Excel file does not contain any translation rows.",
+                        "I18N_IMPORT_EMPTY_DATA", HttpStatus.CONFLICT);
+            }
+
+            if (!duplicateRows.isEmpty()) {
+                throw new BusinessRuleException("Excel import contains duplicate translation keys at rows " + duplicateRows + ".",
+                        "I18N_IMPORT_DUPLICATE_KEYS", HttpStatus.CONFLICT);
+            }
+
+            Map<String, String> restoredCase = new LinkedHashMap<>();
+            for (int rowIndex = sheet.getFirstRowNum() + 1; rowIndex <= sheet.getLastRowNum(); rowIndex++) {
+                Row row = sheet.getRow(rowIndex);
+                if (row == null) continue;
+                String key = formatter.formatCellValue(row.getCell(keyColumn)).strip();
+                String value = formatter.formatCellValue(row.getCell(valueColumn)).strip();
+                if (key.isEmpty() || value.isEmpty()) continue;
+                restoredCase.put(key, value);
+            }
+            return restoredCase;
+        } catch (EncryptedDocumentException | IOException ex) {
+            throw new BusinessRuleException("The uploaded Excel file could not be read.",
+                    "I18N_IMPORT_INVALID_FILE", HttpStatus.CONFLICT);
+        }
     }
 
     private List<TranslationRow> rowsForScope(String locale, String appId) {
@@ -241,9 +411,23 @@ public class TranslationAdminService {
         return text.strip();
     }
 
+    private String normalizeHeader(String value) {
+        return value == null ? "" : value.strip().toLowerCase(Locale.ROOT).replaceAll("[^a-z]", "");
+    }
+
     private String auditDetails(String key, String locale, String appId) {
-        return "{\"key\":\"" + key.replace("\"", "\\\"") + "\",\"locale\":\"" + locale
-                + "\",\"scope\":\"" + (appId == null ? "DEFAULT" : appId) + "\"}";
+        return "{\"key\":\"" + escapeJson(key) + "\",\"locale\":\"" + locale
+                + "\",\"scope\":\"" + (appId == null ? "DEFAULT" : escapeJson(appId)) + "\"}";
+    }
+
+    private String importAuditDetails(String key, String locale, String appId, String filename) {
+        return "{\"key\":\"" + escapeJson(key) + "\",\"locale\":\"" + locale
+                + "\",\"scope\":\"" + (appId == null ? "DEFAULT" : escapeJson(appId))
+                + "\",\"sourceFile\":\"" + escapeJson(filename) + "\"}";
+    }
+
+    private String escapeJson(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     public record AppOption(String id, String code, String name, boolean active) { }
@@ -259,4 +443,9 @@ public class TranslationAdminService {
                                   long totalElements,
                                   int totalPages,
                                   long overriddenCount) { }
+
+    public record TranslationImportResult(int importedCount,
+                                          int createdCount,
+                                          int updatedCount,
+                                          int unchangedCount) { }
 }
