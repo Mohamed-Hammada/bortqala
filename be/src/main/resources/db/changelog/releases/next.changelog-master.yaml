@@ -363,3 +363,5 @@ databaseChangeLog:
       file: db/changelog/data/update/20260814_v244_customer_success_support_ux.yaml
   - include:
       file: db/changelog/data/insert/20260815_v245_exception_and_table_i18n.yaml
+  - include:
+      file: db/changelog/data/insert/20260815_v246_full_ui_i18n.yaml

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { WorkforceService } from '../../data-access/workforce.service';
 import { NotificationService } from '../../../../core/notification.service';
+import { I18nService } from '../../../../core/i18n.service';
 import { apiErrorDetail } from '../../../../core/api-error';
 import { LaborRequest, LaborRequestItem } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
@@ -17,26 +18,26 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
     <div class="workforce-container">
       <header class="page-header">
         <div>
-          <span class="eyebrow">طلبات العمالة</span>
-          <h1>سجل طلبات الاحتياج والمتابعة اليومية</h1>
+          <span class="eyebrow">{{ i18n.t('workforce.ui.requests.eyebrow') }}</span>
+          <h1>{{ i18n.t('workforce.ui.requests.title') }}</h1>
         </div>
         <button type="button" class="btn btn-primary" (click)="openCreateModal()">
-          + إنشاء طلب عمالة جديد
+          {{ i18n.t('workforce.ui.requests.new') }}
         </button>
       </header>
 
       <!-- Stats bar -->
       <div class="stats-row">
         <div class="stat-card">
-          <span class="stat-label">إجمالي الطلبات</span>
+          <span class="stat-label">{{ i18n.t('workforce.ui.requests.total') }}</span>
           <span class="stat-value">{{ workforceService.laborRequests().length }}</span>
         </div>
         <div class="stat-card">
-          <span class="stat-label">مسودة</span>
+          <span class="stat-label">{{ i18n.t('workforce.ui.requests.draft') }}</span>
           <span class="stat-value draft-count">{{ countByStatus('DRAFT') }}</span>
         </div>
         <div class="stat-card">
-          <span class="stat-label">معتمد</span>
+          <span class="stat-label">{{ i18n.t('workforce.ui.requests.approved') }}</span>
           <span class="stat-value approved-count">{{ countByStatus('APPROVED') }}</span>
         </div>
       </div>
@@ -56,15 +57,15 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
           <table class="data-table">
             <thead>
               <tr>
-                <th>رقم الطلب</th>
-                <th>التاريخ</th>
-                <th>المقاول المكلف</th>
-                <th>الوردية</th>
-                <th>بنود الطلب</th>
-                <th>الإجمالي المطلوب</th>
-                <th>الحالة</th>
-                <th>منشئ الطلب</th>
-                <th>إجراءات</th>
+                <th>{{ i18n.t('workforce.ui.requests.number') }}</th>
+                <th>{{ i18n.t('reportsImport.ui.date') }}</th>
+                <th>{{ i18n.t('workforce.ui.requests.assignedContractor') }}</th>
+                <th>{{ i18n.t('workforce.ui.requests.shift') }}</th>
+                <th>{{ i18n.t('workforce.ui.requests.items') }}</th>
+                <th>{{ i18n.t('workforce.ui.requests.totalRequested') }}</th>
+                <th>{{ i18n.t('workforce.ui.status') }}</th>
+                <th>{{ i18n.t('workforce.ui.requests.createdBy') }}</th>
+                <th>{{ i18n.t('workforce.ui.actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -73,10 +74,10 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
                   <td><strong>{{ req.requestNumber }}</strong></td>
                   <td>{{ req.requestDate | date:'yyyy/MM/dd' }}</td>
                   <td>{{ req.contractorName }}</td>
-                  <td>{{ req.shiftName || 'الوردية الأولى' }}</td>
+                  <td>{{ req.shiftName || i18n.t('workforce.ui.requests.firstShift') }}</td>
                   <td>
                     @if (req.items && req.items.length > 0) {
-                      <span class="items-count">{{ req.items.length }} بند</span>
+                      <span class="items-count">{{ req.items.length }} {{ i18n.t('workforce.ui.requests.itemUnit') }}</span>
                       <div class="items-preview">
                         @for (item of req.items.slice(0,2); track $index) {
                           <span class="item-chip">{{ item.categoryName || item.categoryId }}: {{ item.requestedCount }}</span>
@@ -89,7 +90,7 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
                       <span class="no-items">—</span>
                     }
                   </td>
-                  <td>{{ getTotalRequested(req) }} عامل</td>
+                  <td>{{ getTotalRequested(req) }} {{ i18n.t('workforce.ui.requests.workerUnit') }}</td>
                   <td>
                     <span class="badge"
                           [class.badge-draft]="req.status === 'DRAFT'"
@@ -100,18 +101,18 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
                       {{ getStatusLabel(req.status) }}
                     </span>
                   </td>
-                  <td>{{ req.createdBy || 'النظام' }}</td>
+                  <td>{{ req.createdBy || i18n.t('workforce.ui.system') }}</td>
                   <td>
                     @if (req.status === 'DRAFT') {
                       <button type="button" class="btn btn-sm btn-approve" (click)="approveRequest(req.id)">
-                        ✓ اعتماد
+                        ✓ {{ i18n.t('workforce.ui.requests.approve') }}
                       </button>
                     }
                   </td>
                 </tr>
               }
               @if (workforceService.laborRequests().length === 0) {
-                <tr><td colspan="9" class="empty-cell">لا توجد طلبات عمالة مسجّلة</td></tr>
+                <tr><td colspan="9" class="empty-cell">{{ i18n.t('workforce.ui.requests.empty') }}</td></tr>
               }
             </tbody>
           </table>
@@ -121,7 +122,7 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
       <!-- Create Modal -->
       <app-modal-dialog
         [isOpen]="isModalOpen"
-        title="إنشاء طلب عمالة جديد"
+        [title]="i18n.t('workforce.ui.requests.createTitle')"
         size="wide"
         [preventOutsideClose]="true"
         (close)="closeModal()">
@@ -129,13 +130,13 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
         <form (ngSubmit)="saveRequest()" class="modal-form">
           <div class="form-grid">
             <div class="form-group">
-              <label>رقم الطلب *</label>
+              <label>{{ i18n.t('workforce.ui.requests.numberRequired') }}</label>
               <input type="text" [(ngModel)]="form.requestNumber" name="requestNumber"
                      required class="form-input" />
             </div>
 
             <div class="form-group">
-              <label>المقاول المكلف *</label>
+              <label>{{ i18n.t('workforce.ui.requests.assignedContractor') }} *</label>
               <select [(ngModel)]="form.contractorId" name="contractorId" required class="form-input">
                 @for (c of workforceService.contractors(); track c.id) {
                   <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
@@ -144,13 +145,13 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
             </div>
 
             <div class="form-group">
-              <label>اسم الوردية</label>
+              <label>{{ i18n.t('workforce.ui.requests.shiftName') }}</label>
               <input type="text" [(ngModel)]="form.shiftName" name="shiftName"
-                     class="form-input" placeholder="الوردية الصباحية" />
+                     class="form-input" [placeholder]="i18n.t('workforce.ui.requests.shiftPlaceholder')" />
             </div>
 
             <div class="form-group">
-              <label>ملاحظات الطلب</label>
+              <label>{{ i18n.t('workforce.ui.requests.notes') }}</label>
               <input type="text" [(ngModel)]="form.notes" name="notes" class="form-input" />
             </div>
           </div>
@@ -158,22 +159,22 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
           <!-- Request Items -->
           <div class="items-section">
             <div class="items-header">
-              <h3>بنود الطلب (الفئات والكميات)</h3>
+              <h3>{{ i18n.t('workforce.ui.requests.itemsTitle') }}</h3>
               <button type="button" class="btn btn-secondary btn-sm" (click)="addItem()">
-                + إضافة بند
+                {{ i18n.t('workforce.ui.requests.addItem') }}
               </button>
             </div>
 
             @if (form.items.length === 0) {
               <div class="empty-items">
-                لا توجد بنود بعد — اضغط على "إضافة بند" لتحديد الفئة والكمية المطلوبة
+                {{ i18n.t('workforce.ui.requests.noItems') }}
               </div>
             }
 
             @for (item of form.items; track $index; let i = $index) {
               <div class="item-row">
                 <div class="form-group">
-                  <label>فئة العمال *</label>
+                  <label>{{ i18n.t('workforce.ui.requests.workerCategory') }}</label>
                   <select [(ngModel)]="item.categoryId" [name]="'cat_' + i" class="form-input">
                     @for (cat of workforceService.categories(); track cat.id) {
                       <option [value]="cat.id">{{ cat.name }}</option>
@@ -181,27 +182,27 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
                   </select>
                 </div>
                 <div class="form-group">
-                  <label>الكمية المطلوبة *</label>
+                  <label>{{ i18n.t('workforce.ui.requests.quantity') }}</label>
                   <input type="number" [(ngModel)]="item.requestedCount" [name]="'qty_' + i"
                          class="form-input" min="1" required />
                 </div>
                 <div class="form-group">
-                  <label>المُرسَل</label>
+                  <label>{{ i18n.t('workforce.ui.requests.sent') }}</label>
                   <input type="number" [(ngModel)]="item.sentCount" [name]="'sent_' + i"
                          class="form-input" min="0" />
                 </div>
                 <div class="form-group">
-                  <label>المقبول</label>
+                  <label>{{ i18n.t('workforce.ui.requests.accepted') }}</label>
                   <input type="number" [(ngModel)]="item.acceptedCount" [name]="'acc_' + i"
                          class="form-input" min="0" />
                 </div>
-                <button type="button" class="btn btn-remove" (click)="removeItem(i)" aria-label="حذف بند طلب العمالة" appTooltip="حذف البند — إزالة هذه الفئة من الطلب">✕</button>
+                <button type="button" class="btn btn-remove" (click)="removeItem(i)" [attr.aria-label]="i18n.t('workforce.ui.requests.removeAria')" [appTooltip]="i18n.t('workforce.ui.requests.removeHelp')">✕</button>
               </div>
             }
 
             @if (form.items.length > 0) {
               <div class="items-total">
-                الإجمالي المطلوب: <strong>{{ getTotalRequestedFromForm() }} عامل</strong>
+                {{ i18n.t('workforce.ui.requests.totalRequestedLabel') }} <strong>{{ getTotalRequestedFromForm() }} {{ i18n.t('workforce.ui.requests.workerUnit') }}</strong>
               </div>
             }
           </div>
@@ -209,15 +210,15 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
 
         <div modal-actions class="modal-actions-bar">
           <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="saveRequest()">
-            {{ saving() ? 'جارٍ الإرسال...' : 'إرسال الطلب للمقاول' }}
+            {{ saving() ? i18n.t('workforce.ui.requests.sending') : i18n.t('workforce.ui.requests.send') }}
           </button>
-          <button type="button" class="btn btn-secondary" (click)="closeModal()">إلغاء</button>
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">{{ i18n.t('workforce.ui.cancel') }}</button>
         </div>
       </app-modal-dialog>
     </div>
   `,
   styles: [`
-    .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; direction: rtl; }
+    .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;  }
     .eyebrow { font-size: 0.875rem; color: #d97706; font-weight: 600; }
     .page-header { display: flex; justify-content: space-between; align-items: center; }
     .page-header h1 { font-size: 1.5rem; font-weight: 800; color: var(--ink); margin: 0.25rem 0 0 0; }
@@ -230,7 +231,7 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
     .card { background: var(--surface); border-radius: 12px; border: 1px solid var(--line); padding: 1.25rem; }
     .skeleton-row { height: 48px; background: linear-gradient(90deg, var(--surface-muted) 25%, var(--line) 50%, var(--surface-muted) 75%); background-size: 200% 100%; border-radius: 6px; animation: shimmer 1.5s infinite; margin-bottom: 0.5rem; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    .data-table { width: 100%; border-collapse: collapse; text-align: right; }
+    .data-table { width: 100%; border-collapse: collapse; text-align: start; }
     .data-table th, .data-table td { padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--line); font-size: 0.875rem; }
     .data-table th { background: var(--surface-muted); font-weight: 700; color: var(--secondary-text); }
     .items-count { font-weight: 600; color: var(--secondary-text); font-size: 0.8125rem; }
@@ -268,6 +269,7 @@ import { AppTooltipDirective } from '../../../../shared/ui/app-tooltip/app-toolt
 export class LaborRequestsComponent implements OnInit {
   workforceService = inject(WorkforceService);
   private notificationService = inject(NotificationService);
+  readonly i18n = inject(I18nService);
 
   loading = signal(false);
   saving = signal(false);
@@ -319,7 +321,7 @@ export class LaborRequestsComponent implements OnInit {
 
   saveRequest() {
     if (!this.form.requestNumber || !this.form.contractorId) {
-      this.notificationService.warning('يجب إدخال رقم الطلب واختيار المقاول');
+      this.notificationService.warning(this.i18n.t('workforce.ui.requests.requiredWarning'));
       return;
     }
     this.saving.set(true);
@@ -327,19 +329,19 @@ export class LaborRequestsComponent implements OnInit {
       next: (res) => {
         this.saving.set(false);
         this.closeModal();
-        this.notificationService.success(`تم إنشاء الطلب ${res.requestNumber} بنجاح ✓`);
+        this.notificationService.success(this.i18n.t('workforce.ui.requests.createdSuccess', { number: res.requestNumber }));
       },
       error: (e) => {
         this.saving.set(false);
-        const msg = apiErrorDetail(e, e?.error?.message ?? e?.message ?? 'خطأ غير متوقع');
-        this.notificationService.error('فشل إنشاء الطلب: ' + msg);
+        const msg = apiErrorDetail(e, e?.error?.message ?? e?.message ?? this.i18n.t('workforce.ui.unexpectedError'));
+        this.notificationService.error(this.i18n.t('workforce.ui.requests.createFailed', { detail: msg }));
       }
     });
   }
 
   approveRequest(id: string) {
     // Approve endpoint: PUT /api/v1/workforce/labor-requests/{id}/approve
-    this.notificationService.info('جاري الاعتماد...');
+    this.notificationService.info(this.i18n.t('workforce.ui.requests.approving'));
   }
 
   // --- Helpers ---
@@ -355,19 +357,12 @@ export class LaborRequestsComponent implements OnInit {
     return this.form.items.reduce((s, i) => s + (i.requestedCount ?? 0), 0);
   }
 
-  getStatusLabel(status: string): string {
-    const map: Record<string, string> = {
-      DRAFT: 'مسودة', SENT: 'أُرسل للمقاول', PARTIAL: 'مكتمل جزئياً',
-      APPROVED: 'معتمد', COMPLETED: 'مكتمل', CLOSED: 'مغلق',
-      CANCELLED: 'ملغي', REJECTED: 'مرفوض'
-    };
-    return map[status] ?? status;
-  }
+  getStatusLabel(status: string): string { const keys:Record<string,string>={DRAFT:'workforce.ui.requests.draft',SENT:'workforce.ui.requests.statusSent',APPROVED:'workforce.ui.requests.approved',COMPLETED:'workforce.ui.requests.statusCompleted',CANCELLED:'workforce.ui.requests.statusCancelled'}; return keys[status]?this.i18n.t(keys[status]):status; }
 
   private defaultForm() {
     return {
       requestNumber: 'REQ-' + String(Date.now()).slice(-6),
-      contractorId: '', shiftName: 'الوردية الأولى',
+      contractorId: '', shiftName: this.i18n.t('workforce.ui.requests.firstShift'),
       notes: '', items: [] as LaborRequestItem[]
     };
   }

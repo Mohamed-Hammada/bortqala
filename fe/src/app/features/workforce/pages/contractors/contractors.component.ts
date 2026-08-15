@@ -17,12 +17,12 @@ import { NotificationService } from '../../../../core/notification.service';
     <div class="workforce-container">
       <header class="page-header">
         <div>
-          <span class="eyebrow">إدارة المقاولين</span>
-          <h1>دليل المقاولين ونماذج المحاسبة</h1>
+          <span class="eyebrow">{{ i18n.t('workforce.ui.contractors.eyebrow') }}</span>
+          <h1>{{ i18n.t('workforce.ui.contractors.title') }}</h1>
         </div>
         <div class="header-actions">
-          <button type="button" class="btn btn-secondary" (click)="exportExcel()">⇩ تصدير Excel</button>
-          <button type="button" class="btn btn-primary" (click)="openCreateModal()">+ إضافة مقاول جديد</button>
+          <button type="button" class="btn btn-secondary" (click)="exportExcel()">{{ i18n.t('workforce.ui.exportExcel') }}</button>
+          <button type="button" class="btn btn-primary" (click)="openCreateModal()">{{ i18n.t('workforce.ui.contractors.add') }}</button>
         </div>
       </header>
 
@@ -30,8 +30,8 @@ import { NotificationService } from '../../../../core/notification.service';
         <table class="data-table">
           <thead>
             <tr>
-              <th>الكود</th><th>الاسم الكامل</th><th>الاسم التجاري</th><th>الهاتف</th>
-              <th>نموذج المحاسبة</th><th>جهة الصرف</th><th>حالة التعامل</th><th>إجراءات</th>
+              <th>{{ i18n.t('workforce.ui.contractors.code') }}</th><th>{{ i18n.t('workforce.ui.contractors.fullName') }}</th><th>{{ i18n.t('workforce.ui.contractors.tradeName') }}</th><th>{{ i18n.t('workforce.ui.contractors.phone') }}</th>
+              <th>{{ i18n.t('workforce.ui.contractors.accountingModel') }}</th><th>{{ i18n.t('workforce.ui.contractors.paymentRouting') }}</th><th>{{ i18n.t('workforce.ui.contractors.dealingStatus') }}</th><th>{{ i18n.t('workforce.ui.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -43,7 +43,7 @@ import { NotificationService } from '../../../../core/notification.service';
               <td><span class="badge model-badge">{{ getModelLabel(c.accountingModel) }}</span></td>
               <td>{{ getRoutingLabel(c.paymentRouting) }}</td>
               <td><span class="badge active">{{ contractorStatusLabel(c.status) }}</span></td>
-              <td><button type="button" class="btn btn-sm" (click)="openEditModal(c)">تعديل</button></td>
+              <td><button type="button" class="btn btn-sm" (click)="openEditModal(c)">{{ i18n.t('workforce.ui.edit') }}</button></td>
             </tr>
           </tbody>
         </table>
@@ -51,7 +51,7 @@ import { NotificationService } from '../../../../core/notification.service';
 
       <app-modal-dialog
         [isOpen]="isModalOpen"
-        [title]="editingContractor ? 'تعديل بيانات المقاول' : 'إضافة مقاول جديد'"
+        [title]="editingContractor ? i18n.t('workforce.ui.contractors.editTitle') : i18n.t('workforce.ui.contractors.addTitle')"
         size="wide"
         [preventOutsideClose]="true"
         (close)="closeModal()">
@@ -59,93 +59,93 @@ import { NotificationService } from '../../../../core/notification.service';
         <form (ngSubmit)="saveContractor()" class="modal-form">
           <div class="form-grid">
             <div class="form-group">
-              <label>كود المقاول *</label>
+              <label>{{ i18n.t('workforce.ui.contractors.codeRequired') }}</label>
               <input type="text" [(ngModel)]="form.code" name="code" required class="form-input" [disabled]="saving()" />
             </div>
             <div class="form-group">
-              <label>اسم المقاول *</label>
+              <label>{{ i18n.t('workforce.ui.contractors.nameRequired') }}</label>
               <input type="text" [(ngModel)]="form.name" name="name" required class="form-input" [disabled]="saving()" />
             </div>
             <div class="form-group">
-              <label>الاسم التجاري</label>
+              <label>{{ i18n.t('workforce.ui.contractors.tradeName') }}</label>
               <input type="text" [(ngModel)]="form.tradeName" name="tradeName" class="form-input" [disabled]="saving()" />
             </div>
             <div class="form-group">
-              <label>رقم الهاتف *</label>
+              <label>{{ i18n.t('workforce.ui.contractors.phoneRequired') }}</label>
               <input type="text" [(ngModel)]="form.phone" name="phone" required class="form-input" [disabled]="saving()" />
             </div>
 
             <div class="form-group col-span-2">
-              <label>نموذج محاسبة المقاول الإلزامي *</label>
+              <label>{{ i18n.t('workforce.ui.contractors.modelRequired') }}</label>
               <div class="model-cards">
                 <label class="model-card" [class.selected]="form.accountingModel === 'worker_net_total'">
                   <input type="radio" [(ngModel)]="form.accountingModel" name="accountingModel" value="worker_net_total" [disabled]="saving()" />
-                  <strong>مجموع صافي العمال</strong>
-                  <p>مستحق المقاول يساوي مجموع صافي العمال بعد الخصومات والسلف.</p>
+                  <strong>{{ i18n.t('workforce.ui.contractorAccounts.workerNetTotal') }}</strong>
+                  <p>{{ i18n.t('workforce.ui.contractors.workerNetDescription') }}</p>
                 </label>
                 <label class="model-card" [class.selected]="form.accountingModel === 'contractor_daily_rate'">
                   <input type="radio" [(ngModel)]="form.accountingModel" name="accountingModel" value="contractor_daily_rate" [disabled]="saving()" />
-                  <strong>سعر تعاقد مستقل</strong>
-                  <p>الحساب بسعر المقاول لكل يوم/ساعة بصرف النظر عن يومية العامل.</p>
+                  <strong>{{ i18n.t('workforce.ui.model.contractorDailyRate') }}</strong>
+                  <p>{{ i18n.t('workforce.ui.contractors.dailyRateDescription') }}</p>
                 </label>
                 <label class="model-card" [class.selected]="form.accountingModel === 'worker_cost_plus_fee'">
                   <input type="radio" [(ngModel)]="form.accountingModel" name="accountingModel" value="worker_cost_plus_fee" [disabled]="saving()" />
-                  <strong>تكلفة العمال + عمولة</strong>
-                  <p>تكلفة العمال مضافاً إليها عمولة ثابتة أو نسبة مئوية.</p>
+                  <strong>{{ i18n.t('workforce.ui.model.workerCostPlusFee') }}</strong>
+                  <p>{{ i18n.t('workforce.ui.contractors.costPlusDescription') }}</p>
                 </label>
                 <label class="model-card" [class.selected]="form.accountingModel === 'fixed_period_amount'">
                   <input type="radio" [(ngModel)]="form.accountingModel" name="accountingModel" value="fixed_period_amount" [disabled]="saving()" />
-                  <strong>مبلغ ثابت للفترة</strong>
-                  <p>مبلغ ثابت متفق عليه لكل فترة تسوية مع تعديلات الإضافة والخصم.</p>
+                  <strong>{{ i18n.t('workforce.ui.model.fixedPeriodAmount') }}</strong>
+                  <p>{{ i18n.t('workforce.ui.contractors.fixedDescription') }}</p>
                 </label>
               </div>
             </div>
 
             <div class="form-group" *ngIf="form.accountingModel === 'contractor_daily_rate'">
-              <label>سعر المقاول اليومي الافتراضي</label>
+              <label>{{ i18n.t('workforce.ui.contractors.defaultRate') }}</label>
               <input type="number" min="0" [(ngModel)]="form.defaultDailyRate" name="defaultDailyRate" class="form-input" [disabled]="saving()" />
             </div>
             <div class="form-group" *ngIf="form.accountingModel === 'worker_cost_plus_fee'">
-              <label>قيمة العمولة (مبلغ أو نسبة %)</label>
+              <label>{{ i18n.t('workforce.ui.contractors.feeValue') }}</label>
               <input type="number" min="0" [(ngModel)]="form.feeValue" name="feeValue" class="form-input" [disabled]="saving()" />
             </div>
             <div class="form-group" *ngIf="form.accountingModel === 'fixed_period_amount'">
-              <label>مبلغ الفترة الثابت</label>
+              <label>{{ i18n.t('workforce.ui.contractors.fixedAmount') }}</label>
               <input type="number" min="0" [(ngModel)]="form.fixedPeriodAmount" name="fixedPeriodAmount" class="form-input" [disabled]="saving()" />
             </div>
 
             <div class="form-group">
-              <label>دورة التسوية</label>
+              <label>{{ i18n.t('workforce.ui.contractors.cycle') }}</label>
               <select [(ngModel)]="form.settlementCycleDays" name="settlementCycleDays" class="form-input" [disabled]="saving()">
-                <option [ngValue]="15">كل 15 يومًا (فترتان شهريًا)</option>
-                <option [ngValue]="30">كل 30 يومًا</option>
+                <option [ngValue]="15">{{ i18n.t('workforce.ui.contractors.cycle15') }}</option>
+                <option [ngValue]="30">{{ i18n.t('workforce.ui.contractors.cycle30') }}</option>
               </select>
             </div>
 
             <div class="form-group">
-              <label>جهة الصرف</label>
+              <label>{{ i18n.t('workforce.ui.contractors.paymentRouting') }}</label>
               <select [(ngModel)]="form.paymentRouting" name="paymentRouting" class="form-input" [disabled]="saving()">
-                <option value="contractor_full">صرف كامل المبلغ للمقاول</option>
-                <option value="worker_direct">صرف مستحقات العمال مباشرة وصرف العمولة للمقاول</option>
-                <option value="mixed">صرف مختلط</option>
+                <option value="contractor_full">{{ i18n.t('workforce.ui.contractors.routingFull') }}</option>
+                <option value="worker_direct">{{ i18n.t('workforce.ui.contractors.routingDirect') }}</option>
+                <option value="mixed">{{ i18n.t('workforce.ui.contractors.routingMixed') }}</option>
               </select>
             </div>
           </div>
 
           @if (saveError()) {
             <div class="save-error" role="alert">
-              <strong>تعذر حفظ المقاول.</strong>
+              <strong>{{ i18n.t('workforce.ui.contractors.saveErrorTitle') }}</strong>
               <span>{{ saveError() }}</span>
-              <span>راجع البيانات أو الاتصال ثم أعد المحاولة. لن تُغلق النافذة قبل تأكيد الحفظ من الخادم.</span>
+              <span>{{ i18n.t('workforce.ui.contractors.saveErrorHelp') }}</span>
             </div>
           }
         </form>
 
         <div modal-actions class="modal-actions-bar">
           <button type="button" class="btn btn-primary" (click)="saveContractor()" [disabled]="saving()">
-            {{ saving() ? 'جارٍ الحفظ والتحقق...' : 'حفظ البيانات' }}
+            {{ saving() ? i18n.t('workforce.ui.contractors.saving') : i18n.t('workforce.ui.saveData') }}
           </button>
-          <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="saving()">إلغاء</button>
+          <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="saving()">{{ i18n.t('workforce.ui.cancel') }}</button>
         </div>
       </app-modal-dialog>
     </div>
@@ -157,7 +157,7 @@ import { NotificationService } from '../../../../core/notification.service';
     .header-actions { display: flex; gap: .75rem; }
     .page-header h1 { font-size: 1.75rem; font-weight: 800; color: var(--ink); margin: 0.25rem 0 0 0; }
     .card { background: var(--surface); border-radius: 12px; border: 1px solid var(--line); padding: 1.25rem; overflow-x: auto; }
-    .data-table { width: 100%; border-collapse: collapse; text-align: right; }
+    .data-table { width: 100%; border-collapse: collapse; text-align: start; }
     .data-table th, .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
     .btn { padding: 0.625rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; }
     .btn:disabled { cursor:not-allowed; opacity: .65; }
@@ -241,7 +241,7 @@ export class ContractorsComponent implements OnInit {
   async saveContractor(): Promise<void> {
     if (this.saving()) return;
     if (!this.form.code?.trim() || !this.form.name?.trim() || !this.form.phone?.trim()) {
-      this.saveError.set('الكود واسم المقاول ورقم الهاتف حقول إلزامية.');
+      this.saveError.set(this.i18n.t('workforce.ui.contractors.requiredError')); 
       return;
     }
 
@@ -255,18 +255,18 @@ export class ContractorsComponent implements OnInit {
 
       const refreshed = await firstValueFrom(this.workforceService.loadContractors());
       if (!saved?.id || !refreshed.some(contractor => contractor.id === saved.id)) {
-        throw new Error('استجاب الخادم للحفظ لكن السجل لم يظهر بعد إعادة تحميل البيانات.');
+        throw new Error(this.i18n.t('workforce.ui.contractors.verifyFailed')); 
       }
 
       this.editingContractor = saved;
       this.isModalOpen = false;
-      this.notification.success(wasEditing ? 'تم تحديث بيانات المقاول بنجاح' : 'تم إنشاء المقاول بنجاح');
+      this.notification.success(this.i18n.t(wasEditing ? 'workforce.ui.contractors.updatedSuccess' : 'workforce.ui.contractors.createdSuccess')); 
     } catch (error: any) {
       const message =
         error?.error?.message ??
         error?.error?.detail ??
         error?.message ??
-        'حدث خطأ غير متوقع أثناء حفظ المقاول.';
+        this.i18n.t('workforce.ui.contractors.saveFailed');
       this.saveError.set(message);
     } finally {
       this.saving.set(false);
@@ -283,12 +283,5 @@ export class ContractorsComponent implements OnInit {
     }
   }
 
-  getRoutingLabel(routing: string): string {
-    switch (routing) {
-      case 'contractor_full': return 'كامل للمقاول';
-      case 'worker_direct': return 'مباشر للعمال والعمولة للمقاول';
-      case 'mixed': return 'مختلط';
-      default: return routing;
-    }
-  }
+  getRoutingLabel(routing: string): string { const keys:Record<string,string>={contractor_full:'workforce.ui.contractors.routingFullShort',worker_direct:'workforce.ui.contractors.routingDirectShort',mixed:'workforce.ui.contractors.routingMixedShort'}; return keys[routing]?this.i18n.t(keys[routing]):routing; }
 }

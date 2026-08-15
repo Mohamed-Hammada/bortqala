@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { WorkforceService } from '../../data-access/workforce.service';
 import { WorkforceAdvance, AdvanceRepayRequest, AdvancePolicy } from '../../models/workforce.models';
 import { NotificationService } from '../../../../core/notification.service';
+import { I18nService } from '../../../../core/i18n.service';
 import { exportCsv } from '../../../../core/download';
 import { apiErrorDetail } from '../../../../core/api-error';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
@@ -18,36 +19,36 @@ import { ActivatedRoute } from '@angular/router';
     <div class="workforce-container">
       <header class="page-header">
         <div>
-          <span class="eyebrow">السلف والأقساط</span>
-          <h1>إدارة سُلف الموظفين والعمال والمقاولين وجدولة الأقساط</h1>
+          <span class="eyebrow">{{ i18n.t('workforce.ui.advances.eyebrow') }}</span>
+          <h1>{{ i18n.t('workforce.ui.advances.title') }}</h1>
         </div>
         <div style="display: flex; gap: 0.75rem;">
-          <button type="button" class="btn btn-secondary" (click)="openPolicyModal()">⚙ سياسة الخصم</button>
-          <button type="button" class="btn btn-secondary" (click)="exportCsv()">⇩ Excel</button>
+          <button type="button" class="btn btn-secondary" (click)="openPolicyModal()">⚙ {{ i18n.t('workforce.ui.advances.policy') }}</button>
+          <button type="button" class="btn btn-secondary" (click)="exportCsv()">{{ i18n.t('workforce.ui.exportExcel') }}</button>
           <button type="button" class="btn btn-primary" (click)="openCreateModal()">
-            + صرف سُلفة جديدة
+            {{ i18n.t('workforce.ui.advances.new') }}
           </button>
         </div>
       </header>
 
       <div class="card policy-summary-card">
-        <div><strong>سياسة السلف الافتراضية والاستثناءات</strong><p>الأولوية: استثناء المستفيد ← استثناء فئته ← الإعداد العام، للموظفين والعمال. ويمكن تجاوزها داخل السلفة نفسها.</p></div>
-        <div class="policy-chips">@for (policy of workforceService.advancePolicies(); track policy.id) {<span class="badge policy-chip">{{ policy.scopeName || getPolicyScopeLabel(policy) }} · إصدار {{ policy.version }} · {{ policy.effectiveFrom }} → {{ policy.effectiveTo || 'مفتوحة' }} · {{ policy.deductionMode === 'AUTO' ? 'تلقائي' : 'يدوي' }} · {{ policy.maxDeductionPercent }}%</span>}</div>
+        <div><strong>{{ i18n.t('workforce.ui.advances.policySummary') }}</strong><p>{{ i18n.t('workforce.ui.advances.policyPriority') }}</p></div>
+        <div class="policy-chips">@for (policy of workforceService.advancePolicies(); track policy.id) {<span class="badge policy-chip">{{ policy.scopeName || getPolicyScopeLabel(policy) }} · {{ i18n.t('workforce.ui.advances.version') }} {{ policy.version }} · {{ policy.effectiveFrom }} → {{ policy.effectiveTo || i18n.t('workforce.ui.advances.openEnded') }} · {{ policy.deductionMode === 'AUTO' ? i18n.t('workforce.ui.advances.auto') : i18n.t('workforce.ui.advances.manual') }} · {{ policy.maxDeductionPercent }}%</span>}</div>
       </div>
 
       <!-- Summary Stats -->
       <div class="stats-row">
         <div class="stat-card">
-          <span class="stat-label">إجمالي السلف القائمة</span>
+          <span class="stat-label">{{ i18n.t('workforce.ui.advances.totalOpen') }}</span>
           <span class="stat-value">{{ workforceService.advances().length }}</span>
         </div>
         <div class="stat-card">
-          <span class="stat-label">إجمالي المبالغ الممنوحة</span>
-          <span class="stat-value amount-val">{{ totalGranted() | number:'1.0-0' }} ج.م</span>
+          <span class="stat-label">{{ i18n.t('workforce.ui.advances.totalGranted') }}</span>
+          <span class="stat-value amount-val">{{ totalGranted() | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</span>
         </div>
         <div class="stat-card">
-          <span class="stat-label">إجمالي الأرصدة المتبقية</span>
-          <span class="stat-value balance-val">{{ totalRemaining() | number:'1.0-0' }} ج.م</span>
+          <span class="stat-label">{{ i18n.t('workforce.ui.advances.totalRemaining') }}</span>
+          <span class="stat-value balance-val">{{ totalRemaining() | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</span>
         </div>
       </div>
 
@@ -66,17 +67,17 @@ import { ActivatedRoute } from '@angular/router';
           <table class="data-table">
             <thead>
               <tr>
-                <th>الجهة المستفيدة</th>
-                <th>النوع</th>
-                <th>المبلغ الكلي</th>
-                <th>نوع السلفة</th>
-                <th>الأقساط</th>
-                <th>قيمة القسط</th>
-                <th>الرصيد المتبقي</th>
-                <th>دورية الخصم</th>
-                <th>أقصى خصم %</th>
-                <th>الحالة</th>
-                <th>تاريخ الإنشاء</th>
+                <th>{{ i18n.t('workforce.ui.advances.recipient') }}</th>
+                <th>{{ i18n.t('workforce.ui.type') }}</th>
+                <th>{{ i18n.t('workforce.ui.advances.totalAmount') }}</th>
+                <th>{{ i18n.t('workforce.ui.advances.termType') }}</th>
+                <th>{{ i18n.t('workforce.ui.advances.installments') }}</th>
+                <th>{{ i18n.t('workforce.ui.advances.installmentAmount') }}</th>
+                <th>{{ i18n.t('workforce.ui.advances.remainingBalance') }}</th>
+                <th>{{ i18n.t('workforce.ui.advances.frequency') }}</th>
+                <th>{{ i18n.t('workforce.ui.advances.maxDeduction') }}</th>
+                <th>{{ i18n.t('workforce.ui.status') }}</th>
+                <th>{{ i18n.t('workforce.ui.advances.createdAt') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -84,11 +85,11 @@ import { ActivatedRoute } from '@angular/router';
                 <tr>
                   <td><strong>{{ recipientName(adv) }}</strong></td>
                   <td><span class="badge type-badge">{{ recipientTypeLabel(adv.recipientType) }}</span></td>
-                  <td>{{ adv.amount | number:'1.2-2' }} ج.م</td>
+                  <td>{{ adv.amount | number:'1.2-2' }} {{ i18n.t('workforce.ui.currencyEgp') }}</td>
                   <td><span class="badge term-badge" [class.long-term]="adv.termType === 'LONG_TERM'">{{ getTermLabel(adv.termType) }}</span></td>
-                  <td>{{ adv.totalInstallments }} قسط</td>
-                  <td>{{ adv.installmentAmount | number:'1.2-2' }} ج.م</td>
-                  <td><strong class="rem-bal">{{ adv.remainingBalance | number:'1.2-2' }} ج.م</strong></td>
+                  <td>{{ adv.totalInstallments }} {{ i18n.t('workforce.ui.advances.installmentUnit') }}</td>
+                  <td>{{ adv.installmentAmount | number:'1.2-2' }} {{ i18n.t('workforce.ui.currencyEgp') }}</td>
+                  <td><strong class="rem-bal">{{ adv.remainingBalance | number:'1.2-2' }} {{ i18n.t('workforce.ui.currencyEgp') }}</strong></td>
                   <td>{{ getFrequencyLabel(adv.deductionFrequency) }}</td>
                   <td>{{ adv.maxDeductionPercent }} %</td>
                   <td>
@@ -101,18 +102,18 @@ import { ActivatedRoute } from '@angular/router';
                   <td>
                     <div style="display: flex; gap: 0.25rem;">
                       @if (adv.status === 'ACTIVE') {
-                        <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" (click)="pauseAdvance(adv)">⏸️ إيقاف</button>
-                        <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" (click)="repayAdvance(adv)">💵 سداد</button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" (click)="pauseAdvance(adv)">⏸️ {{ i18n.t('workforce.ui.advances.pause') }}</button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" (click)="repayAdvance(adv)">💵 {{ i18n.t('workforce.ui.advances.repay') }}</button>
                       }
                       @if (adv.status === 'PAUSED' || adv.status === 'SUSPENDED') {
-                        <button type="button" class="btn btn-primary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" (click)="resumeAdvance(adv)">▶️ استئناف</button>
+                        <button type="button" class="btn btn-primary btn-sm" style="padding: 2px 6px; font-size: 0.75rem;" (click)="resumeAdvance(adv)">▶️ {{ i18n.t('workforce.ui.advances.resume') }}</button>
                       }
                     </div>
                   </td>
                 </tr>
               }
               @if (workforceService.advances().length === 0) {
-                <tr><td colspan="11" class="empty-cell">لا توجد سلف مسجّلة حتى الآن</td></tr>
+                <tr><td colspan="11" class="empty-cell">{{ i18n.t('workforce.ui.advances.empty') }}</td></tr>
               }
             </tbody>
           </table>
@@ -122,7 +123,7 @@ import { ActivatedRoute } from '@angular/router';
       <!-- Create Modal -->
       <app-modal-dialog
         [isOpen]="isModalOpen"
-        title="طلب صرف سُلفة جديدة"
+        [title]="i18n.t('workforce.ui.advances.createTitle')"
         size="wide"
         [preventOutsideClose]="true"
         (close)="isModalOpen = false">
@@ -132,19 +133,19 @@ import { ActivatedRoute } from '@angular/router';
 
             <!-- Recipient Type -->
             <div class="form-group">
-              <label>نوع المستفيد *</label>
+              <label>{{ i18n.t('workforce.ui.advances.recipientTypeRequired') }}</label>
               <select [(ngModel)]="form.recipientType" name="recipientType" class="form-input"
                       (ngModelChange)="onRecipientTypeChange()">
-                <option value="WORKER">عامل</option>
-                <option value="CONTRACTOR">مقاول</option>
-                <option value="EMPLOYEE">موظف</option>
+                <option value="WORKER">{{ i18n.t('workforce.ui.worker') }}</option>
+                <option value="CONTRACTOR">{{ i18n.t('workforce.ui.contractor') }}</option>
+                <option value="EMPLOYEE">{{ i18n.t('workforce.ui.employee') }}</option>
               </select>
             </div>
 
             <!-- Worker / Contractor selector -->
             @if (form.recipientType === 'WORKER') {
               <div class="form-group">
-                <label>اختر العامل *</label>
+                <label>{{ i18n.t('workforce.ui.advances.selectWorker') }}</label>
                 <select [(ngModel)]="form.workerId" name="workerId" class="form-input" (ngModelChange)="applyAdvancePolicy()">
                   @for (w of workforceService.workers(); track w.id) {
                     <option [value]="w.id">{{ w.fullName }} ({{ w.code }})</option>
@@ -153,7 +154,7 @@ import { ActivatedRoute } from '@angular/router';
               </div>
             } @else if (form.recipientType === 'CONTRACTOR') {
               <div class="form-group">
-                <label>اختر المقاول *</label>
+                <label>{{ i18n.t('workforce.ui.advances.selectContractor') }}</label>
                 <select [(ngModel)]="form.contractorId" name="contractorId" class="form-input">
                   @for (c of workforceService.contractors(); track c.id) {
                     <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
@@ -162,11 +163,11 @@ import { ActivatedRoute } from '@angular/router';
               </div>
             } @else {
               <div class="form-group">
-                <label>اختر الموظف *</label>
+                <label>{{ i18n.t('workforce.ui.advances.selectEmployee') }}</label>
                 <select [(ngModel)]="form.employeeId" name="employeeId" class="form-input"
-                        aria-label="اختر الموظف المستفيد من السلفة" (ngModelChange)="applyAdvancePolicy()">
+                        [attr.aria-label]="i18n.t('workforce.ui.advances.employeeAria')" (ngModelChange)="applyAdvancePolicy()">
                   @if (workforceService.employees().length === 0) {
-                    <option value="" disabled>لا يوجد موظفون نشطون متاحون</option>
+                    <option value="" disabled>{{ i18n.t('workforce.ui.advances.noEmployees') }}</option>
                   }
                   @for (employee of workforceService.employees(); track employee.id) {
                     <option [value]="employee.id">{{ employee.fullName }} ({{ employee.employeeCode }})</option>
@@ -177,68 +178,68 @@ import { ActivatedRoute } from '@angular/router';
 
             @if (effectivePolicyPreview(); as policy) {
               <div class="summary-box col-span-2">
-                <strong>السياسة الفعلية التي سيحفظها الخادم مع السلفة:</strong>
-                {{ policy.scopeName || getPolicyScopeLabel(policy) }} · إصدار {{ policy.version }} ·
-                {{ policy.deductionMode === 'AUTO' ? 'خصم تلقائي' : 'خصم يدوي' }} · حد {{ policy.maxDeductionPercent }}% ·
-                سارية من {{ policy.effectiveFrom }} {{ policy.effectiveTo ? 'حتى ' + policy.effectiveTo : '' }}
+                <strong>{{ i18n.t('workforce.ui.advances.effectivePolicy') }}</strong>
+                {{ policy.scopeName || getPolicyScopeLabel(policy) }} · {{ i18n.t('workforce.ui.advances.version') }} {{ policy.version }} ·
+                {{ policy.deductionMode === 'AUTO' ? i18n.t('workforce.ui.advances.autoDeduction') : i18n.t('workforce.ui.advances.manualDeduction') }} · {{ i18n.t('workforce.ui.advances.maxDeduction') }} {{ policy.maxDeductionPercent }}% ·
+                {{ i18n.t('workforce.ui.advances.effectiveFrom') }} {{ policy.effectiveFrom }} {{ policy.effectiveTo ? ('→ ' + policy.effectiveTo) : '' }}
               </div>
             }
 
             <!-- Amount -->
             <div class="form-group">
-              <label>مبلغ السُلفة (ج.م) *</label>
+              <label>{{ i18n.t('workforce.ui.advances.amountRequired') }}</label>
               <input type="number" [(ngModel)]="form.amount" name="amount" required
                      class="form-input" min="1" (ngModelChange)="recalcInstallment()" />
             </div>
 
             <!-- Term Type -->
             <div class="form-group">
-              <label>نوع السلفة</label>
+              <label>{{ i18n.t('workforce.ui.advances.termType') }}</label>
               <select [(ngModel)]="form.termType" name="termType" class="form-input">
-                <option value="SHORT_TERM">قصيرة الأجل — خصم مباشر دفعة واحدة</option>
-                <option value="LONG_TERM">طويلة الأجل — تقسيط متكرر</option>
+                <option value="SHORT_TERM">{{ i18n.t('workforce.ui.advances.shortDescription') }}</option>
+                <option value="LONG_TERM">{{ i18n.t('workforce.ui.advances.longDescription') }}</option>
               </select>
             </div>
 
             <!-- Installments count (only for LONG_TERM) -->
             @if (form.termType === 'LONG_TERM') {
               <div class="form-group">
-                <label>عدد الأقساط *</label>
+                <label>{{ i18n.t('workforce.ui.advances.installmentCount') }}</label>
                 <input type="number" [(ngModel)]="form.totalInstallments" name="totalInstallments"
                        class="form-input" min="2" max="60" (ngModelChange)="recalcInstallment()" />
               </div>
 
               <div class="form-group">
-                <label>قيمة القسط (ج.م) — محسوبة تلقائياً <span tabindex="0" aria-label="شرح احتساب الأقساط" appTooltip="طريقة احتساب الأقساط — مبلغ السلفة ÷ عدد الأقساط ويمكن تعديله">ⓘ</span></label>
+                <label>{{ i18n.t('workforce.ui.advances.installmentAuto') }} <span tabindex="0" [attr.aria-label]="i18n.t('workforce.ui.advances.installmentHelpAria')" [appTooltip]="i18n.t('workforce.ui.advances.installmentHelp')">ⓘ</span></label>
                 <input type="number" [(ngModel)]="form.installmentAmount" name="installmentAmount"
                        class="form-input" min="1" />
               </div>
 
               <div class="form-group">
-                <label>تاريخ أول قسط</label>
+                <label>{{ i18n.t('workforce.ui.advances.firstInstallmentDate') }}</label>
                 <input type="date" [(ngModel)]="form.firstInstallmentDate" name="firstInstallmentDate"
                        class="form-input" (ngModelChange)="applyAdvancePolicy()" />
               </div>
 
               <div class="form-group">
-                <label>دورية الخصم</label>
+                <label>{{ i18n.t('workforce.ui.advances.frequency') }}</label>
                 <select [(ngModel)]="form.deductionFrequency" name="deductionFrequency" class="form-input">
-                  <option value="HALF_MONTH">نصف شهري (كل 15 يوم)</option>
-                  <option value="MONTHLY">شهري</option>
-                  <option value="WEEKLY">أسبوعي</option>
+                  <option value="HALF_MONTH">{{ i18n.t('workforce.ui.advances.halfMonth15') }}</option>
+                  <option value="MONTHLY">{{ i18n.t('workforce.ui.advances.monthly') }}</option>
+                  <option value="WEEKLY">{{ i18n.t('workforce.ui.advances.weekly') }}</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>نوع التشغيل</label>
+                <label>{{ i18n.t('workforce.ui.advances.deductionMode') }}</label>
                 <select [(ngModel)]="form.deductionMode" name="deductionMode" class="form-input">
-                  <option value="AUTO">تلقائي — يُخصم مع كل تسوية</option>
-                  <option value="MANUAL">يدوي — يتطلب تدخل يدوي</option>
+                  <option value="AUTO">{{ i18n.t('workforce.ui.advances.autoWithSettlement') }}</option>
+                  <option value="MANUAL">{{ i18n.t('workforce.ui.advances.manualIntervention') }}</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label>تأجيل بداية الخصم (عدد الفترات)</label>
+                <label>{{ i18n.t('workforce.ui.advances.deferral') }}</label>
                 <input type="number" [(ngModel)]="form.deferralPeriods" name="deferralPeriods"
                        class="form-input" min="0" max="12" />
               </div>
@@ -246,25 +247,25 @@ import { ActivatedRoute } from '@angular/router';
 
             <!-- Max deduction % -->
             <div class="form-group">
-              <label>الحد الأقصى للخصم من مستحق الفترة (%)</label>
+              <label>{{ i18n.t('workforce.ui.advances.maxPeriodDeduction') }}</label>
               <input type="number" [(ngModel)]="form.maxDeductionPercent" name="maxDeductionPercent"
                      class="form-input" min="10" max="100" />
             </div>
 
             <!-- Reason -->
             <div class="form-group col-span-2">
-              <label>سبب السلفة والملاحظات</label>
+              <label>{{ i18n.t('workforce.ui.advances.reason') }}</label>
               <input type="text" [(ngModel)]="form.reason" name="reason" class="form-input"
-                     placeholder="مثل: ظروف طارئة، احتياج شخصي، ..." />
+                     [placeholder]="i18n.t('workforce.ui.advances.reasonPlaceholder')" />
             </div>
 
             <!-- Summary for long term -->
             @if (form.termType === 'LONG_TERM' && form.totalInstallments > 0) {
               <div class="summary-box col-span-2">
-                <strong>ملخص السلفة:</strong> {{ form.amount | number:'1.0-0' }} ج.م ÷
-                {{ form.totalInstallments }} قسط = {{ form.installmentAmount | number:'1.2-2' }} ج.م / قسط
+                <strong>{{ i18n.t('workforce.ui.advances.summary') }}</strong> {{ form.amount | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }} ÷
+                {{ form.totalInstallments }} {{ i18n.t('workforce.ui.advances.installmentUnit') }} = {{ form.installmentAmount | number:'1.2-2' }} {{ i18n.t('workforce.ui.currencyEgp') }} / {{ i18n.t('workforce.ui.advances.installmentUnit') }}
                 @if (form.firstInstallmentDate) {
-                  | أول قسط: {{ form.firstInstallmentDate }}
+                  | {{ i18n.t('workforce.ui.advances.firstInstallment') }} {{ form.firstInstallmentDate }}
                 }
               </div>
             }
@@ -273,37 +274,37 @@ import { ActivatedRoute } from '@angular/router';
 
         <div modal-actions class="modal-actions-bar">
           <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="saveAdvance()">
-            {{ saving() ? 'جارٍ الحفظ...' : 'اعتماد وصرف السلفة' }}
+            {{ saving() ? i18n.t('common.saving') : i18n.t('workforce.ui.advances.approveDisburse') }}
           </button>
-          <button type="button" class="btn btn-secondary" (click)="isModalOpen = false">إلغاء</button>
+          <button type="button" class="btn btn-secondary" (click)="isModalOpen = false">{{ i18n.t('workforce.ui.cancel') }}</button>
         </div>
       </app-modal-dialog>
 
-      <app-modal-dialog [isOpen]="policyModalOpen()" title="سياسة خصم السلف" size="normal" [preventOutsideClose]="true" (close)="policyModalOpen.set(false)">
+      <app-modal-dialog [isOpen]="policyModalOpen()" [title]="i18n.t('workforce.ui.advances.policyTitle')" size="normal" [preventOutsideClose]="true" (close)="policyModalOpen.set(false)">
         <form class="modal-form">
           <div class="form-grid">
-            <div class="form-group"><label>نطاق السياسة *</label><select [(ngModel)]="policyForm.scopeType" name="policyScope" class="form-input" (ngModelChange)="policyForm.scopeId = ''"><option value="GLOBAL">إعداد عام</option><option value="CATEGORY">استثناء حسب فئة العمال</option><option value="WORKER">استثناء حسب العامل</option><option value="EMPLOYEE_CATEGORY">استثناء حسب فئة الموظفين</option><option value="EMPLOYEE">استثناء حسب الموظف</option></select></div>
-            @if (policyForm.scopeType === 'CATEGORY') {<div class="form-group"><label>الفئة *</label><select [(ngModel)]="policyForm.scopeId" name="policyCategory" class="form-input">@for (category of workforceService.categories(); track category.id) {<option [value]="category.id">{{ category.name }}</option>}</select></div>}
-            @if (policyForm.scopeType === 'WORKER') {<div class="form-group"><label>العامل *</label><select [(ngModel)]="policyForm.scopeId" name="policyWorker" class="form-input">@for (worker of workforceService.workers(); track worker.id) {<option [value]="worker.id">{{ worker.fullName }} ({{ worker.code }})</option>}</select></div>}
-            @if (policyForm.scopeType === 'EMPLOYEE_CATEGORY') {<div class="form-group"><label>فئة الموظفين *</label><select [(ngModel)]="policyForm.scopeId" name="policyEmployeeCategory" class="form-input">@for (category of employeeCategories(); track category.id) {<option [value]="category.id">{{ category.name }}</option>}</select></div>}
-            @if (policyForm.scopeType === 'EMPLOYEE') {<div class="form-group"><label>الموظف *</label><select [(ngModel)]="policyForm.scopeId" name="policyEmployee" class="form-input">@for (employee of workforceService.employees(); track employee.id) {<option [value]="employee.id">{{ employee.fullName }} ({{ employee.employeeCode }})</option>}</select></div>}
-            <div class="form-group"><label>طريقة الخصم الافتراضية</label><select [(ngModel)]="policyForm.deductionMode" name="policyMode" class="form-input"><option value="AUTO">تلقائي مع التسوية</option><option value="MANUAL">يدوي</option></select></div>
-            <div class="form-group"><label>دورية الخصم</label><select [(ngModel)]="policyForm.deductionFrequency" name="policyFrequency" class="form-input"><option value="HALF_MONTH">نصف شهري</option><option value="MONTHLY">شهري</option><option value="WEEKLY">أسبوعي</option></select></div>
-            <div class="form-group"><label>الحد الأقصى من مستحق الفترة %</label><input type="number" min="1" max="100" [(ngModel)]="policyForm.maxDeductionPercent" name="policyMax" class="form-input" /></div>
-            <div class="form-group"><label>عدد الأقساط الافتراضي</label><input type="number" min="1" max="60" [(ngModel)]="policyForm.defaultInstallments" name="policyInstallments" class="form-input" /></div>
-            <div class="form-group"><label>فترات التأجيل الافتراضية</label><input type="number" min="0" max="12" [(ngModel)]="policyForm.deferralPeriods" name="policyDeferral" class="form-input" /></div>
-            <div class="form-group"><label>تاريخ بداية السريان *</label><input type="date" [(ngModel)]="policyForm.effectiveFrom" name="policyEffectiveFrom" class="form-input" /></div>
-            <div class="form-group"><label>تاريخ نهاية السريان</label><input type="date" [(ngModel)]="policyForm.effectiveTo" name="policyEffectiveTo" class="form-input" /></div>
-            <label class="form-group"><span>الحالة</span><input type="checkbox" [(ngModel)]="policyForm.active" name="policyActive" /> مفعّلة</label>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.advances.policyScope') }}</label><select [(ngModel)]="policyForm.scopeType" name="policyScope" class="form-input" (ngModelChange)="policyForm.scopeId = ''"><option value="GLOBAL">{{ i18n.t('workforce.ui.advances.global') }}</option><option value="CATEGORY">{{ i18n.t('workforce.ui.advances.workerCategoryException') }}</option><option value="WORKER">{{ i18n.t('workforce.ui.advances.workerException') }}</option><option value="EMPLOYEE_CATEGORY">{{ i18n.t('workforce.ui.advances.employeeCategoryException') }}</option><option value="EMPLOYEE">{{ i18n.t('workforce.ui.advances.employeeException') }}</option></select></div>
+            @if (policyForm.scopeType === 'CATEGORY') {<div class="form-group"><label>{{ i18n.t('workforce.ui.advances.categoryRequired') }}</label><select [(ngModel)]="policyForm.scopeId" name="policyCategory" class="form-input">@for (category of workforceService.categories(); track category.id) {<option [value]="category.id">{{ category.name }}</option>}</select></div>}
+            @if (policyForm.scopeType === 'WORKER') {<div class="form-group"><label>{{ i18n.t('workforce.ui.advances.workerRequired') }}</label><select [(ngModel)]="policyForm.scopeId" name="policyWorker" class="form-input">@for (worker of workforceService.workers(); track worker.id) {<option [value]="worker.id">{{ worker.fullName }} ({{ worker.code }})</option>}</select></div>}
+            @if (policyForm.scopeType === 'EMPLOYEE_CATEGORY') {<div class="form-group"><label>{{ i18n.t('workforce.ui.advances.employeeCategoryRequired') }}</label><select [(ngModel)]="policyForm.scopeId" name="policyEmployeeCategory" class="form-input">@for (category of employeeCategories(); track category.id) {<option [value]="category.id">{{ category.name }}</option>}</select></div>}
+            @if (policyForm.scopeType === 'EMPLOYEE') {<div class="form-group"><label>{{ i18n.t('workforce.ui.advances.employeeRequired') }}</label><select [(ngModel)]="policyForm.scopeId" name="policyEmployee" class="form-input">@for (employee of workforceService.employees(); track employee.id) {<option [value]="employee.id">{{ employee.fullName }} ({{ employee.employeeCode }})</option>}</select></div>}
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.advances.defaultDeductionMode') }}</label><select [(ngModel)]="policyForm.deductionMode" name="policyMode" class="form-input"><option value="AUTO">{{ i18n.t('workforce.ui.advances.autoSettlement') }}</option><option value="MANUAL">{{ i18n.t('workforce.ui.advances.manual') }}</option></select></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.advances.frequency') }}</label><select [(ngModel)]="policyForm.deductionFrequency" name="policyFrequency" class="form-input"><option value="HALF_MONTH">{{ i18n.t('workforce.ui.advances.halfMonthly') }}</option><option value="MONTHLY">{{ i18n.t('workforce.ui.advances.monthly') }}</option><option value="WEEKLY">{{ i18n.t('workforce.ui.advances.weekly') }}</option></select></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.advances.policyMax') }}</label><input type="number" min="1" max="100" [(ngModel)]="policyForm.maxDeductionPercent" name="policyMax" class="form-input" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.advances.defaultInstallments') }}</label><input type="number" min="1" max="60" [(ngModel)]="policyForm.defaultInstallments" name="policyInstallments" class="form-input" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.advances.defaultDeferral') }}</label><input type="number" min="0" max="12" [(ngModel)]="policyForm.deferralPeriods" name="policyDeferral" class="form-input" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.advances.policyStart') }}</label><input type="date" [(ngModel)]="policyForm.effectiveFrom" name="policyEffectiveFrom" class="form-input" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.advances.policyEnd') }}</label><input type="date" [(ngModel)]="policyForm.effectiveTo" name="policyEffectiveTo" class="form-input" /></div>
+            <label class="form-group"><span>{{ i18n.t('workforce.ui.status') }}</span><input type="checkbox" [(ngModel)]="policyForm.active" name="policyActive" /> {{ i18n.t('workforce.ui.advances.enabled') }}</label>
           </div>
         </form>
-        <div modal-actions class="modal-actions-bar"><button type="button" class="btn btn-primary" [disabled]="saving()" (click)="savePolicy()">حفظ السياسة</button><button type="button" class="btn btn-secondary" (click)="policyModalOpen.set(false)">إلغاء</button></div>
+        <div modal-actions class="modal-actions-bar"><button type="button" class="btn btn-primary" [disabled]="saving()" (click)="savePolicy()">{{ i18n.t('workforce.ui.advances.savePolicy') }}</button><button type="button" class="btn btn-secondary" (click)="policyModalOpen.set(false)">{{ i18n.t('workforce.ui.cancel') }}</button></div>
       </app-modal-dialog>
 
       <!-- Repayment Modal -->
       <app-modal-dialog
         [isOpen]="repayModalOpen()"
-        title="سداد سلفة مبكر"
+        [title]="i18n.t('workforce.ui.advances.earlyRepayment')"
         size="normal"
         [preventOutsideClose]="true"
         (close)="closeRepayModal()">
@@ -314,24 +315,24 @@ import { ActivatedRoute } from '@angular/router';
             <!-- Recipient Info -->
             <div class="repay-info-grid">
               <div class="repay-info-item">
-                <span class="info-label">المستفيد</span>
+                <span class="info-label">{{ i18n.t('workforce.ui.advances.beneficiary') }}</span>
                 <span class="info-value">{{ recipientName(adv) }}</span>
               </div>
               <div class="repay-info-item">
-                <span class="info-label">النوع</span>
+                <span class="info-label">{{ i18n.t('workforce.ui.type') }}</span>
                 <span class="info-value">{{ recipientTypeLabel(adv.recipientType) }}</span>
               </div>
               <div class="repay-info-item">
-                <span class="info-label">المبلغ الأصلي <span tabindex="0" aria-label="شرح المبلغ الأصلي" appTooltip="المبلغ الأصلي — كامل قيمة السلفة عند الصرف">ⓘ</span></span>
-                <span class="info-value">{{ adv.amount | number:'1.0-0' }} ج.م</span>
+                <span class="info-label">{{ i18n.t('workforce.ui.advances.originalAmount') }} <span tabindex="0" [attr.aria-label]="i18n.t('workforce.ui.advances.originalAmountAria')" [appTooltip]="i18n.t('workforce.ui.advances.originalAmountHelp')">ⓘ</span></span>
+                <span class="info-value">{{ adv.amount | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</span>
               </div>
               <div class="repay-info-item">
-                <span class="info-label">المسدّد سابقاً</span>
-                <span class="info-value">{{ (adv.amount - adv.remainingBalance) | number:'1.0-0' }} ج.م</span>
+                <span class="info-label">{{ i18n.t('workforce.ui.advances.previouslyPaid') }}</span>
+                <span class="info-value">{{ (adv.amount - adv.remainingBalance) | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</span>
               </div>
               <div class="repay-info-item">
-                <span class="info-label">الرصيد المتبقي <span tabindex="0" aria-label="شرح الرصيد المتبقي" appTooltip="الرصيد المتبقي — المبلغ الأصلي ناقص كل السداد والخصومات المسجلة">ⓘ</span></span>
-                <span class="info-value balance-highlight">{{ adv.remainingBalance | number:'1.0-0' }} ج.م</span>
+                <span class="info-label">{{ i18n.t('workforce.ui.advances.remainingBalance') }} <span tabindex="0" [attr.aria-label]="i18n.t('workforce.ui.advances.remainingHelpAria')" [appTooltip]="i18n.t('workforce.ui.advances.remainingHelp')">ⓘ</span></span>
+                <span class="info-value balance-highlight">{{ adv.remainingBalance | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</span>
               </div>
             </div>
 
@@ -340,70 +341,70 @@ import { ActivatedRoute } from '@angular/router';
               <label class="repay-type-option">
                 <input type="radio" [(ngModel)]="repayForm.repaymentType" name="repayType"
                        value="FULL" (change)="onRepayTypeChange()" />
-                <span>سداد كامل — سيتم إغلاق السلفة بالكامل</span>
+                <span>{{ i18n.t('workforce.ui.advances.fullRepayment') }}</span>
               </label>
               <label class="repay-type-option">
                 <input type="radio" [(ngModel)]="repayForm.repaymentType" name="repayType"
                        value="PARTIAL" (change)="onRepayTypeChange()" />
-                <span>سداد جزئي — سيتبقى رصيد بعد السداد</span>
+                <span>{{ i18n.t('workforce.ui.advances.partialRepayment') }}</span>
               </label>
             </div>
 
             <!-- Amount -->
             <div class="form-group">
-              <label>مبلغ السداد (ج.م) *</label>
+              <label>{{ i18n.t('workforce.ui.advances.repaymentAmount') }}</label>
               <input type="number" [(ngModel)]="repayForm.amount" name="repayAmount"
                      class="form-input" min="1" [max]="adv.remainingBalance" />
-              <small class="hint">الحد الأقصى: {{ adv.remainingBalance | number:'1.0-0' }} ج.م</small>
+              <small class="hint">{{ i18n.t('workforce.ui.advances.maximum') }} {{ adv.remainingBalance | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</small>
             </div>
 
             <!-- Date & Method Row -->
             <div class="form-grid">
               <div class="form-group">
-                <label>تاريخ السداد</label>
+                <label>{{ i18n.t('workforce.ui.advances.repaymentDate') }}</label>
                 <input type="date" [(ngModel)]="repayForm.repaymentDate" name="repayDate" class="form-input" />
               </div>
               <div class="form-group">
-                <label>طريقة السداد</label>
+                <label>{{ i18n.t('workforce.ui.advances.paymentMethod') }}</label>
                 <select [(ngModel)]="repayForm.paymentMethod" name="repayMethod" class="form-input">
-                  <option value="">اختر</option>
-                  <option value="CASH">نقداً</option>
-                  <option value="BANK_TRANSFER">تحويل بنكي</option>
-                  <option value="CHEQUE">شيك</option>
-                  <option value="DEDUCTION">خصم من المستحقات</option>
+                  <option value="">{{ i18n.t('workforce.ui.advances.select') }}</option>
+                  <option value="CASH">{{ i18n.t('workforce.ui.advances.cash') }}</option>
+                  <option value="BANK_TRANSFER">{{ i18n.t('workforce.ui.advances.bankTransfer') }}</option>
+                  <option value="CHEQUE">{{ i18n.t('workforce.ui.advances.cheque') }}</option>
+                  <option value="DEDUCTION">{{ i18n.t('workforce.ui.advances.entitlementDeduction') }}</option>
                 </select>
               </div>
             </div>
 
             <!-- Receipt Ref -->
             <div class="form-group">
-              <label>رقم الإيصال أو مرجع الدفع</label>
+              <label>{{ i18n.t('workforce.ui.advances.receiptRef') }}</label>
               <input type="text" [(ngModel)]="repayForm.receiptRef" name="receiptRef" class="form-input"
-                     placeholder="اختياري" />
+                     [placeholder]="i18n.t('workforce.ui.advances.optional')" />
             </div>
 
             <!-- Notes -->
             <div class="form-group">
-              <label>ملاحظات</label>
+              <label>{{ i18n.t('workforce.ui.advances.notes') }}</label>
               <input type="text" [(ngModel)]="repayForm.notes" name="repayNotes" class="form-input"
-                     placeholder="اختياري" />
+                     [placeholder]="i18n.t('workforce.ui.advances.optional')" />
             </div>
 
             <!-- Preview -->
             @if (repayPreview(); as preview) {
               <div class="repay-preview" [class.preview-close]="preview.willClose">
-                <strong>معاينة النتيجة:</strong>
+                <strong>{{ i18n.t('workforce.ui.advances.preview') }}</strong>
                 <div class="preview-row">
-                  <span>الرصيد قبل السداد:</span>
-                  <span>{{ preview.before | number:'1.0-0' }} ج.م</span>
+                  <span>{{ i18n.t('workforce.ui.advances.beforeRepayment') }}</span>
+                  <span>{{ preview.before | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</span>
                 </div>
                 <div class="preview-row">
-                  <span>مبلغ السداد:</span>
-                  <span class="deduct-amount">- {{ preview.amount | number:'1.0-0' }} ج.م</span>
+                  <span>{{ i18n.t('workforce.ui.advances.repaymentAmountLabel') }}</span>
+                  <span class="deduct-amount">- {{ preview.amount | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</span>
                 </div>
                 <div class="preview-row total-row">
-                  <span>الرصيد بعد السداد:</span>
-                  <span [class.zero-balance]="preview.after <= 0">{{ preview.after | number:'1.0-0' }} ج.م</span>
+                  <span>{{ i18n.t('workforce.ui.advances.afterRepayment') }}</span>
+                  <span [class.zero-balance]="preview.after <= 0">{{ preview.after | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</span>
                 </div>
                 <div class="preview-impact">{{ preview.impact }}</div>
               </div>
@@ -413,9 +414,9 @@ import { ActivatedRoute } from '@angular/router';
         @if (repayTarget()) {
           <div modal-actions class="modal-actions-bar">
             <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="confirmRepayment()">
-              {{ saving() ? 'جارٍ التنفيذ...' : 'تأكيد السداد' }}
+              {{ saving() ? i18n.t('common.saving') : i18n.t('workforce.ui.advances.confirmRepayment') }}
             </button>
-            <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="closeRepayModal()">إلغاء</button>
+            <button type="button" class="btn btn-secondary" [disabled]="saving()" (click)="closeRepayModal()">{{ i18n.t('workforce.ui.cancel') }}</button>
           </div>
         }
       </app-modal-dialog>
@@ -427,8 +428,8 @@ import { ActivatedRoute } from '@angular/router';
             <div class="confirm-icon">⚠️</div>
             <div class="confirm-message">{{ action.message }}</div>
             <div class="confirm-actions">
-              <button type="button" class="btn btn-primary" (click)="action.onConfirm()">تأكيد</button>
-              <button type="button" class="btn btn-secondary" (click)="cancelAction()">إلغاء</button>
+              <button type="button" class="btn btn-primary" (click)="action.onConfirm()">{{ i18n.t('workforce.ui.advances.confirm') }}</button>
+              <button type="button" class="btn btn-secondary" (click)="cancelAction()">{{ i18n.t('workforce.ui.cancel') }}</button>
             </div>
           </div>
         </div>
@@ -436,7 +437,7 @@ import { ActivatedRoute } from '@angular/router';
     </div>
   `,
   styles: [`
-    .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; direction: rtl; }
+    .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;  }
     .eyebrow { font-size: 0.875rem; color: #d97706; font-weight: 600; }
     .page-header { display: flex; justify-content: space-between; align-items: center; }
     .page-header h1 { font-size: 1.5rem; font-weight: 800; color: var(--ink); margin: 0.25rem 0 0 0; }
@@ -453,7 +454,7 @@ import { ActivatedRoute } from '@angular/router';
     .card { background: var(--surface); border-radius: 12px; border: 1px solid var(--line); padding: 1.25rem; }
     .skeleton-row { height: 48px; background: linear-gradient(90deg, var(--surface-muted) 25%, var(--line) 50%, var(--surface-muted) 75%); background-size: 200% 100%; border-radius: 6px; animation: shimmer 1.5s infinite; margin-bottom: 0.5rem; }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-    .data-table { width: 100%; border-collapse: collapse; text-align: right; }
+    .data-table { width: 100%; border-collapse: collapse; text-align: start; }
     .data-table th, .data-table td { padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--line); font-size: 0.875rem; }
     .data-table th { background: var(--surface-muted); font-weight: 700; color: var(--secondary-text); }
     .btn { padding: 0.625rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; }
@@ -508,6 +509,7 @@ import { ActivatedRoute } from '@angular/router';
 export class AdvancesComponent implements OnInit {
   workforceService = inject(WorkforceService);
   private notificationService = inject(NotificationService);
+  readonly i18n = inject(I18nService);
   private route = inject(ActivatedRoute);
 
   loading = signal(false);
@@ -536,7 +538,7 @@ export class AdvancesComponent implements OnInit {
     const amount = this.repayForm.amount || 0;
     const after = Math.max(0, before - amount);
     const willClose = after <= 0;
-    const impact = willClose ? 'سيتم إغلاق السلفة بالكامل' : `سيتبقى رصيد ${after} ج.م بعد السداد`;
+    const impact = willClose ? this.i18n.t('workforce.ui.advances.repayImpactClose') : this.i18n.t('workforce.ui.advances.repayImpactRemaining', { amount: after });
     return { before, amount, after, willClose, impact };
   });
 
@@ -604,13 +606,13 @@ export class AdvancesComponent implements OnInit {
   openPolicyModal(): void { this.policyForm = this.defaultPolicyForm(); this.policyModalOpen.set(true); }
 
   savePolicy(): void {
-    if (this.policyForm.scopeType !== 'GLOBAL' && !this.policyForm.scopeId) { this.notificationService.warning('اختر الفئة أو العامل للاستثناء'); return; }
-    if (!this.policyForm.effectiveFrom) { this.notificationService.warning('أدخل تاريخ بداية سريان السياسة'); return; }
-    if (this.policyForm.effectiveTo && this.policyForm.effectiveTo < this.policyForm.effectiveFrom) { this.notificationService.warning('تاريخ نهاية السياسة يسبق تاريخ البداية'); return; }
+    if (this.policyForm.scopeType !== 'GLOBAL' && !this.policyForm.scopeId) { this.notificationService.warning(this.i18n.t('workforce.ui.advances.policySelectScope')); return; }
+    if (!this.policyForm.effectiveFrom) { this.notificationService.warning(this.i18n.t('workforce.ui.advances.policyStartRequired')); return; }
+    if (this.policyForm.effectiveTo && this.policyForm.effectiveTo < this.policyForm.effectiveFrom) { this.notificationService.warning(this.i18n.t('workforce.ui.advances.policyDateInvalid')); return; }
     this.saving.set(true);
     this.workforceService.saveAdvancePolicy(this.policyForm).subscribe({
-      next: () => { this.saving.set(false); this.policyModalOpen.set(false); this.notificationService.success('تم حفظ سياسة السلف بنجاح ✓'); },
-      error: error => { this.saving.set(false); this.notificationService.error(apiErrorDetail(error, 'تعذّر حفظ السياسة')); },
+      next: () => { this.saving.set(false); this.policyModalOpen.set(false); this.notificationService.success(this.i18n.t('workforce.ui.advances.policySaved')); },
+      error: error => { this.saving.set(false); this.notificationService.error(apiErrorDetail(error, this.i18n.t('workforce.ui.advances.policySaveFailed'))); },
     });
   }
 
@@ -634,14 +636,8 @@ export class AdvancesComponent implements OnInit {
   }
 
   getPolicyScopeLabel(policy: AdvancePolicy): string {
-    const labels: Record<AdvancePolicy['scopeType'], string> = {
-      GLOBAL: 'الإعداد العام',
-      CATEGORY: 'استثناء فئة عمال',
-      WORKER: 'استثناء عامل',
-      EMPLOYEE_CATEGORY: 'استثناء فئة موظفين',
-      EMPLOYEE: 'استثناء موظف',
-    };
-    return labels[policy.scopeType];
+    const keys: Record<AdvancePolicy['scopeType'], string> = { GLOBAL: 'workforce.ui.advances.policyScopeGlobal', CATEGORY: 'workforce.ui.advances.policyScopeWorkerCategory', WORKER: 'workforce.ui.advances.policyScopeWorker', EMPLOYEE_CATEGORY: 'workforce.ui.advances.policyScopeEmployeeCategory', EMPLOYEE: 'workforce.ui.advances.policyScopeEmployee' };
+    return this.i18n.t(keys[policy.scopeType]);
   }
 
   recalcInstallment() {
@@ -652,18 +648,18 @@ export class AdvancesComponent implements OnInit {
 
   saveAdvance() {
     if (!this.form.amount || this.form.amount <= 0) {
-      this.notificationService.warning('يجب إدخال مبلغ السلفة');
+      this.notificationService.warning(this.i18n.t('workforce.ui.advances.amountRequiredWarning'));
       return;
     }
     const selectedRecipientId = this.form.recipientType === 'WORKER'
       ? this.form.workerId : this.form.recipientType === 'CONTRACTOR'
         ? this.form.contractorId : this.form.employeeId;
     if (!selectedRecipientId) {
-      this.notificationService.warning('اختر المستفيد من السلفة');
+      this.notificationService.warning(this.i18n.t('workforce.ui.advances.recipientRequiredWarning'));
       return;
     }
     if (this.form.termType === 'LONG_TERM' && this.form.totalInstallments < 2) {
-      this.notificationService.warning('السلفة طويلة الأجل تتطلب 2 قسط على الأقل');
+      this.notificationService.warning(this.i18n.t('workforce.ui.advances.installmentsMinimum'));
       return;
     }
     this.saving.set(true);
@@ -671,12 +667,12 @@ export class AdvancesComponent implements OnInit {
       next: () => {
         this.saving.set(false);
         this.isModalOpen = false;
-        this.notificationService.success('تم صرف السلفة بنجاح ✓');
+        this.notificationService.success(this.i18n.t('workforce.ui.advances.createdSuccess'));
       },
       error: (e) => {
         this.saving.set(false);
-        const msg = apiErrorDetail(e, e?.error?.message ?? e?.message ?? 'خطأ غير متوقع');
-        this.notificationService.error('فشل حفظ السلفة: ' + msg);
+        const msg = apiErrorDetail(e, e?.error?.message ?? e?.message ?? this.i18n.t('workforce.ui.unexpectedError'));
+        this.notificationService.error(this.i18n.t('workforce.ui.advances.saveFailed', { detail: msg }));
       }
     });
   }
@@ -684,17 +680,17 @@ export class AdvancesComponent implements OnInit {
   confirmAction = signal<{ message: string; onConfirm: () => void } | null>(null);
 
   pauseAdvance(adv: WorkforceAdvance) {
-    const msg = `هل أنت متأكد من إيقاف اقتطاع السلفة الخاصة بـ (${this.recipientName(adv)})؟`;
+    const msg = this.i18n.t('workforce.ui.advances.pauseConfirm', { name: this.recipientName(adv) });
     this.confirmAction.set({
       message: msg,
       onConfirm: () => {
         this.confirmAction.set(null);
         this.workforceService.pauseAdvance(adv.id).subscribe({
           next: () => {
-            this.notificationService.success('تم إيقاف خصم السلفة مؤقتاً ✓');
+            this.notificationService.success(this.i18n.t('workforce.ui.advances.pauseSuccess'));
             this.workforceService.loadAdvances().subscribe();
           },
-          error: (e) => this.notificationService.error('فشل إيقاف السلفة: ' + (e?.error?.message ?? e?.message))
+          error: (e) => this.notificationService.error(this.i18n.t('workforce.ui.advances.pauseFailed', { detail: e?.error?.message ?? e?.message ?? '' }))
         });
       }
     });
@@ -702,15 +698,15 @@ export class AdvancesComponent implements OnInit {
 
   resumeAdvance(adv: WorkforceAdvance) {
     this.confirmAction.set({
-      message: 'هل أنت متأكد من استئناف اقتطاع السلفة؟',
+      message: this.i18n.t('workforce.ui.advances.resumeConfirm'),
       onConfirm: () => {
         this.confirmAction.set(null);
         this.workforceService.resumeAdvance(adv.id).subscribe({
           next: () => {
-            this.notificationService.success('تم استئناف خصم السلفة بنجاح ✓');
+            this.notificationService.success(this.i18n.t('workforce.ui.advances.resumeSuccess'));
             this.workforceService.loadAdvances().subscribe();
           },
-          error: (e) => this.notificationService.error('فشل استئناف السلفة: ' + (e?.error?.message ?? e?.message))
+          error: (e) => this.notificationService.error(this.i18n.t('workforce.ui.advances.resumeFailed', { detail: e?.error?.message ?? e?.message ?? '' }))
         });
       }
     });
@@ -741,15 +737,15 @@ export class AdvancesComponent implements OnInit {
     if (!adv) return;
     const amount = this.repayForm.amount;
     if (!amount || amount <= 0) {
-      this.notificationService.warning('يجب إدخال مبلغ سداد صحيح');
+      this.notificationService.warning(this.i18n.t('workforce.ui.advances.repaymentAmountInvalid'));
       return;
     }
     if (amount > adv.remainingBalance) {
-      this.notificationService.warning('مبلغ السداد لا يمكن أن يتجاوز الرصيد المتبقي');
+      this.notificationService.warning(this.i18n.t('workforce.ui.advances.repaymentExceedsBalance'));
       return;
     }
     if (this.repayForm.repaymentType === 'FULL' && amount !== adv.remainingBalance) {
-      this.notificationService.warning('عند السداد الكامل، يجب أن يساوي المبلغ الرصيد المتبقي');
+      this.notificationService.warning(this.i18n.t('workforce.ui.advances.fullRepaymentMismatch'));
       return;
     }
 
@@ -767,13 +763,13 @@ export class AdvancesComponent implements OnInit {
         this.saving.set(false);
         this.repayModalOpen.set(false);
         this.repayTarget.set(null);
-        this.notificationService.success(`تم تسجيل السداد بمبلغ ${amount} ج.م بنجاح ✓`);
+        this.notificationService.success(this.i18n.t('workforce.ui.advances.repaymentSuccess', { amount }));
         this.workforceService.loadAdvances().subscribe();
       },
       error: (e) => {
         this.saving.set(false);
-        const msg = apiErrorDetail(e, e?.error?.message ?? e?.message ?? 'خطأ غير متوقع');
-        this.notificationService.error('فشل السداد: ' + msg);
+        const msg = apiErrorDetail(e, e?.error?.message ?? e?.message ?? this.i18n.t('workforce.ui.unexpectedError'));
+        this.notificationService.error(this.i18n.t('workforce.ui.advances.repaymentFailed', { detail: msg }));
       }
     });
   }
@@ -803,32 +799,25 @@ export class AdvancesComponent implements OnInit {
     exportCsv(
       rows,
       [
-        { key: 'recipient', label: 'الجهة المستفيدة' },
-        { key: 'type', label: 'النوع' },
-        { key: 'amount', label: 'المبلغ الكلي' },
-        { key: 'termType', label: 'نوع السلفة' },
-        { key: 'totalInstallments', label: 'الأقساط' },
-        { key: 'installmentAmount', label: 'قيمة القسط' },
-        { key: 'remainingBalance', label: 'الرصيد المتبقي' },
-        { key: 'deductionFrequency', label: 'دورية الخصم' },
-        { key: 'maxDeductionPercent', label: 'أقصى خصم %' },
-        { key: 'status', label: 'الحالة' },
+        { key: 'recipient', label: this.i18n.t('workforce.ui.advances.recipient') },
+        { key: 'type', label: this.i18n.t('workforce.ui.type') },
+        { key: 'amount', label: this.i18n.t('workforce.ui.advances.totalAmount') },
+        { key: 'termType', label: this.i18n.t('workforce.ui.advances.termType') },
+        { key: 'totalInstallments', label: this.i18n.t('workforce.ui.advances.installments') },
+        { key: 'installmentAmount', label: this.i18n.t('workforce.ui.advances.installmentAmount') },
+        { key: 'remainingBalance', label: this.i18n.t('workforce.ui.advances.remainingBalance') },
+        { key: 'deductionFrequency', label: this.i18n.t('workforce.ui.advances.frequency') },
+        { key: 'maxDeductionPercent', label: this.i18n.t('workforce.ui.advances.maxDeduction') },
+        { key: 'status', label: this.i18n.t('workforce.ui.status') },
       ],
       `advances-${new Date().toISOString().slice(0, 10)}.csv`,
     );
   }
 
   // --- Labels ---
-  getTermLabel(term: string): string {
-    return term === 'SHORT_TERM' ? 'قصيرة الأجل' : 'طويلة الأجل';
-  }
+  getTermLabel(term: string): string { return this.i18n.t(term === 'SHORT_TERM' ? 'workforce.ui.advances.shortTerm' : 'workforce.ui.advances.longTerm'); }
 
-  getFrequencyLabel(freq: string): string {
-    const m: Record<string, string> = {
-      HALF_MONTH: 'نصف شهري', MONTHLY: 'شهري', WEEKLY: 'أسبوعي'
-    };
-    return m[freq] ?? freq;
-  }
+  getFrequencyLabel(freq: string): string { const keys:Record<string,string>={HALF_MONTH:'workforce.ui.advances.halfMonthly',MONTHLY:'workforce.ui.advances.monthly',WEEKLY:'workforce.ui.advances.weekly'}; return keys[freq] ? this.i18n.t(keys[freq]) : freq; }
 
   getStatusLabel(status: string): string {
     const m: Record<string, string> = { ACTIVE: 'نشطة', PAID_OFF: 'مسدّدة', SUSPENDED: 'موقوفة' };
@@ -841,9 +830,7 @@ export class AdvancesComponent implements OnInit {
     return advance.workerName ?? '—';
   }
 
-  recipientTypeLabel(type: WorkforceAdvance['recipientType']): string {
-    return type === 'EMPLOYEE' ? '👤 موظف' : type === 'CONTRACTOR' ? '🏗️ مقاول' : '👷 عامل';
-  }
+  recipientTypeLabel(type: WorkforceAdvance['recipientType']): string { const key=type==='EMPLOYEE'?'workforce.ui.employee':type==='CONTRACTOR'?'workforce.ui.contractor':'workforce.ui.worker'; return this.i18n.t(key); }
 
   private defaultForm() {
     return {

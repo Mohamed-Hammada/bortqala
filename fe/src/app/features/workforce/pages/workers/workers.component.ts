@@ -17,47 +17,47 @@ import { NotificationService } from '../../../../core/notification.service';
   template: `
     <div class="workforce-container">
       <header class="page-header">
-        <div><span class="eyebrow">إدارة العمال</span><h1>سجل العمال اليوميين والمؤقتين</h1></div>
+        <div><span class="eyebrow">{{ i18n.t('workforce.ui.workers.eyebrow') }}</span><h1>{{ i18n.t('workforce.ui.workers.title') }}</h1></div>
         <div class="header-actions">
-          <button type="button" class="btn btn-secondary" (click)="exportExcel()">⇩ تصدير Excel</button>
-          <button type="button" class="btn btn-primary" (click)="openCreateModal()">+ إضافة عامل جديد</button>
+          <button type="button" class="btn btn-secondary" (click)="exportExcel()">{{ i18n.t('workforce.ui.exportExcel') }}</button>
+          <button type="button" class="btn btn-primary" (click)="openCreateModal()">{{ i18n.t('workforce.ui.workers.add') }}</button>
         </div>
       </header>
 
       <div class="card">
         <table class="data-table">
           <thead><tr>
-            <th>كود العامل</th><th>الاسم الكامل</th><th>المقاول التابع له</th><th>الفئة</th>
-            <th>اليومية الافتراضية</th><th>ساعات العمل</th><th>طريقة الحضور</th><th>الحالة</th><th>إجراءات</th>
+            <th>{{ i18n.t('reportsImport.ui.workerCode') }}</th><th>{{ i18n.t('workforce.ui.contractors.fullName') }}</th><th>{{ i18n.t('workforce.ui.workers.contractor') }}</th><th>{{ i18n.t('workforce.ui.workers.category') }}</th>
+            <th>{{ i18n.t('workforce.ui.categories.dailyRate') }}</th><th>{{ i18n.t('workforce.ui.workers.hours') }}</th><th>{{ i18n.t('workforce.ui.workers.attendanceMode') }}</th><th>{{ i18n.t('workforce.ui.status') }}</th><th>{{ i18n.t('workforce.ui.actions') }}</th>
           </tr></thead>
           <tbody>
             <tr *ngFor="let w of workforceService.workers()">
               <td><strong>{{ w.code }}</strong></td><td>{{ w.fullName }}</td><td>{{ w.contractorName }}</td>
               <td><span class="badge category-badge">{{ w.categoryName }}</span></td>
-              <td>{{ w.defaultDailyRate | number:'1.2-2' }} ج.م</td><td>{{ w.standardDailyHours }} س</td>
-              <td>{{ w.attendanceMode === 'MANUAL' ? 'يدوي' : 'بصمة' }}</td>
+              <td>{{ w.defaultDailyRate | number:'1.2-2' }} {{ i18n.t('workforce.ui.currencyEgp') }}</td><td>{{ w.standardDailyHours }} {{ i18n.t('workforce.ui.hoursShort') }}</td>
+              <td>{{ w.attendanceMode === 'MANUAL' ? i18n.t('workforce.ui.advances.manual') : i18n.t('workforce.ui.workers.biometric') }}</td>
               <td><span class="badge active">{{ workerStatusLabel(w.status) }}</span></td>
-              <td><button type="button" class="btn btn-sm" (click)="openEditModal(w)">تعديل</button></td>
+              <td><button type="button" class="btn btn-sm" (click)="openEditModal(w)">{{ i18n.t('workforce.ui.edit') }}</button></td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <app-modal-dialog [isOpen]="isModalOpen" [title]="editingWorker ? 'تعديل بيانات العامل' : 'إضافة عامل جديد'"
+      <app-modal-dialog [isOpen]="isModalOpen" [title]="editingWorker ? i18n.t('workforce.ui.workers.editTitle') : i18n.t('workforce.ui.workers.addTitle')"
         size="wide" [preventOutsideClose]="true" (close)="closeModal()">
         <form (ngSubmit)="saveWorker()" class="modal-form">
           <div class="form-grid">
-            <div class="form-group"><label>كود العامل *</label><input type="text" [(ngModel)]="form.code" name="code" required class="form-input" [disabled]="saving()" /></div>
-            <div class="form-group"><label>الاسم الكامل *</label><input type="text" [(ngModel)]="form.fullName" name="fullName" required class="form-input" [disabled]="saving()" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.workers.codeRequired') }}</label><input type="text" [(ngModel)]="form.code" name="code" required class="form-input" [disabled]="saving()" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.workers.nameRequired') }}</label><input type="text" [(ngModel)]="form.fullName" name="fullName" required class="form-input" [disabled]="saving()" /></div>
             <div class="form-group">
-              <label>المقاول المكلف *</label>
+              <label>{{ i18n.t('workforce.ui.workers.contractorRequired') }}</label>
               <select [(ngModel)]="form.contractorId" name="contractorId" required class="form-input" [disabled]="saving()">
-                <option value="" disabled>اختر المقاول</option>
+                <option value="" disabled>{{ i18n.t('workforce.ui.workers.selectContractor') }}</option>
                 <option *ngFor="let c of workforceService.contractors()" [value]="c.id">{{ c.name }} ({{ c.code }})</option>
               </select>
             </div>
             <div class="form-group">
-              <label>فئة العامل *</label>
+              <label>{{ i18n.t('workforce.ui.workers.categoryRequired') }}</label>
               <select
                 [(ngModel)]="form.categoryId"
                 name="categoryId"
@@ -66,14 +66,14 @@ import { NotificationService } from '../../../../core/notification.service';
                 [disabled]="saving() || categoriesLoading()"
                 (ngModelChange)="onCategoryChange($event)">
                 @if (categoriesLoading()) {
-                  <option value="" disabled>جارٍ تحميل الفئات...</option>
+                  <option value="" disabled>{{ i18n.t('workforce.ui.workers.loadingCategories') }}</option>
                 } @else if (categoriesLoadError()) {
-                  <option value="" disabled>تعذر تحميل الفئات</option>
+                  <option value="" disabled>{{ i18n.t('workforce.ui.workers.categoriesFailed') }}</option>
                 } @else if (workforceService.categories().length === 0) {
-                  <option value="" disabled>لا توجد فئات عمال متاحة</option>
+                  <option value="" disabled>{{ i18n.t('workforce.ui.workers.noCategories') }}</option>
                 } @else {
-                  <option value="" disabled>اختر الفئة</option>
-                  <option *ngFor="let cat of workforceService.categories()" [value]="cat.id">{{ cat.name }} — {{ cat.defaultDailyRate | number:'1.2-2' }} ج.م</option>
+                  <option value="" disabled>{{ i18n.t('workforce.ui.workers.selectCategory') }}</option>
+                  <option *ngFor="let cat of workforceService.categories()" [value]="cat.id">{{ cat.name }} — {{ cat.defaultDailyRate | number:'1.2-2' }} {{ i18n.t('workforce.ui.currencyEgp') }}</option>
                 }
               </select>
 
@@ -81,28 +81,28 @@ import { NotificationService } from '../../../../core/notification.service';
                 <div class="category-helper category-helper-error">
                   <span>{{ categoriesLoadError() }}</span>
                   <button type="button" class="inline-action-button" (click)="loadWorkerCategories()" [disabled]="categoriesLoading()">
-                    إعادة المحاولة
+                    {{ i18n.t('workforce.ui.retry') }}
                   </button>
                 </div>
               } @else if (!categoriesLoading() && workforceService.categories().length === 0) {
                 <div class="category-helper category-helper-warning">
-                  <span>لا توجد فئات عمال متاحة حالياً. أنشئ فئة أولاً حتى تتمكن من إضافة العامل.</span>
-                  <a routerLink="/workforce/categories" class="inline-action-link">+ إنشاء فئة عمال</a>
+                  <span>{{ i18n.t('workforce.ui.workers.noCategoriesHelp') }}</span>
+                  <a routerLink="/workforce/categories" class="inline-action-link">{{ i18n.t('workforce.ui.workers.createCategory') }}</a>
                 </div>
               } @else {
-                <small>عند إنشاء عامل جديد تُورث اليومية وساعات العمل من الفئة المختارة ويمكن تعديلهما بعد ذلك.</small>
+                <small>{{ i18n.t('workforce.ui.workers.categoryInheritance') }}</small>
               }
             </div>
-            <div class="form-group"><label>اليومية الافتراضية (ج.م) *</label><input type="number" min="0" [(ngModel)]="form.defaultDailyRate" name="defaultDailyRate" required class="form-input" [disabled]="saving()" /></div>
-            <div class="form-group"><label>ساعات اليوم القياسية *</label><input type="number" min="0" step="0.5" [(ngModel)]="form.standardDailyHours" name="standardDailyHours" required class="form-input" [disabled]="saving()" /></div>
-            <div class="form-group"><label>رقم الهاتف</label><input type="text" [(ngModel)]="form.phone" name="phone" class="form-input" [disabled]="saving()" /></div>
-            <div class="form-group"><label>الرقم القومي</label><input type="text" [(ngModel)]="form.nationalId" name="nationalId" class="form-input" [disabled]="saving()" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.categories.dailyRate') }} ({{ i18n.t('workforce.ui.currencyEgp') }}) *</label><input type="number" min="0" [(ngModel)]="form.defaultDailyRate" name="defaultDailyRate" required class="form-input" [disabled]="saving()" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.workers.standardHoursRequired') }}</label><input type="number" min="0" step="0.5" [(ngModel)]="form.standardDailyHours" name="standardDailyHours" required class="form-input" [disabled]="saving()" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.workers.phone') }}</label><input type="text" [(ngModel)]="form.phone" name="phone" class="form-input" [disabled]="saving()" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.workers.nationalId') }}</label><input type="text" [(ngModel)]="form.nationalId" name="nationalId" class="form-input" [disabled]="saving()" /></div>
           </div>
           @if (saveError()) { <div class="save-error" role="alert">{{ saveError() }}</div> }
         </form>
         <div modal-actions class="modal-actions-bar">
-          <button type="button" class="btn btn-primary" (click)="saveWorker()" [disabled]="saving()">{{ saving() ? 'جارٍ الحفظ...' : 'حفظ البيانات' }}</button>
-          <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="saving()">إلغاء</button>
+          <button type="button" class="btn btn-primary" (click)="saveWorker()" [disabled]="saving()">{{ saving() ? i18n.t('common.saving') : i18n.t('workforce.ui.saveData') }}</button>
+          <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="saving()">{{ i18n.t('workforce.ui.cancel') }}</button>
         </div>
       </app-modal-dialog>
     </div>
@@ -114,7 +114,7 @@ import { NotificationService } from '../../../../core/notification.service';
     .header-actions { display: flex; gap: .75rem; }
     .page-header h1 { font-size: 1.75rem; font-weight: 800; color: var(--ink); margin: .25rem 0 0; }
     .card { background: var(--surface); border-radius: 12px; border: 1px solid var(--line); padding: 1.25rem; overflow-x: auto; }
-    .data-table { width: 100%; border-collapse: collapse; text-align: right; }
+    .data-table { width: 100%; border-collapse: collapse; text-align: start; }
     .data-table th,.data-table td { padding: .75rem 1rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
     .btn { padding: .625rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; }
     .btn:disabled { opacity: .65; cursor:not-allowed; }
@@ -169,7 +169,7 @@ export class WorkersComponent implements OnInit {
         this.categoriesLoadError.set(
           error?.error?.message ??
           error?.error?.detail ??
-          'تعذر تحميل فئات العمال. أعد المحاولة.'
+          this.i18n.t('workforce.ui.workers.categoriesLoadFailedDetail')
         );
       }
     });
@@ -222,11 +222,11 @@ export class WorkersComponent implements OnInit {
   async saveWorker(): Promise<void> {
     if (this.saving()) return;
     if (!this.form.code?.trim() || !this.form.fullName?.trim() || !this.form.contractorId || !this.form.categoryId) {
-      this.saveError.set('كود العامل والاسم والمقاول والفئة حقول إلزامية.');
+      this.saveError.set(this.i18n.t('workforce.ui.workers.requiredError')); 
       return;
     }
     if ((this.form.defaultDailyRate ?? 0) < 0 || (this.form.standardDailyHours ?? 0) <= 0) {
-      this.saveError.set('اليومية يجب ألا تكون سالبة وساعات العمل يجب أن تكون أكبر من صفر.');
+      this.saveError.set(this.i18n.t('workforce.ui.workers.rateHoursError')); 
       return;
     }
 
@@ -239,12 +239,12 @@ export class WorkersComponent implements OnInit {
         : await firstValueFrom(this.workforceService.createWorker(this.form));
       const refreshed = await firstValueFrom(this.workforceService.loadWorkers());
       if (!saved?.id || !refreshed.some(worker => worker.id === saved.id)) {
-        throw new Error('تم إرسال طلب الحفظ لكن العامل لم يظهر بعد إعادة تحميل البيانات.');
+        throw new Error(this.i18n.t('workforce.ui.workers.verifyFailed')); 
       }
       this.isModalOpen = false;
-      this.notification.success(wasEditing ? 'تم تحديث بيانات العامل بنجاح' : 'تم إنشاء العامل بنجاح');
+      this.notification.success(this.i18n.t(wasEditing ? 'workforce.ui.workers.updatedSuccess' : 'workforce.ui.workers.createdSuccess')); 
     } catch (error: any) {
-      this.saveError.set(error?.error?.message ?? error?.error?.detail ?? error?.message ?? 'تعذر حفظ العامل. أعد المحاولة.');
+      this.saveError.set(error?.error?.message ?? error?.error?.detail ?? error?.message ?? this.i18n.t('workforce.ui.workers.saveFailed'));
     } finally {
       this.saving.set(false);
     }

@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { apiErrorDetail } from '../../../../core/api-error';
+import { I18nService } from '../../../../core/i18n.service';
 import { WorkforceService } from '../../data-access/workforce.service';
 
 @Component({
@@ -14,68 +15,68 @@ import { WorkforceService } from '../../data-access/workforce.service';
   template: `
     <div class="workforce-container" [class.motion-enabled]="animationsEnabled()" [class.motion-disabled]="!animationsEnabled()">
       <header class="page-header">
-        <div><span class="eyebrow">العمالة والمقاولون</span><h1>لوحة متابعة العمالة والتشغيل اليومي</h1></div>
+        <div><span class="eyebrow">{{ i18n.t('workforce.ui.dashboard.eyebrow') }}</span><h1>{{ i18n.t('workforce.ui.dashboard.title') }}</h1></div>
       </header>
 
-      <section class="card shared-filters" aria-label="فلاتر لوحة القوى العاملة">
-        <div><label>المقاول</label><select [ngModel]="selectedContractorId()" (ngModelChange)="selectedContractorId.set($event); persistFilters()"><option value="">الكل</option>@for (item of workforceService.contractors(); track item.id) {<option [value]="item.id">{{ item.name }}</option>}</select></div>
-        <div><label>فئة العامل</label><select [ngModel]="selectedCategoryId()" (ngModelChange)="selectedCategoryId.set($event); persistFilters()"><option value="">الكل</option>@for (item of workforceService.categories(); track item.id) {<option [value]="item.id">{{ item.name }}</option>}</select></div>
-        <div><label>الموقع</label><select [ngModel]="selectedLocationId()" (ngModelChange)="selectedLocationId.set($event); persistFilters()"><option value="">كل المواقع</option>@for (location of locationOptions(); track location) {<option [value]="location">{{ location }}</option>}</select></div>
-        <div><label>حالة النشاط</label><select [ngModel]="selectedStatus()" (ngModelChange)="selectedStatus.set($event); persistFilters()"><option value="">الكل</option><option value="ACTIVE">نشط</option><option value="INACTIVE">غير نشط</option></select></div>
-        <button type="button" (click)="clearFilters()">مسح الفلاتر</button>
-        <small>الفلاتر مشتركة بين البطاقات والرسوم ومحفوظة داخل رابط الصفحة.</small>
+      <section class="card shared-filters" [attr.aria-label]="i18n.t('workforce.ui.dashboard.filtersAria')">
+        <div><label>{{ i18n.t('workforce.ui.contractor') }}</label><select [ngModel]="selectedContractorId()" (ngModelChange)="selectedContractorId.set($event); persistFilters()"><option value="">{{ i18n.t('workforce.ui.all') }}</option>@for (item of workforceService.contractors(); track item.id) {<option [value]="item.id">{{ item.name }}</option>}</select></div>
+        <div><label>{{ i18n.t('workforce.ui.dashboard.category') }}</label><select [ngModel]="selectedCategoryId()" (ngModelChange)="selectedCategoryId.set($event); persistFilters()"><option value="">{{ i18n.t('workforce.ui.all') }}</option>@for (item of workforceService.categories(); track item.id) {<option [value]="item.id">{{ item.name }}</option>}</select></div>
+        <div><label>{{ i18n.t('workforce.ui.dashboard.location') }}</label><select [ngModel]="selectedLocationId()" (ngModelChange)="selectedLocationId.set($event); persistFilters()"><option value="">{{ i18n.t('workforce.ui.dashboard.allLocations') }}</option>@for (location of locationOptions(); track location) {<option [value]="location">{{ location }}</option>}</select></div>
+        <div><label>{{ i18n.t('workforce.ui.dashboard.activityStatus') }}</label><select [ngModel]="selectedStatus()" (ngModelChange)="selectedStatus.set($event); persistFilters()"><option value="">{{ i18n.t('workforce.ui.all') }}</option><option value="ACTIVE">{{ i18n.t('workforce.ui.active') }}</option><option value="INACTIVE">{{ i18n.t('workforce.ui.inactive') }}</option></select></div>
+        <button type="button" (click)="clearFilters()">{{ i18n.t('workforce.ui.dashboard.clearFilters') }}</button>
+        <small>{{ i18n.t('workforce.ui.dashboard.filtersHelp') }}</small>
       </section>
 
-      @if (loading()) { <div class="loading-state">جاري تحميل البيانات...</div> }
-      @else if (loadError()) { <div class="error-state">{{ loadError() }} <button (click)="ngOnInit()">إعادة المحاولة</button></div> }
+      @if (loading()) { <div class="loading-state">{{ i18n.t('workforce.ui.dashboard.loading') }}</div> }
+      @else if (loadError()) { <div class="error-state">{{ loadError() }} <button (click)="ngOnInit()">{{ i18n.t('workforce.ui.retry') }}</button></div> }
       @else {
         <div class="kpi-grid">
-          <a class="kpi-card" routerLink="/workforce/contractors"><span class="kpi-title">المقاولون النشطون</span><span class="kpi-value">{{ filteredContractorCount() }}</span><small>فتح التفاصيل ←</small></a>
-          <a class="kpi-card" routerLink="/workforce/workers" [queryParams]="filterQueryParams()"><span class="kpi-title">إجمالي العمالة المطابقة</span><span class="kpi-value">{{ filteredWorkers().length }}</span><small>فتح العمال ←</small></a>
-          <a class="kpi-card" routerLink="/workforce/labor-requests"><span class="kpi-title">طلبات العمالة النشطة</span><span class="kpi-value">{{ workforceService.laborRequests().length }}</span><small>فتح الطلبات ←</small></a>
-          <a class="kpi-card" routerLink="/workforce/advances"><span class="kpi-title">السلف القائمة</span><span class="kpi-value">{{ workforceService.advances().length }}</span><small>فتح السلف ←</small></a>
+          <a class="kpi-card" routerLink="/workforce/contractors"><span class="kpi-title">{{ i18n.t('workforce.ui.dashboard.activeContractors') }}</span><span class="kpi-value">{{ filteredContractorCount() }}</span><small>{{ i18n.t('workforce.ui.dashboard.openDetails') }}</small></a>
+          <a class="kpi-card" routerLink="/workforce/workers" [queryParams]="filterQueryParams()"><span class="kpi-title">{{ i18n.t('workforce.ui.dashboard.matchedWorkers') }}</span><span class="kpi-value">{{ filteredWorkers().length }}</span><small>{{ i18n.t('workforce.ui.dashboard.openWorkers') }}</small></a>
+          <a class="kpi-card" routerLink="/workforce/labor-requests"><span class="kpi-title">{{ i18n.t('workforce.ui.dashboard.activeRequests') }}</span><span class="kpi-value">{{ workforceService.laborRequests().length }}</span><small>{{ i18n.t('workforce.ui.dashboard.openRequests') }}</small></a>
+          <a class="kpi-card" routerLink="/workforce/advances"><span class="kpi-title">{{ i18n.t('workforce.ui.dashboard.openAdvances') }}</span><span class="kpi-value">{{ workforceService.advances().length }}</span><small>{{ i18n.t('workforce.ui.dashboard.openAdvancesLink') }}</small></a>
         </div>
 
         <div class="dashboard-grid">
           <section class="card chart-card">
-            <div class="chart-head"><div><span class="chart-eyebrow">توزيع القوى العاملة</span><h3>العمال حسب المقاول</h3></div><strong>{{ filteredWorkers().length }} عامل</strong></div>
-            <div class="bar-chart" role="img" aria-label="رسم يوضح عدد العمال حسب المقاول">
+            <div class="chart-head"><div><span class="chart-eyebrow">{{ i18n.t('workforce.ui.dashboard.distribution') }}</span><h3>{{ i18n.t('workforce.ui.dashboard.byContractor') }}</h3></div><strong>{{ filteredWorkers().length }} {{ i18n.t('workforce.ui.requests.workerUnit') }}</strong></div>
+            <div class="bar-chart" role="img" [attr.aria-label]="i18n.t('workforce.ui.dashboard.byContractorAria')">
               @for (item of contractorSeries(); track item.id) {
                 <a class="bar-row" routerLink="/workforce/workers" [queryParams]="{ contractorId: item.id }"><span>{{ item.label }}</span><div class="bar-track"><i [style.width.%]="item.percent"></i></div><strong>{{ item.value }}</strong></a>
-              } @empty { <p class="empty-cell">لا توجد بيانات كافية للرسم</p> }
+              } @empty { <p class="empty-cell">{{ i18n.t('workforce.ui.dashboard.noChartData') }}</p> }
             </div>
           </section>
 
           <section class="card chart-card">
-            <div class="chart-head"><div><span class="chart-eyebrow">المزيج التشغيلي</span><h3>العمال حسب الفئة</h3></div></div>
-            <div class="bar-chart category-bars" role="img" aria-label="رسم يوضح عدد العمال حسب الفئة">
+            <div class="chart-head"><div><span class="chart-eyebrow">{{ i18n.t('workforce.ui.dashboard.operationalMix') }}</span><h3>{{ i18n.t('workforce.ui.dashboard.byCategory') }}</h3></div></div>
+            <div class="bar-chart category-bars" role="img" [attr.aria-label]="i18n.t('workforce.ui.dashboard.byCategoryAria')">
               @for (item of categorySeries(); track item.id) {
                 <a class="bar-row" routerLink="/workforce/workers" [queryParams]="{ categoryId: item.id }"><span>{{ item.label }}</span><div class="bar-track"><i [style.width.%]="item.percent"></i></div><strong>{{ item.value }}</strong></a>
-              } @empty { <p class="empty-cell">لا توجد بيانات كافية للرسم</p> }
+              } @empty { <p class="empty-cell">{{ i18n.t('workforce.ui.dashboard.noChartData') }}</p> }
             </div>
           </section>
 
           <section class="card chart-card donut-card">
-            <div><span class="chart-eyebrow">تغطية طلبات العمالة</span><h3>المقبول مقابل المطلوب</h3></div>
+            <div><span class="chart-eyebrow">{{ i18n.t('workforce.ui.dashboard.requestCoverage') }}</span><h3>{{ i18n.t('workforce.ui.dashboard.acceptedVsRequested') }}</h3></div>
             <div class="donut-layout">
-              <div class="donut" [style.background]="requestCoverageStyle()" role="img" [attr.aria-label]="'نسبة تغطية الطلبات ' + requestCoverage() + ' بالمائة'"><span>{{ requestCoverage() }}%</span></div>
-              <div class="legend"><span><i class="accepted"></i> مقبول: {{ acceptedWorkers() }}</span><span><i class="remaining"></i> متبقٍ: {{ requestRemaining() }}</span></div>
+              <div class="donut" [style.background]="requestCoverageStyle()" role="img" [attr.aria-label]="i18n.t('workforce.ui.dashboard.coverageAria', { percent: requestCoverage() })"><span>{{ requestCoverage() }}%</span></div>
+              <div class="legend"><span><i class="accepted"></i> {{ i18n.t('workforce.ui.dashboard.accepted') }} {{ acceptedWorkers() }}</span><span><i class="remaining"></i> {{ i18n.t('workforce.ui.dashboard.remaining') }} {{ requestRemaining() }}</span></div>
             </div>
           </section>
 
           <section class="card chart-card">
-            <div class="chart-head"><div><span class="chart-eyebrow">مخاطر السلف</span><h3>الرصيد المتبقي من السلف</h3></div><strong>{{ advanceRemaining() | number:'1.0-0' }} ج.م</strong></div>
-            <div class="financial-meter" role="img" [attr.aria-label]="'الرصيد المتبقي من السلف ' + advanceRemaining()"><i [style.width.%]="advanceRemainingPercent()"></i></div>
-            <div class="meter-labels"><span>تم سداده {{ advancePaid() | number:'1.0-0' }}</span><span>أصل السلف {{ advanceGranted() | number:'1.0-0' }}</span></div>
+            <div class="chart-head"><div><span class="chart-eyebrow">{{ i18n.t('workforce.ui.dashboard.advanceRisk') }}</span><h3>{{ i18n.t('workforce.ui.dashboard.advanceRemaining') }}</h3></div><strong>{{ advanceRemaining() | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</strong></div>
+            <div class="financial-meter" role="img" [attr.aria-label]="i18n.t('workforce.ui.dashboard.remainingAria', { amount: advanceRemaining() })"><i [style.width.%]="advanceRemainingPercent()"></i></div>
+            <div class="meter-labels"><span>{{ i18n.t('workforce.ui.dashboard.advancePaid', { amount: (advancePaid() | number:'1.0-0') ?? '0' }) }}</span><span>{{ i18n.t('workforce.ui.dashboard.advanceGranted', { amount: (advanceGranted() | number:'1.0-0') ?? '0' }) }}</span></div>
           </section>
 
           <section class="card contractor-table">
-            <h3>المقاولون ونماذج الحساب</h3>
+            <h3>{{ i18n.t('workforce.ui.dashboard.contractorsModels') }}</h3>
             <table class="data-table">
-              <thead><tr><th>كود المقاول</th><th>اسم المقاول</th><th>نموذج المحاسبة</th><th>دورة التسوية</th><th>الحالة</th></tr></thead>
+              <thead><tr><th>{{ i18n.t('workforce.ui.dashboard.contractorCode') }}</th><th>{{ i18n.t('workforce.ui.dashboard.contractorName') }}</th><th>{{ i18n.t('workforce.ui.contractors.accountingModel') }}</th><th>{{ i18n.t('workforce.ui.contractors.cycle') }}</th><th>{{ i18n.t('workforce.ui.status') }}</th></tr></thead>
               <tbody>
-                <tr *ngFor="let c of filteredContractors()"><td><strong>{{ c.code }}</strong></td><td>{{ c.name }}</td><td><span class="badge model-badge">{{ getModelLabel(c.accountingModel) }}</span></td><td>كل {{ c.settlementCycleDays }} يوم</td><td><span class="badge active">{{ c.status }}</span></td></tr>
-                <tr *ngIf="workforceService.contractors().length === 0"><td colspan="5" class="empty-cell">لا يوجد مقاولون مسجلون حالياً</td></tr>
+                <tr *ngFor="let c of filteredContractors()"><td><strong>{{ c.code }}</strong></td><td>{{ c.name }}</td><td><span class="badge model-badge">{{ getModelLabel(c.accountingModel) }}</span></td><td>{{ i18n.t('workforce.ui.dashboard.daysCycle', { days: c.settlementCycleDays }) }}</td><td><span class="badge active">{{ contractorStatusLabel(c.status) }}</span></td></tr>
+                <tr *ngIf="workforceService.contractors().length === 0"><td colspan="5" class="empty-cell">{{ i18n.t('workforce.ui.dashboard.noContractors') }}</td></tr>
               </tbody>
             </table>
           </section>
@@ -84,7 +85,7 @@ import { WorkforceService } from '../../data-access/workforce.service';
     </div>
   `,
   styles: [`
-    .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; direction: rtl; }
+    .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;  }
     .eyebrow { font-size: .875rem; color: #d97706; font-weight: 600; }
     .page-header h1 { font-size: 1.75rem; font-weight: 800; color: var(--ink); margin: .25rem 0 0; }
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
@@ -120,13 +121,13 @@ import { WorkforceService } from '../../data-access/workforce.service';
     .financial-meter { height: 34px; border-radius: 10px; background: #dcfce7; overflow: hidden; margin: 2.5rem 0 .75rem; }
     .financial-meter i { display: block; height: 100%; background: linear-gradient(90deg, #ef4444, #f97316); }
     .meter-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: .78rem; }
-    .data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; text-align: right; }
+    .data-table { width: 100%; border-collapse: collapse; margin-top: 1rem; text-align: start; }
     .data-table th, .data-table td { padding: .75rem 1rem; border-bottom: 1px solid var(--line); }
     .badge { padding: .25rem .625rem; border-radius: 6px; font-size: .75rem; font-weight: 600; }
     .badge.active { background: #dcfce7; color: var(--success); } .badge.model-badge { background: #fef3c7; color: #92400e; }
     .empty-cell { text-align: center; color: var(--muted); padding: 2rem; }
     .loading-state, .error-state { padding: 2rem; text-align: center; color: var(--muted); } .error-state { color: var(--danger); }
-    .motion-enabled .bar-track i, .motion-enabled .financial-meter i { animation: grow-bar 500ms cubic-bezier(.2,.8,.2,1) both; transform-origin: right; }
+    .motion-enabled .bar-track i, .motion-enabled .financial-meter i { animation: grow-bar 500ms cubic-bezier(.2,.8,.2,1) both; transform-origin: center; }
     .motion-disabled .bar-track i, .motion-disabled .financial-meter i { animation: none; }
     @keyframes grow-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
     @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } .contractor-table { grid-column: auto; overflow-x: auto; } }
@@ -135,6 +136,7 @@ import { WorkforceService } from '../../data-access/workforce.service';
 })
 export class WorkforceDashboardComponent implements OnInit {
   workforceService = inject(WorkforceService);
+  readonly i18n = inject(I18nService);
   private auth = inject(AuthService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -184,7 +186,7 @@ export class WorkforceDashboardComponent implements OnInit {
       advances: this.workforceService.loadAdvances(),
     }).subscribe({
       next: () => this.loading.set(false),
-      error: (error) => { this.loadError.set('تعذّر تحميل البيانات: ' + (apiErrorDetail(error, error?.message ?? 'خطأ غير متوقع'))); this.loading.set(false); },
+      error: (error) => { this.loadError.set(this.i18n.t('workforce.ui.dashboard.loadFailed', { detail: apiErrorDetail(error, error?.message ?? this.i18n.t('workforce.ui.unexpectedError')) })); this.loading.set(false); },
     });
   }
 
@@ -200,9 +202,8 @@ export class WorkforceDashboardComponent implements OnInit {
     this.persistFilters();
   }
 
-  getModelLabel(model: string): string {
-    return ({ worker_net_total: 'مجموع صافي العمال', contractor_daily_rate: 'سعر تعاقد مستقل', worker_cost_plus_fee: 'تكلفة العمال + عمولة', fixed_period_amount: 'مبلغ ثابت للفترة' } as Record<string, string>)[model] ?? model;
-  }
+  getModelLabel(model: string): string { const keys:Record<string,string>={worker_net_total:'workforce.ui.model.workerNetTotal',contractor_daily_rate:'workforce.ui.model.contractorDailyRate',worker_cost_plus_fee:'workforce.ui.model.workerCostPlusFee',fixed_period_amount:'workforce.ui.model.fixedPeriodAmount'}; return keys[model]?this.i18n.t(keys[model]):model; }
+  contractorStatusLabel(status:string):string { const key=status==='ACTIVE'?'workforce.ui.dashboard.statusActive':status==='INACTIVE'?'workforce.ui.dashboard.statusInactive':''; return key?this.i18n.t(key):status; }
 
   private breakdown(labels: Array<{ id: string; label: string }>, selector: (worker: { contractorId: string; categoryId: string }) => string) {
     const counts = labels.map(label => ({ ...label, value: this.filteredWorkers().filter(worker => selector(worker) === label.id).length }));

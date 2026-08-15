@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260815-v246-full-ui-i18n
+      author: openai
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck: { expectedResult: 0, sql: "SELECT COUNT(*) FROM translations WHERE id LIKE 'v246-%'" }
+      changes:
+        - loadData:
+            file: db/changelog/data/insert/files/20260815_v246_full_ui_i18n.csv
+            separator: ";"
+            tableName: translations
+            encoding: UTF-8
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: value, name: text_value, type: STRING }
+        - update:
+            tableName: translations
+            columns:
+              - column:
+                  name: text_value
+                  value: "الأعمدة المطلوبة: التاريخ (date)، الوصف (description)، والمبلغ (amount). الاختيارية: تاريخ القيمة (valueDate)، المرجع (reference)، والرصيد (balance)."
+            where: "translation_key = 'banks.reconciliation.csvHint' AND locale = 'ar-EG' AND app_id IS NULL"
+      rollback:
+        - update:
+            tableName: translations
+            columns:
+              - column:
+                  name: text_value
+                  value: "الأعمدة المطلوبة: date وdescription وamount. الاختيارية: valueDate وreference وbalance."
+            where: "translation_key = 'banks.reconciliation.csvHint' AND locale = 'ar-EG' AND app_id IS NULL"
+        - delete: { tableName: translations, where: "id LIKE 'v246-%'" }

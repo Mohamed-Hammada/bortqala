@@ -107,8 +107,13 @@ class ApiExceptionHandlerTests {
     @Test
     void validationReturnsFieldErrorsArray() {
         when(translationService.resolveLocale(any())).thenReturn("ar-EG");
-        when(translationService.translateOrDefault(eq("error.invalidValue"), eq("ar-EG"), anyString()))
-                .thenReturn("قيمة غير صالحة");
+        when(translationService.translateOrDefault(anyString(), anyString(), anyString()))
+                .thenAnswer(invocation -> {
+                    if ("error.invalidValue".equals(invocation.getArgument(0)) && "ar-EG".equals(invocation.getArgument(1))) {
+                        return "قيمة غير صالحة";
+                    }
+                    return invocation.getArgument(2);
+                });
         var target = new Object();
         var bindingResult = new BeanPropertyBindingResult(target, "target");
         bindingResult.addError(new FieldError("target", "employeeCode", "must not be blank"));
