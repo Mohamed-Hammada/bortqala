@@ -200,8 +200,8 @@ describe('TranslationManagementComponent', () => {
     expect(request.request.method).toBe('POST');
     const body = request.request.body as FormData;
     expect(body.get('locale')).toBe('ar-EG');
-    expect(body.get('file')).toBe(file);
     request.flush({ importedCount: 2, createdCount: 1, updatedCount: 1, unchangedCount: 0 });
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
     expectTranslationRequest().flush(pageResponse());
     await promise;

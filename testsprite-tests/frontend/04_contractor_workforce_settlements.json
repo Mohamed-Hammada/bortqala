@@ -1,0 +1,25 @@
+{
+  "projectId": "e95d5ad8-8299-4359-9982-008c2132fd7a",
+  "type": "frontend",
+  "name": "Contractor workforce labor settlement management",
+  "description": "User views contractor labor requests, 15-day settlement period details, worker attendance breakdowns, and finance ledger postings.",
+  "priority": "p1",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to Contractor Workforce under the HR menu"
+    },
+    {
+      "type": "assertion",
+      "description": "Verify active labor requests and 15-day settlement periods table renders cleanly"
+    },
+    {
+      "type": "action",
+      "description": "Click on a settlement row to open the Contractor Settlement Detail drawer"
+    },
+    {
+      "type": "assertion",
+      "description": "Verify worker attendance details, advances and deductions, supplier invoice linking, and finance posting status are shown"
+    }
+  ]
+}

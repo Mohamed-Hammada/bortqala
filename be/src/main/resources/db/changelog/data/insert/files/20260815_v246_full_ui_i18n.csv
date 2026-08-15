@@ -391,913 +391,915 @@ v246-0389;workforce.ui.advances.defaultInstallments;en-US;Default installment co
 v246-0390;workforce.ui.advances.defaultInstallments;ar-EG;عدد الأقساط الافتراضي
 v246-0391;workforce.ui.advances.deferral;en-US;Deduction start deferral (periods)
 v246-0392;workforce.ui.advances.deferral;ar-EG;تأجيل بداية الخصم (عدد الفترات)
-v246-0393;workforce.ui.advances.earlyRepayment;en-US;Early advance repayment
-v246-0394;workforce.ui.advances.earlyRepayment;ar-EG;سداد سلفة مبكر
-v246-0395;workforce.ui.advances.effectiveFrom;en-US;Effective from
-v246-0396;workforce.ui.advances.effectiveFrom;ar-EG;سارية من
-v246-0397;workforce.ui.advances.effectivePolicy;en-US;Effective policy that will be stored with the advance:
-v246-0398;workforce.ui.advances.effectivePolicy;ar-EG;السياسة الفعلية التي سيحفظها الخادم مع السلفة:
-v246-0399;workforce.ui.advances.employeeAria;en-US;Select the employee receiving the advance
-v246-0400;workforce.ui.advances.employeeAria;ar-EG;اختر الموظف المستفيد من السلفة
-v246-0401;workforce.ui.advances.employeeCategoryException;en-US;Employee category exception
-v246-0402;workforce.ui.advances.employeeCategoryException;ar-EG;استثناء حسب فئة الموظفين
-v246-0403;workforce.ui.advances.employeeCategoryRequired;en-US;Employee category *
-v246-0404;workforce.ui.advances.employeeCategoryRequired;ar-EG;فئة الموظفين *
-v246-0405;workforce.ui.advances.employeeException;en-US;Employee exception
-v246-0406;workforce.ui.advances.employeeException;ar-EG;استثناء حسب الموظف
-v246-0407;workforce.ui.advances.employeeRequired;en-US;Employee *
-v246-0408;workforce.ui.advances.employeeRequired;ar-EG;الموظف *
-v246-0409;workforce.ui.advances.empty;en-US;No advances have been recorded yet
-v246-0410;workforce.ui.advances.empty;ar-EG;لا توجد سلف مسجّلة حتى الآن
-v246-0411;workforce.ui.advances.enabled;en-US;Enabled
-v246-0412;workforce.ui.advances.enabled;ar-EG;مفعّلة
-v246-0413;workforce.ui.advances.entitlementDeduction;en-US;Deduct from entitlements
-v246-0414;workforce.ui.advances.entitlementDeduction;ar-EG;خصم من المستحقات
-v246-0415;workforce.ui.advances.eyebrow;en-US;Advances and installments
-v246-0416;workforce.ui.advances.eyebrow;ar-EG;السلف والأقساط
-v246-0417;workforce.ui.advances.firstInstallment;en-US;First installment:
-v246-0418;workforce.ui.advances.firstInstallment;ar-EG;أول قسط:
-v246-0419;workforce.ui.advances.firstInstallmentDate;en-US;First installment date
-v246-0420;workforce.ui.advances.firstInstallmentDate;ar-EG;تاريخ أول قسط
-v246-0421;workforce.ui.advances.frequency;en-US;Deduction frequency
-v246-0422;workforce.ui.advances.frequency;ar-EG;دورية الخصم
-v246-0423;workforce.ui.advances.fullRepayment;en-US;Full repayment — the advance will be closed
-v246-0424;workforce.ui.advances.fullRepayment;ar-EG;سداد كامل — سيتم إغلاق السلفة بالكامل
-v246-0425;workforce.ui.advances.fullRepaymentMismatch;en-US;For full repayment, the amount must equal the remaining balance
-v246-0426;workforce.ui.advances.fullRepaymentMismatch;ar-EG;عند السداد الكامل، يجب أن يساوي المبلغ الرصيد المتبقي
-v246-0427;workforce.ui.advances.global;en-US;Global setting
-v246-0428;workforce.ui.advances.global;ar-EG;إعداد عام
-v246-0429;workforce.ui.advances.halfMonth15;en-US;Half-monthly (every 15 days)
-v246-0430;workforce.ui.advances.halfMonth15;ar-EG;نصف شهري (كل 15 يوم)
-v246-0431;workforce.ui.advances.halfMonthly;en-US;Half-monthly
-v246-0432;workforce.ui.advances.halfMonthly;ar-EG;نصف شهري
-v246-0433;workforce.ui.advances.installmentAmount;en-US;Installment amount
-v246-0434;workforce.ui.advances.installmentAmount;ar-EG;قيمة القسط
-v246-0435;workforce.ui.advances.installmentAuto;en-US;Installment amount (EGP) — calculated automatically
-v246-0436;workforce.ui.advances.installmentAuto;ar-EG;قيمة القسط (ج.م) — محسوبة تلقائياً
-v246-0437;workforce.ui.advances.installmentCount;en-US;Number of installments *
-v246-0438;workforce.ui.advances.installmentCount;ar-EG;عدد الأقساط *
-v246-0439;workforce.ui.advances.installmentHelp;en-US;"Installment calculation — advance amount ÷ number of installments; it can be adjusted"
-v246-0440;workforce.ui.advances.installmentHelp;ar-EG;طريقة احتساب الأقساط — مبلغ السلفة ÷ عدد الأقساط ويمكن تعديله
-v246-0441;workforce.ui.advances.installmentHelpAria;en-US;Installment calculation help
-v246-0442;workforce.ui.advances.installmentHelpAria;ar-EG;شرح احتساب الأقساط
-v246-0443;workforce.ui.advances.installmentUnit;en-US;installment
-v246-0444;workforce.ui.advances.installmentUnit;ar-EG;قسط
-v246-0445;workforce.ui.advances.installments;en-US;Installments
-v246-0446;workforce.ui.advances.installments;ar-EG;الأقساط
-v246-0447;workforce.ui.advances.installmentsMinimum;en-US;A long-term advance requires at least 2 installments
-v246-0448;workforce.ui.advances.installmentsMinimum;ar-EG;السلفة طويلة الأجل تتطلب قسطين على الأقل
-v246-0449;workforce.ui.advances.longDescription;en-US;Long-term — recurring installments
-v246-0450;workforce.ui.advances.longDescription;ar-EG;طويلة الأجل — تقسيط متكرر
-v246-0451;workforce.ui.advances.longTerm;en-US;Long-term
-v246-0452;workforce.ui.advances.longTerm;ar-EG;طويلة الأجل
-v246-0453;workforce.ui.advances.manual;en-US;Manual
-v246-0454;workforce.ui.advances.manual;ar-EG;يدوي
-v246-0455;workforce.ui.advances.manualDeduction;en-US;Manual deduction
-v246-0456;workforce.ui.advances.manualDeduction;ar-EG;خصم يدوي
-v246-0457;workforce.ui.advances.manualIntervention;en-US;Manual — requires manual action
-v246-0458;workforce.ui.advances.manualIntervention;ar-EG;يدوي — يتطلب تدخل يدوي
-v246-0459;workforce.ui.advances.maxDeduction;en-US;Max deduction %
-v246-0460;workforce.ui.advances.maxDeduction;ar-EG;أقصى خصم %
-v246-0461;workforce.ui.advances.maxPeriodDeduction;en-US;Maximum deduction from period entitlement (%)
-v246-0462;workforce.ui.advances.maxPeriodDeduction;ar-EG;الحد الأقصى للخصم من مستحق الفترة (%)
-v246-0463;workforce.ui.advances.maximum;en-US;Maximum:
-v246-0464;workforce.ui.advances.maximum;ar-EG;الحد الأقصى:
-v246-0465;workforce.ui.advances.monthly;en-US;Monthly
-v246-0466;workforce.ui.advances.monthly;ar-EG;شهري
-v246-0467;workforce.ui.advances.new;en-US;+ New advance
-v246-0468;workforce.ui.advances.new;ar-EG;+ صرف سُلفة جديدة
-v246-0469;workforce.ui.advances.noEmployees;en-US;No active employees are available
-v246-0470;workforce.ui.advances.noEmployees;ar-EG;لا يوجد موظفون نشطون متاحون
-v246-0471;workforce.ui.advances.notes;en-US;Notes
-v246-0472;workforce.ui.advances.notes;ar-EG;ملاحظات
-v246-0473;workforce.ui.advances.openEnded;en-US;Open-ended
-v246-0474;workforce.ui.advances.openEnded;ar-EG;مفتوحة
-v246-0475;workforce.ui.advances.optional;en-US;Optional
-v246-0476;workforce.ui.advances.optional;ar-EG;اختياري
-v246-0477;workforce.ui.advances.originalAmount;en-US;Original amount
-v246-0478;workforce.ui.advances.originalAmount;ar-EG;المبلغ الأصلي
-v246-0479;workforce.ui.advances.originalAmountAria;en-US;Original amount help
-v246-0480;workforce.ui.advances.originalAmountAria;ar-EG;شرح المبلغ الأصلي
-v246-0481;workforce.ui.advances.originalAmountHelp;en-US;Original amount — full advance value at disbursement
-v246-0482;workforce.ui.advances.originalAmountHelp;ar-EG;المبلغ الأصلي — كامل قيمة السلفة عند الصرف
-v246-0483;workforce.ui.advances.paidOff;en-US;Paid off
-v246-0484;workforce.ui.advances.paidOff;ar-EG;مسدّدة
-v246-0485;workforce.ui.advances.partialRepayment;en-US;Partial repayment — a balance will remain
-v246-0486;workforce.ui.advances.partialRepayment;ar-EG;سداد جزئي — سيتبقى رصيد بعد السداد
-v246-0487;workforce.ui.advances.pause;en-US;Pause
-v246-0488;workforce.ui.advances.pause;ar-EG;إيقاف
-v246-0489;workforce.ui.advances.pauseConfirm;en-US;Pause deductions for {name}?
-v246-0490;workforce.ui.advances.pauseConfirm;ar-EG;هل أنت متأكد من إيقاف اقتطاع السلفة الخاصة بـ ({name})؟
-v246-0491;workforce.ui.advances.pauseFailed;en-US;Could not pause the advance: {detail}
-v246-0492;workforce.ui.advances.pauseFailed;ar-EG;فشل إيقاف السلفة: {detail}
-v246-0493;workforce.ui.advances.pauseSuccess;en-US;Advance deductions paused
-v246-0494;workforce.ui.advances.pauseSuccess;ar-EG;تم إيقاف خصم السلفة مؤقتاً ✓
-v246-0495;workforce.ui.advances.paymentMethod;en-US;Payment method
-v246-0496;workforce.ui.advances.paymentMethod;ar-EG;طريقة السداد
-v246-0497;workforce.ui.advances.policy;en-US;Deduction policy
-v246-0498;workforce.ui.advances.policy;ar-EG;سياسة الخصم
-v246-0499;workforce.ui.advances.policyDateInvalid;en-US;The policy end date cannot be before its start date
-v246-0500;workforce.ui.advances.policyDateInvalid;ar-EG;تاريخ نهاية السياسة يسبق تاريخ البداية
-v246-0501;workforce.ui.advances.policyEnd;en-US;Effective end date
-v246-0502;workforce.ui.advances.policyEnd;ar-EG;تاريخ نهاية السريان
-v246-0503;workforce.ui.advances.policyMax;en-US;Maximum of period entitlement %
-v246-0504;workforce.ui.advances.policyMax;ar-EG;الحد الأقصى من مستحق الفترة %
-v246-0505;workforce.ui.advances.policyPriority;en-US;Priority: beneficiary exception → category exception → global setting, for employees and workers. It can be overridden on the advance.
-v246-0506;workforce.ui.advances.policyPriority;ar-EG;الأولوية: استثناء المستفيد ← استثناء فئته ← الإعداد العام، للموظفين والعمال. ويمكن تجاوزها داخل السلفة نفسها.
-v246-0507;workforce.ui.advances.policySaveFailed;en-US;Could not save the policy
-v246-0508;workforce.ui.advances.policySaveFailed;ar-EG;تعذّر حفظ السياسة
-v246-0509;workforce.ui.advances.policySaved;en-US;Advance policy saved successfully
-v246-0510;workforce.ui.advances.policySaved;ar-EG;تم حفظ سياسة السلف بنجاح ✓
-v246-0511;workforce.ui.advances.policyScope;en-US;Policy scope *
-v246-0512;workforce.ui.advances.policyScope;ar-EG;نطاق السياسة *
-v246-0513;workforce.ui.advances.policyScopeEmployee;en-US;Employee exception
-v246-0514;workforce.ui.advances.policyScopeEmployee;ar-EG;استثناء موظف
-v246-0515;workforce.ui.advances.policyScopeEmployeeCategory;en-US;Employee category exception
-v246-0516;workforce.ui.advances.policyScopeEmployeeCategory;ar-EG;استثناء فئة موظفين
-v246-0517;workforce.ui.advances.policyScopeGlobal;en-US;Global setting
-v246-0518;workforce.ui.advances.policyScopeGlobal;ar-EG;الإعداد العام
-v246-0519;workforce.ui.advances.policyScopeWorker;en-US;Worker exception
-v246-0520;workforce.ui.advances.policyScopeWorker;ar-EG;استثناء عامل
-v246-0521;workforce.ui.advances.policyScopeWorkerCategory;en-US;Worker category exception
-v246-0522;workforce.ui.advances.policyScopeWorkerCategory;ar-EG;استثناء فئة عمال
-v246-0523;workforce.ui.advances.policySelectScope;en-US;Select the category, worker, or employee for the exception
-v246-0524;workforce.ui.advances.policySelectScope;ar-EG;اختر الفئة أو العامل أو الموظف للاستثناء
-v246-0525;workforce.ui.advances.policyStart;en-US;Effective start date *
-v246-0526;workforce.ui.advances.policyStart;ar-EG;تاريخ بداية السريان *
-v246-0527;workforce.ui.advances.policyStartRequired;en-US;Enter the policy effective start date
-v246-0528;workforce.ui.advances.policyStartRequired;ar-EG;أدخل تاريخ بداية سريان السياسة
-v246-0529;workforce.ui.advances.policySummary;en-US;Default advance policy and exceptions
-v246-0530;workforce.ui.advances.policySummary;ar-EG;سياسة السلف الافتراضية والاستثناءات
-v246-0531;workforce.ui.advances.policyTitle;en-US;Advance deduction policy
-v246-0532;workforce.ui.advances.policyTitle;ar-EG;سياسة خصم السلف
-v246-0533;workforce.ui.advances.preview;en-US;Result preview:
-v246-0534;workforce.ui.advances.preview;ar-EG;معاينة النتيجة:
-v246-0535;workforce.ui.advances.previouslyPaid;en-US;Previously paid
-v246-0536;workforce.ui.advances.previouslyPaid;ar-EG;المسدّد سابقاً
-v246-0537;workforce.ui.advances.reason;en-US;Advance reason and notes
-v246-0538;workforce.ui.advances.reason;ar-EG;سبب السلفة والملاحظات
-v246-0539;workforce.ui.advances.reasonPlaceholder;en-US;Example: emergency, personal need, ...
-v246-0540;workforce.ui.advances.reasonPlaceholder;ar-EG;مثل: ظروف طارئة، احتياج شخصي، ...
-v246-0541;workforce.ui.advances.receiptRef;en-US;Receipt number or payment reference
-v246-0542;workforce.ui.advances.receiptRef;ar-EG;رقم الإيصال أو مرجع الدفع
-v246-0543;workforce.ui.advances.recipient;en-US;Beneficiary
-v246-0544;workforce.ui.advances.recipient;ar-EG;الجهة المستفيدة
-v246-0545;workforce.ui.advances.recipientRequiredWarning;en-US;Select the advance beneficiary
-v246-0546;workforce.ui.advances.recipientRequiredWarning;ar-EG;اختر المستفيد من السلفة
-v246-0547;workforce.ui.advances.recipientTypeRequired;en-US;Beneficiary type *
-v246-0548;workforce.ui.advances.recipientTypeRequired;ar-EG;نوع المستفيد *
-v246-0549;workforce.ui.advances.remainingBalance;en-US;Remaining balance
-v246-0550;workforce.ui.advances.remainingBalance;ar-EG;الرصيد المتبقي
-v246-0551;workforce.ui.advances.remainingHelp;en-US;Remaining balance — original amount minus all recorded repayments and deductions
-v246-0552;workforce.ui.advances.remainingHelp;ar-EG;الرصيد المتبقي — المبلغ الأصلي ناقص كل السداد والخصومات المسجلة
-v246-0553;workforce.ui.advances.remainingHelpAria;en-US;Remaining balance help
-v246-0554;workforce.ui.advances.remainingHelpAria;ar-EG;شرح الرصيد المتبقي
-v246-0555;workforce.ui.advances.repay;en-US;Repay
-v246-0556;workforce.ui.advances.repay;ar-EG;سداد
-v246-0557;workforce.ui.advances.repayImpactClose;en-US;The advance will be closed in full
-v246-0558;workforce.ui.advances.repayImpactClose;ar-EG;سيتم إغلاق السلفة بالكامل
-v246-0559;workforce.ui.advances.repayImpactRemaining;en-US;A balance of {amount} EGP will remain after repayment
-v246-0560;workforce.ui.advances.repayImpactRemaining;ar-EG;سيتبقى رصيد {amount} ج.م بعد السداد
-v246-0561;workforce.ui.advances.repaymentAmount;en-US;Repayment amount (EGP) *
-v246-0562;workforce.ui.advances.repaymentAmount;ar-EG;مبلغ السداد (ج.م) *
-v246-0563;workforce.ui.advances.repaymentAmountInvalid;en-US;Enter a valid repayment amount
-v246-0564;workforce.ui.advances.repaymentAmountInvalid;ar-EG;يجب إدخال مبلغ سداد صحيح
-v246-0565;workforce.ui.advances.repaymentAmountLabel;en-US;Repayment amount:
-v246-0566;workforce.ui.advances.repaymentAmountLabel;ar-EG;مبلغ السداد:
-v246-0567;workforce.ui.advances.repaymentDate;en-US;Repayment date
-v246-0568;workforce.ui.advances.repaymentDate;ar-EG;تاريخ السداد
-v246-0569;workforce.ui.advances.repaymentExceedsBalance;en-US;Repayment cannot exceed the remaining balance
-v246-0570;workforce.ui.advances.repaymentExceedsBalance;ar-EG;مبلغ السداد لا يمكن أن يتجاوز الرصيد المتبقي
-v246-0571;workforce.ui.advances.repaymentFailed;en-US;Repayment failed: {detail}
-v246-0572;workforce.ui.advances.repaymentFailed;ar-EG;فشل السداد: {detail}
-v246-0573;workforce.ui.advances.repaymentSuccess;en-US;Repayment of {amount} EGP recorded successfully
-v246-0574;workforce.ui.advances.repaymentSuccess;ar-EG;تم تسجيل السداد بمبلغ {amount} ج.م بنجاح ✓
-v246-0575;workforce.ui.advances.resume;en-US;Resume
-v246-0576;workforce.ui.advances.resume;ar-EG;استئناف
-v246-0577;workforce.ui.advances.resumeConfirm;en-US;Resume advance deductions?
-v246-0578;workforce.ui.advances.resumeConfirm;ar-EG;هل أنت متأكد من استئناف اقتطاع السلفة؟
-v246-0579;workforce.ui.advances.resumeFailed;en-US;Could not resume the advance: {detail}
-v246-0580;workforce.ui.advances.resumeFailed;ar-EG;فشل استئناف السلفة: {detail}
-v246-0581;workforce.ui.advances.resumeSuccess;en-US;Advance deductions resumed
-v246-0582;workforce.ui.advances.resumeSuccess;ar-EG;تم استئناف خصم السلفة بنجاح ✓
-v246-0583;workforce.ui.advances.saveFailed;en-US;Could not save the advance: {detail}
-v246-0584;workforce.ui.advances.saveFailed;ar-EG;فشل حفظ السلفة: {detail}
-v246-0585;workforce.ui.advances.savePolicy;en-US;Save policy
-v246-0586;workforce.ui.advances.savePolicy;ar-EG;حفظ السياسة
-v246-0587;workforce.ui.advances.select;en-US;Select
-v246-0588;workforce.ui.advances.select;ar-EG;اختر
-v246-0589;workforce.ui.advances.selectContractor;en-US;Select contractor *
-v246-0590;workforce.ui.advances.selectContractor;ar-EG;اختر المقاول *
-v246-0591;workforce.ui.advances.selectEmployee;en-US;Select employee *
-v246-0592;workforce.ui.advances.selectEmployee;ar-EG;اختر الموظف *
-v246-0593;workforce.ui.advances.selectWorker;en-US;Select worker *
-v246-0594;workforce.ui.advances.selectWorker;ar-EG;اختر العامل *
-v246-0595;workforce.ui.advances.shortDescription;en-US;Short-term — one-time direct deduction
-v246-0596;workforce.ui.advances.shortDescription;ar-EG;قصيرة الأجل — خصم مباشر دفعة واحدة
-v246-0597;workforce.ui.advances.shortTerm;en-US;Short-term
-v246-0598;workforce.ui.advances.shortTerm;ar-EG;قصيرة الأجل
-v246-0599;workforce.ui.advances.summary;en-US;Advance summary:
-v246-0600;workforce.ui.advances.summary;ar-EG;ملخص السلفة:
-v246-0601;workforce.ui.advances.suspended;en-US;Suspended
-v246-0602;workforce.ui.advances.suspended;ar-EG;موقوفة
-v246-0603;workforce.ui.advances.termType;en-US;Advance type
-v246-0604;workforce.ui.advances.termType;ar-EG;نوع السلفة
-v246-0605;workforce.ui.advances.title;en-US;Manage employee, worker, and contractor advances and installment schedules
-v246-0606;workforce.ui.advances.title;ar-EG;إدارة سُلف الموظفين والعمال والمقاولين وجدولة الأقساط
-v246-0607;workforce.ui.advances.totalAmount;en-US;Total amount
-v246-0608;workforce.ui.advances.totalAmount;ar-EG;المبلغ الكلي
-v246-0609;workforce.ui.advances.totalGranted;en-US;Total granted
-v246-0610;workforce.ui.advances.totalGranted;ar-EG;إجمالي المبالغ الممنوحة
-v246-0611;workforce.ui.advances.totalOpen;en-US;Open advances
-v246-0612;workforce.ui.advances.totalOpen;ar-EG;إجمالي السلف القائمة
-v246-0613;workforce.ui.advances.totalRemaining;en-US;Total remaining balance
-v246-0614;workforce.ui.advances.totalRemaining;ar-EG;إجمالي الأرصدة المتبقية
-v246-0615;workforce.ui.advances.version;en-US;Version
-v246-0616;workforce.ui.advances.version;ar-EG;إصدار
-v246-0617;workforce.ui.advances.weekly;en-US;Weekly
-v246-0618;workforce.ui.advances.weekly;ar-EG;أسبوعي
-v246-0619;workforce.ui.advances.workerCategoryException;en-US;Worker category exception
-v246-0620;workforce.ui.advances.workerCategoryException;ar-EG;استثناء حسب فئة العمال
-v246-0621;workforce.ui.advances.workerException;en-US;Worker exception
-v246-0622;workforce.ui.advances.workerException;ar-EG;استثناء حسب العامل
-v246-0623;workforce.ui.advances.workerRequired;en-US;Worker *
-v246-0624;workforce.ui.advances.workerRequired;ar-EG;العامل *
-v246-0625;workforce.ui.all;en-US;All
-v246-0626;workforce.ui.all;ar-EG;الكل
-v246-0627;workforce.ui.cancel;en-US;Cancel
-v246-0628;workforce.ui.cancel;ar-EG;إلغاء
-v246-0629;workforce.ui.categories.add;en-US;+ Add worker category
-v246-0630;workforce.ui.categories.add;ar-EG;+ إضافة فئة عمال جديدة
-v246-0631;workforce.ui.categories.addTitle;en-US;Add worker category
-v246-0632;workforce.ui.categories.addTitle;ar-EG;إضافة فئة عمال جديدة
-v246-0633;workforce.ui.categories.both;en-US;Shared: workers and employees (BOTH)
-v246-0634;workforce.ui.categories.both;ar-EG;مشتركة: عمال وموظفون (BOTH)
-v246-0635;workforce.ui.categories.code;en-US;Category code
-v246-0636;workforce.ui.categories.code;ar-EG;كود الفئة
-v246-0637;workforce.ui.categories.codeError;en-US;Category code is required.
-v246-0638;workforce.ui.categories.codeError;ar-EG;كود الفئة مطلوب.
-v246-0639;workforce.ui.categories.codeRequired;en-US;Category code *
-v246-0640;workforce.ui.categories.codeRequired;ar-EG;كود الفئة *
-v246-0641;workforce.ui.categories.cycle;en-US;Default settlement cycle
-v246-0642;workforce.ui.categories.cycle;ar-EG;دورة التسوية الافتراضية
-v246-0643;workforce.ui.categories.dailyRate;en-US;Default daily rate
-v246-0644;workforce.ui.categories.dailyRate;ar-EG;اليومية الافتراضية
-v246-0645;workforce.ui.categories.dailyRateRequired;en-US;Default daily rate (EGP) *
-v246-0646;workforce.ui.categories.dailyRateRequired;ar-EG;اليومية الافتراضية (ج.م) *
-v246-0647;workforce.ui.categories.description;en-US;Description
-v246-0648;workforce.ui.categories.description;ar-EG;الوصف
-v246-0649;workforce.ui.categories.export;en-US;⇩ Export Excel
-v246-0650;workforce.ui.categories.export;ar-EG;⇩ تصدير Excel
-v246-0651;workforce.ui.categories.eyebrow;en-US;Worker category management
-v246-0652;workforce.ui.categories.eyebrow;ar-EG;إدارة فئات العمالة
-v246-0653;workforce.ui.categories.halfMonth;en-US;Half-monthly (15 days)
-v246-0654;workforce.ui.categories.halfMonth;ar-EG;نصف شهري (15 يومًا)
-v246-0655;workforce.ui.categories.hours;en-US;Standard daily hours
-v246-0656;workforce.ui.categories.hours;ar-EG;ساعات اليوم القياسية
-v246-0657;workforce.ui.categories.hoursRequired;en-US;Standard daily work hours *
-v246-0658;workforce.ui.categories.hoursRequired;ar-EG;ساعات العمل اليومية القياسية *
-v246-0659;workforce.ui.categories.monthly;en-US;Monthly (30 days)
-v246-0660;workforce.ui.categories.monthly;ar-EG;شهري (30 يومًا)
-v246-0661;workforce.ui.categories.name;en-US;Category name
-v246-0662;workforce.ui.categories.name;ar-EG;اسم الفئة
-v246-0663;workforce.ui.categories.nameError;en-US;Category name is required.
-v246-0664;workforce.ui.categories.nameError;ar-EG;اسم الفئة مطلوب.
-v246-0665;workforce.ui.categories.nameRequired;en-US;Category name *
-v246-0666;workforce.ui.categories.nameRequired;ar-EG;اسم الفئة *
-v246-0667;workforce.ui.categories.rateHoursError;en-US;Daily rate cannot be negative and work hours must be greater than zero.
-v246-0668;workforce.ui.categories.rateHoursError;ar-EG;اليومية يجب ألا تكون سالبة وساعات العمل يجب أن تكون أكبر من صفر.
-v246-0669;workforce.ui.categories.requiredError;en-US;Category code and name are required.
-v246-0670;workforce.ui.categories.requiredError;ar-EG;كود الفئة واسم الفئة حقول إلزامية.
-v246-0671;workforce.ui.categories.save;en-US;Save category
-v246-0672;workforce.ui.categories.save;ar-EG;حفظ الفئة
-v246-0673;workforce.ui.categories.saveFailed;en-US;Could not save the category. Try again.
-v246-0674;workforce.ui.categories.saveFailed;ar-EG;تعذر حفظ الفئة. أعد المحاولة.
-v246-0675;workforce.ui.categories.scope;en-US;Scope
-v246-0676;workforce.ui.categories.scope;ar-EG;النطاق
-v246-0677;workforce.ui.categories.scopeBoth;en-US;Shared (Both)
-v246-0678;workforce.ui.categories.scopeBoth;ar-EG;مشتركة (Both)
-v246-0679;workforce.ui.categories.scopeEmployee;en-US;Employees only
-v246-0680;workforce.ui.categories.scopeEmployee;ar-EG;موظفون فقط
-v246-0681;workforce.ui.categories.scopeNote;en-US;This screen manages WORKER categories. A shared BOTH category can also appear in employee categories and worker-category selectors. Employee-only categories are managed from the main categories screen.
-v246-0682;workforce.ui.categories.scopeNote;ar-EG;هذه الشاشة تخص فئات العمال (WORKER). يمكن أيضًا إنشاء فئة مشتركة (BOTH) تظهر في شاشة فئات الموظفين وقوائم اختيار فئة العمال معًا. فئات الموظفين فقط (EMPLOYEE) تُدار من شاشة الفئات الرئيسية.
-v246-0683;workforce.ui.categories.scopeRequired;en-US;Category scope *
-v246-0684;workforce.ui.categories.scopeRequired;ar-EG;نطاق الفئة *
-v246-0685;workforce.ui.categories.scopeWorker;en-US;Workers only
-v246-0686;workforce.ui.categories.scopeWorker;ar-EG;عمال فقط
-v246-0687;workforce.ui.categories.statusSuspended;en-US;Suspended
-v246-0688;workforce.ui.categories.statusSuspended;ar-EG;معلق
-v246-0689;workforce.ui.categories.title;en-US;Operational categories and standard daily rates
-v246-0690;workforce.ui.categories.title;ar-EG;الفئات التشغيلية واليوميات القياسية
-v246-0691;workforce.ui.categories.verifyFailed;en-US;The save request completed, but the category did not appear after refreshing the data.
-v246-0692;workforce.ui.categories.verifyFailed;ar-EG;تم إرسال طلب الحفظ لكن الفئة لم تظهر بعد إعادة تحميل البيانات.
-v246-0693;workforce.ui.categories.workerOnly;en-US;Workers only (WORKER)
-v246-0694;workforce.ui.categories.workerOnly;ar-EG;عمال فقط (WORKER)
-v246-0695;workforce.ui.close;en-US;Close
-v246-0696;workforce.ui.close;ar-EG;إغلاق
-v246-0697;workforce.ui.contractor;en-US;Contractor
-v246-0698;workforce.ui.contractor;ar-EG;مقاول
-v246-0699;workforce.ui.contractorAccounts.accountingModel;en-US;Accounting model
-v246-0700;workforce.ui.contractorAccounts.accountingModel;ar-EG;نموذج الحساب
-v246-0701;workforce.ui.contractorAccounts.contractor;en-US;Contractor
-v246-0702;workforce.ui.contractorAccounts.contractor;ar-EG;المقاول
-v246-0703;workforce.ui.contractorAccounts.eyebrow;en-US;Contractor accounts
-v246-0704;workforce.ui.contractorAccounts.eyebrow;ar-EG;حسابات المقاولين
-v246-0705;workforce.ui.contractorAccounts.feeOrRate;en-US;Fee / independent rate
-v246-0706;workforce.ui.contractorAccounts.feeOrRate;ar-EG;العمولة / السعر المستقل
-v246-0707;workforce.ui.contractorAccounts.paid;en-US;Paid
-v246-0708;workforce.ui.contractorAccounts.paid;ar-EG;المسدد
-v246-0709;workforce.ui.contractorAccounts.printReceipt;en-US;Print receipt statement
-v246-0710;workforce.ui.contractorAccounts.printReceipt;ar-EG;طباعة كشف الاستلام
-v246-0711;workforce.ui.contractorAccounts.remaining;en-US;Remaining to pay
-v246-0712;workforce.ui.contractorAccounts.remaining;ar-EG;المتبقي للصرف
-v246-0713;workforce.ui.contractorAccounts.title;en-US;Contractor receipt statements and payable balances
-v246-0714;workforce.ui.contractorAccounts.title;ar-EG;كشوف استلام المقاولين وأرصدة المستحقات
-v246-0715;workforce.ui.contractorAccounts.totalPayable;en-US;Total payable
-v246-0716;workforce.ui.contractorAccounts.totalPayable;ar-EG;إجمالي المستحق
-v246-0717;workforce.ui.contractorAccounts.workerNetTotal;en-US;Workers net total
-v246-0718;workforce.ui.contractorAccounts.workerNetTotal;ar-EG;مجموع صافي العمال
-v246-0719;workforce.ui.contractors.accountingModel;en-US;Accounting model
-v246-0720;workforce.ui.contractors.accountingModel;ar-EG;نموذج المحاسبة
-v246-0721;workforce.ui.contractors.add;en-US;+ Add contractor
-v246-0722;workforce.ui.contractors.add;ar-EG;+ إضافة مقاول جديد
-v246-0723;workforce.ui.contractors.addTitle;en-US;Add contractor
-v246-0724;workforce.ui.contractors.addTitle;ar-EG;إضافة مقاول جديد
-v246-0725;workforce.ui.contractors.code;en-US;Code
-v246-0726;workforce.ui.contractors.code;ar-EG;الكود
-v246-0727;workforce.ui.contractors.codeRequired;en-US;Contractor code *
-v246-0728;workforce.ui.contractors.codeRequired;ar-EG;كود المقاول *
-v246-0729;workforce.ui.contractors.costPlusDescription;en-US;Worker cost plus a fixed fee or percentage.
-v246-0730;workforce.ui.contractors.costPlusDescription;ar-EG;تكلفة العمال مضافاً إليها عمولة ثابتة أو نسبة مئوية.
-v246-0731;workforce.ui.contractors.createdSuccess;en-US;Contractor created successfully
-v246-0732;workforce.ui.contractors.createdSuccess;ar-EG;تم إنشاء المقاول بنجاح
-v246-0733;workforce.ui.contractors.cycle;en-US;Settlement cycle
-v246-0734;workforce.ui.contractors.cycle;ar-EG;دورة التسوية
-v246-0735;workforce.ui.contractors.cycle15;en-US;Every 15 days (twice monthly)
-v246-0736;workforce.ui.contractors.cycle15;ar-EG;كل 15 يومًا (فترتان شهريًا)
-v246-0737;workforce.ui.contractors.cycle30;en-US;Every 30 days
-v246-0738;workforce.ui.contractors.cycle30;ar-EG;كل 30 يومًا
-v246-0739;workforce.ui.contractors.dailyRateDescription;en-US;Calculated using the contractor's day/hour rate independently of each worker's daily rate.
-v246-0740;workforce.ui.contractors.dailyRateDescription;ar-EG;الحساب بسعر المقاول لكل يوم/ساعة بصرف النظر عن يومية العامل.
-v246-0741;workforce.ui.contractors.dealingStatus;en-US;Status
-v246-0742;workforce.ui.contractors.dealingStatus;ar-EG;حالة التعامل
-v246-0743;workforce.ui.contractors.defaultRate;en-US;Default contractor daily rate
-v246-0744;workforce.ui.contractors.defaultRate;ar-EG;سعر المقاول اليومي الافتراضي
-v246-0745;workforce.ui.contractors.editTitle;en-US;Edit contractor
-v246-0746;workforce.ui.contractors.editTitle;ar-EG;تعديل بيانات المقاول
-v246-0747;workforce.ui.contractors.eyebrow;en-US;Contractor management
-v246-0748;workforce.ui.contractors.eyebrow;ar-EG;إدارة المقاولين
-v246-0749;workforce.ui.contractors.feeValue;en-US;Fee value (amount or %)
-v246-0750;workforce.ui.contractors.feeValue;ar-EG;قيمة العمولة (مبلغ أو نسبة %)
-v246-0751;workforce.ui.contractors.fixedAmount;en-US;Fixed period amount
-v246-0752;workforce.ui.contractors.fixedAmount;ar-EG;مبلغ الفترة الثابت
-v246-0753;workforce.ui.contractors.fixedDescription;en-US;A fixed amount agreed for each settlement period, with additions and deductions.
-v246-0754;workforce.ui.contractors.fixedDescription;ar-EG;مبلغ ثابت متفق عليه لكل فترة تسوية مع تعديلات الإضافة والخصم.
-v246-0755;workforce.ui.contractors.fullName;en-US;Full name
-v246-0756;workforce.ui.contractors.fullName;ar-EG;الاسم الكامل
-v246-0757;workforce.ui.contractors.modelRequired;en-US;Contractor accounting model *
-v246-0758;workforce.ui.contractors.modelRequired;ar-EG;نموذج محاسبة المقاول الإلزامي *
-v246-0759;workforce.ui.contractors.nameRequired;en-US;Contractor name *
-v246-0760;workforce.ui.contractors.nameRequired;ar-EG;اسم المقاول *
-v246-0761;workforce.ui.contractors.paymentRouting;en-US;Payment routing
-v246-0762;workforce.ui.contractors.paymentRouting;ar-EG;جهة الصرف
-v246-0763;workforce.ui.contractors.phone;en-US;Phone
-v246-0764;workforce.ui.contractors.phone;ar-EG;الهاتف
-v246-0765;workforce.ui.contractors.phoneRequired;en-US;Phone number *
-v246-0766;workforce.ui.contractors.phoneRequired;ar-EG;رقم الهاتف *
-v246-0767;workforce.ui.contractors.requiredError;en-US;Code, contractor name, and phone number are required.
-v246-0768;workforce.ui.contractors.requiredError;ar-EG;الكود واسم المقاول ورقم الهاتف حقول إلزامية.
-v246-0769;workforce.ui.contractors.routingDirect;en-US;Pay workers directly and the fee to the contractor
-v246-0770;workforce.ui.contractors.routingDirect;ar-EG;صرف مستحقات العمال مباشرة وصرف العمولة للمقاول
-v246-0771;workforce.ui.contractors.routingDirectShort;en-US;"Workers directly; fee to contractor"
-v246-0772;workforce.ui.contractors.routingDirectShort;ar-EG;مباشر للعمال والعمولة للمقاول
-v246-0773;workforce.ui.contractors.routingFull;en-US;Pay the full amount to the contractor
-v246-0774;workforce.ui.contractors.routingFull;ar-EG;صرف كامل المبلغ للمقاول
-v246-0775;workforce.ui.contractors.routingFullShort;en-US;Full amount to contractor
-v246-0776;workforce.ui.contractors.routingFullShort;ar-EG;كامل للمقاول
-v246-0777;workforce.ui.contractors.routingMixed;en-US;Mixed payment
-v246-0778;workforce.ui.contractors.routingMixed;ar-EG;صرف مختلط
-v246-0779;workforce.ui.contractors.routingMixedShort;en-US;Mixed
-v246-0780;workforce.ui.contractors.routingMixedShort;ar-EG;مختلط
-v246-0781;workforce.ui.contractors.saveErrorHelp;en-US;Review the data or connection and try again. The dialog stays open until the server confirms the save.
-v246-0782;workforce.ui.contractors.saveErrorHelp;ar-EG;راجع البيانات أو الاتصال ثم أعد المحاولة. لن تُغلق النافذة قبل تأكيد الحفظ من الخادم.
-v246-0783;workforce.ui.contractors.saveErrorTitle;en-US;Could not save the contractor.
-v246-0784;workforce.ui.contractors.saveErrorTitle;ar-EG;تعذر حفظ المقاول.
-v246-0785;workforce.ui.contractors.saveFailed;en-US;Unexpected error while saving the contractor.
-v246-0786;workforce.ui.contractors.saveFailed;ar-EG;حدث خطأ غير متوقع أثناء حفظ المقاول.
-v246-0787;workforce.ui.contractors.saving;en-US;Saving and verifying...
-v246-0788;workforce.ui.contractors.saving;ar-EG;جارٍ الحفظ والتحقق...
-v246-0789;workforce.ui.contractors.title;en-US;Contractor directory and accounting models
-v246-0790;workforce.ui.contractors.title;ar-EG;دليل المقاولين ونماذج المحاسبة
-v246-0791;workforce.ui.contractors.tradeName;en-US;Trade name
-v246-0792;workforce.ui.contractors.tradeName;ar-EG;الاسم التجاري
-v246-0793;workforce.ui.contractors.updatedSuccess;en-US;Contractor updated successfully
-v246-0794;workforce.ui.contractors.updatedSuccess;ar-EG;تم تحديث بيانات المقاول بنجاح
-v246-0795;workforce.ui.contractors.verifyFailed;en-US;The server accepted the save, but the record did not appear after refreshing the data.
-v246-0796;workforce.ui.contractors.verifyFailed;ar-EG;استجاب الخادم للحفظ لكن السجل لم يظهر بعد إعادة تحميل البيانات.
-v246-0797;workforce.ui.contractors.workerNetDescription;en-US;Contractor payable equals the workers' net total after deductions and advances.
-v246-0798;workforce.ui.contractors.workerNetDescription;ar-EG;مستحق المقاول يساوي مجموع صافي العمال بعد الخصومات والسلف.
-v246-0799;workforce.ui.currencyEgp;en-US;EGP
-v246-0800;workforce.ui.currencyEgp;ar-EG;ج.م
-v246-0801;workforce.ui.dashboard.accepted;en-US;Accepted:
-v246-0802;workforce.ui.dashboard.accepted;ar-EG;مقبول:
-v246-0803;workforce.ui.dashboard.acceptedVsRequested;en-US;Accepted vs requested
-v246-0804;workforce.ui.dashboard.acceptedVsRequested;ar-EG;المقبول مقابل المطلوب
-v246-0805;workforce.ui.dashboard.activeContractors;en-US;Active contractors
-v246-0806;workforce.ui.dashboard.activeContractors;ar-EG;المقاولون النشطون
-v246-0807;workforce.ui.dashboard.activeRequests;en-US;Active labor requests
-v246-0808;workforce.ui.dashboard.activeRequests;ar-EG;طلبات العمالة النشطة
-v246-0809;workforce.ui.dashboard.activityStatus;en-US;Activity status
-v246-0810;workforce.ui.dashboard.activityStatus;ar-EG;حالة النشاط
-v246-0811;workforce.ui.dashboard.advanceGranted;en-US;Principal advances {amount}
-v246-0812;workforce.ui.dashboard.advanceGranted;ar-EG;أصل السلف {amount}
-v246-0813;workforce.ui.dashboard.advancePaid;en-US;Repaid {amount}
-v246-0814;workforce.ui.dashboard.advancePaid;ar-EG;تم سداده {amount}
-v246-0815;workforce.ui.dashboard.advanceRemaining;en-US;Remaining advance balance
-v246-0816;workforce.ui.dashboard.advanceRemaining;ar-EG;الرصيد المتبقي من السلف
-v246-0817;workforce.ui.dashboard.advanceRisk;en-US;Advance exposure
-v246-0818;workforce.ui.dashboard.advanceRisk;ar-EG;مخاطر السلف
-v246-0819;workforce.ui.dashboard.allLocations;en-US;All locations
-v246-0820;workforce.ui.dashboard.allLocations;ar-EG;كل المواقع
-v246-0821;workforce.ui.dashboard.byCategory;en-US;Workers by category
-v246-0822;workforce.ui.dashboard.byCategory;ar-EG;العمال حسب الفئة
-v246-0823;workforce.ui.dashboard.byCategoryAria;en-US;Chart showing workers by category
-v246-0824;workforce.ui.dashboard.byCategoryAria;ar-EG;رسم يوضح عدد العمال حسب الفئة
-v246-0825;workforce.ui.dashboard.byContractor;en-US;Workers by contractor
-v246-0826;workforce.ui.dashboard.byContractor;ar-EG;العمال حسب المقاول
-v246-0827;workforce.ui.dashboard.byContractorAria;en-US;Chart showing workers by contractor
-v246-0828;workforce.ui.dashboard.byContractorAria;ar-EG;رسم يوضح عدد العمال حسب المقاول
-v246-0829;workforce.ui.dashboard.category;en-US;Worker category
-v246-0830;workforce.ui.dashboard.category;ar-EG;فئة العامل
-v246-0831;workforce.ui.dashboard.clearFilters;en-US;Clear filters
-v246-0832;workforce.ui.dashboard.clearFilters;ar-EG;مسح الفلاتر
-v246-0833;workforce.ui.dashboard.contractorCode;en-US;Contractor code
-v246-0834;workforce.ui.dashboard.contractorCode;ar-EG;كود المقاول
-v246-0835;workforce.ui.dashboard.contractorName;en-US;Contractor name
-v246-0836;workforce.ui.dashboard.contractorName;ar-EG;اسم المقاول
-v246-0837;workforce.ui.dashboard.contractorsModels;en-US;Contractors and accounting models
-v246-0838;workforce.ui.dashboard.contractorsModels;ar-EG;المقاولون ونماذج الحساب
-v246-0839;workforce.ui.dashboard.coverageAria;en-US;Request coverage rate {percent} percent
-v246-0840;workforce.ui.dashboard.coverageAria;ar-EG;نسبة تغطية الطلبات {percent} بالمائة
-v246-0841;workforce.ui.dashboard.daysCycle;en-US;Every {days} days
-v246-0842;workforce.ui.dashboard.daysCycle;ar-EG;كل {days} يوم
-v246-0843;workforce.ui.dashboard.distribution;en-US;Workforce distribution
-v246-0844;workforce.ui.dashboard.distribution;ar-EG;توزيع القوى العاملة
-v246-0845;workforce.ui.dashboard.eyebrow;en-US;Workforce and contractors
-v246-0846;workforce.ui.dashboard.eyebrow;ar-EG;العمالة والمقاولون
-v246-0847;workforce.ui.dashboard.filtersAria;en-US;Workforce dashboard filters
-v246-0848;workforce.ui.dashboard.filtersAria;ar-EG;فلاتر لوحة القوى العاملة
-v246-0849;workforce.ui.dashboard.filtersHelp;en-US;Filters are shared across cards and charts and are stored in the page URL.
-v246-0850;workforce.ui.dashboard.filtersHelp;ar-EG;الفلاتر مشتركة بين البطاقات والرسوم ومحفوظة داخل رابط الصفحة.
-v246-0851;workforce.ui.dashboard.loadFailed;en-US;Could not load data: {detail}
-v246-0852;workforce.ui.dashboard.loadFailed;ar-EG;تعذّر تحميل البيانات: {detail}
-v246-0853;workforce.ui.dashboard.loading;en-US;Loading data...
-v246-0854;workforce.ui.dashboard.loading;ar-EG;جاري تحميل البيانات...
-v246-0855;workforce.ui.dashboard.location;en-US;Location
-v246-0856;workforce.ui.dashboard.location;ar-EG;الموقع
-v246-0857;workforce.ui.dashboard.matchedWorkers;en-US;Matched workers
-v246-0858;workforce.ui.dashboard.matchedWorkers;ar-EG;إجمالي العمالة المطابقة
-v246-0859;workforce.ui.dashboard.noChartData;en-US;Not enough data to chart
-v246-0860;workforce.ui.dashboard.noChartData;ar-EG;لا توجد بيانات كافية للرسم
-v246-0861;workforce.ui.dashboard.noContractors;en-US;No contractors are currently registered
-v246-0862;workforce.ui.dashboard.noContractors;ar-EG;لا يوجد مقاولون مسجلون حالياً
-v246-0863;workforce.ui.dashboard.openAdvances;en-US;Open advances
-v246-0864;workforce.ui.dashboard.openAdvances;ar-EG;السلف القائمة
-v246-0865;workforce.ui.dashboard.openAdvancesLink;en-US;Open advances →
-v246-0866;workforce.ui.dashboard.openAdvancesLink;ar-EG;فتح السلف ←
-v246-0867;workforce.ui.dashboard.openDetails;en-US;Open details →
-v246-0868;workforce.ui.dashboard.openDetails;ar-EG;فتح التفاصيل ←
-v246-0869;workforce.ui.dashboard.openRequests;en-US;Open requests →
-v246-0870;workforce.ui.dashboard.openRequests;ar-EG;فتح الطلبات ←
-v246-0871;workforce.ui.dashboard.openWorkers;en-US;Open workers →
-v246-0872;workforce.ui.dashboard.openWorkers;ar-EG;فتح العمال ←
-v246-0873;workforce.ui.dashboard.operationalMix;en-US;Operational mix
-v246-0874;workforce.ui.dashboard.operationalMix;ar-EG;المزيج التشغيلي
-v246-0875;workforce.ui.dashboard.remaining;en-US;Remaining:
-v246-0876;workforce.ui.dashboard.remaining;ar-EG;متبقٍ:
-v246-0877;workforce.ui.dashboard.remainingAria;en-US;Remaining advance balance {amount}
-v246-0878;workforce.ui.dashboard.remainingAria;ar-EG;الرصيد المتبقي من السلف {amount}
-v246-0879;workforce.ui.dashboard.requestCoverage;en-US;Labor request coverage
-v246-0880;workforce.ui.dashboard.requestCoverage;ar-EG;تغطية طلبات العمالة
-v246-0881;workforce.ui.dashboard.statusActive;en-US;Active
-v246-0882;workforce.ui.dashboard.statusActive;ar-EG;نشط
-v246-0883;workforce.ui.dashboard.statusInactive;en-US;Inactive
-v246-0884;workforce.ui.dashboard.statusInactive;ar-EG;غير نشط
-v246-0885;workforce.ui.dashboard.title;en-US;Workforce and daily operations dashboard
-v246-0886;workforce.ui.dashboard.title;ar-EG;لوحة متابعة العمالة والتشغيل اليومي
-v246-0887;workforce.ui.dashboard.workerCount;en-US;{count} workers
-v246-0888;workforce.ui.dashboard.workerCount;ar-EG;{count} عامل
-v246-0889;workforce.ui.edit;en-US;Edit
-v246-0890;workforce.ui.edit;ar-EG;تعديل
-v246-0891;workforce.ui.employee;en-US;Employee
-v246-0892;workforce.ui.employee;ar-EG;موظف
-v246-0893;workforce.ui.exportExcel;en-US;Export Excel
-v246-0894;workforce.ui.exportExcel;ar-EG;تصدير Excel
-v246-0895;workforce.ui.hoursShort;en-US;h
-v246-0896;workforce.ui.hoursShort;ar-EG;س
-v246-0897;workforce.ui.inactive;en-US;Inactive
-v246-0898;workforce.ui.inactive;ar-EG;غير نشط
-v246-0899;workforce.ui.model.contractorDailyRate;en-US;Independent contractor rate
-v246-0900;workforce.ui.model.contractorDailyRate;ar-EG;سعر تعاقد مستقل
-v246-0901;workforce.ui.model.fixedPeriodAmount;en-US;Fixed amount per period
-v246-0902;workforce.ui.model.fixedPeriodAmount;ar-EG;مبلغ ثابت للفترة
-v246-0903;workforce.ui.model.workerCostPlusFee;en-US;Worker cost + fee
-v246-0904;workforce.ui.model.workerCostPlusFee;ar-EG;تكلفة العمال + عمولة
-v246-0905;workforce.ui.model.workerNetTotal;en-US;Workers net total
-v246-0906;workforce.ui.model.workerNetTotal;ar-EG;مجموع صافي العمال
-v246-0907;workforce.ui.requests.accepted;en-US;Accepted
-v246-0908;workforce.ui.requests.accepted;ar-EG;المقبول
-v246-0909;workforce.ui.requests.addItem;en-US;+ Add item
-v246-0910;workforce.ui.requests.addItem;ar-EG;+ إضافة بند
-v246-0911;workforce.ui.requests.approve;en-US;Approve
-v246-0912;workforce.ui.requests.approve;ar-EG;اعتماد
-v246-0913;workforce.ui.requests.approved;en-US;Approved
-v246-0914;workforce.ui.requests.approved;ar-EG;معتمد
-v246-0915;workforce.ui.requests.approving;en-US;Approving request...
-v246-0916;workforce.ui.requests.approving;ar-EG;جاري الاعتماد...
-v246-0917;workforce.ui.requests.assignedContractor;en-US;Assigned contractor
-v246-0918;workforce.ui.requests.assignedContractor;ar-EG;المقاول المكلف
-v246-0919;workforce.ui.requests.createFailed;en-US;Could not create the labor request: {detail}
-v246-0920;workforce.ui.requests.createFailed;ar-EG;تعذر إنشاء طلب العمالة: {detail}
-v246-0921;workforce.ui.requests.createTitle;en-US;Create labor request
-v246-0922;workforce.ui.requests.createTitle;ar-EG;إنشاء طلب عمالة جديد
-v246-0923;workforce.ui.requests.createdBy;en-US;Created by
-v246-0924;workforce.ui.requests.createdBy;ar-EG;منشئ الطلب
-v246-0925;workforce.ui.requests.createdSuccess;en-US;Request {number} created successfully
-v246-0926;workforce.ui.requests.createdSuccess;ar-EG;تم إنشاء الطلب {number} بنجاح
-v246-0927;workforce.ui.requests.draft;en-US;Draft
-v246-0928;workforce.ui.requests.draft;ar-EG;مسودة
-v246-0929;workforce.ui.requests.empty;en-US;No labor requests are recorded
-v246-0930;workforce.ui.requests.empty;ar-EG;لا توجد طلبات عمالة مسجّلة
-v246-0931;workforce.ui.requests.eyebrow;en-US;Labor requests
-v246-0932;workforce.ui.requests.eyebrow;ar-EG;طلبات العمالة
-v246-0933;workforce.ui.requests.firstShift;en-US;First shift
-v246-0934;workforce.ui.requests.firstShift;ar-EG;الوردية الأولى
-v246-0935;workforce.ui.requests.itemUnit;en-US;item
-v246-0936;workforce.ui.requests.itemUnit;ar-EG;بند
-v246-0937;workforce.ui.requests.items;en-US;Request items
-v246-0938;workforce.ui.requests.items;ar-EG;بنود الطلب
-v246-0939;workforce.ui.requests.itemsTitle;en-US;Request items (categories and quantities)
-v246-0940;workforce.ui.requests.itemsTitle;ar-EG;بنود الطلب (الفئات والكميات)
-v246-0941;workforce.ui.requests.new;en-US;+ Create labor request
-v246-0942;workforce.ui.requests.new;ar-EG;+ إنشاء طلب عمالة جديد
-v246-0943;workforce.ui.requests.noItems;en-US;No items yet — select Add item to specify the category and required quantity
-v246-0944;workforce.ui.requests.noItems;ar-EG;"لا توجد بنود بعد — اضغط على ""إضافة بند"" لتحديد الفئة والكمية المطلوبة"
-v246-0945;workforce.ui.requests.notes;en-US;Request notes
-v246-0946;workforce.ui.requests.notes;ar-EG;ملاحظات الطلب
-v246-0947;workforce.ui.requests.number;en-US;Request number
-v246-0948;workforce.ui.requests.number;ar-EG;رقم الطلب
-v246-0949;workforce.ui.requests.numberRequired;en-US;Request number *
-v246-0950;workforce.ui.requests.numberRequired;ar-EG;رقم الطلب *
-v246-0951;workforce.ui.requests.quantity;en-US;Required quantity *
-v246-0952;workforce.ui.requests.quantity;ar-EG;الكمية المطلوبة *
-v246-0953;workforce.ui.requests.removeAria;en-US;Remove labor request item
-v246-0954;workforce.ui.requests.removeAria;ar-EG;حذف بند طلب العمالة
-v246-0955;workforce.ui.requests.removeHelp;en-US;Remove item — remove this category from the request
-v246-0956;workforce.ui.requests.removeHelp;ar-EG;حذف البند — إزالة هذه الفئة من الطلب
-v246-0957;workforce.ui.requests.requiredWarning;en-US;Complete the required request fields and add at least one item.
-v246-0958;workforce.ui.requests.requiredWarning;ar-EG;أكمل الحقول المطلوبة وأضف بندًا واحدًا على الأقل.
-v246-0959;workforce.ui.requests.send;en-US;Send request to contractor
-v246-0960;workforce.ui.requests.send;ar-EG;إرسال الطلب للمقاول
-v246-0961;workforce.ui.requests.sending;en-US;Sending...
-v246-0962;workforce.ui.requests.sending;ar-EG;جارٍ الإرسال...
-v246-0963;workforce.ui.requests.sent;en-US;Sent
-v246-0964;workforce.ui.requests.sent;ar-EG;المُرسَل
-v246-0965;workforce.ui.requests.shift;en-US;Shift
-v246-0966;workforce.ui.requests.shift;ar-EG;الوردية
-v246-0967;workforce.ui.requests.shiftName;en-US;Shift name
-v246-0968;workforce.ui.requests.shiftName;ar-EG;اسم الوردية
-v246-0969;workforce.ui.requests.shiftPlaceholder;en-US;Morning shift
-v246-0970;workforce.ui.requests.shiftPlaceholder;ar-EG;الوردية الصباحية
-v246-0971;workforce.ui.requests.statusCancelled;en-US;Cancelled
-v246-0972;workforce.ui.requests.statusCancelled;ar-EG;ملغي
-v246-0973;workforce.ui.requests.statusCompleted;en-US;Completed
-v246-0974;workforce.ui.requests.statusCompleted;ar-EG;مكتمل
-v246-0975;workforce.ui.requests.statusSent;en-US;Sent
-v246-0976;workforce.ui.requests.statusSent;ar-EG;مرسل
-v246-0977;workforce.ui.requests.title;en-US;Labor demand requests and daily follow-up
-v246-0978;workforce.ui.requests.title;ar-EG;سجل طلبات الاحتياج والمتابعة اليومية
-v246-0979;workforce.ui.requests.total;en-US;Total requests
-v246-0980;workforce.ui.requests.total;ar-EG;إجمالي الطلبات
-v246-0981;workforce.ui.requests.totalRequested;en-US;Total requested
-v246-0982;workforce.ui.requests.totalRequested;ar-EG;الإجمالي المطلوب
-v246-0983;workforce.ui.requests.totalRequestedLabel;en-US;Total requested:
-v246-0984;workforce.ui.requests.totalRequestedLabel;ar-EG;الإجمالي المطلوب:
-v246-0985;workforce.ui.requests.workerCategory;en-US;Worker category *
-v246-0986;workforce.ui.requests.workerCategory;ar-EG;فئة العمال *
-v246-0987;workforce.ui.requests.workerUnit;en-US;worker
-v246-0988;workforce.ui.requests.workerUnit;ar-EG;عامل
-v246-0989;workforce.ui.retry;en-US;Retry
-v246-0990;workforce.ui.retry;ar-EG;إعادة المحاولة
-v246-0991;workforce.ui.saveData;en-US;Save data
-v246-0992;workforce.ui.saveData;ar-EG;حفظ البيانات
-v246-0993;workforce.ui.settlement.action;en-US;Action
-v246-0994;workforce.ui.settlement.action;ar-EG;الإجراء
-v246-0995;workforce.ui.settlement.advances;en-US;Advances
-v246-0996;workforce.ui.settlement.advances;ar-EG;السلف
-v246-0997;workforce.ui.settlement.approve;en-US;Approve
-v246-0998;workforce.ui.settlement.approve;ar-EG;اعتماد
-v246-0999;workforce.ui.settlement.approveFailed;en-US;Could not approve period.
-v246-1000;workforce.ui.settlement.approveFailed;ar-EG;تعذر اعتماد الفترة.
-v246-1001;workforce.ui.settlement.by;en-US;By
-v246-1002;workforce.ui.settlement.by;ar-EG;بواسطة
-v246-1003;workforce.ui.settlement.calculatedSuccess;en-US;Calculation completed successfully — version v{version}
-v246-1004;workforce.ui.settlement.calculatedSuccess;ar-EG;تم الاحتساب بنجاح — الإصدار v{version}
-v246-1005;workforce.ui.settlement.calculating;en-US;Calculating…
-v246-1006;workforce.ui.settlement.calculating;ar-EG;جارٍ الاحتساب…
-v246-1007;workforce.ui.settlement.contractorNet;en-US;Contractors net
-v246-1008;workforce.ui.settlement.contractorNet;ar-EG;صافي المقاولين
-v246-1009;workforce.ui.settlement.contractorSettlements;en-US;Contractor settlements
-v246-1010;workforce.ui.settlement.contractorSettlements;ar-EG;تسويات المقاولين
-v246-1011;workforce.ui.settlement.contractorSettlementsButton;en-US;📋 Contractor settlements
-v246-1012;workforce.ui.settlement.contractorSettlementsButton;ar-EG;📋 تسويات المقاولين
-v246-1013;workforce.ui.settlement.contractorsFailed;en-US;Could not load contractor settlements.
-v246-1014;workforce.ui.settlement.contractorsFailed;ar-EG;تعذر تحميل تسويات المقاولين.
-v246-1015;workforce.ui.settlement.contractorsForPeriod;en-US;Contractor settlements for period — {code}
-v246-1016;workforce.ui.settlement.contractorsForPeriod;ar-EG;تسويات المقاولين للفترة — {code}
-v246-1017;workforce.ui.settlement.create;en-US;Create
-v246-1018;workforce.ui.settlement.create;ar-EG;إنشاء
-v246-1019;workforce.ui.settlement.createFailed;en-US;Could not create the period.
-v246-1020;workforce.ui.settlement.createFailed;ar-EG;تعذر إنشاء الفترة.
-v246-1021;workforce.ui.settlement.createTitle;en-US;Create settlement period
-v246-1022;workforce.ui.settlement.createTitle;ar-EG;إنشاء فترة تسوية
-v246-1023;workforce.ui.settlement.deductions;en-US;Deductions
-v246-1024;workforce.ui.settlement.deductions;ar-EG;الخصومات
-v246-1025;workforce.ui.settlement.description;en-US;Calculate worker wages and contractor payables and track posting and payment.
-v246-1026;workforce.ui.settlement.description;ar-EG;احتساب أجور العمال ومستحقات المقاولين وتتبع القيود والسداد.
-v246-1027;workforce.ui.settlement.details;en-US;🔍 View details and actions
-v246-1028;workforce.ui.settlement.details;ar-EG;🔍 عرض التفاصيل والإجراءات
-v246-1029;workforce.ui.settlement.empty;en-US;No settlement periods.
-v246-1030;workforce.ui.settlement.empty;ar-EG;لا توجد فترات تسوية.
-v246-1031;workforce.ui.settlement.endDate;en-US;End date *
-v246-1032;workforce.ui.settlement.endDate;ar-EG;تاريخ النهاية *
-v246-1033;workforce.ui.settlement.error;en-US;Error
-v246-1034;workforce.ui.settlement.error;ar-EG;خطأ
-v246-1035;workforce.ui.settlement.exportFailed;en-US;Could not export.
-v246-1036;workforce.ui.settlement.exportFailed;ar-EG;تعذر التصدير.
-v246-1037;workforce.ui.settlement.eyebrow;en-US;Financial settlement document cycle
-v246-1038;workforce.ui.settlement.eyebrow;ar-EG;دورة التسوية المستندية المالية
-v246-1039;workforce.ui.settlement.flowApproved;en-US;4 Approved
-v246-1040;workforce.ui.settlement.flowApproved;ar-EG;4 معتمدة
-v246-1041;workforce.ui.settlement.flowAria;en-US;Settlement status flow
-v246-1042;workforce.ui.settlement.flowAria;ar-EG;دورة حالات التسوية
-v246-1043;workforce.ui.settlement.flowCalculated;en-US;2 Calculated
-v246-1044;workforce.ui.settlement.flowCalculated;ar-EG;2 تم الاحتساب
-v246-1045;workforce.ui.settlement.flowDraft;en-US;1 Draft
-v246-1046;workforce.ui.settlement.flowDraft;ar-EG;1 مسودة
-v246-1047;workforce.ui.settlement.flowLocked;en-US;6 Locked / paid
-v246-1048;workforce.ui.settlement.flowLocked;ar-EG;6 مقفلة / صرفت
-v246-1049;workforce.ui.settlement.flowPosted;en-US;5 Post to Finance
-v246-1050;workforce.ui.settlement.flowPosted;ar-EG;5 ترحيل للمالية
-v246-1051;workforce.ui.settlement.flowReviewed;en-US;3 Reviewed
-v246-1052;workforce.ui.settlement.flowReviewed;ar-EG;3 تمت المراجعة
-v246-1053;workforce.ui.settlement.gross;en-US;Gross payable
-v246-1054;workforce.ui.settlement.gross;ar-EG;إجمالي المستحقات
-v246-1055;workforce.ui.settlement.issues;en-US;Records requiring action
-v246-1056;workforce.ui.settlement.issues;ar-EG;السجلات التي تحتاج إجراء
-v246-1057;workforce.ui.settlement.issuesFailed;en-US;Could not load issues.
-v246-1058;workforce.ui.settlement.issuesFailed;ar-EG;تعذر تحميل المشاكل.
-v246-1059;workforce.ui.settlement.lastCalculation;en-US;Last calculation
-v246-1060;workforce.ui.settlement.lastCalculation;ar-EG;آخر احتساب
-v246-1061;workforce.ui.settlement.lastCalculationFailed;en-US;Last attempt failed: {detail}
-v246-1062;workforce.ui.settlement.lastCalculationFailed;ar-EG;آخر محاولة فشلت: {detail}
-v246-1063;workforce.ui.settlement.loadFailed;en-US;Could not load settlement periods.
-v246-1064;workforce.ui.settlement.loadFailed;ar-EG;تعذر تحميل فترات التسوية.
-v246-1065;workforce.ui.settlement.loading;en-US;Loading settlement periods…
-v246-1066;workforce.ui.settlement.loading;ar-EG;جارٍ تحميل فترات التسوية…
-v246-1067;workforce.ui.settlement.loadingContractors;en-US;Loading contractor settlements…
-v246-1068;workforce.ui.settlement.loadingContractors;ar-EG;جارٍ تحميل تسويات المقاولين…
-v246-1069;workforce.ui.settlement.lock;en-US;Final lock
-v246-1070;workforce.ui.settlement.lock;ar-EG;قفل نهائي
-v246-1071;workforce.ui.settlement.lockFailed;en-US;Could not lock period.
-v246-1072;workforce.ui.settlement.lockFailed;ar-EG;تعذر قفل الفترة.
-v246-1073;workforce.ui.settlement.needsRecalc;en-US;⚠ Recalculation required
-v246-1074;workforce.ui.settlement.needsRecalc;ar-EG;⚠ يحتاج إعادة احتساب
-v246-1075;workforce.ui.settlement.netPayable;en-US;Net payable
-v246-1076;workforce.ui.settlement.netPayable;ar-EG;صافي المستحق
-v246-1077;workforce.ui.settlement.new;en-US;＋ Open new period
-v246-1078;workforce.ui.settlement.new;ar-EG;＋ فتح فترة جديدة
-v246-1079;workforce.ui.settlement.noContractors;en-US;No contractor settlements for this period.
-v246-1080;workforce.ui.settlement.noContractors;ar-EG;لا توجد تسويات مقاولين لهذه الفترة.
-v246-1081;workforce.ui.settlement.noIssues;en-US;No warnings or errors in the selected version.
-v246-1082;workforce.ui.settlement.noIssues;ar-EG;لا توجد تحذيرات أو أخطاء في الإصدار المحدد.
-v246-1083;workforce.ui.settlement.openWorkers;en-US;Open worker register
-v246-1084;workforce.ui.settlement.openWorkers;ar-EG;فتح سجل العمال
-v246-1085;workforce.ui.settlement.paid;en-US;Paid
-v246-1086;workforce.ui.settlement.paid;ar-EG;المنصرف
-v246-1087;workforce.ui.settlement.period;en-US;Period
-v246-1088;workforce.ui.settlement.period;ar-EG;الفترة
-v246-1089;workforce.ui.settlement.periodCode;en-US;Period code *
-v246-1090;workforce.ui.settlement.periodCode;ar-EG;كود الفترة *
-v246-1091;workforce.ui.settlement.previousKept;en-US;The last successful result remains stored unchanged.
-v246-1092;workforce.ui.settlement.previousKept;ar-EG;ظلت آخر نتيجة ناجحة محفوظة دون تغيير.
-v246-1093;workforce.ui.settlement.problem;en-US;Problem
-v246-1094;workforce.ui.settlement.problem;ar-EG;المشكلة
-v246-1095;workforce.ui.settlement.recalcFailed;en-US;Recalculation failed.
-v246-1096;workforce.ui.settlement.recalcFailed;ar-EG;فشلت إعادة الاحتساب.
-v246-1097;workforce.ui.settlement.recalculate;en-US;Recalculate
-v246-1098;workforce.ui.settlement.recalculate;ar-EG;إعادة الاحتساب
-v246-1099;workforce.ui.settlement.recordUnit;en-US;record
-v246-1100;workforce.ui.settlement.recordUnit;ar-EG;سجل
-v246-1101;workforce.ui.settlement.records;en-US;Records
-v246-1102;workforce.ui.settlement.records;ar-EG;السجلات
-v246-1103;workforce.ui.settlement.recordsCount;en-US;{count} records
-v246-1104;workforce.ui.settlement.recordsCount;ar-EG;{count} سجل
-v246-1105;workforce.ui.settlement.resultTitle;en-US;Settlement recalculation result
-v246-1106;workforce.ui.settlement.resultTitle;ar-EG;نتيجة إعادة احتساب التسوية
-v246-1107;workforce.ui.settlement.review;en-US;Confirm review
-v246-1108;workforce.ui.settlement.review;ar-EG;تأكيد المراجعة
-v246-1109;workforce.ui.settlement.reviewFailed;en-US;Could not review period.
-v246-1110;workforce.ui.settlement.reviewFailed;ar-EG;تعذر مراجعة الفترة.
-v246-1111;workforce.ui.settlement.runFailed;en-US;The new calculation failed.
-v246-1112;workforce.ui.settlement.runFailed;ar-EG;فشلت المحاولة الجديدة.
-v246-1113;workforce.ui.settlement.runSuccess;en-US;Operation succeeded
-v246-1114;workforce.ui.settlement.runSuccess;ar-EG;نجحت العملية
-v246-1115;workforce.ui.settlement.serviceFee;en-US;Fee / service charge
-v246-1116;workforce.ui.settlement.serviceFee;ar-EG;عمولة / رسوم الخدمة
-v246-1117;workforce.ui.settlement.startDate;en-US;Start date *
-v246-1118;workforce.ui.settlement.startDate;ar-EG;تاريخ البداية *
-v246-1119;workforce.ui.settlement.statusApproved;en-US;Approved
-v246-1120;workforce.ui.settlement.statusApproved;ar-EG;معتمدة
-v246-1121;workforce.ui.settlement.statusCalculated;en-US;Calculated
-v246-1122;workforce.ui.settlement.statusCalculated;ar-EG;تم الاحتساب
-v246-1123;workforce.ui.settlement.statusDraft;en-US;Draft
-v246-1124;workforce.ui.settlement.statusDraft;ar-EG;مسودة
-v246-1125;workforce.ui.settlement.statusLocked;en-US;Locked
-v246-1126;workforce.ui.settlement.statusLocked;ar-EG;مقفلة
-v246-1127;workforce.ui.settlement.statusPaid;en-US;Paid
-v246-1128;workforce.ui.settlement.statusPaid;ar-EG;مصروفة
-v246-1129;workforce.ui.settlement.statusPosted;en-US;Posted
-v246-1130;workforce.ui.settlement.statusPosted;ar-EG;مرحلة
-v246-1131;workforce.ui.settlement.statusReviewed;en-US;Reviewed
-v246-1132;workforce.ui.settlement.statusReviewed;ar-EG;تمت المراجعة
-v246-1133;workforce.ui.settlement.summary;en-US;Result summary
-v246-1134;workforce.ui.settlement.summary;ar-EG;ملخص النتيجة
-v246-1135;workforce.ui.settlement.summaryDetails;en-US;Gross {gross} · Deductions {deductions} · Advances {advances} · Net {net}
-v246-1136;workforce.ui.settlement.summaryDetails;ar-EG;إجمالي {gross} · خصومات {deductions} · سلف {advances} · صافي {net}
-v246-1137;workforce.ui.settlement.title;en-US;Workforce and contractor settlement periods
-v246-1138;workforce.ui.settlement.title;ar-EG;فترات تسوية العمالة والمقاولين
-v246-1139;workforce.ui.settlement.version;en-US;Version
-v246-1140;workforce.ui.settlement.version;ar-EG;الإصدار
-v246-1141;workforce.ui.settlement.warning;en-US;Warning
-v246-1142;workforce.ui.settlement.warning;ar-EG;تحذير
-v246-1143;workforce.ui.settlement.warnings;en-US;Warnings
-v246-1144;workforce.ui.settlement.warnings;ar-EG;التحذيرات
-v246-1145;workforce.ui.settlement.workerGross;en-US;Total worker wages
-v246-1146;workforce.ui.settlement.workerGross;ar-EG;إجمالي أجور العمال
-v246-1147;workforce.ui.settlement.workerNet;en-US;Workers net
-v246-1148;workforce.ui.settlement.workerNet;ar-EG;صافي العمال
-v246-1149;workforce.ui.settlementDetail.accountingModel;en-US;Accounting model
-v246-1150;workforce.ui.settlementDetail.accountingModel;ar-EG;نموذج المحاسبة
-v246-1151;workforce.ui.settlementDetail.advanceDeduction;en-US;Advance deduction
-v246-1152;workforce.ui.settlementDetail.advanceDeduction;ar-EG;خصم السلف
-v246-1153;workforce.ui.settlementDetail.attendanceDays;en-US;Attendance days
-v246-1154;workforce.ui.settlementDetail.attendanceDays;ar-EG;أيام الحضور
-v246-1155;workforce.ui.settlementDetail.cancelInvoiceLink;en-US;Cancel invoice link
-v246-1156;workforce.ui.settlementDetail.cancelInvoiceLink;ar-EG;إلغاء ربط الفاتورة
-v246-1157;workforce.ui.settlementDetail.cancelPayment;en-US;Cancel payment entry
-v246-1158;workforce.ui.settlementDetail.cancelPayment;ar-EG;إلغاء تسجيل السداد
-v246-1159;workforce.ui.settlementDetail.confirmPayment;en-US;Confirm payment
-v246-1160;workforce.ui.settlementDetail.confirmPayment;ar-EG;تأكيد الصرف
-v246-1161;workforce.ui.settlementDetail.contractorName;en-US;Contractor name
-v246-1162;workforce.ui.settlementDetail.contractorName;ar-EG;اسم المقاول
-v246-1163;workforce.ui.settlementDetail.dailyRate;en-US;Daily rate
-v246-1164;workforce.ui.settlementDetail.dailyRate;ar-EG;فئة اليومية
-v246-1165;workforce.ui.settlementDetail.daysUnit;en-US;days
-v246-1166;workforce.ui.settlementDetail.daysUnit;ar-EG;يوم
-v246-1167;workforce.ui.settlementDetail.deductions;en-US;Deductions
-v246-1168;workforce.ui.settlementDetail.deductions;ar-EG;الخصومات
-v246-1169;workforce.ui.settlementDetail.financePostingStatus;en-US;Finance posting status
-v246-1170;workforce.ui.settlementDetail.financePostingStatus;ar-EG;حالة الترحيل للمالية
-v246-1171;workforce.ui.settlementDetail.gross;en-US;Gross
-v246-1172;workforce.ui.settlementDetail.gross;ar-EG;الإجمالي
-v246-1173;workforce.ui.settlementDetail.invoiceAmount;en-US;Invoice amount
-v246-1174;workforce.ui.settlementDetail.invoiceAmount;ar-EG;مبلغ الفاتورة
-v246-1175;workforce.ui.settlementDetail.invoiceDate;en-US;Invoice date *
-v246-1176;workforce.ui.settlementDetail.invoiceDate;ar-EG;تاريخ الفاتورة *
-v246-1177;workforce.ui.settlementDetail.invoiceFailed;en-US;Could not link the invoice.
-v246-1178;workforce.ui.settlementDetail.invoiceFailed;ar-EG;تعذر ربط الفاتورة.
-v246-1179;workforce.ui.settlementDetail.invoiceNumber;en-US;Invoice number *
-v246-1180;workforce.ui.settlementDetail.invoiceNumber;ar-EG;رقم الفاتورة *
-v246-1181;workforce.ui.settlementDetail.invoiceReference;en-US;Invoice number and reference
-v246-1182;workforce.ui.settlementDetail.invoiceReference;ar-EG;رقم الفاتورة والمرجع
-v246-1183;workforce.ui.settlementDetail.invoiceTitle;en-US;Link official contractor invoice
-v246-1184;workforce.ui.settlementDetail.invoiceTitle;ar-EG;ربط فاتورة المقاول الرسمية
-v246-1185;workforce.ui.settlementDetail.linkInvoice;en-US;Link contractor invoice
-v246-1186;workforce.ui.settlementDetail.linkInvoice;ar-EG;ربط فاتورة المقاول
-v246-1187;workforce.ui.settlementDetail.net;en-US;Net
-v246-1188;workforce.ui.settlementDetail.net;ar-EG;الصافي
-v246-1189;workforce.ui.settlementDetail.netPayable;en-US;Contractor net payable
-v246-1190;workforce.ui.settlementDetail.netPayable;ar-EG;صافي المستحق للمقاول
-v246-1191;workforce.ui.settlementDetail.noWorkerLines;en-US;No worker details exist for this settlement.
-v246-1192;workforce.ui.settlementDetail.noWorkerLines;ar-EG;لا توجد تفاصيل عمال لهذه التسوية.
-v246-1193;workforce.ui.settlementDetail.notLinked;en-US;Not linked
-v246-1194;workforce.ui.settlementDetail.notLinked;ar-EG;غير مربوطة
-v246-1195;workforce.ui.settlementDetail.notPosted;en-US;Not posted
-v246-1196;workforce.ui.settlementDetail.notPosted;ar-EG;غير مرحل
-v246-1197;workforce.ui.settlementDetail.paidAmount;en-US;Paid amount
-v246-1198;workforce.ui.settlementDetail.paidAmount;ar-EG;المبلغ المنصرف
-v246-1199;workforce.ui.settlementDetail.paymentAmount;en-US;Payment amount *
-v246-1200;workforce.ui.settlementDetail.paymentAmount;ar-EG;مبلغ الصرف *
-v246-1201;workforce.ui.settlementDetail.paymentDate;en-US;Payment date
-v246-1202;workforce.ui.settlementDetail.paymentDate;ar-EG;تاريخ الصرف
-v246-1203;workforce.ui.settlementDetail.paymentFailed;en-US;Could not record the payment.
-v246-1204;workforce.ui.settlementDetail.paymentFailed;ar-EG;تعذر تسجيل الصرف.
-v246-1205;workforce.ui.settlementDetail.paymentReference;en-US;Reference / cheque number
-v246-1206;workforce.ui.settlementDetail.paymentReference;ar-EG;رقم المرجع / الشيك
-v246-1207;workforce.ui.settlementDetail.paymentTitle;en-US;Record contractor payable payment
-v246-1208;workforce.ui.settlementDetail.paymentTitle;ar-EG;تسجيل صرف مستحقات للمقاول
-v246-1209;workforce.ui.settlementDetail.postFailed;en-US;Could not post the settlement to Finance.
-v246-1210;workforce.ui.settlementDetail.postFailed;ar-EG;تعذر ترحيل التسوية للمالية.
-v246-1211;workforce.ui.settlementDetail.postReason;en-US;Post contractor settlement wages and payables
-v246-1212;workforce.ui.settlementDetail.postReason;ar-EG;ترحيل أجور ومستحقات تسوية المقاول
-v246-1213;workforce.ui.settlementDetail.postToFinance;en-US;⚖ Post to Finance (payable entry)
-v246-1214;workforce.ui.settlementDetail.postToFinance;ar-EG;⚖ ترحيل للمالية (قيد المستحق)
-v246-1215;workforce.ui.settlementDetail.posted;en-US;Posted ({journal})
-v246-1216;workforce.ui.settlementDetail.posted;ar-EG;تم الترحيل ({journal})
-v246-1217;workforce.ui.settlementDetail.posting;en-US;Posting…
-v246-1218;workforce.ui.settlementDetail.posting;ar-EG;جارٍ الترحيل…
-v246-1219;workforce.ui.settlementDetail.recordPayment;en-US;Record payable payment
-v246-1220;workforce.ui.settlementDetail.recordPayment;ar-EG;تسجيل صرف مستحقات
-v246-1221;workforce.ui.settlementDetail.saveInvoiceLink;en-US;Save link
-v246-1222;workforce.ui.settlementDetail.saveInvoiceLink;ar-EG;حفظ الربط
-v246-1223;workforce.ui.settlementDetail.title;en-US;Contractor settlement details — {name}
-v246-1224;workforce.ui.settlementDetail.title;ar-EG;تفاصيل تسوية المقاول — {name}
-v246-1225;workforce.ui.settlementDetail.worker;en-US;Worker
-v246-1226;workforce.ui.settlementDetail.worker;ar-EG;العامل
-v246-1227;workforce.ui.settlementDetail.workerLinesTitle;en-US;Contractor worker wage details ({count})
-v246-1228;workforce.ui.settlementDetail.workerLinesTitle;ar-EG;تفاصيل أجور عمال المقاول ({count})
-v246-1229;workforce.ui.status;en-US;Status
-v246-1230;workforce.ui.status;ar-EG;الحالة
-v246-1231;workforce.ui.system;en-US;System
-v246-1232;workforce.ui.system;ar-EG;النظام
-v246-1233;workforce.ui.type;en-US;Type
-v246-1234;workforce.ui.type;ar-EG;النوع
-v246-1235;workforce.ui.unexpectedError;en-US;Unexpected error
-v246-1236;workforce.ui.unexpectedError;ar-EG;خطأ غير متوقع
-v246-1237;workforce.ui.worker;en-US;Worker
-v246-1238;workforce.ui.worker;ar-EG;عامل
-v246-1239;workforce.ui.workers.add;en-US;+ Add worker
-v246-1240;workforce.ui.workers.add;ar-EG;+ إضافة عامل جديد
-v246-1241;workforce.ui.workers.addTitle;en-US;Add worker
-v246-1242;workforce.ui.workers.addTitle;ar-EG;إضافة عامل جديد
-v246-1243;workforce.ui.workers.attendanceMode;en-US;Attendance method
-v246-1244;workforce.ui.workers.attendanceMode;ar-EG;طريقة الحضور
-v246-1245;workforce.ui.workers.biometric;en-US;Biometric
-v246-1246;workforce.ui.workers.biometric;ar-EG;بصمة
-v246-1247;workforce.ui.workers.categoriesFailed;en-US;Could not load categories
-v246-1248;workforce.ui.workers.categoriesFailed;ar-EG;تعذر تحميل الفئات
-v246-1249;workforce.ui.workers.categoriesLoadFailedDetail;en-US;Could not load worker categories. Try again.
-v246-1250;workforce.ui.workers.categoriesLoadFailedDetail;ar-EG;تعذر تحميل فئات العمال. أعد المحاولة.
-v246-1251;workforce.ui.workers.category;en-US;Category
-v246-1252;workforce.ui.workers.category;ar-EG;الفئة
-v246-1253;workforce.ui.workers.categoryInheritance;en-US;"New workers inherit the daily rate and work hours from the selected category; they can be edited afterward."
-v246-1254;workforce.ui.workers.categoryInheritance;ar-EG;عند إنشاء عامل جديد تُورث اليومية وساعات العمل من الفئة المختارة ويمكن تعديلهما بعد ذلك.
-v246-1255;workforce.ui.workers.categoryRequired;en-US;Worker category *
-v246-1256;workforce.ui.workers.categoryRequired;ar-EG;فئة العامل *
-v246-1257;workforce.ui.workers.codeRequired;en-US;Worker code *
-v246-1258;workforce.ui.workers.codeRequired;ar-EG;كود العامل *
-v246-1259;workforce.ui.workers.contractor;en-US;Contractor
-v246-1260;workforce.ui.workers.contractor;ar-EG;المقاول التابع له
-v246-1261;workforce.ui.workers.contractorRequired;en-US;Assigned contractor *
-v246-1262;workforce.ui.workers.contractorRequired;ar-EG;المقاول المكلف *
-v246-1263;workforce.ui.workers.createCategory;en-US;+ Create worker category
-v246-1264;workforce.ui.workers.createCategory;ar-EG;+ إنشاء فئة عمال
-v246-1265;workforce.ui.workers.createdSuccess;en-US;Worker created successfully
-v246-1266;workforce.ui.workers.createdSuccess;ar-EG;تم إنشاء العامل بنجاح
-v246-1267;workforce.ui.workers.editTitle;en-US;Edit worker
-v246-1268;workforce.ui.workers.editTitle;ar-EG;تعديل بيانات العامل
-v246-1269;workforce.ui.workers.eyebrow;en-US;Worker management
-v246-1270;workforce.ui.workers.eyebrow;ar-EG;إدارة العمال
-v246-1271;workforce.ui.workers.hours;en-US;Work hours
-v246-1272;workforce.ui.workers.hours;ar-EG;ساعات العمل
-v246-1273;workforce.ui.workers.loadingCategories;en-US;Loading categories...
-v246-1274;workforce.ui.workers.loadingCategories;ar-EG;جارٍ تحميل الفئات...
-v246-1275;workforce.ui.workers.nameRequired;en-US;Full name *
-v246-1276;workforce.ui.workers.nameRequired;ar-EG;الاسم الكامل *
-v246-1277;workforce.ui.workers.nationalId;en-US;National ID
-v246-1278;workforce.ui.workers.nationalId;ar-EG;الرقم القومي
-v246-1279;workforce.ui.workers.noCategories;en-US;No worker categories are available
-v246-1280;workforce.ui.workers.noCategories;ar-EG;لا توجد فئات عمال متاحة
-v246-1281;workforce.ui.workers.noCategoriesHelp;en-US;No worker categories are currently available. Create a category before adding a worker.
-v246-1282;workforce.ui.workers.noCategoriesHelp;ar-EG;لا توجد فئات عمال متاحة حالياً. أنشئ فئة أولاً حتى تتمكن من إضافة العامل.
-v246-1283;workforce.ui.workers.phone;en-US;Phone number
-v246-1284;workforce.ui.workers.phone;ar-EG;رقم الهاتف
-v246-1285;workforce.ui.workers.rateHoursError;en-US;Daily rate cannot be negative and work hours must be greater than zero.
-v246-1286;workforce.ui.workers.rateHoursError;ar-EG;اليومية يجب ألا تكون سالبة وساعات العمل يجب أن تكون أكبر من صفر.
-v246-1287;workforce.ui.workers.requiredError;en-US;Worker code, name, contractor, and category are required.
-v246-1288;workforce.ui.workers.requiredError;ar-EG;كود العامل والاسم والمقاول والفئة حقول إلزامية.
-v246-1289;workforce.ui.workers.saveFailed;en-US;Could not save the worker. Try again.
-v246-1290;workforce.ui.workers.saveFailed;ar-EG;تعذر حفظ العامل. أعد المحاولة.
-v246-1291;workforce.ui.workers.selectCategory;en-US;Select category
-v246-1292;workforce.ui.workers.selectCategory;ar-EG;اختر الفئة
-v246-1293;workforce.ui.workers.selectContractor;en-US;Select contractor
-v246-1294;workforce.ui.workers.selectContractor;ar-EG;اختر المقاول
-v246-1295;workforce.ui.workers.standardHoursRequired;en-US;Standard daily hours *
-v246-1296;workforce.ui.workers.standardHoursRequired;ar-EG;ساعات اليوم القياسية *
-v246-1297;workforce.ui.workers.title;en-US;Daily and temporary worker register
-v246-1298;workforce.ui.workers.title;ar-EG;سجل العمال اليوميين والمؤقتين
-v246-1299;workforce.ui.workers.updatedSuccess;en-US;Worker updated successfully
-v246-1300;workforce.ui.workers.updatedSuccess;ar-EG;تم تحديث بيانات العامل بنجاح
-v246-1301;workforce.ui.workers.verifyFailed;en-US;The save request completed, but the worker did not appear after refreshing the data.
-v246-1302;workforce.ui.workers.verifyFailed;ar-EG;تم إرسال طلب الحفظ لكن العامل لم يظهر بعد إعادة تحميل البيانات.
+v246-0393;workforce.ui.advances.disabled;en-US;Disabled
+v246-0394;workforce.ui.advances.disabled;ar-EG;غير مفعّلة
+v246-0395;workforce.ui.advances.earlyRepayment;en-US;Early advance repayment
+v246-0396;workforce.ui.advances.earlyRepayment;ar-EG;سداد سلفة مبكر
+v246-0397;workforce.ui.advances.effectiveFrom;en-US;Effective from
+v246-0398;workforce.ui.advances.effectiveFrom;ar-EG;سارية من
+v246-0399;workforce.ui.advances.effectivePolicy;en-US;Effective policy that will be stored with the advance:
+v246-0400;workforce.ui.advances.effectivePolicy;ar-EG;السياسة الفعلية التي سيحفظها الخادم مع السلفة:
+v246-0401;workforce.ui.advances.employeeAria;en-US;Select the employee receiving the advance
+v246-0402;workforce.ui.advances.employeeAria;ar-EG;اختر الموظف المستفيد من السلفة
+v246-0403;workforce.ui.advances.employeeCategoryException;en-US;Employee category exception
+v246-0404;workforce.ui.advances.employeeCategoryException;ar-EG;استثناء حسب فئة الموظفين
+v246-0405;workforce.ui.advances.employeeCategoryRequired;en-US;Employee category *
+v246-0406;workforce.ui.advances.employeeCategoryRequired;ar-EG;فئة الموظفين *
+v246-0407;workforce.ui.advances.employeeException;en-US;Employee exception
+v246-0408;workforce.ui.advances.employeeException;ar-EG;استثناء حسب الموظف
+v246-0409;workforce.ui.advances.employeeRequired;en-US;Employee *
+v246-0410;workforce.ui.advances.employeeRequired;ar-EG;الموظف *
+v246-0411;workforce.ui.advances.empty;en-US;No advances have been recorded yet
+v246-0412;workforce.ui.advances.empty;ar-EG;لا توجد سلف مسجّلة حتى الآن
+v246-0413;workforce.ui.advances.enabled;en-US;Enabled
+v246-0414;workforce.ui.advances.enabled;ar-EG;مفعّلة
+v246-0415;workforce.ui.advances.entitlementDeduction;en-US;Deduct from entitlements
+v246-0416;workforce.ui.advances.entitlementDeduction;ar-EG;خصم من المستحقات
+v246-0417;workforce.ui.advances.eyebrow;en-US;Advances and installments
+v246-0418;workforce.ui.advances.eyebrow;ar-EG;السلف والأقساط
+v246-0419;workforce.ui.advances.firstInstallment;en-US;First installment:
+v246-0420;workforce.ui.advances.firstInstallment;ar-EG;أول قسط:
+v246-0421;workforce.ui.advances.firstInstallmentDate;en-US;First installment date
+v246-0422;workforce.ui.advances.firstInstallmentDate;ar-EG;تاريخ أول قسط
+v246-0423;workforce.ui.advances.frequency;en-US;Deduction frequency
+v246-0424;workforce.ui.advances.frequency;ar-EG;دورية الخصم
+v246-0425;workforce.ui.advances.fullRepayment;en-US;Full repayment — the advance will be closed
+v246-0426;workforce.ui.advances.fullRepayment;ar-EG;سداد كامل — سيتم إغلاق السلفة بالكامل
+v246-0427;workforce.ui.advances.fullRepaymentMismatch;en-US;For full repayment, the amount must equal the remaining balance
+v246-0428;workforce.ui.advances.fullRepaymentMismatch;ar-EG;عند السداد الكامل، يجب أن يساوي المبلغ الرصيد المتبقي
+v246-0429;workforce.ui.advances.global;en-US;Global setting
+v246-0430;workforce.ui.advances.global;ar-EG;إعداد عام
+v246-0431;workforce.ui.advances.halfMonth15;en-US;Half-monthly (every 15 days)
+v246-0432;workforce.ui.advances.halfMonth15;ar-EG;نصف شهري (كل 15 يوم)
+v246-0433;workforce.ui.advances.halfMonthly;en-US;Half-monthly
+v246-0434;workforce.ui.advances.halfMonthly;ar-EG;نصف شهري
+v246-0435;workforce.ui.advances.installmentAmount;en-US;Installment amount
+v246-0436;workforce.ui.advances.installmentAmount;ar-EG;قيمة القسط
+v246-0437;workforce.ui.advances.installmentAuto;en-US;Installment amount (EGP) — calculated automatically
+v246-0438;workforce.ui.advances.installmentAuto;ar-EG;قيمة القسط (ج.م) — محسوبة تلقائياً
+v246-0439;workforce.ui.advances.installmentCount;en-US;Number of installments *
+v246-0440;workforce.ui.advances.installmentCount;ar-EG;عدد الأقساط *
+v246-0441;workforce.ui.advances.installmentHelp;en-US;"Installment calculation — advance amount ÷ number of installments; it can be adjusted"
+v246-0442;workforce.ui.advances.installmentHelp;ar-EG;طريقة احتساب الأقساط — مبلغ السلفة ÷ عدد الأقساط ويمكن تعديله
+v246-0443;workforce.ui.advances.installmentHelpAria;en-US;Installment calculation help
+v246-0444;workforce.ui.advances.installmentHelpAria;ar-EG;شرح احتساب الأقساط
+v246-0445;workforce.ui.advances.installmentUnit;en-US;installment
+v246-0446;workforce.ui.advances.installmentUnit;ar-EG;قسط
+v246-0447;workforce.ui.advances.installments;en-US;Installments
+v246-0448;workforce.ui.advances.installments;ar-EG;الأقساط
+v246-0449;workforce.ui.advances.installmentsMinimum;en-US;A long-term advance requires at least 2 installments
+v246-0450;workforce.ui.advances.installmentsMinimum;ar-EG;السلفة طويلة الأجل تتطلب قسطين على الأقل
+v246-0451;workforce.ui.advances.longDescription;en-US;Long-term — recurring installments
+v246-0452;workforce.ui.advances.longDescription;ar-EG;طويلة الأجل — تقسيط متكرر
+v246-0453;workforce.ui.advances.longTerm;en-US;Long-term
+v246-0454;workforce.ui.advances.longTerm;ar-EG;طويلة الأجل
+v246-0455;workforce.ui.advances.manual;en-US;Manual
+v246-0456;workforce.ui.advances.manual;ar-EG;يدوي
+v246-0457;workforce.ui.advances.manualDeduction;en-US;Manual deduction
+v246-0458;workforce.ui.advances.manualDeduction;ar-EG;خصم يدوي
+v246-0459;workforce.ui.advances.manualIntervention;en-US;Manual — requires manual action
+v246-0460;workforce.ui.advances.manualIntervention;ar-EG;يدوي — يتطلب تدخل يدوي
+v246-0461;workforce.ui.advances.maxDeduction;en-US;Max deduction %
+v246-0462;workforce.ui.advances.maxDeduction;ar-EG;أقصى خصم %
+v246-0463;workforce.ui.advances.maxPeriodDeduction;en-US;Maximum deduction from period entitlement (%)
+v246-0464;workforce.ui.advances.maxPeriodDeduction;ar-EG;الحد الأقصى للخصم من مستحق الفترة (%)
+v246-0465;workforce.ui.advances.maximum;en-US;Maximum:
+v246-0466;workforce.ui.advances.maximum;ar-EG;الحد الأقصى:
+v246-0467;workforce.ui.advances.monthly;en-US;Monthly
+v246-0468;workforce.ui.advances.monthly;ar-EG;شهري
+v246-0469;workforce.ui.advances.new;en-US;+ New advance
+v246-0470;workforce.ui.advances.new;ar-EG;+ صرف سُلفة جديدة
+v246-0471;workforce.ui.advances.noEmployees;en-US;No active employees are available
+v246-0472;workforce.ui.advances.noEmployees;ar-EG;لا يوجد موظفون نشطون متاحون
+v246-0473;workforce.ui.advances.notes;en-US;Notes
+v246-0474;workforce.ui.advances.notes;ar-EG;ملاحظات
+v246-0475;workforce.ui.advances.openEnded;en-US;Open-ended
+v246-0476;workforce.ui.advances.openEnded;ar-EG;مفتوحة
+v246-0477;workforce.ui.advances.optional;en-US;Optional
+v246-0478;workforce.ui.advances.optional;ar-EG;اختياري
+v246-0479;workforce.ui.advances.originalAmount;en-US;Original amount
+v246-0480;workforce.ui.advances.originalAmount;ar-EG;المبلغ الأصلي
+v246-0481;workforce.ui.advances.originalAmountAria;en-US;Original amount help
+v246-0482;workforce.ui.advances.originalAmountAria;ar-EG;شرح المبلغ الأصلي
+v246-0483;workforce.ui.advances.originalAmountHelp;en-US;Original amount — full advance value at disbursement
+v246-0484;workforce.ui.advances.originalAmountHelp;ar-EG;المبلغ الأصلي — كامل قيمة السلفة عند الصرف
+v246-0485;workforce.ui.advances.paidOff;en-US;Paid off
+v246-0486;workforce.ui.advances.paidOff;ar-EG;مسدّدة
+v246-0487;workforce.ui.advances.partialRepayment;en-US;Partial repayment — a balance will remain
+v246-0488;workforce.ui.advances.partialRepayment;ar-EG;سداد جزئي — سيتبقى رصيد بعد السداد
+v246-0489;workforce.ui.advances.pause;en-US;Pause
+v246-0490;workforce.ui.advances.pause;ar-EG;إيقاف
+v246-0491;workforce.ui.advances.pauseConfirm;en-US;Pause deductions for {name}?
+v246-0492;workforce.ui.advances.pauseConfirm;ar-EG;هل أنت متأكد من إيقاف اقتطاع السلفة الخاصة بـ ({name})؟
+v246-0493;workforce.ui.advances.pauseFailed;en-US;Could not pause the advance: {detail}
+v246-0494;workforce.ui.advances.pauseFailed;ar-EG;فشل إيقاف السلفة: {detail}
+v246-0495;workforce.ui.advances.pauseSuccess;en-US;Advance deductions paused
+v246-0496;workforce.ui.advances.pauseSuccess;ar-EG;تم إيقاف خصم السلفة مؤقتاً ✓
+v246-0497;workforce.ui.advances.paymentMethod;en-US;Payment method
+v246-0498;workforce.ui.advances.paymentMethod;ar-EG;طريقة السداد
+v246-0499;workforce.ui.advances.policy;en-US;Deduction policy
+v246-0500;workforce.ui.advances.policy;ar-EG;سياسة الخصم
+v246-0501;workforce.ui.advances.policyDateInvalid;en-US;The policy end date cannot be before its start date
+v246-0502;workforce.ui.advances.policyDateInvalid;ar-EG;تاريخ نهاية السياسة يسبق تاريخ البداية
+v246-0503;workforce.ui.advances.policyEnd;en-US;Effective end date
+v246-0504;workforce.ui.advances.policyEnd;ar-EG;تاريخ نهاية السريان
+v246-0505;workforce.ui.advances.policyMax;en-US;Maximum of period entitlement %
+v246-0506;workforce.ui.advances.policyMax;ar-EG;الحد الأقصى من مستحق الفترة %
+v246-0507;workforce.ui.advances.policyPriority;en-US;Priority: beneficiary exception → category exception → global setting, for employees and workers. It can be overridden on the advance.
+v246-0508;workforce.ui.advances.policyPriority;ar-EG;الأولوية: استثناء المستفيد ← استثناء فئته ← الإعداد العام، للموظفين والعمال. ويمكن تجاوزها داخل السلفة نفسها.
+v246-0509;workforce.ui.advances.policySaveFailed;en-US;Could not save the policy
+v246-0510;workforce.ui.advances.policySaveFailed;ar-EG;تعذّر حفظ السياسة
+v246-0511;workforce.ui.advances.policySaved;en-US;Advance policy saved successfully
+v246-0512;workforce.ui.advances.policySaved;ar-EG;تم حفظ سياسة السلف بنجاح ✓
+v246-0513;workforce.ui.advances.policyScope;en-US;Policy scope *
+v246-0514;workforce.ui.advances.policyScope;ar-EG;نطاق السياسة *
+v246-0515;workforce.ui.advances.policyScopeEmployee;en-US;Employee exception
+v246-0516;workforce.ui.advances.policyScopeEmployee;ar-EG;استثناء موظف
+v246-0517;workforce.ui.advances.policyScopeEmployeeCategory;en-US;Employee category exception
+v246-0518;workforce.ui.advances.policyScopeEmployeeCategory;ar-EG;استثناء فئة موظفين
+v246-0519;workforce.ui.advances.policyScopeGlobal;en-US;Global setting
+v246-0520;workforce.ui.advances.policyScopeGlobal;ar-EG;الإعداد العام
+v246-0521;workforce.ui.advances.policyScopeWorker;en-US;Worker exception
+v246-0522;workforce.ui.advances.policyScopeWorker;ar-EG;استثناء عامل
+v246-0523;workforce.ui.advances.policyScopeWorkerCategory;en-US;Worker category exception
+v246-0524;workforce.ui.advances.policyScopeWorkerCategory;ar-EG;استثناء فئة عمال
+v246-0525;workforce.ui.advances.policySelectScope;en-US;Select the category, worker, or employee for the exception
+v246-0526;workforce.ui.advances.policySelectScope;ar-EG;اختر الفئة أو العامل أو الموظف للاستثناء
+v246-0527;workforce.ui.advances.policyStart;en-US;Effective start date *
+v246-0528;workforce.ui.advances.policyStart;ar-EG;تاريخ بداية السريان *
+v246-0529;workforce.ui.advances.policyStartRequired;en-US;Enter the policy effective start date
+v246-0530;workforce.ui.advances.policyStartRequired;ar-EG;أدخل تاريخ بداية سريان السياسة
+v246-0531;workforce.ui.advances.policySummary;en-US;Default advance policy and exceptions
+v246-0532;workforce.ui.advances.policySummary;ar-EG;سياسة السلف الافتراضية والاستثناءات
+v246-0533;workforce.ui.advances.policyTitle;en-US;Advance deduction policy
+v246-0534;workforce.ui.advances.policyTitle;ar-EG;سياسة خصم السلف
+v246-0535;workforce.ui.advances.preview;en-US;Result preview:
+v246-0536;workforce.ui.advances.preview;ar-EG;معاينة النتيجة:
+v246-0537;workforce.ui.advances.previouslyPaid;en-US;Previously paid
+v246-0538;workforce.ui.advances.previouslyPaid;ar-EG;المسدّد سابقاً
+v246-0539;workforce.ui.advances.reason;en-US;Advance reason and notes
+v246-0540;workforce.ui.advances.reason;ar-EG;سبب السلفة والملاحظات
+v246-0541;workforce.ui.advances.reasonPlaceholder;en-US;Example: emergency, personal need, ...
+v246-0542;workforce.ui.advances.reasonPlaceholder;ar-EG;مثل: ظروف طارئة، احتياج شخصي، ...
+v246-0543;workforce.ui.advances.receiptRef;en-US;Receipt number or payment reference
+v246-0544;workforce.ui.advances.receiptRef;ar-EG;رقم الإيصال أو مرجع الدفع
+v246-0545;workforce.ui.advances.recipient;en-US;Beneficiary
+v246-0546;workforce.ui.advances.recipient;ar-EG;الجهة المستفيدة
+v246-0547;workforce.ui.advances.recipientRequiredWarning;en-US;Select the advance beneficiary
+v246-0548;workforce.ui.advances.recipientRequiredWarning;ar-EG;اختر المستفيد من السلفة
+v246-0549;workforce.ui.advances.recipientTypeRequired;en-US;Beneficiary type *
+v246-0550;workforce.ui.advances.recipientTypeRequired;ar-EG;نوع المستفيد *
+v246-0551;workforce.ui.advances.remainingBalance;en-US;Remaining balance
+v246-0552;workforce.ui.advances.remainingBalance;ar-EG;الرصيد المتبقي
+v246-0553;workforce.ui.advances.remainingHelp;en-US;Remaining balance — original amount minus all recorded repayments and deductions
+v246-0554;workforce.ui.advances.remainingHelp;ar-EG;الرصيد المتبقي — المبلغ الأصلي ناقص كل السداد والخصومات المسجلة
+v246-0555;workforce.ui.advances.remainingHelpAria;en-US;Remaining balance help
+v246-0556;workforce.ui.advances.remainingHelpAria;ar-EG;شرح الرصيد المتبقي
+v246-0557;workforce.ui.advances.repay;en-US;Repay
+v246-0558;workforce.ui.advances.repay;ar-EG;سداد
+v246-0559;workforce.ui.advances.repayImpactClose;en-US;The advance will be closed in full
+v246-0560;workforce.ui.advances.repayImpactClose;ar-EG;سيتم إغلاق السلفة بالكامل
+v246-0561;workforce.ui.advances.repayImpactRemaining;en-US;A balance of {amount} EGP will remain after repayment
+v246-0562;workforce.ui.advances.repayImpactRemaining;ar-EG;سيتبقى رصيد {amount} ج.م بعد السداد
+v246-0563;workforce.ui.advances.repaymentAmount;en-US;Repayment amount (EGP) *
+v246-0564;workforce.ui.advances.repaymentAmount;ar-EG;مبلغ السداد (ج.م) *
+v246-0565;workforce.ui.advances.repaymentAmountInvalid;en-US;Enter a valid repayment amount
+v246-0566;workforce.ui.advances.repaymentAmountInvalid;ar-EG;يجب إدخال مبلغ سداد صحيح
+v246-0567;workforce.ui.advances.repaymentAmountLabel;en-US;Repayment amount:
+v246-0568;workforce.ui.advances.repaymentAmountLabel;ar-EG;مبلغ السداد:
+v246-0569;workforce.ui.advances.repaymentDate;en-US;Repayment date
+v246-0570;workforce.ui.advances.repaymentDate;ar-EG;تاريخ السداد
+v246-0571;workforce.ui.advances.repaymentExceedsBalance;en-US;Repayment cannot exceed the remaining balance
+v246-0572;workforce.ui.advances.repaymentExceedsBalance;ar-EG;مبلغ السداد لا يمكن أن يتجاوز الرصيد المتبقي
+v246-0573;workforce.ui.advances.repaymentFailed;en-US;Repayment failed: {detail}
+v246-0574;workforce.ui.advances.repaymentFailed;ar-EG;فشل السداد: {detail}
+v246-0575;workforce.ui.advances.repaymentSuccess;en-US;Repayment of {amount} EGP recorded successfully
+v246-0576;workforce.ui.advances.repaymentSuccess;ar-EG;تم تسجيل السداد بمبلغ {amount} ج.م بنجاح ✓
+v246-0577;workforce.ui.advances.resume;en-US;Resume
+v246-0578;workforce.ui.advances.resume;ar-EG;استئناف
+v246-0579;workforce.ui.advances.resumeConfirm;en-US;Resume advance deductions?
+v246-0580;workforce.ui.advances.resumeConfirm;ar-EG;هل أنت متأكد من استئناف اقتطاع السلفة؟
+v246-0581;workforce.ui.advances.resumeFailed;en-US;Could not resume the advance: {detail}
+v246-0582;workforce.ui.advances.resumeFailed;ar-EG;فشل استئناف السلفة: {detail}
+v246-0583;workforce.ui.advances.resumeSuccess;en-US;Advance deductions resumed
+v246-0584;workforce.ui.advances.resumeSuccess;ar-EG;تم استئناف خصم السلفة بنجاح ✓
+v246-0585;workforce.ui.advances.saveFailed;en-US;Could not save the advance: {detail}
+v246-0586;workforce.ui.advances.saveFailed;ar-EG;فشل حفظ السلفة: {detail}
+v246-0587;workforce.ui.advances.savePolicy;en-US;Save policy
+v246-0588;workforce.ui.advances.savePolicy;ar-EG;حفظ السياسة
+v246-0589;workforce.ui.advances.select;en-US;Select
+v246-0590;workforce.ui.advances.select;ar-EG;اختر
+v246-0591;workforce.ui.advances.selectContractor;en-US;Select contractor *
+v246-0592;workforce.ui.advances.selectContractor;ar-EG;اختر المقاول *
+v246-0593;workforce.ui.advances.selectEmployee;en-US;Select employee *
+v246-0594;workforce.ui.advances.selectEmployee;ar-EG;اختر الموظف *
+v246-0595;workforce.ui.advances.selectWorker;en-US;Select worker *
+v246-0596;workforce.ui.advances.selectWorker;ar-EG;اختر العامل *
+v246-0597;workforce.ui.advances.shortDescription;en-US;Short-term — one-time direct deduction
+v246-0598;workforce.ui.advances.shortDescription;ar-EG;قصيرة الأجل — خصم مباشر دفعة واحدة
+v246-0599;workforce.ui.advances.shortTerm;en-US;Short-term
+v246-0600;workforce.ui.advances.shortTerm;ar-EG;قصيرة الأجل
+v246-0601;workforce.ui.advances.summary;en-US;Advance summary:
+v246-0602;workforce.ui.advances.summary;ar-EG;ملخص السلفة:
+v246-0603;workforce.ui.advances.suspended;en-US;Suspended
+v246-0604;workforce.ui.advances.suspended;ar-EG;موقوفة
+v246-0605;workforce.ui.advances.termType;en-US;Advance type
+v246-0606;workforce.ui.advances.termType;ar-EG;نوع السلفة
+v246-0607;workforce.ui.advances.title;en-US;Manage employee, worker, and contractor advances and installment schedules
+v246-0608;workforce.ui.advances.title;ar-EG;إدارة سُلف الموظفين والعمال والمقاولين وجدولة الأقساط
+v246-0609;workforce.ui.advances.totalAmount;en-US;Total amount
+v246-0610;workforce.ui.advances.totalAmount;ar-EG;المبلغ الكلي
+v246-0611;workforce.ui.advances.totalGranted;en-US;Total granted
+v246-0612;workforce.ui.advances.totalGranted;ar-EG;إجمالي المبالغ الممنوحة
+v246-0613;workforce.ui.advances.totalOpen;en-US;Open advances
+v246-0614;workforce.ui.advances.totalOpen;ar-EG;إجمالي السلف القائمة
+v246-0615;workforce.ui.advances.totalRemaining;en-US;Total remaining balance
+v246-0616;workforce.ui.advances.totalRemaining;ar-EG;إجمالي الأرصدة المتبقية
+v246-0617;workforce.ui.advances.version;en-US;Version
+v246-0618;workforce.ui.advances.version;ar-EG;إصدار
+v246-0619;workforce.ui.advances.weekly;en-US;Weekly
+v246-0620;workforce.ui.advances.weekly;ar-EG;أسبوعي
+v246-0621;workforce.ui.advances.workerCategoryException;en-US;Worker category exception
+v246-0622;workforce.ui.advances.workerCategoryException;ar-EG;استثناء حسب فئة العمال
+v246-0623;workforce.ui.advances.workerException;en-US;Worker exception
+v246-0624;workforce.ui.advances.workerException;ar-EG;استثناء حسب العامل
+v246-0625;workforce.ui.advances.workerRequired;en-US;Worker *
+v246-0626;workforce.ui.advances.workerRequired;ar-EG;العامل *
+v246-0627;workforce.ui.all;en-US;All
+v246-0628;workforce.ui.all;ar-EG;الكل
+v246-0629;workforce.ui.cancel;en-US;Cancel
+v246-0630;workforce.ui.cancel;ar-EG;إلغاء
+v246-0631;workforce.ui.categories.add;en-US;+ Add worker category
+v246-0632;workforce.ui.categories.add;ar-EG;+ إضافة فئة عمال جديدة
+v246-0633;workforce.ui.categories.addTitle;en-US;Add worker category
+v246-0634;workforce.ui.categories.addTitle;ar-EG;إضافة فئة عمال جديدة
+v246-0635;workforce.ui.categories.both;en-US;Shared: workers and employees (BOTH)
+v246-0636;workforce.ui.categories.both;ar-EG;مشتركة: عمال وموظفون (BOTH)
+v246-0637;workforce.ui.categories.code;en-US;Category code
+v246-0638;workforce.ui.categories.code;ar-EG;كود الفئة
+v246-0639;workforce.ui.categories.codeError;en-US;Category code is required.
+v246-0640;workforce.ui.categories.codeError;ar-EG;كود الفئة مطلوب.
+v246-0641;workforce.ui.categories.codeRequired;en-US;Category code *
+v246-0642;workforce.ui.categories.codeRequired;ar-EG;كود الفئة *
+v246-0643;workforce.ui.categories.cycle;en-US;Default settlement cycle
+v246-0644;workforce.ui.categories.cycle;ar-EG;دورة التسوية الافتراضية
+v246-0645;workforce.ui.categories.dailyRate;en-US;Default daily rate
+v246-0646;workforce.ui.categories.dailyRate;ar-EG;اليومية الافتراضية
+v246-0647;workforce.ui.categories.dailyRateRequired;en-US;Default daily rate (EGP) *
+v246-0648;workforce.ui.categories.dailyRateRequired;ar-EG;اليومية الافتراضية (ج.م) *
+v246-0649;workforce.ui.categories.description;en-US;Description
+v246-0650;workforce.ui.categories.description;ar-EG;الوصف
+v246-0651;workforce.ui.categories.export;en-US;⇩ Export Excel
+v246-0652;workforce.ui.categories.export;ar-EG;⇩ تصدير Excel
+v246-0653;workforce.ui.categories.eyebrow;en-US;Worker category management
+v246-0654;workforce.ui.categories.eyebrow;ar-EG;إدارة فئات العمالة
+v246-0655;workforce.ui.categories.halfMonth;en-US;Half-monthly (15 days)
+v246-0656;workforce.ui.categories.halfMonth;ar-EG;نصف شهري (15 يومًا)
+v246-0657;workforce.ui.categories.hours;en-US;Standard daily hours
+v246-0658;workforce.ui.categories.hours;ar-EG;ساعات اليوم القياسية
+v246-0659;workforce.ui.categories.hoursRequired;en-US;Standard daily work hours *
+v246-0660;workforce.ui.categories.hoursRequired;ar-EG;ساعات العمل اليومية القياسية *
+v246-0661;workforce.ui.categories.monthly;en-US;Monthly (30 days)
+v246-0662;workforce.ui.categories.monthly;ar-EG;شهري (30 يومًا)
+v246-0663;workforce.ui.categories.name;en-US;Category name
+v246-0664;workforce.ui.categories.name;ar-EG;اسم الفئة
+v246-0665;workforce.ui.categories.nameError;en-US;Category name is required.
+v246-0666;workforce.ui.categories.nameError;ar-EG;اسم الفئة مطلوب.
+v246-0667;workforce.ui.categories.nameRequired;en-US;Category name *
+v246-0668;workforce.ui.categories.nameRequired;ar-EG;اسم الفئة *
+v246-0669;workforce.ui.categories.rateHoursError;en-US;Daily rate cannot be negative and work hours must be greater than zero.
+v246-0670;workforce.ui.categories.rateHoursError;ar-EG;اليومية يجب ألا تكون سالبة وساعات العمل يجب أن تكون أكبر من صفر.
+v246-0671;workforce.ui.categories.requiredError;en-US;Category code and name are required.
+v246-0672;workforce.ui.categories.requiredError;ar-EG;كود الفئة واسم الفئة حقول إلزامية.
+v246-0673;workforce.ui.categories.save;en-US;Save category
+v246-0674;workforce.ui.categories.save;ar-EG;حفظ الفئة
+v246-0675;workforce.ui.categories.saveFailed;en-US;Could not save the category. Try again.
+v246-0676;workforce.ui.categories.saveFailed;ar-EG;تعذر حفظ الفئة. أعد المحاولة.
+v246-0677;workforce.ui.categories.scope;en-US;Scope
+v246-0678;workforce.ui.categories.scope;ar-EG;النطاق
+v246-0679;workforce.ui.categories.scopeBoth;en-US;Shared (Both)
+v246-0680;workforce.ui.categories.scopeBoth;ar-EG;مشتركة (Both)
+v246-0681;workforce.ui.categories.scopeEmployee;en-US;Employees only
+v246-0682;workforce.ui.categories.scopeEmployee;ar-EG;موظفون فقط
+v246-0683;workforce.ui.categories.scopeNote;en-US;This screen manages WORKER categories. A shared BOTH category can also appear in employee categories and worker-category selectors. Employee-only categories are managed from the main categories screen.
+v246-0684;workforce.ui.categories.scopeNote;ar-EG;هذه الشاشة تخص فئات العمال (WORKER). يمكن أيضًا إنشاء فئة مشتركة (BOTH) تظهر في شاشة فئات الموظفين وقوائم اختيار فئة العمال معًا. فئات الموظفين فقط (EMPLOYEE) تُدار من شاشة الفئات الرئيسية.
+v246-0685;workforce.ui.categories.scopeRequired;en-US;Category scope *
+v246-0686;workforce.ui.categories.scopeRequired;ar-EG;نطاق الفئة *
+v246-0687;workforce.ui.categories.scopeWorker;en-US;Workers only
+v246-0688;workforce.ui.categories.scopeWorker;ar-EG;عمال فقط
+v246-0689;workforce.ui.categories.statusSuspended;en-US;Suspended
+v246-0690;workforce.ui.categories.statusSuspended;ar-EG;معلق
+v246-0691;workforce.ui.categories.title;en-US;Operational categories and standard daily rates
+v246-0692;workforce.ui.categories.title;ar-EG;الفئات التشغيلية واليوميات القياسية
+v246-0693;workforce.ui.categories.verifyFailed;en-US;The save request completed, but the category did not appear after refreshing the data.
+v246-0694;workforce.ui.categories.verifyFailed;ar-EG;تم إرسال طلب الحفظ لكن الفئة لم تظهر بعد إعادة تحميل البيانات.
+v246-0695;workforce.ui.categories.workerOnly;en-US;Workers only (WORKER)
+v246-0696;workforce.ui.categories.workerOnly;ar-EG;عمال فقط (WORKER)
+v246-0697;workforce.ui.close;en-US;Close
+v246-0698;workforce.ui.close;ar-EG;إغلاق
+v246-0699;workforce.ui.contractor;en-US;Contractor
+v246-0700;workforce.ui.contractor;ar-EG;مقاول
+v246-0701;workforce.ui.contractorAccounts.accountingModel;en-US;Accounting model
+v246-0702;workforce.ui.contractorAccounts.accountingModel;ar-EG;نموذج الحساب
+v246-0703;workforce.ui.contractorAccounts.contractor;en-US;Contractor
+v246-0704;workforce.ui.contractorAccounts.contractor;ar-EG;المقاول
+v246-0705;workforce.ui.contractorAccounts.eyebrow;en-US;Contractor accounts
+v246-0706;workforce.ui.contractorAccounts.eyebrow;ar-EG;حسابات المقاولين
+v246-0707;workforce.ui.contractorAccounts.feeOrRate;en-US;Fee / independent rate
+v246-0708;workforce.ui.contractorAccounts.feeOrRate;ar-EG;العمولة / السعر المستقل
+v246-0709;workforce.ui.contractorAccounts.paid;en-US;Paid
+v246-0710;workforce.ui.contractorAccounts.paid;ar-EG;المسدد
+v246-0711;workforce.ui.contractorAccounts.printReceipt;en-US;Print receipt statement
+v246-0712;workforce.ui.contractorAccounts.printReceipt;ar-EG;طباعة كشف الاستلام
+v246-0713;workforce.ui.contractorAccounts.remaining;en-US;Remaining to pay
+v246-0714;workforce.ui.contractorAccounts.remaining;ar-EG;المتبقي للصرف
+v246-0715;workforce.ui.contractorAccounts.title;en-US;Contractor receipt statements and payable balances
+v246-0716;workforce.ui.contractorAccounts.title;ar-EG;كشوف استلام المقاولين وأرصدة المستحقات
+v246-0717;workforce.ui.contractorAccounts.totalPayable;en-US;Total payable
+v246-0718;workforce.ui.contractorAccounts.totalPayable;ar-EG;إجمالي المستحق
+v246-0719;workforce.ui.contractorAccounts.workerNetTotal;en-US;Workers net total
+v246-0720;workforce.ui.contractorAccounts.workerNetTotal;ar-EG;مجموع صافي العمال
+v246-0721;workforce.ui.contractors.accountingModel;en-US;Accounting model
+v246-0722;workforce.ui.contractors.accountingModel;ar-EG;نموذج المحاسبة
+v246-0723;workforce.ui.contractors.add;en-US;+ Add contractor
+v246-0724;workforce.ui.contractors.add;ar-EG;+ إضافة مقاول جديد
+v246-0725;workforce.ui.contractors.addTitle;en-US;Add contractor
+v246-0726;workforce.ui.contractors.addTitle;ar-EG;إضافة مقاول جديد
+v246-0727;workforce.ui.contractors.code;en-US;Code
+v246-0728;workforce.ui.contractors.code;ar-EG;الكود
+v246-0729;workforce.ui.contractors.codeRequired;en-US;Contractor code *
+v246-0730;workforce.ui.contractors.codeRequired;ar-EG;كود المقاول *
+v246-0731;workforce.ui.contractors.costPlusDescription;en-US;Worker cost plus a fixed fee or percentage.
+v246-0732;workforce.ui.contractors.costPlusDescription;ar-EG;تكلفة العمال مضافاً إليها عمولة ثابتة أو نسبة مئوية.
+v246-0733;workforce.ui.contractors.createdSuccess;en-US;Contractor created successfully
+v246-0734;workforce.ui.contractors.createdSuccess;ar-EG;تم إنشاء المقاول بنجاح
+v246-0735;workforce.ui.contractors.cycle;en-US;Settlement cycle
+v246-0736;workforce.ui.contractors.cycle;ar-EG;دورة التسوية
+v246-0737;workforce.ui.contractors.cycle15;en-US;Every 15 days (twice monthly)
+v246-0738;workforce.ui.contractors.cycle15;ar-EG;كل 15 يومًا (فترتان شهريًا)
+v246-0739;workforce.ui.contractors.cycle30;en-US;Every 30 days
+v246-0740;workforce.ui.contractors.cycle30;ar-EG;كل 30 يومًا
+v246-0741;workforce.ui.contractors.dailyRateDescription;en-US;Calculated using the contractor's day/hour rate independently of each worker's daily rate.
+v246-0742;workforce.ui.contractors.dailyRateDescription;ar-EG;الحساب بسعر المقاول لكل يوم/ساعة بصرف النظر عن يومية العامل.
+v246-0743;workforce.ui.contractors.dealingStatus;en-US;Status
+v246-0744;workforce.ui.contractors.dealingStatus;ar-EG;حالة التعامل
+v246-0745;workforce.ui.contractors.defaultRate;en-US;Default contractor daily rate
+v246-0746;workforce.ui.contractors.defaultRate;ar-EG;سعر المقاول اليومي الافتراضي
+v246-0747;workforce.ui.contractors.editTitle;en-US;Edit contractor
+v246-0748;workforce.ui.contractors.editTitle;ar-EG;تعديل بيانات المقاول
+v246-0749;workforce.ui.contractors.eyebrow;en-US;Contractor management
+v246-0750;workforce.ui.contractors.eyebrow;ar-EG;إدارة المقاولين
+v246-0751;workforce.ui.contractors.feeValue;en-US;Fee value (amount or %)
+v246-0752;workforce.ui.contractors.feeValue;ar-EG;قيمة العمولة (مبلغ أو نسبة %)
+v246-0753;workforce.ui.contractors.fixedAmount;en-US;Fixed period amount
+v246-0754;workforce.ui.contractors.fixedAmount;ar-EG;مبلغ الفترة الثابت
+v246-0755;workforce.ui.contractors.fixedDescription;en-US;A fixed amount agreed for each settlement period, with additions and deductions.
+v246-0756;workforce.ui.contractors.fixedDescription;ar-EG;مبلغ ثابت متفق عليه لكل فترة تسوية مع تعديلات الإضافة والخصم.
+v246-0757;workforce.ui.contractors.fullName;en-US;Full name
+v246-0758;workforce.ui.contractors.fullName;ar-EG;الاسم الكامل
+v246-0759;workforce.ui.contractors.modelRequired;en-US;Contractor accounting model *
+v246-0760;workforce.ui.contractors.modelRequired;ar-EG;نموذج محاسبة المقاول الإلزامي *
+v246-0761;workforce.ui.contractors.nameRequired;en-US;Contractor name *
+v246-0762;workforce.ui.contractors.nameRequired;ar-EG;اسم المقاول *
+v246-0763;workforce.ui.contractors.paymentRouting;en-US;Payment routing
+v246-0764;workforce.ui.contractors.paymentRouting;ar-EG;جهة الصرف
+v246-0765;workforce.ui.contractors.phone;en-US;Phone
+v246-0766;workforce.ui.contractors.phone;ar-EG;الهاتف
+v246-0767;workforce.ui.contractors.phoneRequired;en-US;Phone number *
+v246-0768;workforce.ui.contractors.phoneRequired;ar-EG;رقم الهاتف *
+v246-0769;workforce.ui.contractors.requiredError;en-US;Code, contractor name, and phone number are required.
+v246-0770;workforce.ui.contractors.requiredError;ar-EG;الكود واسم المقاول ورقم الهاتف حقول إلزامية.
+v246-0771;workforce.ui.contractors.routingDirect;en-US;Pay workers directly and the fee to the contractor
+v246-0772;workforce.ui.contractors.routingDirect;ar-EG;صرف مستحقات العمال مباشرة وصرف العمولة للمقاول
+v246-0773;workforce.ui.contractors.routingDirectShort;en-US;"Workers directly; fee to contractor"
+v246-0774;workforce.ui.contractors.routingDirectShort;ar-EG;مباشر للعمال والعمولة للمقاول
+v246-0775;workforce.ui.contractors.routingFull;en-US;Pay the full amount to the contractor
+v246-0776;workforce.ui.contractors.routingFull;ar-EG;صرف كامل المبلغ للمقاول
+v246-0777;workforce.ui.contractors.routingFullShort;en-US;Full amount to contractor
+v246-0778;workforce.ui.contractors.routingFullShort;ar-EG;كامل للمقاول
+v246-0779;workforce.ui.contractors.routingMixed;en-US;Mixed payment
+v246-0780;workforce.ui.contractors.routingMixed;ar-EG;صرف مختلط
+v246-0781;workforce.ui.contractors.routingMixedShort;en-US;Mixed
+v246-0782;workforce.ui.contractors.routingMixedShort;ar-EG;مختلط
+v246-0783;workforce.ui.contractors.saveErrorHelp;en-US;Review the data or connection and try again. The dialog stays open until the server confirms the save.
+v246-0784;workforce.ui.contractors.saveErrorHelp;ar-EG;راجع البيانات أو الاتصال ثم أعد المحاولة. لن تُغلق النافذة قبل تأكيد الحفظ من الخادم.
+v246-0785;workforce.ui.contractors.saveErrorTitle;en-US;Could not save the contractor.
+v246-0786;workforce.ui.contractors.saveErrorTitle;ar-EG;تعذر حفظ المقاول.
+v246-0787;workforce.ui.contractors.saveFailed;en-US;Unexpected error while saving the contractor.
+v246-0788;workforce.ui.contractors.saveFailed;ar-EG;حدث خطأ غير متوقع أثناء حفظ المقاول.
+v246-0789;workforce.ui.contractors.saving;en-US;Saving and verifying...
+v246-0790;workforce.ui.contractors.saving;ar-EG;جارٍ الحفظ والتحقق...
+v246-0791;workforce.ui.contractors.title;en-US;Contractor directory and accounting models
+v246-0792;workforce.ui.contractors.title;ar-EG;دليل المقاولين ونماذج المحاسبة
+v246-0793;workforce.ui.contractors.tradeName;en-US;Trade name
+v246-0794;workforce.ui.contractors.tradeName;ar-EG;الاسم التجاري
+v246-0795;workforce.ui.contractors.updatedSuccess;en-US;Contractor updated successfully
+v246-0796;workforce.ui.contractors.updatedSuccess;ar-EG;تم تحديث بيانات المقاول بنجاح
+v246-0797;workforce.ui.contractors.verifyFailed;en-US;The server accepted the save, but the record did not appear after refreshing the data.
+v246-0798;workforce.ui.contractors.verifyFailed;ar-EG;استجاب الخادم للحفظ لكن السجل لم يظهر بعد إعادة تحميل البيانات.
+v246-0799;workforce.ui.contractors.workerNetDescription;en-US;Contractor payable equals the workers' net total after deductions and advances.
+v246-0800;workforce.ui.contractors.workerNetDescription;ar-EG;مستحق المقاول يساوي مجموع صافي العمال بعد الخصومات والسلف.
+v246-0801;workforce.ui.currencyEgp;en-US;EGP
+v246-0802;workforce.ui.currencyEgp;ar-EG;ج.م
+v246-0803;workforce.ui.dashboard.accepted;en-US;Accepted:
+v246-0804;workforce.ui.dashboard.accepted;ar-EG;مقبول:
+v246-0805;workforce.ui.dashboard.acceptedVsRequested;en-US;Accepted vs requested
+v246-0806;workforce.ui.dashboard.acceptedVsRequested;ar-EG;المقبول مقابل المطلوب
+v246-0807;workforce.ui.dashboard.activeContractors;en-US;Active contractors
+v246-0808;workforce.ui.dashboard.activeContractors;ar-EG;المقاولون النشطون
+v246-0809;workforce.ui.dashboard.activeRequests;en-US;Active labor requests
+v246-0810;workforce.ui.dashboard.activeRequests;ar-EG;طلبات العمالة النشطة
+v246-0811;workforce.ui.dashboard.activityStatus;en-US;Activity status
+v246-0812;workforce.ui.dashboard.activityStatus;ar-EG;حالة النشاط
+v246-0813;workforce.ui.dashboard.advanceGranted;en-US;Principal advances {amount}
+v246-0814;workforce.ui.dashboard.advanceGranted;ar-EG;أصل السلف {amount}
+v246-0815;workforce.ui.dashboard.advancePaid;en-US;Repaid {amount}
+v246-0816;workforce.ui.dashboard.advancePaid;ar-EG;تم سداده {amount}
+v246-0817;workforce.ui.dashboard.advanceRemaining;en-US;Remaining advance balance
+v246-0818;workforce.ui.dashboard.advanceRemaining;ar-EG;الرصيد المتبقي من السلف
+v246-0819;workforce.ui.dashboard.advanceRisk;en-US;Advance exposure
+v246-0820;workforce.ui.dashboard.advanceRisk;ar-EG;مخاطر السلف
+v246-0821;workforce.ui.dashboard.allLocations;en-US;All locations
+v246-0822;workforce.ui.dashboard.allLocations;ar-EG;كل المواقع
+v246-0823;workforce.ui.dashboard.byCategory;en-US;Workers by category
+v246-0824;workforce.ui.dashboard.byCategory;ar-EG;العمال حسب الفئة
+v246-0825;workforce.ui.dashboard.byCategoryAria;en-US;Chart showing workers by category
+v246-0826;workforce.ui.dashboard.byCategoryAria;ar-EG;رسم يوضح عدد العمال حسب الفئة
+v246-0827;workforce.ui.dashboard.byContractor;en-US;Workers by contractor
+v246-0828;workforce.ui.dashboard.byContractor;ar-EG;العمال حسب المقاول
+v246-0829;workforce.ui.dashboard.byContractorAria;en-US;Chart showing workers by contractor
+v246-0830;workforce.ui.dashboard.byContractorAria;ar-EG;رسم يوضح عدد العمال حسب المقاول
+v246-0831;workforce.ui.dashboard.category;en-US;Worker category
+v246-0832;workforce.ui.dashboard.category;ar-EG;فئة العامل
+v246-0833;workforce.ui.dashboard.clearFilters;en-US;Clear filters
+v246-0834;workforce.ui.dashboard.clearFilters;ar-EG;مسح الفلاتر
+v246-0835;workforce.ui.dashboard.contractorCode;en-US;Contractor code
+v246-0836;workforce.ui.dashboard.contractorCode;ar-EG;كود المقاول
+v246-0837;workforce.ui.dashboard.contractorName;en-US;Contractor name
+v246-0838;workforce.ui.dashboard.contractorName;ar-EG;اسم المقاول
+v246-0839;workforce.ui.dashboard.contractorsModels;en-US;Contractors and accounting models
+v246-0840;workforce.ui.dashboard.contractorsModels;ar-EG;المقاولون ونماذج الحساب
+v246-0841;workforce.ui.dashboard.coverageAria;en-US;Request coverage rate {percent} percent
+v246-0842;workforce.ui.dashboard.coverageAria;ar-EG;نسبة تغطية الطلبات {percent} بالمائة
+v246-0843;workforce.ui.dashboard.daysCycle;en-US;Every {days} days
+v246-0844;workforce.ui.dashboard.daysCycle;ar-EG;كل {days} يوم
+v246-0845;workforce.ui.dashboard.distribution;en-US;Workforce distribution
+v246-0846;workforce.ui.dashboard.distribution;ar-EG;توزيع القوى العاملة
+v246-0847;workforce.ui.dashboard.eyebrow;en-US;Workforce and contractors
+v246-0848;workforce.ui.dashboard.eyebrow;ar-EG;العمالة والمقاولون
+v246-0849;workforce.ui.dashboard.filtersAria;en-US;Workforce dashboard filters
+v246-0850;workforce.ui.dashboard.filtersAria;ar-EG;فلاتر لوحة القوى العاملة
+v246-0851;workforce.ui.dashboard.filtersHelp;en-US;Filters are shared across cards and charts and are stored in the page URL.
+v246-0852;workforce.ui.dashboard.filtersHelp;ar-EG;الفلاتر مشتركة بين البطاقات والرسوم ومحفوظة داخل رابط الصفحة.
+v246-0853;workforce.ui.dashboard.loadFailed;en-US;Could not load data: {detail}
+v246-0854;workforce.ui.dashboard.loadFailed;ar-EG;تعذّر تحميل البيانات: {detail}
+v246-0855;workforce.ui.dashboard.loading;en-US;Loading data...
+v246-0856;workforce.ui.dashboard.loading;ar-EG;جاري تحميل البيانات...
+v246-0857;workforce.ui.dashboard.location;en-US;Location
+v246-0858;workforce.ui.dashboard.location;ar-EG;الموقع
+v246-0859;workforce.ui.dashboard.matchedWorkers;en-US;Matched workers
+v246-0860;workforce.ui.dashboard.matchedWorkers;ar-EG;إجمالي العمالة المطابقة
+v246-0861;workforce.ui.dashboard.noChartData;en-US;Not enough data to chart
+v246-0862;workforce.ui.dashboard.noChartData;ar-EG;لا توجد بيانات كافية للرسم
+v246-0863;workforce.ui.dashboard.noContractors;en-US;No contractors are currently registered
+v246-0864;workforce.ui.dashboard.noContractors;ar-EG;لا يوجد مقاولون مسجلون حالياً
+v246-0865;workforce.ui.dashboard.openAdvances;en-US;Open advances
+v246-0866;workforce.ui.dashboard.openAdvances;ar-EG;السلف القائمة
+v246-0867;workforce.ui.dashboard.openAdvancesLink;en-US;Open advances →
+v246-0868;workforce.ui.dashboard.openAdvancesLink;ar-EG;فتح السلف ←
+v246-0869;workforce.ui.dashboard.openDetails;en-US;Open details →
+v246-0870;workforce.ui.dashboard.openDetails;ar-EG;فتح التفاصيل ←
+v246-0871;workforce.ui.dashboard.openRequests;en-US;Open requests →
+v246-0872;workforce.ui.dashboard.openRequests;ar-EG;فتح الطلبات ←
+v246-0873;workforce.ui.dashboard.openWorkers;en-US;Open workers →
+v246-0874;workforce.ui.dashboard.openWorkers;ar-EG;فتح العمال ←
+v246-0875;workforce.ui.dashboard.operationalMix;en-US;Operational mix
+v246-0876;workforce.ui.dashboard.operationalMix;ar-EG;المزيج التشغيلي
+v246-0877;workforce.ui.dashboard.remaining;en-US;Remaining:
+v246-0878;workforce.ui.dashboard.remaining;ar-EG;متبقٍ:
+v246-0879;workforce.ui.dashboard.remainingAria;en-US;Remaining advance balance {amount}
+v246-0880;workforce.ui.dashboard.remainingAria;ar-EG;الرصيد المتبقي من السلف {amount}
+v246-0881;workforce.ui.dashboard.requestCoverage;en-US;Labor request coverage
+v246-0882;workforce.ui.dashboard.requestCoverage;ar-EG;تغطية طلبات العمالة
+v246-0883;workforce.ui.dashboard.statusActive;en-US;Active
+v246-0884;workforce.ui.dashboard.statusActive;ar-EG;نشط
+v246-0885;workforce.ui.dashboard.statusInactive;en-US;Inactive
+v246-0886;workforce.ui.dashboard.statusInactive;ar-EG;غير نشط
+v246-0887;workforce.ui.dashboard.title;en-US;Workforce and daily operations dashboard
+v246-0888;workforce.ui.dashboard.title;ar-EG;لوحة متابعة العمالة والتشغيل اليومي
+v246-0889;workforce.ui.dashboard.workerCount;en-US;{count} workers
+v246-0890;workforce.ui.dashboard.workerCount;ar-EG;{count} عامل
+v246-0891;workforce.ui.edit;en-US;Edit
+v246-0892;workforce.ui.edit;ar-EG;تعديل
+v246-0893;workforce.ui.employee;en-US;Employee
+v246-0894;workforce.ui.employee;ar-EG;موظف
+v246-0895;workforce.ui.exportExcel;en-US;Export Excel
+v246-0896;workforce.ui.exportExcel;ar-EG;تصدير Excel
+v246-0897;workforce.ui.hoursShort;en-US;h
+v246-0898;workforce.ui.hoursShort;ar-EG;س
+v246-0899;workforce.ui.inactive;en-US;Inactive
+v246-0900;workforce.ui.inactive;ar-EG;غير نشط
+v246-0901;workforce.ui.model.contractorDailyRate;en-US;Independent contractor rate
+v246-0902;workforce.ui.model.contractorDailyRate;ar-EG;سعر تعاقد مستقل
+v246-0903;workforce.ui.model.fixedPeriodAmount;en-US;Fixed amount per period
+v246-0904;workforce.ui.model.fixedPeriodAmount;ar-EG;مبلغ ثابت للفترة
+v246-0905;workforce.ui.model.workerCostPlusFee;en-US;Worker cost + fee
+v246-0906;workforce.ui.model.workerCostPlusFee;ar-EG;تكلفة العمال + عمولة
+v246-0907;workforce.ui.model.workerNetTotal;en-US;Workers net total
+v246-0908;workforce.ui.model.workerNetTotal;ar-EG;مجموع صافي العمال
+v246-0909;workforce.ui.requests.accepted;en-US;Accepted
+v246-0910;workforce.ui.requests.accepted;ar-EG;المقبول
+v246-0911;workforce.ui.requests.addItem;en-US;+ Add item
+v246-0912;workforce.ui.requests.addItem;ar-EG;+ إضافة بند
+v246-0913;workforce.ui.requests.approve;en-US;Approve
+v246-0914;workforce.ui.requests.approve;ar-EG;اعتماد
+v246-0915;workforce.ui.requests.approved;en-US;Approved
+v246-0916;workforce.ui.requests.approved;ar-EG;معتمد
+v246-0917;workforce.ui.requests.approving;en-US;Approving request...
+v246-0918;workforce.ui.requests.approving;ar-EG;جاري الاعتماد...
+v246-0919;workforce.ui.requests.assignedContractor;en-US;Assigned contractor
+v246-0920;workforce.ui.requests.assignedContractor;ar-EG;المقاول المكلف
+v246-0921;workforce.ui.requests.createFailed;en-US;Could not create the labor request: {detail}
+v246-0922;workforce.ui.requests.createFailed;ar-EG;تعذر إنشاء طلب العمالة: {detail}
+v246-0923;workforce.ui.requests.createTitle;en-US;Create labor request
+v246-0924;workforce.ui.requests.createTitle;ar-EG;إنشاء طلب عمالة جديد
+v246-0925;workforce.ui.requests.createdBy;en-US;Created by
+v246-0926;workforce.ui.requests.createdBy;ar-EG;منشئ الطلب
+v246-0927;workforce.ui.requests.createdSuccess;en-US;Request {number} created successfully
+v246-0928;workforce.ui.requests.createdSuccess;ar-EG;تم إنشاء الطلب {number} بنجاح
+v246-0929;workforce.ui.requests.draft;en-US;Draft
+v246-0930;workforce.ui.requests.draft;ar-EG;مسودة
+v246-0931;workforce.ui.requests.empty;en-US;No labor requests are recorded
+v246-0932;workforce.ui.requests.empty;ar-EG;لا توجد طلبات عمالة مسجّلة
+v246-0933;workforce.ui.requests.eyebrow;en-US;Labor requests
+v246-0934;workforce.ui.requests.eyebrow;ar-EG;طلبات العمالة
+v246-0935;workforce.ui.requests.firstShift;en-US;First shift
+v246-0936;workforce.ui.requests.firstShift;ar-EG;الوردية الأولى
+v246-0937;workforce.ui.requests.itemUnit;en-US;item
+v246-0938;workforce.ui.requests.itemUnit;ar-EG;بند
+v246-0939;workforce.ui.requests.items;en-US;Request items
+v246-0940;workforce.ui.requests.items;ar-EG;بنود الطلب
+v246-0941;workforce.ui.requests.itemsTitle;en-US;Request items (categories and quantities)
+v246-0942;workforce.ui.requests.itemsTitle;ar-EG;بنود الطلب (الفئات والكميات)
+v246-0943;workforce.ui.requests.new;en-US;+ Create labor request
+v246-0944;workforce.ui.requests.new;ar-EG;+ إنشاء طلب عمالة جديد
+v246-0945;workforce.ui.requests.noItems;en-US;No items yet — select Add item to specify the category and required quantity
+v246-0946;workforce.ui.requests.noItems;ar-EG;"لا توجد بنود بعد — اضغط على ""إضافة بند"" لتحديد الفئة والكمية المطلوبة"
+v246-0947;workforce.ui.requests.notes;en-US;Request notes
+v246-0948;workforce.ui.requests.notes;ar-EG;ملاحظات الطلب
+v246-0949;workforce.ui.requests.number;en-US;Request number
+v246-0950;workforce.ui.requests.number;ar-EG;رقم الطلب
+v246-0951;workforce.ui.requests.numberRequired;en-US;Request number *
+v246-0952;workforce.ui.requests.numberRequired;ar-EG;رقم الطلب *
+v246-0953;workforce.ui.requests.quantity;en-US;Required quantity *
+v246-0954;workforce.ui.requests.quantity;ar-EG;الكمية المطلوبة *
+v246-0955;workforce.ui.requests.removeAria;en-US;Remove labor request item
+v246-0956;workforce.ui.requests.removeAria;ar-EG;حذف بند طلب العمالة
+v246-0957;workforce.ui.requests.removeHelp;en-US;Remove item — remove this category from the request
+v246-0958;workforce.ui.requests.removeHelp;ar-EG;حذف البند — إزالة هذه الفئة من الطلب
+v246-0959;workforce.ui.requests.requiredWarning;en-US;Complete the required request fields and add at least one item.
+v246-0960;workforce.ui.requests.requiredWarning;ar-EG;أكمل الحقول المطلوبة وأضف بندًا واحدًا على الأقل.
+v246-0961;workforce.ui.requests.send;en-US;Send request to contractor
+v246-0962;workforce.ui.requests.send;ar-EG;إرسال الطلب للمقاول
+v246-0963;workforce.ui.requests.sending;en-US;Sending...
+v246-0964;workforce.ui.requests.sending;ar-EG;جارٍ الإرسال...
+v246-0965;workforce.ui.requests.sent;en-US;Sent
+v246-0966;workforce.ui.requests.sent;ar-EG;المُرسَل
+v246-0967;workforce.ui.requests.shift;en-US;Shift
+v246-0968;workforce.ui.requests.shift;ar-EG;الوردية
+v246-0969;workforce.ui.requests.shiftName;en-US;Shift name
+v246-0970;workforce.ui.requests.shiftName;ar-EG;اسم الوردية
+v246-0971;workforce.ui.requests.shiftPlaceholder;en-US;Morning shift
+v246-0972;workforce.ui.requests.shiftPlaceholder;ar-EG;الوردية الصباحية
+v246-0973;workforce.ui.requests.statusCancelled;en-US;Cancelled
+v246-0974;workforce.ui.requests.statusCancelled;ar-EG;ملغي
+v246-0975;workforce.ui.requests.statusCompleted;en-US;Completed
+v246-0976;workforce.ui.requests.statusCompleted;ar-EG;مكتمل
+v246-0977;workforce.ui.requests.statusSent;en-US;Sent
+v246-0978;workforce.ui.requests.statusSent;ar-EG;مرسل
+v246-0979;workforce.ui.requests.title;en-US;Labor demand requests and daily follow-up
+v246-0980;workforce.ui.requests.title;ar-EG;سجل طلبات الاحتياج والمتابعة اليومية
+v246-0981;workforce.ui.requests.total;en-US;Total requests
+v246-0982;workforce.ui.requests.total;ar-EG;إجمالي الطلبات
+v246-0983;workforce.ui.requests.totalRequested;en-US;Total requested
+v246-0984;workforce.ui.requests.totalRequested;ar-EG;الإجمالي المطلوب
+v246-0985;workforce.ui.requests.totalRequestedLabel;en-US;Total requested:
+v246-0986;workforce.ui.requests.totalRequestedLabel;ar-EG;الإجمالي المطلوب:
+v246-0987;workforce.ui.requests.workerCategory;en-US;Worker category *
+v246-0988;workforce.ui.requests.workerCategory;ar-EG;فئة العمال *
+v246-0989;workforce.ui.requests.workerUnit;en-US;worker
+v246-0990;workforce.ui.requests.workerUnit;ar-EG;عامل
+v246-0991;workforce.ui.retry;en-US;Retry
+v246-0992;workforce.ui.retry;ar-EG;إعادة المحاولة
+v246-0993;workforce.ui.saveData;en-US;Save data
+v246-0994;workforce.ui.saveData;ar-EG;حفظ البيانات
+v246-0995;workforce.ui.settlement.action;en-US;Action
+v246-0996;workforce.ui.settlement.action;ar-EG;الإجراء
+v246-0997;workforce.ui.settlement.advances;en-US;Advances
+v246-0998;workforce.ui.settlement.advances;ar-EG;السلف
+v246-0999;workforce.ui.settlement.approve;en-US;Approve
+v246-1000;workforce.ui.settlement.approve;ar-EG;اعتماد
+v246-1001;workforce.ui.settlement.approveFailed;en-US;Could not approve period.
+v246-1002;workforce.ui.settlement.approveFailed;ar-EG;تعذر اعتماد الفترة.
+v246-1003;workforce.ui.settlement.by;en-US;By
+v246-1004;workforce.ui.settlement.by;ar-EG;بواسطة
+v246-1005;workforce.ui.settlement.calculatedSuccess;en-US;Calculation completed successfully — version v{version}
+v246-1006;workforce.ui.settlement.calculatedSuccess;ar-EG;تم الاحتساب بنجاح — الإصدار v{version}
+v246-1007;workforce.ui.settlement.calculating;en-US;Calculating…
+v246-1008;workforce.ui.settlement.calculating;ar-EG;جارٍ الاحتساب…
+v246-1009;workforce.ui.settlement.contractorNet;en-US;Contractors net
+v246-1010;workforce.ui.settlement.contractorNet;ar-EG;صافي المقاولين
+v246-1011;workforce.ui.settlement.contractorSettlements;en-US;Contractor settlements
+v246-1012;workforce.ui.settlement.contractorSettlements;ar-EG;تسويات المقاولين
+v246-1013;workforce.ui.settlement.contractorSettlementsButton;en-US;📋 Contractor settlements
+v246-1014;workforce.ui.settlement.contractorSettlementsButton;ar-EG;📋 تسويات المقاولين
+v246-1015;workforce.ui.settlement.contractorsFailed;en-US;Could not load contractor settlements.
+v246-1016;workforce.ui.settlement.contractorsFailed;ar-EG;تعذر تحميل تسويات المقاولين.
+v246-1017;workforce.ui.settlement.contractorsForPeriod;en-US;Contractor settlements for period — {code}
+v246-1018;workforce.ui.settlement.contractorsForPeriod;ar-EG;تسويات المقاولين للفترة — {code}
+v246-1019;workforce.ui.settlement.create;en-US;Create
+v246-1020;workforce.ui.settlement.create;ar-EG;إنشاء
+v246-1021;workforce.ui.settlement.createFailed;en-US;Could not create the period.
+v246-1022;workforce.ui.settlement.createFailed;ar-EG;تعذر إنشاء الفترة.
+v246-1023;workforce.ui.settlement.createTitle;en-US;Create settlement period
+v246-1024;workforce.ui.settlement.createTitle;ar-EG;إنشاء فترة تسوية
+v246-1025;workforce.ui.settlement.deductions;en-US;Deductions
+v246-1026;workforce.ui.settlement.deductions;ar-EG;الخصومات
+v246-1027;workforce.ui.settlement.description;en-US;Calculate worker wages and contractor payables and track posting and payment.
+v246-1028;workforce.ui.settlement.description;ar-EG;احتساب أجور العمال ومستحقات المقاولين وتتبع القيود والسداد.
+v246-1029;workforce.ui.settlement.details;en-US;🔍 View details and actions
+v246-1030;workforce.ui.settlement.details;ar-EG;🔍 عرض التفاصيل والإجراءات
+v246-1031;workforce.ui.settlement.empty;en-US;No settlement periods.
+v246-1032;workforce.ui.settlement.empty;ar-EG;لا توجد فترات تسوية.
+v246-1033;workforce.ui.settlement.endDate;en-US;End date *
+v246-1034;workforce.ui.settlement.endDate;ar-EG;تاريخ النهاية *
+v246-1035;workforce.ui.settlement.error;en-US;Error
+v246-1036;workforce.ui.settlement.error;ar-EG;خطأ
+v246-1037;workforce.ui.settlement.exportFailed;en-US;Could not export.
+v246-1038;workforce.ui.settlement.exportFailed;ar-EG;تعذر التصدير.
+v246-1039;workforce.ui.settlement.eyebrow;en-US;Financial settlement document cycle
+v246-1040;workforce.ui.settlement.eyebrow;ar-EG;دورة التسوية المستندية المالية
+v246-1041;workforce.ui.settlement.flowApproved;en-US;4 Approved
+v246-1042;workforce.ui.settlement.flowApproved;ar-EG;4 معتمدة
+v246-1043;workforce.ui.settlement.flowAria;en-US;Settlement status flow
+v246-1044;workforce.ui.settlement.flowAria;ar-EG;دورة حالات التسوية
+v246-1045;workforce.ui.settlement.flowCalculated;en-US;2 Calculated
+v246-1046;workforce.ui.settlement.flowCalculated;ar-EG;2 تم الاحتساب
+v246-1047;workforce.ui.settlement.flowDraft;en-US;1 Draft
+v246-1048;workforce.ui.settlement.flowDraft;ar-EG;1 مسودة
+v246-1049;workforce.ui.settlement.flowLocked;en-US;6 Locked / paid
+v246-1050;workforce.ui.settlement.flowLocked;ar-EG;6 مقفلة / صرفت
+v246-1051;workforce.ui.settlement.flowPosted;en-US;5 Post to Finance
+v246-1052;workforce.ui.settlement.flowPosted;ar-EG;5 ترحيل للمالية
+v246-1053;workforce.ui.settlement.flowReviewed;en-US;3 Reviewed
+v246-1054;workforce.ui.settlement.flowReviewed;ar-EG;3 تمت المراجعة
+v246-1055;workforce.ui.settlement.gross;en-US;Gross payable
+v246-1056;workforce.ui.settlement.gross;ar-EG;إجمالي المستحقات
+v246-1057;workforce.ui.settlement.issues;en-US;Records requiring action
+v246-1058;workforce.ui.settlement.issues;ar-EG;السجلات التي تحتاج إجراء
+v246-1059;workforce.ui.settlement.issuesFailed;en-US;Could not load issues.
+v246-1060;workforce.ui.settlement.issuesFailed;ar-EG;تعذر تحميل المشاكل.
+v246-1061;workforce.ui.settlement.lastCalculation;en-US;Last calculation
+v246-1062;workforce.ui.settlement.lastCalculation;ar-EG;آخر احتساب
+v246-1063;workforce.ui.settlement.lastCalculationFailed;en-US;Last attempt failed: {detail}
+v246-1064;workforce.ui.settlement.lastCalculationFailed;ar-EG;آخر محاولة فشلت: {detail}
+v246-1065;workforce.ui.settlement.loadFailed;en-US;Could not load settlement periods.
+v246-1066;workforce.ui.settlement.loadFailed;ar-EG;تعذر تحميل فترات التسوية.
+v246-1067;workforce.ui.settlement.loading;en-US;Loading settlement periods…
+v246-1068;workforce.ui.settlement.loading;ar-EG;جارٍ تحميل فترات التسوية…
+v246-1069;workforce.ui.settlement.loadingContractors;en-US;Loading contractor settlements…
+v246-1070;workforce.ui.settlement.loadingContractors;ar-EG;جارٍ تحميل تسويات المقاولين…
+v246-1071;workforce.ui.settlement.lock;en-US;Final lock
+v246-1072;workforce.ui.settlement.lock;ar-EG;قفل نهائي
+v246-1073;workforce.ui.settlement.lockFailed;en-US;Could not lock period.
+v246-1074;workforce.ui.settlement.lockFailed;ar-EG;تعذر قفل الفترة.
+v246-1075;workforce.ui.settlement.needsRecalc;en-US;⚠ Recalculation required
+v246-1076;workforce.ui.settlement.needsRecalc;ar-EG;⚠ يحتاج إعادة احتساب
+v246-1077;workforce.ui.settlement.netPayable;en-US;Net payable
+v246-1078;workforce.ui.settlement.netPayable;ar-EG;صافي المستحق
+v246-1079;workforce.ui.settlement.new;en-US;＋ Open new period
+v246-1080;workforce.ui.settlement.new;ar-EG;＋ فتح فترة جديدة
+v246-1081;workforce.ui.settlement.noContractors;en-US;No contractor settlements for this period.
+v246-1082;workforce.ui.settlement.noContractors;ar-EG;لا توجد تسويات مقاولين لهذه الفترة.
+v246-1083;workforce.ui.settlement.noIssues;en-US;No warnings or errors in the selected version.
+v246-1084;workforce.ui.settlement.noIssues;ar-EG;لا توجد تحذيرات أو أخطاء في الإصدار المحدد.
+v246-1085;workforce.ui.settlement.openWorkers;en-US;Open worker register
+v246-1086;workforce.ui.settlement.openWorkers;ar-EG;فتح سجل العمال
+v246-1087;workforce.ui.settlement.paid;en-US;Paid
+v246-1088;workforce.ui.settlement.paid;ar-EG;المنصرف
+v246-1089;workforce.ui.settlement.period;en-US;Period
+v246-1090;workforce.ui.settlement.period;ar-EG;الفترة
+v246-1091;workforce.ui.settlement.periodCode;en-US;Period code *
+v246-1092;workforce.ui.settlement.periodCode;ar-EG;كود الفترة *
+v246-1093;workforce.ui.settlement.previousKept;en-US;The last successful result remains stored unchanged.
+v246-1094;workforce.ui.settlement.previousKept;ar-EG;ظلت آخر نتيجة ناجحة محفوظة دون تغيير.
+v246-1095;workforce.ui.settlement.problem;en-US;Problem
+v246-1096;workforce.ui.settlement.problem;ar-EG;المشكلة
+v246-1097;workforce.ui.settlement.recalcFailed;en-US;Recalculation failed.
+v246-1098;workforce.ui.settlement.recalcFailed;ar-EG;فشلت إعادة الاحتساب.
+v246-1099;workforce.ui.settlement.recalculate;en-US;Recalculate
+v246-1100;workforce.ui.settlement.recalculate;ar-EG;إعادة الاحتساب
+v246-1101;workforce.ui.settlement.recordUnit;en-US;record
+v246-1102;workforce.ui.settlement.recordUnit;ar-EG;سجل
+v246-1103;workforce.ui.settlement.records;en-US;Records
+v246-1104;workforce.ui.settlement.records;ar-EG;السجلات
+v246-1105;workforce.ui.settlement.recordsCount;en-US;{count} records
+v246-1106;workforce.ui.settlement.recordsCount;ar-EG;{count} سجل
+v246-1107;workforce.ui.settlement.resultTitle;en-US;Settlement recalculation result
+v246-1108;workforce.ui.settlement.resultTitle;ar-EG;نتيجة إعادة احتساب التسوية
+v246-1109;workforce.ui.settlement.review;en-US;Confirm review
+v246-1110;workforce.ui.settlement.review;ar-EG;تأكيد المراجعة
+v246-1111;workforce.ui.settlement.reviewFailed;en-US;Could not review period.
+v246-1112;workforce.ui.settlement.reviewFailed;ar-EG;تعذر مراجعة الفترة.
+v246-1113;workforce.ui.settlement.runFailed;en-US;The new calculation failed.
+v246-1114;workforce.ui.settlement.runFailed;ar-EG;فشلت المحاولة الجديدة.
+v246-1115;workforce.ui.settlement.runSuccess;en-US;Operation succeeded
+v246-1116;workforce.ui.settlement.runSuccess;ar-EG;نجحت العملية
+v246-1117;workforce.ui.settlement.serviceFee;en-US;Fee / service charge
+v246-1118;workforce.ui.settlement.serviceFee;ar-EG;عمولة / رسوم الخدمة
+v246-1119;workforce.ui.settlement.startDate;en-US;Start date *
+v246-1120;workforce.ui.settlement.startDate;ar-EG;تاريخ البداية *
+v246-1121;workforce.ui.settlement.statusApproved;en-US;Approved
+v246-1122;workforce.ui.settlement.statusApproved;ar-EG;معتمدة
+v246-1123;workforce.ui.settlement.statusCalculated;en-US;Calculated
+v246-1124;workforce.ui.settlement.statusCalculated;ar-EG;تم الاحتساب
+v246-1125;workforce.ui.settlement.statusDraft;en-US;Draft
+v246-1126;workforce.ui.settlement.statusDraft;ar-EG;مسودة
+v246-1127;workforce.ui.settlement.statusLocked;en-US;Locked
+v246-1128;workforce.ui.settlement.statusLocked;ar-EG;مقفلة
+v246-1129;workforce.ui.settlement.statusPaid;en-US;Paid
+v246-1130;workforce.ui.settlement.statusPaid;ar-EG;مصروفة
+v246-1131;workforce.ui.settlement.statusPosted;en-US;Posted
+v246-1132;workforce.ui.settlement.statusPosted;ar-EG;مرحلة
+v246-1133;workforce.ui.settlement.statusReviewed;en-US;Reviewed
+v246-1134;workforce.ui.settlement.statusReviewed;ar-EG;تمت المراجعة
+v246-1135;workforce.ui.settlement.summary;en-US;Result summary
+v246-1136;workforce.ui.settlement.summary;ar-EG;ملخص النتيجة
+v246-1137;workforce.ui.settlement.summaryDetails;en-US;Gross {gross} · Deductions {deductions} · Advances {advances} · Net {net}
+v246-1138;workforce.ui.settlement.summaryDetails;ar-EG;إجمالي {gross} · خصومات {deductions} · سلف {advances} · صافي {net}
+v246-1139;workforce.ui.settlement.title;en-US;Workforce and contractor settlement periods
+v246-1140;workforce.ui.settlement.title;ar-EG;فترات تسوية العمالة والمقاولين
+v246-1141;workforce.ui.settlement.version;en-US;Version
+v246-1142;workforce.ui.settlement.version;ar-EG;الإصدار
+v246-1143;workforce.ui.settlement.warning;en-US;Warning
+v246-1144;workforce.ui.settlement.warning;ar-EG;تحذير
+v246-1145;workforce.ui.settlement.warnings;en-US;Warnings
+v246-1146;workforce.ui.settlement.warnings;ar-EG;التحذيرات
+v246-1147;workforce.ui.settlement.workerGross;en-US;Total worker wages
+v246-1148;workforce.ui.settlement.workerGross;ar-EG;إجمالي أجور العمال
+v246-1149;workforce.ui.settlement.workerNet;en-US;Workers net
+v246-1150;workforce.ui.settlement.workerNet;ar-EG;صافي العمال
+v246-1151;workforce.ui.settlementDetail.accountingModel;en-US;Accounting model
+v246-1152;workforce.ui.settlementDetail.accountingModel;ar-EG;نموذج المحاسبة
+v246-1153;workforce.ui.settlementDetail.advanceDeduction;en-US;Advance deduction
+v246-1154;workforce.ui.settlementDetail.advanceDeduction;ar-EG;خصم السلف
+v246-1155;workforce.ui.settlementDetail.attendanceDays;en-US;Attendance days
+v246-1156;workforce.ui.settlementDetail.attendanceDays;ar-EG;أيام الحضور
+v246-1157;workforce.ui.settlementDetail.cancelInvoiceLink;en-US;Cancel invoice link
+v246-1158;workforce.ui.settlementDetail.cancelInvoiceLink;ar-EG;إلغاء ربط الفاتورة
+v246-1159;workforce.ui.settlementDetail.cancelPayment;en-US;Cancel payment entry
+v246-1160;workforce.ui.settlementDetail.cancelPayment;ar-EG;إلغاء تسجيل السداد
+v246-1161;workforce.ui.settlementDetail.confirmPayment;en-US;Confirm payment
+v246-1162;workforce.ui.settlementDetail.confirmPayment;ar-EG;تأكيد الصرف
+v246-1163;workforce.ui.settlementDetail.contractorName;en-US;Contractor name
+v246-1164;workforce.ui.settlementDetail.contractorName;ar-EG;اسم المقاول
+v246-1165;workforce.ui.settlementDetail.dailyRate;en-US;Daily rate
+v246-1166;workforce.ui.settlementDetail.dailyRate;ar-EG;فئة اليومية
+v246-1167;workforce.ui.settlementDetail.daysUnit;en-US;days
+v246-1168;workforce.ui.settlementDetail.daysUnit;ar-EG;يوم
+v246-1169;workforce.ui.settlementDetail.deductions;en-US;Deductions
+v246-1170;workforce.ui.settlementDetail.deductions;ar-EG;الخصومات
+v246-1171;workforce.ui.settlementDetail.financePostingStatus;en-US;Finance posting status
+v246-1172;workforce.ui.settlementDetail.financePostingStatus;ar-EG;حالة الترحيل للمالية
+v246-1173;workforce.ui.settlementDetail.gross;en-US;Gross
+v246-1174;workforce.ui.settlementDetail.gross;ar-EG;الإجمالي
+v246-1175;workforce.ui.settlementDetail.invoiceAmount;en-US;Invoice amount
+v246-1176;workforce.ui.settlementDetail.invoiceAmount;ar-EG;مبلغ الفاتورة
+v246-1177;workforce.ui.settlementDetail.invoiceDate;en-US;Invoice date *
+v246-1178;workforce.ui.settlementDetail.invoiceDate;ar-EG;تاريخ الفاتورة *
+v246-1179;workforce.ui.settlementDetail.invoiceFailed;en-US;Could not link the invoice.
+v246-1180;workforce.ui.settlementDetail.invoiceFailed;ar-EG;تعذر ربط الفاتورة.
+v246-1181;workforce.ui.settlementDetail.invoiceNumber;en-US;Invoice number *
+v246-1182;workforce.ui.settlementDetail.invoiceNumber;ar-EG;رقم الفاتورة *
+v246-1183;workforce.ui.settlementDetail.invoiceReference;en-US;Invoice number and reference
+v246-1184;workforce.ui.settlementDetail.invoiceReference;ar-EG;رقم الفاتورة والمرجع
+v246-1185;workforce.ui.settlementDetail.invoiceTitle;en-US;Link official contractor invoice
+v246-1186;workforce.ui.settlementDetail.invoiceTitle;ar-EG;ربط فاتورة المقاول الرسمية
+v246-1187;workforce.ui.settlementDetail.linkInvoice;en-US;Link contractor invoice
+v246-1188;workforce.ui.settlementDetail.linkInvoice;ar-EG;ربط فاتورة المقاول
+v246-1189;workforce.ui.settlementDetail.net;en-US;Net
+v246-1190;workforce.ui.settlementDetail.net;ar-EG;الصافي
+v246-1191;workforce.ui.settlementDetail.netPayable;en-US;Contractor net payable
+v246-1192;workforce.ui.settlementDetail.netPayable;ar-EG;صافي المستحق للمقاول
+v246-1193;workforce.ui.settlementDetail.noWorkerLines;en-US;No worker details exist for this settlement.
+v246-1194;workforce.ui.settlementDetail.noWorkerLines;ar-EG;لا توجد تفاصيل عمال لهذه التسوية.
+v246-1195;workforce.ui.settlementDetail.notLinked;en-US;Not linked
+v246-1196;workforce.ui.settlementDetail.notLinked;ar-EG;غير مربوطة
+v246-1197;workforce.ui.settlementDetail.notPosted;en-US;Not posted
+v246-1198;workforce.ui.settlementDetail.notPosted;ar-EG;غير مرحل
+v246-1199;workforce.ui.settlementDetail.paidAmount;en-US;Paid amount
+v246-1200;workforce.ui.settlementDetail.paidAmount;ar-EG;المبلغ المنصرف
+v246-1201;workforce.ui.settlementDetail.paymentAmount;en-US;Payment amount *
+v246-1202;workforce.ui.settlementDetail.paymentAmount;ar-EG;مبلغ الصرف *
+v246-1203;workforce.ui.settlementDetail.paymentDate;en-US;Payment date
+v246-1204;workforce.ui.settlementDetail.paymentDate;ar-EG;تاريخ الصرف
+v246-1205;workforce.ui.settlementDetail.paymentFailed;en-US;Could not record the payment.
+v246-1206;workforce.ui.settlementDetail.paymentFailed;ar-EG;تعذر تسجيل الصرف.
+v246-1207;workforce.ui.settlementDetail.paymentReference;en-US;Reference / cheque number
+v246-1208;workforce.ui.settlementDetail.paymentReference;ar-EG;رقم المرجع / الشيك
+v246-1209;workforce.ui.settlementDetail.paymentTitle;en-US;Record contractor payable payment
+v246-1210;workforce.ui.settlementDetail.paymentTitle;ar-EG;تسجيل صرف مستحقات للمقاول
+v246-1211;workforce.ui.settlementDetail.postFailed;en-US;Could not post the settlement to Finance.
+v246-1212;workforce.ui.settlementDetail.postFailed;ar-EG;تعذر ترحيل التسوية للمالية.
+v246-1213;workforce.ui.settlementDetail.postReason;en-US;Post contractor settlement wages and payables
+v246-1214;workforce.ui.settlementDetail.postReason;ar-EG;ترحيل أجور ومستحقات تسوية المقاول
+v246-1215;workforce.ui.settlementDetail.postToFinance;en-US;⚖ Post to Finance (payable entry)
+v246-1216;workforce.ui.settlementDetail.postToFinance;ar-EG;⚖ ترحيل للمالية (قيد المستحق)
+v246-1217;workforce.ui.settlementDetail.posted;en-US;Posted ({journal})
+v246-1218;workforce.ui.settlementDetail.posted;ar-EG;تم الترحيل ({journal})
+v246-1219;workforce.ui.settlementDetail.posting;en-US;Posting…
+v246-1220;workforce.ui.settlementDetail.posting;ar-EG;جارٍ الترحيل…
+v246-1221;workforce.ui.settlementDetail.recordPayment;en-US;Record payable payment
+v246-1222;workforce.ui.settlementDetail.recordPayment;ar-EG;تسجيل صرف مستحقات
+v246-1223;workforce.ui.settlementDetail.saveInvoiceLink;en-US;Save link
+v246-1224;workforce.ui.settlementDetail.saveInvoiceLink;ar-EG;حفظ الربط
+v246-1225;workforce.ui.settlementDetail.title;en-US;Contractor settlement details — {name}
+v246-1226;workforce.ui.settlementDetail.title;ar-EG;تفاصيل تسوية المقاول — {name}
+v246-1227;workforce.ui.settlementDetail.worker;en-US;Worker
+v246-1228;workforce.ui.settlementDetail.worker;ar-EG;العامل
+v246-1229;workforce.ui.settlementDetail.workerLinesTitle;en-US;Contractor worker wage details ({count})
+v246-1230;workforce.ui.settlementDetail.workerLinesTitle;ar-EG;تفاصيل أجور عمال المقاول ({count})
+v246-1231;workforce.ui.status;en-US;Status
+v246-1232;workforce.ui.status;ar-EG;الحالة
+v246-1233;workforce.ui.system;en-US;System
+v246-1234;workforce.ui.system;ar-EG;النظام
+v246-1235;workforce.ui.type;en-US;Type
+v246-1236;workforce.ui.type;ar-EG;النوع
+v246-1237;workforce.ui.unexpectedError;en-US;Unexpected error
+v246-1238;workforce.ui.unexpectedError;ar-EG;خطأ غير متوقع
+v246-1239;workforce.ui.worker;en-US;Worker
+v246-1240;workforce.ui.worker;ar-EG;عامل
+v246-1241;workforce.ui.workers.add;en-US;+ Add worker
+v246-1242;workforce.ui.workers.add;ar-EG;+ إضافة عامل جديد
+v246-1243;workforce.ui.workers.addTitle;en-US;Add worker
+v246-1244;workforce.ui.workers.addTitle;ar-EG;إضافة عامل جديد
+v246-1245;workforce.ui.workers.attendanceMode;en-US;Attendance method
+v246-1246;workforce.ui.workers.attendanceMode;ar-EG;طريقة الحضور
+v246-1247;workforce.ui.workers.biometric;en-US;Biometric
+v246-1248;workforce.ui.workers.biometric;ar-EG;بصمة
+v246-1249;workforce.ui.workers.categoriesFailed;en-US;Could not load categories
+v246-1250;workforce.ui.workers.categoriesFailed;ar-EG;تعذر تحميل الفئات
+v246-1251;workforce.ui.workers.categoriesLoadFailedDetail;en-US;Could not load worker categories. Try again.
+v246-1252;workforce.ui.workers.categoriesLoadFailedDetail;ar-EG;تعذر تحميل فئات العمال. أعد المحاولة.
+v246-1253;workforce.ui.workers.category;en-US;Category
+v246-1254;workforce.ui.workers.category;ar-EG;الفئة
+v246-1255;workforce.ui.workers.categoryInheritance;en-US;"New workers inherit the daily rate and work hours from the selected category; they can be edited afterward."
+v246-1256;workforce.ui.workers.categoryInheritance;ar-EG;عند إنشاء عامل جديد تُورث اليومية وساعات العمل من الفئة المختارة ويمكن تعديلهما بعد ذلك.
+v246-1257;workforce.ui.workers.categoryRequired;en-US;Worker category *
+v246-1258;workforce.ui.workers.categoryRequired;ar-EG;فئة العامل *
+v246-1259;workforce.ui.workers.codeRequired;en-US;Worker code *
+v246-1260;workforce.ui.workers.codeRequired;ar-EG;كود العامل *
+v246-1261;workforce.ui.workers.contractor;en-US;Contractor
+v246-1262;workforce.ui.workers.contractor;ar-EG;المقاول التابع له
+v246-1263;workforce.ui.workers.contractorRequired;en-US;Assigned contractor *
+v246-1264;workforce.ui.workers.contractorRequired;ar-EG;المقاول المكلف *
+v246-1265;workforce.ui.workers.createCategory;en-US;+ Create worker category
+v246-1266;workforce.ui.workers.createCategory;ar-EG;+ إنشاء فئة عمال
+v246-1267;workforce.ui.workers.createdSuccess;en-US;Worker created successfully
+v246-1268;workforce.ui.workers.createdSuccess;ar-EG;تم إنشاء العامل بنجاح
+v246-1269;workforce.ui.workers.editTitle;en-US;Edit worker
+v246-1270;workforce.ui.workers.editTitle;ar-EG;تعديل بيانات العامل
+v246-1271;workforce.ui.workers.eyebrow;en-US;Worker management
+v246-1272;workforce.ui.workers.eyebrow;ar-EG;إدارة العمال
+v246-1273;workforce.ui.workers.hours;en-US;Work hours
+v246-1274;workforce.ui.workers.hours;ar-EG;ساعات العمل
+v246-1275;workforce.ui.workers.loadingCategories;en-US;Loading categories...
+v246-1276;workforce.ui.workers.loadingCategories;ar-EG;جارٍ تحميل الفئات...
+v246-1277;workforce.ui.workers.nameRequired;en-US;Full name *
+v246-1278;workforce.ui.workers.nameRequired;ar-EG;الاسم الكامل *
+v246-1279;workforce.ui.workers.nationalId;en-US;National ID
+v246-1280;workforce.ui.workers.nationalId;ar-EG;الرقم القومي
+v246-1281;workforce.ui.workers.noCategories;en-US;No worker categories are available
+v246-1282;workforce.ui.workers.noCategories;ar-EG;لا توجد فئات عمال متاحة
+v246-1283;workforce.ui.workers.noCategoriesHelp;en-US;No worker categories are currently available. Create a category before adding a worker.
+v246-1284;workforce.ui.workers.noCategoriesHelp;ar-EG;لا توجد فئات عمال متاحة حالياً. أنشئ فئة أولاً حتى تتمكن من إضافة العامل.
+v246-1285;workforce.ui.workers.phone;en-US;Phone number
+v246-1286;workforce.ui.workers.phone;ar-EG;رقم الهاتف
+v246-1287;workforce.ui.workers.rateHoursError;en-US;Daily rate cannot be negative and work hours must be greater than zero.
+v246-1288;workforce.ui.workers.rateHoursError;ar-EG;اليومية يجب ألا تكون سالبة وساعات العمل يجب أن تكون أكبر من صفر.
+v246-1289;workforce.ui.workers.requiredError;en-US;Worker code, name, contractor, and category are required.
+v246-1290;workforce.ui.workers.requiredError;ar-EG;كود العامل والاسم والمقاول والفئة حقول إلزامية.
+v246-1291;workforce.ui.workers.saveFailed;en-US;Could not save the worker. Try again.
+v246-1292;workforce.ui.workers.saveFailed;ar-EG;تعذر حفظ العامل. أعد المحاولة.
+v246-1293;workforce.ui.workers.selectCategory;en-US;Select category
+v246-1294;workforce.ui.workers.selectCategory;ar-EG;اختر الفئة
+v246-1295;workforce.ui.workers.selectContractor;en-US;Select contractor
+v246-1296;workforce.ui.workers.selectContractor;ar-EG;اختر المقاول
+v246-1297;workforce.ui.workers.standardHoursRequired;en-US;Standard daily hours *
+v246-1298;workforce.ui.workers.standardHoursRequired;ar-EG;ساعات اليوم القياسية *
+v246-1299;workforce.ui.workers.title;en-US;Daily and temporary worker register
+v246-1300;workforce.ui.workers.title;ar-EG;سجل العمال اليوميين والمؤقتين
+v246-1301;workforce.ui.workers.updatedSuccess;en-US;Worker updated successfully
+v246-1302;workforce.ui.workers.updatedSuccess;ar-EG;تم تحديث بيانات العامل بنجاح
+v246-1303;workforce.ui.workers.verifyFailed;en-US;The save request completed, but the worker did not appear after refreshing the data.
+v246-1304;workforce.ui.workers.verifyFailed;ar-EG;تم إرسال طلب الحفظ لكن العامل لم يظهر بعد إعادة تحميل البيانات.

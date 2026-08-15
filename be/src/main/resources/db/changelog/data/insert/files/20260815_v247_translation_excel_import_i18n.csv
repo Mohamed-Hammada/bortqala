@@ -41,3 +41,12 @@ v247-en-020;I18N_IMPORT_DUPLICATE_KEYS;en-US;The Excel file contains duplicate t
 v247-ar-020;I18N_IMPORT_DUPLICATE_KEYS;ar-EG;يحتوي ملف Excel على مفاتيح ترجمة مكررة. احذف التكرارات ثم أعد المحاولة.
 v247-en-021;I18N_IMPORT_INVALID_FILE;en-US;The uploaded Excel file could not be read. Verify that the workbook is valid and try again.
 v247-ar-021;I18N_IMPORT_INVALID_FILE;ar-EG;تعذر قراءة ملف Excel المرفوع. تحقق من سلامة الملف ثم أعد المحاولة.
+v247-en-022;I18N_IMPORT_EMPTY_FILE;en-US;The uploaded Excel file is empty.
+v247-ar-022;I18N_IMPORT_EMPTY_FILE;ar-EG;ملف Excel المرفوع فارغ.
+v247-en-023;I18N_IMPORT_MISSING_HEADER;en-US;The uploaded Excel file is missing a header row.
+v247-ar-023;I18N_IMPORT_MISSING_HEADER;ar-EG;ملف Excel المرفوع لا يحتوي على صف عناوين.
+v247-en-024;I18N_INVALID_PAGE;en-US;Page index must not be negative.
+v247-ar-024;I18N_INVALID_PAGE;ar-EG;رقم الصفحة يجب ألا يكون سالبًا.
+v247-en-025;I18N_INVALID_PAGE_SIZE;en-US;Page size must be between 1 and 200.
+v247-ar-025;I18N_INVALID_PAGE_SIZE;ar-EG;حجم الصفحة يجب أن يكون بين 1 و 200.
+

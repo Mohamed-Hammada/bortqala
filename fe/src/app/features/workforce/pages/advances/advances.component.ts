@@ -295,7 +295,21 @@ import { ActivatedRoute } from '@angular/router';
             <div class="form-group"><label>{{ i18n.t('workforce.ui.advances.defaultDeferral') }}</label><input type="number" min="0" max="12" [(ngModel)]="policyForm.deferralPeriods" name="policyDeferral" class="form-input" /></div>
             <div class="form-group"><label>{{ i18n.t('workforce.ui.advances.policyStart') }}</label><input type="date" [(ngModel)]="policyForm.effectiveFrom" name="policyEffectiveFrom" class="form-input" /></div>
             <div class="form-group"><label>{{ i18n.t('workforce.ui.advances.policyEnd') }}</label><input type="date" [(ngModel)]="policyForm.effectiveTo" name="policyEffectiveTo" class="form-input" /></div>
-            <label class="form-group"><span>{{ i18n.t('workforce.ui.status') }}</span><input type="checkbox" [(ngModel)]="policyForm.active" name="policyActive" /> {{ i18n.t('workforce.ui.advances.enabled') }}</label>
+            <div class="form-group policy-status-field col-span-2">
+              <span class="policy-status-title">{{ i18n.t('workforce.ui.status') }}</span>
+              <label class="policy-status-control">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="policyForm.active"
+                  name="policyActive"
+                  class="policy-status-checkbox"
+                  role="switch"
+                  [attr.aria-checked]="policyForm.active"
+                />
+                <span class="policy-status-track" aria-hidden="true"><span class="policy-status-thumb"></span></span>
+                <span class="policy-status-text">{{ policyForm.active ? i18n.t('workforce.ui.advances.enabled') : i18n.t('workforce.ui.advances.disabled') }}</span>
+              </label>
+            </div>
           </div>
         </form>
         <div modal-actions class="modal-actions-bar"><button type="button" class="btn btn-primary" [disabled]="saving()" (click)="savePolicy()">{{ i18n.t('workforce.ui.advances.savePolicy') }}</button><button type="button" class="btn btn-secondary" (click)="policyModalOpen.set(false)">{{ i18n.t('workforce.ui.cancel') }}</button></div>
@@ -474,6 +488,18 @@ import { ActivatedRoute } from '@angular/router';
     .col-span-2 { grid-column: span 2; }
     .form-group { display: flex; flex-direction: column; gap: 0.375rem; }
     .form-group label { font-weight: 600; font-size: 0.8125rem; color: var(--secondary-text); }
+    .policy-status-field { grid-column: 1 / -1; min-width: 0; }
+    .policy-status-title { font-weight: 600; font-size: 0.8125rem; color: var(--secondary-text); }
+    .policy-status-control { width: 100%; min-height: 3rem; box-sizing: border-box; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 0.75rem; padding: 0.625rem 0.75rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); cursor: pointer; transition: border-color 120ms ease, background-color 120ms ease; }
+    .policy-status-control:hover { border-color: color-mix(in srgb, #d97706 55%, var(--line)); background: color-mix(in srgb, #d97706 4%, var(--surface)); }
+    .policy-status-checkbox { position: absolute; inline-size: 1px; block-size: 1px; margin: 0; opacity: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+    .policy-status-track { position: relative; direction: ltr; inline-size: 2.75rem; block-size: 1.5rem; flex: 0 0 2.75rem; border: 1px solid color-mix(in srgb, var(--secondary-text) 25%, var(--line)); border-radius: 999px; background: var(--line); transition: background-color 140ms ease, border-color 140ms ease; }
+    .policy-status-thumb { position: absolute; inset-block-start: 0.1875rem; inset-inline-start: 0.1875rem; inline-size: 1rem; block-size: 1rem; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.24); transition: transform 140ms ease; }
+    .policy-status-checkbox:checked + .policy-status-track { background: #d97706; border-color: #d97706; }
+    .policy-status-checkbox:checked + .policy-status-track .policy-status-thumb { transform: translateX(1.25rem); }
+    .policy-status-checkbox:focus-visible + .policy-status-track { outline: 3px solid color-mix(in srgb, #d97706 35%, transparent); outline-offset: 3px; }
+    .policy-status-text { color: var(--ink); font-size: 0.875rem; font-weight: 700; line-height: 1.4; }
+    @media (prefers-reduced-motion: reduce) { .policy-status-control, .policy-status-track, .policy-status-thumb { transition: none; } }
     .form-input { padding: 0.625rem; border: 1px solid var(--line); border-radius: 8px; font-size: 0.875rem; }
     .summary-box { background: var(--surface-muted); border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.875rem; color: var(--secondary-text); }
     .modal-actions-bar { width: 100%; display: flex; gap: 0.75rem; justify-content: flex-start; }
@@ -819,10 +845,7 @@ export class AdvancesComponent implements OnInit {
 
   getFrequencyLabel(freq: string): string { const keys:Record<string,string>={HALF_MONTH:'workforce.ui.advances.halfMonthly',MONTHLY:'workforce.ui.advances.monthly',WEEKLY:'workforce.ui.advances.weekly'}; return keys[freq] ? this.i18n.t(keys[freq]) : freq; }
 
-  getStatusLabel(status: string): string {
-    const m: Record<string, string> = { ACTIVE: 'نشطة', PAID_OFF: 'مسدّدة', SUSPENDED: 'موقوفة' };
-    return m[status] ?? status;
-  }
+  getStatusLabel(status: string): string { const keys:Record<string,string>={ACTIVE:'workforce.ui.advances.activeStatus',PAID_OFF:'workforce.ui.advances.paidOff',SUSPENDED:'workforce.ui.advances.suspended',PAUSED:'workforce.ui.advances.suspended'}; return keys[status] ? this.i18n.t(keys[status]) : status; }
 
   recipientName(advance: WorkforceAdvance): string {
     if (advance.recipientType === 'EMPLOYEE') return advance.employeeName ?? '—';

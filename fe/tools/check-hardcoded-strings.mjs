@@ -55,6 +55,10 @@ const ALLOWED_EXACT = new Set([
   'v',
   'yyyy-MM-dd HH:mm',
   'yyyy-MM-dd HH:mm:ss',
+  '&nbsp;',
+  'v',
+  'yyyy-MM-dd HH:mm',
+  'yyyy-MM-dd HH:mm:ss',
 ]);
 
 function findTagEnd(source, start) {

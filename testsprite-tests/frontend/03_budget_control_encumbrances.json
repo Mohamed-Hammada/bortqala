@@ -1,0 +1,25 @@
+{
+  "projectId": "e95d5ad8-8299-4359-9982-008c2132fd7a",
+  "type": "frontend",
+  "name": "Budget control and encumbrance tracking workbench",
+  "description": "User opens the budget management workspace, views department allocated vs encumbered amounts, and exports budget status to Excel.",
+  "priority": "p1",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to Budgets under the Finance section in the main navigation menu"
+    },
+    {
+      "type": "assertion",
+      "description": "Verify the Budgets workbench loads displaying department budget cards with progress indicators for encumbered and remaining funds"
+    },
+    {
+      "type": "action",
+      "description": "Switch to the Encumbrances tab to inspect active purchase order encumbrance log entries"
+    },
+    {
+      "type": "assertion",
+      "description": "Verify encumbrance table displays document reference, status, initial amount, and remaining balance"
+    }
+  ]
+}

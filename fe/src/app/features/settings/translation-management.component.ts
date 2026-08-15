@@ -135,21 +135,13 @@ export class TranslationManagementComponent implements OnDestroy {
     }
 
     if (!/\.(xlsx|xls)$/i.test(file.name)) {
-      this.notification.error(this.i18n.t(
-        'translations.invalidExcelFile',
-        undefined,
-        'اختر ملف Excel بصيغة XLSX أو XLS.',
-      ));
+      this.notification.error(this.i18n.t('translations.invalidExcelFile'));
       this.clearImportFile(input ?? undefined);
       return;
     }
 
     if (file.size > TranslationManagementComponent.MAX_IMPORT_FILE_BYTES) {
-      this.notification.error(this.i18n.t(
-        'translations.excelFileTooLarge',
-        undefined,
-        'حجم ملف Excel يجب ألا يتجاوز 5 ميجابايت.',
-      ));
+      this.notification.error(this.i18n.t('translations.excelFileTooLarge'));
       this.clearImportFile(input ?? undefined);
       return;
     }
@@ -194,7 +186,6 @@ export class TranslationManagementComponent implements OnDestroy {
             updated: result.updatedCount,
             unchanged: result.unchangedCount,
           },
-          `تم استيراد ${result.importedCount} ترجمة: ${result.createdCount} جديدة، ${result.updatedCount} محدثة، ${result.unchangedCount} بدون تغيير.`,
         ),
       );
     } catch (error) {

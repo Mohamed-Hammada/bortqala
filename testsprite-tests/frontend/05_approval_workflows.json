@@ -1,0 +1,25 @@
+{
+  "projectId": "e95d5ad8-8299-4359-9982-008c2132fd7a",
+  "type": "frontend",
+  "name": "Configurable approval workflow engine and task decisions",
+  "description": "User views pending approval tasks, filters by priority and status, and inspects approval workflow definitions.",
+  "priority": "p1",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to Approvals in the top navigation bar or menu"
+    },
+    {
+      "type": "assertion",
+      "description": "Verify Pending Approvals workbench renders overdue badge counts and action buttons for approve and reject"
+    },
+    {
+      "type": "action",
+      "description": "Navigate to Workflow Definitions page under Admin settings"
+    },
+    {
+      "type": "assertion",
+      "description": "Verify workflow definition rules, multi-step approval levels, and role permissions are displayed"
+    }
+  ]
+}

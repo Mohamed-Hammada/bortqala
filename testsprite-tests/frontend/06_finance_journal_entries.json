@@ -1,0 +1,25 @@
+{
+  "projectId": "e95d5ad8-8299-4359-9982-008c2132fd7a",
+  "type": "frontend",
+  "name": "Finance general ledger journal entries and document numbering",
+  "description": "User views General Ledger journal entries, debit/credit balance validations, and document numbering settings.",
+  "priority": "p1",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to General Ledger under the Finance menu"
+    },
+    {
+      "type": "assertion",
+      "description": "Verify Journal Entries list displays entry number, posting date, total debit, total credit, and status"
+    },
+    {
+      "type": "action",
+      "description": "Click on Document Numbering Settings button in the toolbar"
+    },
+    {
+      "type": "assertion",
+      "description": "Verify document numbering modal opens with automatic prefix, sequence, and year fields"
+    }
+  ]
+}
