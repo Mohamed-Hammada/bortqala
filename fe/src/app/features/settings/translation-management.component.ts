@@ -8,6 +8,7 @@ import { I18nService, SupportedLocale } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
+import { SampleTemplateService } from '../../core/sample-template.service';
 
 interface AppOption { id: string; code: string; name: string; active: boolean; }
 
@@ -51,6 +52,7 @@ export class TranslationManagementComponent implements OnDestroy {
   private readonly auth = inject(AuthService);
   readonly i18n = inject(I18nService);
   private readonly notification = inject(NotificationService);
+  private readonly sampleTemplates = inject(SampleTemplateService);
 
   readonly apps = signal<AppOption[]>([]);
   readonly rows = signal<TranslationRow[]>([]);
@@ -193,6 +195,10 @@ export class TranslationManagementComponent implements OnDestroy {
     } finally {
       this.importing.set(false);
     }
+  }
+
+  downloadSampleTemplate(): void {
+    void this.sampleTemplates.translations().catch(error => this.notification.error(apiErrorMessage(error, this.i18n)));
   }
 
   async save(row: TranslationRow): Promise<void> {

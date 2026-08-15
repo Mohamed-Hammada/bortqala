@@ -6,8 +6,9 @@ import { WorkforceService } from '../../data-access/workforce.service';
 import { WorkforceImportBatch, WorkforceImportCommit, WorkforceImportValidation } from '../../models/workforce.models';
 import { NotificationService } from '../../../../core/notification.service';
 import { I18nService } from '../../../../core/i18n.service';
-import { downloadBlob, exportCsv } from '../../../../core/download';
+import { downloadBlob } from '../../../../core/download';
 import { apiErrorDetail } from '../../../../core/api-error';
+import { SampleTemplateService } from '../../../../core/sample-template.service';
 
 @Component({
   selector: 'app-reports-import',
@@ -29,6 +30,7 @@ import { apiErrorDetail } from '../../../../core/api-error';
             <span class="selected-file-name">{{ selectedFile()?.name || i18n.t('reportsImport.ui.noFileChosen') }}</span>
             <button class="btn primary" type="button" [disabled]="!selectedFile() || busy()" (click)="upload()">{{ busy() ? i18n.t('reportsImport.ui.uploading') : i18n.t('reportsImport.ui.uploadOriginal') }}</button>
             <button class="btn" type="button" (click)="downloadTemplate()">{{ i18n.t('reportsImport.downloadTemplate') }}</button>
+            <button class="btn" type="button" (click)="downloadWorkersTemplate()">{{ i18n.t('common.downloadTemplate') }}</button>
           </section>
 
           @if (batch(); as current) {
@@ -65,6 +67,7 @@ import { apiErrorDetail } from '../../../../core/api-error';
 export class ReportsImportComponent implements OnInit {
   private readonly service = inject(WorkforceService);
   private readonly notification = inject(NotificationService);
+  private readonly sampleTemplates = inject(SampleTemplateService);
   readonly i18n = inject(I18nService);
   readonly selectedFile = signal<File | null>(null);
   readonly batch = signal<WorkforceImportBatch | null>(null);
@@ -89,18 +92,14 @@ export class ReportsImportComponent implements OnInit {
   downloadErrors(item: WorkforceImportBatch): void { this.service.downloadImportErrors(item.id).subscribe({ next: blob => downloadBlob(blob, `workforce-import-errors-${item.id}.xlsx`), error: e => this.fail(e) }); }
   downloadOriginal(item: WorkforceImportBatch): void { this.service.downloadImportOriginal(item.id).subscribe({ next: blob => downloadBlob(blob, item.fileName), error: e => this.fail(e) }); }
   downloadTemplate(): void {
-    const columns = [
-      { key: 'workerCode', label: this.i18n.t('reportsImport.ui.workerCode') },
-      { key: 'workDate', label: this.i18n.t('reportsImport.ui.workDate') },
-      { key: 'attendanceValue', label: this.i18n.t('reportsImport.ui.attendanceValue') }
-    ];
-    const sampleRows = [
-      { workerCode: 'EMP-001', workDate: '2026-07-31', attendanceValue: '1' },
-      { workerCode: 'EMP-002', workDate: '2026-07-31', attendanceValue: '0.5' },
-      { workerCode: 'EMP-003', workDate: '2026-07-31', attendanceValue: '0' }
-    ];
-    exportCsv(sampleRows, columns, 'workforce-report-import-template.csv');
-    this.notification.success(this.i18n.t('reportsImport.templateDownloadSuccess'));
+    void this.sampleTemplates.workforceAttendance()
+      .then(() => this.notification.success(this.i18n.t('reportsImport.templateDownloadSuccess')))
+      .catch(e => this.fail(e));
+  }
+  downloadWorkersTemplate(): void {
+    void this.sampleTemplates.workforceWorkers()
+      .then(() => this.notification.success(this.i18n.t('reportsImport.templateDownloadSuccess')))
+      .catch(e => this.fail(e));
   }
   mappingComplete(): boolean { return Boolean(this.mapping.workerCode && this.mapping.workDate && this.mapping.attendanceValue); }
   statusLabel(status: string): string { const keys: Record<string,string>={UPLOADED:'reportsImport.ui.status.uploaded',MAPPED:'reportsImport.ui.status.mapped',VALIDATED:'reportsImport.ui.status.validated',READY:'reportsImport.ui.status.ready',IMPORTED:'reportsImport.ui.status.imported',REVERSED:'reportsImport.ui.status.reversed'}; return keys[status] ? this.i18n.t(keys[status]) : status; }

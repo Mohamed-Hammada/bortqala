@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { downloadBlob } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
+import { SampleTemplateService } from '../../core/sample-template.service';
 import {
   SmartImportCommitResult,
   SmartImportPreview,
@@ -15,6 +16,7 @@ import {
 export class SmartImportStore {
   private readonly http = inject(HttpClient);
   private readonly i18n = inject(I18nService);
+  private readonly sampleTemplates = inject(SampleTemplateService);
 
   readonly workflows = signal<SmartImportWorkflow[]>([]);
   readonly preview = signal<SmartImportPreview | null>(null);
@@ -80,6 +82,20 @@ export class SmartImportStore {
   async downloadTemplate(workflow: SmartImportWorkflow, sample: boolean): Promise<void> {
     this.error.set(null);
     try {
+      if (sample) {
+        const entityMap: Record<string, 'EMPLOYEE_MASTER' | 'CHART_OF_ACCOUNTS' | 'BUSINESS_PARTIES' | 'INVENTORY_ITEMS' | 'BOM_MASTER'> = {
+          employees: 'EMPLOYEE_MASTER',
+          accounts: 'CHART_OF_ACCOUNTS',
+          parties: 'BUSINESS_PARTIES',
+          items: 'INVENTORY_ITEMS',
+          'bom-routing': 'BOM_MASTER',
+        };
+        const entityType = entityMap[workflow.key];
+        if (entityType) {
+          await this.sampleTemplates.smartImport(entityType, workflow.templateFileName);
+          return;
+        }
+      }
       const blob = await firstValueFrom(
         this.http.get(`/api/v1/smart-imports/${workflow.key}/template.xlsx?sample=${sample}`, { responseType: 'blob' }),
       );

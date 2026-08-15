@@ -234,6 +234,13 @@
         }
       </div>
       <button
+        type="button"
+        class="button secondary"
+        (click)="downloadTemplate()"
+      >
+        ⇩ {{ i18n.t('imports.downloadTemplate') }}
+      </button>
+      <button
         class="button secondary submit-import-btn"
         (click)="previewFile()"
         [disabled]="!file() || !selectedSourceId() || store.loading()"

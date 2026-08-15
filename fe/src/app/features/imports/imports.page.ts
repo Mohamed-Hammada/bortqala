@@ -11,7 +11,7 @@ import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.dir
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { FormsModule } from '@angular/forms';
 import { BiometricDevice, BiometricSource, BiometricSourceType } from './imports.models';
-import { exportCsv } from '../../core/download';
+import { SampleTemplateService } from '../../core/sample-template.service';
 
 @Component({
   selector: 'app-imports-page',
@@ -25,6 +25,7 @@ export class ImportsPage {
   readonly store = inject(ImportsStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
+  readonly sampleTemplates = inject(SampleTemplateService);
   readonly file = signal<File | null>(null);
   readonly isDragging = signal(false);
   readonly selectedSourceId = signal('');
@@ -52,18 +53,9 @@ export class ImportsPage {
   readonly showSourceModal = signal(false);
 
   downloadTemplate(): void {
-    const columns = [
-      { key: 'deviceUserId', label: this.i18n.t('imports.templateHeaderDeviceUserId', {}) },
-      { key: 'punchedAt', label: this.i18n.t('imports.templateHeaderPunchedAt', {}) },
-      { key: 'employeeName', label: this.i18n.t('imports.templateHeaderEmployeeName', {}) }
-    ];
-    const sampleRows = [
-      { deviceUserId: '101', punchedAt: '2026-07-31 08:30:00', employeeName: '' },
-      { deviceUserId: '101', punchedAt: '2026-07-31 17:00:00', employeeName: '' },
-      { deviceUserId: '102', punchedAt: '2026-07-31 08:45:00', employeeName: '' }
-    ];
-    exportCsv(sampleRows, columns, this.i18n.t('imports.templateFileName', {}));
-    this.notification.success(this.i18n.t('imports.templateDownloadSuccess', {}));
+    void this.sampleTemplates.attendance()
+      .then(() => this.notification.success(this.i18n.t('imports.templateDownloadSuccess', {})))
+      .catch(() => this.notification.error(this.i18n.t('common.loadError')));
   }
 
   constructor() {
