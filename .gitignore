@@ -39,4 +39,3 @@ cloudflared-*
 *.bak
 *.orig
 desktop/src-tauri/resources/backend/bemo-erp.exe
-/shared
