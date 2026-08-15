@@ -1,0 +1,33 @@
+<div class="enterprise-toolbar">
+  <div class="main-actions">
+    <button type="button" (click)="togglePanel('export')">{{ i18n.t('enterpriseTable.export', undefined, 'Export') }}</button>
+    <button type="button" (click)="togglePanel('columns')">{{ i18n.t('enterpriseTable.columns', undefined, 'Columns') }}</button>
+    <button type="button" (click)="togglePanel('presets')">{{ i18n.t('enterpriseTable.savedFilters', undefined, 'Saved filters') }}</button>
+  </div>
+  @if (selectedRows.length > 0 && bulkActions.length > 0) {
+    <div class="bulk-bar"><strong>{{ selectedRows.length }} {{ i18n.t('enterpriseTable.selected', undefined, 'selected') }}</strong>
+      @for (action of bulkActions; track action.key) { <button type="button" [disabled]="action.disabled" (click)="requestBulkAction(action)">{{ action.label }}</button> }
+    </div>
+  }
+  @if (openPanel() === 'export') {
+    <div class="panel">
+      <button type="button" [disabled]="exporting()" (click)="exportRows('current')">{{ i18n.t('enterpriseTable.exportCurrent', undefined, 'Export current view') }}</button>
+      <button type="button" [disabled]="exporting() || allRows === null" (click)="exportRows('all')">{{ i18n.t('enterpriseTable.exportAll', undefined, 'Export all records') }}</button>
+      <button type="button" [disabled]="exporting() || selectedRows.length === 0" (click)="exportRows('selected')">{{ i18n.t('enterpriseTable.exportSelected', undefined, 'Export selected rows') }}</button>
+      <button type="button" [disabled]="exporting() || summaryRows.length === 0" (click)="exportRows('summary')">{{ i18n.t('enterpriseTable.exportSummary', undefined, 'Export summary / matrix') }}</button>
+      @if (exportError()) { <p class="error">{{ exportError() }}</p> }
+    </div>
+  }
+  @if (openPanel() === 'columns') {
+    <div class="panel columns">
+      @for (column of columns; track column.key) { <label><input type="checkbox" [checked]="visible(column)" (change)="toggleColumn(column.key)" /> {{ column.label }}</label> }
+    </div>
+  }
+  @if (openPanel() === 'presets') {
+    <div class="panel presets">
+      <div class="save-row"><input #nameInput [value]="presetName()" (input)="presetName.set(nameInput.value)" [placeholder]="i18n.t('enterpriseTable.presetName', undefined, 'Filter view name')" />
+        <button type="button" [disabled]="!presetName().trim()" (click)="savePreset()">{{ i18n.t('common.save', undefined, 'Save') }}</button></div>
+      @for (preset of presets(); track preset.name) { <div class="preset-row"><button type="button" (click)="applyPreset(preset)">{{ preset.name }}</button><button type="button" (click)="deletePreset(preset.name)" aria-label="Delete">×</button></div> }
+    </div>
+  }
+</div>

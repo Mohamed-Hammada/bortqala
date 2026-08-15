@@ -369,3 +369,6 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260815_v247_translation_excel_import_i18n.yaml
   - include:
       file: db/changelog/data/insert/20260815_v248_business_report_catalog_i18n.yaml
+  - include:
+      file: db/changelog/data/insert/20260815_v249_data_exchange_i18n.yaml
+      relativeToChangelogFile: false
