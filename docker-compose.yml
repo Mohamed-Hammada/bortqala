@@ -1,9 +1,7 @@
 name: bemo-erp
-
 # Development baseline. Secrets have dev fallbacks and services are exposed for
 # local tooling. Production overrides: `docker compose -f docker-compose.yml
 # -f docker-compose.prod.yml up -d` (see docker-compose.prod.yml).
-
 services:
   # 1. PostgreSQL Database Service
   db:
@@ -25,7 +23,6 @@ services:
       retries: 5
     networks:
       - internal
-
 
   # Backend-owned vendor/protocol adapter. Angular never calls this directly.
   device-hub:
@@ -72,20 +69,20 @@ services:
       # Internal Spring Boot -> backend device module communication.
       BEMO_DEVICE_HUB_BASE_URL: http://device-hub:8090
       DEVICE_HUB_API_KEY: ${DEVICE_HUB_API_KEY:-}
+      # Web Push. The fallback VAPID pair below is intentionally development-only.
+      # Production compose requires an explicit, private key pair.
+      HR_WEB_PUSH_ENABLED: ${HR_WEB_PUSH_ENABLED:-true}
+      HR_WEB_PUSH_PUBLIC_KEY: ${HR_WEB_PUSH_PUBLIC_KEY:-BGMHGzdrTGM-gl0Mz9N3Vxa4ikgTuVpBkuRtliKK135FS-TYaCGmUzMSSpfgt4womxH-In5uo9dhg8NowHPBp9c}
+      HR_WEB_PUSH_PRIVATE_KEY: ${HR_WEB_PUSH_PRIVATE_KEY:-jdl2o2sjy6-fXiu4RqynsTTdnfjwbFYbQibGokehV10}
+      HR_WEB_PUSH_SUBJECT: ${HR_WEB_PUSH_SUBJECT:-mailto:admin@bemo-erp.local}
+      HR_WEB_PUSH_TTL_SECONDS: ${HR_WEB_PUSH_TTL_SECONDS:-86400}
       # Only the frontend proxy (on the internal network) may supply X-Forwarded-For.
       # Never use 0.0.0.0/0 here: it would let any client spoof its IP address.
       HR_SECURITY_TRUSTED_PROXIES: ${HR_SECURITY_TRUSTED_PROXIES:-10.42.0.0/24}
-      # Web Push (VAPID)
-      HR_WEB_PUSH_ENABLED: ${HR_WEB_PUSH_ENABLED:-true}
-      HR_WEB_PUSH_PUBLIC_KEY: ${HR_WEB_PUSH_PUBLIC_KEY:-BL-bzM8FHFmA40bnpCUe12VFdT9FvmGCrRLKlXzWgHlPAobdCTtgh3GfV9x15nqS2BqrBmnQ2gnyBEbf_TwfpNo}
-      HR_WEB_PUSH_PRIVATE_KEY: ${HR_WEB_PUSH_PRIVATE_KEY:-78ruUuxQ9RnhtBeqzUYv3SPsFtEkTDGw0Q8o9JLuC0s}
-      HR_WEB_PUSH_SUBJECT: ${HR_WEB_PUSH_SUBJECT:-mailto:admin@bemo-erp.local}
-      HR_WEB_PUSH_TTL_SECONDS: ${HR_WEB_PUSH_TTL_SECONDS:-86400}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     networks:
       - internal
-
   # 3. Angular Frontend (Nginx Web Server & Reverse Proxy)
   frontend:
     build:

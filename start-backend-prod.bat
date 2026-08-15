@@ -5,12 +5,12 @@ echo Starting Bemo ERP Spring Boot Backend - PROD (Port 8080)
 echo   Database : bemo_erp_prod (localhost:5432)
 echo   Profile  : prod
 echo   Demo no-login SUPER_ADMIN link: DISABLED
+echo   Entitlement defaults: ALL IMPLEMENTED FEATURES ENABLED
 echo ========================================================
 echo.
 
 set "JAVA_HOME=C:\Users\wolfn\scoop\apps\openjdk26\current"
 set "PATH=%JAVA_HOME%\bin;%PATH%"
-
 rem ==== Spring profile (prod - no secret fallbacks, fails fast) ====
 set "SPRING_PROFILES_ACTIVE=prod"
 
@@ -21,7 +21,6 @@ set "DB_PASSWORD=root"
 
 rem Allow both local Angular and the Cloudflare domain
 set "HR_CORS_ALLOWED_ORIGINS=http://localhost:4200,http://127.0.0.1:4200,https://app.eysawy.dpdns.org"
-
 rem Respect X-Forwarded-Proto and other Cloudflare proxy headers
 set "SERVER_FORWARD_HEADERS_STRATEGY=framework"
 
@@ -32,7 +31,6 @@ set "HR_BOOTSTRAP_ADMIN_USERNAME=admin"
 set "HR_BOOTSTRAP_ADMIN_PASSWORD=Admin@12345"
 set "HR_BOOTSTRAP_SUPER_ADMIN_USERNAME=superadmin"
 set "HR_BOOTSTRAP_SUPER_ADMIN_PASSWORD=SuperSameh@12345"
-
 rem ==== Secrets - the prod profile has NO fallbacks, so these are required ====
 set "HR_JWT_SECRET=local-development-jwt-secret-key-32bytes-minimum"
 set "HR_DEVICE_CREDENTIALS_SECRET=ZGV2aWNlLWNyZWRlbnRpYWxzLTMyLWJ5dGVzLWtleSE="
@@ -40,22 +38,29 @@ set "HR_JWT_ISSUER=bemo-erp-prod"
 set "HR_COMPANY_ZONE=Africa/Cairo"
 rem WARNING: override HR_JWT_SECRET and HR_DEVICE_CREDENTIALS_SECRET with unique
 rem production values. Keep them out of version control.
-
-rem ==== Web Push (PROD - configure with real VAPID keys) ====
-if not defined HR_WEB_PUSH_ENABLED set "HR_WEB_PUSH_ENABLED=false"
-if not defined HR_WEB_PUSH_PUBLIC_KEY set "HR_WEB_PUSH_PUBLIC_KEY="
-if not defined HR_WEB_PUSH_PRIVATE_KEY set "HR_WEB_PUSH_PRIVATE_KEY="
-if not defined HR_WEB_PUSH_SUBJECT set "HR_WEB_PUSH_SUBJECT="
+rem ==== Web Push (PROD - enabled, but real VAPID credentials are mandatory) ====
+if not defined HR_WEB_PUSH_ENABLED set "HR_WEB_PUSH_ENABLED=true"
 if not defined HR_WEB_PUSH_TTL_SECONDS set "HR_WEB_PUSH_TTL_SECONDS=86400"
-
+if not defined HR_WEB_PUSH_PUBLIC_KEY (
+ echo [ERROR] HR_WEB_PUSH_PUBLIC_KEY must be set for production Web Push.
+ pause
+ exit /b 1
+)
+if not defined HR_WEB_PUSH_PRIVATE_KEY (
+ echo [ERROR] HR_WEB_PUSH_PRIVATE_KEY must be set for production Web Push.
+ pause
+ exit /b 1
+)
+if not defined HR_WEB_PUSH_SUBJECT (
+ echo [ERROR] HR_WEB_PUSH_SUBJECT must be set for production Web Push.
+ pause
+ exit /b 1
+)
 rem ==== Demo no-login SUPER_ADMIN link: explicitly DISABLED in prod ====
-rem The demo link must never be available on the production database. Even if
-rem HR_DEMO_NO_LOGIN_ENABLED were turned on here, the default profiles
-rem allow-list (test) would not match the prod profile, so the link stays dead.
+rem The demo link must never be available on the production database.
 set "HR_DEMO_NO_LOGIN_ENABLED=false"
 
 cd /d "%~dp0be"
-
 call gradlew.bat bootJar
 if errorlevel 1 (
  echo.

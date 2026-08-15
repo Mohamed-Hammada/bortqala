@@ -9,10 +9,11 @@ import { ReportsStore } from './reports.store';
 import { I18nService } from '../../core/i18n.service';
 import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
+import { BusinessReportsCatalogComponent } from './business-reports-catalog.component';
 
 @Component({
   selector: 'app-reports-page',
-  imports: [RouterLink, ReactiveFormsModule, TablePaginationComponent],
+  imports: [RouterLink, ReactiveFormsModule, TablePaginationComponent, BusinessReportsCatalogComponent],
   providers: [ReportsStore],
   templateUrl: './reports.page.html',
   styleUrl: './reports.page.scss',

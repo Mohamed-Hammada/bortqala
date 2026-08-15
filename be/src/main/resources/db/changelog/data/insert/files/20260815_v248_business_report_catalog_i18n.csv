@@ -1,0 +1,69 @@
+id;translation_key;locale;text_value
+v248-001-en;reports.catalog.eyebrow;en-US;Business reporting
+v248-002-ar;reports.catalog.eyebrow;ar-EG;تقارير الأعمال
+v248-003-en;reports.catalog.title;en-US;Business reports catalog
+v248-004-ar;reports.catalog.title;ar-EG;كتالوج تقارير الأعمال
+v248-005-en;reports.catalog.description;en-US;Explore the suggested cross-module reports, review their required filters and metrics, and open the current workspace that owns the underlying business flow.
+v248-006-ar;reports.catalog.description;ar-EG;استعرض التقارير المقترحة عبر الوحدات، وراجع المرشحات والمؤشرات المطلوبة، ثم افتح مساحة العمل الحالية المسؤولة عن مسار الأعمال.
+v248-007-en;reports.catalog.reportsCount;en-US;reports
+v248-008-ar;reports.catalog.reportsCount;ar-EG;تقرير
+v248-009-en;reports.catalog.modulesCount;en-US;modules
+v248-010-ar;reports.catalog.modulesCount;ar-EG;وحدات
+v248-011-en;reports.catalog.searchLabel;en-US;Search reports
+v248-012-ar;reports.catalog.searchLabel;ar-EG;البحث في التقارير
+v248-013-en;reports.catalog.searchPlaceholder;en-US;Search by report, entity, metric, route, or business objective
+v248-014-ar;reports.catalog.searchPlaceholder;ar-EG;ابحث باسم التقرير أو الكيان أو المؤشر أو المسار أو الهدف
+v248-015-en;reports.catalog.moduleFilter;en-US;Filter reports by module
+v248-016-ar;reports.catalog.moduleFilter;ar-EG;تصفية التقارير حسب الوحدة
+v248-017-en;reports.catalog.allModules;en-US;All modules
+v248-018-ar;reports.catalog.allModules;ar-EG;كل الوحدات
+v248-019-en;reports.catalog.searchResults;en-US;{count} matching reports
+v248-020-ar;reports.catalog.searchResults;ar-EG;{count} تقرير مطابق
+v248-021-en;reports.catalog.sourceRoute;en-US;Suggested route in source specification
+v248-022-ar;reports.catalog.sourceRoute;ar-EG;المسار المقترح في مواصفة المصدر
+v248-023-en;reports.catalog.adjustedRoute;en-US;Mapped to current route
+v248-024-ar;reports.catalog.adjustedRoute;ar-EG;مربوط بالمسار الحالي
+v248-025-en;reports.catalog.openWorkspace;en-US;Open workspace
+v248-026-ar;reports.catalog.openWorkspace;ar-EG;فتح مساحة العمل
+v248-027-en;reports.catalog.details;en-US;View specification
+v248-028-ar;reports.catalog.details;ar-EG;عرض المواصفة
+v248-029-en;reports.catalog.hideDetails;en-US;Hide specification
+v248-030-ar;reports.catalog.hideDetails;ar-EG;إخفاء المواصفة
+v248-031-en;reports.catalog.entities;en-US;Underlying entities
+v248-032-ar;reports.catalog.entities;ar-EG;الكيانات الأساسية
+v248-033-en;reports.catalog.filters;en-US;Key filters & slicers
+v248-034-ar;reports.catalog.filters;ar-EG;المرشحات الأساسية
+v248-035-en;reports.catalog.metrics;en-US;Metrics & output columns
+v248-036-ar;reports.catalog.metrics;ar-EG;المؤشرات وأعمدة المخرجات
+v248-037-en;reports.catalog.trigger;en-US;Actionable decision trigger
+v248-038-ar;reports.catalog.trigger;ar-EG;محفز القرار والإجراء
+v248-039-en;reports.catalog.exports;en-US;Suggested exports
+v248-040-ar;reports.catalog.exports;ar-EG;صيغ التصدير المقترحة
+v248-041-en;reports.catalog.empty;en-US;No matching reports
+v248-042-ar;reports.catalog.empty;ar-EG;لا توجد تقارير مطابقة
+v248-043-en;reports.catalog.emptyHint;en-US;Change the search text or module filter.
+v248-044-ar;reports.catalog.emptyHint;ar-EG;غيّر نص البحث أو فلتر الوحدة.
+v248-045-en;reports.catalog.sourceNote;en-US;"Report specification details are preserved from the supplied catalog; workspace links are mapped to routes that exist in the current branch."
+v248-046-ar;reports.catalog.sourceNote;ar-EG;تم الحفاظ على تفاصيل مواصفات التقارير من الكتالوج المرفق، مع ربط أزرار مساحات العمل بمسارات موجودة فعلياً في الفرع الحالي.
+v248-047-en;reports.catalog.module.dashboard;en-US;Dashboard
+v248-048-ar;reports.catalog.module.dashboard;ar-EG;لوحة المتابعة
+v248-049-en;reports.catalog.module.workforce;en-US;Workforce
+v248-050-ar;reports.catalog.module.workforce;ar-EG;العمالة والمقاولون
+v248-051-en;reports.catalog.module.attendance;en-US;Attendance & devices
+v248-052-ar;reports.catalog.module.attendance;ar-EG;الحضور والأجهزة
+v248-053-en;reports.catalog.module.payroll;en-US;Payroll
+v248-054-ar;reports.catalog.module.payroll;ar-EG;الرواتب
+v248-055-en;reports.catalog.module.finance;en-US;Finance
+v248-056-ar;reports.catalog.module.finance;ar-EG;المالية
+v248-057-en;reports.catalog.module.procurement;en-US;Procurement
+v248-058-ar;reports.catalog.module.procurement;ar-EG;المشتريات
+v248-059-en;reports.catalog.module.sales;en-US;Sales
+v248-060-ar;reports.catalog.module.sales;ar-EG;المبيعات
+v248-061-en;reports.catalog.module.inventory;en-US;Inventory
+v248-062-ar;reports.catalog.module.inventory;ar-EG;المخزون
+v248-063-en;reports.catalog.module.manufacturing;en-US;Manufacturing & quality
+v248-064-ar;reports.catalog.module.manufacturing;ar-EG;التصنيع والجودة
+v248-065-en;reports.catalog.module.governance;en-US;Governance & audit
+v248-066-ar;reports.catalog.module.governance;ar-EG;الحوكمة والتدقيق
+v248-067-en;reports.catalog.summaryAria;en-US;Business report catalog summary
+v248-068-ar;reports.catalog.summaryAria;ar-EG;ملخص كتالوج تقارير الأعمال

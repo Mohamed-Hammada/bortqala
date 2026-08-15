@@ -2,7 +2,6 @@ package com.bemo.hr.shared.security;
 
 import org.springframework.stereotype.Component;
 import java.util.*;
-
 @Component
 public class EntitlementCatalog {
     public record Feature(String key,String moduleKey,boolean defaultEnabled,Set<String> dependencies,List<String> apiPrefixes) { }
@@ -10,7 +9,7 @@ public class EntitlementCatalog {
     private final List<Feature> features=List.of(
             f("employeeAttendance.enabled","HR",Set.of(),"/api/v1/reports","/api/v1/attendance"),
             f("biometric.fileImport.enabled","HR",Set.of("employeeAttendance.enabled"),"/api/v1/imports"),
-            f(false,"biometric.liveSync.enabled","HR",Set.of("employeeAttendance.enabled"),"/api/v1/attendance/device-integrations"),
+            f("biometric.liveSync.enabled","HR",Set.of("employeeAttendance.enabled"),"/api/v1/attendance/device-integrations"),
             f("workforce.enabled","WORKFORCE",Set.of(),"/api/v1/workforce"),
             f("workforce.attendance.enabled","WORKFORCE",Set.of("workforce.enabled"),"/api/v1/workforce/attendance"),
             f("workforce.dashboard.enabled","WORKFORCE",Set.of("workforce.enabled"),"/api/v1/workforce/dashboard"),
@@ -24,7 +23,7 @@ public class EntitlementCatalog {
             f("quality.enabled","QUALITY",Set.of(),"/api/v1/quality"),
             f("finance.enabled","FINANCE",Set.of(),"/api/v1/finance","/api/v1/fiscal-periods"),
             f("exports.enabled","PLATFORM",Set.of(),"/api/v1/exports"),
-            f(false,"notifications.enabled","PLATFORM",Set.of(),"/api/v1/notifications"),
+            f("notifications.enabled","PLATFORM",Set.of(),"/api/v1/notifications"),
             f("navigation.favorites.enabled","PLATFORM",Set.of()),
             f("navigation.recents.enabled","PLATFORM",Set.of()));
     private final Map<String,Feature> byKey=features.stream().collect(java.util.stream.Collectors.toUnmodifiableMap(Feature::key,java.util.function.Function.identity()));

@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260815-v248-business-report-catalog-i18n
+      author: openai
+      comment: Arabic and English copy for the cross-module business reports catalog.
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: "SELECT COUNT(*) FROM translations WHERE id LIKE 'v248-%'"
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260815_v248_business_report_catalog_i18n.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v248-%'" }
