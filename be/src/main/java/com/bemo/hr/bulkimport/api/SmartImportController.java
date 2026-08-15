@@ -1,0 +1,67 @@
+package com.bemo.hr.bulkimport.api;
+
+import com.bemo.hr.bulkimport.application.SmartImportService;
+import com.bemo.hr.bulkimport.domain.SmartImportModels.CommitRequest;
+import com.bemo.hr.bulkimport.domain.SmartImportModels.CommitResult;
+import com.bemo.hr.bulkimport.domain.SmartImportModels.Preview;
+import com.bemo.hr.bulkimport.domain.SmartImportModels.Workflow;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/smart-imports")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','HR_REVIEWER','PAYROLL_MANAGER','FINANCE_MANAGER','ACCOUNTANT','TREASURY_USER','AUDITOR','PROCUREMENT_MANAGER','PROCUREMENT_USER','INVENTORY_MANAGER','SALES_MANAGER','MANUFACTURING_MANAGER','QUALITY_MANAGER')")
+public class SmartImportController {
+    private static final MediaType XLSX = MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    private final SmartImportService service;
+
+    public SmartImportController(SmartImportService service) { this.service = service; }
+
+    @GetMapping("/workflows")
+    public List<Workflow> workflows() { return service.workflows(); }
+
+    @GetMapping("/{workflow}/template.xlsx")
+    public ResponseEntity<byte[]> template(@PathVariable String workflow,
+                                           @RequestParam(defaultValue = "false") boolean sample) {
+        var descriptor = service.workflow(workflow);
+        return ResponseEntity.ok()
+                .contentType(XLSX)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename(descriptor.templateFileName(), StandardCharsets.UTF_8).build().toString())
+                .body(service.template(workflow, sample));
+    }
+
+    @PostMapping(path = "/{workflow}/preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Preview preview(@PathVariable String workflow, @RequestParam("file") MultipartFile file) {
+        return service.preview(workflow, file);
+    }
+
+    @PostMapping("/{workflow}/commit")
+    public CommitResult commit(@PathVariable String workflow, @RequestBody CommitRequest request) {
+        return service.commit(workflow, request);
+    }
+
+    @GetMapping("/batches/{batchId}/rejected.xlsx")
+    public ResponseEntity<byte[]> rejected(@PathVariable UUID batchId) {
+        return ResponseEntity.ok()
+                .contentType(XLSX)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename("smart-import-rejected-" + batchId + ".xlsx", StandardCharsets.UTF_8).build().toString())
+                .body(service.rejectedWorkbook(batchId));
+    }
+}

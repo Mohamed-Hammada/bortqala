@@ -60,6 +60,34 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'smart-import',
+        canActivate: [roleGuard],
+        data: {
+          roles: [
+            'SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER',
+            'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR',
+            'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'INVENTORY_MANAGER',
+            'SALES_MANAGER', 'MANUFACTURING_MANAGER', 'QUALITY_MANAGER',
+          ],
+        },
+        loadComponent: () =>
+          import('./features/smart-import/smart-import.page').then((module) => module.SmartImportPage),
+      },
+      {
+        path: 'smart-import/:workflow',
+        canActivate: [roleGuard],
+        data: {
+          roles: [
+            'SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER',
+            'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR',
+            'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'INVENTORY_MANAGER',
+            'SALES_MANAGER', 'MANUFACTURING_MANAGER', 'QUALITY_MANAGER',
+          ],
+        },
+        loadComponent: () =>
+          import('./features/smart-import/smart-import.page').then((module) => module.SmartImportPage),
+      },
+      {
         path: 'parties',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'parties' },

@@ -372,3 +372,6 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260815_v249_data_exchange_i18n.yaml
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260815_v250_smart_import_i18n.yaml
+      relativeToChangelogFile: false
