@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/api/v1/i18n/admin")
 @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -29,10 +30,13 @@ public class TranslationAdminController {
     }
 
     @GetMapping("/translations")
-    List<TranslationAdminService.TranslationRow> translations(
+    TranslationAdminService.TranslationPage translations(
             @RequestParam String locale,
-            @RequestParam(required = false) String appId) {
-        return service.list(locale, blankToNull(appId));
+            @RequestParam(required = false) String appId,
+            @RequestParam(required = false, defaultValue = "") String search,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "25") int size) {
+        return service.page(locale, blankToNull(appId), search, page, size);
     }
 
     @PutMapping("/translations/{key}")

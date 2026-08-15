@@ -4,6 +4,8 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +17,7 @@ import java.util.Map;
 @Service
 public class TranslationAdminService {
     private static final List<String> SUPPORTED_LOCALES = List.of("ar-EG", "en-US");
+    private static final List<Integer> ALLOWED_PAGE_SIZES = List.of(10, 25, 50, 100);
 
     private final TranslationRepository translationRepository;
     private final TenantApplicationRepository appRepository;
@@ -36,19 +39,63 @@ public class TranslationAdminService {
                 .toList();
     }
 
+    /**
+     * Kept for existing callers/tests that need the complete effective list.
+     */
     @Transactional(readOnly = true)
     public List<TranslationRow> list(String locale, String appId) {
-        String normalized = normalize(locale);
-        appId = normalizeAppId(appId);
-        validateApp(appId);
-        Map<String, TranslationEntry> defaults = byKey(
-                translationRepository.findAllByLocaleIgnoreCaseAndAppIdIsNullOrderByTranslationKeyAsc(normalized));
-        Map<String, TranslationEntry> overrides = appId == null ? Map.of() : byKey(
-                translationRepository.findAllByLocaleIgnoreCaseAndAppIdOrderByTranslationKeyAsc(normalized, appId));
-        var keys = new java.util.TreeSet<String>();
-        keys.addAll(defaults.keySet());
-        keys.addAll(overrides.keySet());
-        return keys.stream().map(key -> {
+        return rowsForScope(locale, appId);
+    }
+
+    /**
+     * Database-backed pagination contract used by the translation-management page.
+     * The first query pages distinct translation keys for the selected scope, then
+     * a second query loads only the default/override rows required for that page.
+     */
+    @Transactional(readOnly = true)
+    public TranslationPage page(String locale, String appId, String search, int page, int size) {
+        if (page < 0) {
+            throw new BusinessRuleException("Page index cannot be negative.",
+                    "I18N_INVALID_PAGE", HttpStatus.BAD_REQUEST);
+        }
+        if (!ALLOWED_PAGE_SIZES.contains(size)) {
+            throw new BusinessRuleException("Page size must be one of 10, 25, 50 or 100.",
+                    "I18N_INVALID_PAGE_SIZE", HttpStatus.BAD_REQUEST);
+        }
+
+        String normalizedLocale = normalize(locale);
+        String normalizedAppId = normalizeAppId(appId);
+        validateApp(normalizedAppId);
+        String normalizedSearch = search == null ? "" : search.strip();
+
+        int effectivePage = page;
+        Page<String> keyPage = translationRepository.findTranslationKeysForScope(
+                normalizedLocale, normalizedAppId, normalizedSearch, PageRequest.of(effectivePage, size));
+
+        if (keyPage.getTotalElements() == 0) {
+            effectivePage = 0;
+        } else if (effectivePage > 0 && effectivePage >= keyPage.getTotalPages()) {
+            effectivePage = keyPage.getTotalPages() - 1;
+            keyPage = translationRepository.findTranslationKeysForScope(
+                    normalizedLocale, normalizedAppId, normalizedSearch, PageRequest.of(effectivePage, size));
+        }
+
+        List<String> keys = keyPage.getContent();
+        List<TranslationEntry> pageEntries = keys.isEmpty()
+                ? List.of()
+                : translationRepository.findEntriesForScopeKeys(normalizedLocale, normalizedAppId, keys);
+
+        Map<String, TranslationEntry> defaults = new LinkedHashMap<>();
+        Map<String, TranslationEntry> overrides = new LinkedHashMap<>();
+        pageEntries.forEach(entry -> {
+            if (entry.getAppId() == null) {
+                defaults.put(entry.getTranslationKey(), entry);
+            } else {
+                overrides.put(entry.getTranslationKey(), entry);
+            }
+        });
+
+        List<TranslationRow> rows = keys.stream().map(key -> {
             TranslationEntry base = defaults.get(key);
             TranslationEntry scoped = overrides.get(key);
             String defaultValue = base == null ? null : base.getTextValue();
@@ -56,6 +103,18 @@ public class TranslationAdminService {
             return new TranslationRow(key, defaultValue, overrideValue,
                     overrideValue != null ? overrideValue : defaultValue, scoped != null);
         }).toList();
+
+        long overriddenCount = normalizedAppId == null
+                ? 0
+                : translationRepository.countByLocaleIgnoreCaseAndAppId(normalizedLocale, normalizedAppId);
+
+        return new TranslationPage(
+                rows,
+                effectivePage,
+                size,
+                keyPage.getTotalElements(),
+                keyPage.getTotalPages(),
+                overriddenCount);
     }
 
     @Transactional
@@ -72,11 +131,13 @@ public class TranslationAdminService {
                         normalizedLocale, normalizedKey).orElse(null)
                 : translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppId(
                         normalizedLocale, normalizedKey, appId).orElse(null);
+
         if (entry == null) {
             entry = new TranslationEntry(normalizedKey, normalizedLocale, textValue, appId);
         } else {
             entry.updateTextValue(textValue);
         }
+
         translationRepository.save(entry);
         auditService.record("TRANSLATION_UPSERT", "TRANSLATION", entry.getId(), actor,
                 auditDetails(normalizedKey, normalizedLocale, appId), null);
@@ -91,9 +152,11 @@ public class TranslationAdminService {
             throw new BusinessRuleException("Default translations cannot be restored by deleting them.",
                     "I18N_DEFAULT_DELETE_NOT_ALLOWED", HttpStatus.CONFLICT);
         }
+
         String normalizedKey = normalizeKey(key);
         String normalizedLocale = normalize(locale);
         validateApp(normalizedAppId);
+
         translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppId(
                 normalizedLocale, normalizedKey, normalizedAppId).ifPresent(entry -> {
                     translationRepository.delete(entry);
@@ -101,6 +164,31 @@ public class TranslationAdminService {
                             auditDetails(normalizedKey, normalizedLocale, normalizedAppId), null);
                 });
         return row(normalizedKey, normalizedLocale, normalizedAppId);
+    }
+
+    private List<TranslationRow> rowsForScope(String locale, String appId) {
+        String normalized = normalize(locale);
+        String normalizedAppId = normalizeAppId(appId);
+        validateApp(normalizedAppId);
+
+        Map<String, TranslationEntry> defaults = byKey(
+                translationRepository.findAllByLocaleIgnoreCaseAndAppIdIsNullOrderByTranslationKeyAsc(normalized));
+        Map<String, TranslationEntry> overrides = normalizedAppId == null ? Map.of() : byKey(
+                translationRepository.findAllByLocaleIgnoreCaseAndAppIdOrderByTranslationKeyAsc(
+                        normalized, normalizedAppId));
+
+        var keys = new java.util.TreeSet<String>();
+        keys.addAll(defaults.keySet());
+        keys.addAll(overrides.keySet());
+
+        return keys.stream().map(key -> {
+            TranslationEntry base = defaults.get(key);
+            TranslationEntry scoped = overrides.get(key);
+            String defaultValue = base == null ? null : base.getTextValue();
+            String overrideValue = scoped == null ? null : scoped.getTextValue();
+            return new TranslationRow(key, defaultValue, overrideValue,
+                    overrideValue != null ? overrideValue : defaultValue, scoped != null);
+        }).toList();
     }
 
     private TranslationRow row(String key, String locale, String appId) {
@@ -159,7 +247,16 @@ public class TranslationAdminService {
     }
 
     public record AppOption(String id, String code, String name, boolean active) { }
+
     public record TranslationUpdate(String locale, String appId, String textValue) { }
+
     public record TranslationRow(String key, String defaultValue, String overrideValue,
                                  String effectiveValue, boolean overridden) { }
+
+    public record TranslationPage(List<TranslationRow> content,
+                                  int page,
+                                  int size,
+                                  long totalElements,
+                                  int totalPages,
+                                  long overriddenCount) { }
 }

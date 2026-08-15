@@ -144,6 +144,82 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent);
 }
 
+/*
+ * Product-level radios: larger hit target, clearer selected state, and visible
+ * keyboard focus. data-unstyled remains an escape hatch for bespoke controls.
+ */
+:root body input[type='radio']:not([data-unstyled]) {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  max-width: 20px;
+  max-height: 20px;
+  inline-size: 20px;
+  block-size: 20px;
+  min-inline-size: 20px;
+  min-block-size: 20px;
+  max-inline-size: 20px;
+  max-block-size: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  margin: 0;
+  flex: 0 0 20px;
+  border: 2px solid color-mix(in srgb, var(--line-strong) 80%, var(--line));
+  border-radius: 50%;
+  background: var(--surface);
+  background-clip: padding-box;
+  vertical-align: middle;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+:root body input[type='radio']:not([data-unstyled]):hover:not(:disabled) {
+  border-color: var(--gold);
+}
+
+:root body input[type='radio']:not([data-unstyled]):checked {
+  border-color: var(--gold);
+  background:
+    radial-gradient(circle at center, var(--gold) 0 36%, transparent 39%),
+    var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 14%, transparent);
+}
+
+:root body input[type='radio']:not([data-unstyled]):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--gold-glow);
+}
+
+:root body input[type='radio']:not([data-unstyled]):disabled {
+  cursor: not-allowed;
+  border-color: var(--line);
+  background: var(--surface-muted);
+  opacity: 0.55;
+}
+
+:root body input[type='radio']:not([data-unstyled]):disabled:checked {
+  background:
+    radial-gradient(circle at center, var(--muted) 0 36%, transparent 39%),
+    var(--surface-muted);
+}
+
+
+@media (forced-colors: active) {
+  :root body input[type='radio']:not([data-unstyled]) {
+    appearance: auto;
+    -webkit-appearance: radio;
+    accent-color: Highlight;
+    forced-color-adjust: auto;
+  }
+}
+
 /* Logical padding keeps Arabic RTL and English LTR layouts aligned correctly.
  * Existing technical/password direction rules are intentionally left untouched.
  */
@@ -163,7 +239,8 @@
     input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
     select:not([multiple]),
     textarea,
-    .search-input
+    .search-input,
+    input[type='radio']
   ):not([data-unstyled]) {
     transition: none;
   }

@@ -1,5 +1,5 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
@@ -10,12 +10,22 @@ import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 
 interface AppOption { id: string; code: string; name: string; active: boolean; }
+
 interface TranslationRow {
   key: string;
   defaultValue: string | null;
   overrideValue: string | null;
   effectiveValue: string | null;
   overridden: boolean;
+}
+
+interface TranslationPage {
+  content: TranslationRow[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  overriddenCount: number;
 }
 
 @Component({
@@ -26,7 +36,9 @@ interface TranslationRow {
   styleUrl: './translation-management.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TranslationManagementComponent {
+export class TranslationManagementComponent implements OnDestroy {
+  private static readonly SEARCH_DEBOUNCE_MS = 300;
+
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
   readonly i18n = inject(I18nService);
@@ -37,6 +49,8 @@ export class TranslationManagementComponent {
   readonly locale = signal<SupportedLocale>(this.i18n.locale());
   readonly appId = signal<string | null>(null);
   readonly search = signal('');
+  readonly total = signal(0);
+  readonly overriddenCount = signal(0);
   readonly loading = signal(false);
   readonly savingKey = signal<string | null>(null);
   readonly drafts = signal<Record<string, string>>({});
@@ -44,30 +58,26 @@ export class TranslationManagementComponent {
   readonly newValue = signal('');
   readonly pagination = new TablePagination(25);
 
-  readonly filteredRows = computed(() => {
-    const query = this.search().trim().toLowerCase();
-    if (!query) return this.rows();
-
-    return this.rows().filter((row) => {
-      const values = [row.key, row.defaultValue, row.overrideValue, row.effectiveValue];
-      return values.some((value) => (value ?? '').toLowerCase().includes(query));
-    });
-  });
-
-  readonly pagedRows = computed(() => this.pagination.slice(this.filteredRows()));
-  readonly overriddenCount = computed(() => this.rows().filter((row) => row.overridden).length);
+  private searchTimer: ReturnType<typeof setTimeout> | null = null;
+  private loadRequestId = 0;
 
   constructor() {
     void this.initialize();
   }
 
+  ngOnDestroy(): void {
+    this.cancelSearchReload();
+  }
+
   async changeLocale(value: string): Promise<void> {
+    this.cancelSearchReload();
     this.locale.set(value === 'en-US' ? 'en-US' : 'ar-EG');
     this.pagination.page.set(1);
     await this.loadRows();
   }
 
   async changeScope(value: string): Promise<void> {
+    this.cancelSearchReload();
     this.appId.set(value || null);
     this.pagination.page.set(1);
     await this.loadRows();
@@ -76,6 +86,23 @@ export class TranslationManagementComponent {
   changeSearch(value: string): void {
     this.search.set(value);
     this.pagination.page.set(1);
+    this.cancelSearchReload();
+    this.searchTimer = setTimeout(() => {
+      this.searchTimer = null;
+      void this.loadRows();
+    }, TranslationManagementComponent.SEARCH_DEBOUNCE_MS);
+  }
+
+  async changePage(page: number): Promise<void> {
+    this.cancelSearchReload();
+    this.pagination.changePage(page, this.total());
+    await this.loadRows();
+  }
+
+  async changePageSize(pageSize: number): Promise<void> {
+    this.cancelSearchReload();
+    this.pagination.changePageSize(pageSize);
+    await this.loadRows();
   }
 
   updateDraft(key: string, value: string): void {
@@ -83,7 +110,9 @@ export class TranslationManagementComponent {
   }
 
   displayValue(row: TranslationRow): string {
-    return this.drafts()[row.key] ?? (this.appId() ? row.overrideValue ?? row.effectiveValue : row.defaultValue) ?? '';
+    return this.drafts()[row.key]
+      ?? (this.appId() ? row.overrideValue ?? row.effectiveValue : row.defaultValue)
+      ?? '';
   }
 
   async save(row: TranslationRow): Promise<void> {
@@ -96,7 +125,10 @@ export class TranslationManagementComponent {
     const key = this.newKey().trim();
     const value = this.newValue().trim();
     if (!key || !value) return;
-    await this.saveKey(key, value);
+
+    const saved = await this.saveKey(key, value);
+    if (!saved) return;
+
     this.newKey.set('');
     this.newValue.set('');
   }
@@ -104,14 +136,15 @@ export class TranslationManagementComponent {
   async restore(row: TranslationRow): Promise<void> {
     const appId = this.appId();
     if (!appId || !row.overridden) return;
+
     this.savingKey.set(row.key);
     try {
       const params = new HttpParams().set('locale', this.locale()).set('appId', appId);
-      const updated = await firstValueFrom(this.http.delete<TranslationRow>(
+      await firstValueFrom(this.http.delete<TranslationRow>(
         `/api/v1/i18n/admin/translations/${encodeURIComponent(row.key)}`, { params }));
-      this.replaceRow(updated);
       this.clearDraft(row.key);
       await this.refreshActiveBundle();
+      await this.loadRows();
       this.notification.success(this.i18n.t('translations.restored'));
     } catch (error) {
       this.notification.error(apiErrorMessage(error, this.i18n));
@@ -132,44 +165,66 @@ export class TranslationManagementComponent {
   }
 
   private async loadRows(): Promise<void> {
+    const requestId = ++this.loadRequestId;
     this.loading.set(true);
+
     try {
-      let params = new HttpParams().set('locale', this.locale());
-      if (this.appId()) params = params.set('appId', this.appId()!);
-      this.rows.set(await firstValueFrom(
-        this.http.get<TranslationRow[]>('/api/v1/i18n/admin/translations', { params })));
+      let params = new HttpParams()
+        .set('locale', this.locale())
+        .set('page', Math.max(0, this.pagination.page() - 1))
+        .set('size', this.pagination.pageSize());
+
+      const appId = this.appId();
+      const search = this.search().trim();
+      if (appId) params = params.set('appId', appId);
+      if (search) params = params.set('search', search);
+
+      const response = await firstValueFrom(
+        this.http.get<TranslationPage>('/api/v1/i18n/admin/translations', { params }));
+
+      if (requestId !== this.loadRequestId) return;
+
+      this.rows.set(response.content);
+      this.total.set(response.totalElements);
+      this.overriddenCount.set(response.overriddenCount);
+      this.pagination.page.set(response.page + 1);
+      this.pagination.pageSize.set(response.size);
       this.drafts.set({});
     } catch (error) {
-      this.notification.error(apiErrorMessage(error, this.i18n));
+      if (requestId === this.loadRequestId) {
+        this.notification.error(apiErrorMessage(error, this.i18n));
+      }
     } finally {
-      this.loading.set(false);
+      if (requestId === this.loadRequestId) {
+        this.loading.set(false);
+      }
     }
   }
 
-  private async saveKey(key: string, textValue: string): Promise<void> {
+  private async saveKey(key: string, textValue: string): Promise<boolean> {
     this.savingKey.set(key);
     try {
-      const updated = await firstValueFrom(this.http.put<TranslationRow>(
+      await firstValueFrom(this.http.put<TranslationRow>(
         `/api/v1/i18n/admin/translations/${encodeURIComponent(key)}`,
         { locale: this.locale(), appId: this.appId(), textValue },
       ));
-      this.replaceRow(updated);
       this.clearDraft(key);
       await this.refreshActiveBundle();
+      await this.loadRows();
       this.notification.success(this.i18n.t('translations.saved'));
+      return true;
     } catch (error) {
       this.notification.error(apiErrorMessage(error, this.i18n));
+      return false;
     } finally {
       this.savingKey.set(null);
     }
   }
 
-  private replaceRow(updated: TranslationRow): void {
-    this.rows.update((rows) => {
-      const found = rows.some((row) => row.key === updated.key);
-      const next = found ? rows.map((row) => row.key === updated.key ? updated : row) : [...rows, updated];
-      return next.sort((a, b) => a.key.localeCompare(b.key));
-    });
+  private cancelSearchReload(): void {
+    if (this.searchTimer === null) return;
+    clearTimeout(this.searchTimer);
+    this.searchTimer = null;
   }
 
   private clearDraft(key: string): void {

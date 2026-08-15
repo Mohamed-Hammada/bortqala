@@ -5,7 +5,7 @@
       <p>{{ i18n.t('translations.description', undefined, 'عدّل النص الافتراضي للمنصة أو أنشئ ترجمة خاصة بتطبيق محدد.') }}</p>
     </div>
     <div class="translation-summary" aria-label="Translation summary">
-      <span><strong>{{ rows().length }}</strong> {{ i18n.t('translations.keys', undefined, 'مفتاح') }}</span>
+      <span><strong>{{ total() }}</strong> {{ i18n.t('translations.keys', undefined, 'مفتاح') }}</span>
       @if (appId()) {
         <span class="custom-summary"><strong>{{ overriddenCount() }}</strong> {{ i18n.t('translations.custom', undefined, 'مخصصة') }}</span>
       }
@@ -40,7 +40,6 @@
         />
       </label>
     </div>
-
     @if (appId()) {
       <p class="scope-note">{{ i18n.t('translations.overrideHint', undefined, 'النص الخاص بالتطبيق له الأولوية، وإذا لم يوجد فسيُعرض النص الافتراضي تلقائيًا.') }}</p>
     }
@@ -82,7 +81,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (row of pagedRows(); track row.key) {
+            @for (row of rows(); track row.key) {
               <tr>
                 <td class="key-cell"><code class="ltr">{{ row.key }}</code></td>
                 @if (appId()) {
@@ -137,13 +136,12 @@
           </tbody>
         </table>
       </div>
-
       <app-table-pagination
-        [total]="filteredRows().length"
-        [page]="pagination.currentPage(filteredRows().length)"
+        [total]="total()"
+        [page]="pagination.currentPage(total())"
         [pageSize]="pagination.pageSize()"
-        (pageChange)="pagination.changePage($event, filteredRows().length)"
-        (pageSizeChange)="pagination.changePageSize($event)"
+        (pageChange)="changePage($event)"
+        (pageSizeChange)="changePageSize($event)"
       />
     </div>
   }
