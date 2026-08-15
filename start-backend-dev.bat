@@ -36,6 +36,13 @@ set "HR_DEVICE_CREDENTIALS_SECRET=ZGV2aWNlLWNyZWRlbnRpYWxzLTMyLWJ5dGVzLWtleSE="
 rem HR_JWT_SECRET / HR_DEVICE_CREDENTIALS_SECRET are also fine to leave unset here;
 rem the dev profile has fallbacks. Override these values for local testing.
 
+rem ==== Web Push (DEV - default VAPID keypair) ====
+set "HR_WEB_PUSH_ENABLED=true"
+set "HR_WEB_PUSH_PUBLIC_KEY=BL-bzM8FHFmA40bnpCUe12VFdT9FvmGCrRLKlXzWgHlPAobdCTtgh3GfV9x15nqS2BqrBmnQ2gnyBEbf_TwfpNo"
+set "HR_WEB_PUSH_PRIVATE_KEY=78ruUuxQ9RnhtBeqzUYv3SPsFtEkTDGw0Q8o9JLuC0s"
+set "HR_WEB_PUSH_SUBJECT=mailto:admin@bemo-erp.local"
+set "HR_WEB_PUSH_TTL_SECONDS=86400"
+
 rem ==== Demo no-login SUPER_ADMIN link (DEV only) ====
 rem Adds a password-less SUPER_ADMIN dashboard link for the DEMO app.
 rem The link is only active when one of the running profiles matches

@@ -41,6 +41,13 @@ set "HR_COMPANY_ZONE=Africa/Cairo"
 rem WARNING: override HR_JWT_SECRET and HR_DEVICE_CREDENTIALS_SECRET with unique
 rem production values. Keep them out of version control.
 
+rem ==== Web Push (PROD - configure with real VAPID keys) ====
+if not defined HR_WEB_PUSH_ENABLED set "HR_WEB_PUSH_ENABLED=false"
+if not defined HR_WEB_PUSH_PUBLIC_KEY set "HR_WEB_PUSH_PUBLIC_KEY="
+if not defined HR_WEB_PUSH_PRIVATE_KEY set "HR_WEB_PUSH_PRIVATE_KEY="
+if not defined HR_WEB_PUSH_SUBJECT set "HR_WEB_PUSH_SUBJECT="
+if not defined HR_WEB_PUSH_TTL_SECONDS set "HR_WEB_PUSH_TTL_SECONDS=86400"
+
 rem ==== Demo no-login SUPER_ADMIN link: explicitly DISABLED in prod ====
 rem The demo link must never be available on the production database. Even if
 rem HR_DEMO_NO_LOGIN_ENABLED were turned on here, the default profiles

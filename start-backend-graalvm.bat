@@ -14,6 +14,11 @@ if not exist "%GRAALVM_HOME%\bin\java.exe" (
 set "JAVA_HOME=%GRAALVM_HOME%"
 set "PATH=%JAVA_HOME%\bin;%PATH%"
 if not defined SPRING_PROFILES_ACTIVE set "SPRING_PROFILES_ACTIVE=dev"
+if not defined HR_WEB_PUSH_ENABLED set "HR_WEB_PUSH_ENABLED=true"
+if not defined HR_WEB_PUSH_PUBLIC_KEY set "HR_WEB_PUSH_PUBLIC_KEY=BL-bzM8FHFmA40bnpCUe12VFdT9FvmGCrRLKlXzWgHlPAobdCTtgh3GfV9x15nqS2BqrBmnQ2gnyBEbf_TwfpNo"
+if not defined HR_WEB_PUSH_PRIVATE_KEY set "HR_WEB_PUSH_PRIVATE_KEY=78ruUuxQ9RnhtBeqzUYv3SPsFtEkTDGw0Q8o9JLuC0s"
+if not defined HR_WEB_PUSH_SUBJECT set "HR_WEB_PUSH_SUBJECT=mailto:admin@bemo-erp.local"
+if not defined HR_WEB_PUSH_TTL_SECONDS set "HR_WEB_PUSH_TTL_SECONDS=86400"
 
 echo [INFO] Runtime: 
 "%JAVA_HOME%\bin\java.exe" -version
