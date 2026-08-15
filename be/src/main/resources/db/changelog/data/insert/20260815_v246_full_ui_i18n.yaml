@@ -2,6 +2,11 @@ databaseChangeLog:
   - changeSet:
       id: 20260815-v246-full-ui-i18n
       author: openai
+      # The CSV was extended after this changeset was already applied to some
+      # environments (a later commit appended workforce translation keys). Accept
+      # any previously recorded checksum so already-migrated databases validate;
+      # the appended keys are backfilled by V251.
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - sqlCheck: { expectedResult: 0, sql: "SELECT COUNT(*) FROM translations WHERE id LIKE 'v246-%'" }

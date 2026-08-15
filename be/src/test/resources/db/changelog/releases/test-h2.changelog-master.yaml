@@ -735,3 +735,6 @@ databaseChangeLog:
       file: db/changelog/data/insert/20260815_v246_full_ui_i18n.yaml
   - include:
       file: db/changelog/data/insert/20260815_v247_translation_excel_import_i18n.yaml
+  - include:
+      file: db/changelog/data/insert/20260815_v251_full_ui_i18n_delta.yaml
+      relativeToChangelogFile: false

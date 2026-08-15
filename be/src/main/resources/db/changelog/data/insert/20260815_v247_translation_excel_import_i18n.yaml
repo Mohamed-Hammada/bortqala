@@ -3,6 +3,11 @@ databaseChangeLog:
       id: 20260815-v247-translation-excel-import-i18n
       author: openai
       comment: Arabic and English copy for translation Excel import UI and validation errors.
+      # The CSV was extended after this changeset was already applied to some
+      # environments (a later commit appended I18N_IMPORT_* error codes). Accept
+      # any previously recorded checksum so already-migrated databases validate;
+      # the appended keys are backfilled by V251.
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - sqlCheck:
