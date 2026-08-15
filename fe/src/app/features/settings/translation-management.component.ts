@@ -6,6 +6,8 @@ import { apiErrorMessage } from '../../core/api-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18nService, SupportedLocale } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
+import { TablePagination } from '../../shared/ui/table-pagination/pagination';
+import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 
 interface AppOption { id: string; code: string; name: string; active: boolean; }
 interface TranslationRow {
@@ -19,7 +21,7 @@ interface TranslationRow {
 @Component({
   selector: 'app-translation-management',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TablePaginationComponent],
   templateUrl: './translation-management.component.html',
   styleUrl: './translation-management.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,13 +42,20 @@ export class TranslationManagementComponent {
   readonly drafts = signal<Record<string, string>>({});
   readonly newKey = signal('');
   readonly newValue = signal('');
+  readonly pagination = new TablePagination(25);
 
   readonly filteredRows = computed(() => {
     const query = this.search().trim().toLowerCase();
     if (!query) return this.rows();
-    return this.rows().filter((row) =>
-      row.key.toLowerCase().includes(query) || (row.effectiveValue ?? '').toLowerCase().includes(query));
+
+    return this.rows().filter((row) => {
+      const values = [row.key, row.defaultValue, row.overrideValue, row.effectiveValue];
+      return values.some((value) => (value ?? '').toLowerCase().includes(query));
+    });
   });
+
+  readonly pagedRows = computed(() => this.pagination.slice(this.filteredRows()));
+  readonly overriddenCount = computed(() => this.rows().filter((row) => row.overridden).length);
 
   constructor() {
     void this.initialize();
@@ -54,12 +63,19 @@ export class TranslationManagementComponent {
 
   async changeLocale(value: string): Promise<void> {
     this.locale.set(value === 'en-US' ? 'en-US' : 'ar-EG');
+    this.pagination.page.set(1);
     await this.loadRows();
   }
 
   async changeScope(value: string): Promise<void> {
     this.appId.set(value || null);
+    this.pagination.page.set(1);
     await this.loadRows();
+  }
+
+  changeSearch(value: string): void {
+    this.search.set(value);
+    this.pagination.page.set(1);
   }
 
   updateDraft(key: string, value: string): void {

@@ -48,10 +48,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     ResponseEntity<ApiError> notFound(NotFoundException exception, HttpServletRequest request) {
+        String locale = resolveLocale(request);
         String code = exception.getCode() == null ? "NOT_FOUND" : exception.getCode();
         ErrorText errorText = exception.getCode() == null
-                ? raw(exception.getMessage())
-                : translated(exception.getCode(), resolveLocale(request), exception.getMessage());
+                ? translated("error.resourceNotFound", locale)
+                : translatedOrGeneric(exception.getCode(), locale, "error.resourceNotFound");
         return respond(code, HttpStatus.NOT_FOUND, errorText, request);
     }
 
@@ -63,10 +64,13 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(BusinessRuleException.class)
     ResponseEntity<ApiError> businessConflict(BusinessRuleException exception, HttpServletRequest request) {
+        String locale = resolveLocale(request);
+        String code = exception.getCode() == null || exception.getCode().isBlank() ? "BUSINESS_CONFLICT" : exception.getCode();
+        ErrorText errorText = translatedOrGeneric(code, locale, "error.requestFailed");
         List<ApiError.FieldError> fieldErrors = exception.getFields().stream()
-                .map(field -> new ApiError.FieldError(field, exception.getCode(), translationService.translateOrDefault(exception.getCode(), resolveLocale(request), exception.getMessage())))
+                .map(field -> new ApiError.FieldError(field, code, errorText.localizedMessage()))
                 .toList();
-        return respond(exception.getCode(), exception.getStatus(), translated(exception.getCode(), resolveLocale(request), exception.getMessage()), request, fieldErrors);
+        return respond(code, exception.getStatus(), errorText, request, fieldErrors);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -83,10 +87,12 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<ApiError> validation(MethodArgumentNotValidException exception, HttpServletRequest request) {
-        var errorText = translated("error.validationDetail", resolveLocale(request));
+        String locale = resolveLocale(request);
+        var errorText = translated("error.validationDetail", locale);
+        String invalidValue = translated("error.invalidValue", locale).localizedMessage();
         List<ApiError.FieldError> fieldErrors = new ArrayList<>();
         exception.getBindingResult().getFieldErrors()
-                .forEach(error -> fieldErrors.add(new ApiError.FieldError(error.getField(), "INVALID_VALUE", error.getDefaultMessage())));
+                .forEach(error -> fieldErrors.add(new ApiError.FieldError(error.getField(), "INVALID_VALUE", invalidValue)));
         return respond("VALIDATION_FAILED", HttpStatus.BAD_REQUEST, errorText, request, fieldErrors);
     }
 
@@ -106,8 +112,8 @@ public class ApiExceptionHandler {
     ResponseEntity<ApiError> responseStatus(ResponseStatusException exception, HttpServletRequest request) {
         HttpStatus status = HttpStatus.resolve(exception.getStatusCode().value());
         HttpStatus effective = status != null ? status : HttpStatus.INTERNAL_SERVER_ERROR;
-        String message = exception.getReason() != null ? exception.getReason() : effective.getReasonPhrase();
-        return respond(codeFor(effective), effective, raw(message), request);
+        return respond(codeFor(effective), effective,
+                translated(translationKeyFor(effective), resolveLocale(request)), request);
     }
 
     @ExceptionHandler(Exception.class)
@@ -127,14 +133,14 @@ public class ApiExceptionHandler {
                 translationService.translateOrDefault(key, locale, key));
     }
 
-    private ErrorText translated(String key, String locale, String defaultMsg) {
+    private ErrorText translatedOrGeneric(String key, String locale, String genericKey) {
+        ErrorText generic = translated(genericKey, locale);
+        if (key == null || key.isBlank()) {
+            return generic;
+        }
         return new ErrorText(
-                translationService.translateOrDefault(key, "en-US", defaultMsg),
-                translationService.translateOrDefault(key, locale, defaultMsg));
-    }
-
-    private ErrorText raw(String message) {
-        return new ErrorText(message, message);
+                translationService.translateOrDefault(key, "en-US", generic.message()),
+                translationService.translateOrDefault(key, locale, generic.localizedMessage()));
     }
 
     private ResponseEntity<ApiError> respond(String code, HttpStatus status, ErrorText errorText,
@@ -163,8 +169,21 @@ public class ApiExceptionHandler {
             case UNAUTHORIZED -> "AUTHENTICATION_FAILED";
             case FORBIDDEN -> "FORBIDDEN";
             case NOT_FOUND -> "NOT_FOUND";
+            case METHOD_NOT_ALLOWED -> "METHOD_NOT_ALLOWED";
             case CONFLICT -> "BUSINESS_CONFLICT";
             default -> "REQUEST_FAILED";
+        };
+    }
+
+    private String translationKeyFor(HttpStatus status) {
+        return switch (status) {
+            case BAD_REQUEST -> "error.malformedRequest";
+            case UNAUTHORIZED -> "error.invalidCredentials";
+            case FORBIDDEN -> "error.accessDenied";
+            case NOT_FOUND -> "error.resourceNotFound";
+            case METHOD_NOT_ALLOWED -> "error.methodNotAllowed";
+            case CONFLICT -> "error.dataConflictDetail";
+            default -> status.is5xxServerError() ? "error.unexpectedError" : "error.requestFailed";
         };
     }
 

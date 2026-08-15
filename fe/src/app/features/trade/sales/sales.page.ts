@@ -216,6 +216,19 @@ export class SalesPage {
   async saveCredit(){if(this.creditForm.invalid||this.savingAr())return;const value=this.creditForm.getRawValue();this.savingAr.set(true);try{const profile=await firstValueFrom(this.http.put<CreditProfile>(`/api/v1/trade/sales/customers/${value.customerId}/credit`,{creditLimit:value.creditLimit,paymentTermsDays:value.paymentTermsDays,creditHold:value.creditHold}));this.credit.set(profile);this.notification.success(this.i18n.t('sales.ar.creditSaved'));}catch(e){this.error.set(apiErrorMessage(e,this.i18n));}finally{this.savingAr.set(false);}}
   async markContacted(task:CollectionTask){if(this.savingAr())return;this.savingAr.set(true);try{await firstValueFrom(this.http.put(`/api/v1/trade/sales/receivables/collections/${task.id}`,{status:'CONTACTED',ownerUserId:task.ownerUserId??'',nextActionDate:this.businessDate()+7*86400000,note:task.note??'',version:task.version,asOf:this.businessDate()}));this.notification.success(this.i18n.t('sales.ar.collectionUpdated'));await this.load();}catch(e){this.error.set(apiErrorMessage(e,this.i18n));}finally{this.savingAr.set(false);}}
 
+  receivableStatusLabel(status: string): string {
+    const keys: Record<string, string> = {
+      DRAFT: 'sales.ar.statusDraft',
+      OPEN: 'sales.ar.statusOpen',
+      PARTIALLY_PAID: 'sales.ar.statusPartiallyPaid',
+      PAID: 'sales.ar.statusPaid',
+      CANCELLED: 'sales.ar.statusCancelled',
+      CONTACTED: 'sales.ar.statusContacted',
+      CLOSED: 'sales.ar.statusClosed',
+    };
+    return this.i18n.t(keys[status] ?? 'sales.ar.statusUnknown');
+  }
+
   date(ms: number) {
     return formatDate(ms);
   }

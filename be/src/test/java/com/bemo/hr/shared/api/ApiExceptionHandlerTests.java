@@ -48,8 +48,8 @@ class ApiExceptionHandlerTests {
         assertThat(response.getStatusCode().value()).isEqualTo(409);
         ApiError body = response.getBody();
         assertThat(body.code()).isEqualTo("BUSINESS_CONFLICT");
-        assertThat(body.message()).isEqualTo("Employee code already exists.");
-        assertThat(body.localizedMessage()).isEqualTo("Employee code already exists.");
+        assertThat(body.message()).isEqualTo("error.requestFailed");
+        assertThat(body.localizedMessage()).isEqualTo("error.requestFailed");
         assertThat(body.status()).isEqualTo(409);
         assertThat(body.path()).isEqualTo("/api/v1/employees");
         assertThat(body.correlationId()).isEqualTo("correlation-123");
@@ -59,11 +59,14 @@ class ApiExceptionHandlerTests {
 
     @Test
     void notFoundReturnsNotFoundShape() {
+        when(translationService.resolveLocale(any())).thenReturn("en-US");
+        when(translationService.translateOrDefault(eq("error.resourceNotFound"), eq("en-US"), anyString()))
+                .thenReturn("Resource not found");
         var response = handler().notFound(new NotFoundException("Employee not found."), request());
 
         assertThat(response.getStatusCode().value()).isEqualTo(404);
         assertThat(response.getBody().code()).isEqualTo("NOT_FOUND");
-        assertThat(response.getBody().message()).isEqualTo("Employee not found.");
+        assertThat(response.getBody().message()).isEqualTo("Resource not found");
     }
 
     @Test
@@ -104,6 +107,8 @@ class ApiExceptionHandlerTests {
     @Test
     void validationReturnsFieldErrorsArray() {
         when(translationService.resolveLocale(any())).thenReturn("ar-EG");
+        when(translationService.translateOrDefault(eq("error.invalidValue"), eq("ar-EG"), anyString()))
+                .thenReturn("قيمة غير صالحة");
         var target = new Object();
         var bindingResult = new BeanPropertyBindingResult(target, "target");
         bindingResult.addError(new FieldError("target", "employeeCode", "must not be blank"));
@@ -116,7 +121,7 @@ class ApiExceptionHandlerTests {
         assertThat(response.getBody().fieldErrors()).hasSize(1);
         assertThat(response.getBody().fieldErrors().get(0).field()).isEqualTo("employeeCode");
         assertThat(response.getBody().fieldErrors().get(0).code()).isEqualTo("INVALID_VALUE");
-        assertThat(response.getBody().fieldErrors().get(0).message()).isEqualTo("must not be blank");
+        assertThat(response.getBody().fieldErrors().get(0).message()).isEqualTo("قيمة غير صالحة");
     }
 
     @Test
