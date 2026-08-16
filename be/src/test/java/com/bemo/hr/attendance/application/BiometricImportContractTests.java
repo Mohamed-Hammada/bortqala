@@ -164,7 +164,7 @@ class BiometricImportContractTests {
     }
 
     @Test
-    void reverseDeletesPunchesAndErrorsIsIdempotentAndBlocksReimportOfSameFile() {
+    void reverseDeletesPunchesAndErrorsIsIdempotentAndAllowsReimportOfSameFile() {
         var app = app();
         TenantContext.set(app.getId());
         String sourceId = fileSource("بوابة المصنع");
@@ -185,9 +185,11 @@ class BiometricImportContractTests {
         assertThat(punchRecordRepository.countByBatchId(uploaded.id())).isZero();
 
         var reimport = biometricImportService.importFile(csv("attendance.csv", CSV), sourceId, "tester");
-        assertThat(reimport.duplicate()).isTrue();
-        assertThat(reimport.id()).isEqualTo(uploaded.id());
-        assertThat(punchRecordRepository.countByBatchId(uploaded.id())).isZero();
+        createdBatches.add(reimport.id());
+        assertThat(reimport.duplicate()).isFalse();
+        assertThat(reimport.id()).isNotEqualTo(uploaded.id());
+        assertThat(reimport.status()).isEqualTo(ImportStatus.COMPLETED);
+        assertThat(punchRecordRepository.countByBatchId(reimport.id())).isEqualTo(2);
     }
 
     @Test

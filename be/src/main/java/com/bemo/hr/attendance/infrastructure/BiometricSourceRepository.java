@@ -21,9 +21,13 @@ public interface BiometricSourceRepository extends JpaRepository<BiometricSource
     @Modifying
     @Query(value = """
             INSERT INTO biometric_sources (
-                id, app_id, source_type, name, normalized_code, active, created_at
+                id, app_id, source_type, name, normalized_code, active,
+                auto_create_employees, auto_create_employment_type, auto_create_active_from_mode, auto_create_employee_active,
+                created_at
             ) VALUES (
-                :id, :appId, :sourceType, :name, :normalizedCode, TRUE, CURRENT_TIMESTAMP
+                :id, :appId, :sourceType, :name, :normalizedCode, TRUE,
+                FALSE, 'FIXED', 'FIRST_PUNCH', TRUE,
+                CURRENT_TIMESTAMP
             )
             ON CONFLICT DO NOTHING
             """, nativeQuery = true)

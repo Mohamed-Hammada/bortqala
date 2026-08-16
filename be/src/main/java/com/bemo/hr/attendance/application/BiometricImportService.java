@@ -45,6 +45,7 @@ public class BiometricImportService {
     private final PunchRecordRepository punchRecordRepository;
     private final PunchImportEvidenceRepository punchImportEvidenceRepository;
     private final ImportRowErrorRepository importRowErrorRepository;
+    private final BiometricEmployeeProvisioningService employeeProvisioningService;
     private final EmployeeRepository employeeRepository;
     private final AuditService auditService;
 
@@ -100,8 +101,18 @@ public class BiometricImportService {
         try {
             byte[] content = file.getBytes();
             String checksum = sha256(content);
-            var existing = importBatchRepository.findBySourceIdAndChecksum(sourceId, checksum);
-            if (existing.isPresent()) return toResponse(existing.get(), true);
+            var existing = importBatchRepository
+                    .findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
+                            sourceId, checksum, ImportStatus.REVERSED);
+            if (existing.isPresent()) {
+                if (source.isAutoCreateEmployees()) {
+                    var duplicateParsed = biometricFileReader.read(file.getOriginalFilename(),
+                            new ByteArrayInputStream(content));
+                    duplicateParsed.rows().forEach(row -> employeeProvisioningService.resolveEmployeeId(
+                            source, row.deviceUserId(), row.employeeName(), row.punchedAt(), actor));
+                }
+                return toResponse(existing.get(), true);
+            }
 
             var parsed = biometricFileReader.read(file.getOriginalFilename(), new ByteArrayInputStream(content));
             String appId = TenantContext.require();
@@ -115,7 +126,9 @@ public class BiometricImportService {
                     totalRows, validRows, errorRows, actor);
             ImportBatch batch;
             if (reserved == 0) {
-                batch = importBatchRepository.findBySourceIdAndChecksum(sourceId, checksum)
+                batch = importBatchRepository
+                        .findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
+                                sourceId, checksum, ImportStatus.REVERSED)
                         .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + checksum));
                 return toResponse(batch, true);
             }
@@ -126,9 +139,8 @@ public class BiometricImportService {
             int duplicates = 0;
             List<PunchImportEvidence> evidence = new ArrayList<>(parsed.rows().size());
             for (var row : parsed.rows()) {
-                String employeeId = employeeRepository.findByEmployeeCodeIgnoreCase(row.deviceUserId())
-                        .or(() -> employeeRepository.findByDeviceUserId(row.deviceUserId()))
-                        .map(employee -> employee.getId()).orElse(null);
+                String employeeId = employeeProvisioningService.resolveEmployeeId(
+                        source, row.deviceUserId(), row.employeeName(), row.punchedAt(), actor);
                 String punchId = UUID.randomUUID().toString();
                 int inserted = punchRecordRepository.insertIfAbsent(punchId, appId,
                         batch.getId(), sourceId, null, employeeId, row.deviceUserId(), row.employeeName(),

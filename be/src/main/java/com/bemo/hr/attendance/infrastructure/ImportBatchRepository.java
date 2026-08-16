@@ -1,6 +1,7 @@
 package com.bemo.hr.attendance.infrastructure;
 
 import com.bemo.hr.attendance.domain.ImportBatch;
+import com.bemo.hr.attendance.domain.ImportStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ImportBatchRepository extends JpaRepository<ImportBatch, String> {
+    Optional<ImportBatch> findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
+            String sourceId, String checksum, ImportStatus status);
     Optional<ImportBatch> findBySourceIdAndChecksum(String sourceId, String checksum);
     List<ImportBatch> findAllByOrderByImportedAtDesc();
 

@@ -34,6 +34,8 @@ export class ImportsPage {
   readonly pagedUnmatched = computed(() => this.pagination.slice(this.store.unmatched()));
   readonly activeSources = computed(() => this.store.sources().filter((s) => s.active));
   readonly uploadSources = computed(() => this.store.sources().filter((s) => s.active && s.sourceType === 'FILE_DEVICE'));
+  readonly employeeCategories = computed(() =>
+    this.store.categories().filter((category) => category.active && category.scope !== 'WORKER'));
   readonly editingDeviceId = signal<string | null>(null);
   readonly connectionName = signal('');
   readonly endpointUrl = signal('');
@@ -50,6 +52,11 @@ export class ImportsPage {
   readonly sourceName = signal('');
   readonly sourceType = signal<BiometricSourceType>('FILE_DEVICE');
   readonly sourceActive = signal(true);
+  readonly sourceAutoCreateEmployees = signal(false);
+  readonly sourceAutoCreateCategoryId = signal('');
+  readonly sourceAutoCreateEmploymentType = signal<'FIXED' | 'DAILY'>('FIXED');
+  readonly sourceAutoCreateActiveFromMode = signal<'FIRST_PUNCH' | 'IMPORT_DATE'>('FIRST_PUNCH');
+  readonly sourceAutoCreateEmployeeActive = signal(true);
   readonly showSourceModal = signal(false);
 
   downloadTemplate(): void {
@@ -69,6 +76,9 @@ export class ImportsPage {
   choose(event: Event) {
     const input = event.target as HTMLInputElement;
     this.file.set(input.files?.item(0) ?? null);
+    // Clear the native input so selecting the exact same file again still fires change.
+    // The File object above remains valid after the input value is reset.
+    input.value = '';
     this.previewResult.set(null);
   }
 
@@ -144,6 +154,17 @@ export class ImportsPage {
       }
     } finally {
       this.reversingBatchId.set(null);
+    }
+  }
+
+  prepareReimport(item: ImportBatch): void {
+    this.selectedSourceId.set(item.sourceId);
+    this.file.set(null);
+    this.previewResult.set(null);
+    const input = document.querySelector<HTMLInputElement>('.hidden-file-input');
+    if (input) {
+      input.value = '';
+      input.click();
     }
   }
 
@@ -226,6 +247,11 @@ export class ImportsPage {
     this.sourceName.set(source.name);
     this.sourceType.set(source.sourceType);
     this.sourceActive.set(source.active);
+    this.sourceAutoCreateEmployees.set(source.autoCreateEmployees);
+    this.sourceAutoCreateCategoryId.set(source.autoCreateCategoryId ?? '');
+    this.sourceAutoCreateEmploymentType.set(source.autoCreateEmploymentType ?? 'FIXED');
+    this.sourceAutoCreateActiveFromMode.set(source.autoCreateActiveFromMode ?? 'FIRST_PUNCH');
+    this.sourceAutoCreateEmployeeActive.set(source.autoCreateEmployeeActive ?? true);
     this.showSourceModal.set(true);
   }
 
@@ -234,7 +260,22 @@ export class ImportsPage {
     this.sourceName.set('');
     this.sourceType.set('FILE_DEVICE');
     this.sourceActive.set(true);
+    this.sourceAutoCreateEmployees.set(false);
+    this.sourceAutoCreateCategoryId.set('');
+    this.sourceAutoCreateEmploymentType.set('FIXED');
+    this.sourceAutoCreateActiveFromMode.set('FIRST_PUNCH');
+    this.sourceAutoCreateEmployeeActive.set(true);
     this.showSourceModal.set(false);
+  }
+
+  onAutoCreateEmployeesChange(enabled: boolean): void {
+    this.sourceAutoCreateEmployees.set(enabled);
+    if (!enabled) return;
+    if (!this.sourceAutoCreateCategoryId() && this.employeeCategories().length > 0) {
+      this.sourceAutoCreateCategoryId.set(this.employeeCategories()[0].id);
+    }
+    this.sourceAutoCreateEmploymentType.set(this.sourceAutoCreateEmploymentType() || 'FIXED');
+    this.sourceAutoCreateActiveFromMode.set(this.sourceAutoCreateActiveFromMode() || 'FIRST_PUNCH');
   }
 
   async saveSource(): Promise<void> {
@@ -243,14 +284,29 @@ export class ImportsPage {
       this.notification.warning(this.i18n.t('imports.sourceNameInvalid', {}));
       return;
     }
+    if (this.sourceAutoCreateEmployees()
+        && this.employeeCategories().length > 0
+        && !this.sourceAutoCreateCategoryId()) {
+      this.notification.warning(this.i18n.t('imports.autoCreateCategoryRequired'));
+      return;
+    }
+    if (this.sourceAutoCreateEmployees()
+        && (!this.sourceAutoCreateEmploymentType() || !this.sourceAutoCreateActiveFromMode())) {
+      this.notification.warning(this.i18n.t('imports.autoCreateRequiredDefaults'));
+      return;
+    }
     const saved = await this.store.saveSource({
       name,
       sourceType: this.sourceType(),
       active: this.sourceActive(),
+      autoCreateEmployees: this.sourceAutoCreateEmployees(),
+      autoCreateCategoryId: this.sourceAutoCreateEmployees() ? this.sourceAutoCreateCategoryId() : null,
+      autoCreateEmploymentType: this.sourceAutoCreateEmploymentType(),
+      autoCreateActiveFromMode: this.sourceAutoCreateActiveFromMode(),
+      autoCreateEmployeeActive: this.sourceAutoCreateEmployeeActive(),
     }, this.editingSourceId() ?? undefined);
     if (saved) {
-      this.notification.success(this.i18n.t(this.editingSourceId() ? 'imports.sourceUpdated' : 'imports.sourceCreated',
-        {}, this.editingSourceId() ? 'تم تحديث مصدر البصمات.' : 'تم إنشاء مصدر البصمات.'));
+      this.notification.success(this.i18n.t(this.editingSourceId() ? 'imports.sourceUpdated' : 'imports.sourceCreated'));
       if (!this.selectedSourceId() && this.sourceActive()) {
         this.selectedSourceId.set(this.store.sources().find((s) => s.name === name)?.id ?? '');
       }

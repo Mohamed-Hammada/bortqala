@@ -1,0 +1,109 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260816-v253-biometric-source-auto-employees
+      author: OpenAI
+      comment: Adds per-source employee auto-provisioning settings shared by file imports and live biometric sync.
+      changes:
+        - addColumn:
+            tableName: biometric_sources
+            columns:
+              - column:
+                  name: auto_create_employees
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: auto_create_category_id
+                  type: VARCHAR(36)
+              - column:
+                  name: auto_create_employment_type
+                  type: VARCHAR(20)
+                  defaultValue: FIXED
+                  constraints:
+                    nullable: false
+              - column:
+                  name: auto_create_active_from_mode
+                  type: VARCHAR(20)
+                  defaultValue: FIRST_PUNCH
+                  constraints:
+                    nullable: false
+              - column:
+                  name: auto_create_employee_active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+        - addForeignKeyConstraint:
+            baseTableName: biometric_sources
+            baseColumnNames: auto_create_category_id
+            constraintName: fk_biometric_sources_auto_category
+            referencedTableName: attendance_categories
+            referencedColumnNames: id
+            onDelete: RESTRICT
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: biometric_sources
+            constraintName: fk_biometric_sources_auto_category
+        - dropColumn:
+            tableName: biometric_sources
+            columnName: auto_create_employee_active
+        - dropColumn:
+            tableName: biometric_sources
+            columnName: auto_create_active_from_mode
+        - dropColumn:
+            tableName: biometric_sources
+            columnName: auto_create_employment_type
+        - dropColumn:
+            tableName: biometric_sources
+            columnName: auto_create_category_id
+        - dropColumn:
+            tableName: biometric_sources
+            columnName: auto_create_employees
+
+  - changeSet:
+      id: 20260816-v253-reversed-batch-reimport
+      author: OpenAI
+      dbms: postgresql
+      comment: A reversed batch remains in audit history but no longer owns the source/checksum lock, allowing the same file/device payload to be imported again after reversal.
+      changes:
+        - sql:
+            splitStatements: true
+            stripComments: true
+            sql: |
+              ALTER TABLE import_batches
+                DROP CONSTRAINT IF EXISTS uq_import_batches_app_source_checksum;
+              DROP INDEX IF EXISTS uq_import_batches_app_source_checksum_active;
+              CREATE UNIQUE INDEX uq_import_batches_app_source_checksum_active
+                ON import_batches (app_id, source_id, checksum)
+                WHERE status <> 'REVERSED';
+      rollback:
+        - sql:
+            splitStatements: true
+            stripComments: true
+            sql: |
+              DROP INDEX IF EXISTS uq_import_batches_app_source_checksum_active;
+              ALTER TABLE import_batches
+                ADD CONSTRAINT uq_import_batches_app_source_checksum
+                UNIQUE (app_id, source_id, checksum);
+
+  - changeSet:
+      id: 20260816-v253-reversed-batch-reimport-h2
+      author: OpenAI
+      dbms: h2
+      comment: H2 mirror for dropping unique constraint on import_batches to allow reimport of reversed batches.
+      changes:
+        - sql:
+            splitStatements: true
+            stripComments: true
+            sql: |
+              ALTER TABLE import_batches
+                DROP CONSTRAINT IF EXISTS uq_import_batches_app_source_checksum;
+      rollback:
+        - sql:
+            splitStatements: true
+            stripComments: true
+            sql: |
+              ALTER TABLE import_batches
+                ADD CONSTRAINT uq_import_batches_app_source_checksum
+                UNIQUE (app_id, source_id, checksum);

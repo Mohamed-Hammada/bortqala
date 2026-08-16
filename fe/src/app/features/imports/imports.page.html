@@ -158,6 +158,9 @@
             <small>
               <code class="ltr">{{ source.normalizedCode }}</code> ·
               {{ source.sourceType === 'DEVICE' ? i18n.t('imports.sourceTypeDevice', {}, 'جهاز') : i18n.t('imports.sourceTypeFile', {}, 'ملف') }}
+              @if (source.autoCreateEmployees) {
+                · <strong>{{ i18n.t('imports.autoCreateEmployeesEnabled', {}, 'إنشاء الموظفين تلقائياً') }}</strong>
+              }
             </small>
           </div>
           <div class="device-actions">
@@ -382,6 +385,14 @@
                   {{ reversingBatchId() === item.id ? i18n.t('imports.reversingBatch', {}, 'جارٍ التراجع…') : i18n.t('imports.reverseBatch', {}, 'تراجع') }}
                 </button>
               </div>
+            } @else {
+              <div class="batch-actions">
+                <button type="button" class="button gold btn-sm"
+                  [disabled]="store.loading()"
+                  (click)="prepareReimport(item)">
+                  ↻ {{ i18n.t('imports.reimportReversedBatch', {}, 'إعادة استيراد الملف') }}
+                </button>
+              </div>
             }
             @if (expanded() === item.id && item.errors.length) {
               <div class="error-list">
@@ -463,10 +474,11 @@
       <div class="field">
         <label>{{ i18n.t('imports.sourceNameLabel', {}, 'اسم المصدر') }}</label>
         <input [ngModel]="sourceName()" (ngModelChange)="sourceName.set($event)"
+          [disabled]="sourceType() === 'DEVICE'"
           [placeholder]="i18n.t('imports.sourceNamePlaceholder', {}, 'مثال: بوابة المصنع الرئيسية')" autocomplete="off" />
       </div>
       @if (sourceType() === 'DEVICE') {
-        <small>{{ i18n.t('imports.deviceSourceLockedHint', {}, 'مصدر الجهاز ثابت: لا يمكن تغيير نوعه أو تعطيله.') }}</small>
+        <small>{{ i18n.t('imports.deviceSourceLockedHint', {}, 'هوية مصدر الجهاز ثابتة؛ يمكنك تعديل إعداد إنشاء الموظفين أدناه.') }}</small>
       } @else {
         <div class="field">
           <label>{{ i18n.t('imports.sourceTypeLabel', {}, 'نوع المصدر') }}</label>
@@ -480,6 +492,64 @@
           <span>{{ i18n.t('imports.sourceActiveLabel', {}, 'مصدر نشط') }}</span>
         </label>
       }
+      <div style="border-top:1px solid var(--line);padding-top:1rem;display:grid;gap:0.8rem;">
+        <label class="device-enabled-toggle">
+          <input type="checkbox" name="sourceAutoCreateEmployees"
+            [ngModel]="sourceAutoCreateEmployees()"
+            (ngModelChange)="onAutoCreateEmployeesChange($event)" />
+          <span>{{ i18n.t('imports.autoCreateEmployees', {}, 'إضافة الموظفين غير الموجودين تلقائياً') }}</span>
+        </label>
+        <small>{{ i18n.t('imports.autoCreateEmployeesHint', {},
+          'عند الرفع أو مزامنة الجهاز، يتم إنشاء موظف جديد من رقم مستخدم جهاز البصمة والاسم المرصود، ثم ربط البصمات السابقة غير المرتبطة به.') }}</small>
+        @if (sourceAutoCreateEmployees()) {
+          @if (employeeCategories().length > 0) {
+            <div class="field">
+              <label><span class="required">*</span> {{ i18n.t('imports.autoCreateCategory', {}, 'فئة الموظف الافتراضية') }}</label>
+              <select [ngModel]="sourceAutoCreateCategoryId()"
+                (ngModelChange)="sourceAutoCreateCategoryId.set($event)" name="sourceAutoCategory">
+                <option value="">{{ i18n.t('common.select', {}, 'اختر') }}</option>
+                @for (category of employeeCategories(); track category.id) {
+                  <option [value]="category.id">{{ category.name }} ({{ category.code }})</option>
+                }
+              </select>
+              <small>{{ i18n.t('imports.autoCreateCategoryRequiredHint', {},
+                'يجب اختيار فئة؛ لن يتم إنشاء موظفين تلقائياً بدون الفئة المحددة.') }}</small>
+            </div>
+          } @else {
+            <div class="info-banner">
+              {{ i18n.t('imports.autoCreateCategoryWillBeCreated', {},
+                'لا توجد فئات موظفين نشطة. سيتم إنشاء فئة «موظفو البصمة - تلقائي» واستخدامها تلقائياً عند الحفظ.') }}
+            </div>
+          }
+          <div class="field">
+            <label><span class="required">*</span> {{ i18n.t('imports.autoCreateEmploymentType', {}, 'نوع التوظيف الافتراضي') }}</label>
+            <select [ngModel]="sourceAutoCreateEmploymentType()"
+              (ngModelChange)="sourceAutoCreateEmploymentType.set($event)" name="sourceAutoEmploymentType">
+              <option value="FIXED">{{ i18n.t('employmentType.FIXED', {}, 'ثابت') }}</option>
+              <option value="DAILY">{{ i18n.t('employmentType.DAILY', {}, 'يومي') }}</option>
+            </select>
+          </div>
+          <div class="field">
+            <label><span class="required">*</span> {{ i18n.t('imports.autoCreateActiveFrom', {}, 'تاريخ بداية الموظف') }}</label>
+            <select [ngModel]="sourceAutoCreateActiveFromMode()"
+              (ngModelChange)="sourceAutoCreateActiveFromMode.set($event)" name="sourceAutoActiveFromMode">
+              <option value="FIRST_PUNCH">{{ i18n.t('imports.autoCreateFirstPunch', {}, 'تاريخ أول بصمة للموظف (افتراضي)') }}</option>
+              <option value="IMPORT_DATE">{{ i18n.t('imports.autoCreateImportDate', {}, 'تاريخ الاستيراد / المزامنة') }}</option>
+            </select>
+          </div>
+          <label class="device-enabled-toggle">
+            <input type="checkbox" name="sourceAutoCreateEmployeeActive"
+              [ngModel]="sourceAutoCreateEmployeeActive()"
+              (ngModelChange)="sourceAutoCreateEmployeeActive.set($event)" />
+            <span>{{ i18n.t('imports.autoCreateEmployeeActive', {}, 'إنشاء الموظف بحالة نشط (افتراضي)') }}</span>
+          </label>
+          <div class="info-banner">
+            <strong>{{ i18n.t('imports.autoCreateImportedFields', {}, 'حقول إلزامية يتم تعبئتها من البصمة تلقائياً:') }}</strong>
+            {{ i18n.t('imports.autoCreateImportedFieldsHint', {},
+              'الاسم من اسم المستخدم في الملف/الجهاز، ورقم مستخدم جهاز البصمة من Device User ID. إذا لم يصل الاسم، يستخدم النظام اسماً احتياطياً واضحاً.') }}
+          </div>
+        }
+      </div>
     </div>
 
     <div modal-actions style="display:flex;justify-content:flex-end;gap:0.5rem;width:100%;">

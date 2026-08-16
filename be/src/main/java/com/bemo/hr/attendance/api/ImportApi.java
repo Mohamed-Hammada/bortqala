@@ -32,12 +32,29 @@ public final class ImportApi {
     public record SourceRequest(
             @NotBlank String name,
             String sourceType,
-            boolean active
-    ) { }
+            Boolean active,
+            Boolean autoCreateEmployees,
+            String autoCreateCategoryId,
+            String autoCreateEmploymentType,
+            String autoCreateActiveFromMode,
+            Boolean autoCreateEmployeeActive
+    ) {
+        public SourceRequest(String name, String sourceType, Boolean active) {
+            this(name, sourceType, active, false, null, "FIXED", "FIRST_PUNCH", true);
+        }
+    }
 
     public record SourceResponse(
-            String id, String name, String sourceType, String normalizedCode, boolean active, Instant createdAt
-    ) { }
+            String id, String name, String sourceType, String normalizedCode, boolean active,
+            boolean autoCreateEmployees, String autoCreateCategoryId, String autoCreateEmploymentType,
+            String autoCreateActiveFromMode, boolean autoCreateEmployeeActive, Instant createdAt
+    ) {
+        public SourceResponse(String id, String name, String sourceType, String normalizedCode,
+                              boolean active, Instant createdAt) {
+            this(id, name, sourceType, normalizedCode, active, false, null, "FIXED",
+                    "FIRST_PUNCH", true, createdAt);
+        }
+    }
 
     public record DeviceRequest(
             @NotBlank String name,

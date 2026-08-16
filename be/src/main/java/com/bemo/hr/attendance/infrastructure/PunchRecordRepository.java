@@ -51,6 +51,18 @@ public interface PunchRecordRepository extends JpaRepository<PunchRecord, String
            "from PunchRecord p where p.employeeId is null group by p.deviceUserId order by p.deviceUserId")
     List<Object[]> summarizeUnmatched();
 
+    @Modifying
+    @Query(value = """
+            UPDATE punch_records
+            SET employee_id = :employeeId
+            WHERE app_id = :appId
+              AND employee_id IS NULL
+              AND device_user_id = :deviceUserId
+            """, nativeQuery = true)
+    int linkUnmatchedToEmployee(@Param("appId") String appId,
+                                @Param("deviceUserId") String deviceUserId,
+                                @Param("employeeId") String employeeId);
+
     /**
      * Conflict-safe insertion keyed on the punch source identity. Returns
      * {@code 1} when the row was inserted and {@code 0} when a punch with the
