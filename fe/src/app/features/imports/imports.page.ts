@@ -28,6 +28,7 @@ export class ImportsPage {
   readonly sampleTemplates = inject(SampleTemplateService);
   readonly file = signal<File | null>(null);
   readonly isDragging = signal(false);
+  readonly historyView = signal(new URLSearchParams(window.location.search).get('history') === 'all');
   readonly selectedSourceId = signal('');
   readonly expanded = signal<string | null>(null);
   readonly pagination = new TablePagination();
@@ -321,4 +322,11 @@ export class ImportsPage {
       if (this.selectedSourceId() === source.id) this.selectedSourceId.set('');
     }
   }
+
+  // BORTQALA_FEEDBACK_20260816_IMPORT_HISTORY
+  visibleBatches() {
+    const batches = this.store.batches();
+    return this.historyView() ? batches : batches.slice(0, 5);
+  }
+
 }

@@ -8,11 +8,12 @@ import { Contractor } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 import { downloadBlob } from '../../../../core/download';
 import { NotificationService } from '../../../../core/notification.service';
+import { WorkforceExcelImportButtonComponent } from '../../ui/workforce-excel-import-button.component';
 
 @Component({
   selector: 'app-contractors',
   standalone: true,
-  imports: [CommonModule, FormsModule, ModalDialogComponent],
+  imports: [WorkforceExcelImportButtonComponent, CommonModule, FormsModule, ModalDialogComponent],
   template: `
     <div class="workforce-container">
       <header class="page-header">
@@ -21,6 +22,7 @@ import { NotificationService } from '../../../../core/notification.service';
           <h1>{{ i18n.t('workforce.ui.contractors.title') }}</h1>
         </div>
         <div class="header-actions">
+        <app-workforce-excel-import-button kind="contractors" />
           <button type="button" class="btn btn-secondary" (click)="exportExcel()">{{ i18n.t('workforce.ui.exportExcel') }}</button>
           <button type="button" class="btn btn-primary" (click)="openCreateModal()">{{ i18n.t('workforce.ui.contractors.add') }}</button>
         </div>
@@ -285,3 +287,5 @@ export class ContractorsComponent implements OnInit {
 
   getRoutingLabel(routing: string): string { const keys:Record<string,string>={contractor_full:'workforce.ui.contractors.routingFullShort',worker_direct:'workforce.ui.contractors.routingDirectShort',mixed:'workforce.ui.contractors.routingMixedShort'}; return keys[routing]?this.i18n.t(keys[routing]):routing; }
 }
+
+// BORTQALA_FEEDBACK_20260816_EXCEL_CONTRACTORS

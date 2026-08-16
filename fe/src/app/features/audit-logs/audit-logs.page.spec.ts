@@ -103,6 +103,8 @@ describe('AuditLogsPage', () => {
   });
 
   it('omits empty filters from the request', async () => {
+    page.fromFilter.set('');
+    page.toFilter.set('');
     await applyFilters();
 
     const req = httpMock.expectOne((request) => request.url === '/api/v1/audit-logs');
@@ -130,11 +132,12 @@ describe('AuditLogsPage', () => {
     expect(page.actionFilter()).toBe('');
     expect(page.usernameFilter()).toBe('');
     expect(page.searchFilter()).toBe('');
-    expect(page.fromFilter()).toBe('');
-    expect(page.toFilter()).toBe('');
+    expect(page.fromFilter()).toBe((page as any).relativeDate(-1));
+    expect(page.toFilter()).toBe((page as any).relativeDate(0));
 
     const req = httpMock.expectOne((request) => request.url === '/api/v1/audit-logs');
     expect(req.request.params.has('entityType')).toBe(false);
+    expect(req.request.params.has('from')).toBe(true);
     req.flush(pageOf([log()]));
   });
 

@@ -1,98 +1,50 @@
 <section class="page attendance-browser">
-  <header class="page-header">
+  <header class="page-header hero-header">
     <div>
-      <p class="eyebrow">{{ i18n.t('attendanceBrowser.eyebrow') }}</p>
-      <h1>{{ i18n.t('attendanceBrowser.title') }}</h1>
-      <p>{{ i18n.t('attendanceBrowser.description') }}</p>
+      <p class="eyebrow">{{ i18n.locale().startsWith('ar') ? 'الحضور والانصراف' : 'Attendance' }}</p>
+      <h1>{{ i18n.locale().startsWith('ar') ? 'تفاصيل حضور الموظفين' : 'Employee attendance details' }}</h1>
+      <p>{{ i18n.locale().startsWith('ar') ? 'فلترة حسب التاريخ، بحث سريع، تصدير، ثم فتح سجل كل موظف.' : 'Filter by date, search, export, then open each employee record.' }}</p>
     </div>
-    <a class="button secondary" routerLink="/imports">← {{ i18n.t('attendanceBrowser.backToImports') }}</a>
+    <a class="button secondary" routerLink="/imports">← {{ i18n.locale().startsWith('ar') ? 'العودة للاستيراد' : 'Back to imports' }}</a>
   </header>
 
   @if (error()) { <div class="alert error">{{ error() }}</div> }
   @if (loading()) { <div class="loading"></div> }
 
   @if (months().length === 0 && !loading()) {
-    <div class="empty-card">
-      <strong>{{ i18n.t('attendanceBrowser.noPunches') }}</strong>
-    </div>
+    <div class="empty-card"><strong>{{ i18n.locale().startsWith('ar') ? 'لا توجد بصمات مستوردة بعد.' : 'No imported punches yet.' }}</strong></div>
   } @else {
     <section class="card month-section">
-      <div class="section-title">
-        <div>
-          <h2>{{ i18n.t('attendanceBrowser.availableMonths') }}</h2>
-          <p>{{ i18n.t('attendanceBrowser.chooseMonthHint') }}</p>
-        </div>
-      </div>
+      <div class="section-title"><div><h2>{{ i18n.locale().startsWith('ar') ? 'الشهور المتاحة' : 'Available months' }}</h2><p>{{ i18n.locale().startsWith('ar') ? 'اختر شهراً لعرض الموظفين والبصمات.' : 'Choose a month to see employees and punches.' }}</p></div></div>
       <div class="month-grid">
         @for (month of months(); track month.month) {
           <button class="month-card" [class.active]="selectedMonth() === month.month" (click)="selectMonth(month.month)">
-            <strong>{{ monthLabel(month.month) }}</strong>
-            <span>{{ month.employeeCount }} {{ i18n.t('attendanceBrowser.employeesCount') }}</span>
-            <span>{{ month.punchCount }} {{ i18n.t('attendanceBrowser.punchesCount') }}</span>
-            @if (month.unmatchedEmployeeCount > 0) {
-              <small class="warning">{{ month.unmatchedEmployeeCount }} {{ i18n.t('attendanceBrowser.unmapped') }}</small>
-            }
+            <strong>{{ monthLabel(month.month) }}</strong><span>{{ month.employeeCount }} {{ i18n.locale().startsWith('ar') ? 'موظف/مستخدم' : 'employees/users' }}</span><span>{{ month.punchCount }} {{ i18n.locale().startsWith('ar') ? 'بصمة' : 'punches' }}</span>
+            @if (month.unmatchedEmployeeCount > 0) { <small class="warning">{{ month.unmatchedEmployeeCount }} {{ i18n.locale().startsWith('ar') ? 'غير مربوط' : 'unmapped' }}</small> }
           </button>
         }
       </div>
     </section>
 
     <section class="card employees-section">
-      <div class="section-title employee-title">
-        <div>
-          <h2>{{ i18n.t('attendanceBrowser.employeesIn') }} {{ monthLabel(selectedMonth()) }}</h2>
-          <p>{{ filteredEmployees().length }} {{ i18n.t('attendanceBrowser.records') }}</p>
-        </div>
-        <input class="search-input" type="search" [value]="search()" (input)="setSearch($event)"
-          [placeholder]="i18n.t('attendanceBrowser.searchPlaceholder')" />
+      <div class="section-title employee-title"><div><h2>{{ i18n.locale().startsWith('ar') ? 'الموظفون في' : 'Employees in' }} {{ monthLabel(selectedMonth()) }}</h2><p>{{ filteredEmployees().length }} {{ i18n.locale().startsWith('ar') ? 'سجل مطابق' : 'matching records' }}</p></div></div>
+      <div class="filters-bar">
+        <label class="filter-field grow"><span>{{ i18n.locale().startsWith('ar') ? 'بحث' : 'Search' }}</span><input class="search-input" type="search" [value]="search()" (input)="setSearch($event)" [placeholder]="i18n.locale().startsWith('ar') ? 'الاسم أو الكود أو رقم الجهاز' : 'Name, code or device ID'" /></label>
+        <label class="filter-field"><span>{{ i18n.locale().startsWith('ar') ? 'من تاريخ' : 'From' }}</span><input type="date" [value]="fromDate()" (input)="setFromDate($event)" /></label>
+        <label class="filter-field"><span>{{ i18n.locale().startsWith('ar') ? 'إلى تاريخ' : 'To' }}</span><input type="date" [value]="toDate()" (input)="setToDate($event)" /></label>
+        <button class="button secondary" type="button" (click)="resetFilters()">{{ i18n.locale().startsWith('ar') ? 'إعادة الضبط' : 'Reset' }}</button>
+        <button class="button gold" type="button" (click)="exportCsv()" [disabled]="filteredEmployees().length === 0">⇩ {{ i18n.locale().startsWith('ar') ? 'تصدير النتائج' : 'Export results' }}</button>
       </div>
 
       <div class="table-card">
-        <table>
-          <thead>
-            <tr>
-              <th>{{ i18n.t('attendanceBrowser.thEmployee') }}</th>
-              <th>{{ i18n.t('attendanceBrowser.thDeviceId') }}</th>
-              <th>{{ i18n.t('attendanceBrowser.thStatus') }}</th>
-              <th>{{ i18n.t('attendanceBrowser.thPunches') }}</th>
-              <th>{{ i18n.t('attendanceBrowser.thFirstLast') }}</th>
-              <th></th>
+        <table><thead><tr><th>{{ i18n.locale().startsWith('ar') ? 'الموظف' : 'Employee' }}</th><th>{{ i18n.locale().startsWith('ar') ? 'رقم الجهاز' : 'Device ID' }}</th><th>{{ i18n.locale().startsWith('ar') ? 'الحالة' : 'Status' }}</th><th>{{ i18n.locale().startsWith('ar') ? 'البصمات' : 'Punches' }}</th><th>{{ i18n.locale().startsWith('ar') ? 'أول / آخر بصمة' : 'First / last punch' }}</th><th></th></tr></thead>
+          <tbody>@for (item of filteredEmployees(); track item.deviceUserId) {
+            <tr class="clickable-row" [routerLink]="['/imports/attendance', item.deviceUserId]" [queryParams]="{ month: selectedMonth() }">
+              <td><strong>{{ displayName(item) }}</strong>@if (item.employeeCode) { <small>{{ item.employeeCode }}</small> }@if (!item.employeeName && item.observedName) { <small>{{ item.observedName }}</small> }</td>
+              <td><code>{{ item.deviceUserId }}</code></td><td><span class="status" [class.mapped]="item.mapped" [class.unmapped]="!item.mapped">{{ item.mapped ? (i18n.locale().startsWith('ar') ? 'مربوط بموظف' : 'Mapped') : (i18n.locale().startsWith('ar') ? 'غير مضاف للنظام' : 'Not in employees') }}</span></td><td><strong>{{ item.punchCount }}</strong></td><td><span class="ltr">{{ dateTime(item.firstPunch) }}</span><small class="ltr">{{ dateTime(item.lastPunch) }}</small></td>
+              <td class="actions" (click)="$event.stopPropagation()">@if (!item.mapped) { <a class="button gold compact" [routerLink]="['/imports/attendance', item.deviceUserId]" [queryParams]="{ month: selectedMonth(), add: 1 }">+ {{ i18n.locale().startsWith('ar') ? 'إضافة موظف' : 'Add employee' }}</a> } @else { <a class="button secondary compact" [routerLink]="['/imports/attendance', item.deviceUserId]" [queryParams]="{ month: selectedMonth() }">{{ i18n.locale().startsWith('ar') ? 'التفاصيل' : 'Details' }} →</a> }</td>
             </tr>
-          </thead>
-          <tbody>
-            @for (item of filteredEmployees(); track item.deviceUserId) {
-              <tr class="clickable-row" [routerLink]="['/imports/attendance', item.deviceUserId]" [queryParams]="{ month: selectedMonth() }">
-                <td>
-                  <strong>{{ displayName(item) }}</strong>
-                  @if (item.employeeCode) { <small>{{ item.employeeCode }}</small> }
-                  @if (!item.employeeName && item.observedName) { <small>{{ item.observedName }}</small> }
-                </td>
-                <td><code>{{ item.deviceUserId }}</code></td>
-                <td>
-                  <span class="status" [class.mapped]="item.mapped" [class.unmapped]="!item.mapped">
-                    {{ item.mapped ? i18n.t('attendanceBrowser.statusMapped') : i18n.t('attendanceBrowser.statusUnmapped') }}
-                  </span>
-                </td>
-                <td><strong>{{ item.punchCount }}</strong></td>
-                <td><span class="ltr">{{ dateTime(item.firstPunch) }}</span><small class="ltr">{{ dateTime(item.lastPunch) }}</small></td>
-                <td class="actions" (click)="$event.stopPropagation()">
-                  @if (!item.mapped) {
-                    <a class="button gold compact" [routerLink]="['/imports/attendance', item.deviceUserId]"
-                      [queryParams]="{ month: selectedMonth(), add: 1 }">
-                      + {{ i18n.t('attendanceBrowser.addEmployee') }}
-                    </a>
-                  } @else {
-                    <a class="button secondary compact" [routerLink]="['/imports/attendance', item.deviceUserId]"
-                      [queryParams]="{ month: selectedMonth() }">
-                      {{ i18n.t('attendanceBrowser.details') }} →
-                    </a>
-                  }
-                </td>
-              </tr>
-            } @empty {
-              <tr><td colspan="6" class="empty-cell">{{ i18n.t('attendanceBrowser.noResults') }}</td></tr>
-            }
-          </tbody>
+          } @empty { <tr><td colspan="6" class="empty-cell">{{ i18n.locale().startsWith('ar') ? 'لا توجد نتائج ضمن الفلاتر.' : 'No results match the filters.' }}</td></tr> }</tbody>
         </table>
       </div>
     </section>

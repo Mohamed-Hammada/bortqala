@@ -9,16 +9,18 @@ import { Worker } from '../../models/workforce.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
 import { downloadBlob } from '../../../../core/download';
 import { NotificationService } from '../../../../core/notification.service';
+import { WorkforceExcelImportButtonComponent } from '../../ui/workforce-excel-import-button.component';
 
 @Component({
   selector: 'app-workers',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ModalDialogComponent],
+  imports: [WorkforceExcelImportButtonComponent, CommonModule, FormsModule, RouterLink, ModalDialogComponent],
   template: `
     <div class="workforce-container">
       <header class="page-header">
         <div><span class="eyebrow">{{ i18n.t('workforce.ui.workers.eyebrow') }}</span><h1>{{ i18n.t('workforce.ui.workers.title') }}</h1></div>
         <div class="header-actions">
+        <app-workforce-excel-import-button kind="workers" />
           <button type="button" class="btn btn-secondary" (click)="exportExcel()">{{ i18n.t('workforce.ui.exportExcel') }}</button>
           <button type="button" class="btn btn-primary" (click)="openCreateModal()">{{ i18n.t('workforce.ui.workers.add') }}</button>
         </div>
@@ -250,3 +252,5 @@ export class WorkersComponent implements OnInit {
     }
   }
 }
+
+// BORTQALA_FEEDBACK_20260816_EXCEL_WORKERS

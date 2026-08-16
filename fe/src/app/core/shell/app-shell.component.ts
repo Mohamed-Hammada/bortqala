@@ -346,8 +346,8 @@ export const NAV_ITEMS: NavItem[] = [
       descriptionKey: 'nav.organizationHint',
       path: '/organization',
       icon: 'categories',
-      workspace: 'workspace.admin',
-      roles: ['ADMIN'],
+      workspace: 'workspace.people',
+      roles: ['ADMIN', 'HR_MANAGER'],
     },
     {
       menuId: 'audit-logs',
@@ -872,3 +872,5 @@ export class AppShellComponent {
     this.chordTimer = null;
   }
 }
+
+// BORTQALA_FEEDBACK_20260816_ORGANIZATION: organization belongs to People and is available to HR managers.

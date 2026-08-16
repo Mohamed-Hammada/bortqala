@@ -1026,3 +1026,9 @@ kbd {
   width: 18px;
   height: 18px;
 }
+
+/* BORTQALA_FEEDBACK_20260816_NOTIFICATION_SCROLL */
+.action-center-dialog{max-height:min(86dvh,760px);display:flex;flex-direction:column;overflow:hidden}
+.action-center-header{flex:0 0 auto}
+.action-center-list{flex:1 1 auto;min-height:0;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain;scrollbar-gutter:stable;padding-inline-end:.25rem}
+@media(max-width:680px){.action-center-dialog{max-height:90dvh}.action-center-list{max-height:none!important}}

@@ -28,7 +28,7 @@ class BiometricImportServiceTests {
     void preview_throwsBusinessRuleExceptionWithSafeKey_onIOException() throws IOException {
         MultipartFile mockFile = org.mockito.Mockito.mock(MultipartFile.class);
         when(mockFile.isEmpty()).thenReturn(false);
-        when(mockFile.getBytes()).thenThrow(new IOException("Simulated disk error"));
+        when(mockFile.getInputStream()).thenThrow(new IOException("Simulated disk error"));
 
         assertThatThrownBy(() -> biometricImportService.preview(mockFile))
                 .isInstanceOf(BusinessRuleException.class)

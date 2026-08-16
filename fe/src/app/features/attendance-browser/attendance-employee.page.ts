@@ -82,7 +82,7 @@ export class AttendanceEmployeePage {
 
   async addEmployee(): Promise<void> {
     if (!this.employeeCode.trim() || !this.fullName.trim() || !this.categoryId) {
-      this.notification.warning(this.i18n.t('attendanceEmployee.validationRequired'));
+      this.notification.warning(this.i18n.locale() === 'ar-EG' ? 'أكمل الحقول المطلوبة.' : 'Complete the required fields.');
       return;
     }
     this.saving.set(true);
@@ -100,7 +100,7 @@ export class AttendanceEmployeePage {
         version: null,
       };
       await firstValueFrom(this.http.post('/api/v1/employees', payload));
-      this.notification.success(this.i18n.t('attendanceEmployee.addSuccess'));
+      this.notification.success(this.i18n.locale() === 'ar-EG' ? 'تمت إضافة الموظف وربطه برقم جهاز البصمة.' : 'Employee added and mapped to the biometric device ID.');
       this.showAdd.set(false);
       await this.load();
     } catch (error) {

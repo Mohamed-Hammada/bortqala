@@ -747,5 +747,8 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260816_v254_biometric_reimport_auto_employees_i18n.yaml
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260816_v255_entitlement_feature_translations.yaml
+      relativeToChangelogFile: false
 
 

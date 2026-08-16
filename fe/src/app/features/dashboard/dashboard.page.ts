@@ -276,4 +276,12 @@ export class DashboardPage {
     )[value ?? ''];
     return key ? this.i18n.t(key) : this.i18n.t('dashboard.noReport');
   }
+
+  // BORTQALA_FEEDBACK_20260816_DASHBOARD_ORDER
+  editorWidgetOptions() {
+    const order = this.draftWidgetIds();
+    const rank = new Map(order.map((id, index) => [id, index]));
+    return [...this.widgetOptions].sort((a: any, b: any) => (rank.get(a.id) ?? 999) - (rank.get(b.id) ?? 999));
+  }
+
 }

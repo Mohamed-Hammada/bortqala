@@ -239,7 +239,7 @@ export const routes: Routes = [
       {
         path: 'organization',
         canActivate: [roleGuard, menuAccessGuard],
-        data: { roles: ['ADMIN'], menuId: 'organization' },
+        data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'organization' },
         loadComponent: () =>
           import('./features/organization/organization.page').then((module) => module.OrganizationPage),
       },
@@ -324,3 +324,5 @@ export const routes: Routes = [
   },
   { path: '**', redirectTo: 'not-found' },
 ];
+
+// BORTQALA_FEEDBACK_20260816_ORGANIZATION route parity

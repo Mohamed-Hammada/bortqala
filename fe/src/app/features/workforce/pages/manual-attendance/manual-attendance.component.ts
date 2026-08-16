@@ -558,7 +558,10 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
     .rule-label { color: var(--secondary-text); font-weight: 600; min-width: 110px; }
     .rule-value { color: var(--ink); font-weight: 500; }
     .rules-desc { font-size: 0.75rem; color: var(--muted); margin-top: 0.375rem; font-style: italic; }
-  `]
+  
+/* BORTQALA_FEEDBACK_20260816_WORKFORCE_ATTENDANCE_UI */
+:host{display:block}.page,.attendance-page{max-width:1600px;margin-inline:auto;display:grid;gap:1rem}.card{border-radius:16px!important;box-shadow:0 6px 24px rgba(15,23,42,.04)}.filters,.filter-bar,.toolbar{display:flex;gap:.65rem;align-items:end;flex-wrap:wrap;padding:.8rem;border-radius:14px;background:var(--surface-muted,#f8fafc)}.matrix,.matrix-wrapper,.table-wrap,.table-card{overflow:auto!important;max-height:68vh;border:1px solid var(--line,#e5e7eb);border-radius:14px}.matrix table,table{border-collapse:separate;border-spacing:0}.matrix th,thead th{position:sticky;top:0;z-index:3;background:var(--surface,#fff)}.matrix td:first-child,.matrix th:first-child{position:sticky;inset-inline-start:0;z-index:2;background:var(--surface,#fff)}input,select{min-height:38px}@media(max-width:760px){.filters,.filter-bar,.toolbar{display:grid;grid-template-columns:1fr}.matrix,.matrix-wrapper,.table-wrap,.table-card{max-height:none}}
+`]
 })
 export class ManualAttendanceComponent implements OnInit {
   private workforceService = inject(WorkforceService);

@@ -653,3 +653,6 @@ td small {
   padding: 8px 14px;
   border-top: 1px solid var(--line);
 }
+
+/* BORTQALA_FEEDBACK_20260816_IMPORT_HISTORY */
+.batch-history-toolbar{display:flex;justify-content:flex-end;gap:.5rem;margin:.65rem 0 1rem}.imports-page .table-card{overflow:auto;border-radius:14px}.imports-page .upload-card{border-radius:18px}.imports-page .drop-zone{min-height:170px;display:grid;place-items:center}.imports-page .batch-card{transition:.15s ease}@media(max-width:720px){.batch-history-toolbar,.batch-history-toolbar .button{width:100%}.batch-history-toolbar{display:grid}}

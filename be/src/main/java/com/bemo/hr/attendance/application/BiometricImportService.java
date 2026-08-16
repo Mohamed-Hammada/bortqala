@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -53,12 +52,11 @@ public class BiometricImportService {
     public ImportApi.PreviewResponse preview(MultipartFile file) {
         if (file.isEmpty()) throw new BusinessRuleException("Select a non-empty biometric file.", "BIO_FILE_EMPTY", HttpStatus.CONFLICT);
         try {
-            byte[] content = file.getBytes();
-            var parsed = biometricFileReader.read(file.getOriginalFilename() == null ? "biometric-file"
-                    : file.getOriginalFilename(), new ByteArrayInputStream(content));
+                        var parsed = biometricFileReader.read(file.getOriginalFilename() == null ? "biometric-file"
+                    : file.getOriginalFilename(), file.getInputStream());
             return new ImportApi.PreviewResponse(
                     file.getOriginalFilename() == null ? "biometric-file" : file.getOriginalFilename(),
-                    sha256(content), parsed.totalRows(), parsed.importedRows(), parsed.errors().size(),
+                    sha256(file), parsed.totalRows(), parsed.importedRows(), parsed.errors().size(),
                     parsed.rows().stream().limit(PREVIEW_LIMIT).map(row -> new ImportApi.PreviewRowResponse(
                             row.rowNumber(), row.deviceUserId(), row.employeeName(),
                             row.punchedAt().toEpochMilli(), row.rawLine())).toList(),
@@ -99,22 +97,21 @@ public class BiometricImportService {
             throw new BusinessRuleException("Selected source is inactive.", "BIO_SOURCE_INACTIVE", HttpStatus.CONFLICT);
         }
         try {
-            byte[] content = file.getBytes();
-            String checksum = sha256(content);
+                        String checksum = sha256(file);
             var existing = importBatchRepository
                     .findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
                             sourceId, checksum, ImportStatus.REVERSED);
             if (existing.isPresent()) {
                 if (source.isAutoCreateEmployees()) {
                     var duplicateParsed = biometricFileReader.read(file.getOriginalFilename(),
-                            new ByteArrayInputStream(content));
+                            file.getInputStream());
                     duplicateParsed.rows().forEach(row -> employeeProvisioningService.resolveEmployeeId(
                             source, row.deviceUserId(), row.employeeName(), row.punchedAt(), actor));
                 }
                 return toResponse(existing.get(), true);
             }
 
-            var parsed = biometricFileReader.read(file.getOriginalFilename(), new ByteArrayInputStream(content));
+            var parsed = biometricFileReader.read(file.getOriginalFilename(), file.getInputStream());
             String appId = TenantContext.require();
             String fileName = file.getOriginalFilename() == null ? "biometric-file" : file.getOriginalFilename();
             int totalRows = parsed.totalRows();
@@ -195,11 +192,15 @@ public class BiometricImportService {
                 batch.getImportedAt(), duplicate, errors);
     }
 
-    private String sha256(byte[] content) {
-        try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(content));
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("SHA-256 is not available.", exception);
+    private String sha256(MultipartFile file) {
+        // BORTQALA_FEEDBACK_20260816_STREAMING_UPLOAD
+        try (var input = file.getInputStream()) {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] buffer = new byte[64 * 1024];
+            for (int read; (read = input.read(buffer)) != -1;) digest.update(buffer, 0, read);
+            return HexFormat.of().formatHex(digest.digest());
+        } catch (java.io.IOException | NoSuchAlgorithmException ex) {
+            throw new IllegalStateException("Could not calculate biometric file checksum", ex);
         }
     }
 
