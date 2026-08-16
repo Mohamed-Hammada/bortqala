@@ -393,8 +393,3 @@ databaseChangeLog:
   - include:
       file: db/changelog/schema/update/20260816_v260_runtime_feedback_fixes.yaml
       relativeToChangelogFile: false
-  # BORTQALA_CORRECTIVE_20260816_PRODUCT_ANALYTICS_V3
-  - include:
-      file: db/changelog/schema/update/20260816_v261_corrective_runtime_fixes.yaml
-      relativeToChangelogFile: false
-

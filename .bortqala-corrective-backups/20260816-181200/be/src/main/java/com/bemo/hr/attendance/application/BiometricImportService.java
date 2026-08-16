@@ -102,11 +102,19 @@ public class BiometricImportService {
                     .findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
                             sourceId, checksum, ImportStatus.REVERSED);
             if (existing.isPresent()) {
-            // BORTQALA_CORRECTIVE_20260816_DUPLICATE_FASTPATH
-            // The checksum already proves this exact payload was imported. Do not parse the same large file
-            // again and do not repeat per-user provisioning on an idempotent duplicate request.
-            return toResponse(existing.get(), true);
-        }
+                if (source.isAutoCreateEmployees()) {
+                    var duplicateParsed = biometricFileReader.read(file.getOriginalFilename(),
+                            file.getInputStream());
+                    java.util.Set<String> seenDeviceUsers = new java.util.HashSet<>();
+                    duplicateParsed.rows().forEach(row -> {
+                        if (seenDeviceUsers.add(row.deviceUserId())) {
+                            employeeProvisioningService.resolveEmployeeId(
+                                    source, row.deviceUserId(), row.employeeName(), row.punchedAt(), actor);
+                        }
+                    });
+                }
+                return toResponse(existing.get(), true);
+            }
 
             var parsed = biometricFileReader.read(file.getOriginalFilename(), file.getInputStream());
             String appId = TenantContext.require();

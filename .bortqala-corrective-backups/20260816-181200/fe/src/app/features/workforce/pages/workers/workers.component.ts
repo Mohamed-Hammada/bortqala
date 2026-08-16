@@ -132,13 +132,7 @@ import { WorkforceExcelImportButtonComponent } from '../../ui/workforce-excel-im
     .inline-action-button:disabled { opacity: .65;cursor: not-allowed; }
     .save-error { margin-top: 1rem;padding: .75rem 1rem;border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line));border-radius: 8px;background: var(--danger-soft);color: var(--danger); }
     @media (max-width: 760px){.page-header{align-items: stretch;flex-direction: column;gap: 1rem}.form-grid{grid-template-columns: 1fr}.category-helper{align-items:flex-start;flex-direction:column}}
-  
-    /* BORTQALA_CORRECTIVE_20260816_WORKER_HEADER_ORDER */
-    .page-header { display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
-    .page-header > :not(.header-actions) { order:1; min-width:0; }
-    .page-header > .header-actions { order:2; margin-inline-start:auto; display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
-    @media (max-width:720px) { .page-header > .header-actions { width:100%; margin-inline-start:0; } }
-`]
+  `]
 })
 export class WorkersComponent implements OnInit {
   workforceService = inject(WorkforceService);
