@@ -22,9 +22,11 @@ import { WorkforceExcelImportButtonComponent } from '../../ui/workforce-excel-im
           <h1>{{ i18n.t('workforce.ui.contractors.title') }}</h1>
         </div>
         <div class="header-actions">
-        <app-workforce-excel-import-button kind="contractors" />
-          <button type="button" class="btn btn-secondary" (click)="exportExcel()">{{ i18n.t('workforce.ui.exportExcel') }}</button>
-          <button type="button" class="btn btn-primary" (click)="openCreateModal()">{{ i18n.t('workforce.ui.contractors.add') }}</button>
+          <app-workforce-excel-import-button kind="contractors" />
+          <div class="btn-group">
+            <button type="button" class="btn btn-secondary" (click)="exportExcel()">{{ i18n.t('workforce.ui.exportExcel') }}</button>
+            <button type="button" class="btn btn-primary" (click)="openCreateModal()">{{ i18n.t('workforce.ui.contractors.add') }}</button>
+          </div>
         </div>
       </header>
 
@@ -156,7 +158,11 @@ import { WorkforceExcelImportButtonComponent } from '../../ui/workforce-excel-im
     .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
     .eyebrow { font-size: 0.875rem; color: #d97706; font-weight: 600; }
     .page-header { display: flex; justify-content: space-between; align-items: center; }
-    .header-actions { display: flex; gap: .75rem; }
+    .header-actions { display: flex; gap: .75rem; align-items: center; }
+    .btn-group { display: flex; gap: 0; }
+    .btn-group .btn { border-radius: 0; }
+    .btn-group .btn:first-child { border-radius: 8px 0 0 8px; }
+    .btn-group .btn:last-child { border-radius: 0 8px 8px 0; }
     .page-header h1 { font-size: 1.75rem; font-weight: 800; color: var(--ink); margin: 0.25rem 0 0 0; }
     .card { background: var(--surface); border-radius: 12px; border: 1px solid var(--line); padding: 1.25rem; overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; text-align: start; }

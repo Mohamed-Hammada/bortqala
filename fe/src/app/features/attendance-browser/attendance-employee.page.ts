@@ -1,27 +1,22 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
-import { formatDateTime, dateInputToEpoch } from '../../core/date';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { formatDateTime } from '../../core/date';
 import { I18nService } from '../../core/i18n.service';
 import { apiErrorMessage } from '../../core/api-error';
 import { NotificationService } from '../../core/notification.service';
-import { AttendanceCategory } from '../categories/categories.models';
-import { EmployeePayload } from '../employees/employees.models';
 import { AttendanceApiService } from './attendance-api.service';
 import { EmployeeAttendanceDetails } from './attendance.models';
 
 @Component({
   selector: 'app-attendance-employee-page',
-  imports: [RouterLink, FormsModule],
+  imports: [RouterLink],
   templateUrl: './attendance-employee.page.html',
   styleUrl: './attendance-employee.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AttendanceEmployeePage {
   private readonly route = inject(ActivatedRoute);
-  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
   readonly api = inject(AttendanceApiService);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
@@ -31,16 +26,7 @@ export class AttendanceEmployeePage {
   readonly details = signal<EmployeeAttendanceDetails | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
-  readonly showAdd = signal(this.route.snapshot.queryParamMap.get('add') === '1');
-  readonly categories = signal<AttendanceCategory[]>([]);
-  readonly saving = signal(false);
-
-  employeeCode = this.deviceUserId;
-  fullName = '';
-  categoryId = '';
-  employmentType: 'FIXED' | 'DAILY' = 'FIXED';
-  baseSalary = 0;
-  activeFrom = new Date().toISOString().slice(0, 10);
+  private readonly addRequested = this.route.snapshot.queryParamMap.get('add') === '1';
 
   constructor() {
     void this.load();
@@ -53,9 +39,10 @@ export class AttendanceEmployeePage {
       const details = await this.api.employee(this.deviceUserId, this.month());
       this.details.set(details);
       this.month.set(details.month);
-      this.fullName ||= details.observedName || details.deviceUserId;
-      this.employeeCode ||= details.deviceUserId;
-      if (!details.mapped) await this.loadCategories();
+      if (this.addRequested && !details.mapped) {
+        await this.openAddEmployee();
+        return;
+      }
     } catch (error) {
       this.error.set(apiErrorMessage(error, this.i18n));
     } finally {
@@ -63,51 +50,20 @@ export class AttendanceEmployeePage {
     }
   }
 
-  async loadCategories(): Promise<void> {
-    if (this.categories().length > 0) return;
-    try {
-      const categories = await firstValueFrom(this.http.get<AttendanceCategory[]>('/api/v1/categories'));
-      const allowed = categories.filter((item) => item.active && item.scope !== 'WORKER');
-      this.categories.set(allowed);
-      this.categoryId ||= allowed[0]?.id ?? '';
-    } catch (error) {
-      this.error.set(apiErrorMessage(error, this.i18n));
-    }
-  }
-
   async openAddEmployee(): Promise<void> {
-    await this.loadCategories();
-    this.showAdd.set(true);
-  }
-
-  async addEmployee(): Promise<void> {
-    if (!this.employeeCode.trim() || !this.fullName.trim() || !this.categoryId) {
-      this.notification.warning(this.i18n.locale() === 'ar-EG' ? 'أكمل الحقول المطلوبة.' : 'Complete the required fields.');
-      return;
-    }
-    this.saving.set(true);
-    try {
-      const payload: EmployeePayload = {
-        employeeCode: this.employeeCode.trim(),
-        fullName: this.fullName.trim(),
+    const details = this.details();
+    const month = this.month();
+    const returnUrl = `/imports/attendance/${encodeURIComponent(this.deviceUserId)}${month ? `?month=${encodeURIComponent(month)}` : ''}`;
+    await this.router.navigate(['/employees'], {
+      queryParams: {
+        fromBiometric: '1',
         deviceUserId: this.deviceUserId,
-        categoryId: this.categoryId,
-        employmentType: this.employmentType,
-        baseSalary: Number(this.baseSalary) || 0,
-        activeFrom: dateInputToEpoch(this.activeFrom),
-        activeTo: null,
-        active: true,
-        version: null,
-      };
-      await firstValueFrom(this.http.post('/api/v1/employees', payload));
-      this.notification.success(this.i18n.locale() === 'ar-EG' ? 'تمت إضافة الموظف وربطه برقم جهاز البصمة.' : 'Employee added and mapped to the biometric device ID.');
-      this.showAdd.set(false);
-      await this.load();
-    } catch (error) {
-      this.error.set(apiErrorMessage(error, this.i18n));
-    } finally {
-      this.saving.set(false);
-    }
+        employeeCode: this.deviceUserId,
+        fullName: details?.observedName || details?.deviceUserId || this.deviceUserId,
+        month: month ?? '',
+        returnUrl,
+      },
+    });
   }
 
   dateTime(value: number | null): string {
@@ -125,3 +81,5 @@ export class AttendanceEmployeePage {
     return details?.employeeName || details?.observedName || details?.deviceUserId || this.deviceUserId;
   }
 }
+
+// BORTQALA_REMAINING_20260816_V3_BIOMETRIC_EMPLOYEE_PARITY

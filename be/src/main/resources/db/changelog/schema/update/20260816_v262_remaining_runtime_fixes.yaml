@@ -1,0 +1,109 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260816-fix-product-event-operation-unique-v4
+      author: openai
+      dbms: postgresql
+      comment: Replace any one-column app_id uniqueness on product analytics events with app_id + operation_id.
+      changes:
+        - sql:
+            splitStatements: false
+            stripComments: false
+            sql: |
+              DO $$
+              DECLARE
+                  target_oid oid;
+                  target_schema text;
+                  target_table text;
+                  app_attnum smallint;
+                  r record;
+              BEGIN
+                  SELECT c.conrelid
+                    INTO target_oid
+                    FROM pg_constraint c
+                   WHERE c.conname = 'uk_product_event_operation'
+                   ORDER BY c.oid
+                   LIMIT 1;
+
+                  IF target_oid IS NULL THEN
+                      SELECT cls.oid
+                        INTO target_oid
+                        FROM pg_class cls
+                        JOIN pg_namespace ns ON ns.oid = cls.relnamespace
+                       WHERE cls.relkind = 'r'
+                         AND EXISTS (SELECT 1 FROM pg_attribute a WHERE a.attrelid = cls.oid AND a.attname = 'app_id' AND NOT a.attisdropped)
+                         AND EXISTS (SELECT 1 FROM pg_attribute a WHERE a.attrelid = cls.oid AND a.attname = 'operation_id' AND NOT a.attisdropped)
+                         AND (cls.relname ILIKE '%product%event%' OR cls.relname ILIKE '%analytics%event%')
+                       ORDER BY CASE WHEN cls.relname ILIKE '%product%event%' THEN 0 ELSE 1 END, cls.relname
+                       LIMIT 1;
+                  END IF;
+
+                  IF target_oid IS NULL THEN
+                      RAISE EXCEPTION 'Could not locate product analytics event table with app_id and operation_id';
+                  END IF;
+
+                  SELECT ns.nspname, cls.relname
+                    INTO target_schema, target_table
+                    FROM pg_class cls
+                    JOIN pg_namespace ns ON ns.oid = cls.relnamespace
+                   WHERE cls.oid = target_oid;
+
+                  SELECT attnum INTO app_attnum
+                    FROM pg_attribute
+                   WHERE attrelid = target_oid AND attname = 'app_id' AND NOT attisdropped;
+
+                  -- Remove the known malformed constraint regardless of its current column list.
+                  FOR r IN
+                      SELECT conname
+                        FROM pg_constraint
+                       WHERE conrelid = target_oid AND conname = 'uk_product_event_operation'
+                  LOOP
+                      EXECUTE format('ALTER TABLE %I.%I DROP CONSTRAINT %I', target_schema, target_table, r.conname);
+                  END LOOP;
+
+                  -- Remove any other UNIQUE constraint that still makes app_id unique by itself.
+                  FOR r IN
+                      SELECT conname
+                        FROM pg_constraint
+                       WHERE conrelid = target_oid
+                         AND contype = 'u'
+                         AND array_length(conkey, 1) = 1
+                         AND conkey[1] = app_attnum
+                  LOOP
+                      EXECUTE format('ALTER TABLE %I.%I DROP CONSTRAINT %I', target_schema, target_table, r.conname);
+                  END LOOP;
+
+                  -- Remove standalone one-column UNIQUE indexes on app_id (not backing a constraint).
+                  FOR r IN
+                      SELECT idxns.nspname AS index_schema, idx.relname AS index_name
+                        FROM pg_index i
+                        JOIN pg_class idx ON idx.oid = i.indexrelid
+                        JOIN pg_namespace idxns ON idxns.oid = idx.relnamespace
+                       WHERE i.indrelid = target_oid
+                         AND i.indisunique
+                         AND i.indnkeyatts = 1
+                         AND (i.indkey::text = app_attnum::text)
+                         AND NOT EXISTS (SELECT 1 FROM pg_constraint c WHERE c.conindid = i.indexrelid)
+                  LOOP
+                      EXECUTE format('DROP INDEX %I.%I', r.index_schema, r.index_name);
+                  END LOOP;
+
+                  EXECUTE format(
+                      'ALTER TABLE %I.%I ADD CONSTRAINT uk_product_event_operation UNIQUE (app_id, operation_id)',
+                      target_schema, target_table
+                  );
+
+                  IF NOT EXISTS (
+                      SELECT 1
+                        FROM pg_constraint c
+                        JOIN pg_attribute a1 ON a1.attrelid = c.conrelid AND a1.attnum = c.conkey[1]
+                        JOIN pg_attribute a2 ON a2.attrelid = c.conrelid AND a2.attnum = c.conkey[2]
+                       WHERE c.conrelid = target_oid
+                         AND c.conname = 'uk_product_event_operation'
+                         AND c.contype = 'u'
+                         AND array_length(c.conkey, 1) = 2
+                         AND a1.attname = 'app_id'
+                         AND a2.attname = 'operation_id'
+                  ) THEN
+                      RAISE EXCEPTION 'uk_product_event_operation repair verification failed on %.%', target_schema, target_table;
+                  END IF;
+              END $$;

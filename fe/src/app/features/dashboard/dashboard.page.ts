@@ -88,6 +88,7 @@ export class DashboardPage {
       this.draftWidgetIds.set([...preferences.dashboardWidgetIds]);
       this.animationsEnabled.set(preferences.dashboardAnimationsEnabled);
     }, { allowSignalWrites: true });
+    window.addEventListener('bortqala:attendance-updated', () => void this.loadAll());
     this.route.queryParams.subscribe((params: Record<string, string>) => {
       const y = Number(params['year']) || new Date().getFullYear();
       const m = Number(params['month']) || new Date().getMonth() + 1;

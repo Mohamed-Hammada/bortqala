@@ -111,6 +111,17 @@ export class ImportsStore {
       this.loading.set(false);
     }
   }
+  async isDuplicate(sourceId: string, checksum: string): Promise<boolean> {
+    try {
+      const result = await firstValueFrom(this.http.get<{ duplicate: boolean }>('/api/v1/imports/preflight', {
+        params: { sourceId, checksum },
+      }));
+      return !!result.duplicate;
+    } catch {
+      return false;
+    }
+  }
+
   async upload(file: File, sourceId: string) {
     this.loading.set(true);
     this.error.set(null);

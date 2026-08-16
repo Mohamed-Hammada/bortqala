@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/imports")
@@ -35,6 +36,12 @@ public class BiometricImportController {
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     List<ImportApi.BatchResponse> list() { return biometricImportService.listBatches(); }
+
+    @GetMapping("/preflight")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    Map<String, Boolean> preflight(@RequestParam String sourceId, @RequestParam String checksum) {
+        return Map.of("duplicate", biometricImportService.alreadyImported(sourceId, checksum));
+    }
 
     @PostMapping(path = "/preview", consumes = "multipart/form-data")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")

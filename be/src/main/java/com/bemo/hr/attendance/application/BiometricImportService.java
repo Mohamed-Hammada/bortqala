@@ -17,7 +17,10 @@ import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.security.TenantContext;
+import jakarta.persistence.EntityManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class BiometricImportService {
     private static final int PREVIEW_LIMIT = 100;
+    private static final int BATCH_FLUSH_SIZE = 500;
 
     private final BiometricFileReader biometricFileReader;
     private final BiometricSourceRepository biometricSourceRepository;
@@ -47,6 +51,15 @@ public class BiometricImportService {
     private final BiometricEmployeeProvisioningService employeeProvisioningService;
     private final EmployeeRepository employeeRepository;
     private final AuditService auditService;
+    private final EntityManager entityManager;
+    private final JdbcTemplate jdbcTemplate;
+    private final ApplicationEventPublisher eventPublisher;
+
+    public boolean alreadyImported(String sourceId, String checksum) {
+        if (sourceId == null || sourceId.isBlank() || checksum == null || !checksum.matches("(?i)[0-9a-f]{64}")) return false;
+        return importBatchRepository.findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
+                sourceId, checksum.toLowerCase(java.util.Locale.ROOT), ImportStatus.REVERSED).isPresent();
+    }
 
     @Transactional
     public ImportApi.PreviewResponse preview(MultipartFile file) {
@@ -133,6 +146,7 @@ public class BiometricImportService {
             int duplicates = 0;
             List<PunchImportEvidence> evidence = new ArrayList<>(parsed.rows().size());
             java.util.Map<String, java.util.Optional<String>> employeeIdCache = new java.util.HashMap<>();
+            int processed = 0;
             for (var row : parsed.rows()) {
                 String employeeId = employeeIdCache.computeIfAbsent(row.deviceUserId(), key ->
                         java.util.Optional.ofNullable(employeeProvisioningService.resolveEmployeeId(
@@ -154,13 +168,34 @@ public class BiometricImportService {
                     evidence.add(new PunchImportEvidence(punchId, batch.getId(), appId,
                             row.rowNumber(), row.rawLine()));
                 }
+                processed++;
+                if (processed % BATCH_FLUSH_SIZE == 0) {
+                    entityManager.flush();
+                    entityManager.clear();
+                }
             }
-            punchImportEvidenceRepository.saveAll(evidence);
+            if (!evidence.isEmpty()) {
+                jdbcTemplate.batchUpdate(
+                    "INSERT INTO punch_import_evidence (punch_id, batch_id, app_id, row_number, raw_line) VALUES (?, ?, ?, ?, ?)",
+                    evidence, BATCH_FLUSH_SIZE,
+                    (ps, ev) -> {
+                        ps.setString(1, ev.getPunchId());
+                        ps.setString(2, ev.getBatchId());
+                        ps.setString(3, ev.getAppId());
+                        ps.setInt(4, ev.getRowNumber());
+                        ps.setString(5, ev.getRawLine());
+                    });
+            }
             batch.updateCounts(totalRows, validRows, errorRows, imported, duplicates);
             importBatchRepository.save(batch);
             importRowErrorRepository.saveAll(parsed.errors().stream()
                     .map(error -> new ImportRowError(batch.getId(), error.rowNumber(), error.message(), error.rawLine()))
                     .toList());
+            var firstImportedPunch = parsed.rows().stream().map(row -> row.punchedAt())
+                    .filter(java.util.Objects::nonNull).min(java.util.Comparator.naturalOrder()).orElse(null);
+            var lastImportedPunch = parsed.rows().stream().map(row -> row.punchedAt())
+                    .filter(java.util.Objects::nonNull).max(java.util.Comparator.naturalOrder()).orElse(null);
+            eventPublisher.publishEvent(new BiometricImportCompletedEvent(firstImportedPunch, lastImportedPunch, actor));
             return toResponse(batch, false);
         } catch (IOException exception) {
             throw new BusinessRuleException("Could not read the uploaded file.", "EXCEL_READ_FAILED", org.springframework.http.HttpStatus.BAD_REQUEST);
@@ -189,6 +224,10 @@ public class BiometricImportService {
                 batch.getTotalRows(), batch.getImportedRows(), batch.getValidRows(),
                 batch.getNewPunches(), batch.getDuplicatePunches(), batch.getErrorRows(), batch.getImportedBy(),
                 batch.getImportedAt(), duplicate, errors);
+    }
+
+    private String punchKey(String deviceUserId, Instant punchedAt) {
+        return deviceUserId + "\u001f" + punchedAt;
     }
 
     private String sha256(MultipartFile file) {

@@ -57,22 +57,4 @@
       </div>
     </section>
   }
-
-  @if (showAdd() && details() && !details()!.mapped) {
-    <div class="modal-backdrop" (click)="showAdd.set(false)">
-      <section class="add-dialog" (click)="$event.stopPropagation()">
-        <div class="dialog-head"><div><h2>{{ i18n.locale() === 'ar-EG' ? 'إضافة موظف من البصمة' : 'Add employee from attendance' }}</h2><p>{{ i18n.locale() === 'ar-EG' ? 'سيتم ربط الموظف تلقائياً برقم الجهاز.' : 'The employee will be mapped to this device ID automatically.' }}</p></div><button type="button" class="close" (click)="showAdd.set(false)">×</button></div>
-        <div class="form-grid">
-          <label><span>{{ i18n.locale() === 'ar-EG' ? 'كود الموظف *' : 'Employee code *' }}</span><input [(ngModel)]="employeeCode" /></label>
-          <label><span>{{ i18n.locale() === 'ar-EG' ? 'الاسم *' : 'Full name *' }}</span><input [(ngModel)]="fullName" /></label>
-          <label><span>{{ i18n.locale() === 'ar-EG' ? 'رقم جهاز البصمة' : 'Device user ID' }}</span><input [value]="deviceUserId" disabled /></label>
-          <label><span>{{ i18n.locale() === 'ar-EG' ? 'فئة الحضور *' : 'Attendance category *' }}</span><select [(ngModel)]="categoryId">@for (category of categories(); track category.id) { <option [value]="category.id">{{ category.name }}</option> }</select></label>
-          <label><span>{{ i18n.locale() === 'ar-EG' ? 'نوع التوظيف' : 'Employment type' }}</span><select [(ngModel)]="employmentType"><option value="FIXED">{{ i18n.locale() === 'ar-EG' ? 'ثابت' : 'Fixed' }}</option><option value="DAILY">{{ i18n.locale() === 'ar-EG' ? 'يومي' : 'Daily' }}</option></select></label>
-          <label><span>{{ i18n.locale() === 'ar-EG' ? 'الراتب الأساسي' : 'Base salary' }}</span><input type="number" min="0" [(ngModel)]="baseSalary" /></label>
-          <label><span>{{ i18n.locale() === 'ar-EG' ? 'تاريخ بدء العمل' : 'Active from' }}</span><input type="date" [(ngModel)]="activeFrom" /></label>
-        </div>
-        <div class="dialog-actions"><button class="button secondary" type="button" (click)="showAdd.set(false)">{{ i18n.locale() === 'ar-EG' ? 'إلغاء' : 'Cancel' }}</button><button class="button gold" type="button" [disabled]="saving()" (click)="addEmployee()">{{ saving() ? (i18n.locale() === 'ar-EG' ? 'جارٍ الحفظ…' : 'Saving…') : (i18n.locale() === 'ar-EG' ? 'إضافة وربط الموظف' : 'Add & map employee') }}</button></div>
-      </section>
-    </div>
-  }
 </section>

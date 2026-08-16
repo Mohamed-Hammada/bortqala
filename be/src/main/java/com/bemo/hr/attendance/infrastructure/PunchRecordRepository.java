@@ -22,6 +22,8 @@ public interface PunchRecordRepository extends JpaRepository<PunchRecord, String
 
     Optional<PunchRecord> findBySourceIdAndDeviceUserIdAndPunchedAt(String sourceId, String deviceUserId, Instant punchedAt);
 
+    List<PunchRecord> findBySourceIdAndPunchedAtBetweenOrderByPunchedAtAsc(String sourceId, Instant from, Instant to);
+
     /**
      * Removes only the punches this batch supplied that no other batch still
      * claims via punch_import_evidence. The batch's own evidence is deleted

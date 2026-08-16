@@ -27,6 +27,7 @@ export class ImportsPage {
   readonly notification = inject(NotificationService);
   readonly sampleTemplates = inject(SampleTemplateService);
   readonly file = signal<File | null>(null);
+  readonly duplicateChecking = signal(false);
   readonly isDragging = signal(false);
   readonly historyView = signal(new URLSearchParams(window.location.search).get('history') === 'all');
   readonly selectedSourceId = signal('');
@@ -75,13 +76,11 @@ export class ImportsPage {
     });
   }
 
-  choose(event: Event) {
+  async choose(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
-    this.file.set(input.files?.item(0) ?? null);
-    // Clear the native input so selecting the exact same file again still fires change.
-    // The File object above remains valid after the input value is reset.
+    const candidate = input.files?.item(0) ?? null;
     input.value = '';
-    this.previewResult.set(null);
+    if (candidate) await this.acceptFile(candidate);
   }
 
   onDragOver(event: DragEvent) {
@@ -96,15 +95,12 @@ export class ImportsPage {
     this.isDragging.set(false);
   }
 
-  onDrop(event: DragEvent) {
+  onDrop(event: DragEvent): void {
     event.preventDefault();
     event.stopPropagation();
     this.isDragging.set(false);
-    if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-      const droppedFile = event.dataTransfer.files[0];
-      this.file.set(droppedFile);
-      this.previewResult.set(null);
-    }
+    const candidate = event.dataTransfer?.files?.item(0);
+    if (candidate) void this.acceptFile(candidate);
   }
 
   clearFile(event: Event) {
@@ -112,6 +108,34 @@ export class ImportsPage {
     event.preventDefault();
     this.file.set(null);
     this.previewResult.set(null);
+  }
+
+  private async acceptFile(candidate: File): Promise<void> {
+    this.previewResult.set(null);
+    const sourceId = this.selectedSourceId();
+    if (!sourceId || candidate.size > 64 * 1024 * 1024) { this.file.set(candidate); return; }
+    this.duplicateChecking.set(true);
+    try {
+      const checksum = await this.sha256(candidate);
+      if (await this.store.isDuplicate(sourceId, checksum)) {
+        this.file.set(null);
+        this.notification.warning(this.i18n.locale() === 'ar-EG'
+          ? 'تم استيراد هذا الملف مسبقاً — لن يتم رفعه أو تحليله مرة أخرى.'
+          : 'This file was already imported — it will not be uploaded or parsed again.');
+        return;
+      }
+      this.file.set(candidate);
+    } catch {
+      this.file.set(candidate);
+    } finally {
+      this.duplicateChecking.set(false);
+    }
+  }
+
+  private async sha256(file: File): Promise<string> {
+    const buffer = await file.arrayBuffer();
+    const digest = await crypto.subtle.digest('SHA-256', buffer);
+    return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
   }
 
   formatFileSize(bytes: number): string {
@@ -125,10 +149,22 @@ export class ImportsPage {
   async upload() {
     const file = this.file();
     if (file && this.selectedSourceId()) {
+      if (file.size <= 64 * 1024 * 1024) {
+        const checksum = await this.sha256(file);
+        if (await this.store.isDuplicate(this.selectedSourceId(), checksum)) {
+          this.file.set(null);
+          this.previewResult.set(null);
+          this.notification.warning(this.i18n.locale() === 'ar-EG'
+            ? 'تم استيراد هذا الملف مسبقاً — تم إلغاء الرفع قبل إرسال البيانات.'
+            : 'This file was already imported — upload was cancelled before sending the file.');
+          return;
+        }
+      }
       if (await this.store.upload(file, this.selectedSourceId())) {
         this.notification.success(this.i18n.t('imports.uploadSuccess') || 'تم استيراد ملف البصمة بنجاح ✓');
         this.file.set(null);
         this.previewResult.set(null);
+        this.markAttendanceDataChanged();
       }
     } else if (!this.selectedSourceId()) {
       this.notification.warning(this.i18n.t('imports.sourceRequired', {}));
