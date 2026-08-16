@@ -3,7 +3,7 @@
     <div>
       <p class="eyebrow">{{ i18n.locale().startsWith('ar') ? 'الحضور والانصراف' : 'Attendance' }}</p>
       <h1>{{ i18n.locale().startsWith('ar') ? 'تفاصيل حضور الموظفين' : 'Employee attendance details' }}</h1>
-      <p>{{ i18n.locale().startsWith('ar') ? 'اختر السنة والشهر من نافذة مختصرة، ثم راجع الموظفين والبصمات.' : 'Choose the year and month from a compact dialog, then review employees and punches.' }}</p>
+      <p>{{ i18n.locale().startsWith('ar') ? 'فلترة حسب التاريخ، بحث سريع، تصدير، ثم فتح سجل كل موظف.' : 'Filter by date, search, export, then open each employee record.' }}</p>
     </div>
     <a class="button secondary" routerLink="/imports">← {{ i18n.locale().startsWith('ar') ? 'العودة للاستيراد' : 'Back to imports' }}</a>
   </header>
@@ -14,16 +14,15 @@
   @if (months().length === 0 && !loading()) {
     <div class="empty-card"><strong>{{ i18n.locale().startsWith('ar') ? 'لا توجد بصمات مستوردة بعد.' : 'No imported punches yet.' }}</strong></div>
   } @else {
-    <section class="card period-section">
-      <div class="period-summary">
-        <div>
-          <span class="period-label">{{ i18n.locale().startsWith('ar') ? 'الفترة المعروضة' : 'Displayed period' }}</span>
-          <strong>{{ monthLabel(selectedMonth()) }}</strong>
-          @if (currentMonthSummary(); as summary) {
-            <small>{{ summary.employeeCount }} {{ i18n.locale().startsWith('ar') ? 'موظف/مستخدم' : 'employees/users' }} · {{ summary.punchCount }} {{ i18n.locale().startsWith('ar') ? 'بصمة' : 'punches' }}</small>
-          }
-        </div>
-        <button class="button gold" type="button" (click)="openMonthDialog()">{{ i18n.locale().startsWith('ar') ? 'اختيار السنة والشهر' : 'Choose year & month' }}</button>
+    <section class="card month-section">
+      <div class="section-title"><div><h2>{{ i18n.locale().startsWith('ar') ? 'الشهور المتاحة' : 'Available months' }}</h2><p>{{ i18n.locale().startsWith('ar') ? 'اختر شهراً لعرض الموظفين والبصمات.' : 'Choose a month to see employees and punches.' }}</p></div></div>
+      <div class="month-grid">
+        @for (month of months(); track month.month) {
+          <button class="month-card" [class.active]="selectedMonth() === month.month" (click)="selectMonth(month.month)">
+            <strong>{{ monthLabel(month.month) }}</strong><span>{{ month.employeeCount }} {{ i18n.locale().startsWith('ar') ? 'موظف/مستخدم' : 'employees/users' }}</span><span>{{ month.punchCount }} {{ i18n.locale().startsWith('ar') ? 'بصمة' : 'punches' }}</span>
+            @if (month.unmatchedEmployeeCount > 0) { <small class="warning">{{ month.unmatchedEmployeeCount }} {{ i18n.locale().startsWith('ar') ? 'غير مربوط' : 'unmapped' }}</small> }
+          </button>
+        }
       </div>
     </section>
 
@@ -51,22 +50,3 @@
     </section>
   }
 </section>
-
-@if (monthDialogOpen()) {
-  <div class="dialog-backdrop" (click)="closeMonthDialog()">
-    <section class="month-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
-      <header>
-        <div><h2>{{ i18n.locale().startsWith('ar') ? 'اختيار فترة الحضور' : 'Choose attendance period' }}</h2><p>{{ i18n.locale().startsWith('ar') ? 'اختر السنة أولاً ثم الشهر.' : 'Choose a year first, then a month.' }}</p></div>
-        <button class="icon-button" type="button" (click)="closeMonthDialog()" aria-label="Close">×</button>
-      </header>
-      <label class="year-field"><span>{{ i18n.locale().startsWith('ar') ? 'السنة' : 'Year' }}</span><select [value]="selectedYear() ?? ''" (change)="chooseYear($event)">@for (year of years(); track year) { <option [value]="year">{{ year }}</option> }</select></label>
-      <div class="dialog-months">
-        @for (month of monthsForYear(); track month.month) {
-          <button type="button" class="dialog-month" [class.active]="selectedMonth() === month.month" (click)="chooseMonth(month.month)">
-            <strong>{{ shortMonthLabel(month.month) }}</strong><span>{{ month.employeeCount }} {{ i18n.locale().startsWith('ar') ? 'موظف' : 'employees' }}</span><small>{{ month.punchCount }} {{ i18n.locale().startsWith('ar') ? 'بصمة' : 'punches' }}</small>
-          </button>
-        } @empty { <div class="empty-cell">{{ i18n.locale().startsWith('ar') ? 'لا توجد شهور لهذه السنة.' : 'No months available for this year.' }}</div> }
-      </div>
-    </section>
-  </div>
-}

@@ -1,0 +1,110 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260816-fix-audit-log-search-column-types-v1
+      author: openai
+      comment: Normalize searchable audit fields to text so PostgreSQL lower/LIKE never receives bytea/json values.
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: HALT
+        - dbms:
+            type: postgresql
+        - tableExists:
+            tableName: audit_logs
+      changes:
+        - sql:
+            dbms: postgresql
+            splitStatements: false
+            stripComments: true
+            sql: |
+              DO $$
+              DECLARE
+                entity_type_name text;
+                details_type_name text;
+              BEGIN
+                SELECT format_type(a.atttypid, a.atttypmod)
+                  INTO entity_type_name
+                  FROM pg_attribute a
+                 WHERE a.attrelid = 'audit_logs'::regclass
+                   AND a.attname = 'entity_id'
+                   AND NOT a.attisdropped;
+
+                IF entity_type_name = 'bytea' THEN
+                  ALTER TABLE audit_logs
+                    ALTER COLUMN entity_id TYPE text
+                    USING convert_from(entity_id, 'UTF8');
+                ELSIF entity_type_name = 'uuid' THEN
+                  ALTER TABLE audit_logs
+                    ALTER COLUMN entity_id TYPE text
+                    USING entity_id::text;
+                END IF;
+
+                SELECT format_type(a.atttypid, a.atttypmod)
+                  INTO details_type_name
+                  FROM pg_attribute a
+                 WHERE a.attrelid = 'audit_logs'::regclass
+                   AND a.attname = 'details_json'
+                   AND NOT a.attisdropped;
+
+                IF details_type_name = 'bytea' THEN
+                  ALTER TABLE audit_logs
+                    ALTER COLUMN details_json TYPE text
+                    USING convert_from(details_json, 'UTF8');
+                ELSIF details_type_name IN ('json', 'jsonb') THEN
+                  ALTER TABLE audit_logs
+                    ALTER COLUMN details_json TYPE text
+                    USING details_json::text;
+                END IF;
+              END $$;
+
+  - changeSet:
+      id: 20260816-fix-product-event-operation-unique-v2
+      author: openai
+      comment: Product analytics idempotency is per tenant app and operation, not one event per app.
+      preConditions:
+        - onFail: MARK_RAN
+        - onError: HALT
+        - dbms:
+            type: postgresql
+      changes:
+        - sql:
+            dbms: postgresql
+            splitStatements: false
+            stripComments: true
+            sql: |
+              DO $$
+              DECLARE
+                target_table regclass;
+                operation_column_exists boolean;
+              BEGIN
+                SELECT conrelid::regclass
+                  INTO target_table
+                  FROM pg_constraint
+                 WHERE conname = 'uk_product_event_operation'
+                 ORDER BY oid
+                 LIMIT 1;
+
+                IF target_table IS NULL THEN
+                  RAISE NOTICE 'uk_product_event_operation does not exist; nothing to repair.';
+                  RETURN;
+                END IF;
+
+                SELECT EXISTS (
+                  SELECT 1
+                    FROM pg_attribute
+                   WHERE attrelid = target_table
+                     AND attname = 'operation_id'
+                     AND NOT attisdropped
+                ) INTO operation_column_exists;
+
+                IF NOT operation_column_exists THEN
+                  RAISE EXCEPTION 'Constraint % is on %, but operation_id is missing',
+                    'uk_product_event_operation', target_table;
+                END IF;
+
+                EXECUTE format(
+                  'ALTER TABLE %s DROP CONSTRAINT %I',
+                  target_table, 'uk_product_event_operation');
+                EXECUTE format(
+                  'ALTER TABLE %s ADD CONSTRAINT %I UNIQUE (app_id, operation_id)',
+                  target_table, 'uk_product_event_operation');
+              END $$;

@@ -22,11 +22,11 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, String> {
               and (:username is null or a.username = :username)
               and (:from is null or a.occurredAt >= :from)
               and (:to is null or a.occurredAt <= :to)
-              and (cast(:search as string) is null or lower(cast(a.entityId as string)) like concat('%', lower(cast(:search as string)), '%')
-                   or lower(cast(a.detailsJson as string)) like concat('%', lower(cast(:search as string)), '%')
-                   or lower(cast(a.action as string)) like concat('%', lower(cast(:search as string)), '%')
-                   or lower(cast(a.entityType as string)) like concat('%', lower(cast(:search as string)), '%')
-                   or lower(cast(a.username as string)) like concat('%', lower(cast(:search as string)), '%'))
+              and (:search is null or lower(a.entityId) like lower(concat('%', :search, '%'))
+                   or lower(a.detailsJson) like lower(concat('%', :search, '%'))
+                   or lower(a.action) like lower(concat('%', :search, '%'))
+                   or lower(a.entityType) like lower(concat('%', :search, '%'))
+                   or lower(a.username) like lower(concat('%', :search, '%')))
             order by a.occurredAt desc
             """)
     Page<AuditLog> search(
@@ -38,4 +38,3 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, String> {
             @Param("to") Long to,
             Pageable pageable);
 }
-// BORTQALA_RUNTIME_20260816_V2_AUDIT_SEARCH_TEXT_CAST

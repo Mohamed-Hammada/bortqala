@@ -43,12 +43,6 @@ export const routes: Routes = [
           import('./features/employees/employees.page').then((module) => module.EmployeesPage),
       },
       {
-        path: 'imports/history',
-        canActivate: [roleGuard, menuAccessGuard],
-        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'imports' },
-        loadComponent: () => import('./features/imports/import-history.page').then((m) => m.ImportHistoryPage),
-      },
-      {
         path: 'imports',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'imports' },

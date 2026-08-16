@@ -14,11 +14,10 @@ import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.dir
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { downloadBlob, timestampedExcelFileName } from '../../core/download';
-import { AttendanceImportSnapshotComponent } from './attendance-import-snapshot.component';
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [AttendanceImportSnapshotComponent, RouterLink, TablePaginationComponent, FormsModule, DecimalPipe, AppTooltipDirective, ModalDialogComponent, IconComponent],
+  imports: [RouterLink, TablePaginationComponent, FormsModule, DecimalPipe, AppTooltipDirective, ModalDialogComponent, IconComponent],
   providers: [DashboardStore],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss',
@@ -286,4 +285,3 @@ export class DashboardPage {
   }
 
 }
-// BORTQALA_RUNTIME_20260816_V2_DASHBOARD_ATTENDANCE_SNAPSHOT

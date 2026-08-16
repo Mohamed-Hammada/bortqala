@@ -348,11 +348,12 @@
         </div>
       </div>
       <div class="batches">
-<!-- BORTQALA_RUNTIME_20260816_V2_IMPORT_HISTORY -->
+        <!-- BORTQALA_FEEDBACK_20260816_IMPORT_HISTORY -->
       <div class="batch-history-toolbar">
-        <a class="button secondary" href="/imports/history">{{ i18n.locale().toLowerCase().startsWith('ar') ? 'عرض سجل الاستيراد بالكامل' : 'View full import history' }}</a>
+        @if (!historyView() && store.batches().length > 5) { <a class="button secondary" href="/imports?history=all">{{ i18n.locale().toLowerCase().startsWith('ar') ? 'عرض كل سجل دفعات الاستيراد' : 'View full import history' }}</a> }
+        @if (historyView()) { <a class="button secondary" href="/imports">← {{ i18n.locale().toLowerCase().startsWith('ar') ? 'العودة لآخر 5 دفعات' : 'Back to latest 5 batches' }}</a> }
       </div>
-      @for (item of store.batches().slice(0, 2); track item.id) {
+      @for (item of visibleBatches(); track item.id) {
           <article class="card batch-card">
             <button
               class="batch-main"

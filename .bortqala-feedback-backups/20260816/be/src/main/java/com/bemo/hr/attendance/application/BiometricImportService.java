@@ -105,13 +105,8 @@ public class BiometricImportService {
                 if (source.isAutoCreateEmployees()) {
                     var duplicateParsed = biometricFileReader.read(file.getOriginalFilename(),
                             file.getInputStream());
-                    java.util.Set<String> seenDeviceUsers = new java.util.HashSet<>();
-                    duplicateParsed.rows().forEach(row -> {
-                        if (seenDeviceUsers.add(row.deviceUserId())) {
-                            employeeProvisioningService.resolveEmployeeId(
-                                    source, row.deviceUserId(), row.employeeName(), row.punchedAt(), actor);
-                        }
-                    });
+                    duplicateParsed.rows().forEach(row -> employeeProvisioningService.resolveEmployeeId(
+                            source, row.deviceUserId(), row.employeeName(), row.punchedAt(), actor));
                 }
                 return toResponse(existing.get(), true);
             }
@@ -140,11 +135,9 @@ public class BiometricImportService {
             int imported = 0;
             int duplicates = 0;
             List<PunchImportEvidence> evidence = new ArrayList<>(parsed.rows().size());
-            java.util.Map<String, java.util.Optional<String>> employeeIdCache = new java.util.HashMap<>();
             for (var row : parsed.rows()) {
-                String employeeId = employeeIdCache.computeIfAbsent(row.deviceUserId(), key ->
-                        java.util.Optional.ofNullable(employeeProvisioningService.resolveEmployeeId(
-                                source, key, row.employeeName(), row.punchedAt(), actor))).orElse(null);
+                String employeeId = employeeProvisioningService.resolveEmployeeId(
+                        source, row.deviceUserId(), row.employeeName(), row.punchedAt(), actor);
                 String punchId = UUID.randomUUID().toString();
                 int inserted = punchRecordRepository.insertIfAbsent(punchId, appId,
                         batch.getId(), sourceId, null, employeeId, row.deviceUserId(), row.employeeName(),
@@ -215,4 +208,3 @@ public class BiometricImportService {
         return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }
-// BORTQALA_RUNTIME_20260816_V2_ATTENDANCE_IMPORT_PERF

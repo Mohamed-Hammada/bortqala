@@ -25,18 +25,6 @@ export class AttendanceBrowserPage {
   readonly fromDate = signal('');
   readonly toDate = signal('');
 
-  readonly monthDialogOpen = signal(false);
-  readonly selectedYear = signal<number | null>(null);
-  readonly years = computed(() => Array.from(new Set(
-    this.months().map((item) => Number(item.month.slice(0, 4))).filter((year) => Number.isFinite(year)),
-  )).sort((a, b) => b - a));
-  readonly monthsForYear = computed(() => {
-    const year = this.selectedYear();
-    if (!year) return [];
-    return this.months().filter((item) => Number(item.month.slice(0, 4)) === year);
-  });
-  readonly currentMonthSummary = computed(() => this.months().find((item) => item.month === this.selectedMonth()) ?? null);
-
   readonly filteredEmployees = computed(() => {
     const query = this.search().trim().toLowerCase();
     const from = this.startOfDay(this.fromDate());
@@ -57,30 +45,12 @@ export class AttendanceBrowserPage {
     try {
       const months = await this.api.months();
       this.months.set(months);
-      if (months.length > 0) {
-        this.selectedYear.set(Number(months[0].month.slice(0, 4)));
-        await this.selectMonth(months[0].month);
-      }
+      if (months.length > 0) await this.selectMonth(months[0].month);
     } catch (error) { this.error.set(apiErrorMessage(error, this.i18n)); }
     finally { this.loading.set(false); }
   }
 
-  openMonthDialog(): void {
-    const currentYear = Number(this.selectedMonth().slice(0, 4));
-    this.selectedYear.set(Number.isFinite(currentYear) && currentYear > 0 ? currentYear : (this.years()[0] ?? null));
-    this.monthDialogOpen.set(true);
-  }
-
-  closeMonthDialog(): void { this.monthDialogOpen.set(false); }
-  chooseYear(event: Event): void { this.selectedYear.set(Number((event.target as HTMLSelectElement).value)); }
-
-  async chooseMonth(month: string): Promise<void> {
-    await this.selectMonth(month);
-    this.closeMonthDialog();
-  }
-
   async selectMonth(month: string): Promise<void> {
-    if (!month) return;
     this.selectedMonth.set(month); this.loading.set(true); this.error.set(null);
     const [year, monthNumber] = month.split('-').map(Number);
     if (year && monthNumber) {
@@ -100,11 +70,6 @@ export class AttendanceBrowserPage {
     const [year, monthNumber] = month.split('-').map(Number);
     if (!year || !monthNumber) return month;
     return new Intl.DateTimeFormat(this.i18n.locale(), { month: 'long', year: 'numeric' }).format(new Date(year, monthNumber - 1, 1));
-  }
-  shortMonthLabel(month: string): string {
-    const [year, monthNumber] = month.split('-').map(Number);
-    if (!year || !monthNumber) return month;
-    return new Intl.DateTimeFormat(this.i18n.locale(), { month: 'long' }).format(new Date(year, monthNumber - 1, 1));
   }
   setSearch(event: Event): void { this.search.set((event.target as HTMLInputElement).value); }
   setFromDate(event: Event): void { this.fromDate.set((event.target as HTMLInputElement).value); }

@@ -68,7 +68,6 @@ export class ImportsPage {
 
   constructor() {
     void this.store.load().then(() => {
-      this.markAttendanceDataChanged();
       if (!this.selectedSourceId() && this.uploadSources().length > 0) {
         this.selectedSourceId.set(this.uploadSources()[0].id);
       }
@@ -328,14 +327,6 @@ export class ImportsPage {
   visibleBatches() {
     const batches = this.store.batches();
     return this.historyView() ? batches : batches.slice(0, 5);
-  }
-
-
-  // BORTQALA_RUNTIME_20260816_V2_ATTENDANCE_REFRESH_SIGNAL
-  private markAttendanceDataChanged(): void {
-    const value = Date.now().toString();
-    window.localStorage.setItem('bortqala.attendance.changedAt', value);
-    window.dispatchEvent(new CustomEvent('bortqala:attendance-updated', { detail: value }));
   }
 
 }
