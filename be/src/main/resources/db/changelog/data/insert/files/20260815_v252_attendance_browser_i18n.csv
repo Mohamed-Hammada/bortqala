@@ -1,0 +1,119 @@
+id;translation_key;locale;text_value
+v252-001;imports.attendanceDetails;ar-EG;تفاصيل الحضور
+v252-002;imports.attendanceDetails;en-US;Attendance details
+v252-003;attendanceBrowser.eyebrow;ar-EG;الحضور والانصراف
+v252-004;attendanceBrowser.eyebrow;en-US;Attendance
+v252-005;attendanceBrowser.title;ar-EG;تفاصيل حضور الموظفين
+v252-006;attendanceBrowser.title;en-US;Employee attendance details
+v252-007;attendanceBrowser.description;ar-EG;استعرض الشهور ثم افتح سجل كل موظف والبصمات اليومية.
+v252-008;attendanceBrowser.description;en-US;Browse months, then open each employee to review daily punches.
+v252-009;attendanceBrowser.backToImports;ar-EG;العودة للاستيراد
+v252-010;attendanceBrowser.backToImports;en-US;Back to imports
+v252-011;attendanceBrowser.noPunches;ar-EG;لا توجد بصمات مستوردة بعد.
+v252-012;attendanceBrowser.noPunches;en-US;No imported punches yet.
+v252-013;attendanceBrowser.availableMonths;ar-EG;الشهور المتاحة
+v252-014;attendanceBrowser.availableMonths;en-US;Available months
+v252-015;attendanceBrowser.chooseMonthHint;ar-EG;اختر شهراً لعرض الموظفين والبصمات.
+v252-016;attendanceBrowser.chooseMonthHint;en-US;Choose a month to see employees and punches.
+v252-017;attendanceBrowser.employeesCount;ar-EG;موظف/مستخدم
+v252-018;attendanceBrowser.employeesCount;en-US;employees/users
+v252-019;attendanceBrowser.punchesCount;ar-EG;بصمة
+v252-020;attendanceBrowser.punchesCount;en-US;punches
+v252-021;attendanceBrowser.unmapped;ar-EG;غير مربوط
+v252-022;attendanceBrowser.unmapped;en-US;unmapped
+v252-023;attendanceBrowser.employeesIn;ar-EG;الموظفون في
+v252-024;attendanceBrowser.employeesIn;en-US;Employees in
+v252-025;attendanceBrowser.records;ar-EG;سجل
+v252-026;attendanceBrowser.records;en-US;records
+v252-027;attendanceBrowser.searchPlaceholder;ar-EG;بحث بالاسم أو الكود أو رقم الجهاز
+v252-028;attendanceBrowser.searchPlaceholder;en-US;Search name, code or device ID
+v252-029;attendanceBrowser.thEmployee;ar-EG;الموظف
+v252-030;attendanceBrowser.thEmployee;en-US;Employee
+v252-031;attendanceBrowser.thDeviceId;ar-EG;رقم الجهاز
+v252-032;attendanceBrowser.thDeviceId;en-US;Device ID
+v252-033;attendanceBrowser.thStatus;ar-EG;الحالة
+v252-034;attendanceBrowser.thStatus;en-US;Status
+v252-035;attendanceBrowser.thPunches;ar-EG;البصمات
+v252-036;attendanceBrowser.thPunches;en-US;Punches
+v252-037;attendanceBrowser.thFirstLast;ar-EG;أول / آخر بصمة
+v252-038;attendanceBrowser.thFirstLast;en-US;First / last punch
+v252-039;attendanceBrowser.statusMapped;ar-EG;مربوط بموظف
+v252-040;attendanceBrowser.statusMapped;en-US;Mapped
+v252-041;attendanceBrowser.statusUnmapped;ar-EG;غير مضاف للنظام
+v252-042;attendanceBrowser.statusUnmapped;en-US;Not in employees
+v252-043;attendanceBrowser.addEmployee;ar-EG;إضافة موظف
+v252-044;attendanceBrowser.addEmployee;en-US;Add employee
+v252-045;attendanceBrowser.details;ar-EG;التفاصيل
+v252-046;attendanceBrowser.details;en-US;Details
+v252-047;attendanceBrowser.noResults;ar-EG;لا توجد نتائج.
+v252-048;attendanceBrowser.noResults;en-US;No results.
+v252-049;attendanceEmployee.eyebrow;ar-EG;تفاصيل الحضور
+v252-050;attendanceEmployee.eyebrow;en-US;Attendance details
+v252-051;attendanceEmployee.allEmployees;ar-EG;كل الموظفين
+v252-052;attendanceEmployee.allEmployees;en-US;All employees
+v252-053;attendanceEmployee.addToEmployees;ar-EG;إضافة للنظام
+v252-054;attendanceEmployee.addToEmployees;en-US;Add to employees
+v252-055;attendanceEmployee.status;ar-EG;الحالة
+v252-056;attendanceEmployee.status;en-US;Status
+v252-057;attendanceEmployee.mappedEmployee;ar-EG;موظف مربوط
+v252-058;attendanceEmployee.mappedEmployee;en-US;Mapped employee
+v252-059;attendanceEmployee.unmapped;ar-EG;غير مضاف
+v252-060;attendanceEmployee.unmapped;en-US;Unmapped
+v252-061;attendanceEmployee.totalPunches;ar-EG;إجمالي البصمات
+v252-062;attendanceEmployee.totalPunches;en-US;Total punches
+v252-063;attendanceEmployee.daysWithPunches;ar-EG;أيام بها حركة
+v252-064;attendanceEmployee.daysWithPunches;en-US;Days with punches
+v252-065;attendanceEmployee.calculatedTime;ar-EG;الوقت المحسوب
+v252-066;attendanceEmployee.calculatedTime;en-US;Calculated time
+v252-067;attendanceEmployee.employeeName;ar-EG;اسم الموظف
+v252-068;attendanceEmployee.employeeName;en-US;Employee name
+v252-069;attendanceEmployee.employeeCode;ar-EG;كود الموظف
+v252-070;attendanceEmployee.employeeCode;en-US;Employee code
+v252-071;attendanceEmployee.deviceId;ar-EG;رقم جهاز البصمة
+v252-072;attendanceEmployee.deviceId;en-US;Device user ID
+v252-073;attendanceEmployee.dailyAttendance;ar-EG;الحضور اليومي
+v252-074;attendanceEmployee.dailyAttendance;en-US;Daily attendance
+v252-075;attendanceEmployee.dailyAttendanceHint;ar-EG;كل البصمات مرتبة حسب اليوم.
+v252-076;attendanceEmployee.dailyAttendanceHint;en-US;All punches grouped by day.
+v252-077;attendanceEmployee.thDate;ar-EG;التاريخ
+v252-078;attendanceEmployee.thDate;en-US;Date
+v252-079;attendanceEmployee.thFirst;ar-EG;أول بصمة
+v252-080;attendanceEmployee.thFirst;en-US;First
+v252-081;attendanceEmployee.thLast;ar-EG;آخر بصمة
+v252-082;attendanceEmployee.thLast;en-US;Last
+v252-083;attendanceEmployee.thCount;ar-EG;العدد
+v252-084;attendanceEmployee.thCount;en-US;Count
+v252-085;attendanceEmployee.thDuration;ar-EG;المدة
+v252-086;attendanceEmployee.thDuration;en-US;Duration
+v252-087;attendanceEmployee.thPunches;ar-EG;البصمات
+v252-088;attendanceEmployee.thPunches;en-US;Punches
+v252-089;attendanceEmployee.unpairedPunch;ar-EG;بصمة غير مزدوجة
+v252-090;attendanceEmployee.unpairedPunch;en-US;Unpaired punch
+v252-091;attendanceEmployee.dialogTitle;ar-EG;إضافة موظف من البصمة
+v252-092;attendanceEmployee.dialogTitle;en-US;Add employee from attendance
+v252-093;attendanceEmployee.dialogSubtitle;ar-EG;سيتم ربط الموظف تلقائياً برقم الجهاز.
+v252-094;attendanceEmployee.dialogSubtitle;en-US;The employee will be mapped to this device ID automatically.
+v252-095;attendanceEmployee.codeLabel;ar-EG;كود الموظف *
+v252-096;attendanceEmployee.codeLabel;en-US;Employee code *
+v252-097;attendanceEmployee.nameLabel;ar-EG;الاسم *
+v252-098;attendanceEmployee.nameLabel;en-US;Full name *
+v252-099;attendanceEmployee.deviceLabel;ar-EG;رقم جهاز البصمة
+v252-100;attendanceEmployee.deviceLabel;en-US;Device user ID
+v252-101;attendanceEmployee.categoryLabel;ar-EG;فئة الحضور *
+v252-102;attendanceEmployee.categoryLabel;en-US;Attendance category *
+v252-103;attendanceEmployee.employmentTypeLabel;ar-EG;نوع التوظيف
+v252-104;attendanceEmployee.employmentTypeLabel;en-US;Employment type
+v252-105;attendanceEmployee.fixed;ar-EG;ثابت
+v252-106;attendanceEmployee.fixed;en-US;Fixed
+v252-107;attendanceEmployee.daily;ar-EG;يومي
+v252-108;attendanceEmployee.daily;en-US;Daily
+v252-109;attendanceEmployee.baseSalaryLabel;ar-EG;الراتب الأساسي
+v252-110;attendanceEmployee.baseSalaryLabel;en-US;Base salary
+v252-111;attendanceEmployee.activeFromLabel;ar-EG;تاريخ بدء العمل
+v252-112;attendanceEmployee.activeFromLabel;en-US;Active from
+v252-113;attendanceEmployee.addAndMap;ar-EG;إضافة وربط الموظف
+v252-114;attendanceEmployee.addAndMap;en-US;Add & map employee
+v252-115;attendanceEmployee.validationRequired;ar-EG;أكمل الحقول المطلوبة.
+v252-116;attendanceEmployee.validationRequired;en-US;Complete the required fields.
+v252-117;attendanceEmployee.addSuccess;ar-EG;تمت إضافة الموظف وربطه برقم جهاز البصمة.
+v252-118;attendanceEmployee.addSuccess;en-US;Employee added and mapped to the biometric device ID.

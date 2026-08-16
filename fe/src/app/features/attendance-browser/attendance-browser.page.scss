@@ -1,0 +1,25 @@
+.attendance-browser { display: grid; gap: 1rem; }
+.card { background: var(--surface, #fff); border: 1px solid var(--line, #e5e7eb); border-radius: 16px; padding: 1rem; }
+.section-title, .employee-title { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.section-title h2 { margin: 0 0 .25rem; }
+.section-title p { margin: 0; opacity: .72; }
+.month-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .75rem; }
+.month-card { display: grid; gap: .3rem; text-align: start; padding: .9rem; border: 1px solid var(--line, #e5e7eb); border-radius: 12px; background: transparent; cursor: pointer; color: inherit; }
+.month-card:hover, .month-card.active { border-color: var(--gold, #9b7b2f); box-shadow: 0 0 0 1px var(--gold, #9b7b2f) inset; }
+.month-card strong { font-size: 1rem; }
+.month-card span, .month-card small { opacity: .78; }
+.month-card .warning { color: var(--warning, #b45309); opacity: 1; }
+.search-input { min-width: 280px; max-width: 420px; width: 35vw; padding: .65rem .8rem; border: 1px solid var(--line, #d1d5db); border-radius: 10px; background: var(--input-bg, var(--surface, #fff)); color: inherit; }
+.table-card { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: .75rem; border-bottom: 1px solid var(--line, #e5e7eb); text-align: start; vertical-align: middle; }
+td small { display: block; margin-top: .25rem; opacity: .7; }
+.clickable-row { cursor: pointer; }
+.clickable-row:hover { background: var(--row-hover, rgba(127,127,127,.06)); }
+.status { display: inline-block; border-radius: 999px; padding: .25rem .55rem; font-size: .8rem; white-space: nowrap; }
+.status.mapped { background: var(--success-soft, rgba(22,163,74,.12)); color: var(--success, #15803d); }
+.status.unmapped { background: var(--warning-soft, rgba(217,119,6,.14)); color: var(--warning-text, #b45309); }
+.compact { padding: .4rem .65rem; white-space: nowrap; }
+.ltr { direction: ltr; unicode-bidi: isolate; display: block; }
+.empty-card, .empty-cell { text-align: center; padding: 2rem; opacity: .8; }
+@media (max-width: 800px) { .section-title, .employee-title { align-items: stretch; flex-direction: column; } .search-input { width: 100%; min-width: 0; max-width: none; } }

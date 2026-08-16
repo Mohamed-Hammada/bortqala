@@ -6,6 +6,10 @@
       <p>{{ i18n.t('imports.description') }}</p>
     </div>
     <div class="header-actions" style="display: flex; gap: 0.5rem; align-items: center;">
+      <!-- attendance-details-entry -->
+      <a class="button secondary" routerLink="/imports/attendance">
+        {{ i18n.t('imports.attendanceDetails') }}
+      </a>
       <!-- device-integrations-entry -->
       <a class="button secondary" href="/imports/device-integrations">
         {{ i18n.t('deviceIntegrations.open', {}, i18n.locale() === 'ar-EG' ? 'تكامل الأجهزة' : 'Device integrations') }}

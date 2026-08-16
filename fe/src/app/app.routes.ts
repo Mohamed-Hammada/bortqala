@@ -43,6 +43,20 @@ export const routes: Routes = [
           import('./features/employees/employees.page').then((module) => module.EmployeesPage),
       },
       {
+        path: 'imports/attendance/:deviceUserId',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'imports' },
+        loadComponent: () =>
+          import('./features/attendance-browser/attendance-employee.page').then((module) => module.AttendanceEmployeePage),
+      },
+      {
+        path: 'imports/attendance',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'imports' },
+        loadComponent: () =>
+          import('./features/attendance-browser/attendance-browser.page').then((module) => module.AttendanceBrowserPage),
+      },
+      {
         path: 'imports',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'imports' },

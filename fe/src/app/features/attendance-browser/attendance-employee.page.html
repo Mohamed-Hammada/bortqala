@@ -1,0 +1,78 @@
+<section class="page attendance-detail">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('attendanceEmployee.eyebrow') }}</p>
+      <h1>{{ displayName() }}</h1>
+      @if (details(); as item) {
+        <p><code>{{ item.deviceUserId }}</code> · {{ item.month }}</p>
+      }
+    </div>
+    <div class="header-actions">
+      <a class="button secondary" routerLink="/imports/attendance">← {{ i18n.t('attendanceEmployee.allEmployees') }}</a>
+      @if (details() && !details()!.mapped) {
+        <button class="button gold" type="button" (click)="openAddEmployee()">+ {{ i18n.t('attendanceEmployee.addToEmployees') }}</button>
+      }
+    </div>
+  </header>
+
+  @if (error()) { <div class="alert error">{{ error() }}</div> }
+  @if (loading()) { <div class="loading"></div> }
+
+  @if (details(); as item) {
+    <section class="summary-grid">
+      <article class="summary-card"><span>{{ i18n.t('attendanceEmployee.status') }}</span><strong>{{ item.mapped ? i18n.t('attendanceEmployee.mappedEmployee') : i18n.t('attendanceEmployee.unmapped') }}</strong></article>
+      <article class="summary-card"><span>{{ i18n.t('attendanceEmployee.totalPunches') }}</span><strong>{{ item.punchCount }}</strong></article>
+      <article class="summary-card"><span>{{ i18n.t('attendanceEmployee.daysWithPunches') }}</span><strong>{{ item.days.length }}</strong></article>
+      <article class="summary-card"><span>{{ i18n.t('attendanceEmployee.calculatedTime') }}</span><strong>{{ hours(item.workedMinutes) }}</strong></article>
+    </section>
+
+    @if (item.mapped) {
+      <section class="card identity-card">
+        <div><span>{{ i18n.t('attendanceEmployee.employeeName') }}</span><strong>{{ item.employeeName }}</strong></div>
+        <div><span>{{ i18n.t('attendanceEmployee.employeeCode') }}</span><strong>{{ item.employeeCode }}</strong></div>
+        <div><span>{{ i18n.t('attendanceEmployee.deviceId') }}</span><strong>{{ item.deviceUserId }}</strong></div>
+      </section>
+    }
+
+    <section class="card">
+      <div class="section-title">
+        <div><h2>{{ i18n.t('attendanceEmployee.dailyAttendance') }}</h2><p>{{ i18n.t('attendanceEmployee.dailyAttendanceHint') }}</p></div>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>{{ i18n.t('attendanceEmployee.thDate') }}</th><th>{{ i18n.t('attendanceEmployee.thFirst') }}</th><th>{{ i18n.t('attendanceEmployee.thLast') }}</th><th>{{ i18n.t('attendanceEmployee.thCount') }}</th><th>{{ i18n.t('attendanceEmployee.thDuration') }}</th><th>{{ i18n.t('attendanceEmployee.thPunches') }}</th></tr></thead>
+          <tbody>
+            @for (day of item.days; track day.date) {
+              <tr>
+                <td><strong>{{ day.date }}</strong>@if (day.incomplete) { <small class="warning">{{ i18n.t('attendanceEmployee.unpairedPunch') }}</small> }</td>
+                <td class="ltr">{{ dateTime(day.firstPunch) }}</td>
+                <td class="ltr">{{ dateTime(day.lastPunch) }}</td>
+                <td>{{ day.punchCount }}</td>
+                <td>{{ hours(day.workedMinutes) }}</td>
+                <td><div class="punches">@for (punch of day.punches; track punch) { <span class="ltr">{{ dateTime(punch) }}</span> }</div></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  @if (showAdd() && details() && !details()!.mapped) {
+    <div class="modal-backdrop" (click)="showAdd.set(false)">
+      <section class="add-dialog" (click)="$event.stopPropagation()">
+        <div class="dialog-head"><div><h2>{{ i18n.t('attendanceEmployee.dialogTitle') }}</h2><p>{{ i18n.t('attendanceEmployee.dialogSubtitle') }}</p></div><button type="button" class="close" (click)="showAdd.set(false)">×</button></div>
+        <div class="form-grid">
+          <label><span>{{ i18n.t('attendanceEmployee.codeLabel') }}</span><input [(ngModel)]="employeeCode" /></label>
+          <label><span>{{ i18n.t('attendanceEmployee.nameLabel') }}</span><input [(ngModel)]="fullName" /></label>
+          <label><span>{{ i18n.t('attendanceEmployee.deviceLabel') }}</span><input [value]="deviceUserId" disabled /></label>
+          <label><span>{{ i18n.t('attendanceEmployee.categoryLabel') }}</span><select [(ngModel)]="categoryId">@for (category of categories(); track category.id) { <option [value]="category.id">{{ category.name }}</option> }</select></label>
+          <label><span>{{ i18n.t('attendanceEmployee.employmentTypeLabel') }}</span><select [(ngModel)]="employmentType"><option value="FIXED">{{ i18n.t('attendanceEmployee.fixed') }}</option><option value="DAILY">{{ i18n.t('attendanceEmployee.daily') }}</option></select></label>
+          <label><span>{{ i18n.t('attendanceEmployee.baseSalaryLabel') }}</span><input type="number" min="0" [(ngModel)]="baseSalary" /></label>
+          <label><span>{{ i18n.t('attendanceEmployee.activeFromLabel') }}</span><input type="date" [(ngModel)]="activeFrom" /></label>
+        </div>
+        <div class="dialog-actions"><button class="button secondary" type="button" (click)="showAdd.set(false)">{{ i18n.t('common.cancel') }}</button><button class="button gold" type="button" [disabled]="saving()" (click)="addEmployee()">{{ saving() ? i18n.t('common.saving') : i18n.t('attendanceEmployee.addAndMap') }}</button></div>
+      </section>
+    </div>
+  }
+</section>

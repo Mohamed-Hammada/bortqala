@@ -1,0 +1,100 @@
+<section class="page attendance-browser">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('attendanceBrowser.eyebrow') }}</p>
+      <h1>{{ i18n.t('attendanceBrowser.title') }}</h1>
+      <p>{{ i18n.t('attendanceBrowser.description') }}</p>
+    </div>
+    <a class="button secondary" routerLink="/imports">← {{ i18n.t('attendanceBrowser.backToImports') }}</a>
+  </header>
+
+  @if (error()) { <div class="alert error">{{ error() }}</div> }
+  @if (loading()) { <div class="loading"></div> }
+
+  @if (months().length === 0 && !loading()) {
+    <div class="empty-card">
+      <strong>{{ i18n.t('attendanceBrowser.noPunches') }}</strong>
+    </div>
+  } @else {
+    <section class="card month-section">
+      <div class="section-title">
+        <div>
+          <h2>{{ i18n.t('attendanceBrowser.availableMonths') }}</h2>
+          <p>{{ i18n.t('attendanceBrowser.chooseMonthHint') }}</p>
+        </div>
+      </div>
+      <div class="month-grid">
+        @for (month of months(); track month.month) {
+          <button class="month-card" [class.active]="selectedMonth() === month.month" (click)="selectMonth(month.month)">
+            <strong>{{ monthLabel(month.month) }}</strong>
+            <span>{{ month.employeeCount }} {{ i18n.t('attendanceBrowser.employeesCount') }}</span>
+            <span>{{ month.punchCount }} {{ i18n.t('attendanceBrowser.punchesCount') }}</span>
+            @if (month.unmatchedEmployeeCount > 0) {
+              <small class="warning">{{ month.unmatchedEmployeeCount }} {{ i18n.t('attendanceBrowser.unmapped') }}</small>
+            }
+          </button>
+        }
+      </div>
+    </section>
+
+    <section class="card employees-section">
+      <div class="section-title employee-title">
+        <div>
+          <h2>{{ i18n.t('attendanceBrowser.employeesIn') }} {{ monthLabel(selectedMonth()) }}</h2>
+          <p>{{ filteredEmployees().length }} {{ i18n.t('attendanceBrowser.records') }}</p>
+        </div>
+        <input class="search-input" type="search" [value]="search()" (input)="setSearch($event)"
+          [placeholder]="i18n.t('attendanceBrowser.searchPlaceholder')" />
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('attendanceBrowser.thEmployee') }}</th>
+              <th>{{ i18n.t('attendanceBrowser.thDeviceId') }}</th>
+              <th>{{ i18n.t('attendanceBrowser.thStatus') }}</th>
+              <th>{{ i18n.t('attendanceBrowser.thPunches') }}</th>
+              <th>{{ i18n.t('attendanceBrowser.thFirstLast') }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of filteredEmployees(); track item.deviceUserId) {
+              <tr class="clickable-row" [routerLink]="['/imports/attendance', item.deviceUserId]" [queryParams]="{ month: selectedMonth() }">
+                <td>
+                  <strong>{{ displayName(item) }}</strong>
+                  @if (item.employeeCode) { <small>{{ item.employeeCode }}</small> }
+                  @if (!item.employeeName && item.observedName) { <small>{{ item.observedName }}</small> }
+                </td>
+                <td><code>{{ item.deviceUserId }}</code></td>
+                <td>
+                  <span class="status" [class.mapped]="item.mapped" [class.unmapped]="!item.mapped">
+                    {{ item.mapped ? i18n.t('attendanceBrowser.statusMapped') : i18n.t('attendanceBrowser.statusUnmapped') }}
+                  </span>
+                </td>
+                <td><strong>{{ item.punchCount }}</strong></td>
+                <td><span class="ltr">{{ dateTime(item.firstPunch) }}</span><small class="ltr">{{ dateTime(item.lastPunch) }}</small></td>
+                <td class="actions" (click)="$event.stopPropagation()">
+                  @if (!item.mapped) {
+                    <a class="button gold compact" [routerLink]="['/imports/attendance', item.deviceUserId]"
+                      [queryParams]="{ month: selectedMonth(), add: 1 }">
+                      + {{ i18n.t('attendanceBrowser.addEmployee') }}
+                    </a>
+                  } @else {
+                    <a class="button secondary compact" [routerLink]="['/imports/attendance', item.deviceUserId]"
+                      [queryParams]="{ month: selectedMonth() }">
+                      {{ i18n.t('attendanceBrowser.details') }} →
+                    </a>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="empty-cell">{{ i18n.t('attendanceBrowser.noResults') }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</section>
