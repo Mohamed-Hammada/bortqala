@@ -21,15 +21,14 @@ import { WorkforceExcelImportButtonComponent } from '../../ui/workforce-excel-im
           <span class="eyebrow">{{ i18n.t('workforce.ui.contractors.eyebrow') }}</span>
           <h1>{{ i18n.t('workforce.ui.contractors.title') }}</h1>
         </div>
-        
-      
-      <!-- BORTQALA_WORKFORCE_UI_20260816_V2: unified compact header actions -->
-      <div class="header-actions">
-        <button type="button" class="btn btn-primary" (click)="openCreateModal()">{{ i18n.t('workforce.ui.contractors.add') }}</button>
-        <button type="button" class="btn btn-secondary" (click)="exportExcel()">{{ i18n.t('workforce.ui.exportExcel') }}</button>
-        <app-workforce-excel-import-button kind="contractors" />
-      </div>
-</header>
+        <div class="header-actions">
+          <app-workforce-excel-import-button kind="contractors" />
+          <div class="btn-group">
+            <button type="button" class="btn btn-secondary" (click)="exportExcel()">{{ i18n.t('workforce.ui.exportExcel') }}</button>
+            <button type="button" class="btn btn-primary" (click)="openCreateModal()">{{ i18n.t('workforce.ui.contractors.add') }}</button>
+          </div>
+        </div>
+      </header>
 
       <div class="card">
         <table class="data-table">
@@ -192,56 +191,7 @@ import { WorkforceExcelImportButtonComponent } from '../../ui/workforce-excel-im
       .form-grid, .model-cards { grid-template-columns: 1fr; }
       .col-span-2 { grid-column: auto; }
     }
-  
-    /* BORTQALA_WORKFORCE_UI_20260816_V2: one clean title/action row for Workers and Contractors. */
-    .page-header {
-      display:flex !important;
-      align-items:flex-end !important;
-      justify-content:space-between !important;
-      gap:1.25rem !important;
-      flex-wrap:wrap !important;
-      margin-bottom:1.5rem;
-    }
-    .page-header > :not(.header-actions) {
-      min-width:0;
-      flex:1 1 360px;
-    }
-    .header-actions {
-      flex:0 0 auto;
-      display:flex !important;
-      align-items:center !important;
-      justify-content:flex-end !important;
-      gap:.6rem !important;
-      flex-wrap:wrap !important;
-      margin:0 !important;
-      align-self:flex-end;
-    }
-    .header-actions > button,
-    .header-actions > .button,
-    .header-actions > app-workforce-excel-import-button {
-      flex:0 0 auto;
-      margin:0 !important;
-    }
-    .header-actions button,
-    .header-actions .button {
-      min-height:44px;
-      white-space:nowrap;
-      border-radius:10px;
-    }
-    @media (max-width:900px) {
-      .page-header { align-items:flex-start !important; }
-      .page-header > :not(.header-actions) { flex-basis:100%; }
-      .header-actions { width:100%; justify-content:flex-start !important; }
-    }
-    @media (max-width:560px) {
-      .header-actions { display:grid !important; grid-template-columns:1fr; }
-      .header-actions > button,
-      .header-actions > .button,
-      .header-actions > app-workforce-excel-import-button { width:100%; }
-      .header-actions app-workforce-excel-import-button { display:flex; }
-      .header-actions app-workforce-excel-import-button .button { width:100%; }
-    }
-`]
+  `]
 })
 export class ContractorsComponent implements OnInit {
   workforceService = inject(WorkforceService);
@@ -345,5 +295,3 @@ export class ContractorsComponent implements OnInit {
 }
 
 // BORTQALA_FEEDBACK_20260816_EXCEL_CONTRACTORS
-
-// BORTQALA_WORKFORCE_UI_20260816_V2
