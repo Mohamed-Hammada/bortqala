@@ -74,7 +74,8 @@ class ReportingDecisionAuditTests {
                 punchRecordRepository, reportExporter, "Africa/Cairo", auditService, tenantApplicationRepository,
                 attendanceReportDecisionRepository,
                 new IdempotencyService(org.mockito.Mockito.mock(IdempotencyKeyRepository.class)),
-                org.mockito.Mockito.mock(AttendanceExceptionService.class));
+                org.mockito.Mockito.mock(AttendanceExceptionService.class),
+                org.mockito.Mockito.mock(com.bemo.hr.reporting.infrastructure.AttendanceExceptionRepository.class));
     }
 
     @Test

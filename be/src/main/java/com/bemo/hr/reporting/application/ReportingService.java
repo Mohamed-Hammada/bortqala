@@ -25,6 +25,7 @@ import com.bemo.hr.reporting.domain.DailyStatus;
 import com.bemo.hr.reporting.domain.HolidayProposal;
 import com.bemo.hr.reporting.domain.HolidayProposalStatus;
 import com.bemo.hr.reporting.domain.ReportStatus;
+import com.bemo.hr.reporting.infrastructure.AttendanceExceptionRepository;
 import com.bemo.hr.reporting.infrastructure.AttendanceReportDecisionRepository;
 import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
 import com.bemo.hr.reporting.infrastructure.DayAnomalyRepository;
@@ -95,6 +96,7 @@ public class ReportingService {
     private final AttendanceReportDecisionRepository attendanceReportDecisionRepository;
     private final IdempotencyService idempotencyService;
     private final AttendanceExceptionService attendanceExceptionService;
+    private final AttendanceExceptionRepository attendanceExceptionRepository;
 
     public ReportingService(AttendanceReportRepository attendanceReportRepository,
                             DailyAttendanceResultRepository dailyAttendanceResultRepository,
@@ -112,7 +114,8 @@ public class ReportingService {
                             TenantApplicationRepository tenantApplicationRepository,
                             AttendanceReportDecisionRepository attendanceReportDecisionRepository,
                             IdempotencyService idempotencyService,
-                            AttendanceExceptionService attendanceExceptionService) {
+                            AttendanceExceptionService attendanceExceptionService,
+                            AttendanceExceptionRepository attendanceExceptionRepository) {
         this.attendanceReportRepository = attendanceReportRepository;
         this.dailyAttendanceResultRepository = dailyAttendanceResultRepository;
         this.holidayProposalRepository = holidayProposalRepository;
@@ -130,6 +133,7 @@ public class ReportingService {
         this.attendanceReportDecisionRepository = attendanceReportDecisionRepository;
         this.idempotencyService = idempotencyService;
         this.attendanceExceptionService = attendanceExceptionService;
+        this.attendanceExceptionRepository = attendanceExceptionRepository;
     }
 
     public List<ReportingApi.Summary> list() {
@@ -375,9 +379,12 @@ public class ReportingService {
             punchMap.computeIfAbsent(owner.getId() + "|" + date, ignored -> new ArrayList<>()).add(punch.getPunchedAt());
         }
 
-        dailyAttendanceResultRepository.deleteAll(dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(report.getId()));
-        holidayProposalRepository.deleteAll(holidayProposalRepository.findByReportIdOrderByWorkDateAscCategoryNameAsc(report.getId()));
-        dayAnomalyRepository.deleteAll(dayAnomalyRepository.findByReportIdOrderByWorkDateAscCategoryNameAsc(report.getId()));
+        attendanceExceptionRepository.deleteByReportId(report.getId());
+        dayAnomalyResultSnapshotRepository.deleteByReportId(report.getId());
+        dayAnomalyRepository.deleteByReportId(report.getId());
+        holidayProposalRepository.deleteByReportId(report.getId());
+        dailyAttendanceResultRepository.deleteByReportId(report.getId());
+        dailyAttendanceResultRepository.flush();
 
         var results = new ArrayList<DailyAttendanceResult>();
         for (LocalDate date = report.getPeriodStart(); !date.isAfter(report.getPeriodEnd()); date = date.plusDays(1)) {

@@ -112,24 +112,7 @@ export class ImportsPage {
 
   private async acceptFile(candidate: File): Promise<void> {
     this.previewResult.set(null);
-    const sourceId = this.selectedSourceId();
-    if (!sourceId || candidate.size > 64 * 1024 * 1024) { this.file.set(candidate); return; }
-    this.duplicateChecking.set(true);
-    try {
-      const checksum = await this.sha256(candidate);
-      if (await this.store.isDuplicate(sourceId, checksum)) {
-        this.file.set(null);
-        this.notification.warning(this.i18n.locale() === 'ar-EG'
-          ? 'تم استيراد هذا الملف مسبقاً — لن يتم رفعه أو تحليله مرة أخرى.'
-          : 'This file was already imported — it will not be uploaded or parsed again.');
-        return;
-      }
-      this.file.set(candidate);
-    } catch {
-      this.file.set(candidate);
-    } finally {
-      this.duplicateChecking.set(false);
-    }
+    this.file.set(candidate);
   }
 
   private async sha256(file: File): Promise<string> {
@@ -149,22 +132,15 @@ export class ImportsPage {
   async upload() {
     const file = this.file();
     if (file && this.selectedSourceId()) {
-      if (file.size <= 64 * 1024 * 1024) {
-        const checksum = await this.sha256(file);
-        if (await this.store.isDuplicate(this.selectedSourceId(), checksum)) {
-          this.file.set(null);
-          this.previewResult.set(null);
-          this.notification.warning(this.i18n.locale() === 'ar-EG'
-            ? 'تم استيراد هذا الملف مسبقاً — تم إلغاء الرفع قبل إرسال البيانات.'
-            : 'This file was already imported — upload was cancelled before sending the file.');
-          return;
-        }
-      }
       if (await this.store.upload(file, this.selectedSourceId())) {
-        this.notification.success(this.i18n.t('imports.uploadSuccess') || 'تم استيراد ملف البصمة بنجاح ✓');
+        const msg = this.store.success() || this.i18n.t('imports.uploadSuccess');
+        this.notification.success(msg);
         this.file.set(null);
         this.previewResult.set(null);
         this.markAttendanceDataChanged();
+      } else {
+        const err = this.store.error() || this.i18n.t('api.unexpected');
+        this.notification.error(err);
       }
     } else if (!this.selectedSourceId()) {
       this.notification.warning(this.i18n.t('imports.sourceRequired', {}));

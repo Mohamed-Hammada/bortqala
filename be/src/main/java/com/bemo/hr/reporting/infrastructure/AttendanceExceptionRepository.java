@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Modifying;
 import jakarta.persistence.LockModeType;
 import java.util.List;
 public interface AttendanceExceptionRepository extends JpaRepository<AttendanceException,String>{
@@ -12,6 +13,9 @@ public interface AttendanceExceptionRepository extends JpaRepository<AttendanceE
     boolean existsByReportIdAndDailyResultIdAndExceptionType(String reportId,String resultId,com.bemo.hr.reporting.domain.AttendanceExceptionType type);
     long countByReportIdAndEmployeeIdAndStatusAndPayrollBlockingTrue(String reportId,String employeeId,AttendanceExceptionStatus status);
     long countByReportIdAndStatusAndPayrollBlockingTrue(String reportId,AttendanceExceptionStatus status);
+    @Modifying
+    @Query("delete from AttendanceException e where e.reportId = :reportId")
+    void deleteByReportId(@Param("reportId") String reportId);
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select e from AttendanceException e where e.id in :ids")
     List<AttendanceException> findAllByIdForUpdate(@Param("ids") List<String> ids);

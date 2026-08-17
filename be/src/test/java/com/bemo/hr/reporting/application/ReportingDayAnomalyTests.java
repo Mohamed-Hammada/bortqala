@@ -64,7 +64,8 @@ class ReportingDayAnomalyTests {
                 tenantApplicationRepository, attendanceReportDecisionRepository,
                 new com.bemo.hr.shared.idempotency.application.IdempotencyService(
                         org.mockito.Mockito.mock(com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository.class)),
-                org.mockito.Mockito.mock(AttendanceExceptionService.class));
+                org.mockito.Mockito.mock(AttendanceExceptionService.class),
+                org.mockito.Mockito.mock(com.bemo.hr.reporting.infrastructure.AttendanceExceptionRepository.class));
     }
 
     @Test

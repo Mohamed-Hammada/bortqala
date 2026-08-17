@@ -26,12 +26,6 @@
   @if (store.loading()) {
     <div class="loading"></div>
   }
-  @if (store.error()) {
-    <div class="alert error">{{ store.error() }}</div>
-  }
-  @if (store.success()) {
-    <div class="alert success">{{ store.success() }}</div>
-  }
 
   <section class="live-sync-card card" aria-labelledby="live-sync-title">
     <div class="live-sync-head">

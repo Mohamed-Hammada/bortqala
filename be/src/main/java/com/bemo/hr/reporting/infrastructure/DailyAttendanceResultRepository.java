@@ -15,6 +15,10 @@ public interface DailyAttendanceResultRepository extends JpaRepository<DailyAtte
     long countByReportId(String reportId);
 
     @Modifying
+    @Query("delete from DailyAttendanceResult d where d.reportId = :reportId")
+    void deleteByReportId(@Param("reportId") String reportId);
+
+    @Modifying
     @Query("update DailyAttendanceResult d set d.employeeCode = :newCode where d.employeeCode = :oldCode")
     int normalizeEmployeeCode(@Param("oldCode") String oldCode, @Param("newCode") String newCode);
 }

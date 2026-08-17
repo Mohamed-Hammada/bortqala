@@ -135,14 +135,6 @@ public class BiometricImportService {
             log.info("[IMPORT] Received biometric file: name={}, size={} bytes, checksum={}, sourceId={}, actor={}",
                     file.getOriginalFilename(), fileBytes.length, checksum, sourceId, actor);
 
-            var existing = importBatchRepository
-                    .findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
-                            sourceId, checksum, ImportStatus.REVERSED);
-            if (existing.isPresent()) {
-                log.info("[IMPORT] Idempotent fast-path: identical batch already exists (batchId={})", existing.get().getId());
-                return toResponse(existing.get(), true);
-            }
-
             String fileName = file.getOriginalFilename() == null ? "biometric-file" : file.getOriginalFilename();
             long parseStart = System.currentTimeMillis();
             var parsed = biometricFileReader.read(fileName, new ByteArrayInputStream(fileBytes));
@@ -164,12 +156,12 @@ public class BiometricImportService {
                         .findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
                                 sourceId, checksum, ImportStatus.REVERSED)
                         .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + checksum));
-                log.info("[IMPORT] Concurrent reservation resolved to existing batchId={}", batch.getId());
-                return toResponse(batch, true);
+                log.info("[IMPORT] Processing existing batchId={}", batch.getId());
+            } else {
+                batch = importBatchRepository.findById(batchId)
+                        .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + batchId));
+                log.info("[IMPORT] Reserved new batch: batchId={}, appId={}", batchId, appId);
             }
-            batch = importBatchRepository.findById(batchId)
-                    .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + batchId));
-            log.info("[IMPORT] Reserved new batch: batchId={}, appId={}", batchId, appId);
 
             // ------------------------------------------------------------------
             // Pre-load known employees in bulk
@@ -283,7 +275,8 @@ public class BiometricImportService {
             }
             if (!evidence.isEmpty()) {
                 jdbcTemplate.batchUpdate(
-                    "INSERT INTO punch_import_evidence (punch_id, batch_id, app_id, row_number, raw_line) VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO punch_import_evidence (punch_id, batch_id, app_id, row_number, raw_line) " +
+                    "VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
                     evidence, BATCH_FLUSH_SIZE,
                     (ps, ev) -> {
                         ps.setString(1, ev.getPunchId());
@@ -298,9 +291,14 @@ public class BiometricImportService {
 
             batch.updateCounts(totalRows, validRows, errorRows, newPunches, duplicatePunches);
             importBatchRepository.save(batch);
-            importRowErrorRepository.saveAll(parsed.errors().stream()
-                    .map(error -> new ImportRowError(batch.getId(), error.rowNumber(), error.message(), error.rawLine()))
-                    .toList());
+            if (reserved == 0) {
+                importRowErrorRepository.deleteByBatchId(batch.getId());
+            }
+            if (!parsed.errors().isEmpty()) {
+                importRowErrorRepository.saveAll(parsed.errors().stream()
+                        .map(error -> new ImportRowError(batch.getId(), error.rowNumber(), error.message(), error.rawLine()))
+                        .toList());
+            }
 
             // ------------------------------------------------------------------
             // Auto-generate attendance reports for recent/active affected months
