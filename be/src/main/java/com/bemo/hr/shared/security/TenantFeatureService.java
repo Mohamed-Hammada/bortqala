@@ -16,7 +16,7 @@ public class TenantFeatureService {
     private final TenantFeatureRepository repository;
     private final EntitlementCatalog catalog;
 
-    public TenantFeatureService(TenantFeatureRepository repository,EntitlementCatalog catalog) {
+    public TenantFeatureService(TenantFeatureRepository repository, EntitlementCatalog catalog) {
         this.repository = repository;
         this.catalog = catalog;
     }

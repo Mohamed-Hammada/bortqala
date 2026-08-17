@@ -30,6 +30,28 @@ public class ApprovalWorkflowService {
     private final ApprovalDelegationRepository delegationRepository;
     private final AuditService auditService;
 
+    private static boolean appliesToAmount(ApprovalWorkflowStep step, BigDecimal amount) {
+        if (amount == null) return step.getAmountFrom() == null && step.getAmountTo() == null;
+        return (step.getAmountFrom() == null || amount.compareTo(step.getAmountFrom()) >= 0)
+                && (step.getAmountTo() == null || amount.compareTo(step.getAmountTo()) <= 0);
+    }
+
+    private static String normalizeType(String value) {
+        return value.strip().toUpperCase();
+    }
+
+    private static Long epoch(Instant value) {
+        return value == null ? null : value.toEpochMilli();
+    }
+
+    private static boolean isAdmin(Set<String> roles) {
+        return roles.contains("SUPER_ADMIN") || roles.contains("ADMIN");
+    }
+
+    private static BusinessRuleException error(String code, HttpStatus status) {
+        return new BusinessRuleException(code, code, status);
+    }
+
     @Transactional(readOnly = true)
     public boolean hasActiveWorkflow(String documentType) {
         return !definitionRepository.findByDocumentTypeAndActiveTrue(normalizeType(documentType)).isEmpty();
@@ -183,7 +205,7 @@ public class ApprovalWorkflowService {
                 .findByInstanceIdAndStepOrder(instance.getId(), instance.getCurrentStepOrder()).orElse(null);
         int required = current == null ? 0 : current.getMinimumApprovals();
         int received = current == null ? 0 : Math.toIntExact(decisionRepository
-                .countByInstanceIdAndStepIdAndDecision(instance.getId(), current.getId(), "APPROVED"));
+                                                             .countByInstanceIdAndStepIdAndDecision(instance.getId(), current.getId(), "APPROVED"));
         List<ApprovalApi.DecisionResponse> decisions = decisionRepository.findByInstanceIdOrderByDecidedAtAsc(instance.getId()).stream()
                 .map(d -> new ApprovalApi.DecisionResponse(d.getId(), d.getInstanceId(), d.getStepId(), d.getDecision(),
                         d.getComment(), d.getDecidedBy(), d.getDecidedAt().toEpochMilli(), d.getDelegatedFrom())).toList();
@@ -328,21 +350,13 @@ public class ApprovalWorkflowService {
                 d.getCreatedBy(), d.getCreatedAt().toEpochMilli(), d.getVersion());
     }
 
-    private static boolean appliesToAmount(ApprovalWorkflowStep step, BigDecimal amount) {
-        if (amount == null) return step.getAmountFrom() == null && step.getAmountTo() == null;
-        return (step.getAmountFrom() == null || amount.compareTo(step.getAmountFrom()) >= 0)
-                && (step.getAmountTo() == null || amount.compareTo(step.getAmountTo()) <= 0);
-    }
-    private static String normalizeType(String value) { return value.strip().toUpperCase(); }
-    private static Long epoch(Instant value) { return value == null ? null : value.toEpochMilli(); }
-    private static boolean isAdmin(Set<String> roles) { return roles.contains("SUPER_ADMIN") || roles.contains("ADMIN"); }
-    private static BusinessRuleException error(String code, HttpStatus status) { return new BusinessRuleException(code, code, status); }
     private Set<String> userRoles() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) return Set.of();
         return auth.getAuthorities().stream().map(GrantedAuthority::getAuthority)
                 .map(a -> a.startsWith("ROLE_") ? a.substring(5) : a).collect(Collectors.toSet());
     }
+
     private String actor() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth == null ? "system" : auth.getName();

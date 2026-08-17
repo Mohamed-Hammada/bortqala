@@ -1,10 +1,155 @@
 package com.bemo.hr.product.risk;
-import com.bemo.hr.audit.application.AuditService;import com.bemo.hr.party.*;import com.bemo.hr.shared.domain.BusinessRuleException;import com.bemo.hr.shared.security.*;import com.bemo.hr.workforce.*;import lombok.RequiredArgsConstructor;import org.springframework.http.HttpStatus;import org.springframework.stereotype.Service;import org.springframework.transaction.annotation.Transactional;import tools.jackson.databind.ObjectMapper;import java.time.LocalDate;import java.util.*;
-@Service@RequiredArgsConstructor public class PartnerRiskScoreService{private final TenantApplicationRepository tenantRepository;private final PartnerRiskRuleRepository ruleRepository;private final PartnerRiskScoreSnapshotRepository snapshotRepository;private final BusinessPartyRepository partyRepository;private final SupplierDocumentRepository documentRepository;private final SupplierBankAccountRepository bankRepository;private final ContractorRepository contractorRepository;private final WorkerRepository workerRepository;private final ContractorSettlementRepository settlementRepository;private final WorkforceSettlementIssueRepository issueRepository;private final ObjectMapper objectMapper;private final AuditService auditService;
-@Transactional(readOnly=true)public List<PartnerRiskApi.ScoreResponse> scores(){return calculate(ruleRepository.findFirstBy().orElseGet(()->new PartnerRiskRule("system")),0);}
-@Transactional public List<PartnerRiskApi.ScoreResponse> refresh(PartnerRiskApi.RefreshRequest request,String actor){String app=TenantContext.require();tenantRepository.findByIdForUpdate(app).orElseThrow(()->error("TENANT_NOT_FOUND",HttpStatus.NOT_FOUND));var replay=snapshotRepository.findByOperationIdOrderBySubjectTypeAscSubjectNameAsc(request.operationId());if(!replay.isEmpty())return replay.stream().map(this::snapshotView).toList();PartnerRiskRule rule=ruleRepository.findFirstBy().orElseGet(()->ruleRepository.save(new PartnerRiskRule(actor)));var result=calculate(rule,System.currentTimeMillis());for(var score:result){try{snapshotRepository.save(new PartnerRiskScoreSnapshot(score.subjectType(),score.subjectId(),score.subjectName(),score.score(),score.riskBand(),objectMapper.writeValueAsString(score.components()),request.operationId(),actor));}catch(Exception ex){throw error("PARTNER_RISK_SNAPSHOT_INVALID",HttpStatus.INTERNAL_SERVER_ERROR);}}auditService.record("REFRESH","PARTNER_RISK_SCORE",app,actor,"{\"operationId\":\""+request.operationId()+"\",\"subjects\":"+result.size()+"}",null);return result;}
-@Transactional(readOnly=true)public PartnerRiskApi.RuleResponse rule(){var r=ruleRepository.findFirstBy().orElseGet(()->new PartnerRiskRule("system"));return ruleView(r);}@Transactional public PartnerRiskApi.RuleResponse updateRule(PartnerRiskApi.RuleRequest request,String actor){String app=TenantContext.require();tenantRepository.findByIdForUpdate(app).orElseThrow(()->error("TENANT_NOT_FOUND",HttpStatus.NOT_FOUND));var rule=ruleRepository.findFirstBy().orElseGet(()->new PartnerRiskRule(actor));if(rule.getVersion()!=request.expectedVersion())throw error("STALE_STATE",HttpStatus.CONFLICT);try{rule.update(request.lowRiskMin(),request.mediumRiskMin(),request.highRiskMin(),actor);}catch(IllegalArgumentException ex){throw error("PARTNER_RISK_THRESHOLDS_INVALID",HttpStatus.BAD_REQUEST);}rule=ruleRepository.save(rule);auditService.record("UPDATE_RULE","PARTNER_RISK_SCORE",rule.getId(),actor,"{\"low\":"+request.lowRiskMin()+",\"medium\":"+request.mediumRiskMin()+",\"high\":"+request.highRiskMin()+"}",null);return ruleView(rule);}
-private List<PartnerRiskApi.ScoreResponse>calculate(PartnerRiskRule rule,long at){List<PartnerRiskApi.ScoreResponse>result=new ArrayList<>();partyRepository.findByPartyTypeOrderByNameAsc("SUPPLIER").forEach(s->result.add(supplier(s,rule,at)));contractorRepository.findAll().stream().sorted(Comparator.comparing(Contractor::getName)).forEach(c->result.add(contractor(c,rule,at)));return result;}
-private PartnerRiskApi.ScoreResponse supplier(BusinessParty s,PartnerRiskRule rule,long at){List<PartnerRiskApi.ComponentResponse>c=new ArrayList<>();add(c,"risk.lifecycle",s.isProcurementAllowed()?30:0,30,s.isProcurementAllowed(),"/parties");var docs=documentRepository.findBySupplierIdOrderByCreatedAtDesc(s.getId()).stream().filter(SupplierDocument::isMandatory).toList();long valid=docs.stream().filter(d->d.isVerified()&&!d.isExpired(LocalDate.now())).count();int docScore=docs.isEmpty()?0:(int)(valid*25/docs.size());add(c,"risk.compliance",docScore,25,docScore==25,"/parties");boolean bank=bankRepository.findBySupplierIdOrderByPrimaryDescCreatedAtAsc(s.getId()).stream().anyMatch(SupplierBankAccount::isVerified);add(c,"risk.bank",bank?20:0,20,bank,"/parties");int profile=(s.getTaxId()!=null?5:0)+(s.getEmail()!=null?5:0)+(s.getPhone()!=null?5:0);add(c,"risk.profile",profile,15,profile==15,"/parties");int declared=s.getRiskLevel()==null?5:switch(s.getRiskLevel()){case"LOW"->10;case"MEDIUM"->7;case"HIGH"->3;default->0;};add(c,"risk.declared",declared,10,declared>=7,"/parties");return score("SUPPLIER",s.getId(),s.getName(),c,rule,at);}
-private PartnerRiskApi.ScoreResponse contractor(Contractor contractor,PartnerRiskRule rule,long at){List<PartnerRiskApi.ComponentResponse>c=new ArrayList<>();add(c,"risk.lifecycle","ACTIVE".equals(contractor.getStatus())?25:0,25,"ACTIVE".equals(contractor.getStatus()),"/workforce/contractors");var workers=workerRepository.findByContractorId(contractor.getId());long active=workers.stream().filter(w->"ACTIVE".equals(w.getStatus())).count();int workerScore=workers.isEmpty()?0:(int)(active*25/workers.size());add(c,"risk.workers",workerScore,25,workerScore==25,"/workforce/workers");var settlements=settlementRepository.findByContractorId(contractor.getId());long paid=settlements.stream().filter(s->"PAID".equals(s.getStatus())).count();int settlementScore=settlements.isEmpty()?12:(int)(paid*25/settlements.size());add(c,"risk.settlements",settlementScore,25,settlementScore>=20,"/workforce/settlement-periods");Set<String>workerIds=workers.stream().map(Worker::getId).collect(java.util.stream.Collectors.toSet());long issues=issueRepository.findAll().stream().filter(i->i.getWorkerId()!=null&&workerIds.contains(i.getWorkerId())).count();int quality=Math.max(0,15-(int)Math.min(15,issues*3));add(c,"risk.quality",quality,15,quality==15,"/workforce/settlement-periods");int profile=(contractor.getPhone()!=null&&!contractor.getPhone().isBlank()?4:0)+(contractor.getTaxId()!=null?3:0)+(contractor.getAddress()!=null?3:0);add(c,"risk.profile",profile,10,profile==10,"/workforce/contractors");return score("CONTRACTOR",contractor.getId(),contractor.getName(),c,rule,at);}
-private void add(List<PartnerRiskApi.ComponentResponse>c,String key,int score,int max,boolean pass,String route){c.add(new PartnerRiskApi.ComponentResponse(key,score,max,pass?"PASS":"RISK",route));}private PartnerRiskApi.ScoreResponse score(String type,String id,String name,List<PartnerRiskApi.ComponentResponse>c,PartnerRiskRule rule,long at){int total=c.stream().mapToInt(PartnerRiskApi.ComponentResponse::score).sum();return new PartnerRiskApi.ScoreResponse(type,id,name,total,rule.band(total),at,List.copyOf(c));}private PartnerRiskApi.ScoreResponse snapshotView(PartnerRiskScoreSnapshot s){try{return new PartnerRiskApi.ScoreResponse(s.getSubjectType(),s.getSubjectId(),s.getSubjectName(),s.getScore(),s.getRiskBand(),s.getCalculatedAt().toEpochMilli(),List.of(objectMapper.readValue(s.getComponentsJson(),PartnerRiskApi.ComponentResponse[].class)));}catch(Exception ex){throw error("PARTNER_RISK_SNAPSHOT_INVALID",HttpStatus.INTERNAL_SERVER_ERROR);}}private PartnerRiskApi.RuleResponse ruleView(PartnerRiskRule r){return new PartnerRiskApi.RuleResponse(r.getLowRiskMin(),r.getMediumRiskMin(),r.getHighRiskMin(),r.getVersion());}private static BusinessRuleException error(String code,HttpStatus status){return new BusinessRuleException(code,code,status);}}
+
+import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.party.*;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.security.TenantApplicationRepository;
+import com.bemo.hr.shared.security.TenantContext;
+import com.bemo.hr.workforce.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+
+@Service
+@RequiredArgsConstructor
+public class PartnerRiskScoreService {
+    private final TenantApplicationRepository tenantRepository;
+    private final PartnerRiskRuleRepository ruleRepository;
+    private final PartnerRiskScoreSnapshotRepository snapshotRepository;
+    private final BusinessPartyRepository partyRepository;
+    private final SupplierDocumentRepository documentRepository;
+    private final SupplierBankAccountRepository bankRepository;
+    private final ContractorRepository contractorRepository;
+    private final WorkerRepository workerRepository;
+    private final ContractorSettlementRepository settlementRepository;
+    private final WorkforceSettlementIssueRepository issueRepository;
+    private final ObjectMapper objectMapper;
+    private final AuditService auditService;
+
+    private static BusinessRuleException error(String code, HttpStatus status) {
+        return new BusinessRuleException(code, code, status);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PartnerRiskApi.ScoreResponse> scores() {
+        return calculate(ruleRepository.findFirstBy().orElseGet(() -> new PartnerRiskRule("system")), 0);
+    }
+
+    @Transactional
+    public List<PartnerRiskApi.ScoreResponse> refresh(PartnerRiskApi.RefreshRequest request, String actor) {
+        String app = TenantContext.require();
+        tenantRepository.findByIdForUpdate(app).orElseThrow(() -> error("TENANT_NOT_FOUND", HttpStatus.NOT_FOUND));
+        var replay = snapshotRepository.findByOperationIdOrderBySubjectTypeAscSubjectNameAsc(request.operationId());
+        if (!replay.isEmpty()) return replay.stream().map(this::snapshotView).toList();
+        PartnerRiskRule rule = ruleRepository.findFirstBy().orElseGet(() -> ruleRepository.save(new PartnerRiskRule(actor)));
+        var result = calculate(rule, System.currentTimeMillis());
+        for (var score : result) {
+            try {
+                snapshotRepository.save(new PartnerRiskScoreSnapshot(score.subjectType(), score.subjectId(), score.subjectName(), score.score(), score.riskBand(), objectMapper.writeValueAsString(score.components()), request.operationId(), actor));
+            } catch (Exception ex) {
+                throw error("PARTNER_RISK_SNAPSHOT_INVALID", HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+        auditService.record("REFRESH", "PARTNER_RISK_SCORE", app, actor, "{\"operationId\":\"" + request.operationId() + "\",\"subjects\":" + result.size() + "}", null);
+        return result;
+    }
+
+    @Transactional(readOnly = true)
+    public PartnerRiskApi.RuleResponse rule() {
+        var r = ruleRepository.findFirstBy().orElseGet(() -> new PartnerRiskRule("system"));
+        return ruleView(r);
+    }
+
+    @Transactional
+    public PartnerRiskApi.RuleResponse updateRule(PartnerRiskApi.RuleRequest request, String actor) {
+        String app = TenantContext.require();
+        tenantRepository.findByIdForUpdate(app).orElseThrow(() -> error("TENANT_NOT_FOUND", HttpStatus.NOT_FOUND));
+        var rule = ruleRepository.findFirstBy().orElseGet(() -> new PartnerRiskRule(actor));
+        if (rule.getVersion() != request.expectedVersion()) throw error("STALE_STATE", HttpStatus.CONFLICT);
+        try {
+            rule.update(request.lowRiskMin(), request.mediumRiskMin(), request.highRiskMin(), actor);
+        } catch (IllegalArgumentException ex) {
+            throw error("PARTNER_RISK_THRESHOLDS_INVALID", HttpStatus.BAD_REQUEST);
+        }
+        rule = ruleRepository.save(rule);
+        auditService.record("UPDATE_RULE", "PARTNER_RISK_SCORE", rule.getId(), actor, "{\"low\":" + request.lowRiskMin() + ",\"medium\":" + request.mediumRiskMin() + ",\"high\":" + request.highRiskMin() + "}", null);
+        return ruleView(rule);
+    }
+
+    private List<PartnerRiskApi.ScoreResponse> calculate(PartnerRiskRule rule, long at) {
+        List<PartnerRiskApi.ScoreResponse> result = new ArrayList<>();
+        partyRepository.findByPartyTypeOrderByNameAsc("SUPPLIER").forEach(s -> result.add(supplier(s, rule, at)));
+        contractorRepository.findAll().stream().sorted(Comparator.comparing(Contractor::getName)).forEach(c -> result.add(contractor(c, rule, at)));
+        return result;
+    }
+
+    private PartnerRiskApi.ScoreResponse supplier(BusinessParty s, PartnerRiskRule rule, long at) {
+        List<PartnerRiskApi.ComponentResponse> c = new ArrayList<>();
+        add(c, "risk.lifecycle", s.isProcurementAllowed() ? 30 : 0, 30, s.isProcurementAllowed(), "/parties");
+        var docs = documentRepository.findBySupplierIdOrderByCreatedAtDesc(s.getId()).stream().filter(SupplierDocument::isMandatory).toList();
+        long valid = docs.stream().filter(d -> d.isVerified() && !d.isExpired(LocalDate.now())).count();
+        int docScore = docs.isEmpty() ? 0 : (int) (valid * 25 / docs.size());
+        add(c, "risk.compliance", docScore, 25, docScore == 25, "/parties");
+        boolean bank = bankRepository.findBySupplierIdOrderByPrimaryDescCreatedAtAsc(s.getId()).stream().anyMatch(SupplierBankAccount::isVerified);
+        add(c, "risk.bank", bank ? 20 : 0, 20, bank, "/parties");
+        int profile = (s.getTaxId() != null ? 5 : 0) + (s.getEmail() != null ? 5 : 0) + (s.getPhone() != null ? 5 : 0);
+        add(c, "risk.profile", profile, 15, profile == 15, "/parties");
+        int declared = s.getRiskLevel() == null ? 5 : switch (s.getRiskLevel()) {
+            case "LOW" -> 10;
+            case "MEDIUM" -> 7;
+            case "HIGH" -> 3;
+            default -> 0;
+        };
+        add(c, "risk.declared", declared, 10, declared >= 7, "/parties");
+        return score("SUPPLIER", s.getId(), s.getName(), c, rule, at);
+    }
+
+    private PartnerRiskApi.ScoreResponse contractor(Contractor contractor, PartnerRiskRule rule, long at) {
+        List<PartnerRiskApi.ComponentResponse> c = new ArrayList<>();
+        add(c, "risk.lifecycle", "ACTIVE".equals(contractor.getStatus()) ? 25 : 0, 25, "ACTIVE".equals(contractor.getStatus()), "/workforce/contractors");
+        var workers = workerRepository.findByContractorId(contractor.getId());
+        long active = workers.stream().filter(w -> "ACTIVE".equals(w.getStatus())).count();
+        int workerScore = workers.isEmpty() ? 0 : (int) (active * 25 / workers.size());
+        add(c, "risk.workers", workerScore, 25, workerScore == 25, "/workforce/workers");
+        var settlements = settlementRepository.findByContractorId(contractor.getId());
+        long paid = settlements.stream().filter(s -> "PAID".equals(s.getStatus())).count();
+        int settlementScore = settlements.isEmpty() ? 12 : (int) (paid * 25 / settlements.size());
+        add(c, "risk.settlements", settlementScore, 25, settlementScore >= 20, "/workforce/settlement-periods");
+        Set<String> workerIds = workers.stream().map(Worker::getId).collect(java.util.stream.Collectors.toSet());
+        long issues = issueRepository.findAll().stream().filter(i -> i.getWorkerId() != null && workerIds.contains(i.getWorkerId())).count();
+        int quality = Math.max(0, 15 - (int) Math.min(15, issues * 3));
+        add(c, "risk.quality", quality, 15, quality == 15, "/workforce/settlement-periods");
+        int profile = (contractor.getPhone() != null && !contractor.getPhone().isBlank() ? 4 : 0) + (contractor.getTaxId() != null ? 3 : 0) + (contractor.getAddress() != null ? 3 : 0);
+        add(c, "risk.profile", profile, 10, profile == 10, "/workforce/contractors");
+        return score("CONTRACTOR", contractor.getId(), contractor.getName(), c, rule, at);
+    }
+
+    private void add(List<PartnerRiskApi.ComponentResponse> c, String key, int score, int max, boolean pass, String route) {
+        c.add(new PartnerRiskApi.ComponentResponse(key, score, max, pass ? "PASS" : "RISK", route));
+    }
+
+    private PartnerRiskApi.ScoreResponse score(String type, String id, String name, List<PartnerRiskApi.ComponentResponse> c, PartnerRiskRule rule, long at) {
+        int total = c.stream().mapToInt(PartnerRiskApi.ComponentResponse::score).sum();
+        return new PartnerRiskApi.ScoreResponse(type, id, name, total, rule.band(total), at, List.copyOf(c));
+    }
+
+    private PartnerRiskApi.ScoreResponse snapshotView(PartnerRiskScoreSnapshot s) {
+        try {
+            return new PartnerRiskApi.ScoreResponse(s.getSubjectType(), s.getSubjectId(), s.getSubjectName(), s.getScore(), s.getRiskBand(), s.getCalculatedAt().toEpochMilli(), List.of(objectMapper.readValue(s.getComponentsJson(), PartnerRiskApi.ComponentResponse[].class)));
+        } catch (Exception ex) {
+            throw error("PARTNER_RISK_SNAPSHOT_INVALID", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private PartnerRiskApi.RuleResponse ruleView(PartnerRiskRule r) {
+        return new PartnerRiskApi.RuleResponse(r.getLowRiskMin(), r.getMediumRiskMin(), r.getHighRiskMin(), r.getVersion());
+    }
+}

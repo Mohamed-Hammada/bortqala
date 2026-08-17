@@ -1,0 +1,167 @@
+<section class="smart-import" [class.rtl]="rtl()">
+  <header class="page-header">
+    <div>
+      <a routerLink="/imports" class="back-link">← {{ i18n.t('smartImport.backLink') }}</a>
+      <h1>{{ i18n.t('smartImport.title') }}</h1>
+      <p>{{ i18n.t('smartImport.description') }}</p>
+    </div>
+    @if (workflow()) {
+      <button type="button" class="secondary" routerLink="/smart-import">{{ i18n.t('smartImport.allWorkflows') }}</button>
+    }
+  </header>
+
+  @if (store.error()) {
+    <div class="alert error" role="alert">{{ store.error() }}</div>
+  }
+
+  @if (!workflow()) {
+    <div class="workflow-grid">
+      @for (item of store.workflows(); track item.key) {
+        <button type="button" class="workflow-card" (click)="chooseWorkflow(item)">
+          <span class="priority">{{ item.priority }}</span>
+          <strong>{{ rtl() ? item.titleAr : item.titleEn }}</strong>
+          <small>{{ item.route }}</small>
+          <span class="commit-chip" [class.ready]="item.domainCommitAvailable">
+            {{ item.domainCommitAvailable
+              ? i18n.t('smartImport.domainCommitWired')
+              : i18n.t('smartImport.validationReady') }}
+          </span>
+        </button>
+      }
+    </div>
+  } @else {
+    <div class="wizard-title">
+      <div>
+        <span class="priority">{{ workflow()!.priority }}</span>
+        <h2>{{ rtl() ? workflow()!.titleAr : workflow()!.titleEn }}</h2>
+        <small>{{ workflow()!.route }}</small>
+      </div>
+    </div>
+
+    <ol class="steps" aria-label="Smart import steps">
+      <li [class.active]="step() >= 1"><span>1</span>{{ i18n.t('smartImport.step1') }}</li>
+      <li [class.active]="step() >= 2"><span>2</span>{{ i18n.t('smartImport.step2') }}</li>
+      <li [class.active]="step() >= 3"><span>3</span>{{ i18n.t('smartImport.step3') }}</li>
+      <li [class.active]="step() >= 4"><span>4</span>{{ i18n.t('smartImport.step4') }}</li>
+      <li [class.active]="step() >= 5"><span>5</span>{{ i18n.t('smartImport.step5') }}</li>
+    </ol>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h3>{{ i18n.t('smartImport.downloadWorkbookTitle') }}</h3>
+          <p>{{ i18n.t('smartImport.downloadWorkbookHint') }}</p>
+        </div>
+        <label class="toggle"><input type="checkbox" [ngModel]="sampleTemplate()" (ngModelChange)="sampleTemplate.set($event)" /> {{ i18n.t('smartImport.includeSample') }}</label>
+      </div>
+      <button type="button" class="primary" (click)="store.downloadTemplate(workflow()!, sampleTemplate())">
+        {{ i18n.t('smartImport.downloadTemplate') }}
+      </button>
+    </section>
+
+    <section class="panel">
+      <h3>{{ i18n.t('smartImport.uploadTitle') }}</h3>
+      <div class="drop-zone" [class.over]="dragOver()" (dragover)="$event.preventDefault(); dragOver.set(true)" (dragleave)="dragOver.set(false)" (drop)="onDrop($event)">
+        <input #fileInput type="file" accept=".xlsx,.xls,.csv" (change)="onFileInput($event)" hidden />
+        <button type="button" class="secondary" (click)="fileInput.click()">{{ i18n.t('smartImport.chooseFile') }}</button>
+        <span>{{ selectedFile()?.name || i18n.t('smartImport.dragAndDrop') }}</span>
+      </div>
+      @if (selectedFile()) {
+        <div class="row-actions">
+          <button type="button" class="primary" [disabled]="store.loading()" (click)="preview()">{{ i18n.t('smartImport.parsePreview') }}</button>
+          <button type="button" class="ghost" (click)="clearFile()">{{ i18n.t('smartImport.clear') }}</button>
+        </div>
+      }
+    </section>
+
+    @if (store.preview(); as preview) {
+      <section class="panel wide">
+        <div class="panel-heading">
+          <div>
+            <h3>{{ i18n.t('smartImport.gridTitle') }}</h3>
+            <p>
+              {{ i18n.t('smartImport.rows') }}: {{ preview.totalRows }} ·
+              {{ i18n.t('smartImport.valid') }}: {{ preview.validRows }} ·
+              {{ i18n.t('smartImport.withErrors') }}: {{ preview.errorRows }}
+            </p>
+          </div>
+          <div class="sheet-tabs">
+            @for (sheet of workflow()!.sheets; track sheet.key) {
+              <button type="button" [class.active]="activeSheet() === sheet.key" (click)="activeSheet.set(sheet.key)">
+                {{ rtl() ? sheet.titleAr : sheet.titleEn }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="grid-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                @for (column of currentSheet()?.columns ?? []; track column.key) {
+                  <th>
+                    {{ rtl() ? column.headerAr : column.headerEn }}
+                    @if (column.required) { <span class="required">*</span> }
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of previewRows(); track row.sheet + '-' + row.rowNumber) {
+                <tr [class.invalid-row]="rowHasErrors(row)">
+                  <td class="row-number">{{ row.rowNumber }}</td>
+                  @for (column of currentSheet()?.columns ?? []; track column.key) {
+                    <td [class.invalid-cell]="cellErrors(row, column.key).length > 0">
+                      @if (column.allowedValues.length) {
+                        <select [(ngModel)]="row.values[column.key]">
+                          <option value=""></option>
+                          @for (option of column.allowedValues; track option) { <option [value]="option">{{ option }}</option> }
+                        </select>
+                      } @else {
+                        <input [(ngModel)]="row.values[column.key]" [type]="column.type === 'DATE' ? 'date' : 'text'" />
+                      }
+                      @for (error of cellErrors(row, column.key); track error.messageEn) {
+                        <small class="cell-error">{{ rtl() ? error.messageAr : error.messageEn }}</small>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="commit-bar">
+          <label class="toggle">
+            <input type="checkbox" [ngModel]="skipInvalid()" (ngModelChange)="skipInvalid.set($event)" />
+            {{ i18n.t('smartImport.skipInvalid') }}
+          </label>
+          <button type="button" class="primary" [disabled]="store.loading() || (!skipInvalid() && preview.errorRows > 0)" (click)="commit()">
+            {{ i18n.t('smartImport.revalidateCommit') }}
+          </button>
+        </div>
+        @if (!skipInvalid() && preview.errorRows > 0) {
+          <p class="hint error-text">{{ i18n.t('smartImport.strictBlockedHint') }}</p>
+        }
+      </section>
+    }
+
+    @if (store.result(); as result) {
+      <section class="panel result" [class.warning]="!result.persisted">
+        <h3>{{ i18n.t('smartImport.resultTitle') }}</h3>
+        <div class="result-metrics">
+          <span><strong>{{ result.status }}</strong>{{ i18n.t('smartImport.status') }}</span>
+          <span><strong>{{ result.committedRows }}</strong>{{ i18n.t('smartImport.committed') }}</span>
+          <span><strong>{{ result.rejectedRows }}</strong>{{ i18n.t('smartImport.rejected') }}</span>
+        </div>
+        <p>{{ rtl() ? result.messageAr : result.messageEn }}</p>
+        @if (result.rejectedRows > 0) {
+          <button type="button" class="secondary" (click)="store.downloadRejected(result.batchId)">
+            {{ i18n.t('smartImport.downloadRejected') }}
+          </button>
+        }
+      </section>
+    }
+  }
+</section>

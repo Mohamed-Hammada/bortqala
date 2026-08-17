@@ -18,9 +18,6 @@ public class PayrollComponentController {
         this.evaluatorService = evaluatorService;
     }
 
-    public record CreateComponentPayload(String code, String name, String type, String calculationFormula) {}
-    public record EvaluatePayload(String componentId, BigDecimal baseAmount, BigDecimal percentage) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
     public PayrollComponent createComponent(@RequestBody CreateComponentPayload payload) {
@@ -37,5 +34,11 @@ public class PayrollComponentController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER', 'VIEWER')")
     public List<PayrollComponent> getAllComponents() {
         return evaluatorService.getAllComponents();
+    }
+
+    public record CreateComponentPayload(String code, String name, String type, String calculationFormula) {
+    }
+
+    public record EvaluatePayload(String componentId, BigDecimal baseAmount, BigDecimal percentage) {
     }
 }

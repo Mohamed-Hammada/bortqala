@@ -10,57 +10,63 @@ import java.util.List;
 
 public final class ScreenShortcutApi {
 
-    private ScreenShortcutApi() {}
+    private ScreenShortcutApi() {
+    }
 
     public record DestinationResponse(
-        String pageCode,
-        String menuId,
-        String route,
-        String titleKey,
-        String module,
-        String requiredFeature
-    ) {}
+            String pageCode,
+            String menuId,
+            String route,
+            String titleKey,
+            String module,
+            String requiredFeature
+    ) {
+    }
 
     public record ShortcutResponse(
-        String id,
-        String pageCode,
-        String menuId,
-        String route,
-        String titleKey,
-        String secondKeyCode,
-        String displayKey,
-        boolean enabled,
-        boolean defaultShortcut,
-        String availabilityStatus,
-        String unavailableReasonKey
-    ) {}
+            String id,
+            String pageCode,
+            String menuId,
+            String route,
+            String titleKey,
+            String secondKeyCode,
+            String displayKey,
+            boolean enabled,
+            boolean defaultShortcut,
+            String availabilityStatus,
+            String unavailableReasonKey
+    ) {
+    }
 
     public record ProfileResponse(
-        String profileMode,
-        long version,
-        List<ShortcutResponse> shortcuts,
-        List<DestinationResponse> availableDestinations,
-        Instant updatedAt
-    ) {}
+            String profileMode,
+            long version,
+            List<ShortcutResponse> shortcuts,
+            List<DestinationResponse> availableDestinations,
+            Instant updatedAt
+    ) {
+    }
 
     public record ShortcutItemRequest(
-        @NotNull
-        @Pattern(regexp = "Key[A-Z]|Digit[0-9]")
-        String secondKeyCode,
+            @NotNull
+            @Pattern(regexp = "Key[A-Z]|Digit[0-9]")
+            String secondKeyCode,
 
-        @NotNull
-        @Pattern(regexp = "[A-Z0-9_]{1,80}")
-        String pageCode,
+            @NotNull
+            @Pattern(regexp = "[A-Z0-9_]{1,80}")
+            String pageCode,
 
-        boolean enabled
-    ) {}
+            boolean enabled
+    ) {
+    }
 
     public record ReplaceShortcutsRequest(
-        @NotNull
-        Long expectedVersion,
+            @NotNull
+            Long expectedVersion,
 
-        @NotNull
-        @Size(max = 20)
-        List<@Valid ShortcutItemRequest> shortcuts
-    ) {}
+            @NotNull
+            @Size(max = 20)
+            List<@Valid ShortcutItemRequest> shortcuts
+    ) {
+    }
 }

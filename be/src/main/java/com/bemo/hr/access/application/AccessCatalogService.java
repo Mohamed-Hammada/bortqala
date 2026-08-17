@@ -13,14 +13,7 @@ import com.bemo.hr.shared.security.TenantFeatureService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -122,6 +115,13 @@ public class AccessCatalogService {
         List<AccessApi.AccessWarningResponse> warnings = sensitiveWarnings(granted);
         List<AccessApi.AccessValidateErrorResponse> errors =
                 new ArrayList<>(menuAndFeatureErrors(menus, selected));
+        // BORTQALA_FEEDBACK_20260816_ACCESS_REASON_OVERRIDE
+        // A documented reason may acknowledge recoverable menu/feature parity mismatches.
+        // Unknown menus and the hard security rules above remain non-bypassable.
+        if (reason != null && !reason.isBlank()) {
+            errors.removeIf(error -> ERR_MENU_ROLE_MISMATCH.equals(error.code())
+                    || ERR_FEATURE_DISABLED.equals(error.code()));
+        }
         errors.addAll(reasonErrors(conflicts, warnings, currentUserRoles, reason));
 
         return new AccessApi.AccessValidateResponse(errors.isEmpty(), conflicts, warnings, errors,
@@ -148,7 +148,9 @@ public class AccessCatalogService {
         }
     }
 
-    /** Suggested minimal roles covering a set of business needs. */
+    /**
+     * Suggested minimal roles covering a set of business needs.
+     */
     public List<String> suggestRoles(Set<String> permissions) {
         Set<String> uncovered = new HashSet<>(permissions);
         if (uncovered.isEmpty()) return List.of();

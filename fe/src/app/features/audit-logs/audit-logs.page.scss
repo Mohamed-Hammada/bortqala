@@ -54,7 +54,7 @@ code { font-family: monospace; font-size: 12px; color: var(--gold); }
 .filter-row .btn.primary {
   background: var(--gold);
   border: none;
-  color: #1a1204;
+  color: #0F172A;
   font-weight: 600;
   padding: 8px 16px;
   border-radius: 8px;
@@ -84,7 +84,7 @@ code { font-family: monospace; font-size: 12px; color: var(--gold); }
   border: 1px solid var(--danger);
   border-radius: 10px;
   padding: 20px;
-  color: #FCA5A5;
+  color: var(--danger);
 }
 
 .load-error strong {
@@ -104,9 +104,12 @@ code { font-family: monospace; font-size: 12px; color: var(--gold); }
 .load-error .btn.primary {
   background: var(--gold);
   border: none;
-  color: #1a1204;
+  color: #0F172A;
   font-weight: 600;
   padding: 8px 18px;
   border-radius: 8px;
   cursor: pointer;
 }
+
+/* BORTQALA_FEEDBACK_20260816_AUDIT_REDESIGN */
+:host{display:block}.page{max-width:1600px;margin-inline:auto}.filters,.filter-bar,.audit-filters{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.75rem;padding:1rem;border:1px solid var(--line,#e5e7eb);border-radius:16px;background:var(--surface,#fff);box-shadow:0 6px 24px rgba(15,23,42,.04)}.table-card,.audit-table{margin-top:1rem;overflow:auto;max-height:68vh;border:1px solid var(--line,#e5e7eb);border-radius:16px;background:var(--surface,#fff)}table{min-width:960px}thead th{position:sticky;top:0;z-index:2;background:var(--surface,#fff)}.alert.error{border-radius:14px;padding:1rem}.empty-state{padding:2.5rem;text-align:center;color:var(--muted,#667085)}@media(max-width:720px){.filters,.filter-bar,.audit-filters{grid-template-columns:1fr}.table-card,.audit-table{max-height:none}}

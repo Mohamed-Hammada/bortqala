@@ -1,12 +1,6 @@
 package com.bemo.hr.shared.numbering;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -14,11 +8,11 @@ import java.util.UUID;
 
 @Entity
 @Table(
-    name = "document_number_sequences",
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_document_number_sequence_app_type_year",
-        columnNames = {"app_id", "document_type", "year"}
-    )
+        name = "document_number_sequences",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_document_number_sequence_app_type_year",
+                columnNames = {"app_id", "document_type", "year"}
+        )
 )
 public class DocumentNumberSequence {
 

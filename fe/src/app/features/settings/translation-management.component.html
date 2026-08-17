@@ -1,78 +1,217 @@
 <section class="translation-manager">
-  <header>
+  <header class="translation-header">
     <div>
       <h2>{{ i18n.t('translations.title', undefined, 'إدارة الترجمات') }}</h2>
       <p>{{ i18n.t('translations.description', undefined, 'عدّل النص الافتراضي للمنصة أو أنشئ ترجمة خاصة بتطبيق محدد.') }}</p>
     </div>
+    <div class="translation-summary" aria-label="Translation summary">
+      <span><strong>{{ total() }}</strong> {{ i18n.t('translations.keys', undefined, 'مفتاح') }}</span>
+      @if (appId()) {
+        <span class="custom-summary"><strong>{{ overriddenCount() }}</strong> {{ i18n.t('translations.custom', undefined, 'مخصصة') }}</span>
+      }
+    </div>
   </header>
 
-  <div class="scope-grid">
-    <label>
-      <span>{{ i18n.t('translations.language', undefined, 'اللغة') }}</span>
-      <select [ngModel]="locale()" (ngModelChange)="changeLocale($event)">
-        <option value="ar-EG">{{ i18n.t('settings.arabic') }}</option>
-        <option value="en-US">{{ i18n.t('settings.english') }}</option>
-      </select>
-    </label>
-    <label>
-      <span>{{ i18n.t('translations.scope', undefined, 'نطاق الترجمة') }}</span>
-      <select [ngModel]="appId() ?? ''" (ngModelChange)="changeScope($event)">
-        <option value="">{{ i18n.t('translations.defaultScope', undefined, 'الترجمة الافتراضية لكل التطبيقات') }}</option>
-        @for (app of apps(); track app.id) {
-          <option [value]="app.id">{{ app.name }} ({{ app.code }})</option>
+  <section class="translation-tools" aria-label="Translation filters">
+    <div class="scope-grid">
+      <label>
+        <span>{{ i18n.t('translations.language', undefined, 'اللغة') }}</span>
+        <select [ngModel]="locale()" (ngModelChange)="changeLocale($event)">
+          <option value="ar-EG">{{ i18n.t('settings.arabic') }}</option>
+          <option value="en-US">{{ i18n.t('settings.english') }}</option>
+        </select>
+      </label>
+      <label>
+        <span>{{ i18n.t('translations.scope', undefined, 'نطاق الترجمة') }}</span>
+        <select [ngModel]="appId() ?? ''" (ngModelChange)="changeScope($event)">
+          <option value="">{{ i18n.t('translations.defaultScope', undefined, 'الترجمة الافتراضية لكل التطبيقات') }}</option>
+          @for (app of apps(); track app.id) {
+            <option [value]="app.id">{{ app.name }} ({{ app.code }})</option>
+          }
+        </select>
+      </label>
+      <label class="translation-search">
+        <span>{{ i18n.t('common.search', undefined, 'بحث') }}</span>
+        <input
+          type="search"
+          [ngModel]="search()"
+          (ngModelChange)="changeSearch($event)"
+          [placeholder]="i18n.t('translations.searchPlaceholder', undefined, 'ابحث بالمفتاح أو النص')"
+        />
+      </label>
+    </div>
+    @if (appId()) {
+      <p class="scope-note">{{ i18n.t('translations.overrideHint', undefined, 'النص الخاص بالتطبيق له الأولوية، وإذا لم يوجد فسيُعرض النص الافتراضي تلقائيًا.') }}</p>
+    }
+  </section>
+
+  <section class="translation-import" aria-label="Translation import">
+    <div class="import-copy">
+      <span class="import-icon" aria-hidden="true">⇧</span>
+      <div>
+        <h3>{{ i18n.t('translations.importTitle', undefined, 'استيراد الترجمات من Excel') }}</h3>
+        <p>{{ i18n.t('translations.importDescription', undefined, 'استورد مجموعة ترجمات إلى اللغة والنطاق المحددين أعلاه دون الحاجة إلى تعديل كل صف يدويًا.') }}</p>
+      </div>
+    </div>
+
+    <input
+      #importFileInput
+      class="visually-hidden-file"
+      type="file"
+      accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+      (change)="onImportFileSelected($event)"
+      [disabled]="importing()"
+    />
+
+    <div class="import-controls">
+      <button
+        type="button"
+        class="button secondary"
+        (click)="downloadSampleTemplate()"
+      >
+        ⇩ {{ i18n.t('common.downloadTemplate') }}
+      </button>
+      <button
+        type="button"
+        class="button secondary choose-file-button"
+        (click)="importFileInput.click()"
+        [disabled]="importing()"
+      >
+        {{ i18n.t('translations.chooseExcelFile', undefined, 'اختيار ملف Excel') }}
+      </button>
+
+      <div class="selected-file" [class.empty]="!importFileName()" aria-live="polite">
+        @if (importFileName()) {
+          <span class="file-type-badge">Excel</span>
+          <strong [title]="importFileName()">{{ importFileName() }}</strong>
+          <button
+            type="button"
+            class="file-clear"
+            (click)="clearImportFile(importFileInput)"
+            [disabled]="importing()"
+            [attr.aria-label]="i18n.t('translations.clearSelectedFile', undefined, 'مسح الملف المحدد')"
+          >×</button>
+        } @else {
+          <span>{{ i18n.t('translations.noFileSelected', undefined, 'لم يتم اختيار ملف بعد') }}</span>
         }
-      </select>
-    </label>
-    <label>
-      <span>{{ i18n.t('common.search', undefined, 'بحث') }}</span>
-      <input type="search" [ngModel]="search()" (ngModelChange)="search.set($event)"
-             [placeholder]="i18n.t('translations.searchPlaceholder', undefined, 'ابحث بالمفتاح أو النص')" />
-    </label>
-  </div>
+      </div>
 
-  <div class="add-row">
-    <input [ngModel]="newKey()" (ngModelChange)="newKey.set($event)" placeholder="menu.example" />
-    <input [ngModel]="newValue()" (ngModelChange)="newValue.set($event)"
-           [placeholder]="i18n.t('translations.newValue', undefined, 'نص الترجمة')" />
-    <button type="button" class="button primary" (click)="add()" [disabled]="!newKey().trim() || !newValue().trim()">
-      {{ i18n.t('translations.add', undefined, 'إضافة مفتاح') }}
-    </button>
-  </div>
+      <button
+        type="button"
+        class="button primary import-submit"
+        (click)="uploadImport(importFileInput)"
+        [disabled]="importing() || !importFile()"
+      >
+        {{ importing() ? i18n.t('translations.importing', undefined, 'جارٍ الاستيراد...') : i18n.t('translations.importAction', undefined, 'استيراد الملف') }}
+      </button>
+    </div>
 
-  @if (appId()) {
-    <p class="scope-note">{{ i18n.t('translations.overrideHint', undefined, 'النص الخاص بالتطبيق له الأولوية، وإذا لم يوجد فسيُعرض النص الافتراضي تلقائيًا.') }}</p>
-  }
+    <p class="import-note">
+      <strong>{{ i18n.t('translations.excelColumns', undefined, 'تنسيق الملف:') }}</strong>
+      {{ i18n.t('translations.importNote', undefined, 'أول ورقة يجب أن تحتوي على العمودين key و value. الصفوف الحالية تُحدّث، والمفاتيح الجديدة تُنشأ ضمن اللغة والنطاق الحاليين.') }}
+    </p>
+  </section>
+
+  <details class="add-translation">
+    <summary>＋ {{ i18n.t('translations.add', undefined, 'إضافة مفتاح') }}</summary>
+    <div class="add-row">
+      <label>
+        <span>{{ i18n.t('translations.key', undefined, 'المفتاح') }}</span>
+        <input class="ltr" [ngModel]="newKey()" (ngModelChange)="newKey.set($event)" placeholder="menu.example" />
+      </label>
+      <label>
+        <span>{{ i18n.t('translations.newValue', undefined, 'نص الترجمة') }}</span>
+        <input [ngModel]="newValue()" (ngModelChange)="newValue.set($event)"
+               [placeholder]="i18n.t('translations.newValue', undefined, 'نص الترجمة')" />
+      </label>
+      <button type="button" class="button primary" (click)="add()" [disabled]="!newKey().trim() || !newValue().trim() || savingKey() !== null">
+        {{ i18n.t('translations.add', undefined, 'إضافة مفتاح') }}
+      </button>
+    </div>
+  </details>
 
   @if (loading()) {
     <p class="state">{{ i18n.t('common.loading', undefined, 'جارٍ التحميل...') }}</p>
   } @else {
-    <div class="translation-list">
-      @for (row of filteredRows(); track row.key) {
-        <article class="translation-row">
-          <div class="row-heading">
-            <code>{{ row.key }}</code>
-            @if (row.overridden) {
-              <span class="override-badge">{{ i18n.t('translations.custom', undefined, 'مخصصة') }}</span>
+    <div class="translation-table-card">
+      <div class="translation-table-scroll">
+        <table class="translation-table">
+          <thead>
+            <tr>
+              <th class="key-column">{{ i18n.t('translations.key', undefined, 'المفتاح') }}</th>
+              @if (appId()) {
+                <th class="default-column">{{ i18n.t('translations.defaultValue', undefined, 'الافتراضي') }}</th>
+              }
+              <th class="value-column">{{ i18n.t('translations.value', undefined, 'الترجمة') }}</th>
+              <th class="status-column">{{ i18n.t('common.status', undefined, 'الحالة') }}</th>
+              <th class="actions-column">{{ i18n.t('common.actions', undefined, 'الإجراءات') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows(); track row.key) {
+              <tr>
+                <td class="key-cell"><code class="ltr">{{ row.key }}</code></td>
+                @if (appId()) {
+                  <td class="default-cell">
+                    <span>{{ row.defaultValue || '—' }}</span>
+                  </td>
+                }
+                <td class="value-cell">
+                  <textarea
+                    rows="2"
+                    [ngModel]="displayValue(row)"
+                    (ngModelChange)="updateDraft(row.key, $event)"
+                    [attr.aria-label]="row.key"
+                  ></textarea>
+                </td>
+                <td class="status-cell">
+                  @if (appId() && row.overridden) {
+                    <span class="override-badge">{{ i18n.t('translations.custom', undefined, 'مخصصة') }}</span>
+                  } @else {
+                    <span class="default-badge">{{ i18n.t('translations.defaultValue', undefined, 'افتراضي') }}</span>
+                  }
+                </td>
+                <td class="actions-cell">
+                  <div class="row-actions">
+                    @if (appId() && row.overridden) {
+                      <button
+                        type="button"
+                        class="button secondary btn-sm"
+                        (click)="restore(row)"
+                        [disabled]="savingKey() === row.key"
+                        [attr.title]="i18n.t('translations.restoreDefault', undefined, 'العودة للافتراضي')"
+                      >
+                        ↶ {{ i18n.t('translations.restoreDefault', undefined, 'العودة للافتراضي') }}
+                      </button>
+                    }
+                    <button
+                      type="button"
+                      class="button primary btn-sm"
+                      (click)="save(row)"
+                      [disabled]="savingKey() === row.key || !displayValue(row).trim()"
+                    >
+                      {{ savingKey() === row.key ? i18n.t('common.saving', undefined, 'جارٍ الحفظ...') : i18n.t('common.save', undefined, 'حفظ') }}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td [attr.colspan]="appId() ? 5 : 4">
+                  <p class="state">{{ i18n.t('translations.empty', undefined, 'لا توجد نتائج') }}</p>
+                </td>
+              </tr>
             }
-          </div>
-          @if (appId() && row.defaultValue) {
-            <small>{{ i18n.t('translations.defaultValue', undefined, 'الافتراضي') }}: {{ row.defaultValue }}</small>
-          }
-          <textarea rows="2" [ngModel]="displayValue(row)" (ngModelChange)="updateDraft(row.key, $event)"></textarea>
-          <div class="row-actions">
-            @if (appId() && row.overridden) {
-              <button type="button" class="button secondary" (click)="restore(row)" [disabled]="savingKey() === row.key">
-                {{ i18n.t('translations.restoreDefault', undefined, 'العودة للافتراضي') }}
-              </button>
-            }
-            <button type="button" class="button primary" (click)="save(row)" [disabled]="savingKey() === row.key || !displayValue(row).trim()">
-              {{ i18n.t('common.save', undefined, 'حفظ') }}
-            </button>
-          </div>
-        </article>
-      } @empty {
-        <p class="state">{{ i18n.t('translations.empty', undefined, 'لا توجد نتائج') }}</p>
-      }
+          </tbody>
+        </table>
+      </div>
+      <app-table-pagination
+        [total]="total()"
+        [page]="pagination.currentPage(total())"
+        [pageSize]="pagination.pageSize()"
+        (pageChange)="changePage($event)"
+        (pageSizeChange)="changePageSize($event)"
+      />
     </div>
   }
 </section>

@@ -1,0 +1,14 @@
+@if (loading.visible()) {
+  <div class="global-loading-backdrop" aria-hidden="true"></div>
+
+  <div
+    class="global-loading-dialog"
+    role="status"
+    aria-live="polite"
+    aria-busy="true"
+    [attr.aria-label]="i18n.t('skeleton.loadingAria')"
+  >
+    <span class="global-loading-spinner" aria-hidden="true"></span>
+    <span>{{ i18n.t('skeleton.loadingAria') }}</span>
+  </div>
+}

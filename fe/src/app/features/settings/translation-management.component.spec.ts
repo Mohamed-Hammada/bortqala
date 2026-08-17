@@ -1,24 +1,32 @@
 import '@angular/compiler';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting, TestRequest } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
-import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TranslationManagementComponent } from './translation-management.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n.service';
 import { NotificationService } from '../../core/notification.service';
+import { TranslationManagementComponent } from './translation-management.component';
+
+interface TestTranslationRow {
+  key: string;
+  defaultValue: string | null;
+  overrideValue: string | null;
+  effectiveValue: string | null;
+  overridden: boolean;
+}
 
 const APPS = [
   { id: 'app-1', code: 'DEMO', name: 'Demo App', active: true },
   { id: 'app-2', code: 'CORE', name: 'Core ERP', active: true },
 ];
 
-const DEFAULT_ROWS = [
+const DEFAULT_ROWS: TestTranslationRow[] = [
   { key: 'common.save', defaultValue: 'حفظ', overrideValue: null, effectiveValue: 'حفظ', overridden: false },
   { key: 'nav.title', defaultValue: 'العنوان العام', overrideValue: null, effectiveValue: 'العنوان العام', overridden: false },
 ];
 
-const APP_ROWS = [
+const APP_ROWS: TestTranslationRow[] = [
   { key: 'common.save', defaultValue: 'حفظ', overrideValue: null, effectiveValue: 'حفظ', overridden: false },
   { key: 'nav.title', defaultValue: 'العنوان العام', overrideValue: 'عنوان العميل', effectiveValue: 'عنوان العميل', overridden: true },
 ];
@@ -28,7 +36,6 @@ describe('TranslationManagementComponent', () => {
   let fixture: ComponentFixture<TranslationManagementComponent>;
   let http: HttpTestingController;
   let notification: NotificationService;
-  let i18n: I18nService;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -57,103 +64,155 @@ describe('TranslationManagementComponent', () => {
     component = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController);
     notification = TestBed.inject(NotificationService);
-    i18n = TestBed.inject(I18nService);
 
     await flushInitialLoad();
     fixture.detectChanges();
   });
 
   afterEach(() => {
+    fixture.destroy();
+    vi.useRealTimers();
     http.verify();
   });
+
+  function pageResponse(
+    content = DEFAULT_ROWS,
+    page = 0,
+    size = 25,
+    totalElements = content.length,
+    overriddenCount = 0,
+  ) {
+    return {
+      content,
+      page,
+      size,
+      totalElements,
+      totalPages: Math.max(1, Math.ceil(totalElements / size)),
+      overriddenCount,
+    };
+  }
+
+  function expectTranslationRequest(options: {
+    locale?: string;
+    page?: number;
+    size?: number;
+    appId?: string | null;
+    search?: string | null;
+  } = {}): TestRequest {
+    const locale = options.locale ?? 'ar-EG';
+    const page = options.page ?? 0;
+    const size = options.size ?? 25;
+
+    return http.expectOne((request) => {
+      if (request.url !== '/api/v1/i18n/admin/translations') return false;
+      if (request.params.get('locale') !== locale) return false;
+      if (request.params.get('page') !== String(page)) return false;
+      if (request.params.get('size') !== String(size)) return false;
+      if ((request.params.get('appId') ?? null) !== (options.appId ?? null)) return false;
+      if ((request.params.get('search') ?? null) !== (options.search ?? null)) return false;
+      return true;
+    });
+  }
 
   async function flushInitialLoad(): Promise<void> {
     http.expectOne('/api/v1/i18n/admin/apps').flush(APPS);
     await Promise.resolve();
-    http.expectOne('/api/v1/i18n/admin/translations?locale=ar-EG').flush(DEFAULT_ROWS);
+    expectTranslationRequest().flush(pageResponse());
     await Promise.resolve();
   }
 
-  it('loads applications and rows for the current locale on init', () => {
+  it('loads the first server page and total count on init', () => {
     expect(component.apps()).toHaveLength(2);
     expect(component.rows().map((row) => row.key)).toEqual(['common.save', 'nav.title']);
-    expect(component.rows().every((row) => !row.overridden)).toBe(true);
+    expect(component.total()).toBe(2);
+    expect(component.pagination.page()).toBe(1);
   });
 
-  it('reloads rows when the language changes', () => {
-    void component.changeLocale('en-US');
-
-    http.expectOne('/api/v1/i18n/admin/translations?locale=en-US')
-      .flush(DEFAULT_ROWS.map((row) => ({ ...row, effectiveValue: 'Save' })));
+  it('reloads page zero when the language changes', async () => {
+    const promise = component.changeLocale('en-US');
+    expectTranslationRequest({ locale: 'en-US' }).flush(pageResponse(
+      DEFAULT_ROWS.map((row) => ({ ...row, effectiveValue: 'Save' })),
+    ));
+    await promise;
 
     expect(component.locale()).toBe('en-US');
+    expect(component.pagination.page()).toBe(1);
   });
 
-  it('reloads rows with the selected application scope', async () => {
+  it('reloads page zero with the selected application scope', async () => {
     const promise = component.changeScope('app-1');
-
-    http.expectOne('/api/v1/i18n/admin/translations?locale=ar-EG&appId=app-1').flush(APP_ROWS);
+    expectTranslationRequest({ appId: 'app-1' }).flush(pageResponse(APP_ROWS, 0, 25, 2, 1));
     await promise;
 
     expect(component.appId()).toBe('app-1');
+    expect(component.overriddenCount()).toBe(1);
     expect(component.rows().find((row) => row.key === 'nav.title')?.overridden).toBe(true);
   });
 
-  it('filters rows by key or effective text', () => {
-    component.search.set('العنوان');
+  it('requests the selected page from the backend', async () => {
+    component.total.set(60);
 
-    expect(component.filteredRows().map((row) => row.key)).toEqual(['nav.title']);
+    const promise = component.changePage(2);
+    expectTranslationRequest({ page: 1 }).flush(pageResponse(DEFAULT_ROWS, 1, 25, 60));
+    await promise;
+
+    expect(component.pagination.page()).toBe(2);
+    expect(component.total()).toBe(60);
   });
 
-  it('saves a key via PUT and refreshes the active bundle', async () => {
-    const updated = { ...DEFAULT_ROWS[1], overrideValue: 'عنوان جديد', effectiveValue: 'عنوان جديد', overridden: true };
-    const promise = component.save(component.rows()[1]);
+  it('resets to page one and requests the new page size', async () => {
+    component.total.set(60);
+    component.pagination.page.set(2);
 
-    http.expectOne('/api/v1/i18n/admin/translations/nav.title').flush(updated);
-
+    const promise = component.changePageSize(50);
+    expectTranslationRequest({ page: 0, size: 50 }).flush(pageResponse(DEFAULT_ROWS, 0, 50, 60));
     await promise;
-    expect(component.rows()[1].effectiveValue).toBe('عنوان جديد');
-    expect(notification.success).toHaveBeenCalledWith('translations.saved');
-    expect(i18n.invalidate).toHaveBeenCalledWith('ar-EG', null);
-    expect(i18n.invalidate).toHaveBeenCalledWith('ar-EG', 'app-1');
-    expect(i18n.use).toHaveBeenCalledWith('ar-EG', 'app-1');
+
+    expect(component.pagination.page()).toBe(1);
+    expect(component.pagination.pageSize()).toBe(50);
   });
 
-  it('restores an application override via DELETE and re-exposes the default', async () => {
-    component.appId.set('app-1');
-    component.rows.set(APP_ROWS);
-    const restored = { key: 'nav.title', defaultValue: 'العنوان العام', overrideValue: null, effectiveValue: 'العنوان العام', overridden: false };
-    const promise = component.restore(component.rows()[1]);
+  it('debounces search and sends it to the backend', async () => {
+    vi.useFakeTimers();
+    component.changeSearch('العنوان');
 
-    http.expectOne('/api/v1/i18n/admin/translations/nav.title?locale=ar-EG&appId=app-1').flush(restored);
+    vi.advanceTimersByTime(299);
+    http.expectNone((request) => request.url === '/api/v1/i18n/admin/translations');
+    vi.advanceTimersByTime(1);
 
-    await promise;
-    expect(component.rows()[1].overridden).toBe(false);
-    expect(component.rows()[1].effectiveValue).toBe('العنوان العام');
-    expect(notification.success).toHaveBeenCalledWith('translations.restored');
+    expectTranslationRequest({ search: 'العنوان' }).flush(pageResponse([DEFAULT_ROWS[1]], 0, 25, 1));
+    await Promise.resolve();
+
+    expect(component.total()).toBe(1);
+    expect(component.rows().map((row) => row.key)).toEqual(['nav.title']);
   });
 
-  it('adds a new key and value from the form inputs', async () => {
-    component.newKey.set('menu.example');
-    component.newValue.set('مثال');
-    const created = { key: 'menu.example', defaultValue: 'مثال', overrideValue: null, effectiveValue: 'مثال', overridden: false };
-    const promise = component.add();
+  it('uploads an excel file then refreshes the current page', async () => {
+    const file = new File(['binary'], 'translations.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
+    component.onImportFileSelected({
+      target: { files: [file] },
+    } as unknown as Event);
 
-    http.expectOne('/api/v1/i18n/admin/translations/menu.example').flush(created);
+    const promise = component.uploadImport();
+    const request = http.expectOne('/api/v1/i18n/admin/translations/import');
+    expect(request.request.method).toBe('POST');
+    const body = request.request.body as FormData;
+    expect(body.get('locale')).toBe('ar-EG');
+    request.flush({ importedCount: 2, createdCount: 1, updatedCount: 1, unchangedCount: 0 });
+    await new Promise((resolve) => setTimeout(resolve, 0));
 
+    expectTranslationRequest().flush(pageResponse());
     await promise;
-    expect(component.newKey()).toBe('');
-    expect(component.newValue()).toBe('');
-    expect(component.rows().some((row) => row.key === 'menu.example')).toBe(true);
+
+    expect(component.importFile()).toBeNull();
     expect(notification.success).toHaveBeenCalled();
   });
 
-  it('surfaces load errors through the notification service', async () => {
-    component.search.set('');
-    component.apps.set([]);
-
+  it('surfaces server-page load errors through the notification service', async () => {
     const promise = component.changeLocale('en-US');
-    http.expectOne('/api/v1/i18n/admin/translations?locale=en-US')
+    expectTranslationRequest({ locale: 'en-US' })
       .error(new ProgressEvent('error'), { status: 500, statusText: 'Server Error' });
     await promise;
 

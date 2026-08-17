@@ -72,7 +72,7 @@ databaseChangeLog:
               - column: { name: version, type: bigint, defaultValueNumeric: 0, constraints: { nullable: false } }
               - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
               - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
-        - addUniqueConstraint: { tableName: attendance_exceptions, columnNames: app_id,report_id,daily_result_id,exception_type, constraintName: uk_attendance_exception_evidence }
+        - addUniqueConstraint: { tableName: attendance_exceptions, columnNames: "app_id, report_id, daily_result_id, exception_type", constraintName: uk_attendance_exception_evidence }
         - createIndex: { tableName: attendance_exceptions, indexName: ix_attendance_exception_payroll_gate, columns: [{ column: { name: report_id } }, { column: { name: employee_id } }, { column: { name: status } }, { column: { name: payroll_blocking } }] }
       rollback:
         - dropTable: { tableName: attendance_exceptions }

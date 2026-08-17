@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v230_001_payroll_state_audit
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: salary_payment
+        - not:
+            columnExists:
+              tableName: salary_payment
+              columnName: paid_by
+      changes:
+        - addColumn:
+            tableName: salary_payment
+            columns:
+              - column: { name: paid_by, type: VARCHAR(100) }
+              - column: { name: reversed_by, type: VARCHAR(100) }
+              - column: { name: reversed_at, type: TIMESTAMP WITH TIME ZONE }
+              - column: { name: reversal_reason, type: VARCHAR(500) }
+        - update:
+            tableName: salary_payment
+            columns:
+              - column: { name: payment_status, value: DRAFT }
+            where: payment_status = 'PENDING'
+      rollback:
+        - dropColumn: { tableName: salary_payment, columnName: reversal_reason }
+        - dropColumn: { tableName: salary_payment, columnName: reversed_at }
+        - dropColumn: { tableName: salary_payment, columnName: reversed_by }
+        - dropColumn: { tableName: salary_payment, columnName: paid_by }

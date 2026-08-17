@@ -30,7 +30,9 @@
               }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/ui-ux-fixes.scss",
+              "src/form-controls.scss"
             ]
           },
           "configurations": {

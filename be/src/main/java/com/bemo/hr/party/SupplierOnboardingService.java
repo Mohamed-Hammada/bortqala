@@ -36,9 +36,9 @@ class SupplierOnboardingService {
     SupplierOnboardingApi.DuplicateResponse duplicates(String taxId, String iban, String excludeSupplierId) {
         List<SupplierOnboardingApi.DuplicateMatch> taxMatches = taxId == null || taxId.isBlank() ? List.of()
                 : businessPartyRepository.findByTaxIdIgnoreCase(taxId.strip()).stream()
-                .filter(p -> !p.getId().equals(excludeSupplierId))
-                .map(p -> new SupplierOnboardingApi.DuplicateMatch(p.getId(), p.getCode(), p.getName(), "TAX_ID"))
-                .toList();
+                  .filter(p -> !p.getId().equals(excludeSupplierId))
+                  .map(p -> new SupplierOnboardingApi.DuplicateMatch(p.getId(), p.getCode(), p.getName(), "TAX_ID"))
+                  .toList();
         List<SupplierOnboardingApi.DuplicateMatch> bankMatches = new ArrayList<>();
         if (iban != null && !iban.isBlank()) {
             supplierBankAccountRepository.findByNormalizedIban(SupplierBankAccount.normalize(iban))
@@ -67,21 +67,26 @@ class SupplierOnboardingService {
 
     @Transactional
     SupplierOnboardingApi.DocumentResponse addDocument(String supplierId, SupplierOnboardingApi.DocumentRequest request,
-                                                        MultipartFile file) {
+                                                       MultipartFile file) {
         requireSupplier(supplierId);
         if (request.expiryDate() != null && request.issueDate() != null && request.expiryDate().isBefore(request.issueDate())) {
             throw conflict("Document expiry date cannot precede its issue date.", "SUPPLIER_DOCUMENT_DATE_INVALID");
         }
-        if (file == null || file.isEmpty()) throw conflict("Supplier document file is required.", "SUPPLIER_DOCUMENT_FILE_REQUIRED");
-        if (file.getSize() > 5L * 1024 * 1024) throw conflict("Supplier document cannot exceed 5 MB.", "SUPPLIER_DOCUMENT_FILE_TOO_LARGE");
+        if (file == null || file.isEmpty())
+            throw conflict("Supplier document file is required.", "SUPPLIER_DOCUMENT_FILE_REQUIRED");
+        if (file.getSize() > 5L * 1024 * 1024)
+            throw conflict("Supplier document cannot exceed 5 MB.", "SUPPLIER_DOCUMENT_FILE_TOO_LARGE");
         String contentType = file.getContentType() == null ? "application/octet-stream" : file.getContentType();
         if (!java.util.Set.of("application/pdf", "image/png", "image/jpeg",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet").contains(contentType)) {
             throw conflict("Unsupported supplier document type.", "SUPPLIER_DOCUMENT_FILE_TYPE_INVALID");
         }
         byte[] content;
-        try { content = file.getBytes(); }
-        catch (java.io.IOException ex) { throw conflict("Supplier document could not be read.", "SUPPLIER_DOCUMENT_FILE_READ_FAILED"); }
+        try {
+            content = file.getBytes();
+        } catch (java.io.IOException ex) {
+            throw conflict("Supplier document could not be read.", "SUPPLIER_DOCUMENT_FILE_READ_FAILED");
+        }
         String fileName = file.getOriginalFilename() == null || file.getOriginalFilename().isBlank()
                 ? "supplier-document" : file.getOriginalFilename();
         SupplierDocument document = supplierDocumentRepository.save(new SupplierDocument(supplierId,
@@ -104,7 +109,8 @@ class SupplierOnboardingService {
         SupplierDocument document = supplierDocumentRepository.findById(documentId)
                 .filter(d -> d.getSupplierId().equals(supplierId))
                 .orElseThrow(() -> new NotFoundException("Supplier document not found.", "SUPPLIER_DOCUMENT_NOT_FOUND"));
-        if (document.isExpired(LocalDate.now())) throw conflict("Expired supplier documents cannot be verified.", "SUPPLIER_DOCUMENT_EXPIRED");
+        if (document.isExpired(LocalDate.now()))
+            throw conflict("Expired supplier documents cannot be verified.", "SUPPLIER_DOCUMENT_EXPIRED");
         document.verify(businessPartyService.currentUser());
         audit("VERIFY", "SUPPLIER_DOCUMENT", document.getId(), supplierId);
         return documentResponse(document);
@@ -132,7 +138,8 @@ class SupplierOnboardingService {
                 .filter(a -> a.getSupplierId().equals(supplierId))
                 .orElseThrow(() -> new NotFoundException("Supplier bank account not found.", "SUPPLIER_BANK_NOT_FOUND"));
         account.verify(businessPartyService.currentUser());
-        if (account.isPrimary()) supplier.verifyBank(account.getIban(), account.getVerifiedBy(), account.getVerifiedAt());
+        if (account.isPrimary())
+            supplier.verifyBank(account.getIban(), account.getVerifiedBy(), account.getVerifiedAt());
         audit("VERIFY", "SUPPLIER_BANK_ACCOUNT", account.getId(), supplierId);
         return bankResponse(account);
     }
@@ -170,7 +177,8 @@ class SupplierOnboardingService {
     BusinessPartyApi.Response activate(String supplierId) {
         BusinessParty supplier = requireSupplier(supplierId);
         validateCompliance(supplierId);
-        if (!supplier.isBankVerified()) throw conflict("A verified primary bank account is required.", "SUPPLIER_BANK_VERIFICATION_REQUIRED");
+        if (!supplier.isBankVerified())
+            throw conflict("A verified primary bank account is required.", "SUPPLIER_BANK_VERIFICATION_REQUIRED");
         transition(supplier::activateSupplier);
         audit("ACTIVATE", "SUPPLIER_ONBOARDING", supplierId, null);
         return businessPartyService.toResponse(supplier);
@@ -186,7 +194,8 @@ class SupplierOnboardingService {
 
     @Transactional
     BusinessPartyApi.Response blacklist(String supplierId, String reason) {
-        if (reason == null || reason.isBlank()) throw conflict("Blacklist reason is required.", "SUPPLIER_BLACKLIST_REASON_REQUIRED");
+        if (reason == null || reason.isBlank())
+            throw conflict("Blacklist reason is required.", "SUPPLIER_BLACKLIST_REASON_REQUIRED");
         BusinessParty supplier = requireSupplier(supplierId);
         transition(supplier::blacklistSupplier);
         audit("BLACKLIST", "SUPPLIER_ONBOARDING", supplierId, reason);
@@ -207,7 +216,7 @@ class SupplierOnboardingService {
     }
 
     private List<SupplierOnboardingApi.ComplianceItem> compliance(BusinessParty supplier,
-            List<SupplierDocument> documents, List<SupplierBankAccount> accounts) {
+                                                                  List<SupplierDocument> documents, List<SupplierBankAccount> accounts) {
         LocalDate today = LocalDate.now();
         boolean mandatoryPresent = documents.stream().anyMatch(SupplierDocument::isMandatory);
         boolean documentsValid = mandatoryPresent && documents.stream()
@@ -221,7 +230,8 @@ class SupplierOnboardingService {
 
     private BusinessParty requireSupplier(String id) {
         BusinessParty party = businessPartyService.requireParty(id);
-        if (!"SUPPLIER".equals(party.getPartyType())) throw conflict("The selected party is not a supplier.", "SUPPLIER_REQUIRED");
+        if (!"SUPPLIER".equals(party.getPartyType()))
+            throw conflict("The selected party is not a supplier.", "SUPPLIER_REQUIRED");
         return party;
     }
 
@@ -240,8 +250,11 @@ class SupplierOnboardingService {
     }
 
     private void transition(Runnable action) {
-        try { action.run(); }
-        catch (IllegalStateException ex) { throw conflict(ex.getMessage(), "SUPPLIER_STATUS_TRANSITION_INVALID"); }
+        try {
+            action.run();
+        } catch (IllegalStateException ex) {
+            throw conflict(ex.getMessage(), "SUPPLIER_STATUS_TRANSITION_INVALID");
+        }
     }
 
     private void audit(String action, String type, String id, String detail) {
@@ -249,6 +262,11 @@ class SupplierOnboardingService {
                 "{\"detail\":\"" + safe(detail) + "\"}", null);
     }
 
-    private String safe(String value) { return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\""); }
-    private BusinessRuleException conflict(String message, String code) { return new BusinessRuleException(message, code, HttpStatus.CONFLICT); }
+    private String safe(String value) {
+        return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private BusinessRuleException conflict(String message, String code) {
+        return new BusinessRuleException(message, code, HttpStatus.CONFLICT);
+    }
 }

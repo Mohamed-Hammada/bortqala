@@ -95,7 +95,7 @@ code {
 }
 
 .alert.warning {
-  border-color: color-mix(in srgb, #d99d28 55%, var(--line));
+  border-color: color-mix(in srgb, var(--warning) 55%, var(--line));
 }
 
 @media (max-width: 1100px) {

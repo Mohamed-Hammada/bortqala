@@ -8,7 +8,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public final class SupplierOnboardingApi {
-    private SupplierOnboardingApi() { }
+    private SupplierOnboardingApi() {
+    }
 
     public record SupplierRequest(
             @NotBlank @Size(max = 50) String code,
@@ -24,30 +25,35 @@ public final class SupplierOnboardingApi {
             @Size(max = 50) String supplierCategory,
             @Size(max = 20) String riskLevel,
             @Size(max = 100) String ownerUserId,
-            @Size(max = 1000) String notes) { }
+            @Size(max = 1000) String notes) {
+    }
 
     public record DocumentRequest(
             @NotBlank @Size(max = 50) String documentType,
             @Size(max = 100) String documentNumber,
             LocalDate issueDate,
             LocalDate expiryDate,
-            @NotNull Boolean mandatory) { }
+            @NotNull Boolean mandatory) {
+    }
 
     public record DocumentResponse(String id, String documentType, String documentNumber, String fileName,
                                    String contentType, long fileSize,
                                    LocalDate issueDate, LocalDate expiryDate, boolean mandatory, boolean verified,
-                                   String verifiedBy, Long verifiedAt, long createdAt, boolean expired) { }
+                                   String verifiedBy, Long verifiedAt, long createdAt, boolean expired) {
+    }
 
     public record BankAccountRequest(
             @NotBlank @Size(max = 160) String accountName,
             @NotBlank @Size(max = 100) String iban,
             @NotBlank @Size(max = 160) String bankName,
             @NotBlank @Size(max = 10) String currencyCode,
-            boolean primary) { }
+            boolean primary) {
+    }
 
     public record BankAccountResponse(String id, String accountName, String iban, String bankName,
                                       String currencyCode, boolean primary, String verificationStatus,
-                                      String verifiedBy, Long verifiedAt, long createdAt) { }
+                                      String verifiedBy, Long verifiedAt, long createdAt) {
+    }
 
     public record DuplicateResponse(List<DuplicateMatch> taxIdMatches, List<DuplicateMatch> bankMatches,
                                     boolean duplicateFound) {
@@ -55,9 +61,13 @@ public final class SupplierOnboardingApi {
             this(taxIdMatches, bankMatches, !taxIdMatches.isEmpty() || !bankMatches.isEmpty());
         }
     }
-    public record DuplicateMatch(String supplierId, String code, String name, String reason) { }
 
-    public record ComplianceItem(String code, boolean passed, String explanation) { }
+    public record DuplicateMatch(String supplierId, String code, String name, String reason) {
+    }
+
+    public record ComplianceItem(String code, boolean passed, String explanation) {
+    }
+
     public record Supplier360(
             BusinessPartyApi.Response supplier,
             List<DocumentResponse> documents,
@@ -67,7 +77,9 @@ public final class SupplierOnboardingApi {
             long expiredDocumentCount,
             long verifiedBankCount,
             boolean procurementAllowed,
-            boolean paymentAllowed) { }
+            boolean paymentAllowed) {
+    }
 
-    public record TransitionRequest(@Size(max = 1000) String reason) { }
+    public record TransitionRequest(@Size(max = 1000) String reason) {
+    }
 }

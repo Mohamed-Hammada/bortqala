@@ -12,10 +12,14 @@ public class SaasTenantConfiguration {
     CurrentTenantIdentifierResolver<String> currentTenantIdentifierResolver() {
         return new CurrentTenantIdentifierResolver<>() {
             @Override
-            public String resolveCurrentTenantIdentifier() { return TenantContext.currentOrSystem(); }
+            public String resolveCurrentTenantIdentifier() {
+                return TenantContext.currentOrSystem();
+            }
 
             @Override
-            public boolean validateExistingCurrentSessions() { return true; }
+            public boolean validateExistingCurrentSessions() {
+                return true;
+            }
         };
     }
 

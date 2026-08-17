@@ -1,12 +1,6 @@
 package com.bemo.hr.finance.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -46,7 +40,8 @@ public class ExchangeRateRecord {
     @Column(nullable = false)
     private long version;
 
-    protected ExchangeRateRecord() {}
+    protected ExchangeRateRecord() {
+    }
 
     public ExchangeRateRecord(String fromCurrency, String toCurrency, BigDecimal rate, LocalDate effectiveDate) {
         this.id = UUID.randomUUID().toString();
@@ -57,18 +52,49 @@ public class ExchangeRateRecord {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getFromCurrency() { return fromCurrency; }
-    public String getToCurrency() { return toCurrency; }
-    public BigDecimal getRate() { return rate; }
-    public LocalDate getEffectiveDate() { return effectiveDate; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getFromCurrency() {
+        return fromCurrency;
+    }
+
+    public String getToCurrency() {
+        return toCurrency;
+    }
+
+    public BigDecimal getRate() {
+        return rate;
+    }
+
+    public LocalDate getEffectiveDate() {
+        return effectiveDate;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

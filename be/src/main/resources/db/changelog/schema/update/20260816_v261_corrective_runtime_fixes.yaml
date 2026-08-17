@@ -1,0 +1,81 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260816-fix-product-event-operation-unique-v3
+      author: openai
+      comment: Re-run product analytics idempotency repair under a new changeset id after v2 may already have been recorded.
+      preConditions:
+        - onFail: HALT
+        - onError: HALT
+        - dbms:
+            type: postgresql
+      changes:
+        - sql:
+            dbms: postgresql
+            splitStatements: false
+            stripComments: true
+            sql: |
+              DO $$
+              DECLARE
+                target_table regclass;
+                constraint_definition text;
+              BEGIN
+                SELECT conrelid::regclass, pg_get_constraintdef(oid)
+                  INTO target_table, constraint_definition
+                  FROM pg_constraint
+                 WHERE conname = 'uk_product_event_operation'
+                 ORDER BY oid
+                 LIMIT 1;
+
+                IF target_table IS NULL THEN
+                  SELECT c.oid::regclass
+                    INTO target_table
+                    FROM pg_class c
+                    JOIN pg_namespace n ON n.oid = c.relnamespace
+                    JOIN pg_attribute a1 ON a1.attrelid = c.oid
+                                         AND a1.attname = 'app_id'
+                                         AND NOT a1.attisdropped
+                    JOIN pg_attribute a2 ON a2.attrelid = c.oid
+                                         AND a2.attname = 'operation_id'
+                                         AND NOT a2.attisdropped
+                   WHERE c.relkind = 'r'
+                     AND EXISTS (
+                       SELECT 1 FROM pg_attribute ax
+                        WHERE ax.attrelid = c.oid
+                          AND ax.attname IN ('event_type','event_name','occurred_at','created_at')
+                          AND NOT ax.attisdropped
+                     )
+                   ORDER BY c.oid
+                   LIMIT 1;
+                END IF;
+
+                IF target_table IS NULL THEN
+                  RAISE EXCEPTION 'Could not locate product analytics event table containing app_id and operation_id';
+                END IF;
+
+                IF NOT EXISTS (
+                  SELECT 1 FROM pg_attribute
+                   WHERE attrelid = target_table AND attname = 'operation_id' AND NOT attisdropped
+                ) THEN
+                  RAISE EXCEPTION 'operation_id is missing from %', target_table;
+                END IF;
+
+                IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'uk_product_event_operation' AND conrelid = target_table) THEN
+                  EXECUTE format('ALTER TABLE %s DROP CONSTRAINT %I', target_table, 'uk_product_event_operation');
+                END IF;
+
+                EXECUTE format(
+                  'ALTER TABLE %s ADD CONSTRAINT %I UNIQUE (app_id, operation_id)',
+                  target_table, 'uk_product_event_operation');
+
+                SELECT pg_get_constraintdef(oid)
+                  INTO constraint_definition
+                  FROM pg_constraint
+                 WHERE conname = 'uk_product_event_operation'
+                   AND conrelid = target_table;
+
+                IF constraint_definition IS NULL
+                   OR position('app_id' in constraint_definition) = 0
+                   OR position('operation_id' in constraint_definition) = 0 THEN
+                  RAISE EXCEPTION 'uk_product_event_operation verification failed on %: %', target_table, constraint_definition;
+                END IF;
+              END $$;

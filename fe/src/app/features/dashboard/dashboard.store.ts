@@ -80,11 +80,11 @@ export class DashboardStore {
     }
   }
 
-  async loadTrends(months: number): Promise<void> {
+  async loadTrends(months: number, year: number, month: number): Promise<void> {
     this.trendsLoading.set(true);
     try {
       const res = await firstValueFrom(
-        this.httpClient.get<TrendPoint[]>('/api/v1/dashboard/trends', { params: { months } }),
+        this.httpClient.get<TrendPoint[]>('/api/v1/dashboard/trends', { params: { months, year, month } }),
       );
       this.trends.set(res);
     } catch {
@@ -94,9 +94,9 @@ export class DashboardStore {
     }
   }
 
-  downloadTrends(months: number): Promise<Blob> {
+  downloadTrends(months: number, year: number, month: number): Promise<Blob> {
     return firstValueFrom(
-      this.httpClient.get('/api/v1/exports/trends.xlsx', { params: { months }, responseType: 'blob' }),
+      this.httpClient.get('/api/v1/exports/trends.xlsx', { params: { months, year, month }, responseType: 'blob' }),
     );
   }
 
@@ -106,7 +106,9 @@ export class DashboardStore {
       this.loadChartData(period, departmentId, year, month),
       this.loadPayrollSummary(year, month),
       this.loadDepartmentMetrics(year, month),
-      this.loadTrends(trendMonths),
+      this.loadTrends(trendMonths, year, month),
     ]);
   }
 }
+
+// BORTQALA_ATTENDANCE_PIPELINE_20260816_V1_TREND_FE_STORE

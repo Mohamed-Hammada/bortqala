@@ -1,11 +1,6 @@
 package com.bemo.hr.employee.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -85,24 +80,61 @@ public class ScheduleRule {
     }
 
     @PrePersist
-    void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = Instant.now(); }
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
 
     public boolean appliesOn(LocalDate date) {
         return !date.isBefore(effectiveFrom) && (effectiveTo == null || !date.isAfter(effectiveTo));
     }
 
-    public String getId() { return id; }
-    public String getCategoryId() { return categoryId; }
-    public String getName() { return name; }
-    public LocalDate getEffectiveFrom() { return effectiveFrom; }
-    public LocalDate getEffectiveTo() { return effectiveTo; }
-    public LocalTime getStartTime() { return startTime; }
-    public Integer getExpectedMinutesOverride() { return expectedMinutesOverride; }
-    public int getGraceMinutes() { return graceMinutes; }
-    public LocalTime getEndTime() { return endTime; }
-    public String getScope() { return scope; }
-    public String getScopeCategoryId() { return scopeCategoryId; }
+    public String getId() {
+        return id;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public LocalDate getEffectiveFrom() {
+        return effectiveFrom;
+    }
+
+    public LocalDate getEffectiveTo() {
+        return effectiveTo;
+    }
+
+    public LocalTime getStartTime() {
+        return startTime;
+    }
+
+    public Integer getExpectedMinutesOverride() {
+        return expectedMinutesOverride;
+    }
+
+    public int getGraceMinutes() {
+        return graceMinutes;
+    }
+
+    public LocalTime getEndTime() {
+        return endTime;
+    }
+
+    public String getScope() {
+        return scope;
+    }
+
+    public String getScopeCategoryId() {
+        return scopeCategoryId;
+    }
 }

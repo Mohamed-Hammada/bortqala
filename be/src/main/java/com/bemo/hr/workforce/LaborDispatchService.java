@@ -25,6 +25,14 @@ public class LaborDispatchService {
         this.auditService = auditService;
     }
 
+    private static void requireText(String value, String code) {
+        if (value == null || value.isBlank()) throw rule("A required dispatch value is missing", code);
+    }
+
+    private static BusinessRuleException rule(String message, String code) {
+        return new BusinessRuleException(message, code, HttpStatus.CONFLICT);
+    }
+
     @Transactional
     public LaborDispatch createDispatch(String requestId, String contractorId, LocalDate dispatchDate, String actor) {
         requireText(requestId, "DISPATCH_REQUEST_REQUIRED");
@@ -96,7 +104,8 @@ public class LaborDispatchService {
     @Transactional
     public WorkerAssignment rejectAssignment(String assignmentId, String reason, String actor) {
         WorkerAssignment assignment = getAssignment(assignmentId);
-        if (reason == null || reason.isBlank()) throw rule("Assignment rejection reason is required", "ASSIGNMENT_REJECTION_REASON_REQUIRED");
+        if (reason == null || reason.isBlank())
+            throw rule("Assignment rejection reason is required", "ASSIGNMENT_REJECTION_REASON_REQUIRED");
         return transitionAssignment(assignment, actor, "REJECT", () -> assignment.reject(reason));
     }
 
@@ -162,13 +171,5 @@ public class LaborDispatchService {
         auditService.record(action, "WORKER_ASSIGNMENT", saved.getId(), actor,
                 "{\"from\":\"" + previous + "\",\"to\":\"" + saved.getStatus() + "\"}", null);
         return saved;
-    }
-
-    private static void requireText(String value, String code) {
-        if (value == null || value.isBlank()) throw rule("A required dispatch value is missing", code);
-    }
-
-    private static BusinessRuleException rule(String message, String code) {
-        return new BusinessRuleException(message, code, HttpStatus.CONFLICT);
     }
 }

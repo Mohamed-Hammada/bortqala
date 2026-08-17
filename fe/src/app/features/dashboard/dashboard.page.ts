@@ -14,10 +14,11 @@ import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.dir
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { downloadBlob, timestampedExcelFileName } from '../../core/download';
+import { AttendanceImportSnapshotComponent } from './attendance-import-snapshot.component';
 
 @Component({
   selector: 'app-dashboard-page',
-  imports: [RouterLink, TablePaginationComponent, FormsModule, DecimalPipe, AppTooltipDirective, ModalDialogComponent, IconComponent],
+  imports: [AttendanceImportSnapshotComponent, RouterLink, TablePaginationComponent, FormsModule, DecimalPipe, AppTooltipDirective, ModalDialogComponent, IconComponent],
   providers: [DashboardStore],
   templateUrl: './dashboard.page.html',
   styleUrl: './dashboard.page.scss',
@@ -87,6 +88,7 @@ export class DashboardPage {
       this.draftWidgetIds.set([...preferences.dashboardWidgetIds]);
       this.animationsEnabled.set(preferences.dashboardAnimationsEnabled);
     }, { allowSignalWrites: true });
+    window.addEventListener('bortqala:attendance-updated', () => void this.loadAll());
     this.route.queryParams.subscribe((params: Record<string, string>) => {
       const y = Number(params['year']) || new Date().getFullYear();
       const m = Number(params['month']) || new Date().getMonth() + 1;
@@ -230,7 +232,7 @@ export class DashboardPage {
     const months = Number(monthsStr);
     if (!isNaN(months) && months >= 1 && months <= 24) {
       this.trendMonthCount.set(months);
-      void this.store.loadTrends(months);
+      void this.store.loadTrends(months, this.year(), this.month());
     }
   }
 
@@ -238,7 +240,7 @@ export class DashboardPage {
     if (this.trendExporting()) return;
     this.trendExporting.set(true);
     try {
-      const blob = await this.store.downloadTrends(this.trendMonthCount());
+      const blob = await this.store.downloadTrends(this.trendMonthCount(), this.year(), this.month());
       downloadBlob(blob, timestampedExcelFileName(
         'اتجاهات-متعددة-الفترات',
         'multi-period-trends',
@@ -276,4 +278,15 @@ export class DashboardPage {
     )[value ?? ''];
     return key ? this.i18n.t(key) : this.i18n.t('dashboard.noReport');
   }
+
+  // BORTQALA_FEEDBACK_20260816_DASHBOARD_ORDER
+  editorWidgetOptions() {
+    const order = this.draftWidgetIds();
+    const rank = new Map(order.map((id, index) => [id, index]));
+    return [...this.widgetOptions].sort((a: any, b: any) => (rank.get(a.id) ?? 999) - (rank.get(b.id) ?? 999));
+  }
+
 }
+// BORTQALA_RUNTIME_20260816_V2_DASHBOARD_ATTENDANCE_SNAPSHOT
+
+// BORTQALA_ATTENDANCE_PIPELINE_20260816_V1_TREND_FE_PAGE

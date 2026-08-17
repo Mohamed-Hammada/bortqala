@@ -1,11 +1,9 @@
 package com.bemo.hr.shared.security;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -19,6 +17,10 @@ public class LoginRateLimiter {
     static final int MAX_KEYS = 10_000;
 
     private final ConcurrentHashMap<String, Window> windows = new ConcurrentHashMap<>();
+
+    private static String key(String... parts) {
+        return String.join("|", parts);
+    }
 
     public boolean isGlobalIpBlocked(String ipKey) {
         return blocked(key("global-ip", ipKey), MAX_GLOBAL_IP_ATTEMPTS);
@@ -65,9 +67,6 @@ public class LoginRateLimiter {
         }
     }
 
-    private static String key(String... parts) {
-        return String.join("|", parts);
+    private record Window(Instant startedAt, int count) {
     }
-
-    private record Window(Instant startedAt, int count) { }
 }

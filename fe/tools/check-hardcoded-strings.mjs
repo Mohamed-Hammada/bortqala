@@ -51,6 +51,14 @@ const ALLOWED_EXACT = new Set([
   'Enter',
   'Excel',
   'ج.م',
+  '&nbsp;',
+  'v',
+  'yyyy-MM-dd HH:mm',
+  'yyyy-MM-dd HH:mm:ss',
+  '&nbsp;',
+  'v',
+  'yyyy-MM-dd HH:mm',
+  'yyyy-MM-dd HH:mm:ss',
 ]);
 
 function findTagEnd(source, start) {
@@ -382,8 +390,32 @@ function scanLiteralArgumentCalls(source, path, callName, argumentIndex, kind) {
   }
 }
 
+function scanInlineTemplates(source, path) {
+  const normalizedPath = path.replace(/\\/g, '/');
+  // v246 closes the inline-template blind spot for Workforce, where the mixed-language defects were found.
+  if (!normalizedPath.includes('/features/workforce/')) return;
+  const re = /\btemplate\s*:\s*`([\s\S]*?)`\s*,/g;
+  let match;
+  while ((match = re.exec(source)) !== null) {
+    const template = match[1];
+    const text = stripTags(template);
+    for (const raw of text.split(/\r?\n/)) {
+      let line = raw.replace(/^\s*}/, '').replace(LET, '').replace(DIRECTIVE, '').replace(/[*@]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (!line || !LETTER.test(line) || PUNCT_ONLY.test(line) || PAREN_TECH.test(line) || TIME_LITERAL.test(line) || RATE_LITERAL.test(line) || ALLOWED_EXACT.has(line)) continue;
+      report(`${path}#inline-template`, 'HTML text', line, match.index);
+    }
+    scanInterpolations(template, `${path}#inline-template`);
+    const attrRe = /(?<!\[)(placeholder|title|aria-label|appTooltip)\s*=\s*(["'])([^"']*[A-Za-z\u0600-\u06FF][^"']*)\2/g;
+    let attr;
+    while ((attr = attrRe.exec(template)) !== null) {
+      if (!ALLOWED_EXACT.has(attr[3])) report(`${path}#inline-template`, `literal ${attr[1]}`, attr[3], match.index + attr.index);
+    }
+  }
+}
+
 function scanTypeScript(path) {
   const source = readFileSync(path, 'utf8');
+  scanInlineTemplates(source, path);
 
   // Direct user-visible notification strings must always use i18n.t(...).
   for (const method of ['success', 'error', 'warning', 'info']) {
@@ -401,6 +433,10 @@ function scanTypeScript(path) {
       0,
       `TypeScript notification.${method}`,
     );
+    if (path.replace(/\\/g, '/').includes('/features/workforce/')) {
+      scanLiteralArgumentCalls(source, path, `this.notificationService.${method}`, 0, `TypeScript notificationService.${method}`);
+      scanLiteralArgumentCalls(source, path, `notificationService.${method}`, 0, `TypeScript notificationService.${method}`);
+    }
   }
 
   // Browser blocking dialogs are not allowed to contain hardcoded UI text.

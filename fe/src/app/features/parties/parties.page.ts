@@ -12,6 +12,7 @@ import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { BusinessParty, BusinessPartyPayload } from './parties.models';
 import { PartiesStore } from './parties.store';
+import { SampleTemplateService } from '../../core/sample-template.service';
 
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 
@@ -26,6 +27,7 @@ import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.
 export class PartiesPage {
   readonly store = inject(PartiesStore);
   readonly i18n = inject(I18nService);
+  readonly sampleTemplates = inject(SampleTemplateService);
   readonly drawerOpen = signal(false);
   readonly editingId = signal<string | null>(null);
   readonly submitted = signal(false);
@@ -247,6 +249,10 @@ export class PartiesPage {
   onDocumentFile(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.documentFile.set(input.files?.item(0) ?? null);
+  }
+
+  downloadDocumentRequirements(): void {
+    void this.sampleTemplates.supplierDocuments();
   }
 
   async addBankAccount(): Promise<void> {

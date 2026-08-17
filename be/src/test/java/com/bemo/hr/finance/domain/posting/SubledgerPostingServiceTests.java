@@ -1,13 +1,13 @@
 package com.bemo.hr.finance.domain.posting;
 
+import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.finance.domain.FiscalPeriod;
+import com.bemo.hr.finance.domain.FiscalPeriodGuard;
 import com.bemo.hr.finance.domain.JournalEntry;
 import com.bemo.hr.finance.domain.JournalEntryLine;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import com.bemo.hr.finance.domain.FiscalPeriod;
-import com.bemo.hr.finance.domain.FiscalPeriodGuard;
-import com.bemo.hr.audit.application.AuditService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +24,7 @@ import static org.mockito.Mockito.*;
 class SubledgerPostingServiceTests {
 
     private PostingProfileRepository postingProfileRepository;
+    private PostingProfileLineRepository postingProfileLineRepository;
     private JournalEntryRepository journalEntryRepository;
     private JournalEntryLineRepository journalEntryLineRepository;
     private SubledgerPostingService subledgerPostingService;
@@ -33,13 +34,15 @@ class SubledgerPostingServiceTests {
     @BeforeEach
     void setUp() {
         postingProfileRepository = mock(PostingProfileRepository.class);
+        postingProfileLineRepository = mock(PostingProfileLineRepository.class);
         journalEntryRepository = mock(JournalEntryRepository.class);
         journalEntryLineRepository = mock(JournalEntryLineRepository.class);
         fiscalPeriodGuard = mock(FiscalPeriodGuard.class);
         auditService = mock(AuditService.class);
         FiscalPeriod period = new FiscalPeriod(2026, 2, "Feb", LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28), FiscalPeriod.Status.OPEN);
         when(fiscalPeriodGuard.requireOpen(any())).thenReturn(period);
-        subledgerPostingService = new SubledgerPostingService(postingProfileRepository, journalEntryRepository, journalEntryLineRepository,
+        subledgerPostingService = new SubledgerPostingService(postingProfileRepository, postingProfileLineRepository,
+                journalEntryRepository, journalEntryLineRepository,
                 fiscalPeriodGuard, auditService, mock(com.bemo.hr.finance.infrastructure.JournalSourceMetadataRepository.class));
     }
 
@@ -47,8 +50,11 @@ class SubledgerPostingServiceTests {
     void postsBalancedSubledgerEventSuccessfully() {
         String opId = UUID.randomUUID().toString();
         PostingProfile profile = new PostingProfile("P01", "CONTRACTOR_SETTLEMENT_POST", LocalDate.of(2026, 1, 1), null);
-        when(postingProfileRepository.findByBusinessEventAndActiveTrue("CONTRACTOR_SETTLEMENT_POST"))
+        when(postingProfileRepository.findByBusinessEventAndActiveTrueOrderByEffectiveFromDesc("CONTRACTOR_SETTLEMENT_POST"))
                 .thenReturn(List.of(profile));
+        when(postingProfileLineRepository.findByProfileIdOrderByLineNoAsc(profile.getId())).thenReturn(List.of(
+                new PostingProfileLine(profile.getId(), 1, "DEBIT", "FIXED", "DR", "AMOUNT"),
+                new PostingProfileLine(profile.getId(), 2, "CREDIT", "FIXED", "CR", "AMOUNT")));
 
         when(journalEntryRepository.save(any(JournalEntry.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -90,14 +96,53 @@ class SubledgerPostingServiceTests {
                 new BigDecimal("4500.00"), // Unbalanced
                 "fp-1"
         )).isInstanceOf(BusinessRuleException.class)
-          .hasMessageContaining("Debit and credit amounts must be equal");
+                .hasMessageContaining("Debit and credit amounts must be equal");
+    }
+
+    @Test
+    void missingOrIncompletePostingProfileFailsClosed() {
+        when(postingProfileRepository.findByBusinessEventAndActiveTrueOrderByEffectiveFromDesc("CUSTOMER_INVOICE_ISSUED"))
+                .thenReturn(List.of());
+        assertThatThrownBy(() -> subledgerPostingService.postSubledgerEvent(
+                "SALES", "CUSTOMER_INVOICE", "invoice-1", "CUSTOMER_INVOICE_ISSUED", "op-1",
+                LocalDate.of(2026, 2, 1), "Invoice", new BigDecimal("100"), new BigDecimal("100"), null))
+                .isInstanceOfSatisfying(BusinessRuleException.class,
+                        error -> assertThat(error.getCode()).isEqualTo("SUBLEDGER_POSTING_PROFILE_REQUIRED"));
+    }
+
+    @Test
+    void profileEventPostsGrossAgainstNetAndDeductions() {
+        PostingProfile profile = new PostingProfile("PAYROLL", "PAYROLL_ACCRUAL", LocalDate.of(2026, 1, 1), null);
+        when(postingProfileRepository.findByBusinessEventAndActiveTrueOrderByEffectiveFromDesc("PAYROLL_ACCRUAL"))
+                .thenReturn(List.of(profile));
+        when(postingProfileLineRepository.findByProfileIdOrderByLineNoAsc(profile.getId())).thenReturn(List.of(
+                new PostingProfileLine(profile.getId(), 1, "DEBIT", "FIXED", "EXPENSE", "TOTAL_GROSS"),
+                new PostingProfileLine(profile.getId(), 2, "CREDIT", "FIXED", "PAYABLE", "TOTAL_NET"),
+                new PostingProfileLine(profile.getId(), 3, "CREDIT", "FIXED", "DEDUCTIONS", "TOTAL_DEDUCTIONS")));
+        when(journalEntryRepository.save(any(JournalEntry.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        JournalEntry entry = subledgerPostingService.postProfileEvent("PAYROLL", "PAYROLL_RUN", "run-1",
+                "PAYROLL_ACCRUAL", "PAYROLL-ACCRUAL:run-1", LocalDate.of(2026, 2, 28), "Payroll accrual",
+                java.util.Map.of("TOTAL_GROSS", new BigDecimal("120"), "TOTAL_NET", new BigDecimal("100"),
+                        "TOTAL_DEDUCTIONS", new BigDecimal("20")), null, null, null, "payroll-admin");
+
+        var lineCaptor = org.mockito.ArgumentCaptor.forClass(JournalEntryLine.class);
+        verify(journalEntryLineRepository, times(3)).save(lineCaptor.capture());
+        assertThat(lineCaptor.getAllValues().stream().map(JournalEntryLine::getDebit)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)).isEqualByComparingTo("120");
+        assertThat(lineCaptor.getAllValues().stream().map(JournalEntryLine::getCredit)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)).isEqualByComparingTo("120");
+        assertThat(entry.getStatus()).isEqualTo(JournalEntry.Status.POSTED);
+        assertThat(entry.getPostedBy()).isEqualTo("payroll-admin");
     }
 
     @Test
     void replaysOperationAndCreatesLinkedBalancedReversal() {
         String opId = UUID.randomUUID().toString();
         JournalEntry original = new JournalEntry("POST-1", LocalDate.of(2026, 2, 1), "Posting", "AP:INVOICE:I-1", null);
-        original.setCurrency("USD"); original.approve("approver"); original.post("SYSTEM");
+        original.setCurrency("USD");
+        original.approve("approver");
+        original.post("SYSTEM");
         when(journalEntryRepository.findById(original.getId())).thenReturn(java.util.Optional.of(original));
         when(journalEntryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(journalEntryLineRepository.findByJournalEntryId(original.getId())).thenReturn(List.of(
@@ -109,6 +154,10 @@ class SubledgerPostingServiceTests {
         JournalEntry replay = subledgerPostingService.reverse(original.getId(), opId, LocalDate.of(2026, 2, 2), "Correction", "checker");
 
         assertThat(reversal.getReversedEntryId()).isEqualTo(original.getId());
+        assertThat(reversal.getCreatedBy()).isEqualTo("checker");
+        assertThat(reversal.getApprovedBy()).isEqualTo("checker");
+        assertThat(reversal.getPostedBy()).isEqualTo("checker");
+        assertThat(reversal.getPostedAt()).isNotNull();
         assertThat(original.getReversalEntryId()).isEqualTo(reversal.getId());
         assertThat(replay).isSameAs(reversal);
         verify(journalEntryLineRepository, times(2)).save(any(JournalEntryLine.class));

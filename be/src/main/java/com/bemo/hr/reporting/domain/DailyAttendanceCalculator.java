@@ -5,17 +5,12 @@ import com.bemo.hr.employee.domain.AttendanceMode;
 import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.domain.ScheduleRule;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.LocalTime;
-import java.util.Comparator;
+import java.time.*;
 import java.util.List;
 
 public final class DailyAttendanceCalculator {
-    private DailyAttendanceCalculator() { }
+    private DailyAttendanceCalculator() {
+    }
 
     public static DailyAttendanceResult calculate(String reportId, Employee employee, AttendanceCategory category,
                                                   ScheduleRule schedule, LocalDate date, List<Instant> punches,

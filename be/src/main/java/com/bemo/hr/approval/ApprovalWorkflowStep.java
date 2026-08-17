@@ -14,22 +14,38 @@ import java.util.UUID;
 @Table(name = "approval_workflow_steps")
 @Getter
 public class ApprovalWorkflowStep {
-    @Id private String id;
-    @TenantId @Column(name = "app_id", nullable = false) private String appId;
-    @Column(name = "workflow_definition_id", nullable = false, length = 36) private String workflowDefinitionId;
-    @Column(name = "step_order", nullable = false) private int stepOrder;
-    @Column(name = "step_code", nullable = false, length = 50) private String stepCode;
-    @Column(nullable = false, length = 100) private String name;
-    @Column(name = "required_role", length = 50) private String requiredRole;
-    @Column(name = "required_user_id", length = 36) private String requiredUserId;
-    @Column(name = "amount_from", precision = 19, scale = 2) private BigDecimal amountFrom;
-    @Column(name = "amount_to", precision = 19, scale = 2) private BigDecimal amountTo;
-    @Column(name = "minimum_approvals") private int minimumApprovals;
-    @Column(name = "allow_self_approval") private boolean allowSelfApproval;
-    @Column(name = "escalation_hours") private Integer escalationHours;
-    @Column(name = "decision_policy", nullable = false, length = 20) private String decisionPolicy;
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(name = "workflow_definition_id", nullable = false, length = 36)
+    private String workflowDefinitionId;
+    @Column(name = "step_order", nullable = false)
+    private int stepOrder;
+    @Column(name = "step_code", nullable = false, length = 50)
+    private String stepCode;
+    @Column(nullable = false, length = 100)
+    private String name;
+    @Column(name = "required_role", length = 50)
+    private String requiredRole;
+    @Column(name = "required_user_id", length = 36)
+    private String requiredUserId;
+    @Column(name = "amount_from", precision = 19, scale = 2)
+    private BigDecimal amountFrom;
+    @Column(name = "amount_to", precision = 19, scale = 2)
+    private BigDecimal amountTo;
+    @Column(name = "minimum_approvals")
+    private int minimumApprovals;
+    @Column(name = "allow_self_approval")
+    private boolean allowSelfApproval;
+    @Column(name = "escalation_hours")
+    private Integer escalationHours;
+    @Column(name = "decision_policy", nullable = false, length = 20)
+    private String decisionPolicy;
 
-    protected ApprovalWorkflowStep() { }
+    protected ApprovalWorkflowStep() {
+    }
 
     public ApprovalWorkflowStep(String workflowDefinitionId, int stepOrder, String stepCode, String name,
                                 String requiredRole, String requiredUserId, BigDecimal amountFrom, BigDecimal amountTo,

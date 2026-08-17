@@ -1,12 +1,6 @@
 package com.bemo.hr.operations.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.util.UUID;
@@ -50,7 +44,8 @@ public class WarehouseBin {
     @Column(nullable = false)
     private long version;
 
-    protected WarehouseBin() {}
+    protected WarehouseBin() {
+    }
 
     public WarehouseBin(String warehouseId, String binCode, String aisle, String rack, String shelf) {
         this.id = UUID.randomUUID().toString();
@@ -63,20 +58,57 @@ public class WarehouseBin {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getWarehouseId() { return warehouseId; }
-    public String getBinCode() { return binCode; }
-    public String getAisle() { return aisle; }
-    public String getRack() { return rack; }
-    public String getShelf() { return shelf; }
-    public boolean isActive() { return active; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getWarehouseId() {
+        return warehouseId;
+    }
+
+    public String getBinCode() {
+        return binCode;
+    }
+
+    public String getAisle() {
+        return aisle;
+    }
+
+    public String getRack() {
+        return rack;
+    }
+
+    public String getShelf() {
+        return shelf;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

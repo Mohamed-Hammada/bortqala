@@ -8,6 +8,8 @@ import java.util.Optional;
 
 public interface BiometricDeviceIntegrationRepository extends JpaRepository<BiometricDeviceIntegration, String> {
     List<BiometricDeviceIntegration> findAllByOrderByNameAsc();
+
     Optional<BiometricDeviceIntegration> findByBiometricDeviceId(String biometricDeviceId);
+
     Optional<BiometricDeviceIntegration> findByHubDeviceId(String hubDeviceId);
 }

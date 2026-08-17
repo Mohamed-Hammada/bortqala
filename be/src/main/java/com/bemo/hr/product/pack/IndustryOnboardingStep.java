@@ -1,5 +1,64 @@
 package com.bemo.hr.product.pack;
-import jakarta.persistence.*;import lombok.Getter;import org.hibernate.annotations.TenantId;import java.time.Instant;import java.util.UUID;
-@Entity @Table(name="industry_onboarding_steps") @Getter
-public class IndustryOnboardingStep{public enum Status{BLOCKED,READY,COMPLETED,SKIPPED}@Id private String id;@TenantId @Column(name="app_id",nullable=false)private String appId;@Column(name="tenant_pack_id",nullable=false)private String tenantPackId;@Column(name="step_key",nullable=false)private String stepKey;@Column(name="sequence_no",nullable=false)private int sequenceNo;@Column(name="prerequisite_key")private String prerequisiteKey;@Column(nullable=false)private boolean optional;@Enumerated(EnumType.STRING)@Column(nullable=false)private Status status;@Column(name="completed_at")private Instant completedAt;@Column(name="completed_by")private String completedBy;@Version private long version;protected IndustryOnboardingStep(){}
-public IndustryOnboardingStep(String pack,String key,int sequence,String prerequisite,boolean optional){id=UUID.randomUUID().toString();tenantPackId=pack;stepKey=key;sequenceNo=sequence;prerequisiteKey=prerequisite;this.optional=optional;status=prerequisite==null?Status.READY:Status.BLOCKED;}public void ready(){if(status==Status.BLOCKED)status=Status.READY;}public void complete(String actor,boolean skip){if(status!=Status.READY)throw new IllegalStateException("Step is blocked");if(skip&&!optional)throw new IllegalArgumentException("Step is required");status=skip?Status.SKIPPED:Status.COMPLETED;completedBy=actor;completedAt=Instant.now();}}
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import org.hibernate.annotations.TenantId;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "industry_onboarding_steps")
+@Getter
+public class IndustryOnboardingStep {
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(name = "tenant_pack_id", nullable = false)
+    private String tenantPackId;
+    @Column(name = "step_key", nullable = false)
+    private String stepKey;
+    @Column(name = "sequence_no", nullable = false)
+    private int sequenceNo;
+    @Column(name = "prerequisite_key")
+    private String prerequisiteKey;
+    @Column(nullable = false)
+    private boolean optional;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Status status;
+    @Column(name = "completed_at")
+    private Instant completedAt;
+    @Column(name = "completed_by")
+    private String completedBy;
+    @Version
+    private long version;
+    protected IndustryOnboardingStep() {
+    }
+
+    public IndustryOnboardingStep(String pack, String key, int sequence, String prerequisite, boolean optional) {
+        id = UUID.randomUUID().toString();
+        tenantPackId = pack;
+        stepKey = key;
+        sequenceNo = sequence;
+        prerequisiteKey = prerequisite;
+        this.optional = optional;
+        status = prerequisite == null ? Status.READY : Status.BLOCKED;
+    }
+
+    public void ready() {
+        if (status == Status.BLOCKED) status = Status.READY;
+    }
+
+    public void complete(String actor, boolean skip) {
+        if (status != Status.READY) throw new IllegalStateException("Step is blocked");
+        if (skip && !optional) throw new IllegalArgumentException("Step is required");
+        status = skip ? Status.SKIPPED : Status.COMPLETED;
+        completedBy = actor;
+        completedAt = Instant.now();
+    }
+
+    public enum Status {BLOCKED, READY, COMPLETED, SKIPPED}
+}

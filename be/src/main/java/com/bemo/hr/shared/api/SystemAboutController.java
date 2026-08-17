@@ -14,18 +14,6 @@ public class SystemAboutController {
     @Value("${spring.application.name:BEMO ERP}")
     private String applicationName;
 
-    public record SystemAboutResponse(
-            String productName,
-            String applicationName,
-            String version,
-            String buildNumber,
-            String gitCommit,
-            String buildTime,
-            String apiVersion,
-            String environment,
-            boolean supportEnabled
-    ) {}
-
     @GetMapping
     public SystemAboutResponse getSystemAbout() {
         return new SystemAboutResponse(
@@ -39,5 +27,18 @@ public class SystemAboutController {
                 "PRODUCTION",
                 true
         );
+    }
+
+    public record SystemAboutResponse(
+            String productName,
+            String applicationName,
+            String version,
+            String buildNumber,
+            String gitCommit,
+            String buildTime,
+            String apiVersion,
+            String environment,
+            boolean supportEnabled
+    ) {
     }
 }

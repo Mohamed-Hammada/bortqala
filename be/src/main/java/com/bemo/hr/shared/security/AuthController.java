@@ -12,16 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -122,7 +113,9 @@ public class AuthController {
     }
 
     @GetMapping("/auth/me")
-    AuthApi.UserResponse me(Authentication authentication) { return authService.current(authentication.getName()); }
+    AuthApi.UserResponse me(Authentication authentication) {
+        return authService.current(authentication.getName());
+    }
 
     @GetMapping("/users/me")
     AuthApi.MeResponse usersMe(@AuthenticationPrincipal Jwt jwt) {
@@ -154,7 +147,9 @@ public class AuthController {
 
     @GetMapping("/admin/app-settings")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-    AuthApi.AppSettingsResponse appSettings() { return authService.currentAppSettings(); }
+    AuthApi.AppSettingsResponse appSettings() {
+        return authService.currentAppSettings();
+    }
 
     @PutMapping("/admin/app-settings")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
@@ -164,11 +159,15 @@ public class AuthController {
     }
 
     @GetMapping("/auth/user-categories")
-    List<AuthApi.UserCategoryResponse> userCategories() { return authService.listCategories(); }
+    List<AuthApi.UserCategoryResponse> userCategories() {
+        return authService.listCategories();
+    }
 
     @GetMapping("/users")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-    List<AuthApi.UserResponse> users() { return authService.listUsers(); }
+    List<AuthApi.UserResponse> users() {
+        return authService.listUsers();
+    }
 
     @PostMapping("/users")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")

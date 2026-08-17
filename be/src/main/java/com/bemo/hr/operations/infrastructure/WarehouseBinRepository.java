@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface WarehouseBinRepository extends JpaRepository<WarehouseBin, String> {
     List<WarehouseBin> findByWarehouseId(String warehouseId);
+
     Optional<WarehouseBin> findByWarehouseIdAndBinCodeIgnoreCase(String warehouseId, String binCode);
 }

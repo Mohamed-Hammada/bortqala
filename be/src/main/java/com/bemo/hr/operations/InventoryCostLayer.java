@@ -1,11 +1,6 @@
 package com.bemo.hr.operations;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -17,18 +12,30 @@ import java.util.UUID;
 @Table(name = "inventory_cost_layers")
 @Getter
 public class InventoryCostLayer {
-    @Id private String id;
-    @TenantId @Column(name = "app_id", nullable = false) private String appId;
-    @Column(name = "item_id", nullable = false, length = 36) private String itemId;
-    @Column(name = "source_movement_id", nullable = false, length = 36) private String sourceMovementId;
-    @Column(name = "received_at", nullable = false) private Instant receivedAt;
-    @Column(name = "initial_quantity", nullable = false, precision = 19, scale = 4) private BigDecimal initialQuantity;
-    @Column(name = "remaining_quantity", nullable = false, precision = 19, scale = 4) private BigDecimal remainingQuantity;
-    @Column(name = "unit_cost", nullable = false, precision = 19, scale = 6) private BigDecimal unitCost;
-    @Version private long version;
-    @Column(name = "created_at", nullable = false) private Instant createdAt;
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(name = "item_id", nullable = false, length = 36)
+    private String itemId;
+    @Column(name = "source_movement_id", nullable = false, length = 36)
+    private String sourceMovementId;
+    @Column(name = "received_at", nullable = false)
+    private Instant receivedAt;
+    @Column(name = "initial_quantity", nullable = false, precision = 19, scale = 4)
+    private BigDecimal initialQuantity;
+    @Column(name = "remaining_quantity", nullable = false, precision = 19, scale = 4)
+    private BigDecimal remainingQuantity;
+    @Column(name = "unit_cost", nullable = false, precision = 19, scale = 6)
+    private BigDecimal unitCost;
+    @Version
+    private long version;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
 
-    protected InventoryCostLayer() { }
+    protected InventoryCostLayer() {
+    }
 
     public InventoryCostLayer(String itemId, String sourceMovementId, Instant receivedAt,
                               BigDecimal quantity, BigDecimal unitCost) {
@@ -47,7 +54,12 @@ public class InventoryCostLayer {
         return consumed;
     }
 
-    public void revalue(BigDecimal newUnitCost) { this.unitCost = newUnitCost; }
+    public void revalue(BigDecimal newUnitCost) {
+        this.unitCost = newUnitCost;
+    }
 
-    @PrePersist void prePersist() { createdAt = Instant.now(); }
+    @PrePersist
+    void prePersist() {
+        createdAt = Instant.now();
+    }
 }

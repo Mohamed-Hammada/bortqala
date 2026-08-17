@@ -2,12 +2,7 @@ package com.bemo.hr.budget.application;
 
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.budget.api.BudgetApi;
-import com.bemo.hr.budget.domain.Budget;
-import com.bemo.hr.budget.domain.BudgetPeriodType;
-import com.bemo.hr.budget.domain.BudgetRepository;
-import com.bemo.hr.budget.domain.Encumbrance;
-import com.bemo.hr.budget.domain.EncumbranceRepository;
-import com.bemo.hr.budget.domain.EncumbranceStatus;
+import com.bemo.hr.budget.domain.*;
 import com.bemo.hr.organization.domain.Department;
 import com.bemo.hr.organization.infrastructure.DepartmentRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
@@ -25,20 +20,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class BudgetServiceTests {
 
+    private static final String DEPARTMENT = "dept-1";
+    private static final String BUDGET_ID = "budget-1";
     private BudgetRepository budgetRepository;
     private EncumbranceRepository encumbranceRepository;
     private DepartmentRepository departmentRepository;
     private BudgetService budgetService;
-
-    private static final String DEPARTMENT = "dept-1";
-    private static final String BUDGET_ID = "budget-1";
 
     @BeforeEach
     void setUp() {

@@ -9,6 +9,8 @@ import java.util.List;
 @Repository
 public interface SupplierReturnRepository extends JpaRepository<SupplierReturn, String> {
     List<SupplierReturn> findAllByOrderByReturnDateDesc();
+
     List<SupplierReturn> findByPurchaseOrderId(String purchaseOrderId);
+
     boolean existsByReturnNumberIgnoreCase(String returnNumber);
 }

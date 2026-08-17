@@ -10,7 +10,10 @@ import java.util.Optional;
 @Repository
 public interface ItemLotSerialRepository extends JpaRepository<ItemLotSerial, String> {
     List<ItemLotSerial> findByItemId(String itemId);
+
     List<ItemLotSerial> findByItemIdAndStatus(String itemId, ItemLotSerial.Status status);
+
     Optional<ItemLotSerial> findBySerialNumberIgnoreCase(String serialNumber);
+
     Optional<ItemLotSerial> findByItemIdAndWarehouseIdAndLotNumberIgnoreCase(String itemId, String warehouseId, String lotNumber);
 }

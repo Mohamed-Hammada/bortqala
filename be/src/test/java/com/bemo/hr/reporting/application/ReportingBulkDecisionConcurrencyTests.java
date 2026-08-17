@@ -1,23 +1,13 @@
 package com.bemo.hr.reporting.application;
 
 import com.bemo.hr.PostgresIntegrationTest;
-import com.bemo.hr.employee.domain.AttendanceCategory;
-import com.bemo.hr.employee.domain.AttendanceMode;
-import com.bemo.hr.employee.domain.Employee;
-import com.bemo.hr.employee.domain.EmploymentType;
-import com.bemo.hr.employee.domain.PayCycle;
-import com.bemo.hr.employee.domain.ScheduleRule;
+import com.bemo.hr.employee.domain.*;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
 import com.bemo.hr.reporting.api.ReportingApi;
 import com.bemo.hr.reporting.domain.AttendanceDecision;
-import com.bemo.hr.reporting.infrastructure.AttendanceReportDecisionRepository;
-import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
-import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
-import com.bemo.hr.reporting.infrastructure.DayAnomalyRepository;
-import com.bemo.hr.reporting.infrastructure.DayAnomalyResultSnapshotRepository;
-import com.bemo.hr.reporting.infrastructure.HolidayProposalRepository;
+import com.bemo.hr.reporting.infrastructure.*;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository;
 import com.bemo.hr.shared.security.TenantApplication;
@@ -30,7 +20,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;

@@ -1,28 +1,23 @@
 package com.bemo.hr.payroll.application;
 
 import com.bemo.hr.employee.domain.AttendanceCategory;
-import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.operations.OperationsService;
 import com.bemo.hr.payroll.api.PayrollApi;
-import com.bemo.hr.payroll.domain.PaymentMethod;
-import com.bemo.hr.payroll.domain.PaymentStatus;
-import com.bemo.hr.payroll.domain.SalaryPayment;
-import com.bemo.hr.payroll.domain.PayrollRunHeader;
-import com.bemo.hr.payroll.domain.PayrollRunLine;
-import com.bemo.hr.payroll.infrastructure.SalaryPaymentRepository;
+import com.bemo.hr.payroll.domain.*;
 import com.bemo.hr.payroll.infrastructure.PayrollRunHeaderRepository;
 import com.bemo.hr.payroll.infrastructure.PayrollRunLineRepository;
+import com.bemo.hr.payroll.infrastructure.SalaryPaymentRepository;
+import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.reporting.domain.DailyAttendanceResult;
 import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
 import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
-import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.workforce.WorkforceAdvanceService;
-import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +28,6 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,6 +51,8 @@ public class PayrollService {
     private final PayrollCalculationPolicyService payrollCalculationPolicyService;
     private final PayrollRunHeaderRepository payrollRunHeaderRepository;
     private final PayrollRunLineRepository payrollRunLineRepository;
+    private final PayrollGlPostingService payrollGlPostingService;
+    private final PayrollPaymentAccountingService payrollPaymentAccountingService;
 
     public List<PayrollApi.ExplanationResponse> getPaymentExplanation(String paymentId) {
         var explanations = explanationRepository.findBySalaryPaymentIdOrderByCreatedAtAsc(paymentId);
@@ -85,9 +81,9 @@ public class PayrollService {
 
         String calculationInputs = snapshot == null ? "{\"gross\":" + gross + "}"
                 : "{\"snapshotId\":\"" + snapshot.getId() + "\",\"baseSalary\":" + snapshot.getBaseSalary()
-                + ",\"overtimeMinutes\":" + snapshot.getOvertimeMinutes() + ",\"lateMinutes\":"
-                + snapshot.getLateMinutes() + ",\"workingHourDivisor\":" + snapshot.getWorkingHourDivisor()
-                + ",\"overtimeMultiplier\":" + snapshot.getOvertimeMultiplier() + "}";
+                  + ",\"overtimeMinutes\":" + snapshot.getOvertimeMinutes() + ",\"lateMinutes\":"
+                  + snapshot.getLateMinutes() + ",\"workingHourDivisor\":" + snapshot.getWorkingHourDivisor()
+                  + ",\"overtimeMultiplier\":" + snapshot.getOvertimeMultiplier() + "}";
         explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
                 payment.getId(), "SNAPSHOT_CALCULATION", "base + overtime - lateness - advances + adjustments", calculationInputs,
                 gross, "إجمالي الراتب المستحق المستخرج من سجل الحضور والانصراف", "Gross base salary derived from locked attendance records"
@@ -139,10 +135,19 @@ public class PayrollService {
         BigDecimal totalPending = BigDecimal.ZERO;
         BigDecimal totalAdvancesDeducted = BigDecimal.ZERO;
 
-        PaymentStatus overallPeriodStatus = PaymentStatus.DRAFT;
-        if (!payments.isEmpty()) {
-            overallPeriodStatus = payments.get(0).getPaymentStatus();
-        }
+        String runPeriodId = year + "-" + String.format("%02d", month) + ":FULL_MONTH";
+        PaymentStatus overallPeriodStatus = payrollRunHeaderRepository
+                .findFirstByPeriodIdOrderByCreatedAtDesc(runPeriodId)
+                .map(run -> switch (run.getStatus()) {
+                    case DRAFT -> PaymentStatus.DRAFT;
+                    case CALCULATED -> PaymentStatus.CALCULATED;
+                    case REVIEWED -> PaymentStatus.REVIEWED;
+                    case APPROVED -> PaymentStatus.APPROVED;
+                    case POSTED -> PaymentStatus.POSTED;
+                    case PAID -> PaymentStatus.PAID;
+                    case CANCELLED -> PaymentStatus.REVERSED;
+                })
+                .orElse(PaymentStatus.DRAFT);
 
         for (var emp : employees) {
             if (!emp.isActive()) continue;
@@ -241,7 +246,7 @@ public class PayrollService {
                 }
             }
 
-            if (status == PaymentStatus.PAID || status == PaymentStatus.POSTED) {
+            if (status == PaymentStatus.PAID) {
                 paidCount++;
                 totalPaid = totalPaid.add(net);
             } else {
@@ -282,7 +287,12 @@ public class PayrollService {
                     note,
                     incompleteProfile,
                     createdBy,
-                    createdAt
+                    createdAt,
+                    payment == null ? null : payment.getPaidBy(),
+                    payment == null ? null : payment.getReversedBy(),
+                    payment == null ? null : payment.getReversedAt(),
+                    payment == null ? null : payment.getReversalReason(),
+                    payment == null ? 0L : payment.getVersion()
             ));
         }
 
@@ -309,78 +319,49 @@ public class PayrollService {
         }
 
         var periodKind = request.periodKind() == null || request.periodKind().isBlank() ? "FULL_MONTH" : request.periodKind();
-        var existingOpt = salaryPaymentRepository.findByEmployeeIdAndPeriodYearAndPeriodMonthAndPeriodKind(
-                emp.getId(), request.periodYear(), request.periodMonth(), periodKind);
-
-        if (existingOpt.isPresent()) {
-            var existing = existingOpt.get();
-            if (existing.getPaymentStatus() == PaymentStatus.PAID || existing.getPaymentStatus() == PaymentStatus.POSTED) {
-                throw new BusinessRuleException("تم صرف وقيد راتب هذا الموظف لهذه الفترة بالفعل (منع الدفع المكرر).", "PAYROLL_DUPLICATE_PAYMENT", HttpStatus.CONFLICT);
-            }
-            if (existing.getPaymentStatus() == PaymentStatus.APPROVED) {
-                throw new BusinessRuleException("الفترة معتمدة ومقفولة ضد تعديل الرواتب.", "PAYROLL_PERIOD_LOCKED", HttpStatus.CONFLICT);
-            }
+        SalaryPayment entity = salaryPaymentRepository.findForUpdate(
+                        emp.getId(), request.periodYear(), request.periodMonth(), periodKind)
+                .orElseThrow(() -> new BusinessRuleException("The salary must complete approval and posting before payment.",
+                        "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT));
+        if (entity.getVersion() != request.expectedVersion()) {
+            throw new BusinessRuleException("The salary payment was changed by another request.",
+                    "PAYROLL_STALE_VERSION", HttpStatus.CONFLICT);
+        }
+        if (entity.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new BusinessRuleException("This salary has already been paid.",
+                    "PAYROLL_DUPLICATE_PAYMENT", HttpStatus.CONFLICT);
+        }
+        if (entity.getPaymentStatus() != PaymentStatus.POSTED
+                && entity.getPaymentStatus() != PaymentStatus.REVERSED) {
+            throw new BusinessRuleException("Only a posted or reversed salary can be paid.",
+                    "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT);
+        }
+        if (entity.getPayrollRunId() == null || entity.getPayrollSnapshotId() == null
+                || payrollSnapshotService.findById(entity.getPayrollSnapshotId()).isEmpty()) {
+            throw new BusinessRuleException("Frozen payroll calculation evidence is required before payment.",
+                    "PAYROLL_RUN_SNAPSHOTS_REQUIRED", HttpStatus.CONFLICT);
+        }
+        PayrollRunHeader run = payrollRunHeaderRepository.findByIdForUpdate(entity.getPayrollRunId())
+                .orElseThrow(() -> new BusinessRuleException("Payroll run not found",
+                        "PAYROLL_RUN_NOT_FOUND", HttpStatus.NOT_FOUND));
+        if (run.getStatus() != PayrollRunHeader.Status.POSTED) {
+            throw new BusinessRuleException("The payroll run must be posted before payment.",
+                    "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT);
         }
 
-        var monthObj = YearMonth.of(request.periodYear(), request.periodMonth());
-        LocalDate pStart = request.periodStart() == null ? monthObj.atDay(1) : request.periodStart();
-        LocalDate pEnd = request.periodEnd() == null ? monthObj.atEndOfMonth() : request.periodEnd();
+        LocalDate pStart = entity.getPeriodStart();
+        LocalDate pEnd = entity.getPeriodEnd();
         var payrollReport = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
                 com.bemo.hr.employee.domain.PayCycle.MONTHLY, pStart, pEnd).orElse(null);
         attendanceExceptionService.assertPayrollReady(payrollReport == null ? null : payrollReport.getId(), emp.getId());
 
-        // Freeze every calculation input before deriving or paying the result.
-        BigDecimal base = emp.getBaseSalary() == null ? BigDecimal.ZERO : emp.getBaseSalary();
-        var activeAdvances = operationsService.getAdvanceBalance(emp.getId());
-        if (activeAdvances == null) activeAdvances = BigDecimal.ZERO;
-
-        BigDecimal requestedDeductions = request.otherDeductions() == null ? BigDecimal.ZERO : request.otherDeductions();
-        BigDecimal requestedBonus = request.bonuses() == null ? BigDecimal.ZERO : request.bonuses();
-        BigDecimal availableForAdvance = base.add(requestedBonus).subtract(requestedDeductions).max(BigDecimal.ZERO);
-        BigDecimal calculatedAdvance = workforceAdvanceService.calculateEmployeePayrollDeduction(
-                emp.getId(), pEnd, availableForAdvance, activeAdvances);
-        var attendanceRows = payrollReport == null ? List.<DailyAttendanceResult>of()
-                : dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(payrollReport.getId())
-                .stream().filter(row -> row.getEmployeeId().equals(emp.getId())).toList();
-        long workedMinutes = attendanceRows.stream().mapToLong(DailyAttendanceResult::getWorkedMinutes).sum();
-        long overtimeMinutes = attendanceRows.stream().mapToLong(DailyAttendanceResult::getOvertimeMinutes).sum();
-        long lateMinutes = attendanceRows.stream().mapToLong(DailyAttendanceResult::getLateMinutes).sum();
-        String periodId = request.periodYear() + "-" + String.format("%02d", request.periodMonth()) + ":" + periodKind;
-        PayrollRunHeader run = resolveRun(periodId, pEnd, actor);
-        var policy = payrollCalculationPolicyService.effectivePolicy(pEnd);
-        var snapshot = payrollSnapshotService.captureSnapshot(new PayrollSnapshotService.CalculationInputs(
-                run.getId(), emp.getId(), periodId, pStart, pEnd, base, workedMinutes, overtimeMinutes, lateMinutes,
-                absenceDays(attendanceRows),
-                policy.getId(), policy.getVersion(), policy.getWorkingHourDivisor(), policy.getOvertimeMultiplier(),
-                requestedDeductions, requestedBonus, activeAdvances, calculatedAdvance), actor);
-        payrollRunLineRepository.findByRunIdAndEmployeeId(run.getId(), emp.getId()).orElseGet(() ->
-                payrollRunLineRepository.save(new PayrollRunLine(run.getId(), emp.getId(), snapshot.getId(),
-                        snapshot.getBaseSalary(), snapshot.getAllowanceAmount(),
-                        snapshot.getDeductionAmount().add(snapshot.getAdvanceDeduction()))));
-
-        BigDecimal gross = snapshot.getGrossPay();
-        BigDecimal advances = snapshot.getAdvanceDeduction();
-        BigDecimal deductions = snapshot.getDeductionAmount();
-        BigDecimal bonus = snapshot.getAllowanceAmount();
-        BigDecimal net = snapshot.getNetPay();
-
-        SalaryPayment entity;
-        if (existingOpt.isPresent()) {
-            entity = existingOpt.get();
-        } else {
-            entity = new SalaryPayment(emp.getId(), null, request.periodYear(), request.periodMonth(),
-                    periodKind, pStart, pEnd, gross, advances, deductions, bonus, net,
-                    PaymentStatus.DRAFT, null, null, null, null, actor);
-        }
-        entity.attachCalculationEvidence(run.getId(), snapshot.getId());
-
         Instant paidAtInstant = request.paidAtEpochMs() == null ? Instant.now() : Instant.ofEpochMilli(request.paidAtEpochMs());
-        entity.markAsPaid(gross, advances, deductions, bonus, net, request.paymentMethod(), paidAtInstant,
-                request.referenceCode(), request.note(), actor);
-
+        entity.markAsPaid(request.paymentMethod(), paidAtInstant, request.referenceCode(), request.note(), actor);
+        var disbursementJournal = payrollPaymentAccountingService.postDisbursement(entity, actor);
+        entity.attachPaymentJournal(disbursementJournal.getId());
         salaryPaymentRepository.save(entity);
 
-        // If advances were deducted, record a settlement entry in employee advances ledger
+        BigDecimal advances = entity.getAdvancesDeducted();
         if (advances.signum() > 0) {
             String periodReference = request.periodYear() + "/" + request.periodMonth();
             operationsService.recordAdvanceSettlement(
@@ -393,86 +374,97 @@ public class PayrollService {
             workforceAdvanceService.applyEmployeePayrollSettlement(emp.getId(), advances, periodReference, actor);
         }
 
+        if (salaryPaymentRepository.findByPayrollRunId(run.getId()).stream()
+                .allMatch(payment -> payment.getId().equals(entity.getId())
+                        || payment.getPaymentStatus() == PaymentStatus.PAID)) {
+            run.transitionTo(PayrollRunHeader.Status.PAID);
+            payrollRunHeaderRepository.save(run);
+        }
+
         auditService.record("PAYROLL_DISBURSEMENT", "SALARY_PAYMENT", entity.getId(), actor,
-                "{\"employeeId\":\"" + emp.getId() + "\",\"employeeName\":\"" + emp.getFullName() + "\",\"net\":" + net + "}", null);
+                "{\"employeeId\":\"" + emp.getId() + "\",\"employeeName\":\"" + emp.getFullName()
+                        + "\",\"previousStatus\":\"POSTED\",\"newStatus\":\"PAID\",\"paidBy\":\""
+                        + actor + "\",\"net\":" + entity.getNetAmount() + "}", null);
 
         return getSheet(request.periodYear(), request.periodMonth(), null);
     }
 
     @Transactional
     public PayrollApi.SheetResponse transitionStatus(PayrollApi.StatusTransitionRequest request, String actor) {
-        boolean freezesCalculation = request.targetStatus() == PaymentStatus.CALCULATED
-                || request.targetStatus() == PaymentStatus.REVIEWED
-                || request.targetStatus() == PaymentStatus.APPROVED
-                || request.targetStatus() == PaymentStatus.POSTED
-                || request.targetStatus() == PaymentStatus.PAID;
+        PaymentStatus requiredCurrent = switch (request.targetStatus()) {
+            case CALCULATED -> PaymentStatus.DRAFT;
+            case REVIEWED -> PaymentStatus.CALCULATED;
+            case APPROVED -> PaymentStatus.REVIEWED;
+            case POSTED -> PaymentStatus.APPROVED;
+            default -> throw new BusinessRuleException("This payroll state requires a dedicated command.",
+                    "PAYROLL_STATE_TRANSITION_INVALID", HttpStatus.CONFLICT);
+        };
         String periodId = request.periodYear() + "-" + String.format("%02d", request.periodMonth()) + ":FULL_MONTH";
-        PayrollRunHeader run = freezesCalculation
-                ? resolveRun(periodId, YearMonth.of(request.periodYear(), request.periodMonth()).atEndOfMonth(), actor)
-                : null;
-        var sheet = buildSheet(request.periodYear(), request.periodMonth(), request.categoryId(), freezesCalculation,
-                actor, run == null ? null : run.getId());
-        if (request.targetStatus() == PaymentStatus.APPROVED || request.targetStatus() == PaymentStatus.POSTED
-                || request.targetStatus() == PaymentStatus.PAID) {
+        PayrollRunHeader run = resolveRun(periodId, YearMonth.of(request.periodYear(), request.periodMonth()).atEndOfMonth());
+        if (request.targetStatus() == PaymentStatus.POSTED && run.getStatus() == PayrollRunHeader.Status.POSTED) {
+            payrollGlPostingService.getGlPosting(periodId);
+            return getSheet(request.periodYear(), request.periodMonth(), null);
+        }
+        boolean freezeSnapshots = request.targetStatus() == PaymentStatus.CALCULATED;
+        var sheet = buildSheet(request.periodYear(), request.periodMonth(), null, freezeSnapshots, actor, run.getId());
+        if (sheet.rows().isEmpty()) {
+            throw new BusinessRuleException("The payroll register has no payable employees.",
+                    "PAYROLL_REGISTER_EMPTY", HttpStatus.CONFLICT);
+        }
+        if (request.targetStatus() == PaymentStatus.APPROVED || request.targetStatus() == PaymentStatus.POSTED) {
             sheet.rows().stream().map(PayrollApi.PayrollRow::reportId).filter(java.util.Objects::nonNull).distinct()
                     .forEach(reportId -> attendanceExceptionService.assertPayrollReady(reportId, null));
         }
         for (var row : sheet.rows()) {
-            if (row.paymentStatus() != PaymentStatus.REVERSED && row.paymentStatus() != PaymentStatus.PAID) {
-                var periodKind = row.periodKind() == null ? "FULL_MONTH" : row.periodKind();
-                var existingOpt = salaryPaymentRepository.findByEmployeeIdAndPeriodYearAndPeriodMonthAndPeriodKind(
-                        row.employeeId(), request.periodYear(), request.periodMonth(), periodKind);
-
-                SalaryPayment entity;
-                if (existingOpt.isPresent()) {
-                    entity = existingOpt.get();
-                    entity.updateStatus(request.targetStatus());
-                } else {
-                    entity = new SalaryPayment(row.employeeId(), row.reportId(), request.periodYear(), request.periodMonth(),
-                            periodKind, row.periodStart(), row.periodEnd(), row.grossAmount(), row.advancesDeducted(),
-                            row.otherDeductions(), row.bonuses(), row.netAmount(), request.targetStatus(), null, null,
-                            null, "تغيير حالة كشف المرتبات إلى " + request.targetStatus().name(), actor);
-                }
-                if (run != null) {
-                    var snapshot = payrollSnapshotService.find(run.getId(), row.employeeId()).orElseThrow();
-                    entity.attachCalculationEvidence(run.getId(), snapshot.getId());
-                }
-                salaryPaymentRepository.save(entity);
+            var periodKind = row.periodKind() == null ? "FULL_MONTH" : row.periodKind();
+            var existingOpt = salaryPaymentRepository.findForUpdate(
+                    row.employeeId(), request.periodYear(), request.periodMonth(), periodKind);
+            SalaryPayment entity = existingOpt.orElseGet(() -> new SalaryPayment(
+                    row.employeeId(), row.reportId(), request.periodYear(), request.periodMonth(), periodKind,
+                    row.periodStart(), row.periodEnd(), row.grossAmount(), row.advancesDeducted(),
+                    row.otherDeductions(), row.bonuses(), row.netAmount(), PaymentStatus.DRAFT, null, null,
+                    null, "Payroll register created", actor));
+            PaymentStatus current = entity.getPaymentStatus() == PaymentStatus.PENDING
+                    ? PaymentStatus.DRAFT : entity.getPaymentStatus();
+            if (current != requiredCurrent) {
+                throw new BusinessRuleException("Every payroll row must be " + requiredCurrent
+                        + " before transition to " + request.targetStatus() + ".",
+                        "PAYROLL_STATE_TRANSITION_INVALID", HttpStatus.CONFLICT);
             }
+            var snapshot = payrollSnapshotService.find(run.getId(), row.employeeId())
+                    .orElseThrow(() -> new BusinessRuleException("Frozen payroll calculation evidence is required.",
+                            "PAYROLL_RUN_SNAPSHOTS_REQUIRED", HttpStatus.CONFLICT));
+            entity.attachCalculationEvidence(run.getId(), snapshot.getId());
+            entity.transitionTo(request.targetStatus());
+            salaryPaymentRepository.save(entity);
         }
 
-        if (run != null) {
-            if (run.getStatus() == PayrollRunHeader.Status.DRAFT) {
-                BigDecimal runDeductions = sheet.rows().stream()
-                        .map(row -> row.otherDeductions().add(row.advancesDeducted()))
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                run.updateTotals(sheet.summary().totalGrossAmount(), runDeductions,
-                        sheet.rows().stream().map(PayrollApi.PayrollRow::netAmount)
-                                .reduce(BigDecimal.ZERO, BigDecimal::add));
+        if (request.targetStatus() == PaymentStatus.CALCULATED) {
+            BigDecimal runDeductions = sheet.rows().stream()
+                    .map(row -> row.otherDeductions().add(row.advancesDeducted()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            run.updateTotals(sheet.summary().totalGrossAmount(), runDeductions,
+                    sheet.rows().stream().map(PayrollApi.PayrollRow::netAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add));
+        } else {
+            if (request.targetStatus() == PaymentStatus.POSTED) {
+                payrollGlPostingService.postApprovedRun(run, actor);
             }
-            if ((request.targetStatus() == PaymentStatus.APPROVED
-                    || request.targetStatus() == PaymentStatus.POSTED
-                    || request.targetStatus() == PaymentStatus.PAID)
-                    && run.getStatus() == PayrollRunHeader.Status.CALCULATED) {
-                run.approve();
-            }
-            if ((request.targetStatus() == PaymentStatus.POSTED || request.targetStatus() == PaymentStatus.PAID)
-                    && run.getStatus() == PayrollRunHeader.Status.APPROVED) {
-                run.post();
-            }
-            payrollRunHeaderRepository.save(run);
+            run.transitionTo(PayrollRunHeader.Status.valueOf(request.targetStatus().name()));
         }
+        payrollRunHeaderRepository.save(run);
 
         auditService.record("PAYROLL_STATUS_TRANSITION", "PAYROLL_REGISTER", request.periodYear() + "-" + request.periodMonth(), actor,
-                "{\"periodYear\":" + request.periodYear() + ",\"periodMonth\":" + request.periodMonth() + ",\"targetStatus\":\"" + request.targetStatus().name() + "\"}", null);
+                "{\"periodYear\":" + request.periodYear() + ",\"periodMonth\":" + request.periodMonth()
+                        + ",\"previousStatus\":\"" + requiredCurrent + "\",\"newStatus\":\""
+                        + request.targetStatus().name() + "\",\"actor\":\"" + actor + "\"}", null);
 
-        return getSheet(request.periodYear(), request.periodMonth(), request.categoryId());
+        return getSheet(request.periodYear(), request.periodMonth(), null);
     }
 
-    private PayrollRunHeader resolveRun(String periodId, LocalDate runDate, String actor) {
+    private PayrollRunHeader resolveRun(String periodId, LocalDate runDate) {
         return payrollRunHeaderRepository.findFirstByPeriodIdOrderByCreatedAtDesc(periodId)
-                .filter(run -> run.getStatus() == PayrollRunHeader.Status.DRAFT
-                        || run.getStatus() == PayrollRunHeader.Status.CALCULATED)
+                .map(run -> payrollRunHeaderRepository.findByIdForUpdate(run.getId()).orElseThrow())
                 .orElseGet(() -> payrollRunHeaderRepository.save(new PayrollRunHeader(
                         "PAY-" + periodId.replace(':', '-'), periodId, runDate)));
     }
@@ -485,12 +477,26 @@ public class PayrollService {
 
     @Transactional
     public PayrollApi.SheetResponse reversePayment(PayrollApi.ReversePaymentRequest request, String actor) {
-        var payment = salaryPaymentRepository.findById(request.paymentId())
+        var payment = salaryPaymentRepository.findByIdForUpdate(request.paymentId())
                 .orElseThrow(() -> new NotFoundException("قيد الراتب غير موجود.", "PAYROLL_ENTRY_NOT_FOUND"));
 
+        if (payment.getVersion() != request.expectedVersion()) {
+            throw new BusinessRuleException("The salary payment was changed by another request.",
+                    "PAYROLL_STALE_VERSION", HttpStatus.CONFLICT);
+        }
         if (payment.getPaymentStatus() == PaymentStatus.REVERSED) {
             throw new BusinessRuleException("هذا القيد متراجع عنه بالفعل.", "PAYROLL_ENTRY_ALREADY_REVERSED", HttpStatus.CONFLICT);
         }
+        if (payment.getPaymentStatus() != PaymentStatus.PAID) {
+            throw new BusinessRuleException("Only a paid salary can be reversed.",
+                    "PAYROLL_REVERSAL_STATE_INVALID", HttpStatus.CONFLICT);
+        }
+
+        PayrollRunHeader run = payrollRunHeaderRepository.findByIdForUpdate(payment.getPayrollRunId())
+                .orElseThrow(() -> new BusinessRuleException("Payroll run not found",
+                        "PAYROLL_RUN_NOT_FOUND", HttpStatus.NOT_FOUND));
+        var reversalJournal = payrollPaymentAccountingService.reverseDisbursement(
+                payment, LocalDate.now(), request.reason(), actor);
 
         BigDecimal deductedAdvances = payment.getAdvancesDeducted();
         if (deductedAdvances != null && deductedAdvances.signum() > 0) {
@@ -507,10 +513,15 @@ public class PayrollService {
         }
 
         payment.markAsReversed(request.reason(), actor);
+        payment.attachReversalJournal(reversalJournal.getId());
         salaryPaymentRepository.save(payment);
+        run.reopenAfterPaymentReversal();
+        payrollRunHeaderRepository.save(run);
 
         auditService.record("PAYROLL_REVERSE", "SALARY_PAYMENT", payment.getId(), actor,
-                "{\"paymentId\":\"" + payment.getId() + "\",\"reason\":\"" + request.reason().replace("\"", "\\\"") + "\"}", null);
+                "{\"paymentId\":\"" + payment.getId() + "\",\"previousStatus\":\"PAID\","
+                        + "\"newStatus\":\"REVERSED\",\"reversedBy\":\"" + actor + "\",\"reason\":\""
+                        + request.reason().replace("\"", "\\\"") + "\"}", null);
 
         return getSheet(payment.getPeriodYear(), payment.getPeriodMonth(), null);
     }
@@ -518,26 +529,23 @@ public class PayrollService {
     @Transactional
     public PayrollApi.SheetResponse payBulk(PayrollApi.BulkPaymentRequest request, String actor) {
         var sheet = getSheet(request.periodYear(), request.periodMonth(), request.categoryId());
+        if (sheet.rows().isEmpty() || sheet.rows().stream().anyMatch(row -> row.incompleteProfile()
+                || row.id() == null || row.paymentStatus() != PaymentStatus.POSTED)) {
+            throw new BusinessRuleException("Bulk payment requires every selected row to be posted and payable.",
+                    "PAYROLL_BULK_NOT_PAYABLE", HttpStatus.CONFLICT);
+        }
         for (var row : sheet.rows()) {
-            if (row.paymentStatus() != PaymentStatus.PAID && row.paymentStatus() != PaymentStatus.POSTED && !row.incompleteProfile()) {
-                recordPayment(new PayrollApi.PaymentRequest(
-                        row.employeeId(),
-                        request.periodYear(),
-                        request.periodMonth(),
-                        row.periodKind(),
-                        row.periodStart(),
-                        row.periodEnd(),
-                        row.grossAmount(),
-                        row.advancesDeducted(),
-                        row.otherDeductions(),
-                        row.bonuses(),
-                        row.netAmount(),
-                        request.paymentMethod() == null ? PaymentMethod.CASH : request.paymentMethod(),
-                        request.referenceCode(),
-                        request.note(),
-                        System.currentTimeMillis()
-                ), actor);
-            }
+            recordPayment(new PayrollApi.PaymentRequest(
+                    row.employeeId(),
+                    request.periodYear(),
+                    request.periodMonth(),
+                    row.periodKind(),
+                    request.paymentMethod() == null ? PaymentMethod.CASH : request.paymentMethod(),
+                    request.referenceCode(),
+                    request.note(),
+                    System.currentTimeMillis(),
+                    row.version()
+            ), actor);
         }
 
         auditService.record("PAYROLL_BULK_DISBURSEMENT", "PAYROLL_REGISTER", request.periodYear() + "-" + request.periodMonth(), actor,

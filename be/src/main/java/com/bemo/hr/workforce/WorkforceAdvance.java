@@ -1,12 +1,6 @@
 package com.bemo.hr.workforce;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -18,34 +12,59 @@ import java.util.UUID;
 @Table(name = "workforce_advances")
 @Getter
 public class WorkforceAdvance {
-    @Id private String id;
-    @TenantId @Column(name = "app_id", nullable = false) private String appId;
-    @Column(name = "recipient_type", nullable = false, length = 30) private String recipientType;
-    @Column(name = "worker_id", length = 36) private String workerId;
-    @Column(name = "contractor_id", length = 36) private String contractorId;
-    @Column(name = "employee_id", length = 36) private String employeeId;
-    @Column(precision = 12, scale = 2, nullable = false) private BigDecimal amount;
-    @Column(name = "term_type", nullable = false, length = 30) private String termType;
-    @Column(name = "total_installments", nullable = false) private int totalInstallments;
-    @Column(name = "installment_amount", precision = 12, scale = 2, nullable = false) private BigDecimal installmentAmount;
-    @Column(name = "remaining_balance", precision = 12, scale = 2, nullable = false) private BigDecimal remainingBalance;
-    @Column(name = "deduction_frequency", nullable = false, length = 30) private String deductionFrequency;
-    @Column(name = "max_deduction_percent", precision = 5, scale = 2) private BigDecimal maxDeductionPercent;
-    @Column(nullable = false, length = 30) private String status;
-    @Column(length = 500) private String reason;
-    @Column(name = "first_installment_date", length = 10) private String firstInstallmentDate;
-    @Column(name = "deduction_mode", length = 20) private String deductionMode;
-    @Column(name = "deferral_periods") private Integer deferralPeriods;
-    @Column(name = "applied_policy_id", length = 36) private String appliedPolicyId;
-    @Column(name = "applied_policy_version") private Integer appliedPolicyVersion;
-    @Column(name = "applied_policy_snapshot", length = 1000) private String appliedPolicySnapshot;
-    @Column(name = "created_at", nullable = false) private Instant createdAt;
-    @Column(name = "updated_at", nullable = false) private Instant updatedAt;
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(name = "recipient_type", nullable = false, length = 30)
+    private String recipientType;
+    @Column(name = "worker_id", length = 36)
+    private String workerId;
+    @Column(name = "contractor_id", length = 36)
+    private String contractorId;
+    @Column(name = "employee_id", length = 36)
+    private String employeeId;
+    @Column(precision = 12, scale = 2, nullable = false)
+    private BigDecimal amount;
+    @Column(name = "term_type", nullable = false, length = 30)
+    private String termType;
+    @Column(name = "total_installments", nullable = false)
+    private int totalInstallments;
+    @Column(name = "installment_amount", precision = 12, scale = 2, nullable = false)
+    private BigDecimal installmentAmount;
+    @Column(name = "remaining_balance", precision = 12, scale = 2, nullable = false)
+    private BigDecimal remainingBalance;
+    @Column(name = "deduction_frequency", nullable = false, length = 30)
+    private String deductionFrequency;
+    @Column(name = "max_deduction_percent", precision = 5, scale = 2)
+    private BigDecimal maxDeductionPercent;
+    @Column(nullable = false, length = 30)
+    private String status;
+    @Column(length = 500)
+    private String reason;
+    @Column(name = "first_installment_date", length = 10)
+    private String firstInstallmentDate;
+    @Column(name = "deduction_mode", length = 20)
+    private String deductionMode;
+    @Column(name = "deferral_periods")
+    private Integer deferralPeriods;
+    @Column(name = "applied_policy_id", length = 36)
+    private String appliedPolicyId;
+    @Column(name = "applied_policy_version")
+    private Integer appliedPolicyVersion;
+    @Column(name = "applied_policy_snapshot", length = 1000)
+    private String appliedPolicySnapshot;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
     @Version
     @Column(name = "version", nullable = false)
     private long version;
 
-    protected WorkforceAdvance() { }
+    protected WorkforceAdvance() {
+    }
 
     public WorkforceAdvance(String recipientType, String workerId, String contractorId, String employeeId,
                             BigDecimal amount, String termType, int totalInstallments,
@@ -81,9 +100,17 @@ public class WorkforceAdvance {
         }
     }
 
-    public void pause() { this.status = "PAUSED"; }
-    public void resume() { this.status = "ACTIVE"; }
-    public void repay(BigDecimal value) { deduct(value); }
+    public void pause() {
+        this.status = "PAUSED";
+    }
+
+    public void resume() {
+        this.status = "ACTIVE";
+    }
+
+    public void repay(BigDecimal value) {
+        deduct(value);
+    }
 
     public BigDecimal restore(BigDecimal value) {
         if (value == null || value.signum() <= 0) return BigDecimal.ZERO;
@@ -104,8 +131,18 @@ public class WorkforceAdvance {
                 + policy.getDeferralPeriods() + "|" + policy.getEffectiveFrom() + "|" + policy.getEffectiveTo();
     }
 
-    @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
-    @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
+    @PrePersist
+    void prePersist() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
 
-    public long getVersion() { return version; }
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

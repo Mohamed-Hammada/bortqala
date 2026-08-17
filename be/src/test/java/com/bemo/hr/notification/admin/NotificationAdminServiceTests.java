@@ -1,10 +1,6 @@
 package com.bemo.hr.notification.admin;
 
-import com.bemo.hr.shared.security.AppUser;
-import com.bemo.hr.shared.security.AppUserRepository;
-import com.bemo.hr.shared.security.TenantApplication;
-import com.bemo.hr.shared.security.TenantApplicationRepository;
-import com.bemo.hr.shared.security.TenantContext;
+import com.bemo.hr.shared.security.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,12 +22,18 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class NotificationAdminServiceTests {
-    @Mock private AppUserRepository appUserRepository;
-    @Mock private TenantApplicationRepository tenantApplicationRepository;
-    @Mock private JdbcTemplate jdbcTemplate;
-    @Mock private ApplicationEventPublisher applicationEventPublisher;
-    @Mock private Authentication authentication;
-    @InjectMocks private NotificationAdminService notificationAdminService;
+    @Mock
+    private AppUserRepository appUserRepository;
+    @Mock
+    private TenantApplicationRepository tenantApplicationRepository;
+    @Mock
+    private JdbcTemplate jdbcTemplate;
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+    @Mock
+    private Authentication authentication;
+    @InjectMocks
+    private NotificationAdminService notificationAdminService;
 
     @AfterEach
     void clearTenant() {

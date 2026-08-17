@@ -1,10 +1,6 @@
 package com.bemo.hr.shared.security;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -76,18 +72,52 @@ public class RefreshToken {
         this.revokedAt = Instant.now();
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getUserId() { return userId; }
-    public String getFamilyId() { return familyId; }
-    public String getTokenHash() { return tokenHash; }
-    public Instant getExpiresAt() { return expiresAt; }
-    public String getDeviceId() { return deviceId; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getRevokedAt() { return revokedAt; }
-    public String getRevokedBy() { return revokedBy; }
-    public String getReplacedByTokenId() { return replacedByTokenId; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public String getFamilyId() {
+        return familyId;
+    }
+
+    public String getTokenHash() {
+        return tokenHash;
+    }
+
+    public Instant getExpiresAt() {
+        return expiresAt;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getRevokedAt() {
+        return revokedAt;
+    }
+
+    public String getRevokedBy() {
+        return revokedBy;
+    }
+
+    public String getReplacedByTokenId() {
+        return replacedByTokenId;
+    }
 
     @PrePersist
-    void prePersist() { createdAt = Instant.now(); }
+    void prePersist() {
+        createdAt = Instant.now();
+    }
 }

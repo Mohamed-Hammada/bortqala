@@ -21,7 +21,9 @@ class TenantFeatureServiceTests {
     private TenantFeatureService service;
 
     @org.junit.jupiter.api.BeforeEach
-    void setUp() { service = new TenantFeatureService(repository, new EntitlementCatalog()); }
+    void setUp() {
+        service = new TenantFeatureService(repository, new EntitlementCatalog());
+    }
 
     @Test
     void defaultEnabledFeaturesAreReturnedWhenNoDbRows() {
@@ -34,8 +36,9 @@ class TenantFeatureServiceTests {
                         "workforce.enabled", "procurement.enabled", "exports.enabled",
                         "payroll.enabled", "sales.enabled", "manufacturing.enabled",
                         "finance.enabled", "quality.enabled",
-                        "navigation.favorites.enabled", "navigation.recents.enabled")
-                .doesNotContain("biometric.liveSync.enabled", "notifications.enabled");
+                        "navigation.favorites.enabled", "navigation.recents.enabled",
+                        "notifications.enabled")
+                .doesNotContain("unknown.feature.enabled");
     }
 
     @Test
@@ -81,7 +84,7 @@ class TenantFeatureServiceTests {
 
         assertThat(service.isEnabled("app-1", "payroll.enabled")).isTrue();
         assertThat(service.isEnabled("app-1", "exports.enabled")).isTrue();
-        assertThat(service.isEnabled("app-1", "notifications.enabled")).isFalse();
+        assertThat(service.isEnabled("app-1", "notifications.enabled")).isTrue();
         assertThat(service.isEnabled("app-1", "unknown.key")).isFalse();
     }
 

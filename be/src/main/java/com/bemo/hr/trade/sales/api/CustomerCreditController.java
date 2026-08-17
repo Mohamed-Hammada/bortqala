@@ -17,8 +17,6 @@ public class CustomerCreditController {
         this.creditService = creditService;
     }
 
-    public record SetCreditLimitPayload(String customerId, BigDecimal creditLimit) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'FINANCE_MANAGER')")
     public CustomerCreditProfile setCreditLimit(@RequestBody SetCreditLimitPayload payload) {
@@ -29,5 +27,8 @@ public class CustomerCreditController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public CustomerCreditProfile getCreditProfile(@PathVariable String customerId) {
         return creditService.getCreditProfile(customerId);
+    }
+
+    public record SetCreditLimitPayload(String customerId, BigDecimal creditLimit) {
     }
 }

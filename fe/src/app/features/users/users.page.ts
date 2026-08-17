@@ -74,6 +74,14 @@ export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = [
 
 
 export class UsersPage {
+  // BORTQALA_RUNTIME_20260816_V2_USER_REASON_FIELD
+  readonly accessReasonEditing = signal(false);
+
+  finishAccessReasonEditing(): void {
+    // Defer until after the click that caused blur (for example Save) has fired.
+    window.setTimeout(() => this.accessReasonEditing.set(false), 0);
+  }
+
   readonly auth = inject(AuthService);
   readonly store = inject(UsersStore);
   readonly i18n = inject(I18nService);

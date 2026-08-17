@@ -1,0 +1,5 @@
+id;translation_key;locale;text_value
+v237-001;MFG_BOM_EFFECTIVE_DATES_INVALID;en-US;The BOM effective dates are invalid.
+v237-002;MFG_BOM_EFFECTIVE_DATES_INVALID;ar-EG;تواريخ سريان قائمة المواد غير صالحة.
+v237-003;MFG_BOM_NOT_APPLICABLE;en-US;The BOM is inactive or outside its effective dates for this production order.
+v237-004;MFG_BOM_NOT_APPLICABLE;ar-EG;قائمة المواد غير نشطة أو خارج فترة سريانها لأمر الإنتاج هذا.

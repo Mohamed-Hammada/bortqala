@@ -7,12 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @Transactional(readOnly = true)
@@ -129,7 +124,9 @@ public class TranslationService {
                 .findFirst().orElse(DEFAULT_LOCALE);
     }
 
-    private record LocalePreference(String locale, double quality) { }
+    private record LocalePreference(String locale, double quality) {
+    }
 
-    public record TranslationBundle(String locale, String appId, Map<String, String> messages) { }
+    public record TranslationBundle(String locale, String appId, Map<String, String> messages) {
+    }
 }

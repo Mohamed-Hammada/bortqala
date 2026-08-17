@@ -1,10 +1,6 @@
 package com.bemo.hr.workforce;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -16,22 +12,38 @@ import java.util.UUID;
 @Table(name = "worker_settlements")
 @Getter
 public class WorkerSettlement {
-    @Id private String id;
-    @TenantId @Column(name = "app_id", nullable = false) private String appId;
-    @Column(name = "period_id", nullable = false, length = 36) private String periodId;
-    @Column(name = "worker_id", nullable = false, length = 36) private String workerId;
-    @Column(name = "contractor_id", nullable = false, length = 36) private String contractorId;
-    @Column(name = "total_attendance_units", precision = 8, scale = 2) private BigDecimal totalAttendanceUnits;
-    @Column(name = "daily_rate", precision = 12, scale = 2) private BigDecimal dailyRate;
-    @Column(name = "gross_amount", precision = 12, scale = 2) private BigDecimal grossAmount;
-    @Column(name = "overtime_amount", precision = 12, scale = 2) private BigDecimal overtimeAmount;
-    @Column(name = "deductions_amount", precision = 12, scale = 2) private BigDecimal deductionsAmount;
-    @Column(name = "advance_deductions", precision = 12, scale = 2) private BigDecimal advanceDeductions;
-    @Column(name = "net_amount", precision = 12, scale = 2) private BigDecimal netAmount;
-    @Column(name = "advance_policy_snapshot", length = 2000) private String advancePolicySnapshot;
-    @Column(name = "created_at", nullable = false) private Instant createdAt;
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(name = "period_id", nullable = false, length = 36)
+    private String periodId;
+    @Column(name = "worker_id", nullable = false, length = 36)
+    private String workerId;
+    @Column(name = "contractor_id", nullable = false, length = 36)
+    private String contractorId;
+    @Column(name = "total_attendance_units", precision = 8, scale = 2)
+    private BigDecimal totalAttendanceUnits;
+    @Column(name = "daily_rate", precision = 12, scale = 2)
+    private BigDecimal dailyRate;
+    @Column(name = "gross_amount", precision = 12, scale = 2)
+    private BigDecimal grossAmount;
+    @Column(name = "overtime_amount", precision = 12, scale = 2)
+    private BigDecimal overtimeAmount;
+    @Column(name = "deductions_amount", precision = 12, scale = 2)
+    private BigDecimal deductionsAmount;
+    @Column(name = "advance_deductions", precision = 12, scale = 2)
+    private BigDecimal advanceDeductions;
+    @Column(name = "net_amount", precision = 12, scale = 2)
+    private BigDecimal netAmount;
+    @Column(name = "advance_policy_snapshot", length = 2000)
+    private String advancePolicySnapshot;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
 
-    protected WorkerSettlement() { }
+    protected WorkerSettlement() {
+    }
 
     public WorkerSettlement(String periodId, String workerId, String contractorId,
                             BigDecimal totalAttendanceUnits, BigDecimal dailyRate,
@@ -51,7 +63,12 @@ public class WorkerSettlement {
         this.netAmount = netAmount != null ? netAmount : BigDecimal.ZERO;
     }
 
-    public void applyAdvancePolicySnapshot(String snapshot) { this.advancePolicySnapshot = snapshot; }
+    public void applyAdvancePolicySnapshot(String snapshot) {
+        this.advancePolicySnapshot = snapshot;
+    }
 
-    @PrePersist void prePersist() { createdAt = Instant.now(); }
+    @PrePersist
+    void prePersist() {
+        createdAt = Instant.now();
+    }
 }

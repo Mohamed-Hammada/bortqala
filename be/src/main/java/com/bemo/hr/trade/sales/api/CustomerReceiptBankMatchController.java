@@ -17,8 +17,6 @@ public class CustomerReceiptBankMatchController {
         this.matchService = matchService;
     }
 
-    public record MatchReceiptPayload(String receiptId, String bankTransactionId, BigDecimal matchedAmount) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'SALES_MANAGER')")
     public CustomerReceiptBankMatch matchReceipt(@RequestBody MatchReceiptPayload payload) {
@@ -29,5 +27,8 @@ public class CustomerReceiptBankMatchController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'SALES_MANAGER', 'VIEWER')")
     public CustomerReceiptBankMatch getMatchForReceipt(@PathVariable String receiptId) {
         return matchService.getMatchForReceipt(receiptId);
+    }
+
+    public record MatchReceiptPayload(String receiptId, String bankTransactionId, BigDecimal matchedAmount) {
     }
 }

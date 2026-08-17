@@ -29,8 +29,8 @@ export class AuditLogsPage {
   readonly actionFilter = signal('');
   readonly usernameFilter = signal('');
   readonly searchFilter = signal('');
-  readonly fromFilter = signal('');
-  readonly toFilter = signal('');
+  readonly fromFilter = signal(this.relativeDate(-1));
+  readonly toFilter = signal(this.relativeDate(0));
 
   constructor() {
     void this.load(1);
@@ -54,8 +54,8 @@ export class AuditLogsPage {
     this.actionFilter.set('');
     this.usernameFilter.set('');
     this.searchFilter.set('');
-    this.fromFilter.set('');
-    this.toFilter.set('');
+    this.fromFilter.set(this.relativeDate(-1));
+    this.toFilter.set(this.relativeDate(0));
     this.load(1);
   }
 
@@ -106,4 +106,15 @@ export class AuditLogsPage {
   dateTime(ms: number) {
     return formatDateTime(ms);
   }
+
+  // BORTQALA_FEEDBACK_20260816_AUDIT_DEFAULT_DATES
+  private relativeDate(offsetDays: number): string {
+    const date = new Date();
+    date.setDate(date.getDate() + offsetDays);
+    const y = date.getFullYear();
+    const m = `${date.getMonth() + 1}`.padStart(2, '0');
+    const d = `${date.getDate()}`.padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
 }

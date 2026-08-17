@@ -13,12 +13,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IdempotencyServiceTests {
@@ -50,7 +46,9 @@ class IdempotencyServiceTests {
                 .thenReturn(Optional.of(completedKey()));
 
         String first = service().execute("PAYMENT", "op-1", "hash-a",
-                () -> { throw new AssertionError("operation must not run on replay"); },
+                () -> {
+                    throw new AssertionError("operation must not run on replay");
+                },
                 value -> value, reference -> "replayed:" + reference);
 
         assertThat(first).isEqualTo("replayed:payment-id");
@@ -92,7 +90,9 @@ class IdempotencyServiceTests {
                 .thenReturn(1);
 
         assertThatThrownBy(() -> service().execute("PAYMENT", "op-1", "hash-a",
-                () -> { throw new IllegalStateException("boom"); }, value -> value, reference -> reference))
+                () -> {
+                    throw new IllegalStateException("boom");
+                }, value -> value, reference -> reference))
                 .isInstanceOf(IllegalStateException.class);
         verify(idempotencyKeyRepository).fail(anyString(), anyString(), anyString(), anyString());
         verify(idempotencyKeyRepository, never()).complete(anyString(), anyString(), anyString(), anyString(), anyString());
@@ -106,7 +106,9 @@ class IdempotencyServiceTests {
                 .thenReturn(Optional.of(completedKey()));
 
         String result = service().execute("PAYMENT", "op-1", "hash-a",
-                () -> { throw new AssertionError("operation must not run after the race"); },
+                () -> {
+                    throw new AssertionError("operation must not run after the race");
+                },
                 value -> value, reference -> "replayed:" + reference);
 
         assertThat(result).isEqualTo("replayed:payment-id");

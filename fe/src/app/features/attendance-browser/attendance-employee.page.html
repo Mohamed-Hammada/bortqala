@@ -1,0 +1,60 @@
+<section class="page attendance-detail">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.locale() === 'ar-EG' ? 'تفاصيل الحضور' : 'Attendance details' }}</p>
+      <h1>{{ displayName() }}</h1>
+      @if (details(); as item) {
+        <p><code>{{ item.deviceUserId }}</code> · {{ item.month }}</p>
+      }
+    </div>
+    <div class="header-actions">
+      <a class="button secondary" routerLink="/imports/attendance">← {{ i18n.locale() === 'ar-EG' ? 'كل الموظفين' : 'All employees' }}</a>
+      @if (details() && !details()!.mapped) {
+        <button class="button gold" type="button" (click)="openAddEmployee()">+ {{ i18n.locale() === 'ar-EG' ? 'إضافة للنظام' : 'Add to employees' }}</button>
+      }
+    </div>
+  </header>
+
+  @if (error()) { <div class="alert error">{{ error() }}</div> }
+  @if (loading()) { <div class="loading"></div> }
+
+  @if (details(); as item) {
+    <section class="summary-grid">
+      <article class="summary-card"><span>{{ i18n.locale() === 'ar-EG' ? 'الحالة' : 'Status' }}</span><strong>{{ item.mapped ? (i18n.locale() === 'ar-EG' ? 'موظف مربوط' : 'Mapped employee') : (i18n.locale() === 'ar-EG' ? 'غير مضاف' : 'Unmapped') }}</strong></article>
+      <article class="summary-card"><span>{{ i18n.locale() === 'ar-EG' ? 'إجمالي البصمات' : 'Total punches' }}</span><strong>{{ item.punchCount }}</strong></article>
+      <article class="summary-card"><span>{{ i18n.locale() === 'ar-EG' ? 'أيام بها حركة' : 'Days with punches' }}</span><strong>{{ item.days.length }}</strong></article>
+      <article class="summary-card"><span>{{ i18n.locale() === 'ar-EG' ? 'الوقت المحسوب' : 'Calculated time' }}</span><strong>{{ hours(item.workedMinutes) }}</strong></article>
+    </section>
+
+    @if (item.mapped) {
+      <section class="card identity-card">
+        <div><span>{{ i18n.locale() === 'ar-EG' ? 'اسم الموظف' : 'Employee name' }}</span><strong>{{ item.employeeName }}</strong></div>
+        <div><span>{{ i18n.locale() === 'ar-EG' ? 'كود الموظف' : 'Employee code' }}</span><strong>{{ item.employeeCode }}</strong></div>
+        <div><span>{{ i18n.locale() === 'ar-EG' ? 'رقم جهاز البصمة' : 'Device user ID' }}</span><strong>{{ item.deviceUserId }}</strong></div>
+      </section>
+    }
+
+    <section class="card">
+      <div class="section-title">
+        <div><h2>{{ i18n.locale() === 'ar-EG' ? 'الحضور اليومي' : 'Daily attendance' }}</h2><p>{{ i18n.locale() === 'ar-EG' ? 'كل البصمات مرتبة حسب اليوم.' : 'All punches grouped by day.' }}</p></div>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead><tr><th>{{ i18n.locale() === 'ar-EG' ? 'التاريخ' : 'Date' }}</th><th>{{ i18n.locale() === 'ar-EG' ? 'أول بصمة' : 'First' }}</th><th>{{ i18n.locale() === 'ar-EG' ? 'آخر بصمة' : 'Last' }}</th><th>{{ i18n.locale() === 'ar-EG' ? 'العدد' : 'Count' }}</th><th>{{ i18n.locale() === 'ar-EG' ? 'المدة' : 'Duration' }}</th><th>{{ i18n.locale() === 'ar-EG' ? 'البصمات' : 'Punches' }}</th></tr></thead>
+          <tbody>
+            @for (day of item.days; track day.date) {
+              <tr>
+                <td><strong>{{ day.date }}</strong>@if (day.incomplete) { <small class="warning">{{ i18n.locale() === 'ar-EG' ? 'بصمة غير مزدوجة' : 'Unpaired punch' }}</small> }</td>
+                <td class="ltr">{{ dateTime(day.firstPunch) }}</td>
+                <td class="ltr">{{ dateTime(day.lastPunch) }}</td>
+                <td>{{ day.punchCount }}</td>
+                <td>{{ hours(day.workedMinutes) }}</td>
+                <td><div class="punches">@for (punch of day.punches; track punch) { <span class="ltr">{{ dateTime(punch) }}</span> }</div></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</section>

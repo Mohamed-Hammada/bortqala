@@ -17,8 +17,6 @@ public class JournalApprovalController {
         this.approvalService = approvalService;
     }
 
-    public record SetApprovalRulePayload(String accountId, BigDecimal maxAmountWithoutApproval, boolean requiresApproval) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public JournalApprovalRule setApprovalRule(@RequestBody SetApprovalRulePayload payload) {
@@ -29,5 +27,9 @@ public class JournalApprovalController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
     public JournalApprovalRule getApprovalRule(@PathVariable String accountId) {
         return approvalService.getApprovalRule(accountId);
+    }
+
+    public record SetApprovalRulePayload(String accountId, BigDecimal maxAmountWithoutApproval,
+                                         boolean requiresApproval) {
     }
 }

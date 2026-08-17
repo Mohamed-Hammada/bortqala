@@ -1,14 +1,9 @@
 package com.bemo.hr.manufacturing.production.domain;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
+import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -63,7 +58,8 @@ public class BomHeader {
     @OneToMany(mappedBy = "bomHeader", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BomLine> lines = new ArrayList<>();
 
-    protected BomHeader() {}
+    protected BomHeader() {
+    }
 
     public BomHeader(String bomCode, String finishedItemId, String finishedGoodName,
                      BigDecimal yieldQuantity, String revision, LocalDate effectiveFrom,
@@ -77,6 +73,10 @@ public class BomHeader {
     public void update(String bomCode, String finishedItemId, String finishedGoodName,
                        BigDecimal yieldQuantity, String revision, LocalDate effectiveFrom,
                        LocalDate effectiveTo, String notes, boolean active, List<BomLine> lines) {
+        if (effectiveFrom != null && effectiveTo != null && effectiveTo.isBefore(effectiveFrom)) {
+            throw new BusinessRuleException("BOM effective dates are invalid.",
+                    "MFG_BOM_EFFECTIVE_DATES_INVALID", HttpStatus.CONFLICT);
+        }
         this.bomCode = bomCode.strip();
         this.finishedItemId = finishedItemId;
         this.finishedGoodName = finishedGoodName.strip();
@@ -99,23 +99,72 @@ public class BomHeader {
         this.lines.add(line);
     }
 
+    public boolean appliesOn(LocalDate date) {
+        return active && date != null
+                && (effectiveFrom == null || !date.isBefore(effectiveFrom))
+                && (effectiveTo == null || !date.isAfter(effectiveTo));
+    }
+
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getBomCode() { return bomCode; }
-    public String getFinishedItemId() { return finishedItemId; }
-    public String getFinishedGoodName() { return finishedGoodName; }
-    public BigDecimal getYieldQuantity() { return yieldQuantity; }
-    public String getRevision() { return revision; }
-    public LocalDate getEffectiveFrom() { return effectiveFrom; }
-    public LocalDate getEffectiveTo() { return effectiveTo; }
-    public String getNotes() { return notes; }
-    public boolean isActive() { return active; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public List<BomLine> getLines() { return lines; }
+    public String getId() {
+        return id;
+    }
+
+    public String getBomCode() {
+        return bomCode;
+    }
+
+    public String getFinishedItemId() {
+        return finishedItemId;
+    }
+
+    public String getFinishedGoodName() {
+        return finishedGoodName;
+    }
+
+    public BigDecimal getYieldQuantity() {
+        return yieldQuantity;
+    }
+
+    public String getRevision() {
+        return revision;
+    }
+
+    public LocalDate getEffectiveFrom() {
+        return effectiveFrom;
+    }
+
+    public LocalDate getEffectiveTo() {
+        return effectiveTo;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public List<BomLine> getLines() {
+        return lines;
+    }
 }

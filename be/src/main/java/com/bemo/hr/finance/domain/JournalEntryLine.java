@@ -38,7 +38,8 @@ public class JournalEntryLine {
     @Column(length = 255)
     private String memo;
 
-    protected JournalEntryLine() {}
+    protected JournalEntryLine() {
+    }
 
     public JournalEntryLine(String journalEntryId, String accountId, String partyId, BigDecimal debit, BigDecimal credit, String memo) {
         this.id = UUID.randomUUID().toString();
@@ -50,11 +51,31 @@ public class JournalEntryLine {
         this.memo = memo == null ? null : memo.strip();
     }
 
-    public String getId() { return id; }
-    public String getJournalEntryId() { return journalEntryId; }
-    public String getAccountId() { return accountId; }
-    public String getPartyId() { return partyId; }
-    public BigDecimal getDebit() { return debit; }
-    public BigDecimal getCredit() { return credit; }
-    public String getMemo() { return memo; }
+    public String getId() {
+        return id;
+    }
+
+    public String getJournalEntryId() {
+        return journalEntryId;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public String getPartyId() {
+        return partyId;
+    }
+
+    public BigDecimal getDebit() {
+        return debit;
+    }
+
+    public BigDecimal getCredit() {
+        return credit;
+    }
+
+    public String getMemo() {
+        return memo;
+    }
 }

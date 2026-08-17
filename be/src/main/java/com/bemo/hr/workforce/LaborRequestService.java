@@ -1,14 +1,14 @@
 package com.bemo.hr.workforce;
 
+import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.employee.domain.AttendanceCategory;
+import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import com.bemo.hr.audit.application.AuditService;
-import com.bemo.hr.employee.domain.AttendanceCategory;
-import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -27,49 +27,49 @@ public class LaborRequestService {
     @Transactional
     public WorkforceApi.LaborRequestResponse create(WorkforceApi.LaborRequestCreate dto, String createdBy) {
         LaborRequest req = new LaborRequest(
-            dto.requestNumber(), Instant.now(), dto.branchId(), dto.shiftName(),
-            dto.contractorId(), "DRAFT", dto.notes(), createdBy
+                dto.requestNumber(), Instant.now(), dto.branchId(), dto.shiftName(),
+                dto.contractorId(), "DRAFT", dto.notes(), createdBy
         );
         LaborRequest saved = requestRepository.save(req);
         if (dto.items() != null) {
             for (WorkforceApi.LaborRequestItemDto itemDto : dto.items()) {
                 LaborRequestItem item = new LaborRequestItem(
-                    saved.getId(), itemDto.categoryId(), itemDto.requestedCount(),
-                    itemDto.sentCount(), itemDto.acceptedCount()
+                        saved.getId(), itemDto.categoryId(), itemDto.requestedCount(),
+                        itemDto.sentCount(), itemDto.acceptedCount()
                 );
                 itemRepository.save(item);
             }
         }
-        
-        auditService.record("CREATE", "LABOR_REQUEST", saved.getId(), createdBy, 
-            "{\"requestNumber\":\"" + dto.requestNumber() + "\"}", null);
-            
+
+        auditService.record("CREATE", "LABOR_REQUEST", saved.getId(), createdBy,
+                "{\"requestNumber\":\"" + dto.requestNumber() + "\"}", null);
+
         return mapToResponse(saved);
     }
 
     @Transactional
     public WorkforceApi.LaborRequestResponse updateStatus(String id, String status, String user) {
         LaborRequest req = requestRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Labor request not found: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Labor request not found: " + id));
         req.updateStatus(status, user);
         return mapToResponse(requestRepository.save(req));
     }
 
     private WorkforceApi.LaborRequestResponse mapToResponse(LaborRequest req) {
         String contractorName = contractorRepository.findById(req.getContractorId())
-            .map(Contractor::getName).orElse("—");
+                .map(Contractor::getName).orElse("—");
         List<WorkforceApi.LaborRequestItemDto> items = itemRepository.findByRequestId(req.getId())
-            .stream().map(i -> new WorkforceApi.LaborRequestItemDto(
-                i.getId(), i.getCategoryId(),
-                categoryRepository.findById(i.getCategoryId()).map(AttendanceCategory::getName).orElse("—"),
-                i.getRequestedCount(), i.getSentCount(), i.getAcceptedCount(), i.getVarianceCount()
-            )).toList();
+                .stream().map(i -> new WorkforceApi.LaborRequestItemDto(
+                        i.getId(), i.getCategoryId(),
+                        categoryRepository.findById(i.getCategoryId()).map(AttendanceCategory::getName).orElse("—"),
+                        i.getRequestedCount(), i.getSentCount(), i.getAcceptedCount(), i.getVarianceCount()
+                )).toList();
 
         return new WorkforceApi.LaborRequestResponse(
-            req.getId(), req.getRequestNumber(), req.getRequestDate().toEpochMilli(),
-            req.getBranchId(), req.getShiftName(), req.getContractorId(), contractorName,
-            req.getStatus(), req.getNotes(), req.getCreatedBy(), req.getApprovedBy(),
-            items, req.getCreatedAt().toEpochMilli(), req.getUpdatedAt().toEpochMilli()
+                req.getId(), req.getRequestNumber(), req.getRequestDate().toEpochMilli(),
+                req.getBranchId(), req.getShiftName(), req.getContractorId(), contractorName,
+                req.getStatus(), req.getNotes(), req.getCreatedBy(), req.getApprovedBy(),
+                items, req.getCreatedAt().toEpochMilli(), req.getUpdatedAt().toEpochMilli()
         );
     }
 }

@@ -7,8 +7,10 @@
   },
   "scripts": {
     "prepare:resources": "powershell -ExecutionPolicy Bypass -File scripts/prepare-resources.ps1",
+    "prepare:native": "powershell -ExecutionPolicy Bypass -File scripts/prepare-resources.ps1 -BuildMode Native",
     "tauri": "tauri",
-    "build": "npm run prepare:resources && tauri build"
+    "build": "npm run prepare:resources && tauri build",
+    "build:native": "npm run prepare:native && tauri build --config src-tauri/tauri.native.conf.json"
   },
   "devDependencies": {
     "@tauri-apps/cli": "2.11.4"

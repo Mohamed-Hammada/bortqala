@@ -20,12 +20,17 @@ public class WorkforceDisputeService {
         this.auditService = auditService;
     }
 
+    private static BusinessRuleException rule(String message, String code) {
+        return new BusinessRuleException(message, code, HttpStatus.CONFLICT);
+    }
+
     @Transactional
     public WorkforceDispute createDispute(String settlementPeriodId, String contractorId, BigDecimal amount, String reason, String actor) {
         if (settlementPeriodId == null || settlementPeriodId.isBlank() || contractorId == null || contractorId.isBlank()) {
             throw rule("Settlement period and contractor are required", "DISPUTE_SCOPE_REQUIRED");
         }
-        if (amount == null || amount.signum() <= 0) throw rule("Disputed amount must be positive", "DISPUTE_AMOUNT_POSITIVE");
+        if (amount == null || amount.signum() <= 0)
+            throw rule("Disputed amount must be positive", "DISPUTE_AMOUNT_POSITIVE");
         if (reason == null || reason.isBlank()) throw rule("Dispute reason is required", "DISPUTE_REASON_REQUIRED");
         WorkforceDispute dispute = new WorkforceDispute(settlementPeriodId, contractorId, amount, reason);
         WorkforceDispute saved = workforceDisputeRepository.save(dispute);
@@ -73,9 +78,5 @@ public class WorkforceDisputeService {
         auditService.record(action, "WORKFORCE_DISPUTE", saved.getId(), actor,
                 "{\"from\":\"" + previous + "\",\"to\":\"" + saved.getStatus() + "\"}", null);
         return saved;
-    }
-
-    private static BusinessRuleException rule(String message, String code) {
-        return new BusinessRuleException(message, code, HttpStatus.CONFLICT);
     }
 }

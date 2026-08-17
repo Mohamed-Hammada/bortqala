@@ -1,11 +1,6 @@
 package com.bemo.hr.shared.security;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "roles")
@@ -26,6 +21,11 @@ public class Role {
         this.nameAr = nameAr;
     }
 
-    public RoleCode getCode() { return code; }
-    public String getNameAr() { return nameAr; }
+    public RoleCode getCode() {
+        return code;
+    }
+
+    public String getNameAr() {
+        return nameAr;
+    }
 }

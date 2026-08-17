@@ -1,0 +1,344 @@
+/*
+ * Unified form-control styling.
+ *
+ * Loaded after the legacy/global UI styles. The deliberately strong :is()
+ * selector lets these product-level rules win over older Angular component
+ * selectors without scattering !important declarations.
+ *
+ * Native <select> option popups remain browser/OS rendered; the closed control
+ * itself follows the product design system.
+ */
+
+/* Normal text/data-entry controls share one product-level visual contract. */
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled]) {
+  box-sizing: border-box;
+  min-height: var(--control-height, 40px);
+  max-width: 100%;
+  padding-block: 8px;
+  padding-inline: 12px;
+  color: var(--ink);
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm, 8px);
+  font: inherit;
+  line-height: 1.35;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+/* Field-based forms stay fluid, including controls nested in password wrappers. */
+:root body :is(
+  .field,
+  .form-grid .field,
+  .dialog-form-grid .field,
+  .modal-dialog-box .field,
+  .drawer .field,
+  .card form .field
+) :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea
+):not([data-unstyled]) {
+  width: 100%;
+}
+
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled]):hover:not(:disabled):not([readonly]) {
+  border-color: color-mix(in srgb, var(--gold) 48%, var(--line));
+}
+
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled]):focus,
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled]):focus-visible {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 22%, transparent);
+}
+
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  textarea,
+  .search-input
+):not([data-unstyled])::placeholder {
+  color: var(--muted);
+  opacity: 0.78;
+}
+
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled]):disabled {
+  cursor: not-allowed;
+  color: var(--secondary-text);
+  background-color: var(--surface-muted);
+  opacity: 0.72;
+}
+
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  textarea
+):not([data-unstyled])[readonly] {
+  color: var(--secondary-text);
+  background-color: var(--surface-muted);
+}
+
+:root body textarea:not([data-unstyled]) {
+  min-height: 96px;
+  resize: vertical;
+}
+
+/* Keep native select behavior/keyboard accessibility and only normalize the shell. */
+:root body select:not([multiple]):not([data-unstyled]) {
+  padding-inline-end: 36px;
+  cursor: pointer;
+}
+
+:root body select:not([multiple]):not([data-unstyled]):disabled {
+  cursor: not-allowed;
+}
+
+/* Search controls are identical whether implemented by type or shared class. */
+:root body :is(input[type='search'], .search-input):not([data-unstyled]) {
+  min-height: var(--control-height, 40px);
+  border-radius: var(--radius-sm, 8px);
+}
+
+/* Shared validation state. */
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled])[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+:root body :is(
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+  select:not([multiple]),
+  textarea,
+  .search-input
+):not([data-unstyled])[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+/*
+ * Product-level radios: larger hit target, clearer selected state, and visible
+ * keyboard focus. data-unstyled remains an escape hatch for bespoke controls.
+ */
+:root body input[type='radio']:not([data-unstyled]) {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: 20px;
+  height: 20px;
+  max-width: 20px;
+  max-height: 20px;
+  inline-size: 20px;
+  block-size: 20px;
+  min-inline-size: 20px;
+  min-block-size: 20px;
+  max-inline-size: 20px;
+  max-block-size: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  margin: 0;
+  flex: 0 0 20px;
+  border: 2px solid color-mix(in srgb, var(--line-strong) 80%, var(--line));
+  border-radius: 50%;
+  background: var(--surface);
+  background-clip: padding-box;
+  vertical-align: middle;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+:root body input[type='radio']:not([data-unstyled]):hover:not(:disabled) {
+  border-color: var(--gold);
+}
+
+:root body input[type='radio']:not([data-unstyled]):checked {
+  border-color: var(--gold);
+  background:
+    radial-gradient(circle at center, var(--gold) 0 36%, transparent 39%),
+    var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 14%, transparent);
+}
+
+:root body input[type='radio']:not([data-unstyled]):focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--gold-glow);
+}
+
+:root body input[type='radio']:not([data-unstyled]):disabled {
+  cursor: not-allowed;
+  border-color: var(--line);
+  background: var(--surface-muted);
+  opacity: 0.55;
+}
+
+:root body input[type='radio']:not([data-unstyled]):disabled:checked {
+  background:
+    radial-gradient(circle at center, var(--muted) 0 36%, transparent 39%),
+    var(--surface-muted);
+}
+
+
+
+@media (forced-colors: active) {
+  :root body input[type='radio']:not([data-unstyled]) {
+    appearance: auto;
+    -webkit-appearance: auto;
+    accent-color: Highlight;
+    forced-color-adjust: auto;
+  }
+}
+
+/* Logical padding keeps Arabic RTL and English LTR layouts aligned correctly.
+ * Existing technical/password direction rules are intentionally left untouched.
+ */
+@media (max-width: 700px) {
+  :root body :is(
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+    select:not([multiple]),
+    textarea,
+    .search-input
+  ):not([data-unstyled]) {
+    min-height: var(--control-height-lg, 44px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root body :is(
+    input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='color']):not([type='file']):not([type='hidden']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']),
+    select:not([multiple]),
+    textarea,
+    .search-input,
+    input[type='radio']
+  ):not([data-unstyled]) {
+    transition: none;
+  }
+}
+
+/* Advance policy dialog: present the active state as one clear full-width toggle row. */
+:root body app-advances app-modal-dialog label.form-group:has(> input[name='policyActive']) {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  min-height: 58px;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--surface-muted);
+  color: var(--secondary-text);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+:root body app-advances app-modal-dialog label.form-group:has(> input[name='policyActive']) > span:first-child {
+  margin-inline-end: auto;
+  color: var(--secondary-text);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+
+:root body app-advances app-modal-dialog label.form-group:has(> input[name='policyActive']:checked) {
+  border-color: color-mix(in srgb, var(--gold) 44%, var(--line));
+  background: color-mix(in srgb, var(--gold) 7%, var(--surface));
+}
+
+:root body app-advances app-modal-dialog label.form-group:has(> input[name='policyActive']:focus-visible) {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 18%, transparent);
+}
+
+/* Scoped custom switch: this only affects the policy-active checkbox. */
+:root body app-advances app-modal-dialog label.form-group > input[name='policyActive'] {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 26px;
+  min-width: 46px;
+  min-height: 26px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--line-strong, var(--line));
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 12px 50%, var(--surface) 0 8px, transparent 9px),
+    color-mix(in srgb, var(--muted) 30%, var(--surface-muted));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--line) 45%, transparent);
+  cursor: pointer;
+  vertical-align: middle;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+:root body app-advances app-modal-dialog label.form-group > input[name='policyActive']:checked {
+  border-color: var(--gold);
+  background:
+    radial-gradient(circle at calc(100% - 12px) 50%, #fff 0 8px, transparent 9px),
+    var(--gold);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 70%, transparent);
+}
+
+:root body app-advances app-modal-dialog label.form-group > input[name='policyActive']:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px var(--gold-glow);
+}
+
+:root body app-advances app-modal-dialog label.form-group > input[name='policyActive']:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+@media (forced-colors: active) {
+  :root body app-advances app-modal-dialog label.form-group > input[name='policyActive'] {
+    appearance: auto;
+    -webkit-appearance: auto;
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    min-height: 22px;
+    flex-basis: 22px;
+    accent-color: Highlight;
+    forced-color-adjust: auto;
+  }
+}

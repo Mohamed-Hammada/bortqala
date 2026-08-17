@@ -20,7 +20,8 @@ public class AccountingApi {
             boolean active,
             long createdAt,
             long updatedAt
-    ) {}
+    ) {
+    }
 
     public record AccountPayload(
             @NotBlank String code,
@@ -30,7 +31,8 @@ public class AccountingApi {
             boolean isHeader,
             String currency,
             boolean active
-    ) {}
+    ) {
+    }
 
     public record JournalEntryLineResponse(
             String id,
@@ -43,7 +45,8 @@ public class AccountingApi {
             String costCenterId,
             String projectId,
             String departmentId
-    ) {}
+    ) {
+    }
 
     public record JournalEntryLinePayload(
             @NotBlank String accountId,
@@ -54,7 +57,8 @@ public class AccountingApi {
             String costCenterId,
             String projectId,
             String departmentId
-    ) {}
+    ) {
+    }
 
     public record JournalEntryPayload(
             String entryNumber,
@@ -64,7 +68,8 @@ public class AccountingApi {
             String fiscalPeriodId,
             String currency,
             @NotNull @Size(min = 2) List<JournalEntryLinePayload> lines
-    ) {}
+    ) {
+    }
 
     public record JournalEntryResponse(
             String id,
@@ -89,13 +94,15 @@ public class AccountingApi {
             BigDecimal totalCredit,
             long createdAt,
             long updatedAt
-    ) {}
+    ) {
+    }
 
     public record JournalActionRequest(
             @NotBlank String operationId,
             Long expectedVersion,
             String reason
-    ) {}
+    ) {
+    }
 
     public record JournalEntryPageResponse(
             List<JournalEntryResponse> content,
@@ -103,7 +110,9 @@ public class AccountingApi {
             int pageSize,
             long totalElements,
             int totalPages
-    ) {}
+    ) {
+    }
 
-    public record NumberingSettings(boolean automaticNumbering) {}
+    public record NumberingSettings(boolean automaticNumbering) {
+    }
 }

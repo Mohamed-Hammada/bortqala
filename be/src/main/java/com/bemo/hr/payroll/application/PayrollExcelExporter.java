@@ -2,7 +2,9 @@ package com.bemo.hr.payroll.application;
 
 import com.bemo.hr.payroll.api.PayrollApi;
 import com.bemo.hr.reporting.application.ExcelExportOptions;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +13,10 @@ import java.io.IOException;
 
 @Component
 public class PayrollExcelExporter {
+
+    private static String safe(String value) {
+        return com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(value);
+    }
 
     public byte[] export(PayrollApi.SheetResponse sheet, ExcelExportOptions options) {
         try (var workbook = new XSSFWorkbook(); var out = new ByteArrayOutputStream()) {
@@ -88,9 +94,5 @@ public class PayrollExcelExporter {
         } catch (IOException e) {
             throw new RuntimeException("Failed to generate Payroll Excel export", e);
         }
-    }
-
-    private static String safe(String value) {
-        return com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(value);
     }
 }

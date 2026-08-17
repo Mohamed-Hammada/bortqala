@@ -255,6 +255,8 @@
                   <option [ngValue]="cat.id">{{ cat.name }}</option>
                 }
               </select>
+          <!-- BORTQALA_FEEDBACK_20260816_CATEGORY_LINK -->
+          <a class="field-inline-link" href="/categories">{{ i18n.locale().toLowerCase().startsWith('ar') ? 'إدارة التصنيفات / إضافة تصنيف جديد' : 'Manage categories / Add a category' }}</a>
             </div>
 
             @if (accessLoading()) {
@@ -547,7 +549,7 @@
             } @else if (validationError()) {
               <div class="alert error">{{ validationError() }}</div>
             } @else if (validationResult()) {
-              @if (validationOk()) {
+              @if (validationOk() && !accessReasonEditing()) {
                 <p class="validation-ok">✅ {{ i18n.t('access.validateOk') }}</p>
               } @else {
                 @if (validationResult()!.errors.length) {
@@ -571,7 +573,7 @@
                     }
                   </div>
                 }
-                @if (validationNeedsAck()) {
+                @if ((validationNeedsAck()) || accessReasonEditing()) {
                   <div class="ack-reason-box">
                     <label for="ack-reason" class="ack-reason-label">
                       {{ i18n.t('access.ackReasonLabel') }}
@@ -582,7 +584,7 @@
                       [value]="ackReason()"
                       (input)="ackReason.set($any($event.target).value)"
                       [placeholder]="i18n.t('access.ackReasonPlaceholder')"
-                    />
+                     (focus)="accessReasonEditing.set(true)" (blur)="finishAccessReasonEditing()" />
                     @if (!validationAckSatisfied()) {
                       <small class="hint warning-text">{{ i18n.t('access.ackReasonRequired') }}</small>
                     }
@@ -611,3 +613,5 @@
   </app-modal-dialog>
 
 </section>
+<!-- BORTQALA_RUNTIME_20260816_V2_USER_REASON_FIELD -->
+<!-- BORTQALA_CORRECTIVE_20260816_USER_REASON_FIELD: keep override reason editor mounted until the user finishes typing. -->

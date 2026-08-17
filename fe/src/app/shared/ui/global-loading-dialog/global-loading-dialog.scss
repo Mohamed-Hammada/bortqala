@@ -1,0 +1,60 @@
+:host {
+  position: relative;
+  z-index: 10050;
+}
+
+.global-loading-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(2px);
+  cursor: wait;
+}
+
+.global-loading-dialog {
+  position: fixed;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  z-index: 10051;
+  min-width: min(260px, calc(100vw - 32px));
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+:host-context([dir='rtl']) .global-loading-dialog {
+  transform: translate(50%, -50%);
+}
+
+.global-loading-spinner {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border: 3px solid var(--line);
+  border-block-start-color: var(--gold);
+  border-radius: 50%;
+  animation: global-loading-spin 0.8s linear infinite;
+}
+
+@keyframes global-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .global-loading-spinner {
+    animation-duration: 1.6s;
+  }
+}

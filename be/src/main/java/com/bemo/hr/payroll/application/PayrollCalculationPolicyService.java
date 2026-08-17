@@ -21,6 +21,13 @@ public class PayrollCalculationPolicyService {
         this.payrollCalculationPolicyRepository = payrollCalculationPolicyRepository;
     }
 
+    private static boolean rangesOverlap(LocalDate leftStart, LocalDate leftEnd, LocalDate rightStart, LocalDate rightEnd) {
+        if (leftStart == null) return false;
+        LocalDate lEnd = leftEnd == null ? LocalDate.MAX : leftEnd;
+        LocalDate rEnd = rightEnd == null ? LocalDate.MAX : rightEnd;
+        return !lEnd.isBefore(rightStart) && !rEnd.isBefore(leftStart);
+    }
+
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public PayrollCalculationPolicy effectivePolicy(LocalDate date) {
         List<PayrollCalculationPolicy> policies = payrollCalculationPolicyRepository.findByActiveTrueOrderByEffectiveFromDesc();
@@ -54,12 +61,5 @@ public class PayrollCalculationPolicyService {
         }
         return payrollCalculationPolicyRepository.save(
                 new PayrollCalculationPolicy(name, effectiveFrom, effectiveTo, divisor, multiplier));
-    }
-
-    private static boolean rangesOverlap(LocalDate leftStart, LocalDate leftEnd, LocalDate rightStart, LocalDate rightEnd) {
-        if (leftStart == null) return false;
-        LocalDate lEnd = leftEnd == null ? LocalDate.MAX : leftEnd;
-        LocalDate rEnd = rightEnd == null ? LocalDate.MAX : rightEnd;
-        return !lEnd.isBefore(rightStart) && !rEnd.isBefore(leftStart);
     }
 }

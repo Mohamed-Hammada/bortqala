@@ -1,0 +1,25 @@
+{
+  "projectId": "e95d5ad8-8299-4359-9982-008c2132fd7a",
+  "type": "frontend",
+  "name": "Procurement document lifecycle and three-way matching verification",
+  "description": "User opens the procurement workspace, inspects Purchase Orders, GRNs, Supplier Invoices, and checks 3-Way Match variance resolution.",
+  "priority": "p0",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to the Procurement section from the sidebar navigation menu"
+    },
+    {
+      "type": "assertion",
+      "description": "Verify the procurement tab bar is visible containing Purchase Orders, Goods Receipts, Supplier Invoices, and Payments tabs"
+    },
+    {
+      "type": "action",
+      "description": "Click on the Supplier Invoices tab and select an invoice with a 3-Way Match badge"
+    },
+    {
+      "type": "assertion",
+      "description": "Verify the 3-Way Match resolution modal opens showing unit price, quantity tolerance variance breakdown, and resolution options"
+    }
+  ]
+}

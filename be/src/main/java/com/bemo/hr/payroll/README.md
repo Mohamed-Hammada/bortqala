@@ -1,17 +1,9 @@
-# Payroll capability / مخرجات الأجور
+# Payroll integrity / سلامة الرواتب
 
-**EN:** Produces payroll-ready attendance totals for monthly and half-month cycles. It never executes payments.
+The authoritative salary lifecycle is `DRAFT → CALCULATED → REVIEWED → APPROVED → POSTED → PAID`. Generic status mutation is forbidden. Calculation freezes the source snapshot, transition commands advance one step, payment requires `POSTED`, and payment reversal requires `PAID`.
 
-**AR:** تنتج إجماليات حضور جاهزة للأجور للدورات الشهرية ونصف الشهرية، ولا تنفذ أي دفع مالي.
+Salary mutations lock the row and payment/reversal requests include the expected entity version. Creator, payer, and reverser are stored separately in `created_by`, `paid_by`, and `reversed_by`; reversal time and reason are preserved independently from the original note.
 
-**EN:** Payroll resolves employee advance deductions through the shared installment engine, posts the employee-ledger settlement and scheduled-advance allocation transactionally, and reverses both when a salary payment is reversed.
+دورة الراتب المعتمدة هي `مسودة → محسوب → مراجع → معتمد → مرحّل → مصروف`. لا يسمح بتغيير الحالة بشكل عام أو بتجاوز أي خطوة. تؤدي عملية الحساب إلى تجميد لقطة المصدر، ولا يتم الصرف إلا من الحالة المرحلة، ولا يتم العكس إلا بعد الصرف.
 
-**AR:** تحتسب الرواتب خصم سلف الموظفين من محرك الأقساط الموحد، وتسجل تسوية دفتر الموظف وتوزيعها على السلف المجدولة داخل معاملة واحدة، وتعكس الجانبين عند التراجع عن صرف الراتب.
-
-**EN:** Payment recording and approval/posting transitions require an approved attendance report and no open payroll-blocking exception for the affected employee or report.
-
-**EN:** Calculation becomes deterministic when a period is calculated, reviewed, approved, posted, or paid. The service captures one tenant-scoped immutable `PayrollInputSnapshot` per employee/period before persisting results. Salary, attendance minutes, manual adjustments, advance deduction, and the effective policy version/divisor/overtime multiplier are frozen; replay reuses the same snapshot. Effective-dated policies are managed at `/api/v1/payroll/calculation-policies`.
-
-**AR:** يصبح احتساب الفترة حتمياً عند الانتقال إلى الاحتساب أو المراجعة أو الاعتماد أو الترحيل أو الصرف. تحفظ الخدمة لقطة `PayrollInputSnapshot` ثابتة ومعزولة للمستأجر لكل موظف وفترة قبل تثبيت النتائج، وتشمل الراتب ودقائق الحضور والتعديلات وخصم السلفة وإصدار سياسة الرواتب وقيم المقسوم ومعامل الإضافي. أي إعادة تنفيذ تستخدم اللقطة نفسها، وتدار السياسات المؤرخة عبر `/api/v1/payroll/calculation-policies`.
-
-**AR:** يتطلب تسجيل الصرف وانتقالات الاعتماد/الترحيل تقرير حضور معتمداً وألا توجد استثناءات حضور مفتوحة تمنع راتب الموظف أو التقرير.
+تقفل عمليات التعديل صف الراتب، وترسل طلبات الصرف والعكس رقم الإصدار المتوقع. تُحفظ هوية المنشئ والقائم بالصرف والقائم بالعكس في حقول منفصلة، كما يُحفظ وقت العكس وسببه دون تغيير الملاحظة أو هوية المنشئ.

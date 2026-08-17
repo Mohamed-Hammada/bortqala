@@ -2,16 +2,21 @@ package com.bemo.hr.product.trial;
 
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import com.bemo.hr.shared.security.*;
+import com.bemo.hr.shared.security.TenantApplication;
+import com.bemo.hr.shared.security.TenantApplicationRepository;
+import com.bemo.hr.shared.security.TenantContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tools.jackson.databind.*;
-import java.time.*;
-import java.util.*;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
-@Service @RequiredArgsConstructor
+import java.time.Instant;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
 public class TrialDemoService {
     private final TenantApplicationRepository tenantRepository;
     private final DemoTenantTemplateRepository templateRepository;
@@ -20,7 +25,9 @@ public class TrialDemoService {
     private final AuditService auditService;
 
     @Transactional(readOnly = true)
-    public TrialDemoApi.StatusResponse status() { return view(current()); }
+    public TrialDemoApi.StatusResponse status() {
+        return view(current());
+    }
 
     @Transactional(readOnly = true)
     public List<TrialDemoApi.TemplateResponse> templates() {
@@ -30,7 +37,9 @@ public class TrialDemoService {
 
     @Transactional
     public TrialDemoApi.StatusResponse start(TrialDemoApi.StartRequest request, String actor) {
-        TenantApplication app = current(); Instant now = Instant.now(); DemoTenantTemplate template = null;
+        TenantApplication app = current();
+        Instant now = Instant.now();
+        DemoTenantTemplate template = null;
         if (request.operationId().equals(app.getLastTrialOperationId())) return view(app);
         if (request.demo()) template = template(request.templateCode(), request.templateVersion());
         app.startTrial(now, now.plus(request.days(), java.time.temporal.ChronoUnit.DAYS), request.demo(),
@@ -44,8 +53,11 @@ public class TrialDemoService {
 
     @Transactional
     public TrialDemoApi.StatusResponse convert(TrialDemoApi.ConvertRequest request, String actor) {
-        TenantApplication app = current(); if(request.operationId().equals(app.getLastConversionOperationId())) return view(app);
-        String id = app.getId(); app.convertTrial(Instant.now(), request.operationId()); tenantRepository.save(app);
+        TenantApplication app = current();
+        if (request.operationId().equals(app.getLastConversionOperationId())) return view(app);
+        String id = app.getId();
+        app.convertTrial(Instant.now(), request.operationId());
+        tenantRepository.save(app);
         auditService.record("CONVERT_TRIAL", "TENANT_APPLICATION", id, actor,
                 "{\"operationId\":\"" + request.operationId() + "\",\"tenantPreserved\":true}", null);
         return view(app);
@@ -71,12 +83,14 @@ public class TrialDemoService {
         sampleRepository.deleteOwnedByTenant(app.getId());
         try {
             JsonNode rows = objectMapper.readTree(template.getSampleJson());
-            for (JsonNode row : rows) sampleRepository.save(new DemoSampleRecord(template.getCode(), template.getTemplateVersion(),
-                    row.path("key").asText(), row.path("payload").toString(), operationId, now));
+            for (JsonNode row : rows)
+                sampleRepository.save(new DemoSampleRecord(template.getCode(), template.getTemplateVersion(),
+                        row.path("key").asText(), row.path("payload").toString(), operationId, now));
         } catch (Exception ex) {
             throw error("DEMO_TEMPLATE_INVALID", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        app.recordDemoReset(operationId, actor, now, template.getCode(), template.getTemplateVersion()); tenantRepository.save(app);
+        app.recordDemoReset(operationId, actor, now, template.getCode(), template.getTemplateVersion());
+        tenantRepository.save(app);
         auditService.record("RESET_DEMO", "TENANT_APPLICATION", app.getId(), actor,
                 "{\"template\":\"" + template.getCode() + "\",\"version\":" + template.getTemplateVersion() + ",\"operationId\":\"" + operationId + "\"}", null);
     }
@@ -88,15 +102,25 @@ public class TrialDemoService {
                 .orElseThrow(() -> error("DEMO_TEMPLATE_NOT_FOUND", HttpStatus.NOT_FOUND));
     }
 
-    private TenantApplication current() { return tenantRepository.findById(TenantContext.require()).orElseThrow(() -> error("TENANT_NOT_FOUND", HttpStatus.NOT_FOUND)); }
+    private TenantApplication current() {
+        return tenantRepository.findById(TenantContext.require()).orElseThrow(() -> error("TENANT_NOT_FOUND", HttpStatus.NOT_FOUND));
+    }
+
     private TrialDemoApi.StatusResponse view(TenantApplication app) {
-        Instant now = Instant.now(); String state = app.isTrialExpired(now) ? "EXPIRED" : app.getCommercialState();
+        Instant now = Instant.now();
+        String state = app.isTrialExpired(now) ? "EXPIRED" : app.getCommercialState();
         List<TrialDemoApi.SampleResponse> samples = app.isDemoTenant() ? sampleRepository.findAllByOrderByRecordKey().stream()
-                .map(r -> new TrialDemoApi.SampleResponse(r.getRecordKey(), r.getPayloadJson())).toList() : List.of();
+                                                                         .map(r -> new TrialDemoApi.SampleResponse(r.getRecordKey(), r.getPayloadJson())).toList() : List.of();
         return new TrialDemoApi.StatusResponse(app.getId(), state, epoch(app.getTrialStartedAt()), epoch(app.getTrialEndsAt()), epoch(app.getConvertedAt()),
                 !"EXPIRED".equals(state), app.isDemoTenant(), app.getDemoTemplateCode(), app.getDemoTemplateVersion(),
                 epoch(app.getLastDemoResetAt()), app.getLastDemoResetBy(), samples.size(), samples);
     }
-    private long epoch(Instant value) { return value == null ? 0 : value.toEpochMilli(); }
-    private BusinessRuleException error(String code, HttpStatus status) { return new BusinessRuleException(code, code, status); }
+
+    private long epoch(Instant value) {
+        return value == null ? 0 : value.toEpochMilli();
+    }
+
+    private BusinessRuleException error(String code, HttpStatus status) {
+        return new BusinessRuleException(code, code, status);
+    }
 }

@@ -8,7 +8,9 @@ import java.util.List;
 
 public interface PartnerLedgerEntryRepository extends JpaRepository<PartnerLedgerEntry, String> {
     List<PartnerLedgerEntry> findAllByOrderByOccurredAtDesc();
+
     List<PartnerLedgerEntry> findByPartyIdOrderByOccurredAtDesc(String partyId);
+
     @Query("select coalesce(sum(e.amountDelta), 0) from PartnerLedgerEntry e where e.partyId = :partyId")
     BigDecimal balance(String partyId);
 }

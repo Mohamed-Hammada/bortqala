@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260816-v254-biometric-reimport-auto-employees-i18n
+      author: OpenAI
+      comment: Arabic and English translations for biometric reimport after reversal, auto-employee provisioning, and related exception codes.
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: "SELECT COUNT(*) FROM translations WHERE id LIKE 'v254-%'"
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260816_v254_biometric_reimport_auto_employees_i18n.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v254-%'" }
+
+  - changeSet:
+      id: 20260816-v254-device-source-locked-hint-update
+      author: OpenAI
+      comment: Update deviceSourceLockedHint to clarify auto-create employee configuration availability.
+      changes:
+        - update:
+            tableName: translations
+            columns:
+              - column:
+                  name: text_value
+                  value: 'هوية مصدر الجهاز ثابتة؛ يمكنك تعديل إعداد إنشاء الموظفين أدناه.'
+            where: "translation_key = 'imports.deviceSourceLockedHint' AND locale = 'ar-EG'"
+        - update:
+            tableName: translations
+            columns:
+              - column:
+                  name: text_value
+                  value: 'Device source identity is immutable - you can adjust auto-employee creation settings below.'
+            where: "translation_key = 'imports.deviceSourceLockedHint' AND locale = 'en-US'"
+      rollback:
+        - update:
+            tableName: translations
+            columns:
+              - column:
+                  name: text_value
+                  value: 'مصدر الجهاز ثابت: لا يمكن تغيير نوعه أو تعطيله.'
+            where: "translation_key = 'imports.deviceSourceLockedHint' AND locale = 'ar-EG'"
+        - update:
+            tableName: translations
+            columns:
+              - column:
+                  name: text_value
+                  value: 'Device sources are fixed: their type and active state cannot be changed.'
+            where: "translation_key = 'imports.deviceSourceLockedHint' AND locale = 'en-US'"

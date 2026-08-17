@@ -1,15 +1,6 @@
 package com.bemo.hr.shared.shortcut.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -18,11 +9,11 @@ import java.util.UUID;
 
 @Entity
 @Table(
-    name = "user_shortcut_profiles",
-    uniqueConstraints = @UniqueConstraint(
-        name = "uk_user_shortcut_profile_app_user",
-        columnNames = {"app_id", "user_id"}
-    )
+        name = "user_shortcut_profiles",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_user_shortcut_profile_app_user",
+                columnNames = {"app_id", "user_id"}
+        )
 )
 @Getter
 public class UserShortcutProfile {
@@ -50,7 +41,8 @@ public class UserShortcutProfile {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected UserShortcutProfile() {}
+    protected UserShortcutProfile() {
+    }
 
     public UserShortcutProfile(String userId) {
         this.id = UUID.randomUUID().toString();

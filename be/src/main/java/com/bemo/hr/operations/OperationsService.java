@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class OperationsService {
-    public record ValuedMovement(String movementId, BigDecimal unitCost, BigDecimal totalCost, String journalEntryId) { }
     private final InventoryItemRepository inventoryItemRepository;
     private final StockMovementRepository stockMovementRepository;
     private final InventoryMovementCostRepository inventoryMovementCostRepository;
@@ -41,6 +40,20 @@ public class OperationsService {
     private final InventoryValuationService inventoryValuationService;
     private final com.bemo.hr.operations.application.WarehouseInventoryService warehouseInventoryService;
     private final com.bemo.hr.operations.application.ItemLotSerialService itemLotSerialService;
+
+    private static String defaultDocumentType(String op) {
+        return switch (op) {
+            case "SUPPLY_RECEIPT", "PROCESSING_INTAKE" -> "GOODS_RECEIPT";
+            case "PROCESSING_DELIVERY", "EXPORT_SALE", "SORTING_SALE" -> "DELIVERY_NOTE";
+            case "ADJUSTMENT" -> "ADJUSTMENT";
+            case "PAYMENT" -> "SUPPLIER_PAYMENT";
+            default -> null;
+        };
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
 
     public byte[] export(com.bemo.hr.reporting.application.ExcelExportOptions options) {
         return operationsExcelExporter.export(snapshot(), inventoryValuationService.report(), options);
@@ -232,7 +245,8 @@ public class OperationsService {
 
     @Transactional
     public OperationsApi.ItemView createItem(OperationsApi.ItemRequest request) {
-        if (inventoryItemRepository.existsByCodeIgnoreCase(request.code())) throw new BusinessRuleException("Item code already exists.", "OPS_ITEM_CODE_EXISTS", HttpStatus.CONFLICT);
+        if (inventoryItemRepository.existsByCodeIgnoreCase(request.code()))
+            throw new BusinessRuleException("Item code already exists.", "OPS_ITEM_CODE_EXISTS", HttpStatus.CONFLICT);
         var item = inventoryItemRepository.save(new InventoryItem(request.code(), request.name(), request.itemType(), request.unitCode()));
         item.configureReorder(request.reorderPoint(), request.reorderQuantity());
         if (request.categoryId() != null || request.uomId() != null) {
@@ -244,8 +258,10 @@ public class OperationsService {
     @Transactional
     public OperationsApi.ItemView updateItem(String id, OperationsApi.ItemRequest request) {
         var item = requireItem(id);
-        if (request.version() == null || request.version() != item.getVersion()) throw new BusinessRuleException("This item changed. Refresh and retry.", "OPS_ITEM_VERSION_CONFLICT", HttpStatus.CONFLICT);
-        if (inventoryItemRepository.existsByCodeIgnoreCaseAndIdNot(request.code(), id)) throw new BusinessRuleException("Item code already exists.", "OPS_ITEM_CODE_EXISTS", HttpStatus.CONFLICT);
+        if (request.version() == null || request.version() != item.getVersion())
+            throw new BusinessRuleException("This item changed. Refresh and retry.", "OPS_ITEM_VERSION_CONFLICT", HttpStatus.CONFLICT);
+        if (inventoryItemRepository.existsByCodeIgnoreCaseAndIdNot(request.code(), id))
+            throw new BusinessRuleException("Item code already exists.", "OPS_ITEM_CODE_EXISTS", HttpStatus.CONFLICT);
         item.update(request.code(), request.name(), request.itemType(), request.unitCode(), request.active());
         item.configureReorder(request.reorderPoint(), request.reorderQuantity());
         if (request.categoryId() != null || request.uomId() != null) {
@@ -269,11 +285,12 @@ public class OperationsService {
         String op = request.operationType() == null ? "" : request.operationType().toUpperCase();
         validateDocumentReferences(request, op);
         if (request.quantityDelta().signum() != 0) {
-            if (request.itemId() == null || request.itemId().isBlank()) throw new BusinessRuleException("An inventory item is required for quantity movement.", "OPS_MOVEMENT_ITEM_REQUIRED", HttpStatus.CONFLICT);
+            if (request.itemId() == null || request.itemId().isBlank())
+                throw new BusinessRuleException("An inventory item is required for quantity movement.", "OPS_MOVEMENT_ITEM_REQUIRED", HttpStatus.CONFLICT);
             requireItem(request.itemId());
             BigDecimal qty = request.quantityDelta().abs();
             if (op.equals("PROCESSING_INTAKE") || op.equals("PROCESSING_DELIVERY")
-                || op.equals("EXPORT_SALE") || op.equals("SORTING_SALE") || op.equals("DISPOSAL")) {
+                    || op.equals("EXPORT_SALE") || op.equals("SORTING_SALE") || op.equals("DISPOSAL")) {
                 qty = qty.negate();
             }
             var sm = stockMovementRepository.save(new StockMovement(request.itemId(), normalizeId(request.partyId()), request.operationType(),
@@ -289,7 +306,8 @@ public class OperationsService {
         }
         if (request.amountDelta().signum() != 0) {
             var partyId = normalizeId(request.partyId());
-            if (partyId == null) throw new BusinessRuleException("A business party is required for a financial movement.", "OPS_MOVEMENT_PARTY_REQUIRED", HttpStatus.CONFLICT);
+            if (partyId == null)
+                throw new BusinessRuleException("A business party is required for a financial movement.", "OPS_MOVEMENT_PARTY_REQUIRED", HttpStatus.CONFLICT);
             requireParty(partyId);
             partnerLedgerEntryRepository.save(new PartnerLedgerEntry(partyId, request.operationType(), request.amountDelta(),
                     request.referenceCode(), request.note(), request.occurredAt(), actor));
@@ -385,7 +403,8 @@ public class OperationsService {
 
     @Transactional
     public OperationsApi.Snapshot recordAdvance(OperationsApi.AdvanceRequest request, String actor) {
-        if (request.amountDelta().signum() == 0) throw new BusinessRuleException("Advance amount cannot be zero.", "OPS_ADVANCE_AMOUNT_ZERO", HttpStatus.CONFLICT);
+        if (request.amountDelta().signum() == 0)
+            throw new BusinessRuleException("Advance amount cannot be zero.", "OPS_ADVANCE_AMOUNT_ZERO", HttpStatus.CONFLICT);
         var employee = employeeRepository.findById(request.employeeId())
                 .orElseThrow(() -> new NotFoundException("Employee not found.", "HRCFG_EMPLOYEE_NOT_FOUND"));
         var category = attendanceCategoryRepository.findById(employee.getCategoryId())
@@ -408,7 +427,8 @@ public class OperationsService {
         }
         var employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new NotFoundException("الموظف غير موجود.", "EMPLOYEE_NOT_FOUND"));
-        if (!employee.isActive()) throw new BusinessRuleException("لا يمكن صرف سلفة لموظف غير نشط.", "ADVANCE_INACTIVE_EMPLOYEE", HttpStatus.CONFLICT);
+        if (!employee.isActive())
+            throw new BusinessRuleException("لا يمكن صرف سلفة لموظف غير نشط.", "ADVANCE_INACTIVE_EMPLOYEE", HttpStatus.CONFLICT);
         var category = attendanceCategoryRepository.findById(employee.getCategoryId())
                 .orElseThrow(() -> new NotFoundException("فئة الموظف غير موجودة.", "HRCFG_EMPLOYEE_CATEGORY_NOT_FOUND"));
         if (!category.isAllowsEmployeeAdvances()) {
@@ -432,14 +452,20 @@ public class OperationsService {
     private InventoryItem requireItem(String id) {
         return inventoryItemRepository.findById(id).orElseThrow(() -> new NotFoundException("Inventory item not found.", "OPS_ITEM_NOT_FOUND"));
     }
+
     private BusinessParty requireParty(String id) {
         return businessPartyRepository.findById(id).orElseThrow(() -> new NotFoundException("Business party not found.", "PTY_NOT_FOUND"));
     }
-    private String normalizeId(String id) { return id == null || id.isBlank() ? null : id; }
+
+    private String normalizeId(String id) {
+        return id == null || id.isBlank() ? null : id;
+    }
+
     private OperationsApi.ItemView itemView(InventoryItem item, BigDecimal balance) {
         return itemView(item, balance, itemCategoryRepository.findAll().stream().collect(Collectors.toMap(ItemCategory::getId, Function.identity())),
                 unitOfMeasureRepository.findAll().stream().collect(Collectors.toMap(UnitOfMeasure::getId, Function.identity())));
     }
+
     private OperationsApi.ItemView itemView(InventoryItem item, BigDecimal balance,
                                             Map<String, ItemCategory> categoryMap,
                                             Map<String, UnitOfMeasure> uomMap) {
@@ -454,8 +480,8 @@ public class OperationsService {
 
     @Transactional
     public ValuedMovement recordSalesDelivery(String itemId, String customerId, String warehouseId,
-                                               String reservationId, BigDecimal quantity, String deliveryNumber,
-                                               Instant occurredAt, String actor) {
+                                              String reservationId, BigDecimal quantity, String deliveryNumber,
+                                              Instant occurredAt, String actor) {
         requireItem(itemId);
         if (quantity == null || quantity.signum() <= 0) {
             throw new BusinessRuleException("Sales delivery quantity must be positive.",
@@ -502,26 +528,19 @@ public class OperationsService {
                 "Customer return " + returnNumber + " qty: " + quantity, null);
         return new ValuedMovement(movement.getId(), cost.getUnitCost(), cost.getValueEffect().abs(), cost.getJournalEntryId());
     }
+
     private OperationsApi.ItemCategoryView categoryView(ItemCategory c) {
         return new OperationsApi.ItemCategoryView(c.getId(), c.getName(), c.getDescription(), c.isActive(),
                 c.getCreatedAt(), c.getUpdatedAt());
     }
+
     private OperationsApi.UnitOfMeasureView uomView(UnitOfMeasure u) {
         return new OperationsApi.UnitOfMeasureView(u.getId(), u.getName(), u.getAbbreviation(), u.getDescription(), u.isActive(),
                 u.getCreatedAt(), u.getUpdatedAt());
     }
+
     private String getCurrentAppId() {
         return TenantContext.require();
-    }
-
-    private static String defaultDocumentType(String op) {
-        return switch (op) {
-            case "SUPPLY_RECEIPT", "PROCESSING_INTAKE" -> "GOODS_RECEIPT";
-            case "PROCESSING_DELIVERY", "EXPORT_SALE", "SORTING_SALE" -> "DELIVERY_NOTE";
-            case "ADJUSTMENT" -> "ADJUSTMENT";
-            case "PAYMENT" -> "SUPPLIER_PAYMENT";
-            default -> null;
-        };
     }
 
     private void validateDocumentReferences(OperationsApi.TransactionRequest request, String op) {
@@ -572,17 +591,38 @@ public class OperationsService {
     }
 
     public BigDecimal productionIssueCost(String orderNumber, String itemId) {
-        return stockMovementRepository.findByOperationTypeAndReferenceCodeAndItemId(
-                        "PRODUCTION_ISSUE", orderNumber, itemId).stream()
+        return productionIssueEvidence(orderNumber, itemId).totalCost();
+    }
+
+    public ProductionIssueEvidence productionIssueEvidence(String orderNumber, String itemId) {
+        var issues = stockMovementRepository.findByOperationTypeAndReferenceCodeAndItemId(
+                "PRODUCTION_ISSUE", orderNumber, itemId);
+        if (issues.isEmpty()) {
+            throw new BusinessRuleException("Original production issue valuation evidence was not found.",
+                    "MFG_ISSUE_VALUATION_EVIDENCE_REQUIRED", HttpStatus.CONFLICT);
+        }
+        BigDecimal quantity = issues.stream().map(StockMovement::getQuantityDelta).map(BigDecimal::abs)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        var issueCosts = issues.stream()
                 .map(StockMovement::getId)
                 .map(inventoryMovementCostRepository::findByMovementId)
+                .toList();
+        BigDecimal totalCost = issueCosts.stream()
                 .flatMap(Optional::stream)
                 .map(InventoryMovementCost::getValueEffect)
                 .map(BigDecimal::abs)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        long valuedMovements = issueCosts.stream().filter(Optional::isPresent).count();
+        if (quantity.signum() <= 0 || valuedMovements != issues.size()) {
+            throw new BusinessRuleException("Original production issue valuation evidence is incomplete.",
+                    "MFG_ISSUE_VALUATION_EVIDENCE_REQUIRED", HttpStatus.CONFLICT);
+        }
+        return new ProductionIssueEvidence(quantity, totalCost);
     }
 
-    private static boolean isBlank(String value) {
-        return value == null || value.isBlank();
+    public record ValuedMovement(String movementId, BigDecimal unitCost, BigDecimal totalCost, String journalEntryId) {
+    }
+
+    public record ProductionIssueEvidence(BigDecimal issuedQuantity, BigDecimal totalCost) {
     }
 }

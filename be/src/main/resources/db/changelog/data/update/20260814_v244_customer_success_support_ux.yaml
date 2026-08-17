@@ -1,0 +1,134 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260814_v244_001_customer_success_support_ux
+      author: bemo-erp
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: SELECT COUNT(*) FROM translations WHERE id LIKE 'v244-%'
+      changes:
+        - loadData:
+            file: db/changelog/data/insert/files/20260814_v244_customer_success_support_ux.csv
+            separator: ";"
+            tableName: translations
+            encoding: UTF-8
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+        - sql:
+            sql: |
+              UPDATE translations SET text_value='Feedback & suggestions'
+              WHERE app_id IS NULL AND translation_key='support.feedback' AND locale='en-US';
+              UPDATE translations SET text_value='الملاحظات والاقتراحات'
+              WHERE app_id IS NULL AND translation_key='support.feedback' AND locale='ar-EG';
+
+              UPDATE translations SET text_value='Customer success indicator'
+              WHERE app_id IS NULL AND translation_key='support.health' AND locale='en-US';
+              UPDATE translations SET text_value='مؤشر نجاح العميل'
+              WHERE app_id IS NULL AND translation_key='support.health' AND locale='ar-EG';
+
+              UPDATE translations SET text_value='Update indicator'
+              WHERE app_id IS NULL AND translation_key='support.calculate' AND locale='en-US';
+              UPDATE translations SET text_value='تحديث المؤشر'
+              WHERE app_id IS NULL AND translation_key='support.calculate' AND locale='ar-EG';
+
+              UPDATE translations SET text_value='Customer success score'
+              WHERE app_id IS NULL AND translation_key='support.score' AND locale='en-US';
+              UPDATE translations SET text_value='درجة نجاح العميل'
+              WHERE app_id IS NULL AND translation_key='support.score' AND locale='ar-EG';
+
+              UPDATE translations SET text_value='What drives the score and what needs attention'
+              WHERE app_id IS NULL AND translation_key='support.reasons' AND locale='en-US';
+              UPDATE translations SET text_value='العوامل المؤثرة في المؤشر وما يحتاج إلى متابعة'
+              WHERE app_id IS NULL AND translation_key='support.reasons' AND locale='ar-EG';
+
+              UPDATE translations SET text_value='Activation progress'
+              WHERE app_id IS NULL AND translation_key='health.activation' AND locale='en-US';
+              UPDATE translations SET text_value='تقدم التفعيل'
+              WHERE app_id IS NULL AND translation_key='health.activation' AND locale='ar-EG';
+
+              UPDATE translations SET text_value='Usage in the last 7 days'
+              WHERE app_id IS NULL AND translation_key='health.usage' AND locale='en-US';
+              UPDATE translations SET text_value='النشاط خلال آخر 7 أيام'
+              WHERE app_id IS NULL AND translation_key='health.usage' AND locale='ar-EG';
+
+              UPDATE translations SET text_value='Workflow adoption in the last 30 days'
+              WHERE app_id IS NULL AND translation_key='health.adoption' AND locale='en-US';
+              UPDATE translations SET text_value='تبني مسارات العمل خلال آخر 30 يوماً'
+              WHERE app_id IS NULL AND translation_key='health.adoption' AND locale='ar-EG';
+
+              UPDATE translations SET text_value='Data readiness'
+              WHERE app_id IS NULL AND translation_key='health.dataQuality' AND locale='en-US';
+              UPDATE translations SET text_value='جاهزية البيانات'
+              WHERE app_id IS NULL AND translation_key='health.dataQuality' AND locale='ar-EG';
+
+              UPDATE translations SET text_value='Operational stability in the last 7 days'
+              WHERE app_id IS NULL AND translation_key='health.operational' AND locale='en-US';
+              UPDATE translations SET text_value='الاستقرار التشغيلي خلال آخر 7 أيام'
+              WHERE app_id IS NULL AND translation_key='health.operational' AND locale='ar-EG';
+
+              UPDATE translations SET text_value='Open urgent support load'
+              WHERE app_id IS NULL AND translation_key='health.support' AND locale='en-US';
+              UPDATE translations SET text_value='ضغط تذاكر الدعم العاجلة المفتوحة'
+              WHERE app_id IS NULL AND translation_key='health.support' AND locale='ar-EG';
+
+              UPDATE translations SET text_value='Subscription and renewal state'
+              WHERE app_id IS NULL AND translation_key='health.commercial' AND locale='en-US';
+              UPDATE translations SET text_value='حالة الاشتراك والتجديد'
+              WHERE app_id IS NULL AND translation_key='health.commercial' AND locale='ar-EG';
+      rollback:
+        - sql:
+            sql: |
+              DELETE FROM translations WHERE id LIKE 'v244-%';
+
+              UPDATE translations SET text_value='Feedback'
+              WHERE app_id IS NULL AND translation_key='support.feedback' AND locale='en-US';
+              UPDATE translations SET text_value='الملاحظات'
+              WHERE app_id IS NULL AND translation_key='support.feedback' AND locale='ar-EG';
+              UPDATE translations SET text_value='Customer health'
+              WHERE app_id IS NULL AND translation_key='support.health' AND locale='en-US';
+              UPDATE translations SET text_value='صحة العميل'
+              WHERE app_id IS NULL AND translation_key='support.health' AND locale='ar-EG';
+              UPDATE translations SET text_value='Recalculate health'
+              WHERE app_id IS NULL AND translation_key='support.calculate' AND locale='en-US';
+              UPDATE translations SET text_value='إعادة حساب الصحة'
+              WHERE app_id IS NULL AND translation_key='support.calculate' AND locale='ar-EG';
+              UPDATE translations SET text_value='Health score'
+              WHERE app_id IS NULL AND translation_key='support.score' AND locale='en-US';
+              UPDATE translations SET text_value='درجة الصحة'
+              WHERE app_id IS NULL AND translation_key='support.score' AND locale='ar-EG';
+              UPDATE translations SET text_value='Transparent reasons and recommended actions'
+              WHERE app_id IS NULL AND translation_key='support.reasons' AND locale='en-US';
+              UPDATE translations SET text_value='الأسباب الواضحة والإجراءات المقترحة'
+              WHERE app_id IS NULL AND translation_key='support.reasons' AND locale='ar-EG';
+              UPDATE translations SET text_value='Activation milestones'
+              WHERE app_id IS NULL AND translation_key='health.activation' AND locale='en-US';
+              UPDATE translations SET text_value='مراحل التفعيل'
+              WHERE app_id IS NULL AND translation_key='health.activation' AND locale='ar-EG';
+              UPDATE translations SET text_value='Recent usage'
+              WHERE app_id IS NULL AND translation_key='health.usage' AND locale='en-US';
+              UPDATE translations SET text_value='الاستخدام الحديث'
+              WHERE app_id IS NULL AND translation_key='health.usage' AND locale='ar-EG';
+              UPDATE translations SET text_value='Workflow adoption'
+              WHERE app_id IS NULL AND translation_key='health.adoption' AND locale='en-US';
+              UPDATE translations SET text_value='تبني مسارات العمل'
+              WHERE app_id IS NULL AND translation_key='health.adoption' AND locale='ar-EG';
+              UPDATE translations SET text_value='Data quality'
+              WHERE app_id IS NULL AND translation_key='health.dataQuality' AND locale='en-US';
+              UPDATE translations SET text_value='جودة البيانات'
+              WHERE app_id IS NULL AND translation_key='health.dataQuality' AND locale='ar-EG';
+              UPDATE translations SET text_value='Operational health'
+              WHERE app_id IS NULL AND translation_key='health.operational' AND locale='en-US';
+              UPDATE translations SET text_value='الصحة التشغيلية'
+              WHERE app_id IS NULL AND translation_key='health.operational' AND locale='ar-EG';
+              UPDATE translations SET text_value='Support load'
+              WHERE app_id IS NULL AND translation_key='health.support' AND locale='en-US';
+              UPDATE translations SET text_value='عبء الدعم'
+              WHERE app_id IS NULL AND translation_key='health.support' AND locale='ar-EG';
+              UPDATE translations SET text_value='Commercial state'
+              WHERE app_id IS NULL AND translation_key='health.commercial' AND locale='en-US';
+              UPDATE translations SET text_value='الحالة التجارية'
+              WHERE app_id IS NULL AND translation_key='health.commercial' AND locale='ar-EG';

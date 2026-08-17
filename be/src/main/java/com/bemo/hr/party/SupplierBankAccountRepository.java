@@ -7,6 +7,8 @@ import java.util.Optional;
 
 public interface SupplierBankAccountRepository extends JpaRepository<SupplierBankAccount, String> {
     List<SupplierBankAccount> findBySupplierIdOrderByPrimaryDescCreatedAtAsc(String supplierId);
+
     Optional<SupplierBankAccount> findByNormalizedIban(String normalizedIban);
+
     boolean existsByNormalizedIbanAndSupplierIdNot(String normalizedIban, String supplierId);
 }

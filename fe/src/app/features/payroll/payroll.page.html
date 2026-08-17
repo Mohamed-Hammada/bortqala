@@ -10,20 +10,40 @@
       <button class="button secondary" type="button" (click)="exportExcel()" [disabled]="store.loading() || rows().length === 0">
         📊 {{ i18n.t('payroll.exportExcel', undefined, 'تصدير كشف الصرف (Excel)') }}
       </button>
-      @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'])) {
+      @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER'])) {
         <button
           class="button secondary"
           type="button"
-          (click)="transitionPeriod('APPROVED')"
-          [disabled]="store.loading() || store.data()?.periodStatus === 'APPROVED' || store.data()?.periodStatus === 'POSTED' || store.data()?.periodStatus === 'PAID'"
+          (click)="transitionPeriod('CALCULATED')"
+          [disabled]="store.loading() || store.data()?.periodStatus !== 'DRAFT'"
         >
-          🔒 {{ i18n.t('payroll.approvePeriod') }}
+          🧮 {{ i18n.t('payroll.calculatePeriod') }}
         </button>
         <button
           class="button secondary"
           type="button"
+          (click)="transitionPeriod('REVIEWED')"
+          [disabled]="store.loading() || store.data()?.periodStatus !== 'CALCULATED'"
+        >
+          🔎 {{ i18n.t('payroll.reviewPeriod') }}
+        </button>
+      }
+      @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER'])) {
+        <button
+          class="button secondary"
+          type="button"
+          (click)="transitionPeriod('APPROVED')"
+          [disabled]="store.loading() || store.data()?.periodStatus !== 'REVIEWED'"
+        >
+          🔒 {{ i18n.t('payroll.approvePeriod') }}
+        </button>
+      }
+      @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER'])) {
+        <button
+          class="button secondary"
+          type="button"
           (click)="transitionPeriod('POSTED')"
-          [disabled]="store.loading() || store.data()?.periodStatus === 'POSTED' || store.data()?.periodStatus === 'PAID'"
+          [disabled]="store.loading() || store.data()?.periodStatus !== 'APPROVED'"
         >
           📖 {{ i18n.t('payroll.postGl') }}
         </button>
@@ -31,7 +51,7 @@
           class="button primary"
           type="button"
           (click)="payBulk()"
-          [disabled]="store.loading() || (store.data()?.summary?.pendingCount ?? 0) === 0"
+          [disabled]="store.loading() || store.data()?.periodStatus !== 'POSTED' || (store.data()?.summary?.pendingCount ?? 0) === 0"
         >
           ⚡ {{ i18n.t('payroll.disburseAll', undefined, 'صرف الكشف بالكامل') }}
         </button>
@@ -43,6 +63,14 @@
   <app-payroll-stepper
     [currentStatus]="store.data()?.periodStatus || 'DRAFT'"
   />
+
+  @if (store.glPosting(); as posting) {
+    <div class="card gl-posting-card">
+      <strong>{{ i18n.t('payroll.glPostingReference') }}</strong>
+      <span class="ltr-text">{{ posting.journalId }}</span>
+      <small>{{ i18n.t('payroll.glPostingAmounts', { gross: posting.grossAmount, net: posting.netAmount }) }}</small>
+    </div>
+  }
 
   <!-- Period & Year Selector & Status Filter -->
   <div class="card filter-card">
@@ -79,6 +107,7 @@
         </div>
       }
     </div>
+    <small>{{ i18n.t('payroll.fullMonthLifecycleNotice') }}</small>
   </div>
 
   <!-- Loading Skeleton State -->
@@ -184,9 +213,9 @@
               <td>
                 <span
                   class="status"
-                  [class.success]="row.paymentStatus === 'PAID' || row.paymentStatus === 'POSTED'"
+                  [class.success]="row.paymentStatus === 'PAID'"
                   [class.warning]="row.paymentStatus === 'DRAFT' || row.paymentStatus === 'CALCULATED' || row.paymentStatus === 'PENDING'"
-                  [class.neutral]="row.paymentStatus === 'APPROVED' || row.paymentStatus === 'REVIEWED'"
+                  [class.neutral]="row.paymentStatus === 'APPROVED' || row.paymentStatus === 'REVIEWED' || row.paymentStatus === 'POSTED'"
                   [class.danger]="row.paymentStatus === 'REVERSED' || row.paymentStatus === 'CANCELLED'"
                 >
                   {{ statusLabel(row.paymentStatus) }}
@@ -200,8 +229,8 @@
                   >
                     💡 {{ i18n.t('payroll.explanationTitle', undefined, 'تفاصيل الحساب') }}
                   </button>
-                  @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER'])) {
-                    @if (row.paymentStatus !== 'PAID' && row.paymentStatus !== 'POSTED' && row.paymentStatus !== 'REVERSED') {
+                  @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER'])) {
+                    @if (row.paymentStatus === 'POSTED') {
                       <button
                         class="button primary"
                         type="button"
@@ -210,7 +239,7 @@
                         💵 {{ i18n.t('payroll.disburseEmployeeSalary') }}
                       </button>
                     }
-                    @if (row.paymentStatus === 'PAID' || row.paymentStatus === 'POSTED') {
+                    @if (row.paymentStatus === 'PAID') {
                       <button
                         class="button secondary danger-btn"
                         type="button"
@@ -298,7 +327,7 @@
             class="ltr"
             type="number"
             formControlName="advancesDeducted"
-            (input)="recalculateNet()"
+            readonly
           />
         </div>
 
@@ -309,7 +338,7 @@
             class="ltr"
             type="number"
             formControlName="otherDeductions"
-            (input)="recalculateNet()"
+            readonly
           />
         </div>
 
@@ -320,7 +349,7 @@
             class="ltr"
             type="number"
             formControlName="bonuses"
-            (input)="recalculateNet()"
+            readonly
           />
         </div>
 

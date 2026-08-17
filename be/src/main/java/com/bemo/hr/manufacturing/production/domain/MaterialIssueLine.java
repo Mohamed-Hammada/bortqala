@@ -32,7 +32,8 @@ public class MaterialIssueLine {
     @Column(name = "warehouse_id", nullable = false, length = 36)
     private String warehouseId;
 
-    protected MaterialIssueLine() {}
+    protected MaterialIssueLine() {
+    }
 
     public MaterialIssueLine(String issueId, String itemId, BigDecimal quantity, String warehouseId) {
         this.id = UUID.randomUUID().toString();
@@ -42,10 +43,27 @@ public class MaterialIssueLine {
         this.warehouseId = warehouseId;
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getIssueId() { return issueId; }
-    public String getItemId() { return itemId; }
-    public BigDecimal getQuantity() { return quantity; }
-    public String getWarehouseId() { return warehouseId; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getIssueId() {
+        return issueId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public BigDecimal getQuantity() {
+        return quantity;
+    }
+
+    public String getWarehouseId() {
+        return warehouseId;
+    }
 }

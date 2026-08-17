@@ -146,10 +146,10 @@
   font-size: 11px;
 
   .text-success {
-    color: #22c55e;
+    color: var(--success);
   }
   .text-danger {
-    color: #ef4444;
+    color: var(--danger);
   }
 }
 
@@ -201,20 +201,20 @@
 
 .status {
   &.neutral {
-    background: rgba(100, 116, 139, 0.15);
-    color: #64748b;
+    background: color-mix(in srgb, var(--muted) 15%, transparent);
+    color: var(--muted);
   }
   &.danger {
-    background: rgba(239, 68, 68, 0.15);
-    color: #ef4444;
+    background: var(--danger-soft);
+    color: var(--danger);
   }
 }
 
 .danger-btn {
-  border-color: rgba(239, 68, 68, 0.3) !important;
-  color: #ef4444 !important;
+  border-color: color-mix(in srgb, var(--danger) 30%, var(--line)) !important;
+  color: var(--danger) !important;
   &:hover {
-    background: rgba(239, 68, 68, 0.1) !important;
+    background: var(--danger-soft) !important;
   }
 }
 

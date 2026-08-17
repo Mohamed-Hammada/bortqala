@@ -14,7 +14,8 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ManufacturingVarianceCloseServiceTests {
 
@@ -41,7 +42,7 @@ class ManufacturingVarianceCloseServiceTests {
                 BigDecimal.ONE, java.time.LocalDate.of(2026, 8, 1), null);
         when(productionOrderRepository.findById("wo-200")).thenReturn(Optional.of(order));
         when(bomSnapshotService.getSnapshotsForProductionOrder("wo-200")).thenReturn(java.util.List.of(
-                new BomSnapshot("wo-200", "bom-1", 1, "rm-1", new BigDecimal("100"), new BigDecimal("100"))));
+                new BomSnapshot("wo-200", "bom-1", "v1", "rm-1", new BigDecimal("100"), new BigDecimal("100"))));
         when(operationsService.productionIssueCost("WO-200", "rm-1")).thenReturn(new BigDecimal("10500.00"));
 
         ProductionVarianceClose close = service.calculateAndCloseVariance("wo-200");

@@ -19,11 +19,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +32,10 @@ public class DeviceIntegrationService {
     private final VendorHubClient vendorHubClient;
     private final ObjectMapper objectMapper;
     private final AuditService auditService;
+
+    private static String nullIfBlank(String value) {
+        return value == null || value.isBlank() ? null : value;
+    }
 
     public JsonNode health() {
         return vendorHubClient.health();
@@ -362,9 +362,5 @@ public class DeviceIntegrationService {
 
     private String safe(String value) {
         return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
-    }
-
-    private static String nullIfBlank(String value) {
-        return value == null || value.isBlank() ? null : value;
     }
 }

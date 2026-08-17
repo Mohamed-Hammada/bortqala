@@ -5,6 +5,7 @@ echo Starting Bemo ERP Spring Boot Backend - DEV (Port 8080)
 echo   Database : bemo_erp_dev (localhost:5432)
 echo   Profile  : dev
 echo   Demo no-login SUPER_ADMIN link: ENABLED
+echo   Entitlement defaults: ALL IMPLEMENTED FEATURES ENABLED
 echo ========================================================
 echo.
 
@@ -13,7 +14,6 @@ set "PATH=%JAVA_HOME%\bin;%PATH%"
 
 rem ==== Spring profile (dev) ====
 set "SPRING_PROFILES_ACTIVE=dev"
-
 rem ==== Database (DEV - never share this with the prod script) ====
 set "DB_URL=jdbc:postgresql://localhost:5432/bemo_erp_dev"
 set "DB_USERNAME=root"
@@ -24,7 +24,6 @@ set "HR_CORS_ALLOWED_ORIGINS=http://localhost:4200,http://127.0.0.1:4200,https:/
 
 rem Respect X-Forwarded-Proto and other Cloudflare proxy headers
 set "SERVER_FORWARD_HEADERS_STRATEGY=framework"
-
 set "HR_BOOTSTRAP_APP_CODE=DEMO"
 set "HR_BOOTSTRAP_APP_NAME=Bemo ERP"
 set "HR_BOOTSTRAP_ADMIN_USERNAME=admin"
@@ -35,7 +34,12 @@ set "HR_JWT_SECRET=local-development-jwt-secret-key-32bytes-minimum"
 set "HR_DEVICE_CREDENTIALS_SECRET=ZGV2aWNlLWNyZWRlbnRpYWxzLTMyLWJ5dGVzLWtleSE="
 rem HR_JWT_SECRET / HR_DEVICE_CREDENTIALS_SECRET are also fine to leave unset here;
 rem the dev profile has fallbacks. Override these values for local testing.
-
+rem ==== Web Push (DEV - development-only VAPID keypair) ====
+set "HR_WEB_PUSH_ENABLED=true"
+set "HR_WEB_PUSH_PUBLIC_KEY=BGMHGzdrTGM-gl0Mz9N3Vxa4ikgTuVpBkuRtliKK135FS-TYaCGmUzMSSpfgt4womxH-In5uo9dhg8NowHPBp9c"
+set "HR_WEB_PUSH_PRIVATE_KEY=jdl2o2sjy6-fXiu4RqynsTTdnfjwbFYbQibGokehV10"
+set "HR_WEB_PUSH_SUBJECT=mailto:admin@bemo-erp.local"
+set "HR_WEB_PUSH_TTL_SECONDS=86400"
 rem ==== Demo no-login SUPER_ADMIN link (DEV only) ====
 rem Adds a password-less SUPER_ADMIN dashboard link for the DEMO app.
 rem The link is only active when one of the running profiles matches
@@ -47,10 +51,9 @@ set "HR_DEMO_NO_LOGIN_APP_CODE=DEMO"
 set "HR_DEMO_NO_LOGIN_APP_NAME=Bemo ERP"
 set "HR_DEMO_NO_LOGIN_PROFILES=dev"
 rem set "HR_DEMO_SECRET=optional-fixed-secret"
-
 cd /d "%~dp0be"
 
-call gradlew.bat bootJar
+call gradlew.bat clean bootJar
 if errorlevel 1 (
  echo.
  echo [ERROR] Backend build failed. The previous JAR will NOT be started.

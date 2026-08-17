@@ -18,9 +18,6 @@ public class PayrollCalendarController {
         this.calendarService = calendarService;
     }
 
-    public record CreateCalendarPayload(String calendarCode, String name, String frequency) {}
-    public record GeneratePeriodsPayload(int year) {}
-
     @PostMapping("/calendars")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
     public PayrollCalendar createCalendar(@RequestBody CreateCalendarPayload payload) {
@@ -49,5 +46,11 @@ public class PayrollCalendarController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER', 'VIEWER')")
     public List<PayPeriod> getPeriodsByCalendar(@PathVariable String id) {
         return calendarService.getPeriodsByCalendar(id);
+    }
+
+    public record CreateCalendarPayload(String calendarCode, String name, String frequency) {
+    }
+
+    public record GeneratePeriodsPayload(int year) {
     }
 }

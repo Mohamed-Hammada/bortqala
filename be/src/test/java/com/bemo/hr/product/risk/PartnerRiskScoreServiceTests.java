@@ -1,10 +1,122 @@
 package com.bemo.hr.product.risk;
-import com.bemo.hr.audit.application.AuditService;import com.bemo.hr.party.*;import com.bemo.hr.shared.domain.BusinessRuleException;import com.bemo.hr.shared.security.*;import com.bemo.hr.workforce.*;import org.junit.jupiter.api.*;import org.junit.jupiter.api.extension.ExtendWith;import org.mockito.*;import org.mockito.junit.jupiter.MockitoExtension;import tools.jackson.databind.ObjectMapper;import java.math.BigDecimal;import java.time.LocalDate;import java.util.*;import static org.assertj.core.api.Assertions.*;import static org.mockito.ArgumentMatchers.*;import static org.mockito.Mockito.*;
-@ExtendWith(MockitoExtension.class)class PartnerRiskScoreServiceTests{@Mock TenantApplicationRepository tenantRepository;@Mock PartnerRiskRuleRepository ruleRepository;@Mock PartnerRiskScoreSnapshotRepository snapshotRepository;@Mock BusinessPartyRepository partyRepository;@Mock SupplierDocumentRepository documentRepository;@Mock SupplierBankAccountRepository bankRepository;@Mock ContractorRepository contractorRepository;@Mock WorkerRepository workerRepository;@Mock ContractorSettlementRepository settlementRepository;@Mock WorkforceSettlementIssueRepository issueRepository;@Mock AuditService auditService;PartnerRiskScoreService service;TenantApplication tenant;
-@BeforeEach void setup(){tenant=new TenantApplication("risk","Risk Tenant");TenantContext.set(tenant.getId());service=new PartnerRiskScoreService(tenantRepository,ruleRepository,snapshotRepository,partyRepository,documentRepository,bankRepository,contractorRepository,workerRepository,settlementRepository,issueRepository,new ObjectMapper(),auditService);lenient().when(ruleRepository.findFirstBy()).thenReturn(Optional.of(new PartnerRiskRule("admin")));lenient().when(tenantRepository.findByIdForUpdate(tenant.getId())).thenReturn(Optional.of(tenant));lenient().when(snapshotRepository.findByOperationIdOrderBySubjectTypeAscSubjectNameAsc(anyString())).thenReturn(List.of());lenient().when(snapshotRepository.save(any())).thenAnswer(i->i.getArgument(0));lenient().when(issueRepository.findAll()).thenReturn(List.of());}
-@AfterEach void clear(){TenantContext.clear();}
-@Test void supplierScoreExplainsEveryWeightedRule(){var supplier=new BusinessParty("SUP","Supplier",null,"SUPPLIER","Owner","010","mail@example.com","Cairo",null,true,"DIRECT",null,null,null,"EGP","E_INVOICE","30_DAYS","TAX",null);supplier.updateSupplierProfile("RAW","LOW","owner");var doc=new SupplierDocument(supplier.getId(),"TAX","1","tax.pdf","application/pdf",new byte[]{1},LocalDate.now(),LocalDate.now().plusDays(30),true);doc.verify("admin");var bank=new SupplierBankAccount(supplier.getId(),"Supplier","EG123","Bank","EGP",true);bank.verify("admin");when(partyRepository.findByPartyTypeOrderByNameAsc("SUPPLIER")).thenReturn(List.of(supplier));when(documentRepository.findBySupplierIdOrderByCreatedAtDesc(supplier.getId())).thenReturn(List.of(doc));when(bankRepository.findBySupplierIdOrderByPrimaryDescCreatedAtAsc(supplier.getId())).thenReturn(List.of(bank));var score=service.scores().get(0);assertThat(score.score()).isEqualTo(100);assertThat(score.riskBand()).isEqualTo("LOW");assertThat(score.components()).extracting(PartnerRiskApi.ComponentResponse::key).containsExactly("risk.lifecycle","risk.compliance","risk.bank","risk.profile","risk.declared");}
-@Test void contractorScoreUsesWorkersSettlementsIssuesAndProfile(){var contractor=new Contractor("CTR","Contractor",null,"010",null,"TAX","Cairo","worker_net_total","contractor_full",15,BigDecimal.TEN,"fixed",BigDecimal.ZERO,"gross",BigDecimal.ZERO,"ACTIVE",null);var worker=new Worker("W1","Worker",contractor.getId(),"cat",BigDecimal.TEN,new BigDecimal("8"),null,"MANUAL","ACTIVE",null,null,null);var settlement=new ContractorSettlement("period",contractor.getId(),"worker_net_total",BigDecimal.TEN,BigDecimal.TEN,BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.ZERO,BigDecimal.TEN,BigDecimal.TEN,BigDecimal.TEN,"PAID");when(contractorRepository.findAll()).thenReturn(List.of(contractor));when(workerRepository.findByContractorId(contractor.getId())).thenReturn(List.of(worker));when(settlementRepository.findByContractorId(contractor.getId())).thenReturn(List.of(settlement));var score=service.scores().get(0);assertThat(score.score()).isEqualTo(100);assertThat(score.components()).extracting(PartnerRiskApi.ComponentResponse::actionRoute).contains("/workforce/workers","/workforce/settlement-periods");}
-@Test void refreshPersistsAuditedSnapshotsAndReplayIsSideEffectFree(){var supplier=new BusinessParty("SUP","Supplier",null,"SUPPLIER",null,null,null,null,null,false,"DIRECT",null,null,null,"EGP","CASH","CASH",null,null);when(partyRepository.findByPartyTypeOrderByNameAsc("SUPPLIER")).thenReturn(List.of(supplier));var request=new PartnerRiskApi.RefreshRequest("op-1");var first=service.refresh(request,"admin");assertThat(first).hasSize(1);verify(snapshotRepository).save(any());verify(auditService).record(eq("REFRESH"),eq("PARTNER_RISK_SCORE"),eq(tenant.getId()),eq("admin"),contains("op-1"),isNull());var saved=new PartnerRiskScoreSnapshot("SUPPLIER",supplier.getId(),supplier.getName(),first.get(0).score(),first.get(0).riskBand(),"[]","op-1","admin");when(snapshotRepository.findByOperationIdOrderBySubjectTypeAscSubjectNameAsc("op-1")).thenReturn(List.of(saved));service.refresh(request,"admin");verify(snapshotRepository,times(1)).save(any());}
-@Test void thresholdsMustRemainStrictlyDescending(){var request=new PartnerRiskApi.RuleRequest(60,80,40,0);assertThatThrownBy(()->service.updateRule(request,"admin")).isInstanceOfSatisfying(BusinessRuleException.class,e->assertThat(e.getCode()).isEqualTo("PARTNER_RISK_THRESHOLDS_INVALID"));}
+
+import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.party.*;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.security.TenantApplication;
+import com.bemo.hr.shared.security.TenantApplicationRepository;
+import com.bemo.hr.shared.security.TenantContext;
+import com.bemo.hr.workforce.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.ObjectMapper;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class PartnerRiskScoreServiceTests {
+    @Mock
+    TenantApplicationRepository tenantRepository;
+    @Mock
+    PartnerRiskRuleRepository ruleRepository;
+    @Mock
+    PartnerRiskScoreSnapshotRepository snapshotRepository;
+    @Mock
+    BusinessPartyRepository partyRepository;
+    @Mock
+    SupplierDocumentRepository documentRepository;
+    @Mock
+    SupplierBankAccountRepository bankRepository;
+    @Mock
+    ContractorRepository contractorRepository;
+    @Mock
+    WorkerRepository workerRepository;
+    @Mock
+    ContractorSettlementRepository settlementRepository;
+    @Mock
+    WorkforceSettlementIssueRepository issueRepository;
+    @Mock
+    AuditService auditService;
+    PartnerRiskScoreService service;
+    TenantApplication tenant;
+
+    @BeforeEach
+    void setup() {
+        tenant = new TenantApplication("risk", "Risk Tenant");
+        TenantContext.set(tenant.getId());
+        service = new PartnerRiskScoreService(tenantRepository, ruleRepository, snapshotRepository, partyRepository, documentRepository, bankRepository, contractorRepository, workerRepository, settlementRepository, issueRepository, new ObjectMapper(), auditService);
+        lenient().when(ruleRepository.findFirstBy()).thenReturn(Optional.of(new PartnerRiskRule("admin")));
+        lenient().when(tenantRepository.findByIdForUpdate(tenant.getId())).thenReturn(Optional.of(tenant));
+        lenient().when(snapshotRepository.findByOperationIdOrderBySubjectTypeAscSubjectNameAsc(anyString())).thenReturn(List.of());
+        lenient().when(snapshotRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(issueRepository.findAll()).thenReturn(List.of());
+    }
+
+    @AfterEach
+    void clear() {
+        TenantContext.clear();
+    }
+
+    @Test
+    void supplierScoreExplainsEveryWeightedRule() {
+        var supplier = new BusinessParty("SUP", "Supplier", null, "SUPPLIER", "Owner", "010", "mail@example.com", "Cairo", null, true, "DIRECT", null, null, null, "EGP", "E_INVOICE", "30_DAYS", "TAX", null);
+        supplier.updateSupplierProfile("RAW", "LOW", "owner");
+        var doc = new SupplierDocument(supplier.getId(), "TAX", "1", "tax.pdf", "application/pdf", new byte[]{1}, LocalDate.now(), LocalDate.now().plusDays(30), true);
+        doc.verify("admin");
+        var bank = new SupplierBankAccount(supplier.getId(), "Supplier", "EG123", "Bank", "EGP", true);
+        bank.verify("admin");
+        when(partyRepository.findByPartyTypeOrderByNameAsc("SUPPLIER")).thenReturn(List.of(supplier));
+        when(documentRepository.findBySupplierIdOrderByCreatedAtDesc(supplier.getId())).thenReturn(List.of(doc));
+        when(bankRepository.findBySupplierIdOrderByPrimaryDescCreatedAtAsc(supplier.getId())).thenReturn(List.of(bank));
+        var score = service.scores().get(0);
+        assertThat(score.score()).isEqualTo(100);
+        assertThat(score.riskBand()).isEqualTo("LOW");
+        assertThat(score.components()).extracting(PartnerRiskApi.ComponentResponse::key).containsExactly("risk.lifecycle", "risk.compliance", "risk.bank", "risk.profile", "risk.declared");
+    }
+
+    @Test
+    void contractorScoreUsesWorkersSettlementsIssuesAndProfile() {
+        var contractor = new Contractor("CTR", "Contractor", null, "010", null, "TAX", "Cairo", "worker_net_total", "contractor_full", 15, BigDecimal.TEN, "fixed", BigDecimal.ZERO, "gross", BigDecimal.ZERO, "ACTIVE", null);
+        var worker = new Worker("W1", "Worker", contractor.getId(), "cat", BigDecimal.TEN, new BigDecimal("8"), null, "MANUAL", "ACTIVE", null, null, null);
+        var settlement = new ContractorSettlement("period", contractor.getId(), "worker_net_total", BigDecimal.TEN, BigDecimal.TEN, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.TEN, BigDecimal.TEN, BigDecimal.TEN, "PAID");
+        when(contractorRepository.findAll()).thenReturn(List.of(contractor));
+        when(workerRepository.findByContractorId(contractor.getId())).thenReturn(List.of(worker));
+        when(settlementRepository.findByContractorId(contractor.getId())).thenReturn(List.of(settlement));
+        var score = service.scores().get(0);
+        assertThat(score.score()).isEqualTo(100);
+        assertThat(score.components()).extracting(PartnerRiskApi.ComponentResponse::actionRoute).contains("/workforce/workers", "/workforce/settlement-periods");
+    }
+
+    @Test
+    void refreshPersistsAuditedSnapshotsAndReplayIsSideEffectFree() {
+        var supplier = new BusinessParty("SUP", "Supplier", null, "SUPPLIER", null, null, null, null, null, false, "DIRECT", null, null, null, "EGP", "CASH", "CASH", null, null);
+        when(partyRepository.findByPartyTypeOrderByNameAsc("SUPPLIER")).thenReturn(List.of(supplier));
+        var request = new PartnerRiskApi.RefreshRequest("op-1");
+        var first = service.refresh(request, "admin");
+        assertThat(first).hasSize(1);
+        verify(snapshotRepository).save(any());
+        verify(auditService).record(eq("REFRESH"), eq("PARTNER_RISK_SCORE"), eq(tenant.getId()), eq("admin"), contains("op-1"), isNull());
+        var saved = new PartnerRiskScoreSnapshot("SUPPLIER", supplier.getId(), supplier.getName(), first.get(0).score(), first.get(0).riskBand(), "[]", "op-1", "admin");
+        when(snapshotRepository.findByOperationIdOrderBySubjectTypeAscSubjectNameAsc("op-1")).thenReturn(List.of(saved));
+        service.refresh(request, "admin");
+        verify(snapshotRepository, times(1)).save(any());
+    }
+
+    @Test
+    void thresholdsMustRemainStrictlyDescending() {
+        var request = new PartnerRiskApi.RuleRequest(60, 80, 40, 0);
+        assertThatThrownBy(() -> service.updateRule(request, "admin")).isInstanceOfSatisfying(BusinessRuleException.class, e -> assertThat(e.getCode()).isEqualTo("PARTNER_RISK_THRESHOLDS_INVALID"));
+    }
 }

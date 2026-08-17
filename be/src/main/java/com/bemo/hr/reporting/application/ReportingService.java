@@ -3,34 +3,13 @@ package com.bemo.hr.reporting.application;
 import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
 import com.bemo.hr.calendar.domain.ConfirmedHoliday;
 import com.bemo.hr.calendar.infrastructure.ConfirmedHolidayRepository;
-import com.bemo.hr.employee.domain.AttendanceCategory;
-import com.bemo.hr.employee.domain.AttendanceMode;
-import com.bemo.hr.employee.domain.Employee;
-import com.bemo.hr.employee.domain.PayCycle;
-import com.bemo.hr.employee.domain.ScheduleRule;
+import com.bemo.hr.employee.domain.*;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
 import com.bemo.hr.reporting.api.ReportingApi;
-import com.bemo.hr.reporting.domain.AttendanceDecision;
-import com.bemo.hr.reporting.domain.AttendanceReport;
-import com.bemo.hr.reporting.domain.AttendanceReportDecision;
-import com.bemo.hr.reporting.domain.DayAnomaly;
-import com.bemo.hr.reporting.domain.DayAnomalyDecision;
-import com.bemo.hr.reporting.domain.DayAnomalyResultSnapshot;
-import com.bemo.hr.reporting.domain.DayAnomalyStatus;
-import com.bemo.hr.reporting.domain.DailyAttendanceCalculator;
-import com.bemo.hr.reporting.domain.DailyAttendanceResult;
-import com.bemo.hr.reporting.domain.DailyStatus;
-import com.bemo.hr.reporting.domain.HolidayProposal;
-import com.bemo.hr.reporting.domain.HolidayProposalStatus;
-import com.bemo.hr.reporting.domain.ReportStatus;
-import com.bemo.hr.reporting.infrastructure.AttendanceReportDecisionRepository;
-import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
-import com.bemo.hr.reporting.infrastructure.DayAnomalyRepository;
-import com.bemo.hr.reporting.infrastructure.DayAnomalyResultSnapshotRepository;
-import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
-import com.bemo.hr.reporting.infrastructure.HolidayProposalRepository;
+import com.bemo.hr.reporting.domain.*;
+import com.bemo.hr.reporting.infrastructure.*;
 import com.bemo.hr.shared.api.TransitionResponse;
 import com.bemo.hr.shared.api.WorkflowTransitions;
 import com.bemo.hr.shared.domain.BusinessRuleException;
@@ -43,23 +22,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.YearMonth;
-import java.time.ZoneId;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HexFormat;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.time.*;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -95,6 +64,7 @@ public class ReportingService {
     private final AttendanceReportDecisionRepository attendanceReportDecisionRepository;
     private final IdempotencyService idempotencyService;
     private final AttendanceExceptionService attendanceExceptionService;
+    private final AttendanceExceptionRepository attendanceExceptionRepository;
 
     public ReportingService(AttendanceReportRepository attendanceReportRepository,
                             DailyAttendanceResultRepository dailyAttendanceResultRepository,
@@ -112,7 +82,8 @@ public class ReportingService {
                             TenantApplicationRepository tenantApplicationRepository,
                             AttendanceReportDecisionRepository attendanceReportDecisionRepository,
                             IdempotencyService idempotencyService,
-                            AttendanceExceptionService attendanceExceptionService) {
+                            AttendanceExceptionService attendanceExceptionService,
+                            AttendanceExceptionRepository attendanceExceptionRepository) {
         this.attendanceReportRepository = attendanceReportRepository;
         this.dailyAttendanceResultRepository = dailyAttendanceResultRepository;
         this.holidayProposalRepository = holidayProposalRepository;
@@ -130,6 +101,12 @@ public class ReportingService {
         this.attendanceReportDecisionRepository = attendanceReportDecisionRepository;
         this.idempotencyService = idempotencyService;
         this.attendanceExceptionService = attendanceExceptionService;
+        this.attendanceExceptionRepository = attendanceExceptionRepository;
+    }
+
+    private static ScheduleRule effectiveSchedule(List<ScheduleRule> rules, LocalDate date) {
+        return rules.stream().filter(rule -> rule.appliesOn(date))
+                .max(Comparator.comparing(ScheduleRule::getEffectiveFrom)).orElse(null);
     }
 
     public List<ReportingApi.Summary> list() {
@@ -147,7 +124,8 @@ public class ReportingService {
     }
 
     public List<ReportingApi.PeriodOption> availablePeriods(int year) {
-        if (year < 2000 || year > 2200) throw new BusinessRuleException("Year is outside the supported range.", "RPT_YEAR_OUT_OF_RANGE", HttpStatus.CONFLICT);
+        if (year < 2000 || year > 2200)
+            throw new BusinessRuleException("Year is outside the supported range.", "RPT_YEAR_OUT_OF_RANGE", HttpStatus.CONFLICT);
         var reports = attendanceReportRepository.findByPeriodStartBetween(LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
         var activeCategories = employeeCategories().stream().filter(AttendanceCategory::isActive).toList();
         boolean hasMonthly = activeCategories.isEmpty()
@@ -222,10 +200,29 @@ public class ReportingService {
                 .filter(AttendanceCategory::isActive)
                 .filter(category -> category.getPayCycle() == payCycle)
                 .collect(Collectors.toMap(AttendanceCategory::getId, Function.identity()));
-        if (categories.isEmpty()) throw new BusinessRuleException("No attendance categories use this pay cycle.", "RPT_NO_CATEGORIES_FOR_CYCLE", HttpStatus.CONFLICT);
+        if (categories.isEmpty())
+            throw new BusinessRuleException("No attendance categories use this pay cycle.", "RPT_NO_CATEGORIES_FOR_CYCLE", HttpStatus.CONFLICT);
         var schedules = scheduleRuleRepository.findAll().stream()
                 .filter(schedule -> categories.containsKey(schedule.getCategoryId()))
                 .collect(Collectors.groupingBy(ScheduleRule::getCategoryId));
+
+        for (var category : categories.values()) {
+            if (!schedules.containsKey(category.getId()) || schedules.get(category.getId()).isEmpty()) {
+                var defaultSchedule = scheduleRuleRepository.save(new ScheduleRule(
+                        category.getId(),
+                        "الدوام الافتراضي",
+                        LocalDate.of(2000, 1, 1),
+                        null,
+                        LocalTime.of(8, 0),
+                        null,
+                        15,
+                        LocalTime.of(16, 0),
+                        "ALL",
+                        null));
+                schedules.computeIfAbsent(category.getId(), k -> new ArrayList<>()).add(defaultSchedule);
+            }
+        }
+
         var employees = employeeRepository.findAll().stream()
                 .filter(employee -> categories.containsKey(employee.getCategoryId())).toList();
         var report = attendanceReportRepository.save(new AttendanceReport(request.periodStart(), request.periodEnd(), payCycle,
@@ -236,12 +233,17 @@ public class ReportingService {
                 .map(holiday -> holiday.getCategoryId() + "|" + holiday.getWorkDate()).collect(Collectors.toSet());
         Instant from = request.periodStart().atStartOfDay(companyZone).toInstant();
         Instant to = request.periodEnd().plusDays(2).atStartOfDay(companyZone).toInstant();
-        var currentDeviceOwners = employees.stream().filter(employee -> employee.getDeviceUserId() != null)
-                .collect(Collectors.toMap(Employee::getDeviceUserId, Function.identity()));
+        var currentDeviceOwners = new HashMap<String, Employee>();
+        for (var employee : employees) {
+            if (employee.getDeviceUserId() != null && !employee.getDeviceUserId().isBlank()) {
+                currentDeviceOwners.put(employee.getDeviceUserId().strip(), employee);
+            }
+        }
         var byId = employees.stream().collect(Collectors.toMap(Employee::getId, Function.identity()));
         var punchMap = new HashMap<String, List<Instant>>();
         for (var punch : punchRecordRepository.findInRange(from, to)) {
-            var owner = currentDeviceOwners.get(punch.getDeviceUserId());
+            String duid = punch.getDeviceUserId() == null ? "" : punch.getDeviceUserId().strip();
+            var owner = currentDeviceOwners.get(duid);
             if (owner == null && punch.getEmployeeId() != null) owner = byId.get(punch.getEmployeeId());
             if (owner == null) continue;
             var localPunch = punch.getPunchedAt().atZone(companyZone);
@@ -277,9 +279,110 @@ public class ReportingService {
         return details(report);
     }
 
-    private static ScheduleRule effectiveSchedule(List<ScheduleRule> rules, LocalDate date) {
-        return rules.stream().filter(rule -> rule.appliesOn(date))
-                .max(Comparator.comparing(ScheduleRule::getEffectiveFrom)).orElse(null);
+    @Transactional
+    public boolean recalculateMonth(int year, int month, String actor) {
+        var period = java.time.YearMonth.of(year, month);
+        var existing = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
+                PayCycle.MONTHLY, period.atDay(1), period.atEndOfMonth());
+        if (existing.isEmpty()) {
+            try {
+                create(new ReportingApi.CreateRequest(period.atDay(1), period.atEndOfMonth(), PayCycle.MONTHLY), actor);
+                return true;
+            } catch (Exception ex) {
+                return false;
+            }
+        }
+        var report = existing.get();
+        if (report.getStatus() == ReportStatus.APPROVED || report.getStatus() == ReportStatus.EXPORTED) {
+            return false;
+        }
+
+        var categories = employeeCategories().stream()
+                .filter(AttendanceCategory::isActive)
+                .filter(category -> category.getPayCycle() == PayCycle.MONTHLY)
+                .collect(Collectors.toMap(AttendanceCategory::getId, Function.identity()));
+        if (categories.isEmpty()) return false;
+
+        var schedules = scheduleRuleRepository.findAll().stream()
+                .filter(schedule -> categories.containsKey(schedule.getCategoryId()))
+                .collect(Collectors.groupingBy(ScheduleRule::getCategoryId));
+
+        for (var category : categories.values()) {
+            if (!schedules.containsKey(category.getId()) || schedules.get(category.getId()).isEmpty()) {
+                var defaultSchedule = scheduleRuleRepository.save(new ScheduleRule(
+                        category.getId(),
+                        "الدوام الافتراضي",
+                        LocalDate.of(2000, 1, 1),
+                        null,
+                        LocalTime.of(8, 0),
+                        null,
+                        15,
+                        LocalTime.of(16, 0),
+                        "ALL",
+                        null));
+                schedules.computeIfAbsent(category.getId(), k -> new ArrayList<>()).add(defaultSchedule);
+            }
+        }
+
+        var employees = employeeRepository.findAll().stream()
+                .filter(employee -> categories.containsKey(employee.getCategoryId())).toList();
+
+        var confirmedHolidays = confirmedHolidayRepository.findByWorkDateBetween(report.getPeriodStart(), report.getPeriodEnd()).stream()
+                .map(holiday -> holiday.getCategoryId() + "|" + holiday.getWorkDate()).collect(Collectors.toSet());
+        Instant from = report.getPeriodStart().atStartOfDay(companyZone).toInstant();
+        Instant to = report.getPeriodEnd().plusDays(2).atStartOfDay(companyZone).toInstant();
+        var currentDeviceOwners = new HashMap<String, Employee>();
+        for (var employee : employees) {
+            if (employee.getDeviceUserId() != null && !employee.getDeviceUserId().isBlank()) {
+                currentDeviceOwners.put(employee.getDeviceUserId().strip(), employee);
+            }
+        }
+        var byId = employees.stream().collect(Collectors.toMap(Employee::getId, Function.identity()));
+        var punchMap = new HashMap<String, List<Instant>>();
+        for (var punch : punchRecordRepository.findInRange(from, to)) {
+            String duid = punch.getDeviceUserId() == null ? "" : punch.getDeviceUserId().strip();
+            var owner = currentDeviceOwners.get(duid);
+            if (owner == null && punch.getEmployeeId() != null) owner = byId.get(punch.getEmployeeId());
+            if (owner == null) continue;
+            var localPunch = punch.getPunchedAt().atZone(companyZone);
+            LocalDate date = localPunch.toLocalDate();
+            var ownerSchedules = schedules.getOrDefault(owner.getCategoryId(), List.of());
+            var previousSchedule = effectiveSchedule(ownerSchedules, date.minusDays(1));
+            date = DailyAttendanceCalculator.workDateForPunch(localPunch,
+                    previousSchedule == null ? null : previousSchedule.getStartTime(),
+                    previousSchedule == null ? null : previousSchedule.getEndTime());
+            punchMap.computeIfAbsent(owner.getId() + "|" + date, ignored -> new ArrayList<>()).add(punch.getPunchedAt());
+        }
+
+        attendanceExceptionRepository.deleteByReportId(report.getId());
+        dayAnomalyResultSnapshotRepository.deleteByReportId(report.getId());
+        dayAnomalyRepository.deleteByReportId(report.getId());
+        holidayProposalRepository.deleteByReportId(report.getId());
+        dailyAttendanceResultRepository.deleteByReportId(report.getId());
+        dailyAttendanceResultRepository.flush();
+
+        var results = new ArrayList<DailyAttendanceResult>();
+        for (LocalDate date = report.getPeriodStart(); !date.isAfter(report.getPeriodEnd()); date = date.plusDays(1)) {
+            LocalDate workDate = date;
+            for (var employee : employees) {
+                if (!employee.activeOn(workDate)) continue;
+                var category = categories.get(employee.getCategoryId());
+                if (category == null) continue;
+                var schedule = effectiveSchedule(schedules.getOrDefault(category.getId(), List.of()), workDate);
+                results.add(DailyAttendanceCalculator.calculate(report.getId(), employee, category, schedule, workDate,
+                        punchMap.getOrDefault(employee.getId() + "|" + workDate, List.of()),
+                        confirmedHolidays.contains(category.getId() + "|" + workDate), companyZone));
+            }
+        }
+        dailyAttendanceResultRepository.saveAll(results);
+        attendanceExceptionService.detect(report.getId(), actor);
+        detectAnomalies(report, results);
+
+        var proposals = createHolidayProposals(report, results, categories);
+        holidayProposalRepository.saveAll(proposals);
+        report.startReview(unresolved(results, proposals));
+        attendanceReportRepository.save(report);
+        return true;
     }
 
     @Transactional
@@ -307,22 +410,22 @@ public class ReportingService {
         int successCount = 0;
         for (var result : editable) {
             Integer worked = (request.decision() == AttendanceDecision.NORMAL_DAY &&
-                (result.getStatus() == DailyStatus.MANUAL_ENTRY || result.getStatus() == DailyStatus.SINGLE_PUNCH))
-                ? result.getExpectedMinutes() : 0;
+                    (result.getStatus() == DailyStatus.MANUAL_ENTRY || result.getStatus() == DailyStatus.SINGLE_PUNCH))
+                    ? result.getExpectedMinutes() : 0;
             var before = result.decisionState();
             result.decide(request.decision(), worked,
-                "BULK[" + request.operationId() + "]: " + (request.note() != null ? request.note() : ""), actor);
+                    "BULK[" + request.operationId() + "]: " + (request.note() != null ? request.note() : ""), actor);
             recordDecision(reportId, result, request.operationId(), "BULK_DECISION", before, actor);
             successCount++;
         }
         dailyAttendanceResultRepository.saveAll(editable);
         refreshUnresolved(report);
         auditService.record("BULK_DECISION", "ATTENDANCE_REPORT", reportId, actor,
-            "{\"operationId\":\"" + request.operationId() + "\",\"decision\":\"" + request.decision()
-            + "\",\"statusFilter\":\"" + request.statusFilter() + "\",\"matching\":" + matching.size()
-            + ",\"editable\":" + editable.size() + ",\"excluded\":" + excluded.size() + "}", null);
+                "{\"operationId\":\"" + request.operationId() + "\",\"decision\":\"" + request.decision()
+                        + "\",\"statusFilter\":\"" + request.statusFilter() + "\",\"matching\":" + matching.size()
+                        + ",\"editable\":" + editable.size() + ",\"excluded\":" + excluded.size() + "}", null);
         return new ReportingApi.BulkDecisionResponse(matching.size(), editable.size(), excluded.size(), successCount,
-            excluded.stream().map(DailyAttendanceResult::getId).toList());
+                excluded.stream().map(DailyAttendanceResult::getId).toList());
     }
 
     private String serializeBulkDecision(ReportingApi.BulkDecisionResponse response) {
@@ -348,10 +451,12 @@ public class ReportingService {
         var result = dailyAttendanceResultRepository.findById(resultId)
                 .filter(item -> item.getReportId().equals(reportId))
                 .orElseThrow(() -> new NotFoundException("Daily result not found in this report.", "RPT_DAILY_RESULT_NOT_FOUND"));
-        if (!result.isBlocking() && result.getDecision() == null) throw new BusinessRuleException("This row does not require an HR decision.", "RPT_ROW_NO_DECISION_REQUIRED", HttpStatus.CONFLICT);
+        if (!result.isBlocking() && result.getDecision() == null)
+            throw new BusinessRuleException("This row does not require an HR decision.", "RPT_ROW_NO_DECISION_REQUIRED", HttpStatus.CONFLICT);
         Integer worked = request.workedMinutes();
         if (worked == null && request.decision() == AttendanceDecision.NORMAL_DAY &&
-                (result.getStatus() == DailyStatus.MANUAL_ENTRY || result.getStatus() == DailyStatus.SINGLE_PUNCH)) worked = result.getExpectedMinutes();
+                (result.getStatus() == DailyStatus.MANUAL_ENTRY || result.getStatus() == DailyStatus.SINGLE_PUNCH))
+            worked = result.getExpectedMinutes();
         if (worked == null && request.decision() != AttendanceDecision.NORMAL_DAY) worked = 0;
         if (request.expectedVersion() != null && result.getVersion() != request.expectedVersion()) {
             throw new BusinessRuleException("تم تعديل السجل بواسطة مراجع آخر. أعد التحميل وحاول مجددًا.", "RPT_VERSION_CONFLICT", HttpStatus.CONFLICT);
@@ -370,14 +475,16 @@ public class ReportingService {
     public ReportingApi.Details saveDowntimeDecision(String reportId, ReportingApi.DowntimeDecisionRequest request, String actor) {
         var report = requireEditable(reportId);
         LocalDate date;
-        try { date = LocalDate.parse(request.date()); } catch (Exception e) {
+        try {
+            date = LocalDate.parse(request.date());
+        } catch (Exception e) {
             throw new BusinessRuleException("تاريخ غير صالح: " + request.date());
         }
         String categoryId = request.categoryId() != null && !request.categoryId().isBlank() ? request.categoryId() : "ALL";
         var results = categoryId.equals("ALL")
-            ? dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(reportId).stream()
-                .filter(r -> r.getWorkDate().equals(date)).toList()
-            : dailyAttendanceResultRepository.findByReportIdAndCategoryIdAndWorkDate(reportId, categoryId, date);
+                ? dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(reportId).stream()
+                  .filter(r -> r.getWorkDate().equals(date)).toList()
+                : dailyAttendanceResultRepository.findByReportIdAndCategoryIdAndWorkDate(reportId, categoryId, date);
 
         String decision = request.decision();
         String note = request.note() != null ? request.note() : "";
@@ -387,13 +494,13 @@ public class ReportingService {
             var before = result.decisionState();
             switch (decision) {
                 case "NORMAL_DAY" -> result.decide(AttendanceDecision.NORMAL_DAY, result.getExpectedMinutes(),
-                    "جهاز/كهرباء - يوم عمل عادي: " + note + " [" + actor + "]", actor);
+                        "جهاز/كهرباء - يوم عمل عادي: " + note + " [" + actor + "]", actor);
                 case "ABSENT" -> result.decide(AttendanceDecision.ABSENCE, 0,
-                    "جهاز/كهرباء - غياب: " + note + " [" + actor + "]", actor);
+                        "جهاز/كهرباء - غياب: " + note + " [" + actor + "]", actor);
                 case "HOLIDAY" -> result.decide(AttendanceDecision.OFFICIAL_HOLIDAY, result.getExpectedMinutes(),
-                    "جهاز/كهرباء - إجازة رسمية: " + note + " [" + actor + "]", actor);
+                        "جهاز/كهرباء - إجازة رسمية: " + note + " [" + actor + "]", actor);
                 case "DEVICE_FAILURE" -> result.decide(AttendanceDecision.NORMAL_DAY, result.getExpectedMinutes(),
-                    "عطل جهاز: " + note + " [" + actor + "]", actor);
+                        "عطل جهاز: " + note + " [" + actor + "]", actor);
                 case "INDIVIDUAL_REVIEW" -> { /* leave for individual review */ }
             }
             recordDecision(reportId, result, downtimeOperationId, "DOWNTIME_DECISION", before, actor);
@@ -401,7 +508,7 @@ public class ReportingService {
         dailyAttendanceResultRepository.saveAll(results);
         refreshUnresolved(report);
         auditService.record("DOWNTIME_DECISION", "ATTENDANCE_REPORT", reportId, actor,
-            "{\"date\":\"" + date + "\",\"categoryId\":\"" + categoryId + "\",\"decision\":\"" + decision + "\",\"affected\":" + results.size() + "}", null);
+                "{\"date\":\"" + date + "\",\"categoryId\":\"" + categoryId + "\",\"decision\":\"" + decision + "\",\"affected\":" + results.size() + "}", null);
         return details(report);
     }
 
@@ -417,7 +524,7 @@ public class ReportingService {
 
     @Transactional
     public ReportingApi.DayAnomalyActionResponse decideDayAnomaly(String reportId, String anomalyId,
-            ReportingApi.DayAnomalyDecisionRequest request, String actor) {
+                                                                  ReportingApi.DayAnomalyDecisionRequest request, String actor) {
         var report = requireEditable(reportId);
         var anomaly = requireAnomaly(reportId, anomalyId);
         if (anomaly.isReplay(request.operationId())) {
@@ -432,7 +539,7 @@ public class ReportingService {
         if (request.decision() != DayAnomalyDecision.DEFER) {
             var snapshots = dayAnomalyResultSnapshotRepository.findByAnomalyId(anomalyId);
             var byId = dailyAttendanceResultRepository.findAllById(
-                    snapshots.stream().map(DayAnomalyResultSnapshot::getDailyResultId).toList()).stream()
+                            snapshots.stream().map(DayAnomalyResultSnapshot::getDailyResultId).toList()).stream()
                     .collect(Collectors.toMap(DailyAttendanceResult::getId, Function.identity()));
             for (var snapshot : snapshots) {
                 var result = byId.get(snapshot.getDailyResultId());
@@ -448,7 +555,8 @@ public class ReportingService {
                     case OFFICIAL_HOLIDAY -> result.decide(AttendanceDecision.OFFICIAL_HOLIDAY,
                             result.getExpectedMinutes(), note, actor);
                     case ABSENCE -> result.decide(AttendanceDecision.ABSENCE, 0, note, actor);
-                    case DEFER -> { }
+                    case DEFER -> {
+                    }
                 }
                 recordDecision(reportId, result, request.operationId(), "DAY_ANOMALY", before, actor);
                 applied++;
@@ -475,7 +583,7 @@ public class ReportingService {
         }
         var snapshots = dayAnomalyResultSnapshotRepository.findByAnomalyId(anomalyId);
         var byId = dailyAttendanceResultRepository.findAllById(
-                snapshots.stream().map(DayAnomalyResultSnapshot::getDailyResultId).toList()).stream()
+                        snapshots.stream().map(DayAnomalyResultSnapshot::getDailyResultId).toList()).stream()
                 .collect(Collectors.toMap(DailyAttendanceResult::getId, Function.identity()));
         int restored = 0;
         int skipped = 0;
@@ -516,9 +624,10 @@ public class ReportingService {
 
     @Transactional
     public ReportingApi.Details decideHoliday(String reportId, String proposalId,
-                                               ReportingApi.HolidayDecisionRequest request, String actor) {
+                                              ReportingApi.HolidayDecisionRequest request, String actor) {
         var report = requireEditable(reportId);
-        if (request.status() == HolidayProposalStatus.PENDING) throw new BusinessRuleException("Choose CONFIRMED or REJECTED.", "RPT_HOLIDAY_PROPOSAL_STATUS_REQUIRED", HttpStatus.CONFLICT);
+        if (request.status() == HolidayProposalStatus.PENDING)
+            throw new BusinessRuleException("Choose CONFIRMED or REJECTED.", "RPT_HOLIDAY_PROPOSAL_STATUS_REQUIRED", HttpStatus.CONFLICT);
         var proposal = holidayProposalRepository.findById(proposalId)
                 .filter(item -> item.getReportId().equals(reportId))
                 .orElseThrow(() -> new NotFoundException("Holiday proposal not found in this report.", "RPT_HOLIDAY_PROPOSAL_NOT_FOUND"));
@@ -571,7 +680,10 @@ public class ReportingService {
 
     @Transactional
     public byte[] export(String id, ExcelExportOptions options) {
-        var report = requireReport(id); byte[] bytes = reportExporter.export(details(report), options); report.markExported(); return bytes;
+        var report = requireReport(id);
+        byte[] bytes = reportExporter.export(details(report), options);
+        report.markExported();
+        return bytes;
     }
 
     private List<HolidayProposal> createHolidayProposals(AttendanceReport report, List<DailyAttendanceResult> results,
@@ -579,7 +691,9 @@ public class ReportingService {
         var grouped = results.stream().collect(Collectors.groupingBy(item -> item.getCategoryId() + "|" + item.getWorkDate()));
         var proposals = new ArrayList<HolidayProposal>();
         for (var entry : grouped.entrySet()) {
-            var group = entry.getValue(); var first = group.get(0); var category = categories.get(first.getCategoryId());
+            var group = entry.getValue();
+            var first = group.get(0);
+            var category = categories.get(first.getCategoryId());
             if (category == null || category.getAttendanceMode() != AttendanceMode.BIOMETRIC) continue;
             long noPunchCount = group.stream().filter(item -> item.getStatus() == DailyStatus.NO_PUNCH).count();
             if (!group.isEmpty() && noPunchCount * 2 >= group.size()) {
@@ -683,8 +797,17 @@ public class ReportingService {
                 + proposals.stream().filter(proposal -> proposal.getStatus() == HolidayProposalStatus.PENDING).count());
     }
 
-    private AttendanceReport requireReport(String id) { return attendanceReportRepository.findById(id).orElseThrow(() -> new NotFoundException("Report not found.", "RPT_NOT_FOUND")); }
-    private AttendanceReport requireEditable(String id) { var report = requireReport(id); if (report.getStatus() != ReportStatus.IN_REVIEW) throw new BusinessRuleException("Only in-review reports can be changed.", "RPT_ONLY_IN_REVIEW", HttpStatus.CONFLICT); return report; }
+    private AttendanceReport requireReport(String id) {
+        return attendanceReportRepository.findById(id).orElseThrow(() -> new NotFoundException("Report not found.", "RPT_NOT_FOUND"));
+    }
+
+    private AttendanceReport requireEditable(String id) {
+        var report = requireReport(id);
+        if (report.getStatus() != ReportStatus.IN_REVIEW)
+            throw new BusinessRuleException("Only in-review reports can be changed.", "RPT_ONLY_IN_REVIEW", HttpStatus.CONFLICT);
+        return report;
+    }
+
     private DayAnomaly requireAnomaly(String reportId, String anomalyId) {
         return dayAnomalyRepository.findById(anomalyId).filter(item -> item.getReportId().equals(reportId))
                 .orElseThrow(() -> new NotFoundException("حالة الشذوذ غير موجودة داخل هذا التقرير.", "ANOM_NOT_FOUND_IN_REPORT"));
@@ -695,6 +818,7 @@ public class ReportingService {
                 report.getUnresolvedCount(), report.getCreatedBy(), report.getCreatedAt(), report.getApprovedBy(),
                 report.getApprovedAt(), report.getExportedAt(), report.getVersion(), report.getGenerationHash());
     }
+
     private ReportingApi.DailyResult daily(DailyAttendanceResult item) {
         return new ReportingApi.DailyResult(item.getId(), item.getEmployeeId(), item.getEmployeeCode(), item.getEmployeeName(),
                 item.getCategoryId(), item.getCategoryName(), item.getWorkDate(), item.getFirstPunch(), item.getLastPunch(),
@@ -702,10 +826,12 @@ public class ReportingService {
                 item.getEffectiveWorkedMinutes(), item.getLateMinutes(), item.getEarlyLeaveMinutes(), item.getOvertimeMinutes(),
                 item.getStatus(), item.getWarning(), item.getDecision(), item.getDecisionNote(), item.getDecidedBy(), item.getDecidedAt(), item.getRuleVersion(), item.getVersion());
     }
+
     private ReportingApi.HolidayProposalView proposal(HolidayProposal item) {
         return new ReportingApi.HolidayProposalView(item.getId(), item.getCategoryId(), item.getCategoryName(), item.getWorkDate(),
                 item.getActiveEmployeeCount(), item.getStatus(), item.getNote(), item.getDecidedBy(), item.getDecidedAt());
     }
+
     private ReportingApi.DayAnomalyView anomaly(DayAnomaly item) {
         return new ReportingApi.DayAnomalyView(item.getId(), item.getReportId(), item.getWorkDate(),
                 item.getCategoryId(), item.getCategoryName(), item.getLocation(), item.getAffectedCount(),
@@ -715,10 +841,9 @@ public class ReportingService {
                 item.getReopenedBy(), item.getReopenedAt(), item.getCreatedAt());
     }
 
-    private record DayCategoryKey(LocalDate workDate, String categoryId, String categoryName) { }
-
     private void validatePeriod(LocalDate start, LocalDate end) {
-        if (end.isBefore(start)) throw new BusinessRuleException("Report end date cannot be before start date.", "RPT_END_BEFORE_START", HttpStatus.CONFLICT);
+        if (end.isBefore(start))
+            throw new BusinessRuleException("Report end date cannot be before start date.", "RPT_END_BEFORE_START", HttpStatus.CONFLICT);
         if (start.isBefore(LocalDate.of(2000, 1, 1)) || end.isAfter(LocalDate.of(2200, 12, 31))) {
             throw new BusinessRuleException("Report dates are outside the supported range.", "RPT_DATES_OUT_OF_RANGE", HttpStatus.CONFLICT);
         }
@@ -741,13 +866,22 @@ public class ReportingService {
         String source = categories.stream().sorted(Comparator.comparing(AttendanceCategory::getId)).map(item -> item.getId() + ':' + item.getVersion()).collect(Collectors.joining("|"))
                 + schedules.stream().sorted(Comparator.comparing(ScheduleRule::getId)).map(ScheduleRule::getId).collect(Collectors.joining("|"))
                 + employees.stream().sorted(Comparator.comparing(Employee::getId)).map(item -> item.getId() + ':' + item.getVersion()).collect(Collectors.joining("|"));
-        try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(source.getBytes(StandardCharsets.UTF_8))); }
-        catch (NoSuchAlgorithmException exception) { throw new IllegalStateException(exception); }
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(source.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException(exception);
+        }
     }
 
     private String generationHash(LocalDate periodStart, LocalDate periodEnd, PayCycle payCycle) {
         String source = TenantContext.currentOrSystem() + "|" + periodStart + "|" + periodEnd + "|" + payCycle;
-        try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(source.getBytes(StandardCharsets.UTF_8))); }
-        catch (NoSuchAlgorithmException exception) { throw new IllegalStateException(exception); }
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(source.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException(exception);
+        }
+    }
+
+    private record DayCategoryKey(LocalDate workDate, String categoryId, String categoryName) {
     }
 }

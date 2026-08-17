@@ -1,25 +1,15 @@
 package com.bemo.hr.attendance.application;
 
 import com.bemo.hr.attendance.api.ImportApi;
-import com.bemo.hr.attendance.domain.BiometricDevice;
-import com.bemo.hr.attendance.domain.BiometricSource;
-import com.bemo.hr.attendance.domain.ImportBatch;
-import com.bemo.hr.attendance.domain.ImportStatus;
-import com.bemo.hr.attendance.domain.PunchImportEvidence;
-import com.bemo.hr.attendance.domain.PunchRecord;
-import com.bemo.hr.attendance.infrastructure.BiometricDeviceRepository;
-import com.bemo.hr.attendance.infrastructure.BiometricSourceRepository;
-import com.bemo.hr.attendance.infrastructure.DeviceCredentialsCrypto;
-import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
-import com.bemo.hr.attendance.infrastructure.PunchImportEvidenceRepository;
-import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
+import com.bemo.hr.attendance.domain.*;
+import com.bemo.hr.attendance.infrastructure.*;
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.security.TenantContext;
-import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +32,7 @@ public class BiometricDeviceSyncService {
     private final ImportBatchRepository importBatchRepository;
     private final PunchRecordRepository punchRecordRepository;
     private final PunchImportEvidenceRepository punchImportEvidenceRepository;
+    private final BiometricEmployeeProvisioningService employeeProvisioningService;
     private final EmployeeRepository employeeRepository;
     private final AuditService auditService;
     private final DeviceCredentialsCrypto deviceCredentialsCrypto;
@@ -52,9 +43,7 @@ public class BiometricDeviceSyncService {
 
     public List<ImportApi.SourceResponse> listSources() {
         return biometricSourceRepository.findAllByOrderBySourceTypeAscNameAsc().stream()
-                .map(source -> new ImportApi.SourceResponse(source.getId(), source.getName(),
-                        source.getSourceType().name(), source.getNormalizedCode(), source.isActive(),
-                        source.getCreatedAt()))
+                .map(this::toSourceResponse)
                 .toList();
     }
 
@@ -69,8 +58,15 @@ public class BiometricDeviceSyncService {
                     "BIO_SOURCE_DEVICE_TYPE_RESTRICTED", HttpStatus.CONFLICT);
         }
         String normalizedCode = normalizeCode(request.name());
+        boolean active = request.active() == null || request.active();
         var source = biometricSourceRepository.findBySourceTypeAndNormalizedCode(sourceType, normalizedCode)
-                .orElseGet(() -> biometricSourceRepository.save(new BiometricSource(sourceType, request.name(), normalizedCode, request.active())));
+                .orElseGet(() -> new BiometricSource(sourceType, request.name(), normalizedCode, active));
+        boolean autoCreate = Boolean.TRUE.equals(request.autoCreateEmployees());
+        boolean autoCreateActive = request.autoCreateEmployeeActive() == null || request.autoCreateEmployeeActive();
+        employeeProvisioningService.configureSource(source, autoCreate,
+                request.autoCreateCategoryId(), request.autoCreateEmploymentType(),
+                request.autoCreateActiveFromMode(), autoCreateActive);
+        source = biometricSourceRepository.saveAndFlush(source);
         auditService.record("CREATE", "BIOMETRIC_SOURCE", source.getId(), actor,
                 "{\"name\":\"" + safe(source.getName()) + "\",\"type\":\"" + sourceType + "\"}", null);
         return toSourceResponse(source);
@@ -80,9 +76,21 @@ public class BiometricDeviceSyncService {
     public ImportApi.SourceResponse updateSource(String id, ImportApi.SourceRequest request, String actor) {
         var source = biometricSourceRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("مصدر البصمة غير موجود.", "BIO_SOURCE_NOT_FOUND"));
+        boolean autoCreate = Boolean.TRUE.equals(request.autoCreateEmployees());
+        boolean autoCreateActive = request.autoCreateEmployeeActive() == null || request.autoCreateEmployeeActive();
         if (source.getSourceType() == BiometricSource.SourceType.DEVICE) {
-            throw new BusinessRuleException("Device sources are immutable: their name, type and active state cannot be changed.",
-                    "BIO_SOURCE_DEVICE_IMMUTABLE", HttpStatus.CONFLICT);
+            if (request.sourceType() != null
+                    && !BiometricSource.SourceType.DEVICE.name().equalsIgnoreCase(request.sourceType())) {
+                throw new BusinessRuleException("Device source identity is immutable.",
+                        "BIO_SOURCE_DEVICE_IMMUTABLE", HttpStatus.CONFLICT);
+            }
+            employeeProvisioningService.configureSource(source, autoCreate,
+                    request.autoCreateCategoryId(), request.autoCreateEmploymentType(),
+                    request.autoCreateActiveFromMode(), autoCreateActive);
+            biometricSourceRepository.saveAndFlush(source);
+            auditService.record("UPDATE", "BIOMETRIC_SOURCE", id, actor,
+                    "{\"autoCreateEmployees\":" + source.isAutoCreateEmployees() + "}", null);
+            return toSourceResponse(source);
         }
         BiometricSource.SourceType sourceType = parseSourceType(request.sourceType());
         if (sourceType != BiometricSource.SourceType.FILE_DEVICE) {
@@ -94,7 +102,11 @@ public class BiometricDeviceSyncService {
         if (clash.isPresent() && !clash.get().getId().equals(source.getId())) {
             throw new BusinessRuleException("A source with this name already exists.", "BIO_SOURCE_NAME_CLASH", HttpStatus.CONFLICT);
         }
-        source.update(request.name(), sourceType, normalizedCode, request.active());
+        boolean active = request.active() == null || request.active();
+        source.update(request.name(), sourceType, normalizedCode, active);
+        employeeProvisioningService.configureSource(source, autoCreate,
+                request.autoCreateCategoryId(), request.autoCreateEmploymentType(),
+                request.autoCreateActiveFromMode(), autoCreateActive);
         biometricSourceRepository.saveAndFlush(source);
         auditService.record("UPDATE", "BIOMETRIC_SOURCE", id, actor,
                 "{\"name\":\"" + safe(source.getName()) + "\",\"active\":" + source.isActive() + "}", null);
@@ -154,8 +166,14 @@ public class BiometricDeviceSyncService {
                     new BiometricDeviceClient.DeviceCredentials(device.getUsername(),
                             deviceCredentialsCrypto.decrypt(device.getPasswordEncrypted())));
             String checksum = sha256(remote.rawContent());
-            var existing = importBatchRepository.findBySourceIdAndChecksum(source.getId(), checksum);
+            var existing = importBatchRepository
+                    .findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
+                            source.getId(), checksum, ImportStatus.REVERSED);
             if (existing.isPresent()) {
+                if (source.isAutoCreateEmployees()) {
+                    remote.punches().forEach(punch -> employeeProvisioningService.resolveEmployeeId(
+                            source, punch.deviceUserId(), punch.employeeName(), punch.punchedAt(), actor));
+                }
                 device.syncSucceeded(0, device.getLastSuccessfulPunchAt());
                 biometricDeviceRepository.saveAndFlush(device);
                 return new ImportApi.DeviceSyncResponse(response(device), remote.punches().size(), 0,
@@ -170,7 +188,9 @@ public class BiometricDeviceSyncService {
                     source.getId(), device.getName(), ImportStatus.COMPLETED.name(), size, size, 0, actor);
             ImportBatch batch;
             if (reserved == 0) {
-                batch = importBatchRepository.findBySourceIdAndChecksum(source.getId(), checksum)
+                batch = importBatchRepository
+                        .findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
+                                source.getId(), checksum, ImportStatus.REVERSED)
                         .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + checksum));
                 device.syncSucceeded(0, device.getLastSuccessfulPunchAt());
                 biometricDeviceRepository.saveAndFlush(device);
@@ -186,9 +206,8 @@ public class BiometricDeviceSyncService {
             List<PunchImportEvidence> evidence = new ArrayList<>(size);
             for (var punch : remote.punches()) {
                 rowNumber++;
-                String employeeId = employeeRepository.findByEmployeeCodeIgnoreCase(punch.deviceUserId())
-                        .or(() -> employeeRepository.findByDeviceUserId(punch.deviceUserId()))
-                        .map(employee -> employee.getId()).orElse(null);
+                String employeeId = employeeProvisioningService.resolveEmployeeId(
+                        source, punch.deviceUserId(), punch.employeeName(), punch.punchedAt(), actor);
                 String punchId = UUID.randomUUID().toString();
                 int inserted = punchRecordRepository.insertIfAbsent(punchId, appId,
                         batch.getId(), source.getId(), device.getId(), employeeId, punch.deviceUserId(),
@@ -252,6 +271,9 @@ public class BiometricDeviceSyncService {
     private ImportApi.SourceResponse toSourceResponse(BiometricSource source) {
         return new ImportApi.SourceResponse(source.getId(), source.getName(),
                 source.getSourceType().name(), source.getNormalizedCode(), source.isActive(),
+                source.isAutoCreateEmployees(), source.getAutoCreateCategoryId(),
+                source.getAutoCreateEmploymentType(), source.getAutoCreateActiveFromMode(),
+                source.isAutoCreateEmployeeActive(),
                 source.getCreatedAt());
     }
 

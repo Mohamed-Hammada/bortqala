@@ -39,6 +39,7 @@ export interface WorkspaceSection {
 }
 
 const FINANCE_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'];
+const FINANCE_REPORT_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'];
 const PROCUREMENT_ROLES: RoleCode[] = [
   'PROCUREMENT_MANAGER',
   'PROCUREMENT_USER',
@@ -328,7 +329,7 @@ export const NAV_ITEMS: NavItem[] = [
       path: '/fiscal-periods',
       icon: 'dashboard',
       workspace: 'workspace.finance',
-      roles: FINANCE_ROLES,
+      roles: FINANCE_REPORT_ROLES,
     },
     {
       menuId: 'budgets',
@@ -345,8 +346,8 @@ export const NAV_ITEMS: NavItem[] = [
       descriptionKey: 'nav.organizationHint',
       path: '/organization',
       icon: 'categories',
-      workspace: 'workspace.admin',
-      roles: ['ADMIN'],
+      workspace: 'workspace.people',
+      roles: ['ADMIN', 'HR_MANAGER'],
     },
     {
       menuId: 'audit-logs',
@@ -871,3 +872,5 @@ export class AppShellComponent {
     this.chordTimer = null;
   }
 }
+
+// BORTQALA_FEEDBACK_20260816_ORGANIZATION: organization belongs to People and is available to HR managers.

@@ -1,5 +1,4 @@
 name: bemo-erp
-
 # Production overlay. Run with:
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 # Every secret is required (`:?`) and has no fallback; the command fails fast
@@ -8,7 +7,6 @@ name: bemo-erp
 # network only. `!reset []` is required because Compose merges sequence values:
 # a plain `ports: []` would leave the development host ports from the base file
 # published.
-
 services:
   db:
     ports: !reset []
@@ -16,7 +14,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set}
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
-
 
   device-hub:
     # Production: internal network only; never publish the adapter port.
@@ -49,3 +46,10 @@ services:
       HR_BOOTSTRAP_SUPER_ADMIN_USERNAME: ${HR_BOOTSTRAP_SUPER_ADMIN_USERNAME:?HR_BOOTSTRAP_SUPER_ADMIN_USERNAME must be set}
       HR_BOOTSTRAP_SUPER_ADMIN_PASSWORD: ${HR_BOOTSTRAP_SUPER_ADMIN_PASSWORD:?HR_BOOTSTRAP_SUPER_ADMIN_PASSWORD must be set}
       HR_COMPANY_ZONE: ${HR_COMPANY_ZONE:-Africa/Cairo}
+      # Web Push is enabled in production, but credentials are deliberately
+      # required instead of falling back to the development VAPID key pair.
+      HR_WEB_PUSH_ENABLED: ${HR_WEB_PUSH_ENABLED:?HR_WEB_PUSH_ENABLED must be set}
+      HR_WEB_PUSH_PUBLIC_KEY: ${HR_WEB_PUSH_PUBLIC_KEY:?HR_WEB_PUSH_PUBLIC_KEY must be set}
+      HR_WEB_PUSH_PRIVATE_KEY: ${HR_WEB_PUSH_PRIVATE_KEY:?HR_WEB_PUSH_PRIVATE_KEY must be set}
+      HR_WEB_PUSH_SUBJECT: ${HR_WEB_PUSH_SUBJECT:?HR_WEB_PUSH_SUBJECT must be set}
+      HR_WEB_PUSH_TTL_SECONDS: ${HR_WEB_PUSH_TTL_SECONDS:-86400}

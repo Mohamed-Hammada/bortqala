@@ -35,7 +35,8 @@ public class CycleCountLine {
     @Column(name = "variance_quantity", nullable = false, precision = 15, scale = 4)
     private BigDecimal varianceQuantity;
 
-    protected CycleCountLine() {}
+    protected CycleCountLine() {
+    }
 
     public CycleCountLine(String countId, String itemId, BigDecimal systemQuantity, BigDecimal countedQuantity) {
         this.id = UUID.randomUUID().toString();
@@ -46,11 +47,31 @@ public class CycleCountLine {
         this.varianceQuantity = countedQuantity.subtract(systemQuantity);
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getCountId() { return countId; }
-    public String getItemId() { return itemId; }
-    public BigDecimal getSystemQuantity() { return systemQuantity; }
-    public BigDecimal getCountedQuantity() { return countedQuantity; }
-    public BigDecimal getVarianceQuantity() { return varianceQuantity; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getCountId() {
+        return countId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public BigDecimal getSystemQuantity() {
+        return systemQuantity;
+    }
+
+    public BigDecimal getCountedQuantity() {
+        return countedQuantity;
+    }
+
+    public BigDecimal getVarianceQuantity() {
+        return varianceQuantity;
+    }
 }

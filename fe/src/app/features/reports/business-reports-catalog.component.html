@@ -1,0 +1,153 @@
+<section class="business-catalog">
+  <div class="catalog-head">
+    <div>
+      <p class="eyebrow">{{ i18n.t('reports.catalog.eyebrow') }}</p>
+      <h2>{{ i18n.t('reports.catalog.title') }}</h2>
+      <p class="catalog-description">{{ i18n.t('reports.catalog.description') }}</p>
+    </div>
+    <div class="catalog-stats" [attr.aria-label]="i18n.t('reports.catalog.summaryAria')">
+      <span><strong>{{ reports.length }}</strong>{{ i18n.t('reports.catalog.reportsCount') }}</span>
+      <span><strong>{{ modules.length }}</strong>{{ i18n.t('reports.catalog.modulesCount') }}</span>
+    </div>
+  </div>
+
+  <div class="catalog-toolbar">
+    <label class="search-field">
+      <span>{{ i18n.t('reports.catalog.searchLabel') }}</span>
+      <input
+        #searchInput
+        type="search"
+        [value]="query()"
+        [placeholder]="i18n.t('reports.catalog.searchPlaceholder')"
+        (input)="setQuery(searchInput.value)"
+      />
+    </label>
+
+    <div class="module-filter" role="group" [attr.aria-label]="i18n.t('reports.catalog.moduleFilter')">
+      <button
+        type="button"
+        [class.active]="selectedModule() === 'all'"
+        (click)="setModule('all')"
+      >
+        {{ i18n.t('reports.catalog.allModules') }}
+        <span>{{ reports.length }}</span>
+      </button>
+      @for (module of modules; track module) {
+        <button
+          type="button"
+          [class.active]="selectedModule() === module"
+          (click)="setModule(module)"
+        >
+          {{ moduleLabel(module) }}
+          <span>{{ moduleCount(module) }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="result-summary">
+    {{ i18n.t('reports.catalog.searchResults', { count: filteredReports().length }) }}
+  </div>
+
+  <div class="report-grid">
+    @for (report of filteredReports(); track report.id) {
+      <article class="report-card" [class.expanded]="expandedId() === report.id">
+        <div class="report-card-head">
+          <div class="report-identity">
+            <span class="module-badge">{{ moduleLabel(report.module) }}</span>
+            <span class="report-number">#{{ report.number }}</span>
+          </div>
+          <h3>{{ title(report) }}</h3>
+          @if (!i18n.locale().startsWith('en')) {
+            <p class="alternate-title ltr">{{ report.titleEn }}</p>
+          }
+          <p class="objective ltr">{{ report.objective }}</p>
+        </div>
+
+        <div class="route-row">
+          <div>
+            <small>{{ i18n.t('reports.catalog.sourceRoute') }}</small>
+            <div class="route-list ltr">
+              @for (route of report.sourceRoutes; track route) {
+                <code>{{ route }}</code>
+              }
+            </div>
+          </div>
+          @if (routeAdjusted(report)) {
+            <span class="adjusted-note">{{ i18n.t('reports.catalog.adjustedRoute') }}</span>
+          }
+        </div>
+
+        <div class="report-actions">
+          <a class="button primary" [routerLink]="report.workspaceRoute">
+            {{ i18n.t('reports.catalog.openWorkspace') }}
+          </a>
+          <button
+            class="button secondary"
+            type="button"
+            [attr.aria-expanded]="expandedId() === report.id"
+            (click)="toggleDetails(report.id)"
+          >
+            {{
+              i18n.t(
+                expandedId() === report.id ? 'reports.catalog.hideDetails' : 'reports.catalog.details'
+              )
+            }}
+          </button>
+        </div>
+
+        @if (expandedId() === report.id) {
+          <div class="report-details">
+            <section>
+              <h4>{{ i18n.t('reports.catalog.entities') }}</h4>
+              <div class="chip-list ltr">
+                @for (entity of report.entities; track entity) {
+                  <code>{{ entity }}</code>
+                }
+              </div>
+            </section>
+
+            <section>
+              <h4>{{ i18n.t('reports.catalog.filters') }}</h4>
+              <ul class="ltr">
+                @for (filter of report.filters; track filter) {
+                  <li>{{ filter }}</li>
+                }
+              </ul>
+            </section>
+
+            <section class="metrics-section">
+              <h4>{{ i18n.t('reports.catalog.metrics') }}</h4>
+              <ul class="ltr">
+                @for (metric of report.metrics; track metric) {
+                  <li>{{ metric }}</li>
+                }
+              </ul>
+            </section>
+
+            <section class="trigger-box">
+              <h4>{{ i18n.t('reports.catalog.trigger') }}</h4>
+              <p class="ltr">{{ report.trigger }}</p>
+            </section>
+
+            <section>
+              <h4>{{ i18n.t('reports.catalog.exports') }}</h4>
+              <div class="chip-list ltr">
+                @for (format of report.exportFormats; track format) {
+                  <span>{{ format }}</span>
+                }
+              </div>
+            </section>
+          </div>
+        }
+      </article>
+    } @empty {
+      <div class="catalog-empty">
+        <strong>{{ i18n.t('reports.catalog.empty') }}</strong>
+        <p>{{ i18n.t('reports.catalog.emptyHint') }}</p>
+      </div>
+    }
+  </div>
+
+  <p class="source-note">{{ i18n.t('reports.catalog.sourceNote') }}</p>
+</section>

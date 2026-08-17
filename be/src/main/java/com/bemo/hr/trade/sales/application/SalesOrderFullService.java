@@ -2,8 +2,8 @@ package com.bemo.hr.trade.sales.application;
 
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.operations.OperationsService;
-import com.bemo.hr.operations.domain.StockReservation;
 import com.bemo.hr.operations.application.WarehouseInventoryService;
+import com.bemo.hr.operations.domain.StockReservation;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.trade.sales.api.SalesApi;
 import com.bemo.hr.trade.sales.domain.*;
@@ -14,8 +14,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.*;
-import java.util.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -38,6 +41,22 @@ public class SalesOrderFullService {
     private final SalesReceivablesService receivablesService;
     private final AuditService auditService;
 
+    private static LocalDate date(long value) {
+        return Instant.ofEpochMilli(value).atZone(ZoneOffset.UTC).toLocalDate();
+    }
+
+    private static long ms(LocalDate value) {
+        return value.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
+    }
+
+    private static BusinessRuleException conflict(String code) {
+        return new BusinessRuleException(code, code, HttpStatus.CONFLICT);
+    }
+
+    private static BusinessRuleException notFound(String code) {
+        return new BusinessRuleException(code, code, HttpStatus.NOT_FOUND);
+    }
+
     @Transactional(readOnly = true)
     public List<SalesApi.SalesOrderResponse> orders() {
         return salesOrderRepository.findAllByOrderBySoDateDescCreatedAtDesc().stream().map(this::order).toList();
@@ -45,7 +64,8 @@ public class SalesOrderFullService {
 
     @Transactional
     public SalesApi.SalesOrderResponse createOrder(SalesApi.SalesOrderPayload request, String actor) {
-        if (salesOrderRepository.existsBySoNumberIgnoreCase(request.soNumber())) throw conflict("SALE_ORDER_NUMBER_EXISTS");
+        if (salesOrderRepository.existsBySoNumberIgnoreCase(request.soNumber()))
+            throw conflict("SALE_ORDER_NUMBER_EXISTS");
         List<SalesApi.SalesOrderLineRequest> lines = request.lines() == null ? List.of() : request.lines();
         if (lines.isEmpty()) throw conflict("O2C_ORDER_LINES_REQUIRED");
         if (request.warehouseId() == null || request.warehouseId().isBlank()) throw conflict("O2C_WAREHOUSE_REQUIRED");
@@ -108,7 +128,8 @@ public class SalesOrderFullService {
     public SalesApi.DeliveryResponse deliver(String salesOrderId, SalesApi.DeliveryRequest request, String actor) {
         SalesDeliveryHeader replay = deliveryHeaderRepository.findByOperationId(request.operationId()).orElse(null);
         if (replay != null) return delivery(replay);
-        if (deliveryHeaderRepository.existsByDeliveryNumberIgnoreCase(request.deliveryNumber())) throw conflict("O2C_DELIVERY_NUMBER_EXISTS");
+        if (deliveryHeaderRepository.existsByDeliveryNumberIgnoreCase(request.deliveryNumber()))
+            throw conflict("O2C_DELIVERY_NUMBER_EXISTS");
         SalesOrder order = lockOrder(salesOrderId);
         if (order.getStatus() != SalesOrder.Status.CONFIRMED) throw conflict("O2C_ORDER_NOT_DELIVERABLE");
         List<SalesOrderLine> orderLines = salesOrderLineRepository.findBySalesOrderId(salesOrderId);
@@ -135,8 +156,11 @@ public class SalesOrderFullService {
         if (invoiceAmount.signum() <= 0) throw conflict("O2C_DELIVERY_LINES_REQUIRED");
         CustomerInvoice invoice = receivablesService.createAndIssueDeliveryInvoice("INV-" + request.deliveryNumber(),
                 order.getCustomerId(), order.getId(), deliveryDate, order.getCurrencyCode(), invoiceAmount, actor);
-        header.linkInvoice(invoice.getId()); header.deliver(); order.deliver();
-        deliveryHeaderRepository.save(header); salesOrderRepository.save(order);
+        header.linkInvoice(invoice.getId());
+        header.deliver();
+        order.deliver();
+        deliveryHeaderRepository.save(header);
+        salesOrderRepository.save(order);
         auditService.record("DELIVER", "SALES_ORDER", order.getId(), actor,
                 "{\"deliveryId\":\"" + header.getId() + "\",\"invoiceId\":\"" + invoice.getId() + "\"}", null);
         return delivery(header);
@@ -146,7 +170,8 @@ public class SalesOrderFullService {
     public SalesApi.ReturnResponse receiveReturn(String salesOrderId, SalesApi.ReturnRequest request, String actor) {
         CustomerReturnHeader replay = returnHeaderRepository.findByOperationId(request.operationId()).orElse(null);
         if (replay != null) return customerReturn(replay);
-        if (returnHeaderRepository.existsByReturnNumberIgnoreCase(request.returnNumber())) throw conflict("O2C_RETURN_NUMBER_EXISTS");
+        if (returnHeaderRepository.existsByReturnNumberIgnoreCase(request.returnNumber()))
+            throw conflict("O2C_RETURN_NUMBER_EXISTS");
         SalesOrder order = lockOrder(salesOrderId);
         SalesDeliveryHeader delivery = deliveryHeaderRepository.findById(request.deliveryId())
                 .orElseThrow(() -> notFound("O2C_DELIVERY_NOT_FOUND"));
@@ -163,7 +188,8 @@ public class SalesOrderFullService {
             SalesDeliveryLine source = deliveryLines.get(row.deliveryLineId());
             if (source == null) throw conflict("O2C_RETURN_LINE_INVALID");
             BigDecimal alreadyReturned = returnLineRepository.returnedQuantity(source.getId());
-            if (alreadyReturned.add(row.quantity()).compareTo(source.getQuantity()) > 0) throw conflict("O2C_RETURN_EXCEEDS_DELIVERY");
+            if (alreadyReturned.add(row.quantity()).compareTo(source.getQuantity()) > 0)
+                throw conflict("O2C_RETURN_EXCEEDS_DELIVERY");
             OperationsService.ValuedMovement movement = operationsService.recordCustomerReturn(source.getItemId(), order.getCustomerId(),
                     delivery.getWarehouseId(), row.quantity(), source.getUnitCogs(), request.returnNumber(), row.disposition(),
                     returnDate.atStartOfDay(ZoneOffset.UTC).toInstant(), actor);
@@ -174,16 +200,30 @@ public class SalesOrderFullService {
         }
         CustomerCreditNote note = receivablesService.applyReturnCredit(request.operationId() + ":credit", "CN-" + request.returnNumber(),
                 delivery.getInvoiceId(), order.getId(), delivery.getId(), header.getId(), returnDate, credit, actor);
-        header.receive(); header.approve(); header.linkCreditNote(note.getId()); header.refund();
+        header.receive();
+        header.approve();
+        header.linkCreditNote(note.getId());
+        header.refund();
         returnHeaderRepository.save(header);
         auditService.record("RETURN", "SALES_ORDER", order.getId(), actor,
                 "{\"returnId\":\"" + header.getId() + "\",\"creditNoteId\":\"" + note.getId() + "\"}", null);
         return customerReturn(header);
     }
 
-    @Transactional(readOnly = true) public List<SalesOrderLine> getSalesOrderLines(String id) { return salesOrderLineRepository.findBySalesOrderId(id); }
-    @Transactional(readOnly = true) public List<SalesApi.DeliveryResponse> deliveries(String id) { return deliveryHeaderRepository.findBySalesOrderId(id).stream().map(this::delivery).toList(); }
-    @Transactional(readOnly = true) public List<SalesApi.ReturnResponse> returns(String id) { return returnHeaderRepository.findBySalesOrderId(id).stream().map(this::customerReturn).toList(); }
+    @Transactional(readOnly = true)
+    public List<SalesOrderLine> getSalesOrderLines(String id) {
+        return salesOrderLineRepository.findBySalesOrderId(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SalesApi.DeliveryResponse> deliveries(String id) {
+        return deliveryHeaderRepository.findBySalesOrderId(id).stream().map(this::delivery).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SalesApi.ReturnResponse> returns(String id) {
+        return returnHeaderRepository.findBySalesOrderId(id).stream().map(this::customerReturn).toList();
+    }
 
     private SalesApi.SalesOrderResponse order(SalesOrder value) {
         List<SalesApi.SalesOrderLineResponse> lines = salesOrderLineRepository.findBySalesOrderId(value.getId()).stream().map(row ->
@@ -214,9 +254,7 @@ public class SalesOrderFullService {
                 value.getCreditNoteId(), note == null ? null : note.getCreditNoteNumber(), value.getStatus().name(), lines);
     }
 
-    private SalesOrder lockOrder(String id) { return salesOrderRepository.findByIdForUpdate(id).orElseThrow(() -> notFound("SALE_ORDER_NOT_FOUND")); }
-    private static LocalDate date(long value) { return Instant.ofEpochMilli(value).atZone(ZoneOffset.UTC).toLocalDate(); }
-    private static long ms(LocalDate value) { return value.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(); }
-    private static BusinessRuleException conflict(String code) { return new BusinessRuleException(code, code, HttpStatus.CONFLICT); }
-    private static BusinessRuleException notFound(String code) { return new BusinessRuleException(code, code, HttpStatus.NOT_FOUND); }
+    private SalesOrder lockOrder(String id) {
+        return salesOrderRepository.findByIdForUpdate(id).orElseThrow(() -> notFound("SALE_ORDER_NOT_FOUND"));
+    }
 }

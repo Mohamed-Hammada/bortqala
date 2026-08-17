@@ -18,11 +18,6 @@ public class LaborDispatchController {
         this.laborDispatchService = laborDispatchService;
     }
 
-    public record CreateDispatchPayload(String requestId, String contractorId, String dispatchDate) {}
-    public record AssignWorkerPayload(String workerId, String requestLineId, String contractorId, String fromDate, String toDate, BigDecimal agreedRate, BigDecimal agreedHours) {}
-    public record RejectAssignmentPayload(String reason) {}
-    public record ReplaceAssignmentPayload(String newWorkerId, BigDecimal agreedRate, BigDecimal agreedHours) {}
-
     @PostMapping("/dispatches")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
     public LaborDispatch createDispatch(@RequestBody CreateDispatchPayload payload, Authentication authentication) {
@@ -92,5 +87,18 @@ public class LaborDispatchController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE', 'VIEWER')")
     public List<WorkerAssignment> getAssignments(@PathVariable String id) {
         return laborDispatchService.getAssignmentsByDispatch(id);
+    }
+
+    public record CreateDispatchPayload(String requestId, String contractorId, String dispatchDate) {
+    }
+
+    public record AssignWorkerPayload(String workerId, String requestLineId, String contractorId, String fromDate,
+                                      String toDate, BigDecimal agreedRate, BigDecimal agreedHours) {
+    }
+
+    public record RejectAssignmentPayload(String reason) {
+    }
+
+    public record ReplaceAssignmentPayload(String newWorkerId, BigDecimal agreedRate, BigDecimal agreedHours) {
     }
 }

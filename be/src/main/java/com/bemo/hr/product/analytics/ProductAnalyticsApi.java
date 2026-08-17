@@ -1,1 +1,40 @@
-package com.bemo.hr.product.analytics;import jakarta.validation.constraints.*;import java.util.*;public final class ProductAnalyticsApi{private ProductAnalyticsApi(){}public record EventRequest(@NotBlank@Pattern(regexp="[A-Z0-9_]+")@Size(max=80)String eventName,@NotBlank@Size(max=120)String featureKey,@NotBlank@Size(max=80)String operationId,@Size(max=10)Map<String,Object>properties){}public record EventResponse(String id,String eventName,String featureKey,long occurredAt,boolean replay){}public record MilestoneResponse(String key,long achievedAt){}public record FeatureUsage(String featureKey,long eventCount){}public record TenantSummary(long eventCount,long activeDays,int activationScore,List<MilestoneResponse>milestones,List<FeatureUsage>features){}public record RetentionRequest(@Min(30)@Max(730)int retainDays){}public record RetentionResponse(int deletedRawEvents,int retainDays){}public record PlatformTenantSummary(String tenantId,String tenantCode,String tenantName,long eventCount,long milestoneCount,long lastEventAt){} }
+package com.bemo.hr.product.analytics;
+
+import jakarta.validation.constraints.*;
+
+import java.util.List;
+import java.util.Map;
+
+public final class ProductAnalyticsApi {
+    private ProductAnalyticsApi() {
+    }
+
+    public record EventRequest(@NotBlank @Pattern(regexp = "[A-Z0-9_]+") @Size(max = 80) String eventName,
+                               @NotBlank @Size(max = 120) String featureKey,
+                               @NotBlank @Size(max = 80) String operationId,
+                               @Size(max = 10) Map<String, Object> properties) {
+    }
+
+    public record EventResponse(String id, String eventName, String featureKey, long occurredAt, boolean replay) {
+    }
+
+    public record MilestoneResponse(String key, long achievedAt) {
+    }
+
+    public record FeatureUsage(String featureKey, long eventCount) {
+    }
+
+    public record TenantSummary(long eventCount, long activeDays, int activationScore,
+                                List<MilestoneResponse> milestones, List<FeatureUsage> features) {
+    }
+
+    public record RetentionRequest(@Min(30) @Max(730) int retainDays) {
+    }
+
+    public record RetentionResponse(int deletedRawEvents, int retainDays) {
+    }
+
+    public record PlatformTenantSummary(String tenantId, String tenantCode, String tenantName, long eventCount,
+                                        long milestoneCount, long lastEventAt) {
+    }
+}

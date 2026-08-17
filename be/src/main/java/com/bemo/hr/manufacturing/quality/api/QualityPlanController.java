@@ -18,9 +18,6 @@ public class QualityPlanController {
         this.qualityPlanService = qualityPlanService;
     }
 
-    public record CreatePlanPayload(String planCode, String name, String itemId, String targetCategory) {}
-    public record RecordDispositionPayload(String dispositionNumber, String planId, String inspectionId, String result, String notes) {}
-
     @PostMapping("/plans")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'QUALITY_MANAGER', 'MANUFACTURING_MANAGER')")
     public QualityPlanHeader createPlan(@RequestBody CreatePlanPayload payload) {
@@ -37,5 +34,12 @@ public class QualityPlanController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'QUALITY_MANAGER', 'MANUFACTURING_MANAGER', 'VIEWER')")
     public List<QualityPlanHeader> getPlansByItem(@PathVariable String itemId) {
         return qualityPlanService.getPlansByItem(itemId);
+    }
+
+    public record CreatePlanPayload(String planCode, String name, String itemId, String targetCategory) {
+    }
+
+    public record RecordDispositionPayload(String dispositionNumber, String planId, String inspectionId, String result,
+                                           String notes) {
     }
 }

@@ -6,8 +6,8 @@ import com.bemo.hr.employee.domain.PayCycle;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -31,7 +31,9 @@ class SaasTenantIsolationTests {
     }
 
     @AfterEach
-    void clearTenant() { TenantContext.clear(); }
+    void clearTenant() {
+        TenantContext.clear();
+    }
 
     @Test
     void tenantIdIsAssignedOnInsertAndFiltersEveryJpaQuery() {

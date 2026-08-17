@@ -1,11 +1,9 @@
 package com.bemo.hr.inventory.application;
 
-import com.bemo.hr.inventory.domain.InventoryReservation;
-import com.bemo.hr.inventory.infrastructure.InventoryReservationRepository;
+import com.bemo.hr.operations.application.WarehouseInventoryService;
+import com.bemo.hr.operations.domain.StockReservation;
 import com.bemo.hr.organization.domain.Warehouse;
 import com.bemo.hr.organization.infrastructure.WarehouseRepository;
-import com.bemo.hr.shared.domain.BusinessRuleException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,19 +14,17 @@ import java.util.List;
 public class InventoryService {
 
     private final WarehouseRepository warehouseRepository;
-    private final InventoryReservationRepository reservationRepository;
+    private final WarehouseInventoryService warehouseInventoryService;
 
     public InventoryService(WarehouseRepository warehouseRepository,
-                            InventoryReservationRepository reservationRepository) {
+                            WarehouseInventoryService warehouseInventoryService) {
         this.warehouseRepository = warehouseRepository;
-        this.reservationRepository = reservationRepository;
+        this.warehouseInventoryService = warehouseInventoryService;
     }
 
     @Transactional
     public Warehouse createWarehouse(String branchId, String code, String name, String location) {
-        String effectiveBranch = branchId != null ? branchId : "branch-default";
-        Warehouse warehouse = new Warehouse(effectiveBranch, code, name, location, true);
-        return warehouseRepository.save(warehouse);
+        return warehouseInventoryService.createWarehouse(branchId, code, name, location);
     }
 
     @Transactional(readOnly = true)
@@ -37,16 +33,14 @@ public class InventoryService {
     }
 
     @Transactional
-    public InventoryReservation reserveStock(String sourceType, String sourceId, String itemId, String warehouseId, BigDecimal quantity) {
-        InventoryReservation reservation = new InventoryReservation(sourceType, sourceId, itemId, warehouseId, quantity);
-        return reservationRepository.save(reservation);
+    public StockReservation reserveStock(String sourceType, String sourceId, String itemId, String warehouseId, BigDecimal quantity) {
+        String reservationNumber = "API-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        return warehouseInventoryService.reserveStock(
+                reservationNumber, sourceType, sourceId, itemId, warehouseId, quantity);
     }
 
     @Transactional
     public void releaseReservation(String reservationId) {
-        InventoryReservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new BusinessRuleException("Reservation not found", "RESERVATION_NOT_FOUND", HttpStatus.NOT_FOUND));
-        reservation.release();
-        reservationRepository.save(reservation);
+        warehouseInventoryService.cancelReservation(reservationId);
     }
 }

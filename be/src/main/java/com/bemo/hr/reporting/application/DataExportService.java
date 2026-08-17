@@ -4,13 +4,13 @@ import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
 import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
-import com.bemo.hr.reporting.infrastructure.ExcelExportSupport;
 import com.bemo.hr.party.BusinessPartyRepository;
+import com.bemo.hr.reporting.infrastructure.ExcelExportSupport;
 import com.bemo.hr.shared.i18n.TranslationService;
+import lombok.RequiredArgsConstructor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import lombok.RequiredArgsConstructor;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -31,8 +31,8 @@ public class DataExportService {
     public byte[] categories(ExcelExportOptions options) {
         var messages = ExcelExportSupport.messages(translationService, options);
         var rows = attendanceCategoryRepository.findByScopeInOrderByNameAsc(java.util.List.of(
-                        com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE,
-                        com.bemo.hr.employee.domain.CategoryScope.BOTH)).stream().<List<?>>map(item -> List.of(
+                com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE,
+                com.bemo.hr.employee.domain.CategoryScope.BOTH)).stream().<List<?>>map(item -> List.of(
                 item.getCode(), item.getName(), item.getExpectedDailyMinutes(),
                 ExcelExportSupport.enumText(messages, item.getAttendanceMode()),
                 ExcelExportSupport.enumText(messages, item.getPayCycle()),
@@ -85,8 +85,13 @@ public class DataExportService {
     }
 
     public byte[] trends(int months, ExcelExportOptions options) {
+        var current = java.time.YearMonth.now();
+        return trends(months, current.getYear(), current.getMonthValue(), options);
+    }
+
+    public byte[] trends(int months, int year, int month, ExcelExportOptions options) {
         var messages = ExcelExportSupport.messages(translationService, options);
-        var rows = dashboardService.trends(months).stream().<List<?>>map(point -> List.of(
+        var rows = dashboardService.trends(months, year, month).stream().<List<?>>map(point -> List.of(
                 point.label(), point.scheduledEmployeeDays(), point.presentEmployeeDays(),
                 point.attendanceRate() + "%", point.exceptionDays(), point.overtimeMinutes(),
                 point.paidCount(), point.pendingCount(), point.totalGross(), point.totalPaid())).toList();

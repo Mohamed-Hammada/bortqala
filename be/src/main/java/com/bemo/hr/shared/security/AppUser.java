@@ -1,16 +1,6 @@
 package com.bemo.hr.shared.security;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 
 import java.time.Instant;
 import java.util.LinkedHashSet;
@@ -42,7 +32,7 @@ public class AppUser {
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_code"))
-    private Set<Role> roles = new LinkedHashSet<>();
+    private final Set<Role> roles = new LinkedHashSet<>();
 
     @Column(name = "allowed_menus", length = 1000)
     private String allowedMenus;
@@ -101,7 +91,7 @@ public class AppUser {
         this.active = active;
         this.roles.clear();
         this.roles.addAll(roles);
-        this.canViewSalary = canViewSalary == null ? true : canViewSalary;
+        this.canViewSalary = canViewSalary == null || canViewSalary;
         this.dashboardCustomizationEnabled = dashboardCustomizationEnabled == null || dashboardCustomizationEnabled;
         if (allowedMenus != null) {
             this.allowedMenus = String.join(",", allowedMenus);
@@ -161,34 +151,91 @@ public class AppUser {
     }
 
     @PrePersist
-    void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = Instant.now(); }
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getUsername() { return username; }
-    public String getDisplayName() { return displayName; }
-    public String getPasswordHash() { return passwordHash; }
-    public boolean isActive() { return active; }
-    public boolean isCanViewSalary() { return canViewSalary; }
-    public String getCategoryId() { return categoryId; }
-    public boolean isDashboardCustomizationEnabled() { return dashboardCustomizationEnabled; }
-    public int getFailedLoginAttempts() { return failedLoginAttempts; }
-    public Instant getLockedUntil() { return lockedUntil; }
-    public boolean isMustChangePassword() { return mustChangePassword; }
-    public Instant getLastLoginAt() { return lastLoginAt; }
-    public Instant getLastFailedLoginAt() { return lastFailedLoginAt; }
-    public int getTokenVersion() { return tokenVersion; }
-    public Set<Role> getRoles() { return Set.copyOf(roles); }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public boolean isCanViewSalary() {
+        return canViewSalary;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public boolean isDashboardCustomizationEnabled() {
+        return dashboardCustomizationEnabled;
+    }
+
+    public int getFailedLoginAttempts() {
+        return failedLoginAttempts;
+    }
+
+    public Instant getLockedUntil() {
+        return lockedUntil;
+    }
+
+    public boolean isMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public Instant getLastLoginAt() {
+        return lastLoginAt;
+    }
+
+    public Instant getLastFailedLoginAt() {
+        return lastFailedLoginAt;
+    }
+
+    public int getTokenVersion() {
+        return tokenVersion;
+    }
+
+    public Set<Role> getRoles() {
+        return Set.copyOf(roles);
+    }
+
     public Set<String> getAllowedMenus() {
         if (allowedMenus == null || allowedMenus.isBlank()) {
             return Set.of();
         }
         return Set.of(allowedMenus.split(","));
     }
-    public long getVersion() { return version; }
+
+    public long getVersion() {
+        return version;
+    }
+
     public boolean isMenuAccessAll() {
         return roles.stream().anyMatch(role -> role.getCode() == RoleCode.SUPER_ADMIN
                 || role.getCode() == RoleCode.ADMIN);

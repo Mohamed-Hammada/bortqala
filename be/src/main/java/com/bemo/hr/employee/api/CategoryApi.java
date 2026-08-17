@@ -1,15 +1,10 @@
 package com.bemo.hr.employee.api;
 
-import com.bemo.hr.employee.domain.PayCycle;
 import com.bemo.hr.employee.domain.AttendanceMode;
 import com.bemo.hr.employee.domain.CategoryScope;
+import com.bemo.hr.employee.domain.PayCycle;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.time.DayOfWeek;
 import java.time.Instant;

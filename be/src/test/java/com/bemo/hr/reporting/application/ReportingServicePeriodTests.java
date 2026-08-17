@@ -2,22 +2,13 @@ package com.bemo.hr.reporting.application;
 
 import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
 import com.bemo.hr.calendar.infrastructure.ConfirmedHolidayRepository;
-import com.bemo.hr.employee.domain.AttendanceCategory;
-import com.bemo.hr.employee.domain.AttendanceMode;
-import com.bemo.hr.employee.domain.Employee;
-import com.bemo.hr.employee.domain.EmploymentType;
-import com.bemo.hr.employee.domain.PayCycle;
-import com.bemo.hr.employee.domain.ScheduleRule;
+import com.bemo.hr.employee.domain.*;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
 import com.bemo.hr.reporting.api.ReportingApi;
 import com.bemo.hr.reporting.domain.AttendanceReport;
-import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
-import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
-import com.bemo.hr.reporting.infrastructure.DayAnomalyRepository;
-import com.bemo.hr.reporting.infrastructure.DayAnomalyResultSnapshotRepository;
-import com.bemo.hr.reporting.infrastructure.HolidayProposalRepository;
+import com.bemo.hr.reporting.infrastructure.*;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,26 +23,38 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ReportingServicePeriodTests {
-    @Mock private AttendanceReportRepository attendanceReportRepository;
-    @Mock private DailyAttendanceResultRepository dailyAttendanceResultRepository;
-    @Mock private HolidayProposalRepository holidayProposalRepository;
-    @Mock private DayAnomalyRepository dayAnomalyRepository;
-    @Mock private DayAnomalyResultSnapshotRepository dayAnomalyResultSnapshotRepository;
-    @Mock private ConfirmedHolidayRepository confirmedHolidayRepository;
-    @Mock private AttendanceCategoryRepository attendanceCategoryRepository;
-    @Mock private ScheduleRuleRepository scheduleRuleRepository;
-    @Mock private EmployeeRepository employeeRepository;
-    @Mock private PunchRecordRepository punchRecordRepository;
-    @Mock private ReportExporter reportExporter;
-    @Mock private com.bemo.hr.audit.application.AuditService auditService;
-    @Mock private TenantApplicationRepository tenantApplicationRepository;
-    @Mock private com.bemo.hr.reporting.infrastructure.AttendanceReportDecisionRepository attendanceReportDecisionRepository;
+    @Mock
+    private AttendanceReportRepository attendanceReportRepository;
+    @Mock
+    private DailyAttendanceResultRepository dailyAttendanceResultRepository;
+    @Mock
+    private HolidayProposalRepository holidayProposalRepository;
+    @Mock
+    private DayAnomalyRepository dayAnomalyRepository;
+    @Mock
+    private DayAnomalyResultSnapshotRepository dayAnomalyResultSnapshotRepository;
+    @Mock
+    private ConfirmedHolidayRepository confirmedHolidayRepository;
+    @Mock
+    private AttendanceCategoryRepository attendanceCategoryRepository;
+    @Mock
+    private ScheduleRuleRepository scheduleRuleRepository;
+    @Mock
+    private EmployeeRepository employeeRepository;
+    @Mock
+    private PunchRecordRepository punchRecordRepository;
+    @Mock
+    private ReportExporter reportExporter;
+    @Mock
+    private com.bemo.hr.audit.application.AuditService auditService;
+    @Mock
+    private TenantApplicationRepository tenantApplicationRepository;
+    @Mock
+    private com.bemo.hr.reporting.infrastructure.AttendanceReportDecisionRepository attendanceReportDecisionRepository;
 
     private ReportingService reportingService;
 
@@ -66,7 +69,8 @@ class ReportingServicePeriodTests {
                 attendanceReportDecisionRepository,
                 new com.bemo.hr.shared.idempotency.application.IdempotencyService(
                         org.mockito.Mockito.mock(com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository.class)),
-                org.mockito.Mockito.mock(AttendanceExceptionService.class));
+                org.mockito.Mockito.mock(AttendanceExceptionService.class),
+                org.mockito.Mockito.mock(com.bemo.hr.reporting.infrastructure.AttendanceExceptionRepository.class));
     }
 
     @Test

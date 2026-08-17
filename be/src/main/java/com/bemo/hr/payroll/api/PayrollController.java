@@ -1,16 +1,12 @@
 package com.bemo.hr.payroll.api;
 
-import com.bemo.hr.payroll.application.PayrollService;
 import com.bemo.hr.payroll.application.PayrollCalculationPolicyService;
+import com.bemo.hr.payroll.application.PayrollService;
 import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.shared.security.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -47,7 +43,7 @@ public class PayrollController {
     }
 
     @PostMapping("/pay")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER') "
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') "
             + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse recordPayment(
             @Valid @RequestBody PayrollApi.PaymentRequest request,
@@ -56,7 +52,7 @@ public class PayrollController {
     }
 
     @PostMapping("/pay-bulk")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER') "
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') "
             + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse payBulk(
             @Valid @RequestBody PayrollApi.BulkPaymentRequest request,
@@ -65,7 +61,10 @@ public class PayrollController {
     }
 
     @PostMapping("/transition")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER') "
+    @PreAuthorize("(((#request.targetStatus.name() == 'CALCULATED' or #request.targetStatus.name() == 'REVIEWED') "
+            + "and hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER')) "
+            + "or (#request.targetStatus.name() == 'APPROVED' and hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER')) "
+            + "or (#request.targetStatus.name() == 'POSTED' and hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER'))) "
             + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse transitionStatus(
             @Valid @RequestBody PayrollApi.StatusTransitionRequest request,
@@ -74,7 +73,7 @@ public class PayrollController {
     }
 
     @PostMapping("/reverse")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER') "
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') "
             + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse reversePayment(
             @Valid @RequestBody PayrollApi.ReversePaymentRequest request,

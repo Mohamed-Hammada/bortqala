@@ -1,12 +1,6 @@
 package com.bemo.hr.finance.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.util.UUID;
@@ -47,7 +41,8 @@ public class ExchangeRateHintSetting {
     @Column(name = "version", nullable = false)
     private long version;
 
-    protected ExchangeRateHintSetting() {}
+    protected ExchangeRateHintSetting() {
+    }
 
     public static ExchangeRateHintSetting createDefault() {
         ExchangeRateHintSetting setting = new ExchangeRateHintSetting();
@@ -104,13 +99,39 @@ public class ExchangeRateHintSetting {
         updatedAt = System.currentTimeMillis();
     }
 
-    public String getId() { return id; }
-    public boolean isEnabled() { return enabled; }
-    public int getRefreshIntervalHours() { return refreshIntervalHours; }
-    public Long getLastAttemptAt() { return lastAttemptAt; }
-    public Long getLastSuccessAt() { return lastSuccessAt; }
-    public String getLastErrorCode() { return lastErrorCode; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public int getRefreshIntervalHours() {
+        return refreshIntervalHours;
+    }
+
+    public Long getLastAttemptAt() {
+        return lastAttemptAt;
+    }
+
+    public Long getLastSuccessAt() {
+        return lastSuccessAt;
+    }
+
+    public String getLastErrorCode() {
+        return lastErrorCode;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

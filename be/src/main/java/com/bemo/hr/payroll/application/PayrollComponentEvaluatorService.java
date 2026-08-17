@@ -20,15 +20,6 @@ public class PayrollComponentEvaluatorService {
         this.repository = repository;
     }
 
-    public record EvaluationResult(
-            String componentId,
-            String code,
-            PayrollComponent.Type type,
-            BigDecimal baseAmount,
-            BigDecimal percentage,
-            BigDecimal evaluatedAmount
-    ) {}
-
     @Transactional
     public PayrollComponent createComponent(String code, String name, PayrollComponent.Type type, String calculationFormula) {
         PayrollComponent component = new PayrollComponent(code, name, type, calculationFormula);
@@ -49,5 +40,15 @@ public class PayrollComponentEvaluatorService {
     @Transactional(readOnly = true)
     public List<PayrollComponent> getAllComponents() {
         return repository.findAll();
+    }
+
+    public record EvaluationResult(
+            String componentId,
+            String code,
+            PayrollComponent.Type type,
+            BigDecimal baseAmount,
+            BigDecimal percentage,
+            BigDecimal evaluatedAmount
+    ) {
     }
 }

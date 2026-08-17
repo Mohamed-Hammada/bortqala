@@ -1,16 +1,23 @@
 package com.bemo.hr.operations.application;
 
-import com.bemo.hr.operations.domain.*;
-import com.bemo.hr.operations.infrastructure.*;
+import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.operations.InventoryItemRepository;
+import com.bemo.hr.operations.domain.StockReservation;
+import com.bemo.hr.operations.domain.StockStatusBalance;
+import com.bemo.hr.operations.domain.WarehouseBin;
+import com.bemo.hr.operations.infrastructure.StockReservationRepository;
+import com.bemo.hr.operations.infrastructure.StockStatusBalanceRepository;
+import com.bemo.hr.operations.infrastructure.WarehouseBinRepository;
 import com.bemo.hr.organization.domain.Warehouse;
+import com.bemo.hr.organization.infrastructure.BranchRepository;
 import com.bemo.hr.organization.infrastructure.WarehouseRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import com.bemo.hr.audit.application.AuditService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -21,21 +28,32 @@ public class WarehouseInventoryService {
     private final StockStatusBalanceRepository balanceRepository;
     private final StockReservationRepository reservationRepository;
     private final AuditService auditService;
+    private final BranchRepository branchRepository;
+    private final InventoryItemRepository inventoryItemRepository;
 
     public WarehouseInventoryService(WarehouseRepository warehouseRepository,
                                      WarehouseBinRepository binRepository,
                                      StockStatusBalanceRepository balanceRepository,
                                      StockReservationRepository reservationRepository,
-                                     AuditService auditService) {
+                                     AuditService auditService,
+                                     BranchRepository branchRepository,
+                                     InventoryItemRepository inventoryItemRepository) {
         this.warehouseRepository = warehouseRepository;
         this.binRepository = binRepository;
         this.balanceRepository = balanceRepository;
         this.reservationRepository = reservationRepository;
         this.auditService = auditService;
+        this.branchRepository = branchRepository;
+        this.inventoryItemRepository = inventoryItemRepository;
     }
 
     @Transactional
     public Warehouse createWarehouse(String branchId, String code, String name, String location) {
+        if (branchId == null || branchId.isBlank()
+                || branchRepository.findById(branchId).filter(branch -> branch.isActive()).isEmpty()) {
+            throw new BusinessRuleException("Select an active branch.",
+                    "WAREHOUSE_BRANCH_REQUIRED", HttpStatus.CONFLICT);
+        }
         Warehouse warehouse = new Warehouse(branchId, code, name, location, true);
         return warehouseRepository.save(warehouse);
     }
@@ -100,11 +118,22 @@ public class WarehouseInventoryService {
     public StockReservation reserveStock(String reservationNumber, String sourceType, String sourceId, String itemId, String warehouseId, BigDecimal quantity) {
         requirePositive(quantity);
         requireActiveWarehouse(warehouseId);
+        if (itemId == null || itemId.isBlank()
+                || inventoryItemRepository.findById(itemId).filter(com.bemo.hr.operations.InventoryItem::isActive).isEmpty()) {
+            throw new BusinessRuleException("Select an active inventory item.",
+                    "WAREHOUSE_ITEM_ACTIVE_REQUIRED", HttpStatus.CONFLICT);
+        }
+        List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemIdForUpdate(warehouseId, itemId);
         StockReservation replay = reservationRepository
                 .findBySourceTypeAndSourceIdAndItemIdAndWarehouseId(sourceType, sourceId, itemId, warehouseId)
                 .orElse(null);
-        if (replay != null) return replay;
-        List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemIdForUpdate(warehouseId, itemId);
+        if (replay != null) {
+            if (replay.getReservedQuantity().compareTo(quantity) != 0) {
+                throw new BusinessRuleException("A reservation replay must use the original quantity.",
+                        "RESERVATION_REPLAY_CONFLICT", HttpStatus.CONFLICT);
+            }
+            return replay;
+        }
         BigDecimal available = availableStock(warehouseId, itemId, balances);
         if (available.compareTo(quantity) < 0) {
             throw new BusinessRuleException("Insufficient available stock for reservation", "INSUFFICIENT_STOCK_RESERVATION", HttpStatus.CONFLICT);
@@ -146,18 +175,8 @@ public class WarehouseInventoryService {
         if (reservation.getStatus() == StockReservation.Status.FULFILLED) return reservation;
         List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemIdForUpdate(
                 reservation.getWarehouseId(), reservation.getItemId());
-        StockStatusBalance available = balances.stream()
-                .filter(row -> row.getStatus() == StockStatusBalance.Status.AVAILABLE)
-                .findFirst()
-                .orElseThrow(() -> new BusinessRuleException("Warehouse stock balance was not found.",
-                        "WAREHOUSE_STOCK_BALANCE_NOT_FOUND", HttpStatus.CONFLICT));
-        if (available.getQuantity().compareTo(reservation.getReservedQuantity()) < 0) {
-            throw new BusinessRuleException("Insufficient physical stock for the reserved delivery.",
-                    "WAREHOUSE_STOCK_INSUFFICIENT", HttpStatus.CONFLICT);
-        }
+        consumeAvailableBalances(balances, reservation.getReservedQuantity());
         reservation.fulfill();
-        available.adjustQuantity(reservation.getReservedQuantity().negate());
-        balanceRepository.save(available);
         return reservationRepository.save(reservation);
     }
 
@@ -197,17 +216,12 @@ public class WarehouseInventoryService {
     public void issueAvailableStock(String warehouseId, String itemId, BigDecimal quantity) {
         requirePositive(quantity);
         requireActiveWarehouse(warehouseId);
-        if (getAvailableStock(warehouseId, itemId).compareTo(quantity) < 0) {
+        List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemIdForUpdate(warehouseId, itemId);
+        if (availableStock(warehouseId, itemId, balances).compareTo(quantity) < 0) {
             throw new BusinessRuleException("Insufficient available warehouse stock.",
                     "WAREHOUSE_STOCK_INSUFFICIENT", HttpStatus.CONFLICT);
         }
-        StockStatusBalance balance = balanceRepository
-                .findByWarehouseIdAndBinIdAndItemIdAndStatus(
-                        warehouseId, "", itemId, StockStatusBalance.Status.AVAILABLE)
-                .orElseThrow(() -> new BusinessRuleException("Warehouse stock balance was not found.",
-                        "WAREHOUSE_STOCK_BALANCE_NOT_FOUND", HttpStatus.CONFLICT));
-        balance.adjustQuantity(quantity.negate());
-        balanceRepository.save(balance);
+        consumeAvailableBalances(balances, quantity);
     }
 
     @Transactional(readOnly = true)
@@ -230,6 +244,26 @@ public class WarehouseInventoryService {
                 && binRepository.findById(binId).filter(bin -> bin.isActive() && bin.getWarehouseId().equals(warehouseId)).isEmpty()) {
             throw new BusinessRuleException("The bin does not belong to the selected warehouse.",
                     "WAREHOUSE_BIN_MISMATCH", HttpStatus.CONFLICT);
+        }
+    }
+
+    private void consumeAvailableBalances(List<StockStatusBalance> balances, BigDecimal quantity) {
+        BigDecimal remaining = quantity;
+        List<StockStatusBalance> availableBalances = balances.stream()
+                .filter(row -> row.getStatus() == StockStatusBalance.Status.AVAILABLE)
+                .filter(row -> row.getQuantity().signum() > 0)
+                .sorted(Comparator.comparing(StockStatusBalance::getBinId))
+                .toList();
+        for (StockStatusBalance balance : availableBalances) {
+            if (remaining.signum() == 0) break;
+            BigDecimal consumed = balance.getQuantity().min(remaining);
+            balance.adjustQuantity(consumed.negate());
+            balanceRepository.save(balance);
+            remaining = remaining.subtract(consumed);
+        }
+        if (remaining.signum() > 0) {
+            throw new BusinessRuleException("Insufficient physical stock across warehouse bins.",
+                    "WAREHOUSE_STOCK_INSUFFICIENT", HttpStatus.CONFLICT);
         }
     }
 

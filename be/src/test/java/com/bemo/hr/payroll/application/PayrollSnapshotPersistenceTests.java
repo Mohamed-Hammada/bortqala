@@ -20,11 +20,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class PayrollSnapshotPersistenceTests {
 
-    @Autowired private PayrollSnapshotService snapshotService;
-    @Autowired private PayrollInputSnapshotRepository snapshotRepository;
-    @Autowired private TenantApplicationRepository tenantApplicationRepository;
-
     private final List<String> tenantIds = new ArrayList<>();
+    @Autowired
+    private PayrollSnapshotService snapshotService;
+    @Autowired
+    private PayrollInputSnapshotRepository snapshotRepository;
+    @Autowired
+    private TenantApplicationRepository tenantApplicationRepository;
 
     @AfterEach
     void cleanup() {
@@ -61,7 +63,7 @@ class PayrollSnapshotPersistenceTests {
     }
 
     private PayrollSnapshotService.CalculationInputs inputs(String runId, String employeeId, String salary,
-                                                              long overtimeMinutes, String policyId) {
+                                                            long overtimeMinutes, String policyId) {
         return new PayrollSnapshotService.CalculationInputs(runId, employeeId, "2026-08:FULL_MONTH",
                 LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), new BigDecimal(salary),
                 9600, overtimeMinutes, 60, 1, policyId, 1, new BigDecimal("240"),

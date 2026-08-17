@@ -18,9 +18,6 @@ public class WorkforceAttendanceLockController {
         this.lockService = lockService;
     }
 
-    public record LockAttendancePayload(String contractorId, String periodId, BigDecimal totalHours, String lockedBy) {}
-    public record CorrectLockPayload(BigDecimal newTotalHours, String reason) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER')")
     public WorkforceAttendanceLock lockAttendance(@RequestBody LockAttendancePayload payload) {
@@ -37,5 +34,11 @@ public class WorkforceAttendanceLockController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER', 'VIEWER')")
     public List<WorkforceAttendanceLock> getLocksForContractor(@PathVariable String contractorId) {
         return lockService.getLocksForContractor(contractorId);
+    }
+
+    public record LockAttendancePayload(String contractorId, String periodId, BigDecimal totalHours, String lockedBy) {
+    }
+
+    public record CorrectLockPayload(BigDecimal newTotalHours, String reason) {
     }
 }

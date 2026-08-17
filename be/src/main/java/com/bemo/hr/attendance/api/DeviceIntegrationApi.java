@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 public final class DeviceIntegrationApi {
-    private DeviceIntegrationApi() { }
+    private DeviceIntegrationApi() {
+    }
 
     public record RouteRequest(
             @NotBlank String vendor,
@@ -27,7 +28,8 @@ public final class DeviceIntegrationApi {
             String baseUrl,
             String route,
             Map<String, Object> options
-    ) { }
+    ) {
+    }
 
     public record DeviceRequest(
             @NotBlank String name,
@@ -51,7 +53,8 @@ public final class DeviceIntegrationApi {
             String password,
             boolean enabled,
             @Min(1) @Max(1440) int syncIntervalMinutes
-    ) { }
+    ) {
+    }
 
     public record RouteCandidate(
             String route,
@@ -63,7 +66,8 @@ public final class DeviceIntegrationApi {
             String serverVersionSpec,
             String implementationStatus,
             List<String> officialDocumentation
-    ) { }
+    ) {
+    }
 
     public record RouteResolution(
             String supplier,
@@ -74,7 +78,8 @@ public final class DeviceIntegrationApi {
             List<RouteCandidate> candidates,
             String notes,
             List<String> officialDocumentation
-    ) { }
+    ) {
+    }
 
     public record DeviceResponse(
             String id,
@@ -110,7 +115,8 @@ public final class DeviceIntegrationApi {
             Instant lastProbeAt,
             Instant createdAt,
             Instant updatedAt
-    ) { }
+    ) {
+    }
 
     public record ProbeResponse(
             String status,
@@ -119,5 +125,6 @@ public final class DeviceIntegrationApi {
             String detail,
             Object data,
             Instant checkedAt
-    ) { }
+    ) {
+    }
 }

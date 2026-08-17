@@ -1,11 +1,7 @@
 package com.bemo.hr.workforce;
 
 import com.bemo.hr.audit.application.AuditService;
-import com.bemo.hr.employee.domain.AttendanceCategory;
-import com.bemo.hr.employee.domain.AttendanceMode;
-import com.bemo.hr.employee.domain.Employee;
-import com.bemo.hr.employee.domain.EmploymentType;
-import com.bemo.hr.employee.domain.PayCycle;
+import com.bemo.hr.employee.domain.*;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.operations.OperationsService;
@@ -25,22 +21,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class WorkforceEmployeeAdvanceServiceTests {
-    @Mock private WorkforceAdvanceRepository advanceRepository;
-    @Mock private WorkforceAdvanceInstallmentRepository installmentRepository;
-    @Mock private WorkforceAdvanceLedgerEntryRepository ledgerRepository;
-    @Mock private WorkerRepository workerRepository;
-    @Mock private ContractorRepository contractorRepository;
-    @Mock private AuditService auditService;
-    @Mock private WorkforceAdvancePolicyRepository policyRepository;
-    @Mock private EmployeeRepository employeeRepository;
-    @Mock private AttendanceCategoryRepository attendanceCategoryRepository;
-    @Mock private OperationsService operationsService;
+    @Mock
+    private WorkforceAdvanceRepository advanceRepository;
+    @Mock
+    private WorkforceAdvanceInstallmentRepository installmentRepository;
+    @Mock
+    private WorkforceAdvanceLedgerEntryRepository ledgerRepository;
+    @Mock
+    private WorkerRepository workerRepository;
+    @Mock
+    private ContractorRepository contractorRepository;
+    @Mock
+    private AuditService auditService;
+    @Mock
+    private WorkforceAdvancePolicyRepository policyRepository;
+    @Mock
+    private EmployeeRepository employeeRepository;
+    @Mock
+    private AttendanceCategoryRepository attendanceCategoryRepository;
+    @Mock
+    private OperationsService operationsService;
     private WorkforceAdvanceService service;
 
     @BeforeEach

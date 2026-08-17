@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface PurchaseOrderLineRepository extends JpaRepository<PurchaseOrderLine, String> {
     List<PurchaseOrderLine> findByPurchaseOrderId(String purchaseOrderId);
+
     void deleteByPurchaseOrderId(String purchaseOrderId);
 }

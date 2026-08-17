@@ -1,23 +1,19 @@
 package com.bemo.hr.finance.application;
 
+import com.bemo.hr.approval.SegregationOfDutiesService;
+import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.finance.api.AccountingApi;
-import com.bemo.hr.finance.domain.Account;
-import com.bemo.hr.finance.domain.FiscalPeriod;
-import com.bemo.hr.finance.domain.FiscalPeriodGuard;
-import com.bemo.hr.finance.domain.JournalEntry;
-import com.bemo.hr.finance.domain.JournalEntryLine;
+import com.bemo.hr.finance.domain.*;
+import com.bemo.hr.finance.domain.posting.JournalDimension;
 import com.bemo.hr.finance.infrastructure.AccountRepository;
+import com.bemo.hr.finance.infrastructure.JournalDimensionRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
-import com.bemo.hr.finance.infrastructure.JournalDimensionRepository;
-import com.bemo.hr.finance.domain.posting.JournalDimension;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.shared.numbering.DocumentNumberService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
-import com.bemo.hr.approval.SegregationOfDutiesService;
-import com.bemo.hr.audit.application.AuditService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -43,6 +39,7 @@ public class JournalEntryService {
     private final SegregationOfDutiesService segregationOfDutiesService;
     private final AuditService auditService;
     private final JournalDimensionRepository journalDimensionRepository;
+    private final JournalApprovalService journalApprovalService;
 
     public JournalEntryService(JournalEntryRepository journalEntryRepository,
                                JournalEntryLineRepository journalEntryLineRepository,
@@ -53,7 +50,8 @@ public class JournalEntryService {
                                TenantApplicationRepository tenantApplicationRepository,
                                SegregationOfDutiesService segregationOfDutiesService,
                                AuditService auditService,
-                               JournalDimensionRepository journalDimensionRepository) {
+                               JournalDimensionRepository journalDimensionRepository,
+                               JournalApprovalService journalApprovalService) {
         this.journalEntryRepository = journalEntryRepository;
         this.journalEntryLineRepository = journalEntryLineRepository;
         this.accountRepository = accountRepository;
@@ -64,6 +62,7 @@ public class JournalEntryService {
         this.segregationOfDutiesService = segregationOfDutiesService;
         this.auditService = auditService;
         this.journalDimensionRepository = journalDimensionRepository;
+        this.journalApprovalService = journalApprovalService;
     }
 
     @Transactional
@@ -86,6 +85,17 @@ public class JournalEntryService {
             line = journalEntryLineRepository.save(line);
             if (hasDimension(linePayload)) journalDimensionRepository.save(new JournalDimension(line.getId(),
                     blank(linePayload.costCenterId()), blank(linePayload.projectId()), blank(linePayload.departmentId())));
+        }
+        var amountsByAccount = payload.lines().stream().collect(java.util.stream.Collectors.toMap(
+                AccountingApi.JournalEntryLinePayload::accountId,
+                line -> (line.debit() == null ? BigDecimal.ZERO : line.debit())
+                        .add(line.credit() == null ? BigDecimal.ZERO : line.credit()),
+                BigDecimal::add));
+        if (!journalApprovalService.isApprovalRequired(amountsByAccount)) {
+            entry.approve("SYSTEM_APPROVAL_RULE");
+            entry = journalEntryRepository.save(entry);
+            auditService.record("JOURNAL_AUTO_APPROVED", "JOURNAL_ENTRY", entry.getId(), username,
+                    "{\"createdBy\":\"" + username + "\",\"ruleDecision\":\"NO_MANUAL_APPROVAL_REQUIRED\"}", null);
         }
         return toResponse(entry);
     }
@@ -196,7 +206,7 @@ public class JournalEntryService {
                         + (request.reason() == null || request.reason().isBlank() ? "" : " — " + request.reason().strip()),
                 entry.getReference(), entry.getFiscalPeriodId());
         reversal.setCurrency(entry.getCurrency());
-        reversal.linkReversalOf(entry.getId(), request.operationId());
+        reversal.linkReversalOf(entry.getId(), request.operationId(), username);
         reversal = journalEntryRepository.save(reversal);
 
         for (var originalLine : originalLines) {
@@ -299,9 +309,12 @@ public class JournalEntryService {
         var dimensions = journalDimensionRepository.findByJournalEntryLineIdIn(storedLines.stream().map(JournalEntryLine::getId).toList())
                 .stream().collect(java.util.stream.Collectors.toMap(JournalDimension::getJournalEntryLineId, d -> d));
         var lines = storedLines.stream()
-                .map(l -> { var d = dimensions.get(l.getId()); return new AccountingApi.JournalEntryLineResponse(l.getId(), l.getJournalEntryId(), l.getAccountId(),
-                        l.getPartyId(), l.getDebit(), l.getCredit(), l.getMemo(), d == null ? null : d.getCostCenterId(),
-                        d == null ? null : d.getProjectId(), d == null ? null : d.getDepartmentId()); })
+                .map(l -> {
+                    var d = dimensions.get(l.getId());
+                    return new AccountingApi.JournalEntryLineResponse(l.getId(), l.getJournalEntryId(), l.getAccountId(),
+                            l.getPartyId(), l.getDebit(), l.getCredit(), l.getMemo(), d == null ? null : d.getCostCenterId(),
+                            d == null ? null : d.getProjectId(), d == null ? null : d.getDepartmentId());
+                })
                 .toList();
         BigDecimal totalDebit = lines.stream().map(AccountingApi.JournalEntryLineResponse::debit).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalCredit = lines.stream().map(AccountingApi.JournalEntryLineResponse::credit).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -319,5 +332,7 @@ public class JournalEntryService {
         return blank(line.costCenterId()) != null || blank(line.projectId()) != null || blank(line.departmentId()) != null;
     }
 
-    private String blank(String value) { return value == null || value.isBlank() ? null : value.strip(); }
+    private String blank(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
+    }
 }

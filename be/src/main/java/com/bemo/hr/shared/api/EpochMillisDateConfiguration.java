@@ -32,7 +32,9 @@ public class EpochMillisDateConfiguration {
     }
 
     private static final class InstantEpochSerializer extends StdScalarSerializer<Instant> {
-        private InstantEpochSerializer() { super(Instant.class); }
+        private InstantEpochSerializer() {
+            super(Instant.class);
+        }
 
         @Override
         public void serialize(Instant value, JsonGenerator generator, SerializationContext context)
@@ -42,7 +44,9 @@ public class EpochMillisDateConfiguration {
     }
 
     private static final class InstantEpochDeserializer extends StdScalarDeserializer<Instant> {
-        private InstantEpochDeserializer() { super(Instant.class); }
+        private InstantEpochDeserializer() {
+            super(Instant.class);
+        }
 
         @Override
         public Instant deserialize(JsonParser parser, DeserializationContext context) throws JacksonException {
@@ -55,7 +59,11 @@ public class EpochMillisDateConfiguration {
 
     private static final class LocalDateEpochSerializer extends StdScalarSerializer<LocalDate> {
         private final ZoneId zoneId;
-        private LocalDateEpochSerializer(ZoneId zoneId) { super(LocalDate.class); this.zoneId = zoneId; }
+
+        private LocalDateEpochSerializer(ZoneId zoneId) {
+            super(LocalDate.class);
+            this.zoneId = zoneId;
+        }
 
         @Override
         public void serialize(LocalDate value, JsonGenerator generator, SerializationContext context)
@@ -66,7 +74,11 @@ public class EpochMillisDateConfiguration {
 
     private static final class LocalDateEpochDeserializer extends StdScalarDeserializer<LocalDate> {
         private final ZoneId zoneId;
-        private LocalDateEpochDeserializer(ZoneId zoneId) { super(LocalDate.class); this.zoneId = zoneId; }
+
+        private LocalDateEpochDeserializer(ZoneId zoneId) {
+            super(LocalDate.class);
+            this.zoneId = zoneId;
+        }
 
         @Override
         public LocalDate deserialize(JsonParser parser, DeserializationContext context) throws JacksonException {

@@ -9,15 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -83,10 +75,6 @@ public class BudgetController {
         return budgetService.listEncumbrances();
     }
 
-    public record ReviseBudgetPayload(@jakarta.validation.constraints.NotNull @jakarta.validation.constraints.DecimalMin("0") java.math.BigDecimal newAmount,
-                                      @jakarta.validation.constraints.NotBlank String reason) {}
-    public record CreateTransferPayload(String transferNumber, String sourceBudgetId, String targetBudgetId, java.math.BigDecimal transferAmount, String reason) {}
-
     @PostMapping("/budgets/{id}/revisions")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public com.bemo.hr.budget.BudgetRevision reviseBudget(@PathVariable String id, @Valid @RequestBody ReviseBudgetPayload payload, Authentication auth) {
@@ -120,5 +108,14 @@ public class BudgetController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public com.bemo.hr.budget.BudgetTransfer approveTransfer(@PathVariable String id) {
         return budgetService.approveTransfer(id);
+    }
+
+    public record ReviseBudgetPayload(
+            @jakarta.validation.constraints.NotNull @jakarta.validation.constraints.DecimalMin("0") java.math.BigDecimal newAmount,
+            @jakarta.validation.constraints.NotBlank String reason) {
+    }
+
+    public record CreateTransferPayload(String transferNumber, String sourceBudgetId, String targetBudgetId,
+                                        java.math.BigDecimal transferAmount, String reason) {
     }
 }

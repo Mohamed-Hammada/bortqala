@@ -1,21 +1,12 @@
 package com.bemo.hr.access.domain;
 
-import com.bemo.hr.access.domain.AccessDefs.AccessActionDef;
-import com.bemo.hr.access.domain.AccessDefs.AccessConflictRuleDef;
-import com.bemo.hr.access.domain.AccessDefs.AccessNeedDef;
-import com.bemo.hr.access.domain.AccessDefs.AccessPageDef;
-import com.bemo.hr.access.domain.AccessDefs.AccessRoleDef;
+import com.bemo.hr.access.domain.AccessDefs.*;
 import com.bemo.hr.access.domain.AccessEnums.AccessSensitivity;
 import com.bemo.hr.access.domain.AccessEnums.ConflictSeverity;
 import com.bemo.hr.access.domain.AccessEnums.RoleKind;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.LinkedHashMap;
-import java.util.HashSet;
-import java.util.Collections;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -109,19 +100,19 @@ public final class AccessCatalog {
     public static final String P_WORKFLOW_DEFINITIONS_READ = "workflowDefinitions.read";
     public static final String P_WORKFLOW_DEFINITIONS_MANAGE = "workflowDefinitions.manage";
 
-    /** Every permission a super user can act on. */
+    /**
+     * Every permission a super user can act on.
+     */
     public static final Set<String> ALL_PERMISSIONS = Set.of(
             P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_EMPLOYEES_EDIT, P_EMPLOYEES_DEACTIVATE,
             P_CATEGORIES_READ, P_CATEGORIES_MANAGE, P_IMPORTS_READ, P_IMPORTS_MANAGE,
             P_PARTIES_READ, P_PARTIES_MANAGE, P_REPORTS_READ, P_REPORTS_DECIDE, P_REPORTS_APPROVE,
-            P_OPERATIONS_READ, P_OPERATIONS_MANAGE,
-            P_PROCUREMENT_READ, P_PROCUREMENT_MANAGE,
-            P_SALES_READ, P_SALES_MANAGE,
-            P_MANUFACTURING_READ, P_MANUFACTURING_MANAGE,
-            P_QUALITY_READ, P_QUALITY_MANAGE,
-            P_PAYROLL_READ, P_PAYROLL_PREPARE, P_PAYROLL_APPROVE,
+            P_OPERATIONS_READ, P_OPERATIONS_MANAGE, P_PROCUREMENT_READ, P_PROCUREMENT_MANAGE,
+            P_SALES_READ, P_SALES_MANAGE, P_MANUFACTURING_READ, P_MANUFACTURING_MANAGE,
+            P_QUALITY_READ, P_QUALITY_MANAGE, P_PAYROLL_READ, P_PAYROLL_PREPARE, P_PAYROLL_APPROVE,
             P_FINANCE_READ, P_FINANCE_MANAGE, P_JOURNAL_READ, P_JOURNAL_CREATE, P_JOURNAL_POST, P_JOURNAL_REVERSE,
-            P_PAYMENTS_EXECUTE, P_PAYMENTS_APPROVE, P_BUDGET_READ, P_BUDGET_MANAGE,
+            P_PAYMENTS_EXECUTE, P_PAYMENTS_APPROVE,
+            P_BUDGET_READ, P_BUDGET_MANAGE,
             P_INVENTORY_READ, P_INVENTORY_MANAGE,
             P_ORGANIZATION_READ, P_ORGANIZATION_MANAGE, P_AUDIT_READ,
             P_USERS_READ, P_USERS_MANAGE, P_ROLES_ASSIGN, P_SETTINGS_READ, P_SETTINGS_MANAGE,
@@ -137,11 +128,11 @@ public final class AccessCatalog {
 
     private static final Set<String> HR_READ = Set.of(
             P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_CATEGORIES_READ, P_IMPORTS_READ, P_PARTIES_READ,
-            P_REPORTS_READ, P_PAYROLL_READ);
+            P_REPORTS_READ, P_PAYROLL_READ, P_ORGANIZATION_READ);
 
     private static final Set<String> HR_WRITE = Set.of(
             P_EMPLOYEES_EDIT, P_EMPLOYEES_DEACTIVATE, P_CATEGORIES_MANAGE, P_IMPORTS_MANAGE,
-            P_PARTIES_MANAGE, P_REPORTS_DECIDE, P_REPORTS_APPROVE);
+            P_PARTIES_MANAGE, P_REPORTS_DECIDE, P_REPORTS_APPROVE, P_ORGANIZATION_MANAGE);
 
     private static final Set<String> WORKFORCE_READ = Set.of(
             P_WORKFORCE_DASHBOARD, P_WORKERS_READ, P_CONTRACTORS_READ, P_LABOR_REQUESTS_READ, P_DISPATCH_DISPUTES_READ,
@@ -169,6 +160,8 @@ public final class AccessCatalog {
     private static final Set<String> PAYROLL_ROLES = Set.of("ADMIN", "SUPER_ADMIN", "PAYROLL_MANAGER", "HR_MANAGER", "HR_REVIEWER");
     private static final Set<String> FINANCE_ROLES = Set.of(
             "ADMIN", "SUPER_ADMIN", "FINANCE_MANAGER", "ACCOUNTANT", "TREASURY_USER", "AUDITOR");
+    private static final Set<String> FINANCE_REPORT_ROLES = Set.of(
+            "ADMIN", "SUPER_ADMIN", "FINANCE_MANAGER", "ACCOUNTANT", "AUDITOR");
     private static final Set<String> WORKFORCE_BASE_ROLES = Set.of(
             "ADMIN", "SUPER_ADMIN", "WORKFORCE_MANAGER", "WORKFORCE_REVIEWER", "WORKFORCE_FINANCE");
     private static final Set<String> WORKFORCE_IMPORT_ROLES = Set.of(
@@ -189,7 +182,10 @@ public final class AccessCatalog {
 
     private static final String KEY_ROLE_PREFIX = "roles.access.";
     private static final String KEY_PAGE_PREFIX = "access.pages.";
-
+    private static final Set<String> SENSITIVE_PERMISSIONS = Set.of(
+            P_JOURNAL_POST, P_JOURNAL_REVERSE, P_PAYROLL_APPROVE, P_PAYMENTS_EXECUTE,
+            P_PAYMENTS_APPROVE, P_USERS_MANAGE, P_ROLES_ASSIGN, P_SETTINGS_MANAGE,
+            P_SETTLEMENTS_FINALIZE, P_ATTENDANCE_REVIEW);
     // ------------------------------------------------------------------
     // Role definitions (permissions derived from the enforced @PreAuthorize sets).
     // ------------------------------------------------------------------
@@ -280,7 +276,6 @@ public final class AccessCatalog {
                             P_SALES_READ, P_MANUFACTURING_READ, P_QUALITY_READ, P_OPERATIONS_READ,
                             P_INVENTORY_READ, P_BUDGET_READ),
                     Set.of(), null));
-
     // ------------------------------------------------------------------
     // Page definitions (menuId matches the shell navigation and users.page).
     // ------------------------------------------------------------------
@@ -338,13 +333,13 @@ public final class AccessCatalog {
                     FINANCE_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_FINANCE_MANAGE, false)),
             page("FISCAL_PERIODS", "FINANCE", "/fiscal-periods", "fiscal-periods", "nav.fiscalPeriods", P_FINANCE_READ,
-                    FINANCE_ROLES, FEATURE_FINANCE,
+                    FINANCE_REPORT_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_FINANCE_MANAGE, false)),
             page("BUDGETS", "FINANCE", "/finance/budgets", "budgets", "nav.budgets", P_BUDGET_READ,
                     FINANCE_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_BUDGET_MANAGE, false)),
-            page("ORGANIZATION", "ADMINISTRATION", "/organization", "organization", "nav.organization",
-                    P_ORGANIZATION_READ, ADMIN_ONLY, null,
+            page("ORGANIZATION", "HR", "/organization", "organization", "nav.organization",
+                    P_ORGANIZATION_READ, HR_ROLES, null,
                     action("MANAGE", P_ORGANIZATION_MANAGE, false)),
             page("AUDIT_LOGS", "ADMINISTRATION", "/audit-logs", "audit-logs", "nav.auditLogs", P_AUDIT_READ,
                     ADMIN_ONLY, null),
@@ -401,7 +396,6 @@ public final class AccessCatalog {
                     action("MANAGE", P_WORKFLOW_DEFINITIONS_MANAGE, true)),
             page("NOTIFICATIONS_SEND", "ADMINISTRATION", "/notifications/send", "notifications-send",
                     "nav.notificationsSend", P_USERS_READ, ADMIN_ONLY, null));
-
     // ------------------------------------------------------------------
     // Segregation-of-duties rules.
     // ------------------------------------------------------------------
@@ -416,12 +410,6 @@ public final class AccessCatalog {
                     ConflictSeverity.WARNING, "access.conflicts.settlementPrepareAndFinalize"),
             rule("PAYMENTS_CREATE_AND_APPROVE", List.of(P_PAYMENTS_EXECUTE, P_PAYMENTS_APPROVE),
                     ConflictSeverity.WARNING, "access.conflicts.paymentsCreateAndApprove"));
-
-    private static final Set<String> SENSITIVE_PERMISSIONS = Set.of(
-            P_JOURNAL_POST, P_JOURNAL_REVERSE, P_PAYROLL_APPROVE, P_PAYMENTS_EXECUTE,
-            P_PAYMENTS_APPROVE, P_USERS_MANAGE, P_ROLES_ASSIGN, P_SETTINGS_MANAGE,
-            P_SETTLEMENTS_FINALIZE, P_ATTENDANCE_REVIEW);
-
     // ------------------------------------------------------------------
     // Business needs used by the guided "what should this user be able to do?" mode.
     // ------------------------------------------------------------------
@@ -461,69 +449,6 @@ public final class AccessCatalog {
         this.permissionRoles = buildPermissionRoles();
         this.rolePermissions = roles.stream().collect(Collectors.toUnmodifiableMap(
                 AccessRoleDef::code, r -> Set.copyOf(r.permissions())));
-    }
-
-    private Map<String, Set<String>> buildPermissionRoles() {
-        Map<String, Set<String>> byPermission = new LinkedHashMap<>();
-        for (AccessRoleDef role : roles) {
-            for (String permission : role.permissions()) {
-                byPermission.computeIfAbsent(permission, ignored -> new HashSet<>()).add(role.code());
-            }
-        }
-        Map<String, Set<String>> immutable = new LinkedHashMap<>();
-        byPermission.forEach((permission, codes) -> immutable.put(permission, Collections.unmodifiableSet(codes)));
-        return Collections.unmodifiableMap(immutable);
-    }
-
-    public List<AccessRoleDef> roles() {
-        return roles;
-    }
-
-    public List<AccessPageDef> pages() {
-        return pages;
-    }
-
-    public List<AccessConflictRuleDef> conflictRules() {
-        return conflictRules;
-    }
-
-    public List<AccessNeedDef> needs() {
-        return needs;
-    }
-
-    public AccessRoleDef role(String code) {
-        return roleByCode.get(code);
-    }
-
-    public boolean hasRole(String code) {
-        return roleByCode.containsKey(code);
-    }
-
-    public AccessPageDef page(String code) {
-        return pageByCode.get(code);
-    }
-
-    /** All roles that grant a given permission. */
-    public Set<String> rolesGranting(String permission) {
-        return permissionRoles.getOrDefault(permission, Set.of());
-    }
-
-    /** Permissions granted by a single role code. */
-    public Set<String> permissionsOf(String roleCode) {
-        return rolePermissions.getOrDefault(roleCode, Set.of());
-    }
-
-    /** Union of permissions granted by a set of role codes. */
-    public Set<String> permissionsOfRoles(Set<String> roleCodes) {
-        Set<String> union = new HashSet<>();
-        for (String code : roleCodes) {
-            union.addAll(permissionsOf(code));
-        }
-        return union;
-    }
-
-    public Set<String> sensitivePermissions() {
-        return SENSITIVE_PERMISSIONS;
     }
 
     private static String key(String role) {
@@ -577,5 +502,74 @@ public final class AccessCatalog {
         Set<String> result = new HashSet<>(base);
         result.removeAll(excluded);
         return Set.copyOf(result);
+    }
+
+    private Map<String, Set<String>> buildPermissionRoles() {
+        Map<String, Set<String>> byPermission = new LinkedHashMap<>();
+        for (AccessRoleDef role : roles) {
+            for (String permission : role.permissions()) {
+                byPermission.computeIfAbsent(permission, ignored -> new HashSet<>()).add(role.code());
+            }
+        }
+        Map<String, Set<String>> immutable = new LinkedHashMap<>();
+        byPermission.forEach((permission, codes) -> immutable.put(permission, Collections.unmodifiableSet(codes)));
+        return Collections.unmodifiableMap(immutable);
+    }
+
+    public List<AccessRoleDef> roles() {
+        return roles;
+    }
+
+    public List<AccessPageDef> pages() {
+        return pages;
+    }
+
+    public List<AccessConflictRuleDef> conflictRules() {
+        return conflictRules;
+    }
+
+    public List<AccessNeedDef> needs() {
+        return needs;
+    }
+
+    public AccessRoleDef role(String code) {
+        return roleByCode.get(code);
+    }
+
+    public boolean hasRole(String code) {
+        return roleByCode.containsKey(code);
+    }
+
+    public AccessPageDef page(String code) {
+        return pageByCode.get(code);
+    }
+
+    /**
+     * All roles that grant a given permission.
+     */
+    public Set<String> rolesGranting(String permission) {
+        return permissionRoles.getOrDefault(permission, Set.of());
+    }
+
+    /**
+     * Permissions granted by a single role code.
+     */
+    public Set<String> permissionsOf(String roleCode) {
+        return rolePermissions.getOrDefault(roleCode, Set.of());
+    }
+
+    /**
+     * Union of permissions granted by a set of role codes.
+     */
+    public Set<String> permissionsOfRoles(Set<String> roleCodes) {
+        Set<String> union = new HashSet<>();
+        for (String code : roleCodes) {
+            union.addAll(permissionsOf(code));
+        }
+        return union;
+    }
+
+    public Set<String> sensitivePermissions() {
+        return SENSITIVE_PERMISSIONS;
     }
 }

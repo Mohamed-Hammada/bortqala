@@ -2,15 +2,15 @@ package com.bemo.hr.operations.api;
 
 import com.bemo.hr.operations.application.WarehouseInventoryService;
 import com.bemo.hr.operations.domain.StockReservation;
+import com.bemo.hr.operations.domain.StockStatusBalance;
 import com.bemo.hr.operations.domain.WarehouseBin;
 import com.bemo.hr.organization.domain.Warehouse;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
-import org.springframework.security.core.Authentication;
-import com.bemo.hr.operations.domain.StockStatusBalance;
 
 @RestController
 @RequestMapping("/api/v1/operations")
@@ -21,12 +21,6 @@ public class WarehouseInventoryController {
     public WarehouseInventoryController(WarehouseInventoryService inventoryService) {
         this.inventoryService = inventoryService;
     }
-
-    public record CreateWarehousePayload(String branchId, String code, String name, String location) {}
-    public record CreateBinPayload(String binCode, String aisle, String rack, String shelf) {}
-    public record ReserveStockPayload(String reservationNumber, String sourceType, String sourceId, String itemId, String warehouseId, BigDecimal quantity) {}
-    public record MoveStatusPayload(String binId, String itemId, StockStatusBalance.Status fromStatus,
-                                    StockStatusBalance.Status toStatus, BigDecimal quantity) {}
 
     @PostMapping("/warehouses")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
@@ -42,11 +36,15 @@ public class WarehouseInventoryController {
 
     @GetMapping("/warehouses/{id}/bins")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'VIEWER')")
-    public List<WarehouseBin> bins(@PathVariable String id) { return inventoryService.bins(id); }
+    public List<WarehouseBin> bins(@PathVariable String id) {
+        return inventoryService.bins(id);
+    }
 
     @GetMapping("/warehouses/{id}/status-balances")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'VIEWER')")
-    public List<StockStatusBalance> balances(@PathVariable String id) { return inventoryService.balances(id); }
+    public List<StockStatusBalance> balances(@PathVariable String id) {
+        return inventoryService.balances(id);
+    }
 
     @PostMapping("/warehouses/{id}/status-movements")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
@@ -75,11 +73,27 @@ public class WarehouseInventoryController {
 
     @PostMapping("/reservations/{id}/expire")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
-    public StockReservation expireReservation(@PathVariable String id) { return inventoryService.expireReservation(id); }
+    public StockReservation expireReservation(@PathVariable String id) {
+        return inventoryService.expireReservation(id);
+    }
 
     @GetMapping("/warehouses/{id}/items/{itemId}/available")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'SALES_MANAGER', 'VIEWER')")
     public BigDecimal getAvailableStock(@PathVariable String id, @PathVariable String itemId) {
         return inventoryService.getAvailableStock(id, itemId);
+    }
+
+    public record CreateWarehousePayload(String branchId, String code, String name, String location) {
+    }
+
+    public record CreateBinPayload(String binCode, String aisle, String rack, String shelf) {
+    }
+
+    public record ReserveStockPayload(String reservationNumber, String sourceType, String sourceId, String itemId,
+                                      String warehouseId, BigDecimal quantity) {
+    }
+
+    public record MoveStatusPayload(String binId, String itemId, StockStatusBalance.Status fromStatus,
+                                    StockStatusBalance.Status toStatus, BigDecimal quantity) {
     }
 }

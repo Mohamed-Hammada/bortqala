@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface SupplierQuoteHeaderRepository extends JpaRepository<SupplierQuoteHeader, String> {
     List<SupplierQuoteHeader> findByRfqId(String rfqId);
+
     List<SupplierQuoteHeader> findBySupplierId(String supplierId);
 }

@@ -1,0 +1,17 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260813_v232_001_retire_legacy_inventory_reservations
+      author: Mohamed-Hammada
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: inventory_reservations
+      changes:
+        - update:
+            tableName: inventory_reservations
+            columns:
+              - column: { name: status, value: RELEASED }
+            where: status = 'ACTIVE'
+      rollback:
+        - sql:
+            sql: SELECT 1

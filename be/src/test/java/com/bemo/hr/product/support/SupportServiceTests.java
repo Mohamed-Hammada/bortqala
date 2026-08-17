@@ -1,10 +1,132 @@
-package com.bemo.hr.product.support;import com.bemo.hr.audit.application.AuditService;import com.bemo.hr.product.analytics.*;import com.bemo.hr.product.onboarding.*;import com.bemo.hr.product.subscription.*;import com.bemo.hr.shared.domain.BusinessRuleException;import com.bemo.hr.shared.security.*;import org.junit.jupiter.api.*;import org.junit.jupiter.api.extension.ExtendWith;import org.mockito.*;import org.mockito.junit.jupiter.MockitoExtension;import tools.jackson.databind.ObjectMapper;import java.time.*;import java.util.*;import static org.assertj.core.api.Assertions.*;import static org.mockito.ArgumentMatchers.*;import static org.mockito.Mockito.*;
-@ExtendWith(MockitoExtension.class)class SupportServiceTests{@Mock TenantApplicationRepository tenantRepository;@Mock SupportTicketRepository ticketRepository;@Mock SupportTicketUpdateRepository updateRepository;@Mock FeedbackItemRepository feedbackRepository;@Mock CustomerHealthSnapshotRepository healthRepository;@Mock ProductEventDailyAggregateRepository dailyRepository;@Mock ActivationMilestoneRepository milestoneRepository;@Mock OnboardingAssessmentRepository onboardingRepository;@Mock TenantSubscriptionRepository subscriptionRepository;@Mock AuditService auditService;SupportService service;TenantApplication tenant;
-@BeforeEach void setup(){tenant=new TenantApplication("support","Support");TenantContext.set(tenant.getId());service=new SupportService(tenantRepository,ticketRepository,updateRepository,feedbackRepository,healthRepository,dailyRepository,milestoneRepository,onboardingRepository,subscriptionRepository,new ObjectMapper(),auditService);lenient().when(tenantRepository.findByIdForUpdate(tenant.getId())).thenReturn(Optional.of(tenant));lenient().when(ticketRepository.findByOperationId(anyString())).thenReturn(Optional.empty());lenient().when(ticketRepository.save(any())).thenAnswer(i->i.getArgument(0));lenient().when(feedbackRepository.findByOperationId(anyString())).thenReturn(Optional.empty());lenient().when(feedbackRepository.save(any())).thenAnswer(i->i.getArgument(0));lenient().when(healthRepository.findByOperationId(anyString())).thenReturn(Optional.empty());lenient().when(healthRepository.save(any())).thenAnswer(i->i.getArgument(0));}
-@AfterEach void clear(){TenantContext.clear();}
-@Test void criticalTicketRequiresMeaningfulImpactAndGetsFourHourSla(){var invalid=new SupportApi.TicketRequest("CRITICAL","OUTAGE","PAYROLL","/payroll?employee=secret","Stopped","Cannot post payroll","op-1");assertThatThrownBy(()->service.create(invalid,"user")).isInstanceOfSatisfying(BusinessRuleException.class,e->assertThat(e.getCode()).isEqualTo("SUPPORT_CRITICAL_IMPACT_REQUIRED"));var valid=new SupportApi.TicketRequest("CRITICAL","OUTAGE","PAYROLL","/payroll?employee=secret","Monthly payroll posting is fully blocked","Cannot post payroll","op-2");var before=Instant.now();var response=service.create(valid,"user");assertThat(response.screen()).isEqualTo("/payroll");assertThat(response.slaDueAt()).isBetween(before.plus(Duration.ofHours(3)).toEpochMilli(),before.plus(Duration.ofHours(5)).toEpochMilli());verify(auditService).record(eq("CREATE"),eq("SUPPORT_TICKET"),anyString(),eq("user"),contains("CRITICAL"),isNull());}
-@Test void ticketCreationReplayHasNoDuplicateSideEffects(){var existing=new SupportTicket("SUP-1","LOW","QUESTION","HR","/employees","Need guidance","Question","SUPPORT",Instant.now().plusSeconds(100),"user","op");when(ticketRepository.findByOperationId("op")).thenReturn(Optional.of(existing));var response=service.create(new SupportApi.TicketRequest("LOW","QUESTION","HR","/employees","Need guidance","Question","op"),"user");assertThat(response.replayed()).isTrue();verify(ticketRepository,never()).save(any());}
-@Test void transitionIsVersionedValidatedAndWritesImmutableUpdate(){var ticket=new SupportTicket("SUP-1","HIGH","BUG","FINANCE","/finance","Posting blocked","Details","SUPPORT",Instant.now().plusSeconds(100),"user","op");when(ticketRepository.findByIdForUpdate(ticket.getId())).thenReturn(Optional.of(ticket));when(updateRepository.findByOperationId("u1")).thenReturn(Optional.empty());var response=service.update(ticket.getId(),new SupportApi.TicketUpdateRequest("TRIAGED","FINANCE_SUPPORT","Investigating","u1",0),"admin");assertThat(response.status()).isEqualTo("TRIAGED");verify(updateRepository).save(argThat(u->u.getFromStatus().equals("NEW")&&u.getToStatus().equals("TRIAGED")));assertThatThrownBy(()->service.update(ticket.getId(),new SupportApi.TicketUpdateRequest("RESOLVED","SUPPORT","skip","u2",0),"admin")).isInstanceOfSatisfying(BusinessRuleException.class,e->assertThat(e.getCode()).isEqualTo("SUPPORT_STATUS_TRANSITION_INVALID"));}
-@Test void feedbackCapturesOnlySafeContextAndRequiresRating(){var invalid=new SupportApi.FeedbackRequest("RATING","HR","Useful",null,"/employees","1","browser","corr","f1");assertThatThrownBy(()->service.feedback(invalid,"user")).isInstanceOfSatisfying(BusinessRuleException.class,e->assertThat(e.getCode()).isEqualTo("FEEDBACK_RATING_REQUIRED"));var response=service.feedback(new SupportApi.FeedbackRequest("PROBLEM","HR","Screen issue",null,"/employees?nationalId=secret#row","1","browser","corr","f2"),"user");assertThat(response.route()).isEqualTo("/employees");}
-@Test void healthScoreIsDeterministicAndEveryDimensionHasAReason(){var daily=new ProductEventDailyAggregate(LocalDate.now(),"PAGE_VIEW","navigation");when(dailyRepository.findAllByOrderByEventDateDesc()).thenReturn(List.of(daily));when(milestoneRepository.findAllByOrderByAchievedAtAsc()).thenReturn(List.of(new ActivationMilestone("FIRST_LOGIN","e",Instant.now())));when(onboardingRepository.findFirstByOrderByAssessedAtDesc()).thenReturn(Optional.empty());when(ticketRepository.countByStatusNotInAndPriorityIn(any(),any())).thenReturn(2L);when(subscriptionRepository.findFirstBy()).thenReturn(Optional.of(new TenantSubscription("STARTER","ACTIVE",Instant.now(),Instant.now().plus(60,java.time.temporal.ChronoUnit.DAYS),null,"s","admin")));var response=service.calculate(new SupportApi.HealthRequest("h1"),"admin");assertThat(response.score()).isEqualTo(response.dimensions().values().stream().mapToInt(Integer::intValue).sum());assertThat(response.score()).isBetween(0,100);assertThat(response.reasons()).hasSize(7).allMatch(r->r.actionRoute().startsWith("/"));verify(healthRepository).save(any());}
+package com.bemo.hr.product.support;
+
+import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.product.analytics.ActivationMilestone;
+import com.bemo.hr.product.analytics.ActivationMilestoneRepository;
+import com.bemo.hr.product.analytics.ProductEventDailyAggregate;
+import com.bemo.hr.product.analytics.ProductEventDailyAggregateRepository;
+import com.bemo.hr.product.onboarding.OnboardingAssessmentRepository;
+import com.bemo.hr.product.subscription.TenantSubscription;
+import com.bemo.hr.product.subscription.TenantSubscriptionRepository;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.security.TenantApplication;
+import com.bemo.hr.shared.security.TenantApplicationRepository;
+import com.bemo.hr.shared.security.TenantContext;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.ObjectMapper;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class SupportServiceTests {
+    @Mock
+    TenantApplicationRepository tenantRepository;
+    @Mock
+    SupportTicketRepository ticketRepository;
+    @Mock
+    SupportTicketUpdateRepository updateRepository;
+    @Mock
+    FeedbackItemRepository feedbackRepository;
+    @Mock
+    CustomerHealthSnapshotRepository healthRepository;
+    @Mock
+    ProductEventDailyAggregateRepository dailyRepository;
+    @Mock
+    ActivationMilestoneRepository milestoneRepository;
+    @Mock
+    OnboardingAssessmentRepository onboardingRepository;
+    @Mock
+    TenantSubscriptionRepository subscriptionRepository;
+    @Mock
+    AuditService auditService;
+    SupportService service;
+    TenantApplication tenant;
+
+    @BeforeEach
+    void setup() {
+        tenant = new TenantApplication("support", "Support");
+        TenantContext.set(tenant.getId());
+        service = new SupportService(tenantRepository, ticketRepository, updateRepository, feedbackRepository, healthRepository, dailyRepository, milestoneRepository, onboardingRepository, subscriptionRepository, new ObjectMapper(), auditService);
+        lenient().when(tenantRepository.findByIdForUpdate(tenant.getId())).thenReturn(Optional.of(tenant));
+        lenient().when(ticketRepository.findByOperationId(anyString())).thenReturn(Optional.empty());
+        lenient().when(ticketRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(feedbackRepository.findByOperationId(anyString())).thenReturn(Optional.empty());
+        lenient().when(feedbackRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(healthRepository.findByOperationId(anyString())).thenReturn(Optional.empty());
+        lenient().when(healthRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+    }
+
+    @AfterEach
+    void clear() {
+        TenantContext.clear();
+    }
+
+    @Test
+    void criticalTicketRequiresMeaningfulImpactAndGetsFourHourSla() {
+        var invalid = new SupportApi.TicketRequest("CRITICAL", "OUTAGE", "PAYROLL", "/payroll?employee=secret", "Stopped", "Cannot post payroll", "op-1");
+        assertThatThrownBy(() -> service.create(invalid, "user")).isInstanceOfSatisfying(BusinessRuleException.class, e -> assertThat(e.getCode()).isEqualTo("SUPPORT_CRITICAL_IMPACT_REQUIRED"));
+        var valid = new SupportApi.TicketRequest("CRITICAL", "OUTAGE", "PAYROLL", "/payroll?employee=secret", "Monthly payroll posting is fully blocked", "Cannot post payroll", "op-2");
+        var before = Instant.now();
+        var response = service.create(valid, "user");
+        assertThat(response.screen()).isEqualTo("/payroll");
+        assertThat(response.slaDueAt()).isBetween(before.plus(Duration.ofHours(3)).toEpochMilli(), before.plus(Duration.ofHours(5)).toEpochMilli());
+        verify(auditService).record(eq("CREATE"), eq("SUPPORT_TICKET"), anyString(), eq("user"), contains("CRITICAL"), isNull());
+    }
+
+    @Test
+    void ticketCreationReplayHasNoDuplicateSideEffects() {
+        var existing = new SupportTicket("SUP-1", "LOW", "QUESTION", "HR", "/employees", "Need guidance", "Question", "SUPPORT", Instant.now().plusSeconds(100), "user", "op");
+        when(ticketRepository.findByOperationId("op")).thenReturn(Optional.of(existing));
+        var response = service.create(new SupportApi.TicketRequest("LOW", "QUESTION", "HR", "/employees", "Need guidance", "Question", "op"), "user");
+        assertThat(response.replayed()).isTrue();
+        verify(ticketRepository, never()).save(any());
+    }
+
+    @Test
+    void transitionIsVersionedValidatedAndWritesImmutableUpdate() {
+        var ticket = new SupportTicket("SUP-1", "HIGH", "BUG", "FINANCE", "/finance", "Posting blocked", "Details", "SUPPORT", Instant.now().plusSeconds(100), "user", "op");
+        when(ticketRepository.findByIdForUpdate(ticket.getId())).thenReturn(Optional.of(ticket));
+        when(updateRepository.findByOperationId("u1")).thenReturn(Optional.empty());
+        var response = service.update(ticket.getId(), new SupportApi.TicketUpdateRequest("TRIAGED", "FINANCE_SUPPORT", "Investigating", "u1", 0), "admin");
+        assertThat(response.status()).isEqualTo("TRIAGED");
+        verify(updateRepository).save(argThat(u -> u.getFromStatus().equals("NEW") && u.getToStatus().equals("TRIAGED")));
+        assertThatThrownBy(() -> service.update(ticket.getId(), new SupportApi.TicketUpdateRequest("RESOLVED", "SUPPORT", "skip", "u2", 0), "admin")).isInstanceOfSatisfying(BusinessRuleException.class, e -> assertThat(e.getCode()).isEqualTo("SUPPORT_STATUS_TRANSITION_INVALID"));
+    }
+
+    @Test
+    void feedbackCapturesOnlySafeContextAndRequiresRating() {
+        var invalid = new SupportApi.FeedbackRequest("RATING", "HR", "Useful", null, "/employees", "1", "browser", "corr", "f1");
+        assertThatThrownBy(() -> service.feedback(invalid, "user")).isInstanceOfSatisfying(BusinessRuleException.class, e -> assertThat(e.getCode()).isEqualTo("FEEDBACK_RATING_REQUIRED"));
+        var response = service.feedback(new SupportApi.FeedbackRequest("PROBLEM", "HR", "Screen issue", null, "/employees?nationalId=secret#row", "1", "browser", "corr", "f2"), "user");
+        assertThat(response.route()).isEqualTo("/employees");
+    }
+
+    @Test
+    void healthScoreIsDeterministicAndEveryDimensionHasAReason() {
+        var daily = new ProductEventDailyAggregate(LocalDate.now(), "PAGE_VIEW", "navigation");
+        when(dailyRepository.findAllByOrderByEventDateDesc()).thenReturn(List.of(daily));
+        when(milestoneRepository.findAllByOrderByAchievedAtAsc()).thenReturn(List.of(new ActivationMilestone("FIRST_LOGIN", "e", Instant.now())));
+        when(onboardingRepository.findFirstByOrderByAssessedAtDesc()).thenReturn(Optional.empty());
+        when(ticketRepository.countByStatusNotInAndPriorityIn(any(), any())).thenReturn(2L);
+        when(subscriptionRepository.findFirstBy()).thenReturn(Optional.of(new TenantSubscription("STARTER", "ACTIVE", Instant.now(), Instant.now().plus(60, java.time.temporal.ChronoUnit.DAYS), null, "s", "admin")));
+        var response = service.calculate(new SupportApi.HealthRequest("h1"), "admin");
+        assertThat(response.score()).isEqualTo(response.dimensions().values().stream().mapToInt(Integer::intValue).sum());
+        assertThat(response.score()).isBetween(0, 100);
+        assertThat(response.reasons()).hasSize(7).allMatch(r -> r.actionRoute().startsWith("/"));
+        verify(healthRepository).save(any());
+    }
 }

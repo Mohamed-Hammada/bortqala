@@ -1,10 +1,6 @@
 package com.bemo.hr.manufacturing.production.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -27,8 +23,8 @@ public class BomSnapshot {
     @Column(name = "bom_id", nullable = false, length = 36)
     private String bomId;
 
-    @Column(name = "bom_version", nullable = false)
-    private int bomVersion;
+    @Column(name = "bom_revision", nullable = false, length = 20)
+    private String bomRevision;
 
     @Column(name = "component_item_id", nullable = false, length = 36)
     private String componentItemId;
@@ -42,29 +38,58 @@ public class BomSnapshot {
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
-    protected BomSnapshot() {}
+    protected BomSnapshot() {
+    }
 
-    public BomSnapshot(String productionOrderId, String bomId, int bomVersion, String componentItemId,
+    public BomSnapshot(String productionOrderId, String bomId, String bomRevision, String componentItemId,
                        BigDecimal requiredQuantity, BigDecimal standardUnitCost) {
         this.id = UUID.randomUUID().toString();
         this.productionOrderId = productionOrderId;
         this.bomId = bomId;
-        this.bomVersion = bomVersion;
+        this.bomRevision = bomRevision;
         this.componentItemId = componentItemId;
         this.requiredQuantity = requiredQuantity;
         this.standardUnitCost = standardUnitCost;
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getProductionOrderId() { return productionOrderId; }
-    public String getBomId() { return bomId; }
-    public int getBomVersion() { return bomVersion; }
-    public String getComponentItemId() { return componentItemId; }
-    public BigDecimal getRequiredQuantity() { return requiredQuantity; }
-    public BigDecimal getStandardUnitCost() { return standardUnitCost; }
-    public long getCreatedAt() { return createdAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getProductionOrderId() {
+        return productionOrderId;
+    }
+
+    public String getBomId() {
+        return bomId;
+    }
+
+    public String getBomRevision() {
+        return bomRevision;
+    }
+
+    public String getComponentItemId() {
+        return componentItemId;
+    }
+
+    public BigDecimal getRequiredQuantity() {
+        return requiredQuantity;
+    }
+
+    public BigDecimal getStandardUnitCost() {
+        return standardUnitCost;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
 }

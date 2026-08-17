@@ -8,10 +8,10 @@ import com.bemo.hr.operations.PartnerLedgerEntryRepository;
 import com.bemo.hr.party.BusinessParty;
 import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.numbering.DocumentNumberSequenceRepository;
 import com.bemo.hr.shared.security.TenantApplication;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
-import com.bemo.hr.shared.numbering.DocumentNumberSequenceRepository;
 import com.bemo.hr.trade.procurement.application.VendorPaymentProposalService;
 import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
@@ -35,17 +35,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class VendorPaymentProposalConcurrencyTests extends PostgresIntegrationTest {
 
-    @Autowired private VendorPaymentProposalService proposalService;
-    @Autowired private VendorPaymentProposalRepository proposalRepository;
-    @Autowired private VendorPaymentProposalAllocationRepository allocationRepository;
-    @Autowired private SupplierInvoiceRepository invoiceRepository;
-    @Autowired private SupplierPaymentRepository paymentRepository;
-    @Autowired private PartnerLedgerEntryRepository ledgerRepository;
-    @Autowired private AuditLogRepository auditLogRepository;
-    @Autowired private BusinessPartyRepository partyRepository;
-    @Autowired private FiscalPeriodRepository fiscalPeriodRepository;
-    @Autowired private TenantApplicationRepository appRepository;
-    @Autowired private DocumentNumberSequenceRepository documentNumberSequenceRepository;
+    @Autowired
+    private VendorPaymentProposalService proposalService;
+    @Autowired
+    private VendorPaymentProposalRepository proposalRepository;
+    @Autowired
+    private VendorPaymentProposalAllocationRepository allocationRepository;
+    @Autowired
+    private SupplierInvoiceRepository invoiceRepository;
+    @Autowired
+    private SupplierPaymentRepository paymentRepository;
+    @Autowired
+    private PartnerLedgerEntryRepository ledgerRepository;
+    @Autowired
+    private AuditLogRepository auditLogRepository;
+    @Autowired
+    private BusinessPartyRepository partyRepository;
+    @Autowired
+    private FiscalPeriodRepository fiscalPeriodRepository;
+    @Autowired
+    private TenantApplicationRepository appRepository;
+    @Autowired
+    private DocumentNumberSequenceRepository documentNumberSequenceRepository;
 
     private String appId;
     private String supplierId;
@@ -64,7 +75,8 @@ class VendorPaymentProposalConcurrencyTests extends PostgresIntegrationTest {
                 allocationRepository.findByProposalIdOrderByLineNoAsc(proposalId).forEach(allocationRepository::delete);
                 proposalRepository.deleteById(proposalId);
             }
-            if (supplierId != null) ledgerRepository.findByPartyIdOrderByOccurredAtDesc(supplierId).forEach(ledgerRepository::delete);
+            if (supplierId != null)
+                ledgerRepository.findByPartyIdOrderByOccurredAtDesc(supplierId).forEach(ledgerRepository::delete);
             if (invoiceId != null) {
                 paymentRepository.findBySupplierInvoiceId(invoiceId).forEach(paymentRepository::delete);
                 invoiceRepository.deleteById(invoiceId);

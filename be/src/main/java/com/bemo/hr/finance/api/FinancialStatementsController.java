@@ -5,7 +5,10 @@ import com.bemo.hr.finance.application.FinancialStatementsReportService.BalanceS
 import com.bemo.hr.finance.application.FinancialStatementsReportService.CashFlowReport;
 import com.bemo.hr.finance.application.FinancialStatementsReportService.IncomeStatementReport;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
 
@@ -20,19 +23,19 @@ public class FinancialStatementsController {
     }
 
     @GetMapping("/balance-sheet")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR')")
     public BalanceSheetReport getBalanceSheet(@RequestParam String asOfDate) {
         return statementsService.getBalanceSheet(LocalDate.parse(asOfDate));
     }
 
     @GetMapping("/income-statement")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR')")
     public IncomeStatementReport getIncomeStatement(@RequestParam String startDate, @RequestParam String endDate) {
         return statementsService.getIncomeStatement(LocalDate.parse(startDate), LocalDate.parse(endDate));
     }
 
     @GetMapping("/cash-flow")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR')")
     public CashFlowReport getCashFlowStatement(@RequestParam String startDate, @RequestParam String endDate) {
         return statementsService.getCashFlowStatement(LocalDate.parse(startDate), LocalDate.parse(endDate));
     }

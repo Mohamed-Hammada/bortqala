@@ -29,7 +29,8 @@ public class StockTransferLine {
     @Column(nullable = false, precision = 15, scale = 4)
     private BigDecimal quantity;
 
-    protected StockTransferLine() {}
+    protected StockTransferLine() {
+    }
 
     public StockTransferLine(String transferId, String itemId, BigDecimal quantity) {
         this.id = UUID.randomUUID().toString();
@@ -38,9 +39,23 @@ public class StockTransferLine {
         this.quantity = quantity;
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getTransferId() { return transferId; }
-    public String getItemId() { return itemId; }
-    public BigDecimal getQuantity() { return quantity; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getTransferId() {
+        return transferId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public BigDecimal getQuantity() {
+        return quantity;
+    }
 }

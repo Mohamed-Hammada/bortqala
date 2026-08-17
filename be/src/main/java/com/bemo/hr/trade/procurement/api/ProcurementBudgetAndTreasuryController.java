@@ -18,9 +18,6 @@ public class ProcurementBudgetAndTreasuryController {
         this.governanceService = governanceService;
     }
 
-    public record ApproveBudgetPayload(String requisitionId, String budgetId, BigDecimal amount) {}
-    public record MatchTreasuryPayload(String paymentId, String bankTransactionId, BigDecimal matchedAmount) {}
-
     @PostMapping("/budget-approvals")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER')")
     public ProcurementBudgetApproval approveBudget(@RequestBody ApproveBudgetPayload payload) {
@@ -37,5 +34,11 @@ public class ProcurementBudgetAndTreasuryController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public ProcurementBudgetApproval getBudgetApproval(@PathVariable String requisitionId) {
         return governanceService.getBudgetApproval(requisitionId);
+    }
+
+    public record ApproveBudgetPayload(String requisitionId, String budgetId, BigDecimal amount) {
+    }
+
+    public record MatchTreasuryPayload(String paymentId, String bankTransactionId, BigDecimal matchedAmount) {
     }
 }

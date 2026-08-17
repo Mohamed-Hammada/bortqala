@@ -1,12 +1,6 @@
 package com.bemo.hr.finance.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -75,7 +69,8 @@ public class Currency {
     @Column(name = "version", nullable = false)
     private long version;
 
-    protected Currency() {}
+    protected Currency() {
+    }
 
     public Currency(String code, String name, String symbol, boolean isBase, BigDecimal exchangeRate, boolean active) {
         this.id = UUID.randomUUID().toString();
@@ -110,25 +105,77 @@ public class Currency {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getCode() { return code; }
-    public String getName() { return name; }
-    public String getSymbol() { return symbol; }
-    public boolean isBase() { return isBase; }
-    public BigDecimal getExchangeRate() { return exchangeRate; }
-    public BigDecimal getReferenceExchangeRate() { return referenceExchangeRate; }
-    public String getReferenceRateProvider() { return referenceRateProvider; }
-    public String getReferenceRateBaseCode() { return referenceRateBaseCode; }
-    public LocalDate getReferenceRateDate() { return referenceRateDate; }
-    public Long getReferenceRateFetchedAt() { return referenceRateFetchedAt; }
-    public Boolean getReferenceRateSupported() { return referenceRateSupported; }
-    public boolean isActive() { return active; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public boolean isBase() {
+        return isBase;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public BigDecimal getReferenceExchangeRate() {
+        return referenceExchangeRate;
+    }
+
+    public String getReferenceRateProvider() {
+        return referenceRateProvider;
+    }
+
+    public String getReferenceRateBaseCode() {
+        return referenceRateBaseCode;
+    }
+
+    public LocalDate getReferenceRateDate() {
+        return referenceRateDate;
+    }
+
+    public Long getReferenceRateFetchedAt() {
+        return referenceRateFetchedAt;
+    }
+
+    public Boolean getReferenceRateSupported() {
+        return referenceRateSupported;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

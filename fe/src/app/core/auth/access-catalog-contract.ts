@@ -66,7 +66,7 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
   {
     menuId: 'fiscal-periods',
     route: '/fiscal-periods',
-    roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+    roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'],
     requiredFeature: 'finance.enabled',
   },
   {
@@ -75,7 +75,7 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
     requiredFeature: 'finance.enabled',
   },
-  { menuId: 'organization', route: '/organization', roles: ['ADMIN', 'SUPER_ADMIN'], requiredFeature: null },
+  { menuId: 'organization', route: '/organization', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'], requiredFeature: null },
   { menuId: 'audit-logs', route: '/audit-logs', roles: ['ADMIN', 'SUPER_ADMIN'], requiredFeature: null },
   { menuId: 'users', route: '/users', roles: ['ADMIN', 'SUPER_ADMIN'], requiredFeature: null },
   { menuId: 'settings', route: '/settings', roles: [], requiredFeature: null },

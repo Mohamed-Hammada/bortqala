@@ -15,8 +15,6 @@ public class JournalSourceMetadataController {
         this.metadataService = metadataService;
     }
 
-    public record AttachMetadataPayload(String journalId, String sourceDocumentType, String sourceDocumentId) {}
-
     @PostMapping("/attach")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public JournalSourceMetadata attachSourceMetadata(@RequestBody AttachMetadataPayload payload) {
@@ -27,5 +25,8 @@ public class JournalSourceMetadataController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
     public JournalSourceMetadata getMetadata(@PathVariable String journalId) {
         return metadataService.getMetadata(journalId);
+    }
+
+    public record AttachMetadataPayload(String journalId, String sourceDocumentType, String sourceDocumentId) {
     }
 }

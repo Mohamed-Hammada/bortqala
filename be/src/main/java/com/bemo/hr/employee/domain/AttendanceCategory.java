@@ -1,14 +1,6 @@
 package com.bemo.hr.employee.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -113,18 +105,59 @@ public class AttendanceCategory {
         updatedAt = Instant.now();
     }
 
-    public String getId() { return id; }
-    public String getCode() { return code; }
-    public String getName() { return name; }
-    public CategoryScope getScope() { return scope; }
-    public int getExpectedDailyMinutes() { return expectedDailyMinutes; }
-    public PayCycle getPayCycle() { return payCycle; }
-    public AttendanceMode getAttendanceMode() { return attendanceMode; }
-    public boolean isSinglePunchCounts() { return singlePunchCounts; }
-    public boolean isAllowsEmployeeAdvances() { return allowsEmployeeAdvances; }
-    public int getWorkDaysMask() { return workDaysMask; }
-    public boolean isActive() { return active; }
-    public long getVersion() { return version; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public CategoryScope getScope() {
+        return scope;
+    }
+
+    public int getExpectedDailyMinutes() {
+        return expectedDailyMinutes;
+    }
+
+    public PayCycle getPayCycle() {
+        return payCycle;
+    }
+
+    public AttendanceMode getAttendanceMode() {
+        return attendanceMode;
+    }
+
+    public boolean isSinglePunchCounts() {
+        return singlePunchCounts;
+    }
+
+    public boolean isAllowsEmployeeAdvances() {
+        return allowsEmployeeAdvances;
+    }
+
+    public int getWorkDaysMask() {
+        return workDaysMask;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
 }

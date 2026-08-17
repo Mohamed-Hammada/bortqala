@@ -36,6 +36,30 @@ public class VendorHubClient {
         this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(6)).build();
     }
 
+    private static String normalized(String value) {
+        return value == null ? "" : value.strip().toLowerCase();
+    }
+
+    private static String defaultText(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value.strip();
+    }
+
+    private static String emptyToNull(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
+    }
+
+    private static Map<String, String> safeMap(Map<String, String> value) {
+        return value == null ? Map.of() : value;
+    }
+
+    private static Map<String, Object> safeObjectMap(Map<String, Object> value) {
+        return value == null ? Map.of() : value;
+    }
+
+    private static List<String> safeList(List<String> value) {
+        return value == null ? List.of() : value;
+    }
+
     public JsonNode health() {
         return request("GET", "/health", null, null, null);
     }
@@ -167,29 +191,5 @@ public class VendorHubClient {
             throw new BusinessRuleException("Invalid device-hub identifier.", "DEVICE_HUB_ID_INVALID", HttpStatus.CONFLICT);
         }
         return value;
-    }
-
-    private static String normalized(String value) {
-        return value == null ? "" : value.strip().toLowerCase();
-    }
-
-    private static String defaultText(String value, String fallback) {
-        return value == null || value.isBlank() ? fallback : value.strip();
-    }
-
-    private static String emptyToNull(String value) {
-        return value == null || value.isBlank() ? null : value.strip();
-    }
-
-    private static Map<String, String> safeMap(Map<String, String> value) {
-        return value == null ? Map.of() : value;
-    }
-
-    private static Map<String, Object> safeObjectMap(Map<String, Object> value) {
-        return value == null ? Map.of() : value;
-    }
-
-    private static List<String> safeList(List<String> value) {
-        return value == null ? List.of() : value;
     }
 }

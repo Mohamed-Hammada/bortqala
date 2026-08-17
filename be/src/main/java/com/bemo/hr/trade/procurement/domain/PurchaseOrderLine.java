@@ -1,10 +1,6 @@
 package com.bemo.hr.trade.procurement.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -48,7 +44,8 @@ public class PurchaseOrderLine {
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
-    protected PurchaseOrderLine() {}
+    protected PurchaseOrderLine() {
+    }
 
     public PurchaseOrderLine(String purchaseOrderId, String itemId, String itemName, String itemCategory,
                              BigDecimal quantity, String unitOfMeasure, BigDecimal unitPrice) {
@@ -64,16 +61,47 @@ public class PurchaseOrderLine {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getPurchaseOrderId() { return purchaseOrderId; }
-    public String getItemId() { return itemId; }
-    public String getItemName() { return itemName; }
-    public String getItemCategory() { return itemCategory; }
-    public BigDecimal getQuantity() { return quantity; }
-    public String getUnitOfMeasure() { return unitOfMeasure; }
-    public BigDecimal getUnitPrice() { return unitPrice; }
-    public BigDecimal getLineTotal() { return lineTotal; }
-    public long getCreatedAt() { return createdAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getPurchaseOrderId() {
+        return purchaseOrderId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public String getItemCategory() {
+        return itemCategory;
+    }
+
+    public BigDecimal getQuantity() {
+        return quantity;
+    }
+
+    public String getUnitOfMeasure() {
+        return unitOfMeasure;
+    }
+
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public BigDecimal getLineTotal() {
+        return lineTotal;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
 }

@@ -1,0 +1,157 @@
+<section class="data-exchange card" aria-labelledby="data-exchange-title">
+  <div class="section-heading">
+    <div>
+      <p class="eyebrow">{{ i18n.t('dataExchange.eyebrow', undefined, 'Excel data exchange') }}</p>
+      <h2 id="data-exchange-title">{{ i18n.t('dataExchange.title', undefined, 'Import templates & validation center') }}</h2>
+      <p>{{ i18n.t('dataExchange.subtitle', undefined, 'Download governed templates, validate files before commit, and produce an annotated rejected-row workbook.') }}</p>
+    </div>
+    <span class="count">{{ templates().length }} {{ i18n.t('dataExchange.templates', undefined, 'templates') }}</span>
+  </div>
+
+  @if (error()) { <div class="alert error" role="alert">{{ error() }}</div> }
+
+  <div class="catalog-controls">
+    <label>
+      <span>{{ i18n.t('dataExchange.search', undefined, 'Search') }}</span>
+      <input #searchInput type="search" [value]="query()" (input)="query.set(searchInput.value)"
+             [placeholder]="i18n.t('dataExchange.search.placeholder', undefined, 'Template, module or route')" />
+    </label>
+    <label>
+      <span>{{ i18n.t('dataExchange.module', undefined, 'Module') }}</span>
+      <select #moduleSelect [value]="selectedModule()" (change)="selectedModule.set(moduleSelect.value)">
+        <option value="all">{{ i18n.t('dataExchange.module.all', undefined, 'All modules') }}</option>
+        @for (module of modules(); track module) { <option [value]="module">{{ module }}</option> }
+      </select>
+    </label>
+  </div>
+
+  @if (loadingCatalog()) {
+    <p class="muted">{{ i18n.t('common.loading', undefined, 'Loading…') }}</p>
+  } @else {
+    <div class="catalog-layout">
+      <div class="template-list" role="list">
+        @for (template of filtered(); track template.key) {
+          <button type="button" class="template-card" [class.active]="selectedKey() === template.key"
+                  (click)="chooseTemplate(template.key)">
+            <strong>{{ template.title }}</strong>
+            <span>{{ template.module }}</span>
+            <small>{{ template.description }}</small>
+          </button>
+        } @empty {
+          <p class="muted">{{ i18n.t('dataExchange.empty', undefined, 'No templates match this filter.') }}</p>
+        }
+      </div>
+
+      @if (selected(); as template) {
+        <div class="wizard">
+          <div class="wizard-title">
+            <div>
+              <h3>{{ template.title }}</h3>
+              <p>{{ template.description }}</p>
+            </div>
+            <a class="route-link" [routerLink]="template.workspaceRoute">{{ i18n.t('dataExchange.openWorkspace', undefined, 'Open workspace') }}</a>
+          </div>
+
+          <div class="step">
+            <span class="step-no">1</span>
+            <div class="step-body">
+              <h4>{{ i18n.t('dataExchange.step1', undefined, 'Download template') }}</h4>
+              <div class="actions">
+                <button type="button" class="btn" [disabled]="downloading()" (click)="downloadTemplate(false)">
+                  {{ i18n.t('dataExchange.blankTemplate', undefined, 'Blank .xlsx') }}
+                </button>
+                <button type="button" class="btn secondary" [disabled]="downloading()" (click)="downloadTemplate(true)">
+                  {{ i18n.t('dataExchange.sampleTemplate', undefined, 'Sample .xlsx') }}
+                </button>
+              </div>
+              @for (sheet of template.sheets; track sheet.name) {
+                <details>
+                  <summary>{{ sheet.name }} · {{ sheet.columns.length }} {{ i18n.t('dataExchange.columns', undefined, 'columns') }}</summary>
+                  <div class="schema-grid">
+                    @for (column of sheet.columns; track column.header) {
+                      <span><strong>{{ column.header }}</strong> · {{ column.type }} @if (column.required) { <b aria-label="required">*</b> }</span>
+                    }
+                  </div>
+                </details>
+              }
+            </div>
+          </div>
+
+          <div class="step">
+            <span class="step-no">2</span>
+            <div class="step-body">
+              <h4>{{ i18n.t('dataExchange.step2', undefined, 'Upload & parse') }}</h4>
+              <label class="drop-zone">
+                <input #fileInput type="file" accept=".xlsx,.xls" (change)="chooseFile(fileInput)" />
+                <strong>{{ file()?.name || i18n.t('dataExchange.chooseFile', undefined, 'Choose an Excel file') }}</strong>
+                <small>{{ i18n.t('dataExchange.fileHint', undefined, '.xlsx / .xls, maximum 10 MB') }}</small>
+              </label>
+              <button type="button" class="btn" [disabled]="!file() || validating()" (click)="validateUpload()">
+                {{ validating() ? i18n.t('dataExchange.validating', undefined, 'Validating…') : i18n.t('dataExchange.validate', undefined, 'Validate workbook') }}
+              </button>
+            </div>
+          </div>
+
+          <div class="step">
+            <span class="step-no">3</span>
+            <div class="step-body">
+              <h4>{{ i18n.t('dataExchange.step3', undefined, 'Pre-commit validation preview') }}</h4>
+              @if (validation(); as result) {
+                <div class="metrics">
+                  <span><b>{{ result.totalRows }}</b> {{ i18n.t('dataExchange.rows', undefined, 'rows') }}</span>
+                  <span class="good"><b>{{ result.validRows }}</b> {{ i18n.t('dataExchange.validRows', undefined, 'valid') }}</span>
+                  <span class="bad"><b>{{ result.invalidRows }}</b> {{ i18n.t('dataExchange.invalidRows', undefined, 'invalid') }}</span>
+                </div>
+                @for (sheet of result.sheets; track sheet.sheet) {
+                  @if (sheet.sheetErrors.length || invalidRows(sheet).length) {
+                    <details open>
+                      <summary>{{ sheet.sheet }} · {{ sheet.invalidRows }} {{ i18n.t('dataExchange.invalidRows', undefined, 'invalid') }}</summary>
+                      @for (message of sheet.sheetErrors; track message) { <p class="error-line">{{ message }}</p> }
+                      <div class="error-table-wrap">
+                        <table class="error-table">
+                          <thead><tr><th>{{ i18n.t('dataExchange.row', undefined, 'Row') }}</th><th>{{ i18n.t('dataExchange.errors', undefined, 'Errors') }}</th></tr></thead>
+                          <tbody>
+                            @for (row of invalidRows(sheet); track row.rowNumber) {
+                              <tr><td>{{ row.rowNumber }}</td><td>@for (issue of row.errors; track issue.column + issue.message) { <div><b>{{ issue.column }}</b>: {{ issue.message }}</div> }</td></tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                    </details>
+                  }
+                }
+              } @else {
+                <p class="muted">{{ i18n.t('dataExchange.previewHint', undefined, 'Validation results will appear here before any business data is changed.') }}</p>
+              }
+            </div>
+          </div>
+
+          <div class="step">
+            <span class="step-no">4</span>
+            <div class="step-body">
+              <h4>{{ i18n.t('dataExchange.step4', undefined, 'Commit strategy') }}</h4>
+              <label class="radio"><input type="radio" name="commit-strategy" value="rollback_all" [checked]="commitStrategy() === 'rollback_all'" (change)="setStrategy('rollback_all')" />
+                {{ i18n.t('dataExchange.rollbackAll', undefined, 'Rollback the entire batch on any error') }}</label>
+              <label class="radio"><input type="radio" name="commit-strategy" value="skip_invalid" [checked]="commitStrategy() === 'skip_invalid'" (change)="setStrategy('skip_invalid')" />
+                {{ i18n.t('dataExchange.skipInvalid', undefined, 'Skip invalid rows and import valid rows only') }}</label>
+              <div class="alert info">
+                {{ i18n.t('dataExchange.commitGuard', undefined, 'Validation is reusable. Final commit stays disabled until this module is wired to its existing authoritative business service, so the import cannot bypass accounting, inventory, payroll or approval rules.') }}
+              </div>
+            </div>
+          </div>
+
+          <div class="step">
+            <span class="step-no">5</span>
+            <div class="step-body">
+              <h4>{{ i18n.t('dataExchange.step5', undefined, 'Rejected-row workbook') }}</h4>
+              <p>{{ i18n.t('dataExchange.errorWorkbookHint', undefined, 'Download only rejected rows with invalid cells highlighted and comments explaining each error.') }}</p>
+              <button type="button" class="btn secondary" [disabled]="!validation() || validation()!.invalidRows === 0 || downloading()" (click)="downloadErrors()">
+                {{ i18n.t('dataExchange.downloadErrors', undefined, 'Download errors .xlsx') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>

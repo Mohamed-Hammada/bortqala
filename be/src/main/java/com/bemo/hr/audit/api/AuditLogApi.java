@@ -13,7 +13,8 @@ public class AuditLogApi {
             String detailsJson,
             String ipAddress,
             long occurredAt
-    ) {}
+    ) {
+    }
 
     public record AuditLogPageResponse(
             List<AuditLogResponse> content,
@@ -21,5 +22,6 @@ public class AuditLogApi {
             int pageSize,
             long totalElements,
             int totalPages
-    ) {}
+    ) {
+    }
 }

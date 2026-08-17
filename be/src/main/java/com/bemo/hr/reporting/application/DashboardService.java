@@ -2,9 +2,10 @@ package com.bemo.hr.reporting.application;
 
 import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
 import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
+import com.bemo.hr.employee.domain.PayCycle;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
-import com.bemo.hr.employee.domain.PayCycle;
+import com.bemo.hr.operations.OperationsService;
 import com.bemo.hr.payroll.domain.PaymentStatus;
 import com.bemo.hr.payroll.infrastructure.SalaryPaymentRepository;
 import com.bemo.hr.reporting.api.DashboardApi;
@@ -12,22 +13,16 @@ import com.bemo.hr.reporting.domain.AttendanceDecision;
 import com.bemo.hr.reporting.domain.DailyStatus;
 import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
 import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.ZoneId;
+import java.util.*;
 import java.util.stream.Collectors;
-
-import com.bemo.hr.operations.OperationsService;
 
 @Service
 @Transactional(readOnly = true)
@@ -40,6 +35,7 @@ public class DashboardService {
     private final PunchRecordRepository punchRecordRepository;
     private final SalaryPaymentRepository salaryPaymentRepository;
     private final OperationsService operationsService;
+    private final AttendanceReportRefreshService attendanceReportRefreshService;
     private final ZoneId companyZone;
 
     public DashboardService(AttendanceCategoryRepository attendanceCategoryRepository, EmployeeRepository employeeRepository,
@@ -48,19 +44,23 @@ public class DashboardService {
                             ImportBatchRepository importBatchRepository, PunchRecordRepository punchRecordRepository,
                             SalaryPaymentRepository salaryPaymentRepository,
                             OperationsService operationsService,
+                            AttendanceReportRefreshService attendanceReportRefreshService,
                             @Value("${hr.company-zone:Africa/Cairo}") String companyZone) {
-        this.attendanceCategoryRepository = attendanceCategoryRepository; this.employeeRepository = employeeRepository;
-        this.attendanceReportRepository = attendanceReportRepository; this.dailyAttendanceResultRepository = dailyAttendanceResultRepository;
-        this.importBatchRepository = importBatchRepository; this.punchRecordRepository = punchRecordRepository;
+        this.attendanceCategoryRepository = attendanceCategoryRepository;
+        this.employeeRepository = employeeRepository;
+        this.attendanceReportRepository = attendanceReportRepository;
+        this.dailyAttendanceResultRepository = dailyAttendanceResultRepository;
+        this.importBatchRepository = importBatchRepository;
+        this.punchRecordRepository = punchRecordRepository;
         this.salaryPaymentRepository = salaryPaymentRepository;
         this.operationsService = operationsService;
+        this.attendanceReportRefreshService = attendanceReportRefreshService;
         this.companyZone = ZoneId.of(companyZone);
     }
 
     public DashboardApi.Response dashboard(int year, int month) {
         var period = YearMonth.of(year, month);
-        var report = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
-                PayCycle.MONTHLY, period.atDay(1), period.atEndOfMonth()).orElse(null);
+        var report = resolveAttendanceReport(period);
         var rows = report == null ? List.<com.bemo.hr.reporting.domain.DailyAttendanceResult>of()
                 : dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(report.getId());
         long scheduled = rows.stream().filter(row -> row.getStatus() != DailyStatus.NON_WORKDAY && row.getStatus() != DailyStatus.HOLIDAY).count();
@@ -89,8 +89,8 @@ public class DashboardService {
                 year, month, java.time.Instant.now(),
                 employeeRepository.findAll().stream().filter(com.bemo.hr.employee.domain.Employee::isActive).count(),
                 attendanceCategoryRepository.findByScopeIn(java.util.List.of(
-                        com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE,
-                        com.bemo.hr.employee.domain.CategoryScope.BOTH)).stream()
+                                com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE,
+                                com.bemo.hr.employee.domain.CategoryScope.BOTH)).stream()
                         .filter(com.bemo.hr.employee.domain.AttendanceCategory::isActive).count(),
                 report == null ? null : report.getStatus(),
                 report == null ? null : report.getId(),
@@ -114,8 +114,7 @@ public class DashboardService {
 
     public List<DashboardApi.AttendanceChartPoint> attendanceChart(String period, String departmentId, int year, int month) {
         var periodYm = YearMonth.of(year, month);
-        var report = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
-                PayCycle.MONTHLY, periodYm.atDay(1), periodYm.atEndOfMonth()).orElse(null);
+        var report = resolveAttendanceReport(periodYm);
         if (report == null) return List.of();
 
         var rows = dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(report.getId());
@@ -158,7 +157,7 @@ public class DashboardService {
             BigDecimal gross = p.getGrossAmount() == null ? BigDecimal.ZERO : p.getGrossAmount();
             BigDecimal net = p.getNetAmount() == null ? BigDecimal.ZERO : p.getNetAmount();
             totalGross = totalGross.add(gross);
-            if (p.getPaymentStatus() == PaymentStatus.PAID || p.getPaymentStatus() == PaymentStatus.POSTED) {
+            if (p.getPaymentStatus() == PaymentStatus.PAID) {
                 paidCount++;
                 totalPaid = totalPaid.add(net);
             } else {
@@ -172,8 +171,7 @@ public class DashboardService {
 
     public List<DashboardApi.DepartmentMetric> departmentMetrics(int year, int month) {
         var periodYm = YearMonth.of(year, month);
-        var report = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
-                PayCycle.MONTHLY, periodYm.atDay(1), periodYm.atEndOfMonth()).orElse(null);
+        var report = resolveAttendanceReport(periodYm);
         if (report == null) return List.of();
 
         var rows = dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(report.getId());
@@ -198,19 +196,28 @@ public class DashboardService {
     }
 
     public List<DashboardApi.TrendPoint> trends(int months) {
+
+        var current = YearMonth.now(companyZone);
+
+        return trends(months, current.getYear(), current.getMonthValue());
+
+    }
+
+    public List<DashboardApi.TrendPoint> trends(int months, int year, int month) {
         int capped = Math.min(Math.max(months, 1), 24);
-        var anchor = YearMonth.now(companyZone);
+        var anchor = YearMonth.of(year, month);
         var points = new ArrayList<DashboardApi.TrendPoint>(capped);
         for (int offset = capped - 1; offset >= 0; offset--) {
             var period = anchor.minusMonths(offset);
             points.add(pointFor(period));
         }
         return points;
+
+
     }
 
     private DashboardApi.TrendPoint pointFor(YearMonth period) {
-        var report = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
-                PayCycle.MONTHLY, period.atDay(1), period.atEndOfMonth()).orElse(null);
+        var report = resolveAttendanceReport(period);
         var rows = report == null ? List.<com.bemo.hr.reporting.domain.DailyAttendanceResult>of()
                 : dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(report.getId());
         long scheduled = rows.stream().filter(row -> row.getStatus() != DailyStatus.NON_WORKDAY && row.getStatus() != DailyStatus.HOLIDAY).count();
@@ -229,7 +236,7 @@ public class DashboardService {
             var gross = payment.getGrossAmount() == null ? BigDecimal.ZERO : payment.getGrossAmount();
             var net = payment.getNetAmount() == null ? BigDecimal.ZERO : payment.getNetAmount();
             totalGross = totalGross.add(gross);
-            if (payment.getPaymentStatus() == PaymentStatus.PAID || payment.getPaymentStatus() == PaymentStatus.POSTED) {
+            if (payment.getPaymentStatus() == PaymentStatus.PAID) {
                 paid++;
                 totalPaid = totalPaid.add(net);
             } else {
@@ -242,4 +249,17 @@ public class DashboardService {
                 scheduled, present, rate, exceptions, overtime,
                 paid, pending, totalGross, totalPaid);
     }
+
+    private com.bemo.hr.reporting.domain.AttendanceReport resolveAttendanceReport(YearMonth period) {
+        var existing = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
+                PayCycle.MONTHLY, period.atDay(1), period.atEndOfMonth());
+        if (attendanceReportRefreshService.needsRefresh(period, existing.isPresent())) {
+            attendanceReportRefreshService.refreshMonth(period.getYear(), period.getMonthValue(), "dashboard-auto");
+            existing = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
+                    PayCycle.MONTHLY, period.atDay(1), period.atEndOfMonth());
+        }
+        return existing.orElse(null);
+    }
 }
+
+// BORTQALA_ATTENDANCE_PIPELINE_20260816_V1_TREND_SELECTED_PERIOD

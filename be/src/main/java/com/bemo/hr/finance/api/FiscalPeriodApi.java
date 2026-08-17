@@ -17,7 +17,8 @@ public class FiscalPeriodApi {
             long version,
             long createdAt,
             long updatedAt
-    ) {}
+    ) {
+    }
 
     public record CreatePeriodPayload(
             int fiscalYear,
@@ -25,10 +26,12 @@ public class FiscalPeriodApi {
             @NotNull String periodName,
             long startDate,
             long endDate
-    ) {}
+    ) {
+    }
 
     public record UpdateStatusPayload(
             @NotNull String status,
             Long expectedVersion
-    ) {}
+    ) {
+    }
 }

@@ -81,10 +81,27 @@ export interface BiometricSource {
   sourceType: BiometricSourceType;
   normalizedCode: string;
   active: boolean;
+  autoCreateEmployees: boolean;
+  autoCreateCategoryId: string | null;
+  autoCreateEmploymentType: 'FIXED' | 'DAILY';
+  autoCreateActiveFromMode?: 'FIRST_PUNCH' | 'IMPORT_DATE';
+  autoCreateEmployeeActive?: boolean;
   createdAt: number;
 }
 export interface BiometricSourceRequest {
   name: string;
   sourceType: BiometricSourceType;
+  active: boolean;
+  autoCreateEmployees: boolean;
+  autoCreateCategoryId?: string | null;
+  autoCreateEmploymentType: 'FIXED' | 'DAILY';
+  autoCreateActiveFromMode: 'FIRST_PUNCH' | 'IMPORT_DATE';
+  autoCreateEmployeeActive: boolean;
+}
+export interface EmployeeCategoryOption {
+  id: string;
+  code: string;
+  name: string;
+  scope: 'EMPLOYEE' | 'WORKER' | 'BOTH';
   active: boolean;
 }

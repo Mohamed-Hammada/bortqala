@@ -35,9 +35,9 @@ public class WorkerService {
     public WorkforceApi.WorkerResponse create(WorkforceApi.WorkerRequest request) {
         requireWorkerCategory(request.categoryId());
         Worker worker = new Worker(
-            request.code(), request.fullName(), request.contractorId(), request.categoryId(),
-            request.defaultDailyRate(), request.standardDailyHours(), request.branchId(),
-            request.attendanceMode(), request.status(), request.phone(), request.nationalId(), request.notes()
+                request.code(), request.fullName(), request.contractorId(), request.categoryId(),
+                request.defaultDailyRate(), request.standardDailyHours(), request.branchId(),
+                request.attendanceMode(), request.status(), request.phone(), request.nationalId(), request.notes()
         );
         var saved = mapToResponse(workerRepository.save(worker));
         auditService.record("CREATE", "WORKER", saved.id(), currentActor(),
@@ -48,12 +48,12 @@ public class WorkerService {
     @Transactional
     public WorkforceApi.WorkerResponse update(String id, WorkforceApi.WorkerRequest request) {
         Worker worker = workerRepository.findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Worker not found: " + id));
+                .orElseThrow(() -> new IllegalArgumentException("Worker not found: " + id));
         requireWorkerCategory(request.categoryId());
         worker.update(
-            request.code(), request.fullName(), request.contractorId(), request.categoryId(),
-            request.defaultDailyRate(), request.standardDailyHours(), request.branchId(),
-            request.attendanceMode(), request.status(), request.phone(), request.nationalId(), request.notes()
+                request.code(), request.fullName(), request.contractorId(), request.categoryId(),
+                request.defaultDailyRate(), request.standardDailyHours(), request.branchId(),
+                request.attendanceMode(), request.status(), request.phone(), request.nationalId(), request.notes()
         );
         var saved = mapToResponse(workerRepository.save(worker));
         auditService.record("UPDATE", "WORKER", saved.id(), currentActor(),
@@ -80,18 +80,20 @@ public class WorkerService {
         return (auth != null && auth.getName() != null && !auth.getName().isBlank()) ? auth.getName() : "system";
     }
 
-    private String safe(String value) { return value == null ? "" : value.replace("\"", "'"); }
+    private String safe(String value) {
+        return value == null ? "" : value.replace("\"", "'");
+    }
 
     private WorkforceApi.WorkerResponse mapToResponse(Worker w) {
         String contractorName = contractorRepository.findById(w.getContractorId())
-            .map(Contractor::getName).orElse("—");
+                .map(Contractor::getName).orElse("—");
         String categoryName = categoryRepository.findById(w.getCategoryId())
-            .map(AttendanceCategory::getName).orElse("—");
+                .map(AttendanceCategory::getName).orElse("—");
         return new WorkforceApi.WorkerResponse(
-            w.getId(), w.getCode(), w.getFullName(), w.getContractorId(), contractorName,
-            w.getCategoryId(), categoryName, w.getDefaultDailyRate(), w.getStandardDailyHours(),
-            w.getBranchId(), w.getAttendanceMode(), w.getStatus(), w.getPhone(),
-            w.getNationalId(), w.getNotes(), w.getCreatedAt().toEpochMilli(), w.getUpdatedAt().toEpochMilli()
+                w.getId(), w.getCode(), w.getFullName(), w.getContractorId(), contractorName,
+                w.getCategoryId(), categoryName, w.getDefaultDailyRate(), w.getStandardDailyHours(),
+                w.getBranchId(), w.getAttendanceMode(), w.getStatus(), w.getPhone(),
+                w.getNationalId(), w.getNotes(), w.getCreatedAt().toEpochMilli(), w.getUpdatedAt().toEpochMilli()
         );
     }
 }

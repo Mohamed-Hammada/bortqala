@@ -9,19 +9,14 @@ import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.trade.procurement.api.ProcurementApi;
+import com.bemo.hr.trade.procurement.application.ProcurementAccountingService;
 import com.bemo.hr.trade.procurement.application.ProcurementExcelExporter;
 import com.bemo.hr.trade.procurement.application.ProcurementService;
 import com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatch;
 import com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository;
 import com.bemo.hr.trade.procurement.domain.PurchaseOrder;
 import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
-import com.bemo.hr.trade.procurement.infrastructure.GoodsReceiptRepository;
-import com.bemo.hr.trade.procurement.infrastructure.ProcurementDocumentSequenceRepository;
-import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderLineRepository;
-import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderRepository;
-import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
-import com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository;
-import com.bemo.hr.trade.procurement.infrastructure.SupplierReturnRepository;
+import com.bemo.hr.trade.procurement.infrastructure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,24 +34,42 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ProcurementThreeWayMatchServiceTests {
 
-    @Mock private PurchaseOrderRepository purchaseOrderRepository;
-    @Mock private PurchaseOrderLineRepository purchaseOrderLineRepository;
-    @Mock private ProcurementDocumentSequenceRepository procurementDocumentSequenceRepository;
-    @Mock private GoodsReceiptRepository goodsReceiptRepository;
-    @Mock private SupplierInvoiceRepository supplierInvoiceRepository;
-    @Mock private SupplierPaymentRepository supplierPaymentRepository;
-    @Mock private BusinessPartyRepository businessPartyRepository;
-    @Mock private PartnerLedgerEntryRepository partnerLedgerEntryRepository;
-    @Mock private AuditService auditService;
-    @Mock private ProcurementExcelExporter procurementExcelExporter;
-    @Mock private OperationsService operationsService;
-    @Mock private TenantApplicationRepository tenantApplicationRepository;
-    @Mock private CurrencyRepository currencyRepository;
-    @Mock private IdempotencyService idempotencyService;
-    @Mock private SupplierReturnRepository supplierReturnRepository;
-    @Mock private FiscalPeriodGuard fiscalPeriodGuard;
-    @Mock private ProcurementThreeWayMatchRepository threeWayMatchRepository;
-    @Mock private com.bemo.hr.budget.application.BudgetService budgetService;
+    @Mock
+    private PurchaseOrderRepository purchaseOrderRepository;
+    @Mock
+    private PurchaseOrderLineRepository purchaseOrderLineRepository;
+    @Mock
+    private ProcurementDocumentSequenceRepository procurementDocumentSequenceRepository;
+    @Mock
+    private GoodsReceiptRepository goodsReceiptRepository;
+    @Mock
+    private SupplierInvoiceRepository supplierInvoiceRepository;
+    @Mock
+    private SupplierPaymentRepository supplierPaymentRepository;
+    @Mock
+    private BusinessPartyRepository businessPartyRepository;
+    @Mock
+    private PartnerLedgerEntryRepository partnerLedgerEntryRepository;
+    @Mock
+    private AuditService auditService;
+    @Mock
+    private ProcurementExcelExporter procurementExcelExporter;
+    @Mock
+    private OperationsService operationsService;
+    @Mock
+    private TenantApplicationRepository tenantApplicationRepository;
+    @Mock
+    private CurrencyRepository currencyRepository;
+    @Mock
+    private IdempotencyService idempotencyService;
+    @Mock
+    private SupplierReturnRepository supplierReturnRepository;
+    @Mock
+    private FiscalPeriodGuard fiscalPeriodGuard;
+    @Mock
+    private ProcurementThreeWayMatchRepository threeWayMatchRepository;
+    @Mock
+    private com.bemo.hr.budget.application.BudgetService budgetService;
 
     private ProcurementService procurementService;
 
@@ -70,7 +83,8 @@ class ProcurementThreeWayMatchServiceTests {
                 currencyRepository, idempotencyService, fiscalPeriodGuard,
                 new com.bemo.hr.shared.numbering.DocumentNumberService(
                         mock(com.bemo.hr.shared.numbering.DocumentNumberSequenceRepository.class)),
-                threeWayMatchRepository, budgetService
+                threeWayMatchRepository, budgetService,
+                mock(ProcurementAccountingService.class)
         );
     }
 

@@ -28,6 +28,15 @@ public class IdempotencyService {
         this.idempotencyKeyRepository = idempotencyKeyRepository;
     }
 
+    public static String hash(String content) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(content.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is not available.", exception);
+        }
+    }
+
     /**
      * Reservation-based idempotency. The key is claimed with an atomic
      * {@code INSERT ... ON CONFLICT DO NOTHING} so concurrent duplicates never
@@ -121,14 +130,5 @@ public class IdempotencyService {
     private BusinessRuleException inProgress() {
         return new BusinessRuleException("The operation is already being processed.",
                 "IDEMPOTENCY_IN_PROGRESS", HttpStatus.CONFLICT);
-    }
-
-    public static String hash(String content) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            return HexFormat.of().formatHex(digest.digest(content.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException("SHA-256 is not available.", exception);
-        }
     }
 }

@@ -1,0 +1,25 @@
+{
+  "projectId": "e95d5ad8-8299-4359-9982-008c2132fd7a",
+  "type": "frontend",
+  "name": "User authentication and executive dashboard inspection",
+  "description": "User logs in, views the main dashboard metrics, and inspects the multi-period attendance and payroll trend charts.",
+  "priority": "p0",
+  "planSteps": [
+    {
+      "type": "action",
+      "description": "Navigate to the application home page and submit valid admin credentials on the login form"
+    },
+    {
+      "type": "assertion",
+      "description": "Verify the user is redirected to the main dashboard and the active user profile name and role badge are visible in the top header bar"
+    },
+    {
+      "type": "action",
+      "description": "Scroll to the multi-period trends section on the dashboard and select 6 months from the range dropdown"
+    },
+    {
+      "type": "assertion",
+      "description": "Verify the trend table updates with monthly attendance rates and payroll pending counts laid out cleanly"
+    }
+  ]
+}

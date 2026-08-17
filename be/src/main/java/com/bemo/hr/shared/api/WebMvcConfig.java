@@ -12,7 +12,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private final com.bemo.hr.shared.security.EntitlementCatalog entitlementCatalog;
     private final com.bemo.hr.product.trial.TrialDemoService trialDemoService;
 
-    public WebMvcConfig(TenantFeatureService tenantFeatureService,com.bemo.hr.shared.security.EntitlementCatalog entitlementCatalog,com.bemo.hr.product.trial.TrialDemoService trialDemoService) {
+    public WebMvcConfig(TenantFeatureService tenantFeatureService, com.bemo.hr.shared.security.EntitlementCatalog entitlementCatalog, com.bemo.hr.product.trial.TrialDemoService trialDemoService) {
         this.tenantFeatureService = tenantFeatureService;
         this.entitlementCatalog = entitlementCatalog;
         this.trialDemoService = trialDemoService;
@@ -20,7 +20,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new TenantFeatureInterceptor(tenantFeatureService,entitlementCatalog))
+        registry.addInterceptor(new TenantFeatureInterceptor(tenantFeatureService, entitlementCatalog))
                 .addPathPatterns("/api/v1/**");
         registry.addInterceptor(new TrialWriteInterceptor(trialDemoService)).addPathPatterns("/api/v1/**");
     }

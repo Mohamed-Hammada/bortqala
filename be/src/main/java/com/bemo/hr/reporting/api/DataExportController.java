@@ -3,21 +3,17 @@ package com.bemo.hr.reporting.api;
 import com.bemo.hr.reporting.application.DataExportService;
 import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.shared.security.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/exports")
@@ -25,25 +21,37 @@ import lombok.RequiredArgsConstructor;
 public class DataExportController {
     private final DataExportService dataExportService;
     private final AuthService authService;
+
     @GetMapping("/{scope}.xlsx")
     ResponseEntity<byte[]> export(@PathVariable String scope,
                                   @RequestParam(required = false) Integer months,
+                                  @RequestParam(required = false) Integer year,
+                                  @RequestParam(required = false) Integer month,
                                   Authentication authentication) {
         var preference = authService.currentPreferences(authentication.getName());
         var options = new ExcelExportOptions(preference.locale(), preference.excelTableStyle());
         int monthsCount = months == null ? 6 : Math.min(Math.max(months, 1), 24);
+        var current = java.time.YearMonth.now();
+        int y = (year != null && year >= 2000 && year <= 2100) ? year : current.getYear();
+        int m = (month != null && month >= 1 && month <= 12) ? month : current.getMonthValue();
         byte[] body = switch (scope) {
-            case "categories" -> dataExportService.categories(options); case "employees" -> dataExportService.employees(options);
-            case "imports" -> dataExportService.imports(options); case "unmatched" -> dataExportService.unmatched(options);
+            case "categories" -> dataExportService.categories(options);
+            case "employees" -> dataExportService.employees(options);
+            case "imports" -> dataExportService.imports(options);
+            case "unmatched" -> dataExportService.unmatched(options);
             case "parties" -> dataExportService.parties(options);
-            case "trends" -> dataExportService.trends(monthsCount, options);
+            case "trends" -> dataExportService.trends(monthsCount, y, m, options);
             default -> throw new com.bemo.hr.shared.domain.NotFoundException("Export scope not found.");
         };
-        var headers = new HttpHeaders(); headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        var headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
         String localizedScope = preference.locale().startsWith("ar") ? switch (scope) {
-            case "categories" -> "الفئات"; case "employees" -> "الموظفون";
-            case "imports" -> "سجل-الاستيراد"; case "unmatched" -> "هويات-غير-مربوطة";
-            case "parties" -> "جهات-التعامل"; case "trends" -> "اتجاهات-متعددة-الفترات";
+            case "categories" -> "الفئات";
+            case "employees" -> "الموظفون";
+            case "imports" -> "سجل-الاستيراد";
+            case "unmatched" -> "هويات-غير-مربوطة";
+            case "parties" -> "جهات-التعامل";
+            case "trends" -> "اتجاهات-متعددة-الفترات";
             default -> scope;
         } : scope;
         headers.setContentDisposition(ContentDisposition.attachment()

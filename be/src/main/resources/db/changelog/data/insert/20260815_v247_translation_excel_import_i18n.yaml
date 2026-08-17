@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260815-v247-translation-excel-import-i18n
+      author: openai
+      comment: Arabic and English copy for translation Excel import UI and validation errors.
+      # The CSV was extended after this changeset was already applied to some
+      # environments (a later commit appended I18N_IMPORT_* error codes). Accept
+      # any previously recorded checksum so already-migrated databases validate;
+      # the appended keys are backfilled by V251.
+      validCheckSum: ANY
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: "SELECT COUNT(*) FROM translations WHERE id LIKE 'v247-%'"
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260815_v247_translation_excel_import_i18n.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v247-%'" }

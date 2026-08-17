@@ -3,7 +3,6 @@ package com.bemo.hr.finance.infrastructure;
 import com.bemo.hr.finance.domain.FiscalPeriod;
 import com.bemo.hr.finance.domain.FiscalPeriodGuard;
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import com.bemo.hr.shared.security.TenantContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 

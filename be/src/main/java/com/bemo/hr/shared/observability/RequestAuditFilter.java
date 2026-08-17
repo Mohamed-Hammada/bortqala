@@ -1,5 +1,6 @@
 package com.bemo.hr.shared.observability;
 
+import com.bemo.hr.shared.security.TenantContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -7,14 +8,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import com.bemo.hr.shared.security.TenantContext;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -86,9 +86,9 @@ public class RequestAuditFilter extends OncePerRequestFilter {
             String userId = authentication instanceof JwtAuthenticationToken jwt
                     ? jwt.getToken().getClaimAsString("userId") : "unknown";
             String roles = authentication == null ? "" : authentication.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .filter(authority -> authority.startsWith("ROLE_"))
-                    .sorted().collect(java.util.stream.Collectors.joining(","));
+                                                         .map(GrantedAuthority::getAuthority)
+                                                         .filter(authority -> authority.startsWith("ROLE_"))
+                                                         .sorted().collect(java.util.stream.Collectors.joining(","));
             long durationMs = (System.nanoTime() - started) / 1_000_000;
             MDC.put("userId", userId == null ? "unknown" : userId);
             MDC.put("username", username);
@@ -133,5 +133,7 @@ public class RequestAuditFilter extends OncePerRequestFilter {
                 .orElse(rawAppId);
     }
 
-    private String valueOrUnknown(String value) { return value == null ? "unknown" : value; }
+    private String valueOrUnknown(String value) {
+        return value == null ? "unknown" : value;
+    }
 }

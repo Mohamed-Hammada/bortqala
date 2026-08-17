@@ -22,7 +22,7 @@ public class AccountingController {
     private final com.bemo.hr.finance.application.JournalDimensionReportService journalDimensionReportService;
 
     public AccountingController(AccountRepository accountRepository, JournalEntryService journalEntryService,
-            com.bemo.hr.finance.application.JournalDimensionReportService journalDimensionReportService) {
+                                com.bemo.hr.finance.application.JournalDimensionReportService journalDimensionReportService) {
         this.accountRepository = accountRepository;
         this.journalEntryService = journalEntryService;
         this.journalDimensionReportService = journalDimensionReportService;
@@ -97,14 +97,14 @@ public class AccountingController {
     @PostMapping("/journal-entries/{id}/approve")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public AccountingApi.JournalEntryResponse approveJournalEntry(@PathVariable String id,
-            @Valid @RequestBody AccountingApi.JournalActionRequest request, Authentication authentication) {
+                                                                  @Valid @RequestBody AccountingApi.JournalActionRequest request, Authentication authentication) {
         return journalEntryService.approve(id, request, authentication.getName());
     }
 
     @PostMapping("/journal-entries/{id}/reject")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public AccountingApi.JournalEntryResponse rejectJournalEntry(@PathVariable String id,
-            @Valid @RequestBody AccountingApi.JournalActionRequest request, Authentication authentication) {
+                                                                 @Valid @RequestBody AccountingApi.JournalActionRequest request, Authentication authentication) {
         return journalEntryService.reject(id, request, authentication.getName());
     }
 

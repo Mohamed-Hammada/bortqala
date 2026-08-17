@@ -14,7 +14,7 @@
   "private": true,
   "packageManager": "npm@11.16.0",
   "engines": {
-    "node": ">=22.0.0 <25"
+    "node": ">=24.0.0 <25"
   },
   "dependencies": {
     "@angular/common": "^22.0.0",

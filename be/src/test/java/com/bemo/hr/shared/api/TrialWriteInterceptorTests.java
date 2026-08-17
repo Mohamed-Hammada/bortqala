@@ -1,6 +1,35 @@
 package com.bemo.hr.shared.api;
-import com.bemo.hr.product.trial.TrialDemoService;import jakarta.servlet.http.*;import org.junit.jupiter.api.Test;import static org.assertj.core.api.Assertions.*;import static org.mockito.Mockito.*;
+
+import com.bemo.hr.product.trial.TrialDemoService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+
 class TrialWriteInterceptorTests {
-    @Test void checksOrdinaryWrites(){var service=mock(TrialDemoService.class);var request=mock(HttpServletRequest.class);when(request.getMethod()).thenReturn("POST");when(request.getRequestURI()).thenReturn("/api/v1/payroll/run");assertThat(new TrialWriteInterceptor(service).preHandle(request,mock(HttpServletResponse.class),new Object())).isTrue();verify(service).assertWriteAllowed();}
-    @Test void leavesReadsAndCommercialControlAvailable(){var service=mock(TrialDemoService.class);var read=mock(HttpServletRequest.class);when(read.getMethod()).thenReturn("GET");when(read.getRequestURI()).thenReturn("/api/v1/payroll");new TrialWriteInterceptor(service).preHandle(read,mock(HttpServletResponse.class),new Object());var convert=mock(HttpServletRequest.class);when(convert.getMethod()).thenReturn("POST");when(convert.getRequestURI()).thenReturn("/api/v1/platform/trial/convert");new TrialWriteInterceptor(service).preHandle(convert,mock(HttpServletResponse.class),new Object());verifyNoInteractions(service);}
+    @Test
+    void checksOrdinaryWrites() {
+        var service = mock(TrialDemoService.class);
+        var request = mock(HttpServletRequest.class);
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getRequestURI()).thenReturn("/api/v1/payroll/run");
+        assertThat(new TrialWriteInterceptor(service).preHandle(request, mock(HttpServletResponse.class), new Object())).isTrue();
+        verify(service).assertWriteAllowed();
+    }
+
+    @Test
+    void leavesReadsAndCommercialControlAvailable() {
+        var service = mock(TrialDemoService.class);
+        var read = mock(HttpServletRequest.class);
+        when(read.getMethod()).thenReturn("GET");
+        when(read.getRequestURI()).thenReturn("/api/v1/payroll");
+        new TrialWriteInterceptor(service).preHandle(read, mock(HttpServletResponse.class), new Object());
+        var convert = mock(HttpServletRequest.class);
+        when(convert.getMethod()).thenReturn("POST");
+        when(convert.getRequestURI()).thenReturn("/api/v1/platform/trial/convert");
+        new TrialWriteInterceptor(service).preHandle(convert, mock(HttpServletResponse.class), new Object());
+        verifyNoInteractions(service);
+    }
 }

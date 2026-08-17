@@ -22,6 +22,8 @@ public interface PunchRecordRepository extends JpaRepository<PunchRecord, String
 
     Optional<PunchRecord> findBySourceIdAndDeviceUserIdAndPunchedAt(String sourceId, String deviceUserId, Instant punchedAt);
 
+    List<PunchRecord> findBySourceIdAndPunchedAtBetweenOrderByPunchedAtAsc(String sourceId, Instant from, Instant to);
+
     /**
      * Removes only the punches this batch supplied that no other batch still
      * claims via punch_import_evidence. The batch's own evidence is deleted
@@ -48,8 +50,20 @@ public interface PunchRecordRepository extends JpaRepository<PunchRecord, String
     List<PunchRecord> findInRange(@Param("from") Instant from, @Param("to") Instant to);
 
     @Query("select p.deviceUserId, max(p.rawName), count(p), min(p.punchedAt), max(p.punchedAt) " +
-           "from PunchRecord p where p.employeeId is null group by p.deviceUserId order by p.deviceUserId")
+            "from PunchRecord p where p.employeeId is null group by p.deviceUserId order by p.deviceUserId")
     List<Object[]> summarizeUnmatched();
+
+    @Modifying
+    @Query(value = """
+            UPDATE punch_records
+            SET employee_id = :employeeId
+            WHERE app_id = :appId
+              AND employee_id IS NULL
+              AND device_user_id = :deviceUserId
+            """, nativeQuery = true)
+    int linkUnmatchedToEmployee(@Param("appId") String appId,
+                                @Param("deviceUserId") String deviceUserId,
+                                @Param("employeeId") String employeeId);
 
     /**
      * Conflict-safe insertion keyed on the punch source identity. Returns

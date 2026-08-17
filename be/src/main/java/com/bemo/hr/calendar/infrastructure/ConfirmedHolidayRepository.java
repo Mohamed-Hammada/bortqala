@@ -9,5 +9,6 @@ import java.util.Optional;
 
 public interface ConfirmedHolidayRepository extends JpaRepository<ConfirmedHoliday, String> {
     List<ConfirmedHoliday> findByWorkDateBetween(LocalDate from, LocalDate to);
+
     Optional<ConfirmedHoliday> findByCategoryIdAndWorkDate(String categoryId, LocalDate workDate);
 }

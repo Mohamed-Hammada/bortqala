@@ -1,7 +1,7 @@
 package com.bemo.hr.trade.sales.application;
 
-import com.bemo.hr.finance.application.close.ModuleCloseProvider;
 import com.bemo.hr.finance.application.close.CloseBlockerQueryService;
+import com.bemo.hr.finance.application.close.ModuleCloseProvider;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -9,7 +9,10 @@ import java.util.Optional;
 @Service
 public class SalesCloseProvider implements ModuleCloseProvider {
     private final CloseBlockerQueryService queries;
-    public SalesCloseProvider(CloseBlockerQueryService queries) { this.queries = queries; }
+
+    public SalesCloseProvider(CloseBlockerQueryService queries) {
+        this.queries = queries;
+    }
 
     private long blockers(String periodId) {
         return queries.dated(periodId, "sales_orders", "so_date", "status in ('DRAFT','CONFIRMED')")

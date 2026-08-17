@@ -9,6 +9,8 @@ import java.util.List;
 @Repository
 public interface GoodsReceiptRepository extends JpaRepository<GoodsReceipt, String> {
     List<GoodsReceipt> findAllByOrderByReceiptDateDesc();
+
     List<GoodsReceipt> findByPurchaseOrderId(String purchaseOrderId);
+
     boolean existsByGrnNumberIgnoreCase(String grnNumber);
 }

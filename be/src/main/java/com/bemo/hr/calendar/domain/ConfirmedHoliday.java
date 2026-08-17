@@ -1,10 +1,6 @@
 package com.bemo.hr.calendar.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -42,8 +38,15 @@ public class ConfirmedHoliday {
     }
 
     @PrePersist
-    void prePersist() { confirmedAt = Instant.now(); }
+    void prePersist() {
+        confirmedAt = Instant.now();
+    }
 
-    public String getCategoryId() { return categoryId; }
-    public LocalDate getWorkDate() { return workDate; }
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public LocalDate getWorkDate() {
+        return workDate;
+    }
 }

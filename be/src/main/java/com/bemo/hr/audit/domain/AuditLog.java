@@ -1,13 +1,8 @@
 package com.bemo.hr.audit.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -41,7 +36,8 @@ public class AuditLog {
     @Column(name = "occurred_at", nullable = false)
     private long occurredAt;
 
-    protected AuditLog() {}
+    protected AuditLog() {
+    }
 
     public AuditLog(String action, String entityType, String entityId, String username, String detailsJson, String ipAddress) {
         this.id = UUID.randomUUID().toString();
@@ -59,12 +55,35 @@ public class AuditLog {
         if (occurredAt == 0) occurredAt = System.currentTimeMillis();
     }
 
-    public String getId() { return id; }
-    public String getAction() { return action; }
-    public String getEntityType() { return entityType; }
-    public String getEntityId() { return entityId; }
-    public String getUsername() { return username; }
-    public String getDetailsJson() { return detailsJson; }
-    public String getIpAddress() { return ipAddress; }
-    public long getOccurredAt() { return occurredAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public String getEntityType() {
+        return entityType;
+    }
+
+    public String getEntityId() {
+        return entityId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getDetailsJson() {
+        return detailsJson;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public long getOccurredAt() {
+        return occurredAt;
+    }
 }

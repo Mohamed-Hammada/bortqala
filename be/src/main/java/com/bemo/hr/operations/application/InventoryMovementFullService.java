@@ -1,12 +1,18 @@
 package com.bemo.hr.operations.application;
 
-import com.bemo.hr.operations.OperationsService;
-import com.bemo.hr.operations.domain.*;
-import com.bemo.hr.operations.infrastructure.*;
-import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.operations.OperationsService;
+import com.bemo.hr.operations.domain.CycleCountHeader;
+import com.bemo.hr.operations.domain.CycleCountLine;
+import com.bemo.hr.operations.domain.StockTransferHeader;
+import com.bemo.hr.operations.domain.StockTransferLine;
+import com.bemo.hr.operations.infrastructure.CycleCountHeaderRepository;
+import com.bemo.hr.operations.infrastructure.CycleCountLineRepository;
+import com.bemo.hr.operations.infrastructure.StockTransferHeaderRepository;
+import com.bemo.hr.operations.infrastructure.StockTransferLineRepository;
 import com.bemo.hr.organization.domain.Warehouse;
 import com.bemo.hr.organization.infrastructure.WarehouseRepository;
+import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,13 +35,13 @@ public class InventoryMovementFullService {
     private final AuditService auditService;
 
     public InventoryMovementFullService(StockTransferHeaderRepository transferHeaderRepository,
-                                         StockTransferLineRepository transferLineRepository,
-                                         CycleCountHeaderRepository cycleCountHeaderRepository,
-                                         CycleCountLineRepository cycleCountLineRepository,
-                                         OperationsService operationsService,
-                                         WarehouseInventoryService warehouseInventoryService,
-                                         WarehouseRepository warehouseRepository,
-                                         AuditService auditService) {
+                                        StockTransferLineRepository transferLineRepository,
+                                        CycleCountHeaderRepository cycleCountHeaderRepository,
+                                        CycleCountLineRepository cycleCountLineRepository,
+                                        OperationsService operationsService,
+                                        WarehouseInventoryService warehouseInventoryService,
+                                        WarehouseRepository warehouseRepository,
+                                        AuditService auditService) {
         this.transferHeaderRepository = transferHeaderRepository;
         this.transferLineRepository = transferLineRepository;
         this.cycleCountHeaderRepository = cycleCountHeaderRepository;
@@ -161,7 +167,9 @@ public class InventoryMovementFullService {
     }
 
     @Transactional(readOnly = true)
-    public TransferView transfer(String id) { return transferView(getTransfer(id)); }
+    public TransferView transfer(String id) {
+        return transferView(getTransfer(id));
+    }
 
     @Transactional
     public CycleCountHeader createCycleCount(String countNumber, String warehouseId, LocalDate countDate) {
@@ -226,15 +234,6 @@ public class InventoryMovementFullService {
                 .toList();
     }
 
-    public record CycleCountSummary(String id, String countNumber, String warehouseId, LocalDate countDate,
-                                    String status, String itemId, BigDecimal systemQuantity,
-                                    BigDecimal countedQuantity, BigDecimal variance) { }
-
-    public record TransferLineView(String id, String itemId, String itemCode, String itemName, BigDecimal quantity) { }
-    public record TransferView(String id, String transferNumber, String sourceWarehouseId, String sourceWarehouseName,
-                               String targetWarehouseId, String targetWarehouseName, LocalDate transferDate,
-                               String status, long version, List<TransferLineView> lines) { }
-
     private TransferView transferView(StockTransferHeader header) {
         Warehouse source = warehouseRepository.findById(header.getSourceWarehouseId()).orElse(null);
         Warehouse target = warehouseRepository.findById(header.getTargetWarehouseId()).orElse(null);
@@ -263,5 +262,18 @@ public class InventoryMovementFullService {
     private StockTransferHeader getTransfer(String id) {
         return transferHeaderRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("Stock transfer not found", "TRANSFER_NOT_FOUND", HttpStatus.NOT_FOUND));
+    }
+
+    public record CycleCountSummary(String id, String countNumber, String warehouseId, LocalDate countDate,
+                                    String status, String itemId, BigDecimal systemQuantity,
+                                    BigDecimal countedQuantity, BigDecimal variance) {
+    }
+
+    public record TransferLineView(String id, String itemId, String itemCode, String itemName, BigDecimal quantity) {
+    }
+
+    public record TransferView(String id, String transferNumber, String sourceWarehouseId, String sourceWarehouseName,
+                               String targetWarehouseId, String targetWarehouseName, LocalDate transferDate,
+                               String status, long version, List<TransferLineView> lines) {
     }
 }

@@ -27,6 +27,8 @@ artifacts/
 *.log
 install-secrets.json
 license-installation.json
+.env
+!.env.*.example
 
 # Cloudflare tunnel client binaries
 cloudflared-*
@@ -38,4 +40,4 @@ cloudflared-*
 /old_back_up/
 *.bak
 *.orig
-/framework
+desktop/src-tauri/resources/backend/bemo-erp.exe

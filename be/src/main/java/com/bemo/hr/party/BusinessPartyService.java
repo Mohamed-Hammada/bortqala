@@ -114,14 +114,23 @@ class BusinessPartyService {
         return response(party);
     }
 
-    BusinessParty requireParty(String id) { return require(id); }
-    BusinessPartyApi.Response toResponse(BusinessParty party) { return response(party); }
-    String currentUser() { return getCurrentUser(); }
+    BusinessParty requireParty(String id) {
+        return require(id);
+    }
+
+    BusinessPartyApi.Response toResponse(BusinessParty party) {
+        return response(party);
+    }
+
+    String currentUser() {
+        return getCurrentUser();
+    }
 
     private void validateUniqueCode(String code, String currentId) {
         boolean duplicate = currentId == null ? businessPartyRepository.existsByCodeIgnoreCase(code)
                 : businessPartyRepository.existsByCodeIgnoreCaseAndIdNot(code, currentId);
-        if (duplicate) throw new BusinessRuleException("Business party code already exists.", "PTY_CODE_EXISTS", HttpStatus.CONFLICT);
+        if (duplicate)
+            throw new BusinessRuleException("Business party code already exists.", "PTY_CODE_EXISTS", HttpStatus.CONFLICT);
     }
 
     private void validateManagedType(String managedType) {

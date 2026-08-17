@@ -6,18 +6,19 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.authentication.BadCredentialsException;import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
-import org.springframework.security.oauth2.jwt.JwsHeader;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -33,9 +34,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -334,12 +333,12 @@ class AuthSecurityIntegrationTests {
         assertThat(updated.isAdminDashboardCustomizationEnabled()).isNotEqualTo(original);
 
         authService.updateAppSettings(new AuthApi.AppSettingsRequest(
-                current.sessionTimeoutMinutes(), current.sessionTimeoutEnabled(), current.showReportPresets(),
-                current.attendanceAnomalyThresholdPercent(), current.automaticProcurementNumbering(),
-                current.automaticDocumentNumbering(),
-                original, current.minPasswordLength(), current.requireUppercase(), current.requireLowercase(),
-                current.requireNumbers(), current.requireSpecialChars(), current.disallowSpaces(),
-                current.maxPasswordLength(), current.passwordExpiryDays(), current.passwordHistoryCount()),
+                        current.sessionTimeoutMinutes(), current.sessionTimeoutEnabled(), current.showReportPresets(),
+                        current.attendanceAnomalyThresholdPercent(), current.automaticProcurementNumbering(),
+                        current.automaticDocumentNumbering(),
+                        original, current.minPasswordLength(), current.requireUppercase(), current.requireLowercase(),
+                        current.requireNumbers(), current.requireSpecialChars(), current.disallowSpaces(),
+                        current.maxPasswordLength(), current.passwordExpiryDays(), current.passwordHistoryCount()),
                 superAdmin.getUsername());
     }
 
@@ -461,7 +460,7 @@ class AuthSecurityIntegrationTests {
 
         mockMvc.perform(post("/api/v1/payroll/pay")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"employeeId\":\"emp-1\",\"periodYear\":2026,\"periodMonth\":8}")
+                        .content("{\"employeeId\":\"emp-1\",\"periodYear\":2026,\"periodMonth\":8,\"expectedVersion\":0}")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
 
@@ -479,7 +478,7 @@ class AuthSecurityIntegrationTests {
 
         mockMvc.perform(post("/api/v1/payroll/reverse")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"paymentId\":\"p-1\",\"reason\":\"test\"}")
+                        .content("{\"paymentId\":\"p-1\",\"reason\":\"test\",\"expectedVersion\":0}")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
     }
@@ -683,7 +682,7 @@ class AuthSecurityIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"roleCodes":["ADMIN"],"menuCodes":["payroll"],"targetUserId":"does-not-exist"}
-                                """.formatted())
+                                """)
                         .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
                 .andExpect(status().isNotFound());
 
@@ -894,6 +893,25 @@ class AuthSecurityIntegrationTests {
     }
 
     @Test
+    void payrollTransitionAuthorizationSeparatesPreparationFromApprovalAndPosting() throws Exception {
+        AppUser hrReviewer = createUser("payreviewer", Set.of(RoleCode.HR_REVIEWER), true);
+        String reviewerToken = mintAccessToken(hrReviewer);
+
+        mockMvc.perform(post("/api/v1/payroll/transition")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"periodYear\":2026,\"periodMonth\":8,\"targetStatus\":\"POSTED\"}")
+                        .header("Authorization", "Bearer " + reviewerToken))
+                .andExpect(status().isForbidden());
+
+        AppUser payrollManager = createUser("paytransition", Set.of(RoleCode.PAYROLL_MANAGER), true);
+        mockMvc.perform(post("/api/v1/payroll/transition")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"periodYear\":2026,\"periodMonth\":8,\"targetStatus\":\"PAID\"}")
+                        .header("Authorization", "Bearer " + mintAccessToken(payrollManager)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void paymentProposalExecutionCannotBeCalledByProcurementOrViewerRoles() throws Exception {
         AppUser procurement = createUser("propexecproc", Set.of(RoleCode.PROCUREMENT_MANAGER));
         AppUser viewer = createUser("propexecview", Set.of(RoleCode.VIEWER));
@@ -913,6 +931,44 @@ class AuthSecurityIntegrationTests {
                         .header("Authorization", "Bearer " + mintAccessToken(finance)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("PAYMENT_PROPOSAL_NOT_FOUND"));
+    }
+
+    @Test
+    void financeReportAndCloseAuthorizationUsesExplicitFinanceRoles() throws Exception {
+        AppUser accountant = createUser("finreportacct", Set.of(RoleCode.ACCOUNTANT));
+        AppUser auditor = createUser("finreportaudit", Set.of(RoleCode.AUDITOR));
+        AppUser viewer = createUser("finreportview", Set.of(RoleCode.VIEWER));
+        AppUser financeManager = createUser("finreportmgr", Set.of(RoleCode.FINANCE_MANAGER));
+
+        mockMvc.perform(get("/api/v1/finance/reports/balance-sheet")
+                        .param("asOfDate", "2026-08-31")
+                        .header("Authorization", "Bearer " + mintAccessToken(accountant)))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/finance/reports/balance-sheet")
+                        .param("asOfDate", "2026-08-31")
+                        .header("Authorization", "Bearer " + mintAccessToken(viewer)))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/finance/reconciliation/subledger/periods/missing")
+                        .header("Authorization", "Bearer " + mintAccessToken(auditor)))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/finance/reconciliation/subledger/generate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"periodId\":\"missing\",\"subledgerType\":\"AR\"}")
+                        .header("Authorization", "Bearer " + mintAccessToken(auditor)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/v1/finance/reconciliation/subledger/generate")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"periodId\":\"missing\",\"subledgerType\":\"AR\"}")
+                        .header("Authorization", "Bearer " + mintAccessToken(accountant)))
+                .andExpect(notForbidden());
+
+        mockMvc.perform(post("/api/v1/finance/period-close/execute/missing")
+                        .header("Authorization", "Bearer " + mintAccessToken(accountant)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/v1/finance/period-close/execute/missing")
+                        .header("Authorization", "Bearer " + mintAccessToken(financeManager)))
+                .andExpect(notForbidden());
     }
 
     @Test

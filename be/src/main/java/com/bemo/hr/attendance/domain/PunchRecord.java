@@ -53,14 +53,43 @@ public class PunchRecord {
         this.rowNumber = rowNumber;
     }
 
-    public String getId() { return id; }
-    public String getBatchId() { return batchId; }
-    public String getDeviceId() { return deviceId; }
-    public String getSourceId() { return sourceId; }
-    public String getEmployeeId() { return employeeId; }
-    public String getDeviceUserId() { return deviceUserId; }
-    public String getRawName() { return rawName; }
-    public Instant getPunchedAt() { return punchedAt; }
-    public String getRawLine() { return rawLine; }
-    public int getRowNumber() { return rowNumber; }
+    public String getId() {
+        return id;
+    }
+
+    public String getBatchId() {
+        return batchId;
+    }
+
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    public String getSourceId() {
+        return sourceId;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
+    }
+
+    public String getDeviceUserId() {
+        return deviceUserId;
+    }
+
+    public String getRawName() {
+        return rawName;
+    }
+
+    public Instant getPunchedAt() {
+        return punchedAt;
+    }
+
+    public String getRawLine() {
+        return rawLine;
+    }
+
+    public int getRowNumber() {
+        return rowNumber;
+    }
 }

@@ -1,4 +1,7 @@
 <section class="page" [class.motion-enabled]="animationsEnabled()" [class.motion-disabled]="!animationsEnabled()">
+  <!-- BORTQALA_RUNTIME_20260816_V2_DASHBOARD_ATTENDANCE_SNAPSHOT -->
+  <app-attendance-import-snapshot />
+
   <header class="page-header">
     <div>
       <p class="eyebrow">{{ i18n.t('dashboard.eyebrow') }} — {{ i18n.t('dashboard.eyebrowSuffix') }}</p>
@@ -564,7 +567,7 @@
     <p class="dashboard-customization-hint">{{ i18n.t('dashboard.editorHint') }}</p>
 
     <div class="editor-list">
-      @for (widget of widgetOptions; track widget.id) {
+      @for (widget of editorWidgetOptions(); track widget.id) {
         <div class="editor-row" [class.disabled]="!widgetVisible(widget.id)">
           <label>
             <input type="checkbox" [checked]="widgetVisible(widget.id)"

@@ -1,0 +1,3 @@
+id;translation_key;locale;text_value
+v229-001;FIN_CASH_FLOW_NOT_IMPLEMENTED;en-US;Cash Flow Statement is unavailable until ledger-based cash classification is configured.
+v229-002;FIN_CASH_FLOW_NOT_IMPLEMENTED;ar-EG;قائمة التدفقات النقدية غير متاحة حتى يتم إعداد تصنيف نقدي مستند إلى قيود دفتر الأستاذ.

@@ -3,19 +3,17 @@ package com.bemo.hr.operations.api;
 import com.bemo.hr.operations.application.InventoryMovementFullService;
 import com.bemo.hr.operations.domain.CycleCountHeader;
 import com.bemo.hr.operations.domain.CycleCountLine;
-import com.bemo.hr.operations.domain.StockTransferHeader;
-import com.bemo.hr.operations.domain.StockTransferLine;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/v1/operations")
@@ -27,14 +25,6 @@ public class InventoryMovementController {
         this.movementService = movementService;
     }
 
-    public record CreateTransferPayload(@NotBlank String transferNumber, @NotBlank String sourceWarehouseId,
-                                        @NotBlank String targetWarehouseId, @NotBlank String transferDate) {}
-    public record AddTransferLinePayload(@NotBlank String itemId, @NotNull @DecimalMin("0.0001") BigDecimal quantity) {}
-    public record CreateCycleCountPayload(String countNumber, String warehouseId, String countDate) {}
-    public record AddCycleCountLinePayload(String itemId, BigDecimal countedQuantity) {}
-    public record ReconcileCycleCountPayload(String operationId, String warehouseId, String itemId,
-                                             BigDecimal countedQuantity, String countDate) {}
-
     @PostMapping("/transfers")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
     public InventoryMovementFullService.TransferView createTransfer(@Valid @RequestBody CreateTransferPayload payload) {
@@ -44,7 +34,9 @@ public class InventoryMovementController {
 
     @GetMapping("/transfers")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
-    public List<InventoryMovementFullService.TransferView> transfers() { return movementService.transfers(); }
+    public List<InventoryMovementFullService.TransferView> transfers() {
+        return movementService.transfers();
+    }
 
     @PostMapping("/transfers/{id}/lines")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
@@ -94,12 +86,31 @@ public class InventoryMovementController {
 
     @GetMapping("/cycle-counts")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
-    public List<InventoryMovementFullService.CycleCountSummary> cycleCounts() { return movementService.cycleCounts(); }
+    public List<InventoryMovementFullService.CycleCountSummary> cycleCounts() {
+        return movementService.cycleCounts();
+    }
 
     @PostMapping("/cycle-counts/reconcile")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
     public CycleCountHeader reconcile(@RequestBody ReconcileCycleCountPayload payload, Authentication authentication) {
         return movementService.reconcile(payload.operationId(), payload.warehouseId(), payload.itemId(),
                 payload.countedQuantity(), LocalDate.parse(payload.countDate()), authentication.getName());
+    }
+
+    public record CreateTransferPayload(@NotBlank String transferNumber, @NotBlank String sourceWarehouseId,
+                                        @NotBlank String targetWarehouseId, @NotBlank String transferDate) {
+    }
+
+    public record AddTransferLinePayload(@NotBlank String itemId, @NotNull @DecimalMin("0.0001") BigDecimal quantity) {
+    }
+
+    public record CreateCycleCountPayload(String countNumber, String warehouseId, String countDate) {
+    }
+
+    public record AddCycleCountLinePayload(String itemId, BigDecimal countedQuantity) {
+    }
+
+    public record ReconcileCycleCountPayload(String operationId, String warehouseId, String itemId,
+                                             BigDecimal countedQuantity, String countDate) {
     }
 }

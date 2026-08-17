@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface PayPeriodRepository extends JpaRepository<PayPeriod, String> {
     List<PayPeriod> findByCalendarId(String calendarId);
+
     List<PayPeriod> findByCalendarIdAndStatus(String calendarId, PayPeriod.Status status);
 }

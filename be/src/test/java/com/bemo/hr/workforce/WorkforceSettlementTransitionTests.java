@@ -24,30 +24,38 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class WorkforceSettlementTransitionTests {
 
-    @Mock private WorkforceSettlementPeriodRepository periodRepository;
-    @Mock private WorkerSettlementRepository workerSettlementRepository;
-    @Mock private ContractorSettlementRepository contractorSettlementRepository;
-    @Mock private ContractorSettlementLineRepository contractorSettlementLineRepository;
-    @Mock private ContractorSettlementAdjustmentRepository contractorSettlementAdjustmentRepository;
-    @Mock private WorkforceSettlementIssueRepository issueRepository;
-    @Mock private ManualAttendanceEntryRepository attendanceRepository;
-    @Mock private WorkerRepository workerRepository;
-    @Mock private ContractorRepository contractorRepository;
-    @Mock private WorkforceAdvanceRepository advanceRepository;
-    @Mock private WorkforceAdvancePolicyRepository advancePolicyRepository;
-    @Mock private PartnerLedgerEntryRepository partnerLedgerEntryRepository;
-    @Mock private IdempotencyService idempotencyService;
-    @Mock private WorkforceExcelExportService excelExportService;
-    @Mock private AuditService auditService;
-    @Mock private PlatformTransactionManager platformTransactionManager;
-
-    private WorkforceSettlementService service() {
-        return new WorkforceSettlementService(periodRepository, workerSettlementRepository, contractorSettlementRepository,
-                contractorSettlementLineRepository, contractorSettlementAdjustmentRepository,
-                issueRepository, attendanceRepository, workerRepository, contractorRepository, advanceRepository,
-                advancePolicyRepository, partnerLedgerEntryRepository, idempotencyService,
-                excelExportService, auditService, platformTransactionManager);
-    }
+    @Mock
+    private WorkforceSettlementPeriodRepository periodRepository;
+    @Mock
+    private WorkerSettlementRepository workerSettlementRepository;
+    @Mock
+    private ContractorSettlementRepository contractorSettlementRepository;
+    @Mock
+    private ContractorSettlementLineRepository contractorSettlementLineRepository;
+    @Mock
+    private ContractorSettlementAdjustmentRepository contractorSettlementAdjustmentRepository;
+    @Mock
+    private WorkforceSettlementIssueRepository issueRepository;
+    @Mock
+    private ManualAttendanceEntryRepository attendanceRepository;
+    @Mock
+    private WorkerRepository workerRepository;
+    @Mock
+    private ContractorRepository contractorRepository;
+    @Mock
+    private WorkforceAdvanceRepository advanceRepository;
+    @Mock
+    private WorkforceAdvancePolicyRepository advancePolicyRepository;
+    @Mock
+    private PartnerLedgerEntryRepository partnerLedgerEntryRepository;
+    @Mock
+    private IdempotencyService idempotencyService;
+    @Mock
+    private WorkforceExcelExportService excelExportService;
+    @Mock
+    private AuditService auditService;
+    @Mock
+    private PlatformTransactionManager platformTransactionManager;
 
     private static WorkforceSettlementPeriod calculatedPeriod() {
         WorkforceSettlementPeriod period = new WorkforceSettlementPeriod("JUL-2", "2026-07-16", "2026-07-31", "HALF_MONTH", "CALCULATED");
@@ -62,6 +70,14 @@ class WorkforceSettlementTransitionTests {
         } catch (NoSuchAlgorithmException exception) {
             throw new IllegalStateException(exception);
         }
+    }
+
+    private WorkforceSettlementService service() {
+        return new WorkforceSettlementService(periodRepository, workerSettlementRepository, contractorSettlementRepository,
+                contractorSettlementLineRepository, contractorSettlementAdjustmentRepository,
+                issueRepository, attendanceRepository, workerRepository, contractorRepository, advanceRepository,
+                advancePolicyRepository, partnerLedgerEntryRepository, idempotencyService,
+                excelExportService, auditService, platformTransactionManager);
     }
 
     @Test

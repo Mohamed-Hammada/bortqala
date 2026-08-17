@@ -1,33 +1,21 @@
 package com.bemo.hr.reporting.api;
 
-import com.bemo.hr.reporting.application.ReportingService;
-import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.employee.domain.PayCycle;
+import com.bemo.hr.reporting.application.ExcelExportOptions;
+import com.bemo.hr.reporting.application.ReportingService;
 import com.bemo.hr.shared.api.TransitionResponse;
 import com.bemo.hr.shared.security.AuthService;
 import jakarta.validation.Valid;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 @RestController
@@ -39,15 +27,21 @@ public class ReportController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
-    List<ReportingApi.Summary> list() { return reportingService.list(); }
+    List<ReportingApi.Summary> list() {
+        return reportingService.list();
+    }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
-    ReportingApi.Details get(@PathVariable String id) { return reportingService.get(id); }
+    ReportingApi.Details get(@PathVariable String id) {
+        return reportingService.get(id);
+    }
 
     @GetMapping("/available-periods")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
-    List<ReportingApi.PeriodOption> available(@RequestParam int year) { return reportingService.availablePeriods(year); }
+    List<ReportingApi.PeriodOption> available(@RequestParam int year) {
+        return reportingService.availablePeriods(year);
+    }
 
     @GetMapping("/preview")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
@@ -101,15 +95,15 @@ public class ReportController {
     @PostMapping("/{reportId}/day-anomalies/{anomalyId}/decision")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     ReportingApi.DayAnomalyActionResponse decideDayAnomaly(@PathVariable String reportId,
-            @PathVariable String anomalyId, @Valid @RequestBody ReportingApi.DayAnomalyDecisionRequest request,
-            Authentication authentication) {
+                                                           @PathVariable String anomalyId, @Valid @RequestBody ReportingApi.DayAnomalyDecisionRequest request,
+                                                           Authentication authentication) {
         return reportingService.decideDayAnomaly(reportId, anomalyId, request, authentication.getName());
     }
 
     @PostMapping("/{reportId}/day-anomalies/{anomalyId}/reverse")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     ReportingApi.DayAnomalyActionResponse reverseDayAnomaly(@PathVariable String reportId,
-            @PathVariable String anomalyId, Authentication authentication) {
+                                                            @PathVariable String anomalyId, Authentication authentication) {
         return reportingService.reverseDayAnomaly(reportId, anomalyId, authentication.getName());
     }
 
@@ -129,7 +123,9 @@ public class ReportController {
 
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
-    TransitionResponse approve(@PathVariable String id, Authentication authentication) { return reportingService.approve(id, authentication.getName()); }
+    TransitionResponse approve(@PathVariable String id, Authentication authentication) {
+        return reportingService.approve(id, authentication.getName());
+    }
 
     @PostMapping("/{id}/reopen")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
@@ -146,7 +142,7 @@ public class ReportController {
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
         String baseName = preference.locale().startsWith("ar") ? "تقرير-الحضور" : "attendance-report";
         headers.setContentDisposition(ContentDisposition.attachment().filename(baseName + "-"
-                + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmm")) + ".xlsx",
+                        + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmm")) + ".xlsx",
                 StandardCharsets.UTF_8).build());
         return new ResponseEntity<>(reportingService.export(id, options), headers, HttpStatus.OK);
     }

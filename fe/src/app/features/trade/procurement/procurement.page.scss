@@ -496,3 +496,53 @@
   background: var(--success-soft);
   color: var(--ink);
 }
+
+.accepted-quantity > span,
+.accepted-quantity > small {
+  color: var(--success);
+}
+
+.accepted-quantity strong {
+  color: var(--success);
+}
+
+.accepted-quantity.invalid {
+  border-color: color-mix(in srgb, var(--danger) 50%, var(--line));
+  background: var(--danger-soft);
+}
+
+.accepted-quantity.invalid strong,
+.accepted-quantity.invalid small {
+  color: var(--danger);
+}
+
+.grn-status-badge {
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+  background: var(--gold-glow);
+  color: var(--gold);
+}
+
+.grn-line-card.has-error {
+  border-color: var(--danger);
+}
+
+.grn-line-meta {
+  border-top-color: var(--line);
+}
+
+.grn-empty-message {
+  border-color: color-mix(in srgb, var(--gold) 50%, var(--line));
+  background: var(--gold-glow);
+  color: var(--gold);
+}
+
+.valid-hint { color: var(--success); }
+.invalid-hint { color: var(--warning-text); }
+
+.po-item-row strong {
+  color: var(--info);
+}
+
+.remove-btn {
+  color: var(--danger);
+}

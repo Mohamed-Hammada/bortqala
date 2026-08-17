@@ -41,7 +41,8 @@ public class SupplierQuoteLine {
     @Column(name = "unit_price", nullable = false, precision = 15, scale = 4)
     private BigDecimal unitPrice;
 
-    protected SupplierQuoteLine() {}
+    protected SupplierQuoteLine() {
+    }
 
     public SupplierQuoteLine(String quoteId, String rfqLineId, String itemId, String description, BigDecimal quantity, String uom, BigDecimal unitPrice) {
         this.id = UUID.randomUUID().toString();
@@ -54,13 +55,39 @@ public class SupplierQuoteLine {
         this.unitPrice = unitPrice;
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getQuoteId() { return quoteId; }
-    public String getRfqLineId() { return rfqLineId; }
-    public String getItemId() { return itemId; }
-    public String getDescription() { return description; }
-    public BigDecimal getQuantity() { return quantity; }
-    public String getUom() { return uom; }
-    public BigDecimal getUnitPrice() { return unitPrice; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getQuoteId() {
+        return quoteId;
+    }
+
+    public String getRfqLineId() {
+        return rfqLineId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public BigDecimal getQuantity() {
+        return quantity;
+    }
+
+    public String getUom() {
+        return uom;
+    }
+
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
 }

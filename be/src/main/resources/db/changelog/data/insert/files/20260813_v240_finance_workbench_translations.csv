@@ -1,0 +1,83 @@
+id;translation_key;locale;text_value
+v240-001;financeWorkbench.title;en-US;Finance Reports & Close
+v240-002;financeWorkbench.title;ar-EG;التقارير المالية والإقفال
+v240-003;financeWorkbench.description;en-US;Review statements, reconcile subledgers, and close periods with evidence.
+v240-004;financeWorkbench.description;ar-EG;راجع القوائم وطابق الدفاتر المساعدة وأقفل الفترات مع أدلة التنفيذ.
+v240-005;financeWorkbench.open;en-US;Open workbench
+v240-006;financeWorkbench.open;ar-EG;فتح مساحة العمل
+v240-007;financeWorkbench.periodTitle;en-US;"Period: {{period}}"
+v240-008;financeWorkbench.periodTitle;ar-EG;"الفترة: {{period}}"
+v240-009;financeWorkbench.periodHint;en-US;All figures and close checks use this period's dates.
+v240-010;financeWorkbench.periodHint;ar-EG;تستخدم جميع الأرقام وفحوصات الإقفال تواريخ هذه الفترة.
+v240-011;financeWorkbench.balanceSheet;en-US;Balance Sheet
+v240-012;financeWorkbench.balanceSheet;ar-EG;قائمة المركز المالي
+v240-013;financeWorkbench.incomeStatement;en-US;Income Statement
+v240-014;financeWorkbench.incomeStatement;ar-EG;قائمة الدخل
+v240-015;financeWorkbench.cashFlow;en-US;Cash Flow Statement
+v240-016;financeWorkbench.cashFlow;ar-EG;قائمة التدفقات النقدية
+v240-017;financeWorkbench.cashFlowUnavailable;en-US;Unavailable until ledger-based cash classification is configured.
+v240-018;financeWorkbench.cashFlowUnavailable;ar-EG;غير متاحة حتى يتم إعداد تصنيف التدفقات النقدية من دفتر الأستاذ.
+v240-019;financeWorkbench.assets;en-US;Assets
+v240-020;financeWorkbench.assets;ar-EG;الأصول
+v240-021;financeWorkbench.liabilities;en-US;Liabilities
+v240-022;financeWorkbench.liabilities;ar-EG;الالتزامات
+v240-023;financeWorkbench.equity;en-US;Equity
+v240-024;financeWorkbench.equity;ar-EG;حقوق الملكية
+v240-025;financeWorkbench.netIncome;en-US;Net income
+v240-026;financeWorkbench.netIncome;ar-EG;صافي الدخل
+v240-027;financeWorkbench.revenue;en-US;Revenue
+v240-028;financeWorkbench.revenue;ar-EG;الإيرادات
+v240-029;financeWorkbench.expenses;en-US;Expenses
+v240-030;financeWorkbench.expenses;ar-EG;المصروفات
+v240-031;financeWorkbench.balanced;en-US;Balanced
+v240-032;financeWorkbench.balanced;ar-EG;متوازنة
+v240-033;financeWorkbench.unbalanced;en-US;Out of balance
+v240-034;financeWorkbench.unbalanced;ar-EG;غير متوازنة
+v240-035;financeWorkbench.reconciliation;en-US;Subledger reconciliation
+v240-036;financeWorkbench.reconciliation;ar-EG;مطابقة الدفاتر المساعدة
+v240-037;financeWorkbench.reconciliationHint;en-US;Generate and review period snapshots and their source differences.
+v240-038;financeWorkbench.reconciliationHint;ar-EG;أنشئ وراجع لقطات الفترة وفروق مصادرها.
+v240-039;financeWorkbench.ar;en-US;Accounts receivable
+v240-040;financeWorkbench.ar;ar-EG;الذمم المدينة
+v240-041;financeWorkbench.ap;en-US;Accounts payable
+v240-042;financeWorkbench.ap;ar-EG;الذمم الدائنة
+v240-043;financeWorkbench.inventory;en-US;Inventory
+v240-044;financeWorkbench.inventory;ar-EG;المخزون
+v240-045;financeWorkbench.treasury;en-US;Treasury
+v240-046;financeWorkbench.treasury;ar-EG;الخزينة
+v240-047;financeWorkbench.payroll;en-US;Payroll
+v240-048;financeWorkbench.payroll;ar-EG;الرواتب
+v240-049;financeWorkbench.generate;en-US;Generate reconciliation
+v240-050;financeWorkbench.generate;ar-EG;إنشاء المطابقة
+v240-051;financeWorkbench.subledger;en-US;Subledger
+v240-052;financeWorkbench.subledger;ar-EG;الدفتر المساعد
+v240-053;financeWorkbench.glBalance;en-US;General ledger
+v240-054;financeWorkbench.glBalance;ar-EG;دفتر الأستاذ
+v240-055;financeWorkbench.subledgerBalance;en-US;Subledger balance
+v240-056;financeWorkbench.subledgerBalance;ar-EG;رصيد الدفتر المساعد
+v240-057;financeWorkbench.variance;en-US;Variance
+v240-058;financeWorkbench.variance;ar-EG;الفرق
+v240-059;financeWorkbench.differences;en-US;Source differences
+v240-060;financeWorkbench.differences;ar-EG;فروق المصادر
+v240-061;financeWorkbench.noDifferences;en-US;No source differences
+v240-062;financeWorkbench.noDifferences;ar-EG;لا توجد فروق مصادر
+v240-063;financeWorkbench.noReconciliations;en-US;No reconciliation snapshots for this period.
+v240-064;financeWorkbench.noReconciliations;ar-EG;لا توجد لقطات مطابقة لهذه الفترة.
+v240-065;financeWorkbench.precheck;en-US;Financial close precheck
+v240-066;financeWorkbench.precheck;ar-EG;الفحص المالي قبل الإقفال
+v240-067;financeWorkbench.moduleReadiness;en-US;Module readiness
+v240-068;financeWorkbench.moduleReadiness;ar-EG;جاهزية الوحدات
+v240-069;financeWorkbench.ready;en-US;Ready
+v240-070;financeWorkbench.ready;ar-EG;جاهز
+v240-071;financeWorkbench.blocked;en-US;Blocked
+v240-072;financeWorkbench.blocked;ar-EG;محظور
+v240-073;financeWorkbench.executeClose;en-US;Execute authoritative close
+v240-074;financeWorkbench.executeClose;ar-EG;تنفيذ الإقفال المعتمد
+v240-075;financeWorkbench.closeEvidence;en-US;Close completion evidence
+v240-076;financeWorkbench.closeEvidence;ar-EG;أدلة اكتمال الإقفال
+v240-077;financeWorkbench.statusChanged;en-US;Period status changed to {{status}}.
+v240-078;financeWorkbench.statusChanged;ar-EG;تم تغيير حالة الفترة إلى {{status}}.
+v240-079;financeWorkbench.reconciliationGenerated;en-US;Reconciliation snapshot generated.
+v240-080;financeWorkbench.reconciliationGenerated;ar-EG;تم إنشاء لقطة المطابقة.
+v240-081;financeWorkbench.closeCompleted;en-US;The period close completed successfully.
+v240-082;financeWorkbench.closeCompleted;ar-EG;اكتمل إقفال الفترة بنجاح.

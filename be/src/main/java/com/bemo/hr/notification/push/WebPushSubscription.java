@@ -1,10 +1,6 @@
 package com.bemo.hr.notification.push;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -65,7 +61,8 @@ public class WebPushSubscription {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected WebPushSubscription() { }
+    protected WebPushSubscription() {
+    }
 
     public WebPushSubscription(
             String username,
@@ -82,6 +79,14 @@ public class WebPushSubscription {
         this.failureCount = 0;
         this.createdAt = Instant.now();
         this.updatedAt = this.createdAt;
+    }
+
+    private static String normalizeUsername(String username) {
+        return username == null ? "" : username.strip().toLowerCase(Locale.ROOT);
+    }
+
+    private static String normalizeLocale(String locale) {
+        return locale != null && locale.toLowerCase(Locale.ROOT).startsWith("en") ? "en-US" : "ar-EG";
     }
 
     public void update(
@@ -131,14 +136,6 @@ public class WebPushSubscription {
 
     public boolean belongsTo(String username) {
         return this.username.equalsIgnoreCase(normalizeUsername(username));
-    }
-
-    private static String normalizeUsername(String username) {
-        return username == null ? "" : username.strip().toLowerCase(Locale.ROOT);
-    }
-
-    private static String normalizeLocale(String locale) {
-        return locale != null && locale.toLowerCase(Locale.ROOT).startsWith("en") ? "en-US" : "ar-EG";
     }
 
     @PrePersist

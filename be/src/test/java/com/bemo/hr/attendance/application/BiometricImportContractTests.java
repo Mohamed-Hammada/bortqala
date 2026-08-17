@@ -3,12 +3,7 @@ package com.bemo.hr.attendance.application;
 import com.bemo.hr.attendance.api.ImportApi;
 import com.bemo.hr.attendance.domain.BiometricSource;
 import com.bemo.hr.attendance.domain.ImportStatus;
-import com.bemo.hr.attendance.infrastructure.BiometricDeviceRepository;
-import com.bemo.hr.attendance.infrastructure.BiometricSourceRepository;
-import com.bemo.hr.attendance.infrastructure.DeviceCredentialsCrypto;
-import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
-import com.bemo.hr.attendance.infrastructure.ImportRowErrorRepository;
-import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
+import com.bemo.hr.attendance.infrastructure.*;
 import com.bemo.hr.shared.security.TenantApplication;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
@@ -33,7 +28,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class BiometricImportContractTests {
 
 
-
+    private static final String CSV = "Employee code,Day,Official check-in,Official check-out,Actual check-in,Actual check-out\n"
+            + "EMP-101,2026-07-24,08:00,16:00,08:07,16:15\n";
     private final BiometricImportService biometricImportService;
     private final BiometricDeviceSyncService biometricDeviceSyncService;
     private final ImportBatchRepository importBatchRepository;
@@ -45,14 +41,10 @@ class BiometricImportContractTests {
     private final DeviceCredentialsCrypto deviceCredentialsCrypto;
     private final ObjectMapper objectMapper;
     private final TransactionTemplate tx;
-
     private final List<String> createdBatches = new ArrayList<>();
     private final List<String> createdDevices = new ArrayList<>();
     private final List<String> createdSources = new ArrayList<>();
     private final List<String> createdApps = new ArrayList<>();
-
-    private static final String CSV = "Employee code,Day,Official check-in,Official check-out,Actual check-in,Actual check-out\n"
-            + "EMP-101,2026-07-24,08:00,16:00,08:07,16:15\n";
 
     @Autowired
     BiometricImportContractTests(BiometricImportService biometricImportService,
@@ -164,7 +156,7 @@ class BiometricImportContractTests {
     }
 
     @Test
-    void reverseDeletesPunchesAndErrorsIsIdempotentAndBlocksReimportOfSameFile() {
+    void reverseDeletesPunchesAndErrorsIsIdempotentAndAllowsReimportOfSameFile() {
         var app = app();
         TenantContext.set(app.getId());
         String sourceId = fileSource("بوابة المصنع");
@@ -185,9 +177,11 @@ class BiometricImportContractTests {
         assertThat(punchRecordRepository.countByBatchId(uploaded.id())).isZero();
 
         var reimport = biometricImportService.importFile(csv("attendance.csv", CSV), sourceId, "tester");
-        assertThat(reimport.duplicate()).isTrue();
-        assertThat(reimport.id()).isEqualTo(uploaded.id());
-        assertThat(punchRecordRepository.countByBatchId(uploaded.id())).isZero();
+        createdBatches.add(reimport.id());
+        assertThat(reimport.duplicate()).isFalse();
+        assertThat(reimport.id()).isNotEqualTo(uploaded.id());
+        assertThat(reimport.status()).isEqualTo(ImportStatus.COMPLETED);
+        assertThat(punchRecordRepository.countByBatchId(reimport.id())).isEqualTo(2);
     }
 
     @Test

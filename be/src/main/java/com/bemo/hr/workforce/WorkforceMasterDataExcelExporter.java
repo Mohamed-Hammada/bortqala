@@ -1,10 +1,6 @@
 package com.bemo.hr.workforce;
 
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
@@ -73,6 +69,7 @@ public class WorkforceMasterDataExcelExporter {
     private void write(Row row, int column, Object value) {
         var cell = row.createCell(column);
         if (value instanceof Number number) cell.setCellValue(number.doubleValue());
-        else cell.setCellValue(com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(value == null ? "" : value.toString()));
+        else
+            cell.setCellValue(com.bemo.hr.reporting.infrastructure.ExcelExportSupport.escapeFormula(value == null ? "" : value.toString()));
     }
 }

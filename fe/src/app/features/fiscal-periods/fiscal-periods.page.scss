@@ -1,6 +1,21 @@
 .page { display: flex; flex-direction: column; gap: 20px; }
 .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; }
 .btn-sm { font-size: 13px; padding: 4px 8px; }
+.selected-row { background: var(--surface-muted); }
+.workbench { display: flex; flex-direction: column; gap: 16px; }
+.section-heading, .panel-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.report-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.report-card, .panel { border: 1px solid var(--line); border-radius: 12px; background: var(--surface); padding: 16px; }
+.report-card.unavailable { background: var(--surface-muted); }
+.report-card dl { display: grid; gap: 8px; }
+.report-card dl div { display: flex; justify-content: space-between; gap: 12px; }
+.report-card dd { margin: 0; font-variant-numeric: tabular-nums; }
+.close-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.panel ul { margin-block: 12px 0; padding-inline-start: 20px; }
+.panel li { margin-block: 6px; }
+.compact { margin-top: 12px; }
+.details { max-width: 420px; overflow-wrap: anywhere; }
+.success-panel { border-color: var(--success); }
 
 /* UI5-05: fiscal header controls alignment */
 .fiscal-toolbar {
@@ -39,4 +54,6 @@
   .fiscal-year-field {
     flex: 1 1 180px;
   }
+  .report-grid, .close-grid { grid-template-columns: 1fr; }
+  .section-heading, .panel-header { flex-direction: column; }
 }

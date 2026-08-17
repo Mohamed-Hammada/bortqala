@@ -1,5 +1,7 @@
 package com.bemo.hr.finance.application;
 
+import com.bemo.hr.approval.SegregationOfDutiesService;
+import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.finance.api.AccountingApi;
 import com.bemo.hr.finance.domain.Account;
 import com.bemo.hr.finance.domain.FiscalPeriodGuard;
@@ -13,8 +15,6 @@ import com.bemo.hr.shared.numbering.DocumentNumberService;
 import com.bemo.hr.shared.security.TenantApplication;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
-import com.bemo.hr.approval.SegregationOfDutiesService;
-import com.bemo.hr.audit.application.AuditService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,31 +26,36 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class JournalEntryServiceTests {
 
     private static final String APP_ID = "app-1";
 
-    @Mock private JournalEntryRepository journalEntryRepository;
-    @Mock private JournalEntryLineRepository journalEntryLineRepository;
-    @Mock private AccountRepository accountRepository;
-    @Mock private FiscalPeriodGuard fiscalPeriodGuard;
-    @Mock private IdempotencyService idempotencyService;
-    @Mock private DocumentNumberService documentNumberService;
-    @Mock private TenantApplicationRepository tenantApplicationRepository;
-    @Mock private AuditService auditService;
+    @Mock
+    private JournalEntryRepository journalEntryRepository;
+    @Mock
+    private JournalEntryLineRepository journalEntryLineRepository;
+    @Mock
+    private AccountRepository accountRepository;
+    @Mock
+    private FiscalPeriodGuard fiscalPeriodGuard;
+    @Mock
+    private IdempotencyService idempotencyService;
+    @Mock
+    private DocumentNumberService documentNumberService;
+    @Mock
+    private TenantApplicationRepository tenantApplicationRepository;
+    @Mock
+    private AuditService auditService;
+    @Mock
+    private JournalApprovalService journalApprovalService;
 
     private TenantApplication app;
     private JournalEntryService service;
@@ -63,7 +68,7 @@ class JournalEntryServiceTests {
         service = new JournalEntryService(journalEntryRepository, journalEntryLineRepository,
                 accountRepository, fiscalPeriodGuard, idempotencyService, documentNumberService,
                 tenantApplicationRepository, new SegregationOfDutiesService(), auditService,
-                mock(com.bemo.hr.finance.infrastructure.JournalDimensionRepository.class));
+                mock(com.bemo.hr.finance.infrastructure.JournalDimensionRepository.class), journalApprovalService);
         TenantContext.set(APP_ID);
         lenient().when(tenantApplicationRepository.findById(APP_ID)).thenReturn(Optional.of(app));
 
@@ -79,6 +84,7 @@ class JournalEntryServiceTests {
         lenient().when(creditAccount.isActive()).thenReturn(true);
         lenient().when(accountRepository.findAllById(anySet())).thenReturn(List.of(debitAccount, creditAccount));
         lenient().when(journalEntryRepository.save(any(JournalEntry.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(journalApprovalService.isApprovalRequired(any(java.util.Map.class))).thenReturn(true);
     }
 
     @AfterEach
@@ -139,13 +145,28 @@ class JournalEntryServiceTests {
     }
 
     @Test
+    void configuredRuleCanAutoApproveAtCreationWhileMissingRulesRemainManual() {
+        app.updateDocumentNumbering(false);
+        when(journalEntryRepository.existsByAppIdAndEntryNumber(APP_ID, "JV-1002")).thenReturn(false);
+        when(journalApprovalService.isApprovalRequired(any(java.util.Map.class))).thenReturn(false);
+
+        AccountingApi.JournalEntryResponse response = service.create(payload("JV-1002"), "maker");
+
+        assertThat(response.status()).isEqualTo("APPROVED");
+        verify(auditService).record(org.mockito.ArgumentMatchers.eq("JOURNAL_AUTO_APPROVED"),
+                org.mockito.ArgumentMatchers.eq("JOURNAL_ENTRY"), any(),
+                org.mockito.ArgumentMatchers.eq("maker"), any(), org.mockito.ArgumentMatchers.isNull());
+    }
+
+    @Test
     void manualJournalCreatorCannotPostThroughDirectCommandPath() {
         JournalEntry entry = new JournalEntry("JV-1", LocalDate.of(2026, 8, 6), "Manual", null, null);
         entry.assignCreator("maker");
         org.springframework.test.util.ReflectionTestUtils.setField(entry, "appId", APP_ID);
         when(journalEntryRepository.findById(entry.getId())).thenReturn(Optional.of(entry));
         when(idempotencyService.execute(any(), any(), any(), any(), any(), any())).thenAnswer(inv -> {
-            java.util.function.Supplier<?> supplier = inv.getArgument(3); return supplier.get();
+            java.util.function.Supplier<?> supplier = inv.getArgument(3);
+            return supplier.get();
         });
         var request = new AccountingApi.JournalActionRequest(java.util.UUID.randomUUID().toString(), 0L, null);
 
@@ -165,7 +186,8 @@ class JournalEntryServiceTests {
         service.approve(entry.getId(), approve, "checker");
         assertThat(entry.getStatus()).isEqualTo(JournalEntry.Status.APPROVED);
         when(idempotencyService.execute(any(), any(), any(), any(), any(), any())).thenAnswer(inv -> {
-            java.util.function.Supplier<?> supplier = inv.getArgument(3); return supplier.get();
+            java.util.function.Supplier<?> supplier = inv.getArgument(3);
+            return supplier.get();
         });
         assertThatThrownBy(() -> service.post(entry.getId(), approve, "checker"))
                 .isInstanceOf(com.bemo.hr.approval.SegregationOfDutiesViolationException.class);

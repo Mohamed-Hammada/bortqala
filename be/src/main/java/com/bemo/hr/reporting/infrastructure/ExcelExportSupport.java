@@ -18,7 +18,8 @@ import java.util.Locale;
 import java.util.Map;
 
 public final class ExcelExportSupport {
-    private ExcelExportSupport() { }
+    private ExcelExportSupport() {
+    }
 
     public static Map<String, String> messages(TranslationService translationService, ExcelExportOptions options) {
         return translationService.bundle(options.locale()).messages();
@@ -133,5 +134,6 @@ public final class ExcelExportSupport {
         }
     }
 
-    public record Styles(CellStyle text, CellStyle integer, CellStyle date, CellStyle dateTime) { }
+    public record Styles(CellStyle text, CellStyle integer, CellStyle date, CellStyle dateTime) {
+    }
 }

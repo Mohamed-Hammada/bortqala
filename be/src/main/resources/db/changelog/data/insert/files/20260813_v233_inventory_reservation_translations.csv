@@ -1,0 +1,5 @@
+id;translation_key;locale;text_value
+v233-001;WAREHOUSE_BRANCH_REQUIRED;en-US;Select an active branch for the warehouse.
+v233-002;WAREHOUSE_BRANCH_REQUIRED;ar-EG;اختر فرعاً نشطاً للمخزن.
+v233-003;WAREHOUSE_ITEM_ACTIVE_REQUIRED;en-US;Select an active inventory item.
+v233-004;WAREHOUSE_ITEM_ACTIVE_REQUIRED;ar-EG;اختر صنف مخزون نشطاً.

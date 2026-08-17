@@ -10,6 +10,8 @@ import java.util.List;
 @Repository
 public interface JournalEntryLineRepository extends JpaRepository<JournalEntryLine, String> {
     List<JournalEntryLine> findByJournalEntryId(String journalEntryId);
+
     List<JournalEntryLine> findByJournalEntryIdIn(Collection<String> journalEntryIds);
+
     void deleteByJournalEntryId(String journalEntryId);
 }

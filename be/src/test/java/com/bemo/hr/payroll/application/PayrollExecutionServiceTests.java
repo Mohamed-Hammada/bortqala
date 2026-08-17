@@ -1,11 +1,10 @@
 package com.bemo.hr.payroll.application;
 
-import com.bemo.hr.payroll.domain.PayrollRunHeader;
 import com.bemo.hr.payroll.domain.PayrollInputSnapshot;
-import com.bemo.hr.payroll.domain.PayrollRunLine;
+import com.bemo.hr.payroll.domain.PayrollRunHeader;
+import com.bemo.hr.payroll.infrastructure.PayrollInputSnapshotRepository;
 import com.bemo.hr.payroll.infrastructure.PayrollRunHeaderRepository;
 import com.bemo.hr.payroll.infrastructure.PayrollRunLineRepository;
-import com.bemo.hr.payroll.infrastructure.PayrollInputSnapshotRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +16,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class PayrollExecutionServiceTests {
 
@@ -35,7 +35,7 @@ class PayrollExecutionServiceTests {
     }
 
     @Test
-    void createsCalculatesApprovesAndPostsPayrollRunSuccessfully() {
+    void createsCalculatesReviewsApprovesAndPostsPayrollRunSuccessfully() {
         when(runHeaderRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         PayrollRunHeader run = executionService.createRun("RUN-2026-03", "period-1", LocalDate.of(2026, 3, 31));
@@ -56,6 +56,9 @@ class PayrollExecutionServiceTests {
         assertThat(run.getStatus()).isEqualTo(PayrollRunHeader.Status.CALCULATED);
         assertThat(run.getTotalGross()).isEqualByComparingTo(new BigDecimal("6000.00"));
         assertThat(run.getTotalNet()).isEqualByComparingTo(new BigDecimal("5500.00"));
+
+        executionService.reviewRun(run.getId());
+        assertThat(run.getStatus()).isEqualTo(PayrollRunHeader.Status.REVIEWED);
 
         executionService.approveRun(run.getId());
         assertThat(run.getStatus()).isEqualTo(PayrollRunHeader.Status.APPROVED);

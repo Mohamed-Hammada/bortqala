@@ -38,7 +38,8 @@ public class RfqLine {
     @Column(length = 20)
     private String uom;
 
-    protected RfqLine() {}
+    protected RfqLine() {
+    }
 
     public RfqLine(String rfqId, String requisitionLineId, String itemId, String itemName, BigDecimal quantity, String uom) {
         this.id = UUID.randomUUID().toString();
@@ -50,12 +51,35 @@ public class RfqLine {
         this.uom = uom;
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getRfqId() { return rfqId; }
-    public String getRequisitionLineId() { return requisitionLineId; }
-    public String getItemId() { return itemId; }
-    public String getItemName() { return itemName; }
-    public BigDecimal getQuantity() { return quantity; }
-    public String getUom() { return uom; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getRfqId() {
+        return rfqId;
+    }
+
+    public String getRequisitionLineId() {
+        return requisitionLineId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public BigDecimal getQuantity() {
+        return quantity;
+    }
+
+    public String getUom() {
+        return uom;
+    }
 }

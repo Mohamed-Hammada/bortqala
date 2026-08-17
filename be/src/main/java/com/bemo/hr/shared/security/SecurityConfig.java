@@ -2,10 +2,10 @@ package com.bemo.hr.shared.security;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,11 +22,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
@@ -123,18 +119,20 @@ public class SecurityConfig {
             String appId = principal.substring(0, separator);
             String username = principal.substring(separator + 1);
             return appUserRepository.findByAppIdAndUsernameIgnoreCase(appId, username)
-                .map(appUser -> User.withUsername(appUser.getUsername())
-                        .password(appUser.getPasswordHash())
-                        .disabled(!appUser.isActive())
-                        .authorities(appUser.getRoles().stream()
-                                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getCode().name())).toList())
-                        .build())
-                .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("User not found."));
+                    .map(appUser -> User.withUsername(appUser.getUsername())
+                            .password(appUser.getPasswordHash())
+                            .disabled(!appUser.isActive())
+                            .authorities(appUser.getRoles().stream()
+                                    .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getCode().name())).toList())
+                            .build())
+                    .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("User not found."));
         };
     }
 
     @Bean
-    PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(12); }
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
 
     @Bean
     AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {

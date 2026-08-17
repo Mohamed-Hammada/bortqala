@@ -1,0 +1,3 @@
+id;translation_key;locale;text_value
+v234-001;FIN_RECONCILIATION_PROVIDER_REQUIRED;en-US;No authoritative server reconciliation provider is configured for this subledger.
+v234-002;FIN_RECONCILIATION_PROVIDER_REQUIRED;ar-EG;لم يتم إعداد مصدر تسوية معتمد من الخادم لهذا الدفتر الفرعي.

@@ -17,8 +17,6 @@ public class WorkforceSettlementSnapshotController {
         this.snapshotService = snapshotService;
     }
 
-    public record FreezeSnapshotPayload(String contractorId, String periodId, BigDecimal totalHours, BigDecimal grossAmount, BigDecimal netAmount) {}
-
     @PostMapping("/freeze")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER')")
     public WorkforceSettlementSnapshot createFrozenSnapshot(@RequestBody FreezeSnapshotPayload payload) {
@@ -29,5 +27,9 @@ public class WorkforceSettlementSnapshotController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public WorkforceSettlementSnapshot getSnapshot(@PathVariable String contractorId, @PathVariable String periodId) {
         return snapshotService.getSnapshot(contractorId, periodId);
+    }
+
+    public record FreezeSnapshotPayload(String contractorId, String periodId, BigDecimal totalHours,
+                                        BigDecimal grossAmount, BigDecimal netAmount) {
     }
 }

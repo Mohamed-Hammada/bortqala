@@ -1,12 +1,6 @@
 package com.bemo.hr.trade.procurement.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -54,7 +48,8 @@ public class SupplierReturnLine {
     @Column(name = "reason", length = 500)
     private String reason;
 
-    protected SupplierReturnLine() {}
+    protected SupplierReturnLine() {
+    }
 
     public SupplierReturnLine(String purchaseOrderLineId, String itemId, String itemName,
                               String itemCategory, BigDecimal quantity, String unitOfMeasure,
@@ -75,15 +70,47 @@ public class SupplierReturnLine {
         this.supplierReturn = supplierReturn;
     }
 
-    public String getId() { return id; }
-    public String getSupplierReturnId() { return supplierReturn == null ? null : supplierReturn.getId(); }
-    public String getPurchaseOrderLineId() { return purchaseOrderLineId; }
-    public String getItemId() { return itemId; }
-    public String getItemName() { return itemName; }
-    public String getItemCategory() { return itemCategory; }
-    public BigDecimal getQuantity() { return quantity; }
-    public String getUnitOfMeasure() { return unitOfMeasure; }
-    public BigDecimal getUnitPrice() { return unitPrice; }
-    public String getLocationId() { return locationId; }
-    public String getReason() { return reason; }
+    public String getId() {
+        return id;
+    }
+
+    public String getSupplierReturnId() {
+        return supplierReturn == null ? null : supplierReturn.getId();
+    }
+
+    public String getPurchaseOrderLineId() {
+        return purchaseOrderLineId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public String getItemCategory() {
+        return itemCategory;
+    }
+
+    public BigDecimal getQuantity() {
+        return quantity;
+    }
+
+    public String getUnitOfMeasure() {
+        return unitOfMeasure;
+    }
+
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public String getLocationId() {
+        return locationId;
+    }
+
+    public String getReason() {
+        return reason;
+    }
 }

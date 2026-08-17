@@ -18,25 +18,25 @@
     width: 72px;
     height: 72px;
     border-radius: 50%;
-    background: var(--surface-bg, #f4f6f8);
+    background: var(--surface-muted);
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 1rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-xs);
   }
 
   .title {
     margin: 0 0 0.5rem 0;
     font-size: 1.2rem;
     font-weight: 700;
-    color: var(--text-heading, #1f2937);
+    color: var(--ink);
   }
 
   .description {
     margin: 0 0 1.5rem 0;
     font-size: 0.95rem;
-    color: var(--text-body, #6b7280);
+    color: var(--muted);
     line-height: 1.5;
   }
 

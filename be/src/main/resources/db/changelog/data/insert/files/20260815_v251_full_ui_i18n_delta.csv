@@ -1,0 +1,11 @@
+id;translation_key;locale;text_value
+v251-001-en;workforce.ui.advances.disabled;en-US;Disabled
+v251-002-ar;workforce.ui.advances.disabled;ar-EG;غير مفعّلة
+v251-003-en;I18N_IMPORT_EMPTY_FILE;en-US;The uploaded Excel file is empty.
+v251-004-ar;I18N_IMPORT_EMPTY_FILE;ar-EG;ملف Excel المرفوع فارغ.
+v251-005-en;I18N_IMPORT_MISSING_HEADER;en-US;The uploaded Excel file is missing a header row.
+v251-006-ar;I18N_IMPORT_MISSING_HEADER;ar-EG;ملف Excel المرفوع لا يحتوي على صف عناوين.
+v251-007-en;I18N_INVALID_PAGE;en-US;Page index must not be negative.
+v251-008-ar;I18N_INVALID_PAGE;ar-EG;رقم الصفحة يجب ألا يكون سالبًا.
+v251-009-en;I18N_INVALID_PAGE_SIZE;en-US;Page size must be between 1 and 200.
+v251-010-ar;I18N_INVALID_PAGE_SIZE;ar-EG;حجم الصفحة يجب أن يكون بين 1 و 200.

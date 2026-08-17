@@ -1,17 +1,16 @@
 package com.bemo.hr.trade.procurement.api;
 
+import com.bemo.hr.shared.security.AuthService;
 import com.bemo.hr.trade.procurement.application.ProcurementService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import com.bemo.hr.shared.security.AuthService;
-import org.springframework.http.*;
-import org.springframework.security.core.Authentication;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/trade/procurement")
@@ -49,7 +48,7 @@ public class ProcurementController {
 
     @GetMapping("/exchange-rate")
     public ProcurementApi.ExchangeRateQuote exchangeRate(@RequestParam String currencyCode,
-                                                          @RequestParam long documentDate) {
+                                                         @RequestParam long documentDate) {
         return procurementService.exchangeRateQuote(currencyCode, documentDate);
     }
 

@@ -41,7 +41,8 @@ public class PayrollRunLine {
     @Column(name = "net_salary", nullable = false, precision = 15, scale = 2)
     private BigDecimal netSalary;
 
-    protected PayrollRunLine() {}
+    protected PayrollRunLine() {
+    }
 
     public PayrollRunLine(String runId, String employeeId, BigDecimal basicSalary, BigDecimal allowances, BigDecimal deductions) {
         this(runId, employeeId, null, basicSalary, allowances, deductions);
@@ -58,13 +59,39 @@ public class PayrollRunLine {
         this.netSalary = basicSalary.add(allowances).subtract(deductions);
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getRunId() { return runId; }
-    public String getEmployeeId() { return employeeId; }
-    public String getSnapshotId() { return snapshotId; }
-    public BigDecimal getBasicSalary() { return basicSalary; }
-    public BigDecimal getAllowances() { return allowances; }
-    public BigDecimal getDeductions() { return deductions; }
-    public BigDecimal getNetSalary() { return netSalary; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getRunId() {
+        return runId;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
+    }
+
+    public String getSnapshotId() {
+        return snapshotId;
+    }
+
+    public BigDecimal getBasicSalary() {
+        return basicSalary;
+    }
+
+    public BigDecimal getAllowances() {
+        return allowances;
+    }
+
+    public BigDecimal getDeductions() {
+        return deductions;
+    }
+
+    public BigDecimal getNetSalary() {
+        return netSalary;
+    }
 }

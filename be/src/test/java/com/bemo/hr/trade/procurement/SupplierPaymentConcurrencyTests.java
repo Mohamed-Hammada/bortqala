@@ -3,7 +3,6 @@ package com.bemo.hr.trade.procurement;
 import com.bemo.hr.PostgresIntegrationTest;
 import com.bemo.hr.finance.domain.FiscalPeriod;
 import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
-import com.bemo.hr.operations.PartnerLedgerEntry;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
 import com.bemo.hr.party.BusinessParty;
 import com.bemo.hr.party.BusinessPartyRepository;

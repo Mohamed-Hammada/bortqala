@@ -16,35 +16,35 @@ import { apiErrorDetail } from '../../../../core/api-error';
   imports: [CommonModule, FormsModule, ModalDialogComponent, ContractorSettlementDetailModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="workforce-container" dir="rtl">
+    <section class="workforce-container">
       <header class="page-header">
         <div>
-          <span class="eyebrow">دورة التسوية المستندية المالية</span>
-          <h1>فترات تسوية العمالة والمقاولين</h1>
-          <p>احتساب أجور العمال ومستحقات المقاولين وتتبع القيود والسداد.</p>
+          <span class="eyebrow">{{ i18n.t('workforce.ui.settlement.eyebrow') }}</span>
+          <h1>{{ i18n.t('workforce.ui.settlement.title') }}</h1>
+          <p>{{ i18n.t('workforce.ui.settlement.description') }}</p>
         </div>
-        <button type="button" class="btn primary" (click)="openCreateModal()">＋ فتح فترة جديدة</button>
+        <button type="button" class="btn primary" (click)="openCreateModal()">{{ i18n.t('workforce.ui.settlement.new') }}</button>
       </header>
 
-      <div class="state-flow" aria-label="دورة حالات التسوية">
-        <span>1 مسودة</span><b>←</b><span>2 تم الاحتساب</span><b>←</b><span>3 تمت المراجعة</span><b>←</b><span>4 معتمدة</span><b>←</b><span>5 ترحيل للمالية</span><b>←</b><span>6 مقفلة / صرفت</span>
+      <div class="state-flow" [attr.aria-label]="i18n.t('workforce.ui.settlement.flowAria')">
+        <span>{{ i18n.t('workforce.ui.settlement.flowDraft') }}</span><b>←</b><span>{{ i18n.t('workforce.ui.settlement.flowCalculated') }}</span><b>←</b><span>{{ i18n.t('workforce.ui.settlement.flowReviewed') }}</span><b>←</b><span>{{ i18n.t('workforce.ui.settlement.flowApproved') }}</span><b>←</b><span>{{ i18n.t('workforce.ui.settlement.flowPosted') }}</span><b>←</b><span>{{ i18n.t('workforce.ui.settlement.flowLocked') }}</span>
       </div>
 
       @if (pageError()) { <div class="alert error">{{ pageError() }}</div> }
-      @if (workforceService.loading()) { <div class="alert">جارٍ تحميل فترات التسوية…</div> }
+      @if (workforceService.loading()) { <div class="alert">{{ i18n.t('workforce.ui.settlement.loading') }}</div> }
 
       <div class="card table-wrap">
         <table class="data-table">
           <thead>
             <tr>
-              <th>الفترة</th>
-              <th>الحالة</th>
-              <th>آخر احتساب</th>
-              <th>الإصدار</th>
-              <th>ملخص النتيجة</th>
-              <th>تسويات المقاولين</th>
-              <th>التحذيرات</th>
-              <th>الإجراءات</th>
+              <th>{{ i18n.t('workforce.ui.settlement.period') }}</th>
+              <th>{{ i18n.t('workforce.ui.status') }}</th>
+              <th>{{ i18n.t('workforce.ui.settlement.lastCalculation') }}</th>
+              <th>{{ i18n.t('workforce.ui.settlement.version') }}</th>
+              <th>{{ i18n.t('workforce.ui.settlement.summary') }}</th>
+              <th>{{ i18n.t('workforce.ui.settlement.contractorSettlements') }}</th>
+              <th>{{ i18n.t('workforce.ui.settlement.warnings') }}</th>
+              <th>{{ i18n.t('workforce.ui.actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -56,7 +56,7 @@ import { apiErrorDetail } from '../../../../core/api-error';
                 </td>
                 <td>
                   <span class="badge" [class]="'badge ' + period.status.toLowerCase()">{{ statusLabel(period.status) }}</span>
-                  @if (period.needsRecalculation) { <small class="stale-note">⚠ يحتاج إعادة احتساب</small> }
+                  @if (period.needsRecalculation) { <small class="stale-note">{{ i18n.t('workforce.ui.settlement.needsRecalc') }}</small> }
                 </td>
                 <td>
                   @if (period.lastCalculatedAt) {
@@ -64,17 +64,17 @@ import { apiErrorDetail } from '../../../../core/api-error';
                     <small>{{ period.lastCalculatedBy }}</small>
                   } @else { — }
                   @if (period.lastCalculationError) {
-                    <small class="failure">آخر محاولة فشلت: {{ period.lastCalculationError }}</small>
+                    <small class="failure">{{ i18n.t('workforce.ui.settlement.lastCalculationFailed', { detail: period.lastCalculationError }) }}</small>
                   }
                 </td>
                 <td>v{{ period.calculationVersion }}</td>
                 <td>
-                  <span>{{ period.resultRecordCount }} سجل</span>
-                  <small>إجمالي {{ period.resultGrossAmount | number:'1.2-2' }} · خصومات {{ period.resultDeductions | number:'1.2-2' }} · سلف {{ period.resultAdvances | number:'1.2-2' }} · صافي {{ period.resultNetAmount | number:'1.2-2' }}</small>
+                  <span>{{ i18n.t('workforce.ui.settlement.recordsCount', { count: period.resultRecordCount }) }}</span>
+                  <small>{{ i18n.t('workforce.ui.settlement.summaryDetails', { gross: (period.resultGrossAmount | number:'1.2-2') ?? '0', deductions: (period.resultDeductions | number:'1.2-2') ?? '0', advances: (period.resultAdvances | number:'1.2-2') ?? '0', net: (period.resultNetAmount | number:'1.2-2') ?? '0' }) }}</small>
                 </td>
                 <td>
                   <button type="button" class="btn secondary link-btn-full" [disabled]="period.calculationVersion === 0" (click)="openContractorSettlementsModal(period)">
-                    📋 تسويات المقاولين
+                    {{ i18n.t('workforce.ui.settlement.contractorSettlementsButton') }}
                   </button>
                 </td>
                 <td>
@@ -84,43 +84,43 @@ import { apiErrorDetail } from '../../../../core/api-error';
                 </td>
                 <td class="actions">
                   <button type="button" class="btn secondary" [disabled]="calculatingId() === period.id || period.status === 'APPROVED' || period.status === 'LOCKED'" (click)="calculatePeriod(period)">
-                    {{ calculatingId() === period.id ? 'جارٍ الاحتساب…' : 'إعادة الاحتساب' }}
+                    {{ calculatingId() === period.id ? i18n.t('workforce.ui.settlement.calculating') : i18n.t('workforce.ui.settlement.recalculate') }}
                   </button>
                   @if (period.status === 'CALCULATED' && !period.needsRecalculation) {
-                    <button type="button" class="btn" (click)="reviewPeriod(period)">تأكيد المراجعة</button>
+                    <button type="button" class="btn" (click)="reviewPeriod(period)">{{ i18n.t('workforce.ui.settlement.review') }}</button>
                   }
                   @if (period.status === 'REVIEWED' && !period.needsRecalculation && period.resultErrorCount === 0) {
-                    <button type="button" class="btn primary" (click)="approvePeriod(period)">اعتماد</button>
+                    <button type="button" class="btn primary" (click)="approvePeriod(period)">{{ i18n.t('workforce.ui.settlement.approve') }}</button>
                   }
                   @if (period.status === 'APPROVED') {
-                    <button type="button" class="btn danger" (click)="lockPeriod(period)">قفل نهائي</button>
+                    <button type="button" class="btn danger" (click)="lockPeriod(period)">{{ i18n.t('workforce.ui.settlement.lock') }}</button>
                   }
-                  <button type="button" class="btn success" [disabled]="period.calculationVersion === 0" (click)="exportExcel(period)">⇩ Excel</button>
+                  <button type="button" class="btn success" [disabled]="period.calculationVersion === 0" (click)="exportExcel(period)">{{ i18n.t('workforce.ui.exportExcel') }}</button>
                 </td>
               </tr>
             } @empty {
-              <tr><td colspan="8" class="empty">لا توجد فترات تسوية.</td></tr>
+              <tr><td colspan="8" class="empty">{{ i18n.t('workforce.ui.settlement.empty') }}</td></tr>
             }
           </tbody>
         </table>
       </div>
 
       <!-- Contractor Settlements List Modal for Period -->
-      <app-modal-dialog [isOpen]="contractorListOpen()" [title]="'تسويات المقاولين للفترة — ' + (selectedPeriod()?.periodCode || '')" size="wide" (close)="contractorListOpen.set(false)">
+      <app-modal-dialog [isOpen]="contractorListOpen()" [title]="i18n.t('workforce.ui.settlement.contractorsForPeriod', { code: (selectedPeriod()?.periodCode || '') })" size="wide" (close)="contractorListOpen.set(false)">
         @if (loadingContractorSettlements()) {
-          <div class="alert">جارٍ تحميل تسويات المقاولين…</div>
+          <div class="alert">{{ i18n.t('workforce.ui.settlement.loadingContractors') }}</div>
         } @else {
           <table class="data-table">
             <thead>
               <tr>
-                <th>المقاول</th>
-                <th>نموذج المحاسبة</th>
-                <th>إجمالي أجور العمال</th>
-                <th>عمولة / رسوم الخدمة</th>
-                <th>صافي المستحق</th>
-                <th>المنصرف</th>
-                <th>الحالة</th>
-                <th>الإجراء</th>
+                <th>{{ i18n.t('workforce.ui.contractor') }}</th>
+                <th>{{ i18n.t('workforce.ui.contractors.accountingModel') }}</th>
+                <th>{{ i18n.t('workforce.ui.settlement.workerGross') }}</th>
+                <th>{{ i18n.t('workforce.ui.settlement.serviceFee') }}</th>
+                <th>{{ i18n.t('workforce.ui.settlement.netPayable') }}</th>
+                <th>{{ i18n.t('workforce.ui.settlement.paid') }}</th>
+                <th>{{ i18n.t('workforce.ui.status') }}</th>
+                <th>{{ i18n.t('workforce.ui.settlement.action') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -134,23 +134,23 @@ import { apiErrorDetail } from '../../../../core/api-error';
                   <td>{{ cs.paidAmount | number:'1.2-2' }}</td>
                   <td>
                     <span class="badge" [class.posted]="cs.status === 'POSTED'" [class.paid]="cs.status === 'PAID'">
-                      {{ cs.status }}
+                      {{ settlementStatusLabel(cs.status) }}
                     </span>
                   </td>
                   <td>
                     <button type="button" class="btn primary" (click)="openDetailModal(cs)">
-                      🔍 عرض التفاصيل والإجراءات
+                      {{ i18n.t('workforce.ui.settlement.details') }}
                     </button>
                   </td>
                 </tr>
               } @empty {
-                <tr><td colspan="8" class="empty">لا توجد تسويات مقاولين لهذه الفترة.</td></tr>
+                <tr><td colspan="8" class="empty">{{ i18n.t('workforce.ui.settlement.noContractors') }}</td></tr>
               }
             </tbody>
           </table>
         }
         <div modal-actions>
-          <button type="button" class="btn secondary" (click)="contractorListOpen.set(false)">إغلاق</button>
+          <button type="button" class="btn secondary" (click)="contractorListOpen.set(false)">{{ i18n.t('workforce.ui.close') }}</button>
         </div>
       </app-modal-dialog>
 
@@ -163,67 +163,67 @@ import { apiErrorDetail } from '../../../../core/api-error';
       </app-contractor-settlement-detail-modal>
 
       <!-- Calculation Result Modal -->
-      <app-modal-dialog [isOpen]="summaryOpen()" title="نتيجة إعادة احتساب التسوية" size="wide" (close)="summaryOpen.set(false)">
+      <app-modal-dialog [isOpen]="summaryOpen()" [title]="i18n.t('workforce.ui.settlement.resultTitle')" size="wide" (close)="summaryOpen.set(false)">
         @if (calculationError()) {
           <div class="alert error">
-            <strong>فشلت المحاولة الجديدة.</strong>
+            <strong>{{ i18n.t('workforce.ui.settlement.runFailed') }}</strong>
             <span>{{ calculationError() }}</span>
-            <small>ظلت آخر نتيجة ناجحة محفوظة دون تغيير.</small>
+            <small>{{ i18n.t('workforce.ui.settlement.previousKept') }}</small>
           </div>
         }
         @if (summary(); as result) {
           <div class="run-meta">
-            <span>نجحت العملية</span>
-            <span>الإصدار v{{ result.calculationVersion }}</span>
+            <span>{{ i18n.t('workforce.ui.settlement.runSuccess') }}</span>
+            <span>{{ i18n.t('workforce.ui.settlement.version') }} v{{ result.calculationVersion }}</span>
             <span>{{ result.executedAt | date:'yyyy-MM-dd HH:mm:ss' }}</span>
-            <span>بواسطة {{ result.executedBy }}</span>
+            <span>{{ i18n.t('workforce.ui.settlement.by') }} {{ result.executedBy }}</span>
           </div>
           <div class="summary-grid">
-            <article><small>السجلات</small><strong>{{ result.totalWorkers }}</strong></article>
-            <article><small>إجمالي المستحقات</small><strong>{{ result.grossWorkersAmount | number:'1.2-2' }}</strong></article>
-            <article><small>الخصومات</small><strong>{{ result.totalDeductions | number:'1.2-2' }}</strong></article>
-            <article><small>السلف</small><strong>{{ result.totalAdvanceDeductions | number:'1.2-2' }}</strong></article>
-            <article><small>صافي العمال</small><strong>{{ result.netWorkersAmount | number:'1.2-2' }}</strong></article>
-            <article><small>صافي المقاولين</small><strong>{{ result.netContractorsPayable | number:'1.2-2' }}</strong></article>
+            <article><small>{{ i18n.t('workforce.ui.settlement.records') }}</small><strong>{{ result.totalWorkers }}</strong></article>
+            <article><small>{{ i18n.t('workforce.ui.settlement.gross') }}</small><strong>{{ result.grossWorkersAmount | number:'1.2-2' }}</strong></article>
+            <article><small>{{ i18n.t('workforce.ui.settlement.deductions') }}</small><strong>{{ result.totalDeductions | number:'1.2-2' }}</strong></article>
+            <article><small>{{ i18n.t('workforce.ui.settlement.advances') }}</small><strong>{{ result.totalAdvanceDeductions | number:'1.2-2' }}</strong></article>
+            <article><small>{{ i18n.t('workforce.ui.settlement.workerNet') }}</small><strong>{{ result.netWorkersAmount | number:'1.2-2' }}</strong></article>
+            <article><small>{{ i18n.t('workforce.ui.settlement.contractorNet') }}</small><strong>{{ result.netContractorsPayable | number:'1.2-2' }}</strong></article>
           </div>
         }
         @if (issues().length) {
-          <h3 id="settlement-issues">السجلات التي تحتاج إجراء ({{ issues().length }})</h3>
+          <h3 id="settlement-issues">{{ i18n.t('workforce.ui.settlement.issues') }} ({{ issues().length }})</h3>
           <table class="data-table">
-            <thead><tr><th>العامل</th><th>النوع</th><th>المشكلة</th><th>الإجراء</th></tr></thead>
+            <thead><tr><th>{{ i18n.t('workforce.ui.worker') }}</th><th>{{ i18n.t('workforce.ui.type') }}</th><th>{{ i18n.t('workforce.ui.settlement.problem') }}</th><th>{{ i18n.t('workforce.ui.settlement.action') }}</th></tr></thead>
             <tbody>
               @for (issue of issues(); track issue.id) {
                 <tr>
                   <td>{{ issue.workerName || issue.workerId || '—' }}</td>
-                  <td>{{ issue.severity === 'ERROR' ? 'خطأ' : 'تحذير' }}</td>
+                  <td>{{ issue.severity === 'ERROR' ? i18n.t('workforce.ui.settlement.error') : i18n.t('workforce.ui.settlement.warning') }}</td>
                   <td>{{ issue.message }}</td>
-                  <td><a href="/workforce/workers">فتح سجل العمال</a></td>
+                  <td><a href="/workforce/workers">{{ i18n.t('workforce.ui.settlement.openWorkers') }}</a></td>
                 </tr>
               }
             </tbody>
           </table>
         } @else {
-          <p class="empty">لا توجد تحذيرات أو أخطاء في الإصدار المحدد.</p>
+          <p class="empty">{{ i18n.t('workforce.ui.settlement.noIssues') }}</p>
         }
-        <div modal-actions><button type="button" class="btn primary" (click)="summaryOpen.set(false)">إغلاق</button></div>
+        <div modal-actions><button type="button" class="btn primary" (click)="summaryOpen.set(false)">{{ i18n.t('workforce.ui.close') }}</button></div>
       </app-modal-dialog>
 
       <!-- Create Period Modal -->
-      <app-modal-dialog [isOpen]="createOpen()" title="إنشاء فترة تسوية" [preventOutsideClose]="true" (close)="createOpen.set(false)">
+      <app-modal-dialog [isOpen]="createOpen()" [title]="i18n.t('workforce.ui.settlement.createTitle')" [preventOutsideClose]="true" (close)="createOpen.set(false)">
         <form class="form" (ngSubmit)="savePeriod()">
-          <label>كود الفترة *<input [(ngModel)]="createForm.periodCode" name="periodCode" required /></label>
-          <label>تاريخ البداية *<input type="date" [(ngModel)]="createForm.startDate" name="startDate" required /></label>
-          <label>تاريخ النهاية *<input type="date" [(ngModel)]="createForm.endDate" name="endDate" required /></label>
+          <label>{{ i18n.t('workforce.ui.settlement.periodCode') }}<input [(ngModel)]="createForm.periodCode" name="periodCode" required /></label>
+          <label>{{ i18n.t('workforce.ui.settlement.startDate') }}<input type="date" [(ngModel)]="createForm.startDate" name="startDate" required /></label>
+          <label>{{ i18n.t('workforce.ui.settlement.endDate') }}<input type="date" [(ngModel)]="createForm.endDate" name="endDate" required /></label>
         </form>
         <div modal-actions>
-          <button type="button" class="btn primary" (click)="savePeriod()">إنشاء</button>
-          <button type="button" class="btn secondary" (click)="createOpen.set(false)">إلغاء</button>
+          <button type="button" class="btn primary" (click)="savePeriod()">{{ i18n.t('workforce.ui.settlement.create') }}</button>
+          <button type="button" class="btn secondary" (click)="createOpen.set(false)">{{ i18n.t('workforce.ui.cancel') }}</button>
         </div>
       </app-modal-dialog>
     </section>
   `,
   styles: [`
-    .workforce-container{padding: 1.5rem;display: grid;gap: 1.25rem}.page-header{display: flex;justify-content: space-between;gap: 1rem;align-items: center}.page-header h1{margin: .2rem 0}.page-header p,small{color: var(--muted)}.eyebrow{color: #b7791f;font-weight: 800}.state-flow{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.65rem;color:var(--secondary-text)}.state-flow span{display:inline-flex;align-items:center;min-height:32px;padding:.3rem .65rem;border:1px solid var(--line);border-radius:8px;background:var(--surface-muted);color:var(--ink);font-weight:700}.state-flow b{color:var(--gold);font-weight:800}.card{background: var(--surface);border: 1px solid var(--line);border-radius: 14px}.table-wrap{overflow: auto}.data-table{width: 100%;border-collapse: collapse;min-width: 1050px}.data-table th,.data-table td{padding: .75rem;border-bottom: 1px solid var(--line);text-align: right;vertical-align: top}.data-table td small{display: block;margin-top: .3rem}.actions{display: flex;gap: .35rem;flex-wrap: wrap}.btn{border: 0;border-radius: 8px;padding: .55rem .75rem;font-weight: 700;cursor: pointer;background: var(--surface-muted);color: #243247}.btn:disabled{opacity: .5;cursor:not-allowed}.primary{background: #b7791f;color: #fff}.secondary{background: var(--surface-muted)}.success{background: #dcfce7;color: var(--success)}.danger{background: var(--danger-soft);color: var(--danger)}.badge{display: inline-block;border-radius: 999px;padding: .25rem .6rem;background: var(--surface-muted)}.badge.calculated{background: #dbeafe;color: var(--secondary-text)}.badge.reviewed{background: #fef3c7;color: #92400e}.badge.approved,.badge.locked,.badge.posted,.badge.paid{background: #dcfce7;color: var(--success)}.stale{background: #fffaf0}.stale-note,.failure{color: #b45309!important}.failure{max-width: 280px}.alert{padding: .8rem;border-radius: 10px;background: var(--surface-muted);display: grid;gap: .25rem}.alert.error{background: var(--danger-soft);color: var(--danger)}.run-meta,.summary-grid{display: grid;grid-template-columns: repeat(4,minmax(0,1fr));gap: .75rem}.run-meta{margin-bottom: 1rem}.run-meta span,.summary-grid article{padding: .8rem;border: 1px solid var(--line);border-radius: 10px}.summary-grid article{display: grid;gap: .25rem}.summary-grid strong{font-size: 1.25rem}.link-btn{border: 0;background: transparent;color: #9a6700;text-decoration: underline;cursor: pointer}.link-btn-full{color: #b7791f;font-weight: 800}.form{display: grid;gap: 1rem}.form label{display: grid;gap: .35rem;font-weight: 700}.form input{padding: .65rem;border: 1px solid var(--line);border-radius: 8px}.empty{padding: 1rem;text-align: center;color: var(--muted)}@media(max-width: 900px){.page-header{align-items: stretch;flex-direction: column}.run-meta,.summary-grid{grid-template-columns: 1fr 1fr}}
+    .workforce-container{padding: 1.5rem;display: grid;gap: 1.25rem}.page-header{display: flex;justify-content: space-between;gap: 1rem;align-items: center}.page-header h1{margin: .2rem 0}.page-header p,small{color: var(--muted)}.eyebrow{color: #b7791f;font-weight: 800}.state-flow{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.65rem;color:var(--secondary-text)}.state-flow span{display:inline-flex;align-items:center;min-height:32px;padding:.3rem .65rem;border:1px solid var(--line);border-radius:8px;background:var(--surface-muted);color:var(--ink);font-weight:700}.state-flow b{color:var(--gold);font-weight:800}.card{background: var(--surface);border: 1px solid var(--line);border-radius: 14px}.table-wrap{overflow: auto}.data-table{width: 100%;border-collapse: collapse;min-width: 1050px}.data-table th,.data-table td{padding: .75rem;border-bottom: 1px solid var(--line);text-align: start;vertical-align: top}.data-table td small{display: block;margin-top: .3rem}.actions{display: flex;gap: .35rem;flex-wrap: wrap}.btn{border: 0;border-radius: 8px;padding: .55rem .75rem;font-weight: 700;cursor: pointer;background: var(--surface-muted);color: #243247}.btn:disabled{opacity: .5;cursor:not-allowed}.primary{background: #b7791f;color: #fff}.secondary{background: var(--surface-muted)}.success{background: #dcfce7;color: var(--success)}.danger{background: var(--danger-soft);color: var(--danger)}.badge{display: inline-block;border-radius: 999px;padding: .25rem .6rem;background: var(--surface-muted)}.badge.calculated{background: #dbeafe;color: var(--secondary-text)}.badge.reviewed{background: #fef3c7;color: #92400e}.badge.approved,.badge.locked,.badge.posted,.badge.paid{background: #dcfce7;color: var(--success)}.stale{background: #fffaf0}.stale-note,.failure{color: #b45309!important}.failure{max-width: 280px}.alert{padding: .8rem;border-radius: 10px;background: var(--surface-muted);display: grid;gap: .25rem}.alert.error{background: var(--danger-soft);color: var(--danger)}.run-meta,.summary-grid{display: grid;grid-template-columns: repeat(4,minmax(0,1fr));gap: .75rem}.run-meta{margin-bottom: 1rem}.run-meta span,.summary-grid article{padding: .8rem;border: 1px solid var(--line);border-radius: 10px}.summary-grid article{display: grid;gap: .25rem}.summary-grid strong{font-size: 1.25rem}.link-btn{border: 0;background: transparent;color: #9a6700;text-decoration: underline;cursor: pointer}.link-btn-full{color: #b7791f;font-weight: 800}.form{display: grid;gap: 1rem}.form label{display: grid;gap: .35rem;font-weight: 700}.form input{padding: .65rem;border: 1px solid var(--line);border-radius: 8px}.empty{padding: 1rem;text-align: center;color: var(--muted)}@media(max-width: 900px){.page-header{align-items: stretch;flex-direction: column}.run-meta,.summary-grid{grid-template-columns: 1fr 1fr}}
   `]
 })
 export class SettlementPeriodsComponent implements OnInit {
@@ -249,10 +249,11 @@ export class SettlementPeriodsComponent implements OnInit {
   createForm = { periodCode: '', startDate: new Date().toISOString().slice(0, 10), endDate: new Date().toISOString().slice(0, 10), cycleType: 'HALF_MONTH' };
 
   ngOnInit(): void { this.reload(); }
+  settlementStatusLabel(status: string): string { const keys:Record<string,string>={DRAFT:'workforce.ui.settlement.statusDraft',CALCULATED:'workforce.ui.settlement.statusCalculated',REVIEWED:'workforce.ui.settlement.statusReviewed',APPROVED:'workforce.ui.settlement.statusApproved',POSTED:'workforce.ui.settlement.statusPosted',PAID:'workforce.ui.settlement.statusPaid',LOCKED:'workforce.ui.settlement.statusLocked'}; return keys[status]?this.i18n.t(keys[status]):status; }
 
   reload(): void {
     this.workforceService.loadSettlementPeriods().subscribe({
-      error: error => this.pageError.set(apiErrorDetail(error, 'تعذر تحميل فترات التسوية.'))
+      error: error => this.pageError.set(apiErrorDetail(error, this.i18n.t('workforce.ui.settlement.loadFailed')))
     });
   }
 
@@ -264,7 +265,7 @@ export class SettlementPeriodsComponent implements OnInit {
   savePeriod(): void {
     this.workforceService.createSettlementPeriod(this.createForm).subscribe({
       next: () => { this.createOpen.set(false); this.notification.success(this.i18n.t('workforce.settlementPeriodCreated')); },
-      error: error => this.notification.error(apiErrorDetail(error, 'تعذر إنشاء الفترة.'))
+      error: error => this.notification.error(apiErrorDetail(error, this.i18n.t('workforce.ui.settlement.createFailed')))
     });
   }
 
@@ -273,10 +274,10 @@ export class SettlementPeriodsComponent implements OnInit {
     this.workforceService.calculatePeriod(period.id).subscribe({
       next: result => {
         this.summary.set(result); this.issues.set(result.issues); this.calculatingId.set(null); this.reload();
-        this.notification.success(`تم الاحتساب بنجاح — الإصدار v${result.calculationVersion}`);
+        this.notification.success(this.i18n.t('workforce.ui.settlement.calculatedSuccess', { version: result.calculationVersion }));
       },
       error: error => {
-        this.calculatingId.set(null); this.calculationError.set(apiErrorDetail(error, 'فشلت إعادة الاحتساب.')); this.reload();
+        this.calculatingId.set(null); this.calculationError.set(apiErrorDetail(error, this.i18n.t('workforce.ui.settlement.recalcFailed'))); this.reload();
       }
     });
   }
@@ -285,7 +286,7 @@ export class SettlementPeriodsComponent implements OnInit {
     this.summary.set(null); this.calculationError.set(period.lastCalculationError ?? null); this.summaryOpen.set(true);
     this.workforceService.loadSettlementIssues(period.id).subscribe({
       next: value => this.issues.set(value),
-      error: error => this.calculationError.set(apiErrorDetail(error, 'تعذر تحميل المشاكل.'))
+      error: error => this.calculationError.set(apiErrorDetail(error, this.i18n.t('workforce.ui.settlement.issuesFailed')))
     });
   }
 
@@ -300,7 +301,7 @@ export class SettlementPeriodsComponent implements OnInit {
       },
       error: error => {
         this.loadingContractorSettlements.set(false);
-        this.notification.error(apiErrorDetail(error, 'تعذر تحميل تسويات المقاولين.'));
+        this.notification.error(apiErrorDetail(error, this.i18n.t('workforce.ui.settlement.contractorsFailed')));
       }
     });
   }
@@ -320,36 +321,32 @@ export class SettlementPeriodsComponent implements OnInit {
   reviewPeriod(period: SettlementPeriod): void {
     this.workforceService.reviewPeriod(period.id).subscribe({
       next: () => { this.reload(); this.notification.success(this.i18n.t('workforce.settlementPeriodReviewed')); },
-      error: error => this.notification.error(apiErrorDetail(error, 'تعذر مراجعة الفترة.'))
+      error: error => this.notification.error(apiErrorDetail(error, this.i18n.t('workforce.ui.settlement.reviewFailed')))
     });
   }
 
   approvePeriod(period: SettlementPeriod): void {
     this.workforceService.approvePeriod(period.id).subscribe({
       next: () => { this.reload(); this.notification.success(this.i18n.t('workforce.settlementPeriodApproved')); },
-      error: error => this.notification.error(apiErrorDetail(error, 'تعذر اعتماد الفترة.'))
+      error: error => this.notification.error(apiErrorDetail(error, this.i18n.t('workforce.ui.settlement.approveFailed')))
     });
   }
 
   lockPeriod(period: SettlementPeriod): void {
     this.workforceService.lockPeriod(period.id).subscribe({
       next: () => { this.reload(); this.notification.success(this.i18n.t('workforce.settlementPeriodLocked')); },
-      error: error => this.notification.error(apiErrorDetail(error, 'تعذر قفل الفترة.'))
+      error: error => this.notification.error(apiErrorDetail(error, this.i18n.t('workforce.ui.settlement.lockFailed')))
     });
   }
 
   exportExcel(period: SettlementPeriod): void {
     this.workforceService.exportSettlementPeriodExcel(period.id).subscribe({
       next: blob => downloadBlob(blob, `settlement-${period.periodCode}-v${period.calculationVersion}.xlsx`),
-      error: error => this.notification.error(apiErrorDetail(error, 'تعذر التصدير.'))
+      error: error => this.notification.error(apiErrorDetail(error, this.i18n.t('workforce.ui.settlement.exportFailed')))
     });
   }
 
-  statusLabel(status: string): string {
-    return ({ DRAFT: 'مسودة', CALCULATED: 'تم الاحتساب', REVIEWED: 'تمت المراجعة', APPROVED: 'معتمدة', LOCKED: 'مقفلة' } as Record<string, string>)[status] ?? status;
-  }
+  statusLabel(status: string): string { const keys:Record<string,string>={DRAFT:'workforce.ui.settlement.statusDraft',CALCULATED:'workforce.ui.settlement.statusCalculated',REVIEWED:'workforce.ui.settlement.statusReviewed',APPROVED:'workforce.ui.settlement.statusApproved',LOCKED:'workforce.ui.settlement.statusLocked'}; return keys[status]?this.i18n.t(keys[status]):status; }
 
-  cycleLabel(cycle: string): string {
-    return cycle === 'HALF_MONTH' ? 'نصف شهري' : cycle === 'MONTHLY' ? 'شهري' : cycle;
-  }
+  cycleLabel(cycle: string): string { const keys:Record<string,string>={HALF_MONTH:'workforce.ui.categories.halfMonth',MONTHLY:'workforce.ui.categories.monthly'}; return keys[cycle]?this.i18n.t(keys[cycle]):cycle; }
 }

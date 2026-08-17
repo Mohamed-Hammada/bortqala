@@ -15,7 +15,8 @@ public class OrganizationApi {
             boolean active,
             long createdAt,
             long updatedAt
-    ) {}
+    ) {
+    }
 
     public record CompanyPayload(
             @NotBlank String code,
@@ -23,7 +24,8 @@ public class OrganizationApi {
             String taxNumber,
             String commercialRegistry,
             boolean active
-    ) {}
+    ) {
+    }
 
     public record BranchResponse(
             String id,
@@ -34,7 +36,8 @@ public class OrganizationApi {
             boolean active,
             long createdAt,
             long updatedAt
-    ) {}
+    ) {
+    }
 
     public record BranchPayload(
             @NotBlank String companyId,
@@ -42,7 +45,8 @@ public class OrganizationApi {
             @NotBlank String name,
             String location,
             boolean active
-    ) {}
+    ) {
+    }
 
     public record WarehouseResponse(
             String id,
@@ -53,7 +57,8 @@ public class OrganizationApi {
             boolean active,
             long createdAt,
             long updatedAt
-    ) {}
+    ) {
+    }
 
     public record WarehousePayload(
             @NotBlank String branchId,
@@ -61,7 +66,8 @@ public class OrganizationApi {
             @NotBlank String name,
             String location,
             boolean active
-    ) {}
+    ) {
+    }
 
     public record DepartmentResponse(
             String id,
@@ -72,7 +78,8 @@ public class OrganizationApi {
             boolean active,
             long createdAt,
             long updatedAt
-    ) {}
+    ) {
+    }
 
     public record DepartmentPayload(
             @NotBlank String companyId,
@@ -80,12 +87,14 @@ public class OrganizationApi {
             @NotBlank String name,
             String managerId,
             boolean active
-    ) {}
+    ) {
+    }
 
     public record OrganizationHierarchyResponse(
             List<CompanyResponse> companies,
             List<BranchResponse> branches,
             List<WarehouseResponse> warehouses,
             List<DepartmentResponse> departments
-    ) {}
+    ) {
+    }
 }

@@ -2,35 +2,25 @@ package com.bemo.hr.attendance.infrastructure;
 
 import com.bemo.hr.attendance.application.BiometricFileReader;
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.DateUtil;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+import com.healthmarketscience.jackcess.DatabaseBuilder;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import com.healthmarketscience.jackcess.DatabaseBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.nio.file.Files;
+import java.util.*;
 
 @Component
 public class SpreadsheetBiometricFileReader implements BiometricFileReader {
@@ -40,10 +30,23 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
     private static final Set<String> OFFICIAL_OUT_HEADERS = Set.of("officialcheckout", "officialout", "الانصرافالرسمي");
     private static final Set<String> ACTUAL_IN_HEADERS = Set.of("actualcheckin", "actualin", "الحضورالفعلي");
     private static final Set<String> ACTUAL_OUT_HEADERS = Set.of("actualcheckout", "actualout", "الانصرافالفعلي");
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SpreadsheetBiometricFileReader.class);
     private final ZoneId companyZone;
 
     public SpreadsheetBiometricFileReader(@Value("${hr.company-zone:Africa/Cairo}") String companyZone) {
         this.companyZone = ZoneId.of(companyZone);
+    }
+
+    private static String text(Object value) {
+        return value == null ? "" : value.toString();
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
+    }
+
+    private static String safeRaw(Object value) {
+        return text(value).replace('|', '/');
     }
 
     @Override
@@ -54,7 +57,8 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
                 case "csv", "txt" -> readCsv(inputStream);
                 case "xlsx", "xls" -> readWorkbook(inputStream);
                 case "mdb", "accdb" -> readAccess(inputStream);
-                default -> throw new BusinessRuleException("Supported biometric files are CSV, XLSX, XLS, MDB, and ACCDB.", "BIO_UNSUPPORTED_FORMAT", HttpStatus.CONFLICT);
+                default ->
+                        throw new BusinessRuleException("Supported biometric files are CSV, XLSX, XLS, MDB, and ACCDB.", "BIO_UNSUPPORTED_FORMAT", HttpStatus.CONFLICT);
             };
         } catch (IOException exception) {
             throw new BusinessRuleException("Could not read the biometric file.", "BIO_FILE_READ_FAILED", HttpStatus.CONFLICT);
@@ -62,9 +66,11 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
     }
 
     private ParsedFile readAccess(InputStream inputStream) throws IOException {
+        long start = System.currentTimeMillis();
         var temporaryFile = Files.createTempFile("bemo-attendance-", ".mdb");
         try {
             Files.copy(inputStream, temporaryFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            log.info("Copied Access MDB to temp file: size={} bytes, path={}", Files.size(temporaryFile), temporaryFile);
             try (var database = DatabaseBuilder.open(temporaryFile.toFile())) {
                 if (!database.getTableNames().containsAll(Set.of("USERINFO", "CHECKINOUT"))) {
                     throw new BusinessRuleException("Access attendance backup must contain USERINFO and CHECKINOUT tables.", "BIO_ACCESS_TABLES_MISSING", HttpStatus.CONFLICT);
@@ -78,6 +84,7 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
                     userCodes.put(userId, text(row.get("Badgenumber")));
                     userNames.put(userId, text(row.get("Name")));
                 }
+                log.info("Access MDB loaded: {} users in USERINFO, {} total punches in CHECKINOUT table", userCodes.size(), punches.getRowCount());
                 var rows = new ArrayList<PunchRow>();
                 var errors = new ArrayList<RowError>();
                 int totalRows = 0;
@@ -97,6 +104,7 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
                         errors.add(new RowError(totalRows, readableMessage(exception), rawLine));
                     }
                 }
+                log.info("Access MDB reading completed in {}ms: totalRows={}, importedRows={}, errors={}", System.currentTimeMillis() - start, totalRows, importedRows, errors.size());
                 return new ParsedFile(List.copyOf(rows), List.copyOf(errors), totalRows, importedRows);
             }
         } finally {
@@ -107,7 +115,8 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
     private ParsedFile readCsv(InputStream inputStream) throws IOException {
         try (var reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             var headerLine = reader.readLine();
-            if (headerLine == null) throw new BusinessRuleException("The biometric file is empty.", "BIO_FILE_MISSING", HttpStatus.CONFLICT);
+            if (headerLine == null)
+                throw new BusinessRuleException("The biometric file is empty.", "BIO_FILE_MISSING", HttpStatus.CONFLICT);
             headerLine = headerLine.replace("\uFEFF", "");
             char delimiter = detectDelimiter(headerLine);
             var headers = indexHeaders(parseCsvLine(headerLine, delimiter));
@@ -131,7 +140,8 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
         try (var workbook = WorkbookFactory.create(inputStream)) {
             var sheet = workbook.getSheetAt(0);
             var headerRow = sheet.getRow(sheet.getFirstRowNum());
-            if (headerRow == null) throw new BusinessRuleException("The biometric sheet is empty.", "BIO_SHEET_MISSING", HttpStatus.CONFLICT);
+            if (headerRow == null)
+                throw new BusinessRuleException("The biometric sheet is empty.", "BIO_SHEET_MISSING", HttpStatus.CONFLICT);
             var formatter = new DataFormatter(Locale.ROOT);
             var headerValues = new ArrayList<String>();
             for (int index = 0; index < headerRow.getLastCellNum(); index++) {
@@ -187,9 +197,12 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
         }
         for (int index = 0; index < headers.size(); index++) {
             var normalized = normalize(headers.get(index));
-            if (Set.of("deviceuserid", "deviceuser", "badge", "badgenumber").contains(normalized)) result.putIfAbsent("deviceUserId", index);
-            if (Set.of("punchedat", "checktime", "timestamp", "datetime").contains(normalized)) result.putIfAbsent("punchedAt", index);
-            if (Set.of("employeename", "name", "username").contains(normalized)) result.putIfAbsent("employeeName", index);
+            if (Set.of("deviceuserid", "deviceuser", "badge", "badgenumber").contains(normalized))
+                result.putIfAbsent("deviceUserId", index);
+            if (Set.of("punchedat", "checktime", "timestamp", "datetime").contains(normalized))
+                result.putIfAbsent("punchedAt", index);
+            if (Set.of("employeename", "name", "username").contains(normalized))
+                result.putIfAbsent("employeeName", index);
         }
         if (result.containsKey("deviceUserId") && result.containsKey("punchedAt")) return result;
         var structuredKeys = Set.of("employeeCode", "day", "officialIn", "officialOut", "actualIn", "actualOut");
@@ -285,22 +298,24 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
         for (var formatter : List.of(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
                 DateTimeFormatter.ofPattern("yyyy-MM-dd H:mm:ss"), DateTimeFormatter.ofPattern("d/M/yyyy H:mm:ss"),
                 DateTimeFormatter.ofPattern("M/d/yyyy h:mm:ss a", Locale.ENGLISH))) {
-            try { return java.time.LocalDateTime.parse(normalized, formatter).atZone(companyZone).toInstant(); }
-            catch (DateTimeParseException ignored) { }
+            try {
+                return java.time.LocalDateTime.parse(normalized, formatter).atZone(companyZone).toInstant();
+            } catch (DateTimeParseException ignored) {
+            }
         }
-        try { return Instant.parse(normalized); }
-        catch (DateTimeParseException ignored) { throw new IllegalArgumentException("Invalid punch timestamp."); }
+        try {
+            return Instant.parse(normalized);
+        } catch (DateTimeParseException ignored) {
+            throw new IllegalArgumentException("Invalid punch timestamp.");
+        }
     }
 
     private Instant accessInstant(Object value) {
-        if (value instanceof java.time.LocalDateTime localDateTime) return localDateTime.atZone(companyZone).toInstant();
+        if (value instanceof java.time.LocalDateTime localDateTime)
+            return localDateTime.atZone(companyZone).toInstant();
         if (value instanceof java.util.Date date) return date.toInstant();
         return parseInstant(text(value));
     }
-
-    private static String text(Object value) { return value == null ? "" : value.toString(); }
-    private static String blankToNull(String value) { return value == null || value.isBlank() ? null : value.strip(); }
-    private static String safeRaw(Object value) { return text(value).replace('|', '/'); }
 
     private LocalDate parseDate(String value) {
         String normalized = value.strip();
@@ -308,8 +323,10 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
                 DateTimeFormatter.ofPattern("d/M/yyyy"), DateTimeFormatter.ofPattern("M/d/yyyy"),
                 DateTimeFormatter.ofPattern("d-M-yyyy"), DateTimeFormatter.ofPattern("d.M.yyyy"),
                 DateTimeFormatter.ofPattern("yyyy/M/d"))) {
-            try { return LocalDate.parse(normalized, formatter); }
-            catch (DateTimeParseException ignored) { }
+            try {
+                return LocalDate.parse(normalized, formatter);
+            } catch (DateTimeParseException ignored) {
+            }
         }
         throw new IllegalArgumentException("قيمة التاريخ غير صحيحة. استخدم تاريخ Excel أو صيغة يوم/شهر/سنة.");
     }
@@ -322,8 +339,10 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
         }
         for (var formatter : List.of(DateTimeFormatter.ISO_LOCAL_TIME, DateTimeFormatter.ofPattern("H:mm"),
                 DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH))) {
-            try { return LocalTime.parse(normalized, formatter).withNano(0); }
-            catch (DateTimeParseException ignored) { }
+            try {
+                return LocalTime.parse(normalized, formatter).withNano(0);
+            } catch (DateTimeParseException ignored) {
+            }
         }
         throw new IllegalArgumentException("Invalid attendance time.");
     }
@@ -350,7 +369,8 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
 
     private char detectDelimiter(String header) {
         if (header.chars().filter(character -> character == '\t').count() > 1) return '\t';
-        if (header.chars().filter(character -> character == ';').count() > header.chars().filter(character -> character == ',').count()) return ';';
+        if (header.chars().filter(character -> character == ';').count() > header.chars().filter(character -> character == ',').count())
+            return ';';
         return ',';
     }
 

@@ -10,7 +10,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -21,16 +20,19 @@ public class FiscalPeriodController {
 
     private final FiscalPeriodRepository repository;
     private final com.bemo.hr.finance.application.CloseChecklistService closeChecklistService;
+    private final com.bemo.hr.finance.application.close.PeriodCloseOrchestratorService periodCloseOrchestratorService;
 
     public FiscalPeriodController(FiscalPeriodRepository repository,
-                                com.bemo.hr.finance.application.CloseChecklistService closeChecklistService) {
+                                  com.bemo.hr.finance.application.CloseChecklistService closeChecklistService,
+                                  com.bemo.hr.finance.application.close.PeriodCloseOrchestratorService periodCloseOrchestratorService) {
         this.repository = repository;
         this.closeChecklistService = closeChecklistService;
+        this.periodCloseOrchestratorService = periodCloseOrchestratorService;
     }
 
     @GetMapping("/{id}/precheck")
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR')")
     public com.bemo.hr.finance.application.CloseChecklistSummary getClosePrecheck(@PathVariable String id) {
         return closeChecklistService.computePrecheck(id);
     }
@@ -69,8 +71,8 @@ public class FiscalPeriodController {
     @Transactional
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public FiscalPeriodApi.FiscalPeriodResponse updateStatus(@PathVariable String id,
-                                                            @Valid @RequestBody FiscalPeriodApi.UpdateStatusPayload payload,
-                                                            Authentication authentication) {
+                                                             @Valid @RequestBody FiscalPeriodApi.UpdateStatusPayload payload,
+                                                             Authentication authentication) {
         FiscalPeriod period = repository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("الفترة المالية غير موجودة", "FIN_FISCAL_PERIOD_NOT_FOUND", HttpStatus.CONFLICT));
         if (payload.expectedVersion() != null && payload.expectedVersion() != period.getVersion()) {
@@ -80,14 +82,8 @@ public class FiscalPeriodController {
 
         FiscalPeriod.Status newStatus = FiscalPeriod.Status.valueOf(payload.status().toUpperCase());
         if (newStatus == FiscalPeriod.Status.CLOSED) {
-            com.bemo.hr.finance.application.CloseChecklistSummary summary = closeChecklistService.computePrecheck(id);
-            if (!summary.canClose()) {
-                throw new BusinessRuleException(
-                        "لا يمكن إغلاق الفترة المالية لوجود قيود مسودة أو معلقات غير محلولة",
-                        "FISCAL_PERIOD_PRECHECK_FAILED",
-                        HttpStatus.CONFLICT
-                );
-            }
+            periodCloseOrchestratorService.executeClose(id, authentication.getName(), payload.expectedVersion());
+            return toResponse(repository.findById(id).orElseThrow());
         }
         period.updateStatus(newStatus, authentication.getName());
         return toResponse(repository.save(period));

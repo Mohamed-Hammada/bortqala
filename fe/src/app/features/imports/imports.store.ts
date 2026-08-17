@@ -10,6 +10,7 @@ import {
   BiometricDeviceSyncResult,
   BiometricSource,
   BiometricSourceRequest,
+  EmployeeCategoryOption,
   ImportBatch,
   ImportPreview,
   UnmatchedIdentity,
@@ -22,6 +23,7 @@ export class ImportsStore {
   readonly unmatched = signal<UnmatchedIdentity[]>([]);
   readonly devices = signal<BiometricDevice[]>([]);
   readonly sources = signal<BiometricSource[]>([]);
+  readonly categories = signal<EmployeeCategoryOption[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
@@ -29,16 +31,18 @@ export class ImportsStore {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const [batches, unmatched, devices, sources] = await Promise.all([
+      const [batches, unmatched, devices, sources, categories] = await Promise.all([
         firstValueFrom(this.http.get<ImportBatch[]>('/api/v1/imports')),
         firstValueFrom(this.http.get<UnmatchedIdentity[]>('/api/v1/imports/unmatched')),
         firstValueFrom(this.http.get<BiometricDevice[]>('/api/v1/imports/devices')),
         firstValueFrom(this.http.get<BiometricSource[]>('/api/v1/imports/sources')),
+        firstValueFrom(this.http.get<EmployeeCategoryOption[]>('/api/v1/categories')),
       ]);
       this.batches.set(batches);
       this.unmatched.set(unmatched);
       this.devices.set(devices);
       this.sources.set(sources);
+      this.categories.set(categories);
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));
     } finally {
@@ -107,6 +111,17 @@ export class ImportsStore {
       this.loading.set(false);
     }
   }
+  async isDuplicate(sourceId: string, checksum: string): Promise<boolean> {
+    try {
+      const result = await firstValueFrom(this.http.get<{ duplicate: boolean }>('/api/v1/imports/preflight', {
+        params: { sourceId, checksum },
+      }));
+      return !!result.duplicate;
+    } catch {
+      return false;
+    }
+  }
+
   async upload(file: File, sourceId: string) {
     this.loading.set(true);
     this.error.set(null);

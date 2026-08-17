@@ -36,9 +36,9 @@
     }
 
     &.active {
-      background: #FFF8E1;
+      background: var(--gold-glow);
       border-color: var(--gold);
-      color: #1F2937;
+      color: var(--ink);
       font-weight: 700;
     }
   }

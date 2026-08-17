@@ -261,6 +261,7 @@
             <input type="file" accept=".pdf,.png,.jpg,.jpeg,.xlsx" (change)="onDocumentFile($event)" />
             <input type="date" formControlName="expiryDate" />
             <label><input type="checkbox" formControlName="mandatory" /> {{ i18n.t('parties.mandatory') }}</label>
+            <button class="button secondary" type="button" (click)="downloadDocumentRequirements()">{{ i18n.t('common.downloadTemplate') }}</button>
             <button class="button secondary" type="submit">{{ i18n.t('parties.addDocument') }}</button>
           </form>
         </section>

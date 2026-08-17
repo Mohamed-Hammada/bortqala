@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.TenantId;
 
 import java.util.UUID;
 
@@ -13,6 +14,10 @@ public class PostingProfileLine {
 
     @Id
     private String id;
+
+    @TenantId
+    @Column(name = "app_id", nullable = false, length = 50)
+    private String appId;
 
     @Column(name = "profile_id", nullable = false, length = 36)
     private String profileId;
@@ -32,7 +37,8 @@ public class PostingProfileLine {
     @Column(name = "amount_source", nullable = false, length = 50)
     private String amountSource;
 
-    protected PostingProfileLine() {}
+    protected PostingProfileLine() {
+    }
 
     public PostingProfileLine(String profileId, int lineNo, String side, String accountSource, String fixedAccountId, String amountSource) {
         this.id = UUID.randomUUID().toString();
@@ -44,11 +50,31 @@ public class PostingProfileLine {
         this.amountSource = amountSource;
     }
 
-    public String getId() { return id; }
-    public String getProfileId() { return profileId; }
-    public int getLineNo() { return lineNo; }
-    public String getSide() { return side; }
-    public String getAccountSource() { return accountSource; }
-    public String getFixedAccountId() { return fixedAccountId; }
-    public String getAmountSource() { return amountSource; }
+    public String getId() {
+        return id;
+    }
+
+    public String getProfileId() {
+        return profileId;
+    }
+
+    public int getLineNo() {
+        return lineNo;
+    }
+
+    public String getSide() {
+        return side;
+    }
+
+    public String getAccountSource() {
+        return accountSource;
+    }
+
+    public String getFixedAccountId() {
+        return fixedAccountId;
+    }
+
+    public String getAmountSource() {
+        return amountSource;
+    }
 }

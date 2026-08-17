@@ -1,0 +1,53 @@
+id;translation_key;locale;text_value
+v254-001;BIO_AUTO_EMPLOYEE_CATEGORY_NOT_FOUND;ar-EG;فئة حضور الموظف المحددة غير موجودة.
+v254-002;BIO_AUTO_EMPLOYEE_CATEGORY_NOT_FOUND;en-US;The selected employee attendance category does not exist.
+v254-003;BIO_AUTO_EMPLOYEE_CATEGORY_INACTIVE;ar-EG;فئة حضور الموظف المحددة غير نشطة.
+v254-004;BIO_AUTO_EMPLOYEE_CATEGORY_INACTIVE;en-US;The selected employee attendance category is inactive.
+v254-005;BIO_AUTO_EMPLOYEE_CATEGORY_SCOPE;ar-EG;الفئة المحددة مخصصة للعمالة فقط ولا يمكن تعيينها للموظفين.
+v254-006;BIO_AUTO_EMPLOYEE_CATEGORY_SCOPE;en-US;The selected category is worker-only and cannot be assigned to employees.
+v254-007;BIO_AUTO_EMPLOYEE_CATEGORY_REQUIRED;ar-EG;اختر فئة حضور للموظفين قبل تفعيل الإنشاء التلقائي للموظفين.
+v254-008;BIO_AUTO_EMPLOYEE_CATEGORY_REQUIRED;en-US;Select an employee attendance category before enabling automatic employee creation.
+v254-009;BIO_AUTO_EMPLOYEE_CATEGORY_CODE_EXHAUSTED;ar-EG;تعذر تخصيص كود افتراضي لفئة موظفي البصمة.
+v254-010;BIO_AUTO_EMPLOYEE_CATEGORY_CODE_EXHAUSTED;en-US;Could not allocate a default biometric employee category code.
+v254-011;BIO_AUTO_EMPLOYEE_DEVICE_ID_TOO_LONG;ar-EG;رقم مستخدم جهاز البصمة أطول من الحد المسموح به لرقم جهاز الموظف.
+v254-012;BIO_AUTO_EMPLOYEE_DEVICE_ID_TOO_LONG;en-US;Biometric user ID is longer than the supported employee device ID length.
+v254-013;BIO_AUTO_EMPLOYEE_TYPE_INVALID;ar-EG;يجب أن يكون نوع توظيف الموظف التلقائي ثابتاً أو يومياً.
+v254-014;BIO_AUTO_EMPLOYEE_TYPE_INVALID;en-US;Automatic employee employment type must be FIXED or DAILY.
+v254-015;BIO_AUTO_EMPLOYEE_ACTIVE_FROM_MODE_INVALID;ar-EG;يجب أن يكون نمط تاريخ البداية تاريخ أول بصمة أو تاريخ الاستيراد.
+v254-016;BIO_AUTO_EMPLOYEE_ACTIVE_FROM_MODE_INVALID;en-US;Automatic employee active-from mode must be FIRST_PUNCH or IMPORT_DATE.
+v254-017;imports.autoCreateEmployees;ar-EG;إضافة الموظفين غير الموجودين تلقائياً
+v254-018;imports.autoCreateEmployees;en-US;Add missing employees automatically
+v254-019;imports.autoCreateEmployeesHint;ar-EG;عند الرفع أو مزامنة الجهاز، يتم إنشاء موظف جديد من رقم مستخدم جهاز البصمة والاسم المرصود، ثم ربط البصمات السابقة غير المرتبطة به.
+v254-020;imports.autoCreateEmployeesHint;en-US;During upload or device sync, a new employee is created from the device user ID and observed name, and previous unmatched punches are linked.
+v254-021;imports.autoCreateCategory;ar-EG;فئة الموظف الافتراضية
+v254-022;imports.autoCreateCategory;en-US;Default employee category
+v254-023;imports.autoCreateCategoryRequiredHint;ar-EG;يجب اختيار فئة؛ لن يتم إنشاء موظفين تلقائياً بدون الفئة المحددة.
+v254-024;imports.autoCreateCategoryRequiredHint;en-US;A category must be selected - employees will not be created automatically without a category.
+v254-025;imports.autoCreateCategoryWillBeCreated;ar-EG;لا توجد فئات موظفين نشطة. سيتم إنشاء فئة «موظفو البصمة - تلقائي» واستخدامها تلقائياً عند الحفظ.
+v254-026;imports.autoCreateCategoryWillBeCreated;en-US;No active employee categories exist. A default 'Biometric Employees - Auto' category will be created and assigned upon saving.
+v254-027;imports.autoCreateEmploymentType;ar-EG;نوع التوظيف الافتراضي
+v254-028;imports.autoCreateEmploymentType;en-US;Default employment type
+v254-029;imports.autoCreateActiveFrom;ar-EG;تاريخ بداية الموظف
+v254-030;imports.autoCreateActiveFrom;en-US;Employee active-from date
+v254-031;imports.autoCreateFirstPunch;ar-EG;تاريخ أول بصمة للموظف (افتراضي)
+v254-032;imports.autoCreateFirstPunch;en-US;Employee first punch date (default)
+v254-033;imports.autoCreateImportDate;ar-EG;تاريخ الاستيراد / المزامنة
+v254-034;imports.autoCreateImportDate;en-US;Import / sync date
+v254-035;imports.autoCreateEmployeeActive;ar-EG;إنشاء الموظف بحالة نشط (افتراضي)
+v254-036;imports.autoCreateEmployeeActive;en-US;Create employee as active (default)
+v254-037;imports.autoCreateImportedFields;ar-EG;حقول إلزامية يتم تعبئتها من البصمة تلقائياً:
+v254-038;imports.autoCreateImportedFields;en-US;Required fields populated from biometric record:
+v254-039;imports.autoCreateImportedFieldsHint;ar-EG;الاسم من اسم المستخدم في الملف/الجهاز، ورقم مستخدم جهاز البصمة من Device User ID. إذا لم يصل الاسم، يستخدم النظام اسماً احتياطياً واضحاً.
+v254-040;imports.autoCreateImportedFieldsHint;en-US;Full name from the file/device user name, and Device User ID from the biometric record. If name is missing, a clear fallback name is used.
+v254-041;imports.autoCreateEmployeesEnabled;ar-EG;إنشاء الموظفين تلقائياً
+v254-042;imports.autoCreateEmployeesEnabled;en-US;Auto-create employees enabled
+v254-043;imports.reimportReversedBatch;ar-EG;إعادة استيراد الملف
+v254-044;imports.reimportReversedBatch;en-US;Re-import file
+v254-045;imports.autoCreateCategoryRequired;ar-EG;اختر فئة الموظف قبل تفعيل الإنشاء التلقائي للموظفين.
+v254-046;imports.autoCreateCategoryRequired;en-US;Select an employee category before enabling automatic employee creation.
+v254-047;imports.autoCreateRequiredDefaults;ar-EG;أكمل الحقول الإلزامية الخاصة بإنشاء الموظفين تلقائياً.
+v254-048;imports.autoCreateRequiredDefaults;en-US;Complete the required fields for automatic employee creation.
+v254-049;employmentType.FIXED;ar-EG;ثابت
+v254-050;employmentType.FIXED;en-US;Fixed
+v254-051;employmentType.DAILY;ar-EG;يومي
+v254-052;employmentType.DAILY;en-US;Daily

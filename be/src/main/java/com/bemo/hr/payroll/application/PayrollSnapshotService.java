@@ -59,5 +59,6 @@ public class PayrollSnapshotService {
             String payrollPolicyId, long payrollPolicyVersion, BigDecimal workingHourDivisor,
             BigDecimal overtimeMultiplier, BigDecimal otherDeductions, BigDecimal otherBonuses,
             BigDecimal advanceBalance, BigDecimal advanceDeduction
-    ) { }
+    ) {
+    }
 }

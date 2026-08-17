@@ -6,12 +6,17 @@ import com.bemo.hr.finance.domain.JournalEntryLine;
 import com.bemo.hr.finance.infrastructure.AccountRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,14 +34,10 @@ public class FinancialStatementsReportService {
         this.journalEntryLineRepository = journalEntryLineRepository;
     }
 
-    public record BalanceSheetReport(BigDecimal totalAssets, BigDecimal totalLiabilities, BigDecimal totalEquity, BigDecimal netIncome, boolean balanced) {}
-    public record IncomeStatementReport(BigDecimal totalRevenue, BigDecimal totalExpenses, BigDecimal netIncome) {}
-    public record CashFlowReport(BigDecimal operatingCashFlow, BigDecimal investingCashFlow, BigDecimal financingCashFlow, BigDecimal netCashFlow) {}
-
     @Transactional(readOnly = true)
     public BalanceSheetReport getBalanceSheet(LocalDate asOfDate) {
         List<Account> accounts = accountRepository.findAll();
-        List<JournalEntry> postedEntries = journalEntryRepository.findByStatusOrderByEntryDateDesc(JournalEntry.Status.POSTED).stream()
+        List<JournalEntry> postedEntries = journalEntryRepository.findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED)).stream()
                 .filter(je -> !je.getEntryDate().isAfter(asOfDate))
                 .toList();
 
@@ -80,7 +81,7 @@ public class FinancialStatementsReportService {
     @Transactional(readOnly = true)
     public IncomeStatementReport getIncomeStatement(LocalDate startDate, LocalDate endDate) {
         List<Account> accounts = accountRepository.findAll();
-        List<JournalEntry> postedEntries = journalEntryRepository.findByStatusOrderByEntryDateDesc(JournalEntry.Status.POSTED).stream()
+        List<JournalEntry> postedEntries = journalEntryRepository.findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED)).stream()
                 .filter(je -> !je.getEntryDate().isBefore(startDate) && !je.getEntryDate().isAfter(endDate))
                 .toList();
 
@@ -111,12 +112,20 @@ public class FinancialStatementsReportService {
 
     @Transactional(readOnly = true)
     public CashFlowReport getCashFlowStatement(LocalDate startDate, LocalDate endDate) {
-        IncomeStatementReport inc = getIncomeStatement(startDate, endDate);
-        BigDecimal operating = inc.netIncome();
-        BigDecimal investing = BigDecimal.ZERO;
-        BigDecimal financing = BigDecimal.ZERO;
-        BigDecimal netCashFlow = operating.add(investing).add(financing);
+        throw new BusinessRuleException(
+                "Cash Flow Statement is unavailable until ledger-based cash classification is configured.",
+                "FIN_CASH_FLOW_NOT_IMPLEMENTED",
+                HttpStatus.NOT_IMPLEMENTED);
+    }
 
-        return new CashFlowReport(operating, investing, financing, netCashFlow);
+    public record BalanceSheetReport(BigDecimal totalAssets, BigDecimal totalLiabilities, BigDecimal totalEquity,
+                                     BigDecimal netIncome, boolean balanced) {
+    }
+
+    public record IncomeStatementReport(BigDecimal totalRevenue, BigDecimal totalExpenses, BigDecimal netIncome) {
+    }
+
+    public record CashFlowReport(BigDecimal operatingCashFlow, BigDecimal investingCashFlow,
+                                 BigDecimal financingCashFlow, BigDecimal netCashFlow) {
     }
 }

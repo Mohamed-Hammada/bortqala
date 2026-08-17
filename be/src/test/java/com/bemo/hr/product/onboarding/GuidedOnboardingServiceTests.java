@@ -1,12 +1,129 @@
 package com.bemo.hr.product.onboarding;
-import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;import com.bemo.hr.audit.application.AuditService;import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;import com.bemo.hr.product.pack.*;import com.bemo.hr.workforce.*;import org.junit.jupiter.api.*;import org.junit.jupiter.api.extension.ExtendWith;import org.mockito.*;import org.mockito.junit.jupiter.MockitoExtension;import tools.jackson.databind.ObjectMapper;import java.util.*;import static org.assertj.core.api.Assertions.*;import static org.mockito.ArgumentMatchers.*;import static org.mockito.Mockito.*;
+
+import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
+import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
+import com.bemo.hr.product.pack.*;
+import com.bemo.hr.workforce.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.ObjectMapper;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
-class GuidedOnboardingServiceTests{
-@Mock IndustryPackRepository packRepository;@Mock TenantIndustryPackRepository tenantPackRepository;@Mock IndustryOnboardingStepRepository stepRepository;@Mock OnboardingAssessmentRepository assessmentRepository;@Mock ContractorRepository contractorRepository;@Mock AttendanceCategoryRepository categoryRepository;@Mock WorkerRepository workerRepository;@Mock WorkforceImportBatchRepository workforceImportRepository;@Mock ImportBatchRepository attendanceImportRepository;@Mock WorkforceAdvanceRepository advanceRepository;@Mock ContractorSettlementRepository settlementRepository;@Mock AuditService auditService;GuidedOnboardingService service;IndustryPack definition;TenantIndustryPack installed;List<IndustryOnboardingStep>steps;
-@BeforeEach void setup(){definition=new IndustryPack("pack","CONTRACTOR_WORKFORCE_EG",1,"[]");installed=new TenantIndustryPack(definition,"install","admin","{}");steps=steps(installed.getId());service=new GuidedOnboardingService(packRepository,tenantPackRepository,stepRepository,assessmentRepository,contractorRepository,categoryRepository,workerRepository,workforceImportRepository,attendanceImportRepository,advanceRepository,settlementRepository,new ObjectMapper(),auditService);lenient().when(packRepository.findByCodeAndStatus(definition.getCode(),"ACTIVE")).thenReturn(Optional.of(definition));lenient().when(tenantPackRepository.findByPackId(definition.getId())).thenReturn(Optional.of(installed));lenient().when(tenantPackRepository.findByPackIdForUpdate(definition.getId())).thenReturn(Optional.of(installed));lenient().when(stepRepository.findByTenantPackIdOrderBySequenceNo(installed.getId())).thenReturn(steps);lenient().when(stepRepository.save(any())).thenAnswer(i->i.getArgument(0));lenient().when(assessmentRepository.findByTenantPackIdAndOperationId(eq(installed.getId()),anyString())).thenReturn(Optional.empty());lenient().when(assessmentRepository.save(any())).thenAnswer(i->i.getArgument(0));}
-@Test void overviewContainsOnlySelectedVerticalStepsAndActionableIssues(){var result=service.overview(definition.getCode());assertThat(result.steps()).extracting(GuidedOnboardingApi.StepResponse::key).containsExactly("industryPack.step.company","industryPack.step.contractors","industryPack.step.categories","industryPack.step.workers","industryPack.step.attendance","industryPack.step.advances","industryPack.step.settlement");assertThat(result.issues()).extracting(GuidedOnboardingApi.IssueResponse::route).contains("/workforce/contractors","/imports");assertThat(result.dataQualityScore()).isZero();}
-@Test void successfulImportAutomaticallyCompletesAttendanceAfterDependencies(){readyBusinessData();when(advanceRepository.count()).thenReturn(0L);when(settlementRepository.count()).thenReturn(0L);var result=service.assess(definition.getCode(),new GuidedOnboardingApi.AssessRequest("assess-1"),"admin");assertThat(result.steps().stream().filter(s->s.key().equals("industryPack.step.attendance")).findFirst().orElseThrow().status()).isEqualTo("COMPLETED");assertThat(result.steps().stream().filter(s->s.key().equals("industryPack.step.advances")).findFirst().orElseThrow().status()).isEqualTo("READY");assertThat(result.steps().stream().filter(s->s.key().equals("industryPack.step.settlement")).findFirst().orElseThrow().status()).isEqualTo("BLOCKED");}
-@Test void optionalSkipUnlocksFinalStepAndReadyRequiresQuality(){readyBusinessData();when(settlementRepository.count()).thenReturn(1L);service.assess(definition.getCode(),new GuidedOnboardingApi.AssessRequest("first"),"admin");steps.get(5).complete("admin",true);steps.get(6).ready();var result=service.assess(definition.getCode(),new GuidedOnboardingApi.AssessRequest("second"),"admin");assertThat(result.setupProgress()).isEqualTo(100);assertThat(result.dataQualityScore()).isEqualTo(100);assertThat(result.readiness()).isEqualTo("READY");assertThat(result.steps().get(5).status()).isEqualTo("SKIPPED");}
-@Test void operationReplayDoesNotReassessOrDuplicateAudit(){var snapshot=new OnboardingAssessment(installed.getId(),"same",80,80,"IN_PROGRESS","[]","admin");when(assessmentRepository.findByTenantPackIdAndOperationId(installed.getId(),"same")).thenReturn(Optional.of(snapshot));var result=service.assess(definition.getCode(),new GuidedOnboardingApi.AssessRequest("same"),"admin");assertThat(result.dataQualityScore()).isEqualTo(80);verify(assessmentRepository,never()).save(any());verifyNoInteractions(auditService);}
-private void readyBusinessData(){when(contractorRepository.count()).thenReturn(1L);when(categoryRepository.count()).thenReturn(1L);when(workerRepository.count()).thenReturn(1L);when(workforceImportRepository.existsByStatus("IMPORTED")).thenReturn(true);}
-private static List<IndustryOnboardingStep>steps(String pack){String[]keys={"industryPack.step.company","industryPack.step.contractors","industryPack.step.categories","industryPack.step.workers","industryPack.step.attendance","industryPack.step.advances","industryPack.step.settlement"};List<IndustryOnboardingStep>result=new ArrayList<>();String previous=null;for(int i=0;i<keys.length;i++){result.add(new IndustryOnboardingStep(pack,keys[i],i+1,previous,i==5));previous=keys[i];}return result;}}
+class GuidedOnboardingServiceTests {
+    @Mock
+    IndustryPackRepository packRepository;
+    @Mock
+    TenantIndustryPackRepository tenantPackRepository;
+    @Mock
+    IndustryOnboardingStepRepository stepRepository;
+    @Mock
+    OnboardingAssessmentRepository assessmentRepository;
+    @Mock
+    ContractorRepository contractorRepository;
+    @Mock
+    AttendanceCategoryRepository categoryRepository;
+    @Mock
+    WorkerRepository workerRepository;
+    @Mock
+    WorkforceImportBatchRepository workforceImportRepository;
+    @Mock
+    ImportBatchRepository attendanceImportRepository;
+    @Mock
+    WorkforceAdvanceRepository advanceRepository;
+    @Mock
+    ContractorSettlementRepository settlementRepository;
+    @Mock
+    AuditService auditService;
+    GuidedOnboardingService service;
+    IndustryPack definition;
+    TenantIndustryPack installed;
+    List<IndustryOnboardingStep> steps;
+
+    private static List<IndustryOnboardingStep> steps(String pack) {
+        String[] keys = {"industryPack.step.company", "industryPack.step.contractors", "industryPack.step.categories", "industryPack.step.workers", "industryPack.step.attendance", "industryPack.step.advances", "industryPack.step.settlement"};
+        List<IndustryOnboardingStep> result = new ArrayList<>();
+        String previous = null;
+        for (int i = 0; i < keys.length; i++) {
+            result.add(new IndustryOnboardingStep(pack, keys[i], i + 1, previous, i == 5));
+            previous = keys[i];
+        }
+        return result;
+    }
+
+    @BeforeEach
+    void setup() {
+        definition = new IndustryPack("pack", "CONTRACTOR_WORKFORCE_EG", 1, "[]");
+        installed = new TenantIndustryPack(definition, "install", "admin", "{}");
+        steps = steps(installed.getId());
+        service = new GuidedOnboardingService(packRepository, tenantPackRepository, stepRepository, assessmentRepository, contractorRepository, categoryRepository, workerRepository, workforceImportRepository, attendanceImportRepository, advanceRepository, settlementRepository, new ObjectMapper(), auditService);
+        lenient().when(packRepository.findByCodeAndStatus(definition.getCode(), "ACTIVE")).thenReturn(Optional.of(definition));
+        lenient().when(tenantPackRepository.findByPackId(definition.getId())).thenReturn(Optional.of(installed));
+        lenient().when(tenantPackRepository.findByPackIdForUpdate(definition.getId())).thenReturn(Optional.of(installed));
+        lenient().when(stepRepository.findByTenantPackIdOrderBySequenceNo(installed.getId())).thenReturn(steps);
+        lenient().when(stepRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        lenient().when(assessmentRepository.findByTenantPackIdAndOperationId(eq(installed.getId()), anyString())).thenReturn(Optional.empty());
+        lenient().when(assessmentRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+    }
+
+    @Test
+    void overviewContainsOnlySelectedVerticalStepsAndActionableIssues() {
+        var result = service.overview(definition.getCode());
+        assertThat(result.steps()).extracting(GuidedOnboardingApi.StepResponse::key).containsExactly("industryPack.step.company", "industryPack.step.contractors", "industryPack.step.categories", "industryPack.step.workers", "industryPack.step.attendance", "industryPack.step.advances", "industryPack.step.settlement");
+        assertThat(result.issues()).extracting(GuidedOnboardingApi.IssueResponse::route).contains("/workforce/contractors", "/imports");
+        assertThat(result.dataQualityScore()).isZero();
+    }
+
+    @Test
+    void successfulImportAutomaticallyCompletesAttendanceAfterDependencies() {
+        readyBusinessData();
+        when(advanceRepository.count()).thenReturn(0L);
+        when(settlementRepository.count()).thenReturn(0L);
+        var result = service.assess(definition.getCode(), new GuidedOnboardingApi.AssessRequest("assess-1"), "admin");
+        assertThat(result.steps().stream().filter(s -> s.key().equals("industryPack.step.attendance")).findFirst().orElseThrow().status()).isEqualTo("COMPLETED");
+        assertThat(result.steps().stream().filter(s -> s.key().equals("industryPack.step.advances")).findFirst().orElseThrow().status()).isEqualTo("READY");
+        assertThat(result.steps().stream().filter(s -> s.key().equals("industryPack.step.settlement")).findFirst().orElseThrow().status()).isEqualTo("BLOCKED");
+    }
+
+    @Test
+    void optionalSkipUnlocksFinalStepAndReadyRequiresQuality() {
+        readyBusinessData();
+        when(settlementRepository.count()).thenReturn(1L);
+        service.assess(definition.getCode(), new GuidedOnboardingApi.AssessRequest("first"), "admin");
+        steps.get(5).complete("admin", true);
+        steps.get(6).ready();
+        var result = service.assess(definition.getCode(), new GuidedOnboardingApi.AssessRequest("second"), "admin");
+        assertThat(result.setupProgress()).isEqualTo(100);
+        assertThat(result.dataQualityScore()).isEqualTo(100);
+        assertThat(result.readiness()).isEqualTo("READY");
+        assertThat(result.steps().get(5).status()).isEqualTo("SKIPPED");
+    }
+
+    @Test
+    void operationReplayDoesNotReassessOrDuplicateAudit() {
+        var snapshot = new OnboardingAssessment(installed.getId(), "same", 80, 80, "IN_PROGRESS", "[]", "admin");
+        when(assessmentRepository.findByTenantPackIdAndOperationId(installed.getId(), "same")).thenReturn(Optional.of(snapshot));
+        var result = service.assess(definition.getCode(), new GuidedOnboardingApi.AssessRequest("same"), "admin");
+        assertThat(result.dataQualityScore()).isEqualTo(80);
+        verify(assessmentRepository, never()).save(any());
+        verifyNoInteractions(auditService);
+    }
+
+    private void readyBusinessData() {
+        when(contractorRepository.count()).thenReturn(1L);
+        when(categoryRepository.count()).thenReturn(1L);
+        when(workerRepository.count()).thenReturn(1L);
+        when(workforceImportRepository.existsByStatus("IMPORTED")).thenReturn(true);
+    }
+}

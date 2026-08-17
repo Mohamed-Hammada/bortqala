@@ -1,11 +1,6 @@
 package com.bemo.hr.workforce;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -17,20 +12,34 @@ import java.util.UUID;
 @Table(name = "worker_categories")
 @Getter
 public class WorkerCategory {
-    @Id private String id;
-    @TenantId @Column(name = "app_id", nullable = false) private String appId;
-    @Column(name = "category_id", length = 36) private String categoryId;
-    @Column(nullable = false, length = 50) private String code;
-    @Column(nullable = false, length = 160) private String name;
-    @Column(length = 500) private String description;
-    @Column(name = "default_daily_rate", precision = 12, scale = 2, nullable = false) private BigDecimal defaultDailyRate;
-    @Column(name = "standard_daily_hours", precision = 4, scale = 2, nullable = false) private BigDecimal standardDailyHours;
-    @Column(name = "default_settlement_cycle", nullable = false, length = 50) private String defaultSettlementCycle;
-    @Column(nullable = false, length = 30) private String status;
-    @Column(name = "created_at", nullable = false) private Instant createdAt;
-    @Column(name = "updated_at", nullable = false) private Instant updatedAt;
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(name = "category_id", length = 36)
+    private String categoryId;
+    @Column(nullable = false, length = 50)
+    private String code;
+    @Column(nullable = false, length = 160)
+    private String name;
+    @Column(length = 500)
+    private String description;
+    @Column(name = "default_daily_rate", precision = 12, scale = 2, nullable = false)
+    private BigDecimal defaultDailyRate;
+    @Column(name = "standard_daily_hours", precision = 4, scale = 2, nullable = false)
+    private BigDecimal standardDailyHours;
+    @Column(name = "default_settlement_cycle", nullable = false, length = 50)
+    private String defaultSettlementCycle;
+    @Column(nullable = false, length = 30)
+    private String status;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
-    protected WorkerCategory() { }
+    protected WorkerCategory() {
+    }
 
     public WorkerCategory(String code, String name, String description, BigDecimal defaultDailyRate,
                           BigDecimal standardDailyHours, String defaultSettlementCycle, String status) {
@@ -53,6 +62,14 @@ public class WorkerCategory {
         this.categoryId = canonicalCategoryId;
     }
 
-    @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
-    @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
+    @PrePersist
+    void prePersist() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
 }

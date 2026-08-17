@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { apiErrorMessage } from '../../core/api-error';
 import { downloadBlob } from '../../core/download';
 import { I18nService } from '../../core/i18n.service';
-import { BulkPaymentRequest, PaymentRequest, SheetResponse, SalaryPaymentExplanation } from './payroll.models';
+import { BulkPaymentRequest, PaymentRequest, PayrollGlPosting, ReversePaymentRequest, SheetResponse, SalaryPaymentExplanation, StatusTransitionRequest } from './payroll.models';
 
 @Injectable()
 export class PayrollStore {
@@ -25,6 +25,7 @@ export class PayrollStore {
   readonly loading = signal(true);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
+  readonly glPosting = signal<PayrollGlPosting | null>(null);
 
   async load(year: number, month: number, categoryId?: string): Promise<void> {
     this.loading.set(true);
@@ -32,15 +33,29 @@ export class PayrollStore {
     try {
       const params: Record<string, string | number> = { year, month };
       if (categoryId) params['categoryId'] = categoryId;
-      this.data.set(
-        await firstValueFrom(
-          this.httpClient.get<SheetResponse>('/api/v1/payroll', { params }),
-        ),
+      const sheet = await firstValueFrom(
+        this.httpClient.get<SheetResponse>('/api/v1/payroll', { params }),
       );
+      this.data.set(sheet);
+      if (sheet.periodStatus === 'POSTED' || sheet.periodStatus === 'PAID') {
+        await this.loadGlPosting(year, month);
+      } else {
+        this.glPosting.set(null);
+      }
     } catch (err) {
       this.error.set(apiErrorMessage(err, this.i18n));
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async loadGlPosting(year: number, month: number): Promise<void> {
+    try {
+      this.glPosting.set(await firstValueFrom(
+        this.httpClient.get<PayrollGlPosting>(`/api/v1/payroll/gl-posting/${year}/${month}`),
+      ));
+    } catch {
+      this.glPosting.set(null);
     }
   }
 
@@ -80,7 +95,7 @@ export class PayrollStore {
     }
   }
 
-  async transitionStatus(payload: { periodYear: number; periodMonth: number; targetStatus: any; categoryId?: string }): Promise<boolean> {
+  async transitionStatus(payload: StatusTransitionRequest): Promise<boolean> {
     this.saving.set(true);
     this.error.set(null);
     try {
@@ -98,7 +113,7 @@ export class PayrollStore {
     }
   }
 
-  async reversePayment(payload: { paymentId: string; reason: string }): Promise<boolean> {
+  async reversePayment(payload: ReversePaymentRequest): Promise<boolean> {
     this.saving.set(true);
     this.error.set(null);
     try {

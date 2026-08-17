@@ -1,6 +1,10 @@
 package com.bemo.hr.finance.application.close;
 
+import com.bemo.hr.finance.application.CloseChecklistService;
+import com.bemo.hr.finance.application.CloseChecklistSummary;
+import com.bemo.hr.finance.domain.FiscalPeriod;
 import com.bemo.hr.finance.domain.close.PeriodCloseExecutionRecord;
+import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
 import com.bemo.hr.finance.infrastructure.PeriodCloseExecutionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +22,9 @@ class PeriodCloseOrchestratorServiceTests {
     private PeriodCloseExecutionRepository repository;
     private ModuleCloseProvider mockProvider;
     private PeriodCloseOrchestratorService orchestratorService;
+    private FiscalPeriodRepository fiscalPeriodRepository;
+    private CloseChecklistService closeChecklistService;
+    private FiscalPeriod period;
 
     @BeforeEach
     void setUp() {
@@ -27,7 +34,15 @@ class PeriodCloseOrchestratorServiceTests {
         when(mockProvider.isPeriodCloseReady("2026-08")).thenReturn(true);
         when(mockProvider.getBlockerReason("2026-08")).thenReturn(Optional.empty());
 
-        orchestratorService = new PeriodCloseOrchestratorService(List.of(mockProvider), repository);
+        fiscalPeriodRepository = mock(FiscalPeriodRepository.class);
+        closeChecklistService = mock(CloseChecklistService.class);
+        period = new FiscalPeriod(2026, 8, "August", java.time.LocalDate.of(2026, 8, 1),
+                java.time.LocalDate.of(2026, 8, 31), FiscalPeriod.Status.OPEN);
+        when(fiscalPeriodRepository.findByIdForUpdate("2026-08")).thenReturn(Optional.of(period));
+        when(closeChecklistService.computePrecheck("2026-08"))
+                .thenReturn(new CloseChecklistSummary(period.getId(), period.getPeriodName(), true, List.of()));
+        orchestratorService = new PeriodCloseOrchestratorService(List.of(mockProvider), repository,
+                fiscalPeriodRepository, closeChecklistService);
     }
 
     @Test
@@ -39,10 +54,13 @@ class PeriodCloseOrchestratorServiceTests {
 
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        List<PeriodCloseExecutionRecord> records = orchestratorService.executeClose("2026-08");
+        List<PeriodCloseExecutionRecord> records = orchestratorService.executeClose("2026-08", "closer", 0L);
         assertThat(records).hasSize(1);
         assertThat(records.get(0).getStatus()).isEqualTo(PeriodCloseExecutionRecord.Status.CLOSED);
         verify(mockProvider).executeClose("2026-08");
+        assertThat(period.getStatus()).isEqualTo(FiscalPeriod.Status.CLOSED);
+        assertThat(period.getClosedBy()).isEqualTo("closer");
+        verify(fiscalPeriodRepository).save(period);
     }
 
     @Test
@@ -53,7 +71,7 @@ class PeriodCloseOrchestratorServiceTests {
 
         assertThat(report.allReady()).isFalse();
         assertThat(report.modules().get(0).blockerReason()).contains("Readiness check failed");
-        assertThatThrownBy(() -> orchestratorService.executeClose("2026-08"))
+        assertThatThrownBy(() -> orchestratorService.executeClose("2026-08", "closer", 0L))
                 .hasMessageContaining("blocked");
         verify(mockProvider, never()).executeClose(anyString());
     }

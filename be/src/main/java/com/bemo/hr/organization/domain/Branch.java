@@ -1,14 +1,8 @@
 package com.bemo.hr.organization.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -42,7 +36,8 @@ public class Branch {
     @Column(name = "updated_at", nullable = false)
     private long updatedAt;
 
-    protected Branch() {}
+    protected Branch() {
+    }
 
     public Branch(String companyId, String code, String name, String location, boolean active) {
         this.id = UUID.randomUUID().toString();
@@ -58,17 +53,45 @@ public class Branch {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getCompanyId() { return companyId; }
-    public String getCode() { return code; }
-    public String getName() { return name; }
-    public String getLocation() { return location; }
-    public boolean isActive() { return active; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getCompanyId() {
+        return companyId;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
 }

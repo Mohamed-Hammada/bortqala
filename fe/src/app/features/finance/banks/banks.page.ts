@@ -6,7 +6,7 @@ import { I18nService } from '../../../core/i18n.service';
 import { NotificationService } from '../../../core/notification.service';
 import { apiErrorMessage } from '../../../core/api-error';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
-import { exportCsv } from '../../../core/download';
+import { SampleTemplateService } from '../../../core/sample-template.service';
 
 export interface BankAccount {
   id: string;
@@ -38,6 +38,7 @@ export class BanksPage {
   readonly http = inject(HttpClient);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
+  readonly sampleTemplates = inject(SampleTemplateService);
 
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
@@ -134,15 +135,9 @@ export class BanksPage {
   onImportFile(event: Event): void { this.importFile.set((event.target as HTMLInputElement).files?.item(0) ?? null); }
 
   downloadStatementTemplate(): void {
-    exportCsv([
-      { date: '2026-08-01', valueDate: '2026-08-01', description: 'Customer receipt', reference: 'TRX-001', amount: 1250, balance: 11250 },
-      { date: '2026-08-02', valueDate: '2026-08-02', description: 'Supplier payment', reference: 'TRX-002', amount: -500, balance: 10750 },
-    ], [
-      { key: 'date', label: 'date' }, { key: 'valueDate', label: 'valueDate' },
-      { key: 'description', label: 'description' }, { key: 'reference', label: 'reference' },
-      { key: 'amount', label: 'amount' }, { key: 'balance', label: 'balance' },
-    ], 'bank-statement-import-template.csv');
-    this.notification.success(this.i18n.t('imports.templateDownloadSuccess'));
+    void this.sampleTemplates.bankStatement()
+      .then(() => this.notification.success(this.i18n.t('imports.templateDownloadSuccess')))
+      .catch(e => this.error.set(apiErrorMessage(e, this.i18n)));
   }
 
   async importStatement(): Promise<void> {

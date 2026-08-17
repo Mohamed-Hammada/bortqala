@@ -1,0 +1,29 @@
+.attendance-detail { display: grid; gap: 1rem; }
+.header-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+.summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: .75rem; }
+.summary-card, .card { background: var(--surface, #fff); border: 1px solid var(--border-color, #e5e7eb); border-radius: 14px; padding: 1rem; }
+.summary-card { display: grid; gap: .4rem; }
+.summary-card span, .identity-card span { opacity: .7; font-size: .85rem; }
+.summary-card strong { font-size: 1.2rem; }
+.identity-card { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1rem; }
+.identity-card > div { display: grid; gap: .3rem; }
+.section-title h2 { margin: 0 0 .25rem; }
+.section-title p { margin: 0; opacity: .72; }
+.table-card { overflow-x: auto; margin-top: 1rem; }
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: .7rem; border-bottom: 1px solid var(--border-color, #e5e7eb); text-align: start; vertical-align: top; }
+.ltr { direction: ltr; unicode-bidi: isolate; }
+.punches { display: flex; flex-wrap: wrap; gap: .35rem; }
+.punches span { background: rgba(127,127,127,.08); border-radius: 7px; padding: .2rem .4rem; font-size: .8rem; }
+.warning { display: block; margin-top: .25rem; color: #b45309; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.52); display: grid; place-items: center; padding: 1rem; }
+.add-dialog { width: min(760px, 96vw); max-height: 90vh; overflow: auto; background: var(--surface, #fff); color: inherit; border-radius: 16px; padding: 1.2rem; box-shadow: 0 18px 60px rgba(0,0,0,.25); }
+.dialog-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
+.dialog-head h2 { margin: 0; }
+.dialog-head p { opacity: .72; }
+.close { border: 0; background: transparent; font-size: 1.8rem; cursor: pointer; color: inherit; }
+.form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .85rem; margin: 1rem 0; }
+.form-grid label { display: grid; gap: .35rem; }
+.form-grid input, .form-grid select { width: 100%; box-sizing: border-box; padding: .65rem .7rem; border: 1px solid var(--border-color,#d1d5db); border-radius: 9px; background: var(--surface,#fff); color: inherit; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: .5rem; }
+@media (max-width: 850px) { .summary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .identity-card, .form-grid { grid-template-columns: 1fr; } }

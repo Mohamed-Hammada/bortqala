@@ -8,6 +8,8 @@ import java.util.List;
 @Repository
 public interface LaborDispatchRepository extends JpaRepository<LaborDispatch, String> {
     List<LaborDispatch> findAllByOrderByDispatchDateDescCreatedAtDesc();
+
     List<LaborDispatch> findByRequestId(String requestId);
+
     List<LaborDispatch> findByContractorId(String contractorId);
 }

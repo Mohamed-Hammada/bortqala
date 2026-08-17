@@ -1,0 +1,1104 @@
+diff --git a/be/src/main/java/com/bemo/hr/finance/application/CloseCheckItem.java b/be/src/main/java/com/bemo/hr/finance/application/CloseCheckItem.java
+index 538c64f..4e53ead 100644
+--- a/be/src/main/java/com/bemo/hr/finance/application/CloseCheckItem.java
++++ b/be/src/main/java/com/bemo/hr/finance/application/CloseCheckItem.java
+@@ -1,6 +1,7 @@
+ package com.bemo.hr.finance.application;
+ 
+ import java.math.BigDecimal;
++import java.time.LocalDate;
+ 
+ public record CloseCheckItem(
+     String code,
+@@ -8,8 +9,17 @@ public record CloseCheckItem(
+     Severity severity,
+     long count,
+     BigDecimal amount,
+-    String message
++    String message,
++    BigDecimal glBalance,
++    BigDecimal subledgerBalance,
++    BigDecimal tolerance,
++    LocalDate asOfDate,
++    String reportReference
+ ) {
++    public CloseCheckItem(String code, String module, Severity severity, long count,
++                          BigDecimal amount, String message) {
++        this(code, module, severity, count, amount, message, null, null, null, null, null);
++    }
+     public enum Severity {
+         PASS, WARNING, BLOCKER
+     }
+diff --git a/be/src/main/java/com/bemo/hr/finance/application/CloseChecklistService.java b/be/src/main/java/com/bemo/hr/finance/application/CloseChecklistService.java
+index bed13ec..0d76fa7 100644
+--- a/be/src/main/java/com/bemo/hr/finance/application/CloseChecklistService.java
++++ b/be/src/main/java/com/bemo/hr/finance/application/CloseChecklistService.java
+@@ -6,6 +6,7 @@ import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
+ import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
+ import com.bemo.hr.shared.domain.BusinessRuleException;
+ import org.springframework.http.HttpStatus;
++import org.springframework.beans.factory.annotation.Value;
+ import org.springframework.stereotype.Service;
+ 
+ import java.math.BigDecimal;
+@@ -19,6 +20,9 @@ public class CloseChecklistService {
+     private final JournalEntryRepository journalEntryRepository;
+     private final List<SubledgerReconciliationProvider> reconciliationProviders;
+ 
++    @Value("${finance.close.reconciliation-tolerance:0.00}")
++    private BigDecimal reconciliationTolerance = BigDecimal.ZERO;
++
+     public CloseChecklistService(FiscalPeriodRepository fiscalPeriodRepository,
+                                  JournalEntryRepository journalEntryRepository,
+                                  List<SubledgerReconciliationProvider> reconciliationProviders) {
+@@ -56,31 +60,24 @@ public class CloseChecklistService {
+         }
+ 
+         // Check 2: Evaluate All Registered Subledger Reconciliation Providers
+-        boolean subledgerPass = true;
+         for (SubledgerReconciliationProvider provider : reconciliationProviders) {
+             var calc = provider.calculate(periodId, period.getEndDate());
+             BigDecimal absoluteDifference = calc.difference().abs();
+-            if (absoluteDifference.compareTo(new BigDecimal("10.00")) > 0) {
+-                subledgerPass = false;
+-                checks.add(new CloseCheckItem(
+-                        "SUBLEDGER_RECONCILIATION_" + provider.type().name(),
+-                        provider.type().name(),
+-                        CloseCheckItem.Severity.BLOCKER,
+-                        1,
+-                        absoluteDifference,
+-                        String.format("%s subledger absolute imbalance of %s exceeds tolerance.", provider.type().name(), absoluteDifference)
+-                ));
+-            }
+-        }
+-
+-        if (subledgerPass) {
++            boolean withinTolerance = absoluteDifference.compareTo(reconciliationTolerance) <= 0;
+             checks.add(new CloseCheckItem(
+-                    "SUBLEDGER_RECONCILIATION",
+-                    "FINANCE",
+-                    CloseCheckItem.Severity.PASS,
+-                    0,
+-                    BigDecimal.ZERO,
+-                    "Subledger balances are reconciled with GL control accounts."
++                    "SUBLEDGER_RECONCILIATION_" + provider.type().name(),
++                    provider.type().name(),
++                    withinTolerance ? CloseCheckItem.Severity.PASS : CloseCheckItem.Severity.BLOCKER,
++                    withinTolerance ? 0 : calc.sourceDifferences().size(),
++                    absoluteDifference,
++                    String.format("GL %s; subledger %s; absolute difference %s; tolerance %s; as of %s.",
++                            calc.glBalance(), calc.subledgerBalance(), absoluteDifference,
++                            reconciliationTolerance, period.getEndDate()),
++                    calc.glBalance(),
++                    calc.subledgerBalance(),
++                    reconciliationTolerance,
++                    period.getEndDate(),
++                    periodId + ":" + provider.type().name()
+             ));
+         }
+ 
+diff --git a/be/src/main/java/com/bemo/hr/finance/application/close/FinancialReconciliationProviders.java b/be/src/main/java/com/bemo/hr/finance/application/close/FinancialReconciliationProviders.java
+index 7940832..004d913 100644
+--- a/be/src/main/java/com/bemo/hr/finance/application/close/FinancialReconciliationProviders.java
++++ b/be/src/main/java/com/bemo/hr/finance/application/close/FinancialReconciliationProviders.java
+@@ -9,6 +9,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
+ 
+ import java.math.BigDecimal;
+ import java.time.LocalDate;
++import java.time.LocalDateTime;
++import java.util.ArrayList;
+ import java.util.List;
+ 
+ @Configuration
+@@ -24,9 +26,41 @@ public class FinancialReconciliationProviders {
+                 "CUSTOMER_INVOICE", 1);
+     }
+     @Bean SubledgerReconciliationProvider inventoryReconciliation(JdbcTemplate jdbc, FiscalPeriodRepository periods) {
+-        return provider(SubledgerReconciliationReport.SubledgerType.INVENTORY, jdbc, periods,
+-                "select id, item_id, total_value from stock_valuation_records where app_id=? and as_of_date=(select max(as_of_date) from stock_valuation_records where app_id=? and as_of_date<=?)",
+-                "INVENTORY_VALUATION", 1, true);
++        return new SubledgerReconciliationProvider() {
++            public SubledgerReconciliationReport.SubledgerType type() {
++                return SubledgerReconciliationReport.SubledgerType.INVENTORY;
++            }
++
++            public ReconciliationCalculation calculate(String periodId, LocalDate ignored) {
++                LocalDate end = periods.findById(periodId).orElseThrow().getEndDate();
++                LocalDateTime cutoff = end.plusDays(1).atStartOfDay();
++                String tenant = TenantContext.require();
++                String inventoryAccountId = jdbc.query(
++                        "select inventory_account_id from inventory_valuation_policies where app_id=?",
++                        (rs, n) -> rs.getString(1), tenant).stream().findFirst().orElse(null);
++                List<InventorySource> sourceRows = new ArrayList<>();
++                sourceRows.addAll(jdbc.query(
++                        "select id,movement_id,value_effect,journal_entry_id from inventory_movement_costs where app_id=? and occurred_at<?",
++                        (rs, n) -> new InventorySource(rs.getString(1), rs.getString(2), rs.getBigDecimal(3), rs.getString(4)),
++                        tenant, cutoff));
++                sourceRows.addAll(jdbc.query(
++                        "select id,operation_id,value_difference,journal_entry_id from inventory_revaluations where app_id=? and occurred_at<?",
++                        (rs, n) -> new InventorySource(rs.getString(1), rs.getString(2), rs.getBigDecimal(3), rs.getString(4)),
++                        tenant, cutoff));
++                BigDecimal subledger = sourceRows.stream().map(InventorySource::amount)
++                        .reduce(BigDecimal.ZERO, BigDecimal::add);
++                List<SourceDifference> differences = sourceRows.stream().map(source -> {
++                    BigDecimal sourceGl = inventoryJournalAmount(jdbc, tenant, source.journalId(), inventoryAccountId);
++                    return new SourceDifference(source.id(), source.reference(), source.amount(), sourceGl);
++                }).filter(source -> source.subledgerAmount().compareTo(source.glAmount()) != 0).toList();
++                BigDecimal gl = sourceRows.stream()
++                        .map(source -> inventoryJournalAmount(jdbc, tenant, source.journalId(), inventoryAccountId))
++                        .reduce(BigDecimal.ZERO, BigDecimal::add);
++                BigDecimal difference = gl.subtract(subledger);
++                return new ReconciliationCalculation(type(), gl, subledger, difference,
++                        difference.signum() == 0, differences);
++            }
++        };
+     }
+     @Bean SubledgerReconciliationProvider treasuryReconciliation(JdbcTemplate jdbc, FiscalPeriodRepository periods) {
+         return provider(SubledgerReconciliationReport.SubledgerType.TREASURY, jdbc, periods,
+@@ -66,4 +100,14 @@ public class FinancialReconciliationProviders {
+                 BigDecimal.class, sign, tenant, type, id, end);
+         return value == null ? BigDecimal.ZERO : value;
+     }
++
++    private BigDecimal inventoryJournalAmount(JdbcTemplate jdbc, String tenant, String journalId, String accountId) {
++        if (journalId == null || accountId == null) return BigDecimal.ZERO;
++        BigDecimal value = jdbc.queryForObject(
++                "select coalesce(sum(l.debit-l.credit),0) from journal_entries j join journal_entry_lines l on l.journal_entry_id=j.id where j.app_id=? and j.id=? and j.status='POSTED' and l.account_id=?",
++                BigDecimal.class, tenant, journalId, accountId);
++        return value == null ? BigDecimal.ZERO : value;
++    }
++
++    private record InventorySource(String id, String reference, BigDecimal amount, String journalId) {}
+ }
+diff --git a/be/src/main/java/com/bemo/hr/finance/domain/JournalEntry.java b/be/src/main/java/com/bemo/hr/finance/domain/JournalEntry.java
+index 51b513e..03298d9 100644
+--- a/be/src/main/java/com/bemo/hr/finance/domain/JournalEntry.java
++++ b/be/src/main/java/com/bemo/hr/finance/domain/JournalEntry.java
+@@ -114,7 +114,7 @@ public class JournalEntry {
+     public void post(String username) {
+         if (this.status != Status.APPROVED) {
+             throw new com.bemo.hr.shared.domain.BusinessRuleException(
+-                    "لا يمكن ترحيل قيد في حالة " + this.status + ". الترحيل مسموح فقط من حالة مسودة.",
++                    "Journal posting is allowed only from APPROVED status; current status is " + this.status + ".",
+                     "JOURNAL_STATE_INVALID", org.springframework.http.HttpStatus.CONFLICT);
+         }
+         this.status = Status.POSTED;
+diff --git a/be/src/main/java/com/bemo/hr/finance/domain/posting/SubledgerPostingService.java b/be/src/main/java/com/bemo/hr/finance/domain/posting/SubledgerPostingService.java
+index 96727c2..a935b1c 100644
+--- a/be/src/main/java/com/bemo/hr/finance/domain/posting/SubledgerPostingService.java
++++ b/be/src/main/java/com/bemo/hr/finance/domain/posting/SubledgerPostingService.java
+@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
+ import java.math.BigDecimal;
+ import java.time.LocalDate;
+ import java.util.List;
++import java.util.Map;
+ 
+ @Service
+ public class SubledgerPostingService {
+@@ -119,6 +120,80 @@ public class SubledgerPostingService {
+         return savedEntry;
+     }
+ 
++    @Transactional
++    public JournalEntry postProfileEvent(
++            String sourceModule, String sourceDocumentType, String sourceDocumentId, String businessEvent,
++            String operationId, LocalDate eventDate, String description,
++            Map<String, BigDecimal> amountSources, String fiscalPeriodId,
++            String partyId, String currency, String actor) {
++        JournalEntry replay = journalEntryRepository.findByOperationId(operationId).orElse(null);
++        if (replay != null) return replay;
++        if (amountSources == null || amountSources.isEmpty()) {
++            throw new BusinessRuleException("Posting amounts are required.",
++                    "SUBLEDGER_UNBALANCED_POSTING", HttpStatus.CONFLICT);
++        }
++        var fiscalPeriod = fiscalPeriodGuard.requireOpen(eventDate);
++        if (fiscalPeriodId != null && !fiscalPeriodId.equals(fiscalPeriod.getId())) {
++            throw new BusinessRuleException("The selected fiscal period does not cover the event date.",
++                    "SUBLEDGER_FISCAL_PERIOD_MISMATCH", HttpStatus.CONFLICT);
++        }
++        PostingProfile profile = postingProfileRepository
++                .findByBusinessEventAndActiveTrueOrderByEffectiveFromDesc(businessEvent).stream()
++                .filter(candidate -> !eventDate.isBefore(candidate.getEffectiveFrom())
++                        && (candidate.getEffectiveTo() == null || !eventDate.isAfter(candidate.getEffectiveTo())))
++                .findFirst()
++                .orElseThrow(() -> new BusinessRuleException("No effective posting profile is configured.",
++                        "SUBLEDGER_POSTING_PROFILE_REQUIRED", HttpStatus.CONFLICT));
++        List<PostingProfileLine> profileLines = postingProfileLineRepository.findByProfileIdOrderByLineNoAsc(profile.getId());
++        if (profileLines.isEmpty()) {
++            throw new BusinessRuleException("The posting profile has no lines.",
++                    "SUBLEDGER_POSTING_PROFILE_INVALID", HttpStatus.CONFLICT);
++        }
++        BigDecimal debitTotal = BigDecimal.ZERO;
++        BigDecimal creditTotal = BigDecimal.ZERO;
++        for (PostingProfileLine line : profileLines) {
++            if (!"FIXED".equalsIgnoreCase(line.getAccountSource())
++                    || line.getFixedAccountId() == null || line.getFixedAccountId().isBlank()) {
++                throw new BusinessRuleException("The posting profile account mapping is incomplete.",
++                        "SUBLEDGER_POSTING_PROFILE_INVALID", HttpStatus.CONFLICT);
++            }
++            BigDecimal amount = amountSources.get(line.getAmountSource());
++            if (amount == null || amount.signum() < 0) {
++                throw new BusinessRuleException("The posting profile amount mapping is incomplete.",
++                        "SUBLEDGER_POSTING_PROFILE_INVALID", HttpStatus.CONFLICT);
++            }
++            if ("DEBIT".equalsIgnoreCase(line.getSide())) debitTotal = debitTotal.add(amount);
++            else if ("CREDIT".equalsIgnoreCase(line.getSide())) creditTotal = creditTotal.add(amount);
++            else throw new BusinessRuleException("The posting profile side is invalid.",
++                        "SUBLEDGER_POSTING_PROFILE_INVALID", HttpStatus.CONFLICT);
++        }
++        if (debitTotal.signum() <= 0 || debitTotal.compareTo(creditTotal) != 0) {
++            throw new BusinessRuleException("Debit and credit amounts must be equal for subledger posting",
++                    "SUBLEDGER_UNBALANCED_POSTING", HttpStatus.CONFLICT);
++        }
++        String safeActor = actor == null || actor.isBlank() ? "SYSTEM_SUBLEDGER" : actor;
++        JournalEntry journalEntry = new JournalEntry("POST-" + System.currentTimeMillis(), eventDate, description,
++                sourceModule + ":" + sourceDocumentType + ":" + sourceDocumentId, fiscalPeriod.getId());
++        journalEntry.setOperationId(operationId);
++        journalEntry.setCurrency(currency == null || currency.isBlank() ? "EGP" : currency);
++        journalEntry.assignCreator(safeActor);
++        journalEntry.approve("SYSTEM_APPROVER");
++        journalEntry.post(safeActor);
++        JournalEntry savedEntry = journalEntryRepository.save(journalEntry);
++        journalSourceMetadataRepository.save(new JournalSourceMetadata(savedEntry.getId(), sourceDocumentType, sourceDocumentId));
++        for (PostingProfileLine line : profileLines) {
++            BigDecimal amount = amountSources.get(line.getAmountSource());
++            if (amount.signum() == 0) continue;
++            journalEntryLineRepository.save(new JournalEntryLine(savedEntry.getId(), line.getFixedAccountId(), partyId,
++                    "DEBIT".equalsIgnoreCase(line.getSide()) ? amount : BigDecimal.ZERO,
++                    "CREDIT".equalsIgnoreCase(line.getSide()) ? amount : BigDecimal.ZERO, description));
++        }
++        auditService.record("SUBLEDGER_POSTED", "JOURNAL_ENTRY", savedEntry.getId(), safeActor,
++                "Source " + sourceModule + ":" + sourceDocumentType + ":" + sourceDocumentId
++                        + "; operation=" + operationId, null);
++        return savedEntry;
++    }
++
+     private String fixedAccount(List<PostingProfileLine> lines, String side) {
+         return lines.stream()
+                 .filter(line -> side.equalsIgnoreCase(line.getSide()))
+diff --git a/be/src/main/java/com/bemo/hr/operations/api/InventoryValuationController.java b/be/src/main/java/com/bemo/hr/operations/api/InventoryValuationController.java
+index 5beda9d..b182482 100644
+--- a/be/src/main/java/com/bemo/hr/operations/api/InventoryValuationController.java
++++ b/be/src/main/java/com/bemo/hr/operations/api/InventoryValuationController.java
+@@ -1,36 +1,29 @@
+ package com.bemo.hr.operations.api;
+ 
+-import com.bemo.hr.operations.application.InventoryValuationSnapshotService;
+-import com.bemo.hr.operations.domain.StockValuationRecord;
++import com.bemo.hr.shared.domain.BusinessRuleException;
++import org.springframework.http.HttpStatus;
+ import org.springframework.security.access.prepost.PreAuthorize;
+ import org.springframework.web.bind.annotation.*;
+ 
+-import java.math.BigDecimal;
+-import java.time.LocalDate;
+-import java.util.List;
+-
+ @RestController
+ @RequestMapping("/api/v1/operations/inventory/valuation")
+ public class InventoryValuationController {
+ 
+-    private final InventoryValuationSnapshotService valuationService;
+-
+-    public InventoryValuationController(InventoryValuationSnapshotService valuationService) {
+-        this.valuationService = valuationService;
+-    }
+-
+-    public record CalculateValuationPayload(String asOfDate, BigDecimal defaultUnitCost) {}
+-    public record ReconcilePayload(String asOfDate, BigDecimal glBalance) {}
+-
+     @PostMapping("/calculate")
+     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'FINANCE_MANAGER')")
+-    public List<StockValuationRecord> calculateValuation(@RequestBody CalculateValuationPayload payload) {
+-        return valuationService.calculateValuation(LocalDate.parse(payload.asOfDate()), payload.defaultUnitCost());
++    public void calculateValuation() {
++        throw legacyEndpointDisabled();
+     }
+ 
+     @PostMapping("/reconciliation")
+     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
+-    public InventoryValuationSnapshotService.ValuationReconciliationResult reconcile(@RequestBody ReconcilePayload payload) {
+-        return valuationService.reconcileWithGeneralLedger(LocalDate.parse(payload.asOfDate()), payload.glBalance());
++    public void reconcile() {
++        throw legacyEndpointDisabled();
++    }
++
++    private BusinessRuleException legacyEndpointDisabled() {
++        return new BusinessRuleException(
++                "This legacy valuation endpoint is disabled. Use the authoritative movement-cost valuation report and finance reconciliation.",
++                "INVENTORY_VALUATION_LEGACY_DISABLED", HttpStatus.NOT_IMPLEMENTED);
+     }
+ }
+diff --git a/be/src/main/java/com/bemo/hr/operations/application/WarehouseInventoryService.java b/be/src/main/java/com/bemo/hr/operations/application/WarehouseInventoryService.java
+index 4ab7516..3442742 100644
+--- a/be/src/main/java/com/bemo/hr/operations/application/WarehouseInventoryService.java
++++ b/be/src/main/java/com/bemo/hr/operations/application/WarehouseInventoryService.java
+@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
+ import org.springframework.transaction.annotation.Transactional;
+ 
+ import java.math.BigDecimal;
++import java.util.Comparator;
+ import java.util.List;
+ 
+ @Service
+@@ -118,11 +119,17 @@ public class WarehouseInventoryService {
+             throw new BusinessRuleException("Select an active inventory item.",
+                     "WAREHOUSE_ITEM_ACTIVE_REQUIRED", HttpStatus.CONFLICT);
+         }
++        List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemIdForUpdate(warehouseId, itemId);
+         StockReservation replay = reservationRepository
+                 .findBySourceTypeAndSourceIdAndItemIdAndWarehouseId(sourceType, sourceId, itemId, warehouseId)
+                 .orElse(null);
+-        if (replay != null) return replay;
+-        List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemIdForUpdate(warehouseId, itemId);
++        if (replay != null) {
++            if (replay.getReservedQuantity().compareTo(quantity) != 0) {
++                throw new BusinessRuleException("A reservation replay must use the original quantity.",
++                        "RESERVATION_REPLAY_CONFLICT", HttpStatus.CONFLICT);
++            }
++            return replay;
++        }
+         BigDecimal available = availableStock(warehouseId, itemId, balances);
+         if (available.compareTo(quantity) < 0) {
+             throw new BusinessRuleException("Insufficient available stock for reservation", "INSUFFICIENT_STOCK_RESERVATION", HttpStatus.CONFLICT);
+@@ -164,18 +171,8 @@ public class WarehouseInventoryService {
+         if (reservation.getStatus() == StockReservation.Status.FULFILLED) return reservation;
+         List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemIdForUpdate(
+                 reservation.getWarehouseId(), reservation.getItemId());
+-        StockStatusBalance available = balances.stream()
+-                .filter(row -> row.getStatus() == StockStatusBalance.Status.AVAILABLE)
+-                .findFirst()
+-                .orElseThrow(() -> new BusinessRuleException("Warehouse stock balance was not found.",
+-                        "WAREHOUSE_STOCK_BALANCE_NOT_FOUND", HttpStatus.CONFLICT));
+-        if (available.getQuantity().compareTo(reservation.getReservedQuantity()) < 0) {
+-            throw new BusinessRuleException("Insufficient physical stock for the reserved delivery.",
+-                    "WAREHOUSE_STOCK_INSUFFICIENT", HttpStatus.CONFLICT);
+-        }
++        consumeAvailableBalances(balances, reservation.getReservedQuantity());
+         reservation.fulfill();
+-        available.adjustQuantity(reservation.getReservedQuantity().negate());
+-        balanceRepository.save(available);
+         return reservationRepository.save(reservation);
+     }
+ 
+@@ -215,17 +212,12 @@ public class WarehouseInventoryService {
+     public void issueAvailableStock(String warehouseId, String itemId, BigDecimal quantity) {
+         requirePositive(quantity);
+         requireActiveWarehouse(warehouseId);
+-        if (getAvailableStock(warehouseId, itemId).compareTo(quantity) < 0) {
++        List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemIdForUpdate(warehouseId, itemId);
++        if (availableStock(warehouseId, itemId, balances).compareTo(quantity) < 0) {
+             throw new BusinessRuleException("Insufficient available warehouse stock.",
+                     "WAREHOUSE_STOCK_INSUFFICIENT", HttpStatus.CONFLICT);
+         }
+-        StockStatusBalance balance = balanceRepository
+-                .findByWarehouseIdAndBinIdAndItemIdAndStatus(
+-                        warehouseId, "", itemId, StockStatusBalance.Status.AVAILABLE)
+-                .orElseThrow(() -> new BusinessRuleException("Warehouse stock balance was not found.",
+-                        "WAREHOUSE_STOCK_BALANCE_NOT_FOUND", HttpStatus.CONFLICT));
+-        balance.adjustQuantity(quantity.negate());
+-        balanceRepository.save(balance);
++        consumeAvailableBalances(balances, quantity);
+     }
+ 
+     @Transactional(readOnly = true)
+@@ -251,6 +243,26 @@ public class WarehouseInventoryService {
+         }
+     }
+ 
++    private void consumeAvailableBalances(List<StockStatusBalance> balances, BigDecimal quantity) {
++        BigDecimal remaining = quantity;
++        List<StockStatusBalance> availableBalances = balances.stream()
++                .filter(row -> row.getStatus() == StockStatusBalance.Status.AVAILABLE)
++                .filter(row -> row.getQuantity().signum() > 0)
++                .sorted(Comparator.comparing(StockStatusBalance::getBinId))
++                .toList();
++        for (StockStatusBalance balance : availableBalances) {
++            if (remaining.signum() == 0) break;
++            BigDecimal consumed = balance.getQuantity().min(remaining);
++            balance.adjustQuantity(consumed.negate());
++            balanceRepository.save(balance);
++            remaining = remaining.subtract(consumed);
++        }
++        if (remaining.signum() > 0) {
++            throw new BusinessRuleException("Insufficient physical stock across warehouse bins.",
++                    "WAREHOUSE_STOCK_INSUFFICIENT", HttpStatus.CONFLICT);
++        }
++    }
++
+     private void requireActiveWarehouse(String warehouseId) {
+         if (warehouseId == null || warehouseId.isBlank()
+                 || warehouseRepository.findById(warehouseId).filter(Warehouse::isActive).isEmpty()) {
+diff --git a/be/src/main/java/com/bemo/hr/payroll/api/PayrollApi.java b/be/src/main/java/com/bemo/hr/payroll/api/PayrollApi.java
+index 1b1488b..bf91056 100644
+--- a/be/src/main/java/com/bemo/hr/payroll/api/PayrollApi.java
++++ b/be/src/main/java/com/bemo/hr/payroll/api/PayrollApi.java
+@@ -87,13 +87,6 @@ public final class PayrollApi {
+             @NotNull @Min(2000) Integer periodYear,
+             @NotNull @Min(1) Integer periodMonth,
+             String periodKind,
+-            LocalDate periodStart,
+-            LocalDate periodEnd,
+-            BigDecimal grossAmount,
+-            BigDecimal advancesDeducted,
+-            BigDecimal otherDeductions,
+-            BigDecimal bonuses,
+-            BigDecimal netAmount,
+             PaymentMethod paymentMethod,
+             String referenceCode,
+             String note,
+@@ -113,8 +106,7 @@ public final class PayrollApi {
+     public record StatusTransitionRequest(
+             @NotNull @Min(2000) Integer periodYear,
+             @NotNull @Min(1) Integer periodMonth,
+-            @NotNull PaymentStatus targetStatus,
+-            String categoryId
++            @NotNull PaymentStatus targetStatus
+     ) { }
+ 
+     public record ReversePaymentRequest(
+diff --git a/be/src/main/java/com/bemo/hr/payroll/application/PayrollGlPostingService.java b/be/src/main/java/com/bemo/hr/payroll/application/PayrollGlPostingService.java
+index b6398fc..9322fe4 100644
+--- a/be/src/main/java/com/bemo/hr/payroll/application/PayrollGlPostingService.java
++++ b/be/src/main/java/com/bemo/hr/payroll/application/PayrollGlPostingService.java
+@@ -1,6 +1,8 @@
+ package com.bemo.hr.payroll.application;
+ 
++import com.bemo.hr.finance.domain.posting.SubledgerPostingService;
+ import com.bemo.hr.payroll.domain.PayrollGlPosting;
++import com.bemo.hr.payroll.domain.PayrollRunHeader;
+ import com.bemo.hr.payroll.infrastructure.PayrollGlPostingRepository;
+ import com.bemo.hr.shared.domain.BusinessRuleException;
+ import org.springframework.http.HttpStatus;
+@@ -8,26 +10,55 @@ import org.springframework.stereotype.Service;
+ import org.springframework.transaction.annotation.Transactional;
+ 
+ import java.math.BigDecimal;
++import java.util.Map;
+ 
+ @Service
+ public class PayrollGlPostingService {
++    public static final String PAYROLL_ACCRUAL_EVENT = "PAYROLL_ACCRUAL";
+ 
+-    private final PayrollGlPostingRepository repository;
++    private final PayrollGlPostingRepository payrollGlPostingRepository;
++    private final SubledgerPostingService subledgerPostingService;
+ 
+-    public PayrollGlPostingService(PayrollGlPostingRepository repository) {
+-        this.repository = repository;
++    public PayrollGlPostingService(PayrollGlPostingRepository payrollGlPostingRepository,
++                                   SubledgerPostingService subledgerPostingService) {
++        this.payrollGlPostingRepository = payrollGlPostingRepository;
++        this.subledgerPostingService = subledgerPostingService;
+     }
+ 
+     @Transactional
+-    public PayrollGlPosting postPayrollToGl(String payrollPeriodId, String journalId, BigDecimal grossAmount, BigDecimal netAmount) {
+-        PayrollGlPosting posting = repository.findByPayrollPeriodId(payrollPeriodId)
+-                .orElseGet(() -> new PayrollGlPosting(payrollPeriodId, journalId, grossAmount, netAmount));
+-        return repository.save(posting);
++    public PayrollGlPosting postApprovedRun(PayrollRunHeader run, String actor) {
++        PayrollGlPosting replay = payrollGlPostingRepository.findByPayrollPeriodId(run.getPeriodId()).orElse(null);
++        if (replay != null) return replay;
++        if (run.getStatus() != PayrollRunHeader.Status.APPROVED) {
++            throw new BusinessRuleException("Payroll GL posting requires an approved payroll run.",
++                    "PAYROLL_STATE_TRANSITION_INVALID", HttpStatus.CONFLICT);
++        }
++        if (run.getTotalGross() == null || run.getTotalGross().signum() <= 0) {
++            throw new BusinessRuleException("Payroll register has no positive gross amount to post.",
++                    "PAYROLL_REGISTER_EMPTY", HttpStatus.CONFLICT);
++        }
++        String safeActor = actor == null || actor.isBlank() ? "SYSTEM" : actor;
++        var journalEntry = subledgerPostingService.postProfileEvent(
++                "PAYROLL", "PAYROLL_RUN", run.getId(), PAYROLL_ACCRUAL_EVENT,
++                "PAYROLL-ACCRUAL:" + run.getId(), run.getRunDate(), "Payroll accrual " + run.getRunNumber(),
++                Map.of("TOTAL_GROSS", run.getTotalGross(), "TOTAL_NET", run.getTotalNet(),
++                        "TOTAL_DEDUCTIONS", run.getTotalDeductions()), null, null, null, safeActor);
++        return payrollGlPostingRepository.save(new PayrollGlPosting(
++                run.getPeriodId(), journalEntry.getId(), run.getTotalGross(), run.getTotalNet()));
++    }
++
++    @Deprecated
++    @Transactional
++    public PayrollGlPosting postPayrollToGl(String payrollPeriodId, String journalId,
++                                            BigDecimal grossAmount, BigDecimal netAmount) {
++        throw new BusinessRuleException("Payroll GL posting is server-managed through the payroll lifecycle.",
++                "PAYROLL_GL_POSTING_SERVER_MANAGED", HttpStatus.CONFLICT);
+     }
+ 
+     @Transactional(readOnly = true)
+     public PayrollGlPosting getGlPosting(String payrollPeriodId) {
+-        return repository.findByPayrollPeriodId(payrollPeriodId)
+-                .orElseThrow(() -> new BusinessRuleException("Payroll GL posting not found", "PAYROLL_GL_POSTING_NOT_FOUND", HttpStatus.NOT_FOUND));
++        return payrollGlPostingRepository.findByPayrollPeriodId(payrollPeriodId)
++                .orElseThrow(() -> new BusinessRuleException("Payroll GL posting not found",
++                        "PAYROLL_GL_POSTING_NOT_FOUND", HttpStatus.NOT_FOUND));
+     }
+ }
+diff --git a/be/src/main/java/com/bemo/hr/payroll/application/PayrollService.java b/be/src/main/java/com/bemo/hr/payroll/application/PayrollService.java
+index 115681d..49b75b6 100644
+--- a/be/src/main/java/com/bemo/hr/payroll/application/PayrollService.java
++++ b/be/src/main/java/com/bemo/hr/payroll/application/PayrollService.java
+@@ -57,6 +57,7 @@ public class PayrollService {
+     private final PayrollCalculationPolicyService payrollCalculationPolicyService;
+     private final PayrollRunHeaderRepository payrollRunHeaderRepository;
+     private final PayrollRunLineRepository payrollRunLineRepository;
++    private final PayrollGlPostingService payrollGlPostingService;
+ 
+     public List<PayrollApi.ExplanationResponse> getPaymentExplanation(String paymentId) {
+         var explanations = explanationRepository.findBySalaryPaymentIdOrderByCreatedAtAsc(paymentId);
+@@ -139,10 +140,19 @@ public class PayrollService {
+         BigDecimal totalPending = BigDecimal.ZERO;
+         BigDecimal totalAdvancesDeducted = BigDecimal.ZERO;
+ 
+-        PaymentStatus overallPeriodStatus = PaymentStatus.DRAFT;
+-        if (!payments.isEmpty()) {
+-            overallPeriodStatus = payments.get(0).getPaymentStatus();
+-        }
++        String runPeriodId = year + "-" + String.format("%02d", month) + ":FULL_MONTH";
++        PaymentStatus overallPeriodStatus = payrollRunHeaderRepository
++                .findFirstByPeriodIdOrderByCreatedAtDesc(runPeriodId)
++                .map(run -> switch (run.getStatus()) {
++                    case DRAFT -> PaymentStatus.DRAFT;
++                    case CALCULATED -> PaymentStatus.CALCULATED;
++                    case REVIEWED -> PaymentStatus.REVIEWED;
++                    case APPROVED -> PaymentStatus.APPROVED;
++                    case POSTED -> PaymentStatus.POSTED;
++                    case PAID -> PaymentStatus.PAID;
++                    case CANCELLED -> PaymentStatus.REVERSED;
++                })
++                .orElse(PaymentStatus.DRAFT);
+ 
+         for (var emp : employees) {
+             if (!emp.isActive()) continue;
+@@ -394,6 +404,10 @@ public class PayrollService {
+         };
+         String periodId = request.periodYear() + "-" + String.format("%02d", request.periodMonth()) + ":FULL_MONTH";
+         PayrollRunHeader run = resolveRun(periodId, YearMonth.of(request.periodYear(), request.periodMonth()).atEndOfMonth());
++        if (request.targetStatus() == PaymentStatus.POSTED && run.getStatus() == PayrollRunHeader.Status.POSTED) {
++            payrollGlPostingService.getGlPosting(periodId);
++            return getSheet(request.periodYear(), request.periodMonth(), null);
++        }
+         boolean freezeSnapshots = request.targetStatus() == PaymentStatus.CALCULATED;
+         var sheet = buildSheet(request.periodYear(), request.periodMonth(), null, freezeSnapshots, actor, run.getId());
+         if (sheet.rows().isEmpty()) {
+@@ -436,6 +450,9 @@ public class PayrollService {
+                     sheet.rows().stream().map(PayrollApi.PayrollRow::netAmount)
+                             .reduce(BigDecimal.ZERO, BigDecimal::add));
+         } else {
++            if (request.targetStatus() == PaymentStatus.POSTED) {
++                payrollGlPostingService.postApprovedRun(run, actor);
++            }
+             run.transitionTo(PayrollRunHeader.Status.valueOf(request.targetStatus().name()));
+         }
+         payrollRunHeaderRepository.save(run);
+@@ -445,7 +462,7 @@ public class PayrollService {
+                         + ",\"previousStatus\":\"" + requiredCurrent + "\",\"newStatus\":\""
+                         + request.targetStatus().name() + "\",\"actor\":\"" + actor + "\"}", null);
+ 
+-        return getSheet(request.periodYear(), request.periodMonth(), request.categoryId());
++        return getSheet(request.periodYear(), request.periodMonth(), null);
+     }
+ 
+     private PayrollRunHeader resolveRun(String periodId, LocalDate runDate) {
+@@ -517,13 +534,6 @@ public class PayrollService {
+                         request.periodYear(),
+                         request.periodMonth(),
+                         row.periodKind(),
+-                        row.periodStart(),
+-                        row.periodEnd(),
+-                        row.grossAmount(),
+-                        row.advancesDeducted(),
+-                        row.otherDeductions(),
+-                        row.bonuses(),
+-                        row.netAmount(),
+                         request.paymentMethod() == null ? PaymentMethod.CASH : request.paymentMethod(),
+                         request.referenceCode(),
+                         request.note(),
+diff --git a/be/src/main/resources/application.properties b/be/src/main/resources/application.properties
+index 52fc394..2b17e03 100644
+--- a/be/src/main/resources/application.properties
++++ b/be/src/main/resources/application.properties
+@@ -45,3 +45,5 @@ hr.notifications.web-push.public-key=${HR_WEB_PUSH_PUBLIC_KEY:}
+ hr.notifications.web-push.private-key=${HR_WEB_PUSH_PRIVATE_KEY:}
+ hr.notifications.web-push.subject=${HR_WEB_PUSH_SUBJECT:}
+ hr.notifications.web-push.ttl-seconds=${HR_WEB_PUSH_TTL_SECONDS:86400}
++# Period close is fail-closed: every subledger must exactly match its GL control account.
++finance.close.reconciliation-tolerance=0.00
+diff --git a/be/src/main/resources/db/changelog/releases/next.changelog-master.yaml b/be/src/main/resources/db/changelog/releases/next.changelog-master.yaml
+index 1f65eb4..6418538 100644
+--- a/be/src/main/resources/db/changelog/releases/next.changelog-master.yaml
++++ b/be/src/main/resources/db/changelog/releases/next.changelog-master.yaml
+@@ -355,3 +355,5 @@ databaseChangeLog:
+       file: db/changelog/data/insert/20260813_v240_finance_workbench_translations.yaml
+   - include:
+       file: db/changelog/data/insert/20260813_v241_business_date_translation.yaml
++  - include:
++      file: db/changelog/data/insert/20260814_v242_consolidated_review_fixes.yaml
+diff --git a/be/src/test/java/com/bemo/hr/finance/application/CloseChecklistServiceTests.java b/be/src/test/java/com/bemo/hr/finance/application/CloseChecklistServiceTests.java
+index f0e80f1..dd2d2e0 100644
+--- a/be/src/test/java/com/bemo/hr/finance/application/CloseChecklistServiceTests.java
++++ b/be/src/test/java/com/bemo/hr/finance/application/CloseChecklistServiceTests.java
+@@ -6,6 +6,7 @@ import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+ 
++import java.math.BigDecimal;
+ import java.time.LocalDate;
+ import java.util.Optional;
+ 
+@@ -71,6 +72,13 @@ class CloseChecklistServiceTests {
+         assertThat(summary.canClose()).isFalse();
+         assertThat(summary.checks()).filteredOn(item -> item.code().equals("SUBLEDGER_RECONCILIATION_AP"))
+                 .singleElement().extracting(CloseCheckItem::amount).isEqualTo(new java.math.BigDecimal("12"));
++        CloseCheckItem evidence = summary.checks().stream()
++                .filter(item -> item.code().equals("SUBLEDGER_RECONCILIATION_AP")).findFirst().orElseThrow();
++        assertThat(evidence.glBalance()).isEqualByComparingTo("88");
++        assertThat(evidence.subledgerBalance()).isEqualByComparingTo("100");
++        assertThat(evidence.tolerance()).isEqualByComparingTo(BigDecimal.ZERO);
++        assertThat(evidence.asOfDate()).isEqualTo(LocalDate.of(2026, 1, 31));
++        assertThat(evidence.reportReference()).isEqualTo("p-1:AP");
+         verify(provider).calculate("p-1", LocalDate.of(2026, 1, 31));
+     }
+ }
+diff --git a/be/src/test/java/com/bemo/hr/finance/domain/posting/SubledgerPostingServiceTests.java b/be/src/test/java/com/bemo/hr/finance/domain/posting/SubledgerPostingServiceTests.java
+index 7ac08cc..1f7f30d 100644
+--- a/be/src/test/java/com/bemo/hr/finance/domain/posting/SubledgerPostingServiceTests.java
++++ b/be/src/test/java/com/bemo/hr/finance/domain/posting/SubledgerPostingServiceTests.java
+@@ -110,6 +110,32 @@ class SubledgerPostingServiceTests {
+                         error -> assertThat(error.getCode()).isEqualTo("SUBLEDGER_POSTING_PROFILE_REQUIRED"));
+     }
+ 
++    @Test
++    void profileEventPostsGrossAgainstNetAndDeductions() {
++        PostingProfile profile = new PostingProfile("PAYROLL", "PAYROLL_ACCRUAL", LocalDate.of(2026, 1, 1), null);
++        when(postingProfileRepository.findByBusinessEventAndActiveTrueOrderByEffectiveFromDesc("PAYROLL_ACCRUAL"))
++                .thenReturn(List.of(profile));
++        when(postingProfileLineRepository.findByProfileIdOrderByLineNoAsc(profile.getId())).thenReturn(List.of(
++                new PostingProfileLine(profile.getId(), 1, "DEBIT", "FIXED", "EXPENSE", "TOTAL_GROSS"),
++                new PostingProfileLine(profile.getId(), 2, "CREDIT", "FIXED", "PAYABLE", "TOTAL_NET"),
++                new PostingProfileLine(profile.getId(), 3, "CREDIT", "FIXED", "DEDUCTIONS", "TOTAL_DEDUCTIONS")));
++        when(journalEntryRepository.save(any(JournalEntry.class))).thenAnswer(inv -> inv.getArgument(0));
++
++        JournalEntry entry = subledgerPostingService.postProfileEvent("PAYROLL", "PAYROLL_RUN", "run-1",
++                "PAYROLL_ACCRUAL", "PAYROLL-ACCRUAL:run-1", LocalDate.of(2026, 2, 28), "Payroll accrual",
++                java.util.Map.of("TOTAL_GROSS", new BigDecimal("120"), "TOTAL_NET", new BigDecimal("100"),
++                        "TOTAL_DEDUCTIONS", new BigDecimal("20")), null, null, null, "payroll-admin");
++
++        var lineCaptor = org.mockito.ArgumentCaptor.forClass(JournalEntryLine.class);
++        verify(journalEntryLineRepository, times(3)).save(lineCaptor.capture());
++        assertThat(lineCaptor.getAllValues().stream().map(JournalEntryLine::getDebit)
++                .reduce(BigDecimal.ZERO, BigDecimal::add)).isEqualByComparingTo("120");
++        assertThat(lineCaptor.getAllValues().stream().map(JournalEntryLine::getCredit)
++                .reduce(BigDecimal.ZERO, BigDecimal::add)).isEqualByComparingTo("120");
++        assertThat(entry.getStatus()).isEqualTo(JournalEntry.Status.POSTED);
++        assertThat(entry.getPostedBy()).isEqualTo("payroll-admin");
++    }
++
+     @Test
+     void replaysOperationAndCreatesLinkedBalancedReversal() {
+         String opId = UUID.randomUUID().toString();
+diff --git a/be/src/test/java/com/bemo/hr/operations/application/WarehouseInventoryServiceTests.java b/be/src/test/java/com/bemo/hr/operations/application/WarehouseInventoryServiceTests.java
+index 9e12bd0..fc6323d 100644
+--- a/be/src/test/java/com/bemo/hr/operations/application/WarehouseInventoryServiceTests.java
++++ b/be/src/test/java/com/bemo/hr/operations/application/WarehouseInventoryServiceTests.java
+@@ -155,4 +155,43 @@ class WarehouseInventoryServiceTests {
+                 .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class)
+                 .extracting("code").isEqualTo("WAREHOUSE_BRANCH_REQUIRED");
+     }
++
++    @Test
++    void reservationReplayIsCheckedUnderBalanceLockAndRejectsChangedQuantity() {
++        StockStatusBalance balance = new StockStatusBalance("wh-1", "bin-1", "item-1",
++                StockStatusBalance.Status.AVAILABLE, new BigDecimal("10"));
++        StockReservation original = new StockReservation("R-1", "ORDER", "o-1", "item-1", "wh-1",
++                new BigDecimal("4"));
++        when(balanceRepository.findByWarehouseIdAndItemIdForUpdate("wh-1", "item-1")).thenReturn(List.of(balance));
++        when(reservationRepository.findBySourceTypeAndSourceIdAndItemIdAndWarehouseId(
++                "ORDER", "o-1", "item-1", "wh-1")).thenReturn(java.util.Optional.of(original));
++
++        assertThatThrownBy(() -> inventoryService.reserveStock("R-RETRY", "ORDER", "o-1",
++                "item-1", "wh-1", new BigDecimal("5")))
++                .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class)
++                .extracting("code").isEqualTo("RESERVATION_REPLAY_CONFLICT");
++        verify(balanceRepository).findByWarehouseIdAndItemIdForUpdate("wh-1", "item-1");
++        verify(reservationRepository, never()).save(any());
++    }
++
++    @Test
++    void consumesAReservationAcrossMultipleBinsInStableOrder() {
++        StockStatusBalance first = new StockStatusBalance("wh-1", "A", "item-1",
++                StockStatusBalance.Status.AVAILABLE, new BigDecimal("3"));
++        StockStatusBalance second = new StockStatusBalance("wh-1", "B", "item-1",
++                StockStatusBalance.Status.AVAILABLE, new BigDecimal("4"));
++        StockReservation reservation = new StockReservation("R-1", "ORDER", "o-1", "item-1", "wh-1",
++                new BigDecimal("5"));
++        when(reservationRepository.findById(reservation.getId())).thenReturn(java.util.Optional.of(reservation));
++        when(balanceRepository.findByWarehouseIdAndItemIdForUpdate("wh-1", "item-1"))
++                .thenReturn(List.of(second, first));
++        when(reservationRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
++
++        inventoryService.consumeReservation(reservation.getId());
++
++        assertThat(first.getQuantity()).isEqualByComparingTo(BigDecimal.ZERO);
++        assertThat(second.getQuantity()).isEqualByComparingTo("2");
++        assertThat(reservation.getStatus()).isEqualTo(StockReservation.Status.FULFILLED);
++        verify(balanceRepository, times(2)).save(any(StockStatusBalance.class));
++    }
+ }
+diff --git a/be/src/test/java/com/bemo/hr/payroll/PayrollPaymentConcurrencyTests.java b/be/src/test/java/com/bemo/hr/payroll/PayrollPaymentConcurrencyTests.java
+index c3735f5..b0486dc 100644
+--- a/be/src/test/java/com/bemo/hr/payroll/PayrollPaymentConcurrencyTests.java
++++ b/be/src/test/java/com/bemo/hr/payroll/PayrollPaymentConcurrencyTests.java
+@@ -174,8 +174,7 @@ class PayrollPaymentConcurrencyTests extends PostgresIntegrationTest {
+                 ready.countDown();
+                 start.await();
+                 PayrollApi.PaymentRequest request = new PayrollApi.PaymentRequest(
+-                        employeeId, 2026, 8, "FULL_MONTH", null, null, null, null,
+-                        BigDecimal.ZERO, BigDecimal.ZERO, null, PaymentMethod.BANK_TRANSFER,
++                        employeeId, 2026, 8, "FULL_MONTH", PaymentMethod.BANK_TRANSFER,
+                         "PAYCON", null, null, expectedVersion);
+                 try {
+                     payrollService.recordPayment(request, actor);
+diff --git a/be/src/test/java/com/bemo/hr/payroll/application/PayrollGlPostingServiceTests.java b/be/src/test/java/com/bemo/hr/payroll/application/PayrollGlPostingServiceTests.java
+index bc2a9be..ff02e09 100644
+--- a/be/src/test/java/com/bemo/hr/payroll/application/PayrollGlPostingServiceTests.java
++++ b/be/src/test/java/com/bemo/hr/payroll/application/PayrollGlPostingServiceTests.java
+@@ -1,7 +1,11 @@
+ package com.bemo.hr.payroll.application;
+ 
+ import com.bemo.hr.payroll.domain.PayrollGlPosting;
++import com.bemo.hr.payroll.domain.PayrollRunHeader;
+ import com.bemo.hr.payroll.infrastructure.PayrollGlPostingRepository;
++import com.bemo.hr.finance.domain.JournalEntry;
++import com.bemo.hr.finance.domain.posting.SubledgerPostingService;
++import com.bemo.hr.shared.domain.BusinessRuleException;
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+ 
+@@ -15,19 +19,30 @@ import static org.mockito.Mockito.*;
+ class PayrollGlPostingServiceTests {
+ 
+     private PayrollGlPostingRepository repository;
++    private SubledgerPostingService subledgerPostingService;
+     private PayrollGlPostingService service;
+ 
+     @BeforeEach
+     void setUp() {
+         repository = mock(PayrollGlPostingRepository.class);
+-        service = new PayrollGlPostingService(repository);
++        subledgerPostingService = mock(SubledgerPostingService.class);
++        service = new PayrollGlPostingService(repository, subledgerPostingService);
+     }
+ 
+     @Test
+-    void postsPayrollRunToGlSuccessfully() {
++    void postsApprovedPayrollRunThroughConfiguredProfile() {
+         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+-
+-        PayrollGlPosting posting = service.postPayrollToGl("period-2026-08", "jrnl-900", new BigDecimal("120000.00"), new BigDecimal("105000.00"));
++        PayrollRunHeader run = new PayrollRunHeader("PAY-2026-08", "period-2026-08", java.time.LocalDate.of(2026, 8, 31));
++        run.updateTotals(new BigDecimal("120000.00"), new BigDecimal("15000.00"), new BigDecimal("105000.00"));
++        run.transitionTo(PayrollRunHeader.Status.REVIEWED);
++        run.transitionTo(PayrollRunHeader.Status.APPROVED);
++        JournalEntry journalEntry = mock(JournalEntry.class);
++        when(journalEntry.getId()).thenReturn("jrnl-900");
++        when(subledgerPostingService.postProfileEvent(anyString(), anyString(), anyString(), anyString(),
++                anyString(), any(), anyString(), anyMap(), isNull(), isNull(), isNull(), anyString()))
++                .thenReturn(journalEntry);
++
++        PayrollGlPosting posting = service.postApprovedRun(run, "payroll-admin");
+         assertThat(posting).isNotNull();
+         assertThat(posting.getGrossAmount()).isEqualByComparingTo(new BigDecimal("120000.00"));
+         assertThat(posting.getNetAmount()).isEqualByComparingTo(new BigDecimal("105000.00"));
+@@ -36,4 +51,13 @@ class PayrollGlPostingServiceTests {
+         when(repository.findByPayrollPeriodId("period-2026-08")).thenReturn(Optional.of(posting));
+         assertThat(service.getGlPosting("period-2026-08")).isNotNull();
+     }
++
++    @Test
++    void rejectsLegacyClientSuppliedJournalAndAmounts() {
++        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.postPayrollToGl(
++                "period", "journal", BigDecimal.ONE, BigDecimal.ONE))
++                .isInstanceOf(BusinessRuleException.class)
++                .hasMessageContaining("server-managed");
++        verifyNoInteractions(subledgerPostingService);
++    }
+ }
+diff --git a/be/src/test/java/com/bemo/hr/payroll/application/PayrollServiceTests.java b/be/src/test/java/com/bemo/hr/payroll/application/PayrollServiceTests.java
+index 5cb361f..43fb7d0 100644
+--- a/be/src/test/java/com/bemo/hr/payroll/application/PayrollServiceTests.java
++++ b/be/src/test/java/com/bemo/hr/payroll/application/PayrollServiceTests.java
+@@ -65,6 +65,7 @@ class PayrollServiceTests {
+     @Mock private PayrollCalculationPolicyService payrollCalculationPolicyService;
+     @Mock private PayrollRunHeaderRepository payrollRunHeaderRepository;
+     @Mock private PayrollRunLineRepository payrollRunLineRepository;
++    @Mock private PayrollGlPostingService payrollGlPostingService;
+ 
+     @InjectMocks
+     private PayrollService payrollService;
+@@ -135,7 +136,7 @@ class PayrollServiceTests {
+         doThrow(new BusinessRuleException("blocked", "PAYROLL_ATTENDANCE_EXCEPTIONS_OPEN", HttpStatus.CONFLICT))
+                 .when(attendanceExceptionService).assertPayrollReady(report.getId(), employee.getId());
+         PayrollApi.PaymentRequest request = new PayrollApi.PaymentRequest(employee.getId(), 2026, 8, "FULL_MONTH",
+-                null, null, null, null, BigDecimal.ZERO, BigDecimal.ZERO, null, null, null, null, null, 0L);
++                null, null, null, null, 0L);
+         assertThatThrownBy(() -> payrollService.recordPayment(request, "payroll"))
+                 .isInstanceOf(BusinessRuleException.class).hasMessageContaining("blocked");
+         verify(attendanceExceptionService).assertPayrollReady(report.getId(), employee.getId());
+diff --git a/be/src/test/resources/db/changelog/releases/test-h2.changelog-master.yaml b/be/src/test/resources/db/changelog/releases/test-h2.changelog-master.yaml
+index 69dbd64..56e1212 100644
+--- a/be/src/test/resources/db/changelog/releases/test-h2.changelog-master.yaml
++++ b/be/src/test/resources/db/changelog/releases/test-h2.changelog-master.yaml
+@@ -723,3 +723,5 @@ databaseChangeLog:
+       file: db/changelog/data/insert/20260813_v240_finance_workbench_translations.yaml
+   - include:
+       file: db/changelog/data/insert/20260813_v241_business_date_translation.yaml
++  - include:
++      file: db/changelog/data/insert/20260814_v242_consolidated_review_fixes.yaml
+diff --git a/fe/src/app/features/fiscal-periods/fiscal-periods.models.ts b/fe/src/app/features/fiscal-periods/fiscal-periods.models.ts
+index fb7e5f8..1b042be 100644
+--- a/fe/src/app/features/fiscal-periods/fiscal-periods.models.ts
++++ b/fe/src/app/features/fiscal-periods/fiscal-periods.models.ts
+@@ -45,6 +45,11 @@ export interface CloseCheckItem {
+   count: number;
+   amount: number;
+   message: string;
++  glBalance?: number;
++  subledgerBalance?: number;
++  tolerance?: number;
++  asOfDate?: string;
++  reportReference?: string;
+ }
+ 
+ export interface ClosePrecheck {
+diff --git a/fe/src/app/features/fiscal-periods/fiscal-periods.page.html b/fe/src/app/features/fiscal-periods/fiscal-periods.page.html
+index 9a90755..1e956e7 100644
+--- a/fe/src/app/features/fiscal-periods/fiscal-periods.page.html
++++ b/fe/src/app/features/fiscal-periods/fiscal-periods.page.html
+@@ -77,7 +77,7 @@
+ 
+       <div class="close-grid">
+         <article class="panel"><h3>{{ i18n.t('financeWorkbench.precheck') }}</h3>
+-          @if (precheck(); as check) { <span class="status" [class.success]="check.canClose" [class.danger]="!check.canClose">{{ check.canClose ? i18n.t('financeWorkbench.ready') : i18n.t('financeWorkbench.blocked') }}</span><ul>@for (item of check.checks; track item.code) { <li><strong>{{ item.module }}</strong> — {{ item.message }} <span class="status" [class.success]="item.severity === 'PASS'" [class.danger]="item.severity === 'BLOCKER'">{{ item.severity }}</span></li> }</ul> }
++          @if (precheck(); as check) { <span class="status" [class.success]="check.canClose" [class.danger]="!check.canClose">{{ check.canClose ? i18n.t('financeWorkbench.ready') : i18n.t('financeWorkbench.blocked') }}</span><ul>@for (item of check.checks; track item.code) { <li><strong>{{ item.module }}</strong> — {{ item.message }} <span class="status" [class.success]="item.severity === 'PASS'" [class.danger]="item.severity === 'BLOCKER'">{{ item.severity }}</span>@if (item.reportReference) { <small class="details">{{ i18n.t('financeWorkbench.reportReference') }}: {{ item.reportReference }}</small> }</li> }</ul> }
+         </article>
+         <article class="panel"><h3>{{ i18n.t('financeWorkbench.moduleReadiness') }}</h3>
+           @if (readiness(); as state) { <span class="status" [class.success]="state.allReady" [class.danger]="!state.allReady">{{ state.allReady ? i18n.t('financeWorkbench.ready') : i18n.t('financeWorkbench.blocked') }}</span><ul>@for (module of state.modules; track module.moduleName) { <li><strong>{{ module.moduleName }}</strong> — {{ module.ready ? i18n.t('financeWorkbench.ready') : (module.blockerReason || i18n.t('financeWorkbench.blocked')) }}</li> }</ul> }
+diff --git a/fe/src/app/features/payroll/payroll.models.ts b/fe/src/app/features/payroll/payroll.models.ts
+index 5a5b4aa..93cff72 100644
+--- a/fe/src/app/features/payroll/payroll.models.ts
++++ b/fe/src/app/features/payroll/payroll.models.ts
+@@ -84,13 +84,6 @@ export interface PaymentRequest {
+   periodYear: number;
+   periodMonth: number;
+   periodKind?: string;
+-  periodStart?: string;
+-  periodEnd?: string;
+-  grossAmount?: number;
+-  advancesDeducted?: number;
+-  otherDeductions?: number;
+-  bonuses?: number;
+-  netAmount?: number;
+   paymentMethod?: PaymentMethod;
+   referenceCode?: string;
+   note?: string;
+@@ -111,7 +104,14 @@ export interface StatusTransitionRequest {
+   periodYear: number;
+   periodMonth: number;
+   targetStatus: PaymentStatus;
+-  categoryId?: string;
++}
++
++export interface PayrollGlPosting {
++  payrollPeriodId: string;
++  journalId: string;
++  grossAmount: number;
++  netAmount: number;
++  postedAt: number;
+ }
+ 
+ export interface ReversePaymentRequest {
+diff --git a/fe/src/app/features/payroll/payroll.page.html b/fe/src/app/features/payroll/payroll.page.html
+index 98c62ec..d394c98 100644
+--- a/fe/src/app/features/payroll/payroll.page.html
++++ b/fe/src/app/features/payroll/payroll.page.html
+@@ -64,6 +64,14 @@
+     [currentStatus]="store.data()?.periodStatus || 'DRAFT'"
+   />
+ 
++  @if (store.glPosting(); as posting) {
++    <div class="card gl-posting-card">
++      <strong>{{ i18n.t('payroll.glPostingReference') }}</strong>
++      <span class="ltr-text">{{ posting.journalId }}</span>
++      <small>{{ i18n.t('payroll.glPostingAmounts', { gross: posting.grossAmount, net: posting.netAmount }) }}</small>
++    </div>
++  }
++
+   <!-- Period & Year Selector & Status Filter -->
+   <div class="card filter-card">
+     <div class="period-selectors">
+@@ -99,6 +107,7 @@
+         </div>
+       }
+     </div>
++    <small>{{ i18n.t('payroll.fullMonthLifecycleNotice') }}</small>
+   </div>
+ 
+   <!-- Loading Skeleton State -->
+@@ -318,7 +327,7 @@
+             class="ltr"
+             type="number"
+             formControlName="advancesDeducted"
+-            (input)="recalculateNet()"
++            readonly
+           />
+         </div>
+ 
+@@ -329,7 +338,7 @@
+             class="ltr"
+             type="number"
+             formControlName="otherDeductions"
+-            (input)="recalculateNet()"
++            readonly
+           />
+         </div>
+ 
+@@ -340,7 +349,7 @@
+             class="ltr"
+             type="number"
+             formControlName="bonuses"
+-            (input)="recalculateNet()"
++            readonly
+           />
+         </div>
+ 
+diff --git a/fe/src/app/features/payroll/payroll.page.ts b/fe/src/app/features/payroll/payroll.page.ts
+index ac6f542..8a1c73a 100644
+--- a/fe/src/app/features/payroll/payroll.page.ts
++++ b/fe/src/app/features/payroll/payroll.page.ts
+@@ -87,9 +87,9 @@ export class PayrollPage {
+ 
+   readonly payForm = this.formBuilder.nonNullable.group({
+     grossAmount: [{ value: 0, disabled: true }],
+-    advancesDeducted: [0, [Validators.required, Validators.min(0)]],
+-    otherDeductions: [0, [Validators.required, Validators.min(0)]],
+-    bonuses: [0, [Validators.required, Validators.min(0)]],
++    advancesDeducted: [{ value: 0, disabled: true }],
++    otherDeductions: [{ value: 0, disabled: true }],
++    bonuses: [{ value: 0, disabled: true }],
+     netAmount: [{ value: 0, disabled: true }],
+     paymentMethod: ['CASH' as PaymentMethod, Validators.required],
+     referenceCode: [''],
+@@ -138,17 +138,6 @@ export class PayrollPage {
+     this.selectedRow.set(null);
+   }
+ 
+-  recalculateNet(): void {
+-    const row = this.selectedRow();
+-    if (!row) return;
+-    const gross = row.grossAmount;
+-    const advances = this.payForm.controls.advancesDeducted.value || 0;
+-    const deductions = this.payForm.controls.otherDeductions.value || 0;
+-    const bonuses = this.payForm.controls.bonuses.value || 0;
+-    const net = Math.max(0, gross - advances - deductions + bonuses);
+-    this.payForm.patchValue({ netAmount: net }, { emitEvent: false });
+-  }
+-
+   submitPayment(): void {
+     const row = this.selectedRow();
+     if (!row || this.payForm.invalid) return;
+@@ -171,13 +160,6 @@ export class PayrollPage {
+       periodYear: row.periodYear,
+       periodMonth: row.periodMonth,
+       periodKind: row.periodKind,
+-      periodStart: row.periodStart,
+-      periodEnd: row.periodEnd,
+-      grossAmount: row.grossAmount,
+-      advancesDeducted: raw.advancesDeducted,
+-      otherDeductions: raw.otherDeductions,
+-      bonuses: raw.bonuses,
+-      netAmount: Math.max(0, row.grossAmount - raw.advancesDeducted - raw.otherDeductions + raw.bonuses),
+       paymentMethod: raw.paymentMethod,
+       referenceCode: raw.referenceCode,
+       note: raw.note,
+@@ -204,7 +186,7 @@ export class PayrollPage {
+ 
+     if (titleKey && msgKey) {
+       this.confirmAction.set({
+-        message: `${this.i18n.t(titleKey)}\n\n${this.i18n.t(msgKey)}`,
++        message: `${this.i18n.t(titleKey)}\n\n${this.i18n.t(msgKey)}\n\n${this.i18n.t('payroll.fullMonthLifecycleNotice')}`,
+         onConfirm: () => {
+           this.confirmAction.set(null);
+           this.executeTransitionPeriod(targetStatus);
+@@ -220,10 +202,11 @@ export class PayrollPage {
+       periodYear: this.year(),
+       periodMonth: this.month(),
+       targetStatus,
+-      categoryId: this.selectedCategory(),
+     });
+ 
+     if (ok) {
++      if (targetStatus === 'POSTED') await this.store.loadGlPosting(this.year(), this.month());
++      await this.reload();
+       this.notification.success(this.i18n.t('payroll.statusUpdated', { status: targetStatus }));
+     }
+   }
+diff --git a/fe/src/app/features/payroll/payroll.store.ts b/fe/src/app/features/payroll/payroll.store.ts
+index b3e1b0e..a2993fd 100644
+--- a/fe/src/app/features/payroll/payroll.store.ts
++++ b/fe/src/app/features/payroll/payroll.store.ts
+@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
+ import { apiErrorMessage } from '../../core/api-error';
+ import { downloadBlob } from '../../core/download';
+ import { I18nService } from '../../core/i18n.service';
+-import { BulkPaymentRequest, PaymentRequest, ReversePaymentRequest, SheetResponse, SalaryPaymentExplanation, StatusTransitionRequest } from './payroll.models';
++import { BulkPaymentRequest, PaymentRequest, PayrollGlPosting, ReversePaymentRequest, SheetResponse, SalaryPaymentExplanation, StatusTransitionRequest } from './payroll.models';
+ 
+ @Injectable()
+ export class PayrollStore {
+@@ -25,6 +25,7 @@ export class PayrollStore {
+   readonly loading = signal(true);
+   readonly saving = signal(false);
+   readonly error = signal<string | null>(null);
++  readonly glPosting = signal<PayrollGlPosting | null>(null);
+ 
+   async load(year: number, month: number, categoryId?: string): Promise<void> {
+     this.loading.set(true);
+@@ -32,11 +33,15 @@ export class PayrollStore {
+     try {
+       const params: Record<string, string | number> = { year, month };
+       if (categoryId) params['categoryId'] = categoryId;
+-      this.data.set(
+-        await firstValueFrom(
+-          this.httpClient.get<SheetResponse>('/api/v1/payroll', { params }),
+-        ),
++      const sheet = await firstValueFrom(
++        this.httpClient.get<SheetResponse>('/api/v1/payroll', { params }),
+       );
++      this.data.set(sheet);
++      if (sheet.periodStatus === 'POSTED' || sheet.periodStatus === 'PAID') {
++        await this.loadGlPosting(year, month);
++      } else {
++        this.glPosting.set(null);
++      }
+     } catch (err) {
+       this.error.set(apiErrorMessage(err, this.i18n));
+     } finally {
+@@ -44,6 +49,16 @@ export class PayrollStore {
+     }
+   }
+ 
++  async loadGlPosting(year: number, month: number): Promise<void> {
++    try {
++      this.glPosting.set(await firstValueFrom(
++        this.httpClient.get<PayrollGlPosting>(`/api/v1/payroll/gl-posting/${year}/${month}`),
++      ));
++    } catch {
++      this.glPosting.set(null);
++    }
++  }
++
+   async recordPayment(payload: PaymentRequest): Promise<boolean> {
+     this.saving.set(true);
+     this.error.set(null);

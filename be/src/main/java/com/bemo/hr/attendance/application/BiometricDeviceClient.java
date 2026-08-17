@@ -8,7 +8,12 @@ import java.util.List;
 public interface BiometricDeviceClient {
     DeviceResponse fetch(BiometricDevice device, DeviceCredentials credentials);
 
-    record DeviceCredentials(String username, String password) { }
-    record DevicePunch(String deviceUserId, String employeeName, Instant punchedAt, String rawLine) { }
-    record DeviceResponse(byte[] rawContent, List<DevicePunch> punches) { }
+    record DeviceCredentials(String username, String password) {
+    }
+
+    record DevicePunch(String deviceUserId, String employeeName, Instant punchedAt, String rawLine) {
+    }
+
+    record DeviceResponse(byte[] rawContent, List<DevicePunch> punches) {
+    }
 }

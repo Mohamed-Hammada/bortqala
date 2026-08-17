@@ -20,6 +20,8 @@ import { EmptyStateComponent } from '../../shared/ui/empty-state/empty-state.com
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 
 @Component({
@@ -45,12 +47,15 @@ export class EmployeesPage {
   readonly notification = inject(NotificationService);
   private readonly confirm = inject(ConfirmDialogService);
   private readonly router = inject(Router);
+  private readonly http = inject(HttpClient);
   readonly drawerOpen = signal(false);
   readonly submitAttempted = signal(false);
   readonly pagination = new TablePagination();
   readonly editingId = signal<string | null>(null);
   readonly search = signal('');
   private closing = false;
+  private biometricReturnUrl: string | null = null;
+  private biometricMonth: string | null = null;
 
   openEmployeeAdvances(): void {
     void this.router.navigate(['/workforce/advances'], {
@@ -96,7 +101,7 @@ export class EmployeesPage {
   });
 
   constructor() {
-    void this.reload();
+    void this.reloadAndApplyBiometricPrefill();
     this.form.controls.categoryId.valueChanges.subscribe((catId) => {
       const cat = this.store.categories().find((c) => c.id === catId);
       if (cat?.attendanceMode === 'BIOMETRIC') {
@@ -106,6 +111,35 @@ export class EmployeesPage {
       }
       this.form.controls.deviceUserId.updateValueAndValidity();
     });
+  }
+
+  private async reloadAndApplyBiometricPrefill(): Promise<void> {
+    await this.store.load();
+    const qp = this.router.routerState.snapshot.root.queryParamMap;
+    if (qp.get('fromBiometric') !== '1') return;
+    this.biometricReturnUrl = qp.get('returnUrl');
+    this.biometricMonth = qp.get('month');
+    this.submitAttempted.set(false);
+    this.editingId.set(null);
+    this.form.reset({
+      employeeCode: qp.get('employeeCode') ?? '',
+      fullName: qp.get('fullName') ?? '',
+      deviceUserId: qp.get('deviceUserId') ?? '',
+      categoryId: this.store.categories().find((c) => c.attendanceMode === 'BIOMETRIC')?.id ?? this.store.categories()[0]?.id ?? '',
+      employmentType: 'FIXED',
+      baseSalary: 0,
+      activeFrom: new Date().toISOString().slice(0, 10),
+      activeTo: '',
+      active: true,
+      version: null,
+    });
+    const catId = this.form.controls.categoryId.value;
+    const cat = this.store.categories().find((c) => c.id === catId);
+    if (cat?.attendanceMode === 'BIOMETRIC') {
+      this.form.controls.deviceUserId.setValidators([Validators.required]);
+      this.form.controls.deviceUserId.updateValueAndValidity();
+    }
+    this.drawerOpen.set(true);
   }
 
   async reload(): Promise<void> {
@@ -169,6 +203,10 @@ export class EmployeesPage {
     if (await this.store.save(this.editingId(), payload)) {
       this.notification.success(this.i18n.t(this.editingId() ? 'employees.updateSuccess' : 'employees.createSuccess') + ' ✓');
       this.submitAttempted.set(false);
+      const returnUrl = this.biometricReturnUrl;
+      const month = this.biometricMonth;
+      this.biometricReturnUrl = null;
+      this.biometricMonth = null;
       this.form.reset({
         ...payload,
         deviceUserId: payload.deviceUserId ?? '',
@@ -176,6 +214,14 @@ export class EmployeesPage {
         activeTo: payload.activeTo ? epochToDateInput(payload.activeTo) : '',
       });
       this.drawerOpen.set(false);
+      if (returnUrl) {
+        if (month) {
+          const monthDate = new Date(month + '-01');
+          const ym = `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}`;
+          void firstValueFrom(this.http.post('/api/v1/reporting/attendance/recalculate', { yearMonth: ym }));
+        }
+        void this.router.navigateByUrl(returnUrl);
+      }
     }
   }
 

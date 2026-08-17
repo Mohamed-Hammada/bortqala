@@ -1,5 +1,10 @@
 # Bortqala ERP — Remaining Work & Release Acceptance Checklist
 
+> **Superseded on 2026-08-13:** Use
+> [`BORTQALA_CURRENT_CODE_REVIEW_REMAINING_WORK_2026-08-13.md`](BORTQALA_CURRENT_CODE_REVIEW_REMAINING_WORK_2026-08-13.md)
+> as the canonical active tracker. This older checklist uses overlapping item IDs
+> with different meanings and must not be used to claim current completion.
+
 **Branch:** `fm_bemo_consolidated`  
 **Audit date:** 2026-08-12  
 **Audit anchor / reviewed HEAD:** `a9430d3`  

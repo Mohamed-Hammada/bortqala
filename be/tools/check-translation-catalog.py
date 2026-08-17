@@ -15,7 +15,7 @@ LOCALES = {"ar-EG", "en-US"}
 
 def main() -> int:
     ids: dict[str, str] = {}
-    pairs: dict[tuple[str, str, str], str] = {}
+    pairs: dict[tuple[str, str, str], tuple[str, str]] = {}
     errors: list[str] = []
     rows_seen = 0
     dynamic_ids = 0
@@ -56,9 +56,17 @@ def main() -> int:
                     dynamic_ids += 1
                 pair = (scope, key, locale)
                 if pair in pairs:
-                    errors.append(f"{location}: duplicate key/locale {pair!r}; first at {pairs[pair]}")
+                    # A later file may intentionally redeclare a key with the
+                    # identical text as a delta backfill for databases that
+                    # already applied the earlier changeset (e.g. V251). Only
+                    # a conflicting value is a defect.
+                    if value != pairs[pair][1]:
+                        errors.append(
+                            f"{location}: duplicate key/locale {pair!r} with differing text; "
+                            f"first at {pairs[pair][0]}"
+                        )
                 else:
-                    pairs[pair] = location
+                    pairs[pair] = (location, value)
                 key_locales.setdefault((scope, key), set()).add(locale)
 
     for (scope, key), locales in sorted(key_locales.items()):

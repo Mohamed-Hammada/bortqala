@@ -22,12 +22,6 @@ public class VendorPaymentProposalController {
         this.proposalService = proposalService;
     }
 
-    public record AllocationPayload(@NotBlank String invoiceId,
-                                    @NotNull @DecimalMin(value = "0.01") BigDecimal amount) { }
-    public record CreateProposalPayload(@NotBlank String supplierId, String invoiceId, BigDecimal proposedAmount,
-                                        @NotNull LocalDate dueDate, List<@Valid AllocationPayload> allocations) { }
-    public record ExecuteProposalPayload(@NotBlank String operationId, @NotBlank String paymentMethod) {}
-
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public List<VendorPaymentProposalService.ProposalResult> getProposals() {
@@ -41,8 +35,8 @@ public class VendorPaymentProposalController {
         List<VendorPaymentProposalService.AllocationInput> allocations = payload.allocations() == null || payload.allocations().isEmpty()
                 ? List.of(new VendorPaymentProposalService.AllocationInput(payload.invoiceId(), payload.proposedAmount()))
                 : payload.allocations().stream()
-                        .map(allocation -> new VendorPaymentProposalService.AllocationInput(allocation.invoiceId(), allocation.amount()))
-                        .toList();
+                  .map(allocation -> new VendorPaymentProposalService.AllocationInput(allocation.invoiceId(), allocation.amount()))
+                  .toList();
         return proposalService.createProposal(payload.supplierId(), allocations, payload.dueDate(), principal.getName());
     }
 
@@ -55,8 +49,8 @@ public class VendorPaymentProposalController {
     @PostMapping("/{id}/execute")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public VendorPaymentProposalService.ProposalResult executeProposal(@PathVariable String id,
-                                                 @Valid @RequestBody ExecuteProposalPayload payload,
-                                                 java.security.Principal principal) {
+                                                                       @Valid @RequestBody ExecuteProposalPayload payload,
+                                                                       java.security.Principal principal) {
         return proposalService.executeProposal(id, payload.operationId(), payload.paymentMethod(), principal.getName());
     }
 
@@ -64,5 +58,16 @@ public class VendorPaymentProposalController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public List<VendorPaymentProposalService.ProposalResult> getProposalsForSupplier(@PathVariable String supplierId) {
         return proposalService.getProposalsForSupplier(supplierId);
+    }
+
+    public record AllocationPayload(@NotBlank String invoiceId,
+                                    @NotNull @DecimalMin(value = "0.01") BigDecimal amount) {
+    }
+
+    public record CreateProposalPayload(@NotBlank String supplierId, String invoiceId, BigDecimal proposedAmount,
+                                        @NotNull LocalDate dueDate, List<@Valid AllocationPayload> allocations) {
+    }
+
+    public record ExecuteProposalPayload(@NotBlank String operationId, @NotBlank String paymentMethod) {
     }
 }

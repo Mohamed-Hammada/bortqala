@@ -39,11 +39,8 @@ public class InventoryReservation {
     @Version
     private Long version;
 
-    public enum Status {
-        ACTIVE, FULFILLED, RELEASED
+    protected InventoryReservation() {
     }
-
-    protected InventoryReservation() {}
 
     public InventoryReservation(String sourceType, String sourceId, String itemId, String warehouseId, BigDecimal quantity) {
         this.id = UUID.randomUUID().toString();
@@ -63,13 +60,43 @@ public class InventoryReservation {
         this.status = Status.FULFILLED;
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getSourceType() { return sourceType; }
-    public String getSourceId() { return sourceId; }
-    public String getItemId() { return itemId; }
-    public String getWarehouseId() { return warehouseId; }
-    public BigDecimal getQuantity() { return quantity; }
-    public Status getStatus() { return status; }
-    public Long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getSourceType() {
+        return sourceType;
+    }
+
+    public String getSourceId() {
+        return sourceId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public String getWarehouseId() {
+        return warehouseId;
+    }
+
+    public BigDecimal getQuantity() {
+        return quantity;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public enum Status {
+        ACTIVE, FULFILLED, RELEASED
+    }
 }

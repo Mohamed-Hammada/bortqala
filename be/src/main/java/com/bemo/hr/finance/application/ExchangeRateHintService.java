@@ -16,11 +16,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class ExchangeRateHintService {
@@ -39,6 +35,15 @@ public class ExchangeRateHintService {
         this.currencyRepository = currencyRepository;
         this.settingRepository = settingRepository;
         this.frankfurterClient = frankfurterClient;
+    }
+
+    static BigDecimal toBaseRate(BigDecimal providerBaseToQuoteRate) {
+        if (providerBaseToQuoteRate == null || providerBaseToQuoteRate.signum() <= 0) {
+            throw new IllegalArgumentException("Provider rate must be greater than zero");
+        }
+        // Frankfurter: 1 BASE = X QUOTE.
+        // ERP manual rate convention: 1 QUOTE = X BASE.
+        return BigDecimal.ONE.divide(providerBaseToQuoteRate, 8, RoundingMode.HALF_UP);
     }
 
     @Transactional
@@ -161,15 +166,6 @@ public class ExchangeRateHintService {
             setting.recordFailure(attemptedAt, "FRANKFURTER_UNAVAILABLE");
             return failure(setting, "FRANKFURTER_UNAVAILABLE", baseCode);
         }
-    }
-
-    static BigDecimal toBaseRate(BigDecimal providerBaseToQuoteRate) {
-        if (providerBaseToQuoteRate == null || providerBaseToQuoteRate.signum() <= 0) {
-            throw new IllegalArgumentException("Provider rate must be greater than zero");
-        }
-        // Frankfurter: 1 BASE = X QUOTE.
-        // ERP manual rate convention: 1 QUOTE = X BASE.
-        return BigDecimal.ONE.divide(providerBaseToQuoteRate, 8, RoundingMode.HALF_UP);
     }
 
     private ExchangeRateHintSetting currentSetting() {

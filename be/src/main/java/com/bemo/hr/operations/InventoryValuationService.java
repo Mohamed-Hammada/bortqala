@@ -1,11 +1,7 @@
 package com.bemo.hr.operations;
 
 import com.bemo.hr.audit.application.AuditService;
-import com.bemo.hr.finance.domain.Account;
-import com.bemo.hr.finance.domain.FiscalPeriod;
-import com.bemo.hr.finance.domain.FiscalPeriodGuard;
-import com.bemo.hr.finance.domain.JournalEntry;
-import com.bemo.hr.finance.domain.JournalEntryLine;
+import com.bemo.hr.finance.domain.*;
 import com.bemo.hr.finance.infrastructure.AccountRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
@@ -46,7 +42,8 @@ public class InventoryValuationService {
     private final FiscalPeriodGuard fiscalPeriodGuard;
     private final DocumentNumberService documentNumberService;
     private final AuditService auditService;
-    @Value("${hr.company-zone:Africa/Cairo}") private String companyZone;
+    @Value("${hr.company-zone:Africa/Cairo}")
+    private String companyZone;
 
     public BigDecimal getItemUnitCost(String itemId) {
         BigDecimal qty = stockMovementRepository.balance(itemId);
@@ -134,7 +131,8 @@ public class InventoryValuationService {
                 .orElseGet(InventoryValuationPolicy::new);
         FiscalPeriod period = fiscalPeriodGuard.requireAdjustment(localDate(request.occurredAt()));
         BigDecimal quantity = stockMovementRepository.balance(item.getId());
-        if (quantity.signum() <= 0) throw conflict("Only positive on-hand inventory can be revalued.", "INV_VAL_REVALUE_NO_STOCK");
+        if (quantity.signum() <= 0)
+            throw conflict("Only positive on-hand inventory can be revalued.", "INV_VAL_REVALUE_NO_STOCK");
         BigDecimal oldValue = inventoryValue(item.getId());
         BigDecimal newValue = quantity.multiply(request.newUnitCost()).setScale(2, RoundingMode.HALF_UP);
         InventoryRevaluation revaluation = new InventoryRevaluation(item.getId(), request.operationId(), quantity,
@@ -182,7 +180,8 @@ public class InventoryValuationService {
         }
         if (policy.getValuationMethod() == InventoryValuationPolicy.Method.WEIGHTED_AVERAGE) {
             BigDecimal unitCost = currentAverage(movement.getItemId(), priorStock);
-            if (unitCost.signum() <= 0) throw conflict("Inventory has no valued cost available for issue.", "INV_VAL_COST_UNAVAILABLE");
+            if (unitCost.signum() <= 0)
+                throw conflict("Inventory has no valued cost available for issue.", "INV_VAL_COST_UNAVAILABLE");
             return new CostResult(unitCost, requestedQuantity.multiply(unitCost),
                     "WEIGHTED_AVERAGE issue: " + requestedQuantity + " × current average " + unitCost);
         }
@@ -198,7 +197,8 @@ public class InventoryValuationService {
         }
         if (remaining.signum() > 0) {
             BigDecimal openingCost = currentAverage(movement.getItemId(), priorStock);
-            if (openingCost.signum() <= 0) throw conflict("FIFO layers do not cover the requested issue.", "INV_VAL_FIFO_LAYER_SHORTAGE");
+            if (openingCost.signum() <= 0)
+                throw conflict("FIFO layers do not cover the requested issue.", "INV_VAL_FIFO_LAYER_SHORTAGE");
             total = total.add(remaining.multiply(openingCost));
             explanation.append(remaining).append(" @ opening cost ").append(openingCost);
         }
@@ -221,7 +221,7 @@ public class InventoryValuationService {
         String offset = movement.getOperationType().contains("ADJUSTMENT")
                 ? policy.getAdjustmentAccountId()
                 : movement.getOperationType().equals("CUSTOMER_RETURN") ? policy.getCogsAccountId()
-                : valueEffect.signum() > 0 ? policy.getReceiptOffsetAccountId() : policy.getCogsAccountId();
+                  : valueEffect.signum() > 0 ? policy.getReceiptOffsetAccountId() : policy.getCogsAccountId();
         return postJournal(policy.getInventoryAccountId(), offset, valueEffect, movement.getPartyId(),
                 "Inventory movement " + movement.getId(), movement.getReferenceCode(), localDate(movement.getOccurredAt()), period, actor);
     }
@@ -262,10 +262,12 @@ public class InventoryValuationService {
     }
 
     private Account requirePostingAccount(String id) {
-        if (id == null || id.isBlank()) throw conflict("All inventory GL accounts are required when posting is enabled.", "INV_VAL_GL_ACCOUNTS_REQUIRED");
+        if (id == null || id.isBlank())
+            throw conflict("All inventory GL accounts are required when posting is enabled.", "INV_VAL_GL_ACCOUNTS_REQUIRED");
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> conflict("Configured inventory GL account was not found.", "INV_VAL_GL_ACCOUNT_NOT_FOUND"));
-        if (account.isHeader() || !account.isActive()) throw conflict("Inventory GL accounts must be active posting accounts.", "INV_VAL_GL_ACCOUNT_NOT_POSTING");
+        if (account.isHeader() || !account.isActive())
+            throw conflict("Inventory GL accounts must be active posting accounts.", "INV_VAL_GL_ACCOUNT_NOT_POSTING");
         return account;
     }
 
@@ -286,8 +288,9 @@ public class InventoryValuationService {
     }
 
     private OperationsApi.ValuationPolicyView toPolicy(InventoryValuationPolicy policy) {
-        if (policy == null) return new OperationsApi.ValuationPolicyView(null, InventoryValuationPolicy.Method.WEIGHTED_AVERAGE,
-                null, null, null, null, false, false, 0, null, null);
+        if (policy == null)
+            return new OperationsApi.ValuationPolicyView(null, InventoryValuationPolicy.Method.WEIGHTED_AVERAGE,
+                    null, null, null, null, false, false, 0, null, null);
         return new OperationsApi.ValuationPolicyView(policy.getId(), policy.getValuationMethod(),
                 policy.getInventoryAccountId(), policy.getReceiptOffsetAccountId(), policy.getCogsAccountId(),
                 policy.getAdjustmentAccountId(), policy.isGlPostingEnabled(), policy.isAllowBackdatedPosting(),
@@ -300,7 +303,14 @@ public class InventoryValuationService {
                 value.getReason(), value.getJournalEntryId(), value.getOccurredAt(), value.getCreatedBy(), value.getCreatedAt());
     }
 
-    private LocalDate localDate(Instant instant) { return instant.atZone(ZoneId.of(companyZone)).toLocalDate(); }
-    private BusinessRuleException conflict(String message, String code) { return new BusinessRuleException(message, code, HttpStatus.CONFLICT); }
-    private record CostResult(BigDecimal unitCost, BigDecimal totalCost, String explanation) { }
+    private LocalDate localDate(Instant instant) {
+        return instant.atZone(ZoneId.of(companyZone)).toLocalDate();
+    }
+
+    private BusinessRuleException conflict(String message, String code) {
+        return new BusinessRuleException(message, code, HttpStatus.CONFLICT);
+    }
+
+    private record CostResult(BigDecimal unitCost, BigDecimal totalCost, String explanation) {
+    }
 }

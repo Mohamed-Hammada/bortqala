@@ -9,7 +9,9 @@ import java.util.Optional;
 
 public interface ScheduleRuleRepository extends JpaRepository<ScheduleRule, String> {
     List<ScheduleRule> findByCategoryIdOrderByEffectiveFromAsc(String categoryId);
+
     void deleteByCategoryId(String categoryId);
+
     Optional<ScheduleRule> findFirstByCategoryIdAndEffectiveFromLessThanEqualAndEffectiveToGreaterThanEqualOrderByEffectiveFromDesc(
             String categoryId, LocalDate from, LocalDate to);
 }

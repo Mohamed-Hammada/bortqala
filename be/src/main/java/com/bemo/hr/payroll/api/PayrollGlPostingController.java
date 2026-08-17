@@ -17,8 +17,6 @@ public class PayrollGlPostingController {
         this.glPostingService = glPostingService;
     }
 
-    public record PostPayrollToGlPayload(String payrollPeriodId, String journalId, BigDecimal grossAmount, BigDecimal netAmount) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public PayrollGlPosting postPayrollToGl(@RequestBody PostPayrollToGlPayload payload) {
@@ -29,5 +27,9 @@ public class PayrollGlPostingController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public PayrollGlPosting getGlPosting(@PathVariable String payrollPeriodId) {
         return glPostingService.getGlPosting(payrollPeriodId);
+    }
+
+    public record PostPayrollToGlPayload(String payrollPeriodId, String journalId, BigDecimal grossAmount,
+                                         BigDecimal netAmount) {
     }
 }

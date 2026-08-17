@@ -44,8 +44,8 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
     <div class="workforce-container">
       <header class="page-header">
         <div>
-          <span class="eyebrow">مصفوفة الإدخال اليدوي</span>
-          <h1>جدول تسجيل حضور العمالة — مصفوفة متعددة الأيام</h1>
+          <span class="eyebrow">{{ i18n.t('manualAttendance.ui.eyebrow') }}</span>
+          <h1>{{ i18n.t('manualAttendance.ui.title') }}</h1>
         </div>
         <div class="header-actions">
           <button type="button" class="btn btn-outline" (click)="openManualEntryModal()" [appTooltip]="i18n.t('manualAttendance.newEntry')">
@@ -72,53 +72,53 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
       <div class="card controls-card">
         <div class="controls-row">
           <div class="control-group">
-            <label for="manual-start-date">تاريخ البداية</label>
+            <label for="manual-start-date">{{ i18n.t('manualAttendance.ui.startDate') }}</label>
             <input id="manual-start-date" type="date" [(ngModel)]="startDate" class="form-input" (change)="onPeriodChange()"
-              appTooltip="تاريخ البداية — أول يوم يظهر في مصفوفة الحضور" />
+              [appTooltip]="i18n.t('manualAttendance.ui.startDateHelp')" />
           </div>
           <div class="control-group">
-            <label for="manual-end-date">تاريخ النهاية</label>
+            <label for="manual-end-date">{{ i18n.t('manualAttendance.ui.endDate') }}</label>
             <input id="manual-end-date" type="date" [(ngModel)]="endDate" class="form-input" (change)="onPeriodChange()"
-              appTooltip="تاريخ النهاية — آخر يوم يظهر في مصفوفة الحضور" />
+              [appTooltip]="i18n.t('manualAttendance.ui.endDateHelp')" />
           </div>
           <div class="control-group presets">
-            <label>اختصارات الفترة</label>
+            <label>{{ i18n.t('manualAttendance.ui.presets') }}</label>
             <div class="preset-btns">
-              <button type="button" class="btn btn-preset" (click)="setCurrentHalfMonth()">النصف الحالي</button>
-              <button type="button" class="btn btn-preset" (click)="setLastHalfMonth()">النصف السابق</button>
-              <button type="button" class="btn btn-preset" (click)="setCurrentMonth()">الشهر الكامل</button>
+              <button type="button" class="btn btn-preset" (click)="setCurrentHalfMonth()">{{ i18n.t('manualAttendance.ui.currentHalf') }}</button>
+              <button type="button" class="btn btn-preset" (click)="setLastHalfMonth()">{{ i18n.t('manualAttendance.ui.previousHalf') }}</button>
+              <button type="button" class="btn btn-preset" (click)="setCurrentMonth()">{{ i18n.t('manualAttendance.ui.fullMonth') }}</button>
             </div>
           </div>
           <div class="control-group">
-            <label for="manual-contractor">المقاول</label>
+            <label for="manual-contractor">{{ i18n.t('workforce.ui.contractor') }}</label>
             <select id="manual-contractor" [(ngModel)]="selectedContractorId" (change)="onFilterChange()" class="form-input"
-              appTooltip="المقاول — تصفية العمال حسب المقاول">
-              <option value="">الكل</option>
+              [appTooltip]="i18n.t('manualAttendance.ui.contractorHelp')">
+              <option value="">{{ i18n.t('workforce.ui.all') }}</option>
               @for (c of contractors(); track c.id) {
                 <option [value]="c.id">{{ c.name }}</option>
               }
             </select>
           </div>
           <div class="control-group">
-            <label for="manual-category">فئة العامل</label>
+            <label for="manual-category">{{ i18n.t('workforce.ui.dashboard.category') }}</label>
             <select id="manual-category" [(ngModel)]="selectedCategoryId" (change)="onFilterChange()" class="form-input"
-              appTooltip="فئة العامل — تصفية المصفوفة حسب الفئة">
-              <option value="">الكل</option>
+              [appTooltip]="i18n.t('manualAttendance.ui.categoryHelp')">
+              <option value="">{{ i18n.t('workforce.ui.all') }}</option>
               @for (cat of categories(); track cat.id) {
                 <option [value]="cat.id">{{ cat.name }}</option>
               }
             </select>
           </div>
           <div class="control-group">
-            <label for="manual-search">بحث بالاسم/الكود</label>
+            <label for="manual-search">{{ i18n.t('manualAttendance.ui.search') }}</label>
             <input id="manual-search" type="text" [(ngModel)]="searchText" (input)="onFilterChange()"
-              appTooltip="بحث العمال — اكتب الاسم أو الكود"
-              placeholder="ابحث..." class="form-input search-input" />
+              [appTooltip]="i18n.t('manualAttendance.ui.searchHelp')"
+              [placeholder]="i18n.t('manualAttendance.ui.searchPlaceholder')" class="form-input search-input" />
           </div>
           <div class="control-group">
-            <label for="manual-status">حالة الحضور</label>
+            <label for="manual-status">{{ i18n.t('manualAttendance.ui.attendanceStatus') }}</label>
               <select id="manual-status" [(ngModel)]="selectedAttendanceStatus" (change)="onFilterChange()" class="form-input"
-                appTooltip="حالة الحضور — عرض العمال الذين لديهم الحالة المختارة">
+                [appTooltip]="i18n.t('manualAttendance.ui.attendanceStatusHelp')">
               @for (opt of attendanceStatusOptions; track opt.value) {
                 <option [value]="opt.value">{{ opt.label }}</option>
               }
@@ -128,23 +128,22 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
             <label>&nbsp;</label>
             <label class="toggle-label">
               <input type="checkbox" [(ngModel)]="showInactive" (change)="onFilterChange()"
-                aria-label="إظهار العمال غير النشطين" appTooltip="إظهار غير النشطين — تضمين العمال الموقوفين في النتائج" />
-              <span class="toggle-text">إظهار العمال غير النشطين</span>
+                [attr.aria-label]="i18n.t('manualAttendance.ui.showInactive')" [appTooltip]="i18n.t('manualAttendance.ui.showInactiveHelp')" />
+              <span class="toggle-text">{{ i18n.t('manualAttendance.ui.showInactive') }}</span>
             </label>
           </div>
           <div class="control-group">
             <label>&nbsp;</label>
             <button type="button" class="btn btn-outline" (click)="refreshData()"
-              appTooltip="تحديث البيانات — إعادة تحميل المصفوفة من الخادم">
-              🔄 تحديث البيانات
+              [appTooltip]="i18n.t('manualAttendance.ui.refreshHelp')">
+              {{ i18n.t('manualAttendance.ui.refresh') }}
             </button>
           </div>
         </div>
         <div class="period-summary" *ngIf="dates().length > 0">
           <span class="badge-info">
-            📅 {{ dates().length }} يوم | من {{ startDate }} إلى {{ endDate }}
-            | {{ filteredWorkers().length }} عامل | إجمالي الخلايا: {{ dates().length * filteredWorkers().length }}
-            @if (dirtyCellKeys().size > 0) { | <strong>{{ dirtyCellKeys().size }} خلية معدلة غير محفوظة</strong> }
+            {{ i18n.t('manualAttendance.ui.periodSummary', { days: dates().length, start: startDate, end: endDate, workers: filteredWorkers().length, cells: dates().length * filteredWorkers().length }) }}
+            @if (dirtyCellKeys().size > 0) { | <strong>{{ i18n.t('manualAttendance.ui.unsavedCells', { count: dirtyCellKeys().size }) }}</strong> }
           </span>
         </div>
       </div>
@@ -153,19 +152,19 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
       @if (rules(); as r) {
         <div class="card rules-card">
           <details>
-            <summary class="rules-summary">📊 قواعد احتساب الحضور والانصراف</summary>
+            <summary class="rules-summary">{{ i18n.t('manualAttendance.ui.rules') }}</summary>
             <div class="rules-body">
               <div class="rule-item">
-                <span class="rule-label">معدل الأوفرتايم:</span>
-                <span class="rule-value">{{ r.overtimeRate }}× بعد {{ r.overtimeThresholdHours }} ساعات</span>
+                <span class="rule-label">{{ i18n.t('manualAttendance.ui.overtimeRate') }}</span>
+                <span class="rule-value">{{ i18n.t('manualAttendance.ui.overtimeRule', { rate: r.overtimeRate, hours: r.overtimeThresholdHours }) }}</span>
               </div>
               <div class="rule-item">
-                <span class="rule-label">معدل خصم ساعة:</span>
-                <span class="rule-value">الأجر اليومي ÷ {{ r.standardDailyHours }}</span>
+                <span class="rule-label">{{ i18n.t('manualAttendance.ui.hourDeduction') }}</span>
+                <span class="rule-value">{{ i18n.t('manualAttendance.ui.deductionRule', { hours: r.standardDailyHours }) }}</span>
               </div>
               <div class="rule-item">
-                <span class="rule-label">معدل أجر العطلات:</span>
-                <span class="rule-value">{{ r.holidayPayRate }}× الأجر العادي</span>
+                <span class="rule-label">{{ i18n.t('manualAttendance.ui.holidayRate') }}</span>
+                <span class="rule-value">{{ i18n.t('manualAttendance.ui.holidayRule', { rate: r.holidayPayRate }) }}</span>
               </div>
               <p class="rules-desc">{{ r.description }}</p>
             </div>
@@ -175,12 +174,12 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
 
       @if (saveSummary(); as summary) {
         <div class="card save-summary" role="status" aria-live="polite">
-          <strong>ملخص آخر عملية حفظ</strong>
-          <span class="summary-created">جديد: {{ summary.createdCount }}</span>
-          <span class="summary-updated">محدّث: {{ summary.updatedCount }}</span>
-          <span>متجاوز دون تغيير: {{ summary.skippedCount }}</span>
-          <span [class.summary-failed]="summary.failedCount > 0">فشل: {{ summary.failedCount }}</span>
-          @if (summary.failedCount > 0) { <small>صحّح الخلايا المعلّمة بالأحمر ثم أعد الحفظ؛ التعديلات الصحيحة محفوظة.</small> }
+          <strong>{{ i18n.t('manualAttendance.ui.lastSaveSummary') }}</strong>
+          <span class="summary-created">{{ i18n.t('manualAttendance.ui.created') }} {{ summary.createdCount }}</span>
+          <span class="summary-updated">{{ i18n.t('manualAttendance.ui.updated') }} {{ summary.updatedCount }}</span>
+          <span>{{ i18n.t('manualAttendance.ui.skipped') }} {{ summary.skippedCount }}</span>
+          <span [class.summary-failed]="summary.failedCount > 0">{{ i18n.t('manualAttendance.ui.failed') }} {{ summary.failedCount }}</span>
+          @if (summary.failedCount > 0) { <small>{{ i18n.t('manualAttendance.ui.fixFailedCells') }}</small> }
         </div>
       }
 
@@ -198,7 +197,7 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
       @else if (loadError()) {
         <div class="card error-card">
           <span>⚠️ {{ loadError() }}</span>
-          <button type="button" class="btn btn-outline" (click)="refreshData()">إعادة المحاولة</button>
+          <button type="button" class="btn btn-outline" (click)="refreshData()">{{ i18n.t('workforce.ui.retry') }}</button>
         </div>
       }
 
@@ -206,7 +205,7 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
       @else if (filteredWorkers().length === 0) {
         <div class="card empty-card">
           <div class="empty-icon">👷</div>
-          <p>{{ selectedContractorId() || selectedCategoryId() ? 'لا يوجد عمال مطابقون للفلترة المحددة.' : 'لا يوجد عمال مسجلون. أضف عمالاً من قسم العمال أولاً.' }}</p>
+          <p>{{ selectedContractorId() || selectedCategoryId() ? i18n.t('manualAttendance.ui.noFilteredWorkers') : i18n.t('manualAttendance.ui.noWorkers') }}</p>
         </div>
       }
 
@@ -215,38 +214,38 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
         <div class="card matrix-card">
           <!-- Legend -->
           <div class="legend-row">
-            <span class="legend-item full">■ يوم كامل (1)</span>
-            <span class="legend-item half">■ نصف يوم (0.5)</span>
-            <span class="legend-item absent">■ غياب (0)</span>
+            <span class="legend-item full">{{ i18n.t('manualAttendance.ui.legendFull') }}</span>
+            <span class="legend-item half">{{ i18n.t('manualAttendance.ui.legendHalf') }}</span>
+            <span class="legend-item absent">{{ i18n.t('manualAttendance.ui.legendAbsent') }}</span>
           </div>
 
           <!-- Bulk Actions Bar -->
           @if (selectedWorkerIds().size > 0) {
             <div class="bulk-bar">
-              <span class="bulk-count">{{ selectedWorkerIds().size }} عامل × {{ selectedDateIds().size }} يوم</span>
-              <span class="bulk-context">لن تُعدّل العملية إلا {{ selectedWorkerIds().size * selectedDateIds().size }} خلية محددة. ستظهر معاينة إلزامية قبل التنفيذ.</span>
+              <span class="bulk-count">{{ i18n.t('manualAttendance.ui.bulkCount', { workers: selectedWorkerIds().size, days: selectedDateIds().size }) }}</span>
+              <span class="bulk-context">{{ i18n.t('manualAttendance.ui.bulkContext', { cells: selectedWorkerIds().size * selectedDateIds().size }) }}</span>
               <select [(ngModel)]="bulkStatusValue" class="form-input bulk-select"
-                aria-label="حالة الحضور المطلوب تطبيقها جماعياً"
-                appTooltip="حالة الحضور الجماعية — القيمة التي ستطبق على الخلايا المحددة">
+                [attr.aria-label]="i18n.t('manualAttendance.ui.bulkAttendanceAria')"
+                [appTooltip]="i18n.t('manualAttendance.ui.bulkAttendanceHelp')">
                 @for (opt of bulkStatusOptions; track opt.value) {
                   <option [ngValue]="opt.value">{{ opt.label }}</option>
                 }
               </select>
               <button type="button" class="btn btn-primary btn-sm" (click)="previewBulk('attendance')">
-                معاينة تطبيق الحضور
+                {{ i18n.t('manualAttendance.ui.previewAttendance') }}
               </button>
-              <input type="number" min="0" step="0.5" [(ngModel)]="bulkOvertimeHours" class="form-input bulk-select" aria-label="ساعات الأوفر تايم" />
-              <button type="button" class="btn btn-primary btn-sm" (click)="previewBulk('overtime')">معاينة الأوفر تايم</button>
+              <input type="number" min="0" step="0.5" [(ngModel)]="bulkOvertimeHours" class="form-input bulk-select" [attr.aria-label]="i18n.t('manualAttendance.ui.overtimeHours')" />
+              <button type="button" class="btn btn-primary btn-sm" (click)="previewBulk('overtime')">{{ i18n.t('manualAttendance.ui.previewOvertime') }}</button>
               <button type="button" class="btn btn-outline btn-sm" (click)="clearSelection()">
-                إلغاء التحديد
+                {{ i18n.t('manualAttendance.ui.clearSelection') }}
               </button>
             </div>
             @if (bulkPreview(); as preview) {
-              <div class="bulk-bar" role="alertdialog" aria-label="معاينة التعديل المجمع">
-                <strong>سيتم تحديث {{ preview.workerCount }} عامل في {{ preview.dayCount }} يوم ({{ preview.cellCount }} خلية).</strong>
-                <span>{{ preview.kind === 'attendance' ? 'قيمة الحضور: ' + bulkStatusValue() : 'ساعات الأوفر تايم: ' + bulkOvertimeHours() }}</span>
-                <button type="button" class="btn btn-primary btn-sm" (click)="confirmBulk()">تأكيد التطبيق</button>
-                <button type="button" class="btn btn-outline btn-sm" (click)="bulkPreview.set(null)">إلغاء</button>
+              <div class="bulk-bar" role="alertdialog" [attr.aria-label]="i18n.t('manualAttendance.ui.bulkPreview')">
+                <strong>{{ i18n.t('manualAttendance.ui.bulkPreviewSummary', { workers: preview.workerCount, days: preview.dayCount, cells: preview.cellCount }) }}</strong>
+                <span>{{ preview.kind === 'attendance' ? i18n.t('manualAttendance.ui.attendanceValue') + ': ' + bulkStatusValue() : i18n.t('manualAttendance.ui.overtimeHours') + ': ' + bulkOvertimeHours() }}</span>
+                <button type="button" class="btn btn-primary btn-sm" (click)="confirmBulk()">{{ i18n.t('manualAttendance.ui.confirmApply') }}</button>
+                <button type="button" class="btn btn-outline btn-sm" (click)="bulkPreview.set(null)">{{ i18n.t('workforce.ui.cancel') }}</button>
               </div>
             }
           }
@@ -259,27 +258,27 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
                     <input type="checkbox"
                       [checked]="allSelected()"
                       (change)="toggleSelectAll()"
-                      aria-label="تحديد جميع العمال الظاهرين"
-                      appTooltip="تحديد الكل — اختيار أو إلغاء اختيار جميع العمال الظاهرين"
+                      [attr.aria-label]="i18n.t('manualAttendance.ui.selectAllVisible')"
+                      [appTooltip]="i18n.t('manualAttendance.ui.selectAllVisibleHelp')"
                       class="row-check" />
                   </th>
-                  <th class="sticky-col worker-col">كود العامل</th>
-                  <th class="sticky-col name-col">اسم العامل</th>
-                  <th class="sticky-col rate-col">اليومية</th>
+                  <th class="sticky-col worker-col">{{ i18n.t('manualAttendance.ui.workerCode') }}</th>
+                  <th class="sticky-col name-col">{{ i18n.t('manualAttendance.ui.workerName') }}</th>
+                  <th class="sticky-col rate-col">{{ i18n.t('manualAttendance.ui.dailyRate') }}</th>
                   @for (date of dates(); track date) {
                     <th class="date-col" [class.weekend-col]="isWeekend(date)">
                       <div class="date-header">
                         <input type="checkbox" [checked]="selectedDateIds().has(date)" (change)="toggleDate(date)"
-                          [attr.aria-label]="'تحديد تاريخ ' + date"
-                          [appTooltip]="'تحديد التاريخ — تطبيق الإجراءات الجماعية على ' + date" />
+                          [attr.aria-label]="i18n.t('manualAttendance.ui.selectDate', { date })"
+                          [appTooltip]="i18n.t('manualAttendance.ui.selectDateHelp', { date })" />
                         <span class="day-name">{{ getDayName(date) }}</span>
                         <span class="day-num">{{ date.slice(-2) }}</span>
                       </div>
                     </th>
                   }
-                  <th class="total-col">إجمالي أيام</th>
-                  <th class="total-col">الإجمالي (ج.م)</th>
-                  <th class="indicator-col">مؤشرات</th>
+                  <th class="total-col">{{ i18n.t('manualAttendance.ui.totalDays') }}</th>
+                  <th class="total-col">{{ i18n.t('manualAttendance.ui.totalAmountEgp') }}</th>
+                  <th class="indicator-col">{{ i18n.t('manualAttendance.ui.indicators') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -289,8 +288,8 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
                       <input type="checkbox"
                         [checked]="isSelected(w.id)"
                         (change)="toggleWorker(w.id)"
-                        [attr.aria-label]="'تحديد العامل ' + w.fullName"
-                        [appTooltip]="'تحديد العامل — ' + w.fullName"
+                        [attr.aria-label]="i18n.t('manualAttendance.ui.selectWorker', { name: w.fullName })"
+                        [appTooltip]="i18n.t('manualAttendance.ui.selectWorkerHelp', { name: w.fullName })"
                         class="row-check" />
                     </td>
                     <td class="sticky-col worker-col"><strong>{{ w.code }}</strong></td>
@@ -298,10 +297,10 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
                       {{ w.fullName }}<br>
                       <small class="contractor-name">{{ w.contractorName }}</small>
                       @if (w.status === 'INACTIVE') {
-                        <span class="badge-inactive">غير نشط</span>
+                        <span class="badge-inactive">{{ i18n.t('manualAttendance.ui.workerInactive') }}</span>
                       }
                     </td>
-                    <td class="sticky-col rate-col">{{ w.defaultDailyRate | number:'1.0-0' }} ج.م</td>
+                    <td class="sticky-col rate-col">{{ w.defaultDailyRate | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</td>
                     @for (date of dates(); track date) {
                       <td class="cell-td" [class.weekend-cell]="isWeekend(date)"
                           [class.cell-dirty]="isCellDirty(w.id, date)"
@@ -315,8 +314,8 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
                           [class.cell-full]="matrix[w.id][date].attendanceValue === 1"
                           [class.cell-half]="matrix[w.id][date].attendanceValue === 0.5"
                           [class.cell-absent]="matrix[w.id][date].attendanceValue === 0"
-                          [attr.aria-label]="'حالة حضور ' + w.fullName + ' بتاريخ ' + date"
-                          [appTooltip]="'حضور ' + w.fullName + ' — ' + date + ' · اختر دوام كامل أو نصف يوم أو غياب'"
+                          [attr.aria-label]="i18n.t('manualAttendance.ui.attendanceAria', { name: w.fullName, date })"
+                          [appTooltip]="i18n.t('manualAttendance.ui.attendanceCellHelp', { name: w.fullName, date })"
                         >
                           <option [ngValue]="1">1</option>
                           <option [ngValue]="0.5">½</option>
@@ -331,14 +330,14 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
                       <strong>{{ getWorkerTotalDays(w.id) | number:'1.1-1' }}</strong>
                     </td>
                     <td class="total-col total-amount">
-                      <strong>{{ getWorkerTotalAmount(w) | number:'1.0-0' }} ج.م</strong>
+                      <strong>{{ getWorkerTotalAmount(w) | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</strong>
                     </td>
                     <td class="indicator-col">
                       @if (hasOvertime(w.id)) {
-                        <span class="indicator overtime-i" title="يوجد أوفرتايم">⏰</span>
+                        <span class="indicator overtime-i" [title]="i18n.t('manualAttendance.ui.hasOvertime')">⏰</span>
                       }
                       @if (hasDeduction(w.id)) {
-                        <span class="indicator deduction-i" title="يوجد خصم">⚠️</span>
+                        <span class="indicator deduction-i" [title]="i18n.t('manualAttendance.ui.hasDeduction')">⚠️</span>
                       }
                     </td>
                   </tr>
@@ -346,14 +345,14 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
               </tbody>
               <tfoot>
                 <tr class="totals-row">
-                  <td class="sticky-col" colspan="4"><strong>الإجمالي اليومي</strong></td>
+                  <td class="sticky-col" colspan="4"><strong>{{ i18n.t('manualAttendance.ui.dailyTotal') }}</strong></td>
                   @for (date of dates(); track date) {
                     <td class="total-col">
                       <strong>{{ getDayTotal(date) | number:'1.1-1' }}</strong>
                     </td>
                   }
                   <td colspan="2" class="grand-total">
-                    <strong>{{ grandTotal() | number:'1.0-0' }} ج.م</strong>
+                    <strong>{{ grandTotal() | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</strong>
                   </td>
                 </tr>
               </tfoot>
@@ -389,9 +388,9 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
           <div class="control-group">
             <label for="entry-value">{{ i18n.t('manualAttendance.attendanceStatusLabel') }}</label>
             <select id="entry-value" [ngModel]="entryAttendanceValue()" (ngModelChange)="entryAttendanceValue.set(+$event)" name="entryAttendanceValue" class="form-input">
-              <option [value]="1">يوم كامل (1)</option>
-              <option [value]="0.5">نصف يوم (0.5)</option>
-              <option [value]="0">غائب (0)</option>
+              <option [value]="1">{{ i18n.t('manualAttendance.ui.fullDayOne') }}</option>
+              <option [value]="0.5">{{ i18n.t('manualAttendance.ui.halfDayPointFive') }}</option>
+              <option [value]="0">{{ i18n.t('manualAttendance.ui.absentZero') }}</option>
             </select>
           </div>
 
@@ -408,7 +407,7 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
 
           <div class="control-group">
             <label for="entry-notes">{{ i18n.t('manualAttendance.notesLabel') }}</label>
-            <input id="entry-notes" type="text" [ngModel]="entryNotes()" (ngModelChange)="entryNotes.set($event)" name="entryNotes" class="form-input" placeholder="ملاحظات اختيارية..." />
+            <input id="entry-notes" type="text" [ngModel]="entryNotes()" (ngModelChange)="entryNotes.set($event)" name="entryNotes" class="form-input" [placeholder]="i18n.t('manualAttendance.ui.optionalNotes')" />
           </div>
         </form>
 
@@ -430,10 +429,9 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
           <p>{{ i18n.t('manualAttendance.importModalDesc') }}</p>
           
           <div style="border:2px dashed #cbd5e1;padding:1.5rem;border-radius:10px;text-align:center;background:var(--surface-muted);">
-            <input type="file" accept=".csv,.xlsx,.xls,.txt" (change)="onImportFileChange($event)" style="margin-bottom:0.5rem;" />
-            @if (importFile(); as f) {
-              <p style="margin:0.5rem 0 0 0;font-weight:700;color:var(--gold);">📄 {{ f.name }}</p>
-            }
+            <input #attendanceImportFile class="native-file-input" type="file" accept=".csv,.xlsx,.xls,.txt" (change)="onImportFileChange($event)" />
+            <button type="button" class="btn btn-outline" (click)="attendanceImportFile.click()">{{ i18n.t('manualAttendance.ui.chooseImportFile') }}</button>
+            <span class="selected-file-name">📄 {{ importFile()?.name || i18n.t('manualAttendance.ui.noImportFile') }}</span>
           </div>
 
           <div style="background:var(--warning-soft);border:1px solid var(--warning);padding:0.75rem;border-radius:8px;font-size:0.8125rem;">
@@ -459,7 +457,7 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
     </div>
   `,
   styles: [`
-    .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; direction: rtl; }
+    .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;  }
     .eyebrow { font-size: 0.875rem; color: #d97706; font-weight: 600; }
     .page-header { display: flex; justify-content: space-between; align-items: center; }
     .page-header h1 { font-size: 1.5rem; font-weight: 800; color: var(--ink); margin: 0.25rem 0 0 0; }
@@ -469,7 +467,7 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
     .controls-row { display: flex; align-items: flex-end; gap: 1.25rem; flex-wrap: wrap; }
     .control-group { display: flex; flex-direction: column; gap: 0.375rem; }
     .control-group label { font-size: 0.8125rem; font-weight: 600; color: var(--muted); }
-    .form-input { padding: 0.5rem 0.75rem; border: 1px solid var(--line); border-radius: 8px; font-size: 0.875rem; }
+    .native-file-input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}.selected-file-name{display:block;margin-top:.5rem;color:var(--muted);font-size:.875rem}.form-input { padding: 0.5rem 0.75rem; border: 1px solid var(--line); border-radius: 8px; font-size: 0.875rem; }
     .preset-btns { display: flex; gap: 0.5rem; }
     .btn { padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; font-size: 0.875rem; }
     .btn:disabled { opacity: 0.6; cursor:not-allowed; }
@@ -502,9 +500,9 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
     .matrix-table th { background: var(--surface-muted); padding: 0.5rem 0.375rem; border: 1px solid var(--line); position: sticky; top: 0; z-index: 10; white-space: nowrap; }
     .matrix-table td { padding: 0.25rem 0.25rem; border: 1px solid var(--line); }
     .sticky-col { position: sticky; background: var(--surface); z-index: 8; }
-    .worker-col { right: 0; min-width: 80px; text-align: right; padding-right: 0.5rem; }
-    .name-col { right: 80px; min-width: 150px; text-align: right; padding-right: 0.5rem; }
-    .rate-col { right: 230px; min-width: 80px; }
+    .worker-col { right: 0; min-width: 80px; text-align: start; padding-inset-inline-start: 0.5rem; }
+    .name-col { inset-inline-start: 80px; min-width: 150px; text-align: start; padding-inset-inline-start: 0.5rem; }
+    .rate-col { inset-inline-start: 230px; min-width: 80px; }
     .matrix-table th.sticky-col { z-index: 12; }
     .date-col { min-width: 52px; }
     .date-header { display: flex; flex-direction: column; align-items: center; gap: 0.125rem; }
@@ -534,7 +532,7 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
     .toggle-label { display: flex; align-items: center; gap: 0.375rem; cursor: pointer; font-size: 0.8125rem; color: var(--secondary-text); user-select: none; }
     .toggle-text { font-weight: 500; }
     /* Checkbox column */
-    .check-col { position: sticky; background: var(--surface); z-index: 8; right: 310px; min-width: 36px; text-align: center; }
+    .check-col { position: sticky; background: var(--surface); z-index: 8; inset-inline-start: 310px; min-width: 36px; text-align: center; }
     .row-check { width: 16px; height: 16px; cursor: pointer; accent-color: #d97706; }
     .selected-row { background: #fefce8 !important; }
     /* Bulk bar */
@@ -551,7 +549,7 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
     /* Indicator column */
     .indicator-col { min-width: 48px; background: var(--surface-muted); font-size: 1rem; text-align: center; }
     .indicator { cursor: help; display: inline-block; margin: 0 1px; }
-    .badge-inactive { display: inline-block; background: var(--danger-soft); color: var(--danger); font-size: 0.6875rem; padding: 0.125rem 0.375rem; border-radius: 4px; margin-right: 0.375rem; font-weight: 600; }
+    .badge-inactive { display: inline-block; background: var(--danger-soft); color: var(--danger); font-size: 0.6875rem; padding: 0.125rem 0.375rem; border-radius: 4px; margin-inset-inline-start: 0.375rem; font-weight: 600; }
     /* Calculation rules card */
     .rules-card { background: var(--success-soft); border-color: color-mix(in srgb, var(--success) 45%, var(--line)); padding: 0.75rem 1rem; }
     .rules-summary { font-weight: 700; color: var(--success); cursor: pointer; font-size: 0.875rem; }
@@ -560,7 +558,10 @@ export function shouldRenderAttendanceMatrix(loading: boolean, loadError: string
     .rule-label { color: var(--secondary-text); font-weight: 600; min-width: 110px; }
     .rule-value { color: var(--ink); font-weight: 500; }
     .rules-desc { font-size: 0.75rem; color: var(--muted); margin-top: 0.375rem; font-style: italic; }
-  `]
+  
+/* BORTQALA_FEEDBACK_20260816_WORKFORCE_ATTENDANCE_UI */
+:host{display:block}.page,.attendance-page{max-width:1600px;margin-inline:auto;display:grid;gap:1rem}.card{border-radius:16px!important;box-shadow:0 6px 24px rgba(15,23,42,.04)}.filters,.filter-bar,.toolbar{display:flex;gap:.65rem;align-items:end;flex-wrap:wrap;padding:.8rem;border-radius:14px;background:var(--surface-muted,#f8fafc)}.matrix,.matrix-wrapper,.table-wrap,.table-card{overflow:auto!important;max-height:68vh;border:1px solid var(--line,#e5e7eb);border-radius:14px}.matrix table,table{border-collapse:separate;border-spacing:0}.matrix th,thead th{position:sticky;top:0;z-index:3;background:var(--surface,#fff)}.matrix td:first-child,.matrix th:first-child{position:sticky;inset-inline-start:0;z-index:2;background:var(--surface,#fff)}input,select{min-height:38px}@media(max-width:760px){.filters,.filter-bar,.toolbar{display:grid;grid-template-columns:1fr}.matrix,.matrix-wrapper,.table-wrap,.table-card{max-height:none}}
+`]
 })
 export class ManualAttendanceComponent implements OnInit {
   private workforceService = inject(WorkforceService);
@@ -650,19 +651,19 @@ export class ManualAttendanceComponent implements OnInit {
 
   downloadExcelTemplate(): void {
     const columns = [
-      { key: 'workerCode', label: 'كود العامل' },
-      { key: 'date', label: 'التاريخ' },
-      { key: 'attendanceValue', label: 'قيمة الحضور' },
-      { key: 'overtimeHours', label: 'ساعات الأوفر تايم' },
-      { key: 'deductionHours', label: 'ساعات الخصم' },
-      { key: 'notes', label: 'ملاحظات' }
+      { key: 'workerCode', label: this.i18n.t('manualAttendance.ui.workerCode') },
+      { key: 'date', label: this.i18n.t('manualAttendance.ui.date') },
+      { key: 'attendanceValue', label: this.i18n.t('manualAttendance.ui.attendanceValue') },
+      { key: 'overtimeHours', label: this.i18n.t('manualAttendance.ui.overtimeHours') },
+      { key: 'deductionHours', label: this.i18n.t('manualAttendance.ui.deductionHours') },
+      { key: 'notes', label: this.i18n.t('manualAttendance.ui.notes') }
     ];
     const sampleRows = [
-      { workerCode: 'EMP-001', date: '2026-07-31', attendanceValue: '1', overtimeHours: '2', deductionHours: '0', notes: 'وردية كاملة' },
-      { workerCode: 'EMP-002', date: '2026-07-31', attendanceValue: '0.5', overtimeHours: '0', deductionHours: '0', notes: 'نصف يوم' },
-      { workerCode: 'EMP-003', date: '2026-07-31', attendanceValue: '0', overtimeHours: '0', deductionHours: '0', notes: 'غياب' }
+      { workerCode: 'EMP-001', date: '2026-07-31', attendanceValue: '1', overtimeHours: '2', deductionHours: '0', notes: this.i18n.t('manualAttendance.ui.sampleFullShift') },
+      { workerCode: 'EMP-002', date: '2026-07-31', attendanceValue: '0.5', overtimeHours: '0', deductionHours: '0', notes: this.i18n.t('manualAttendance.ui.halfDay') },
+      { workerCode: 'EMP-003', date: '2026-07-31', attendanceValue: '0', overtimeHours: '0', deductionHours: '0', notes: this.i18n.t('manualAttendance.ui.absence') }
     ];
-    exportCsv(sampleRows, columns, 'قالب_الإدخال_اليدوي_للحضور.csv');
+    exportCsv(sampleRows, columns, 'manual-attendance-import-template.csv');
     this.notificationService.success(this.i18n.t('manualAttendance.templateSuccess'));
   }
 
@@ -734,18 +735,22 @@ export class ManualAttendanceComponent implements OnInit {
     reader.readAsText(file, 'UTF-8');
   }
 
-  readonly attendanceStatusOptions: StatusOption[] = [
-    { value: 'all', label: 'الكل' },
-    { value: 'present', label: 'حاضر (1)' },
-    { value: 'half', label: 'نصف يوم (½)' },
-    { value: 'absent', label: 'غائب (—)' },
-  ];
+  get attendanceStatusOptions(): StatusOption[] {
+    return [
+      { value: 'all', label: this.i18n.t('workforce.ui.all') },
+      { value: 'present', label: this.i18n.t('manualAttendance.ui.presentOne') },
+      { value: 'half', label: this.i18n.t('manualAttendance.ui.halfDayHalf') },
+      { value: 'absent', label: this.i18n.t('manualAttendance.ui.absentDash') },
+    ];
+  }
 
-  readonly bulkStatusOptions: StatusOption<number>[] = [
-    { value: 1, label: 'يوم كامل (1)' },
-    { value: 0.5, label: 'نصف يوم (½)' },
-    { value: 0, label: 'غائب (—)' },
-  ];
+  get bulkStatusOptions(): StatusOption<number>[] {
+    return [
+      { value: 1, label: this.i18n.t('manualAttendance.ui.fullDayOne') },
+      { value: 0.5, label: this.i18n.t('manualAttendance.ui.halfDayHalf') },
+      { value: 0, label: this.i18n.t('manualAttendance.ui.absentDash') },
+    ];
+  }
 
   filteredWorkers = computed(() => {
     let list = this.workers();
@@ -893,7 +898,7 @@ export class ManualAttendanceComponent implements OnInit {
         this.loading.set(false);
       },
       error: (e) => {
-        this.loadError.set('تعذّر تحميل بيانات العمال: ' + (apiErrorDetail(e, e?.message ?? 'خطأ غير متوقع')));
+        this.loadError.set(this.i18n.t('manualAttendance.ui.loadError', { detail: apiErrorDetail(e, e?.message ?? this.i18n.t('workforce.ui.unexpectedError')) }));
         this.loading.set(false);
       }
     });
@@ -931,12 +936,12 @@ export class ManualAttendanceComponent implements OnInit {
       return row;
     });
     const columns = [
-      { key: 'code', label: 'كود العامل' },
-      { key: 'name', label: 'اسم العامل' },
-      { key: 'dailyRate', label: 'اليومية' },
+      { key: 'code', label: this.i18n.t('manualAttendance.ui.workerCode') },
+      { key: 'name', label: this.i18n.t('manualAttendance.ui.workerName') },
+      { key: 'dailyRate', label: this.i18n.t('manualAttendance.ui.dailyRate') },
       ...dateList.map((d) => ({ key: d, label: d })),
-      { key: 'totalDays', label: 'إجمالي أيام' },
-      { key: 'totalAmount', label: 'الإجمالي (ج.م)' },
+      { key: 'totalDays', label: this.i18n.t('manualAttendance.ui.totalDays') },
+      { key: 'totalAmount', label: this.i18n.t('manualAttendance.ui.totalAmountEgp') },
     ];
     exportCsv(rows, columns, `manual-attendance-${this.startDate}-${this.endDate}.csv`);
   }
@@ -1012,11 +1017,11 @@ export class ManualAttendanceComponent implements OnInit {
     const ids = [...this.selectedWorkerIds()];
     const selectedDates = [...this.selectedDateIds()];
     if (ids.length === 0 || selectedDates.length === 0) {
-      this.notificationService.warning('اختر عاملاً واحداً على الأقل');
+      this.notificationService.warning(this.i18n.t('manualAttendance.ui.selectWorkerWarning'));
       return;
     }
     if (kind === 'overtime' && this.bulkOvertimeHours() < 0) {
-      this.notificationService.warning('ساعات الأوفر تايم لا يمكن أن تكون سالبة');
+      this.notificationService.warning(this.i18n.t('manualAttendance.ui.negativeOvertimeWarning'));
       return;
     }
     this.bulkPreview.set({ kind, workerCount: ids.length, dayCount: selectedDates.length, cellCount: ids.length * selectedDates.length });
@@ -1037,7 +1042,7 @@ export class ManualAttendanceComponent implements OnInit {
         }
       }
     }
-    this.notificationService.success(`تم تطبيق التحديث على ${preview.cellCount} خلية`);
+    this.notificationService.success(this.i18n.t('manualAttendance.ui.bulkApplied', { count: preview.cellCount }));
     this.selectedWorkerIds.set(new Set());
     this.bulkPreview.set(null);
   }
@@ -1061,7 +1066,7 @@ export class ManualAttendanceComponent implements OnInit {
     }
 
     if (entries.length === 0) {
-      this.notificationService.warning('لا توجد تسجيلات لحفظها');
+      this.notificationService.warning(this.i18n.t('manualAttendance.ui.noEntriesToSave'));
       return;
     }
 
@@ -1085,14 +1090,14 @@ export class ManualAttendanceComponent implements OnInit {
           return next;
         });
         if (response.failedCount > 0) {
-          this.notificationService.warning(`حُفظ الصحيح: ${response.createdCount + response.updatedCount}، وفشل ${response.failedCount}. راجع الخلايا الحمراء.`);
+          this.notificationService.warning(this.i18n.t('manualAttendance.ui.partialSave', { saved: response.createdCount + response.updatedCount, failed: response.failedCount }));
         } else {
-          this.notificationService.success(`تم الحفظ: ${response.createdCount} جديد، ${response.updatedCount} محدّث، ${response.skippedCount} دون تغيير.`);
+          this.notificationService.success(this.i18n.t('manualAttendance.ui.saveSuccess', { created: response.createdCount, updated: response.updatedCount, skipped: response.skippedCount }));
         }
       },
       error: (e) => {
         this.saving.set(false);
-        this.notificationService.error('حدث خطأ أثناء الحفظ: ' + (apiErrorDetail(e, e?.message ?? 'خطأ غير متوقع')));
+        this.notificationService.error(this.i18n.t('manualAttendance.ui.saveError', { detail: apiErrorDetail(e, e?.message ?? this.i18n.t('workforce.ui.unexpectedError')) }));
       }
     });
   }
@@ -1156,9 +1161,9 @@ export class ManualAttendanceComponent implements OnInit {
   }
 
   getStatusLabel(value: number): string {
-    if (value === 1) return 'حاضر';
-    if (value === 0.5) return 'نصف يوم';
-    return 'غائب';
+    if (value === 1) return this.i18n.t('manualAttendance.ui.present');
+    if (value === 0.5) return this.i18n.t('manualAttendance.ui.halfDay');
+    return this.i18n.t('manualAttendance.ui.absent');
   }
 
   getStatusClass(value: number): string {
@@ -1201,9 +1206,9 @@ export class ManualAttendanceComponent implements OnInit {
   }
 
   getDayName(dateStr: string): string {
-    const names = ['أحد', 'إثن', 'ثلا', 'أرب', 'خمس', 'جمع', 'سبت'];
+    const names = ['manualAttendance.ui.daySun','manualAttendance.ui.dayMon','manualAttendance.ui.dayTue','manualAttendance.ui.dayWed','manualAttendance.ui.dayThu','manualAttendance.ui.dayFri','manualAttendance.ui.daySat'];
     const [y, m, d] = dateStr.split('-').map(Number);
-    return names[new Date(y, m - 1, d, 12, 0, 0).getDay()];
+    return this.i18n.t(names[new Date(y, m - 1, d, 12, 0, 0).getDay()]);
   }
 
   private toIso(d: Date): string {

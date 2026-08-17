@@ -1,10 +1,18 @@
 package com.bemo.hr.operations.application;
 
-import com.bemo.hr.operations.domain.*;
-import com.bemo.hr.operations.infrastructure.*;
-import com.bemo.hr.organization.domain.Warehouse;
-import com.bemo.hr.organization.infrastructure.WarehouseRepository;
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.operations.InventoryItem;
+import com.bemo.hr.operations.InventoryItemRepository;
+import com.bemo.hr.operations.domain.StockReservation;
+import com.bemo.hr.operations.domain.StockStatusBalance;
+import com.bemo.hr.operations.domain.WarehouseBin;
+import com.bemo.hr.operations.infrastructure.StockReservationRepository;
+import com.bemo.hr.operations.infrastructure.StockStatusBalanceRepository;
+import com.bemo.hr.operations.infrastructure.WarehouseBinRepository;
+import com.bemo.hr.organization.domain.Branch;
+import com.bemo.hr.organization.domain.Warehouse;
+import com.bemo.hr.organization.infrastructure.BranchRepository;
+import com.bemo.hr.organization.infrastructure.WarehouseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,6 +32,8 @@ class WarehouseInventoryServiceTests {
     private StockReservationRepository reservationRepository;
     private WarehouseInventoryService inventoryService;
     private AuditService auditService;
+    private BranchRepository branchRepository;
+    private InventoryItemRepository inventoryItemRepository;
 
     @BeforeEach
     void setUp() {
@@ -32,10 +42,19 @@ class WarehouseInventoryServiceTests {
         balanceRepository = mock(StockStatusBalanceRepository.class);
         reservationRepository = mock(StockReservationRepository.class);
         auditService = mock(AuditService.class);
-        inventoryService = new WarehouseInventoryService(warehouseRepository, binRepository, balanceRepository, reservationRepository, auditService);
+        branchRepository = mock(BranchRepository.class);
+        inventoryItemRepository = mock(InventoryItemRepository.class);
+        inventoryService = new WarehouseInventoryService(warehouseRepository, binRepository, balanceRepository,
+                reservationRepository, auditService, branchRepository, inventoryItemRepository);
         Warehouse active = mock(Warehouse.class);
         when(active.isActive()).thenReturn(true);
         when(warehouseRepository.findById("wh-1")).thenReturn(java.util.Optional.of(active));
+        Branch branch = mock(Branch.class);
+        when(branch.isActive()).thenReturn(true);
+        when(branchRepository.findById("branch-1")).thenReturn(java.util.Optional.of(branch));
+        InventoryItem item = mock(InventoryItem.class);
+        when(item.isActive()).thenReturn(true);
+        when(inventoryItemRepository.findById(anyString())).thenReturn(java.util.Optional.of(item));
     }
 
     @Test
@@ -109,5 +128,74 @@ class WarehouseInventoryServiceTests {
                 .thenReturn(List.of());
         assertThat(inventoryService.getAvailableStock("wh-1", "item-1")).isEqualByComparingTo("10");
         assertThat(active.getStatus()).isEqualTo(StockReservation.Status.EXPIRED);
+    }
+
+    @Test
+    void reservationRejectsMissingItemNonPositiveQuantityAndInsufficientStock() {
+        when(inventoryItemRepository.findById("missing-item")).thenReturn(java.util.Optional.empty());
+
+        assertThatThrownBy(() -> inventoryService.reserveStock("R-1", "ORDER", "o-1",
+                "missing-item", "wh-1", BigDecimal.ONE))
+                .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class)
+                .extracting("code").isEqualTo("WAREHOUSE_ITEM_ACTIVE_REQUIRED");
+        assertThatThrownBy(() -> inventoryService.reserveStock("R-2", "ORDER", "o-2",
+                "item-1", "wh-1", BigDecimal.ZERO))
+                .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class)
+                .extracting("code").isEqualTo("WAREHOUSE_QUANTITY_POSITIVE");
+
+        StockStatusBalance balance = new StockStatusBalance("wh-1", "", "item-1",
+                StockStatusBalance.Status.AVAILABLE, new BigDecimal("2"));
+        when(balanceRepository.findByWarehouseIdAndItemIdForUpdate("wh-1", "item-1"))
+                .thenReturn(List.of(balance));
+        assertThatThrownBy(() -> inventoryService.reserveStock("R-3", "ORDER", "o-3",
+                "item-1", "wh-1", new BigDecimal("3")))
+                .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class)
+                .extracting("code").isEqualTo("INSUFFICIENT_STOCK_RESERVATION");
+    }
+
+    @Test
+    void warehouseCreationRejectsMissingBranchInsteadOfUsingAFakeDefault() {
+        assertThatThrownBy(() -> inventoryService.createWarehouse(null, "WH", "Warehouse", null))
+                .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class)
+                .extracting("code").isEqualTo("WAREHOUSE_BRANCH_REQUIRED");
+    }
+
+    @Test
+    void reservationReplayIsCheckedUnderBalanceLockAndRejectsChangedQuantity() {
+        StockStatusBalance balance = new StockStatusBalance("wh-1", "bin-1", "item-1",
+                StockStatusBalance.Status.AVAILABLE, new BigDecimal("10"));
+        StockReservation original = new StockReservation("R-1", "ORDER", "o-1", "item-1", "wh-1",
+                new BigDecimal("4"));
+        when(balanceRepository.findByWarehouseIdAndItemIdForUpdate("wh-1", "item-1")).thenReturn(List.of(balance));
+        when(reservationRepository.findBySourceTypeAndSourceIdAndItemIdAndWarehouseId(
+                "ORDER", "o-1", "item-1", "wh-1")).thenReturn(java.util.Optional.of(original));
+
+        assertThatThrownBy(() -> inventoryService.reserveStock("R-RETRY", "ORDER", "o-1",
+                "item-1", "wh-1", new BigDecimal("5")))
+                .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class)
+                .extracting("code").isEqualTo("RESERVATION_REPLAY_CONFLICT");
+        verify(balanceRepository).findByWarehouseIdAndItemIdForUpdate("wh-1", "item-1");
+        verify(reservationRepository, never()).save(any());
+    }
+
+    @Test
+    void consumesAReservationAcrossMultipleBinsInStableOrder() {
+        StockStatusBalance first = new StockStatusBalance("wh-1", "A", "item-1",
+                StockStatusBalance.Status.AVAILABLE, new BigDecimal("3"));
+        StockStatusBalance second = new StockStatusBalance("wh-1", "B", "item-1",
+                StockStatusBalance.Status.AVAILABLE, new BigDecimal("4"));
+        StockReservation reservation = new StockReservation("R-1", "ORDER", "o-1", "item-1", "wh-1",
+                new BigDecimal("5"));
+        when(reservationRepository.findById(reservation.getId())).thenReturn(java.util.Optional.of(reservation));
+        when(balanceRepository.findByWarehouseIdAndItemIdForUpdate("wh-1", "item-1"))
+                .thenReturn(List.of(second, first));
+        when(reservationRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        inventoryService.consumeReservation(reservation.getId());
+
+        assertThat(first.getQuantity()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(second.getQuantity()).isEqualByComparingTo("2");
+        assertThat(reservation.getStatus()).isEqualTo(StockReservation.Status.FULFILLED);
+        verify(balanceRepository, times(2)).save(any(StockStatusBalance.class));
     }
 }

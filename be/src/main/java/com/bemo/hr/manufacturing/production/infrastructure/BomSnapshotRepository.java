@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface BomSnapshotRepository extends JpaRepository<BomSnapshot, String> {
     List<BomSnapshot> findByProductionOrderId(String productionOrderId);
+
     Optional<BomSnapshot> findByProductionOrderIdAndComponentItemId(String productionOrderId, String componentItemId);
 }

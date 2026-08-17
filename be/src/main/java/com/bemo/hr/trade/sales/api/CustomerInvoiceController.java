@@ -18,8 +18,6 @@ public class CustomerInvoiceController {
         this.invoiceService = invoiceService;
     }
 
-    public record CreateInvoicePayload(String salesOrderId, BigDecimal deliveredQuantity, BigDecimal unitPrice, BigDecimal unitCogs) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'FINANCE_MANAGER')")
     public CustomerInvoice createInvoiceFromDelivery(@RequestBody CreateInvoicePayload payload) {
@@ -36,5 +34,9 @@ public class CustomerInvoiceController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public List<CustomerInvoice> getInvoicesForSalesOrder(@PathVariable String salesOrderId) {
         return invoiceService.getInvoicesForSalesOrder(salesOrderId);
+    }
+
+    public record CreateInvoicePayload(String salesOrderId, BigDecimal deliveredQuantity, BigDecimal unitPrice,
+                                       BigDecimal unitCogs) {
     }
 }

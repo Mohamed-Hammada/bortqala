@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface BomHeaderRepository extends JpaRepository<BomHeader, String> {
     List<BomHeader> findAllByOrderByBomCodeAsc();
+
     boolean existsByBomCodeIgnoreCase(String bomCode);
 }

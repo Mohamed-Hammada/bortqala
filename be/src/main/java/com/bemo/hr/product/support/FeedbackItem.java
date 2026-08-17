@@ -1,2 +1,64 @@
-package com.bemo.hr.product.support;import jakarta.persistence.*;import lombok.Getter;import org.hibernate.annotations.TenantId;import java.time.Instant;import java.util.UUID;
-@Entity@Table(name="feedback_items")@Getter public class FeedbackItem{@Id private String id;@TenantId@Column(name="app_id",nullable=false)private String appId;@Column(nullable=false,length=20)private String type;@Column(name="module_code",nullable=false,length=60)private String moduleCode;@Column(nullable=false,length=3000)private String message;private Integer rating;@Column(nullable=false,length=300)private String route;@Column(name="application_version",nullable=false,length=80)private String applicationVersion;@Column(nullable=false,length=300)private String browser;@Column(name="correlation_id",nullable=false,length=100)private String correlationId;@Column(nullable=false,length=20)private String status;@Column(name="created_by",nullable=false,length=100)private String createdBy;@Column(name="operation_id",nullable=false,length=80)private String operationId;@Column(name="created_at",nullable=false)private Instant createdAt;protected FeedbackItem(){}public FeedbackItem(String type,String module,String message,Integer rating,String route,String version,String browser,String correlation,String actor,String operation){id=UUID.randomUUID().toString();this.type=type;moduleCode=module;this.message=message;this.rating=rating;this.route=route;applicationVersion=version;this.browser=browser;correlationId=correlation;status="NEW";createdBy=actor;operationId=operation;createdAt=Instant.now();}}
+package com.bemo.hr.product.support;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import org.hibernate.annotations.TenantId;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "feedback_items")
+@Getter
+public class FeedbackItem {
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(nullable = false, length = 20)
+    private String type;
+    @Column(name = "module_code", nullable = false, length = 60)
+    private String moduleCode;
+    @Column(nullable = false, length = 3000)
+    private String message;
+    private Integer rating;
+    @Column(nullable = false, length = 300)
+    private String route;
+    @Column(name = "application_version", nullable = false, length = 80)
+    private String applicationVersion;
+    @Column(nullable = false, length = 300)
+    private String browser;
+    @Column(name = "correlation_id", nullable = false, length = 100)
+    private String correlationId;
+    @Column(nullable = false, length = 20)
+    private String status;
+    @Column(name = "created_by", nullable = false, length = 100)
+    private String createdBy;
+    @Column(name = "operation_id", nullable = false, length = 80)
+    private String operationId;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    protected FeedbackItem() {
+    }
+
+    public FeedbackItem(String type, String module, String message, Integer rating, String route, String version, String browser, String correlation, String actor, String operation) {
+        id = UUID.randomUUID().toString();
+        this.type = type;
+        moduleCode = module;
+        this.message = message;
+        this.rating = rating;
+        this.route = route;
+        applicationVersion = version;
+        this.browser = browser;
+        correlationId = correlation;
+        status = "NEW";
+        createdBy = actor;
+        operationId = operation;
+        createdAt = Instant.now();
+    }
+}

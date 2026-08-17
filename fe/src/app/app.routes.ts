@@ -50,6 +50,26 @@ export const routes: Routes = [
           import('./features/imports/imports.page').then((module) => module.ImportsPage),
       },
       {
+        path: 'imports/history',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'imports' },
+        loadComponent: () => import('./features/imports/import-history.page').then((m) => m.ImportHistoryPage),
+      },
+      {
+        path: 'imports/attendance/:deviceUserId',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'imports' },
+        loadComponent: () =>
+          import('./features/attendance-browser/attendance-employee.page').then((module) => module.AttendanceEmployeePage),
+      },
+      {
+        path: 'imports/attendance',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'imports' },
+        loadComponent: () =>
+          import('./features/attendance-browser/attendance-browser.page').then((module) => module.AttendanceBrowserPage),
+      },
+      {
         // device-integrations-route: shares the Attendance Imports permission/menu scope.
         path: 'imports/device-integrations',
         canActivate: [roleGuard, menuAccessGuard],
@@ -58,6 +78,34 @@ export const routes: Routes = [
           import('./features/device-integrations/device-integrations.page').then(
             (module) => module.DeviceIntegrationsPage,
           ),
+      },
+      {
+        path: 'smart-import',
+        canActivate: [roleGuard],
+        data: {
+          roles: [
+            'SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER',
+            'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR',
+            'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'INVENTORY_MANAGER',
+            'SALES_MANAGER', 'MANUFACTURING_MANAGER', 'QUALITY_MANAGER',
+          ],
+        },
+        loadComponent: () =>
+          import('./features/smart-import/smart-import.page').then((module) => module.SmartImportPage),
+      },
+      {
+        path: 'smart-import/:workflow',
+        canActivate: [roleGuard],
+        data: {
+          roles: [
+            'SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER',
+            'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR',
+            'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'INVENTORY_MANAGER',
+            'SALES_MANAGER', 'MANUFACTURING_MANAGER', 'QUALITY_MANAGER',
+          ],
+        },
+        loadComponent: () =>
+          import('./features/smart-import/smart-import.page').then((module) => module.SmartImportPage),
       },
       {
         path: 'parties',
@@ -197,7 +245,7 @@ export const routes: Routes = [
       {
         path: 'organization',
         canActivate: [roleGuard, menuAccessGuard],
-        data: { roles: ['ADMIN'], menuId: 'organization' },
+        data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'organization' },
         loadComponent: () =>
           import('./features/organization/organization.page').then((module) => module.OrganizationPage),
       },
@@ -206,7 +254,7 @@ export const routes: Routes = [
         canActivate: [roleGuard, menuAccessGuard],
         data: {
           menuId: 'fiscal-periods',
-          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'],
         },
         loadComponent: () =>
           import('./features/fiscal-periods/fiscal-periods.page').then((module) => module.FiscalPeriodsPage),
@@ -282,3 +330,5 @@ export const routes: Routes = [
   },
   { path: '**', redirectTo: 'not-found' },
 ];
+
+// BORTQALA_FEEDBACK_20260816_ORGANIZATION route parity
