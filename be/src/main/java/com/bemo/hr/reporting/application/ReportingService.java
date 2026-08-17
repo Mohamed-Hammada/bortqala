@@ -226,6 +226,24 @@ public class ReportingService {
         var schedules = scheduleRuleRepository.findAll().stream()
                 .filter(schedule -> categories.containsKey(schedule.getCategoryId()))
                 .collect(Collectors.groupingBy(ScheduleRule::getCategoryId));
+
+        for (var category : categories.values()) {
+            if (!schedules.containsKey(category.getId()) || schedules.get(category.getId()).isEmpty()) {
+                var defaultSchedule = scheduleRuleRepository.save(new ScheduleRule(
+                        category.getId(),
+                        "الدوام الافتراضي",
+                        LocalDate.of(2000, 1, 1),
+                        null,
+                        LocalTime.of(8, 0),
+                        null,
+                        15,
+                        LocalTime.of(16, 0),
+                        "ALL",
+                        null));
+                schedules.computeIfAbsent(category.getId(), k -> new ArrayList<>()).add(defaultSchedule);
+            }
+        }
+
         var employees = employeeRepository.findAll().stream()
                 .filter(employee -> categories.containsKey(employee.getCategoryId())).toList();
         var report = attendanceReportRepository.save(new AttendanceReport(request.periodStart(), request.periodEnd(), payCycle,
@@ -236,12 +254,17 @@ public class ReportingService {
                 .map(holiday -> holiday.getCategoryId() + "|" + holiday.getWorkDate()).collect(Collectors.toSet());
         Instant from = request.periodStart().atStartOfDay(companyZone).toInstant();
         Instant to = request.periodEnd().plusDays(2).atStartOfDay(companyZone).toInstant();
-        var currentDeviceOwners = employees.stream().filter(employee -> employee.getDeviceUserId() != null)
-                .collect(Collectors.toMap(Employee::getDeviceUserId, Function.identity()));
+        var currentDeviceOwners = new HashMap<String, Employee>();
+        for (var employee : employees) {
+            if (employee.getDeviceUserId() != null && !employee.getDeviceUserId().isBlank()) {
+                currentDeviceOwners.put(employee.getDeviceUserId().strip(), employee);
+            }
+        }
         var byId = employees.stream().collect(Collectors.toMap(Employee::getId, Function.identity()));
         var punchMap = new HashMap<String, List<Instant>>();
         for (var punch : punchRecordRepository.findInRange(from, to)) {
-            var owner = currentDeviceOwners.get(punch.getDeviceUserId());
+            String duid = punch.getDeviceUserId() == null ? "" : punch.getDeviceUserId().strip();
+            var owner = currentDeviceOwners.get(duid);
             if (owner == null && punch.getEmployeeId() != null) owner = byId.get(punch.getEmployeeId());
             if (owner == null) continue;
             var localPunch = punch.getPunchedAt().atZone(companyZone);
@@ -275,6 +298,109 @@ public class ReportingService {
         holidayProposalRepository.saveAll(proposals);
         report.startReview(unresolved(results, proposals));
         return details(report);
+    }
+
+    @Transactional
+    public boolean recalculateMonth(int year, int month, String actor) {
+        var period = java.time.YearMonth.of(year, month);
+        var existing = attendanceReportRepository.findByPayCycleAndPeriodStartAndPeriodEnd(
+                PayCycle.MONTHLY, period.atDay(1), period.atEndOfMonth());
+        if (existing.isEmpty()) {
+            try {
+                create(new ReportingApi.CreateRequest(period.atDay(1), period.atEndOfMonth(), PayCycle.MONTHLY), actor);
+                return true;
+            } catch (Exception ex) {
+                return false;
+            }
+        }
+        var report = existing.get();
+        if (report.getStatus() == ReportStatus.APPROVED || report.getStatus() == ReportStatus.EXPORTED) {
+            return false;
+        }
+
+        var categories = employeeCategories().stream()
+                .filter(AttendanceCategory::isActive)
+                .filter(category -> category.getPayCycle() == PayCycle.MONTHLY)
+                .collect(Collectors.toMap(AttendanceCategory::getId, Function.identity()));
+        if (categories.isEmpty()) return false;
+
+        var schedules = scheduleRuleRepository.findAll().stream()
+                .filter(schedule -> categories.containsKey(schedule.getCategoryId()))
+                .collect(Collectors.groupingBy(ScheduleRule::getCategoryId));
+
+        for (var category : categories.values()) {
+            if (!schedules.containsKey(category.getId()) || schedules.get(category.getId()).isEmpty()) {
+                var defaultSchedule = scheduleRuleRepository.save(new ScheduleRule(
+                        category.getId(),
+                        "الدوام الافتراضي",
+                        LocalDate.of(2000, 1, 1),
+                        null,
+                        LocalTime.of(8, 0),
+                        null,
+                        15,
+                        LocalTime.of(16, 0),
+                        "ALL",
+                        null));
+                schedules.computeIfAbsent(category.getId(), k -> new ArrayList<>()).add(defaultSchedule);
+            }
+        }
+
+        var employees = employeeRepository.findAll().stream()
+                .filter(employee -> categories.containsKey(employee.getCategoryId())).toList();
+
+        var confirmedHolidays = confirmedHolidayRepository.findByWorkDateBetween(report.getPeriodStart(), report.getPeriodEnd()).stream()
+                .map(holiday -> holiday.getCategoryId() + "|" + holiday.getWorkDate()).collect(Collectors.toSet());
+        Instant from = report.getPeriodStart().atStartOfDay(companyZone).toInstant();
+        Instant to = report.getPeriodEnd().plusDays(2).atStartOfDay(companyZone).toInstant();
+        var currentDeviceOwners = new HashMap<String, Employee>();
+        for (var employee : employees) {
+            if (employee.getDeviceUserId() != null && !employee.getDeviceUserId().isBlank()) {
+                currentDeviceOwners.put(employee.getDeviceUserId().strip(), employee);
+            }
+        }
+        var byId = employees.stream().collect(Collectors.toMap(Employee::getId, Function.identity()));
+        var punchMap = new HashMap<String, List<Instant>>();
+        for (var punch : punchRecordRepository.findInRange(from, to)) {
+            String duid = punch.getDeviceUserId() == null ? "" : punch.getDeviceUserId().strip();
+            var owner = currentDeviceOwners.get(duid);
+            if (owner == null && punch.getEmployeeId() != null) owner = byId.get(punch.getEmployeeId());
+            if (owner == null) continue;
+            var localPunch = punch.getPunchedAt().atZone(companyZone);
+            LocalDate date = localPunch.toLocalDate();
+            var ownerSchedules = schedules.getOrDefault(owner.getCategoryId(), List.of());
+            var previousSchedule = effectiveSchedule(ownerSchedules, date.minusDays(1));
+            date = DailyAttendanceCalculator.workDateForPunch(localPunch,
+                    previousSchedule == null ? null : previousSchedule.getStartTime(),
+                    previousSchedule == null ? null : previousSchedule.getEndTime());
+            punchMap.computeIfAbsent(owner.getId() + "|" + date, ignored -> new ArrayList<>()).add(punch.getPunchedAt());
+        }
+
+        dailyAttendanceResultRepository.deleteAll(dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(report.getId()));
+        holidayProposalRepository.deleteAll(holidayProposalRepository.findByReportIdOrderByWorkDateAscCategoryNameAsc(report.getId()));
+        dayAnomalyRepository.deleteAll(dayAnomalyRepository.findByReportIdOrderByWorkDateAscCategoryNameAsc(report.getId()));
+
+        var results = new ArrayList<DailyAttendanceResult>();
+        for (LocalDate date = report.getPeriodStart(); !date.isAfter(report.getPeriodEnd()); date = date.plusDays(1)) {
+            LocalDate workDate = date;
+            for (var employee : employees) {
+                if (!employee.activeOn(workDate)) continue;
+                var category = categories.get(employee.getCategoryId());
+                if (category == null) continue;
+                var schedule = effectiveSchedule(schedules.getOrDefault(category.getId(), List.of()), workDate);
+                results.add(DailyAttendanceCalculator.calculate(report.getId(), employee, category, schedule, workDate,
+                        punchMap.getOrDefault(employee.getId() + "|" + workDate, List.of()),
+                        confirmedHolidays.contains(category.getId() + "|" + workDate), companyZone));
+            }
+        }
+        dailyAttendanceResultRepository.saveAll(results);
+        attendanceExceptionService.detect(report.getId(), actor);
+        detectAnomalies(report, results);
+
+        var proposals = createHolidayProposals(report, results, categories);
+        holidayProposalRepository.saveAll(proposals);
+        report.startReview(unresolved(results, proposals));
+        attendanceReportRepository.save(report);
+        return true;
     }
 
     private static ScheduleRule effectiveSchedule(List<ScheduleRule> rules, LocalDate date) {

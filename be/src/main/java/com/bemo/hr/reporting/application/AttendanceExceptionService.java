@@ -38,20 +38,29 @@ public class AttendanceExceptionService {
     }
 
     @Transactional
-    public int detect(String reportId,String actor){
+    public int detect(String reportId, String actor) {
         requireReport(reportId);
-        List<AttendancePolicy> policies=policyRepository.findAllByOrderByPriorityDescEffectiveFromDesc();
-        int created=0;
-        for(DailyAttendanceResult result:resultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(reportId)){
-            AttendancePolicy policy=resolve(policies,result);
-            for(Candidate candidate:candidates(result,policy)){
-                if(!exceptionRepository.existsByReportIdAndDailyResultIdAndExceptionType(reportId,result.getId(),candidate.type())){
-                    exceptionRepository.save(new AttendanceException(result,candidate.type(),candidate.score(),candidate.key(),policy,
-                            candidate.score()>=policy.getPayrollBlockScore()));created++;
+        List<AttendancePolicy> policies = policyRepository.findAllByOrderByPriorityDescEffectiveFromDesc();
+        Set<String> existingKeys = exceptionRepository.findByReportIdOrderByScoreDescWorkDateAsc(reportId).stream()
+                .map(e -> e.getDailyResultId() + ":" + e.getExceptionType())
+                .collect(Collectors.toSet());
+        List<AttendanceException> toSave = new ArrayList<>();
+        for (DailyAttendanceResult result : resultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(reportId)) {
+            AttendancePolicy policy = resolve(policies, result);
+            for (Candidate candidate : candidates(result, policy)) {
+                String key = result.getId() + ":" + candidate.type();
+                if (!existingKeys.contains(key)) {
+                    existingKeys.add(key);
+                    toSave.add(new AttendanceException(result, candidate.type(), candidate.score(), candidate.key(), policy,
+                            candidate.score() >= policy.getPayrollBlockScore()));
                 }
             }
         }
-        auditService.record("DETECT","ATTENDANCE_EXCEPTION",reportId,actor,"{\"created\":"+created+"}",null);
+        if (!toSave.isEmpty()) {
+            exceptionRepository.saveAll(toSave);
+        }
+        int created = toSave.size();
+        auditService.record("DETECT", "ATTENDANCE_EXCEPTION", reportId, actor, "{\"created\":" + created + "}", null);
         return created;
     }
 

@@ -18,6 +18,9 @@ import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.security.TenantContext;
+import com.bemo.hr.reporting.application.ReportingService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -50,6 +53,7 @@ import lombok.RequiredArgsConstructor;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class BiometricImportService {
+    private static final Logger log = LoggerFactory.getLogger(BiometricImportService.class);
     private static final int PREVIEW_LIMIT = 100;
     private static final int BATCH_FLUSH_SIZE = 500;
 
@@ -63,6 +67,7 @@ public class BiometricImportService {
     private final EmployeeRepository employeeRepository;
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final AuditService auditService;
+    private final ReportingService reportingService;
     @Value("${hr.company-zone:Africa/Cairo}")
     private String companyZoneId;
     private final JdbcTemplate jdbcTemplate;
@@ -111,6 +116,7 @@ public class BiometricImportService {
 
     @Transactional
     public ImportApi.BatchResponse importFile(MultipartFile file, String sourceId, String actor) {
+        long totalStart = System.currentTimeMillis();
         if (file.isEmpty()) throw new BusinessRuleException("Select a non-empty biometric file.", "BIO_FILE_EMPTY", HttpStatus.CONFLICT);
         if (sourceId == null || sourceId.isBlank()) throw new BusinessRuleException("Source is required.", "BIO_SOURCE_REQUIRED", HttpStatus.CONFLICT);
         if (actor == null || actor.isBlank()) throw new BusinessRuleException("Importer name is required.", "BIO_IMPORTER_NAME_REQUIRED", HttpStatus.CONFLICT);
@@ -123,20 +129,27 @@ public class BiometricImportService {
             throw new BusinessRuleException("Selected source is inactive.", "BIO_SOURCE_INACTIVE", HttpStatus.CONFLICT);
         }
         try {
-            // PERF-FIX-4: Single-pass — read file bytes once for both checksum and parsing.
+            long t0 = System.currentTimeMillis();
             byte[] fileBytes = file.getBytes();
             String checksum = sha256(fileBytes);
+            log.info("[IMPORT] Received biometric file: name={}, size={} bytes, checksum={}, sourceId={}, actor={}",
+                    file.getOriginalFilename(), fileBytes.length, checksum, sourceId, actor);
+
             var existing = importBatchRepository
                     .findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
                             sourceId, checksum, ImportStatus.REVERSED);
             if (existing.isPresent()) {
-                // BORTQALA_CORRECTIVE_20260816_DUPLICATE_FASTPATH
+                log.info("[IMPORT] Idempotent fast-path: identical batch already exists (batchId={})", existing.get().getId());
                 return toResponse(existing.get(), true);
             }
 
             String fileName = file.getOriginalFilename() == null ? "biometric-file" : file.getOriginalFilename();
+            long parseStart = System.currentTimeMillis();
             var parsed = biometricFileReader.read(fileName, new ByteArrayInputStream(fileBytes));
             fileBytes = null; // allow GC of the raw buffer
+            log.info("[IMPORT] File parsed in {}ms: totalRows={}, importedRows={}, errors={}",
+                    System.currentTimeMillis() - parseStart, parsed.totalRows(), parsed.importedRows(), parsed.errors().size());
+
             String appId = TenantContext.require();
             int totalRows = parsed.totalRows();
             int validRows = parsed.importedRows();
@@ -151,15 +164,17 @@ public class BiometricImportService {
                         .findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
                                 sourceId, checksum, ImportStatus.REVERSED)
                         .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + checksum));
+                log.info("[IMPORT] Concurrent reservation resolved to existing batchId={}", batch.getId());
                 return toResponse(batch, true);
             }
             batch = importBatchRepository.findById(batchId)
                     .orElseThrow(() -> new IllegalStateException("Reserved batch could not be loaded: " + batchId));
+            log.info("[IMPORT] Reserved new batch: batchId={}, appId={}", batchId, appId);
 
             // ------------------------------------------------------------------
-            // PERF-FIX-2: Pre-load known employees in bulk (1 query instead of N).
-            // Only call the heavier resolveEmployeeId for truly unknown device IDs.
+            // Pre-load known employees in bulk
             // ------------------------------------------------------------------
+            long empStart = System.currentTimeMillis();
             Set<String> allDeviceUserIds = parsed.rows().stream()
                     .map(BiometricFileReader.PunchRow::deviceUserId)
                     .filter(id -> id != null && !id.isBlank())
@@ -171,8 +186,8 @@ public class BiometricImportService {
                 employeeRepository.findByDeviceUserIdIn(allDeviceUserIds)
                         .forEach(e -> employeeIdCache.put(e.getDeviceUserId(), e.getId()));
             }
+            int knownPreloaded = employeeIdCache.size();
 
-            // Resolve remaining unknown employees (handles employee-code match + auto-provision)
             for (String duid : allDeviceUserIds) {
                 if (!employeeIdCache.containsKey(duid)) {
                     var sampleRow = parsed.rows().stream()
@@ -185,11 +200,13 @@ public class BiometricImportService {
                     }
                 }
             }
+            log.info("[IMPORT] Employee resolution in {}ms: uniqueDeviceUsers={}, preloaded={}, totalResolved={}",
+                    System.currentTimeMillis() - empStart, allDeviceUserIds.size(), knownPreloaded, employeeIdCache.size());
 
             // ------------------------------------------------------------------
-            // PERF-FIX-1: Batch INSERT punch records via JdbcTemplate
-            // (N/BATCH_FLUSH_SIZE round-trips instead of N individual statements).
+            // Batch INSERT punch records via JdbcTemplate
             // ------------------------------------------------------------------
+            long punchInsertStart = System.currentTimeMillis();
             List<Object[]> punchParams = new ArrayList<>(parsed.rows().size());
             for (var row : parsed.rows()) {
                 String normalized = row.deviceUserId() == null ? "" : row.deviceUserId().strip();
@@ -218,17 +235,18 @@ public class BiometricImportService {
                         ps.setString(10, (String) args[9]);
                         ps.setInt(11, (int) args[10]);
                     });
+            log.info("[IMPORT] Punch records batch insert in {}ms: {} rows processed",
+                    System.currentTimeMillis() - punchInsertStart, punchParams.size());
 
-            // ------------------------------------------------------------------
-            // PERF-FIX-3: Count new-vs-duplicate with aggregate queries instead of
-            // per-row tracking and per-duplicate SELECT.
-            // ------------------------------------------------------------------
             int newPunches = (int) punchRecordRepository.countByBatchId(batch.getId());
             int duplicatePunches = validRows - newPunches;
+            log.info("[IMPORT] Punch insert counts: new={}, duplicates={}, validTotal={}",
+                    newPunches, duplicatePunches, validRows);
 
-            // Resolve ALL punch IDs (new + existing) in bulk for evidence linkage.
-            // New rows carry our batch_id; duplicates belong to an earlier batch.
-            // One range query retrieves both sets.
+            // ------------------------------------------------------------------
+            // Resolve punch IDs in bulk via lightweight JDBC query
+            // ------------------------------------------------------------------
+            long resolveStart = System.currentTimeMillis();
             Instant minTime = parsed.rows().stream().map(BiometricFileReader.PunchRow::punchedAt)
                     .filter(Objects::nonNull).min(Comparator.naturalOrder()).orElse(null);
             Instant maxTime = parsed.rows().stream().map(BiometricFileReader.PunchRow::punchedAt)
@@ -236,12 +254,25 @@ public class BiometricImportService {
 
             Map<String, String> resolvedPunchIds = new HashMap<>();
             if (minTime != null && maxTime != null) {
-                punchRecordRepository.findBySourceIdAndPunchedAtBetweenOrderByPunchedAtAsc(
-                        sourceId, minTime, maxTime)
-                    .forEach(p -> resolvedPunchIds.put(
-                            punchKey(p.getDeviceUserId(), p.getPunchedAt()), p.getId()));
+                jdbcTemplate.query(
+                        "SELECT id, device_user_id, punched_at FROM punch_records WHERE source_id = ? AND punched_at >= ? AND punched_at <= ?",
+                        rs -> {
+                            String punchId = rs.getString("id");
+                            String duid = rs.getString("device_user_id");
+                            java.sql.Timestamp ts = rs.getTimestamp("punched_at");
+                            if (punchId != null && duid != null && ts != null) {
+                                resolvedPunchIds.put(punchKey(duid, ts.toInstant()), punchId);
+                            }
+                        },
+                        sourceId, java.sql.Timestamp.from(minTime), java.sql.Timestamp.from(maxTime));
             }
+            log.info("[IMPORT] Punch ID resolution in {}ms: resolved {} IDs for range [{} to {}]",
+                    System.currentTimeMillis() - resolveStart, resolvedPunchIds.size(), minTime, maxTime);
 
+            // ------------------------------------------------------------------
+            // Batch INSERT evidence
+            // ------------------------------------------------------------------
+            long evidenceStart = System.currentTimeMillis();
             List<PunchImportEvidence> evidence = new ArrayList<>(parsed.rows().size());
             for (var row : parsed.rows()) {
                 String punchId = resolvedPunchIds.get(punchKey(row.deviceUserId(), row.punchedAt()));
@@ -262,6 +293,9 @@ public class BiometricImportService {
                         ps.setString(5, ev.getRawLine());
                     });
             }
+            log.info("[IMPORT] Punch evidence batch insert in {}ms: {} evidence records",
+                    System.currentTimeMillis() - evidenceStart, evidence.size());
+
             batch.updateCounts(totalRows, validRows, errorRows, newPunches, duplicatePunches);
             importBatchRepository.save(batch);
             importRowErrorRepository.saveAll(parsed.errors().stream()
@@ -269,8 +303,7 @@ public class BiometricImportService {
                     .toList());
 
             // ------------------------------------------------------------------
-            // PERF-FIX-6: Collect affected months and delegate report generation
-            // to the event so it can run after commit rather than blocking return.
+            // Auto-generate attendance reports for recent/active affected months
             // ------------------------------------------------------------------
             var affectedAttendanceMonths = new TreeSet<YearMonth>();
             var attendanceZone = ZoneId.of(companyZoneId);
@@ -280,18 +313,50 @@ public class BiometricImportService {
                 }
             }
             boolean hasMonthlyCategory = attendanceCategoryRepository.findByScopeIn(
-                    java.util.List.of(com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE, com.bemo.hr.employee.domain.CategoryScope.BOTH)
+                    List.of(com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE, com.bemo.hr.employee.domain.CategoryScope.BOTH)
             ).stream().anyMatch(c -> c.isActive() && c.getPayCycle() == com.bemo.hr.employee.domain.PayCycle.MONTHLY);
 
-            Set<YearMonth> monthsNeedingReports = hasMonthlyCategory
-                    ? affectedAttendanceMonths : Set.of();
+            if (hasMonthlyCategory && !affectedAttendanceMonths.isEmpty()) {
+                // Scope auto-generation to the latest month in file and any recent active months.
+                // This prevents multi-year backup files (40+ historical months) from blocking import for minutes.
+                YearMonth currentMonth = YearMonth.now(attendanceZone);
+                var targetMonths = new TreeSet<YearMonth>();
+                targetMonths.add(affectedAttendanceMonths.last()); // Always include latest month in file
+                for (var m : affectedAttendanceMonths) {
+                    if (!m.isBefore(currentMonth.minusMonths(1))) {
+                        targetMonths.add(m);
+                    }
+                }
+                log.info("[IMPORT] Auto-generating attendance reports for {} target month(s) (out of {} in file): {}",
+                        targetMonths.size(), affectedAttendanceMonths.size(), targetMonths);
+                int count = 0;
+                for (var period : targetMonths) {
+                    count++;
+                    long reportStart = System.currentTimeMillis();
+                    log.info("[IMPORT] Generating attendance report [{}/{}]: period={} ...",
+                            count, targetMonths.size(), period);
+                    try {
+                        reportingService.recalculateMonth(period.getYear(), period.getMonthValue(), actor);
+                        log.info("[IMPORT] Attendance report [{}/{}] for period={} completed in {}ms",
+                                count, targetMonths.size(), period, System.currentTimeMillis() - reportStart);
+                    } catch (Exception ex) {
+                        log.warn("[IMPORT] Attendance report for period={} failed: {}",
+                                period, ex.getMessage());
+                    }
+                }
+            }
 
             Instant firstImportedPunch = minTime;
             Instant lastImportedPunch = maxTime;
-            eventPublisher.publishEvent(new BiometricImportCompletedEvent(
-                    firstImportedPunch, lastImportedPunch, actor, monthsNeedingReports));
+            eventPublisher.publishEvent(new BiometricImportCompletedEvent(firstImportedPunch, lastImportedPunch, actor));
+
+            long totalElapsed = System.currentTimeMillis() - totalStart;
+            log.info("[IMPORT] >>> Biometric import COMPLETED in {}ms ({}s): batchId={}, file={}, totalRows={}, validRows={}, newPunches={}, duplicatePunches={}, errorRows={}",
+                    totalElapsed, totalElapsed / 1000.0, batch.getId(), fileName, totalRows, validRows, newPunches, duplicatePunches, errorRows);
+
             return toResponse(batch, false);
         } catch (IOException exception) {
+            log.error("[IMPORT] Biometric file read error: {}", exception.getMessage(), exception);
             throw new BusinessRuleException("Could not read the uploaded file.", "EXCEL_READ_FAILED", HttpStatus.BAD_REQUEST);
         }
     }
@@ -321,7 +386,7 @@ public class BiometricImportService {
     }
 
     private String punchKey(String deviceUserId, Instant punchedAt) {
-        return deviceUserId + "\u001f" + punchedAt;
+        return (deviceUserId == null ? "" : deviceUserId.strip()) + "\u001f" + punchedAt;
     }
 
     private String sha256(MultipartFile file) {

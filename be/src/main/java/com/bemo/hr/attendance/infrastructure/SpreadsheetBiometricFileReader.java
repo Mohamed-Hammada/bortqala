@@ -40,6 +40,7 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
     private static final Set<String> OFFICIAL_OUT_HEADERS = Set.of("officialcheckout", "officialout", "الانصرافالرسمي");
     private static final Set<String> ACTUAL_IN_HEADERS = Set.of("actualcheckin", "actualin", "الحضورالفعلي");
     private static final Set<String> ACTUAL_OUT_HEADERS = Set.of("actualcheckout", "actualout", "الانصرافالفعلي");
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SpreadsheetBiometricFileReader.class);
     private final ZoneId companyZone;
 
     public SpreadsheetBiometricFileReader(@Value("${hr.company-zone:Africa/Cairo}") String companyZone) {
@@ -62,9 +63,11 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
     }
 
     private ParsedFile readAccess(InputStream inputStream) throws IOException {
+        long start = System.currentTimeMillis();
         var temporaryFile = Files.createTempFile("bemo-attendance-", ".mdb");
         try {
             Files.copy(inputStream, temporaryFile, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            log.info("Copied Access MDB to temp file: size={} bytes, path={}", Files.size(temporaryFile), temporaryFile);
             try (var database = DatabaseBuilder.open(temporaryFile.toFile())) {
                 if (!database.getTableNames().containsAll(Set.of("USERINFO", "CHECKINOUT"))) {
                     throw new BusinessRuleException("Access attendance backup must contain USERINFO and CHECKINOUT tables.", "BIO_ACCESS_TABLES_MISSING", HttpStatus.CONFLICT);
@@ -78,6 +81,7 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
                     userCodes.put(userId, text(row.get("Badgenumber")));
                     userNames.put(userId, text(row.get("Name")));
                 }
+                log.info("Access MDB loaded: {} users in USERINFO, {} total punches in CHECKINOUT table", userCodes.size(), punches.getRowCount());
                 var rows = new ArrayList<PunchRow>();
                 var errors = new ArrayList<RowError>();
                 int totalRows = 0;
@@ -97,6 +101,7 @@ public class SpreadsheetBiometricFileReader implements BiometricFileReader {
                         errors.add(new RowError(totalRows, readableMessage(exception), rawLine));
                     }
                 }
+                log.info("Access MDB reading completed in {}ms: totalRows={}, importedRows={}, errors={}", System.currentTimeMillis() - start, totalRows, importedRows, errors.size());
                 return new ParsedFile(List.copyOf(rows), List.copyOf(errors), totalRows, importedRows);
             }
         } finally {

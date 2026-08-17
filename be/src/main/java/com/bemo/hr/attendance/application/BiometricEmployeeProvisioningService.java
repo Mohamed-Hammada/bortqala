@@ -9,9 +9,11 @@ import com.bemo.hr.employee.domain.CategoryScope;
 import com.bemo.hr.employee.domain.EmployeeCodeSequence;
 import com.bemo.hr.employee.domain.EmploymentType;
 import com.bemo.hr.employee.domain.PayCycle;
+import com.bemo.hr.employee.domain.ScheduleRule;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeCodeSequenceRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
+import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantContext;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.HexFormat;
 import java.util.List;
@@ -42,6 +45,7 @@ public class BiometricEmployeeProvisioningService {
     private final EmployeeRepository employeeRepository;
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final EmployeeCodeSequenceRepository employeeCodeSequenceRepository;
+    private final ScheduleRuleRepository scheduleRuleRepository;
     private final PunchRecordRepository punchRecordRepository;
     private final AuditService auditService;
 
@@ -112,6 +116,17 @@ public class BiometricEmployeeProvisioningService {
         category.configureAdvanceEligibility(false);
         category = attendanceCategoryRepository.saveAndFlush(category);
         employeeCodeSequenceRepository.save(new EmployeeCodeSequence(category.getId()));
+        scheduleRuleRepository.save(new ScheduleRule(
+                category.getId(),
+                "الدوام الافتراضي",
+                LocalDate.of(2000, 1, 1),
+                null,
+                LocalTime.of(8, 0),
+                null,
+                15,
+                LocalTime.of(16, 0),
+                "ALL",
+                null));
         auditService.record(
                 "AUTO_CREATE",
                 "ATTENDANCE_CATEGORY",
