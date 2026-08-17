@@ -18,14 +18,16 @@ public class NotificationAdminController {
     private final NotificationAdminService service;
 
     @GetMapping("/apps")
-    public List<NotificationAdminApi.AppSummary> apps(Authentication auth) { return service.apps(auth); }
+    public List<NotificationAdminApi.AppSummary> apps(Authentication auth) {
+        return service.apps(auth);
+    }
 
     @GetMapping("/users")
-    public List<NotificationAdminApi.UserSummary> users(@RequestParam String appId, @RequestParam(defaultValue="") String q, Authentication auth) {
+    public List<NotificationAdminApi.UserSummary> users(@RequestParam String appId, @RequestParam(defaultValue = "") String q, Authentication auth) {
         return service.users(appId, q, auth);
     }
 
-    @PostMapping(value="/excel/preview", consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/excel/preview", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public NotificationAdminApi.ExcelPreview previewExcel(@RequestParam String appId, @RequestPart("file") MultipartFile file, Authentication auth) {
         return service.previewExcel(appId, file, auth);
     }

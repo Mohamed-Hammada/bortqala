@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface PurchaseRequisitionLineRepository extends JpaRepository<PurchaseRequisitionLine, String> {
     List<PurchaseRequisitionLine> findByRequisitionId(String requisitionId);
+
     void deleteByRequisitionId(String requisitionId);
 }

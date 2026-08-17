@@ -1,24 +1,14 @@
 package com.bemo.hr.payroll.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import jakarta.persistence.*;
+import org.hibernate.annotations.TenantId;
+import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
-
-import org.hibernate.annotations.TenantId;
-import org.springframework.http.HttpStatus;
-
-import com.bemo.hr.shared.domain.BusinessRuleException;
 
 @Entity
 @Table(name = "salary_payment")
@@ -120,7 +110,8 @@ public class SalaryPayment {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected SalaryPayment() { }
+    protected SalaryPayment() {
+    }
 
     public SalaryPayment(String employeeId, String reportId, int periodYear, int periodMonth,
                          String periodKind, LocalDate periodStart, LocalDate periodEnd,
@@ -204,41 +195,134 @@ public class SalaryPayment {
     }
 
     public void attachReversalJournal(String journalId) {
-        if (journalId == null || journalId.isBlank()) throw new IllegalArgumentException("Reversal journal is required");
+        if (journalId == null || journalId.isBlank())
+            throw new IllegalArgumentException("Reversal journal is required");
         this.reversalJournalId = journalId;
     }
 
-    public String getId() { return id; }
-    public String getTenantId() { return tenantId; }
-    public String getEmployeeId() { return employeeId; }
-    public String getReportId() { return reportId; }
-    public String getPayrollRunId() { return payrollRunId; }
-    public String getPayrollSnapshotId() { return payrollSnapshotId; }
-    public int getPeriodYear() { return periodYear; }
-    public int getPeriodMonth() { return periodMonth; }
-    public String getPeriodKind() { return periodKind; }
-    public LocalDate getPeriodStart() { return periodStart; }
-    public LocalDate getPeriodEnd() { return periodEnd; }
-    public BigDecimal getGrossAmount() { return grossAmount; }
-    public BigDecimal getAdvancesDeducted() { return advancesDeducted; }
-    public BigDecimal getOtherDeductions() { return otherDeductions; }
-    public BigDecimal getBonuses() { return bonuses; }
-    public BigDecimal getNetAmount() { return netAmount; }
-    public PaymentStatus getPaymentStatus() { return paymentStatus; }
-    public Instant getPaidAt() { return paidAt; }
-    public PaymentMethod getPaymentMethod() { return paymentMethod; }
-    public String getReferenceCode() { return referenceCode; }
-    public String getNote() { return note; }
-    public String getCreatedBy() { return createdBy; }
-    public String getPaidBy() { return paidBy; }
-    public String getReversedBy() { return reversedBy; }
-    public Instant getReversedAt() { return reversedAt; }
-    public String getReversalReason() { return reversalReason; }
-    public String getPaymentJournalId() { return paymentJournalId; }
-    public String getReversalJournalId() { return reversalJournalId; }
-    public long getVersion() { return version; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
+    }
+
+    public String getReportId() {
+        return reportId;
+    }
+
+    public String getPayrollRunId() {
+        return payrollRunId;
+    }
+
+    public String getPayrollSnapshotId() {
+        return payrollSnapshotId;
+    }
+
+    public int getPeriodYear() {
+        return periodYear;
+    }
+
+    public int getPeriodMonth() {
+        return periodMonth;
+    }
+
+    public String getPeriodKind() {
+        return periodKind;
+    }
+
+    public LocalDate getPeriodStart() {
+        return periodStart;
+    }
+
+    public LocalDate getPeriodEnd() {
+        return periodEnd;
+    }
+
+    public BigDecimal getGrossAmount() {
+        return grossAmount;
+    }
+
+    public BigDecimal getAdvancesDeducted() {
+        return advancesDeducted;
+    }
+
+    public BigDecimal getOtherDeductions() {
+        return otherDeductions;
+    }
+
+    public BigDecimal getBonuses() {
+        return bonuses;
+    }
+
+    public BigDecimal getNetAmount() {
+        return netAmount;
+    }
+
+    public PaymentStatus getPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public Instant getPaidAt() {
+        return paidAt;
+    }
+
+    public PaymentMethod getPaymentMethod() {
+        return paymentMethod;
+    }
+
+    public String getReferenceCode() {
+        return referenceCode;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public String getPaidBy() {
+        return paidBy;
+    }
+
+    public String getReversedBy() {
+        return reversedBy;
+    }
+
+    public Instant getReversedAt() {
+        return reversedAt;
+    }
+
+    public String getReversalReason() {
+        return reversalReason;
+    }
+
+    public String getPaymentJournalId() {
+        return paymentJournalId;
+    }
+
+    public String getReversalJournalId() {
+        return reversalJournalId;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
 
     @PrePersist
     void prePersist() {

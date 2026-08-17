@@ -29,6 +29,8 @@ public interface AppUserRepository extends JpaRepository<AppUser, String> {
     List<AppUser> lockAllByAppIdOrderByDisplayNameAsc(@Param("appId") String appId);
 
     boolean existsByAppIdAndUsernameIgnoreCase(String appId, String username);
+
     boolean existsByAppIdAndUsernameIgnoreCaseAndIdNot(String appId, String username, String id);
+
     long countByAppId(String appId);
 }

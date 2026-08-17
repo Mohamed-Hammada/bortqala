@@ -1,10 +1,6 @@
 package com.bemo.hr.manufacturing.production.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -42,7 +38,8 @@ public class BomSnapshot {
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
-    protected BomSnapshot() {}
+    protected BomSnapshot() {
+    }
 
     public BomSnapshot(String productionOrderId, String bomId, String bomRevision, String componentItemId,
                        BigDecimal requiredQuantity, BigDecimal standardUnitCost) {
@@ -56,15 +53,43 @@ public class BomSnapshot {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getProductionOrderId() { return productionOrderId; }
-    public String getBomId() { return bomId; }
-    public String getBomRevision() { return bomRevision; }
-    public String getComponentItemId() { return componentItemId; }
-    public BigDecimal getRequiredQuantity() { return requiredQuantity; }
-    public BigDecimal getStandardUnitCost() { return standardUnitCost; }
-    public long getCreatedAt() { return createdAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getProductionOrderId() {
+        return productionOrderId;
+    }
+
+    public String getBomId() {
+        return bomId;
+    }
+
+    public String getBomRevision() {
+        return bomRevision;
+    }
+
+    public String getComponentItemId() {
+        return componentItemId;
+    }
+
+    public BigDecimal getRequiredQuantity() {
+        return requiredQuantity;
+    }
+
+    public BigDecimal getStandardUnitCost() {
+        return standardUnitCost;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
 }

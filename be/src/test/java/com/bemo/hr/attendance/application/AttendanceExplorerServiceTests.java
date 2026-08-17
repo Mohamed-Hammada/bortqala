@@ -26,15 +26,12 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AttendanceExplorerServiceTests {
 
+    private final ZoneId zoneId = ZoneId.of("Africa/Cairo");
     @Mock
     private PunchRecordRepository punchRecordRepository;
-
     @Mock
     private EmployeeRepository employeeRepository;
-
     private AttendanceExplorerService service;
-
-    private final ZoneId zoneId = ZoneId.of("Africa/Cairo");
 
     @BeforeEach
     void setUp() {

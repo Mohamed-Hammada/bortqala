@@ -1,10 +1,10 @@
 package com.bemo.hr.payroll.application;
 
+import com.bemo.hr.finance.domain.JournalEntry;
+import com.bemo.hr.finance.domain.posting.SubledgerPostingService;
 import com.bemo.hr.payroll.domain.PayrollGlPosting;
 import com.bemo.hr.payroll.domain.PayrollRunHeader;
 import com.bemo.hr.payroll.infrastructure.PayrollGlPostingRepository;
-import com.bemo.hr.finance.domain.JournalEntry;
-import com.bemo.hr.finance.domain.posting.SubledgerPostingService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,7 +55,7 @@ class PayrollGlPostingServiceTests {
     @Test
     void rejectsLegacyClientSuppliedJournalAndAmounts() {
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.postPayrollToGl(
-                "period", "journal", BigDecimal.ONE, BigDecimal.ONE))
+                        "period", "journal", BigDecimal.ONE, BigDecimal.ONE))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("server-managed");
         verifyNoInteractions(subledgerPostingService);

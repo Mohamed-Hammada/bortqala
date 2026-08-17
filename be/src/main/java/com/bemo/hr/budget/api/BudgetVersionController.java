@@ -17,8 +17,6 @@ public class BudgetVersionController {
         this.versionService = versionService;
     }
 
-    public record CreateVersionPayload(String versionCode, String name, int fiscalYear) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public BudgetVersion createVersion(@RequestBody CreateVersionPayload payload) {
@@ -35,5 +33,8 @@ public class BudgetVersionController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR', 'VIEWER')")
     public List<BudgetVersion> getVersionsForYear(@PathVariable int fiscalYear) {
         return versionService.getVersionsForYear(fiscalYear);
+    }
+
+    public record CreateVersionPayload(String versionCode, String name, int fiscalYear) {
     }
 }

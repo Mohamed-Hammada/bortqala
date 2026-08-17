@@ -5,13 +5,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -85,14 +79,14 @@ public class WorkforceSettlementController {
     @PostMapping("/contractor-settlements/{id}/post")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_FINANCE', 'FINANCE_MANAGER')")
     public WorkforceApi.ContractorSettlementDetailResponse postSettlement(@PathVariable String id,
-                                                                         @Valid @RequestBody WorkforceApi.SettlementPostingRequest request) {
+                                                                          @Valid @RequestBody WorkforceApi.SettlementPostingRequest request) {
         return settlementService.postSettlement(id, request);
     }
 
     @PostMapping("/contractor-settlements/{id}/link-invoice")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_FINANCE', 'FINANCE_MANAGER')")
     public WorkforceApi.ContractorSettlementDetailResponse linkInvoice(@PathVariable String id,
-                                                                      @Valid @RequestBody WorkforceApi.LinkInvoiceRequest request) {
+                                                                       @Valid @RequestBody WorkforceApi.LinkInvoiceRequest request) {
         return settlementService.linkInvoice(id, request);
     }
 

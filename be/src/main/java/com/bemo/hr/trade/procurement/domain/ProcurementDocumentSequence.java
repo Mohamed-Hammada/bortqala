@@ -24,7 +24,8 @@ public class ProcurementDocumentSequence {
     @Column(name = "next_value", nullable = false)
     private long nextValue;
 
-    protected ProcurementDocumentSequence() { }
+    protected ProcurementDocumentSequence() {
+    }
 
     public ProcurementDocumentSequence(String documentType, long firstValue) {
         this.id = UUID.randomUUID().toString();

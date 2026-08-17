@@ -1,12 +1,6 @@
 package com.bemo.hr.workforce.application;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -18,12 +12,7 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Bulk master-data import for the existing Workforce APIs.
@@ -50,6 +39,36 @@ public class WorkforceMasterDataExcelImportService {
     public WorkforceMasterDataExcelImportService(ApplicationContext applicationContext, ObjectMapper objectMapper) {
         this.applicationContext = applicationContext;
         this.objectMapper = objectMapper;
+    }
+
+    private static void required(String value, String field) {
+        if (isBlank(value)) throw new IllegalArgumentException(field + " is required.");
+    }
+
+    private static String firstNonBlank(String value, String fallback) {
+        return isBlank(value) ? fallback : value.strip();
+    }
+
+    private static String nullIfBlank(String value) {
+        return isBlank(value) ? null : value.strip();
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private static String normalize(String value) {
+        if (value == null) return "";
+        return value.strip().toLowerCase(Locale.ROOT)
+                .replace("_", "").replace("-", "").replace(" ", "")
+                .replace("/", "").replace("\\", "").replace(".", "");
+    }
+
+    private static String rootMessage(Throwable throwable) {
+        Throwable current = throwable;
+        while (current.getCause() != null && current.getCause() != current) current = current.getCause();
+        String message = current.getMessage();
+        return message == null || message.isBlank() ? current.getClass().getSimpleName() : message;
     }
 
     public ImportResult importWorkbook(String kind, MultipartFile file, String identityMode) {
@@ -111,8 +130,8 @@ public class WorkforceMasterDataExcelImportService {
             throw new IllegalArgumentException("kind must be workers or contractors.");
         }
         String[] headers = normalizedKind.equals("workers")
-                ? new String[] {"WorkerCode", "FullName", "NationalID", "ContractorCode", "Category", "DefaultDailyRate", "StandardDailyHours", "BranchId", "AttendanceMode", "Phone", "Status", "Notes"}
-                : new String[] {"ContractorCode", "ContractorName", "TradeName", "Phone", "SecondaryPhone", "TaxId", "Address", "AccountingModel", "PaymentRouting", "SettlementCycleDays", "DefaultDailyRate", "FeeType", "FeeValue", "FeeBase", "FixedPeriodAmount", "Status", "Notes"};
+                ? new String[]{"WorkerCode", "FullName", "NationalID", "ContractorCode", "Category", "DefaultDailyRate", "StandardDailyHours", "BranchId", "AttendanceMode", "Phone", "Status", "Notes"}
+                : new String[]{"ContractorCode", "ContractorName", "TradeName", "Phone", "SecondaryPhone", "TaxId", "Address", "AccountingModel", "PaymentRouting", "SettlementCycleDays", "DefaultDailyRate", "FeeType", "FeeValue", "FeeBase", "FixedPeriodAmount", "Status", "Notes"};
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet(normalizedKind.equals("workers") ? "Workers" : "Contractors");
             Row header = sheet.createRow(0);
@@ -148,22 +167,22 @@ public class WorkforceMasterDataExcelImportService {
             title.getCell(0).setCellStyle(headerStyle);
             title.getCell(1).setCellStyle(headerStyle);
             String[][] rows = normalizedKind.equals("workers")
-                    ? new String[][] {
-                        {"WorkerCode", "Required in USER_CODE mode. In AUTO mode NationalID may be used when WorkerCode is blank."},
-                        {"FullName", "Optional; defaults to Worker <code> if blank."},
-                        {"ContractorCode", "Required. Must match an existing contractor code."},
-                        {"Category", "Required. Must match an existing employee/attendance category code."},
-                        {"AttendanceMode", "Optional; defaults to MANUAL."},
-                        {"Status", "Optional; defaults to ACTIVE."}
-                    }
-                    : new String[][] {
-                        {"ContractorCode", "Required in USER_CODE mode. In AUTO mode TaxId may be used when code is blank."},
-                        {"ContractorName", "Required."},
-                        {"AccountingModel", "Optional; defaults to worker_net_total."},
-                        {"PaymentRouting", "Optional; defaults to contractor_full."},
-                        {"FeeType", "Optional; defaults to PERCENT."},
-                        {"Status", "Optional; defaults to ACTIVE."}
-                    };
+                    ? new String[][]{
+                    {"WorkerCode", "Required in USER_CODE mode. In AUTO mode NationalID may be used when WorkerCode is blank."},
+                    {"FullName", "Optional; defaults to Worker <code> if blank."},
+                    {"ContractorCode", "Required. Must match an existing contractor code."},
+                    {"Category", "Required. Must match an existing employee/attendance category code."},
+                    {"AttendanceMode", "Optional; defaults to MANUAL."},
+                    {"Status", "Optional; defaults to ACTIVE."}
+            }
+                    : new String[][]{
+                    {"ContractorCode", "Required in USER_CODE mode. In AUTO mode TaxId may be used when code is blank."},
+                    {"ContractorName", "Required."},
+                    {"AccountingModel", "Optional; defaults to worker_net_total."},
+                    {"PaymentRouting", "Optional; defaults to contractor_full."},
+                    {"FeeType", "Optional; defaults to PERCENT."},
+                    {"Status", "Optional; defaults to ACTIVE."}
+            };
             for (int i = 0; i < rows.length; i++) {
                 Row row = instructions.createRow(i + 1);
                 row.createCell(0).setCellValue(rows[i][0]);
@@ -314,15 +333,21 @@ public class WorkforceMasterDataExcelImportService {
     private BigDecimal decimal(Map<String, Integer> headers, Row row, BigDecimal fallback, String... names) {
         String value = text(headers, row, names);
         if (isBlank(value)) return fallback;
-        try { return new BigDecimal(value.replace(",", "").strip()); }
-        catch (NumberFormatException ex) { throw new IllegalArgumentException(names[0] + " must be numeric."); }
+        try {
+            return new BigDecimal(value.replace(",", "").strip());
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException(names[0] + " must be numeric.");
+        }
     }
 
     private int integer(Map<String, Integer> headers, Row row, int fallback, String... names) {
         String value = text(headers, row, names);
         if (isBlank(value)) return fallback;
-        try { return new BigDecimal(value.replace(",", "").strip()).intValueExact(); }
-        catch (ArithmeticException | NumberFormatException ex) { throw new IllegalArgumentException(names[0] + " must be an integer."); }
+        try {
+            return new BigDecimal(value.replace(",", "").strip()).intValueExact();
+        } catch (ArithmeticException | NumberFormatException ex) {
+            throw new IllegalArgumentException(names[0] + " must be an integer.");
+        }
     }
 
     private String activeStatus(Map<String, Integer> headers, Row row) {
@@ -342,26 +367,10 @@ public class WorkforceMasterDataExcelImportService {
         return true;
     }
 
-    private static void required(String value, String field) {
-        if (isBlank(value)) throw new IllegalArgumentException(field + " is required.");
+    public record RowError(int rowNumber, String message) {
     }
 
-    private static String firstNonBlank(String value, String fallback) { return isBlank(value) ? fallback : value.strip(); }
-    private static String nullIfBlank(String value) { return isBlank(value) ? null : value.strip(); }
-    private static boolean isBlank(String value) { return value == null || value.isBlank(); }
-    private static String normalize(String value) {
-        if (value == null) return "";
-        return value.strip().toLowerCase(Locale.ROOT)
-                .replace("_", "").replace("-", "").replace(" ", "")
-                .replace("/", "").replace("\\", "").replace(".", "");
+    public record ImportResult(int totalRows, int importedRows, int failedRows, List<RowError> errors,
+                               String identityMode) {
     }
-    private static String rootMessage(Throwable throwable) {
-        Throwable current = throwable;
-        while (current.getCause() != null && current.getCause() != current) current = current.getCause();
-        String message = current.getMessage();
-        return message == null || message.isBlank() ? current.getClass().getSimpleName() : message;
-    }
-
-    public record RowError(int rowNumber, String message) { }
-    public record ImportResult(int totalRows, int importedRows, int failedRows, List<RowError> errors, String identityMode) { }
 }

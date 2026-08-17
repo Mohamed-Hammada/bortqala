@@ -23,35 +23,47 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ApprovalWorkflowServiceTests {
-    @Mock private ApprovalWorkflowDefinitionRepository definitionRepository;
-    @Mock private ApprovalWorkflowStepRepository stepRepository;
-    @Mock private ApprovalInstanceRepository instanceRepository;
-    @Mock private ApprovalInstanceStepRepository instanceStepRepository;
-    @Mock private ApprovalDecisionRepository decisionRepository;
-    @Mock private ApprovalDelegationRepository delegationRepository;
-    @Mock private AuditService auditService;
-    @InjectMocks private ApprovalWorkflowService service;
+    @Mock
+    private ApprovalWorkflowDefinitionRepository definitionRepository;
+    @Mock
+    private ApprovalWorkflowStepRepository stepRepository;
+    @Mock
+    private ApprovalInstanceRepository instanceRepository;
+    @Mock
+    private ApprovalInstanceStepRepository instanceStepRepository;
+    @Mock
+    private ApprovalDecisionRepository decisionRepository;
+    @Mock
+    private ApprovalDelegationRepository delegationRepository;
+    @Mock
+    private AuditService auditService;
+    @InjectMocks
+    private ApprovalWorkflowService service;
 
-    @AfterEach void clearSecurity() { SecurityContextHolder.clearContext(); }
+    @AfterEach
+    void clearSecurity() {
+        SecurityContextHolder.clearContext();
+    }
 
-    @Test void submitFailsWhenNoMatchingDefinition() {
+    @Test
+    void submitFailsWhenNoMatchingDefinition() {
         when(definitionRepository.findByDocumentTypeAndActiveTrue("PURCHASE_ORDER")).thenReturn(List.of());
         assertThatThrownBy(() -> service.submit(new ApprovalApi.SubmitDocumentRequest("PURCHASE_ORDER", "PO-100", new BigDecimal("5000"))))
                 .isInstanceOf(BusinessRuleException.class).hasMessageContaining("APPROVAL_WORKFLOW_NOT_FOUND");
     }
 
-    @Test void rejectFailsWhenCommentIsBlank() {
+    @Test
+    void rejectFailsWhenCommentIsBlank() {
         assertThatThrownBy(() -> service.reject(new ApprovalApi.DecisionRequest("inst-1", "   ")))
                 .isInstanceOf(BusinessRuleException.class).hasMessageContaining("APPROVAL_REJECTION_REASON_REQUIRED");
     }
 
-    @Test void createWorkflowDefinitionSavesValidatedAnyNPolicy() {
+    @Test
+    void createWorkflowDefinitionSavesValidatedAnyNPolicy() {
         ApprovalApi.StepRequest step = new ApprovalApi.StepRequest(1, "STEP_1", "Manager", "PROCUREMENT_MANAGER",
                 null, null, null, 2, false, 24, "ANY_N");
         ApprovalWorkflowDefinition saved = new ApprovalWorkflowDefinition("PURCHASE_ORDER", "PO approvals", true);
@@ -65,7 +77,8 @@ class ApprovalWorkflowServiceTests {
         assertThat(response.documentType()).isEqualTo("PURCHASE_ORDER");
     }
 
-    @Test void anyNDoesNotAdvanceUntilThresholdIsReached() {
+    @Test
+    void anyNDoesNotAdvanceUntilThresholdIsReached() {
         authenticate("manager", "PROCUREMENT_MANAGER");
         ApprovalInstance instance = instance();
         ApprovalInstanceStep snapshot = snapshot(instance, 2, "PROCUREMENT_MANAGER", null, false);
@@ -80,7 +93,8 @@ class ApprovalWorkflowServiceTests {
         verify(instanceRepository, never()).save(instance);
     }
 
-    @Test void delegatedDecisionRecordsOriginalApproverAndCompletesThreshold() {
+    @Test
+    void delegatedDecisionRecordsOriginalApproverAndCompletesThreshold() {
         authenticate("backup", "USER");
         ApprovalInstance instance = instance();
         ApprovalInstanceStep snapshot = snapshot(instance, 1, null, "owner", false);
@@ -101,7 +115,8 @@ class ApprovalWorkflowServiceTests {
         verify(stepRepository, never()).findByWorkflowDefinitionIdAndStepOrder(any(), anyInt());
     }
 
-    @Test void selfApprovalIsBlockedBySnapshotRule() {
+    @Test
+    void selfApprovalIsBlockedBySnapshotRule() {
         authenticate("submitter", "PROCUREMENT_MANAGER");
         ApprovalInstance instance = instance();
         ApprovalInstanceStep snapshot = snapshot(instance, 1, "PROCUREMENT_MANAGER", null, false);
@@ -111,7 +126,8 @@ class ApprovalWorkflowServiceTests {
                 .isInstanceOf(BusinessRuleException.class).hasMessageContaining("APPROVAL_SELF_APPROVAL_BLOCKED");
     }
 
-    @Test void delegationRejectsInvalidDateRange() {
+    @Test
+    void delegationRejectsInvalidDateRange() {
         authenticate("owner", "USER");
         long now = System.currentTimeMillis();
         assertThatThrownBy(() -> service.createDelegation(new ApprovalApi.DelegationRequest(
@@ -119,7 +135,8 @@ class ApprovalWorkflowServiceTests {
                 .isInstanceOf(BusinessRuleException.class).hasMessageContaining("APPROVAL_DELEGATION_DATES_INVALID");
     }
 
-    @Test void overdueScanEscalatesAnInstanceOnlyThroughTheLockedQuery() {
+    @Test
+    void overdueScanEscalatesAnInstanceOnlyThroughTheLockedQuery() {
         ApprovalInstance instance = instance();
         ReflectionTestUtils.setField(instance, "stepDueAt", Instant.now().minusSeconds(60));
         when(instanceRepository.findByStatusInAndStepDueAtBeforeAndEscalatedAtIsNull(any(), any())).thenReturn(List.of(instance));

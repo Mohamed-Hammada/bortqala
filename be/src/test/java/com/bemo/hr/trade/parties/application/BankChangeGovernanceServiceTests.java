@@ -1,11 +1,11 @@
 package com.bemo.hr.trade.parties.application;
 
-import com.bemo.hr.trade.parties.domain.BankChangeRequest;
-import com.bemo.hr.trade.parties.infrastructure.BankChangeRequestRepository;
-import com.bemo.hr.party.BusinessParty;
-import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.approval.SegregationOfDutiesService;
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.party.BusinessParty;
+import com.bemo.hr.party.BusinessPartyRepository;
+import com.bemo.hr.trade.parties.domain.BankChangeRequest;
+import com.bemo.hr.trade.parties.infrastructure.BankChangeRequestRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

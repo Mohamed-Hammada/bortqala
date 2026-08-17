@@ -1,12 +1,6 @@
 package com.bemo.hr.operations.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -52,7 +46,8 @@ public class StockValuationRecord {
     @Column(nullable = false)
     private long version;
 
-    protected StockValuationRecord() {}
+    protected StockValuationRecord() {
+    }
 
     public StockValuationRecord(String itemId, String warehouseId, BigDecimal quantityOnHand, BigDecimal unitCost, LocalDate asOfDate) {
         this.id = UUID.randomUUID().toString();
@@ -65,20 +60,57 @@ public class StockValuationRecord {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getItemId() { return itemId; }
-    public String getWarehouseId() { return warehouseId; }
-    public BigDecimal getQuantityOnHand() { return quantityOnHand; }
-    public BigDecimal getUnitCost() { return unitCost; }
-    public BigDecimal getTotalValue() { return totalValue; }
-    public LocalDate getAsOfDate() { return asOfDate; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public String getWarehouseId() {
+        return warehouseId;
+    }
+
+    public BigDecimal getQuantityOnHand() {
+        return quantityOnHand;
+    }
+
+    public BigDecimal getUnitCost() {
+        return unitCost;
+    }
+
+    public BigDecimal getTotalValue() {
+        return totalValue;
+    }
+
+    public LocalDate getAsOfDate() {
+        return asOfDate;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

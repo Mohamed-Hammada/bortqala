@@ -2,12 +2,7 @@ package com.bemo.hr.budget.application;
 
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.budget.api.BudgetApi;
-import com.bemo.hr.budget.domain.Budget;
-import com.bemo.hr.budget.domain.BudgetPeriodType;
-import com.bemo.hr.budget.domain.BudgetRepository;
-import com.bemo.hr.budget.domain.Encumbrance;
-import com.bemo.hr.budget.domain.EncumbranceRepository;
-import com.bemo.hr.budget.domain.EncumbranceStatus;
+import com.bemo.hr.budget.domain.*;
 import com.bemo.hr.organization.domain.Department;
 import com.bemo.hr.organization.infrastructure.DepartmentRepository;
 import com.bemo.hr.reporting.application.ExcelExportOptions;
@@ -115,7 +110,7 @@ public class BudgetService {
         List<Budget> budgets = fiscalYear == null
                 ? budgetRepository.findByActiveTrueOrderByFiscalYearDescPeriodMonthAsc()
                 : budgetRepository.findByActiveTrueOrderByFiscalYearDescPeriodMonthAsc().stream()
-                        .filter(item -> item.getFiscalYear() == fiscalYear).toList();
+                  .filter(item -> item.getFiscalYear() == fiscalYear).toList();
         return budgets.stream().map(this::toStatusResponse).toList();
     }
 
@@ -137,7 +132,7 @@ public class BudgetService {
             var sheet = ExcelExportSupport.sheet(workbook, ExcelExportSupport.text(messages, "export.sheet.budgets"),
                     options.rightToLeft());
             var headers = List.of("department", "year", "period", "planned", "committed", "actual",
-                    "available", "utilization", "currency", "blocking")
+                            "available", "utilization", "currency", "blocking")
                     .stream().map(key -> ExcelExportSupport.text(messages, "export.column." + key)).toList();
             ExcelExportSupport.writeHeader(sheet, headers);
             var styles = ExcelExportSupport.styles(workbook);
@@ -163,8 +158,8 @@ public class BudgetService {
      */
     @Transactional
     public BudgetApi.EncumbranceResponse encumberForOrder(String purchaseOrderId, String purchaseOrderNumber,
-                                                           String departmentId, BigDecimal baseTotalAmount,
-                                                           LocalDate poDate, String actor) {
+                                                          String departmentId, BigDecimal baseTotalAmount,
+                                                          LocalDate poDate, String actor) {
         Budget budget = resolveBudget(departmentId, poDate);
         if (budget == null) return null;
         BigDecimal amount = baseTotalAmount == null ? BigDecimal.ZERO : baseTotalAmount;
@@ -180,7 +175,9 @@ public class BudgetService {
         return toEncumbranceResponse(encumbrance);
     }
 
-    /** Records invoice spend against the order commitment (budget actuals). */
+    /**
+     * Records invoice spend against the order commitment (budget actuals).
+     */
     @Transactional
     public void liquidateForInvoice(String purchaseOrderId, BigDecimal baseNetAmount, String actor) {
         if (purchaseOrderId == null) return;
@@ -194,13 +191,17 @@ public class BudgetService {
                 });
     }
 
-    /** Returns the un-invoiced remainder of an order commitment to the budget. */
+    /**
+     * Returns the un-invoiced remainder of an order commitment to the budget.
+     */
     @Transactional
     public void releaseForReceive(String purchaseOrderId, String actor) {
         releaseCommitment(purchaseOrderId, actor, "RELEASE_RECEIVED");
     }
 
-    /** Returns the whole outstanding commitment when a purchase order is cancelled. */
+    /**
+     * Returns the whole outstanding commitment when a purchase order is cancelled.
+     */
     @Transactional
     public void releaseForCancel(String purchaseOrderId, String actor) {
         releaseCommitment(purchaseOrderId, actor, "RELEASE_CANCELLED");
@@ -224,8 +225,8 @@ public class BudgetService {
         return budgetRepository.findByDepartmentIdAndActiveTrue(departmentId.strip()).stream()
                 .filter(budget -> budget.getPeriodType() == BudgetPeriodType.MONTHLY
                         ? budget.getFiscalYear() == documentDate.getYear()
-                            && budget.getPeriodMonth() != null
-                            && budget.getPeriodMonth() == documentDate.getMonthValue()
+                          && budget.getPeriodMonth() != null
+                          && budget.getPeriodMonth() == documentDate.getMonthValue()
                         : budget.getFiscalYear() == documentDate.getYear())
                 .findFirst().orElse(null);
     }
@@ -329,8 +330,11 @@ public class BudgetService {
         if (actor.equals(revision.getRequestedBy())) {
             throw new BusinessRuleException("Requester cannot approve the same budget revision.", "BUDGET_REVISION_SOD", HttpStatus.CONFLICT);
         }
-        try { revision.approve(actor); }
-        catch (IllegalStateException ex) { throw new BusinessRuleException(ex.getMessage(), "BUDGET_REVISION_STATE_INVALID", HttpStatus.CONFLICT); }
+        try {
+            revision.approve(actor);
+        } catch (IllegalStateException ex) {
+            throw new BusinessRuleException(ex.getMessage(), "BUDGET_REVISION_STATE_INVALID", HttpStatus.CONFLICT);
+        }
         budget.applyApprovedRevision(revision.getRevisionNumber(), revision.getNewAmount());
         budgetRepository.save(budget);
         com.bemo.hr.budget.BudgetRevision saved = budgetRevisionRepository.save(revision);
@@ -345,8 +349,11 @@ public class BudgetService {
         com.bemo.hr.budget.BudgetRevision revision = budgetRevisionRepository.findById(revisionId)
                 .filter(item -> item.getBudgetId().equals(budgetId))
                 .orElseThrow(() -> new NotFoundException("Budget revision not found: " + revisionId));
-        try { revision.reject(actor); }
-        catch (IllegalStateException ex) { throw new BusinessRuleException(ex.getMessage(), "BUDGET_REVISION_STATE_INVALID", HttpStatus.CONFLICT); }
+        try {
+            revision.reject(actor);
+        } catch (IllegalStateException ex) {
+            throw new BusinessRuleException(ex.getMessage(), "BUDGET_REVISION_STATE_INVALID", HttpStatus.CONFLICT);
+        }
         com.bemo.hr.budget.BudgetRevision saved = budgetRevisionRepository.save(revision);
         auditService.record("REJECT_REVISION", "BUDGET", budgetId, actor,
                 "{\"revision\":" + revision.getRevisionNumber() + ",\"reason\":\"" + revision.getReason().replace("\"", "'") + "\"}", null);
@@ -390,7 +397,7 @@ public class BudgetService {
         BigDecimal available = budget.getPlannedAmount().subtract(committed).subtract(actual).max(BigDecimal.ZERO);
         BigDecimal utilization = budget.getPlannedAmount().signum() > 0
                 ? committed.add(actual).multiply(new BigDecimal("100"))
-                        .divide(budget.getPlannedAmount(), 2, RoundingMode.HALF_UP)
+                  .divide(budget.getPlannedAmount(), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
         return new BudgetApi.BudgetStatusResponse(budget.getId(), budget.getFiscalYear(), budget.getPeriodType(),
                 budget.getPeriodMonth(), budget.getDepartmentId(), departmentName(budget.getDepartmentId()),

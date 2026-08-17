@@ -1,11 +1,6 @@
 package com.bemo.hr.operations;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -40,7 +35,8 @@ public class UnitOfMeasure {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected UnitOfMeasure() {}
+    protected UnitOfMeasure() {
+    }
 
     public UnitOfMeasure(String name, String abbreviation, String description) {
         this.id = UUID.randomUUID().toString();
@@ -56,21 +52,54 @@ public class UnitOfMeasure {
         this.description = description == null || description.isBlank() ? null : description.strip();
     }
 
-    public void deactivate() { this.active = false; }
-    public void activate() { this.active = true; }
+    public void deactivate() {
+        this.active = false;
+    }
+
+    public void activate() {
+        this.active = true;
+    }
 
     @PrePersist
-    void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = Instant.now(); }
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getName() { return name; }
-    public String getAbbreviation() { return abbreviation; }
-    public String getDescription() { return description; }
-    public boolean isActive() { return active; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getAbbreviation() {
+        return abbreviation;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
 }

@@ -48,12 +48,18 @@ public class DemoNoLoginService implements ApplicationRunner {
                 : properties.secret();
     }
 
+    private static String generateRandomSecret() {
+        byte[] bytes = new byte[24];
+        SECURE_RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
     @Override
     public void run(ApplicationArguments args) {
         if (!isAvailable()) {
             if (properties.enabled()) {
                 LOGGER.warn("hr.security.demo-no-login is enabled but the active profile does not match {} "
-                        + "and/or the demo app code is missing; the no-login demo link stays disabled.",
+                                + "and/or the demo app code is missing; the no-login demo link stays disabled.",
                         properties.profiles());
             }
             return;
@@ -95,11 +101,5 @@ public class DemoNoLoginService implements ApplicationRunner {
         return Arrays.stream(environment.getActiveProfiles())
                 .map(value -> value.toLowerCase(Locale.ROOT))
                 .anyMatch(allowedSet::contains);
-    }
-
-    private static String generateRandomSecret() {
-        byte[] bytes = new byte[24];
-        SECURE_RANDOM.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }

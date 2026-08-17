@@ -22,10 +22,6 @@ public class SourcingController {
         this.sourcingService = sourcingService;
     }
 
-    public record CreateRfqPayload(String rfqNumber, String requisitionId, String issueDate, String dueDate) {}
-    public record SubmitQuotePayload(String supplierId, String quoteNumber, String quoteDate, String validUntil, BigDecimal totalAmount) {}
-    public record AwardQuotePayload(String quoteId) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER')")
     public RfqHeader createRfq(@RequestBody CreateRfqPayload payload) {
@@ -61,5 +57,15 @@ public class SourcingController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'VIEWER')")
     public List<SupplierQuoteHeader> getQuotes(@PathVariable String id) {
         return sourcingService.getQuotesForRfq(id);
+    }
+
+    public record CreateRfqPayload(String rfqNumber, String requisitionId, String issueDate, String dueDate) {
+    }
+
+    public record SubmitQuotePayload(String supplierId, String quoteNumber, String quoteDate, String validUntil,
+                                     BigDecimal totalAmount) {
+    }
+
+    public record AwardQuotePayload(String quoteId) {
     }
 }

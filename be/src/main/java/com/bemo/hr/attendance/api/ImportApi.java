@@ -1,12 +1,12 @@
 package com.bemo.hr.attendance.api;
 
 import com.bemo.hr.attendance.domain.ImportStatus;
-
-import java.time.Instant;
-import java.util.List;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+
+import java.time.Instant;
+import java.util.List;
 
 public final class ImportApi {
     private ImportApi() {
@@ -16,18 +16,24 @@ public final class ImportApi {
             String id, String fileName, String sourceId, String deviceName, ImportStatus status,
             int totalRows, int importedRows, int validRows, int newPunches, int duplicatePunches,
             int errorRows, String importedBy,
-            Instant importedAt, boolean duplicate, List<RowErrorResponse> errors) { }
+            Instant importedAt, boolean duplicate, List<RowErrorResponse> errors) {
+    }
 
-    public record RowErrorResponse(int rowNumber, String message, String rawLine) { }
+    public record RowErrorResponse(int rowNumber, String message, String rawLine) {
+    }
 
-    public record PreviewRowResponse(int rowNumber, String deviceUserId, String employeeName, long punchedAt, String rawLine) { }
+    public record PreviewRowResponse(int rowNumber, String deviceUserId, String employeeName, long punchedAt,
+                                     String rawLine) {
+    }
 
     public record PreviewResponse(
             String fileName, String checksum, int totalRows, int importedRows, int errorRows,
-            List<PreviewRowResponse> rows, List<RowErrorResponse> errors) { }
+            List<PreviewRowResponse> rows, List<RowErrorResponse> errors) {
+    }
 
     public record UnmatchedIdentityResponse(
-            String deviceUserId, String observedName, long punchCount, Instant firstPunch, Instant lastPunch) { }
+            String deviceUserId, String observedName, long punchCount, Instant firstPunch, Instant lastPunch) {
+    }
 
     public record SourceRequest(
             @NotBlank String name,
@@ -63,15 +69,18 @@ public final class ImportApi {
             @Min(1) @Max(1440) int syncIntervalMinutes,
             String username,
             String password
-    ) { }
+    ) {
+    }
 
     public record DeviceResponse(
             String id, String name, String endpointUrl, boolean enabled, int syncIntervalMinutes,
             Instant lastSyncAt, Instant lastSuccessfulPunchAt, Instant nextSyncAt,
             String lastStatus, String lastMessage, String username, boolean hasPassword, Instant createdAt
-    ) { }
+    ) {
+    }
 
     public record DeviceSyncResponse(
             DeviceResponse device, int receivedRows, int importedRows, int duplicateRows, boolean duplicateBatch
-    ) { }
+    ) {
+    }
 }

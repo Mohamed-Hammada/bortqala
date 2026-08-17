@@ -4,12 +4,7 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import org.apache.poi.EncryptedDocumentException;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,12 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 public class TranslationAdminService {
@@ -165,9 +155,9 @@ public class TranslationAdminService {
 
             TranslationEntry entry = normalizedAppId == null
                     ? translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppIdIsNull(
-                            normalizedLocale, normalizedKey).orElse(null)
+                    normalizedLocale, normalizedKey).orElse(null)
                     : translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppId(
-                            normalizedLocale, normalizedKey, normalizedAppId).orElse(null);
+                    normalizedLocale, normalizedKey, normalizedAppId).orElse(null);
 
             if (entry == null) {
                 entry = new TranslationEntry(normalizedKey, normalizedLocale, normalizedText, normalizedAppId);
@@ -205,9 +195,9 @@ public class TranslationAdminService {
 
         TranslationEntry entry = appId == null
                 ? translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppIdIsNull(
-                        normalizedLocale, normalizedKey).orElse(null)
+                normalizedLocale, normalizedKey).orElse(null)
                 : translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppId(
-                        normalizedLocale, normalizedKey, appId).orElse(null);
+                normalizedLocale, normalizedKey, appId).orElse(null);
 
         if (entry == null) {
             entry = new TranslationEntry(normalizedKey, normalizedLocale, textValue, appId);
@@ -236,10 +226,10 @@ public class TranslationAdminService {
 
         translationRepository.findByLocaleIgnoreCaseAndTranslationKeyAndAppId(
                 normalizedLocale, normalizedKey, normalizedAppId).ifPresent(entry -> {
-                    translationRepository.delete(entry);
-                    auditService.record("TRANSLATION_OVERRIDE_DELETE", "TRANSLATION", entry.getId(), actor,
-                            auditDetails(normalizedKey, normalizedLocale, normalizedAppId), null);
-                });
+            translationRepository.delete(entry);
+            auditService.record("TRANSLATION_OVERRIDE_DELETE", "TRANSLATION", entry.getId(), actor,
+                    auditDetails(normalizedKey, normalizedLocale, normalizedAppId), null);
+        });
         return row(normalizedKey, normalizedLocale, normalizedAppId);
     }
 
@@ -366,8 +356,8 @@ public class TranslationAdminService {
                 .findByLocaleIgnoreCaseAndTranslationKeyAndAppIdIsNull(locale, key)
                 .map(TranslationEntry::getTextValue).orElse(null);
         String overrideValue = appId == null ? null : translationRepository
-                .findByLocaleIgnoreCaseAndTranslationKeyAndAppId(locale, key, appId)
-                .map(TranslationEntry::getTextValue).orElse(null);
+                                                      .findByLocaleIgnoreCaseAndTranslationKeyAndAppId(locale, key, appId)
+                                                      .map(TranslationEntry::getTextValue).orElse(null);
         return new TranslationRow(key, defaultValue, overrideValue,
                 overrideValue != null ? overrideValue : defaultValue, overrideValue != null);
     }
@@ -430,22 +420,27 @@ public class TranslationAdminService {
         return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
-    public record AppOption(String id, String code, String name, boolean active) { }
+    public record AppOption(String id, String code, String name, boolean active) {
+    }
 
-    public record TranslationUpdate(String locale, String appId, String textValue) { }
+    public record TranslationUpdate(String locale, String appId, String textValue) {
+    }
 
     public record TranslationRow(String key, String defaultValue, String overrideValue,
-                                 String effectiveValue, boolean overridden) { }
+                                 String effectiveValue, boolean overridden) {
+    }
 
     public record TranslationPage(List<TranslationRow> content,
                                   int page,
                                   int size,
                                   long totalElements,
                                   int totalPages,
-                                  long overriddenCount) { }
+                                  long overriddenCount) {
+    }
 
     public record TranslationImportResult(int importedCount,
                                           int createdCount,
                                           int updatedCount,
-                                          int unchangedCount) { }
+                                          int unchangedCount) {
+    }
 }

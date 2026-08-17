@@ -7,5 +7,6 @@ import java.util.Optional;
 
 public interface ApprovalWorkflowDefinitionRepository extends JpaRepository<ApprovalWorkflowDefinition, String> {
     List<ApprovalWorkflowDefinition> findByDocumentTypeAndActiveTrue(String documentType);
+
     Optional<ApprovalWorkflowDefinition> findByDocumentType(String documentType);
 }

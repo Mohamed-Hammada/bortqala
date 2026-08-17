@@ -12,19 +12,8 @@ import com.bemo.hr.shared.security.TenantApplication;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.trade.procurement.api.ProcurementApi;
-import com.bemo.hr.trade.procurement.domain.GoodsReceipt;
-import com.bemo.hr.trade.procurement.domain.GoodsReceiptLine;
-import com.bemo.hr.trade.procurement.domain.PurchaseOrder;
-import com.bemo.hr.trade.procurement.domain.PurchaseOrderLine;
-import com.bemo.hr.trade.procurement.domain.SupplierReturn;
-import com.bemo.hr.trade.procurement.domain.SupplierReturnLine;
-import com.bemo.hr.trade.procurement.infrastructure.GoodsReceiptRepository;
-import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderLineRepository;
-import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderRepository;
-import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
-import com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository;
-import com.bemo.hr.trade.procurement.infrastructure.SupplierReturnRepository;
-
+import com.bemo.hr.trade.procurement.domain.*;
+import com.bemo.hr.trade.procurement.infrastructure.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +21,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -42,13 +30,53 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProcurementServiceTests {
+
+    @Mock
+    private PurchaseOrderRepository purchaseOrderRepository;
+    @Mock
+    private PurchaseOrderLineRepository purchaseOrderLineRepository;
+    @Mock
+    private GoodsReceiptRepository goodsReceiptRepository;
+    @Mock
+    private SupplierInvoiceRepository supplierInvoiceRepository;
+    @Mock
+    private SupplierPaymentRepository supplierPaymentRepository;
+    @Mock
+    private SupplierReturnRepository supplierReturnRepository;
+    @Mock
+    private BusinessPartyRepository businessPartyRepository;
+    @Mock
+    private PartnerLedgerEntryRepository partnerLedgerEntryRepository;
+    @Mock
+    private AuditService auditService;
+    @Mock
+    private ProcurementExcelExporter procurementExcelExporter;
+    @Mock
+    private OperationsService operationsService;
+    @Mock
+    private TenantApplicationRepository tenantApplicationRepository;
+    @Mock
+    private com.bemo.hr.finance.infrastructure.CurrencyRepository currencyRepository;
+    @Mock
+    private com.bemo.hr.shared.idempotency.application.IdempotencyService idempotencyService;
+    @Mock
+    private FiscalPeriodGuard fiscalPeriodGuard;
+    @Mock
+    private DocumentNumberService documentNumberService;
+    @Mock
+    private com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository threeWayMatchRepository;
+    @Mock
+    private BudgetService budgetService;
+    @Mock
+    private com.bemo.hr.trade.procurement.infrastructure.ProcurementDocumentSequenceRepository procurementDocumentSequenceRepository;
+    @InjectMocks
+    private ProcurementService service;
 
     @BeforeEach
     void setUp() {
@@ -59,29 +87,6 @@ class ProcurementServiceTests {
     void tearDown() {
         TenantContext.clear();
     }
-
-    @Mock private PurchaseOrderRepository purchaseOrderRepository;
-    @Mock private PurchaseOrderLineRepository purchaseOrderLineRepository;
-    @Mock private GoodsReceiptRepository goodsReceiptRepository;
-    @Mock private SupplierInvoiceRepository supplierInvoiceRepository;
-    @Mock private SupplierPaymentRepository supplierPaymentRepository;
-    @Mock private SupplierReturnRepository supplierReturnRepository;
-    @Mock private BusinessPartyRepository businessPartyRepository;
-    @Mock private PartnerLedgerEntryRepository partnerLedgerEntryRepository;
-    @Mock private AuditService auditService;
-    @Mock private ProcurementExcelExporter procurementExcelExporter;
-    @Mock private OperationsService operationsService;
-    @Mock private TenantApplicationRepository tenantApplicationRepository;
-    @Mock private com.bemo.hr.finance.infrastructure.CurrencyRepository currencyRepository;
-    @Mock private com.bemo.hr.shared.idempotency.application.IdempotencyService idempotencyService;
-    @Mock private FiscalPeriodGuard fiscalPeriodGuard;
-    @Mock private DocumentNumberService documentNumberService;
-    @Mock private com.bemo.hr.trade.procurement.domain.ProcurementThreeWayMatchRepository threeWayMatchRepository;
-    @Mock private BudgetService budgetService;
-    @Mock private com.bemo.hr.trade.procurement.infrastructure.ProcurementDocumentSequenceRepository procurementDocumentSequenceRepository;
-
-    @InjectMocks
-    private ProcurementService service;
 
     @Test
     void directReceive_throwsDeprecatedError() {

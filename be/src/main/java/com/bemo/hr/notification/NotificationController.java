@@ -19,8 +19,8 @@ public class NotificationController {
 
     @GetMapping
     public List<NotificationApi.NotificationResponse> getMyNotifications(Authentication authentication) {
-        var roles=authentication.getAuthorities().stream().map(a->a.getAuthority().replace("ROLE_","")).collect(java.util.stream.Collectors.toSet());
-        return notificationService.getNotificationsForUser(authentication.getName(),roles);
+        var roles = authentication.getAuthorities().stream().map(a -> a.getAuthority().replace("ROLE_", "")).collect(java.util.stream.Collectors.toSet());
+        return notificationService.getNotificationsForUser(authentication.getName(), roles);
     }
 
     @GetMapping("/unread-count")

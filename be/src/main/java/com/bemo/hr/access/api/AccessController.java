@@ -10,11 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Set;
@@ -36,21 +32,27 @@ public class AccessController {
         this.appUserRepository = appUserRepository;
     }
 
-    /** Metadata only: any authenticated user may read the catalog. */
+    /**
+     * Metadata only: any authenticated user may read the catalog.
+     */
     @GetMapping("/access/catalog")
     @PreAuthorize("isAuthenticated()")
     AccessApi.AccessCatalogResponse catalog() {
         return accessCatalogService.catalog();
     }
 
-    /** Fast local preview for authenticated users; never the final decision. */
+    /**
+     * Fast local preview for authenticated users; never the final decision.
+     */
     @PostMapping("/access/preview")
     @PreAuthorize("isAuthenticated()")
     AccessApi.AccessPreviewResponse preview(@Valid @RequestBody AccessApi.AccessPreviewRequest request) {
         return accessCatalogService.preview(request.roleCodes(), request.menuCodes());
     }
 
-    /** Authoritative validation before a user assignment is saved. */
+    /**
+     * Authoritative validation before a user assignment is saved.
+     */
     @PostMapping("/users/access/validate")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     AccessApi.AccessValidateResponse validate(@Valid @RequestBody AccessApi.AccessValidateRequest request,

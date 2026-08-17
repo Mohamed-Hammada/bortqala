@@ -1,7 +1,7 @@
 package com.bemo.hr.shared.transition;
 
-import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

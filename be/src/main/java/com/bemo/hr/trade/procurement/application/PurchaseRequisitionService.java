@@ -19,7 +19,7 @@ public class PurchaseRequisitionService {
     private final PurchaseRequisitionLineRepository requisitionLineRepository;
 
     public PurchaseRequisitionService(PurchaseRequisitionRepository requisitionRepository,
-                                       PurchaseRequisitionLineRepository requisitionLineRepository) {
+                                      PurchaseRequisitionLineRepository requisitionLineRepository) {
         this.requisitionRepository = requisitionRepository;
         this.requisitionLineRepository = requisitionLineRepository;
     }

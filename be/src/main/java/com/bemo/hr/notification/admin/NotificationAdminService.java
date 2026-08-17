@@ -2,17 +2,9 @@ package com.bemo.hr.notification.admin;
 
 import com.bemo.hr.notification.push.NotificationCreatedEvent;
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import com.bemo.hr.shared.security.AppUser;
-import com.bemo.hr.shared.security.AppUserRepository;
-import com.bemo.hr.shared.security.TenantApplication;
-import com.bemo.hr.shared.security.TenantApplicationRepository;
-import com.bemo.hr.shared.security.TenantContext;
+import com.bemo.hr.shared.security.*;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.usermodel.*;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -24,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.sql.PreparedStatement;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
@@ -41,6 +32,46 @@ public class NotificationAdminService {
     private final TenantApplicationRepository appRepository;
     private final JdbcTemplate jdbcTemplate;
     private final ApplicationEventPublisher eventPublisher;
+
+    private static List<String> parseCsvLine(String line) {
+        List<String> values = new ArrayList<>();
+        StringBuilder value = new StringBuilder();
+        boolean quoted = false;
+        for (int index = 0; index < line.length(); index++) {
+            char current = line.charAt(index);
+            if (current == '"') {
+                if (quoted && index + 1 < line.length() && line.charAt(index + 1) == '"') {
+                    value.append('"');
+                    index++;
+                } else quoted = !quoted;
+            } else if (current == ',' && !quoted) {
+                values.add(value.toString().strip());
+                value.setLength(0);
+            } else value.append(current);
+        }
+        values.add(value.toString().strip());
+        return values;
+    }
+
+    private static String normalize(String v) {
+        return v == null ? "" : v.strip().toLowerCase(Locale.ROOT);
+    }
+
+    private static String normalizeHeader(String v) {
+        return normalize(v).replace('-', '_');
+    }
+
+    private static List<String> limit(List<String> values) {
+        return values.stream().limit(PREVIEW_ERROR_LIMIT).toList();
+    }
+
+    private static boolean isSuperAdmin(Authentication auth) {
+        return auth.getAuthorities().stream().anyMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority()));
+    }
+
+    private static BusinessRuleException badRequest(String message, String code) {
+        return new BusinessRuleException(message, code, HttpStatus.BAD_REQUEST);
+    }
 
     @Transactional(readOnly = true)
     public List<NotificationAdminApi.AppSummary> apps(Authentication auth) {
@@ -70,23 +101,28 @@ public class NotificationAdminService {
     public NotificationAdminApi.ExcelPreview previewExcel(String appId, MultipartFile file, Authentication auth) {
         String target = authorizeTargetApp(appId, auth);
         if (file == null || file.isEmpty()) throw badRequest("Excel file is required", "NOTIFICATION_EXCEL_REQUIRED");
-        if (file.getSize() > MAX_EXCEL_BYTES) throw badRequest("Excel file must be 5 MB or smaller", "NOTIFICATION_EXCEL_TOO_LARGE");
+        if (file.getSize() > MAX_EXCEL_BYTES)
+            throw badRequest("Excel file must be 5 MB or smaller", "NOTIFICATION_EXCEL_TOO_LARGE");
         String name = Optional.ofNullable(file.getOriginalFilename()).orElse("").toLowerCase(Locale.ROOT);
         if (!(name.endsWith(".xlsx") || name.endsWith(".xls") || name.endsWith(".csv"))) {
             throw badRequest("Only .xlsx, .xls, and .csv files are supported", "NOTIFICATION_EXCEL_TYPE");
         }
 
         List<String> rows = name.endsWith(".csv") ? readCsvUsernames(file) : readWorkbookUsernames(file);
-        if (rows.size() > MAX_RECIPIENTS) throw badRequest("Excel recipient limit is 5000", "NOTIFICATION_RECIPIENT_LIMIT");
+        if (rows.size() > MAX_RECIPIENTS)
+            throw badRequest("Excel recipient limit is 5000", "NOTIFICATION_RECIPIENT_LIMIT");
         Map<String, AppUser> users = userRepository.findAllByAppIdOrderByDisplayNameAsc(target).stream()
-                .collect(Collectors.toMap(u -> normalize(u.getUsername()), u -> u, (a,b) -> a, LinkedHashMap::new));
+                .collect(Collectors.toMap(u -> normalize(u.getUsername()), u -> u, (a, b) -> a, LinkedHashMap::new));
 
         Set<String> seen = new LinkedHashSet<>();
         List<String> valid = new ArrayList<>(), duplicates = new ArrayList<>(), missing = new ArrayList<>(), inactive = new ArrayList<>();
         for (String raw : rows) {
             String username = normalize(raw);
             if (username.isBlank()) continue;
-            if (!seen.add(username)) { duplicates.add(username); continue; }
+            if (!seen.add(username)) {
+                duplicates.add(username);
+                continue;
+            }
             AppUser user = users.get(username);
             if (user == null) missing.add(username);
             else if (!user.isActive()) inactive.add(username);
@@ -101,7 +137,7 @@ public class NotificationAdminService {
         String target = authorizeTargetApp(payload.targetAppId(), auth);
         List<AppUser> allUsers = userRepository.findAllByAppIdOrderByDisplayNameAsc(target);
         Map<String, AppUser> byUsername = allUsers.stream().collect(Collectors.toMap(
-                u -> normalize(u.getUsername()), u -> u, (a,b) -> a, LinkedHashMap::new));
+                u -> normalize(u.getUsername()), u -> u, (a, b) -> a, LinkedHashMap::new));
 
         LinkedHashSet<String> requestedNames = new LinkedHashSet<>();
         if ("APP".equals(payload.mode())) {
@@ -110,8 +146,10 @@ public class NotificationAdminService {
             if (payload.usernames() != null) payload.usernames().stream().map(NotificationAdminService::normalize)
                     .filter(v -> !v.isBlank()).forEach(requestedNames::add);
         }
-        if (requestedNames.size() > MAX_RECIPIENTS) throw badRequest("Recipient limit is 5000", "NOTIFICATION_RECIPIENT_LIMIT");
-        if (requestedNames.isEmpty()) throw badRequest("At least one recipient is required", "NOTIFICATION_NO_RECIPIENTS");
+        if (requestedNames.size() > MAX_RECIPIENTS)
+            throw badRequest("Recipient limit is 5000", "NOTIFICATION_RECIPIENT_LIMIT");
+        if (requestedNames.isEmpty())
+            throw badRequest("At least one recipient is required", "NOTIFICATION_NO_RECIPIENTS");
 
         List<AppUser> valid = new ArrayList<>();
         int missing = 0, inactive = 0;
@@ -163,9 +201,13 @@ public class NotificationAdminService {
             int usernameColumn = -1;
             for (int c = 0; c < header.getLastCellNum(); c++) {
                 String h = normalizeHeader(formatter.formatCellValue(header.getCell(c)));
-                if (Set.of("username", "user", "login", "اسم المستخدم", "اسم_المستخدم").contains(h)) { usernameColumn = c; break; }
+                if (Set.of("username", "user", "login", "اسم المستخدم", "اسم_المستخدم").contains(h)) {
+                    usernameColumn = c;
+                    break;
+                }
             }
-            if (usernameColumn < 0) throw badRequest("Excel must contain a username column", "NOTIFICATION_EXCEL_HEADER");
+            if (usernameColumn < 0)
+                throw badRequest("Excel must contain a username column", "NOTIFICATION_EXCEL_HEADER");
             List<String> out = new ArrayList<>();
             for (int r = header.getRowNum() + 1; r <= sheet.getLastRowNum(); r++) {
                 Row row = sheet.getRow(r);
@@ -200,7 +242,8 @@ public class NotificationAdminService {
             String line;
             while ((line = reader.readLine()) != null) {
                 List<String> values = parseCsvLine(line);
-                if (usernameColumn < values.size() && !values.get(usernameColumn).isBlank()) usernames.add(values.get(usernameColumn).strip());
+                if (usernameColumn < values.size() && !values.get(usernameColumn).isBlank())
+                    usernames.add(values.get(usernameColumn).strip());
                 if (usernames.size() > MAX_RECIPIENTS) break;
             }
             return usernames;
@@ -210,30 +253,4 @@ public class NotificationAdminService {
             throw badRequest("Unable to read CSV file", "NOTIFICATION_EXCEL_INVALID");
         }
     }
-
-    private static List<String> parseCsvLine(String line) {
-        List<String> values = new ArrayList<>();
-        StringBuilder value = new StringBuilder();
-        boolean quoted = false;
-        for (int index = 0; index < line.length(); index++) {
-            char current = line.charAt(index);
-            if (current == '"') {
-                if (quoted && index + 1 < line.length() && line.charAt(index + 1) == '"') {
-                    value.append('"');
-                    index++;
-                } else quoted = !quoted;
-            } else if (current == ',' && !quoted) {
-                values.add(value.toString().strip());
-                value.setLength(0);
-            } else value.append(current);
-        }
-        values.add(value.toString().strip());
-        return values;
-    }
-
-    private static String normalize(String v) { return v == null ? "" : v.strip().toLowerCase(Locale.ROOT); }
-    private static String normalizeHeader(String v) { return normalize(v).replace('-', '_'); }
-    private static List<String> limit(List<String> values) { return values.stream().limit(PREVIEW_ERROR_LIMIT).toList(); }
-    private static boolean isSuperAdmin(Authentication auth) { return auth.getAuthorities().stream().anyMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority())); }
-    private static BusinessRuleException badRequest(String message, String code) { return new BusinessRuleException(message, code, HttpStatus.BAD_REQUEST); }
 }

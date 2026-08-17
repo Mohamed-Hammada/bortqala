@@ -9,7 +9,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
  * Base class for integration tests that must exercise real PostgreSQL row
  * locking, transaction waiting, and isolation. Runs the exact production
  * Liquibase changelog and validates the entity mapping like production does.
- *
+ * <p>
  * The container is started exactly once per JVM and kept alive until the
  * process exits. It is intentionally NOT a JUnit {@code @Container}: a
  * per-class lifecycle would restart Postgres between test classes while the

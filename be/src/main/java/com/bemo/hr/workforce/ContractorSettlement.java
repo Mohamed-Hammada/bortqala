@@ -1,12 +1,6 @@
 package com.bemo.hr.workforce;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -18,30 +12,54 @@ import java.util.UUID;
 @Table(name = "contractor_settlements")
 @Getter
 public class ContractorSettlement {
-    @Id private String id;
-    @TenantId @Column(name = "app_id", nullable = false) private String appId;
-    @Column(name = "period_id", nullable = false, length = 36) private String periodId;
-    @Column(name = "contractor_id", nullable = false, length = 36) private String contractorId;
-    @Column(name = "accounting_model", nullable = false, length = 50) private String accountingModel;
-    @Column(name = "workers_net_total", precision = 12, scale = 2) private BigDecimal workersNetTotal;
-    @Column(name = "contractor_rates_total", precision = 12, scale = 2) private BigDecimal contractorRatesTotal;
-    @Column(name = "commission_amount", precision = 12, scale = 2) private BigDecimal commissionAmount;
-    @Column(name = "fixed_amount", precision = 12, scale = 2) private BigDecimal fixedAmount;
-    @Column(name = "additions_amount", precision = 12, scale = 2) private BigDecimal additionsAmount;
-    @Column(name = "deductions_amount", precision = 12, scale = 2) private BigDecimal deductionsAmount;
-    @Column(name = "gross_amount", precision = 12, scale = 2) private BigDecimal grossAmount;
-    @Column(name = "net_payable", precision = 12, scale = 2) private BigDecimal netPayable;
-    @Column(name = "paid_amount", precision = 12, scale = 2) private BigDecimal paidAmount;
-    @Column(name = "invoice_number", length = 100) private String invoiceNumber;
-    @Column(name = "invoice_date") private Instant invoiceDate;
-    @Column(name = "posted_journal_entry_id", length = 36) private String postedJournalEntryId;
-    @Column(name = "calculation_version") private Integer calculationVersion;
-    @Column(nullable = false, length = 30) private String status;
-    @Version private Long version;
-    @Column(name = "created_at", nullable = false) private Instant createdAt;
-    @Column(name = "updated_at", nullable = false) private Instant updatedAt;
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(name = "period_id", nullable = false, length = 36)
+    private String periodId;
+    @Column(name = "contractor_id", nullable = false, length = 36)
+    private String contractorId;
+    @Column(name = "accounting_model", nullable = false, length = 50)
+    private String accountingModel;
+    @Column(name = "workers_net_total", precision = 12, scale = 2)
+    private BigDecimal workersNetTotal;
+    @Column(name = "contractor_rates_total", precision = 12, scale = 2)
+    private BigDecimal contractorRatesTotal;
+    @Column(name = "commission_amount", precision = 12, scale = 2)
+    private BigDecimal commissionAmount;
+    @Column(name = "fixed_amount", precision = 12, scale = 2)
+    private BigDecimal fixedAmount;
+    @Column(name = "additions_amount", precision = 12, scale = 2)
+    private BigDecimal additionsAmount;
+    @Column(name = "deductions_amount", precision = 12, scale = 2)
+    private BigDecimal deductionsAmount;
+    @Column(name = "gross_amount", precision = 12, scale = 2)
+    private BigDecimal grossAmount;
+    @Column(name = "net_payable", precision = 12, scale = 2)
+    private BigDecimal netPayable;
+    @Column(name = "paid_amount", precision = 12, scale = 2)
+    private BigDecimal paidAmount;
+    @Column(name = "invoice_number", length = 100)
+    private String invoiceNumber;
+    @Column(name = "invoice_date")
+    private Instant invoiceDate;
+    @Column(name = "posted_journal_entry_id", length = 36)
+    private String postedJournalEntryId;
+    @Column(name = "calculation_version")
+    private Integer calculationVersion;
+    @Column(nullable = false, length = 30)
+    private String status;
+    @Version
+    private Long version;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
-    protected ContractorSettlement() { }
+    protected ContractorSettlement() {
+    }
 
     public ContractorSettlement(String periodId, String contractorId, String accountingModel,
                                 BigDecimal workersNetTotal, BigDecimal contractorRatesTotal,
@@ -82,6 +100,14 @@ public class ContractorSettlement {
         }
     }
 
-    @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
-    @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
+    @PrePersist
+    void prePersist() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
 }

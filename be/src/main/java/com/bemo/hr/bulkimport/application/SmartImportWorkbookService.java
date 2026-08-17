@@ -1,28 +1,8 @@
 package com.bemo.hr.bulkimport.application;
 
-import com.bemo.hr.bulkimport.domain.SmartImportModels.CellError;
-import com.bemo.hr.bulkimport.domain.SmartImportModels.Column;
-import com.bemo.hr.bulkimport.domain.SmartImportModels.PreviewRow;
+import com.bemo.hr.bulkimport.domain.SmartImportModels.*;
 import com.bemo.hr.bulkimport.domain.SmartImportModels.Sheet;
-import com.bemo.hr.bulkimport.domain.SmartImportModels.Workflow;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.ClientAnchor;
-import org.apache.poi.ss.usermodel.Comment;
-import org.apache.poi.ss.usermodel.CreationHelper;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.DataValidation;
-import org.apache.poi.ss.usermodel.DataValidationConstraint;
-import org.apache.poi.ss.usermodel.DataValidationHelper;
-import org.apache.poi.ss.usermodel.DateUtil;
-import org.apache.poi.ss.usermodel.Drawing;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Component;
@@ -35,19 +15,46 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class SmartImportWorkbookService {
     private final SmartImportCatalog catalog;
     private final DataFormatter formatter = new DataFormatter(Locale.ROOT);
 
-    public SmartImportWorkbookService(SmartImportCatalog catalog) { this.catalog = catalog; }
+    public SmartImportWorkbookService(SmartImportCatalog catalog) {
+        this.catalog = catalog;
+    }
+
+    static List<List<String>> parseCsvRecords(String input) {
+        var records = new ArrayList<List<String>>();
+        var record = new ArrayList<String>();
+        var field = new StringBuilder();
+        boolean quoted = false;
+        for (int i = 0; i < input.length(); i++) {
+            char ch = input.charAt(i);
+            if (ch == '"') {
+                if (quoted && i + 1 < input.length() && input.charAt(i + 1) == '"') {
+                    field.append('"');
+                    i++;
+                } else quoted = !quoted;
+            } else if (ch == ',' && !quoted) {
+                record.add(field.toString());
+                field.setLength(0);
+            } else if ((ch == '\n' || ch == '\r') && !quoted) {
+                if (ch == '\r' && i + 1 < input.length() && input.charAt(i + 1) == '\n') i++;
+                record.add(field.toString());
+                field.setLength(0);
+                records.add(record);
+                record = new ArrayList<>();
+            } else field.append(ch);
+        }
+        if (field.length() > 0 || !record.isEmpty()) {
+            record.add(field.toString());
+            records.add(record);
+        }
+        return records;
+    }
 
     public byte[] buildTemplate(Workflow workflow, boolean sample) {
         try (var workbook = new XSSFWorkbook(); var out = new ByteArrayOutputStream()) {
@@ -98,7 +105,8 @@ public class SmartImportWorkbookService {
             errorStyle.setFillForegroundColor(IndexedColors.ROSE.getIndex());
             errorStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             var errorsByCell = new HashMap<String, CellError>();
-            for (var error : errors) errorsByCell.put(error.sheet() + "#" + error.rowNumber() + "#" + error.column(), error);
+            for (var error : errors)
+                errorsByCell.put(error.sheet() + "#" + error.rowNumber() + "#" + error.column(), error);
 
             for (var spec : workflow.sheets()) {
                 var rejected = rows.stream().filter(row -> row.sheet().equals(spec.key()) && !row.errors().isEmpty()).toList();
@@ -124,8 +132,10 @@ public class SmartImportWorkbookService {
                         if (error != null) {
                             cell.setCellStyle(errorStyle);
                             ClientAnchor anchor = helper.createClientAnchor();
-                            anchor.setCol1(c); anchor.setCol2(Math.min(c + 4, spec.columns().size()));
-                            anchor.setRow1(excelRow.getRowNum()); anchor.setRow2(excelRow.getRowNum() + 4);
+                            anchor.setCol1(c);
+                            anchor.setCol2(Math.min(c + 4, spec.columns().size()));
+                            anchor.setRow1(excelRow.getRowNum());
+                            anchor.setRow2(excelRow.getRowNum() + 4);
                             Comment comment = drawing.createCellComment(anchor);
                             comment.setAuthor("Bemo ERP Smart Import");
                             comment.setString(helper.createRichTextString(error.messageEn() + "\n" + error.messageAr()));
@@ -211,28 +221,6 @@ public class SmartImportWorkbookService {
         return rows;
     }
 
-    static List<List<String>> parseCsvRecords(String input) {
-        var records = new ArrayList<List<String>>();
-        var record = new ArrayList<String>();
-        var field = new StringBuilder();
-        boolean quoted = false;
-        for (int i = 0; i < input.length(); i++) {
-            char ch = input.charAt(i);
-            if (ch == '"') {
-                if (quoted && i + 1 < input.length() && input.charAt(i + 1) == '"') { field.append('"'); i++; }
-                else quoted = !quoted;
-            } else if (ch == ',' && !quoted) {
-                record.add(field.toString()); field.setLength(0);
-            } else if ((ch == '\n' || ch == '\r') && !quoted) {
-                if (ch == '\r' && i + 1 < input.length() && input.charAt(i + 1) == '\n') i++;
-                record.add(field.toString()); field.setLength(0);
-                records.add(record); record = new ArrayList<>();
-            } else field.append(ch);
-        }
-        if (field.length() > 0 || !record.isEmpty()) { record.add(field.toString()); records.add(record); }
-        return records;
-    }
-
     private void addDropdown(org.apache.poi.ss.usermodel.Sheet sheet, int columnIndex, List<String> values) {
         String joined = String.join(",", values);
         if (joined.length() > 250) return;
@@ -262,14 +250,16 @@ public class SmartImportWorkbookService {
             var cell = row.createCell(c);
             String sample = sampleValue(workflow.key(), column.key(), column.allowedValues());
             cell.setCellValue(sample);
-            if (column.type() == com.bemo.hr.bulkimport.domain.SmartImportModels.ColumnType.DATE) cell.setCellStyle(dateStyle);
+            if (column.type() == com.bemo.hr.bulkimport.domain.SmartImportModels.ColumnType.DATE)
+                cell.setCellStyle(dateStyle);
         }
     }
 
     private String sampleValue(String workflow, String key, List<String> allowed) {
         if (!allowed.isEmpty()) return allowed.get(0);
         if (key.toLowerCase(Locale.ROOT).contains("date")) return LocalDate.now().toString();
-        if (key.toLowerCase(Locale.ROOT).contains("amount") || key.toLowerCase(Locale.ROOT).contains("salary") || key.toLowerCase(Locale.ROOT).contains("quantity")) return "0.00";
+        if (key.toLowerCase(Locale.ROOT).contains("amount") || key.toLowerCase(Locale.ROOT).contains("salary") || key.toLowerCase(Locale.ROOT).contains("quantity"))
+            return "0.00";
         if (key.endsWith("Year")) return String.valueOf(LocalDate.now().getYear());
         if (key.endsWith("Code")) return "SAMPLE-001";
         if (key.equals("EmployeeCode")) return "EMP-001";

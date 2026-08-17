@@ -29,7 +29,8 @@ public class MaterialReservationLine {
     @Column(name = "reserved_quantity", nullable = false, precision = 15, scale = 4)
     private BigDecimal reservedQuantity;
 
-    protected MaterialReservationLine() {}
+    protected MaterialReservationLine() {
+    }
 
     public MaterialReservationLine(String reservationId, String itemId, BigDecimal reservedQuantity) {
         this.id = UUID.randomUUID().toString();
@@ -38,9 +39,23 @@ public class MaterialReservationLine {
         this.reservedQuantity = reservedQuantity;
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getReservationId() { return reservationId; }
-    public String getItemId() { return itemId; }
-    public BigDecimal getReservedQuantity() { return reservedQuantity; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getReservationId() {
+        return reservationId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public BigDecimal getReservedQuantity() {
+        return reservedQuantity;
+    }
 }

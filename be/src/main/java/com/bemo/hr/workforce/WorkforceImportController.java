@@ -6,14 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -28,7 +21,9 @@ public class WorkforceImportController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
-    public List<WorkforceExcelImportService.ImportBatchResponse> list() { return workforceExcelImportService.listBatches(); }
+    public List<WorkforceExcelImportService.ImportBatchResponse> list() {
+        return workforceExcelImportService.listBatches();
+    }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER')")
@@ -39,7 +34,7 @@ public class WorkforceImportController {
     @PostMapping("/{id}/mapping")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER')")
     public WorkforceExcelImportService.ImportBatchResponse map(@PathVariable String id,
-            @RequestBody WorkforceExcelImportService.MappingRequest request) {
+                                                               @RequestBody WorkforceExcelImportService.MappingRequest request) {
         return workforceExcelImportService.saveMapping(id, request);
     }
 
@@ -58,7 +53,7 @@ public class WorkforceImportController {
     @PostMapping("/{id}/commit")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
     public WorkforceExcelImportService.CommitResponse commit(@PathVariable String id,
-            @RequestBody WorkforceExcelImportService.CommitRequest request) {
+                                                             @RequestBody WorkforceExcelImportService.CommitRequest request) {
         return workforceExcelImportService.commit(id, request);
     }
 

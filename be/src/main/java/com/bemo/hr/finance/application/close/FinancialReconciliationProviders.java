@@ -1,8 +1,8 @@
 package com.bemo.hr.finance.application.close;
 
+import com.bemo.hr.finance.application.close.SubledgerReconciliationProvider.SourceDifference;
 import com.bemo.hr.finance.domain.reconciliation.SubledgerReconciliationReport;
 import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
-import com.bemo.hr.finance.application.close.SubledgerReconciliationProvider.SourceDifference;
 import com.bemo.hr.shared.security.TenantContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,18 +33,18 @@ public class FinancialReconciliationProviders {
                 String control = accounts.fixedControlAccount("SUPPLIER_INVOICE_RECORDED", end, "CREDIT");
 
                 List<SourceDifference> sources = jdbc.query("""
-                        select i.id,
-                               coalesce(i.invoice_number, i.internal_reference),
-                               i.base_net_amount - coalesce((
-                                   select sum(p.amount * i.exchange_rate)
-                                   from supplier_payments p
-                                   where p.app_id=i.app_id
-                                     and p.supplier_invoice_id=i.id
-                                     and p.payment_date<=?
-                               ),0)
-                        from supplier_invoices i
-                        where i.app_id=? and i.invoice_date<=? and i.status<>'CANCELLED'
-                        """,
+                                select i.id,
+                                       coalesce(i.invoice_number, i.internal_reference),
+                                       i.base_net_amount - coalesce((
+                                           select sum(p.amount * i.exchange_rate)
+                                           from supplier_payments p
+                                           where p.app_id=i.app_id
+                                             and p.supplier_invoice_id=i.id
+                                             and p.payment_date<=?
+                                       ),0)
+                                from supplier_invoices i
+                                where i.app_id=? and i.invoice_date<=? and i.status<>'CANCELLED'
+                                """,
                         (rs, n) -> new SourceDifference(
                                 rs.getString(1), rs.getString(2), rs.getBigDecimal(3), BigDecimal.ZERO),
                         end, tenant, end);
@@ -83,24 +83,24 @@ public class FinancialReconciliationProviders {
                 String control = accounts.fixedControlAccount("CUSTOMER_INVOICE_ISSUED", end, "DEBIT");
 
                 List<SourceDifference> sources = jdbc.query("""
-                        select i.id,
-                               i.invoice_number,
-                               i.amount
-                                 + coalesce((select sum(ca.amount)
-                                             from customer_credit_notes ca
-                                             where ca.app_id=i.app_id and ca.invoice_id=i.id),0)
-                                 - coalesce((select sum(c.amount)
-                                             from customer_credit_notes c
-                                             where c.app_id=i.app_id and c.invoice_id=i.id
-                                               and c.credit_date<=?),0)
-                                 - coalesce((select sum(a.amount)
-                                             from customer_receipt_allocations a
-                                             join customer_receipts r on r.id=a.receipt_id
-                                             where a.app_id=i.app_id and a.invoice_id=i.id
-                                               and r.app_id=i.app_id and r.receipt_date<=?),0)
-                        from customer_invoices i
-                        where i.app_id=? and i.invoice_date<=? and i.status<>'DRAFT'
-                        """,
+                                select i.id,
+                                       i.invoice_number,
+                                       i.amount
+                                         + coalesce((select sum(ca.amount)
+                                                     from customer_credit_notes ca
+                                                     where ca.app_id=i.app_id and ca.invoice_id=i.id),0)
+                                         - coalesce((select sum(c.amount)
+                                                     from customer_credit_notes c
+                                                     where c.app_id=i.app_id and c.invoice_id=i.id
+                                                       and c.credit_date<=?),0)
+                                         - coalesce((select sum(a.amount)
+                                                     from customer_receipt_allocations a
+                                                     join customer_receipts r on r.id=a.receipt_id
+                                                     where a.app_id=i.app_id and a.invoice_id=i.id
+                                                       and r.app_id=i.app_id and r.receipt_date<=?),0)
+                                from customer_invoices i
+                                where i.app_id=? and i.invoice_date<=? and i.status<>'DRAFT'
+                                """,
                         (rs, n) -> new SourceDifference(
                                 rs.getString(1), rs.getString(2), rs.getBigDecimal(3), BigDecimal.ZERO),
                         end, end, tenant, end);
@@ -198,7 +198,9 @@ public class FinancialReconciliationProviders {
             String sourceType,
             int sign) {
         return new SubledgerReconciliationProvider() {
-            public SubledgerReconciliationReport.SubledgerType type() { return type; }
+            public SubledgerReconciliationReport.SubledgerType type() {
+                return type;
+            }
 
             public ReconciliationCalculation calculate(String periodId, LocalDate ignored) {
                 LocalDate end = periods.findById(periodId).orElseThrow().getEndDate();
@@ -209,13 +211,13 @@ public class FinancialReconciliationProviders {
                         tenant, end);
                 BigDecimal subledger = totalSources(sources);
                 BigDecimal gl = jdbc.queryForObject("""
-                        select coalesce(sum((l.debit-l.credit)*?),0)
-                        from journal_source_metadata m
-                        join journal_entries j on j.id=m.journal_id
-                        join journal_entry_lines l on l.journal_entry_id=j.id
-                        where m.app_id=? and m.source_document_type=?
-                          and j.status in ('POSTED','REVERSED') and j.entry_date<=?
-                        """,
+                                select coalesce(sum((l.debit-l.credit)*?),0)
+                                from journal_source_metadata m
+                                join journal_entries j on j.id=m.journal_id
+                                join journal_entry_lines l on l.journal_entry_id=j.id
+                                where m.app_id=? and m.source_document_type=?
+                                  and j.status in ('POSTED','REVERSED') and j.entry_date<=?
+                                """,
                         BigDecimal.class, sign, tenant, sourceType, end);
                 if (gl == null) gl = BigDecimal.ZERO;
                 BigDecimal difference = gl.subtract(subledger);
@@ -234,13 +236,13 @@ public class FinancialReconciliationProviders {
     private BigDecimal accountBalance(
             JdbcTemplate jdbc, String tenant, String accountId, LocalDate end, int sign) {
         BigDecimal value = jdbc.queryForObject("""
-                select coalesce(sum((l.debit-l.credit)*?),0)
-                from journal_entries j
-                join journal_entry_lines l on l.journal_entry_id=j.id
-                where j.app_id=? and l.account_id=?
-                  and j.status in ('POSTED','REVERSED')
-                  and j.entry_date<=?
-                """,
+                        select coalesce(sum((l.debit-l.credit)*?),0)
+                        from journal_entries j
+                        join journal_entry_lines l on l.journal_entry_id=j.id
+                        where j.app_id=? and l.account_id=?
+                          and j.status in ('POSTED','REVERSED')
+                          and j.entry_date<=?
+                        """,
                 BigDecimal.class, sign, tenant, accountId, end);
         return value == null ? BigDecimal.ZERO : value;
     }
@@ -249,14 +251,14 @@ public class FinancialReconciliationProviders {
             JdbcTemplate jdbc, String tenant, String sourceType, String sourceId,
             String accountId, LocalDate end, int sign) {
         BigDecimal value = jdbc.queryForObject("""
-                select coalesce(sum((l.debit-l.credit)*?),0)
-                from journal_source_metadata m
-                join journal_entries j on j.id=m.journal_id
-                join journal_entry_lines l on l.journal_entry_id=j.id
-                where m.app_id=? and m.source_document_type=? and m.source_document_id=?
-                  and j.status in ('POSTED','REVERSED') and j.entry_date<=?
-                  and l.account_id=?
-                """,
+                        select coalesce(sum((l.debit-l.credit)*?),0)
+                        from journal_source_metadata m
+                        join journal_entries j on j.id=m.journal_id
+                        join journal_entry_lines l on l.journal_entry_id=j.id
+                        where m.app_id=? and m.source_document_type=? and m.source_document_id=?
+                          and j.status in ('POSTED','REVERSED') and j.entry_date<=?
+                          and l.account_id=?
+                        """,
                 BigDecimal.class, sign, tenant, sourceType, sourceId, end, accountId);
         return value == null ? BigDecimal.ZERO : value;
     }
@@ -266,16 +268,16 @@ public class FinancialReconciliationProviders {
         BigDecimal invoice = sourceDocumentControlAmount(
                 jdbc, tenant, "SUPPLIER_INVOICE", invoiceId, accountId, end, -1);
         BigDecimal payments = jdbc.queryForObject("""
-                select coalesce(sum((l.debit-l.credit)*-1),0)
-                from supplier_payments p
-                join journal_source_metadata m
-                  on m.source_document_type='SUPPLIER_PAYMENT' and m.source_document_id=p.id
-                join journal_entries j on j.id=m.journal_id
-                join journal_entry_lines l on l.journal_entry_id=j.id
-                where p.app_id=? and p.supplier_invoice_id=?
-                  and m.app_id=? and j.status in ('POSTED','REVERSED')
-                  and j.entry_date<=? and l.account_id=?
-                """,
+                        select coalesce(sum((l.debit-l.credit)*-1),0)
+                        from supplier_payments p
+                        join journal_source_metadata m
+                          on m.source_document_type='SUPPLIER_PAYMENT' and m.source_document_id=p.id
+                        join journal_entries j on j.id=m.journal_id
+                        join journal_entry_lines l on l.journal_entry_id=j.id
+                        where p.app_id=? and p.supplier_invoice_id=?
+                          and m.app_id=? and j.status in ('POSTED','REVERSED')
+                          and j.entry_date<=? and l.account_id=?
+                        """,
                 BigDecimal.class, tenant, invoiceId, tenant, end, accountId);
         return invoice.add(payments == null ? BigDecimal.ZERO : payments);
     }
@@ -286,30 +288,30 @@ public class FinancialReconciliationProviders {
                 jdbc, tenant, "CUSTOMER_INVOICE", invoiceId, accountId, end, 1);
 
         BigDecimal receipts = jdbc.queryForObject("""
-                select coalesce(sum(l.debit-l.credit),0)
-                from customer_receipt_allocations a
-                join customer_receipts r on r.id=a.receipt_id
-                join journal_source_metadata m
-                  on m.source_document_type='CUSTOMER_RECEIPT' and m.source_document_id=r.id
-                join journal_entries j on j.id=m.journal_id
-                join journal_entry_lines l on l.journal_entry_id=j.id
-                where a.app_id=? and a.invoice_id=? and r.app_id=?
-                  and m.app_id=? and j.status in ('POSTED','REVERSED')
-                  and j.entry_date<=? and l.account_id=?
-                """,
+                        select coalesce(sum(l.debit-l.credit),0)
+                        from customer_receipt_allocations a
+                        join customer_receipts r on r.id=a.receipt_id
+                        join journal_source_metadata m
+                          on m.source_document_type='CUSTOMER_RECEIPT' and m.source_document_id=r.id
+                        join journal_entries j on j.id=m.journal_id
+                        join journal_entry_lines l on l.journal_entry_id=j.id
+                        where a.app_id=? and a.invoice_id=? and r.app_id=?
+                          and m.app_id=? and j.status in ('POSTED','REVERSED')
+                          and j.entry_date<=? and l.account_id=?
+                        """,
                 BigDecimal.class, tenant, invoiceId, tenant, tenant, end, accountId);
 
         BigDecimal credits = jdbc.queryForObject("""
-                select coalesce(sum(l.debit-l.credit),0)
-                from customer_credit_notes c
-                join journal_source_metadata m
-                  on m.source_document_type='CUSTOMER_CREDIT_NOTE' and m.source_document_id=c.id
-                join journal_entries j on j.id=m.journal_id
-                join journal_entry_lines l on l.journal_entry_id=j.id
-                where c.app_id=? and c.invoice_id=? and m.app_id=?
-                  and j.status in ('POSTED','REVERSED')
-                  and j.entry_date<=? and l.account_id=?
-                """,
+                        select coalesce(sum(l.debit-l.credit),0)
+                        from customer_credit_notes c
+                        join journal_source_metadata m
+                          on m.source_document_type='CUSTOMER_CREDIT_NOTE' and m.source_document_id=c.id
+                        join journal_entries j on j.id=m.journal_id
+                        join journal_entry_lines l on l.journal_entry_id=j.id
+                        where c.app_id=? and c.invoice_id=? and m.app_id=?
+                          and j.status in ('POSTED','REVERSED')
+                          and j.entry_date<=? and l.account_id=?
+                        """,
                 BigDecimal.class, tenant, invoiceId, tenant, end, accountId);
 
         return invoice
@@ -321,16 +323,17 @@ public class FinancialReconciliationProviders {
             JdbcTemplate jdbc, String tenant, String journalId, String accountId) {
         if (journalId == null || accountId == null) return BigDecimal.ZERO;
         BigDecimal value = jdbc.queryForObject("""
-                select coalesce(sum(l.debit-l.credit),0)
-                from journal_entries j
-                join journal_entry_lines l on l.journal_entry_id=j.id
-                where j.app_id=? and j.id=?
-                  and j.status in ('POSTED','REVERSED')
-                  and l.account_id=?
-                """,
+                        select coalesce(sum(l.debit-l.credit),0)
+                        from journal_entries j
+                        join journal_entry_lines l on l.journal_entry_id=j.id
+                        where j.app_id=? and j.id=?
+                          and j.status in ('POSTED','REVERSED')
+                          and l.account_id=?
+                        """,
                 BigDecimal.class, tenant, journalId, accountId);
         return value == null ? BigDecimal.ZERO : value;
     }
 
-    private record InventorySource(String id, String reference, BigDecimal amount, String journalId) {}
+    private record InventorySource(String id, String reference, BigDecimal amount, String journalId) {
+    }
 }

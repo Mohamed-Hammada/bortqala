@@ -10,6 +10,7 @@ import java.util.List;
 
 public interface PunchImportEvidenceRepository extends JpaRepository<PunchImportEvidence, PunchImportEvidence.Key> {
     List<PunchImportEvidence> findByBatchIdOrderByRowNumber(String batchId);
+
     List<PunchImportEvidence> findByPunchId(String punchId);
 
     @Query("select distinct e.punchId from PunchImportEvidence e where e.batchId = :batchId")

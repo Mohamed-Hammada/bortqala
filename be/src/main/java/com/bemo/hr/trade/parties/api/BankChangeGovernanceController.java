@@ -18,9 +18,6 @@ public class BankChangeGovernanceController {
         this.governanceService = governanceService;
     }
 
-    public record RequestBankChangePayload(String partyType, String partyId, String oldIban, String newIban, String oldBankName, String newBankName, String reason) {}
-    public record RejectBankChangePayload(String reason) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER')")
     public BankChangeRequest createRequest(@RequestBody RequestBankChangePayload payload, Authentication authentication) {
@@ -52,5 +49,12 @@ public class BankChangeGovernanceController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
     public List<BankChangeRequest> getPendingRequests() {
         return governanceService.getPendingRequests();
+    }
+
+    public record RequestBankChangePayload(String partyType, String partyId, String oldIban, String newIban,
+                                           String oldBankName, String newBankName, String reason) {
+    }
+
+    public record RejectBankChangePayload(String reason) {
     }
 }

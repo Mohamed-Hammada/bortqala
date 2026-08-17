@@ -17,7 +17,9 @@ class MeIdentityIntegrationTests {
     private TenantApplicationRepository tenantApplicationRepository;
 
     @AfterEach
-    void clearTenant() { TenantContext.clear(); }
+    void clearTenant() {
+        TenantContext.clear();
+    }
 
     @Test
     void meReturnsIdentityTenantRolesScopesAndSessionSafely() {

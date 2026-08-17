@@ -17,8 +17,6 @@ public class SubledgerReconciliationController {
         this.reconciliationService = reconciliationService;
     }
 
-    public record GenerateReportPayload(String periodId, String subledgerType) {}
-
     @PostMapping("/generate")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
     public SubledgerReconciliationReport generateReport(@RequestBody GenerateReportPayload payload) {
@@ -30,5 +28,8 @@ public class SubledgerReconciliationController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR')")
     public List<SubledgerReconciliationReport> getReportsByPeriod(@PathVariable String periodId) {
         return reconciliationService.getReportsByPeriod(periodId);
+    }
+
+    public record GenerateReportPayload(String periodId, String subledgerType) {
     }
 }

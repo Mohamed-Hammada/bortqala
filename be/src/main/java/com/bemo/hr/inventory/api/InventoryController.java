@@ -19,9 +19,6 @@ public class InventoryController {
         this.inventoryService = inventoryService;
     }
 
-    public record CreateWarehouseRequest(String branchId, String code, String name, String location) {}
-    public record ReserveStockRequest(String sourceType, String sourceId, String itemId, String warehouseId, BigDecimal quantity) {}
-
     @GetMapping("/warehouses")
     @PreAuthorize("hasAuthority('P_INVENTORY_READ') or hasAnyRole('ADMIN','SUPER_ADMIN')")
     public List<Warehouse> getWarehouses() {
@@ -44,5 +41,12 @@ public class InventoryController {
     @PreAuthorize("hasAuthority('P_INVENTORY_MANAGE') or hasAnyRole('ADMIN','SUPER_ADMIN')")
     public void releaseReservation(@PathVariable String id) {
         inventoryService.releaseReservation(id);
+    }
+
+    public record CreateWarehouseRequest(String branchId, String code, String name, String location) {
+    }
+
+    public record ReserveStockRequest(String sourceType, String sourceId, String itemId, String warehouseId,
+                                      BigDecimal quantity) {
     }
 }

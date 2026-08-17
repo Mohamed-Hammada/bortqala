@@ -1,12 +1,6 @@
 package com.bemo.hr.payroll.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -106,7 +100,8 @@ public class PayrollInputSnapshot {
     @Column(nullable = false)
     private long version;
 
-    protected PayrollInputSnapshot() {}
+    protected PayrollInputSnapshot() {
+    }
 
     public PayrollInputSnapshot(String payrollRunId, String employeeId, String periodId, LocalDate periodStart, LocalDate periodEnd,
                                 BigDecimal baseSalary, long workedMinutes, long overtimeMinutes, long lateMinutes,
@@ -142,38 +137,129 @@ public class PayrollInputSnapshot {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getPayrollRunId() { return payrollRunId; }
-    public String getEmployeeId() { return employeeId; }
-    public String getPeriodId() { return periodId; }
-    public LocalDate getPeriodStart() { return periodStart; }
-    public LocalDate getPeriodEnd() { return periodEnd; }
-    public BigDecimal getBaseSalary() { return baseSalary; }
-    public long getWorkedMinutes() { return workedMinutes; }
-    public long getOvertimeMinutes() { return overtimeMinutes; }
-    public long getLateMinutes() { return lateMinutes; }
-    public String getPayrollPolicyId() { return payrollPolicyId; }
-    public long getPayrollPolicyVersion() { return payrollPolicyVersion; }
-    public BigDecimal getWorkingHourDivisor() { return workingHourDivisor; }
-    public BigDecimal getOvertimeMultiplier() { return overtimeMultiplier; }
-    public BigDecimal getAdvanceBalance() { return advanceBalance; }
-    public BigDecimal getAdvanceDeduction() { return advanceDeduction; }
-    public BigDecimal getWorkedHours() { return workedHours; }
-    public BigDecimal getOvertimeHours() { return overtimeHours; }
-    public int getAbsenceDays() { return absenceDays; }
-    public BigDecimal getDeductionAmount() { return deductionAmount; }
-    public BigDecimal getAllowanceAmount() { return allowanceAmount; }
-    public BigDecimal getGrossPay() { return grossPay; }
-    public BigDecimal getNetPay() { return netPay; }
-    public String getLockedBy() { return lockedBy; }
-    public long getLockedAt() { return lockedAt; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getPayrollRunId() {
+        return payrollRunId;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
+    }
+
+    public String getPeriodId() {
+        return periodId;
+    }
+
+    public LocalDate getPeriodStart() {
+        return periodStart;
+    }
+
+    public LocalDate getPeriodEnd() {
+        return periodEnd;
+    }
+
+    public BigDecimal getBaseSalary() {
+        return baseSalary;
+    }
+
+    public long getWorkedMinutes() {
+        return workedMinutes;
+    }
+
+    public long getOvertimeMinutes() {
+        return overtimeMinutes;
+    }
+
+    public long getLateMinutes() {
+        return lateMinutes;
+    }
+
+    public String getPayrollPolicyId() {
+        return payrollPolicyId;
+    }
+
+    public long getPayrollPolicyVersion() {
+        return payrollPolicyVersion;
+    }
+
+    public BigDecimal getWorkingHourDivisor() {
+        return workingHourDivisor;
+    }
+
+    public BigDecimal getOvertimeMultiplier() {
+        return overtimeMultiplier;
+    }
+
+    public BigDecimal getAdvanceBalance() {
+        return advanceBalance;
+    }
+
+    public BigDecimal getAdvanceDeduction() {
+        return advanceDeduction;
+    }
+
+    public BigDecimal getWorkedHours() {
+        return workedHours;
+    }
+
+    public BigDecimal getOvertimeHours() {
+        return overtimeHours;
+    }
+
+    public int getAbsenceDays() {
+        return absenceDays;
+    }
+
+    public BigDecimal getDeductionAmount() {
+        return deductionAmount;
+    }
+
+    public BigDecimal getAllowanceAmount() {
+        return allowanceAmount;
+    }
+
+    public BigDecimal getGrossPay() {
+        return grossPay;
+    }
+
+    public BigDecimal getNetPay() {
+        return netPay;
+    }
+
+    public String getLockedBy() {
+        return lockedBy;
+    }
+
+    public long getLockedAt() {
+        return lockedAt;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

@@ -187,5 +187,6 @@ public class ApiExceptionHandler {
         };
     }
 
-    private record ErrorText(String message, String localizedMessage) { }
+    private record ErrorText(String message, String localizedMessage) {
+    }
 }

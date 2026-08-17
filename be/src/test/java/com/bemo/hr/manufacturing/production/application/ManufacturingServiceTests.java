@@ -4,8 +4,8 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.manufacturing.production.api.ManufacturingApi;
 import com.bemo.hr.manufacturing.production.domain.BomHeader;
 import com.bemo.hr.manufacturing.production.domain.BomLine;
-import com.bemo.hr.manufacturing.production.domain.ProductionOrder;
 import com.bemo.hr.manufacturing.production.domain.BomSnapshot;
+import com.bemo.hr.manufacturing.production.domain.ProductionOrder;
 import com.bemo.hr.manufacturing.production.infrastructure.BomHeaderRepository;
 import com.bemo.hr.manufacturing.production.infrastructure.BomLineRepository;
 import com.bemo.hr.manufacturing.production.infrastructure.ProductionOrderRepository;
@@ -28,15 +28,28 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ManufacturingServiceTests {
+
+    @Mock
+    private BomHeaderRepository bomHeaderRepository;
+    @Mock
+    private BomLineRepository bomLineRepository;
+    @Mock
+    private ProductionOrderRepository productionOrderRepository;
+    @Mock
+    private QualityInspectionRepository qualityInspectionRepository;
+    @Mock
+    private OperationsService operationsService;
+    @Mock
+    private AuditService auditService;
+    @Mock
+    private BomSnapshotService bomSnapshotService;
+    @InjectMocks
+    private ManufacturingService service;
 
     @BeforeEach
     void setUp() {
@@ -47,17 +60,6 @@ class ManufacturingServiceTests {
     void tearDown() {
         TenantContext.clear();
     }
-
-    @Mock private BomHeaderRepository bomHeaderRepository;
-    @Mock private BomLineRepository bomLineRepository;
-    @Mock private ProductionOrderRepository productionOrderRepository;
-    @Mock private QualityInspectionRepository qualityInspectionRepository;
-    @Mock private OperationsService operationsService;
-    @Mock private AuditService auditService;
-    @Mock private BomSnapshotService bomSnapshotService;
-
-    @InjectMocks
-    private ManufacturingService service;
 
     @Test
     void createBom_savesHeaderAndLines() {

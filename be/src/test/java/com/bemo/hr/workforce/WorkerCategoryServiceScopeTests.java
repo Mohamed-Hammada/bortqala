@@ -16,10 +16,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class WorkerCategoryServiceScopeTests {
 
@@ -28,13 +25,6 @@ class WorkerCategoryServiceScopeTests {
     private final EmployeeCodeSequenceRepository employeeCodeSequenceRepository = mock(EmployeeCodeSequenceRepository.class);
     private final WorkerCategoryService service =
             new WorkerCategoryService(categoryRepository, attendanceCategoryRepository, employeeCodeSequenceRepository);
-
-    private WorkerCategory config(AttendanceCategory canonical) {
-        WorkerCategory config = new WorkerCategory(canonical.getCode(), canonical.getName(), null,
-                new BigDecimal("275.50"), new BigDecimal("8"), "HALF_MONTH", "ACTIVE");
-        config.linkToCategory(canonical.getId());
-        return persisted(config);
-    }
 
     private static WorkerCategory persisted(WorkerCategory config) {
         java.time.Instant now = java.time.Instant.now();
@@ -49,6 +39,13 @@ class WorkerCategoryServiceScopeTests {
             throw new RuntimeException(exception);
         }
         return config;
+    }
+
+    private WorkerCategory config(AttendanceCategory canonical) {
+        WorkerCategory config = new WorkerCategory(canonical.getCode(), canonical.getName(), null,
+                new BigDecimal("275.50"), new BigDecimal("8"), "HALF_MONTH", "ACTIVE");
+        config.linkToCategory(canonical.getId());
+        return persisted(config);
     }
 
     private AttendanceCategory canonical(String code, CategoryScope scope) {

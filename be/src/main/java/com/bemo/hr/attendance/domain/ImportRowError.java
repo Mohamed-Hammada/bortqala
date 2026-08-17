@@ -36,7 +36,15 @@ public class ImportRowError {
         this.rawLine = rawLine;
     }
 
-    public int getRowNumber() { return rowNumber; }
-    public String getMessage() { return message; }
-    public String getRawLine() { return rawLine; }
+    public int getRowNumber() {
+        return rowNumber;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public String getRawLine() {
+        return rawLine;
+    }
 }

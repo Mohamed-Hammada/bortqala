@@ -5,9 +5,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class SmartImportModels {
-    private SmartImportModels() {}
+    private SmartImportModels() {
+    }
 
-    public enum ColumnType { STRING, DATE, DECIMAL, INTEGER, BOOLEAN, ENUM }
+    public enum ColumnType {STRING, DATE, DECIMAL, INTEGER, BOOLEAN, ENUM}
 
     public record Column(
             String key,
@@ -28,7 +29,9 @@ public final class SmartImportModels {
             String titleEn,
             String titleAr,
             List<Column> columns) {
-        public Sheet { columns = List.copyOf(columns); }
+        public Sheet {
+            columns = List.copyOf(columns);
+        }
     }
 
     public record Workflow(
@@ -40,7 +43,9 @@ public final class SmartImportModels {
             String priority,
             boolean domainCommitAvailable,
             List<Sheet> sheets) {
-        public Workflow { sheets = List.copyOf(sheets); }
+        public Workflow {
+            sheets = List.copyOf(sheets);
+        }
     }
 
     public record CellError(
@@ -48,7 +53,8 @@ public final class SmartImportModels {
             String sheet,
             String column,
             String messageEn,
-            String messageAr) {}
+            String messageAr) {
+    }
 
     public record PreviewRow(
             int rowNumber,
@@ -77,11 +83,15 @@ public final class SmartImportModels {
     }
 
     public record EditedRow(int rowNumber, String sheet, Map<String, String> values) {
-        public EditedRow { values = Map.copyOf(values); }
+        public EditedRow {
+            values = Map.copyOf(values);
+        }
     }
 
     public record CommitRequest(UUID previewId, boolean skipInvalid, List<EditedRow> rows) {
-        public CommitRequest { rows = rows == null ? List.of() : List.copyOf(rows); }
+        public CommitRequest {
+            rows = rows == null ? List.of() : List.copyOf(rows);
+        }
     }
 
     public record CommitResult(
@@ -94,7 +104,9 @@ public final class SmartImportModels {
             String messageEn,
             String messageAr,
             List<CellError> errors) {
-        public CommitResult { errors = errors == null ? List.of() : List.copyOf(errors); }
+        public CommitResult {
+            errors = errors == null ? List.of() : List.copyOf(errors);
+        }
     }
 
     public record HandlerOutcome(
@@ -104,6 +116,8 @@ public final class SmartImportModels {
             String messageEn,
             String messageAr,
             List<CellError> errors) {
-        public HandlerOutcome { errors = errors == null ? List.of() : List.copyOf(errors); }
+        public HandlerOutcome {
+            errors = errors == null ? List.of() : List.copyOf(errors);
+        }
     }
 }

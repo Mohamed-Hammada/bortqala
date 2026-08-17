@@ -8,5 +8,6 @@ import java.util.List;
 @Repository
 public interface WorkerAssignmentRepository extends JpaRepository<WorkerAssignment, String> {
     List<WorkerAssignment> findByDispatchId(String dispatchId);
+
     List<WorkerAssignment> findByWorkerId(String workerId);
 }

@@ -50,7 +50,8 @@ public class SalesOrderLine {
     @Column(name = "line_total", nullable = false, precision = 15, scale = 2)
     private BigDecimal lineTotal;
 
-    protected SalesOrderLine() {}
+    protected SalesOrderLine() {
+    }
 
     public SalesOrderLine(String salesOrderId, String itemId, String itemName, BigDecimal orderedQuantity, BigDecimal unitPrice, BigDecimal discountRate) {
         this.id = UUID.randomUUID().toString();
@@ -78,16 +79,51 @@ public class SalesOrderLine {
         this.invoicedQuantity = this.invoicedQuantity.add(quantity);
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getSalesOrderId() { return salesOrderId; }
-    public String getItemId() { return itemId; }
-    public String getItemName() { return itemName; }
-    public BigDecimal getOrderedQuantity() { return orderedQuantity; }
-    public BigDecimal getDeliveredQuantity() { return deliveredQuantity; }
-    public BigDecimal getInvoicedQuantity() { return invoicedQuantity; }
-    public BigDecimal getUnitPrice() { return unitPrice; }
-    public BigDecimal getDiscountRate() { return discountRate; }
-    public BigDecimal getNetPrice() { return netPrice; }
-    public BigDecimal getLineTotal() { return lineTotal; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getSalesOrderId() {
+        return salesOrderId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public BigDecimal getOrderedQuantity() {
+        return orderedQuantity;
+    }
+
+    public BigDecimal getDeliveredQuantity() {
+        return deliveredQuantity;
+    }
+
+    public BigDecimal getInvoicedQuantity() {
+        return invoicedQuantity;
+    }
+
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public BigDecimal getDiscountRate() {
+        return discountRate;
+    }
+
+    public BigDecimal getNetPrice() {
+        return netPrice;
+    }
+
+    public BigDecimal getLineTotal() {
+        return lineTotal;
+    }
 }

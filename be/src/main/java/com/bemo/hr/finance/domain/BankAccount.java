@@ -1,15 +1,8 @@
 package com.bemo.hr.finance.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
-import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -37,7 +30,8 @@ public class BankAccount {
 
     @Column(name = "account_id", length = 36)
     private String accountId;
-    @Column(name = "currency_code", nullable = false, length = 10) private String currencyCode;
+    @Column(name = "currency_code", nullable = false, length = 10)
+    private String currencyCode;
 
     @Column(nullable = false)
     private boolean active;
@@ -52,7 +46,8 @@ public class BankAccount {
     @Column(name = "version", nullable = false)
     private long version;
 
-    protected BankAccount() {}
+    protected BankAccount() {
+    }
 
     public BankAccount(String bankName, String accountNumber, String iban, String swiftCode, String accountId, String currencyCode, boolean active) {
         this.id = UUID.randomUUID().toString();
@@ -70,20 +65,57 @@ public class BankAccount {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getBankName() { return bankName; }
-    public String getAccountNumber() { return accountNumber; }
-    public String getIban() { return iban; }
-    public String getSwiftCode() { return swiftCode; }
-    public String getAccountId() { return accountId; }
-    public String getCurrencyCode() { return currencyCode; }
-    public boolean isActive() { return active; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getBankName() {
+        return bankName;
+    }
+
+    public String getAccountNumber() {
+        return accountNumber;
+    }
+
+    public String getIban() {
+        return iban;
+    }
+
+    public String getSwiftCode() {
+        return swiftCode;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public String getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

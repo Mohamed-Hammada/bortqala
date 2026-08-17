@@ -19,11 +19,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class BomSnapshotPersistenceTests {
 
-    @Autowired private BomSnapshotService bomSnapshotService;
-    @Autowired private BomSnapshotRepository bomSnapshotRepository;
-    @Autowired private TenantApplicationRepository tenantApplicationRepository;
-
     private final List<String> tenantIds = new ArrayList<>();
+    @Autowired
+    private BomSnapshotService bomSnapshotService;
+    @Autowired
+    private BomSnapshotRepository bomSnapshotRepository;
+    @Autowired
+    private TenantApplicationRepository tenantApplicationRepository;
 
     @AfterEach
     void cleanup() {

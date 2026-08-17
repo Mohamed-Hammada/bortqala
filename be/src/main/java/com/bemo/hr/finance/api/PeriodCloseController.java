@@ -3,10 +3,10 @@ package com.bemo.hr.finance.api;
 import com.bemo.hr.finance.application.close.PeriodCloseOrchestratorService;
 import com.bemo.hr.finance.domain.close.PeriodCloseExecutionRecord;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/v1/finance/period-close")
@@ -27,8 +27,8 @@ public class PeriodCloseController {
     @PostMapping("/execute/{periodId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public List<PeriodCloseExecutionRecord> executeClose(@PathVariable String periodId,
-                                                          @RequestParam(required = false) Long expectedVersion,
-                                                          Authentication authentication) {
+                                                         @RequestParam(required = false) Long expectedVersion,
+                                                         Authentication authentication) {
         return orchestratorService.executeClose(periodId, authentication.getName(), expectedVersion);
     }
 }

@@ -1,28 +1,23 @@
 package com.bemo.hr.payroll.application;
 
 import com.bemo.hr.employee.domain.AttendanceCategory;
-import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.operations.OperationsService;
 import com.bemo.hr.payroll.api.PayrollApi;
-import com.bemo.hr.payroll.domain.PaymentMethod;
-import com.bemo.hr.payroll.domain.PaymentStatus;
-import com.bemo.hr.payroll.domain.SalaryPayment;
-import com.bemo.hr.payroll.domain.PayrollRunHeader;
-import com.bemo.hr.payroll.domain.PayrollRunLine;
-import com.bemo.hr.payroll.infrastructure.SalaryPaymentRepository;
+import com.bemo.hr.payroll.domain.*;
 import com.bemo.hr.payroll.infrastructure.PayrollRunHeaderRepository;
 import com.bemo.hr.payroll.infrastructure.PayrollRunLineRepository;
+import com.bemo.hr.payroll.infrastructure.SalaryPaymentRepository;
+import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.reporting.domain.DailyAttendanceResult;
 import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
 import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
-import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.workforce.WorkforceAdvanceService;
-import org.springframework.http.HttpStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +28,6 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -87,9 +81,9 @@ public class PayrollService {
 
         String calculationInputs = snapshot == null ? "{\"gross\":" + gross + "}"
                 : "{\"snapshotId\":\"" + snapshot.getId() + "\",\"baseSalary\":" + snapshot.getBaseSalary()
-                + ",\"overtimeMinutes\":" + snapshot.getOvertimeMinutes() + ",\"lateMinutes\":"
-                + snapshot.getLateMinutes() + ",\"workingHourDivisor\":" + snapshot.getWorkingHourDivisor()
-                + ",\"overtimeMultiplier\":" + snapshot.getOvertimeMultiplier() + "}";
+                  + ",\"overtimeMinutes\":" + snapshot.getOvertimeMinutes() + ",\"lateMinutes\":"
+                  + snapshot.getLateMinutes() + ",\"workingHourDivisor\":" + snapshot.getWorkingHourDivisor()
+                  + ",\"overtimeMultiplier\":" + snapshot.getOvertimeMultiplier() + "}";
         explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
                 payment.getId(), "SNAPSHOT_CALCULATION", "base + overtime - lateness - advances + adjustments", calculationInputs,
                 gross, "إجمالي الراتب المستحق المستخرج من سجل الحضور والانصراف", "Gross base salary derived from locked attendance records"
@@ -542,15 +536,15 @@ public class PayrollService {
         }
         for (var row : sheet.rows()) {
             recordPayment(new PayrollApi.PaymentRequest(
-                        row.employeeId(),
-                        request.periodYear(),
-                        request.periodMonth(),
-                        row.periodKind(),
-                        request.paymentMethod() == null ? PaymentMethod.CASH : request.paymentMethod(),
-                        request.referenceCode(),
-                        request.note(),
-                        System.currentTimeMillis(),
-                        row.version()
+                    row.employeeId(),
+                    request.periodYear(),
+                    request.periodMonth(),
+                    row.periodKind(),
+                    request.paymentMethod() == null ? PaymentMethod.CASH : request.paymentMethod(),
+                    request.referenceCode(),
+                    request.note(),
+                    System.currentTimeMillis(),
+                    row.version()
             ), actor);
         }
 

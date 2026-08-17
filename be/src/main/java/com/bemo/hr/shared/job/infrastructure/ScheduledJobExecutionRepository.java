@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface ScheduledJobExecutionRepository extends JpaRepository<ScheduledJobExecutionRecord, String> {
     Optional<ScheduledJobExecutionRecord> findByJobNameAndExecutionKey(String jobName, String executionKey);
+
     List<ScheduledJobExecutionRecord> findByJobName(String jobName);
 }

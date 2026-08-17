@@ -34,15 +34,24 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DashboardServiceTrendsTests {
-    @Mock private AttendanceCategoryRepository attendanceCategoryRepository;
-    @Mock private EmployeeRepository employeeRepository;
-    @Mock private AttendanceReportRepository attendanceReportRepository;
-    @Mock private DailyAttendanceResultRepository dailyAttendanceResultRepository;
-    @Mock private ImportBatchRepository importBatchRepository;
-    @Mock private PunchRecordRepository punchRecordRepository;
-    @Mock private SalaryPaymentRepository salaryPaymentRepository;
-    @Mock private OperationsService operationsService;
-    @Mock private AttendanceReportRefreshService attendanceReportRefreshService;
+    @Mock
+    private AttendanceCategoryRepository attendanceCategoryRepository;
+    @Mock
+    private EmployeeRepository employeeRepository;
+    @Mock
+    private AttendanceReportRepository attendanceReportRepository;
+    @Mock
+    private DailyAttendanceResultRepository dailyAttendanceResultRepository;
+    @Mock
+    private ImportBatchRepository importBatchRepository;
+    @Mock
+    private PunchRecordRepository punchRecordRepository;
+    @Mock
+    private SalaryPaymentRepository salaryPaymentRepository;
+    @Mock
+    private OperationsService operationsService;
+    @Mock
+    private AttendanceReportRefreshService attendanceReportRefreshService;
     private DashboardService service;
 
     @BeforeEach

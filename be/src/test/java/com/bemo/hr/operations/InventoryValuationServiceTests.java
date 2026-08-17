@@ -1,17 +1,14 @@
 package com.bemo.hr.operations;
 
 import com.bemo.hr.audit.application.AuditService;
-import com.bemo.hr.finance.domain.Account;
-import com.bemo.hr.finance.domain.FiscalPeriod;
-import com.bemo.hr.finance.domain.FiscalPeriodGuard;
-import com.bemo.hr.finance.domain.JournalEntry;
-import com.bemo.hr.finance.domain.JournalEntryLine;
+import com.bemo.hr.finance.domain.*;
 import com.bemo.hr.finance.infrastructure.AccountRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.numbering.DocumentNumberService;
 import com.bemo.hr.shared.security.TenantContext;
+import jakarta.persistence.LockModeType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,9 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.data.jpa.repository.Lock;
-import jakarta.persistence.LockModeType;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -32,24 +28,34 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class InventoryValuationServiceTests {
-    @Mock private InventoryValuationPolicyRepository policyRepository;
-    @Mock private InventoryCostLayerRepository layerRepository;
-    @Mock private InventoryMovementCostRepository movementCostRepository;
-    @Mock private InventoryRevaluationRepository revaluationRepository;
-    @Mock private InventoryItemRepository itemRepository;
-    @Mock private StockMovementRepository movementRepository;
-    @Mock private AccountRepository accountRepository;
-    @Mock private JournalEntryRepository journalEntryRepository;
-    @Mock private JournalEntryLineRepository journalEntryLineRepository;
-    @Mock private FiscalPeriodGuard fiscalPeriodGuard;
-    @Mock private DocumentNumberService documentNumberService;
-    @Mock private AuditService auditService;
+    @Mock
+    private InventoryValuationPolicyRepository policyRepository;
+    @Mock
+    private InventoryCostLayerRepository layerRepository;
+    @Mock
+    private InventoryMovementCostRepository movementCostRepository;
+    @Mock
+    private InventoryRevaluationRepository revaluationRepository;
+    @Mock
+    private InventoryItemRepository itemRepository;
+    @Mock
+    private StockMovementRepository movementRepository;
+    @Mock
+    private AccountRepository accountRepository;
+    @Mock
+    private JournalEntryRepository journalEntryRepository;
+    @Mock
+    private JournalEntryLineRepository journalEntryLineRepository;
+    @Mock
+    private FiscalPeriodGuard fiscalPeriodGuard;
+    @Mock
+    private DocumentNumberService documentNumberService;
+    @Mock
+    private AuditService auditService;
 
     private InventoryValuationService service;
     private InventoryItem item;
@@ -75,7 +81,10 @@ class InventoryValuationServiceTests {
         lenient().when(fiscalPeriodGuard.requireOpen(any())).thenReturn(period);
     }
 
-    @AfterEach void tearDown() { TenantContext.clear(); }
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
+    }
 
     @Test
     void weightedAverageValuesReceiptsAndIssuesAndTakesItemLock() {

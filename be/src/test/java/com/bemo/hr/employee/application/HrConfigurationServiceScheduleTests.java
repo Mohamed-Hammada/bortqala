@@ -5,11 +5,7 @@ import com.bemo.hr.employee.domain.AttendanceCategory;
 import com.bemo.hr.employee.domain.AttendanceMode;
 import com.bemo.hr.employee.domain.CategoryScope;
 import com.bemo.hr.employee.domain.PayCycle;
-import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
-import com.bemo.hr.employee.infrastructure.EmployeeAssignmentRepository;
-import com.bemo.hr.employee.infrastructure.EmployeeRepository;
-import com.bemo.hr.employee.infrastructure.EmployeeCodeSequenceRepository;
-import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
+import com.bemo.hr.employee.infrastructure.*;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.AppUserRepository;
 import org.junit.jupiter.api.Test;
@@ -21,14 +17,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.inOrder;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class HrConfigurationServiceScheduleTests {
+    private static CategoryApi.ScheduleRequest schedule(int fromMonth, Integer toMonth) {
+        return new CategoryApi.ScheduleRequest("الجدول", LocalDate.of(2026, fromMonth, 1),
+                toMonth == null ? null : LocalDate.of(2026, toMonth, 28),
+                LocalTime.of(8, 0), null, 0);
+    }
+
     @Test
     void flushesDeletedSchedulesBeforeInsertingReplacements() {
         var categoryRepository = mock(AttendanceCategoryRepository.class);
@@ -74,12 +72,6 @@ class HrConfigurationServiceScheduleTests {
                 .containsExactlyInAnyOrder(CategoryScope.EMPLOYEE, CategoryScope.BOTH);
         assertThat(categories).extracting(CategoryApi.Response::code)
                 .containsExactlyInAnyOrder("ADMIN", "SECURITY");
-    }
-
-    private static CategoryApi.ScheduleRequest schedule(int fromMonth, Integer toMonth) {
-        return new CategoryApi.ScheduleRequest("الجدول", LocalDate.of(2026, fromMonth, 1),
-                toMonth == null ? null : LocalDate.of(2026, toMonth, 28),
-                LocalTime.of(8, 0), null, 0);
     }
 
     @Test

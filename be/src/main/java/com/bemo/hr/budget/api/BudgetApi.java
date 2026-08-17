@@ -20,7 +20,8 @@ public class BudgetApi {
             Boolean blocking,
             Boolean active,
             Boolean revisionApprovalRequired
-    ) {}
+    ) {
+    }
 
     public record BudgetResponse(
             String id,
@@ -37,7 +38,8 @@ public class BudgetApi {
             int currentRevisionNumber,
             long createdAt,
             long updatedAt
-    ) {}
+    ) {
+    }
 
     public record BudgetStatusResponse(
             String budgetId,
@@ -53,7 +55,8 @@ public class BudgetApi {
             BigDecimal utilizationPercent,
             boolean blocking,
             String currencyCode
-    ) {}
+    ) {
+    }
 
     public record EncumbranceResponse(
             String id,
@@ -68,5 +71,6 @@ public class BudgetApi {
             String currencyCode,
             long committedAt,
             Long releasedAt
-    ) {}
+    ) {
+    }
 }

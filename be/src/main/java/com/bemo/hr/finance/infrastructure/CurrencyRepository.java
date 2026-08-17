@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface CurrencyRepository extends JpaRepository<Currency, String> {
     List<Currency> findAllByOrderByCodeAsc();
+
     Optional<Currency> findByCodeIgnoreCaseAndActiveTrue(String code);
 }

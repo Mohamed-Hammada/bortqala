@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface SalaryPaymentExplanationRepository extends JpaRepository<SalaryPaymentExplanation, String> {
     List<SalaryPaymentExplanation> findBySalaryPaymentIdOrderByCreatedAtAsc(String salaryPaymentId);
+
     void deleteBySalaryPaymentId(String salaryPaymentId);
 }

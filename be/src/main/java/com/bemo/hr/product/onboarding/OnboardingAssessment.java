@@ -1,4 +1,53 @@
 package com.bemo.hr.product.onboarding;
-import jakarta.persistence.*;import lombok.Getter;import org.hibernate.annotations.TenantId;import java.time.Instant;import java.util.UUID;
-@Entity @Table(name="onboarding_assessments") @Getter
-public class OnboardingAssessment{@Id private String id;@TenantId@Column(name="app_id",nullable=false)private String appId;@Column(name="tenant_pack_id",nullable=false)private String tenantPackId;@Column(name="operation_id",nullable=false,length=80)private String operationId;@Column(name="setup_progress",nullable=false)private int setupProgress;@Column(name="data_quality_score",nullable=false)private int dataQualityScore;@Column(nullable=false,length=20)private String readiness;@Column(name="issues_json",nullable=false,length=4000)private String issuesJson;@Column(name="assessed_by",nullable=false,length=100)private String assessedBy;@Column(name="assessed_at",nullable=false)private Instant assessedAt;protected OnboardingAssessment(){}public OnboardingAssessment(String pack,String operation,int progress,int quality,String readiness,String issues,String actor){id=UUID.randomUUID().toString();tenantPackId=pack;operationId=operation;setupProgress=progress;dataQualityScore=quality;this.readiness=readiness;issuesJson=issues;assessedBy=actor;assessedAt=Instant.now();}}
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import org.hibernate.annotations.TenantId;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "onboarding_assessments")
+@Getter
+public class OnboardingAssessment {
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(name = "tenant_pack_id", nullable = false)
+    private String tenantPackId;
+    @Column(name = "operation_id", nullable = false, length = 80)
+    private String operationId;
+    @Column(name = "setup_progress", nullable = false)
+    private int setupProgress;
+    @Column(name = "data_quality_score", nullable = false)
+    private int dataQualityScore;
+    @Column(nullable = false, length = 20)
+    private String readiness;
+    @Column(name = "issues_json", nullable = false, length = 4000)
+    private String issuesJson;
+    @Column(name = "assessed_by", nullable = false, length = 100)
+    private String assessedBy;
+    @Column(name = "assessed_at", nullable = false)
+    private Instant assessedAt;
+
+    protected OnboardingAssessment() {
+    }
+
+    public OnboardingAssessment(String pack, String operation, int progress, int quality, String readiness, String issues, String actor) {
+        id = UUID.randomUUID().toString();
+        tenantPackId = pack;
+        operationId = operation;
+        setupProgress = progress;
+        dataQualityScore = quality;
+        this.readiness = readiness;
+        issuesJson = issues;
+        assessedBy = actor;
+        assessedAt = Instant.now();
+    }
+}

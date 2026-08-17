@@ -21,10 +21,6 @@ public class ManufacturingExecutionController {
         this.manufacturingExecutionService = manufacturingExecutionService;
     }
 
-    public record CreateWorkCenterPayload(String code, String name, BigDecimal hourlyRate, BigDecimal capacityHoursPerDay) {}
-    public record CreateRoutingPayload(String routingCode, String name, String itemId) {}
-    public record RecordReceiptPayload(String receiptNumber, String finishedItemId, BigDecimal receivedQuantity, String receiptDate, String warehouseId) {}
-
     @PostMapping("/work-centers")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
     public WorkCenter createWorkCenter(@RequestBody CreateWorkCenterPayload payload) {
@@ -47,5 +43,16 @@ public class ManufacturingExecutionController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'VIEWER')")
     public List<ProductionReceipt> getReceipts(@PathVariable String id) {
         return manufacturingExecutionService.getReceiptsForOrder(id);
+    }
+
+    public record CreateWorkCenterPayload(String code, String name, BigDecimal hourlyRate,
+                                          BigDecimal capacityHoursPerDay) {
+    }
+
+    public record CreateRoutingPayload(String routingCode, String name, String itemId) {
+    }
+
+    public record RecordReceiptPayload(String receiptNumber, String finishedItemId, BigDecimal receivedQuantity,
+                                       String receiptDate, String warehouseId) {
     }
 }

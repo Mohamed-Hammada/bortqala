@@ -1,23 +1,15 @@
 package com.bemo.hr.manufacturing.production.domain;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
+import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
-import com.bemo.hr.shared.domain.BusinessRuleException;
-import org.springframework.http.HttpStatus;
 
 @Entity
 @Table(name = "boms")
@@ -66,7 +58,8 @@ public class BomHeader {
     @OneToMany(mappedBy = "bomHeader", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BomLine> lines = new ArrayList<>();
 
-    protected BomHeader() {}
+    protected BomHeader() {
+    }
 
     public BomHeader(String bomCode, String finishedItemId, String finishedGoodName,
                      BigDecimal yieldQuantity, String revision, LocalDate effectiveFrom,
@@ -113,22 +106,65 @@ public class BomHeader {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getBomCode() { return bomCode; }
-    public String getFinishedItemId() { return finishedItemId; }
-    public String getFinishedGoodName() { return finishedGoodName; }
-    public BigDecimal getYieldQuantity() { return yieldQuantity; }
-    public String getRevision() { return revision; }
-    public LocalDate getEffectiveFrom() { return effectiveFrom; }
-    public LocalDate getEffectiveTo() { return effectiveTo; }
-    public String getNotes() { return notes; }
-    public boolean isActive() { return active; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public List<BomLine> getLines() { return lines; }
+    public String getId() {
+        return id;
+    }
+
+    public String getBomCode() {
+        return bomCode;
+    }
+
+    public String getFinishedItemId() {
+        return finishedItemId;
+    }
+
+    public String getFinishedGoodName() {
+        return finishedGoodName;
+    }
+
+    public BigDecimal getYieldQuantity() {
+        return yieldQuantity;
+    }
+
+    public String getRevision() {
+        return revision;
+    }
+
+    public LocalDate getEffectiveFrom() {
+        return effectiveFrom;
+    }
+
+    public LocalDate getEffectiveTo() {
+        return effectiveTo;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public List<BomLine> getLines() {
+        return lines;
+    }
 }

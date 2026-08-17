@@ -13,8 +13,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @ImportRuntimeHints(LiquibaseRuntimeHints.class)
 public class BemoErpApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(BemoErpApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(BemoErpApplication.class, args);
+    }
 
 }

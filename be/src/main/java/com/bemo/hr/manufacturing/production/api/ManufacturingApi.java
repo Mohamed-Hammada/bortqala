@@ -1,9 +1,9 @@
 package com.bemo.hr.manufacturing.production.api;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.DecimalMin;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,7 +18,8 @@ public class ManufacturingApi {
             String unitOfMeasure,
             BigDecimal wastePercent,
             int lineNumber
-    ) {}
+    ) {
+    }
 
     public record BomLinePayload(
             @NotBlank String componentItemId,
@@ -27,7 +28,8 @@ public class ManufacturingApi {
             String unitOfMeasure,
             BigDecimal wastePercent,
             int lineNumber
-    ) {}
+    ) {
+    }
 
     public record BomResponse(
             String id,
@@ -43,7 +45,8 @@ public class ManufacturingApi {
             List<BomLineResponse> lines,
             long createdAt,
             long updatedAt
-    ) {}
+    ) {
+    }
 
     public record BomPayload(
             @NotBlank String bomCode,
@@ -56,7 +59,8 @@ public class ManufacturingApi {
             String notes,
             boolean active,
             List<@Valid BomLinePayload> lines
-    ) {}
+    ) {
+    }
 
     public record ProductionOrderResponse(
             String id,
@@ -76,7 +80,8 @@ public class ManufacturingApi {
             long createdAt,
             long updatedAt,
             long version
-    ) {}
+    ) {
+    }
 
     public record ProductionOrderPayload(
             @NotBlank String orderNumber,
@@ -86,14 +91,16 @@ public class ManufacturingApi {
             @NotNull @DecimalMin(value = "0.0001") BigDecimal targetQuantity,
             long startDate,
             String notes
-    ) {}
+    ) {
+    }
 
     public record CompleteProductionOrderPayload(
             @NotNull @DecimalMin(value = "0.0001") BigDecimal actualOutputQuantity,
             BigDecimal scrapQuantity,
             long completionDate,
             String notes
-    ) {}
+    ) {
+    }
 
     public record MaterialRequirementView(
             String componentItemId,
@@ -102,14 +109,16 @@ public class ManufacturingApi {
             BigDecimal availableStock,
             BigDecimal shortageQuantity,
             boolean ready
-    ) {}
+    ) {
+    }
 
     public record MaterialReadinessResponse(
             String orderId,
             String orderNumber,
             boolean allMaterialsAvailable,
             List<MaterialRequirementView> requirements
-    ) {}
+    ) {
+    }
 
     public record QualityInspectionResponse(
             String id,
@@ -122,7 +131,8 @@ public class ManufacturingApi {
             String inspectorName,
             String notes,
             long createdAt
-    ) {}
+    ) {
+    }
 
     public record QualityInspectionPayload(
             @NotBlank String inspectionNumber,
@@ -133,5 +143,6 @@ public class ManufacturingApi {
             @NotBlank String status,
             @NotBlank String inspectorName,
             String notes
-    ) {}
+    ) {
+    }
 }

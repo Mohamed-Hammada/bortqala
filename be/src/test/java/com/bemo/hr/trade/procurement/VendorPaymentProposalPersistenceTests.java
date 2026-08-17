@@ -31,19 +31,32 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class VendorPaymentProposalPersistenceTests {
 
-    @Autowired private VendorPaymentProposalService vendorPaymentProposalService;
-    @Autowired private VendorPaymentProposalAllocationRepository allocationRepository;
-    @Autowired private VendorPaymentProposalRepository proposalRepository;
-    @Autowired private SupplierInvoiceRepository supplierInvoiceRepository;
-    @Autowired private SupplierPaymentRepository supplierPaymentRepository;
-    @Autowired private PartnerLedgerEntryRepository partnerLedgerEntryRepository;
-    @Autowired private BusinessPartyRepository businessPartyRepository;
-    @Autowired private FiscalPeriodRepository fiscalPeriodRepository;
-    @Autowired private TenantApplicationRepository tenantApplicationRepository;
-    @Autowired private AuditLogRepository auditLogRepository;
-    @Autowired private com.bemo.hr.finance.infrastructure.AccountRepository accountRepository;
-    @Autowired private com.bemo.hr.finance.domain.posting.PostingProfileRepository postingProfileRepository;
-    @Autowired private com.bemo.hr.finance.domain.posting.PostingProfileLineRepository postingProfileLineRepository;
+    @Autowired
+    private VendorPaymentProposalService vendorPaymentProposalService;
+    @Autowired
+    private VendorPaymentProposalAllocationRepository allocationRepository;
+    @Autowired
+    private VendorPaymentProposalRepository proposalRepository;
+    @Autowired
+    private SupplierInvoiceRepository supplierInvoiceRepository;
+    @Autowired
+    private SupplierPaymentRepository supplierPaymentRepository;
+    @Autowired
+    private PartnerLedgerEntryRepository partnerLedgerEntryRepository;
+    @Autowired
+    private BusinessPartyRepository businessPartyRepository;
+    @Autowired
+    private FiscalPeriodRepository fiscalPeriodRepository;
+    @Autowired
+    private TenantApplicationRepository tenantApplicationRepository;
+    @Autowired
+    private AuditLogRepository auditLogRepository;
+    @Autowired
+    private com.bemo.hr.finance.infrastructure.AccountRepository accountRepository;
+    @Autowired
+    private com.bemo.hr.finance.domain.posting.PostingProfileRepository postingProfileRepository;
+    @Autowired
+    private com.bemo.hr.finance.domain.posting.PostingProfileLineRepository postingProfileLineRepository;
 
     private BusinessParty supplier;
     private SupplierInvoice firstInvoice;
@@ -106,8 +119,8 @@ class VendorPaymentProposalPersistenceTests {
     @Test
     void multiInvoiceProposalPersistsCompletePaymentLedgerAuditAndReplayEvidence() {
         var created = vendorPaymentProposalService.createProposal(supplier.getId(), List.of(
-                new VendorPaymentProposalService.AllocationInput(firstInvoice.getId(), new BigDecimal("60.00")),
-                new VendorPaymentProposalService.AllocationInput(secondInvoice.getId(), new BigDecimal("40.00"))),
+                        new VendorPaymentProposalService.AllocationInput(firstInvoice.getId(), new BigDecimal("60.00")),
+                        new VendorPaymentProposalService.AllocationInput(secondInvoice.getId(), new BigDecimal("40.00"))),
                 LocalDate.now(), "maker");
         proposalId = created.id();
         var approved = vendorPaymentProposalService.approveProposal(created.id(), "checker");

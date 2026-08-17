@@ -1,13 +1,6 @@
 package com.bemo.hr.shared.security;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 
 import java.time.Instant;
 
@@ -96,7 +89,9 @@ public class TenantFeature {
         this.updatedBy = updatedBy;
     }
 
-    public String getChangeReason() { return changeReason; }
+    public String getChangeReason() {
+        return changeReason;
+    }
 
     public void update(boolean enabled, String configJson, String reason, String actor) {
         this.enabled = enabled;

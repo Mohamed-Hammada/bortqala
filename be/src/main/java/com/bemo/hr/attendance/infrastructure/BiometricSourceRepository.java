@@ -12,6 +12,7 @@ import java.util.Optional;
 
 public interface BiometricSourceRepository extends JpaRepository<BiometricSource, String> {
     Optional<BiometricSource> findBySourceTypeAndNormalizedCode(SourceType sourceType, String normalizedCode);
+
     List<BiometricSource> findAllByOrderBySourceTypeAscNameAsc();
 
     /**

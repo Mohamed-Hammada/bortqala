@@ -1,4 +1,70 @@
 package com.bemo.hr.product.pack;
-import jakarta.persistence.*;import lombok.Getter;import java.time.Instant;
-@Entity @Table(name="industry_packs") @Getter
-public class IndustryPack{@Id private String id;@Column(nullable=false,unique=true,length=80)private String code;@Column(name="name_key",nullable=false)private String nameKey;@Column(name="description_key",nullable=false)private String descriptionKey;@Column(name="pack_version",nullable=false)private int packVersion;@Column(name="country_code",nullable=false,length=3)private String countryCode;@Column(name="required_features_json",nullable=false,length=2000)private String requiredFeaturesJson;@Column(name="defaults_json",nullable=false,length=4000)private String defaultsJson;@Column(name="default_roles_json",nullable=false,length=2000)private String defaultRolesJson;@Column(name="kpis_json",nullable=false,length=2000)private String kpisJson;@Column(name="import_templates_json",nullable=false,length=2000)private String importTemplatesJson;@Column(name="onboarding_steps_json",nullable=false,length=3000)private String onboardingStepsJson;@Column(nullable=false)private String status;@Column(name="created_at",nullable=false)private Instant createdAt;@Column(name="updated_at",nullable=false)private Instant updatedAt;protected IndustryPack(){}public IndustryPack(String id,String code,int version,String required){this(id,code,"industryPack.contractorWorkforce.name","industryPack.contractorWorkforce.description",version,required,"{\"terminology\":{\"employee\":\"worker\",\"supplier\":\"contractor\"},\"dashboard\":\"workforce\"}","[\"WORKFORCE_MANAGER\",\"WORKFORCE_REVIEWER\",\"WORKFORCE_FINANCE\"]","[\"contractorFillRate\",\"attendanceExceptionRate\",\"settlementVariance\",\"contractorReliability\"]","[\"workers.xlsx\",\"attendance.xlsx\",\"advances.xlsx\"]","[\"industryPack.step.company\",\"industryPack.step.contractors\",\"industryPack.step.categories\",\"industryPack.step.workers\",\"industryPack.step.attendance\",\"industryPack.step.advances?\",\"industryPack.step.settlement\"]");}public IndustryPack(String id,String code,String name,String description,int version,String required,String defaults,String roles,String kpis,String templates,String steps){this.id=id;this.code=code;nameKey=name;descriptionKey=description;packVersion=version;countryCode="EGY";requiredFeaturesJson=required;defaultsJson=defaults;defaultRolesJson=roles;kpisJson=kpis;importTemplatesJson=templates;onboardingStepsJson=steps;status="ACTIVE";createdAt=Instant.now();updatedAt=createdAt;}}
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Getter;
+
+import java.time.Instant;
+
+@Entity
+@Table(name = "industry_packs")
+@Getter
+public class IndustryPack {
+    @Id
+    private String id;
+    @Column(nullable = false, unique = true, length = 80)
+    private String code;
+    @Column(name = "name_key", nullable = false)
+    private String nameKey;
+    @Column(name = "description_key", nullable = false)
+    private String descriptionKey;
+    @Column(name = "pack_version", nullable = false)
+    private int packVersion;
+    @Column(name = "country_code", nullable = false, length = 3)
+    private String countryCode;
+    @Column(name = "required_features_json", nullable = false, length = 2000)
+    private String requiredFeaturesJson;
+    @Column(name = "defaults_json", nullable = false, length = 4000)
+    private String defaultsJson;
+    @Column(name = "default_roles_json", nullable = false, length = 2000)
+    private String defaultRolesJson;
+    @Column(name = "kpis_json", nullable = false, length = 2000)
+    private String kpisJson;
+    @Column(name = "import_templates_json", nullable = false, length = 2000)
+    private String importTemplatesJson;
+    @Column(name = "onboarding_steps_json", nullable = false, length = 3000)
+    private String onboardingStepsJson;
+    @Column(nullable = false)
+    private String status;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
+    protected IndustryPack() {
+    }
+
+    public IndustryPack(String id, String code, int version, String required) {
+        this(id, code, "industryPack.contractorWorkforce.name", "industryPack.contractorWorkforce.description", version, required, "{\"terminology\":{\"employee\":\"worker\",\"supplier\":\"contractor\"},\"dashboard\":\"workforce\"}", "[\"WORKFORCE_MANAGER\",\"WORKFORCE_REVIEWER\",\"WORKFORCE_FINANCE\"]", "[\"contractorFillRate\",\"attendanceExceptionRate\",\"settlementVariance\",\"contractorReliability\"]", "[\"workers.xlsx\",\"attendance.xlsx\",\"advances.xlsx\"]", "[\"industryPack.step.company\",\"industryPack.step.contractors\",\"industryPack.step.categories\",\"industryPack.step.workers\",\"industryPack.step.attendance\",\"industryPack.step.advances?\",\"industryPack.step.settlement\"]");
+    }
+
+    public IndustryPack(String id, String code, String name, String description, int version, String required, String defaults, String roles, String kpis, String templates, String steps) {
+        this.id = id;
+        this.code = code;
+        nameKey = name;
+        descriptionKey = description;
+        packVersion = version;
+        countryCode = "EGY";
+        requiredFeaturesJson = required;
+        defaultsJson = defaults;
+        defaultRolesJson = roles;
+        kpisJson = kpis;
+        importTemplatesJson = templates;
+        onboardingStepsJson = steps;
+        status = "ACTIVE";
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
+}

@@ -13,13 +13,21 @@ import java.util.Optional;
 
 public interface EmployeeRepository extends JpaRepository<Employee, String> {
     List<Employee> findAllByOrderByFullNameAsc();
+
     Optional<Employee> findByDeviceUserId(String deviceUserId);
+
     List<Employee> findByDeviceUserIdIn(Collection<String> deviceUserIds);
+
     Optional<Employee> findByEmployeeCodeIgnoreCase(String employeeCode);
+
     boolean existsByEmployeeCodeIgnoreCase(String code);
+
     boolean existsByEmployeeCodeIgnoreCaseAndIdNot(String code, String id);
+
     boolean existsByDeviceUserId(String deviceUserId);
+
     boolean existsByDeviceUserIdAndIdNot(String deviceUserId, String id);
+
     boolean existsByCategoryIdAndActiveTrue(String categoryId);
 
     @Modifying

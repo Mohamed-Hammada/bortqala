@@ -20,9 +20,6 @@ public class MaterialIssueController {
         this.issueService = issueService;
     }
 
-    public record CreateIssuePayload(String issueNumber, String productionOrderId, String issueDate) {}
-    public record AddIssueLinePayload(String itemId, BigDecimal quantity, String warehouseId) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'INVENTORY_MANAGER')")
     public MaterialIssueHeader createIssue(@RequestBody CreateIssuePayload payload) {
@@ -45,5 +42,11 @@ public class MaterialIssueController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'INVENTORY_MANAGER', 'VIEWER')")
     public List<MaterialIssueHeader> getIssuesByOrder(@PathVariable String orderId) {
         return issueService.getIssuesByProductionOrder(orderId);
+    }
+
+    public record CreateIssuePayload(String issueNumber, String productionOrderId, String issueDate) {
+    }
+
+    public record AddIssueLinePayload(String itemId, BigDecimal quantity, String warehouseId) {
     }
 }

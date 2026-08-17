@@ -7,9 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.math.BigDecimal;
 
 @Service
 public class ItemLotSerialService {
@@ -50,8 +50,9 @@ public class ItemLotSerialService {
     @Transactional
     public ItemLotSerial issue(String id, BigDecimal quantity, String documentReference) {
         ItemLotSerial item = getItem(id);
-        try { item.issue(quantity, documentReference); }
-        catch (IllegalArgumentException | IllegalStateException error) {
+        try {
+            item.issue(quantity, documentReference);
+        } catch (IllegalArgumentException | IllegalStateException error) {
             throw new BusinessRuleException(error.getMessage(), "LOT_SERIAL_ISSUE_INVALID", HttpStatus.CONFLICT);
         }
         return repository.save(item);
@@ -60,8 +61,9 @@ public class ItemLotSerialService {
     @Transactional
     public ItemLotSerial receiveReturn(String id, BigDecimal quantity, String documentReference) {
         ItemLotSerial item = getItem(id);
-        try { item.receiveReturn(quantity, documentReference); }
-        catch (IllegalArgumentException error) {
+        try {
+            item.receiveReturn(quantity, documentReference);
+        } catch (IllegalArgumentException error) {
             throw new BusinessRuleException(error.getMessage(), "LOT_SERIAL_RETURN_INVALID", HttpStatus.CONFLICT);
         }
         return repository.save(item);
@@ -92,7 +94,9 @@ public class ItemLotSerialService {
     }
 
     @Transactional(readOnly = true)
-    public ItemLotSerial trace(String id) { return getItem(id); }
+    public ItemLotSerial trace(String id) {
+        return getItem(id);
+    }
 
     private void rejectDuplicateSerial(String serialNumber) {
         if (serialNumber != null && !serialNumber.isBlank() && repository.findBySerialNumberIgnoreCase(serialNumber.strip()).isPresent()) {

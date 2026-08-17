@@ -1,9 +1,201 @@
-package com.bemo.hr.product.support;import com.bemo.hr.audit.application.AuditService;import com.bemo.hr.product.analytics.*;import com.bemo.hr.product.onboarding.*;import com.bemo.hr.product.subscription.*;import com.bemo.hr.shared.domain.BusinessRuleException;import com.bemo.hr.shared.security.*;import lombok.RequiredArgsConstructor;import org.springframework.http.HttpStatus;import org.springframework.stereotype.Service;import org.springframework.transaction.annotation.*;import tools.jackson.databind.ObjectMapper;import java.time.*;import java.time.temporal.ChronoUnit;import java.util.*;
-@Service@RequiredArgsConstructor public class SupportService{private static final Set<String>CLOSED=Set.of("RESOLVED","CLOSED");private static final Map<String,Set<String>>TRANSITIONS=Map.of("NEW",Set.of("TRIAGED","CLOSED"),"TRIAGED",Set.of("IN_PROGRESS","WAITING_CUSTOMER","CLOSED"),"IN_PROGRESS",Set.of("WAITING_CUSTOMER","RESOLVED"),"WAITING_CUSTOMER",Set.of("IN_PROGRESS","RESOLVED"),"RESOLVED",Set.of("CLOSED","IN_PROGRESS"),"CLOSED",Set.of());private final TenantApplicationRepository tenantRepository;private final SupportTicketRepository ticketRepository;private final SupportTicketUpdateRepository updateRepository;private final FeedbackItemRepository feedbackRepository;private final CustomerHealthSnapshotRepository healthRepository;private final ProductEventDailyAggregateRepository dailyRepository;private final ActivationMilestoneRepository milestoneRepository;private final OnboardingAssessmentRepository onboardingRepository;private final TenantSubscriptionRepository subscriptionRepository;private final ObjectMapper objectMapper;private final AuditService auditService;
-@Transactional public SupportApi.TicketResponse create(SupportApi.TicketRequest r,String actor){String app=TenantContext.require();tenantRepository.findByIdForUpdate(app).orElseThrow(()->error("TENANT_NOT_FOUND",HttpStatus.NOT_FOUND));var replay=ticketRepository.findByOperationId(r.operationId());if(replay.isPresent())return ticketView(replay.get(),true);if("CRITICAL".equals(r.priority())&&r.businessImpact().strip().length()<20)throw error("SUPPORT_CRITICAL_IMPACT_REQUIRED",HttpStatus.BAD_REQUEST);Instant due=Instant.now().plus(Map.of("CRITICAL",4L,"HIGH",8L,"MEDIUM",24L,"LOW",72L).get(r.priority()),ChronoUnit.HOURS);var ticket=ticketRepository.save(new SupportTicket("SUP-"+UUID.randomUUID().toString().substring(0,8).toUpperCase(Locale.ROOT),r.priority(),r.category().strip(),r.moduleCode().strip(),safeRoute(r.screen()),r.businessImpact().strip(),r.description().strip(),"SUPPORT",due,actor,r.operationId()));auditService.record("CREATE","SUPPORT_TICKET",ticket.getId(),actor,"{\"priority\":\""+r.priority()+"\"}",null);return ticketView(ticket,false);}
-@Transactional(readOnly=true)public List<SupportApi.TicketResponse>tickets(){return ticketRepository.findAllByOrderByCreatedAtDesc().stream().map(t->ticketView(t,false)).toList();}@Transactional(readOnly=true)public List<SupportApi.UpdateResponse>updates(String id){ticketRepository.findById(id).orElseThrow(()->error("SUPPORT_TICKET_NOT_FOUND",HttpStatus.NOT_FOUND));return updateRepository.findByTicketIdOrderByCreatedAtAsc(id).stream().map(u->new SupportApi.UpdateResponse(u.getFromStatus(),u.getToStatus(),u.getComment(),u.getActor(),u.getCreatedAt().toEpochMilli())).toList();}
-@Transactional public SupportApi.TicketResponse update(String id,SupportApi.TicketUpdateRequest r,String actor){var replay=updateRepository.findByOperationId(r.operationId());if(replay.isPresent())return ticketView(ticketRepository.findById(replay.get().getTicketId()).orElseThrow(),true);SupportTicket ticket=ticketRepository.findByIdForUpdate(id).orElseThrow(()->error("SUPPORT_TICKET_NOT_FOUND",HttpStatus.NOT_FOUND));if(ticket.getVersion()!=r.expectedVersion())throw error("STALE_STATE",HttpStatus.CONFLICT);if(!TRANSITIONS.getOrDefault(ticket.getStatus(),Set.of()).contains(r.status()))throw error("SUPPORT_STATUS_TRANSITION_INVALID",HttpStatus.CONFLICT);String from=ticket.getStatus();ticket.transition(r.status(),r.assignedTeam().strip());ticketRepository.save(ticket);updateRepository.save(new SupportTicketUpdate(id,from,r.status(),r.comment().strip(),actor,r.operationId()));auditService.record("UPDATE","SUPPORT_TICKET",id,actor,"{\"from\":\""+from+"\",\"to\":\""+r.status()+"\"}",null);return ticketView(ticket,false);}
-@Transactional public SupportApi.FeedbackResponse feedback(SupportApi.FeedbackRequest r,String actor){String app=TenantContext.require();tenantRepository.findByIdForUpdate(app).orElseThrow(()->error("TENANT_NOT_FOUND",HttpStatus.NOT_FOUND));var replay=feedbackRepository.findByOperationId(r.operationId());if(replay.isPresent())return feedbackView(replay.get(),true);if("RATING".equals(r.type())&&r.rating()==null)throw error("FEEDBACK_RATING_REQUIRED",HttpStatus.BAD_REQUEST);var item=feedbackRepository.save(new FeedbackItem(r.type(),r.moduleCode().strip(),r.message().strip(),r.rating(),safeRoute(r.route()),r.applicationVersion().strip(),r.browser().strip(),r.correlationId().strip(),actor,r.operationId()));auditService.record("CREATE","FEEDBACK",item.getId(),actor,"{\"type\":\""+r.type()+"\"}",null);return feedbackView(item,false);}@Transactional(readOnly=true)public List<SupportApi.FeedbackResponse>feedback(){return feedbackRepository.findAllByOrderByCreatedAtDesc().stream().map(f->feedbackView(f,false)).toList();}
-@Transactional public SupportApi.HealthResponse calculate(SupportApi.HealthRequest r,String actor){String app=TenantContext.require();tenantRepository.findByIdForUpdate(app).orElseThrow(()->error("TENANT_NOT_FOUND",HttpStatus.NOT_FOUND));var replay=healthRepository.findByOperationId(r.operationId());if(replay.isPresent())return healthView(replay.get(),true);var daily=dailyRepository.findAllByOrderByEventDateDesc();LocalDate today=LocalDate.now(ZoneOffset.UTC);LocalDate usageCutoff=today.minusDays(6);LocalDate adoptionCutoff=today.minusDays(29);var recent=daily.stream().filter(d->!d.getEventDate().isBefore(usageCutoff)).toList();var adoptionWindow=daily.stream().filter(d->!d.getEventDate().isBefore(adoptionCutoff)).toList();long recentEvents=recent.stream().mapToLong(ProductEventDailyAggregate::getEventCount).sum();long activeDays=recent.stream().map(ProductEventDailyAggregate::getEventDate).distinct().count();long features=adoptionWindow.stream().map(ProductEventDailyAggregate::getFeatureKey).distinct().count();long failures=recent.stream().filter(d->d.getEventName().contains("FAIL")).mapToLong(ProductEventDailyAggregate::getEventCount).sum();int activation=Math.min(20,milestoneRepository.findAllByOrderByAchievedAtAsc().size()*20/6);int usage=Math.min(25,(int)(activeDays*2+recentEvents/5));int adoption=Math.min(20,(int)features*4);int quality=onboardingRepository.findFirstByOrderByAssessedAtDesc().map(a->a.getDataQualityScore()/10).orElse(5);int operational=Math.max(0,10-(int)Math.min(10,failures));long urgent=ticketRepository.countByStatusNotInAndPriorityIn(CLOSED,List.of("HIGH","CRITICAL"));int support=Math.max(0,5-(int)Math.min(5,urgent*2));var subscription=subscriptionRepository.findFirstBy().orElse(null);int commercial=subscription==null?3:switch(subscription.getStatus()){case"ACTIVE"->10;case"TRIAL"->6;case"PAST_DUE"->2;default->0;};if(subscription!=null&&subscription.getRenewsAt()!=null&&subscription.getRenewsAt().isBefore(Instant.now().plus(30,ChronoUnit.DAYS)))commercial=Math.max(0,commercial-2);Map<String,Integer>dimensions=new LinkedHashMap<>();dimensions.put("activation",activation);dimensions.put("usage",usage);dimensions.put("workflowAdoption",adoption);dimensions.put("dataQuality",quality);dimensions.put("operationalHealth",operational);dimensions.put("support",support);dimensions.put("commercial",commercial);int score=dimensions.values().stream().mapToInt(Integer::intValue).sum();List<SupportApi.HealthReason>reasons=new ArrayList<>();reasons.add(reason("health.activation",activation,activation>=15,"/settings?tab=onboarding"));reasons.add(reason("health.usage",usage,usage>=18,"/settings?tab=analytics"));reasons.add(reason("health.adoption",adoption,adoption>=12,"/settings?tab=onboarding"));reasons.add(reason("health.dataQuality",quality,quality>=8,"/settings?tab=onboarding"));reasons.add(reason("health.operational",operational,operational>=8,"/imports"));reasons.add(reason("health.support",support,support>=4,"/support"));reasons.add(reason("health.commercial",commercial,commercial>=8,"/settings?tab=subscription"));String band=score>=80?"HEALTHY":score>=60?"WATCH":"AT_RISK";var snapshot=healthRepository.save(new CustomerHealthSnapshot(score,band,json(dimensions),json(reasons),r.operationId(),actor));auditService.record("CALCULATE","CUSTOMER_HEALTH",app,actor,"{\"score\":"+score+",\"band\":\""+band+"\"}",null);return healthView(snapshot,false);}
-@Transactional(readOnly=true)public SupportApi.HealthResponse latest(){return healthRepository.findFirstByOrderByCalculatedAtDesc().map(s->healthView(s,false)).orElse(null);}private static SupportApi.HealthReason reason(String key,int points,boolean good,String route){return new SupportApi.HealthReason(key,points,good?"POSITIVE":"ACTION_REQUIRED",route);}private String json(Object value){try{return objectMapper.writeValueAsString(value);}catch(Exception e){throw error("CUSTOMER_HEALTH_SNAPSHOT_INVALID",HttpStatus.INTERNAL_SERVER_ERROR);}}private SupportApi.HealthResponse healthView(CustomerHealthSnapshot s,boolean replay){try{@SuppressWarnings("unchecked")Map<String,Integer>dimensions=objectMapper.readValue(s.getDimensionsJson(),Map.class);var reasons=List.of(objectMapper.readValue(s.getReasonsJson(),SupportApi.HealthReason[].class));return new SupportApi.HealthResponse(s.getScore(),s.getBand(),dimensions,reasons,s.getOperationId(),s.getCalculatedAt().toEpochMilli(),replay);}catch(Exception e){throw error("CUSTOMER_HEALTH_SNAPSHOT_INVALID",HttpStatus.INTERNAL_SERVER_ERROR);}}
-private static String safeRoute(String raw){String route=raw.strip().split("[?#]",2)[0];if(!route.startsWith("/")||route.contains(".."))throw error("SUPPORT_CONTEXT_INVALID",HttpStatus.BAD_REQUEST);return route;}private static SupportApi.TicketResponse ticketView(SupportTicket t,boolean replay){return new SupportApi.TicketResponse(t.getId(),t.getTicketNo(),t.getPriority(),t.getCategory(),t.getModuleCode(),t.getScreen(),t.getBusinessImpact(),t.getDescription(),t.getStatus(),t.getAssignedTeam(),t.getSlaDueAt().toEpochMilli(),t.getCreatedBy(),t.getCreatedAt().toEpochMilli(),t.getUpdatedAt().toEpochMilli(),t.getResolvedAt()==null?0:t.getResolvedAt().toEpochMilli(),t.getVersion(),replay);}private static SupportApi.FeedbackResponse feedbackView(FeedbackItem f,boolean replay){return new SupportApi.FeedbackResponse(f.getId(),f.getType(),f.getModuleCode(),f.getMessage(),f.getRating(),f.getRoute(),f.getStatus(),f.getCreatedBy(),f.getCreatedAt().toEpochMilli(),replay);}private static BusinessRuleException error(String code,HttpStatus status){return new BusinessRuleException(code,code,status);}}
+package com.bemo.hr.product.support;
+
+import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.product.analytics.ActivationMilestoneRepository;
+import com.bemo.hr.product.analytics.ProductEventDailyAggregate;
+import com.bemo.hr.product.analytics.ProductEventDailyAggregateRepository;
+import com.bemo.hr.product.onboarding.OnboardingAssessmentRepository;
+import com.bemo.hr.product.subscription.TenantSubscriptionRepository;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.security.TenantApplicationRepository;
+import com.bemo.hr.shared.security.TenantContext;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+
+@Service
+@RequiredArgsConstructor
+public class SupportService {
+    private static final Set<String> CLOSED = Set.of("RESOLVED", "CLOSED");
+    private static final Map<String, Set<String>> TRANSITIONS = Map.of("NEW", Set.of("TRIAGED", "CLOSED"), "TRIAGED", Set.of("IN_PROGRESS", "WAITING_CUSTOMER", "CLOSED"), "IN_PROGRESS", Set.of("WAITING_CUSTOMER", "RESOLVED"), "WAITING_CUSTOMER", Set.of("IN_PROGRESS", "RESOLVED"), "RESOLVED", Set.of("CLOSED", "IN_PROGRESS"), "CLOSED", Set.of());
+    private final TenantApplicationRepository tenantRepository;
+    private final SupportTicketRepository ticketRepository;
+    private final SupportTicketUpdateRepository updateRepository;
+    private final FeedbackItemRepository feedbackRepository;
+    private final CustomerHealthSnapshotRepository healthRepository;
+    private final ProductEventDailyAggregateRepository dailyRepository;
+    private final ActivationMilestoneRepository milestoneRepository;
+    private final OnboardingAssessmentRepository onboardingRepository;
+    private final TenantSubscriptionRepository subscriptionRepository;
+    private final ObjectMapper objectMapper;
+    private final AuditService auditService;
+
+    private static SupportApi.HealthReason reason(String key, int points, boolean good, String route) {
+        return new SupportApi.HealthReason(key, points, good ? "POSITIVE" : "ACTION_REQUIRED", route);
+    }
+
+    private static String safeRoute(String raw) {
+        String route = raw.strip().split("[?#]", 2)[0];
+        if (!route.startsWith("/") || route.contains(".."))
+            throw error("SUPPORT_CONTEXT_INVALID", HttpStatus.BAD_REQUEST);
+        return route;
+    }
+
+    private static SupportApi.TicketResponse ticketView(SupportTicket t, boolean replay) {
+        return new SupportApi.TicketResponse(t.getId(), t.getTicketNo(), t.getPriority(), t.getCategory(), t.getModuleCode(), t.getScreen(), t.getBusinessImpact(), t.getDescription(), t.getStatus(), t.getAssignedTeam(), t.getSlaDueAt().toEpochMilli(), t.getCreatedBy(), t.getCreatedAt().toEpochMilli(), t.getUpdatedAt().toEpochMilli(), t.getResolvedAt() == null ? 0 : t.getResolvedAt().toEpochMilli(), t.getVersion(), replay);
+    }
+
+    private static SupportApi.FeedbackResponse feedbackView(FeedbackItem f, boolean replay) {
+        return new SupportApi.FeedbackResponse(f.getId(), f.getType(), f.getModuleCode(), f.getMessage(), f.getRating(), f.getRoute(), f.getStatus(), f.getCreatedBy(), f.getCreatedAt().toEpochMilli(), replay);
+    }
+
+    private static BusinessRuleException error(String code, HttpStatus status) {
+        return new BusinessRuleException(code, code, status);
+    }
+
+    @Transactional
+    public SupportApi.TicketResponse create(SupportApi.TicketRequest r, String actor) {
+        String app = TenantContext.require();
+        tenantRepository.findByIdForUpdate(app).orElseThrow(() -> error("TENANT_NOT_FOUND", HttpStatus.NOT_FOUND));
+        var replay = ticketRepository.findByOperationId(r.operationId());
+        if (replay.isPresent()) return ticketView(replay.get(), true);
+        if ("CRITICAL".equals(r.priority()) && r.businessImpact().strip().length() < 20)
+            throw error("SUPPORT_CRITICAL_IMPACT_REQUIRED", HttpStatus.BAD_REQUEST);
+        Instant due = Instant.now().plus(Map.of("CRITICAL", 4L, "HIGH", 8L, "MEDIUM", 24L, "LOW", 72L).get(r.priority()), ChronoUnit.HOURS);
+        var ticket = ticketRepository.save(new SupportTicket("SUP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT), r.priority(), r.category().strip(), r.moduleCode().strip(), safeRoute(r.screen()), r.businessImpact().strip(), r.description().strip(), "SUPPORT", due, actor, r.operationId()));
+        auditService.record("CREATE", "SUPPORT_TICKET", ticket.getId(), actor, "{\"priority\":\"" + r.priority() + "\"}", null);
+        return ticketView(ticket, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SupportApi.TicketResponse> tickets() {
+        return ticketRepository.findAllByOrderByCreatedAtDesc().stream().map(t -> ticketView(t, false)).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SupportApi.UpdateResponse> updates(String id) {
+        ticketRepository.findById(id).orElseThrow(() -> error("SUPPORT_TICKET_NOT_FOUND", HttpStatus.NOT_FOUND));
+        return updateRepository.findByTicketIdOrderByCreatedAtAsc(id).stream().map(u -> new SupportApi.UpdateResponse(u.getFromStatus(), u.getToStatus(), u.getComment(), u.getActor(), u.getCreatedAt().toEpochMilli())).toList();
+    }
+
+    @Transactional
+    public SupportApi.TicketResponse update(String id, SupportApi.TicketUpdateRequest r, String actor) {
+        var replay = updateRepository.findByOperationId(r.operationId());
+        if (replay.isPresent())
+            return ticketView(ticketRepository.findById(replay.get().getTicketId()).orElseThrow(), true);
+        SupportTicket ticket = ticketRepository.findByIdForUpdate(id).orElseThrow(() -> error("SUPPORT_TICKET_NOT_FOUND", HttpStatus.NOT_FOUND));
+        if (ticket.getVersion() != r.expectedVersion()) throw error("STALE_STATE", HttpStatus.CONFLICT);
+        if (!TRANSITIONS.getOrDefault(ticket.getStatus(), Set.of()).contains(r.status()))
+            throw error("SUPPORT_STATUS_TRANSITION_INVALID", HttpStatus.CONFLICT);
+        String from = ticket.getStatus();
+        ticket.transition(r.status(), r.assignedTeam().strip());
+        ticketRepository.save(ticket);
+        updateRepository.save(new SupportTicketUpdate(id, from, r.status(), r.comment().strip(), actor, r.operationId()));
+        auditService.record("UPDATE", "SUPPORT_TICKET", id, actor, "{\"from\":\"" + from + "\",\"to\":\"" + r.status() + "\"}", null);
+        return ticketView(ticket, false);
+    }
+
+    @Transactional
+    public SupportApi.FeedbackResponse feedback(SupportApi.FeedbackRequest r, String actor) {
+        String app = TenantContext.require();
+        tenantRepository.findByIdForUpdate(app).orElseThrow(() -> error("TENANT_NOT_FOUND", HttpStatus.NOT_FOUND));
+        var replay = feedbackRepository.findByOperationId(r.operationId());
+        if (replay.isPresent()) return feedbackView(replay.get(), true);
+        if ("RATING".equals(r.type()) && r.rating() == null)
+            throw error("FEEDBACK_RATING_REQUIRED", HttpStatus.BAD_REQUEST);
+        var item = feedbackRepository.save(new FeedbackItem(r.type(), r.moduleCode().strip(), r.message().strip(), r.rating(), safeRoute(r.route()), r.applicationVersion().strip(), r.browser().strip(), r.correlationId().strip(), actor, r.operationId()));
+        auditService.record("CREATE", "FEEDBACK", item.getId(), actor, "{\"type\":\"" + r.type() + "\"}", null);
+        return feedbackView(item, false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SupportApi.FeedbackResponse> feedback() {
+        return feedbackRepository.findAllByOrderByCreatedAtDesc().stream().map(f -> feedbackView(f, false)).toList();
+    }
+
+    @Transactional
+    public SupportApi.HealthResponse calculate(SupportApi.HealthRequest r, String actor) {
+        String app = TenantContext.require();
+        tenantRepository.findByIdForUpdate(app).orElseThrow(() -> error("TENANT_NOT_FOUND", HttpStatus.NOT_FOUND));
+        var replay = healthRepository.findByOperationId(r.operationId());
+        if (replay.isPresent()) return healthView(replay.get(), true);
+        var daily = dailyRepository.findAllByOrderByEventDateDesc();
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate usageCutoff = today.minusDays(6);
+        LocalDate adoptionCutoff = today.minusDays(29);
+        var recent = daily.stream().filter(d -> !d.getEventDate().isBefore(usageCutoff)).toList();
+        var adoptionWindow = daily.stream().filter(d -> !d.getEventDate().isBefore(adoptionCutoff)).toList();
+        long recentEvents = recent.stream().mapToLong(ProductEventDailyAggregate::getEventCount).sum();
+        long activeDays = recent.stream().map(ProductEventDailyAggregate::getEventDate).distinct().count();
+        long features = adoptionWindow.stream().map(ProductEventDailyAggregate::getFeatureKey).distinct().count();
+        long failures = recent.stream().filter(d -> d.getEventName().contains("FAIL")).mapToLong(ProductEventDailyAggregate::getEventCount).sum();
+        int activation = Math.min(20, milestoneRepository.findAllByOrderByAchievedAtAsc().size() * 20 / 6);
+        int usage = Math.min(25, (int) (activeDays * 2 + recentEvents / 5));
+        int adoption = Math.min(20, (int) features * 4);
+        int quality = onboardingRepository.findFirstByOrderByAssessedAtDesc().map(a -> a.getDataQualityScore() / 10).orElse(5);
+        int operational = Math.max(0, 10 - (int) Math.min(10, failures));
+        long urgent = ticketRepository.countByStatusNotInAndPriorityIn(CLOSED, List.of("HIGH", "CRITICAL"));
+        int support = Math.max(0, 5 - (int) Math.min(5, urgent * 2));
+        var subscription = subscriptionRepository.findFirstBy().orElse(null);
+        int commercial = subscription == null ? 3 : switch (subscription.getStatus()) {
+            case "ACTIVE" -> 10;
+            case "TRIAL" -> 6;
+            case "PAST_DUE" -> 2;
+            default -> 0;
+        };
+        if (subscription != null && subscription.getRenewsAt() != null && subscription.getRenewsAt().isBefore(Instant.now().plus(30, ChronoUnit.DAYS)))
+            commercial = Math.max(0, commercial - 2);
+        Map<String, Integer> dimensions = new LinkedHashMap<>();
+        dimensions.put("activation", activation);
+        dimensions.put("usage", usage);
+        dimensions.put("workflowAdoption", adoption);
+        dimensions.put("dataQuality", quality);
+        dimensions.put("operationalHealth", operational);
+        dimensions.put("support", support);
+        dimensions.put("commercial", commercial);
+        int score = dimensions.values().stream().mapToInt(Integer::intValue).sum();
+        List<SupportApi.HealthReason> reasons = new ArrayList<>();
+        reasons.add(reason("health.activation", activation, activation >= 15, "/settings?tab=onboarding"));
+        reasons.add(reason("health.usage", usage, usage >= 18, "/settings?tab=analytics"));
+        reasons.add(reason("health.adoption", adoption, adoption >= 12, "/settings?tab=onboarding"));
+        reasons.add(reason("health.dataQuality", quality, quality >= 8, "/settings?tab=onboarding"));
+        reasons.add(reason("health.operational", operational, operational >= 8, "/imports"));
+        reasons.add(reason("health.support", support, support >= 4, "/support"));
+        reasons.add(reason("health.commercial", commercial, commercial >= 8, "/settings?tab=subscription"));
+        String band = score >= 80 ? "HEALTHY" : score >= 60 ? "WATCH" : "AT_RISK";
+        var snapshot = healthRepository.save(new CustomerHealthSnapshot(score, band, json(dimensions), json(reasons), r.operationId(), actor));
+        auditService.record("CALCULATE", "CUSTOMER_HEALTH", app, actor, "{\"score\":" + score + ",\"band\":\"" + band + "\"}", null);
+        return healthView(snapshot, false);
+    }
+
+    @Transactional(readOnly = true)
+    public SupportApi.HealthResponse latest() {
+        return healthRepository.findFirstByOrderByCalculatedAtDesc().map(s -> healthView(s, false)).orElse(null);
+    }
+
+    private String json(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (Exception e) {
+            throw error("CUSTOMER_HEALTH_SNAPSHOT_INVALID", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private SupportApi.HealthResponse healthView(CustomerHealthSnapshot s, boolean replay) {
+        try {
+            @SuppressWarnings("unchecked") Map<String, Integer> dimensions = objectMapper.readValue(s.getDimensionsJson(), Map.class);
+            var reasons = List.of(objectMapper.readValue(s.getReasonsJson(), SupportApi.HealthReason[].class));
+            return new SupportApi.HealthResponse(s.getScore(), s.getBand(), dimensions, reasons, s.getOperationId(), s.getCalculatedAt().toEpochMilli(), replay);
+        } catch (Exception e) {
+            throw error("CUSTOMER_HEALTH_SNAPSHOT_INVALID", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+}

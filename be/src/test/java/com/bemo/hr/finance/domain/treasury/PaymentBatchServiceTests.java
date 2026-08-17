@@ -25,14 +25,14 @@ class PaymentBatchServiceTests {
     void setUp() {
         batchHeaderRepository = mock(PaymentBatchHeaderRepository.class);
         batchItemRepository = mock(PaymentBatchItemRepository.class);
-        disbursementRepository=mock(PaymentBatchDisbursementRepository.class);
-        supplierInvoiceRepository=mock(com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository.class);
-        supplierPaymentRepository=mock(com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository.class);
-        payrollPaymentBatchRepository=mock(com.bemo.hr.payroll.infrastructure.PayrollPaymentBatchRepository.class);
-        contractorSettlementRepository=mock(com.bemo.hr.workforce.ContractorSettlementRepository.class);
-        paymentBatchService = new PaymentBatchService(batchHeaderRepository,batchItemRepository,disbursementRepository,
-                supplierInvoiceRepository,supplierPaymentRepository,payrollPaymentBatchRepository,contractorSettlementRepository,
-                new com.bemo.hr.approval.SegregationOfDutiesService(),mock(com.bemo.hr.audit.application.AuditService.class));
+        disbursementRepository = mock(PaymentBatchDisbursementRepository.class);
+        supplierInvoiceRepository = mock(com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository.class);
+        supplierPaymentRepository = mock(com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository.class);
+        payrollPaymentBatchRepository = mock(com.bemo.hr.payroll.infrastructure.PayrollPaymentBatchRepository.class);
+        contractorSettlementRepository = mock(com.bemo.hr.workforce.ContractorSettlementRepository.class);
+        paymentBatchService = new PaymentBatchService(batchHeaderRepository, batchItemRepository, disbursementRepository,
+                supplierInvoiceRepository, supplierPaymentRepository, payrollPaymentBatchRepository, contractorSettlementRepository,
+                new com.bemo.hr.approval.SegregationOfDutiesService(), mock(com.bemo.hr.audit.application.AuditService.class));
     }
 
     @Test
@@ -76,7 +76,7 @@ class PaymentBatchServiceTests {
         when(batchHeaderRepository.findById("batch-2")).thenReturn(Optional.of(header));
         when(batchItemRepository.existsByBatchIdAndDocumentId("batch-2", "payroll-1")).thenReturn(true);
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> paymentBatchService.addBatchItem("batch-2", "payroll-1",
-                "company", "Payroll", BigDecimal.ONE, "BANK"))
+                        "company", "Payroll", BigDecimal.ONE, "BANK"))
                 .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class);
         header.submit();
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> paymentBatchService.approveBatch("batch-2", "maker"))

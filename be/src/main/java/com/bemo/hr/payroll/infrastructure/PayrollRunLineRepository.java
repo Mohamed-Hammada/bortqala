@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface PayrollRunLineRepository extends JpaRepository<PayrollRunLine, String> {
     List<PayrollRunLine> findByRunId(String runId);
+
     Optional<PayrollRunLine> findByRunIdAndEmployeeId(String runId, String employeeId);
 }

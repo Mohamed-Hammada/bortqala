@@ -21,9 +21,6 @@ public class PeriodCloseWorkbenchService {
         this.executionRepository = executionRepository;
     }
 
-    public record ModuleStatus(String moduleName, boolean isReady, String blockerReason, boolean isExecuted) {}
-    public record WorkbenchSummary(String periodId, int totalModules, int readyModules, int executedModules, List<ModuleStatus> moduleStatuses, List<PeriodCloseExecutionRecord> recentExecutions) {}
-
     @Transactional(readOnly = true)
     public WorkbenchSummary getWorkbenchSummary(String periodId) {
         Map<String, PeriodCloseExecutionRecord> executedMap = executionRepository.findByPeriodId(periodId).stream()
@@ -55,5 +52,13 @@ public class PeriodCloseWorkbenchService {
 
         List<PeriodCloseExecutionRecord> recentExecutions = executionRepository.findByPeriodId(periodId);
         return new WorkbenchSummary(periodId, providers.size(), readyCount, executedCount, statuses, recentExecutions);
+    }
+
+    public record ModuleStatus(String moduleName, boolean isReady, String blockerReason, boolean isExecuted) {
+    }
+
+    public record WorkbenchSummary(String periodId, int totalModules, int readyModules, int executedModules,
+                                   List<ModuleStatus> moduleStatuses,
+                                   List<PeriodCloseExecutionRecord> recentExecutions) {
     }
 }

@@ -1,10 +1,6 @@
 package com.bemo.hr.attendance.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.io.Serializable;
@@ -46,11 +42,25 @@ public class PunchImportEvidence {
         this.rawLine = rawLine;
     }
 
-    public String getPunchId() { return punchId; }
-    public String getBatchId() { return batchId; }
-    public String getAppId() { return appId; }
-    public int getRowNumber() { return rowNumber; }
-    public String getRawLine() { return rawLine; }
+    public String getPunchId() {
+        return punchId;
+    }
+
+    public String getBatchId() {
+        return batchId;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public int getRowNumber() {
+        return rowNumber;
+    }
+
+    public String getRawLine() {
+        return rawLine;
+    }
 
     public static class Key implements Serializable {
         private String punchId;

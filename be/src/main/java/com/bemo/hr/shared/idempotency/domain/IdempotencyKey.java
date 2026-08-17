@@ -1,10 +1,6 @@
 package com.bemo.hr.shared.idempotency.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 import org.springframework.data.domain.Persistable;
 
@@ -68,23 +64,69 @@ public class IdempotencyKey implements Persistable<String> {
         this.completedAt = Instant.now();
     }
 
-    public void setLeaseExpiresAt(Instant leaseExpiresAt) { this.leaseExpiresAt = leaseExpiresAt; }
-    public void setOwnerToken(String ownerToken) { this.ownerToken = ownerToken; }
-    public void setAttemptNumber(int attemptNumber) { this.attemptNumber = attemptNumber; }
+    public String getId() {
+        return id;
+    }
 
-    public String getId() { return id; }
-    @Override public boolean isNew() { return createdAt == null; }
-    public String getOperationType() { return operationType; }
-    public String getOperationId() { return operationId; }
-    public String getRequestHash() { return requestHash; }
-    public String getStatus() { return status; }
-    public String getResponseReferenceOrBody() { return responseReferenceOrBody; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getCompletedAt() { return completedAt; }
-    public Instant getLeaseExpiresAt() { return leaseExpiresAt; }
-    public String getOwnerToken() { return ownerToken; }
-    public int getAttemptNumber() { return attemptNumber; }
+    @Override
+    public boolean isNew() {
+        return createdAt == null;
+    }
+
+    public String getOperationType() {
+        return operationType;
+    }
+
+    public String getOperationId() {
+        return operationId;
+    }
+
+    public String getRequestHash() {
+        return requestHash;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getResponseReferenceOrBody() {
+        return responseReferenceOrBody;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getCompletedAt() {
+        return completedAt;
+    }
+
+    public Instant getLeaseExpiresAt() {
+        return leaseExpiresAt;
+    }
+
+    public void setLeaseExpiresAt(Instant leaseExpiresAt) {
+        this.leaseExpiresAt = leaseExpiresAt;
+    }
+
+    public String getOwnerToken() {
+        return ownerToken;
+    }
+
+    public void setOwnerToken(String ownerToken) {
+        this.ownerToken = ownerToken;
+    }
+
+    public int getAttemptNumber() {
+        return attemptNumber;
+    }
+
+    public void setAttemptNumber(int attemptNumber) {
+        this.attemptNumber = attemptNumber;
+    }
 
     @PrePersist
-    void prePersist() { createdAt = Instant.now(); }
+    void prePersist() {
+        createdAt = Instant.now();
+    }
 }

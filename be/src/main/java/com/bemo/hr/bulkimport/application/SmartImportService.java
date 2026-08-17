@@ -1,13 +1,6 @@
 package com.bemo.hr.bulkimport.application;
 
-import com.bemo.hr.bulkimport.domain.SmartImportModels.CellError;
-import com.bemo.hr.bulkimport.domain.SmartImportModels.CommitRequest;
-import com.bemo.hr.bulkimport.domain.SmartImportModels.CommitResult;
-import com.bemo.hr.bulkimport.domain.SmartImportModels.EditedRow;
-import com.bemo.hr.bulkimport.domain.SmartImportModels.HandlerOutcome;
-import com.bemo.hr.bulkimport.domain.SmartImportModels.Preview;
-import com.bemo.hr.bulkimport.domain.SmartImportModels.PreviewRow;
-import com.bemo.hr.bulkimport.domain.SmartImportModels.Workflow;
+import com.bemo.hr.bulkimport.domain.SmartImportModels.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,9 +27,17 @@ public class SmartImportService {
         this.handlers = List.copyOf(handlers);
     }
 
-    public List<Workflow> workflows() { return catalog.list(); }
-    public Workflow workflow(String key) { return catalog.require(key); }
-    public byte[] template(String key, boolean sample) { return workbook.buildTemplate(catalog.require(key), sample); }
+    public List<Workflow> workflows() {
+        return catalog.list();
+    }
+
+    public Workflow workflow(String key) {
+        return catalog.require(key);
+    }
+
+    public byte[] template(String key, boolean sample) {
+        return workbook.buildTemplate(catalog.require(key), sample);
+    }
 
     public Preview preview(String key, MultipartFile file) {
         var workflow = catalog.require(key);
@@ -90,7 +91,8 @@ public class SmartImportService {
 
     public byte[] rejectedWorkbook(UUID batchId) {
         var batch = rejectedBatches.get(batchId);
-        if (batch == null) throw new IllegalArgumentException("Rejected-row export is no longer available for this batch.");
+        if (batch == null)
+            throw new IllegalArgumentException("Rejected-row export is no longer available for this batch.");
         return workbook.rejectedWorkbook(batch.workflow(), batch.rows(), batch.errors());
     }
 
@@ -107,5 +109,6 @@ public class SmartImportService {
         }).toList();
     }
 
-    private record RejectedBatch(Workflow workflow, List<PreviewRow> rows, List<CellError> errors) {}
+    private record RejectedBatch(Workflow workflow, List<PreviewRow> rows, List<CellError> errors) {
+    }
 }

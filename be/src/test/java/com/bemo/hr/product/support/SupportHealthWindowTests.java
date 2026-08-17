@@ -31,16 +31,26 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class SupportHealthWindowTests {
 
-    @Mock TenantApplicationRepository tenantRepository;
-    @Mock SupportTicketRepository ticketRepository;
-    @Mock SupportTicketUpdateRepository updateRepository;
-    @Mock FeedbackItemRepository feedbackRepository;
-    @Mock CustomerHealthSnapshotRepository healthRepository;
-    @Mock ProductEventDailyAggregateRepository dailyRepository;
-    @Mock ActivationMilestoneRepository milestoneRepository;
-    @Mock OnboardingAssessmentRepository onboardingRepository;
-    @Mock TenantSubscriptionRepository subscriptionRepository;
-    @Mock AuditService auditService;
+    @Mock
+    TenantApplicationRepository tenantRepository;
+    @Mock
+    SupportTicketRepository ticketRepository;
+    @Mock
+    SupportTicketUpdateRepository updateRepository;
+    @Mock
+    FeedbackItemRepository feedbackRepository;
+    @Mock
+    CustomerHealthSnapshotRepository healthRepository;
+    @Mock
+    ProductEventDailyAggregateRepository dailyRepository;
+    @Mock
+    ActivationMilestoneRepository milestoneRepository;
+    @Mock
+    OnboardingAssessmentRepository onboardingRepository;
+    @Mock
+    TenantSubscriptionRepository subscriptionRepository;
+    @Mock
+    AuditService auditService;
 
     private SupportService service;
     private TenantApplication tenant;

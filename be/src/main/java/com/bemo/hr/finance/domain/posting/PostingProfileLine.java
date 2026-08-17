@@ -37,7 +37,8 @@ public class PostingProfileLine {
     @Column(name = "amount_source", nullable = false, length = 50)
     private String amountSource;
 
-    protected PostingProfileLine() {}
+    protected PostingProfileLine() {
+    }
 
     public PostingProfileLine(String profileId, int lineNo, String side, String accountSource, String fixedAccountId, String amountSource) {
         this.id = UUID.randomUUID().toString();
@@ -49,11 +50,31 @@ public class PostingProfileLine {
         this.amountSource = amountSource;
     }
 
-    public String getId() { return id; }
-    public String getProfileId() { return profileId; }
-    public int getLineNo() { return lineNo; }
-    public String getSide() { return side; }
-    public String getAccountSource() { return accountSource; }
-    public String getFixedAccountId() { return fixedAccountId; }
-    public String getAmountSource() { return amountSource; }
+    public String getId() {
+        return id;
+    }
+
+    public String getProfileId() {
+        return profileId;
+    }
+
+    public int getLineNo() {
+        return lineNo;
+    }
+
+    public String getSide() {
+        return side;
+    }
+
+    public String getAccountSource() {
+        return accountSource;
+    }
+
+    public String getFixedAccountId() {
+        return fixedAccountId;
+    }
+
+    public String getAmountSource() {
+        return amountSource;
+    }
 }

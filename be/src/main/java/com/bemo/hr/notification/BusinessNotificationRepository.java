@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface BusinessNotificationRepository extends JpaRepository<BusinessNotification, String> {
     List<BusinessNotification> findByRecipientUsernameIgnoreCaseOrderByCreatedAtDesc(String recipientUsername);
+
     long countByRecipientUsernameIgnoreCaseAndIsReadFalse(String recipientUsername);
 
     @Modifying

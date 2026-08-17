@@ -1,13 +1,13 @@
 package com.bemo.hr.finance.domain.posting;
 
+import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.finance.domain.FiscalPeriod;
+import com.bemo.hr.finance.domain.FiscalPeriodGuard;
 import com.bemo.hr.finance.domain.JournalEntry;
 import com.bemo.hr.finance.domain.JournalEntryLine;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import com.bemo.hr.finance.domain.FiscalPeriod;
-import com.bemo.hr.finance.domain.FiscalPeriodGuard;
-import com.bemo.hr.audit.application.AuditService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -96,7 +96,7 @@ class SubledgerPostingServiceTests {
                 new BigDecimal("4500.00"), // Unbalanced
                 "fp-1"
         )).isInstanceOf(BusinessRuleException.class)
-          .hasMessageContaining("Debit and credit amounts must be equal");
+                .hasMessageContaining("Debit and credit amounts must be equal");
     }
 
     @Test
@@ -140,7 +140,9 @@ class SubledgerPostingServiceTests {
     void replaysOperationAndCreatesLinkedBalancedReversal() {
         String opId = UUID.randomUUID().toString();
         JournalEntry original = new JournalEntry("POST-1", LocalDate.of(2026, 2, 1), "Posting", "AP:INVOICE:I-1", null);
-        original.setCurrency("USD"); original.approve("approver"); original.post("SYSTEM");
+        original.setCurrency("USD");
+        original.approve("approver");
+        original.post("SYSTEM");
         when(journalEntryRepository.findById(original.getId())).thenReturn(java.util.Optional.of(original));
         when(journalEntryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(journalEntryLineRepository.findByJournalEntryId(original.getId())).thenReturn(List.of(

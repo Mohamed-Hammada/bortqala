@@ -1,16 +1,16 @@
 package com.bemo.hr.finance.application;
 
 import com.bemo.hr.finance.domain.Account;
+import com.bemo.hr.finance.domain.JournalEntry;
 import com.bemo.hr.finance.domain.JournalEntryLine;
 import com.bemo.hr.finance.infrastructure.AccountRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
-import com.bemo.hr.finance.domain.JournalEntry;
-import java.time.LocalDate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,23 +25,18 @@ public class TrialBalanceReportService {
     private final JournalEntryRepository journalEntryRepository;
 
     public TrialBalanceReportService(AccountRepository accountRepository,
-                                    JournalEntryLineRepository journalEntryLineRepository) {
+                                     JournalEntryLineRepository journalEntryLineRepository) {
         this(accountRepository, journalEntryLineRepository, null);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
     public TrialBalanceReportService(AccountRepository accountRepository,
-                                    JournalEntryLineRepository journalEntryLineRepository,
-                                    JournalEntryRepository journalEntryRepository) {
+                                     JournalEntryLineRepository journalEntryLineRepository,
+                                     JournalEntryRepository journalEntryRepository) {
         this.accountRepository = accountRepository;
         this.journalEntryLineRepository = journalEntryLineRepository;
         this.journalEntryRepository = journalEntryRepository;
     }
-
-    public record TrialBalanceRow(
-            String accountId, String accountCode, String accountName,
-            BigDecimal periodDebit, BigDecimal periodCredit, BigDecimal closingBalance
-    ) {}
 
     public List<TrialBalanceRow> generateTrialBalance() {
         return generateTrialBalance(LocalDate.MIN, LocalDate.MAX);
@@ -69,5 +64,11 @@ public class TrialBalanceReportService {
             rows.add(new TrialBalanceRow(account.getId(), account.getCode(), account.getName(), totalDebit, totalCredit, closing));
         }
         return rows;
+    }
+
+    public record TrialBalanceRow(
+            String accountId, String accountCode, String accountName,
+            BigDecimal periodDebit, BigDecimal periodCredit, BigDecimal closingBalance
+    ) {
     }
 }

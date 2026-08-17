@@ -12,7 +12,10 @@ import java.time.YearMonth;
 @RequestMapping("/api/v1/dashboard")
 public class DashboardController {
     private final DashboardService dashboardService;
-    public DashboardController(DashboardService dashboardService) { this.dashboardService = dashboardService; }
+
+    public DashboardController(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
+    }
 
     @GetMapping
     DashboardApi.Response dashboard(@RequestParam(required = false) Integer year,

@@ -18,8 +18,6 @@ public class PayrollRetroAdjustmentController {
         this.adjustmentService = adjustmentService;
     }
 
-    public record CreateAdjustmentPayload(String employeeId, String payrollPeriodId, String adjustmentType, BigDecimal amount, String reason) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     public PayrollRetroAdjustment createAdjustment(@RequestBody CreateAdjustmentPayload payload) {
@@ -42,5 +40,9 @@ public class PayrollRetroAdjustmentController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'VIEWER')")
     public List<PayrollRetroAdjustment> getAdjustmentsForEmployee(@PathVariable String employeeId) {
         return adjustmentService.getAdjustmentsForEmployee(employeeId);
+    }
+
+    public record CreateAdjustmentPayload(String employeeId, String payrollPeriodId, String adjustmentType,
+                                          BigDecimal amount, String reason) {
     }
 }

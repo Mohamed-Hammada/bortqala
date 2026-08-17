@@ -1,12 +1,6 @@
 package com.bemo.hr.finance.domain.rules;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.util.UUID;
@@ -50,7 +44,8 @@ public class AccountingRulePolicy {
     @Column(nullable = false)
     private long version;
 
-    protected AccountingRulePolicy() {}
+    protected AccountingRulePolicy() {
+    }
 
     public AccountingRulePolicy(String policyCode, String description, String triggerEvent, String debitAccountPattern, String creditAccountPattern) {
         this.id = UUID.randomUUID().toString();
@@ -63,20 +58,57 @@ public class AccountingRulePolicy {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getPolicyCode() { return policyCode; }
-    public String getDescription() { return description; }
-    public String getTriggerEvent() { return triggerEvent; }
-    public String getDebitAccountPattern() { return debitAccountPattern; }
-    public String getCreditAccountPattern() { return creditAccountPattern; }
-    public boolean isActive() { return active; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getPolicyCode() {
+        return policyCode;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getTriggerEvent() {
+        return triggerEvent;
+    }
+
+    public String getDebitAccountPattern() {
+        return debitAccountPattern;
+    }
+
+    public String getCreditAccountPattern() {
+        return creditAccountPattern;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

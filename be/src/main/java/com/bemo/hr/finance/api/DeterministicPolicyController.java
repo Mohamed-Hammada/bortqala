@@ -18,9 +18,6 @@ public class DeterministicPolicyController {
         this.policyService = policyService;
     }
 
-    public record CreatePolicyPayload(String policyCode, String description, String triggerEvent, String debitAccountPattern, String creditAccountPattern) {}
-    public record EvaluatePolicyPayload(String policyCode, BigDecimal amount) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public AccountingRulePolicy createPolicy(@RequestBody CreatePolicyPayload payload) {
@@ -37,5 +34,12 @@ public class DeterministicPolicyController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
     public List<AccountingRulePolicy> getAllPolicies() {
         return policyService.getAllPolicies();
+    }
+
+    public record CreatePolicyPayload(String policyCode, String description, String triggerEvent,
+                                      String debitAccountPattern, String creditAccountPattern) {
+    }
+
+    public record EvaluatePolicyPayload(String policyCode, BigDecimal amount) {
     }
 }

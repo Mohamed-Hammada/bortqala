@@ -20,8 +20,8 @@ public class ManufacturingWipService {
     private final WipPostingRecordRepository wipPostingRepository;
 
     public ManufacturingWipService(MaterialReservationHeaderRepository reservationHeaderRepository,
-                                  MaterialReservationLineRepository reservationLineRepository,
-                                  WipPostingRecordRepository wipPostingRepository) {
+                                   MaterialReservationLineRepository reservationLineRepository,
+                                   WipPostingRecordRepository wipPostingRepository) {
         this.reservationHeaderRepository = reservationHeaderRepository;
         this.reservationLineRepository = reservationLineRepository;
         this.wipPostingRepository = wipPostingRepository;

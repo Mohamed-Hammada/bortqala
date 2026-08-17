@@ -12,6 +12,15 @@ public record SpreadsheetTemplateDefinition(
         boolean commitSupported,
         List<SheetDefinition> sheets) {
 
+    public enum ColumnType {
+        TEXT,
+        INTEGER,
+        DECIMAL,
+        DATE,
+        DATETIME,
+        BOOLEAN
+    }
+
     public record SheetDefinition(
             String name,
             List<ColumnDefinition> columns,
@@ -31,14 +40,5 @@ public record SpreadsheetTemplateDefinition(
         public ColumnDefinition {
             allowedValues = allowedValues == null ? List.of() : List.copyOf(allowedValues);
         }
-    }
-
-    public enum ColumnType {
-        TEXT,
-        INTEGER,
-        DECIMAL,
-        DATE,
-        DATETIME,
-        BOOLEAN
     }
 }

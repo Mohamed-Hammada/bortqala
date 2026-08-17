@@ -9,12 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.bemo.hr.shared.dataexchange.SpreadsheetTemplateDefinition.ColumnType.BOOLEAN;
-import static com.bemo.hr.shared.dataexchange.SpreadsheetTemplateDefinition.ColumnType.DATE;
-import static com.bemo.hr.shared.dataexchange.SpreadsheetTemplateDefinition.ColumnType.DATETIME;
-import static com.bemo.hr.shared.dataexchange.SpreadsheetTemplateDefinition.ColumnType.DECIMAL;
-import static com.bemo.hr.shared.dataexchange.SpreadsheetTemplateDefinition.ColumnType.INTEGER;
-import static com.bemo.hr.shared.dataexchange.SpreadsheetTemplateDefinition.ColumnType.TEXT;
+import static com.bemo.hr.shared.dataexchange.SpreadsheetTemplateDefinition.ColumnType.*;
 
 @Component
 public class SpreadsheetTemplateCatalog {
@@ -22,6 +17,85 @@ public class SpreadsheetTemplateCatalog {
 
     public SpreadsheetTemplateCatalog() {
         this.definitions = buildDefinitions();
+    }
+
+    private static SpreadsheetTemplateDefinition single(String key, String module, String title,
+                                                        String route, String description,
+                                                        List<SpreadsheetTemplateDefinition.ColumnDefinition> columns) {
+        return new SpreadsheetTemplateDefinition(key, module, title, route, description, false,
+                List.of(sheet("Data", columns)));
+    }
+
+    private static SpreadsheetTemplateDefinition.SheetDefinition sheet(
+            String name, List<SpreadsheetTemplateDefinition.ColumnDefinition> columns) {
+        Map<String, Object> sample = new LinkedHashMap<>();
+        for (SpreadsheetTemplateDefinition.ColumnDefinition column : columns) {
+            if (column.example() != null && !column.example().isBlank()) {
+                sample.put(column.header(), typedExample(column));
+            }
+        }
+        return new SpreadsheetTemplateDefinition.SheetDefinition(name, columns, List.of(sample));
+    }
+
+    private static Object typedExample(SpreadsheetTemplateDefinition.ColumnDefinition column) {
+        String value = column.example();
+        try {
+            return switch (column.type()) {
+                case INTEGER -> Integer.valueOf(value);
+                case DECIMAL -> new BigDecimal(value);
+                case DATE -> LocalDate.parse(value);
+                case BOOLEAN -> Boolean.valueOf(value);
+                default -> value;
+            };
+        } catch (RuntimeException ignored) {
+            return value;
+        }
+    }
+
+    private static List<SpreadsheetTemplateDefinition.ColumnDefinition> cols(
+            SpreadsheetTemplateDefinition.ColumnDefinition... columns) {
+        return List.of(columns);
+    }
+
+    private static SpreadsheetTemplateDefinition.ColumnDefinition req(String header,
+                                                                      SpreadsheetTemplateDefinition.ColumnType type,
+                                                                      boolean unique,
+                                                                      String example,
+                                                                      String description) {
+        return new SpreadsheetTemplateDefinition.ColumnDefinition(header, header, true, type, unique,
+                List.of(), example, description);
+    }
+
+    private static SpreadsheetTemplateDefinition.ColumnDefinition req(String header,
+                                                                      SpreadsheetTemplateDefinition.ColumnType type,
+                                                                      boolean unique,
+                                                                      String example,
+                                                                      String description,
+                                                                      List<String> allowedValues) {
+        return new SpreadsheetTemplateDefinition.ColumnDefinition(header, header, true, type, unique,
+                allowedValues, example, description);
+    }
+
+    private static SpreadsheetTemplateDefinition.ColumnDefinition opt(String header,
+                                                                      SpreadsheetTemplateDefinition.ColumnType type,
+                                                                      String example,
+                                                                      String description) {
+        return new SpreadsheetTemplateDefinition.ColumnDefinition(header, header, false, type, false,
+                List.of(), example, description);
+    }
+
+    private static SpreadsheetTemplateDefinition.ColumnDefinition opt(String header,
+                                                                      SpreadsheetTemplateDefinition.ColumnType type,
+                                                                      String example,
+                                                                      String description,
+                                                                      List<String> allowedValues) {
+        return new SpreadsheetTemplateDefinition.ColumnDefinition(header, header, false, type, false,
+                allowedValues, example, description);
+    }
+
+    private static void add(Map<String, SpreadsheetTemplateDefinition> result,
+                            SpreadsheetTemplateDefinition definition) {
+        result.put(definition.key(), definition);
     }
 
     public List<SpreadsheetTemplateDefinition> all() {
@@ -359,84 +433,5 @@ public class SpreadsheetTemplateCatalog {
                 "employee-onboarding", "employees", "Bulk employee onboarding", "/employees",
                 "Four-sheet employee onboarding workbook covering personal, employment, salary and payment data.",
                 false, sheets);
-    }
-
-    private static SpreadsheetTemplateDefinition single(String key, String module, String title,
-                                                          String route, String description,
-                                                          List<SpreadsheetTemplateDefinition.ColumnDefinition> columns) {
-        return new SpreadsheetTemplateDefinition(key, module, title, route, description, false,
-                List.of(sheet("Data", columns)));
-    }
-
-    private static SpreadsheetTemplateDefinition.SheetDefinition sheet(
-            String name, List<SpreadsheetTemplateDefinition.ColumnDefinition> columns) {
-        Map<String, Object> sample = new LinkedHashMap<>();
-        for (SpreadsheetTemplateDefinition.ColumnDefinition column : columns) {
-            if (column.example() != null && !column.example().isBlank()) {
-                sample.put(column.header(), typedExample(column));
-            }
-        }
-        return new SpreadsheetTemplateDefinition.SheetDefinition(name, columns, List.of(sample));
-    }
-
-    private static Object typedExample(SpreadsheetTemplateDefinition.ColumnDefinition column) {
-        String value = column.example();
-        try {
-            return switch (column.type()) {
-                case INTEGER -> Integer.valueOf(value);
-                case DECIMAL -> new BigDecimal(value);
-                case DATE -> LocalDate.parse(value);
-                case BOOLEAN -> Boolean.valueOf(value);
-                default -> value;
-            };
-        } catch (RuntimeException ignored) {
-            return value;
-        }
-    }
-
-    private static List<SpreadsheetTemplateDefinition.ColumnDefinition> cols(
-            SpreadsheetTemplateDefinition.ColumnDefinition... columns) {
-        return List.of(columns);
-    }
-
-    private static SpreadsheetTemplateDefinition.ColumnDefinition req(String header,
-                                                                        SpreadsheetTemplateDefinition.ColumnType type,
-                                                                        boolean unique,
-                                                                        String example,
-                                                                        String description) {
-        return new SpreadsheetTemplateDefinition.ColumnDefinition(header, header, true, type, unique,
-                List.of(), example, description);
-    }
-
-    private static SpreadsheetTemplateDefinition.ColumnDefinition req(String header,
-                                                                        SpreadsheetTemplateDefinition.ColumnType type,
-                                                                        boolean unique,
-                                                                        String example,
-                                                                        String description,
-                                                                        List<String> allowedValues) {
-        return new SpreadsheetTemplateDefinition.ColumnDefinition(header, header, true, type, unique,
-                allowedValues, example, description);
-    }
-
-    private static SpreadsheetTemplateDefinition.ColumnDefinition opt(String header,
-                                                                        SpreadsheetTemplateDefinition.ColumnType type,
-                                                                        String example,
-                                                                        String description) {
-        return new SpreadsheetTemplateDefinition.ColumnDefinition(header, header, false, type, false,
-                List.of(), example, description);
-    }
-
-    private static SpreadsheetTemplateDefinition.ColumnDefinition opt(String header,
-                                                                        SpreadsheetTemplateDefinition.ColumnType type,
-                                                                        String example,
-                                                                        String description,
-                                                                        List<String> allowedValues) {
-        return new SpreadsheetTemplateDefinition.ColumnDefinition(header, header, false, type, false,
-                allowedValues, example, description);
-    }
-
-    private static void add(Map<String, SpreadsheetTemplateDefinition> result,
-                            SpreadsheetTemplateDefinition definition) {
-        result.put(definition.key(), definition);
     }
 }

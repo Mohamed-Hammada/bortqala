@@ -10,7 +10,9 @@ import java.util.Optional;
 @Repository
 public interface StockReservationRepository extends JpaRepository<StockReservation, String> {
     List<StockReservation> findByWarehouseIdAndItemIdAndStatus(String warehouseId, String itemId, StockReservation.Status status);
+
     List<StockReservation> findBySourceTypeAndSourceIdOrderByCreatedAtAsc(String sourceType, String sourceId);
+
     Optional<StockReservation> findBySourceTypeAndSourceIdAndItemIdAndWarehouseId(
             String sourceType, String sourceId, String itemId, String warehouseId);
 }

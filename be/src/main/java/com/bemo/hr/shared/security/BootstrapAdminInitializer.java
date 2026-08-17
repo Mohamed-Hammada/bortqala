@@ -34,6 +34,13 @@ public class BootstrapAdminInitializer implements ApplicationRunner {
         this.superAdminPassword = superAdminPassword;
     }
 
+    private static String required(String value, String property) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException(property + " is required for the mandatory administrator bootstrap.");
+        }
+        return value;
+    }
+
     @Override
     public void run(ApplicationArguments args) {
         authService.ensureBootstrapAppAdmin(
@@ -51,12 +58,5 @@ public class BootstrapAdminInitializer implements ApplicationRunner {
                 required(adminPassword, "hr.bootstrap.admin-password"),
                 "مدير التشغيل والنظام (Admin)",
                 java.util.Set.of(RoleCode.ADMIN));
-    }
-
-    private static String required(String value, String property) {
-        if (value == null || value.isBlank()) {
-            throw new IllegalStateException(property + " is required for the mandatory administrator bootstrap.");
-        }
-        return value;
     }
 }

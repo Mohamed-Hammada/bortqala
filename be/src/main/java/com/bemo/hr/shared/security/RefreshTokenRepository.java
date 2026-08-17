@@ -18,7 +18,9 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Stri
     Optional<RefreshToken> findForRotationByAppIdAndTokenHash(String appId, String tokenHash);
 
     List<RefreshToken> findAllByAppIdAndUserIdAndRevokedAtIsNull(String appId, String userId);
+
     List<RefreshToken> findAllByAppIdAndRevokedAtIsNull(String appId);
+
     List<RefreshToken> findAllByAppIdAndFamilyIdAndRevokedAtIsNull(String appId, String familyId);
 
     @Modifying

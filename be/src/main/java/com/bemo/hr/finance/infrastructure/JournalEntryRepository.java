@@ -12,10 +12,16 @@ import java.util.Optional;
 @Repository
 public interface JournalEntryRepository extends JpaRepository<JournalEntry, String> {
     Page<JournalEntry> findAllByOrderByEntryDateDescCreatedAtDesc(Pageable pageable);
+
     List<JournalEntry> findByStatusOrderByEntryDateDesc(JournalEntry.Status status);
+
     List<JournalEntry> findByStatusInOrderByEntryDateDesc(List<JournalEntry.Status> statuses);
+
     boolean existsByAppIdAndEntryNumber(String appId, String entryNumber);
+
     boolean existsByAppIdAndEntryNumberAndIdNot(String appId, String entryNumber, String id);
+
     long countByFiscalPeriodIdAndStatus(String fiscalPeriodId, JournalEntry.Status status);
+
     Optional<JournalEntry> findByOperationId(String operationId);
 }

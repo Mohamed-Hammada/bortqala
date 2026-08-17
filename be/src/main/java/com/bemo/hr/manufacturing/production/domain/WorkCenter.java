@@ -1,12 +1,6 @@
 package com.bemo.hr.manufacturing.production.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -48,7 +42,8 @@ public class WorkCenter {
     @Column(nullable = false)
     private long version;
 
-    protected WorkCenter() {}
+    protected WorkCenter() {
+    }
 
     public WorkCenter(String code, String name, BigDecimal hourlyRate, BigDecimal capacityHoursPerDay) {
         this.id = UUID.randomUUID().toString();
@@ -60,19 +55,53 @@ public class WorkCenter {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getCode() { return code; }
-    public String getName() { return name; }
-    public BigDecimal getHourlyRate() { return hourlyRate; }
-    public BigDecimal getCapacityHoursPerDay() { return capacityHoursPerDay; }
-    public boolean isActive() { return active; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public BigDecimal getHourlyRate() {
+        return hourlyRate;
+    }
+
+    public BigDecimal getCapacityHoursPerDay() {
+        return capacityHoursPerDay;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

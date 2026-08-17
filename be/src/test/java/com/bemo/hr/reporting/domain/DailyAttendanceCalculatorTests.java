@@ -1,11 +1,6 @@
 package com.bemo.hr.reporting.domain;
 
-import com.bemo.hr.employee.domain.AttendanceCategory;
-import com.bemo.hr.employee.domain.AttendanceMode;
-import com.bemo.hr.employee.domain.Employee;
-import com.bemo.hr.employee.domain.EmploymentType;
-import com.bemo.hr.employee.domain.PayCycle;
-import com.bemo.hr.employee.domain.ScheduleRule;
+import com.bemo.hr.employee.domain.*;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -68,7 +63,7 @@ class DailyAttendanceCalculatorTests {
     }
 
     private DailyAttendanceResult calculate(AttendanceCategory category, ScheduleRule schedule,
-                                             List<java.time.Instant> punches) {
+                                            List<java.time.Instant> punches) {
         var employee = new Employee("EMP-1", "Test Employee", "42", category.getId(),
                 EmploymentType.FIXED, WORKDAY.minusYears(1), null, true);
         return DailyAttendanceCalculator.calculate("report-1", employee, category, schedule,

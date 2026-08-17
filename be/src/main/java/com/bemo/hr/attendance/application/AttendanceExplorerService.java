@@ -11,21 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -42,6 +30,12 @@ public class AttendanceExplorerService {
         this.punchRecordRepository = punchRecordRepository;
         this.employeeRepository = employeeRepository;
         this.zoneId = ZoneId.of(timeZone);
+    }
+
+    private static String displayName(AttendanceExplorerApi.EmployeeSummaryResponse item) {
+        if (item.employeeName() != null && !item.employeeName().isBlank()) return item.employeeName();
+        if (item.observedName() != null && !item.observedName().isBlank()) return item.observedName();
+        return item.deviceUserId();
     }
 
     public List<AttendanceExplorerApi.MonthSummaryResponse> months() {
@@ -132,15 +126,15 @@ public class AttendanceExplorerService {
             String deviceUserId, List<PunchRecord> rows, Optional<Employee> employee) {
         List<PunchRecord> sorted = rows.stream().sorted(Comparator.comparing(PunchRecord::getPunchedAt)).toList();
         return new AttendanceExplorerApi.EmployeeSummaryResponse(
-            deviceUserId,
-            observedName(sorted),
-            employee.map(Employee::getId).orElse(null),
-            employee.map(Employee::getEmployeeCode).orElse(null),
-            employee.map(Employee::getFullName).orElse(null),
-            employee.isPresent(),
-            sorted.size(),
-            sorted.get(0).getPunchedAt().toEpochMilli(),
-            sorted.get(sorted.size() - 1).getPunchedAt().toEpochMilli());
+                deviceUserId,
+                observedName(sorted),
+                employee.map(Employee::getId).orElse(null),
+                employee.map(Employee::getEmployeeCode).orElse(null),
+                employee.map(Employee::getFullName).orElse(null),
+                employee.isPresent(),
+                sorted.size(),
+                sorted.get(0).getPunchedAt().toEpochMilli(),
+                sorted.get(sorted.size() - 1).getPunchedAt().toEpochMilli());
     }
 
     private AttendanceExplorerApi.AttendanceDayResponse toDay(LocalDate date, List<PunchRecord> rows) {
@@ -207,12 +201,6 @@ public class AttendanceExplorerService {
         } catch (DateTimeParseException | NullPointerException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "month must use YYYY-MM format");
         }
-    }
-
-    private static String displayName(AttendanceExplorerApi.EmployeeSummaryResponse item) {
-        if (item.employeeName() != null && !item.employeeName().isBlank()) return item.employeeName();
-        if (item.observedName() != null && !item.observedName().isBlank()) return item.observedName();
-        return item.deviceUserId();
     }
 
     private record EmployeeIndex(Map<String, Employee> byDeviceId, Map<String, Employee> byCode) {

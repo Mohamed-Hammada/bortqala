@@ -1,12 +1,6 @@
 package com.bemo.hr.attendance.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -20,11 +14,6 @@ import java.util.UUID;
 @Entity
 @Table(name = "biometric_sources")
 public class BiometricSource {
-    public enum SourceType {
-        DEVICE,
-        FILE_DEVICE
-    }
-
     @Id
     private String id;
     @TenantId
@@ -51,7 +40,6 @@ public class BiometricSource {
     private boolean autoCreateEmployeeActive = true;
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
-
     protected BiometricSource() {
     }
 
@@ -94,16 +82,56 @@ public class BiometricSource {
         this.active = active;
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public SourceType getSourceType() { return sourceType; }
-    public String getName() { return name; }
-    public String getNormalizedCode() { return normalizedCode; }
-    public boolean isActive() { return active; }
-    public boolean isAutoCreateEmployees() { return autoCreateEmployees; }
-    public String getAutoCreateCategoryId() { return autoCreateCategoryId; }
-    public String getAutoCreateEmploymentType() { return autoCreateEmploymentType; }
-    public String getAutoCreateActiveFromMode() { return autoCreateActiveFromMode; }
-    public boolean isAutoCreateEmployeeActive() { return autoCreateEmployeeActive; }
-    public Instant getCreatedAt() { return createdAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public SourceType getSourceType() {
+        return sourceType;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getNormalizedCode() {
+        return normalizedCode;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public boolean isAutoCreateEmployees() {
+        return autoCreateEmployees;
+    }
+
+    public String getAutoCreateCategoryId() {
+        return autoCreateCategoryId;
+    }
+
+    public String getAutoCreateEmploymentType() {
+        return autoCreateEmploymentType;
+    }
+
+    public String getAutoCreateActiveFromMode() {
+        return autoCreateActiveFromMode;
+    }
+
+    public boolean isAutoCreateEmployeeActive() {
+        return autoCreateEmployeeActive;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public enum SourceType {
+        DEVICE,
+        FILE_DEVICE
+    }
 }

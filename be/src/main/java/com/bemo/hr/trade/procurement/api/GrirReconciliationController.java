@@ -17,8 +17,6 @@ public class GrirReconciliationController {
         this.grirService = grirService;
     }
 
-    public record ReconcileLinePayload(String goodsReceiptLineId, String invoiceLineId, BigDecimal receivedAmount, BigDecimal invoicedAmount) {}
-
     @PostMapping("/reconcile")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER')")
     public GrirReconciliationRecord reconcileLine(@RequestBody ReconcileLinePayload payload) {
@@ -35,5 +33,9 @@ public class GrirReconciliationController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public GrirReconciliationService.GrirSummaryReport getSummaryReport() {
         return grirService.getSummaryReport();
+    }
+
+    public record ReconcileLinePayload(String goodsReceiptLineId, String invoiceLineId, BigDecimal receivedAmount,
+                                       BigDecimal invoicedAmount) {
     }
 }

@@ -50,7 +50,7 @@ public interface PunchRecordRepository extends JpaRepository<PunchRecord, String
     List<PunchRecord> findInRange(@Param("from") Instant from, @Param("to") Instant to);
 
     @Query("select p.deviceUserId, max(p.rawName), count(p), min(p.punchedAt), max(p.punchedAt) " +
-           "from PunchRecord p where p.employeeId is null group by p.deviceUserId order by p.deviceUserId")
+            "from PunchRecord p where p.employeeId is null group by p.deviceUserId order by p.deviceUserId")
     List<Object[]> summarizeUnmatched();
 
     @Modifying

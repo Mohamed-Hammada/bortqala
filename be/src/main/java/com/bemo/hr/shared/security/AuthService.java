@@ -1,27 +1,27 @@
 package com.bemo.hr.shared.security;
 
 import com.bemo.hr.access.application.AccessCatalogService;
+import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.i18n.TranslationService;
 import com.bemo.hr.workforce.WorkerCategoryRepository;
-import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
-import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,6 +29,9 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 public class AuthService {
+    private static final String DUMMY_PASSWORD_HASH =
+            "$2a$12$XnjwgsuR3b/qd7/gd5SNmeewo2ZHV5Hw1Citn8vLnTcT9OaPckNYG";
+    private static final String DEMO_SUPERADMIN_USERNAME = "demo_superadmin";
     private final AuthenticationManager authenticationManager;
     private final JwtEncoder jwtEncoder;
     private final JwtProperties jwtProperties;
@@ -86,11 +89,6 @@ public class AuthService {
         this.accessCatalogService = accessCatalogService;
         this.subscriptionLimitService = subscriptionLimitService;
     }
-
-    private static final String DUMMY_PASSWORD_HASH =
-            "$2a$12$XnjwgsuR3b/qd7/gd5SNmeewo2ZHV5Hw1Citn8vLnTcT9OaPckNYG";
-
-    private static final String DEMO_SUPERADMIN_USERNAME = "demo_superadmin";
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public LoginResult demoSuperadminLogin(String deviceId) {
@@ -512,7 +510,7 @@ public class AuthService {
         return appUserRepository.findByAppIdAndUsernameIgnoreCase(app.getId(), username).orElseGet(() -> {
             var roles = requireRoles(roleCodes);
             var created = appUserRepository.save(new AppUser(app.getId(), username, displayName,
-                    passwordEncoder.encode(password), roles, Set.of("dashboard","categories","employees","imports","parties","reports","operations","payroll","users","settings","workforce-dashboard","workforce-contractors","workforce-workers","workforce-categories","workforce-requests","workforce-attendance","workforce-dispatch-disputes","workforce-settlements","workforce-advances","workforce-accounts","workforce-reports","approvals-my-tasks","approvals-workflows","budgets"), true, true));
+                    passwordEncoder.encode(password), roles, Set.of("dashboard", "categories", "employees", "imports", "parties", "reports", "operations", "payroll", "users", "settings", "workforce-dashboard", "workforce-contractors", "workforce-workers", "workforce-categories", "workforce-requests", "workforce-attendance", "workforce-dispatch-disputes", "workforce-settlements", "workforce-advances", "workforce-accounts", "workforce-reports", "approvals-my-tasks", "approvals-workflows", "budgets"), true, true));
             created.requirePasswordChangeOnNextLogin();
             return created;
         });
@@ -571,8 +569,9 @@ public class AuthService {
     }
 
     private void validate(AuthApi.UserUpsertRequest request, String appId, String currentId, boolean passwordRequired) {
-        if (request.roles() == null || request.roles().isEmpty()) throw new BusinessRuleException("Select at least one role.",
-                "AUTH_ROLE_REQUIRED", HttpStatus.CONFLICT);
+        if (request.roles() == null || request.roles().isEmpty())
+            throw new BusinessRuleException("Select at least one role.",
+                    "AUTH_ROLE_REQUIRED", HttpStatus.CONFLICT);
         var app = requireCurrentApp();
         if (passwordRequired && (request.password() == null || request.password().isBlank())) {
             throw new BusinessRuleException("Password is required for a new user.",
@@ -709,7 +708,11 @@ public class AuthService {
         );
     }
 
-    public record LoginResult(String appId, AuthApi.LoginResponse response, String refreshToken, Instant refreshExpiresAt) { }
+    public record LoginResult(String appId, AuthApi.LoginResponse response, String refreshToken,
+                              Instant refreshExpiresAt) {
+    }
 
-    public record RefreshResult(String appId, AuthApi.RefreshResponse response, String refreshToken, Instant refreshExpiresAt) { }
+    public record RefreshResult(String appId, AuthApi.RefreshResponse response, String refreshToken,
+                                Instant refreshExpiresAt) {
+    }
 }

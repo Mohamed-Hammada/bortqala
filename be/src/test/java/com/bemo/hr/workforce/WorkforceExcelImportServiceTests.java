@@ -27,17 +27,8 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class WorkforceExcelImportServiceTests {
@@ -46,15 +37,58 @@ class WorkforceExcelImportServiceTests {
     private static final long MAX_FILE_BYTES = 20L * 1024 * 1024;
     private static final int MAX_ROWS = 20_000;
 
-    @Mock private WorkforceImportBatchRepository batchRepository;
-    @Mock private WorkforceImportRowRepository rowRepository;
-    @Mock private WorkforceImportChangeRepository changeRepository;
-    @Mock private WorkerRepository workerRepository;
-    @Mock private ManualAttendanceEntryRepository attendanceRepository;
-    @Mock private com.bemo.hr.audit.application.AuditService auditService;
+    @Mock
+    private WorkforceImportBatchRepository batchRepository;
+    @Mock
+    private WorkforceImportRowRepository rowRepository;
+    @Mock
+    private WorkforceImportChangeRepository changeRepository;
+    @Mock
+    private WorkerRepository workerRepository;
+    @Mock
+    private ManualAttendanceEntryRepository attendanceRepository;
+    @Mock
+    private com.bemo.hr.audit.application.AuditService auditService;
 
     @InjectMocks
     private WorkforceExcelImportService importService;
+
+    private static byte[] workbookBytes(String[] headers, String[][] rows) throws IOException {
+        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("import");
+            Row header = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) header.createCell(i).setCellValue(headers[i]);
+            for (int r = 0; r < rows.length; r++) {
+                Row row = sheet.createRow(1 + r);
+                for (int c = 0; c < rows[r].length; c++) row.createCell(c).setCellValue(rows[r][c]);
+            }
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    private static String encodedMapping() {
+        return "workerCode\tworkerCode\nworkDate\tworkDate\nattendanceValue\tattendanceValue";
+    }
+
+    // ---------- V-17: upload() file safety ----------
+
+    private static WorkforceImportBatch mappedBatch(String batchId, byte[] bytes) {
+        WorkforceImportBatch batch = new WorkforceImportBatch("import.xlsx", XLSX, "checksum", bytes,
+                "workerCode\tworkDate\tattendanceValue", "user");
+        stampCreatedAt(batch);
+        return batch;
+    }
+
+    private static void stampCreatedAt(WorkforceImportBatch batch) {
+        try {
+            Field field = WorkforceImportBatch.class.getDeclaredField("createdAt");
+            field.setAccessible(true);
+            field.set(batch, Instant.now());
+        } catch (Exception exception) {
+            throw new RuntimeException(exception);
+        }
+    }
 
     @BeforeEach
     void setUp() {
@@ -66,11 +100,11 @@ class WorkforceExcelImportServiceTests {
         TenantContext.clear();
     }
 
-    // ---------- V-17: upload() file safety ----------
+    // ---------- V-13: validate() bounded queries ----------
 
     @Test
     void upload_throwsBusinessRuleException_onCorruptedFile() {
-        byte[] badFile = new byte[] { 0, 1, 2, 3, 4, 5 };
+        byte[] badFile = new byte[]{0, 1, 2, 3, 4, 5};
 
         assertThatThrownBy(() -> importService.upload(new MockMultipartFile("file", "file.xlsx", XLSX, badFile)))
                 .isInstanceOf(BusinessRuleException.class)
@@ -98,7 +132,7 @@ class WorkforceExcelImportServiceTests {
         when(batchRepository.findByChecksum(anyString()))
                 .thenThrow(new RuntimeException("db connection lost: secret-db-pass"));
 
-        assertThatThrownBy(() -> importService.upload(new MockMultipartFile("file", "ok.xlsx", XLSX, new byte[] { 1, 2, 3 })))
+        assertThatThrownBy(() -> importService.upload(new MockMultipartFile("file", "ok.xlsx", XLSX, new byte[]{1, 2, 3})))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("تعذر قراءة ملف البصمة.")
                 .hasFieldOrPropertyWithValue("code", "EXCEL_READ_FAILED");
@@ -110,7 +144,10 @@ class WorkforceExcelImportServiceTests {
         try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             workbook.createSheet("temp");
             workbook.removeSheetAt(0);
-            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) { workbook.write(out); noSheets = out.toByteArray(); }
+            try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                workbook.write(out);
+                noSheets = out.toByteArray();
+            }
         }
         when(batchRepository.findByChecksum(anyString())).thenReturn(Optional.empty());
 
@@ -121,12 +158,12 @@ class WorkforceExcelImportServiceTests {
         verify(batchRepository, never()).save(any());
     }
 
-    // ---------- V-13: validate() bounded queries ----------
+    // ---------- V-19: preview() bounded fetch ----------
 
     @Test
     void validate_queriesOnlyReferencedWorkerCodesOnceAndPersistsRows() throws IOException {
-        byte[] bytes = workbookBytes(new String[] { "workerCode", "workDate", "attendanceValue" },
-                new String[][] { { "W-001", "2026-08-01", "1" }, { "w-002 ", "2026-08-02", "0.5" } });
+        byte[] bytes = workbookBytes(new String[]{"workerCode", "workDate", "attendanceValue"},
+                new String[][]{{"W-001", "2026-08-01", "1"}, {"w-002 ", "2026-08-02", "0.5"}});
         WorkforceImportBatch batch = mappedBatch("b1", bytes);
         batch.map(encodedMapping());
         when(batchRepository.findById("b1")).thenReturn(Optional.of(batch));
@@ -150,10 +187,12 @@ class WorkforceExcelImportServiceTests {
         verify(auditService).record(eq("VALIDATE"), eq("WORKFORCE_IMPORT"), eq("b1"), anyString(), contains("\"total\":2"), isNull());
     }
 
+    // ---------- V-01: reverse() bulk reversal ----------
+
     @Test
     void validate_marksUnknownWorkerCodeAsInvalid() throws IOException {
-        byte[] bytes = workbookBytes(new String[] { "workerCode", "workDate", "attendanceValue" },
-                new String[][] { { "W-001", "2026-08-01", "1" }, { "W-999", "2026-08-02", "0.5" } });
+        byte[] bytes = workbookBytes(new String[]{"workerCode", "workDate", "attendanceValue"},
+                new String[][]{{"W-001", "2026-08-01", "1"}, {"W-999", "2026-08-02", "0.5"}});
         WorkforceImportBatch batch = mappedBatch("b1", bytes);
         batch.map(encodedMapping());
         when(batchRepository.findById("b1")).thenReturn(Optional.of(batch));
@@ -175,8 +214,8 @@ class WorkforceExcelImportServiceTests {
 
     @Test
     void validate_rejectsDuplicateNormalizedWorkerCodesBeforePersistence() throws IOException {
-        byte[] bytes = workbookBytes(new String[] { "workerCode", "workDate", "attendanceValue" },
-                new String[][] { { "W-001", "2026-08-01", "1" }, { "w-001", "2026-08-02", "1" } });
+        byte[] bytes = workbookBytes(new String[]{"workerCode", "workDate", "attendanceValue"},
+                new String[][]{{"W-001", "2026-08-01", "1"}, {"w-001", "2026-08-02", "1"}});
         WorkforceImportBatch batch = mappedBatch("b1", bytes);
         batch.map(encodedMapping());
         when(batchRepository.findById("b1")).thenReturn(Optional.of(batch));
@@ -222,11 +261,9 @@ class WorkforceExcelImportServiceTests {
         verify(rowRepository, never()).saveAll(any());
     }
 
-    // ---------- V-19: preview() bounded fetch ----------
-
     @Test
     void preview_boundsTo100RowsAndFetchesOnlyPreviewWorkerIdsPreservingOrder() {
-        WorkforceImportBatch batch = mappedBatch("b1", new byte[] { 1 });
+        WorkforceImportBatch batch = mappedBatch("b1", new byte[]{1});
         batch.map(encodedMapping());
         batch.validated(250, 250, 0);
 
@@ -259,11 +296,11 @@ class WorkforceExcelImportServiceTests {
         verify(workerRepository, never()).findAll();
     }
 
-    // ---------- V-01: reverse() bulk reversal ----------
+    // ---------- helpers ----------
 
     @Test
     void reverse_bulkFetchesEntriesOnceAndRestoresState() {
-        WorkforceImportBatch batch = mappedBatch("b1", new byte[] { 1 });
+        WorkforceImportBatch batch = mappedBatch("b1", new byte[]{1});
         batch.imported("op-1", 2);
 
         ManualAttendanceEntry createdEntry = new ManualAttendanceEntry("w1", "2026-08-01", BigDecimal.ONE,
@@ -298,7 +335,7 @@ class WorkforceExcelImportServiceTests {
 
     @Test
     void reverse_skipsMissingAndAlreadyReversedChanges() {
-        WorkforceImportBatch batch = mappedBatch("b1", new byte[] { 1 });
+        WorkforceImportBatch batch = mappedBatch("b1", new byte[]{1});
         batch.imported("op-1", 3);
 
         ManualAttendanceEntry entry = new ManualAttendanceEntry("w1", "2026-08-01", BigDecimal.ONE,
@@ -332,7 +369,7 @@ class WorkforceExcelImportServiceTests {
 
     @Test
     void reverse_secondCallIsIdempotentWithoutRepositoryWrites() {
-        WorkforceImportBatch batch = mappedBatch("b1", new byte[] { 1 });
+        WorkforceImportBatch batch = mappedBatch("b1", new byte[]{1});
         batch.imported("op-1", 2);
         batch.reversed("user");
         when(batchRepository.findById("b1")).thenReturn(Optional.of(batch));
@@ -347,7 +384,7 @@ class WorkforceExcelImportServiceTests {
 
     @Test
     void reverse_rejectsNonImportedBatch() {
-        WorkforceImportBatch batch = mappedBatch("b1", new byte[] { 1 });
+        WorkforceImportBatch batch = mappedBatch("b1", new byte[]{1});
         batch.map(encodedMapping());
         batch.validated(2, 1, 1);
         when(batchRepository.findById("b1")).thenReturn(Optional.of(batch));
@@ -358,42 +395,5 @@ class WorkforceExcelImportServiceTests {
 
         verify(changeRepository, never()).findByBatchIdOrderByCreatedAtDesc(anyString());
         verify(attendanceRepository, never()).findAllById(any());
-    }
-
-    // ---------- helpers ----------
-
-    private static byte[] workbookBytes(String[] headers, String[][] rows) throws IOException {
-        try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.createSheet("import");
-            Row header = sheet.createRow(0);
-            for (int i = 0; i < headers.length; i++) header.createCell(i).setCellValue(headers[i]);
-            for (int r = 0; r < rows.length; r++) {
-                Row row = sheet.createRow(1 + r);
-                for (int c = 0; c < rows[r].length; c++) row.createCell(c).setCellValue(rows[r][c]);
-            }
-            workbook.write(out);
-            return out.toByteArray();
-        }
-    }
-
-    private static String encodedMapping() {
-        return "workerCode\tworkerCode\nworkDate\tworkDate\nattendanceValue\tattendanceValue";
-    }
-
-    private static WorkforceImportBatch mappedBatch(String batchId, byte[] bytes) {
-        WorkforceImportBatch batch = new WorkforceImportBatch("import.xlsx", XLSX, "checksum", bytes,
-                "workerCode\tworkDate\tattendanceValue", "user");
-        stampCreatedAt(batch);
-        return batch;
-    }
-
-    private static void stampCreatedAt(WorkforceImportBatch batch) {
-        try {
-            Field field = WorkforceImportBatch.class.getDeclaredField("createdAt");
-            field.setAccessible(true);
-            field.set(batch, Instant.now());
-        } catch (Exception exception) {
-            throw new RuntimeException(exception);
-        }
     }
 }

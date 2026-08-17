@@ -17,9 +17,9 @@ public class ClientIpResolver {
         this.trustedProxies = trustedProxies == null
                 ? List.of()
                 : trustedProxies.stream()
-                        .filter(candidate -> candidate != null && !candidate.isBlank())
-                        .filter(candidate -> !FORBIDDEN_TRUSTS.contains(candidate.trim()))
-                        .toList();
+                  .filter(candidate -> candidate != null && !candidate.isBlank())
+                  .filter(candidate -> !FORBIDDEN_TRUSTS.contains(candidate.trim()))
+                  .toList();
     }
 
     public String resolve(HttpServletRequest request) {

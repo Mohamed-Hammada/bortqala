@@ -3,7 +3,8 @@ package com.bemo.hr.attendance.api;
 import java.util.List;
 
 public final class AttendanceExplorerApi {
-    private AttendanceExplorerApi() {}
+    private AttendanceExplorerApi() {
+    }
 
     public record MonthSummaryResponse(
             String month,
@@ -12,7 +13,8 @@ public final class AttendanceExplorerApi {
             long mappedEmployeeCount,
             long unmatchedEmployeeCount,
             long firstPunch,
-            long lastPunch) {}
+            long lastPunch) {
+    }
 
     public record EmployeeSummaryResponse(
             String deviceUserId,
@@ -23,7 +25,8 @@ public final class AttendanceExplorerApi {
             boolean mapped,
             long punchCount,
             long firstPunch,
-            long lastPunch) {}
+            long lastPunch) {
+    }
 
     public record AttendanceDayResponse(
             String date,
@@ -32,7 +35,8 @@ public final class AttendanceExplorerApi {
             long punchCount,
             long workedMinutes,
             boolean incomplete,
-            List<Long> punches) {}
+            List<Long> punches) {
+    }
 
     public record EmployeeAttendanceResponse(
             String deviceUserId,
@@ -46,5 +50,6 @@ public final class AttendanceExplorerApi {
             long firstPunch,
             long lastPunch,
             long workedMinutes,
-            List<AttendanceDayResponse> days) {}
+            List<AttendanceDayResponse> days) {
+    }
 }

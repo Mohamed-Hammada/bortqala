@@ -13,6 +13,7 @@ import java.util.Optional;
 
 public interface DayAnomalyRepository extends JpaRepository<DayAnomaly, String> {
     List<DayAnomaly> findByReportIdOrderByWorkDateAscCategoryNameAsc(String reportId);
+
     Optional<DayAnomaly> findByReportIdAndCategoryIdAndWorkDate(String reportId, String categoryId, LocalDate workDate);
 
     @Modifying

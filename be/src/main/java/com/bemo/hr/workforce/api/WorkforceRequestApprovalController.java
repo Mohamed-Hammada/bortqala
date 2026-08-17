@@ -17,8 +17,6 @@ public class WorkforceRequestApprovalController {
         this.approvalService = approvalService;
     }
 
-    public record SubmitDecisionPayload(String requestId, String approverUserId, WorkforceRequestApproval.Decision decision, String comment) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER')")
     public WorkforceRequestApproval submitDecision(@RequestBody SubmitDecisionPayload payload) {
@@ -29,5 +27,9 @@ public class WorkforceRequestApprovalController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'VIEWER')")
     public List<WorkforceRequestApproval> getApprovalsForRequest(@PathVariable String requestId) {
         return approvalService.getApprovalsForRequest(requestId);
+    }
+
+    public record SubmitDecisionPayload(String requestId, String approverUserId,
+                                        WorkforceRequestApproval.Decision decision, String comment) {
     }
 }

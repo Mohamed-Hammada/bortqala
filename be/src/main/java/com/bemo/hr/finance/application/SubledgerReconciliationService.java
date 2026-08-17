@@ -2,16 +2,16 @@ package com.bemo.hr.finance.application;
 
 import com.bemo.hr.finance.application.close.SubledgerReconciliationProvider;
 import com.bemo.hr.finance.domain.reconciliation.SubledgerReconciliationReport;
+import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
 import com.bemo.hr.finance.infrastructure.SubledgerReconciliationReportRepository;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.util.List;
-import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
-import tools.jackson.databind.ObjectMapper;
-import com.bemo.hr.shared.domain.BusinessRuleException;
-import org.springframework.http.HttpStatus;
 
 @Service
 public class SubledgerReconciliationService {
@@ -38,7 +38,7 @@ public class SubledgerReconciliationService {
 
     @Transactional
     public SubledgerReconciliationReport generateReport(String periodId,
-                                                         SubledgerReconciliationReport.SubledgerType subledgerType) {
+                                                        SubledgerReconciliationReport.SubledgerType subledgerType) {
         if (fiscalPeriodRepository == null) {
             throw unavailable(subledgerType);
         }
@@ -54,8 +54,11 @@ public class SubledgerReconciliationService {
             throw unavailable(subledgerType);
         }
         String details;
-        try { details = objectMapper.writeValueAsString(calculation.sourceDifferences()); }
-        catch (Exception ex) { throw new IllegalStateException("Cannot serialize reconciliation differences", ex); }
+        try {
+            details = objectMapper.writeValueAsString(calculation.sourceDifferences());
+        } catch (Exception ex) {
+            throw new IllegalStateException("Cannot serialize reconciliation differences", ex);
+        }
 
         SubledgerReconciliationReport report = new SubledgerReconciliationReport(periodId, subledgerType,
                 calculation.glBalance(), calculation.subledgerBalance(), asOf, details);

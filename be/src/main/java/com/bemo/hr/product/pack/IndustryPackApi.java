@@ -1,4 +1,34 @@
 package com.bemo.hr.product.pack;
-import jakarta.validation.constraints.*;import java.util.List;
-public final class IndustryPackApi{private IndustryPackApi(){}public record InstallRequest(@NotBlank String operationId){}public record UpgradeRequest(@NotBlank String operationId,long expectedVersion){}public record SettingsRequest(@NotBlank @Size(max=4000)String settingsJson,long expectedVersion){}public record StepRequest(boolean skip,long expectedVersion){}public record StepResponse(String id,String key,int sequence,String prerequisiteKey,boolean optional,String status,long version){}public record PackResponse(String code,String nameKey,String descriptionKey,int availableVersion,Integer installedVersion,boolean upgradeAvailable,String status,List<String> requiredFeatures,List<String> defaultRoles,List<String> kpis,List<String> importTemplates,String settingsJson,boolean customized,boolean goLiveReady,long version,List<StepResponse> steps){}
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+import java.util.List;
+
+public final class IndustryPackApi {
+    private IndustryPackApi() {
+    }
+
+    public record InstallRequest(@NotBlank String operationId) {
+    }
+
+    public record UpgradeRequest(@NotBlank String operationId, long expectedVersion) {
+    }
+
+    public record SettingsRequest(@NotBlank @Size(max = 4000) String settingsJson, long expectedVersion) {
+    }
+
+    public record StepRequest(boolean skip, long expectedVersion) {
+    }
+
+    public record StepResponse(String id, String key, int sequence, String prerequisiteKey, boolean optional,
+                               String status, long version) {
+    }
+
+    public record PackResponse(String code, String nameKey, String descriptionKey, int availableVersion,
+                               Integer installedVersion, boolean upgradeAvailable, String status,
+                               List<String> requiredFeatures, List<String> defaultRoles, List<String> kpis,
+                               List<String> importTemplates, String settingsJson, boolean customized,
+                               boolean goLiveReady, long version, List<StepResponse> steps) {
+    }
 }

@@ -1,11 +1,6 @@
 package com.bemo.hr.workforce;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -17,29 +12,52 @@ import java.util.UUID;
 @Table(name = "contractors")
 @Getter
 public class Contractor {
-    @Id private String id;
-    @TenantId @Column(name = "app_id", nullable = false) private String appId;
-    @Column(nullable = false, length = 50) private String code;
-    @Column(nullable = false, length = 160) private String name;
-    @Column(name = "trade_name", length = 160) private String tradeName;
-    @Column(nullable = false, length = 50) private String phone;
-    @Column(name = "secondary_phone", length = 50) private String secondaryPhone;
-    @Column(name = "tax_id", length = 50) private String taxId;
-    @Column(length = 255) private String address;
-    @Column(name = "accounting_model", nullable = false, length = 50) private String accountingModel;
-    @Column(name = "payment_routing", nullable = false, length = 50) private String paymentRouting;
-    @Column(name = "settlement_cycle_days", nullable = false) private int settlementCycleDays;
-    @Column(name = "default_daily_rate", precision = 12, scale = 2) private BigDecimal defaultDailyRate;
-    @Column(name = "fee_type", length = 30) private String feeType;
-    @Column(name = "fee_value", precision = 12, scale = 2) private BigDecimal feeValue;
-    @Column(name = "fee_base", length = 30) private String feeBase;
-    @Column(name = "fixed_period_amount", precision = 12, scale = 2) private BigDecimal fixedPeriodAmount;
-    @Column(nullable = false, length = 30) private String status;
-    @Column(length = 1000) private String notes;
-    @Column(name = "created_at", nullable = false) private Instant createdAt;
-    @Column(name = "updated_at", nullable = false) private Instant updatedAt;
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(nullable = false, length = 50)
+    private String code;
+    @Column(nullable = false, length = 160)
+    private String name;
+    @Column(name = "trade_name", length = 160)
+    private String tradeName;
+    @Column(nullable = false, length = 50)
+    private String phone;
+    @Column(name = "secondary_phone", length = 50)
+    private String secondaryPhone;
+    @Column(name = "tax_id", length = 50)
+    private String taxId;
+    @Column(length = 255)
+    private String address;
+    @Column(name = "accounting_model", nullable = false, length = 50)
+    private String accountingModel;
+    @Column(name = "payment_routing", nullable = false, length = 50)
+    private String paymentRouting;
+    @Column(name = "settlement_cycle_days", nullable = false)
+    private int settlementCycleDays;
+    @Column(name = "default_daily_rate", precision = 12, scale = 2)
+    private BigDecimal defaultDailyRate;
+    @Column(name = "fee_type", length = 30)
+    private String feeType;
+    @Column(name = "fee_value", precision = 12, scale = 2)
+    private BigDecimal feeValue;
+    @Column(name = "fee_base", length = 30)
+    private String feeBase;
+    @Column(name = "fixed_period_amount", precision = 12, scale = 2)
+    private BigDecimal fixedPeriodAmount;
+    @Column(nullable = false, length = 30)
+    private String status;
+    @Column(length = 1000)
+    private String notes;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
-    protected Contractor() { }
+    protected Contractor() {
+    }
 
     public Contractor(String code, String name, String tradeName, String phone, String secondaryPhone,
                       String taxId, String address, String accountingModel, String paymentRouting,
@@ -48,8 +66,8 @@ public class Contractor {
                       String status, String notes) {
         this.id = UUID.randomUUID().toString();
         update(code, name, tradeName, phone, secondaryPhone, taxId, address, accountingModel,
-               paymentRouting, settlementCycleDays, defaultDailyRate, feeType, feeValue, feeBase,
-               fixedPeriodAmount, status, notes);
+                paymentRouting, settlementCycleDays, defaultDailyRate, feeType, feeValue, feeBase,
+                fixedPeriodAmount, status, notes);
     }
 
     public void update(String code, String name, String tradeName, String phone, String secondaryPhone,
@@ -76,8 +94,18 @@ public class Contractor {
         this.notes = nullable(notes);
     }
 
-    @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
-    @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
+    @PrePersist
+    void prePersist() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
 
-    private String nullable(String val) { return val == null || val.isBlank() ? null : val.strip(); }
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
+
+    private String nullable(String val) {
+        return val == null || val.isBlank() ? null : val.strip();
+    }
 }

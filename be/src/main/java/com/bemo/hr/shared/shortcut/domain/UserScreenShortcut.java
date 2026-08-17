@@ -1,12 +1,6 @@
 package com.bemo.hr.shared.shortcut.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -15,17 +9,17 @@ import java.util.UUID;
 
 @Entity
 @Table(
-    name = "user_screen_shortcuts",
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uk_user_shortcut_profile_key",
-            columnNames = {"app_id", "profile_id", "second_key_code"}
-        ),
-        @UniqueConstraint(
-            name = "uk_user_shortcut_profile_page",
-            columnNames = {"app_id", "profile_id", "page_code"}
-        )
-    }
+        name = "user_screen_shortcuts",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_user_shortcut_profile_key",
+                        columnNames = {"app_id", "profile_id", "second_key_code"}
+                ),
+                @UniqueConstraint(
+                        name = "uk_user_shortcut_profile_page",
+                        columnNames = {"app_id", "profile_id", "page_code"}
+                )
+        }
 )
 @Getter
 public class UserScreenShortcut {
@@ -58,14 +52,15 @@ public class UserScreenShortcut {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected UserScreenShortcut() {}
+    protected UserScreenShortcut() {
+    }
 
     public UserScreenShortcut(
-        String profileId,
-        String pageCode,
-        String secondKeyCode,
-        boolean enabled,
-        int sortOrder
+            String profileId,
+            String pageCode,
+            String secondKeyCode,
+            boolean enabled,
+            int sortOrder
     ) {
         this.id = UUID.randomUUID().toString();
         this.profileId = profileId;

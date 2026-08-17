@@ -1,18 +1,9 @@
 package com.bemo.hr.trade.procurement.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -20,78 +11,52 @@ import java.util.UUID;
 @Table(name = "purchase_orders")
 public class PurchaseOrder {
 
-    public enum Status {
-        DRAFT,
-        ISSUED,
-        PARTIALLY_RECEIVED,
-        RECEIVED,
-        CANCELLED
-    }
-
     @Id
     private String id;
-
     @TenantId
     @Column(name = "app_id", nullable = false)
     private String appId;
-
     @Column(name = "po_number", nullable = false, length = 50)
     private String poNumber;
-
     @Column(name = "po_date", nullable = false)
     private LocalDate poDate;
-
     @Column(name = "supplier_id", nullable = false, length = 36)
     private String supplierId;
-
     @Column(name = "purchase_request_id", length = 36)
     private String purchaseRequestId;
-
     @Column(name = "department_id", length = 36)
     private String departmentId;
-
     @Column(name = "payment_terms", length = 255)
     private String paymentTerms;
-
     @Column(name = "currency_code", nullable = false, length = 10)
     private String currencyCode;
-
     @Column(name = "base_currency_code", nullable = false, length = 10)
     private String baseCurrencyCode = "EGP";
-
     @Column(name = "exchange_rate", nullable = false, precision = 18, scale = 6)
     private BigDecimal exchangeRate = BigDecimal.ONE;
-
     @Column(name = "exchange_rate_date", nullable = false)
     private LocalDate exchangeRateDate;
-
     @Column(name = "exchange_rate_source", nullable = false, length = 50)
     private String exchangeRateSource = "BASE_CURRENCY";
-
     @Column(name = "exchange_rate_override_reason", length = 500)
     private String exchangeRateOverrideReason;
-
     @Column(name = "base_total_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal baseTotalAmount = BigDecimal.ZERO;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status;
-
     @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal totalAmount;
-
     @Column(name = "created_at", nullable = false)
     private long createdAt;
-
     @Column(name = "updated_at", nullable = false)
     private long updatedAt;
-
     @Version
     @Column(name = "version", nullable = false)
     private long version;
 
-    protected PurchaseOrder() {}
+    protected PurchaseOrder() {
+    }
 
     public PurchaseOrder(String poNumber, LocalDate poDate, String supplierId, String purchaseRequestId, String paymentTerms, BigDecimal totalAmount) {
         this(poNumber, poDate, supplierId, purchaseRequestId, paymentTerms, "EGP", totalAmount);
@@ -146,28 +111,97 @@ public class PurchaseOrder {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getPoNumber() { return poNumber; }
-    public LocalDate getPoDate() { return poDate; }
-    public String getSupplierId() { return supplierId; }
-    public String getPurchaseRequestId() { return purchaseRequestId; }
-    public String getDepartmentId() { return departmentId; }
-    public String getPaymentTerms() { return paymentTerms; }
-    public String getCurrencyCode() { return currencyCode; }
-    public String getBaseCurrencyCode() { return baseCurrencyCode; }
-    public BigDecimal getExchangeRate() { return exchangeRate; }
-    public LocalDate getExchangeRateDate() { return exchangeRateDate; }
-    public String getExchangeRateSource() { return exchangeRateSource; }
-    public String getExchangeRateOverrideReason() { return exchangeRateOverrideReason; }
-    public BigDecimal getBaseTotalAmount() { return baseTotalAmount; }
-    public Status getStatus() { return status; }
-    public BigDecimal getTotalAmount() { return totalAmount; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getPoNumber() {
+        return poNumber;
+    }
+
+    public LocalDate getPoDate() {
+        return poDate;
+    }
+
+    public String getSupplierId() {
+        return supplierId;
+    }
+
+    public String getPurchaseRequestId() {
+        return purchaseRequestId;
+    }
+
+    public String getDepartmentId() {
+        return departmentId;
+    }
+
+    public String getPaymentTerms() {
+        return paymentTerms;
+    }
+
+    public String getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public String getBaseCurrencyCode() {
+        return baseCurrencyCode;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public LocalDate getExchangeRateDate() {
+        return exchangeRateDate;
+    }
+
+    public String getExchangeRateSource() {
+        return exchangeRateSource;
+    }
+
+    public String getExchangeRateOverrideReason() {
+        return exchangeRateOverrideReason;
+    }
+
+    public BigDecimal getBaseTotalAmount() {
+        return baseTotalAmount;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public enum Status {
+        DRAFT,
+        ISSUED,
+        PARTIALLY_RECEIVED,
+        RECEIVED,
+        CANCELLED
+    }
 }

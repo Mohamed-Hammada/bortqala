@@ -1,13 +1,17 @@
 package com.bemo.hr.operations.application;
 
-import com.bemo.hr.operations.domain.*;
-import com.bemo.hr.operations.infrastructure.*;
-import com.bemo.hr.organization.domain.Warehouse;
-import com.bemo.hr.organization.infrastructure.WarehouseRepository;
-import com.bemo.hr.organization.infrastructure.BranchRepository;
-import com.bemo.hr.operations.InventoryItemRepository;
-import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.operations.InventoryItemRepository;
+import com.bemo.hr.operations.domain.StockReservation;
+import com.bemo.hr.operations.domain.StockStatusBalance;
+import com.bemo.hr.operations.domain.WarehouseBin;
+import com.bemo.hr.operations.infrastructure.StockReservationRepository;
+import com.bemo.hr.operations.infrastructure.StockStatusBalanceRepository;
+import com.bemo.hr.operations.infrastructure.WarehouseBinRepository;
+import com.bemo.hr.organization.domain.Warehouse;
+import com.bemo.hr.organization.infrastructure.BranchRepository;
+import com.bemo.hr.organization.infrastructure.WarehouseRepository;
+import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,10 +1,6 @@
 package com.bemo.hr.manufacturing.production.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -43,7 +39,8 @@ public class ProductionReceipt {
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
-    protected ProductionReceipt() {}
+    protected ProductionReceipt() {
+    }
 
     public ProductionReceipt(String receiptNumber, String productionOrderId, String finishedItemId, BigDecimal receivedQuantity, LocalDate receiptDate, String warehouseId) {
         this.id = UUID.randomUUID().toString();
@@ -56,15 +53,43 @@ public class ProductionReceipt {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getReceiptNumber() { return receiptNumber; }
-    public String getProductionOrderId() { return productionOrderId; }
-    public String getFinishedItemId() { return finishedItemId; }
-    public BigDecimal getReceivedQuantity() { return receivedQuantity; }
-    public LocalDate getReceiptDate() { return receiptDate; }
-    public String getWarehouseId() { return warehouseId; }
-    public long getCreatedAt() { return createdAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getReceiptNumber() {
+        return receiptNumber;
+    }
+
+    public String getProductionOrderId() {
+        return productionOrderId;
+    }
+
+    public String getFinishedItemId() {
+        return finishedItemId;
+    }
+
+    public BigDecimal getReceivedQuantity() {
+        return receivedQuantity;
+    }
+
+    public LocalDate getReceiptDate() {
+        return receiptDate;
+    }
+
+    public String getWarehouseId() {
+        return warehouseId;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
 }

@@ -10,7 +10,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -24,8 +23,8 @@ public class FiscalPeriodController {
     private final com.bemo.hr.finance.application.close.PeriodCloseOrchestratorService periodCloseOrchestratorService;
 
     public FiscalPeriodController(FiscalPeriodRepository repository,
-                                com.bemo.hr.finance.application.CloseChecklistService closeChecklistService,
-                                com.bemo.hr.finance.application.close.PeriodCloseOrchestratorService periodCloseOrchestratorService) {
+                                  com.bemo.hr.finance.application.CloseChecklistService closeChecklistService,
+                                  com.bemo.hr.finance.application.close.PeriodCloseOrchestratorService periodCloseOrchestratorService) {
         this.repository = repository;
         this.closeChecklistService = closeChecklistService;
         this.periodCloseOrchestratorService = periodCloseOrchestratorService;
@@ -72,8 +71,8 @@ public class FiscalPeriodController {
     @Transactional
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public FiscalPeriodApi.FiscalPeriodResponse updateStatus(@PathVariable String id,
-                                                            @Valid @RequestBody FiscalPeriodApi.UpdateStatusPayload payload,
-                                                            Authentication authentication) {
+                                                             @Valid @RequestBody FiscalPeriodApi.UpdateStatusPayload payload,
+                                                             Authentication authentication) {
         FiscalPeriod period = repository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("الفترة المالية غير موجودة", "FIN_FISCAL_PERIOD_NOT_FOUND", HttpStatus.CONFLICT));
         if (payload.expectedVersion() != null && payload.expectedVersion() != period.getVersion()) {

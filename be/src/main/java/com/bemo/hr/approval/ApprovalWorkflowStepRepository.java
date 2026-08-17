@@ -7,6 +7,8 @@ import java.util.Optional;
 
 public interface ApprovalWorkflowStepRepository extends JpaRepository<ApprovalWorkflowStep, String> {
     List<ApprovalWorkflowStep> findByWorkflowDefinitionIdOrderByStepOrderAsc(String workflowDefinitionId);
+
     Optional<ApprovalWorkflowStep> findByWorkflowDefinitionIdAndStepOrder(String workflowDefinitionId, int stepOrder);
+
     void deleteByWorkflowDefinitionId(String workflowDefinitionId);
 }

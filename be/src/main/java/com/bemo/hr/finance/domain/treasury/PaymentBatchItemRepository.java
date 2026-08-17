@@ -8,5 +8,6 @@ import java.util.List;
 @Repository
 public interface PaymentBatchItemRepository extends JpaRepository<PaymentBatchItem, String> {
     List<PaymentBatchItem> findByBatchId(String batchId);
+
     boolean existsByBatchIdAndDocumentId(String batchId, String documentId);
 }

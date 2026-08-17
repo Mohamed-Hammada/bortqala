@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface AttendanceReportDecisionRepository extends JpaRepository<AttendanceReportDecision, String> {
     List<AttendanceReportDecision> findByResultIdOrderByCreatedAtAsc(String resultId);
+
     List<AttendanceReportDecision> findByReportIdOrderByCreatedAtAsc(String reportId);
+
     long countByReportId(String reportId);
 }

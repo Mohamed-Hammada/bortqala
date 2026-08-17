@@ -20,11 +20,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class PayrollCalculationPolicyPersistenceTests {
 
-    @Autowired private PayrollCalculationPolicyService payrollCalculationPolicyService;
-    @Autowired private PayrollCalculationPolicyRepository payrollCalculationPolicyRepository;
-    @Autowired private TenantApplicationRepository tenantApplicationRepository;
-
     private final List<String> tenantIds = new ArrayList<>();
+    @Autowired
+    private PayrollCalculationPolicyService payrollCalculationPolicyService;
+    @Autowired
+    private PayrollCalculationPolicyRepository payrollCalculationPolicyRepository;
+    @Autowired
+    private TenantApplicationRepository tenantApplicationRepository;
 
     @AfterEach
     void cleanup() {

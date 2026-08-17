@@ -1,7 +1,5 @@
 package com.bemo.hr.shared.nativeimage;
 
-import java.io.IOException;
-
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -10,7 +8,11 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
 
-/** Registers Liquibase change setters that are selected from YAML at runtime. */
+import java.io.IOException;
+
+/**
+ * Registers Liquibase change setters that are selected from YAML at runtime.
+ */
 public final class LiquibaseRuntimeHints implements RuntimeHintsRegistrar {
 
     private static final String LIQUIBASE_CLASSES = "classpath*:liquibase/**/*.class";

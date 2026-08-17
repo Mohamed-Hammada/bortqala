@@ -1,2 +1,53 @@
-package com.bemo.hr.product.risk;import jakarta.persistence.*;import lombok.Getter;import org.hibernate.annotations.TenantId;import java.time.Instant;import java.util.UUID;
-@Entity@Table(name="partner_risk_rules")@Getter public class PartnerRiskRule{@Id private String id;@TenantId@Column(name="app_id",nullable=false,unique=true)private String appId;@Column(name="low_risk_min",nullable=false)private int lowRiskMin;@Column(name="medium_risk_min",nullable=false)private int mediumRiskMin;@Column(name="high_risk_min",nullable=false)private int highRiskMin;@Version private long version;@Column(name="updated_by",nullable=false)private String updatedBy;@Column(name="updated_at",nullable=false)private Instant updatedAt;protected PartnerRiskRule(){}public PartnerRiskRule(String actor){id=UUID.randomUUID().toString();update(80,60,40,actor);}public void update(int low,int medium,int high,String actor){if(low>100||low<=medium||medium<=high||high<1)throw new IllegalArgumentException("Invalid thresholds");lowRiskMin=low;mediumRiskMin=medium;highRiskMin=high;updatedBy=actor;updatedAt=Instant.now();}public String band(int score){return score>=lowRiskMin?"LOW":score>=mediumRiskMin?"MEDIUM":score>=highRiskMin?"HIGH":"CRITICAL";}}
+package com.bemo.hr.product.risk;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import org.hibernate.annotations.TenantId;
+
+import java.time.Instant;
+import java.util.UUID;
+
+@Entity
+@Table(name = "partner_risk_rules")
+@Getter
+public class PartnerRiskRule {
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false, unique = true)
+    private String appId;
+    @Column(name = "low_risk_min", nullable = false)
+    private int lowRiskMin;
+    @Column(name = "medium_risk_min", nullable = false)
+    private int mediumRiskMin;
+    @Column(name = "high_risk_min", nullable = false)
+    private int highRiskMin;
+    @Version
+    private long version;
+    @Column(name = "updated_by", nullable = false)
+    private String updatedBy;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
+    protected PartnerRiskRule() {
+    }
+
+    public PartnerRiskRule(String actor) {
+        id = UUID.randomUUID().toString();
+        update(80, 60, 40, actor);
+    }
+
+    public void update(int low, int medium, int high, String actor) {
+        if (low > 100 || low <= medium || medium <= high || high < 1)
+            throw new IllegalArgumentException("Invalid thresholds");
+        lowRiskMin = low;
+        mediumRiskMin = medium;
+        highRiskMin = high;
+        updatedBy = actor;
+        updatedAt = Instant.now();
+    }
+
+    public String band(int score) {
+        return score >= lowRiskMin ? "LOW" : score >= mediumRiskMin ? "MEDIUM" : score >= highRiskMin ? "HIGH" : "CRITICAL";
+    }
+}

@@ -10,7 +10,9 @@ import java.util.Optional;
 
 public interface InventoryItemRepository extends JpaRepository<InventoryItem, String> {
     List<InventoryItem> findAllByOrderByNameAsc();
+
     boolean existsByCodeIgnoreCase(String code);
+
     boolean existsByCodeIgnoreCaseAndIdNot(String code, String id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

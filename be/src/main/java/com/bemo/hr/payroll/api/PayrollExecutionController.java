@@ -19,9 +19,6 @@ public class PayrollExecutionController {
         this.executionService = executionService;
     }
 
-    public record CreateRunPayload(String runNumber, String periodId, String runDate) {}
-    public record AddRunLinePayload(String employeeId, BigDecimal basicSalary, BigDecimal allowances, BigDecimal deductions) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
     public PayrollRunHeader createRun(@RequestBody CreateRunPayload payload) {
@@ -56,5 +53,12 @@ public class PayrollExecutionController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public PayrollRunHeader postRun(@PathVariable String id) {
         return executionService.postRun(id);
+    }
+
+    public record CreateRunPayload(String runNumber, String periodId, String runDate) {
+    }
+
+    public record AddRunLinePayload(String employeeId, BigDecimal basicSalary, BigDecimal allowances,
+                                    BigDecimal deductions) {
     }
 }

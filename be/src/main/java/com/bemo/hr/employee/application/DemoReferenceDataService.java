@@ -6,8 +6,8 @@ import com.bemo.hr.employee.domain.PayCycle;
 import com.bemo.hr.employee.domain.ScheduleRule;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
-import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,5 +65,6 @@ public class DemoReferenceDataService {
     }
 
     private record ReferenceCategory(String code, String name, int expectedMinutes, PayCycle payCycle,
-                                     AttendanceMode attendanceMode, boolean singlePunchCounts, boolean allowsAdvances) { }
+                                     AttendanceMode attendanceMode, boolean singlePunchCounts, boolean allowsAdvances) {
+    }
 }

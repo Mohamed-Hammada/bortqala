@@ -2,16 +2,8 @@ package com.bemo.hr.employee.application;
 
 import com.bemo.hr.employee.api.CategoryApi;
 import com.bemo.hr.employee.api.EmployeeApi;
-import com.bemo.hr.employee.domain.AttendanceCategory;
-import com.bemo.hr.employee.domain.CategoryScope;
-import com.bemo.hr.employee.domain.Employee;
-import com.bemo.hr.employee.domain.EmployeeAssignment;
-import com.bemo.hr.employee.domain.ScheduleRule;
-import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
-import com.bemo.hr.employee.infrastructure.EmployeeAssignmentRepository;
-import com.bemo.hr.employee.infrastructure.EmployeeRepository;
-import com.bemo.hr.employee.infrastructure.EmployeeCodeSequenceRepository;
-import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
+import com.bemo.hr.employee.domain.*;
+import com.bemo.hr.employee.infrastructure.*;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.security.AppUserRepository;
@@ -33,6 +25,7 @@ import java.util.stream.Collectors;
 @Service
 @Transactional(readOnly = true)
 public class HrConfigurationService {
+    private static final List<CategoryScope> EMPLOYEE_SCOPES = List.of(CategoryScope.EMPLOYEE, CategoryScope.BOTH);
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final ScheduleRuleRepository scheduleRuleRepository;
     private final EmployeeRepository employeeRepository;
@@ -57,14 +50,39 @@ public class HrConfigurationService {
         this.auditService = auditService;
     }
 
-    private static final List<CategoryScope> EMPLOYEE_SCOPES = List.of(CategoryScope.EMPLOYEE, CategoryScope.BOTH);
+    static void validateScheduleRanges(List<CategoryApi.ScheduleRequest> schedules) {
+        var order = java.util.stream.IntStream.range(0, schedules.size()).boxed()
+                .sorted(Comparator.comparing(index -> schedules.get(index).effectiveFrom())).toList();
+        CategoryApi.ScheduleRequest covering = null;
+        int coveringOriginalIndex = -1;
+        for (int originalIndex : order) {
+            var current = schedules.get(originalIndex);
+            if (current.effectiveTo() != null && current.effectiveTo().isBefore(current.effectiveFrom())) {
+                throw new BusinessRuleException("Schedule end date cannot be before its start date.",
+                        "HRCFG_SCHEDULE_END_BEFORE_START", HttpStatus.CONFLICT);
+            }
+            if (covering != null && (covering.effectiveTo() == null
+                    || !covering.effectiveTo().isBefore(current.effectiveFrom()))) {
+                throw new BusinessRuleException("Schedule effective date ranges cannot overlap.",
+                        "SCHEDULE_RULE_OVERLAP", HttpStatus.UNPROCESSABLE_ENTITY,
+                        List.of("schedules[" + coveringOriginalIndex + "]", "schedules[" + originalIndex + "]"));
+            }
+            if (covering == null || (covering.effectiveTo() != null
+                    && (current.effectiveTo() == null || current.effectiveTo().isAfter(covering.effectiveTo())))) {
+                covering = current;
+                coveringOriginalIndex = originalIndex;
+            }
+        }
+    }
 
     public List<CategoryApi.Response> listCategories() {
         return attendanceCategoryRepository.findByScopeInOrderByNameAsc(EMPLOYEE_SCOPES)
                 .stream().map(this::toCategoryResponse).toList();
     }
 
-    public CategoryApi.Response getCategory(String id) { return toCategoryResponse(requireCategory(id)); }
+    public CategoryApi.Response getCategory(String id) {
+        return toCategoryResponse(requireCategory(id));
+    }
 
     public List<CategoryApi.ScheduleResponse> getScheduleHistory(String categoryId) {
         requireCategory(categoryId);
@@ -183,7 +201,9 @@ public class HrConfigurationService {
                 .toList();
     }
 
-    private String categoryName(AttendanceCategory category) { return category == null ? "—" : category.getName(); }
+    private String categoryName(AttendanceCategory category) {
+        return category == null ? "—" : category.getName();
+    }
 
     private void recordAssignmentChange(Employee employee, LocalDate newEffectiveFrom) {
         var open = employeeAssignmentRepository.findFirstByEmployeeIdAndEffectiveToIsNullOrderByEffectiveFromDesc(employee.getId());
@@ -198,7 +218,8 @@ public class HrConfigurationService {
 
     private void closeOpenAssignment(String employeeId, LocalDate effectiveTo) {
         var open = employeeAssignmentRepository.findFirstByEmployeeIdAndEffectiveToIsNullOrderByEffectiveFromDesc(employeeId);
-        if (open != null && effectiveTo != null && !effectiveTo.isBefore(open.getEffectiveFrom())) open.closeOn(effectiveTo);
+        if (open != null && effectiveTo != null && !effectiveTo.isBefore(open.getEffectiveFrom()))
+            open.closeOn(effectiveTo);
     }
 
     private AttendanceCategory requireCategory(String id) {
@@ -212,31 +233,6 @@ public class HrConfigurationService {
                     "HRCFG_WORK_DAYS_EMPTY", HttpStatus.CONFLICT);
         }
         validateScheduleRanges(request.schedules());
-    }
-
-    static void validateScheduleRanges(List<CategoryApi.ScheduleRequest> schedules) {
-        var order = java.util.stream.IntStream.range(0, schedules.size()).boxed()
-                .sorted(Comparator.comparing(index -> schedules.get(index).effectiveFrom())).toList();
-        CategoryApi.ScheduleRequest covering = null;
-        int coveringOriginalIndex = -1;
-        for (int originalIndex : order) {
-            var current = schedules.get(originalIndex);
-            if (current.effectiveTo() != null && current.effectiveTo().isBefore(current.effectiveFrom())) {
-                throw new BusinessRuleException("Schedule end date cannot be before its start date.",
-                        "HRCFG_SCHEDULE_END_BEFORE_START", HttpStatus.CONFLICT);
-            }
-            if (covering != null && (covering.effectiveTo() == null
-                    || !covering.effectiveTo().isBefore(current.effectiveFrom()))) {
-                throw new BusinessRuleException("Schedule effective date ranges cannot overlap.",
-                        "SCHEDULE_RULE_OVERLAP", HttpStatus.UNPROCESSABLE_ENTITY,
-                        List.of("schedules[" + coveringOriginalIndex + "]", "schedules[" + originalIndex + "]"));
-            }
-            if (covering == null || (covering.effectiveTo() != null
-                    && (current.effectiveTo() == null || current.effectiveTo().isAfter(covering.effectiveTo())))) {
-                covering = current;
-                coveringOriginalIndex = originalIndex;
-            }
-        }
     }
 
     private void validateEmployeeRequest(EmployeeApi.UpsertRequest request, String currentId) {
@@ -271,9 +267,9 @@ public class HrConfigurationService {
             String code = requested.strip().toUpperCase(java.util.Locale.ROOT);
             boolean duplicate = creating ? employeeRepository.existsByEmployeeCodeIgnoreCase(code)
                     : employeeRepository.existsByEmployeeCodeIgnoreCaseAndIdNot(
-                            code,
-                            employeeRepository.findByEmployeeCodeIgnoreCase(currentCode)
-                                    .map(Employee::getId).orElse(""));
+                    code,
+                    employeeRepository.findByEmployeeCodeIgnoreCase(currentCode)
+                    .map(Employee::getId).orElse(""));
             if (duplicate) {
                 throw new BusinessRuleException("Employee code already exists.",
                         "HRCFG_EMPLOYEE_CODE_EXISTS", HttpStatus.CONFLICT);
@@ -285,7 +281,9 @@ public class HrConfigurationService {
                 .orElseGet(() -> employeeCodeSequenceRepository.save(
                         new com.bemo.hr.employee.domain.EmployeeCodeSequence(category.getId())));
         String generated;
-        do { generated = prefix + "%04d".formatted(sequence.takeNext()); }
+        do {
+            generated = prefix + "%04d".formatted(sequence.takeNext());
+        }
         while (employeeRepository.existsByEmployeeCodeIgnoreCase(generated));
         return generated;
     }
@@ -354,5 +352,7 @@ public class HrConfigurationService {
         return (auth != null && auth.getName() != null && !auth.getName().isBlank()) ? auth.getName() : "system";
     }
 
-    private String safeJson(String value) { return value == null ? "" : value.replace("\"", "'"); }
+    private String safeJson(String value) {
+        return value == null ? "" : value.replace("\"", "'");
+    }
 }

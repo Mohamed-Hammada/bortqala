@@ -19,9 +19,6 @@ public class PurchaseRequisitionController {
         this.requisitionService = requisitionService;
     }
 
-    public record CreateRequisitionPayload(String requisitionNumber, String departmentId, String requestedBy) {}
-    public record AddRequisitionLinePayload(String itemId, String itemName, BigDecimal requestedQuantity, BigDecimal unitPriceEstimate, String notes) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER')")
     public PurchaseRequisition createRequisition(@RequestBody CreateRequisitionPayload payload) {
@@ -56,5 +53,12 @@ public class PurchaseRequisitionController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'VIEWER')")
     public List<PurchaseRequisitionLine> getLines(@PathVariable String id) {
         return requisitionService.getRequisitionLines(id);
+    }
+
+    public record CreateRequisitionPayload(String requisitionNumber, String departmentId, String requestedBy) {
+    }
+
+    public record AddRequisitionLinePayload(String itemId, String itemName, BigDecimal requestedQuantity,
+                                            BigDecimal unitPriceEstimate, String notes) {
     }
 }

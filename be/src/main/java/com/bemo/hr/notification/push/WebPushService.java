@@ -29,8 +29,36 @@ public class WebPushService {
     private final JdbcTemplate jdbcTemplate;
     private volatile PushService cachedPushService;
 
-    private record DeliveryTarget(String id, String endpoint, String p256dhKey, String authKey,
-                                  String locale, boolean pushApprovals, boolean pushPayroll) { }
+    private static String endpointHash(String endpoint) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(endpoint.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(digest);
+        } catch (Exception error) {
+            throw new IllegalStateException("Unable to hash Web Push endpoint", error);
+        }
+    }
+
+    private static String json(String value) {
+        if (value == null) return "null";
+        StringBuilder out = new StringBuilder(value.length() + 16).append('"');
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            switch (c) {
+                case '"' -> out.append("\\\"");
+                case '\\' -> out.append("\\\\");
+                case '\b' -> out.append("\\b");
+                case '\f' -> out.append("\\f");
+                case '\n' -> out.append("\\n");
+                case '\r' -> out.append("\\r");
+                case '\t' -> out.append("\\t");
+                default -> {
+                    if (c < 0x20) out.append(String.format("\\u%04x", (int) c));
+                    else out.append(c);
+                }
+            }
+        }
+        return out.append('"').toString();
+    }
 
     public WebPushApi.ConfigResponse config() {
         boolean enabled = properties.configured();
@@ -55,7 +83,10 @@ public class WebPushService {
     public void unsubscribe(String username, WebPushApi.UnsubscribePayload payload) {
         subscriptionRepository.findByEndpointHash(endpointHash(payload.endpoint()))
                 .filter(subscription -> subscription.belongsTo(username))
-                .ifPresent(subscription -> { subscription.disable(); subscriptionRepository.save(subscription); });
+                .ifPresent(subscription -> {
+                    subscription.disable();
+                    subscriptionRepository.save(subscription);
+                });
     }
 
     @Transactional
@@ -150,34 +181,11 @@ public class WebPushService {
     }
 
     private void requireConfigured() {
-        if (!properties.configured()) throw new IllegalStateException("Web Push is not configured. Set HR_WEB_PUSH_ENABLED and VAPID keys.");
+        if (!properties.configured())
+            throw new IllegalStateException("Web Push is not configured. Set HR_WEB_PUSH_ENABLED and VAPID keys.");
     }
 
-    private static String endpointHash(String endpoint) {
-        try {
-            byte[] digest = MessageDigest.getInstance("SHA-256").digest(endpoint.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(digest);
-        } catch (Exception error) {
-            throw new IllegalStateException("Unable to hash Web Push endpoint", error);
-        }
-    }
-
-    private static String json(String value) {
-        if (value == null) return "null";
-        StringBuilder out = new StringBuilder(value.length() + 16).append('"');
-        for (int i = 0; i < value.length(); i++) {
-            char c = value.charAt(i);
-            switch (c) {
-                case '"' -> out.append("\\\"");
-                case '\\' -> out.append("\\\\");
-                case '\b' -> out.append("\\b");
-                case '\f' -> out.append("\\f");
-                case '\n' -> out.append("\\n");
-                case '\r' -> out.append("\\r");
-                case '\t' -> out.append("\\t");
-                default -> { if (c < 0x20) out.append(String.format("\\u%04x", (int) c)); else out.append(c); }
-            }
-        }
-        return out.append('"').toString();
+    private record DeliveryTarget(String id, String endpoint, String p256dhKey, String authKey,
+                                  String locale, boolean pushApprovals, boolean pushPayroll) {
     }
 }

@@ -8,5 +8,6 @@ import java.util.List;
 @Repository
 public interface WorkforceDisputeRepository extends JpaRepository<WorkforceDispute, String> {
     List<WorkforceDispute> findBySettlementPeriodId(String settlementPeriodId);
+
     List<WorkforceDispute> findByContractorId(String contractorId);
 }

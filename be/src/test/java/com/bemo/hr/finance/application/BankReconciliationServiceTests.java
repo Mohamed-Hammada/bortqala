@@ -9,7 +9,8 @@ import com.bemo.hr.shared.numbering.DocumentNumberService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -24,16 +25,26 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BankReconciliationServiceTests {
-    @Mock BankAccountRepository bankAccountRepository;
-    @Mock BankStatementRepository statementRepository;
-    @Mock BankStatementLineRepository lineRepository;
-    @Mock BankReconciliationMatchRepository matchRepository;
-    @Mock JournalEntryRepository journalRepository;
-    @Mock JournalEntryLineRepository journalLineRepository;
-    @Mock AccountRepository accountRepository;
-    @Mock FiscalPeriodGuard fiscalPeriodGuard;
-    @Mock DocumentNumberService documentNumberService;
-    @Mock AuditService auditService;
+    @Mock
+    BankAccountRepository bankAccountRepository;
+    @Mock
+    BankStatementRepository statementRepository;
+    @Mock
+    BankStatementLineRepository lineRepository;
+    @Mock
+    BankReconciliationMatchRepository matchRepository;
+    @Mock
+    JournalEntryRepository journalRepository;
+    @Mock
+    JournalEntryLineRepository journalLineRepository;
+    @Mock
+    AccountRepository accountRepository;
+    @Mock
+    FiscalPeriodGuard fiscalPeriodGuard;
+    @Mock
+    DocumentNumberService documentNumberService;
+    @Mock
+    AuditService auditService;
     BankReconciliationService service;
     BankAccount bank;
     BankStatement statement;
@@ -175,7 +186,12 @@ class BankReconciliationServiceTests {
 
     private JournalEntry postedJournal(String number, String reference) {
         JournalEntry entry = new JournalEntry(number, LocalDate.of(2026, 8, 10), "Payment", reference, "period-1");
-        entry.approve("approver"); entry.post("tester"); return entry;
+        entry.approve("approver");
+        entry.post("tester");
+        return entry;
     }
-    private FiscalPeriod openPeriod() { return new FiscalPeriod(2026, 8, "August", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), FiscalPeriod.Status.OPEN); }
+
+    private FiscalPeriod openPeriod() {
+        return new FiscalPeriod(2026, 8, "August", LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), FiscalPeriod.Status.OPEN);
+    }
 }

@@ -20,11 +20,6 @@ public class WorkforceFinancialIntegrationController {
         this.financialService = financialService;
     }
 
-    public record AllocateBudgetPayload(String requestId, String departmentId, String budgetId, BigDecimal amount) {}
-    public record MatchInvoicePayload(String settlementId, String invoiceId, BigDecimal matchedAmount, BigDecimal varianceAmount) {}
-    public record RecordGlPostingPayload(String settlementId, String journalId, BigDecimal postedAmount) {}
-    public record MatchTreasuryPayload(String paymentId, String bankTransactionId, BigDecimal matchedAmount) {}
-
     @PostMapping("/budget")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER')")
     public WorkforceRequestBudget allocateRequestBudget(@RequestBody AllocateBudgetPayload payload) {
@@ -53,5 +48,18 @@ public class WorkforceFinancialIntegrationController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public WorkforceRequestBudget getRequestBudget(@PathVariable String requestId) {
         return financialService.getRequestBudget(requestId);
+    }
+
+    public record AllocateBudgetPayload(String requestId, String departmentId, String budgetId, BigDecimal amount) {
+    }
+
+    public record MatchInvoicePayload(String settlementId, String invoiceId, BigDecimal matchedAmount,
+                                      BigDecimal varianceAmount) {
+    }
+
+    public record RecordGlPostingPayload(String settlementId, String journalId, BigDecimal postedAmount) {
+    }
+
+    public record MatchTreasuryPayload(String paymentId, String bankTransactionId, BigDecimal matchedAmount) {
     }
 }

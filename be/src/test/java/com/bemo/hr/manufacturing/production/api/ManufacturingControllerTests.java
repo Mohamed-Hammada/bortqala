@@ -22,7 +22,10 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ManufacturingControllerTests {
 
-    @Mock private ManufacturingService manufacturingService;
+    @Mock
+    private ManufacturingService manufacturingService;
+    @InjectMocks
+    private ManufacturingController controller;
 
     @BeforeEach
     void setUp() {
@@ -33,9 +36,6 @@ class ManufacturingControllerTests {
     void tearDown() {
         TenantContext.clear();
     }
-
-    @InjectMocks
-    private ManufacturingController controller;
 
     @Test
     void listBoms_returnsEmptyList_whenNoBomsExist() {

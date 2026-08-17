@@ -1,12 +1,11 @@
 package com.bemo.hr.shared.transition;
 
-import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 

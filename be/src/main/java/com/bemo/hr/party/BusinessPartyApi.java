@@ -7,7 +7,8 @@ import jakarta.validation.constraints.Size;
 import java.time.Instant;
 
 final class BusinessPartyApi {
-    private BusinessPartyApi() { }
+    private BusinessPartyApi() {
+    }
 
     record Response(String id, String code, String name, String nameEn, String partyType,
                     String contactPerson, String phone, String email, String address,
@@ -17,7 +18,8 @@ final class BusinessPartyApi {
                     String bankAccount, String onboardingStatus, String supplierCategory, String riskLevel,
                     String ownerUserId, String approvalInstanceId, boolean bankVerified,
                     Long bankVerifiedAt, String bankVerifiedBy, boolean active, long version,
-                    Instant createdAt, Instant updatedAt) { }
+                    Instant createdAt, Instant updatedAt) {
+    }
 
     record Request(@NotBlank @Size(max = 50) String code,
                    @NotBlank @Size(max = 160) String name,
@@ -41,5 +43,6 @@ final class BusinessPartyApi {
                    @Size(max = 20) String riskLevel,
                    @Size(max = 100) String ownerUserId,
                    @NotNull Boolean active,
-                   Long version) { }
+                   Long version) {
+    }
 }

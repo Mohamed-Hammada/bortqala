@@ -19,18 +19,10 @@ public class InventoryValuationSnapshotService {
     private final StockValuationRecordRepository valuationRepository;
 
     public InventoryValuationSnapshotService(StockStatusBalanceRepository balanceRepository,
-                                           StockValuationRecordRepository valuationRepository) {
+                                             StockValuationRecordRepository valuationRepository) {
         this.balanceRepository = balanceRepository;
         this.valuationRepository = valuationRepository;
     }
-
-    public record ValuationReconciliationResult(
-            LocalDate asOfDate,
-            BigDecimal subledgerTotalValue,
-            BigDecimal glAccountBalance,
-            BigDecimal variance,
-            boolean inBalance
-    ) {}
 
     @Transactional
     public List<StockValuationRecord> calculateValuation(LocalDate asOfDate, BigDecimal defaultUnitCost) {
@@ -55,5 +47,14 @@ public class InventoryValuationSnapshotService {
         boolean inBalance = variance.compareTo(BigDecimal.ZERO) == 0;
 
         return new ValuationReconciliationResult(asOfDate, subledgerTotal, glBalance, variance, inBalance);
+    }
+
+    public record ValuationReconciliationResult(
+            LocalDate asOfDate,
+            BigDecimal subledgerTotalValue,
+            BigDecimal glAccountBalance,
+            BigDecimal variance,
+            boolean inBalance
+    ) {
     }
 }

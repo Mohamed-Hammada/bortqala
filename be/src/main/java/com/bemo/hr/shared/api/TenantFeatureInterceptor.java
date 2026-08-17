@@ -1,9 +1,9 @@
 package com.bemo.hr.shared.api;
 
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.security.EntitlementCatalog;
 import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.shared.security.TenantFeatureService;
-import com.bemo.hr.shared.security.EntitlementCatalog;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
@@ -13,7 +13,7 @@ public class TenantFeatureInterceptor implements HandlerInterceptor {
     private final TenantFeatureService featureService;
     private final EntitlementCatalog catalog;
 
-    public TenantFeatureInterceptor(TenantFeatureService featureService,EntitlementCatalog catalog) {
+    public TenantFeatureInterceptor(TenantFeatureService featureService, EntitlementCatalog catalog) {
         this.featureService = featureService;
         this.catalog = catalog;
     }
@@ -27,9 +27,9 @@ public class TenantFeatureInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        var required=catalog.requiredFeature(uri);
-        if(required.isPresent()&&!featureService.isEnabled(appId,required.get())){
-                throw new BusinessRuleException("Feature is disabled", "FEATURE_DISABLED", HttpStatus.FORBIDDEN);
+        var required = catalog.requiredFeature(uri);
+        if (required.isPresent() && !featureService.isEnabled(appId, required.get())) {
+            throw new BusinessRuleException("Feature is disabled", "FEATURE_DISABLED", HttpStatus.FORBIDDEN);
         }
         return true;
     }

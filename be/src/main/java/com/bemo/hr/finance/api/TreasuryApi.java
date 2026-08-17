@@ -18,7 +18,8 @@ public class TreasuryApi {
             boolean active,
             long createdAt,
             long updatedAt
-    ) {}
+    ) {
+    }
 
     public record BankAccountPayload(
             @NotBlank String bankName,
@@ -28,7 +29,8 @@ public class TreasuryApi {
             String accountId,
             String currencyCode,
             boolean active
-    ) {}
+    ) {
+    }
 
     public record TaxRateResponse(
             String id,
@@ -40,7 +42,8 @@ public class TreasuryApi {
             boolean active,
             long createdAt,
             long updatedAt
-    ) {}
+    ) {
+    }
 
     public record TaxRatePayload(
             @NotBlank String code,
@@ -49,7 +52,8 @@ public class TreasuryApi {
             @NotBlank String taxType,
             String accountId,
             boolean active
-    ) {}
+    ) {
+    }
 
     public record CurrencyResponse(
             String id,
@@ -67,7 +71,8 @@ public class TreasuryApi {
             boolean active,
             long createdAt,
             long updatedAt
-    ) {}
+    ) {
+    }
 
     public record CurrencyPayload(
             @NotBlank String code,
@@ -76,5 +81,6 @@ public class TreasuryApi {
             boolean isBase,
             BigDecimal exchangeRate,
             boolean active
-    ) {}
+    ) {
+    }
 }

@@ -1,12 +1,6 @@
 package com.bemo.hr.attendance.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -69,7 +63,9 @@ public class ImportBatch {
     }
 
     @PrePersist
-    void prePersist() { importedAt = Instant.now(); }
+    void prePersist() {
+        importedAt = Instant.now();
+    }
 
     public void updateCounts(int totalRows, int validRows, int errorRows, int newPunches, int duplicatePunches) {
         this.totalRows = totalRows;
@@ -89,18 +85,59 @@ public class ImportBatch {
         this.errorRows = 0;
     }
 
-    public String getId() { return id; }
-    public String getChecksum() { return checksum; }
-    public String getFileName() { return fileName; }
-    public String getSourceId() { return sourceId; }
-    public String getDeviceName() { return deviceName; }
-    public ImportStatus getStatus() { return status; }
-    public int getTotalRows() { return totalRows; }
-    public int getImportedRows() { return importedRows; }
-    public int getValidRows() { return validRows; }
-    public int getNewPunches() { return newPunches; }
-    public int getDuplicatePunches() { return duplicatePunches; }
-    public int getErrorRows() { return errorRows; }
-    public String getImportedBy() { return importedBy; }
-    public Instant getImportedAt() { return importedAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getChecksum() {
+        return checksum;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public String getSourceId() {
+        return sourceId;
+    }
+
+    public String getDeviceName() {
+        return deviceName;
+    }
+
+    public ImportStatus getStatus() {
+        return status;
+    }
+
+    public int getTotalRows() {
+        return totalRows;
+    }
+
+    public int getImportedRows() {
+        return importedRows;
+    }
+
+    public int getValidRows() {
+        return validRows;
+    }
+
+    public int getNewPunches() {
+        return newPunches;
+    }
+
+    public int getDuplicatePunches() {
+        return duplicatePunches;
+    }
+
+    public int getErrorRows() {
+        return errorRows;
+    }
+
+    public String getImportedBy() {
+        return importedBy;
+    }
+
+    public Instant getImportedAt() {
+        return importedAt;
+    }
 }

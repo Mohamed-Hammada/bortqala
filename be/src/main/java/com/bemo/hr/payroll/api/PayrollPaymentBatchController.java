@@ -18,8 +18,6 @@ public class PayrollPaymentBatchController {
         this.batchService = batchService;
     }
 
-    public record CreateBatchPayload(String payrollPeriodId, BigDecimal totalAmount, int employeeCount) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'FINANCE_MANAGER')")
     public PayrollPaymentBatch createBatch(@RequestBody CreateBatchPayload payload) {
@@ -36,5 +34,8 @@ public class PayrollPaymentBatchController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public List<PayrollPaymentBatch> getBatchesForPeriod(@PathVariable String payrollPeriodId) {
         return batchService.getBatchesForPeriod(payrollPeriodId);
+    }
+
+    public record CreateBatchPayload(String payrollPeriodId, BigDecimal totalAmount, int employeeCount) {
     }
 }

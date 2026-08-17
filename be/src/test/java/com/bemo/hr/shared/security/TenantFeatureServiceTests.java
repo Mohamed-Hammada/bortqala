@@ -21,7 +21,9 @@ class TenantFeatureServiceTests {
     private TenantFeatureService service;
 
     @org.junit.jupiter.api.BeforeEach
-    void setUp() { service = new TenantFeatureService(repository, new EntitlementCatalog()); }
+    void setUp() {
+        service = new TenantFeatureService(repository, new EntitlementCatalog());
+    }
 
     @Test
     void defaultEnabledFeaturesAreReturnedWhenNoDbRows() {

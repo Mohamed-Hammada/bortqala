@@ -1,14 +1,6 @@
 package com.bemo.hr.budget.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -66,7 +58,8 @@ public class Budget {
     @Column(name = "version", nullable = false)
     private long version;
 
-    protected Budget() {}
+    protected Budget() {
+    }
 
     public Budget(int fiscalYear, BudgetPeriodType periodType, Integer periodMonth,
                   String departmentId, BigDecimal plannedAmount, String currencyCode,
@@ -99,35 +92,88 @@ public class Budget {
     }
 
     public void applyApprovedRevision(int revisionNumber, BigDecimal plannedAmount) {
-        if (revisionNumber <= currentRevisionNumber) throw new IllegalArgumentException("Revision must be newer than the current version.");
+        if (revisionNumber <= currentRevisionNumber)
+            throw new IllegalArgumentException("Revision must be newer than the current version.");
         updatePlannedAmount(plannedAmount);
         this.currentRevisionNumber = revisionNumber;
     }
 
-    public void configureRevisionApproval(boolean required) { this.revisionApprovalRequired = required; }
+    public void configureRevisionApproval(boolean required) {
+        this.revisionApprovalRequired = required;
+    }
 
-    public void activate() { this.active = true; }
+    public void activate() {
+        this.active = true;
+    }
 
-    public void deactivate() { this.active = false; }
+    public void deactivate() {
+        this.active = false;
+    }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public int getFiscalYear() { return fiscalYear; }
-    public BudgetPeriodType getPeriodType() { return periodType; }
-    public Integer getPeriodMonth() { return periodMonth; }
-    public String getDepartmentId() { return departmentId; }
-    public BigDecimal getPlannedAmount() { return plannedAmount; }
-    public String getCurrencyCode() { return currencyCode; }
-    public boolean isBlocking() { return blocking; }
-    public boolean isActive() { return active; }
-    public boolean isRevisionApprovalRequired() { return revisionApprovalRequired; }
-    public int getCurrentRevisionNumber() { return currentRevisionNumber; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public int getFiscalYear() {
+        return fiscalYear;
+    }
+
+    public BudgetPeriodType getPeriodType() {
+        return periodType;
+    }
+
+    public Integer getPeriodMonth() {
+        return periodMonth;
+    }
+
+    public String getDepartmentId() {
+        return departmentId;
+    }
+
+    public BigDecimal getPlannedAmount() {
+        return plannedAmount;
+    }
+
+    public String getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public boolean isBlocking() {
+        return blocking;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public boolean isRevisionApprovalRequired() {
+        return revisionApprovalRequired;
+    }
+
+    public int getCurrentRevisionNumber() {
+        return currentRevisionNumber;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

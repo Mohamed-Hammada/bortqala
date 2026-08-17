@@ -1,2 +1,4 @@
-/** Biometric imports, punch reconciliation, and daily attendance calculation. */
+/**
+ * Biometric imports, punch reconciliation, and daily attendance calculation.
+ */
 package com.bemo.hr.attendance;

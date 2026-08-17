@@ -13,9 +13,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 class TranslationInfrastructureIntegrationTests {
-    @Autowired JdbcTemplate jdbcTemplate;
-    @Autowired TranslationService translationService;
-    @Autowired CacheManager cacheManager;
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+    @Autowired
+    TranslationService translationService;
+    @Autowired
+    CacheManager cacheManager;
 
     @AfterEach
     void clearContextAndCache() {

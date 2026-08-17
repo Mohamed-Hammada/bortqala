@@ -1,28 +1,20 @@
 package com.bemo.hr.attendance.application;
 
 import com.bemo.hr.attendance.api.ImportApi;
-import com.bemo.hr.attendance.domain.BiometricSource;
-import com.bemo.hr.attendance.domain.ImportBatch;
-import com.bemo.hr.attendance.domain.ImportRowError;
-import com.bemo.hr.attendance.domain.ImportStatus;
-import com.bemo.hr.attendance.domain.PunchImportEvidence;
-import com.bemo.hr.attendance.domain.PunchRecord;
-import com.bemo.hr.attendance.infrastructure.BiometricSourceRepository;
-import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
-import com.bemo.hr.attendance.infrastructure.ImportRowErrorRepository;
-import com.bemo.hr.attendance.infrastructure.PunchImportEvidenceRepository;
-import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
+import com.bemo.hr.attendance.domain.*;
+import com.bemo.hr.attendance.infrastructure.*;
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
+import com.bemo.hr.reporting.application.ReportingService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.security.TenantContext;
-import com.bemo.hr.reporting.application.ReportingService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -36,18 +28,8 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HexFormat;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 
 @Service
 @Transactional(readOnly = true)
@@ -68,22 +50,24 @@ public class BiometricImportService {
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final AuditService auditService;
     private final ReportingService reportingService;
-    @Value("${hr.company-zone:Africa/Cairo}")
-    private String companyZoneId;
     private final JdbcTemplate jdbcTemplate;
     private final ApplicationEventPublisher eventPublisher;
+    @Value("${hr.company-zone:Africa/Cairo}")
+    private String companyZoneId;
 
     public boolean alreadyImported(String sourceId, String checksum) {
-        if (sourceId == null || sourceId.isBlank() || checksum == null || !checksum.matches("(?i)[0-9a-f]{64}")) return false;
+        if (sourceId == null || sourceId.isBlank() || checksum == null || !checksum.matches("(?i)[0-9a-f]{64}"))
+            return false;
         return importBatchRepository.findFirstBySourceIdAndChecksumAndStatusNotOrderByImportedAtDesc(
                 sourceId, checksum.toLowerCase(java.util.Locale.ROOT), ImportStatus.REVERSED).isPresent();
     }
 
     @Transactional
     public ImportApi.PreviewResponse preview(MultipartFile file) {
-        if (file.isEmpty()) throw new BusinessRuleException("Select a non-empty biometric file.", "BIO_FILE_EMPTY", HttpStatus.CONFLICT);
+        if (file.isEmpty())
+            throw new BusinessRuleException("Select a non-empty biometric file.", "BIO_FILE_EMPTY", HttpStatus.CONFLICT);
         try {
-                        var parsed = biometricFileReader.read(file.getOriginalFilename() == null ? "biometric-file"
+            var parsed = biometricFileReader.read(file.getOriginalFilename() == null ? "biometric-file"
                     : file.getOriginalFilename(), file.getInputStream());
             return new ImportApi.PreviewResponse(
                     file.getOriginalFilename() == null ? "biometric-file" : file.getOriginalFilename(),
@@ -117,9 +101,12 @@ public class BiometricImportService {
     @Transactional
     public ImportApi.BatchResponse importFile(MultipartFile file, String sourceId, String actor) {
         long totalStart = System.currentTimeMillis();
-        if (file.isEmpty()) throw new BusinessRuleException("Select a non-empty biometric file.", "BIO_FILE_EMPTY", HttpStatus.CONFLICT);
-        if (sourceId == null || sourceId.isBlank()) throw new BusinessRuleException("Source is required.", "BIO_SOURCE_REQUIRED", HttpStatus.CONFLICT);
-        if (actor == null || actor.isBlank()) throw new BusinessRuleException("Importer name is required.", "BIO_IMPORTER_NAME_REQUIRED", HttpStatus.CONFLICT);
+        if (file.isEmpty())
+            throw new BusinessRuleException("Select a non-empty biometric file.", "BIO_FILE_EMPTY", HttpStatus.CONFLICT);
+        if (sourceId == null || sourceId.isBlank())
+            throw new BusinessRuleException("Source is required.", "BIO_SOURCE_REQUIRED", HttpStatus.CONFLICT);
+        if (actor == null || actor.isBlank())
+            throw new BusinessRuleException("Importer name is required.", "BIO_IMPORTER_NAME_REQUIRED", HttpStatus.CONFLICT);
         BiometricSource source = biometricSourceRepository.findById(sourceId)
                 .orElseThrow(() -> new NotFoundException("مصدر البصمة غير موجود.", "BIO_SOURCE_NOT_FOUND"));
         if (source.getSourceType() != BiometricSource.SourceType.FILE_DEVICE) {
@@ -211,8 +198,8 @@ public class BiometricImportService {
             }
             jdbcTemplate.batchUpdate(
                     "INSERT INTO punch_records (id, app_id, batch_id, source_id, device_id, employee_id, " +
-                    "device_user_id, raw_name, punched_at, raw_line, row_number) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
+                            "device_user_id, raw_name, punched_at, raw_line, row_number) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
                     punchParams, BATCH_FLUSH_SIZE,
                     (ps, args) -> {
                         ps.setString(1, (String) args[0]);
@@ -275,16 +262,16 @@ public class BiometricImportService {
             }
             if (!evidence.isEmpty()) {
                 jdbcTemplate.batchUpdate(
-                    "INSERT INTO punch_import_evidence (punch_id, batch_id, app_id, row_number, raw_line) " +
-                    "VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
-                    evidence, BATCH_FLUSH_SIZE,
-                    (ps, ev) -> {
-                        ps.setString(1, ev.getPunchId());
-                        ps.setString(2, ev.getBatchId());
-                        ps.setString(3, ev.getAppId());
-                        ps.setInt(4, ev.getRowNumber());
-                        ps.setString(5, ev.getRawLine());
-                    });
+                        "INSERT INTO punch_import_evidence (punch_id, batch_id, app_id, row_number, raw_line) " +
+                                "VALUES (?, ?, ?, ?, ?) ON CONFLICT DO NOTHING",
+                        evidence, BATCH_FLUSH_SIZE,
+                        (ps, ev) -> {
+                            ps.setString(1, ev.getPunchId());
+                            ps.setString(2, ev.getBatchId());
+                            ps.setString(3, ev.getAppId());
+                            ps.setInt(4, ev.getRowNumber());
+                            ps.setString(5, ev.getRawLine());
+                        });
             }
             log.info("[IMPORT] Punch evidence batch insert in {}ms: {} evidence records",
                     System.currentTimeMillis() - evidenceStart, evidence.size());
@@ -392,14 +379,16 @@ public class BiometricImportService {
         try (var input = file.getInputStream()) {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] buffer = new byte[64 * 1024];
-            for (int read; (read = input.read(buffer)) != -1;) digest.update(buffer, 0, read);
+            for (int read; (read = input.read(buffer)) != -1; ) digest.update(buffer, 0, read);
             return HexFormat.of().formatHex(digest.digest());
         } catch (java.io.IOException | NoSuchAlgorithmException ex) {
             throw new IllegalStateException("Could not calculate biometric file checksum", ex);
         }
     }
 
-    /** PERF-FIX-4: Hash from an already-read byte array (avoids double file read in importFile). */
+    /**
+     * PERF-FIX-4: Hash from an already-read byte array (avoids double file read in importFile).
+     */
     private String sha256(byte[] data) {
         try {
             return HexFormat.of().formatHex(

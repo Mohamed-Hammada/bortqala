@@ -20,9 +20,9 @@ public class ManufacturingVarianceCloseService {
     private final OperationsService operationsService;
 
     public ManufacturingVarianceCloseService(ProductionVarianceCloseRepository repository,
-                                              ProductionOrderRepository productionOrderRepository,
-                                              BomSnapshotService bomSnapshotService,
-                                              OperationsService operationsService) {
+                                             ProductionOrderRepository productionOrderRepository,
+                                             BomSnapshotService bomSnapshotService,
+                                             OperationsService operationsService) {
         this.repository = repository;
         this.productionOrderRepository = productionOrderRepository;
         this.bomSnapshotService = bomSnapshotService;

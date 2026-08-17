@@ -1,11 +1,10 @@
 package com.bemo.hr.payroll.application;
 
-import com.bemo.hr.payroll.domain.PayrollRunHeader;
 import com.bemo.hr.payroll.domain.PayrollInputSnapshot;
-import com.bemo.hr.payroll.domain.PayrollRunLine;
+import com.bemo.hr.payroll.domain.PayrollRunHeader;
+import com.bemo.hr.payroll.infrastructure.PayrollInputSnapshotRepository;
 import com.bemo.hr.payroll.infrastructure.PayrollRunHeaderRepository;
 import com.bemo.hr.payroll.infrastructure.PayrollRunLineRepository;
-import com.bemo.hr.payroll.infrastructure.PayrollInputSnapshotRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +16,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class PayrollExecutionServiceTests {
 

@@ -33,16 +33,16 @@ public interface TranslationRepository extends JpaRepository<TranslationEntry, S
             order by t.translationKey asc
             """,
             countQuery = """
-            select count(distinct t.translationKey)
-            from TranslationEntry t
-            where lower(t.locale) = lower(:locale)
-              and (t.appId is null or t.appId = :appId)
-              and (
-                    :search = ''
-                    or lower(t.translationKey) like lower(concat('%', :search, '%'))
-                    or lower(t.textValue) like lower(concat('%', :search, '%'))
-              )
-            """)
+                    select count(distinct t.translationKey)
+                    from TranslationEntry t
+                    where lower(t.locale) = lower(:locale)
+                      and (t.appId is null or t.appId = :appId)
+                      and (
+                            :search = ''
+                            or lower(t.translationKey) like lower(concat('%', :search, '%'))
+                            or lower(t.textValue) like lower(concat('%', :search, '%'))
+                      )
+                    """)
     Page<String> findTranslationKeysForScope(@Param("locale") String locale,
                                              @Param("appId") String appId,
                                              @Param("search") String search,
@@ -57,8 +57,8 @@ public interface TranslationRepository extends JpaRepository<TranslationEntry, S
             order by t.translationKey asc
             """)
     List<TranslationEntry> findEntriesForScopeKeys(@Param("locale") String locale,
-                                                    @Param("appId") String appId,
-                                                    @Param("keys") List<String> keys);
+                                                   @Param("appId") String appId,
+                                                   @Param("keys") List<String> keys);
 
     long countByLocaleIgnoreCaseAndAppId(String locale, String appId);
 }

@@ -70,5 +70,6 @@ class GoodsReceiptPersistenceTests {
         assertThat(saved.quantity()).isEqualByComparingTo("2.00");
     }
 
-    private record SavedLine(int lineCount, String goodsReceiptId, BigDecimal quantity) { }
+    private record SavedLine(int lineCount, String goodsReceiptId, BigDecimal quantity) {
+    }
 }

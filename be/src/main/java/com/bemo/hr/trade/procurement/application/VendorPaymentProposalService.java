@@ -1,9 +1,12 @@
 package com.bemo.hr.trade.procurement.application;
 
+import com.bemo.hr.approval.SegregationOfDutiesService;
+import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.trade.procurement.api.ProcurementApi;
+import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
 import com.bemo.hr.trade.procurement.domain.VendorPaymentProposal;
 import com.bemo.hr.trade.procurement.domain.VendorPaymentProposalAllocation;
-import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository;
 import com.bemo.hr.trade.procurement.infrastructure.VendorPaymentProposalAllocationRepository;
@@ -14,13 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import com.bemo.hr.trade.procurement.api.ProcurementApi;
-import com.bemo.hr.approval.SegregationOfDutiesService;
-import com.bemo.hr.audit.application.AuditService;
 
 @Service
 public class VendorPaymentProposalService {
@@ -48,16 +48,6 @@ public class VendorPaymentProposalService {
         this.segregationOfDutiesService = segregationOfDutiesService;
         this.auditService = auditService;
     }
-
-    @Transactional
-    public record AllocationInput(String invoiceId, BigDecimal amount) { }
-    public record AllocationResult(String id, String invoiceId, BigDecimal amount,
-                                   String supplierPaymentId, String paymentOperationId) { }
-    public record ProposalResult(String id, String proposalNumber, String supplierId, String invoiceId,
-                                 BigDecimal proposedAmount, String currencyCode, LocalDate dueDate, VendorPaymentProposal.Status status,
-                                 String createdBy, String approvedBy, String executedBy, String operationId,
-                                 String supplierPaymentId, long createdAt, long updatedAt,
-                                 List<AllocationResult> allocations) { }
 
     @Transactional
     public ProposalResult createProposal(String supplierId, List<AllocationInput> requestedAllocations,
@@ -144,8 +134,6 @@ public class VendorPaymentProposalService {
         return repository.findAllByOrderByCreatedAtDesc().stream().map(this::result).toList();
     }
 
-    private record ValidatedAllocations(List<AllocationInput> allocations, String currencyCode) { }
-
     private ValidatedAllocations validateAllocations(String supplierId, List<AllocationInput> requested) {
         if (requested == null || requested.isEmpty()) {
             throw rule("A payment proposal requires at least one invoice allocation", "PAYMENT_PROPOSAL_ALLOCATIONS_REQUIRED");
@@ -204,5 +192,24 @@ public class VendorPaymentProposalService {
 
     private BusinessRuleException rule(String message, String code) {
         return new BusinessRuleException(message, code, HttpStatus.CONFLICT);
+    }
+
+    @Transactional
+    public record AllocationInput(String invoiceId, BigDecimal amount) {
+    }
+
+    public record AllocationResult(String id, String invoiceId, BigDecimal amount,
+                                   String supplierPaymentId, String paymentOperationId) {
+    }
+
+    public record ProposalResult(String id, String proposalNumber, String supplierId, String invoiceId,
+                                 BigDecimal proposedAmount, String currencyCode, LocalDate dueDate,
+                                 VendorPaymentProposal.Status status,
+                                 String createdBy, String approvedBy, String executedBy, String operationId,
+                                 String supplierPaymentId, long createdAt, long updatedAt,
+                                 List<AllocationResult> allocations) {
+    }
+
+    private record ValidatedAllocations(List<AllocationInput> allocations, String currencyCode) {
     }
 }

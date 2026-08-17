@@ -18,8 +18,6 @@ public class QualityStockDispositionController {
         this.dispositionService = dispositionService;
     }
 
-    public record CreateDispositionPayload(String inspectionId, String dispositionType, BigDecimal quantity, String reason) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'QUALITY_MANAGER')")
     public QualityStockDisposition createDisposition(@RequestBody CreateDispositionPayload payload) {
@@ -30,5 +28,9 @@ public class QualityStockDispositionController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'QUALITY_MANAGER', 'VIEWER')")
     public List<QualityStockDisposition> getDispositionsForInspection(@PathVariable String inspectionId) {
         return dispositionService.getDispositionsForInspection(inspectionId);
+    }
+
+    public record CreateDispositionPayload(String inspectionId, String dispositionType, BigDecimal quantity,
+                                           String reason) {
     }
 }

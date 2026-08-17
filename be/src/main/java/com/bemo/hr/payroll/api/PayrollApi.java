@@ -12,7 +12,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public final class PayrollApi {
-    private PayrollApi() { }
+    private PayrollApi() {
+    }
 
     public record PayrollRow(
             String id,
@@ -50,7 +51,8 @@ public final class PayrollApi {
             Instant reversedAt,
             String reversalReason,
             long version
-    ) { }
+    ) {
+    }
 
     public record Summary(
             int totalEmployees,
@@ -60,19 +62,21 @@ public final class PayrollApi {
             BigDecimal totalPaidAmount,
             BigDecimal totalPendingAmount,
             BigDecimal totalAdvancesDeducted
-    ) { }
+    ) {
+    }
 
     public record ExplanationResponse(
-        String id,
-        String salaryPaymentId,
-        String componentType,
-        String formula,
-        String inputValuesJson,
-        BigDecimal calculatedAmount,
-        String explanationTextAr,
-        String explanationTextEn,
-        long createdAt
-    ) { }
+            String id,
+            String salaryPaymentId,
+            String componentType,
+            String formula,
+            String inputValuesJson,
+            BigDecimal calculatedAmount,
+            String explanationTextAr,
+            String explanationTextEn,
+            long createdAt
+    ) {
+    }
 
     public record SheetResponse(
             int periodYear,
@@ -80,7 +84,8 @@ public final class PayrollApi {
             PaymentStatus periodStatus,
             Summary summary,
             List<PayrollRow> rows
-    ) { }
+    ) {
+    }
 
     public record PaymentRequest(
             @NotBlank String employeeId,
@@ -92,7 +97,8 @@ public final class PayrollApi {
             String note,
             Long paidAtEpochMs,
             @NotNull Long expectedVersion
-    ) { }
+    ) {
+    }
 
     public record BulkPaymentRequest(
             @NotNull @Min(2000) Integer periodYear,
@@ -101,19 +107,22 @@ public final class PayrollApi {
             PaymentMethod paymentMethod,
             String referenceCode,
             String note
-    ) { }
+    ) {
+    }
 
     public record StatusTransitionRequest(
             @NotNull @Min(2000) Integer periodYear,
             @NotNull @Min(1) Integer periodMonth,
             @NotNull PaymentStatus targetStatus
-    ) { }
+    ) {
+    }
 
     public record ReversePaymentRequest(
             @NotBlank String paymentId,
             @NotBlank String reason,
             @NotNull Long expectedVersion
-    ) { }
+    ) {
+    }
 
     public record CalculationPolicyRequest(
             @NotBlank String name,
@@ -121,10 +130,12 @@ public final class PayrollApi {
             Long effectiveTo,
             @NotNull BigDecimal workingHourDivisor,
             @NotNull BigDecimal overtimeMultiplier
-    ) { }
+    ) {
+    }
 
     public record CalculationPolicyResponse(
             String id, String name, long effectiveFrom, Long effectiveTo,
             BigDecimal workingHourDivisor, BigDecimal overtimeMultiplier, long version
-    ) { }
+    ) {
+    }
 }

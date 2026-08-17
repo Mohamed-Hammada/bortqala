@@ -20,10 +20,6 @@ public class ManufacturingWipController {
         this.wipService = wipService;
     }
 
-    public record CreateReservationPayload(String workOrderId) {}
-    public record AddReservationLinePayload(String itemId, BigDecimal reservedQuantity) {}
-    public record PostWipPayload(String workOrderId, String workCenterId, BigDecimal laborHours, BigDecimal machineHours, BigDecimal totalWipCost) {}
-
     @PostMapping("/reservations")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
     public MaterialReservationHeader createReservation(@RequestBody CreateReservationPayload payload) {
@@ -46,5 +42,15 @@ public class ManufacturingWipController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public List<WipPostingRecord> getWipPostings(@PathVariable String workOrderId) {
         return wipService.getWipPostings(workOrderId);
+    }
+
+    public record CreateReservationPayload(String workOrderId) {
+    }
+
+    public record AddReservationLinePayload(String itemId, BigDecimal reservedQuantity) {
+    }
+
+    public record PostWipPayload(String workOrderId, String workCenterId, BigDecimal laborHours,
+                                 BigDecimal machineHours, BigDecimal totalWipCost) {
     }
 }

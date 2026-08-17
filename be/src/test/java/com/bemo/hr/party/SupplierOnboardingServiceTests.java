@@ -15,17 +15,23 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class SupplierOnboardingServiceTests {
-    @Mock private BusinessPartyService businessPartyService;
-    @Mock private BusinessPartyRepository businessPartyRepository;
-    @Mock private SupplierDocumentRepository supplierDocumentRepository;
-    @Mock private SupplierBankAccountRepository supplierBankAccountRepository;
-    @Mock private ApprovalWorkflowService approvalWorkflowService;
-    @Mock private AuditService auditService;
+    @Mock
+    private BusinessPartyService businessPartyService;
+    @Mock
+    private BusinessPartyRepository businessPartyRepository;
+    @Mock
+    private SupplierDocumentRepository supplierDocumentRepository;
+    @Mock
+    private SupplierBankAccountRepository supplierBankAccountRepository;
+    @Mock
+    private ApprovalWorkflowService approvalWorkflowService;
+    @Mock
+    private AuditService auditService;
 
     private SupplierOnboardingService service;
     private BusinessParty supplier;

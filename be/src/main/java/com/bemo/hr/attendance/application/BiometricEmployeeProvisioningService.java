@@ -3,13 +3,7 @@ package com.bemo.hr.attendance.application;
 import com.bemo.hr.attendance.domain.BiometricSource;
 import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
 import com.bemo.hr.audit.application.AuditService;
-import com.bemo.hr.employee.domain.AttendanceCategory;
-import com.bemo.hr.employee.domain.AttendanceMode;
-import com.bemo.hr.employee.domain.CategoryScope;
-import com.bemo.hr.employee.domain.EmployeeCodeSequence;
-import com.bemo.hr.employee.domain.EmploymentType;
-import com.bemo.hr.employee.domain.PayCycle;
-import com.bemo.hr.employee.domain.ScheduleRule;
+import com.bemo.hr.employee.domain.*;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeCodeSequenceRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
@@ -53,7 +47,7 @@ public class BiometricEmployeeProvisioningService {
      * Enforces the source's category rule:
      * - if at least one active employee category exists, the user must explicitly select one;
      * - if no active employee category exists at all, create a safe default biometric employee
-     *   category and use it automatically.
+     * category and use it automatically.
      */
     @Transactional
     public void configureSource(BiometricSource source, boolean enabled, String categoryId, String employmentType,

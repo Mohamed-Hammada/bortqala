@@ -9,9 +9,14 @@ import java.util.Optional;
 
 public interface AttendanceCategoryRepository extends JpaRepository<AttendanceCategory, String> {
     List<AttendanceCategory> findAllByOrderByNameAsc();
+
     List<AttendanceCategory> findByScopeInOrderByNameAsc(List<CategoryScope> scopes);
+
     List<AttendanceCategory> findByScopeIn(List<CategoryScope> scopes);
+
     Optional<AttendanceCategory> findByCodeIgnoreCase(String code);
+
     boolean existsByCodeIgnoreCaseAndIdNot(String code, String id);
+
     boolean existsByCodeIgnoreCase(String code);
 }

@@ -143,7 +143,9 @@ public class RefreshTokenService {
         }
     }
 
-    public record IssuedRefreshToken(String rawValue, String id, Instant expiresAt) { }
+    public record IssuedRefreshToken(String rawValue, String id, Instant expiresAt) {
+    }
 
-    public record RotationResult(String userId, String rawValue, Instant expiresAt) { }
+    public record RotationResult(String userId, String rawValue, Instant expiresAt) {
+    }
 }

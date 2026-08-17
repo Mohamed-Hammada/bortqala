@@ -1,5 +1,6 @@
 package com.bemo.hr.workforce;
 
+import com.bemo.hr.audit.application.AuditService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -7,15 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import com.bemo.hr.audit.application.AuditService;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -109,13 +102,13 @@ public class WorkforceAttendanceService {
         List<ManualAttendanceEntry> savedEntries = attendanceRepository.saveAll(toSave);
 
         String currentUser = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null
-            ? org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName()
-            : "system";
+                ? org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName()
+                : "system";
 
         auditService.record("BATCH_ATTENDANCE", "MANUAL_ATTENDANCE",
-            String.valueOf(request.entries().size()) + "_entries",
-            currentUser, "{\"created\":" + created + ",\"updated\":" + updated
-                    + ",\"skipped\":" + skipped + ",\"failed\":" + errors.size() + "}", null);
+                request.entries().size() + "_entries",
+                currentUser, "{\"created\":" + created + ",\"updated\":" + updated
+                        + ",\"skipped\":" + skipped + ",\"failed\":" + errors.size() + "}", null);
 
         return new WorkforceApi.BatchAttendanceResponse(created, updated, skipped, errors.size(),
                 savedEntries, errors);
@@ -125,7 +118,11 @@ public class WorkforceAttendanceService {
         if (cell == null) return "cell";
         if (cell.workerId() == null || cell.workerId().isBlank()) return "workerId";
         if (cell.workDate() == null || cell.workDate().isBlank()) return "workDate";
-        try { LocalDate.parse(cell.workDate()); } catch (DateTimeParseException exception) { return "workDate"; }
+        try {
+            LocalDate.parse(cell.workDate());
+        } catch (DateTimeParseException exception) {
+            return "workDate";
+        }
         if (cell.attendanceValue() == null || (cell.attendanceValue().compareTo(BigDecimal.ZERO) != 0
                 && cell.attendanceValue().compareTo(new BigDecimal("0.5")) != 0
                 && cell.attendanceValue().compareTo(BigDecimal.ONE) != 0)) return "attendanceValue";
@@ -137,12 +134,19 @@ public class WorkforceAttendanceService {
         return null;
     }
 
-    private boolean negative(BigDecimal value) { return value != null && value.compareTo(BigDecimal.ZERO) < 0; }
-    private String key(String workerId, String workDate) { return workerId + "|" + workDate; }
+    private boolean negative(BigDecimal value) {
+        return value != null && value.compareTo(BigDecimal.ZERO) < 0;
+    }
+
+    private String key(String workerId, String workDate) {
+        return workerId + "|" + workDate;
+    }
+
     private WorkforceApi.AttendanceCellError error(WorkforceApi.AttendanceCell cell, String field, String message) {
         return new WorkforceApi.AttendanceCellError(cell == null ? null : cell.workerId(),
                 cell == null ? null : cell.workDate(), field, message);
     }
+
     private String validationMessage(String field) {
         return switch (field) {
             case "workDate" -> "التاريخ غير صالح؛ استخدم الصيغة YYYY-MM-DD.";
@@ -182,8 +186,8 @@ public class WorkforceAttendanceService {
         }
 
         String currentUser = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication() != null
-            ? org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName()
-            : "system";
+                ? org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getName()
+                : "system";
         auditService.record("BULK_ATTENDANCE_UPDATE", "MANUAL_ATTENDANCE",
                 count + "_workers",
                 currentUser,

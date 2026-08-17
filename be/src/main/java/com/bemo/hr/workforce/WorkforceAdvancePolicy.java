@@ -1,11 +1,6 @@
 package com.bemo.hr.workforce;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
@@ -19,24 +14,42 @@ import java.util.UUID;
 @Table(name = "workforce_advance_policies")
 @Getter
 public class WorkforceAdvancePolicy {
-    @Id private String id;
-    @TenantId @Column(name = "app_id", nullable = false) private String appId;
-    @Column(name = "scope_type", nullable = false, length = 20) private String scopeType;
-    @Column(name = "scope_id", length = 36) private String scopeId;
-    @Column(name = "scope_key", nullable = false, length = 36) private String scopeKey;
-    @Column(name = "deduction_mode", nullable = false, length = 20) private String deductionMode;
-    @Column(name = "deduction_frequency", nullable = false, length = 30) private String deductionFrequency;
-    @Column(name = "max_deduction_percent", nullable = false, precision = 5, scale = 2) private BigDecimal maxDeductionPercent;
-    @Column(name = "default_installments", nullable = false) private int defaultInstallments;
-    @Column(name = "deferral_periods", nullable = false) private int deferralPeriods;
-    @Column(nullable = false) private int version;
-    @Column(name = "effective_from", nullable = false) private LocalDate effectiveFrom;
-    @Column(name = "effective_to") private LocalDate effectiveTo;
-    @Column(nullable = false) private boolean active;
-    @Column(name = "created_at", nullable = false) private Instant createdAt;
-    @Column(name = "updated_at", nullable = false) private Instant updatedAt;
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(name = "scope_type", nullable = false, length = 20)
+    private String scopeType;
+    @Column(name = "scope_id", length = 36)
+    private String scopeId;
+    @Column(name = "scope_key", nullable = false, length = 36)
+    private String scopeKey;
+    @Column(name = "deduction_mode", nullable = false, length = 20)
+    private String deductionMode;
+    @Column(name = "deduction_frequency", nullable = false, length = 30)
+    private String deductionFrequency;
+    @Column(name = "max_deduction_percent", nullable = false, precision = 5, scale = 2)
+    private BigDecimal maxDeductionPercent;
+    @Column(name = "default_installments", nullable = false)
+    private int defaultInstallments;
+    @Column(name = "deferral_periods", nullable = false)
+    private int deferralPeriods;
+    @Column(nullable = false)
+    private int version;
+    @Column(name = "effective_from", nullable = false)
+    private LocalDate effectiveFrom;
+    @Column(name = "effective_to")
+    private LocalDate effectiveTo;
+    @Column(nullable = false)
+    private boolean active;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
-    protected WorkforceAdvancePolicy() { }
+    protected WorkforceAdvancePolicy() {
+    }
 
     public WorkforceAdvancePolicy(String scopeType, String scopeId, String deductionMode,
                                   String deductionFrequency, BigDecimal maxDeductionPercent,
@@ -74,6 +87,14 @@ public class WorkforceAdvancePolicy {
         if (!closingDate.isBefore(effectiveFrom)) this.effectiveTo = closingDate;
     }
 
-    @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
-    @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
+    @PrePersist
+    void prePersist() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
 }

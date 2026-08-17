@@ -1,14 +1,6 @@
 package com.bemo.hr.trade.sales.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -18,47 +10,34 @@ import java.util.UUID;
 @Table(name = "customer_credit_profiles")
 public class CustomerCreditProfile {
 
-    public enum Status {
-        ACTIVE, HOLD, EXCEEDED
-    }
-
     @Id
     private String id;
-
     @TenantId
     @Column(name = "app_id", nullable = false)
     private String appId;
-
     @Column(name = "customer_id", nullable = false, length = 36)
     private String customerId;
-
     @Column(name = "credit_limit", nullable = false, precision = 15, scale = 2)
     private BigDecimal creditLimit = BigDecimal.ZERO;
-
     @Column(name = "payment_terms_days", nullable = false)
     private int paymentTermsDays = 30;
-
     @Column(name = "credit_hold", nullable = false)
     private boolean creditHold = false;
-
     @Column(name = "current_exposure", nullable = false, precision = 15, scale = 2)
     private BigDecimal currentExposure = BigDecimal.ZERO;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status = Status.ACTIVE;
-
     @Column(name = "created_at", nullable = false)
     private long createdAt;
-
     @Column(name = "updated_at", nullable = false)
     private long updatedAt;
-
     @Version
     @Column(nullable = false)
     private long version;
 
-    protected CustomerCreditProfile() {}
+    protected CustomerCreditProfile() {
+    }
 
     public CustomerCreditProfile(String customerId) {
         this(customerId, BigDecimal.ZERO);
@@ -78,11 +57,6 @@ public class CustomerCreditProfile {
         this.creditLimit = creditLimit == null ? BigDecimal.ZERO : creditLimit;
         this.paymentTermsDays = Math.max(0, paymentTermsDays);
         this.creditHold = creditHold;
-        reevaluateStatus();
-    }
-
-    public void setCreditLimit(BigDecimal newLimit) {
-        this.creditLimit = newLimit == null ? BigDecimal.ZERO : newLimit;
         reevaluateStatus();
     }
 
@@ -107,20 +81,66 @@ public class CustomerCreditProfile {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getCustomerId() { return customerId; }
-    public BigDecimal getCreditLimit() { return creditLimit; }
-    public int getPaymentTermsDays() { return paymentTermsDays; }
-    public boolean isCreditHold() { return creditHold; }
-    public BigDecimal getCurrentExposure() { return currentExposure; }
-    public Status getStatus() { return status; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getCustomerId() {
+        return customerId;
+    }
+
+    public BigDecimal getCreditLimit() {
+        return creditLimit;
+    }
+
+    public void setCreditLimit(BigDecimal newLimit) {
+        this.creditLimit = newLimit == null ? BigDecimal.ZERO : newLimit;
+        reevaluateStatus();
+    }
+
+    public int getPaymentTermsDays() {
+        return paymentTermsDays;
+    }
+
+    public boolean isCreditHold() {
+        return creditHold;
+    }
+
+    public BigDecimal getCurrentExposure() {
+        return currentExposure;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public enum Status {
+        ACTIVE, HOLD, EXCEEDED
+    }
 }

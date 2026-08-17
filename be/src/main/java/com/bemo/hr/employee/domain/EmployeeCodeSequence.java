@@ -18,7 +18,15 @@ public class EmployeeCodeSequence {
     @Column(name = "next_value", nullable = false)
     private long nextValue;
 
-    protected EmployeeCodeSequence() { }
-    public EmployeeCodeSequence(String categoryId) { this.categoryId = categoryId; this.nextValue = 1; }
-    public long takeNext() { return nextValue++; }
+    protected EmployeeCodeSequence() {
+    }
+
+    public EmployeeCodeSequence(String categoryId) {
+        this.categoryId = categoryId;
+        this.nextValue = 1;
+    }
+
+    public long takeNext() {
+        return nextValue++;
+    }
 }

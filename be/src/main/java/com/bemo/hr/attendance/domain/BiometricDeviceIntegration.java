@@ -1,12 +1,6 @@
 package com.bemo.hr.attendance.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -109,12 +103,21 @@ public class BiometricDeviceIntegration {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected BiometricDeviceIntegration() { }
+    protected BiometricDeviceIntegration() {
+    }
 
     public BiometricDeviceIntegration(String biometricDeviceId, String hubDeviceId) {
         this.id = UUID.randomUUID().toString();
         this.biometricDeviceId = biometricDeviceId;
         this.hubDeviceId = hubDeviceId;
+    }
+
+    private static String clean(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
+    }
+
+    private static String cleanRequired(String value) {
+        return value == null ? "" : value.strip();
     }
 
     public void updateConfiguration(
@@ -179,41 +182,119 @@ public class BiometricDeviceIntegration {
         updatedAt = Instant.now();
     }
 
-    private static String clean(String value) {
-        return value == null || value.isBlank() ? null : value.strip();
+    public String getId() {
+        return id;
     }
 
-    private static String cleanRequired(String value) {
-        return value == null ? "" : value.strip();
+    public String getBiometricDeviceId() {
+        return biometricDeviceId;
     }
 
-    public String getId() { return id; }
-    public String getBiometricDeviceId() { return biometricDeviceId; }
-    public String getHubDeviceId() { return hubDeviceId; }
-    public String getName() { return name; }
-    public String getVendor() { return vendor; }
-    public String getModel() { return model; }
-    public String getSerialNumber() { return serialNumber; }
-    public String getFirmwareVersion() { return firmwareVersion; }
-    public String getPlatformVersion() { return platformVersion; }
-    public String getServerVersion() { return serverVersion; }
-    public String getOsName() { return osName; }
-    public String getArchitecture() { return architecture; }
-    public String getSdkVersionsJson() { return sdkVersionsJson; }
-    public String getApiVersionsJson() { return apiVersionsJson; }
-    public String getCapabilityHintsJson() { return capabilityHintsJson; }
-    public String getHost() { return host; }
-    public Integer getPort() { return port; }
-    public String getBaseUrl() { return baseUrl; }
-    public String getRoute() { return route; }
-    public String getRouteStatus() { return routeStatus; }
-    public String getRouteKind() { return routeKind; }
-    public String getImplementationStatus() { return implementationStatus; }
-    public String getOfficialDocumentationJson() { return officialDocumentationJson; }
-    public String getOptionsJson() { return optionsJson; }
-    public String getLastProbeStatus() { return lastProbeStatus; }
-    public String getLastProbeMessage() { return lastProbeMessage; }
-    public Instant getLastProbeAt() { return lastProbeAt; }
-    public Instant getCreatedAt() { return createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
+    public String getHubDeviceId() {
+        return hubDeviceId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getVendor() {
+        return vendor;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public String getFirmwareVersion() {
+        return firmwareVersion;
+    }
+
+    public String getPlatformVersion() {
+        return platformVersion;
+    }
+
+    public String getServerVersion() {
+        return serverVersion;
+    }
+
+    public String getOsName() {
+        return osName;
+    }
+
+    public String getArchitecture() {
+        return architecture;
+    }
+
+    public String getSdkVersionsJson() {
+        return sdkVersionsJson;
+    }
+
+    public String getApiVersionsJson() {
+        return apiVersionsJson;
+    }
+
+    public String getCapabilityHintsJson() {
+        return capabilityHintsJson;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    public String getRoute() {
+        return route;
+    }
+
+    public String getRouteStatus() {
+        return routeStatus;
+    }
+
+    public String getRouteKind() {
+        return routeKind;
+    }
+
+    public String getImplementationStatus() {
+        return implementationStatus;
+    }
+
+    public String getOfficialDocumentationJson() {
+        return officialDocumentationJson;
+    }
+
+    public String getOptionsJson() {
+        return optionsJson;
+    }
+
+    public String getLastProbeStatus() {
+        return lastProbeStatus;
+    }
+
+    public String getLastProbeMessage() {
+        return lastProbeMessage;
+    }
+
+    public Instant getLastProbeAt() {
+        return lastProbeAt;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
 }

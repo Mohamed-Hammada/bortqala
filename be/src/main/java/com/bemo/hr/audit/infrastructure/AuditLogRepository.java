@@ -11,8 +11,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AuditLogRepository extends JpaRepository<AuditLog, String> {
     Page<AuditLog> findAllByOrderByOccurredAtDesc(Pageable pageable);
+
     Page<AuditLog> findByEntityTypeOrderByOccurredAtDesc(String entityType, Pageable pageable);
+
     Page<AuditLog> findByUsernameOrderByOccurredAtDesc(String username, Pageable pageable);
+
     Page<AuditLog> findByEntityTypeAndUsernameOrderByOccurredAtDesc(String entityType, String username, Pageable pageable);
 
     @Query("""

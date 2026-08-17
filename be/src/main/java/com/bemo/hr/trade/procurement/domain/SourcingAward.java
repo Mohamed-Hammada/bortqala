@@ -1,10 +1,6 @@
 package com.bemo.hr.trade.procurement.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -42,7 +38,8 @@ public class SourcingAward {
     @Column(name = "awarded_at", nullable = false)
     private long awardedAt;
 
-    protected SourcingAward() {}
+    protected SourcingAward() {
+    }
 
     public SourcingAward(String rfqId, String quoteId, String supplierId, BigDecimal awardedAmount, String purchaseOrderId, String awardedBy) {
         this.id = UUID.randomUUID().toString();
@@ -55,15 +52,43 @@ public class SourcingAward {
     }
 
     @PrePersist
-    void prePersist() { awardedAt = System.currentTimeMillis(); }
+    void prePersist() {
+        awardedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getRfqId() { return rfqId; }
-    public String getQuoteId() { return quoteId; }
-    public String getSupplierId() { return supplierId; }
-    public BigDecimal getAwardedAmount() { return awardedAmount; }
-    public String getPurchaseOrderId() { return purchaseOrderId; }
-    public String getAwardedBy() { return awardedBy; }
-    public long getAwardedAt() { return awardedAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getRfqId() {
+        return rfqId;
+    }
+
+    public String getQuoteId() {
+        return quoteId;
+    }
+
+    public String getSupplierId() {
+        return supplierId;
+    }
+
+    public BigDecimal getAwardedAmount() {
+        return awardedAmount;
+    }
+
+    public String getPurchaseOrderId() {
+        return purchaseOrderId;
+    }
+
+    public String getAwardedBy() {
+        return awardedBy;
+    }
+
+    public long getAwardedAt() {
+        return awardedAt;
+    }
 }

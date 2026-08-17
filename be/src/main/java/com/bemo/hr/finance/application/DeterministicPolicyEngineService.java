@@ -19,14 +19,6 @@ public class DeterministicPolicyEngineService {
         this.repository = repository;
     }
 
-    public record PolicyEvaluationResult(
-            String policyCode,
-            String triggerEvent,
-            String debitAccount,
-            String creditAccount,
-            BigDecimal amount
-    ) {}
-
     @Transactional
     public AccountingRulePolicy createPolicy(String policyCode, String description, String triggerEvent, String debitAccountPattern, String creditAccountPattern) {
         AccountingRulePolicy policy = new AccountingRulePolicy(policyCode, description, triggerEvent, debitAccountPattern, creditAccountPattern);
@@ -44,5 +36,14 @@ public class DeterministicPolicyEngineService {
     @Transactional(readOnly = true)
     public List<AccountingRulePolicy> getAllPolicies() {
         return repository.findAll();
+    }
+
+    public record PolicyEvaluationResult(
+            String policyCode,
+            String triggerEvent,
+            String debitAccount,
+            String creditAccount,
+            BigDecimal amount
+    ) {
     }
 }

@@ -2,6 +2,7 @@ package com.bemo.hr.reporting.application;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import java.time.YearMonth;
 
 @Service

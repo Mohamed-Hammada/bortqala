@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface WorkforceAttendanceLockRepository extends JpaRepository<WorkforceAttendanceLock, String> {
     Optional<WorkforceAttendanceLock> findByContractorIdAndPeriodId(String contractorId, String periodId);
+
     List<WorkforceAttendanceLock> findByContractorId(String contractorId);
 }

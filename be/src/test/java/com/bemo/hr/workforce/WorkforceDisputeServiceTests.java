@@ -1,16 +1,16 @@
 package com.bemo.hr.workforce;
 
+import com.bemo.hr.audit.application.AuditService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
-import com.bemo.hr.audit.application.AuditService;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class WorkforceDisputeServiceTests {
 

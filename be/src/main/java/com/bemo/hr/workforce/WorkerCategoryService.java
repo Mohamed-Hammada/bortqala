@@ -1,10 +1,6 @@
 package com.bemo.hr.workforce;
 
-import com.bemo.hr.employee.domain.AttendanceCategory;
-import com.bemo.hr.employee.domain.AttendanceMode;
-import com.bemo.hr.employee.domain.CategoryScope;
-import com.bemo.hr.employee.domain.EmployeeCodeSequence;
-import com.bemo.hr.employee.domain.PayCycle;
+import com.bemo.hr.employee.domain.*;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeCodeSequenceRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
@@ -31,6 +27,33 @@ public class WorkerCategoryService {
     private final WorkerCategoryRepository categoryRepository;
     private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final EmployeeCodeSequenceRepository employeeCodeSequenceRepository;
+
+    private static CategoryScope parseScope(String raw, CategoryScope fallback) {
+        if (raw == null || raw.isBlank()) return fallback;
+        try {
+            return CategoryScope.valueOf(raw.strip().toUpperCase());
+        } catch (IllegalArgumentException exception) {
+            return fallback;
+        }
+    }
+
+    private static int expectedDailyMinutes(BigDecimal standardDailyHours) {
+        if (standardDailyHours == null || standardDailyHours.signum() <= 0) return 480;
+        int minutes = standardDailyHours.multiply(BigDecimal.valueOf(60)).intValue();
+        return Math.max(1, Math.min(1_440, minutes));
+    }
+
+    private static PayCycle mapPayCycle(String settlementCycle) {
+        if (settlementCycle != null) {
+            String normalized = settlementCycle.strip().toUpperCase();
+            if (normalized.contains("HALF")) return PayCycle.HALF_MONTHLY;
+        }
+        return PayCycle.MONTHLY;
+    }
+
+    private static int workDaysMask(EnumSet<DayOfWeek> days) {
+        return days.stream().mapToInt(day -> 1 << (day.getValue() - 1)).reduce(0, (left, right) -> left | right);
+    }
 
     @Transactional(readOnly = true)
     public List<WorkforceApi.CategoryResponse> list() {
@@ -106,32 +129,5 @@ public class WorkerCategoryService {
                 canonical.getScope().name(), canonical.isActive(),
                 config.getCreatedAt().toEpochMilli(), config.getUpdatedAt().toEpochMilli()
         );
-    }
-
-    private static CategoryScope parseScope(String raw, CategoryScope fallback) {
-        if (raw == null || raw.isBlank()) return fallback;
-        try {
-            return CategoryScope.valueOf(raw.strip().toUpperCase());
-        } catch (IllegalArgumentException exception) {
-            return fallback;
-        }
-    }
-
-    private static int expectedDailyMinutes(BigDecimal standardDailyHours) {
-        if (standardDailyHours == null || standardDailyHours.signum() <= 0) return 480;
-        int minutes = standardDailyHours.multiply(BigDecimal.valueOf(60)).intValue();
-        return Math.max(1, Math.min(1_440, minutes));
-    }
-
-    private static PayCycle mapPayCycle(String settlementCycle) {
-        if (settlementCycle != null) {
-            String normalized = settlementCycle.strip().toUpperCase();
-            if (normalized.contains("HALF")) return PayCycle.HALF_MONTHLY;
-        }
-        return PayCycle.MONTHLY;
-    }
-
-    private static int workDaysMask(EnumSet<DayOfWeek> days) {
-        return days.stream().mapToInt(day -> 1 << (day.getValue() - 1)).reduce(0, (left, right) -> left | right);
     }
 }

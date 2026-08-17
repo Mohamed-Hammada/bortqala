@@ -19,7 +19,9 @@ public interface SubledgerReconciliationProvider {
             BigDecimal difference,
             boolean isBalanced,
             List<SourceDifference> sourceDifferences
-    ) {}
+    ) {
+    }
 
-    record SourceDifference(String documentId, String documentNumber, BigDecimal subledgerAmount, BigDecimal glAmount) {}
+    record SourceDifference(String documentId, String documentNumber, BigDecimal subledgerAmount, BigDecimal glAmount) {
+    }
 }

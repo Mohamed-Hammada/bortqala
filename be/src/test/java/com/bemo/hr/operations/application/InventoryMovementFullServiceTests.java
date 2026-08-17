@@ -1,10 +1,16 @@
 package com.bemo.hr.operations.application;
 
-import com.bemo.hr.operations.OperationsService;
-import com.bemo.hr.operations.domain.*;
-import com.bemo.hr.operations.infrastructure.*;
-import com.bemo.hr.organization.infrastructure.WarehouseRepository;
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.operations.OperationsService;
+import com.bemo.hr.operations.domain.CycleCountHeader;
+import com.bemo.hr.operations.domain.CycleCountLine;
+import com.bemo.hr.operations.domain.StockTransferHeader;
+import com.bemo.hr.operations.domain.StockTransferLine;
+import com.bemo.hr.operations.infrastructure.CycleCountHeaderRepository;
+import com.bemo.hr.operations.infrastructure.CycleCountLineRepository;
+import com.bemo.hr.operations.infrastructure.StockTransferHeaderRepository;
+import com.bemo.hr.operations.infrastructure.StockTransferLineRepository;
+import com.bemo.hr.organization.infrastructure.WarehouseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -87,7 +93,7 @@ class InventoryMovementFullServiceTests {
         when(warehouseInventoryService.getAvailableStock("wh-1", "item-10")).thenReturn(new BigDecimal("10.00"));
 
         org.assertj.core.api.Assertions.assertThatThrownBy(
-                () -> movementService.shipTransfer("trf-low", "inventory-manager"))
+                        () -> movementService.shipTransfer("trf-low", "inventory-manager"))
                 .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class)
                 .satisfies(error -> assertThat(((com.bemo.hr.shared.domain.BusinessRuleException) error).getCode())
                         .isEqualTo("TRANSFER_SOURCE_STOCK_INSUFFICIENT"));

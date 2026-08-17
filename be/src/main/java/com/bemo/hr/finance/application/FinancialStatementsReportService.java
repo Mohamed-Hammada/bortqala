@@ -13,7 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,10 +33,6 @@ public class FinancialStatementsReportService {
         this.journalEntryRepository = journalEntryRepository;
         this.journalEntryLineRepository = journalEntryLineRepository;
     }
-
-    public record BalanceSheetReport(BigDecimal totalAssets, BigDecimal totalLiabilities, BigDecimal totalEquity, BigDecimal netIncome, boolean balanced) {}
-    public record IncomeStatementReport(BigDecimal totalRevenue, BigDecimal totalExpenses, BigDecimal netIncome) {}
-    public record CashFlowReport(BigDecimal operatingCashFlow, BigDecimal investingCashFlow, BigDecimal financingCashFlow, BigDecimal netCashFlow) {}
 
     @Transactional(readOnly = true)
     public BalanceSheetReport getBalanceSheet(LocalDate asOfDate) {
@@ -117,5 +116,16 @@ public class FinancialStatementsReportService {
                 "Cash Flow Statement is unavailable until ledger-based cash classification is configured.",
                 "FIN_CASH_FLOW_NOT_IMPLEMENTED",
                 HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    public record BalanceSheetReport(BigDecimal totalAssets, BigDecimal totalLiabilities, BigDecimal totalEquity,
+                                     BigDecimal netIncome, boolean balanced) {
+    }
+
+    public record IncomeStatementReport(BigDecimal totalRevenue, BigDecimal totalExpenses, BigDecimal netIncome) {
+    }
+
+    public record CashFlowReport(BigDecimal operatingCashFlow, BigDecimal investingCashFlow,
+                                 BigDecimal financingCashFlow, BigDecimal netCashFlow) {
     }
 }

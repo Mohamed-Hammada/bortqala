@@ -1,10 +1,6 @@
 package com.bemo.hr.finance.domain.posting;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.util.UUID;
@@ -35,7 +31,8 @@ public class JournalDimension {
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
-    protected JournalDimension() {}
+    protected JournalDimension() {
+    }
 
     public JournalDimension(String journalEntryLineId, String costCenterId, String projectId, String departmentId) {
         this.id = UUID.randomUUID().toString();
@@ -46,13 +43,35 @@ public class JournalDimension {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getJournalEntryLineId() { return journalEntryLineId; }
-    public String getCostCenterId() { return costCenterId; }
-    public String getProjectId() { return projectId; }
-    public String getDepartmentId() { return departmentId; }
-    public long getCreatedAt() { return createdAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getJournalEntryLineId() {
+        return journalEntryLineId;
+    }
+
+    public String getCostCenterId() {
+        return costCenterId;
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public String getDepartmentId() {
+        return departmentId;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
 }

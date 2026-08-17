@@ -1,11 +1,11 @@
 package com.bemo.hr.finance.application.close;
 
+import com.bemo.hr.finance.application.CloseChecklistService;
+import com.bemo.hr.finance.domain.FiscalPeriod;
 import com.bemo.hr.finance.domain.close.PeriodCloseExecutionRecord;
+import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
 import com.bemo.hr.finance.infrastructure.PeriodCloseExecutionRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import com.bemo.hr.finance.application.CloseChecklistService;
-import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
-import com.bemo.hr.finance.domain.FiscalPeriod;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,9 +30,6 @@ public class PeriodCloseOrchestratorService {
         this.fiscalPeriodRepository = fiscalPeriodRepository;
         this.closeChecklistService = closeChecklistService;
     }
-
-    public record ModuleReadinessStatus(String moduleName, boolean ready, String blockerReason) {}
-    public record PeriodReadinessReport(String periodId, boolean allReady, List<ModuleReadinessStatus> modules) {}
 
     @Transactional(readOnly = true)
     public PeriodReadinessReport checkReadiness(String periodId) {
@@ -90,5 +87,11 @@ public class PeriodCloseOrchestratorService {
         fiscalPeriodRepository.save(period);
 
         return results;
+    }
+
+    public record ModuleReadinessStatus(String moduleName, boolean ready, String blockerReason) {
+    }
+
+    public record PeriodReadinessReport(String periodId, boolean allReady, List<ModuleReadinessStatus> modules) {
     }
 }

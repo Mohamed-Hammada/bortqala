@@ -1,8 +1,8 @@
 package com.bemo.hr.shared.api;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Instant;
@@ -15,7 +15,9 @@ class EpochMillisDateConfigurationTests {
     private final JsonMapper jsonMapper;
 
     @Autowired
-    EpochMillisDateConfigurationTests(JsonMapper jsonMapper) { this.jsonMapper = jsonMapper; }
+    EpochMillisDateConfigurationTests(JsonMapper jsonMapper) {
+        this.jsonMapper = jsonMapper;
+    }
 
     @Test
     void serializesAndReadsAllApiDatesAsEpochMilliseconds() throws Exception {
@@ -28,5 +30,6 @@ class EpochMillisDateConfigurationTests {
         assertThat(restored).isEqualTo(value);
     }
 
-    private record DateContract(LocalDate workDate, Instant occurredAt) { }
+    private record DateContract(LocalDate workDate, Instant occurredAt) {
+    }
 }

@@ -9,5 +9,6 @@ import java.util.Optional;
 @Repository
 public interface PostingProfileRepository extends JpaRepository<PostingProfile, String> {
     List<PostingProfile> findByBusinessEventAndActiveTrueOrderByEffectiveFromDesc(String businessEvent);
+
     Optional<PostingProfile> findByCode(String code);
 }

@@ -3,11 +3,7 @@ package com.bemo.hr.attendance.application;
 import com.bemo.hr.attendance.domain.BiometricSource;
 import com.bemo.hr.attendance.infrastructure.BiometricSourceRepository;
 import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
-import com.bemo.hr.employee.domain.AttendanceCategory;
-import com.bemo.hr.employee.domain.AttendanceMode;
-import com.bemo.hr.employee.domain.CategoryScope;
-import com.bemo.hr.employee.domain.EmploymentType;
-import com.bemo.hr.employee.domain.PayCycle;
+import com.bemo.hr.employee.domain.*;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
@@ -33,20 +29,26 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 class BiometricEmployeeProvisioningServiceTests {
 
-    @Autowired private BiometricEmployeeProvisioningService provisioningService;
-    @Autowired private AttendanceCategoryRepository attendanceCategoryRepository;
-    @Autowired private EmployeeRepository employeeRepository;
-    @Autowired private PunchRecordRepository punchRecordRepository;
-    @Autowired private BiometricSourceRepository biometricSourceRepository;
-    @Autowired private TenantApplicationRepository tenantApplicationRepository;
-    @Autowired private PlatformTransactionManager transactionManager;
-
-    @Autowired private EntityManager entityManager;
-
     private final List<String> createdApps = new ArrayList<>();
     private final List<String> createdCategories = new ArrayList<>();
     private final List<String> createdSources = new ArrayList<>();
     private final List<String> createdEmployees = new ArrayList<>();
+    @Autowired
+    private BiometricEmployeeProvisioningService provisioningService;
+    @Autowired
+    private AttendanceCategoryRepository attendanceCategoryRepository;
+    @Autowired
+    private EmployeeRepository employeeRepository;
+    @Autowired
+    private PunchRecordRepository punchRecordRepository;
+    @Autowired
+    private BiometricSourceRepository biometricSourceRepository;
+    @Autowired
+    private TenantApplicationRepository tenantApplicationRepository;
+    @Autowired
+    private PlatformTransactionManager transactionManager;
+    @Autowired
+    private EntityManager entityManager;
 
     @AfterEach
     void cleanup() {

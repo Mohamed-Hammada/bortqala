@@ -4,15 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -24,7 +16,9 @@ class BusinessPartyController {
     private final SupplierOnboardingService supplierOnboardingService;
 
     @GetMapping
-    List<BusinessPartyApi.Response> list() { return businessPartyService.list(); }
+    List<BusinessPartyApi.Response> list() {
+        return businessPartyService.list();
+    }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
@@ -42,7 +36,9 @@ class BusinessPartyController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void deactivate(@PathVariable String id) { businessPartyService.deactivate(id); }
+    void deactivate(@PathVariable String id) {
+        businessPartyService.deactivate(id);
+    }
 
     @PostMapping("/cleanup-phone")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
@@ -74,8 +70,8 @@ class BusinessPartyController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     SupplierOnboardingApi.DocumentResponse addDocument(@PathVariable String id,
-            @Valid @org.springframework.web.bind.annotation.RequestPart("metadata") SupplierOnboardingApi.DocumentRequest request,
-            @org.springframework.web.bind.annotation.RequestPart("file") org.springframework.web.multipart.MultipartFile file) {
+                                                       @Valid @org.springframework.web.bind.annotation.RequestPart("metadata") SupplierOnboardingApi.DocumentRequest request,
+                                                       @org.springframework.web.bind.annotation.RequestPart("file") org.springframework.web.multipart.MultipartFile file) {
         return supplierOnboardingService.addDocument(id, request, file);
     }
 
@@ -100,7 +96,7 @@ class BusinessPartyController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     SupplierOnboardingApi.BankAccountResponse addBank(@PathVariable String id,
-            @Valid @RequestBody SupplierOnboardingApi.BankAccountRequest request) {
+                                                      @Valid @RequestBody SupplierOnboardingApi.BankAccountRequest request) {
         return supplierOnboardingService.addBankAccount(id, request);
     }
 
@@ -112,15 +108,21 @@ class BusinessPartyController {
 
     @PostMapping("/{id}/onboarding/submit")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
-    BusinessPartyApi.Response submitOnboarding(@PathVariable String id) { return supplierOnboardingService.submit(id); }
+    BusinessPartyApi.Response submitOnboarding(@PathVariable String id) {
+        return supplierOnboardingService.submit(id);
+    }
 
     @PostMapping("/{id}/onboarding/approve")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-    BusinessPartyApi.Response approveOnboarding(@PathVariable String id) { return supplierOnboardingService.approve(id); }
+    BusinessPartyApi.Response approveOnboarding(@PathVariable String id) {
+        return supplierOnboardingService.approve(id);
+    }
 
     @PostMapping("/{id}/onboarding/activate")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
-    BusinessPartyApi.Response activateOnboarding(@PathVariable String id) { return supplierOnboardingService.activate(id); }
+    BusinessPartyApi.Response activateOnboarding(@PathVariable String id) {
+        return supplierOnboardingService.activate(id);
+    }
 
     @PostMapping("/{id}/onboarding/suspend")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")

@@ -17,10 +17,6 @@ public class WorkforceDisputeController {
         this.workforceDisputeService = workforceDisputeService;
     }
 
-    public record CreateDisputePayload(String contractorId, BigDecimal disputedAmount, String reason) {}
-    public record ResolveDisputePayload(String resolutionNotes) {}
-    public record RejectDisputePayload(String reason) {}
-
     @PostMapping("/settlements/{periodId}/disputes")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_FINANCE', 'FINANCE_MANAGER')")
     public WorkforceDispute openDispute(@PathVariable String periodId, @RequestBody CreateDisputePayload payload, Authentication authentication) {
@@ -49,5 +45,14 @@ public class WorkforceDisputeController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE', 'FINANCE_MANAGER', 'VIEWER')")
     public List<WorkforceDispute> getDisputesForPeriod(@PathVariable String periodId) {
         return workforceDisputeService.getDisputesByPeriod(periodId);
+    }
+
+    public record CreateDisputePayload(String contractorId, BigDecimal disputedAmount, String reason) {
+    }
+
+    public record ResolveDisputePayload(String resolutionNotes) {
+    }
+
+    public record RejectDisputePayload(String reason) {
     }
 }

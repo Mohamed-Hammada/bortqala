@@ -1,13 +1,6 @@
 package com.bemo.hr.trade.procurement.domain;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.time.LocalDate;
@@ -57,7 +50,8 @@ public class SupplierReturn {
     @OneToMany(mappedBy = "supplierReturn", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SupplierReturnLine> lines = new ArrayList<>();
 
-    protected SupplierReturn() {}
+    protected SupplierReturn() {
+    }
 
     public SupplierReturn(String returnNumber, LocalDate returnDate, String purchaseOrderId,
                           String supplierId, String warehouseId, String notes, List<SupplierReturnLine> lines) {
@@ -85,15 +79,47 @@ public class SupplierReturn {
         createdAt = System.currentTimeMillis();
     }
 
-    public String getId() { return id; }
-    public String getReturnNumber() { return returnNumber; }
-    public LocalDate getReturnDate() { return returnDate; }
-    public String getPurchaseOrderId() { return purchaseOrderId; }
-    public String getSupplierId() { return supplierId; }
-    public String getWarehouseId() { return warehouseId; }
-    public String getStatus() { return status; }
-    public String getNotes() { return notes; }
-    public long getCreatedAt() { return createdAt; }
-    public long getVersion() { return version; }
-    public List<SupplierReturnLine> getLines() { return lines; }
+    public String getId() {
+        return id;
+    }
+
+    public String getReturnNumber() {
+        return returnNumber;
+    }
+
+    public LocalDate getReturnDate() {
+        return returnDate;
+    }
+
+    public String getPurchaseOrderId() {
+        return purchaseOrderId;
+    }
+
+    public String getSupplierId() {
+        return supplierId;
+    }
+
+    public String getWarehouseId() {
+        return warehouseId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public List<SupplierReturnLine> getLines() {
+        return lines;
+    }
 }

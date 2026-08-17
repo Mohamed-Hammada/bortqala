@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface BankChangeRequestRepository extends JpaRepository<BankChangeRequest, String> {
     List<BankChangeRequest> findByPartyId(String partyId);
+
     List<BankChangeRequest> findByStatus(BankChangeRequest.Status status);
 }

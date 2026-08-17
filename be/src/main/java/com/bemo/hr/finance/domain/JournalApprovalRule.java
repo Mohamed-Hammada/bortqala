@@ -1,12 +1,6 @@
 package com.bemo.hr.finance.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -42,7 +36,8 @@ public class JournalApprovalRule {
     @Column(nullable = false)
     private long version;
 
-    protected JournalApprovalRule() {}
+    protected JournalApprovalRule() {
+    }
 
     public JournalApprovalRule(String accountId, BigDecimal maxAmountWithoutApproval, boolean requiresApproval) {
         this.id = UUID.randomUUID().toString();
@@ -57,17 +52,45 @@ public class JournalApprovalRule {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getAccountId() { return accountId; }
-    public BigDecimal getMaxAmountWithoutApproval() { return maxAmountWithoutApproval; }
-    public boolean isRequiresApproval() { return requiresApproval; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public BigDecimal getMaxAmountWithoutApproval() {
+        return maxAmountWithoutApproval;
+    }
+
+    public boolean isRequiresApproval() {
+        return requiresApproval;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

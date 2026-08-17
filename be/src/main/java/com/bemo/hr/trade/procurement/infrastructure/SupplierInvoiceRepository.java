@@ -14,14 +14,16 @@ import java.util.Optional;
 @Repository
 public interface SupplierInvoiceRepository extends JpaRepository<SupplierInvoice, String> {
     List<SupplierInvoice> findAllByOrderByInvoiceDateDesc();
+
     List<SupplierInvoice> findBySupplierId(String supplierId);
+
     List<SupplierInvoice> findByPurchaseOrderId(String purchaseOrderId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
-        select invoice
-        from SupplierInvoice invoice
-        where invoice.id = :id
-    """)
+                select invoice
+                from SupplierInvoice invoice
+                where invoice.id = :id
+            """)
     Optional<SupplierInvoice> findByIdForPayment(@Param("id") String id);
 }

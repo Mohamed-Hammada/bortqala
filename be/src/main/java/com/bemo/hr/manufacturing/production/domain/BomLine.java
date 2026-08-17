@@ -1,12 +1,6 @@
 package com.bemo.hr.manufacturing.production.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -45,7 +39,8 @@ public class BomLine {
     @Column(name = "line_number", nullable = false)
     private int lineNumber;
 
-    protected BomLine() {}
+    protected BomLine() {
+    }
 
     public BomLine(String componentItemId, String componentItemName, BigDecimal quantityPer,
                    String unitOfMeasure, BigDecimal wastePercent, int lineNumber) {
@@ -62,12 +57,35 @@ public class BomLine {
         this.bomHeader = bomHeader;
     }
 
-    public String getId() { return id; }
-    public String getBomId() { return bomHeader == null ? null : bomHeader.getId(); }
-    public String getComponentItemId() { return componentItemId; }
-    public String getComponentItemName() { return componentItemName; }
-    public BigDecimal getQuantityPer() { return quantityPer; }
-    public String getUnitOfMeasure() { return unitOfMeasure; }
-    public BigDecimal getWastePercent() { return wastePercent; }
-    public int getLineNumber() { return lineNumber; }
+    public String getId() {
+        return id;
+    }
+
+    public String getBomId() {
+        return bomHeader == null ? null : bomHeader.getId();
+    }
+
+    public String getComponentItemId() {
+        return componentItemId;
+    }
+
+    public String getComponentItemName() {
+        return componentItemName;
+    }
+
+    public BigDecimal getQuantityPer() {
+        return quantityPer;
+    }
+
+    public String getUnitOfMeasure() {
+        return unitOfMeasure;
+    }
+
+    public BigDecimal getWastePercent() {
+        return wastePercent;
+    }
+
+    public int getLineNumber() {
+        return lineNumber;
+    }
 }

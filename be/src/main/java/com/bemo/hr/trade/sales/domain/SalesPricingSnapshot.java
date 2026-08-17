@@ -1,10 +1,6 @@
 package com.bemo.hr.trade.sales.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -39,7 +35,8 @@ public class SalesPricingSnapshot {
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
-    protected SalesPricingSnapshot() {}
+    protected SalesPricingSnapshot() {
+    }
 
     public SalesPricingSnapshot(String salesOrderId, String itemId, BigDecimal unitPrice, BigDecimal discountRate, BigDecimal netPrice) {
         this.id = UUID.randomUUID().toString();
@@ -51,14 +48,39 @@ public class SalesPricingSnapshot {
     }
 
     @PrePersist
-    void prePersist() { createdAt = System.currentTimeMillis(); }
+    void prePersist() {
+        createdAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getSalesOrderId() { return salesOrderId; }
-    public String getItemId() { return itemId; }
-    public BigDecimal getUnitPrice() { return unitPrice; }
-    public BigDecimal getDiscountRate() { return discountRate; }
-    public BigDecimal getNetPrice() { return netPrice; }
-    public long getCreatedAt() { return createdAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getSalesOrderId() {
+        return salesOrderId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public BigDecimal getDiscountRate() {
+        return discountRate;
+    }
+
+    public BigDecimal getNetPrice() {
+        return netPrice;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
 }

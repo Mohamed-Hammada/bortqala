@@ -14,17 +14,28 @@ import java.util.UUID;
 @Table(name = "workforce_advance_installments")
 @Getter
 public class WorkforceAdvanceInstallment {
-    @Id private String id;
-    @TenantId @Column(name = "app_id", nullable = false) private String appId;
-    @Column(name = "advance_id", nullable = false, length = 36) private String advanceId;
-    @Column(name = "installment_number", nullable = false) private int installmentNumber;
-    @Column(name = "due_date", nullable = false, length = 10) private String dueDate;
-    @Column(precision = 12, scale = 2, nullable = false) private BigDecimal amount;
-    @Column(name = "deducted_amount", precision = 12, scale = 2) private BigDecimal deductedAmount;
-    @Column(nullable = false, length = 30) private String status;
-    @Column(name = "period_id", length = 36) private String periodId;
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(name = "advance_id", nullable = false, length = 36)
+    private String advanceId;
+    @Column(name = "installment_number", nullable = false)
+    private int installmentNumber;
+    @Column(name = "due_date", nullable = false, length = 10)
+    private String dueDate;
+    @Column(precision = 12, scale = 2, nullable = false)
+    private BigDecimal amount;
+    @Column(name = "deducted_amount", precision = 12, scale = 2)
+    private BigDecimal deductedAmount;
+    @Column(nullable = false, length = 30)
+    private String status;
+    @Column(name = "period_id", length = 36)
+    private String periodId;
 
-    protected WorkforceAdvanceInstallment() { }
+    protected WorkforceAdvanceInstallment() {
+    }
 
     public WorkforceAdvanceInstallment(String advanceId, int installmentNumber, String dueDate, BigDecimal amount) {
         this.id = UUID.randomUUID().toString();

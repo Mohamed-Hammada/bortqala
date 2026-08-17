@@ -6,15 +6,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -31,7 +23,9 @@ public class EmployeeController {
     }
 
     @GetMapping
-    List<EmployeeApi.Response> list() { return hrConfigurationService.listEmployees(); }
+    List<EmployeeApi.Response> list() {
+        return hrConfigurationService.listEmployees();
+    }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
@@ -54,7 +48,9 @@ public class EmployeeController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void deactivate(@PathVariable String id) { hrConfigurationService.deactivateEmployee(id); }
+    void deactivate(@PathVariable String id) {
+        hrConfigurationService.deactivateEmployee(id);
+    }
 
     @PostMapping("/code-corrections")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")

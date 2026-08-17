@@ -38,7 +38,8 @@ public class PurchaseRequisitionLine {
     @Column(length = 500)
     private String notes;
 
-    protected PurchaseRequisitionLine() {}
+    protected PurchaseRequisitionLine() {
+    }
 
     public PurchaseRequisitionLine(String requisitionId, String itemId, String itemName, BigDecimal requestedQuantity, BigDecimal unitPriceEstimate, String notes) {
         this.id = UUID.randomUUID().toString();
@@ -50,12 +51,35 @@ public class PurchaseRequisitionLine {
         this.notes = notes;
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getRequisitionId() { return requisitionId; }
-    public String getItemId() { return itemId; }
-    public String getItemName() { return itemName; }
-    public BigDecimal getRequestedQuantity() { return requestedQuantity; }
-    public BigDecimal getUnitPriceEstimate() { return unitPriceEstimate; }
-    public String getNotes() { return notes; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getRequisitionId() {
+        return requisitionId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public BigDecimal getRequestedQuantity() {
+        return requestedQuantity;
+    }
+
+    public BigDecimal getUnitPriceEstimate() {
+        return unitPriceEstimate;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
 }

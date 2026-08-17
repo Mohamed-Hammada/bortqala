@@ -1,19 +1,19 @@
 package com.bemo.hr.trade.sales.infrastructure;
 
 import com.bemo.hr.trade.sales.domain.SalesOrder;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import jakarta.persistence.LockModeType;
-
 import java.util.List;
 
 @Repository
 public interface SalesOrderRepository extends JpaRepository<SalesOrder, String> {
     List<SalesOrder> findAllByOrderBySoDateDescCreatedAtDesc();
+
     boolean existsBySoNumberIgnoreCase(String soNumber);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

@@ -5,13 +5,14 @@ import com.bemo.hr.operations.infrastructure.ItemLotSerialRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDate;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ItemLotSerialServiceTests {
 
@@ -62,10 +63,10 @@ class ItemLotSerialServiceTests {
         ItemLotSerial existing = new ItemLotSerial("item-1", "LOT", "SER-1", null, null);
         when(repository.findBySerialNumberIgnoreCase("SER-1")).thenReturn(Optional.of(existing));
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.receive("item-1", "wh-1", null, "SER-1",
-                BigDecimal.ONE, "GRN-1", null, null))
+                        BigDecimal.ONE, "GRN-1", null, null))
                 .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class);
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.receive("item-1", "wh-1", null, "SER-2",
-                new BigDecimal("2"), "GRN-1", null, null))
+                        new BigDecimal("2"), "GRN-1", null, null))
                 .isInstanceOf(com.bemo.hr.shared.domain.BusinessRuleException.class);
     }
 }

@@ -2,12 +2,12 @@ package com.bemo.hr.trade.procurement.application;
 
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.budget.application.BudgetService;
+import com.bemo.hr.finance.domain.Currency;
 import com.bemo.hr.finance.domain.FiscalPeriodGuard;
+import com.bemo.hr.finance.infrastructure.CurrencyRepository;
+import com.bemo.hr.operations.OperationsService;
 import com.bemo.hr.operations.PartnerLedgerEntry;
 import com.bemo.hr.operations.PartnerLedgerEntryRepository;
-import com.bemo.hr.operations.OperationsService;
-import com.bemo.hr.finance.infrastructure.CurrencyRepository;
-import com.bemo.hr.finance.domain.Currency;
 import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
@@ -16,21 +16,8 @@ import com.bemo.hr.shared.numbering.DocumentNumberService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.trade.procurement.api.ProcurementApi;
-import com.bemo.hr.trade.procurement.domain.GoodsReceipt;
-import com.bemo.hr.trade.procurement.domain.GoodsReceiptLine;
-import com.bemo.hr.trade.procurement.domain.PurchaseOrder;
-import com.bemo.hr.trade.procurement.domain.PurchaseOrderLine;
-import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
-import com.bemo.hr.trade.procurement.domain.SupplierPayment;
-import com.bemo.hr.trade.procurement.domain.SupplierReturn;
-import com.bemo.hr.trade.procurement.domain.SupplierReturnLine;
-import com.bemo.hr.trade.procurement.infrastructure.GoodsReceiptRepository;
-import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderLineRepository;
-import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderRepository;
-import com.bemo.hr.trade.procurement.infrastructure.ProcurementDocumentSequenceRepository;
-import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
-import com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository;
-import com.bemo.hr.trade.procurement.infrastructure.SupplierReturnRepository;
+import com.bemo.hr.trade.procurement.domain.*;
+import com.bemo.hr.trade.procurement.infrastructure.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,9 +26,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -485,7 +472,7 @@ public class ProcurementService {
     }
 
     private ExchangeRateSnapshot resolveExchangeRate(String currencyCode, LocalDate documentDate,
-                                                      BigDecimal requestedRate, String overrideReason) {
+                                                     BigDecimal requestedRate, String overrideReason) {
         Currency currency = currencyRepository.findByCodeIgnoreCaseAndActiveTrue(currencyCode)
                 .orElseThrow(() -> new BusinessRuleException("لا يوجد سعر صرف نشط للعملة المحددة.", "PROC_EXCHANGE_RATE_MISSING", HttpStatus.CONFLICT));
         String baseCurrency = currencyRepository.findAllByOrderByCodeAsc().stream()
@@ -496,7 +483,8 @@ public class ProcurementService {
             throw new BusinessRuleException("لا يمكن ترحيل المستند: لا يتوفر سعر صرف صالح للعملة " + currency.getCode() + ".");
         }
         BigDecimal effectiveRate = requestedRate == null ? configuredRate : requestedRate;
-        if (effectiveRate.signum() <= 0) throw new BusinessRuleException("سعر الصرف يجب أن يكون أكبر من صفر.", "PROC_EXCHANGE_RATE_POSITIVE", HttpStatus.CONFLICT);
+        if (effectiveRate.signum() <= 0)
+            throw new BusinessRuleException("سعر الصرف يجب أن يكون أكبر من صفر.", "PROC_EXCHANGE_RATE_POSITIVE", HttpStatus.CONFLICT);
         boolean manuallyOverridden = effectiveRate.compareTo(configuredRate) != 0;
         if (manuallyOverridden && (overrideReason == null || overrideReason.isBlank())) {
             throw new BusinessRuleException("اكتب سبب تعديل سعر الصرف يدوياً.", "PROC_EXCHANGE_RATE_REASON_REQUIRED", HttpStatus.CONFLICT);
@@ -508,7 +496,7 @@ public class ProcurementService {
     }
 
     private void validateFrozenPurchaseOrderExchangeSnapshot(PurchaseOrder po,
-            ProcurementApi.PurchaseOrderPayload payload, LocalDate requestedDocumentDate) {
+                                                             ProcurementApi.PurchaseOrderPayload payload, LocalDate requestedDocumentDate) {
         if (!po.getPoDate().equals(requestedDocumentDate)) {
             throw new BusinessRuleException("لا يمكن تغيير تاريخ أمر الشراء بعد حفظ لقطة سعر الصرف.", "PROC_EXCHANGE_RATE_DATE_FROZEN", HttpStatus.CONFLICT);
         }
@@ -526,7 +514,8 @@ public class ProcurementService {
     }
 
     private void validateLines(List<ProcurementApi.PurchaseOrderLinePayload> items) {
-        if (items == null || items.isEmpty()) throw new BusinessRuleException("Purchase order requires at least one line.", "PROC_ORDER_LINE_REQUIRED", HttpStatus.CONFLICT);
+        if (items == null || items.isEmpty())
+            throw new BusinessRuleException("Purchase order requires at least one line.", "PROC_ORDER_LINE_REQUIRED", HttpStatus.CONFLICT);
         items.forEach(item -> {
             if (item.quantity() == null || item.quantity().signum() <= 0
                     || item.unitPrice() == null || item.unitPrice().signum() < 0)
@@ -535,10 +524,11 @@ public class ProcurementService {
     }
 
     private List<PurchaseOrderLine> buildLines(String purchaseOrderId,
-                                                List<ProcurementApi.PurchaseOrderLinePayload> items) {
+                                               List<ProcurementApi.PurchaseOrderLinePayload> items) {
         return items.stream().map(item -> {
             var inventoryItem = operationsService.inventoryItem(item.itemId());
-            if (!inventoryItem.active()) throw new BusinessRuleException("Inactive inventory items cannot be purchased.", "PROC_INACTIVE_ITEM", HttpStatus.CONFLICT);
+            if (!inventoryItem.active())
+                throw new BusinessRuleException("Inactive inventory items cannot be purchased.", "PROC_INACTIVE_ITEM", HttpStatus.CONFLICT);
             String unit = inventoryItem.uomName() != null && !inventoryItem.uomName().isBlank()
                     ? inventoryItem.uomName() : inventoryItem.unitCode();
             return new PurchaseOrderLine(purchaseOrderId, inventoryItem.id(), inventoryItem.name(),
@@ -579,7 +569,8 @@ public class ProcurementService {
         String value = requireManualNumber(requested, "رقم أمر الشراء مطلوب عند اختيار الترقيم اليدوي.");
         boolean duplicate = currentId == null ? purchaseOrderRepository.existsByPoNumberIgnoreCase(value)
                 : purchaseOrderRepository.existsByPoNumberIgnoreCaseAndIdNot(value, currentId);
-        if (duplicate) throw new BusinessRuleException("رقم أمر الشراء مستخدم بالفعل.", "PROC_ORDER_NUMBER_EXISTS", HttpStatus.CONFLICT);
+        if (duplicate)
+            throw new BusinessRuleException("رقم أمر الشراء مستخدم بالفعل.", "PROC_ORDER_NUMBER_EXISTS", HttpStatus.CONFLICT);
         return value;
     }
 
@@ -718,9 +709,6 @@ public class ProcurementService {
                 .map(SupplierPayment::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private record ExchangeRateSnapshot(String baseCurrencyCode, BigDecimal rate, LocalDate rateDate,
-                                        String source, String overrideReason) { }
-
     private String getCurrentUser() {
         var auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
         return (auth != null && auth.getName() != null && !auth.getName().isBlank()) ? auth.getName() : "system";
@@ -790,13 +778,13 @@ public class ProcurementService {
         );
     }
 
-    // ─── Supplier Returns ──────────────────────────────────────────────
-
     public List<ProcurementApi.SupplierReturnResponse> listSupplierReturns() {
         List<SupplierReturn> returns = supplierReturnRepository.findAllByOrderByReturnDateDesc();
         Map<String, String> supplierNames = resolveNames(returns.stream().map(SupplierReturn::getSupplierId).distinct().toList());
         return returns.stream().map(ret -> toSupplierReturnResponse(ret, supplierNames)).toList();
     }
+
+    // ─── Supplier Returns ──────────────────────────────────────────────
 
     @Transactional
     public ProcurementApi.SupplierReturnResponse createSupplierReturn(ProcurementApi.SupplierReturnPayload payload) {
@@ -893,5 +881,9 @@ public class ProcurementService {
                 ret.getReturnDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
                 ret.getPurchaseOrderId(), ret.getSupplierId(), supplierNames.getOrDefault(ret.getSupplierId(), "—"),
                 ret.getWarehouseId(), ret.getStatus(), ret.getNotes(), lineResponses, ret.getCreatedAt());
+    }
+
+    private record ExchangeRateSnapshot(String baseCurrencyCode, BigDecimal rate, LocalDate rateDate,
+                                        String source, String overrideReason) {
     }
 }

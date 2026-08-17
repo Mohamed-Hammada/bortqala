@@ -4,8 +4,6 @@ import com.bemo.hr.manufacturing.quality.domain.QualityDisposition;
 import com.bemo.hr.manufacturing.quality.domain.QualityPlanHeader;
 import com.bemo.hr.manufacturing.quality.infrastructure.QualityDispositionRepository;
 import com.bemo.hr.manufacturing.quality.infrastructure.QualityPlanHeaderRepository;
-import com.bemo.hr.shared.domain.BusinessRuleException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

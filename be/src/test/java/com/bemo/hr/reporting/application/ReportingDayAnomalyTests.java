@@ -8,19 +8,8 @@ import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
 import com.bemo.hr.reporting.api.ReportingApi;
-import com.bemo.hr.reporting.domain.AttendanceDecision;
-import com.bemo.hr.reporting.domain.AttendanceReport;
-import com.bemo.hr.reporting.domain.DayAnomaly;
-import com.bemo.hr.reporting.domain.DayAnomalyDecision;
-import com.bemo.hr.reporting.domain.DayAnomalyResultSnapshot;
-import com.bemo.hr.reporting.domain.DayAnomalyStatus;
-import com.bemo.hr.reporting.domain.DailyAttendanceResult;
-import com.bemo.hr.reporting.domain.DailyStatus;
-import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
-import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
-import com.bemo.hr.reporting.infrastructure.DayAnomalyRepository;
-import com.bemo.hr.reporting.infrastructure.DayAnomalyResultSnapshotRepository;
-import com.bemo.hr.reporting.infrastructure.HolidayProposalRepository;
+import com.bemo.hr.reporting.domain.*;
+import com.bemo.hr.reporting.infrastructure.*;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,20 +29,34 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ReportingDayAnomalyTests {
-    @Mock private AttendanceReportRepository reportRepository;
-    @Mock private DailyAttendanceResultRepository resultRepository;
-    @Mock private HolidayProposalRepository holidayRepository;
-    @Mock private DayAnomalyRepository anomalyRepository;
-    @Mock private DayAnomalyResultSnapshotRepository snapshotRepository;
-    @Mock private ConfirmedHolidayRepository confirmedHolidayRepository;
-    @Mock private AttendanceCategoryRepository categoryRepository;
-    @Mock private ScheduleRuleRepository scheduleRepository;
-    @Mock private EmployeeRepository employeeRepository;
-    @Mock private PunchRecordRepository punchRepository;
-    @Mock private ReportExporter exporter;
-    @Mock private AuditService auditService;
-    @Mock private TenantApplicationRepository tenantApplicationRepository;
-    @Mock private com.bemo.hr.reporting.infrastructure.AttendanceReportDecisionRepository attendanceReportDecisionRepository;
+    @Mock
+    private AttendanceReportRepository reportRepository;
+    @Mock
+    private DailyAttendanceResultRepository resultRepository;
+    @Mock
+    private HolidayProposalRepository holidayRepository;
+    @Mock
+    private DayAnomalyRepository anomalyRepository;
+    @Mock
+    private DayAnomalyResultSnapshotRepository snapshotRepository;
+    @Mock
+    private ConfirmedHolidayRepository confirmedHolidayRepository;
+    @Mock
+    private AttendanceCategoryRepository categoryRepository;
+    @Mock
+    private ScheduleRuleRepository scheduleRepository;
+    @Mock
+    private EmployeeRepository employeeRepository;
+    @Mock
+    private PunchRecordRepository punchRepository;
+    @Mock
+    private ReportExporter exporter;
+    @Mock
+    private AuditService auditService;
+    @Mock
+    private TenantApplicationRepository tenantApplicationRepository;
+    @Mock
+    private com.bemo.hr.reporting.infrastructure.AttendanceReportDecisionRepository attendanceReportDecisionRepository;
     private ReportingService service;
 
     @BeforeEach

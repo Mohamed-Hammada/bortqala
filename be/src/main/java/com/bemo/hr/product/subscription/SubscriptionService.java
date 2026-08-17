@@ -1,21 +1,169 @@
 package com.bemo.hr.product.subscription;
 
-import com.bemo.hr.audit.application.AuditService;import com.bemo.hr.shared.domain.BusinessRuleException;import com.bemo.hr.shared.security.*;import lombok.RequiredArgsConstructor;import org.springframework.http.HttpStatus;import org.springframework.stereotype.Service;import org.springframework.transaction.annotation.*;import tools.jackson.databind.ObjectMapper;import java.time.Instant;import java.util.*;
+import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.security.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
-@Service @RequiredArgsConstructor
+import java.time.Instant;
+import java.util.*;
+
+@Service
+@RequiredArgsConstructor
 public class SubscriptionService {
- private final SubscriptionPlanRepository planRepository;private final TenantSubscriptionRepository subscriptionRepository;private final SubscriptionChangeRepository changeRepository;private final TenantApplicationRepository tenantRepository;private final EntitlementManagementService entitlementService;private final EntitlementCatalog entitlementCatalog;private final AppUserRepository userRepository;private final ObjectMapper objectMapper;private final AuditService auditService;
- @Transactional(readOnly=true)public List<SubscriptionApi.PlanResponse>plans(){return planRepository.findAllByOrderByCodeAsc().stream().map(this::planView).toList();}
- @Transactional public SubscriptionApi.PlanResponse savePlan(String code,SubscriptionApi.PlanUpsertRequest request,String actor){String normalized=code.strip().toUpperCase(Locale.ROOT);if(!normalized.matches("[A-Z][A-Z0-9_]{1,39}"))throw error("SUBSCRIPTION_PLAN_CODE_INVALID",HttpStatus.BAD_REQUEST);validateFeatures(request.featureKeys());SubscriptionPlan plan=planRepository.findById(normalized).orElse(null);if(plan==null){if(request.expectedVersion()!=0)throw stale();plan=new SubscriptionPlan(normalized,request.nameAr(),request.nameEn(),json(request.featureKeys()),json(request.limits()));plan.update(request.nameAr(),request.nameEn(),json(request.featureKeys()),json(request.limits()),request.active());}else{if(plan.getVersion()!=request.expectedVersion())throw stale();plan.update(request.nameAr(),request.nameEn(),json(request.featureKeys()),json(request.limits()),request.active());}planRepository.save(plan);auditService.record("UPSERT","SUBSCRIPTION_PLAN",normalized,actor,"{\"active\":"+request.active()+"}",null);return planView(plan);}
- @Transactional(readOnly=true)public SubscriptionApi.SubscriptionResponse current(){return subscriptionRepository.findFirstBy().map(this::subscriptionView).orElse(null);}
- @Transactional public SubscriptionApi.ChangeResponse change(SubscriptionApi.ChangeRequest request,String actor){String app=TenantContext.require();var tenantApp=tenantRepository.findByIdForUpdate(app).orElseThrow(()->error("TENANT_NOT_FOUND",HttpStatus.NOT_FOUND));var replay=changeRepository.findByOperationId(request.operationId());if(replay.isPresent())return new SubscriptionApi.ChangeResponse(subscriptionRepository.findFirstBy().map(this::subscriptionView).orElseThrow(()->error("SUBSCRIPTION_PLAN_CONFIGURATION_INVALID",HttpStatus.INTERNAL_SERVER_ERROR)),true);SubscriptionPlan plan=planRepository.findById(request.planCode().strip().toUpperCase(Locale.ROOT)).filter(SubscriptionPlan::isActive).orElseThrow(()->error("SUBSCRIPTION_PLAN_NOT_FOUND",HttpStatus.NOT_FOUND));TenantSubscription subscription=subscriptionRepository.findCurrentForUpdate().orElse(null);if(subscription!=null&&subscription.getVersion()!=request.expectedVersion())throw stale();String fromPlan=subscription==null?null:subscription.getPlanCode(),fromStatus=subscription==null?null:subscription.getStatus();Instant starts=Instant.ofEpochMilli(request.startsAt()),renews=instant(request.renewsAt()),ends=instant(request.endsAt());if(renews!=null&&!renews.isAfter(starts)||ends!=null&&!ends.isAfter(starts))throw error("SUBSCRIPTION_DATES_INVALID",HttpStatus.BAD_REQUEST);Set<String>features="CANCELED".equals(request.status())?Set.of():features(plan);entitlementService.applyPlan(app,features,"Plan "+plan.getCode()+": "+request.reason().strip(),actor);if("ACTIVE".equals(request.status())&&("TRIAL".equals(tenantApp.getCommercialState())||"EXPIRED".equals(tenantApp.getCommercialState())||tenantApp.isTrialExpired(Instant.now()))){tenantApp.convertTrial(Instant.now(),request.operationId());tenantRepository.save(tenantApp);}if(subscription==null)subscription=new TenantSubscription(plan.getCode(),request.status(),starts,renews,ends,request.operationId(),actor);else subscription.change(plan.getCode(),request.status(),starts,renews,ends,request.operationId(),actor);subscriptionRepository.save(subscription);changeRepository.save(new SubscriptionChange(fromPlan,plan.getCode(),fromStatus,request.status(),request.reason(),request.operationId(),actor));auditService.record("CHANGE","TENANT_SUBSCRIPTION",app,actor,"{\"from\":\""+safe(fromPlan)+"\",\"to\":\""+plan.getCode()+"\",\"reason\":\""+escape(request.reason())+"\"}",null);return new SubscriptionApi.ChangeResponse(subscriptionView(subscription),false);}
- @Transactional(readOnly=true)public List<SubscriptionApi.HistoryResponse>history(){return changeRepository.findAllByOrderByChangedAtDesc().stream().map(c->new SubscriptionApi.HistoryResponse(c.getFromPlan(),c.getToPlan(),c.getFromStatus(),c.getToStatus(),c.getReason(),c.getOperationId(),c.getActor(),c.getChangedAt().toEpochMilli())).toList();}
- @Transactional(readOnly=true)public SubscriptionApi.UsageResponse usage(){TenantSubscription current=subscriptionRepository.findFirstBy().orElse(null);if(current==null)return new SubscriptionApi.UsageResponse(null,Map.of(),Map.of("users",userRepository.countByAppId(TenantContext.require())));SubscriptionPlan plan=planRepository.findById(current.getPlanCode()).orElseThrow(()->error("SUBSCRIPTION_PLAN_NOT_FOUND",HttpStatus.NOT_FOUND));return new SubscriptionApi.UsageResponse(plan.getCode(),limits(plan),Map.of("users",userRepository.countByAppId(TenantContext.require())));}
- private void validateFeatures(Set<String>features){for(String key:features){var definition=entitlementCatalog.feature(key).orElseThrow(()->error("ENTITLEMENT_UNKNOWN_FEATURE",HttpStatus.BAD_REQUEST));if(!features.containsAll(definition.dependencies()))throw error("ENTITLEMENT_DEPENDENCY_MISSING",HttpStatus.CONFLICT);}}
- private SubscriptionApi.PlanResponse planView(SubscriptionPlan p){return new SubscriptionApi.PlanResponse(p.getCode(),p.getNameAr(),p.getNameEn(),features(p),limits(p),p.isActive(),p.getVersion());}
- private SubscriptionApi.SubscriptionResponse subscriptionView(TenantSubscription s){return new SubscriptionApi.SubscriptionResponse(s.getPlanCode(),s.getStatus(),s.getStartsAt().toEpochMilli(),epoch(s.getRenewsAt()),epoch(s.getEndsAt()),s.getVersion(),s.getUpdatedBy(),s.getUpdatedAt().toEpochMilli());}
- @SuppressWarnings("unchecked")private Set<String>features(SubscriptionPlan p){try{return Set.copyOf(Arrays.asList(objectMapper.readValue(p.getFeatureKeysJson(),String[].class)));}catch(Exception e){throw error("SUBSCRIPTION_PLAN_CONFIGURATION_INVALID",HttpStatus.INTERNAL_SERVER_ERROR);}}
- @SuppressWarnings("unchecked")private Map<String,Integer>limits(SubscriptionPlan p){try{Map<?,?>raw=objectMapper.readValue(p.getLimitsJson(),Map.class);Map<String,Integer>result=new LinkedHashMap<>();raw.forEach((k,v)->result.put(k.toString(),((Number)v).intValue()));return Map.copyOf(result);}catch(Exception e){throw error("SUBSCRIPTION_PLAN_CONFIGURATION_INVALID",HttpStatus.INTERNAL_SERVER_ERROR);}}
- private String json(Object value){try{return objectMapper.writeValueAsString(value);}catch(Exception e){throw error("SUBSCRIPTION_PLAN_CONFIGURATION_INVALID",HttpStatus.BAD_REQUEST);}}
- private static Instant instant(long value){return value==0?null:Instant.ofEpochMilli(value);}private static long epoch(Instant value){return value==null?0:value.toEpochMilli();}private static String safe(String value){return value==null?"":escape(value);}private static String escape(String value){return value.replace("\\","\\\\").replace("\"","\\\"");}private static BusinessRuleException stale(){return error("STALE_STATE",HttpStatus.CONFLICT);}private static BusinessRuleException error(String code,HttpStatus status){return new BusinessRuleException(code,code,status);}
+    private final SubscriptionPlanRepository planRepository;
+    private final TenantSubscriptionRepository subscriptionRepository;
+    private final SubscriptionChangeRepository changeRepository;
+    private final TenantApplicationRepository tenantRepository;
+    private final EntitlementManagementService entitlementService;
+    private final EntitlementCatalog entitlementCatalog;
+    private final AppUserRepository userRepository;
+    private final ObjectMapper objectMapper;
+    private final AuditService auditService;
+
+    private static Instant instant(long value) {
+        return value == 0 ? null : Instant.ofEpochMilli(value);
+    }
+
+    private static long epoch(Instant value) {
+        return value == null ? 0 : value.toEpochMilli();
+    }
+
+    private static String safe(String value) {
+        return value == null ? "" : escape(value);
+    }
+
+    private static String escape(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private static BusinessRuleException stale() {
+        return error("STALE_STATE", HttpStatus.CONFLICT);
+    }
+
+    private static BusinessRuleException error(String code, HttpStatus status) {
+        return new BusinessRuleException(code, code, status);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SubscriptionApi.PlanResponse> plans() {
+        return planRepository.findAllByOrderByCodeAsc().stream().map(this::planView).toList();
+    }
+
+    @Transactional
+    public SubscriptionApi.PlanResponse savePlan(String code, SubscriptionApi.PlanUpsertRequest request, String actor) {
+        String normalized = code.strip().toUpperCase(Locale.ROOT);
+        if (!normalized.matches("[A-Z][A-Z0-9_]{1,39}"))
+            throw error("SUBSCRIPTION_PLAN_CODE_INVALID", HttpStatus.BAD_REQUEST);
+        validateFeatures(request.featureKeys());
+        SubscriptionPlan plan = planRepository.findById(normalized).orElse(null);
+        if (plan == null) {
+            if (request.expectedVersion() != 0) throw stale();
+            plan = new SubscriptionPlan(normalized, request.nameAr(), request.nameEn(), json(request.featureKeys()), json(request.limits()));
+            plan.update(request.nameAr(), request.nameEn(), json(request.featureKeys()), json(request.limits()), request.active());
+        } else {
+            if (plan.getVersion() != request.expectedVersion()) throw stale();
+            plan.update(request.nameAr(), request.nameEn(), json(request.featureKeys()), json(request.limits()), request.active());
+        }
+        planRepository.save(plan);
+        auditService.record("UPSERT", "SUBSCRIPTION_PLAN", normalized, actor, "{\"active\":" + request.active() + "}", null);
+        return planView(plan);
+    }
+
+    @Transactional(readOnly = true)
+    public SubscriptionApi.SubscriptionResponse current() {
+        return subscriptionRepository.findFirstBy().map(this::subscriptionView).orElse(null);
+    }
+
+    @Transactional
+    public SubscriptionApi.ChangeResponse change(SubscriptionApi.ChangeRequest request, String actor) {
+        String app = TenantContext.require();
+        var tenantApp = tenantRepository.findByIdForUpdate(app).orElseThrow(() -> error("TENANT_NOT_FOUND", HttpStatus.NOT_FOUND));
+        var replay = changeRepository.findByOperationId(request.operationId());
+        if (replay.isPresent())
+            return new SubscriptionApi.ChangeResponse(subscriptionRepository.findFirstBy().map(this::subscriptionView).orElseThrow(() -> error("SUBSCRIPTION_PLAN_CONFIGURATION_INVALID", HttpStatus.INTERNAL_SERVER_ERROR)), true);
+        SubscriptionPlan plan = planRepository.findById(request.planCode().strip().toUpperCase(Locale.ROOT)).filter(SubscriptionPlan::isActive).orElseThrow(() -> error("SUBSCRIPTION_PLAN_NOT_FOUND", HttpStatus.NOT_FOUND));
+        TenantSubscription subscription = subscriptionRepository.findCurrentForUpdate().orElse(null);
+        if (subscription != null && subscription.getVersion() != request.expectedVersion()) throw stale();
+        String fromPlan = subscription == null ? null : subscription.getPlanCode(), fromStatus = subscription == null ? null : subscription.getStatus();
+        Instant starts = Instant.ofEpochMilli(request.startsAt()), renews = instant(request.renewsAt()), ends = instant(request.endsAt());
+        if (renews != null && !renews.isAfter(starts) || ends != null && !ends.isAfter(starts))
+            throw error("SUBSCRIPTION_DATES_INVALID", HttpStatus.BAD_REQUEST);
+        Set<String> features = "CANCELED".equals(request.status()) ? Set.of() : features(plan);
+        entitlementService.applyPlan(app, features, "Plan " + plan.getCode() + ": " + request.reason().strip(), actor);
+        if ("ACTIVE".equals(request.status()) && ("TRIAL".equals(tenantApp.getCommercialState()) || "EXPIRED".equals(tenantApp.getCommercialState()) || tenantApp.isTrialExpired(Instant.now()))) {
+            tenantApp.convertTrial(Instant.now(), request.operationId());
+            tenantRepository.save(tenantApp);
+        }
+        if (subscription == null)
+            subscription = new TenantSubscription(plan.getCode(), request.status(), starts, renews, ends, request.operationId(), actor);
+        else subscription.change(plan.getCode(), request.status(), starts, renews, ends, request.operationId(), actor);
+        subscriptionRepository.save(subscription);
+        changeRepository.save(new SubscriptionChange(fromPlan, plan.getCode(), fromStatus, request.status(), request.reason(), request.operationId(), actor));
+        auditService.record("CHANGE", "TENANT_SUBSCRIPTION", app, actor, "{\"from\":\"" + safe(fromPlan) + "\",\"to\":\"" + plan.getCode() + "\",\"reason\":\"" + escape(request.reason()) + "\"}", null);
+        return new SubscriptionApi.ChangeResponse(subscriptionView(subscription), false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SubscriptionApi.HistoryResponse> history() {
+        return changeRepository.findAllByOrderByChangedAtDesc().stream().map(c -> new SubscriptionApi.HistoryResponse(c.getFromPlan(), c.getToPlan(), c.getFromStatus(), c.getToStatus(), c.getReason(), c.getOperationId(), c.getActor(), c.getChangedAt().toEpochMilli())).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public SubscriptionApi.UsageResponse usage() {
+        TenantSubscription current = subscriptionRepository.findFirstBy().orElse(null);
+        if (current == null)
+            return new SubscriptionApi.UsageResponse(null, Map.of(), Map.of("users", userRepository.countByAppId(TenantContext.require())));
+        SubscriptionPlan plan = planRepository.findById(current.getPlanCode()).orElseThrow(() -> error("SUBSCRIPTION_PLAN_NOT_FOUND", HttpStatus.NOT_FOUND));
+        return new SubscriptionApi.UsageResponse(plan.getCode(), limits(plan), Map.of("users", userRepository.countByAppId(TenantContext.require())));
+    }
+
+    private void validateFeatures(Set<String> features) {
+        for (String key : features) {
+            var definition = entitlementCatalog.feature(key).orElseThrow(() -> error("ENTITLEMENT_UNKNOWN_FEATURE", HttpStatus.BAD_REQUEST));
+            if (!features.containsAll(definition.dependencies()))
+                throw error("ENTITLEMENT_DEPENDENCY_MISSING", HttpStatus.CONFLICT);
+        }
+    }
+
+    private SubscriptionApi.PlanResponse planView(SubscriptionPlan p) {
+        return new SubscriptionApi.PlanResponse(p.getCode(), p.getNameAr(), p.getNameEn(), features(p), limits(p), p.isActive(), p.getVersion());
+    }
+
+    private SubscriptionApi.SubscriptionResponse subscriptionView(TenantSubscription s) {
+        return new SubscriptionApi.SubscriptionResponse(s.getPlanCode(), s.getStatus(), s.getStartsAt().toEpochMilli(), epoch(s.getRenewsAt()), epoch(s.getEndsAt()), s.getVersion(), s.getUpdatedBy(), s.getUpdatedAt().toEpochMilli());
+    }
+
+    @SuppressWarnings("unchecked")
+    private Set<String> features(SubscriptionPlan p) {
+        try {
+            return Set.copyOf(Arrays.asList(objectMapper.readValue(p.getFeatureKeysJson(), String[].class)));
+        } catch (Exception e) {
+            throw error("SUBSCRIPTION_PLAN_CONFIGURATION_INVALID", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Integer> limits(SubscriptionPlan p) {
+        try {
+            Map<?, ?> raw = objectMapper.readValue(p.getLimitsJson(), Map.class);
+            Map<String, Integer> result = new LinkedHashMap<>();
+            raw.forEach((k, v) -> result.put(k.toString(), ((Number) v).intValue()));
+            return Map.copyOf(result);
+        } catch (Exception e) {
+            throw error("SUBSCRIPTION_PLAN_CONFIGURATION_INVALID", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private String json(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (Exception e) {
+            throw error("SUBSCRIPTION_PLAN_CONFIGURATION_INVALID", HttpStatus.BAD_REQUEST);
+        }
+    }
 }

@@ -3,11 +3,11 @@ package com.bemo.hr.attendance.infrastructure;
 import com.bemo.hr.attendance.application.BiometricDeviceClient;
 import com.bemo.hr.attendance.domain.BiometricDevice;
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.net.URLEncoder;
@@ -94,7 +94,8 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
         if (!"http".equalsIgnoreCase(base.getScheme()) && !"https".equalsIgnoreCase(base.getScheme())) {
             throw new BusinessRuleException("رابط جهاز البصمة يجب أن يبدأ بـ http أو https.", "BIO_DEVICE_ENDPOINT_SCHEME_REQUIRED", HttpStatus.CONFLICT);
         }
-        if (base.getHost() == null) throw new BusinessRuleException("رابط جهاز البصمة غير صالح.", "BIO_DEVICE_ENDPOINT_MALFORMED", HttpStatus.CONFLICT);
+        if (base.getHost() == null)
+            throw new BusinessRuleException("رابط جهاز البصمة غير صالح.", "BIO_DEVICE_ENDPOINT_MALFORMED", HttpStatus.CONFLICT);
         if (device.getLastSuccessfulPunchAt() == null) return base;
         String separator = base.getQuery() == null ? "?" : "&";
         return URI.create(base + separator + "since=" + URLEncoder.encode(

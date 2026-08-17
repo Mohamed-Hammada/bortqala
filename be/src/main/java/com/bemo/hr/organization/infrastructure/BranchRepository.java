@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface BranchRepository extends JpaRepository<Branch, String> {
     List<Branch> findAllByOrderByCodeAsc();
+
     List<Branch> findByCompanyIdOrderByCodeAsc(String companyId);
 }

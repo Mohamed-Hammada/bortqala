@@ -16,13 +16,7 @@ import com.bemo.hr.trade.procurement.application.ProcurementAccountingService;
 import com.bemo.hr.trade.procurement.application.ProcurementExcelExporter;
 import com.bemo.hr.trade.procurement.application.ProcurementService;
 import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
-import com.bemo.hr.trade.procurement.infrastructure.GoodsReceiptRepository;
-import com.bemo.hr.trade.procurement.infrastructure.ProcurementDocumentSequenceRepository;
-import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderLineRepository;
-import com.bemo.hr.trade.procurement.infrastructure.PurchaseOrderRepository;
-import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
-import com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository;
-import com.bemo.hr.trade.procurement.infrastructure.SupplierReturnRepository;
+import com.bemo.hr.trade.procurement.infrastructure.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

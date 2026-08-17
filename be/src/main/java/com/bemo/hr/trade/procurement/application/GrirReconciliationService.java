@@ -19,15 +19,6 @@ public class GrirReconciliationService {
         this.repository = repository;
     }
 
-    public record GrirSummaryReport(
-            int totalRecords,
-            int balancedCount,
-            int varianceCount,
-            BigDecimal totalReceived,
-            BigDecimal totalInvoiced,
-            BigDecimal totalVariance
-    ) {}
-
     @Transactional
     public GrirReconciliationRecord reconcileLine(String goodsReceiptLineId, String invoiceLineId, BigDecimal receivedAmount, BigDecimal invoicedAmount) {
         GrirReconciliationRecord record = new GrirReconciliationRecord(goodsReceiptLineId, invoiceLineId, receivedAmount, invoicedAmount);
@@ -55,5 +46,15 @@ public class GrirReconciliationService {
         BigDecimal variance = records.stream().map(GrirReconciliationRecord::getVarianceAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return new GrirSummaryReport(total, balanced, varianceCount, received, invoiced, variance);
+    }
+
+    public record GrirSummaryReport(
+            int totalRecords,
+            int balancedCount,
+            int varianceCount,
+            BigDecimal totalReceived,
+            BigDecimal totalInvoiced,
+            BigDecimal totalVariance
+    ) {
     }
 }

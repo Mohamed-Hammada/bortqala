@@ -18,7 +18,7 @@ public class ProcurementBudgetAndTreasuryService {
     private final ProcurementTreasuryBankMatchRepository treasuryBankMatchRepository;
 
     public ProcurementBudgetAndTreasuryService(ProcurementBudgetApprovalRepository budgetApprovalRepository,
-                                                ProcurementTreasuryBankMatchRepository treasuryBankMatchRepository) {
+                                               ProcurementTreasuryBankMatchRepository treasuryBankMatchRepository) {
         this.budgetApprovalRepository = budgetApprovalRepository;
         this.treasuryBankMatchRepository = treasuryBankMatchRepository;
     }

@@ -6,11 +6,7 @@ import com.bemo.hr.bulkimport.domain.SmartImportModels.Sheet;
 import com.bemo.hr.bulkimport.domain.SmartImportModels.Workflow;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class SmartImportCatalog {
@@ -32,58 +28,26 @@ public class SmartImportCatalog {
         workflows = Map.copyOf(map);
     }
 
-    private void add(Map<String, Workflow> target, Workflow workflow) { target.put(workflow.key(), workflow); }
-
-    public List<Workflow> list() { return new ArrayList<>(workflows.values()); }
-
-    public Workflow require(String key) {
-        var workflow = workflows.get(key == null ? "" : key.toLowerCase(Locale.ROOT));
-        if (workflow == null) throw new IllegalArgumentException("Unknown smart import workflow: " + key);
-        return workflow;
-    }
-
-    public Column findColumn(Sheet sheet, String incomingHeader) {
-        String normalized = normalize(incomingHeader);
-        for (var column : sheet.columns()) {
-            if (normalize(column.key()).equals(normalized)
-                    || normalize(column.headerEn()).equals(normalized)
-                    || normalize(column.headerAr()).equals(normalized)
-                    || column.aliases().stream().map(this::normalize).anyMatch(normalized::equals)) {
-                return column;
-            }
-        }
-        return null;
-    }
-
-    public Sheet findSheet(Workflow workflow, String name) {
-        String normalized = normalize(name);
-        return workflow.sheets().stream()
-                .filter(sheet -> normalize(sheet.key()).equals(normalized)
-                        || normalize(sheet.titleEn()).equals(normalized)
-                        || normalize(sheet.titleAr()).equals(normalized))
-                .findFirst().orElse(null);
-    }
-
-    private String normalize(String value) {
-        if (value == null) return "";
-        return value.strip().toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "");
-    }
-
     private static Column s(String key, String en, String ar, boolean required, String... aliases) {
         return new Column(key, en, ar, ColumnType.STRING, required, List.of(), List.of(aliases));
     }
+
     private static Column date(String key, String en, String ar, boolean required, String... aliases) {
         return new Column(key, en, ar, ColumnType.DATE, required, List.of(), List.of(aliases));
     }
+
     private static Column dec(String key, String en, String ar, boolean required, String... aliases) {
         return new Column(key, en, ar, ColumnType.DECIMAL, required, List.of(), List.of(aliases));
     }
+
     private static Column integer(String key, String en, String ar, boolean required, String... aliases) {
         return new Column(key, en, ar, ColumnType.INTEGER, required, List.of(), List.of(aliases));
     }
+
     private static Column bool(String key, String en, String ar, boolean required, String... aliases) {
         return new Column(key, en, ar, ColumnType.BOOLEAN, required, List.of("TRUE", "FALSE"), List.of(aliases));
     }
+
     private static Column enm(String key, String en, String ar, boolean required, List<String> values, String... aliases) {
         return new Column(key, en, ar, ColumnType.ENUM, required, values, List.of(aliases));
     }
@@ -243,5 +207,46 @@ public class SmartImportCatalog {
         columns.add(s("DefaultLocationGateCode", "Default Location / Gate Code", "كود الموقع / البوابة", false));
         return new Workflow("shift-roster", "Monthly Shift Roster Planning Wizard", "معالج تخطيط ورديات الشهر",
                 "/categories", "Monthly_Shift_Roster_Grid.xlsx", "P3", false, List.of(new Sheet("roster", "Monthly Roster", "جدول الورديات الشهري", columns)));
+    }
+
+    private void add(Map<String, Workflow> target, Workflow workflow) {
+        target.put(workflow.key(), workflow);
+    }
+
+    public List<Workflow> list() {
+        return new ArrayList<>(workflows.values());
+    }
+
+    public Workflow require(String key) {
+        var workflow = workflows.get(key == null ? "" : key.toLowerCase(Locale.ROOT));
+        if (workflow == null) throw new IllegalArgumentException("Unknown smart import workflow: " + key);
+        return workflow;
+    }
+
+    public Column findColumn(Sheet sheet, String incomingHeader) {
+        String normalized = normalize(incomingHeader);
+        for (var column : sheet.columns()) {
+            if (normalize(column.key()).equals(normalized)
+                    || normalize(column.headerEn()).equals(normalized)
+                    || normalize(column.headerAr()).equals(normalized)
+                    || column.aliases().stream().map(this::normalize).anyMatch(normalized::equals)) {
+                return column;
+            }
+        }
+        return null;
+    }
+
+    public Sheet findSheet(Workflow workflow, String name) {
+        String normalized = normalize(name);
+        return workflow.sheets().stream()
+                .filter(sheet -> normalize(sheet.key()).equals(normalized)
+                        || normalize(sheet.titleEn()).equals(normalized)
+                        || normalize(sheet.titleAr()).equals(normalized))
+                .findFirst().orElse(null);
+    }
+
+    private String normalize(String value) {
+        if (value == null) return "";
+        return value.strip().toLowerCase(Locale.ROOT).replace("_", "").replace("-", "").replace(" ", "");
     }
 }

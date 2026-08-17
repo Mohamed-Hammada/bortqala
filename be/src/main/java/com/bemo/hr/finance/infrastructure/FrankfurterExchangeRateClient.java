@@ -12,11 +12,7 @@ import java.math.BigDecimal;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
@@ -79,10 +75,12 @@ public class FrankfurterExchangeRateClient {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record CurrencyRow(@JsonProperty("iso_code") String isoCode) {}
+    public record CurrencyRow(@JsonProperty("iso_code") String isoCode) {
+    }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record RateRow(LocalDate date, String base, String quote, BigDecimal rate) {}
+    public record RateRow(LocalDate date, String base, String quote, BigDecimal rate) {
+    }
 
     public static final class FrankfurterClientException extends RuntimeException {
         public FrankfurterClientException(String message, Throwable cause) {

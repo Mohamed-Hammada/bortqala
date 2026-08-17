@@ -15,8 +15,6 @@ public class ProcurementMatchOverrideController {
         this.overrideService = overrideService;
     }
 
-    public record ApproveOverridePayload(String matchId, String overrideReason, String approvedBy) {}
-
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER')")
     public ProcurementMatchOverride approveOverride(@RequestBody ApproveOverridePayload payload) {
@@ -27,5 +25,8 @@ public class ProcurementMatchOverrideController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public ProcurementMatchOverride getOverride(@PathVariable String matchId) {
         return overrideService.getOverride(matchId);
+    }
+
+    public record ApproveOverridePayload(String matchId, String overrideReason, String approvedBy) {
     }
 }

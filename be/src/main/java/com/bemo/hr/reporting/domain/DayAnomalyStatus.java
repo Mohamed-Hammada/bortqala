@@ -1,3 +1,3 @@
 package com.bemo.hr.reporting.domain;
 
-public enum DayAnomalyStatus { OPEN, DEFERRED, RESOLVED, REVERSED }
+public enum DayAnomalyStatus {OPEN, DEFERRED, RESOLVED, REVERSED}

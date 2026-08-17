@@ -10,6 +10,8 @@ import java.util.Optional;
 @Repository
 public interface StockTransferHeaderRepository extends JpaRepository<StockTransferHeader, String> {
     List<StockTransferHeader> findBySourceWarehouseIdOrTargetWarehouseId(String sourceWarehouseId, String targetWarehouseId);
+
     List<StockTransferHeader> findAllByOrderByTransferDateDescCreatedAtDesc();
+
     Optional<StockTransferHeader> findByTransferNumberIgnoreCase(String transferNumber);
 }

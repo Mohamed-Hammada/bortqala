@@ -6,18 +6,19 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.authentication.BadCredentialsException;import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
-import org.springframework.security.oauth2.jwt.JwsHeader;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -33,9 +34,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -334,12 +333,12 @@ class AuthSecurityIntegrationTests {
         assertThat(updated.isAdminDashboardCustomizationEnabled()).isNotEqualTo(original);
 
         authService.updateAppSettings(new AuthApi.AppSettingsRequest(
-                current.sessionTimeoutMinutes(), current.sessionTimeoutEnabled(), current.showReportPresets(),
-                current.attendanceAnomalyThresholdPercent(), current.automaticProcurementNumbering(),
-                current.automaticDocumentNumbering(),
-                original, current.minPasswordLength(), current.requireUppercase(), current.requireLowercase(),
-                current.requireNumbers(), current.requireSpecialChars(), current.disallowSpaces(),
-                current.maxPasswordLength(), current.passwordExpiryDays(), current.passwordHistoryCount()),
+                        current.sessionTimeoutMinutes(), current.sessionTimeoutEnabled(), current.showReportPresets(),
+                        current.attendanceAnomalyThresholdPercent(), current.automaticProcurementNumbering(),
+                        current.automaticDocumentNumbering(),
+                        original, current.minPasswordLength(), current.requireUppercase(), current.requireLowercase(),
+                        current.requireNumbers(), current.requireSpecialChars(), current.disallowSpaces(),
+                        current.maxPasswordLength(), current.passwordExpiryDays(), current.passwordHistoryCount()),
                 superAdmin.getUsername());
     }
 
@@ -683,7 +682,7 @@ class AuthSecurityIntegrationTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"roleCodes":["ADMIN"],"menuCodes":["payroll"],"targetUserId":"does-not-exist"}
-                                """.formatted())
+                                """)
                         .header("Authorization", "Bearer " + mintAccessToken(superAdmin)))
                 .andExpect(status().isNotFound());
 

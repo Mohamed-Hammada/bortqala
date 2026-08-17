@@ -1,8 +1,8 @@
 package com.bemo.hr.trade.procurement.application;
 
 import com.bemo.hr.approval.SegregationOfDutiesService;
-import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.approval.SegregationOfDutiesViolationException;
+import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.trade.procurement.api.ProcurementApi;
 import com.bemo.hr.trade.procurement.domain.SupplierInvoice;

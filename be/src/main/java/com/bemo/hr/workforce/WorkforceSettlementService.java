@@ -20,11 +20,7 @@ import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HexFormat;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -126,7 +122,7 @@ public class WorkforceSettlementService {
         List<ManualAttendanceEntry> entries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
         Map<String, List<ManualAttendanceEntry>> workerEntries = entries.stream()
                 .collect(Collectors.groupingBy(ManualAttendanceEntry::getWorkerId));
-        
+
         List<Worker> allWorkers = workerRepository.findAll().stream()
                 .filter(w -> "ACTIVE".equalsIgnoreCase(w.getStatus()) || workerEntries.containsKey(w.getId()))
                 .toList();
@@ -199,7 +195,8 @@ public class WorkforceSettlementService {
         for (Contractor contractor : contractors) {
             List<WorkerSettlement> workerSettlements = workerSettlementRepository
                     .findByPeriodIdAndContractorId(periodId, contractor.getId());
-            if (workerSettlements.isEmpty() && !"fixed_period_amount".equalsIgnoreCase(contractor.getAccountingModel())) continue;
+            if (workerSettlements.isEmpty() && !"fixed_period_amount".equalsIgnoreCase(contractor.getAccountingModel()))
+                continue;
             calculatedContractors++;
             BigDecimal workersNet = workerSettlements.stream().map(WorkerSettlement::getNetAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -213,7 +210,8 @@ public class WorkforceSettlementService {
                     BigDecimal units = workerSettlements.stream().map(WorkerSettlement::getTotalAttendanceUnits)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
                     rateTotal = units.multiply(contractor.getDefaultDailyRate()).setScale(2, RoundingMode.HALF_UP);
-                    gross = rateTotal; payable = gross;
+                    gross = rateTotal;
+                    payable = gross;
                 }
                 case "worker_cost_plus_fee" -> {
                     gross = workersNet;
@@ -223,8 +221,15 @@ public class WorkforceSettlementService {
                     if (commission == null) commission = BigDecimal.ZERO;
                     payable = gross.add(commission);
                 }
-                case "fixed_period_amount" -> { gross = contractor.getFixedPeriodAmount(); if (gross == null) gross = BigDecimal.ZERO; payable = gross; }
-                default -> { gross = workersNet; payable = gross; }
+                case "fixed_period_amount" -> {
+                    gross = contractor.getFixedPeriodAmount();
+                    if (gross == null) gross = BigDecimal.ZERO;
+                    payable = gross;
+                }
+                default -> {
+                    gross = workersNet;
+                    payable = gross;
+                }
             }
             netContractorsPayable = netContractorsPayable.add(payable);
             ContractorSettlement cs = new ContractorSettlement(periodId, contractor.getId(), model,
@@ -288,7 +293,8 @@ public class WorkforceSettlementService {
     @Transactional
     public TransitionResponse approvePeriod(String periodId) {
         WorkforceSettlementPeriod period = requireFreshCalculated(periodId, "REVIEWED");
-        if (period.getResultErrorCount() > 0) throw new BusinessRuleException("يجب معالجة أخطاء التسوية قبل الاعتماد.", "SETTL_ERRORS_MUST_BE_RESOLVED", HttpStatus.CONFLICT);
+        if (period.getResultErrorCount() > 0)
+            throw new BusinessRuleException("يجب معالجة أخطاء التسوية قبل الاعتماد.", "SETTL_ERRORS_MUST_BE_RESOLVED", HttpStatus.CONFLICT);
         period.setStatus("APPROVED");
         auditService.record("APPROVE", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
@@ -303,7 +309,8 @@ public class WorkforceSettlementService {
     @Transactional
     public TransitionResponse lockPeriod(String periodId) {
         WorkforceSettlementPeriod period = requirePeriod(periodId);
-        if (!"APPROVED".equals(period.getStatus())) throw new BusinessRuleException("لا يمكن قفل الفترة قبل اعتمادها.", "SETTL_LOCK_BEFORE_APPROVAL", HttpStatus.CONFLICT);
+        if (!"APPROVED".equals(period.getStatus()))
+            throw new BusinessRuleException("لا يمكن قفل الفترة قبل اعتمادها.", "SETTL_LOCK_BEFORE_APPROVAL", HttpStatus.CONFLICT);
         period.setStatus("LOCKED");
         auditService.record("LOCK", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
@@ -429,7 +436,8 @@ public class WorkforceSettlementService {
         if (!requiredStatus.equals(period.getStatus())) {
             throw new BusinessRuleException("الحالة الحالية لا تسمح بهذا الإجراء. الحالة المطلوبة: " + requiredStatus);
         }
-        if (needsRecalculation(period)) throw new BusinessRuleException("تغيرت بيانات الحضور أو الأسعار أو السياسات؛ أعد الاحتساب أولاً.", "SETTL_STALE_RECALCULATION_REQUIRED", HttpStatus.CONFLICT);
+        if (needsRecalculation(period))
+            throw new BusinessRuleException("تغيرت بيانات الحضور أو الأسعار أو السياسات؛ أعد الاحتساب أولاً.", "SETTL_STALE_RECALCULATION_REQUIRED", HttpStatus.CONFLICT);
         return period;
     }
 
@@ -489,7 +497,7 @@ public class WorkforceSettlementService {
         if (period.getCalculationVersion() == 0 || period.getInputFingerprint() == null) return true;
         var entries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
         var entriesByWorker = entries.stream().collect(Collectors.groupingBy(ManualAttendanceEntry::getWorkerId));
-        
+
         List<Worker> workers = workerRepository.findAll().stream()
                 .filter(w -> "ACTIVE".equalsIgnoreCase(w.getStatus()) || entriesByWorker.containsKey(w.getId()))
                 .toList();
@@ -524,11 +532,17 @@ public class WorkforceSettlementService {
         return authentication == null ? "system" : authentication.getName();
     }
 
-    private Long epoch(Instant instant) { return instant == null ? null : instant.toEpochMilli(); }
+    private Long epoch(Instant instant) {
+        return instant == null ? null : instant.toEpochMilli();
+    }
+
     private String rootMessage(Throwable throwable) {
         Throwable current = throwable;
         while (current.getCause() != null) current = current.getCause();
         return current.getMessage() == null ? "خطأ غير متوقع أثناء الاحتساب." : current.getMessage();
     }
-    private String json(String value) { return value.replace("\\", "\\\\").replace("\"", "\\\""); }
+
+    private String json(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
 }

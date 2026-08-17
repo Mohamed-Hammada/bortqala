@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface ContractorSettlementAdjustmentRepository extends JpaRepository<ContractorSettlementAdjustment, String> {
     List<ContractorSettlementAdjustment> findBySettlementId(String settlementId);
+
     void deleteBySettlementId(String settlementId);
 }

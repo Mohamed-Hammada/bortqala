@@ -1,10 +1,6 @@
 package com.bemo.hr.trade.procurement.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -42,7 +38,8 @@ public class VendorPaymentProposalAllocation {
     @Column(name = "created_at", nullable = false)
     private long createdAt;
 
-    protected VendorPaymentProposalAllocation() { }
+    protected VendorPaymentProposalAllocation() {
+    }
 
     public VendorPaymentProposalAllocation(String proposalId, int lineNo, String invoiceId, BigDecimal amount) {
         this.id = UUID.randomUUID().toString();
@@ -65,13 +62,39 @@ public class VendorPaymentProposalAllocation {
         createdAt = System.currentTimeMillis();
     }
 
-    public String getId() { return id; }
-    public String getAppId() { return appId; }
-    public String getProposalId() { return proposalId; }
-    public String getInvoiceId() { return invoiceId; }
-    public int getLineNo() { return lineNo; }
-    public BigDecimal getAmount() { return amount; }
-    public String getSupplierPaymentId() { return supplierPaymentId; }
-    public String getPaymentOperationId() { return paymentOperationId; }
-    public long getCreatedAt() { return createdAt; }
+    public String getId() {
+        return id;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getProposalId() {
+        return proposalId;
+    }
+
+    public String getInvoiceId() {
+        return invoiceId;
+    }
+
+    public int getLineNo() {
+        return lineNo;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public String getSupplierPaymentId() {
+        return supplierPaymentId;
+    }
+
+    public String getPaymentOperationId() {
+        return paymentOperationId;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
 }

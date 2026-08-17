@@ -13,19 +13,33 @@ import java.util.UUID;
 @Entity
 @Table(name = "payroll_calculation_policies")
 public class PayrollCalculationPolicy {
-    @Id private String id;
-    @TenantId @Column(name = "app_id", nullable = false) private String appId;
-    @Column(nullable = false, length = 100) private String name;
-    @Column(name = "effective_from", nullable = false) private LocalDate effectiveFrom;
-    @Column(name = "effective_to") private LocalDate effectiveTo;
-    @Column(name = "working_hour_divisor", nullable = false, precision = 10, scale = 2) private BigDecimal workingHourDivisor;
-    @Column(name = "overtime_multiplier", nullable = false, precision = 10, scale = 4) private BigDecimal overtimeMultiplier;
-    @Column(nullable = false) private boolean active;
-    @Version @Column(nullable = false) private long version;
-    @Column(name = "created_at", nullable = false) private Instant createdAt;
-    @Column(name = "updated_at", nullable = false) private Instant updatedAt;
+    @Id
+    private String id;
+    @TenantId
+    @Column(name = "app_id", nullable = false)
+    private String appId;
+    @Column(nullable = false, length = 100)
+    private String name;
+    @Column(name = "effective_from", nullable = false)
+    private LocalDate effectiveFrom;
+    @Column(name = "effective_to")
+    private LocalDate effectiveTo;
+    @Column(name = "working_hour_divisor", nullable = false, precision = 10, scale = 2)
+    private BigDecimal workingHourDivisor;
+    @Column(name = "overtime_multiplier", nullable = false, precision = 10, scale = 4)
+    private BigDecimal overtimeMultiplier;
+    @Column(nullable = false)
+    private boolean active;
+    @Version
+    @Column(nullable = false)
+    private long version;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
-    protected PayrollCalculationPolicy() { }
+    protected PayrollCalculationPolicy() {
+    }
 
     public PayrollCalculationPolicy(String name, LocalDate effectiveFrom, LocalDate effectiveTo,
                                     BigDecimal workingHourDivisor, BigDecimal overtimeMultiplier) {
@@ -51,7 +65,10 @@ public class PayrollCalculationPolicy {
         }
     }
 
-    public boolean appliesOn(LocalDate date) { return active && !effectiveFrom.isAfter(date) && (effectiveTo == null || !effectiveTo.isBefore(date)); }
+    public boolean appliesOn(LocalDate date) {
+        return active && !effectiveFrom.isAfter(date) && (effectiveTo == null || !effectiveTo.isBefore(date));
+    }
+
     public void closeBefore(LocalDate nextEffectiveFrom) {
         if (nextEffectiveFrom == null || !nextEffectiveFrom.isAfter(effectiveFrom)) {
             throw new BusinessRuleException("A replacement payroll policy must start after the current policy.",
@@ -59,13 +76,43 @@ public class PayrollCalculationPolicy {
         }
         this.effectiveTo = nextEffectiveFrom.minusDays(1);
     }
-    @PrePersist void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
-    @PreUpdate void preUpdate() { updatedAt = Instant.now(); }
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public LocalDate getEffectiveFrom() { return effectiveFrom; }
-    public LocalDate getEffectiveTo() { return effectiveTo; }
-    public BigDecimal getWorkingHourDivisor() { return workingHourDivisor; }
-    public BigDecimal getOvertimeMultiplier() { return overtimeMultiplier; }
-    public long getVersion() { return version; }
+
+    @PrePersist
+    void prePersist() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public LocalDate getEffectiveFrom() {
+        return effectiveFrom;
+    }
+
+    public LocalDate getEffectiveTo() {
+        return effectiveTo;
+    }
+
+    public BigDecimal getWorkingHourDivisor() {
+        return workingHourDivisor;
+    }
+
+    public BigDecimal getOvertimeMultiplier() {
+        return overtimeMultiplier;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

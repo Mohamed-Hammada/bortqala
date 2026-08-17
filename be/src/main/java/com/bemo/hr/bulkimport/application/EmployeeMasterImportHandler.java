@@ -14,12 +14,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class EmployeeMasterImportHandler implements SmartImportHandler {
@@ -34,7 +29,10 @@ public class EmployeeMasterImportHandler implements SmartImportHandler {
         this.rowTransaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
 
-    @Override public boolean supports(String workflowKey) { return "employees".equals(workflowKey); }
+    @Override
+    public boolean supports(String workflowKey) {
+        return "employees".equals(workflowKey);
+    }
 
     @Override
     public HandlerOutcome commit(Workflow workflow, List<PreviewRow> rows, boolean skipInvalid) {
@@ -44,7 +42,8 @@ public class EmployeeMasterImportHandler implements SmartImportHandler {
         var categories = hr.listCategories();
         var existingCodes = new HashSet<String>();
         hr.listEmployees().forEach(employee -> {
-            if (employee.employeeCode() != null) existingCodes.add(employee.employeeCode().strip().toLowerCase(Locale.ROOT));
+            if (employee.employeeCode() != null)
+                existingCodes.add(employee.employeeCode().strip().toLowerCase(Locale.ROOT));
         });
 
         var errors = new ArrayList<CellError>();
@@ -118,10 +117,11 @@ public class EmployeeMasterImportHandler implements SmartImportHandler {
 
     private Map<String, PreviewRow> byEmployeeCode(List<PreviewRow> rows, String sheet) {
         var result = new HashMap<String, PreviewRow>();
-        for (var row : rows) if (sheet.equals(row.sheet())) {
-            var code = clean(row.values().get("EmployeeCode"));
-            if (!code.isBlank()) result.put(code, row);
-        }
+        for (var row : rows)
+            if (sheet.equals(row.sheet())) {
+                var code = clean(row.values().get("EmployeeCode"));
+                if (!code.isBlank()) result.put(code, row);
+            }
         return result;
     }
 
@@ -135,11 +135,27 @@ public class EmployeeMasterImportHandler implements SmartImportHandler {
         return "DAILY".equalsIgnoreCase(clean(value)) ? EmploymentType.DAILY : EmploymentType.FIXED;
     }
 
-    private BigDecimal decimalOrNull(String value) { return clean(value).isBlank() ? null : new BigDecimal(clean(value).replace(",", "")); }
-    private String blankToNull(String value) { String cleaned = clean(value); return cleaned.isBlank() ? null : cleaned; }
-    private String clean(String value) { return value == null ? "" : value.strip(); }
-    private String safeMessage(RuntimeException ex) { return ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage(); }
-    private CellError error(PreviewRow row, String column, String en, String ar) { return new CellError(row.rowNumber(), row.sheet(), column, en, ar); }
+    private BigDecimal decimalOrNull(String value) {
+        return clean(value).isBlank() ? null : new BigDecimal(clean(value).replace(",", ""));
+    }
 
-    private record PreparedEmployee(PreviewRow source, EmployeeApi.UpsertRequest request) {}
+    private String blankToNull(String value) {
+        String cleaned = clean(value);
+        return cleaned.isBlank() ? null : cleaned;
+    }
+
+    private String clean(String value) {
+        return value == null ? "" : value.strip();
+    }
+
+    private String safeMessage(RuntimeException ex) {
+        return ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage();
+    }
+
+    private CellError error(PreviewRow row, String column, String en, String ar) {
+        return new CellError(row.rowNumber(), row.sheet(), column, en, ar);
+    }
+
+    private record PreparedEmployee(PreviewRow source, EmployeeApi.UpsertRequest request) {
+    }
 }

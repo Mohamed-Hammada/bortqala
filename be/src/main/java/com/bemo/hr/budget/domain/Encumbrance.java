@@ -1,14 +1,6 @@
 package com.bemo.hr.budget.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -35,7 +27,7 @@ public class Encumbrance {
     private String purchaseOrderNumber;
 
     @Column(name = "document_type", nullable = false, length = 30)
-    private String documentType = "PURCHASE_ORDER";
+    private final String documentType = "PURCHASE_ORDER";
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
@@ -69,7 +61,8 @@ public class Encumbrance {
     @Column(name = "version", nullable = false)
     private long version;
 
-    protected Encumbrance() {}
+    protected Encumbrance() {
+    }
 
     public Encumbrance(String budgetId, String purchaseOrderId, String purchaseOrderNumber,
                        BigDecimal committedAmount, String currencyCode) {
@@ -110,21 +103,67 @@ public class Encumbrance {
     }
 
     @PreUpdate
-    void preUpdate() { updatedAt = System.currentTimeMillis(); }
+    void preUpdate() {
+        updatedAt = System.currentTimeMillis();
+    }
 
-    public String getId() { return id; }
-    public String getBudgetId() { return budgetId; }
-    public String getPurchaseOrderId() { return purchaseOrderId; }
-    public String getPurchaseOrderNumber() { return purchaseOrderNumber; }
-    public String getDocumentType() { return documentType; }
-    public EncumbranceStatus getStatus() { return status; }
-    public BigDecimal getCommittedAmount() { return committedAmount; }
-    public BigDecimal getLiquidatedAmount() { return liquidatedAmount; }
-    public BigDecimal getReleasedAmount() { return releasedAmount; }
-    public String getCurrencyCode() { return currencyCode; }
-    public long getCommittedAt() { return committedAt; }
-    public Long getReleasedAt() { return releasedAt; }
-    public long getCreatedAt() { return createdAt; }
-    public long getUpdatedAt() { return updatedAt; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getBudgetId() {
+        return budgetId;
+    }
+
+    public String getPurchaseOrderId() {
+        return purchaseOrderId;
+    }
+
+    public String getPurchaseOrderNumber() {
+        return purchaseOrderNumber;
+    }
+
+    public String getDocumentType() {
+        return documentType;
+    }
+
+    public EncumbranceStatus getStatus() {
+        return status;
+    }
+
+    public BigDecimal getCommittedAmount() {
+        return committedAmount;
+    }
+
+    public BigDecimal getLiquidatedAmount() {
+        return liquidatedAmount;
+    }
+
+    public BigDecimal getReleasedAmount() {
+        return releasedAmount;
+    }
+
+    public String getCurrencyCode() {
+        return currencyCode;
+    }
+
+    public long getCommittedAt() {
+        return committedAt;
+    }
+
+    public Long getReleasedAt() {
+        return releasedAt;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

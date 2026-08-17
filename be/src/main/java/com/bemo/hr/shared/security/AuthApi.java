@@ -1,11 +1,6 @@
 package com.bemo.hr.shared.security;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.time.Instant;
 import java.util.List;
@@ -16,27 +11,49 @@ public final class AuthApi {
     }
 
     public record LoginRequest(@NotBlank @Size(max = 50) String appCode,
-                               @NotBlank String username, @NotBlank String password) { }
+                               @NotBlank String username, @NotBlank String password) {
+    }
+
     public record AppResponse(String id, String code, String name,
-                              boolean adminDashboardCustomizationEnabled) { }
+                              boolean adminDashboardCustomizationEnabled) {
+    }
+
     public record LoginResponse(String accessToken, String tokenType, Instant expiresAt,
                                 boolean mustChangePassword,
-                                AppResponse app, UserResponse user, PreferenceResponse preferences) { }
-    public record RefreshResponse(String accessToken, String tokenType, Instant expiresAt) { }
-    public record DemoLoginRequest(@NotBlank @Size(max = 128) String secret) { }
+                                AppResponse app, UserResponse user, PreferenceResponse preferences) {
+    }
+
+    public record RefreshResponse(String accessToken, String tokenType, Instant expiresAt) {
+    }
+
+    public record DemoLoginRequest(@NotBlank @Size(max = 128) String secret) {
+    }
+
     public record ChangePasswordRequest(@NotBlank @Size(max = 72) String currentPassword,
-                                        @NotBlank @Size(max = 72) String newPassword) { }
+                                        @NotBlank @Size(max = 72) String newPassword) {
+    }
+
     public record UserResponse(String id, String username, String displayName, Set<RoleCode> roles,
-                               Set<String> allowedMenus, String menuAccessMode, boolean canViewSalary, String categoryId,
-                               boolean dashboardCustomizationEnabled, boolean active, long version, Set<String> activeFeatures) { }
-    public record TenantInfo(String id, String code, String name) { }
-    public record SessionInfo(Instant expiresAt, int timeoutMinutes, boolean timeoutEnabled) { }
+                               Set<String> allowedMenus, String menuAccessMode, boolean canViewSalary,
+                               String categoryId,
+                               boolean dashboardCustomizationEnabled, boolean active, long version,
+                               Set<String> activeFeatures) {
+    }
+
+    public record TenantInfo(String id, String code, String name) {
+    }
+
+    public record SessionInfo(Instant expiresAt, int timeoutMinutes, boolean timeoutEnabled) {
+    }
+
     public record MeResponse(String id, String username, String displayName,
                              TenantInfo tenant, Set<RoleCode> roles, Set<String> scopes,
                              Set<String> allowedMenus, String menuAccessMode,
                              boolean canViewSalary, String categoryId,
                              boolean dashboardCustomizationEnabled, boolean active,
-                             SessionInfo session, long version) { }
+                             SessionInfo session, long version) {
+    }
+
     public record UserUpsertRequest(
             @NotBlank @Size(max = 100) String username,
             @NotBlank @Size(max = 150) String displayName,
@@ -48,38 +65,52 @@ public final class AuthApi {
             Boolean dashboardCustomizationEnabled,
             boolean active,
             Long version,
-            @Size(max = 1000) String accessChangeReason) { }
+            @Size(max = 1000) String accessChangeReason) {
+    }
+
     public record PreferenceResponse(ThemePreference theme, TableDensity tableDensity,
                                      String locale, ExcelTableStyle excelTableStyle, int defaultPageSize,
                                      String defaultPage, boolean showFavorites, boolean showRecentlyUsed,
                                      int maxRecentlyUsed, Set<String> favoriteMenuIds, Set<String> recentMenuIds,
                                      List<String> dashboardWidgetIds, boolean dashboardAnimationsEnabled,
                                      boolean dashboardLayoutCustomizationAllowed,
-                                     Instant updatedAt) { }
+                                     Instant updatedAt) {
+    }
+
     public record PreferenceRequest(@NotNull ThemePreference theme, @NotNull TableDensity tableDensity,
                                     @NotBlank @Pattern(regexp = "[a-zA-Z]{2}(-[a-zA-Z]{2})?") String locale,
                                     @NotNull ExcelTableStyle excelTableStyle,
                                     @Min(5) @Max(500) Integer defaultPageSize,
-                                    String defaultPage) { }
+                                    String defaultPage) {
+    }
+
     public record NavigationPreferenceRequest(
             boolean showFavorites,
             boolean showRecentlyUsed,
             @Min(1) @Max(20) int maxRecentlyUsed,
             Set<@Pattern(regexp = "[a-z0-9-]{1,80}") String> favoriteMenuIds,
-            Set<@Pattern(regexp = "[a-z0-9-]{1,80}") String> recentMenuIds) { }
+            Set<@Pattern(regexp = "[a-z0-9-]{1,80}") String> recentMenuIds) {
+    }
+
     public record DashboardPreferenceRequest(
             @NotNull @Size(min = 1, max = 8)
             List<@Pattern(regexp = "summary|report|attendance-chart|insights|units|departments|categories|imports") String> widgetIds,
-            boolean animationsEnabled) { }
+            boolean animationsEnabled) {
+    }
+
     public record AppSettingsResponse(
             int sessionTimeoutMinutes, boolean sessionTimeoutEnabled, boolean showReportPresets,
             int attendanceAnomalyThresholdPercent,
-            boolean automaticProcurementNumbering, boolean automaticDocumentNumbering, boolean adminDashboardCustomizationEnabled,
+            boolean automaticProcurementNumbering, boolean automaticDocumentNumbering,
+            boolean adminDashboardCustomizationEnabled,
             int minPasswordLength, boolean requireUppercase, boolean requireLowercase,
             boolean requireNumbers, boolean requireSpecialChars, boolean disallowSpaces,
             int maxPasswordLength, int passwordExpiryDays, int passwordHistoryCount,
-            Instant updatedAt) { }
-    public record UserCategoryResponse(String id, String code, String name, String scope) { }
+            Instant updatedAt) {
+    }
+
+    public record UserCategoryResponse(String id, String code, String name, String scope) {
+    }
 
     public record AppSettingsRequest(
             @Min(5) @Max(10_080) int sessionTimeoutMinutes,
@@ -97,5 +128,6 @@ public final class AuthApi {
             boolean disallowSpaces,
             @Min(0) @Max(256) Integer maxPasswordLength,
             @Min(0) @Max(365) Integer passwordExpiryDays,
-            @Min(0) @Max(50) Integer passwordHistoryCount) { }
+            @Min(0) @Max(50) Integer passwordHistoryCount) {
+    }
 }

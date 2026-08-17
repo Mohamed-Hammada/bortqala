@@ -1,5 +1,58 @@
-package com.bemo.hr.product.support;import jakarta.validation.constraints.*;import java.util.*;
-public final class SupportApi{private SupportApi(){}public record TicketRequest(@NotBlank@Pattern(regexp="LOW|MEDIUM|HIGH|CRITICAL")String priority,@NotBlank@Size(max=40)String category,@NotBlank@Size(max=60)String moduleCode,@NotBlank@Size(max=200)String screen,@NotBlank@Size(max=1000)String businessImpact,@NotBlank@Size(max=4000)String description,@NotBlank@Size(max=80)String operationId){}public record TicketUpdateRequest(@NotBlank@Pattern(regexp="TRIAGED|IN_PROGRESS|WAITING_CUSTOMER|RESOLVED|CLOSED")String status,@NotBlank@Size(max=80)String assignedTeam,@NotBlank@Size(max=2000)String comment,@NotBlank@Size(max=80)String operationId,long expectedVersion){}public record TicketResponse(String id,String ticketNo,String priority,String category,String moduleCode,String screen,String businessImpact,String description,String status,String assignedTeam,long slaDueAt,String createdBy,long createdAt,long updatedAt,long resolvedAt,long version,boolean replayed){}public record UpdateResponse(String fromStatus,String toStatus,String comment,String actor,long createdAt){}
- public record FeedbackRequest(@NotBlank@Pattern(regexp="PROBLEM|FEATURE|QUESTION|RATING|GENERAL")String type,@NotBlank@Size(max=60)String moduleCode,@NotBlank@Size(max=3000)String message,@Min(1)@Max(5)Integer rating,@NotBlank@Size(max=300)String route,@NotBlank@Size(max=80)String applicationVersion,@NotBlank@Size(max=300)String browser,@NotBlank@Size(max=100)String correlationId,@NotBlank@Size(max=80)String operationId){}public record FeedbackResponse(String id,String type,String moduleCode,String message,Integer rating,String route,String status,String createdBy,long createdAt,boolean replayed){}
- public record HealthReason(String key,int points,String status,String actionRoute){}public record HealthResponse(int score,String band,Map<String,Integer>dimensions,List<HealthReason>reasons,String operationId,long calculatedAt,boolean replayed){}public record HealthRequest(@NotBlank@Size(max=80)String operationId){}
+package com.bemo.hr.product.support;
+
+import jakarta.validation.constraints.*;
+
+import java.util.List;
+import java.util.Map;
+
+public final class SupportApi {
+    private SupportApi() {
+    }
+
+    public record TicketRequest(@NotBlank @Pattern(regexp = "LOW|MEDIUM|HIGH|CRITICAL") String priority,
+                                @NotBlank @Size(max = 40) String category, @NotBlank @Size(max = 60) String moduleCode,
+                                @NotBlank @Size(max = 200) String screen,
+                                @NotBlank @Size(max = 1000) String businessImpact,
+                                @NotBlank @Size(max = 4000) String description,
+                                @NotBlank @Size(max = 80) String operationId) {
+    }
+
+    public record TicketUpdateRequest(
+            @NotBlank @Pattern(regexp = "TRIAGED|IN_PROGRESS|WAITING_CUSTOMER|RESOLVED|CLOSED") String status,
+            @NotBlank @Size(max = 80) String assignedTeam, @NotBlank @Size(max = 2000) String comment,
+            @NotBlank @Size(max = 80) String operationId, long expectedVersion) {
+    }
+
+    public record TicketResponse(String id, String ticketNo, String priority, String category, String moduleCode,
+                                 String screen, String businessImpact, String description, String status,
+                                 String assignedTeam, long slaDueAt, String createdBy, long createdAt, long updatedAt,
+                                 long resolvedAt, long version, boolean replayed) {
+    }
+
+    public record UpdateResponse(String fromStatus, String toStatus, String comment, String actor, long createdAt) {
+    }
+
+    public record FeedbackRequest(@NotBlank @Pattern(regexp = "PROBLEM|FEATURE|QUESTION|RATING|GENERAL") String type,
+                                  @NotBlank @Size(max = 60) String moduleCode,
+                                  @NotBlank @Size(max = 3000) String message, @Min(1) @Max(5) Integer rating,
+                                  @NotBlank @Size(max = 300) String route,
+                                  @NotBlank @Size(max = 80) String applicationVersion,
+                                  @NotBlank @Size(max = 300) String browser,
+                                  @NotBlank @Size(max = 100) String correlationId,
+                                  @NotBlank @Size(max = 80) String operationId) {
+    }
+
+    public record FeedbackResponse(String id, String type, String moduleCode, String message, Integer rating,
+                                   String route, String status, String createdBy, long createdAt, boolean replayed) {
+    }
+
+    public record HealthReason(String key, int points, String status, String actionRoute) {
+    }
+
+    public record HealthResponse(int score, String band, Map<String, Integer> dimensions, List<HealthReason> reasons,
+                                 String operationId, long calculatedAt, boolean replayed) {
+    }
+
+    public record HealthRequest(@NotBlank @Size(max = 80) String operationId) {
+    }
 }

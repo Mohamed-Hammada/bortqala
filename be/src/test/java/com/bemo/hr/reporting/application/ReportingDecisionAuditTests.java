@@ -7,18 +7,8 @@ import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
 import com.bemo.hr.reporting.api.ReportingApi;
-import com.bemo.hr.reporting.domain.AttendanceDecision;
-import com.bemo.hr.reporting.domain.AttendanceReport;
-import com.bemo.hr.reporting.domain.DailyAttendanceResult;
-import com.bemo.hr.reporting.domain.DailyStatus;
-import com.bemo.hr.reporting.domain.HolidayProposal;
-import com.bemo.hr.reporting.domain.HolidayProposalStatus;
-import com.bemo.hr.reporting.infrastructure.AttendanceReportDecisionRepository;
-import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
-import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
-import com.bemo.hr.reporting.infrastructure.DayAnomalyRepository;
-import com.bemo.hr.reporting.infrastructure.DayAnomalyResultSnapshotRepository;
-import com.bemo.hr.reporting.infrastructure.HolidayProposalRepository;
+import com.bemo.hr.reporting.domain.*;
+import com.bemo.hr.reporting.infrastructure.*;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository;
@@ -30,36 +20,44 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.contains;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ReportingDecisionAuditTests {
-    @Mock private AttendanceReportRepository attendanceReportRepository;
-    @Mock private DailyAttendanceResultRepository dailyAttendanceResultRepository;
-    @Mock private HolidayProposalRepository holidayProposalRepository;
-    @Mock private DayAnomalyRepository dayAnomalyRepository;
-    @Mock private DayAnomalyResultSnapshotRepository dayAnomalyResultSnapshotRepository;
-    @Mock private ConfirmedHolidayRepository confirmedHolidayRepository;
-    @Mock private AttendanceCategoryRepository attendanceCategoryRepository;
-    @Mock private ScheduleRuleRepository scheduleRuleRepository;
-    @Mock private EmployeeRepository employeeRepository;
-    @Mock private PunchRecordRepository punchRecordRepository;
-    @Mock private ReportExporter reportExporter;
-    @Mock private AuditService auditService;
-    @Mock private TenantApplicationRepository tenantApplicationRepository;
-    @Mock private AttendanceReportDecisionRepository attendanceReportDecisionRepository;
+    @Mock
+    private AttendanceReportRepository attendanceReportRepository;
+    @Mock
+    private DailyAttendanceResultRepository dailyAttendanceResultRepository;
+    @Mock
+    private HolidayProposalRepository holidayProposalRepository;
+    @Mock
+    private DayAnomalyRepository dayAnomalyRepository;
+    @Mock
+    private DayAnomalyResultSnapshotRepository dayAnomalyResultSnapshotRepository;
+    @Mock
+    private ConfirmedHolidayRepository confirmedHolidayRepository;
+    @Mock
+    private AttendanceCategoryRepository attendanceCategoryRepository;
+    @Mock
+    private ScheduleRuleRepository scheduleRuleRepository;
+    @Mock
+    private EmployeeRepository employeeRepository;
+    @Mock
+    private PunchRecordRepository punchRecordRepository;
+    @Mock
+    private ReportExporter reportExporter;
+    @Mock
+    private AuditService auditService;
+    @Mock
+    private TenantApplicationRepository tenantApplicationRepository;
+    @Mock
+    private AttendanceReportDecisionRepository attendanceReportDecisionRepository;
 
     private ReportingService service;
 

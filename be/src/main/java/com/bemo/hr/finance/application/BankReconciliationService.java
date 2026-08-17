@@ -16,11 +16,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-@Service @RequiredArgsConstructor
+@Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class BankReconciliationService {
     private final BankAccountRepository bankAccountRepository;
@@ -40,18 +42,26 @@ public class BankReconciliationService {
 
     @Transactional
     public BankReconciliationApi.WorkbenchResponse importCsv(String bankAccountId, String reference,
-            BigDecimal opening, BigDecimal closing, MultipartFile file) {
+                                                             BigDecimal opening, BigDecimal closing, MultipartFile file) {
         BankAccount bank = requireBank(bankAccountId);
-        if (bank.getAccountId() == null) throw conflict("Bank account must be linked to a GL account.", "BANK_GL_ACCOUNT_REQUIRED");
-        if (file == null || file.isEmpty()) throw conflict("Bank statement CSV file is required.", "BANK_STATEMENT_FILE_REQUIRED");
-        if (file.getSize() > 10L * 1024 * 1024) throw conflict("Bank statement file cannot exceed 10 MB.", "BANK_STATEMENT_FILE_TOO_LARGE");
+        if (bank.getAccountId() == null)
+            throw conflict("Bank account must be linked to a GL account.", "BANK_GL_ACCOUNT_REQUIRED");
+        if (file == null || file.isEmpty())
+            throw conflict("Bank statement CSV file is required.", "BANK_STATEMENT_FILE_REQUIRED");
+        if (file.getSize() > 10L * 1024 * 1024)
+            throw conflict("Bank statement file cannot exceed 10 MB.", "BANK_STATEMENT_FILE_TOO_LARGE");
         byte[] bytes;
-        try { bytes = file.getBytes(); } catch (java.io.IOException ex) { throw conflict("Bank statement file could not be read.", "BANK_STATEMENT_FILE_READ_FAILED"); }
+        try {
+            bytes = file.getBytes();
+        } catch (java.io.IOException ex) {
+            throw conflict("Bank statement file could not be read.", "BANK_STATEMENT_FILE_READ_FAILED");
+        }
         String hash = sha256(bytes);
         bankStatementRepository.findByBankAccountIdAndFileHash(bankAccountId, hash).ifPresent(s -> {
             throw conflict("This bank statement file was already imported.", "BANK_STATEMENT_DUPLICATE");
         });
-        if (reference == null || reference.isBlank()) throw conflict("Statement reference is required.", "BANK_STATEMENT_REFERENCE_REQUIRED");
+        if (reference == null || reference.isBlank())
+            throw conflict("Statement reference is required.", "BANK_STATEMENT_REFERENCE_REQUIRED");
         if (bankStatementRepository.existsByBankAccountIdAndStatementReference(bankAccountId, reference.strip()))
             throw conflict("Statement reference already exists for this bank account.", "BANK_STATEMENT_REFERENCE_DUPLICATE");
         List<ParsedLine> parsed = parse(bytes);
@@ -107,7 +117,7 @@ public class BankReconciliationService {
 
     @Transactional
     public BankReconciliationApi.WorkbenchResponse match(String statementId, String lineId,
-            BankReconciliationApi.MatchRequest request) {
+                                                         BankReconciliationApi.MatchRequest request) {
         if (!matchRepository.findByOperationId(request.operationId()).isEmpty()) return workbench(statementId);
         BankStatement statement = bankStatementRepository.findByIdForUpdate(statementId)
                 .orElseThrow(() -> conflict("Bank statement not found.", "BANK_STATEMENT_NOT_FOUND"));
@@ -123,7 +133,8 @@ public class BankReconciliationService {
         for (BankReconciliationApi.Allocation allocation : allocations) {
             JournalEntry entry = requirePostedJournal(allocation.journalEntryId());
             BigDecimal available = availableBankAmount(entry, bank, line.getAmount().signum());
-            if (allocation.amount().compareTo(available) > 0) throw conflict("Allocation exceeds the journal bank amount available.", "BANK_MATCH_ALLOCATION_EXCEEDS_AVAILABLE");
+            if (allocation.amount().compareTo(available) > 0)
+                throw conflict("Allocation exceeds the journal bank amount available.", "BANK_MATCH_ALLOCATION_EXCEEDS_AVAILABLE");
             total = total.add(allocation.amount());
             matchRepository.save(new BankReconciliationMatch(lineId, entry.getId(), allocation.amount(),
                     allocation.amount().compareTo(line.getAmount().abs()) == 0 ? BankReconciliationMatch.Type.EXACT : BankReconciliationMatch.Type.PARTIAL,
@@ -132,11 +143,13 @@ public class BankReconciliationService {
         }
         BigDecimal fee = request.feeAmount() == null ? BigDecimal.ZERO : request.feeAmount();
         if (fee.signum() > 0) {
-            if (line.getAmount().signum() >= 0) throw conflict("Bank fees can only reconcile a debit statement line.", "BANK_FEE_DIRECTION_INVALID");
+            if (line.getAmount().signum() >= 0)
+                throw conflict("Bank fees can only reconcile a debit statement line.", "BANK_FEE_DIRECTION_INVALID");
             JournalEntry feeEntry = createFeeJournal(statement, line, fee, request.feeExpenseAccountId(), request.operationId());
             matchRepository.save(new BankReconciliationMatch(lineId, feeEntry.getId(), fee,
                     BankReconciliationMatch.Type.FEE, request.operationId(), actor()));
-            line.addMatch(fee); total = total.add(fee);
+            line.addMatch(fee);
+            total = total.add(fee);
         }
         if (total.signum() == 0) throw conflict("At least one allocation or bank fee is required.", "BANK_MATCH_EMPTY");
         if (line.getMatchedAmount().compareTo(line.getAmount().abs()) > 0)
@@ -149,7 +162,7 @@ public class BankReconciliationService {
 
     @Transactional
     public BankReconciliationApi.WorkbenchResponse reverse(String statementId, String matchId,
-            BankReconciliationApi.ReverseRequest request) {
+                                                           BankReconciliationApi.ReverseRequest request) {
         BankStatement statement = bankStatementRepository.findByIdForUpdate(statementId)
                 .orElseThrow(() -> conflict("Bank statement not found.", "BANK_STATEMENT_NOT_FOUND"));
         BankReconciliationMatch match = matchRepository.findById(matchId)
@@ -160,7 +173,9 @@ public class BankReconciliationService {
         if (match.getStatus() == BankReconciliationMatch.Status.REVERSED) return workbench(statementId);
         fiscalPeriodGuard.requireOpen(line.getTransactionDate());
         if (match.getMatchType() == BankReconciliationMatch.Type.FEE) reverseFeeJournal(match, request);
-        match.reverse(actor(), request.reason()); line.reverseMatch(match.getMatchedAmount()); updateStatement(statement);
+        match.reverse(actor(), request.reason());
+        line.reverseMatch(match.getMatchedAmount());
+        updateStatement(statement);
         auditService.record("REVERSE_MATCH", "BANK_RECONCILIATION_MATCH", matchId, actor(),
                 "{\"reason\":\"" + escape(request.reason()) + "\"}", null);
         return workbench(statementId);
@@ -211,17 +226,22 @@ public class BankReconciliationService {
     }
 
     private JournalEntry createFeeJournal(BankStatement statement, BankStatementLine line, BigDecimal fee,
-            String expenseAccountId, String operationId) {
+                                          String expenseAccountId, String operationId) {
         BankAccount bank = requireBank(statement.getBankAccountId());
-        if (expenseAccountId == null || expenseAccountId.isBlank()) throw conflict("Bank-fee expense account is required.", "BANK_FEE_ACCOUNT_REQUIRED");
+        if (expenseAccountId == null || expenseAccountId.isBlank())
+            throw conflict("Bank-fee expense account is required.", "BANK_FEE_ACCOUNT_REQUIRED");
         Account expense = accountRepository.findById(expenseAccountId)
                 .orElseThrow(() -> conflict("Bank-fee expense account was not found.", "BANK_FEE_ACCOUNT_NOT_FOUND"));
-        if (!expense.isActive() || expense.isHeader()) throw conflict("Bank-fee account must be an active posting account.", "BANK_FEE_ACCOUNT_INVALID");
+        if (!expense.isActive() || expense.isHeader())
+            throw conflict("Bank-fee account must be an active posting account.", "BANK_FEE_ACCOUNT_INVALID");
         FiscalPeriod period = fiscalPeriodGuard.requireAdjustment(line.getTransactionDate());
         JournalEntry entry = new JournalEntry(documentNumberService.next("JOURNAL_ENTRY", "JV", line.getTransactionDate()),
                 line.getTransactionDate(), "Bank fee — " + line.getDescription(), line.getBankReference(), period.getId());
-        entry.setCurrency(statement.getCurrencyCode()); entry.setOperationId(operationId + ":FEE"); entry.assignCreator(actor());
-        entry.approve("SYSTEM_APPROVER"); entry.post(actor());
+        entry.setCurrency(statement.getCurrencyCode());
+        entry.setOperationId(operationId + ":FEE");
+        entry.assignCreator(actor());
+        entry.approve("SYSTEM_APPROVER");
+        entry.post(actor());
         entry = journalEntryRepository.save(entry);
         journalEntryLineRepository.save(new JournalEntryLine(entry.getId(), expenseAccountId, null, fee, BigDecimal.ZERO, "Bank fee"));
         journalEntryLineRepository.save(new JournalEntryLine(entry.getId(), bank.getAccountId(), null, BigDecimal.ZERO, fee, "Bank fee"));
@@ -233,7 +253,8 @@ public class BankReconciliationService {
         FiscalPeriod period = fiscalPeriodGuard.requireOpen(original.getEntryDate());
         JournalEntry reversal = new JournalEntry(original.getEntryNumber() + "-R", original.getEntryDate(),
                 "Reverse bank fee — " + request.reason(), original.getReference(), period.getId());
-        reversal.setCurrency(original.getCurrency()); reversal.linkReversalOf(original.getId(), request.operationId(), actor());
+        reversal.setCurrency(original.getCurrency());
+        reversal.linkReversalOf(original.getId(), request.operationId(), actor());
         reversal = journalEntryRepository.save(reversal);
         for (JournalEntryLine source : journalEntryLineRepository.findByJournalEntryId(original.getId()))
             journalEntryLineRepository.save(new JournalEntryLine(reversal.getId(), source.getAccountId(), source.getPartyId(),
@@ -254,8 +275,8 @@ public class BankReconciliationService {
                         m.getReversedBy(), m.getReversedAt() == null ? null : m.getReversedAt().toEpochMilli(), m.getReversalReason())).toList();
         List<BankReconciliationApi.CandidateResponse> suggestions = includeCandidates && line.getStatus() != BankStatementLine.Status.MATCHED
                 ? candidates(line, bank).stream().map(c -> new BankReconciliationApi.CandidateResponse(c.entry().getId(),
-                    c.entry().getEntryNumber(), epoch(c.entry().getEntryDate()), c.entry().getDescription(), c.entry().getReference(),
-                    signedBankAmount(c.entry(), bank), c.availableAmount(), c.score(), c.score() >= 80 ? "AMOUNT_DATE_REFERENCE" : "AMOUNT_DATE")).toList()
+                c.entry().getEntryNumber(), epoch(c.entry().getEntryDate()), c.entry().getDescription(), c.entry().getReference(),
+                signedBankAmount(c.entry(), bank), c.availableAmount(), c.score(), c.score() >= 80 ? "AMOUNT_DATE_REFERENCE" : "AMOUNT_DATE")).toList()
                 : List.of();
         return new BankReconciliationApi.LineResponse(line.getId(), line.getLineNumber(), epoch(line.getTransactionDate()),
                 line.getValueDate() == null ? null : epoch(line.getValueDate()), line.getDescription(), line.getBankReference(),
@@ -291,39 +312,114 @@ public class BankReconciliationService {
                 result.add(new ParsedLine(LocalDate.parse(value(values, date)), optionalDate(values, valueDate),
                         value(values, description), optional(values, reference), new BigDecimal(value(values, amount).replace(",", "")),
                         optionalDecimal(values, balance)));
-            } catch (RuntimeException ex) { throw conflict("Invalid bank statement CSV row " + (i + 1) + ".", "BANK_STATEMENT_ROW_INVALID"); }
+            } catch (RuntimeException ex) {
+                throw conflict("Invalid bank statement CSV row " + (i + 1) + ".", "BANK_STATEMENT_ROW_INVALID");
+            }
         }
         return result;
     }
 
     private List<String> csvRow(String row) {
-        List<String> values = new ArrayList<>(); StringBuilder value = new StringBuilder(); boolean quoted = false;
-        for (int i = 0; i < row.length(); i++) { char ch = row.charAt(i);
-            if (ch == '"') { if (quoted && i + 1 < row.length() && row.charAt(i + 1) == '"') { value.append('"'); i++; } else quoted = !quoted; }
-            else if (ch == ',' && !quoted) { values.add(value.toString().strip()); value.setLength(0); }
-            else value.append(ch);
+        List<String> values = new ArrayList<>();
+        StringBuilder value = new StringBuilder();
+        boolean quoted = false;
+        for (int i = 0; i < row.length(); i++) {
+            char ch = row.charAt(i);
+            if (ch == '"') {
+                if (quoted && i + 1 < row.length() && row.charAt(i + 1) == '"') {
+                    value.append('"');
+                    i++;
+                } else quoted = !quoted;
+            } else if (ch == ',' && !quoted) {
+                values.add(value.toString().strip());
+                value.setLength(0);
+            } else value.append(ch);
         }
         if (quoted) throw conflict("Unclosed quote in bank statement CSV.", "BANK_STATEMENT_ROW_INVALID");
-        values.add(value.toString().strip()); return values;
+        values.add(value.toString().strip());
+        return values;
     }
 
-    private int requiredColumn(List<String> h, String name) { int i = h.indexOf(name); if (i < 0) throw conflict("Missing CSV column: " + name, "BANK_STATEMENT_COLUMN_MISSING"); return i; }
-    private int optionalColumn(List<String> h, String name) { return h.indexOf(name); }
-    private String value(List<String> v, int i) { if (i < 0 || i >= v.size() || v.get(i).isBlank()) throw new IllegalArgumentException(); return v.get(i); }
-    private String optional(List<String> v, int i) { return i < 0 || i >= v.size() || v.get(i).isBlank() ? null : v.get(i); }
-    private LocalDate optionalDate(List<String> v, int i) { String s = optional(v, i); return s == null ? null : LocalDate.parse(s); }
-    private BigDecimal optionalDecimal(List<String> v, int i) { String s = optional(v, i); return s == null ? null : new BigDecimal(s.replace(",", "")); }
-    private JournalEntry requirePostedJournal(String id) { JournalEntry e = journalEntryRepository.findById(id).orElseThrow(() -> conflict("Journal entry not found.", "JOURNAL_NOT_FOUND")); if (e.getStatus() != JournalEntry.Status.POSTED) throw conflict("Only posted journals can be reconciled.", "BANK_MATCH_JOURNAL_NOT_POSTED"); return e; }
-    private BankAccount requireBank(String id) { return bankAccountRepository.findById(id).filter(BankAccount::isActive).orElseThrow(() -> conflict("Active bank account not found.", "FIN_BANK_ACCOUNT_NOT_FOUND")); }
-    private BankStatement requireStatement(String id) { return bankStatementRepository.findById(id).orElseThrow(() -> conflict("Bank statement not found.", "BANK_STATEMENT_NOT_FOUND")); }
-    private String safeFileName(MultipartFile f) { return f.getOriginalFilename() == null ? "statement.csv" : f.getOriginalFilename(); }
-    private long epoch(LocalDate date) { return date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(); }
-    private String actor() { var a = SecurityContextHolder.getContext().getAuthentication(); return a == null ? "system" : a.getName(); }
-    private String escape(String s) { return s == null ? "" : s.replace("\\", "\\\\").replace("\"", "\\\""); }
-    private String sha256(byte[] value) { try { return java.util.HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value)); } catch (java.security.NoSuchAlgorithmException ex) { throw new IllegalStateException(ex); } }
-    private BusinessRuleException conflict(String message, String code) { return new BusinessRuleException(message, code, HttpStatus.CONFLICT); }
-    private record Candidate(JournalEntry entry, BigDecimal availableAmount, int score) { }
-    private record ParsedLine(LocalDate date, LocalDate valueDate, String description, String reference, BigDecimal amount, BigDecimal balance) {
-        String canonical() { return date + "|" + valueDate + "|" + description + "|" + reference + "|" + amount + "|" + balance; }
+    private int requiredColumn(List<String> h, String name) {
+        int i = h.indexOf(name);
+        if (i < 0) throw conflict("Missing CSV column: " + name, "BANK_STATEMENT_COLUMN_MISSING");
+        return i;
+    }
+
+    private int optionalColumn(List<String> h, String name) {
+        return h.indexOf(name);
+    }
+
+    private String value(List<String> v, int i) {
+        if (i < 0 || i >= v.size() || v.get(i).isBlank()) throw new IllegalArgumentException();
+        return v.get(i);
+    }
+
+    private String optional(List<String> v, int i) {
+        return i < 0 || i >= v.size() || v.get(i).isBlank() ? null : v.get(i);
+    }
+
+    private LocalDate optionalDate(List<String> v, int i) {
+        String s = optional(v, i);
+        return s == null ? null : LocalDate.parse(s);
+    }
+
+    private BigDecimal optionalDecimal(List<String> v, int i) {
+        String s = optional(v, i);
+        return s == null ? null : new BigDecimal(s.replace(",", ""));
+    }
+
+    private JournalEntry requirePostedJournal(String id) {
+        JournalEntry e = journalEntryRepository.findById(id).orElseThrow(() -> conflict("Journal entry not found.", "JOURNAL_NOT_FOUND"));
+        if (e.getStatus() != JournalEntry.Status.POSTED)
+            throw conflict("Only posted journals can be reconciled.", "BANK_MATCH_JOURNAL_NOT_POSTED");
+        return e;
+    }
+
+    private BankAccount requireBank(String id) {
+        return bankAccountRepository.findById(id).filter(BankAccount::isActive).orElseThrow(() -> conflict("Active bank account not found.", "FIN_BANK_ACCOUNT_NOT_FOUND"));
+    }
+
+    private BankStatement requireStatement(String id) {
+        return bankStatementRepository.findById(id).orElseThrow(() -> conflict("Bank statement not found.", "BANK_STATEMENT_NOT_FOUND"));
+    }
+
+    private String safeFileName(MultipartFile f) {
+        return f.getOriginalFilename() == null ? "statement.csv" : f.getOriginalFilename();
+    }
+
+    private long epoch(LocalDate date) {
+        return date.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli();
+    }
+
+    private String actor() {
+        var a = SecurityContextHolder.getContext().getAuthentication();
+        return a == null ? "system" : a.getName();
+    }
+
+    private String escape(String s) {
+        return s == null ? "" : s.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private String sha256(byte[] value) {
+        try {
+            return java.util.HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value));
+        } catch (java.security.NoSuchAlgorithmException ex) {
+            throw new IllegalStateException(ex);
+        }
+    }
+
+    private BusinessRuleException conflict(String message, String code) {
+        return new BusinessRuleException(message, code, HttpStatus.CONFLICT);
+    }
+
+    private record Candidate(JournalEntry entry, BigDecimal availableAmount, int score) {
+    }
+
+    private record ParsedLine(LocalDate date, LocalDate valueDate, String description, String reference,
+                              BigDecimal amount, BigDecimal balance) {
+        String canonical() {
+            return date + "|" + valueDate + "|" + description + "|" + reference + "|" + amount + "|" + balance;
+        }
     }
 }

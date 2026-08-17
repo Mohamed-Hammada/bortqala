@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -30,9 +31,13 @@ public class SalesOrderFullController {
 
     @GetMapping("/{id}/deliveries")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'VIEWER')")
-    public List<SalesApi.DeliveryResponse> deliveries(@PathVariable String id) { return salesOrderFullService.deliveries(id); }
+    public List<SalesApi.DeliveryResponse> deliveries(@PathVariable String id) {
+        return salesOrderFullService.deliveries(id);
+    }
 
     @GetMapping("/{id}/returns")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'VIEWER')")
-    public List<SalesApi.ReturnResponse> returns(@PathVariable String id) { return salesOrderFullService.returns(id); }
+    public List<SalesApi.ReturnResponse> returns(@PathVariable String id) {
+        return salesOrderFullService.returns(id);
+    }
 }

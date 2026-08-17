@@ -4,7 +4,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
 public final class ExchangeRateHintApi {
-    private ExchangeRateHintApi() {}
+    private ExchangeRateHintApi() {
+    }
 
     public record SettingsResponse(
             String provider,
@@ -14,12 +15,14 @@ public final class ExchangeRateHintApi {
             Long lastSuccessAt,
             Long nextRefreshAt,
             String lastErrorCode
-    ) {}
+    ) {
+    }
 
     public record SettingsRequest(
             boolean enabled,
             @Min(1) @Max(168) int refreshIntervalHours
-    ) {}
+    ) {
+    }
 
     public record RefreshResponse(
             boolean success,
@@ -28,5 +31,6 @@ public final class ExchangeRateHintApi {
             String baseCurrency,
             Long fetchedAt,
             String errorCode
-    ) {}
+    ) {
+    }
 }

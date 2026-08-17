@@ -1,31 +1,24 @@
 package com.bemo.hr.payroll.application;
 
-import com.bemo.hr.payroll.api.PayrollApi;
-import com.bemo.hr.payroll.domain.SalaryPayment;
-import com.bemo.hr.payroll.infrastructure.SalaryPaymentRepository;
-import com.bemo.hr.payroll.infrastructure.PayrollRunHeaderRepository;
-import com.bemo.hr.payroll.infrastructure.PayrollRunLineRepository;
-import com.bemo.hr.employee.infrastructure.EmployeeRepository;
-import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
-import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
-import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
-import com.bemo.hr.operations.OperationsService;
-import com.bemo.hr.workforce.WorkforceAdvanceService;
-import com.bemo.hr.payroll.application.PayrollExcelExporter;
 import com.bemo.hr.audit.application.AuditService;
-import com.bemo.hr.shared.domain.BusinessRuleException;
-import com.bemo.hr.shared.security.TenantContext;
-import com.bemo.hr.reporting.application.AttendanceExceptionService;
-import com.bemo.hr.reporting.domain.AttendanceReport;
 import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.domain.EmploymentType;
 import com.bemo.hr.employee.domain.PayCycle;
-import com.bemo.hr.payroll.domain.PayrollCalculationPolicy;
-import com.bemo.hr.payroll.domain.PayrollInputSnapshot;
-import com.bemo.hr.payroll.domain.PayrollRunHeader;
-import com.bemo.hr.payroll.domain.SalaryPaymentExplanation;
-import com.bemo.hr.payroll.domain.SalaryPaymentExplanationRepository;
-
+import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
+import com.bemo.hr.employee.infrastructure.EmployeeRepository;
+import com.bemo.hr.operations.OperationsService;
+import com.bemo.hr.payroll.api.PayrollApi;
+import com.bemo.hr.payroll.domain.*;
+import com.bemo.hr.payroll.infrastructure.PayrollRunHeaderRepository;
+import com.bemo.hr.payroll.infrastructure.PayrollRunLineRepository;
+import com.bemo.hr.payroll.infrastructure.SalaryPaymentRepository;
+import com.bemo.hr.reporting.application.AttendanceExceptionService;
+import com.bemo.hr.reporting.domain.AttendanceReport;
+import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
+import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
+import com.bemo.hr.shared.domain.BusinessRuleException;
+import com.bemo.hr.shared.security.TenantContext;
+import com.bemo.hr.workforce.WorkforceAdvanceService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +29,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
@@ -50,22 +42,38 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PayrollServiceTests {
 
-    @Mock private SalaryPaymentRepository salaryPaymentRepository;
-    @Mock private SalaryPaymentExplanationRepository explanationRepository;
-    @Mock private EmployeeRepository employeeRepository;
-    @Mock private AttendanceCategoryRepository attendanceCategoryRepository;
-    @Mock private AttendanceReportRepository attendanceReportRepository;
-    @Mock private DailyAttendanceResultRepository dailyAttendanceResultRepository;
-    @Mock private OperationsService operationsService;
-    @Mock private WorkforceAdvanceService workforceAdvanceService;
-    @Mock private PayrollExcelExporter payrollExcelExporter;
-    @Mock private AuditService auditService;
-    @Mock private AttendanceExceptionService attendanceExceptionService;
-    @Mock private PayrollSnapshotService payrollSnapshotService;
-    @Mock private PayrollCalculationPolicyService payrollCalculationPolicyService;
-    @Mock private PayrollRunHeaderRepository payrollRunHeaderRepository;
-    @Mock private PayrollRunLineRepository payrollRunLineRepository;
-    @Mock private PayrollGlPostingService payrollGlPostingService;
+    @Mock
+    private SalaryPaymentRepository salaryPaymentRepository;
+    @Mock
+    private SalaryPaymentExplanationRepository explanationRepository;
+    @Mock
+    private EmployeeRepository employeeRepository;
+    @Mock
+    private AttendanceCategoryRepository attendanceCategoryRepository;
+    @Mock
+    private AttendanceReportRepository attendanceReportRepository;
+    @Mock
+    private DailyAttendanceResultRepository dailyAttendanceResultRepository;
+    @Mock
+    private OperationsService operationsService;
+    @Mock
+    private WorkforceAdvanceService workforceAdvanceService;
+    @Mock
+    private PayrollExcelExporter payrollExcelExporter;
+    @Mock
+    private AuditService auditService;
+    @Mock
+    private AttendanceExceptionService attendanceExceptionService;
+    @Mock
+    private PayrollSnapshotService payrollSnapshotService;
+    @Mock
+    private PayrollCalculationPolicyService payrollCalculationPolicyService;
+    @Mock
+    private PayrollRunHeaderRepository payrollRunHeaderRepository;
+    @Mock
+    private PayrollRunLineRepository payrollRunLineRepository;
+    @Mock
+    private PayrollGlPostingService payrollGlPostingService;
 
     @InjectMocks
     private PayrollService payrollService;
@@ -92,12 +100,11 @@ class PayrollServiceTests {
     }
 
 
-
     @Test
     void reversePayment_throwsWhenPaymentNotFound() {
         var req = new PayrollApi.ReversePaymentRequest("missing-id", "reason", 0L);
-        
-        
+
+
         when(salaryPaymentRepository.findByIdForUpdate("missing-id")).thenReturn(Optional.empty());
         assertThatThrownBy(() -> payrollService.reversePayment(req, "admin"))
                 .isInstanceOf(com.bemo.hr.shared.domain.NotFoundException.class)
@@ -110,7 +117,8 @@ class PayrollServiceTests {
                 new BigDecimal("5000"), LocalDate.of(2026, 1, 1), null, true);
         AttendanceReport report = new AttendanceReport(LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31),
                 PayCycle.MONTHLY, "cfg", "admin");
-        report.startReview(0); report.approve("admin");
+        report.startReview(0);
+        report.approve("admin");
         when(employeeRepository.findById(employee.getId())).thenReturn(Optional.of(employee));
         SalaryPayment payment = new SalaryPayment(employee.getId(), report.getId(), 2026, 8, "FULL_MONTH",
                 LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), new BigDecimal("5000"),

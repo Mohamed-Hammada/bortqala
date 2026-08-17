@@ -1,14 +1,6 @@
 package com.bemo.hr.employee.domain;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.hibernate.annotations.TenantId;
 
 import java.time.Instant;
@@ -100,20 +92,57 @@ public class Employee {
     }
 
     @PrePersist
-    void prePersist() { createdAt = Instant.now(); updatedAt = createdAt; }
+    void prePersist() {
+        createdAt = Instant.now();
+        updatedAt = createdAt;
+    }
 
     @PreUpdate
-    void preUpdate() { updatedAt = Instant.now(); }
+    void preUpdate() {
+        updatedAt = Instant.now();
+    }
 
-    public String getId() { return id; }
-    public String getEmployeeCode() { return employeeCode; }
-    public String getFullName() { return fullName; }
-    public String getDeviceUserId() { return deviceUserId; }
-    public String getCategoryId() { return categoryId; }
-    public EmploymentType getEmploymentType() { return employmentType; }
-    public java.math.BigDecimal getBaseSalary() { return baseSalary == null ? java.math.BigDecimal.ZERO : baseSalary; }
-    public LocalDate getActiveFrom() { return activeFrom; }
-    public LocalDate getActiveTo() { return activeTo; }
-    public boolean isActive() { return active; }
-    public long getVersion() { return version; }
+    public String getId() {
+        return id;
+    }
+
+    public String getEmployeeCode() {
+        return employeeCode;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public String getDeviceUserId() {
+        return deviceUserId;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public EmploymentType getEmploymentType() {
+        return employmentType;
+    }
+
+    public java.math.BigDecimal getBaseSalary() {
+        return baseSalary == null ? java.math.BigDecimal.ZERO : baseSalary;
+    }
+
+    public LocalDate getActiveFrom() {
+        return activeFrom;
+    }
+
+    public LocalDate getActiveTo() {
+        return activeTo;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }

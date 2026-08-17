@@ -1,23 +1,19 @@
 package com.bemo.hr.finance.application;
 
+import com.bemo.hr.approval.SegregationOfDutiesService;
+import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.finance.api.AccountingApi;
-import com.bemo.hr.finance.domain.Account;
-import com.bemo.hr.finance.domain.FiscalPeriod;
-import com.bemo.hr.finance.domain.FiscalPeriodGuard;
-import com.bemo.hr.finance.domain.JournalEntry;
-import com.bemo.hr.finance.domain.JournalEntryLine;
+import com.bemo.hr.finance.domain.*;
+import com.bemo.hr.finance.domain.posting.JournalDimension;
 import com.bemo.hr.finance.infrastructure.AccountRepository;
+import com.bemo.hr.finance.infrastructure.JournalDimensionRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
-import com.bemo.hr.finance.infrastructure.JournalDimensionRepository;
-import com.bemo.hr.finance.domain.posting.JournalDimension;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.shared.numbering.DocumentNumberService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
-import com.bemo.hr.approval.SegregationOfDutiesService;
-import com.bemo.hr.audit.application.AuditService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -313,9 +309,12 @@ public class JournalEntryService {
         var dimensions = journalDimensionRepository.findByJournalEntryLineIdIn(storedLines.stream().map(JournalEntryLine::getId).toList())
                 .stream().collect(java.util.stream.Collectors.toMap(JournalDimension::getJournalEntryLineId, d -> d));
         var lines = storedLines.stream()
-                .map(l -> { var d = dimensions.get(l.getId()); return new AccountingApi.JournalEntryLineResponse(l.getId(), l.getJournalEntryId(), l.getAccountId(),
-                        l.getPartyId(), l.getDebit(), l.getCredit(), l.getMemo(), d == null ? null : d.getCostCenterId(),
-                        d == null ? null : d.getProjectId(), d == null ? null : d.getDepartmentId()); })
+                .map(l -> {
+                    var d = dimensions.get(l.getId());
+                    return new AccountingApi.JournalEntryLineResponse(l.getId(), l.getJournalEntryId(), l.getAccountId(),
+                            l.getPartyId(), l.getDebit(), l.getCredit(), l.getMemo(), d == null ? null : d.getCostCenterId(),
+                            d == null ? null : d.getProjectId(), d == null ? null : d.getDepartmentId());
+                })
                 .toList();
         BigDecimal totalDebit = lines.stream().map(AccountingApi.JournalEntryLineResponse::debit).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalCredit = lines.stream().map(AccountingApi.JournalEntryLineResponse::credit).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -333,5 +332,7 @@ public class JournalEntryService {
         return blank(line.costCenterId()) != null || blank(line.projectId()) != null || blank(line.departmentId()) != null;
     }
 
-    private String blank(String value) { return value == null || value.isBlank() ? null : value.strip(); }
+    private String blank(String value) {
+        return value == null || value.isBlank() ? null : value.strip();
+    }
 }
