@@ -28,15 +28,20 @@ public class DataExportController {
     @GetMapping("/{scope}.xlsx")
     ResponseEntity<byte[]> export(@PathVariable String scope,
                                   @RequestParam(required = false) Integer months,
+                                  @RequestParam(required = false) Integer year,
+                                  @RequestParam(required = false) Integer month,
                                   Authentication authentication) {
         var preference = authService.currentPreferences(authentication.getName());
         var options = new ExcelExportOptions(preference.locale(), preference.excelTableStyle());
         int monthsCount = months == null ? 6 : Math.min(Math.max(months, 1), 24);
+        var current = java.time.YearMonth.now();
+        int y = (year != null && year >= 2000 && year <= 2100) ? year : current.getYear();
+        int m = (month != null && month >= 1 && month <= 12) ? month : current.getMonthValue();
         byte[] body = switch (scope) {
             case "categories" -> dataExportService.categories(options); case "employees" -> dataExportService.employees(options);
             case "imports" -> dataExportService.imports(options); case "unmatched" -> dataExportService.unmatched(options);
             case "parties" -> dataExportService.parties(options);
-            case "trends" -> dataExportService.trends(monthsCount, options);
+            case "trends" -> dataExportService.trends(monthsCount, y, m, options);
             default -> throw new com.bemo.hr.shared.domain.NotFoundException("Export scope not found.");
         };
         var headers = new HttpHeaders(); headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));

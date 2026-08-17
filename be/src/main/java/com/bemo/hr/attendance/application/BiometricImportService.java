@@ -13,12 +13,15 @@ import com.bemo.hr.attendance.infrastructure.ImportRowErrorRepository;
 import com.bemo.hr.attendance.infrastructure.PunchImportEvidenceRepository;
 import com.bemo.hr.attendance.infrastructure.PunchRecordRepository;
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.security.TenantContext;
+import com.bemo.hr.reporting.application.ReportingService;
 import jakarta.persistence.EntityManager;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -50,7 +53,11 @@ public class BiometricImportService {
     private final ImportRowErrorRepository importRowErrorRepository;
     private final BiometricEmployeeProvisioningService employeeProvisioningService;
     private final EmployeeRepository employeeRepository;
+    private final AttendanceCategoryRepository attendanceCategoryRepository;
     private final AuditService auditService;
+    private final ReportingService reportingService;
+    @Value("${hr.company-zone:Africa/Cairo}")
+    private String companyZoneId;
     private final EntityManager entityManager;
     private final JdbcTemplate jdbcTemplate;
     private final ApplicationEventPublisher eventPublisher;
@@ -191,6 +198,26 @@ public class BiometricImportService {
             importRowErrorRepository.saveAll(parsed.errors().stream()
                     .map(error -> new ImportRowError(batch.getId(), error.rowNumber(), error.message(), error.rawLine()))
                     .toList());
+
+            // BORTQALA_ATTENDANCE_PIPELINE_20260816_V1_IMPORT_GENERATES_REPORTS: a successful biometric import is not complete until
+            // the affected calendar-month attendance snapshots exist. The existing ReportingService
+            // remains the single source of truth for PRESENT/LATE/overtime calculations.
+            var affectedAttendanceMonths = new java.util.TreeSet<java.time.YearMonth>();
+            var attendanceZone = java.time.ZoneId.of(companyZoneId);
+            for (var importedRow : parsed.rows()) {
+                if (importedRow.punchedAt() != null) {
+                    affectedAttendanceMonths.add(java.time.YearMonth.from(importedRow.punchedAt().atZone(attendanceZone)));
+                }
+            }
+            boolean hasMonthlyCategory = attendanceCategoryRepository.findByScopeIn(
+                    java.util.List.of(com.bemo.hr.employee.domain.CategoryScope.EMPLOYEE, com.bemo.hr.employee.domain.CategoryScope.BOTH)
+            ).stream().anyMatch(c -> c.isActive() && c.getPayCycle() == com.bemo.hr.employee.domain.PayCycle.MONTHLY);
+
+            if (hasMonthlyCategory) {
+                for (var period : affectedAttendanceMonths) {
+                    reportingService.create(new com.bemo.hr.reporting.api.ReportingApi.CreateRequest(period.atDay(1), period.atEndOfMonth(), com.bemo.hr.employee.domain.PayCycle.MONTHLY), actor);
+                }
+            }
             var firstImportedPunch = parsed.rows().stream().map(row -> row.punchedAt())
                     .filter(java.util.Objects::nonNull).min(java.util.Comparator.naturalOrder()).orElse(null);
             var lastImportedPunch = parsed.rows().stream().map(row -> row.punchedAt())
@@ -247,3 +274,5 @@ public class BiometricImportService {
     }
 }
 // BORTQALA_RUNTIME_20260816_V2_ATTENDANCE_IMPORT_PERF
+
+// BORTQALA_ATTENDANCE_PIPELINE_20260816_V1_IMPORT_GENERATES_REPORTS_METHOD_create

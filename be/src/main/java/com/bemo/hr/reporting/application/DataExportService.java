@@ -85,8 +85,13 @@ public class DataExportService {
     }
 
     public byte[] trends(int months, ExcelExportOptions options) {
+        var current = java.time.YearMonth.now();
+        return trends(months, current.getYear(), current.getMonthValue(), options);
+    }
+
+    public byte[] trends(int months, int year, int month, ExcelExportOptions options) {
         var messages = ExcelExportSupport.messages(translationService, options);
-        var rows = dashboardService.trends(months).stream().<List<?>>map(point -> List.of(
+        var rows = dashboardService.trends(months, year, month).stream().<List<?>>map(point -> List.of(
                 point.label(), point.scheduledEmployeeDays(), point.presentEmployeeDays(),
                 point.attendanceRate() + "%", point.exceptionDays(), point.overtimeMinutes(),
                 point.paidCount(), point.pendingCount(), point.totalGross(), point.totalPaid())).toList();

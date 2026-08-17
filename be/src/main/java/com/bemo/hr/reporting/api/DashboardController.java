@@ -62,7 +62,15 @@ public class DashboardController {
     }
 
     @GetMapping("/trends")
-    java.util.List<DashboardApi.TrendPoint> trends(@RequestParam(defaultValue = "6") int months) {
-        return dashboardService.trends(months);
+    java.util.List<DashboardApi.TrendPoint> trends(
+            @RequestParam(defaultValue = "6") int months,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month) {
+        var current = YearMonth.now();
+        int y = (year != null && year >= 2000 && year <= 2100) ? year : current.getYear();
+        int m = (month != null && month >= 1 && month <= 12) ? month : current.getMonthValue();
+        return dashboardService.trends(months, y, m);
     }
 }
+
+// BORTQALA_ATTENDANCE_PIPELINE_20260816_V1_TREND_API_PERIOD

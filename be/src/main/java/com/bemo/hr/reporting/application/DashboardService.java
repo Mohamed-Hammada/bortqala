@@ -198,14 +198,24 @@ public class DashboardService {
     }
 
     public List<DashboardApi.TrendPoint> trends(int months) {
+
+        var current = YearMonth.now(companyZone);
+
+        return trends(months, current.getYear(), current.getMonthValue());
+
+    }
+
+    public List<DashboardApi.TrendPoint> trends(int months, int year, int month) {
         int capped = Math.min(Math.max(months, 1), 24);
-        var anchor = YearMonth.now(companyZone);
+        var anchor = YearMonth.of(year, month);
         var points = new ArrayList<DashboardApi.TrendPoint>(capped);
         for (int offset = capped - 1; offset >= 0; offset--) {
             var period = anchor.minusMonths(offset);
             points.add(pointFor(period));
         }
         return points;
+    
+
     }
 
     private DashboardApi.TrendPoint pointFor(YearMonth period) {
@@ -253,3 +263,5 @@ public class DashboardService {
         return existing.orElse(null);
     }
 }
+
+// BORTQALA_ATTENDANCE_PIPELINE_20260816_V1_TREND_SELECTED_PERIOD

@@ -103,7 +103,7 @@ public class BiometricEmployeeProvisioningService {
                 code,
                 "موظفو البصمة - تلقائي",
                 480,
-                PayCycle.THIRTY_DAYS,
+                PayCycle.MONTHLY,
                 AttendanceMode.BIOMETRIC,
                 false,
                 SATURDAY_TO_THURSDAY_MASK,
@@ -230,3 +230,5 @@ public class BiometricEmployeeProvisioningService {
         return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }
+
+// BORTQALA_ATTENDANCE_PIPELINE_20260816_V1_AUTO_CATEGORY_MONTHLY

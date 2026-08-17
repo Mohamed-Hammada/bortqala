@@ -232,7 +232,7 @@ export class DashboardPage {
     const months = Number(monthsStr);
     if (!isNaN(months) && months >= 1 && months <= 24) {
       this.trendMonthCount.set(months);
-      void this.store.loadTrends(months);
+      void this.store.loadTrends(months, this.year(), this.month());
     }
   }
 
@@ -240,7 +240,7 @@ export class DashboardPage {
     if (this.trendExporting()) return;
     this.trendExporting.set(true);
     try {
-      const blob = await this.store.downloadTrends(this.trendMonthCount());
+      const blob = await this.store.downloadTrends(this.trendMonthCount(), this.year(), this.month());
       downloadBlob(blob, timestampedExcelFileName(
         'اتجاهات-متعددة-الفترات',
         'multi-period-trends',
@@ -288,3 +288,5 @@ export class DashboardPage {
 
 }
 // BORTQALA_RUNTIME_20260816_V2_DASHBOARD_ATTENDANCE_SNAPSHOT
+
+// BORTQALA_ATTENDANCE_PIPELINE_20260816_V1_TREND_FE_PAGE
