@@ -178,21 +178,14 @@ export class ImportsStore {
   }
   async export(scope: 'imports' | 'unmatched') {
     try {
+      const fileName = scope === 'imports'
+        ? this.i18n.t('imports.exportImportHistory')
+        : this.i18n.t('imports.exportUnmatchedIdentities');
       downloadBlob(
         await firstValueFrom(
           this.http.get(`/api/v1/exports/${scope}.xlsx`, { responseType: 'blob' }),
         ),
-        timestampedExcelFileName(
-          this.i18n.locale() === 'ar-EG'
-            ? scope === 'imports'
-              ? 'سجل-الاستيراد'
-              : 'هويات-غير-مربوطة'
-            : scope === 'imports'
-              ? 'import-history'
-              : 'unmatched-identities',
-          scope,
-          this.i18n.locale(),
-        ),
+        timestampedExcelFileName(fileName, scope, this.i18n.locale()),
       );
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));

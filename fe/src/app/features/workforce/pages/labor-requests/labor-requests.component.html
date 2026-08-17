@@ -1,0 +1,203 @@
+
+    <div class="workforce-container">
+      <header class="page-header">
+        <div>
+          <span class="eyebrow">{{ i18n.t('workforce.ui.requests.eyebrow') }}</span>
+          <h1>{{ i18n.t('workforce.ui.requests.title') }}</h1>
+        </div>
+        <button type="button" class="btn btn-primary" (click)="openCreateModal()">
+          {{ i18n.t('workforce.ui.requests.new') }}
+        </button>
+      </header>
+
+      <!-- Stats bar -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-label">{{ i18n.t('workforce.ui.requests.total') }}</span>
+          <span class="stat-value">{{ workforceService.laborRequests().length }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">{{ i18n.t('workforce.ui.requests.draft') }}</span>
+          <span class="stat-value draft-count">{{ countByStatus('DRAFT') }}</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">{{ i18n.t('workforce.ui.requests.approved') }}</span>
+          <span class="stat-value approved-count">{{ countByStatus('APPROVED') }}</span>
+        </div>
+      </div>
+
+      <!-- Loading skeleton -->
+      @if (loading()) {
+        <div class="card">
+          @for (_ of [1,2,3]; track $index) {
+            <div class="skeleton-row"></div>
+          }
+        </div>
+      }
+
+      <!-- Table -->
+      @else {
+        <div class="card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('workforce.ui.requests.number') }}</th>
+                <th>{{ i18n.t('reportsImport.ui.date') }}</th>
+                <th>{{ i18n.t('workforce.ui.requests.assignedContractor') }}</th>
+                <th>{{ i18n.t('workforce.ui.requests.shift') }}</th>
+                <th>{{ i18n.t('workforce.ui.requests.items') }}</th>
+                <th>{{ i18n.t('workforce.ui.requests.totalRequested') }}</th>
+                <th>{{ i18n.t('workforce.ui.status') }}</th>
+                <th>{{ i18n.t('workforce.ui.requests.createdBy') }}</th>
+                <th>{{ i18n.t('workforce.ui.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (req of workforceService.laborRequests(); track req.id) {
+                <tr>
+                  <td><strong>{{ req.requestNumber }}</strong></td>
+                  <td>{{ req.requestDate | date:'yyyy/MM/dd' }}</td>
+                  <td>{{ req.contractorName }}</td>
+                  <td>{{ req.shiftName || i18n.t('workforce.ui.requests.firstShift') }}</td>
+                  <td>
+                    @if (req.items && req.items.length > 0) {
+                      <span class="items-count">{{ req.items.length }} {{ i18n.t('workforce.ui.requests.itemUnit') }}</span>
+                      <div class="items-preview">
+                        @for (item of req.items.slice(0,2); track $index) {
+                          <span class="item-chip">{{ item.categoryName || item.categoryId }}: {{ item.requestedCount }}</span>
+                        }
+                        @if (req.items.length > 2) {
+                          <span class="item-chip more">+{{ req.items.length - 2 }}</span>
+                        }
+                      </div>
+                    } @else {
+                      <span class="no-items">—</span>
+                    }
+                  </td>
+                  <td>{{ getTotalRequested(req) }} {{ i18n.t('workforce.ui.requests.workerUnit') }}</td>
+                  <td>
+                    <span class="badge"
+                          [class.badge-draft]="req.status === 'DRAFT'"
+                          [class.badge-sent]="req.status === 'SENT'"
+                          [class.badge-approved]="req.status === 'APPROVED'"
+                          [class.badge-completed]="req.status === 'COMPLETED'"
+                          [class.badge-cancelled]="req.status === 'CANCELLED'">
+                      {{ getStatusLabel(req.status) }}
+                    </span>
+                  </td>
+                  <td>{{ req.createdBy || i18n.t('workforce.ui.system') }}</td>
+                  <td>
+                    @if (req.status === 'DRAFT') {
+                      <button type="button" class="btn btn-sm btn-approve" (click)="approveRequest(req.id)">
+                        ✓ {{ i18n.t('workforce.ui.requests.approve') }}
+                      </button>
+                    }
+                  </td>
+                </tr>
+              }
+              @if (workforceService.laborRequests().length === 0) {
+                <tr><td colspan="9" class="empty-cell">{{ i18n.t('workforce.ui.requests.empty') }}</td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      <!-- Create Modal -->
+      <app-modal-dialog
+        [isOpen]="isModalOpen"
+        [title]="i18n.t('workforce.ui.requests.createTitle')"
+        size="wide"
+        [preventOutsideClose]="true"
+        (close)="closeModal()">
+
+        <form (ngSubmit)="saveRequest()" class="modal-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>{{ i18n.t('workforce.ui.requests.numberRequired') }}</label>
+              <input type="text" [(ngModel)]="form.requestNumber" name="requestNumber"
+                     required class="form-input" />
+            </div>
+
+            <div class="form-group">
+              <label>{{ i18n.t('workforce.ui.requests.assignedContractor') }} *</label>
+              <select [(ngModel)]="form.contractorId" name="contractorId" required class="form-input">
+                @for (c of workforceService.contractors(); track c.id) {
+                  <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>{{ i18n.t('workforce.ui.requests.shiftName') }}</label>
+              <input type="text" [(ngModel)]="form.shiftName" name="shiftName"
+                     class="form-input" [placeholder]="i18n.t('workforce.ui.requests.shiftPlaceholder')" />
+            </div>
+
+            <div class="form-group">
+              <label>{{ i18n.t('workforce.ui.requests.notes') }}</label>
+              <input type="text" [(ngModel)]="form.notes" name="notes" class="form-input" />
+            </div>
+          </div>
+
+          <!-- Request Items -->
+          <div class="items-section">
+            <div class="items-header">
+              <h3>{{ i18n.t('workforce.ui.requests.itemsTitle') }}</h3>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="addItem()">
+                {{ i18n.t('workforce.ui.requests.addItem') }}
+              </button>
+            </div>
+
+            @if (form.items.length === 0) {
+              <div class="empty-items">
+                {{ i18n.t('workforce.ui.requests.noItems') }}
+              </div>
+            }
+
+            @for (item of form.items; track $index; let i = $index) {
+              <div class="item-row">
+                <div class="form-group">
+                  <label>{{ i18n.t('workforce.ui.requests.workerCategory') }}</label>
+                  <select [(ngModel)]="item.categoryId" [name]="'cat_' + i" class="form-input">
+                    @for (cat of workforceService.categories(); track cat.id) {
+                      <option [value]="cat.id">{{ cat.name }}</option>
+                    }
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>{{ i18n.t('workforce.ui.requests.quantity') }}</label>
+                  <input type="number" [(ngModel)]="item.requestedCount" [name]="'qty_' + i"
+                         class="form-input" min="1" required />
+                </div>
+                <div class="form-group">
+                  <label>{{ i18n.t('workforce.ui.requests.sent') }}</label>
+                  <input type="number" [(ngModel)]="item.sentCount" [name]="'sent_' + i"
+                         class="form-input" min="0" />
+                </div>
+                <div class="form-group">
+                  <label>{{ i18n.t('workforce.ui.requests.accepted') }}</label>
+                  <input type="number" [(ngModel)]="item.acceptedCount" [name]="'acc_' + i"
+                         class="form-input" min="0" />
+                </div>
+                <button type="button" class="btn btn-remove" (click)="removeItem(i)" [attr.aria-label]="i18n.t('workforce.ui.requests.removeAria')" [appTooltip]="i18n.t('workforce.ui.requests.removeHelp')">✕</button>
+              </div>
+            }
+
+            @if (form.items.length > 0) {
+              <div class="items-total">
+                {{ i18n.t('workforce.ui.requests.totalRequestedLabel') }} <strong>{{ getTotalRequestedFromForm() }} {{ i18n.t('workforce.ui.requests.workerUnit') }}</strong>
+              </div>
+            }
+          </div>
+        </form>
+
+        <div modal-actions class="modal-actions-bar">
+          <button type="button" class="btn btn-primary" [disabled]="saving()" (click)="saveRequest()">
+            {{ saving() ? i18n.t('workforce.ui.requests.sending') : i18n.t('workforce.ui.requests.send') }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">{{ i18n.t('workforce.ui.cancel') }}</button>
+        </div>
+      </app-modal-dialog>
+    </div>
+  

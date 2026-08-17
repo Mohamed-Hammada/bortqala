@@ -1,0 +1,141 @@
+
+    <div class="workforce-container">
+      <header class="page-header">
+        <div>
+          <span class="eyebrow">{{ i18n.t('workforce.ui.contractors.eyebrow') }}</span>
+          <h1>{{ i18n.t('workforce.ui.contractors.title') }}</h1>
+        </div>
+        
+      
+      <!-- BORTQALA_WORKFORCE_UI_20260816_V2: unified compact header actions -->
+      <div class="header-actions">
+        <button type="button" class="btn btn-primary" (click)="openCreateModal()">{{ i18n.t('workforce.ui.contractors.add') }}</button>
+        <button type="button" class="btn btn-secondary" (click)="exportExcel()">{{ i18n.t('workforce.ui.exportExcel') }}</button>
+        <app-workforce-excel-import-button kind="contractors" />
+      </div>
+</header>
+
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('workforce.ui.contractors.code') }}</th><th>{{ i18n.t('workforce.ui.contractors.fullName') }}</th><th>{{ i18n.t('workforce.ui.contractors.tradeName') }}</th><th>{{ i18n.t('workforce.ui.contractors.phone') }}</th>
+              <th>{{ i18n.t('workforce.ui.contractors.accountingModel') }}</th><th>{{ i18n.t('workforce.ui.contractors.paymentRouting') }}</th><th>{{ i18n.t('workforce.ui.contractors.dealingStatus') }}</th><th>{{ i18n.t('workforce.ui.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of workforceService.contractors()">
+              <td><strong>{{ c.code }}</strong></td>
+              <td>{{ c.name }}</td>
+              <td>{{ c.tradeName || '—' }}</td>
+              <td>{{ c.phone }}</td>
+              <td><span class="badge model-badge">{{ getModelLabel(c.accountingModel) }}</span></td>
+              <td>{{ getRoutingLabel(c.paymentRouting) }}</td>
+              <td><span class="badge active">{{ contractorStatusLabel(c.status) }}</span></td>
+              <td><button type="button" class="btn btn-sm" (click)="openEditModal(c)">{{ i18n.t('workforce.ui.edit') }}</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <app-modal-dialog
+        [isOpen]="isModalOpen"
+        [title]="editingContractor ? i18n.t('workforce.ui.contractors.editTitle') : i18n.t('workforce.ui.contractors.addTitle')"
+        size="wide"
+        [preventOutsideClose]="true"
+        (close)="closeModal()">
+
+        <form (ngSubmit)="saveContractor()" class="modal-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>{{ i18n.t('workforce.ui.contractors.codeRequired') }}</label>
+              <input type="text" [(ngModel)]="form.code" name="code" required class="form-input" [disabled]="saving()" />
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('workforce.ui.contractors.nameRequired') }}</label>
+              <input type="text" [(ngModel)]="form.name" name="name" required class="form-input" [disabled]="saving()" />
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('workforce.ui.contractors.tradeName') }}</label>
+              <input type="text" [(ngModel)]="form.tradeName" name="tradeName" class="form-input" [disabled]="saving()" />
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('workforce.ui.contractors.phoneRequired') }}</label>
+              <input type="text" [(ngModel)]="form.phone" name="phone" required class="form-input" [disabled]="saving()" />
+            </div>
+
+            <div class="form-group col-span-2">
+              <label>{{ i18n.t('workforce.ui.contractors.modelRequired') }}</label>
+              <div class="model-cards">
+                <label class="model-card" [class.selected]="form.accountingModel === 'worker_net_total'">
+                  <input type="radio" [(ngModel)]="form.accountingModel" name="accountingModel" value="worker_net_total" [disabled]="saving()" />
+                  <strong>{{ i18n.t('workforce.ui.contractorAccounts.workerNetTotal') }}</strong>
+                  <p>{{ i18n.t('workforce.ui.contractors.workerNetDescription') }}</p>
+                </label>
+                <label class="model-card" [class.selected]="form.accountingModel === 'contractor_daily_rate'">
+                  <input type="radio" [(ngModel)]="form.accountingModel" name="accountingModel" value="contractor_daily_rate" [disabled]="saving()" />
+                  <strong>{{ i18n.t('workforce.ui.model.contractorDailyRate') }}</strong>
+                  <p>{{ i18n.t('workforce.ui.contractors.dailyRateDescription') }}</p>
+                </label>
+                <label class="model-card" [class.selected]="form.accountingModel === 'worker_cost_plus_fee'">
+                  <input type="radio" [(ngModel)]="form.accountingModel" name="accountingModel" value="worker_cost_plus_fee" [disabled]="saving()" />
+                  <strong>{{ i18n.t('workforce.ui.model.workerCostPlusFee') }}</strong>
+                  <p>{{ i18n.t('workforce.ui.contractors.costPlusDescription') }}</p>
+                </label>
+                <label class="model-card" [class.selected]="form.accountingModel === 'fixed_period_amount'">
+                  <input type="radio" [(ngModel)]="form.accountingModel" name="accountingModel" value="fixed_period_amount" [disabled]="saving()" />
+                  <strong>{{ i18n.t('workforce.ui.model.fixedPeriodAmount') }}</strong>
+                  <p>{{ i18n.t('workforce.ui.contractors.fixedDescription') }}</p>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-group" *ngIf="form.accountingModel === 'contractor_daily_rate'">
+              <label>{{ i18n.t('workforce.ui.contractors.defaultRate') }}</label>
+              <input type="number" min="0" [(ngModel)]="form.defaultDailyRate" name="defaultDailyRate" class="form-input" [disabled]="saving()" />
+            </div>
+            <div class="form-group" *ngIf="form.accountingModel === 'worker_cost_plus_fee'">
+              <label>{{ i18n.t('workforce.ui.contractors.feeValue') }}</label>
+              <input type="number" min="0" [(ngModel)]="form.feeValue" name="feeValue" class="form-input" [disabled]="saving()" />
+            </div>
+            <div class="form-group" *ngIf="form.accountingModel === 'fixed_period_amount'">
+              <label>{{ i18n.t('workforce.ui.contractors.fixedAmount') }}</label>
+              <input type="number" min="0" [(ngModel)]="form.fixedPeriodAmount" name="fixedPeriodAmount" class="form-input" [disabled]="saving()" />
+            </div>
+
+            <div class="form-group">
+              <label>{{ i18n.t('workforce.ui.contractors.cycle') }}</label>
+              <select [(ngModel)]="form.settlementCycleDays" name="settlementCycleDays" class="form-input" [disabled]="saving()">
+                <option [ngValue]="15">{{ i18n.t('workforce.ui.contractors.cycle15') }}</option>
+                <option [ngValue]="30">{{ i18n.t('workforce.ui.contractors.cycle30') }}</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>{{ i18n.t('workforce.ui.contractors.paymentRouting') }}</label>
+              <select [(ngModel)]="form.paymentRouting" name="paymentRouting" class="form-input" [disabled]="saving()">
+                <option value="contractor_full">{{ i18n.t('workforce.ui.contractors.routingFull') }}</option>
+                <option value="worker_direct">{{ i18n.t('workforce.ui.contractors.routingDirect') }}</option>
+                <option value="mixed">{{ i18n.t('workforce.ui.contractors.routingMixed') }}</option>
+              </select>
+            </div>
+          </div>
+
+          @if (saveError()) {
+            <div class="save-error" role="alert">
+              <strong>{{ i18n.t('workforce.ui.contractors.saveErrorTitle') }}</strong>
+              <span>{{ saveError() }}</span>
+              <span>{{ i18n.t('workforce.ui.contractors.saveErrorHelp') }}</span>
+            </div>
+          }
+        </form>
+
+        <div modal-actions class="modal-actions-bar">
+          <button type="button" class="btn btn-primary" (click)="saveContractor()" [disabled]="saving()">
+            {{ saving() ? i18n.t('workforce.ui.contractors.saving') : i18n.t('workforce.ui.saveData') }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="saving()">{{ i18n.t('workforce.ui.cancel') }}</button>
+        </div>
+      </app-modal-dialog>
+    </div>
+  

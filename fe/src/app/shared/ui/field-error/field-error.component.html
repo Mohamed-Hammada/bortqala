@@ -1,0 +1,19 @@
+
+    @if (control() && control()?.invalid && (control()?.touched || control()?.dirty)) {
+      <span class="field-error-message">
+        @if (control()?.errors?.['required']) {
+          ⚠️ هذا الحقل مطلوب ولا يمكن تركه فارغاً.
+        } @else if (control()?.errors?.['minlength']) {
+          ⚠️ يجب أن يحتوي الحقل على {{ control()?.errors?.['minlength']?.requiredLength }} أحرف على الأقل.
+        } @else if (control()?.errors?.['maxlength']) {
+          ⚠️ تجاوزت الحد الأقصى للمسموح ({{ control()?.errors?.['maxlength']?.requiredLength }} حرفاً).
+        } @else if (control()?.errors?.['min']) {
+          ⚠️ القيمة أدنى من الحد المسموح بها (أصغر قيمة {{ control()?.errors?.['min']?.min }}).
+        } @else if (control()?.errors?.['email']) {
+          ⚠️ صيغة البريد الإلكتروني غير صحيحة.
+        } @else {
+          ⚠️ مدخلات غير صحيحة، يرجى التعديل.
+        }
+      </span>
+    }
+  

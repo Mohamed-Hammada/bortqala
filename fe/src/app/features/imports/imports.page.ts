@@ -232,7 +232,7 @@ export class ImportsPage {
     }, this.editingDeviceId() ?? undefined);
     if (saved) {
       this.notification.success(this.i18n.t(this.editingDeviceId() ? 'imports.deviceUpdated' : 'imports.deviceConnected',
-        {}, this.editingDeviceId() ? 'تم تحديث إعدادات جهاز البصمة.' : 'تم إضافة جهاز البصمة للربط المباشر.'));
+        {}, this.editingDeviceId() ? this.i18n.t('imports.deviceUpdatedHint') : this.i18n.t('imports.deviceConnectedHint')));
       this.resetDeviceForm();
     }
   }

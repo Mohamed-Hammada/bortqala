@@ -1,0 +1,97 @@
+
+    <div class="workforce-container">
+      <header class="page-header">
+        <div><span class="eyebrow">{{ i18n.t('workforce.ui.workers.eyebrow') }}</span><h1>{{ i18n.t('workforce.ui.workers.title') }}</h1></div>
+        
+      
+      <!-- BORTQALA_WORKFORCE_UI_20260816_V2: unified compact header actions -->
+      <div class="header-actions">
+        <button type="button" class="btn btn-primary" (click)="openCreateModal()">{{ i18n.t('workforce.ui.workers.add') }}</button>
+        <button type="button" class="btn btn-secondary" (click)="exportExcel()">{{ i18n.t('workforce.ui.exportExcel') }}</button>
+        <app-workforce-excel-import-button kind="workers" />
+      </div>
+</header>
+
+      <div class="card">
+        <table class="data-table">
+          <thead><tr>
+            <th>{{ i18n.t('reportsImport.ui.workerCode') }}</th><th>{{ i18n.t('workforce.ui.contractors.fullName') }}</th><th>{{ i18n.t('workforce.ui.workers.contractor') }}</th><th>{{ i18n.t('workforce.ui.workers.category') }}</th>
+            <th>{{ i18n.t('workforce.ui.categories.dailyRate') }}</th><th>{{ i18n.t('workforce.ui.workers.hours') }}</th><th>{{ i18n.t('workforce.ui.workers.attendanceMode') }}</th><th>{{ i18n.t('workforce.ui.status') }}</th><th>{{ i18n.t('workforce.ui.actions') }}</th>
+          </tr></thead>
+          <tbody>
+            <tr *ngFor="let w of workforceService.workers()">
+              <td><strong>{{ w.code }}</strong></td><td>{{ w.fullName }}</td><td>{{ w.contractorName }}</td>
+              <td><span class="badge category-badge">{{ w.categoryName }}</span></td>
+              <td>{{ w.defaultDailyRate | number:'1.2-2' }} {{ i18n.t('workforce.ui.currencyEgp') }}</td><td>{{ w.standardDailyHours }} {{ i18n.t('workforce.ui.hoursShort') }}</td>
+              <td>{{ w.attendanceMode === 'MANUAL' ? i18n.t('workforce.ui.advances.manual') : i18n.t('workforce.ui.workers.biometric') }}</td>
+              <td><span class="badge active">{{ workerStatusLabel(w.status) }}</span></td>
+              <td><button type="button" class="btn btn-sm" (click)="openEditModal(w)">{{ i18n.t('workforce.ui.edit') }}</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <app-modal-dialog [isOpen]="isModalOpen" [title]="editingWorker ? i18n.t('workforce.ui.workers.editTitle') : i18n.t('workforce.ui.workers.addTitle')"
+        size="wide" [preventOutsideClose]="true" (close)="closeModal()">
+        <form (ngSubmit)="saveWorker()" class="modal-form">
+          <div class="form-grid">
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.workers.codeRequired') }}</label><input type="text" [(ngModel)]="form.code" name="code" required class="form-input" [disabled]="saving()" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.workers.nameRequired') }}</label><input type="text" [(ngModel)]="form.fullName" name="fullName" required class="form-input" [disabled]="saving()" /></div>
+            <div class="form-group">
+              <label>{{ i18n.t('workforce.ui.workers.contractorRequired') }}</label>
+              <select [(ngModel)]="form.contractorId" name="contractorId" required class="form-input" [disabled]="saving()">
+                <option value="" disabled>{{ i18n.t('workforce.ui.workers.selectContractor') }}</option>
+                <option *ngFor="let c of workforceService.contractors()" [value]="c.id">{{ c.name }} ({{ c.code }})</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('workforce.ui.workers.categoryRequired') }}</label>
+              <select
+                [(ngModel)]="form.categoryId"
+                name="categoryId"
+                required
+                class="form-input"
+                [disabled]="saving() || categoriesLoading()"
+                (ngModelChange)="onCategoryChange($event)">
+                @if (categoriesLoading()) {
+                  <option value="" disabled>{{ i18n.t('workforce.ui.workers.loadingCategories') }}</option>
+                } @else if (categoriesLoadError()) {
+                  <option value="" disabled>{{ i18n.t('workforce.ui.workers.categoriesFailed') }}</option>
+                } @else if (workforceService.categories().length === 0) {
+                  <option value="" disabled>{{ i18n.t('workforce.ui.workers.noCategories') }}</option>
+                } @else {
+                  <option value="" disabled>{{ i18n.t('workforce.ui.workers.selectCategory') }}</option>
+                  <option *ngFor="let cat of workforceService.categories()" [value]="cat.id">{{ cat.name }} — {{ cat.defaultDailyRate | number:'1.2-2' }} {{ i18n.t('workforce.ui.currencyEgp') }}</option>
+                }
+              </select>
+
+              @if (categoriesLoadError()) {
+                <div class="category-helper category-helper-error">
+                  <span>{{ categoriesLoadError() }}</span>
+                  <button type="button" class="inline-action-button" (click)="loadWorkerCategories()" [disabled]="categoriesLoading()">
+                    {{ i18n.t('workforce.ui.retry') }}
+                  </button>
+                </div>
+              } @else if (!categoriesLoading() && workforceService.categories().length === 0) {
+                <div class="category-helper category-helper-warning">
+                  <span>{{ i18n.t('workforce.ui.workers.noCategoriesHelp') }}</span>
+                  <a routerLink="/workforce/categories" class="inline-action-link">{{ i18n.t('workforce.ui.workers.createCategory') }}</a>
+                </div>
+              } @else {
+                <small>{{ i18n.t('workforce.ui.workers.categoryInheritance') }}</small>
+              }
+            </div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.categories.dailyRate') }} ({{ i18n.t('workforce.ui.currencyEgp') }}) *</label><input type="number" min="0" [(ngModel)]="form.defaultDailyRate" name="defaultDailyRate" required class="form-input" [disabled]="saving()" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.workers.standardHoursRequired') }}</label><input type="number" min="0" step="0.5" [(ngModel)]="form.standardDailyHours" name="standardDailyHours" required class="form-input" [disabled]="saving()" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.workers.phone') }}</label><input type="text" [(ngModel)]="form.phone" name="phone" class="form-input" [disabled]="saving()" /></div>
+            <div class="form-group"><label>{{ i18n.t('workforce.ui.workers.nationalId') }}</label><input type="text" [(ngModel)]="form.nationalId" name="nationalId" class="form-input" [disabled]="saving()" /></div>
+          </div>
+          @if (saveError()) { <div class="save-error" role="alert">{{ saveError() }}</div> }
+        </form>
+        <div modal-actions class="modal-actions-bar">
+          <button type="button" class="btn btn-primary" (click)="saveWorker()" [disabled]="saving()">{{ saving() ? i18n.t('common.saving') : i18n.t('workforce.ui.saveData') }}</button>
+          <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="saving()">{{ i18n.t('workforce.ui.cancel') }}</button>
+        </div>
+      </app-modal-dialog>
+    </div>
+  

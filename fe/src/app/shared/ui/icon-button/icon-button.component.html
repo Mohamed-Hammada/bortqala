@@ -1,0 +1,11 @@
+
+    <button
+      type="button"
+      class="app-icon-action"
+      [class.danger]="variant === 'danger'"
+      [disabled]="disabled"
+      [attr.aria-label]="accessibleLabel"
+      [appTooltip]="tooltipText"
+      (click)="pressed.emit($event)"
+    ><span aria-hidden="true">{{ icon }}</span></button>
+  

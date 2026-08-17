@@ -1,0 +1,72 @@
+
+    <div class="workforce-container" [class.motion-enabled]="animationsEnabled()" [class.motion-disabled]="!animationsEnabled()">
+      <header class="page-header">
+        <div><span class="eyebrow">{{ i18n.t('workforce.ui.dashboard.eyebrow') }}</span><h1>{{ i18n.t('workforce.ui.dashboard.title') }}</h1></div>
+      </header>
+
+      <section class="card shared-filters" [attr.aria-label]="i18n.t('workforce.ui.dashboard.filtersAria')">
+        <div><label>{{ i18n.t('workforce.ui.contractor') }}</label><select [ngModel]="selectedContractorId()" (ngModelChange)="selectedContractorId.set($event); persistFilters()"><option value="">{{ i18n.t('workforce.ui.all') }}</option>@for (item of workforceService.contractors(); track item.id) {<option [value]="item.id">{{ item.name }}</option>}</select></div>
+        <div><label>{{ i18n.t('workforce.ui.dashboard.category') }}</label><select [ngModel]="selectedCategoryId()" (ngModelChange)="selectedCategoryId.set($event); persistFilters()"><option value="">{{ i18n.t('workforce.ui.all') }}</option>@for (item of workforceService.categories(); track item.id) {<option [value]="item.id">{{ item.name }}</option>}</select></div>
+        <div><label>{{ i18n.t('workforce.ui.dashboard.location') }}</label><select [ngModel]="selectedLocationId()" (ngModelChange)="selectedLocationId.set($event); persistFilters()"><option value="">{{ i18n.t('workforce.ui.dashboard.allLocations') }}</option>@for (location of locationOptions(); track location) {<option [value]="location">{{ location }}</option>}</select></div>
+        <div><label>{{ i18n.t('workforce.ui.dashboard.activityStatus') }}</label><select [ngModel]="selectedStatus()" (ngModelChange)="selectedStatus.set($event); persistFilters()"><option value="">{{ i18n.t('workforce.ui.all') }}</option><option value="ACTIVE">{{ i18n.t('workforce.ui.active') }}</option><option value="INACTIVE">{{ i18n.t('workforce.ui.inactive') }}</option></select></div>
+        <button type="button" (click)="clearFilters()">{{ i18n.t('workforce.ui.dashboard.clearFilters') }}</button>
+        <small>{{ i18n.t('workforce.ui.dashboard.filtersHelp') }}</small>
+      </section>
+
+      @if (loading()) { <div class="loading-state">{{ i18n.t('workforce.ui.dashboard.loading') }}</div> }
+      @else if (loadError()) { <div class="error-state">{{ loadError() }} <button (click)="ngOnInit()">{{ i18n.t('workforce.ui.retry') }}</button></div> }
+      @else {
+        <div class="kpi-grid">
+          <a class="kpi-card" routerLink="/workforce/contractors"><span class="kpi-title">{{ i18n.t('workforce.ui.dashboard.activeContractors') }}</span><span class="kpi-value">{{ filteredContractorCount() }}</span><small>{{ i18n.t('workforce.ui.dashboard.openDetails') }}</small></a>
+          <a class="kpi-card" routerLink="/workforce/workers" [queryParams]="filterQueryParams()"><span class="kpi-title">{{ i18n.t('workforce.ui.dashboard.matchedWorkers') }}</span><span class="kpi-value">{{ filteredWorkers().length }}</span><small>{{ i18n.t('workforce.ui.dashboard.openWorkers') }}</small></a>
+          <a class="kpi-card" routerLink="/workforce/labor-requests"><span class="kpi-title">{{ i18n.t('workforce.ui.dashboard.activeRequests') }}</span><span class="kpi-value">{{ workforceService.laborRequests().length }}</span><small>{{ i18n.t('workforce.ui.dashboard.openRequests') }}</small></a>
+          <a class="kpi-card" routerLink="/workforce/advances"><span class="kpi-title">{{ i18n.t('workforce.ui.dashboard.openAdvances') }}</span><span class="kpi-value">{{ workforceService.advances().length }}</span><small>{{ i18n.t('workforce.ui.dashboard.openAdvancesLink') }}</small></a>
+        </div>
+
+        <div class="dashboard-grid">
+          <section class="card chart-card">
+            <div class="chart-head"><div><span class="chart-eyebrow">{{ i18n.t('workforce.ui.dashboard.distribution') }}</span><h3>{{ i18n.t('workforce.ui.dashboard.byContractor') }}</h3></div><strong>{{ filteredWorkers().length }} {{ i18n.t('workforce.ui.requests.workerUnit') }}</strong></div>
+            <div class="bar-chart" role="img" [attr.aria-label]="i18n.t('workforce.ui.dashboard.byContractorAria')">
+              @for (item of contractorSeries(); track item.id) {
+                <a class="bar-row" routerLink="/workforce/workers" [queryParams]="{ contractorId: item.id }"><span>{{ item.label }}</span><div class="bar-track"><i [style.width.%]="item.percent"></i></div><strong>{{ item.value }}</strong></a>
+              } @empty { <p class="empty-cell">{{ i18n.t('workforce.ui.dashboard.noChartData') }}</p> }
+            </div>
+          </section>
+
+          <section class="card chart-card">
+            <div class="chart-head"><div><span class="chart-eyebrow">{{ i18n.t('workforce.ui.dashboard.operationalMix') }}</span><h3>{{ i18n.t('workforce.ui.dashboard.byCategory') }}</h3></div></div>
+            <div class="bar-chart category-bars" role="img" [attr.aria-label]="i18n.t('workforce.ui.dashboard.byCategoryAria')">
+              @for (item of categorySeries(); track item.id) {
+                <a class="bar-row" routerLink="/workforce/workers" [queryParams]="{ categoryId: item.id }"><span>{{ item.label }}</span><div class="bar-track"><i [style.width.%]="item.percent"></i></div><strong>{{ item.value }}</strong></a>
+              } @empty { <p class="empty-cell">{{ i18n.t('workforce.ui.dashboard.noChartData') }}</p> }
+            </div>
+          </section>
+
+          <section class="card chart-card donut-card">
+            <div><span class="chart-eyebrow">{{ i18n.t('workforce.ui.dashboard.requestCoverage') }}</span><h3>{{ i18n.t('workforce.ui.dashboard.acceptedVsRequested') }}</h3></div>
+            <div class="donut-layout">
+              <div class="donut" [style.background]="requestCoverageStyle()" role="img" [attr.aria-label]="i18n.t('workforce.ui.dashboard.coverageAria', { percent: requestCoverage() })"><span>{{ requestCoverage() }}%</span></div>
+              <div class="legend"><span><i class="accepted"></i> {{ i18n.t('workforce.ui.dashboard.accepted') }} {{ acceptedWorkers() }}</span><span><i class="remaining"></i> {{ i18n.t('workforce.ui.dashboard.remaining') }} {{ requestRemaining() }}</span></div>
+            </div>
+          </section>
+
+          <section class="card chart-card">
+            <div class="chart-head"><div><span class="chart-eyebrow">{{ i18n.t('workforce.ui.dashboard.advanceRisk') }}</span><h3>{{ i18n.t('workforce.ui.dashboard.advanceRemaining') }}</h3></div><strong>{{ advanceRemaining() | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</strong></div>
+            <div class="financial-meter" role="img" [attr.aria-label]="i18n.t('workforce.ui.dashboard.remainingAria', { amount: advanceRemaining() })"><i [style.width.%]="advanceRemainingPercent()"></i></div>
+            <div class="meter-labels"><span>{{ i18n.t('workforce.ui.dashboard.advancePaid', { amount: (advancePaid() | number:'1.0-0') ?? '0' }) }}</span><span>{{ i18n.t('workforce.ui.dashboard.advanceGranted', { amount: (advanceGranted() | number:'1.0-0') ?? '0' }) }}</span></div>
+          </section>
+
+          <section class="card contractor-table">
+            <h3>{{ i18n.t('workforce.ui.dashboard.contractorsModels') }}</h3>
+            <table class="data-table">
+              <thead><tr><th>{{ i18n.t('workforce.ui.dashboard.contractorCode') }}</th><th>{{ i18n.t('workforce.ui.dashboard.contractorName') }}</th><th>{{ i18n.t('workforce.ui.contractors.accountingModel') }}</th><th>{{ i18n.t('workforce.ui.contractors.cycle') }}</th><th>{{ i18n.t('workforce.ui.status') }}</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let c of filteredContractors()"><td><strong>{{ c.code }}</strong></td><td>{{ c.name }}</td><td><span class="badge model-badge">{{ getModelLabel(c.accountingModel) }}</span></td><td>{{ i18n.t('workforce.ui.dashboard.daysCycle', { days: c.settlementCycleDays }) }}</td><td><span class="badge active">{{ contractorStatusLabel(c.status) }}</span></td></tr>
+                <tr *ngIf="workforceService.contractors().length === 0"><td colspan="5" class="empty-cell">{{ i18n.t('workforce.ui.dashboard.noContractors') }}</td></tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+      }
+    </div>
+  

@@ -1,0 +1,416 @@
+
+    <div class="workforce-container">
+      <header class="page-header">
+        <div>
+          <span class="eyebrow">{{ i18n.t('manualAttendance.ui.eyebrow') }}</span>
+          <h1>{{ i18n.t('manualAttendance.ui.title') }}</h1>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="btn btn-outline" (click)="openManualEntryModal()" [appTooltip]="i18n.t('manualAttendance.newEntry')">
+            {{ i18n.t('manualAttendance.newEntry') }}
+          </button>
+          <button type="button" class="btn btn-outline" (click)="openImportModal()" [appTooltip]="i18n.t('manualAttendance.importExcel')">
+            {{ i18n.t('manualAttendance.importExcel') }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="exportCsv()" [appTooltip]="i18n.t('manualAttendance.exportExcel')">
+            {{ i18n.t('manualAttendance.exportExcel') }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="applyFullDayAll()"
+            [appTooltip]="i18n.t('manualAttendance.setFullDayAll', undefined)">
+            {{ i18n.t('manualAttendance.setFullDayAllLabel', undefined) }}
+          </button>
+          <button type="button" class="btn btn-primary" [disabled]="saving() || dirtyCellKeys().size === 0" (click)="saveAttendance()"
+            [appTooltip]="i18n.t('manualAttendance.saveAttendance')">
+            {{ saving() ? i18n.t('manualAttendance.saving') : (dirtyCellKeys().size > 0 ? i18n.t('manualAttendance.saveAttendanceCount', { count: dirtyCellKeys().size }) : i18n.t('manualAttendance.saveAttendance')) }}
+          </button>
+        </div>
+      </header>
+
+      <!-- Period Controls -->
+      <div class="card controls-card">
+        <div class="controls-row">
+          <div class="control-group">
+            <label for="manual-start-date">{{ i18n.t('manualAttendance.ui.startDate') }}</label>
+            <input id="manual-start-date" type="date" [(ngModel)]="startDate" class="form-input" (change)="onPeriodChange()"
+              [appTooltip]="i18n.t('manualAttendance.ui.startDateHelp')" />
+          </div>
+          <div class="control-group">
+            <label for="manual-end-date">{{ i18n.t('manualAttendance.ui.endDate') }}</label>
+            <input id="manual-end-date" type="date" [(ngModel)]="endDate" class="form-input" (change)="onPeriodChange()"
+              [appTooltip]="i18n.t('manualAttendance.ui.endDateHelp')" />
+          </div>
+          <div class="control-group presets">
+            <label>{{ i18n.t('manualAttendance.ui.presets') }}</label>
+            <div class="preset-btns">
+              <button type="button" class="btn btn-preset" (click)="setCurrentHalfMonth()">{{ i18n.t('manualAttendance.ui.currentHalf') }}</button>
+              <button type="button" class="btn btn-preset" (click)="setLastHalfMonth()">{{ i18n.t('manualAttendance.ui.previousHalf') }}</button>
+              <button type="button" class="btn btn-preset" (click)="setCurrentMonth()">{{ i18n.t('manualAttendance.ui.fullMonth') }}</button>
+            </div>
+          </div>
+          <div class="control-group">
+            <label for="manual-contractor">{{ i18n.t('workforce.ui.contractor') }}</label>
+            <select id="manual-contractor" [(ngModel)]="selectedContractorId" (change)="onFilterChange()" class="form-input"
+              [appTooltip]="i18n.t('manualAttendance.ui.contractorHelp')">
+              <option value="">{{ i18n.t('workforce.ui.all') }}</option>
+              @for (c of contractors(); track c.id) {
+                <option [value]="c.id">{{ c.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="manual-category">{{ i18n.t('workforce.ui.dashboard.category') }}</label>
+            <select id="manual-category" [(ngModel)]="selectedCategoryId" (change)="onFilterChange()" class="form-input"
+              [appTooltip]="i18n.t('manualAttendance.ui.categoryHelp')">
+              <option value="">{{ i18n.t('workforce.ui.all') }}</option>
+              @for (cat of categories(); track cat.id) {
+                <option [value]="cat.id">{{ cat.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="manual-search">{{ i18n.t('manualAttendance.ui.search') }}</label>
+            <input id="manual-search" type="text" [(ngModel)]="searchText" (input)="onFilterChange()"
+              [appTooltip]="i18n.t('manualAttendance.ui.searchHelp')"
+              [placeholder]="i18n.t('manualAttendance.ui.searchPlaceholder')" class="form-input search-input" />
+          </div>
+          <div class="control-group">
+            <label for="manual-status">{{ i18n.t('manualAttendance.ui.attendanceStatus') }}</label>
+              <select id="manual-status" [(ngModel)]="selectedAttendanceStatus" (change)="onFilterChange()" class="form-input"
+                [appTooltip]="i18n.t('manualAttendance.ui.attendanceStatusHelp')">
+              @for (opt of attendanceStatusOptions; track opt.value) {
+                <option [value]="opt.value">{{ opt.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="control-group toggle-group">
+            <label>&nbsp;</label>
+            <label class="toggle-label">
+              <input type="checkbox" [(ngModel)]="showInactive" (change)="onFilterChange()"
+                [attr.aria-label]="i18n.t('manualAttendance.ui.showInactive')" [appTooltip]="i18n.t('manualAttendance.ui.showInactiveHelp')" />
+              <span class="toggle-text">{{ i18n.t('manualAttendance.ui.showInactive') }}</span>
+            </label>
+          </div>
+          <div class="control-group">
+            <label>&nbsp;</label>
+            <button type="button" class="btn btn-outline" (click)="refreshData()"
+              [appTooltip]="i18n.t('manualAttendance.ui.refreshHelp')">
+              {{ i18n.t('manualAttendance.ui.refresh') }}
+            </button>
+          </div>
+        </div>
+        <div class="period-summary" *ngIf="dates().length > 0">
+          <span class="badge-info">
+            {{ i18n.t('manualAttendance.ui.periodSummary', { days: dates().length, start: startDate, end: endDate, workers: filteredWorkers().length, cells: dates().length * filteredWorkers().length }) }}
+            @if (dirtyCellKeys().size > 0) { | <strong>{{ i18n.t('manualAttendance.ui.unsavedCells', { count: dirtyCellKeys().size }) }}</strong> }
+          </span>
+        </div>
+      </div>
+
+      <!-- Calculation Rules Banner -->
+      @if (rules(); as r) {
+        <div class="card rules-card">
+          <details>
+            <summary class="rules-summary">{{ i18n.t('manualAttendance.ui.rules') }}</summary>
+            <div class="rules-body">
+              <div class="rule-item">
+                <span class="rule-label">{{ i18n.t('manualAttendance.ui.overtimeRate') }}</span>
+                <span class="rule-value">{{ i18n.t('manualAttendance.ui.overtimeRule', { rate: r.overtimeRate, hours: r.overtimeThresholdHours }) }}</span>
+              </div>
+              <div class="rule-item">
+                <span class="rule-label">{{ i18n.t('manualAttendance.ui.hourDeduction') }}</span>
+                <span class="rule-value">{{ i18n.t('manualAttendance.ui.deductionRule', { hours: r.standardDailyHours }) }}</span>
+              </div>
+              <div class="rule-item">
+                <span class="rule-label">{{ i18n.t('manualAttendance.ui.holidayRate') }}</span>
+                <span class="rule-value">{{ i18n.t('manualAttendance.ui.holidayRule', { rate: r.holidayPayRate }) }}</span>
+              </div>
+              <p class="rules-desc">{{ r.description }}</p>
+            </div>
+          </details>
+        </div>
+      }
+
+      @if (saveSummary(); as summary) {
+        <div class="card save-summary" role="status" aria-live="polite">
+          <strong>{{ i18n.t('manualAttendance.ui.lastSaveSummary') }}</strong>
+          <span class="summary-created">{{ i18n.t('manualAttendance.ui.created') }} {{ summary.createdCount }}</span>
+          <span class="summary-updated">{{ i18n.t('manualAttendance.ui.updated') }} {{ summary.updatedCount }}</span>
+          <span>{{ i18n.t('manualAttendance.ui.skipped') }} {{ summary.skippedCount }}</span>
+          <span [class.summary-failed]="summary.failedCount > 0">{{ i18n.t('manualAttendance.ui.failed') }} {{ summary.failedCount }}</span>
+          @if (summary.failedCount > 0) { <small>{{ i18n.t('manualAttendance.ui.fixFailedCells') }}</small> }
+        </div>
+      }
+
+      <!-- Loading Skeleton -->
+      @if (loading()) {
+        <div class="card skeleton-card">
+          <div class="skeleton-title"></div>
+          @for (_ of [1,2,3,4,5]; track $index) {
+            <div class="skeleton-row"></div>
+          }
+        </div>
+      }
+
+      <!-- Error State -->
+      @else if (loadError()) {
+        <div class="card error-card">
+          <span>⚠️ {{ loadError() }}</span>
+          <button type="button" class="btn btn-outline" (click)="refreshData()">{{ i18n.t('workforce.ui.retry') }}</button>
+        </div>
+      }
+
+      <!-- Empty Workers -->
+      @else if (filteredWorkers().length === 0) {
+        <div class="card empty-card">
+          <div class="empty-icon">👷</div>
+          <p>{{ selectedContractorId() || selectedCategoryId() ? i18n.t('manualAttendance.ui.noFilteredWorkers') : i18n.t('manualAttendance.ui.noWorkers') }}</p>
+        </div>
+      }
+
+      <!-- Matrix Table -->
+      @if (matrixVisible()) {
+        <div class="card matrix-card">
+          <!-- Legend -->
+          <div class="legend-row">
+            <span class="legend-item full">{{ i18n.t('manualAttendance.ui.legendFull') }}</span>
+            <span class="legend-item half">{{ i18n.t('manualAttendance.ui.legendHalf') }}</span>
+            <span class="legend-item absent">{{ i18n.t('manualAttendance.ui.legendAbsent') }}</span>
+          </div>
+
+          <!-- Bulk Actions Bar -->
+          @if (selectedWorkerIds().size > 0) {
+            <div class="bulk-bar">
+              <span class="bulk-count">{{ i18n.t('manualAttendance.ui.bulkCount', { workers: selectedWorkerIds().size, days: selectedDateIds().size }) }}</span>
+              <span class="bulk-context">{{ i18n.t('manualAttendance.ui.bulkContext', { cells: selectedWorkerIds().size * selectedDateIds().size }) }}</span>
+              <select [(ngModel)]="bulkStatusValue" class="form-input bulk-select"
+                [attr.aria-label]="i18n.t('manualAttendance.ui.bulkAttendanceAria')"
+                [appTooltip]="i18n.t('manualAttendance.ui.bulkAttendanceHelp')">
+                @for (opt of bulkStatusOptions; track opt.value) {
+                  <option [ngValue]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+              <button type="button" class="btn btn-primary btn-sm" (click)="previewBulk('attendance')">
+                {{ i18n.t('manualAttendance.ui.previewAttendance') }}
+              </button>
+              <input type="number" min="0" step="0.5" [(ngModel)]="bulkOvertimeHours" class="form-input bulk-select" [attr.aria-label]="i18n.t('manualAttendance.ui.overtimeHours')" />
+              <button type="button" class="btn btn-primary btn-sm" (click)="previewBulk('overtime')">{{ i18n.t('manualAttendance.ui.previewOvertime') }}</button>
+              <button type="button" class="btn btn-outline btn-sm" (click)="clearSelection()">
+                {{ i18n.t('manualAttendance.ui.clearSelection') }}
+              </button>
+            </div>
+            @if (bulkPreview(); as preview) {
+              <div class="bulk-bar" role="alertdialog" [attr.aria-label]="i18n.t('manualAttendance.ui.bulkPreview')">
+                <strong>{{ i18n.t('manualAttendance.ui.bulkPreviewSummary', { workers: preview.workerCount, days: preview.dayCount, cells: preview.cellCount }) }}</strong>
+                <span>{{ preview.kind === 'attendance' ? i18n.t('manualAttendance.ui.attendanceValue') + ': ' + bulkStatusValue() : i18n.t('manualAttendance.ui.overtimeHours') + ': ' + bulkOvertimeHours() }}</span>
+                <button type="button" class="btn btn-primary btn-sm" (click)="confirmBulk()">{{ i18n.t('manualAttendance.ui.confirmApply') }}</button>
+                <button type="button" class="btn btn-outline btn-sm" (click)="bulkPreview.set(null)">{{ i18n.t('workforce.ui.cancel') }}</button>
+              </div>
+            }
+          }
+
+          <div class="table-scroll-wrapper">
+            <table class="matrix-table">
+              <thead>
+                <tr>
+                  <th class="sticky-col check-col">
+                    <input type="checkbox"
+                      [checked]="allSelected()"
+                      (change)="toggleSelectAll()"
+                      [attr.aria-label]="i18n.t('manualAttendance.ui.selectAllVisible')"
+                      [appTooltip]="i18n.t('manualAttendance.ui.selectAllVisibleHelp')"
+                      class="row-check" />
+                  </th>
+                  <th class="sticky-col worker-col">{{ i18n.t('manualAttendance.ui.workerCode') }}</th>
+                  <th class="sticky-col name-col">{{ i18n.t('manualAttendance.ui.workerName') }}</th>
+                  <th class="sticky-col rate-col">{{ i18n.t('manualAttendance.ui.dailyRate') }}</th>
+                  @for (date of dates(); track date) {
+                    <th class="date-col" [class.weekend-col]="isWeekend(date)">
+                      <div class="date-header">
+                        <input type="checkbox" [checked]="selectedDateIds().has(date)" (change)="toggleDate(date)"
+                          [attr.aria-label]="i18n.t('manualAttendance.ui.selectDate', { date })"
+                          [appTooltip]="i18n.t('manualAttendance.ui.selectDateHelp', { date })" />
+                        <span class="day-name">{{ getDayName(date) }}</span>
+                        <span class="day-num">{{ date.slice(-2) }}</span>
+                      </div>
+                    </th>
+                  }
+                  <th class="total-col">{{ i18n.t('manualAttendance.ui.totalDays') }}</th>
+                  <th class="total-col">{{ i18n.t('manualAttendance.ui.totalAmountEgp') }}</th>
+                  <th class="indicator-col">{{ i18n.t('manualAttendance.ui.indicators') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (w of filteredWorkers(); track w.id) {
+                  <tr [class.selected-row]="isSelected(w.id)">
+                    <td class="sticky-col check-col">
+                      <input type="checkbox"
+                        [checked]="isSelected(w.id)"
+                        (change)="toggleWorker(w.id)"
+                        [attr.aria-label]="i18n.t('manualAttendance.ui.selectWorker', { name: w.fullName })"
+                        [appTooltip]="i18n.t('manualAttendance.ui.selectWorkerHelp', { name: w.fullName })"
+                        class="row-check" />
+                    </td>
+                    <td class="sticky-col worker-col"><strong>{{ w.code }}</strong></td>
+                    <td class="sticky-col name-col">
+                      {{ w.fullName }}<br>
+                      <small class="contractor-name">{{ w.contractorName }}</small>
+                      @if (w.status === 'INACTIVE') {
+                        <span class="badge-inactive">{{ i18n.t('manualAttendance.ui.workerInactive') }}</span>
+                      }
+                    </td>
+                    <td class="sticky-col rate-col">{{ w.defaultDailyRate | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</td>
+                    @for (date of dates(); track date) {
+                      <td class="cell-td" [class.weekend-cell]="isWeekend(date)"
+                          [class.cell-dirty]="isCellDirty(w.id, date)"
+                          [class.cell-invalid]="cellError(w.id, date)"
+                          [attr.title]="cellError(w.id, date) || null">
+                        <select
+                          [(ngModel)]="matrix[w.id][date].attendanceValue"
+                          (ngModelChange)="markCellDirty(w.id, date)"
+                          [name]="'att_' + w.id + '_' + date"
+                          class="cell-select"
+                          [class.cell-full]="matrix[w.id][date].attendanceValue === 1"
+                          [class.cell-half]="matrix[w.id][date].attendanceValue === 0.5"
+                          [class.cell-absent]="matrix[w.id][date].attendanceValue === 0"
+                          [attr.aria-label]="i18n.t('manualAttendance.ui.attendanceAria', { name: w.fullName, date })"
+                          [appTooltip]="i18n.t('manualAttendance.ui.attendanceCellHelp', { name: w.fullName, date })"
+                        >
+                          <option [ngValue]="1">1</option>
+                          <option [ngValue]="0.5">½</option>
+                          <option [ngValue]="0">—</option>
+                        </select>
+                        @if (cellError(w.id, date); as error) {
+                          <span class="cell-error-mark" [attr.aria-label]="error">!</span>
+                        }
+                      </td>
+                    }
+                    <td class="total-col total-days">
+                      <strong>{{ getWorkerTotalDays(w.id) | number:'1.1-1' }}</strong>
+                    </td>
+                    <td class="total-col total-amount">
+                      <strong>{{ getWorkerTotalAmount(w) | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</strong>
+                    </td>
+                    <td class="indicator-col">
+                      @if (hasOvertime(w.id)) {
+                        <span class="indicator overtime-i" [title]="i18n.t('manualAttendance.ui.hasOvertime')">⏰</span>
+                      }
+                      @if (hasDeduction(w.id)) {
+                        <span class="indicator deduction-i" [title]="i18n.t('manualAttendance.ui.hasDeduction')">⚠️</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot>
+                <tr class="totals-row">
+                  <td class="sticky-col" colspan="4"><strong>{{ i18n.t('manualAttendance.ui.dailyTotal') }}</strong></td>
+                  @for (date of dates(); track date) {
+                    <td class="total-col">
+                      <strong>{{ getDayTotal(date) | number:'1.1-1' }}</strong>
+                    </td>
+                  }
+                  <td colspan="2" class="grand-total">
+                    <strong>{{ grandTotal() | number:'1.0-0' }} {{ i18n.t('workforce.ui.currencyEgp') }}</strong>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- Manual Single Entry Modal -->
+      <app-modal-dialog
+        [isOpen]="entryModalOpen()"
+        [title]="i18n.t('manualAttendance.newEntry')"
+        size="normal"
+        [preventOutsideClose]="true"
+        (close)="closeManualEntryModal()">
+        
+        <form (ngSubmit)="submitManualEntry()" class="modal-form" style="display:grid;gap:1rem;">
+          <div class="control-group">
+            <label for="entry-worker">{{ i18n.t('manualAttendance.selectWorkerLabel') }}</label>
+            <select id="entry-worker" [ngModel]="entryWorkerId()" (ngModelChange)="entryWorkerId.set($event)" name="entryWorkerId" class="form-input" required>
+              <option value="">{{ i18n.t('manualAttendance.selectWorker') }}</option>
+              @for (w of workers(); track w.id) {
+                <option [value]="w.id">{{ w.code }} — {{ w.fullName }} ({{ w.contractorName }})</option>
+              }
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="entry-date">{{ i18n.t('manualAttendance.attendanceDateLabel') }}</label>
+            <input id="entry-date" type="date" [ngModel]="entryDate()" (ngModelChange)="entryDate.set($event)" name="entryDate" class="form-input" required />
+          </div>
+
+          <div class="control-group">
+            <label for="entry-value">{{ i18n.t('manualAttendance.attendanceStatusLabel') }}</label>
+            <select id="entry-value" [ngModel]="entryAttendanceValue()" (ngModelChange)="entryAttendanceValue.set(+$event)" name="entryAttendanceValue" class="form-input">
+              <option [value]="1">{{ i18n.t('manualAttendance.ui.fullDayOne') }}</option>
+              <option [value]="0.5">{{ i18n.t('manualAttendance.ui.halfDayPointFive') }}</option>
+              <option [value]="0">{{ i18n.t('manualAttendance.ui.absentZero') }}</option>
+            </select>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+            <div class="control-group">
+              <label for="entry-overtime">{{ i18n.t('manualAttendance.overtimeHoursLabel') }}</label>
+              <input id="entry-overtime" type="number" min="0" step="0.5" [ngModel]="entryOvertimeHours()" (ngModelChange)="entryOvertimeHours.set(+$event)" name="entryOvertimeHours" class="form-input" />
+            </div>
+            <div class="control-group">
+              <label for="entry-deduction">{{ i18n.t('manualAttendance.deductionHoursLabel') }}</label>
+              <input id="entry-deduction" type="number" min="0" step="0.5" [ngModel]="entryDeductionHours()" (ngModelChange)="entryDeductionHours.set(+$event)" name="entryDeductionHours" class="form-input" />
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label for="entry-notes">{{ i18n.t('manualAttendance.notesLabel') }}</label>
+            <input id="entry-notes" type="text" [ngModel]="entryNotes()" (ngModelChange)="entryNotes.set($event)" name="entryNotes" class="form-input" [placeholder]="i18n.t('manualAttendance.ui.optionalNotes')" />
+          </div>
+        </form>
+
+        <div modal-actions style="display:flex;justify-content:flex-end;gap:0.5rem;width:100%;">
+          <button type="button" class="btn btn-primary" [disabled]="!entryWorkerId() || !entryDate()" (click)="submitManualEntry()">{{ i18n.t('manualAttendance.confirmEntry') }}</button>
+          <button type="button" class="btn btn-secondary" (click)="closeManualEntryModal()">{{ i18n.t('common.close') }}</button>
+        </div>
+      </app-modal-dialog>
+
+      <!-- Excel Import Modal -->
+      <app-modal-dialog
+        [isOpen]="importModalOpen()"
+        [title]="i18n.t('manualAttendance.importModalTitle')"
+        size="wide"
+        [preventOutsideClose]="true"
+        (close)="closeImportModal()">
+
+        <div style="display:grid;gap:1rem;">
+          <p>{{ i18n.t('manualAttendance.importModalDesc') }}</p>
+          
+          <div style="border:2px dashed #cbd5e1;padding:1.5rem;border-radius:10px;text-align:center;background:var(--surface-muted);">
+            <input #attendanceImportFile class="native-file-input" type="file" accept=".csv,.xlsx,.xls,.txt" (change)="onImportFileChange($event)" />
+            <button type="button" class="btn btn-outline" (click)="attendanceImportFile.click()">{{ i18n.t('manualAttendance.ui.chooseImportFile') }}</button>
+            <span class="selected-file-name">📄 {{ importFile()?.name || i18n.t('manualAttendance.ui.noImportFile') }}</span>
+          </div>
+
+          <div style="background:var(--warning-soft);border:1px solid var(--warning);padding:0.75rem;border-radius:8px;font-size:0.8125rem;">
+            <p style="margin:0 0 0.3rem 0;font-weight:700;color:var(--warning-text);">{{ i18n.t('manualAttendance.requiredColumnsNote') }}</p>
+            <p style="margin:0;color:var(--warning-text);">
+              {{ i18n.t('manualAttendance.requiredColumnsList') }}
+            </p>
+          </div>
+        </div>
+
+        <div modal-actions style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+          <button type="button" class="btn btn-outline" (click)="downloadExcelTemplate()">
+            {{ i18n.t('manualAttendance.downloadTemplate') }}
+          </button>
+          <div style="display:flex;gap:0.5rem;">
+            <button type="button" class="btn btn-primary" [disabled]="!importFile()" (click)="processImportFile()">
+              {{ i18n.t('manualAttendance.startImport') }}
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="closeImportModal()">{{ i18n.t('common.close') }}</button>
+          </div>
+        </div>
+      </app-modal-dialog>
+    </div>
+  

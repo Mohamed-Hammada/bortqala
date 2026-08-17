@@ -120,12 +120,12 @@ export class AttendanceBrowserPage {
   }
 
   exportCsv(): void {
-    const ar = this.i18n.locale().toLowerCase().startsWith('ar');
+    const t = (k: string) => this.i18n.t(k);
     const rows = [
-      [ar ? 'الموظف' : 'Employee', ar ? 'كود الموظف' : 'Employee code', ar ? 'رقم الجهاز' : 'Device ID', ar ? 'الحالة' : 'Status', ar ? 'البصمات' : 'Punches', ar ? 'أول بصمة' : 'First punch', ar ? 'آخر بصمة' : 'Last punch'],
+      [t('attendanceBrowser.thEmployee'), t('attendanceBrowser.thEmployeeCode'), t('attendanceBrowser.thDeviceId'), t('attendanceBrowser.thStatus'), t('attendanceBrowser.thPunches'), t('attendanceBrowser.thFirstPunch'), t('attendanceBrowser.thLastPunch')],
       ...this.filteredEmployees().map((item) => [
         this.displayName(item), item.employeeCode ?? '', item.deviceUserId,
-        item.mapped ? (ar ? 'مربوط' : 'Mapped') : (ar ? 'غير مربوط' : 'Unmapped'),
+        item.mapped ? t('attendanceBrowser.statusMapped') : t('attendanceBrowser.statusUnmapped'),
         String(item.punchCount), this.dateTime(item.firstPunch), this.dateTime(item.lastPunch),
       ]),
     ];

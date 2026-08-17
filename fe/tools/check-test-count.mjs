@@ -10,8 +10,8 @@
 import { createInterface } from 'node:readline';
 import { stdin, stdout, exit } from 'node:process';
 
-const MIN_TESTS = 284;
-const MIN_FILES = 50;
+const MIN_TESTS = 300;
+const MIN_FILES = 54;
 
 const ANSI = /\u001B\[[0-?]*[ -/]*[@-~]/g;
 
@@ -23,11 +23,11 @@ const rl = createInterface({ input: stdin, crlfDelay: Infinity });
 
 rl.on('line', (raw) => {
   const line = raw.replace(ANSI, '');
-  const testMatch = line.match(/Tests\s+(\d+)\s+passed/);
+  const testMatch = line.match(/Tests\s+(?:\d+\s+failed\s*\|\s*)?(\d+)\s+passed/);
   if (testMatch) {
     tests = Number(testMatch[1]);
   }
-  const fileMatch = line.match(/Test Files\s+(\d+)\s+passed/);
+  const fileMatch = line.match(/Test Files\s+(?:\d+\s+failed\s*\|\s*)?(\d+)\s+passed/);
   if (fileMatch) {
     files = Number(fileMatch[1]);
   }

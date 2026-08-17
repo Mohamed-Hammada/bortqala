@@ -1,0 +1,86 @@
+
+    .workforce-container { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+    .eyebrow { font-size: 0.875rem; color: #d97706; font-weight: 600; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; }
+    .header-actions { display: flex; gap: .75rem; align-items: center; }
+    .btn-group { display: flex; gap: 0; }
+    .btn-group .btn { border-radius: 0; }
+    .btn-group .btn:first-child { border-radius: 8px 0 0 8px; }
+    .btn-group .btn:last-child { border-radius: 0 8px 8px 0; }
+    .page-header h1 { font-size: 1.75rem; font-weight: 800; color: var(--ink); margin: 0.25rem 0 0 0; }
+    .card { background: var(--surface); border-radius: 12px; border: 1px solid var(--line); padding: 1.25rem; overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; text-align: start; }
+    .data-table th, .data-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    .btn { padding: 0.625rem 1.25rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; }
+    .btn:disabled { cursor:not-allowed; opacity: .65; }
+    .btn-primary { background: #d97706; color: #fff; }
+    .btn-secondary { background: var(--line); color: var(--secondary-text); }
+    .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.875rem; }
+    .badge { padding: 0.25rem 0.625rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+    .badge.active { background: #dcfce7; color: var(--success); }
+    .badge.model-badge { background: #fef3c7; color: #92400e; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .col-span-2 { grid-column: span 2; }
+    .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .form-group label { font-weight: 600; font-size: 0.875rem; color: var(--secondary-text); }
+    .form-input { padding: 0.625rem; border: 1px solid var(--line); border-radius: 8px; font-size: 0.875rem; }
+    .model-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+    .model-card { border: 1px solid var(--line); border-radius: 8px; padding: 0.875rem; cursor: pointer; display: flex; flex-direction: column; gap: 0.25rem; }
+    .model-card.selected { border-color: #d97706; background: var(--warning-soft); }
+    .model-card p { font-size: 0.75rem; color: var(--muted); margin: 0; }
+    .modal-actions-bar { width: 100%; display: flex; gap: 0.75rem; justify-content: flex-end; }
+    .save-error { grid-column: 1 / -1; display: flex; flex-direction: column; gap: .25rem; margin-top: 1rem; padding: .75rem 1rem; border: 1px solid color-mix(in srgb, var(--danger) 45%, var(--line)); border-radius: 8px; background: var(--danger-soft); color: var(--danger); }
+    @media (max-width: 760px) {
+      .page-header { align-items: stretch; flex-direction: column; gap: 1rem; }
+      .form-grid, .model-cards { grid-template-columns: 1fr; }
+      .col-span-2 { grid-column: auto; }
+    }
+  
+    /* BORTQALA_WORKFORCE_UI_20260816_V2: one clean title/action row for Workers and Contractors. */
+    .page-header {
+      display:flex !important;
+      align-items:flex-end !important;
+      justify-content:space-between !important;
+      gap:1.25rem !important;
+      flex-wrap:wrap !important;
+      margin-bottom:1.5rem;
+    }
+    .page-header > :not(.header-actions) {
+      min-width:0;
+      flex:1 1 360px;
+    }
+    .header-actions {
+      flex:0 0 auto;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:flex-end !important;
+      gap:.6rem !important;
+      flex-wrap:wrap !important;
+      margin:0 !important;
+      align-self:flex-end;
+    }
+    .header-actions > button,
+    .header-actions > .button,
+    .header-actions > app-workforce-excel-import-button {
+      flex:0 0 auto;
+      margin:0 !important;
+    }
+    .header-actions button,
+    .header-actions .button {
+      min-height:44px;
+      white-space:nowrap;
+      border-radius:10px;
+    }
+    @media (max-width:900px) {
+      .page-header { align-items:flex-start !important; }
+      .page-header > :not(.header-actions) { flex-basis:100%; }
+      .header-actions { width:100%; justify-content:flex-start !important; }
+    }
+    @media (max-width:560px) {
+      .header-actions { display:grid !important; grid-template-columns:1fr; }
+      .header-actions > button,
+      .header-actions > .button,
+      .header-actions > app-workforce-excel-import-button { width:100%; }
+      .header-actions app-workforce-excel-import-button { display:flex; }
+      .header-actions app-workforce-excel-import-button .button { width:100%; }
+    }

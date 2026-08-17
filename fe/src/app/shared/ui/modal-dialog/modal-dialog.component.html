@@ -1,0 +1,41 @@
+
+    <div
+      *ngIf="isOpen"
+      class="modal-backdrop"
+      [class.dismissible]="!preventOutsideClose"
+      (click)="onBackdropClick($event)"
+    >
+      <section
+        #dialogBox
+        class="modal-dialog-box"
+        [class.compact]="size === 'compact'"
+        [class.wide]="size === 'wide'"
+        [class.large]="size === 'large'"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="titleId"
+        tabindex="-1"
+      >
+        <header class="modal-header">
+          <h2 [id]="titleId" class="modal-title">{{ title }}</h2>
+          <button
+            type="button"
+            class="close-btn"
+            [attr.aria-label]="i18n.t('common.close')"
+            [appTooltip]="i18n.t('modal.closeTooltip')"
+            (click)="onClose()"
+          >
+            ✕
+          </button>
+        </header>
+
+        <div #modalBody class="modal-body">
+          <ng-content></ng-content>
+        </div>
+
+        <footer class="modal-actions" *ngIf="showFooter">
+          <ng-content select="[modal-actions]"></ng-content>
+        </footer>
+      </section>
+    </div>
+  

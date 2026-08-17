@@ -5,24 +5,8 @@ import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
   selector: 'app-icon-button',
   standalone: true,
   imports: [AppTooltipDirective],
-  template: `
-    <button
-      type="button"
-      class="app-icon-action"
-      [class.danger]="variant === 'danger'"
-      [disabled]="disabled"
-      [attr.aria-label]="accessibleLabel"
-      [appTooltip]="tooltipText"
-      (click)="pressed.emit($event)"
-    ><span aria-hidden="true">{{ icon }}</span></button>
-  `,
-  styles: [`
-    :host { display: inline-flex; }
-    .app-icon-action { width: 2rem; height: 2rem; display: inline-grid; place-items: center; border: 1px solid #cbd5e1; border-radius: .5rem; background: #fff; color: #334155; cursor: pointer; font: inherit; }
-    .app-icon-action:hover, .app-icon-action:focus-visible { border-color: #d97706; color: #92400e; outline: 2px solid color-mix(in srgb, #d97706 25%, transparent); outline-offset: 2px; }
-    .app-icon-action.danger { color: #b91c1c; }
-    .app-icon-action:disabled { opacity: .55; cursor: not-allowed; }
-  `],
+  templateUrl: './icon-button.component.html',
+  styleUrls: ['./icon-button.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class IconButtonComponent {
