@@ -7,6 +7,7 @@ import com.bemo.hr.manufacturing.production.infrastructure.ProductionReceiptRepo
 import com.bemo.hr.manufacturing.production.infrastructure.RoutingHeaderRepository;
 import com.bemo.hr.manufacturing.production.infrastructure.WorkCenterRepository;
 import com.bemo.hr.operations.OperationsService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @Service
 public class ManufacturingExecutionService {
 
@@ -34,24 +36,34 @@ public class ManufacturingExecutionService {
 
     @Transactional
     public WorkCenter createWorkCenter(String code, String name, BigDecimal hourlyRate, BigDecimal capacityHoursPerDay) {
+        log.debug("createWorkCenter called with code={}, name={}", code, name);
         WorkCenter wc = new WorkCenter(code, name, hourlyRate, capacityHoursPerDay);
-        return workCenterRepository.save(wc);
+        WorkCenter saved = workCenterRepository.save(wc);
+        log.info("WorkCenter {} created successfully", saved.getId());
+        return saved;
     }
 
     @Transactional
     public RoutingHeader createRouting(String routingCode, String name, String itemId) {
+        log.debug("createRouting called with routingCode={}, itemId={}", routingCode, itemId);
         RoutingHeader routing = new RoutingHeader(routingCode, name, itemId);
-        return routingHeaderRepository.save(routing);
+        RoutingHeader saved = routingHeaderRepository.save(routing);
+        log.info("RoutingHeader {} created successfully", saved.getId());
+        return saved;
     }
 
     @Transactional
     public ProductionReceipt recordReceipt(String receiptNumber, String productionOrderId, String finishedItemId, BigDecimal receivedQuantity, LocalDate receiptDate, String warehouseId) {
+        log.debug("recordReceipt called with receiptNumber={}, productionOrderId={}", receiptNumber, productionOrderId);
         ProductionReceipt receipt = new ProductionReceipt(receiptNumber, productionOrderId, finishedItemId, receivedQuantity, receiptDate, warehouseId);
-        return receiptRepository.save(receipt);
+        ProductionReceipt saved = receiptRepository.save(receipt);
+        log.info("ProductionReceipt {} recorded successfully", saved.getId());
+        return saved;
     }
 
     @Transactional(readOnly = true)
     public List<ProductionReceipt> getReceiptsForOrder(String productionOrderId) {
+        log.debug("getReceiptsForOrder called with productionOrderId={}", productionOrderId);
         return receiptRepository.findByProductionOrderId(productionOrderId);
     }
 }

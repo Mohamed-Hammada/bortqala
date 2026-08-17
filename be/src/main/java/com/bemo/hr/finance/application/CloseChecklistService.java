@@ -5,6 +5,7 @@ import com.bemo.hr.finance.domain.FiscalPeriod;
 import com.bemo.hr.finance.infrastructure.FiscalPeriodRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 public class CloseChecklistService {
 
@@ -32,6 +34,7 @@ public class CloseChecklistService {
     }
 
     public CloseChecklistSummary computePrecheck(String periodId) {
+        log.debug("computePrecheck called with periodId={}", periodId);
         FiscalPeriod period = fiscalPeriodRepository.findById(periodId)
                 .orElseThrow(() -> new BusinessRuleException("Fiscal period not found", "FIN_FISCAL_PERIOD_NOT_FOUND", HttpStatus.NOT_FOUND));
 
@@ -83,6 +86,7 @@ public class CloseChecklistService {
 
         boolean canClose = checks.stream().noneMatch(c -> c.severity() == CloseCheckItem.Severity.BLOCKER);
 
+        log.info("computePrecheck completed for period {}; canClose={}", periodId, canClose);
         return new CloseChecklistSummary(
                 period.getId(),
                 period.getPeriodName(),

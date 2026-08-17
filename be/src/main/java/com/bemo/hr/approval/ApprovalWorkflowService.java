@@ -3,6 +3,7 @@ package com.bemo.hr.approval;
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ApprovalWorkflowService {
@@ -54,11 +56,13 @@ public class ApprovalWorkflowService {
 
     @Transactional(readOnly = true)
     public boolean hasActiveWorkflow(String documentType) {
+        log.debug("hasActiveWorkflow called with documentType={}", documentType);
         return !definitionRepository.findByDocumentTypeAndActiveTrue(normalizeType(documentType)).isEmpty();
     }
 
     @Transactional(readOnly = true)
     public List<ApprovalApi.WorkflowDefinitionResponse> listWorkflowDefinitions() {
+        log.debug("listWorkflowDefinitions called");
         return definitionRepository.findAll().stream()
                 .sorted(Comparator.comparing(ApprovalWorkflowDefinition::getDocumentType))
                 .map(this::mapDefinitionToResponse).toList();
@@ -66,22 +70,26 @@ public class ApprovalWorkflowService {
 
     @Transactional(readOnly = true)
     public ApprovalApi.WorkflowDefinitionResponse getWorkflowDefinition(String id) {
+        log.debug("getWorkflowDefinition called with id={}", id);
         return mapDefinitionToResponse(requireDefinition(id));
     }
 
     @Transactional
     public ApprovalApi.WorkflowDefinitionResponse createWorkflowDefinition(ApprovalApi.WorkflowDefinitionRequest request) {
+        log.debug("createWorkflowDefinition called with documentType={}", request.documentType());
         validateSteps(request.steps());
         ApprovalWorkflowDefinition def = definitionRepository.save(
                 new ApprovalWorkflowDefinition(request.documentType(), request.name(), request.active()));
         saveSteps(def.getId(), request.steps());
         auditService.record("CREATE", "APPROVAL_WORKFLOW_DEFINITION", def.getId(), actor(),
                 "{\"documentType\":\"" + def.getDocumentType() + "\"}", null);
+        log.info("Workflow definition {} created successfully", def.getId());
         return mapDefinitionToResponse(def);
     }
 
     @Transactional
     public ApprovalApi.WorkflowDefinitionResponse updateWorkflowDefinition(String id, ApprovalApi.WorkflowDefinitionRequest request) {
+        log.debug("updateWorkflowDefinition called with id={}", id);
         validateSteps(request.steps());
         ApprovalWorkflowDefinition def = requireDefinition(id);
         def.update(request.name(), request.active());
@@ -90,11 +98,13 @@ public class ApprovalWorkflowService {
         saveSteps(id, request.steps());
         auditService.record("UPDATE", "APPROVAL_WORKFLOW_DEFINITION", id, actor(),
                 "{\"version\":" + def.getVersion() + "}", null);
+        log.info("Workflow definition {} updated successfully", id);
         return mapDefinitionToResponse(def);
     }
 
     @Transactional
     public ApprovalApi.ApprovalInstanceDetailResponse submit(ApprovalApi.SubmitDocumentRequest request) {
+        log.debug("submit called with documentType={}, documentId={}", request.documentType(), request.documentId());
         String type = normalizeType(request.documentType());
         ApprovalWorkflowDefinition def = definitionRepository.findByDocumentTypeAndActiveTrue(type).stream()
                 .findFirst().orElseThrow(() -> error("APPROVAL_WORKFLOW_NOT_FOUND", HttpStatus.NOT_FOUND));
@@ -117,11 +127,13 @@ public class ApprovalWorkflowService {
         }
         auditService.record("SUBMIT", "APPROVAL_INSTANCE", instance.getId(), actor(),
                 "{\"documentId\":\"" + request.documentId() + "\",\"definitionVersion\":" + def.getVersion() + "}", null);
+        log.info("Approval instance {} submitted for document {}", instance.getId(), request.documentId());
         return getHistory(type, request.documentId());
     }
 
     @Transactional
     public ApprovalApi.ApprovalInstanceDetailResponse approve(ApprovalApi.DecisionRequest request) {
+        log.debug("approve called with instanceId={}", request.instanceId());
         ApprovalInstance instance = requireActiveInstance(request.instanceId());
         ApprovalInstanceStep step = requireCurrentStep(instance);
         String currentActor = actor();
@@ -144,12 +156,15 @@ public class ApprovalWorkflowService {
         auditService.record("APPROVE_STEP", "APPROVAL_INSTANCE", instance.getId(), currentActor,
                 "{\"stepOrder\":" + step.getStepOrder() + ",\"approvals\":" + approvals
                         + ",\"required\":" + step.getMinimumApprovals() + "}", delegatedFrom);
+        log.info("Approval instance {} step {} approved by {}", instance.getId(), step.getStepOrder(), currentActor);
         return getHistory(instance.getDocumentType(), instance.getDocumentId());
     }
 
     @Transactional
     public ApprovalApi.ApprovalInstanceDetailResponse reject(ApprovalApi.DecisionRequest request) {
+        log.debug("reject called with instanceId={}", request.instanceId());
         if (request.comment() == null || request.comment().isBlank()) {
+            log.warn("Validation failed: rejection reason required");
             throw error("APPROVAL_REJECTION_REASON_REQUIRED", HttpStatus.BAD_REQUEST);
         }
         ApprovalInstance instance = requireActiveInstance(request.instanceId());
@@ -162,11 +177,13 @@ public class ApprovalWorkflowService {
         instanceRepository.save(instance);
         auditService.record("REJECT_STEP", "APPROVAL_INSTANCE", instance.getId(), currentActor,
                 "{\"stepOrder\":" + step.getStepOrder() + "}", delegatedFrom);
+        log.info("Approval instance {} rejected by {}", instance.getId(), currentActor);
         return getHistory(instance.getDocumentType(), instance.getDocumentId());
     }
 
     @Transactional(readOnly = true)
     public List<ApprovalApi.ApprovalTaskResponse> myTasks() {
+        log.debug("myTasks called");
         String currentActor = actor();
         Set<String> roles = userRoles();
         Instant now = Instant.now();
@@ -199,6 +216,7 @@ public class ApprovalWorkflowService {
 
     @Transactional(readOnly = true)
     public ApprovalApi.ApprovalInstanceDetailResponse getHistory(String documentType, String documentId) {
+        log.debug("getHistory called with documentType={}, documentId={}", documentType, documentId);
         ApprovalInstance instance = instanceRepository.findByDocumentTypeAndDocumentId(normalizeType(documentType), documentId)
                 .orElseThrow(() -> error("APPROVAL_INSTANCE_NOT_FOUND", HttpStatus.NOT_FOUND));
         ApprovalInstanceStep current = instanceStepRepository
@@ -217,6 +235,7 @@ public class ApprovalWorkflowService {
 
     @Transactional(readOnly = true)
     public List<ApprovalApi.DelegationResponse> listDelegations() {
+        log.debug("listDelegations called");
         String currentActor = actor();
         boolean admin = isAdmin(userRoles());
         return delegationRepository.findAllByOrderByStartsAtDesc().stream()
@@ -227,6 +246,7 @@ public class ApprovalWorkflowService {
 
     @Transactional
     public ApprovalApi.DelegationResponse createDelegation(ApprovalApi.DelegationRequest request) {
+        log.debug("createDelegation called with delegatorUserId={}, delegateUserId={}", request.delegatorUserId(), request.delegateUserId());
         String currentActor = actor();
         if (!isAdmin(userRoles()) && !currentActor.equalsIgnoreCase(request.delegatorUserId())) {
             throw error("APPROVAL_NOT_AUTHORIZED", HttpStatus.FORBIDDEN);
@@ -240,11 +260,13 @@ public class ApprovalWorkflowService {
         ApprovalDelegation saved = delegationRepository.save(new ApprovalDelegation(request.delegatorUserId(),
                 request.delegateUserId(), request.documentType(), startsAt, endsAt, request.reason(), currentActor));
         auditService.record("CREATE", "APPROVAL_DELEGATION", saved.getId(), currentActor, null, null);
+        log.info("Delegation {} created successfully", saved.getId());
         return mapDelegation(saved);
     }
 
     @Transactional
     public void deactivateDelegation(String id) {
+        log.debug("deactivateDelegation called with id={}", id);
         ApprovalDelegation delegation = delegationRepository.findById(id)
                 .orElseThrow(() -> error("APPROVAL_DELEGATION_NOT_FOUND", HttpStatus.NOT_FOUND));
         String currentActor = actor();
@@ -254,30 +276,35 @@ public class ApprovalWorkflowService {
         delegation.deactivate();
         delegationRepository.save(delegation);
         auditService.record("DEACTIVATE", "APPROVAL_DELEGATION", id, currentActor, null, null);
+        log.info("Delegation {} deactivated successfully", id);
     }
 
     @Transactional
     public ApprovalApi.ApprovalInstanceDetailResponse reassign(String instanceId, ApprovalApi.ReassignRequest request) {
+        log.debug("reassign called with instanceId={}, userId={}", instanceId, request.userId());
         ApprovalInstance instance = requireActiveInstance(instanceId);
         ApprovalInstanceStep step = requireCurrentStep(instance);
         step.reassign(request.userId(), actor(), request.reason());
         instanceStepRepository.save(step);
         auditService.record("REASSIGN", "APPROVAL_INSTANCE", instanceId, actor(),
                 "{\"userId\":\"" + request.userId().strip() + "\"}", request.reason().strip());
+        log.info("Approval instance {} reassigned to {}", instanceId, request.userId());
         return getHistory(instance.getDocumentType(), instance.getDocumentId());
     }
 
     @Transactional
     public int escalateOverdue() {
+        log.debug("escalateOverdue called");
         Instant now = Instant.now();
         List<ApprovalInstance> overdue = instanceRepository
                 .findByStatusInAndStepDueAtBeforeAndEscalatedAtIsNull(ACTIVE_STATUSES, now);
         overdue.forEach(instance -> {
             instance.escalate(now);
             instanceRepository.save(instance);
-            auditService.record("ESCALATE", "APPROVAL_INSTANCE", instance.getId(), actor(),
-                    "{\"level\":" + instance.getEscalationLevel() + "}", null);
+                    auditService.record("ESCALATE", "APPROVAL_INSTANCE", instance.getId(), actor(),
+                            "{\"level\":" + instance.getEscalationLevel() + "}", null);
         });
+        log.info("Escalated {} overdue approval instances", overdue.size());
         return overdue.size();
     }
 

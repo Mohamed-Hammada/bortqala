@@ -1,6 +1,7 @@
 package com.bemo.hr.workforce;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WorkforceExcelExportService {
@@ -29,6 +31,7 @@ public class WorkforceExcelExportService {
     private final WorkforceAdvanceRepository advanceRepository;
 
     public byte[] generatePeriodExcel(String periodId) throws IOException {
+        log.debug("generatePeriodExcel called with periodId={}", periodId);
         WorkforceSettlementPeriod period = periodRepository.findById(periodId)
                 .orElseThrow(() -> new IllegalArgumentException("Period not found: " + periodId));
 
@@ -387,6 +390,7 @@ public class WorkforceExcelExportService {
             }
 
             workbook.write(out);
+            log.info("Period Excel generated successfully for periodId={}", periodId);
             return out.toByteArray();
         }
     }

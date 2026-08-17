@@ -4,6 +4,7 @@ import com.bemo.hr.payroll.domain.PayrollCalculationPolicy;
 import com.bemo.hr.payroll.infrastructure.PayrollCalculationPolicyRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @Service
 public class PayrollCalculationPolicyService {
     private static final BigDecimal INITIAL_WORKING_HOUR_DIVISOR = new BigDecimal("240");
@@ -30,11 +32,19 @@ public class PayrollCalculationPolicyService {
 
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public PayrollCalculationPolicy effectivePolicy(LocalDate date) {
+        log.debug("effectivePolicy called with date={}", date);
         List<PayrollCalculationPolicy> policies = payrollCalculationPolicyRepository.findByActiveTrueOrderByEffectiveFromDesc();
-        return policies.stream().filter(policy -> policy.appliesOn(date)).findFirst()
-                .orElseGet(() -> payrollCalculationPolicyRepository.save(new PayrollCalculationPolicy(
-                        "Initial standard payroll policy", LocalDate.of(2000, 1, 1), null,
-                        INITIAL_WORKING_HOUR_DIVISOR, INITIAL_OVERTIME_MULTIPLIER)));
+        PayrollCalculationPolicy policy = policies.stream().filter(p -> p.appliesOn(date)).findFirst()
+                .orElseGet(() -> {
+                    PayrollCalculationPolicy initial = new PayrollCalculationPolicy(
+                            "Initial standard payroll policy", LocalDate.of(2000, 1, 1), null,
+                            INITIAL_WORKING_HOUR_DIVISOR, INITIAL_OVERTIME_MULTIPLIER);
+                    PayrollCalculationPolicy saved = payrollCalculationPolicyRepository.save(initial);
+                    log.info("PayrollCalculationPolicy created (initial default) id={}", saved.getId());
+                    return saved;
+                });
+        log.debug("effectivePolicy resolved id={} for date={}", policy.getId(), date);
+        return policy;
     }
 
     public List<PayrollCalculationPolicy> list() {
@@ -44,6 +54,7 @@ public class PayrollCalculationPolicyService {
     @Transactional
     public PayrollCalculationPolicy create(String name, LocalDate effectiveFrom, LocalDate effectiveTo,
                                            BigDecimal divisor, BigDecimal multiplier) {
+        log.debug("create called with name={}, effectiveFrom={}, effectiveTo={}, divisor={}, multiplier={}", name, effectiveFrom, effectiveTo, divisor, multiplier);
         List<PayrollCalculationPolicy> policies = payrollCalculationPolicyRepository.findByActiveTrueOrderByEffectiveFromDesc();
         policies.stream()
                 .filter(existing -> existing.getEffectiveTo() == null && effectiveFrom != null
@@ -56,10 +67,13 @@ public class PayrollCalculationPolicyService {
         boolean overlaps = policies.stream()
                 .anyMatch(existing -> rangesOverlap(effectiveFrom, effectiveTo, existing.getEffectiveFrom(), existing.getEffectiveTo()));
         if (overlaps) {
+            log.warn("Validation failed: Payroll policy effective dates overlap an active policy");
             throw new BusinessRuleException("Payroll policy effective dates overlap an active policy.",
                     "PAYROLL_POLICY_DATES_OVERLAP", HttpStatus.CONFLICT);
         }
-        return payrollCalculationPolicyRepository.save(
+        PayrollCalculationPolicy saved = payrollCalculationPolicyRepository.save(
                 new PayrollCalculationPolicy(name, effectiveFrom, effectiveTo, divisor, multiplier));
+        log.info("PayrollCalculationPolicy created id={}", saved.getId());
+        return saved;
     }
 }

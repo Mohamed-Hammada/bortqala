@@ -9,6 +9,7 @@ import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
 import com.bemo.hr.finance.infrastructure.JournalSourceMetadataRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class SubledgerPostingService {
 
@@ -70,14 +72,20 @@ public class SubledgerPostingService {
             BigDecimal debitAmount, BigDecimal creditAmount, String fiscalPeriodId,
             String partyId, String currency, String actor
     ) {
+        log.debug("postSubledgerEvent called with sourceModule={}, operationId={}, businessEvent={}", sourceModule, operationId, businessEvent);
         JournalEntry replay = journalEntryRepository.findByOperationId(operationId).orElse(null);
-        if (replay != null) return replay;
+        if (replay != null) {
+            log.debug("PostSubledgerEvent replay detected for operationId={}", operationId);
+            return replay;
+        }
         if (debitAmount == null || creditAmount == null || debitAmount.compareTo(creditAmount) != 0) {
+            log.warn("Validation failed: debit and credit amounts must be equal for operationId={}", operationId);
             throw new BusinessRuleException("Debit and credit amounts must be equal for subledger posting",
                     "SUBLEDGER_UNBALANCED_POSTING", HttpStatus.CONFLICT);
         }
         var fiscalPeriod = fiscalPeriodGuard.requireOpen(eventDate);
         if (fiscalPeriodId != null && !fiscalPeriodId.equals(fiscalPeriod.getId())) {
+            log.warn("Fiscal period mismatch for operationId={}: expected={}, actual={}", operationId, fiscalPeriodId, fiscalPeriod.getId());
             throw new BusinessRuleException("The selected fiscal period does not cover the event date.",
                     "SUBLEDGER_FISCAL_PERIOD_MISMATCH", HttpStatus.CONFLICT);
         }
@@ -86,8 +94,11 @@ public class SubledgerPostingService {
                 .filter(candidate -> !eventDate.isBefore(candidate.getEffectiveFrom())
                         && (candidate.getEffectiveTo() == null || !eventDate.isAfter(candidate.getEffectiveTo())))
                 .findFirst()
-                .orElseThrow(() -> new BusinessRuleException("No effective posting profile is configured.",
-                        "SUBLEDGER_POSTING_PROFILE_REQUIRED", HttpStatus.CONFLICT));
+                .orElseThrow(() -> {
+                    log.warn("No effective posting profile found for businessEvent={}", businessEvent);
+                    return new BusinessRuleException("No effective posting profile is configured.",
+                            "SUBLEDGER_POSTING_PROFILE_REQUIRED", HttpStatus.CONFLICT);
+                });
         List<PostingProfileLine> profileLines = postingProfileLineRepository.findByProfileIdOrderByLineNoAsc(profile.getId());
         String debitAccountId = fixedAccount(profileLines, "DEBIT");
         String creditAccountId = fixedAccount(profileLines, "CREDIT");
@@ -117,6 +128,7 @@ public class SubledgerPostingService {
         auditService.record("SUBLEDGER_POSTED", "JOURNAL_ENTRY", savedEntry.getId(), "SYSTEM",
                 "Source " + sourceModule + ":" + sourceDocumentType + ":" + sourceDocumentId + "; operation=" + operationId, null);
 
+        log.info("JournalEntry {} posted successfully for operationId={}", savedEntry.getId(), operationId);
         return savedEntry;
     }
 
@@ -126,14 +138,20 @@ public class SubledgerPostingService {
             String operationId, LocalDate eventDate, String description,
             Map<String, BigDecimal> amountSources, String fiscalPeriodId,
             String partyId, String currency, String actor) {
+        log.debug("postProfileEvent called with sourceModule={}, operationId={}, businessEvent={}", sourceModule, operationId, businessEvent);
         JournalEntry replay = journalEntryRepository.findByOperationId(operationId).orElse(null);
-        if (replay != null) return replay;
+        if (replay != null) {
+            log.debug("PostProfileEvent replay detected for operationId={}", operationId);
+            return replay;
+        }
         if (amountSources == null || amountSources.isEmpty()) {
+            log.warn("Validation failed: posting amounts are required for operationId={}", operationId);
             throw new BusinessRuleException("Posting amounts are required.",
                     "SUBLEDGER_UNBALANCED_POSTING", HttpStatus.CONFLICT);
         }
         var fiscalPeriod = fiscalPeriodGuard.requireOpen(eventDate);
         if (fiscalPeriodId != null && !fiscalPeriodId.equals(fiscalPeriod.getId())) {
+            log.warn("Fiscal period mismatch for operationId={}: expected={}, actual={}", operationId, fiscalPeriodId, fiscalPeriod.getId());
             throw new BusinessRuleException("The selected fiscal period does not cover the event date.",
                     "SUBLEDGER_FISCAL_PERIOD_MISMATCH", HttpStatus.CONFLICT);
         }
@@ -142,10 +160,14 @@ public class SubledgerPostingService {
                 .filter(candidate -> !eventDate.isBefore(candidate.getEffectiveFrom())
                         && (candidate.getEffectiveTo() == null || !eventDate.isAfter(candidate.getEffectiveTo())))
                 .findFirst()
-                .orElseThrow(() -> new BusinessRuleException("No effective posting profile is configured.",
-                        "SUBLEDGER_POSTING_PROFILE_REQUIRED", HttpStatus.CONFLICT));
+                .orElseThrow(() -> {
+                    log.warn("No effective posting profile found for businessEvent={}", businessEvent);
+                    return new BusinessRuleException("No effective posting profile is configured.",
+                            "SUBLEDGER_POSTING_PROFILE_REQUIRED", HttpStatus.CONFLICT);
+                });
         List<PostingProfileLine> profileLines = postingProfileLineRepository.findByProfileIdOrderByLineNoAsc(profile.getId());
         if (profileLines.isEmpty()) {
+            log.warn("Posting profile {} has no lines", profile.getId());
             throw new BusinessRuleException("The posting profile has no lines.",
                     "SUBLEDGER_POSTING_PROFILE_INVALID", HttpStatus.CONFLICT);
         }
@@ -207,12 +229,20 @@ public class SubledgerPostingService {
 
     @Transactional
     public JournalEntry reverse(String originalEntryId, String operationId, LocalDate reversalDate, String reason, String actor) {
+        log.debug("reverse called with originalEntryId={}, operationId={}, actor={}", originalEntryId, operationId, actor);
         JournalEntry replay = journalEntryRepository.findByOperationId(operationId).orElse(null);
-        if (replay != null) return replay;
+        if (replay != null) {
+            log.debug("Reverse replay detected for operationId={}", operationId);
+            return replay;
+        }
         fiscalPeriodGuard.requireOpen(reversalDate);
         JournalEntry original = journalEntryRepository.findById(originalEntryId)
-                .orElseThrow(() -> new BusinessRuleException("Original posting was not found.", "SUBLEDGER_POSTING_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("Original posting {} not found for reversal", originalEntryId);
+                    return new BusinessRuleException("Original posting was not found.", "SUBLEDGER_POSTING_NOT_FOUND", HttpStatus.NOT_FOUND);
+                });
         if (original.getStatus() != JournalEntry.Status.POSTED) {
+            log.warn("Reversal rejected: original entry {} is not in POSTED status", originalEntryId);
             throw new BusinessRuleException("Only a posted subledger entry can be reversed.", "SUBLEDGER_REVERSAL_STATE_INVALID", HttpStatus.CONFLICT);
         }
         var originalLines = journalEntryLineRepository.findByJournalEntryId(originalEntryId);
@@ -230,6 +260,7 @@ public class SubledgerPostingService {
         journalEntryRepository.save(original);
         auditService.record("SUBLEDGER_REVERSED", "JOURNAL_ENTRY", original.getId(), actor,
                 "Reversal entry " + saved.getId() + "; operation=" + operationId, null);
+        log.info("JournalEntry {} reversed originalEntryId={}, operationId={}", saved.getId(), originalEntryId, operationId);
         return saved;
     }
 }

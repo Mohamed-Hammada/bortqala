@@ -8,6 +8,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.security.TenantContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -56,6 +58,7 @@ public class OperationsService {
     }
 
     public byte[] export(com.bemo.hr.reporting.application.ExcelExportOptions options) {
+        log.debug("export called");
         return operationsExcelExporter.export(snapshot(), inventoryValuationService.report(), options);
     }
 
@@ -68,6 +71,7 @@ public class OperationsService {
     }
 
     public List<OperationsApi.ReorderAlertView> reorderAlerts() {
+        log.debug("reorderAlerts called");
         return inventoryItemRepository.findAllByOrderByNameAsc().stream()
                 .filter(InventoryItem::isActive)
                 .map(item -> {
@@ -107,6 +111,7 @@ public class OperationsService {
     }
 
     public OperationsApi.Snapshot snapshot() {
+        log.debug("snapshot called");
         var items = inventoryItemRepository.findAllByOrderByNameAsc();
         var itemMap = items.stream().collect(Collectors.toMap(InventoryItem::getId, Function.identity()));
         var parties = businessPartyRepository.findAllByOrderByNameAsc();
@@ -156,10 +161,13 @@ public class OperationsService {
 
     @Transactional
     public OperationsApi.ItemCategoryView createItemCategory(OperationsApi.ItemCategoryRequest request) {
+        log.debug("createItemCategory called with name={}", request.name());
         if (itemCategoryRepository.findByNameAndAppId(request.name().strip(), getCurrentAppId()).isPresent()) {
+            log.warn("Validation failed: item category '{}' already exists", request.name());
             throw new BusinessRuleException("Item category already exists.", "OPS_ITEM_CATEGORY_EXISTS", HttpStatus.CONFLICT);
         }
         var entity = itemCategoryRepository.save(new ItemCategory(request.name(), request.description()));
+        log.info("ItemCategory {} created successfully", entity.getId());
         return categoryView(entity);
     }
 
@@ -170,10 +178,13 @@ public class OperationsService {
 
     @Transactional
     public OperationsApi.UnitOfMeasureView createUnitOfMeasure(OperationsApi.UnitOfMeasureRequest request) {
+        log.debug("createUnitOfMeasure called with name={}", request.name());
         if (unitOfMeasureRepository.findByNameAndAppId(request.name().strip(), getCurrentAppId()).isPresent()) {
+            log.warn("Validation failed: unit of measure '{}' already exists", request.name());
             throw new BusinessRuleException("Unit of measure already exists.", "OPS_UOM_EXISTS", HttpStatus.CONFLICT);
         }
         var entity = unitOfMeasureRepository.save(new UnitOfMeasure(request.name(), request.abbreviation(), request.description()));
+        log.info("UnitOfMeasure {} created successfully", entity.getId());
         return uomView(entity);
     }
 
@@ -192,10 +203,13 @@ public class OperationsService {
 
     @Transactional
     public OperationsApi.UnitConversionView createUnitConversion(OperationsApi.UnitConversionRequest request, String actor) {
+        log.debug("createUnitConversion called with fromUomId={}, toUomId={}, actor={}", request.fromUomId(), request.toUomId(), actor);
         if (unitConversionRepository.findByFromUomIdAndToUomId(request.fromUomId(), request.toUomId()).isPresent()) {
+            log.warn("Validation failed: conversion already exists between {} and {}", request.fromUomId(), request.toUomId());
             throw new BusinessRuleException("Conversion already exists between these units.", "OPS_CONVERSION_EXISTS", HttpStatus.CONFLICT);
         }
         if (request.factor().signum() <= 0) {
+            log.warn("Validation failed: conversion factor must be positive");
             throw new BusinessRuleException("Conversion factor must be positive.", "OPS_CONVERSION_FACTOR_POSITIVE", HttpStatus.CONFLICT);
         }
         var entity = unitConversionRepository.save(new UnitConversion(request.fromUomId(), request.toUomId(), request.factor(), actor));
@@ -205,6 +219,7 @@ public class OperationsService {
         auditService.record("CREATE", "UNIT_CONVERSION", entity.getId(), actor,
                 "Conversion: " + (from == null ? entity.getFromUomId() : from.getName())
                         + " -> " + (to == null ? entity.getToUomId() : to.getName()) + " = " + entity.getFactor(), null);
+        log.info("UnitConversion {} created successfully", entity.getId());
         return new OperationsApi.UnitConversionView(entity.getId(), entity.getFromUomId(),
                 from == null ? "—" : from.getName(),
                 entity.getToUomId(), to == null ? "—" : to.getName(),
@@ -223,10 +238,13 @@ public class OperationsService {
 
     @Transactional
     public OperationsApi.Snapshot createStockAdjustment(OperationsApi.AdjustmentRequest request, String actor) {
+        log.debug("createStockAdjustment called with itemId={}, actor={}", request.itemId(), actor);
         if (!request.approved()) {
+            log.warn("Validation failed: adjustment requires approval for itemId={}", request.itemId());
             throw new BusinessRuleException("An authorized approval is required for inventory adjustments.", "OPS_ADJUSTMENT_APPROVAL_REQUIRED", HttpStatus.CONFLICT);
         }
         if (request.quantityDelta().signum() == 0) {
+            log.warn("Validation failed: adjustment quantity cannot be zero for itemId={}", request.itemId());
             throw new BusinessRuleException("Adjustment quantity cannot be zero.", "OPS_ADJUSTMENT_QTY_ZERO", HttpStatus.CONFLICT);
         }
         requireItem(request.itemId());
@@ -240,23 +258,29 @@ public class OperationsService {
         inventoryValuationService.valueMovement(sm, null, actor);
         auditService.record("STOCK_ADJUSTMENT", "STOCK_ITEM", request.itemId(), actor,
                 "Stock adjustment qty: " + request.quantityDelta() + " reason: " + request.reason(), null);
+        log.info("Stock adjustment created for itemId={}, qty={}", request.itemId(), request.quantityDelta());
         return snapshot();
     }
 
     @Transactional
     public OperationsApi.ItemView createItem(OperationsApi.ItemRequest request) {
-        if (inventoryItemRepository.existsByCodeIgnoreCase(request.code()))
+        log.debug("createItem called with code={}, name={}", request.code(), request.name());
+        if (inventoryItemRepository.existsByCodeIgnoreCase(request.code())) {
+            log.warn("Validation failed: item code '{}' already exists", request.code());
             throw new BusinessRuleException("Item code already exists.", "OPS_ITEM_CODE_EXISTS", HttpStatus.CONFLICT);
+        }
         var item = inventoryItemRepository.save(new InventoryItem(request.code(), request.name(), request.itemType(), request.unitCode()));
         item.configureReorder(request.reorderPoint(), request.reorderQuantity());
         if (request.categoryId() != null || request.uomId() != null) {
             item.assignMasterData(request.categoryId(), request.uomId());
         }
+        log.info("InventoryItem {} created successfully", item.getId());
         return itemView(item, BigDecimal.ZERO, Map.of(), Map.of());
     }
 
     @Transactional
     public OperationsApi.ItemView updateItem(String id, OperationsApi.ItemRequest request) {
+        log.debug("updateItem called with id={}, code={}", id, request.code());
         var item = requireItem(id);
         if (request.version() == null || request.version() != item.getVersion())
             throw new BusinessRuleException("This item changed. Refresh and retry.", "OPS_ITEM_VERSION_CONFLICT", HttpStatus.CONFLICT);
@@ -272,7 +296,9 @@ public class OperationsService {
 
     @Transactional
     public OperationsApi.Snapshot recordTransaction(OperationsApi.TransactionRequest request, String actor) {
+        log.debug("recordTransaction called with operationType={}, actor={}", request.operationType(), actor);
         if (request.quantityDelta().signum() == 0 && request.amountDelta().signum() == 0) {
+            log.warn("Validation failed: quantity and amount cannot both be zero");
             throw new BusinessRuleException("Quantity and amount cannot both be zero.", "OPS_MOVEMENT_QTY_AMOUNT_ZERO", HttpStatus.CONFLICT);
         }
         if (request.quantityDelta().signum() < 0) {
@@ -303,6 +329,7 @@ public class OperationsService {
                     request.attachmentContentType(), request.attachmentSize());
             inventoryValuationService.valueMovement(sm, request.unitCost(), actor);
             auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", request.itemId(), actor, "Recorded stock movement " + op + " qty: " + qty, null);
+            log.info("Stock movement {} recorded for itemId={}, qty={}", op, request.itemId(), qty);
         }
         if (request.amountDelta().signum() != 0) {
             var partyId = normalizeId(request.partyId());
@@ -331,6 +358,7 @@ public class OperationsService {
     @Transactional
     public void recordGoodsReceipt(String itemId, String supplierId, String warehouseId, BigDecimal acceptedQuantity,
                                    BigDecimal unitCost, String grnNumber, String lotNumber, String note, Instant occurredAt, String actor) {
+        log.debug("recordGoodsReceipt called with itemId={}, supplierId={}, grnNumber={}, actor={}", itemId, supplierId, grnNumber, actor);
         requireItem(itemId);
         if (acceptedQuantity == null || acceptedQuantity.signum() <= 0) {
             throw new BusinessRuleException("Accepted goods-receipt quantity must be positive.", "OPS_GRN_ACCEPTED_POSITIVE", HttpStatus.CONFLICT);
@@ -347,11 +375,13 @@ public class OperationsService {
         }
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Goods receipt " + grnNumber + " accepted qty: " + acceptedQuantity, null);
+        log.info("Goods receipt {} recorded for itemId={}, qty={}", grnNumber, itemId, acceptedQuantity);
     }
 
     @Transactional
     public void recordSupplierReturn(String itemId, String supplierId, BigDecimal returnQuantity,
                                      BigDecimal unitCost, String returnNumber, String note, Instant occurredAt, String actor) {
+        log.debug("recordSupplierReturn called with itemId={}, supplierId={}, returnNumber={}, actor={}", itemId, supplierId, returnNumber, actor);
         requireItem(itemId);
         if (returnQuantity == null || returnQuantity.signum() <= 0) {
             throw new BusinessRuleException("Supplier return quantity must be positive.", "OPS_RETURN_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
@@ -366,10 +396,12 @@ public class OperationsService {
         inventoryValuationService.valueMovement(movement, unitCost, actor);
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Supplier return " + returnNumber + " return qty: " + returnQuantity, null);
+        log.info("Supplier return {} recorded for itemId={}, qty={}", returnNumber, itemId, returnQuantity);
     }
 
     @Transactional
     public BigDecimal recordProductionIssue(String itemId, BigDecimal quantity, String orderNumber, String note, Instant occurredAt, String actor) {
+        log.debug("recordProductionIssue called with itemId={}, orderNumber={}, actor={}", itemId, orderNumber, actor);
         requireItem(itemId);
         if (quantity == null || quantity.signum() <= 0) {
             throw new BusinessRuleException("Production issue quantity must be positive.", "OPS_PROD_ISSUE_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
@@ -384,11 +416,13 @@ public class OperationsService {
         var movementCost = inventoryValuationService.valueMovement(movement, null, actor);
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Production issue " + orderNumber + " qty: " + quantity, null);
+        log.info("Production issue {} recorded for itemId={}, qty={}", orderNumber, itemId, quantity);
         return movementCost.getValueEffect().abs();
     }
 
     @Transactional
     public void recordProductionReceipt(String itemId, BigDecimal quantity, BigDecimal unitCost, String orderNumber, String note, Instant occurredAt, String actor) {
+        log.debug("recordProductionReceipt called with itemId={}, orderNumber={}, actor={}", itemId, orderNumber, actor);
         requireItem(itemId);
         if (quantity == null || quantity.signum() <= 0) {
             throw new BusinessRuleException("Production receipt quantity must be positive.", "OPS_PROD_RECEIPT_QUANTITY_POSITIVE", HttpStatus.CONFLICT);
@@ -399,10 +433,12 @@ public class OperationsService {
         inventoryValuationService.valueMovement(movement, unitCost, actor);
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Production receipt " + orderNumber + " qty: " + quantity, null);
+        log.info("Production receipt {} recorded for itemId={}, qty={}", orderNumber, itemId, quantity);
     }
 
     @Transactional
     public OperationsApi.Snapshot recordAdvance(OperationsApi.AdvanceRequest request, String actor) {
+        log.debug("recordAdvance called with employeeId={}, amount={}, actor={}", request.employeeId(), request.amountDelta(), actor);
         if (request.amountDelta().signum() == 0)
             throw new BusinessRuleException("Advance amount cannot be zero.", "OPS_ADVANCE_AMOUNT_ZERO", HttpStatus.CONFLICT);
         var employee = employeeRepository.findById(request.employeeId())
@@ -416,13 +452,16 @@ public class OperationsService {
                 request.entryType(), request.note(), request.occurredAt(), actor));
         auditService.record("EMPLOYEE_ADVANCE", "EMPLOYEE", employee.getId(), actor,
                 "Recorded advance for " + employee.getFullName() + " amount: " + request.amountDelta(), null);
+        log.info("Employee advance recorded for employeeId={}, amount={}", employee.getId(), request.amountDelta());
         return snapshot();
     }
 
     @Transactional
     public void recordAdvanceIssuance(String employeeId, BigDecimal amount, String entryType, String note,
                                       Instant occurredAt, String actor) {
+        log.debug("recordAdvanceIssuance called with employeeId={}, amount={}, actor={}", employeeId, amount, actor);
         if (amount == null || amount.signum() <= 0) {
+            log.warn("Validation failed: advance amount must be positive");
             throw new BusinessRuleException("يجب أن يكون مبلغ السلفة أكبر من صفر.", "ADVANCE_AMOUNT_POSITIVE_REQUIRED", HttpStatus.CONFLICT);
         }
         var employee = employeeRepository.findById(employeeId)
@@ -438,6 +477,7 @@ public class OperationsService {
                 entryType, note, occurredAt == null ? Instant.now() : occurredAt, actor));
         auditService.record("EMPLOYEE_ADVANCE", "EMPLOYEE", employee.getId(), actor,
                 "Recorded advance for " + employee.getFullName() + " amount: " + amount, null);
+        log.info("Employee advance issuance recorded for employeeId={}, amount={}", employee.getId(), amount);
     }
 
     public BigDecimal getAdvanceBalance(String employeeId) {
@@ -482,6 +522,7 @@ public class OperationsService {
     public ValuedMovement recordSalesDelivery(String itemId, String customerId, String warehouseId,
                                               String reservationId, BigDecimal quantity, String deliveryNumber,
                                               Instant occurredAt, String actor) {
+        log.debug("recordSalesDelivery called with itemId={}, deliveryNumber={}, actor={}", itemId, deliveryNumber, actor);
         requireItem(itemId);
         if (quantity == null || quantity.signum() <= 0) {
             throw new BusinessRuleException("Sales delivery quantity must be positive.",
@@ -502,6 +543,7 @@ public class OperationsService {
         var cost = inventoryValuationService.valueMovement(movement, null, actor);
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Sales delivery " + deliveryNumber + " qty: " + quantity, null);
+        log.info("Sales delivery {} recorded for itemId={}, qty={}", deliveryNumber, itemId, quantity);
         return new ValuedMovement(movement.getId(), cost.getUnitCost(), cost.getValueEffect().abs(), cost.getJournalEntryId());
     }
 
@@ -509,6 +551,7 @@ public class OperationsService {
     public ValuedMovement recordCustomerReturn(String itemId, String customerId, String warehouseId,
                                                BigDecimal quantity, BigDecimal originalUnitCost,
                                                String returnNumber, String disposition, Instant occurredAt, String actor) {
+        log.debug("recordCustomerReturn called with itemId={}, returnNumber={}, actor={}", itemId, returnNumber, actor);
         requireItem(itemId);
         if (quantity == null || quantity.signum() <= 0) {
             throw new BusinessRuleException("Customer return quantity must be positive.",
@@ -526,6 +569,7 @@ public class OperationsService {
         warehouseInventoryService.receiveAvailableStock(warehouseId, itemId, quantity);
         auditService.record("STOCK_MOVEMENT", "STOCK_ITEM", itemId, actor,
                 "Customer return " + returnNumber + " qty: " + quantity, null);
+        log.info("Customer return {} recorded for itemId={}, qty={}", returnNumber, itemId, quantity);
         return new ValuedMovement(movement.getId(), cost.getUnitCost(), cost.getValueEffect().abs(), cost.getJournalEntryId());
     }
 
@@ -595,6 +639,7 @@ public class OperationsService {
     }
 
     public ProductionIssueEvidence productionIssueEvidence(String orderNumber, String itemId) {
+        log.debug("productionIssueEvidence called with orderNumber={}, itemId={}", orderNumber, itemId);
         var issues = stockMovementRepository.findByOperationTypeAndReferenceCodeAndItemId(
                 "PRODUCTION_ISSUE", orderNumber, itemId);
         if (issues.isEmpty()) {

@@ -1,6 +1,7 @@
 package com.bemo.hr.bulkimport.application;
 
 import com.bemo.hr.bulkimport.domain.SmartImportModels.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -10,6 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Service
 public class SmartImportService {
     private final SmartImportCatalog catalog;
@@ -28,18 +30,22 @@ public class SmartImportService {
     }
 
     public List<Workflow> workflows() {
+        log.debug("workflows called");
         return catalog.list();
     }
 
     public Workflow workflow(String key) {
+        log.debug("workflow called with key={}", key);
         return catalog.require(key);
     }
 
     public byte[] template(String key, boolean sample) {
+        log.debug("template called with key={}, sample={}", key, sample);
         return workbook.buildTemplate(catalog.require(key), sample);
     }
 
     public Preview preview(String key, MultipartFile file) {
+        log.debug("preview called with key={}, fileName={}", key, file.getOriginalFilename());
         var workflow = catalog.require(key);
         var rawRows = workbook.parse(workflow, file);
         var validated = validator.validate(workflow, rawRows);
@@ -54,6 +60,7 @@ public class SmartImportService {
     }
 
     public CommitResult commit(String key, CommitRequest request) {
+        log.debug("commit called with key={}, previewId={}, skipInvalid={}", key, request.previewId(), request.skipInvalid());
         var workflow = catalog.require(key);
         var original = previews.get(request.previewId());
         if (original == null || !original.workflow().key().equals(workflow.key())) {
@@ -85,11 +92,13 @@ public class SmartImportService {
         String status = outcome.persisted()
                 ? (rejected > 0 ? "COMPLETED_WITH_ERRORS" : "COMPLETED")
                 : "VALIDATED_ONLY";
+        log.info("Import commit completed: key={}, status={}, committed={}, rejected={}", key, status, outcome.committedRows(), rejected);
         return new CommitResult(batchId, workflow.key(), status, outcome.persisted(), outcome.committedRows(), rejected,
                 outcome.messageEn(), outcome.messageAr(), allErrors);
     }
 
     public byte[] rejectedWorkbook(UUID batchId) {
+        log.debug("rejectedWorkbook called with batchId={}", batchId);
         var batch = rejectedBatches.get(batchId);
         if (batch == null)
             throw new IllegalArgumentException("Rejected-row export is no longer available for this batch.");

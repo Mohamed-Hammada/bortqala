@@ -3,12 +3,14 @@ package com.bemo.hr.shared.security;
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EntitlementManagementService {
@@ -27,12 +29,14 @@ public class EntitlementManagementService {
 
     @Transactional(readOnly = true)
     public List<EntitlementApi.ModuleResponse> catalog(String appId) {
+        log.debug("catalog called with appId={}", appId);
         Map<String, TenantFeature> rows = repository.findByAppId(appId).stream().collect(java.util.stream.Collectors.toMap(TenantFeature::getFeatureKey, java.util.function.Function.identity()));
         return catalog.modules().stream().map(m -> new EntitlementApi.ModuleResponse(m.key(), m.features().stream().map(f -> view(appId, f, rows.get(f.key()))).toList())).toList();
     }
 
     @Transactional
     public EntitlementApi.FeatureResponse update(String appId, String key, EntitlementApi.UpdateRequest request, String actor) {
+        log.debug("update called with appId={}, key={}, actor={}", appId, key, actor);
         EntitlementCatalog.Feature definition = catalog.feature(key).orElseThrow(() -> error("ENTITLEMENT_UNKNOWN_FEATURE"));
         TenantFeature row = repository.findById(new TenantFeatureId(appId, key)).orElseGet(() -> new TenantFeature(appId, key, featureService.isEnabledForTenant(appId, key), null, actor));
         if (row.getVersion() != request.expectedVersion())
@@ -47,11 +51,13 @@ public class EntitlementManagementService {
         row.update(request.enabled(), request.configJson(), request.reason(), actor);
         repository.save(row);
         auditService.record("UPDATE", "TENANT_ENTITLEMENT", key, actor, "{\"before\":" + before + ",\"after\":" + request.enabled() + ",\"reason\":\"" + escape(request.reason()) + "\"}", null);
+        log.info("Entitlement {} updated by {} enabled={}", key, actor, request.enabled());
         return view(appId, definition, row);
     }
 
     @Transactional
     public void applyPlan(String appId, Set<String> desired, String reason, String actor) {
+        log.debug("applyPlan called with appId={}, desiredSize={}, actor={}", appId, desired.size(), actor);
         Set<String> known = catalog.modules().stream().flatMap(m -> m.features().stream()).map(EntitlementCatalog.Feature::key).collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
         if (!known.containsAll(desired))
             throw new BusinessRuleException("ENTITLEMENT_UNKNOWN_FEATURE", "ENTITLEMENT_UNKNOWN_FEATURE", HttpStatus.BAD_REQUEST);
@@ -89,6 +95,7 @@ public class EntitlementManagementService {
                 throw new BusinessRuleException("ENTITLEMENT_DEPENDENT_ACTIVE", "ENTITLEMENT_DEPENDENT_ACTIVE", HttpStatus.CONFLICT);
         }
         auditService.record("PLAN_SYNC", "TENANT_ENTITLEMENT", appId, actor, "{\"features\":" + desired.size() + ",\"reason\":\"" + escape(reason) + "\"}", null);
+        log.info("Entitlement plan applied for app={} by {} features={}", appId, actor, desired.size());
     }
 
     private void set(String appId, String key, boolean enabled, Map<String, TenantFeature> rows, String reason, String actor) {

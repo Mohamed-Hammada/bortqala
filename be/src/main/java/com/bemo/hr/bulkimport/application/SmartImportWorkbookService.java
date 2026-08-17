@@ -2,6 +2,7 @@ package com.bemo.hr.bulkimport.application;
 
 import com.bemo.hr.bulkimport.domain.SmartImportModels.*;
 import com.bemo.hr.bulkimport.domain.SmartImportModels.Sheet;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -17,6 +18,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Slf4j
 @Component
 public class SmartImportWorkbookService {
     private final SmartImportCatalog catalog;
@@ -57,6 +59,7 @@ public class SmartImportWorkbookService {
     }
 
     public byte[] buildTemplate(Workflow workflow, boolean sample) {
+        log.debug("buildTemplate called with workflowKey={}, sample={}", workflow.key(), sample);
         try (var workbook = new XSSFWorkbook(); var out = new ByteArrayOutputStream()) {
             var headerStyle = headerStyle(workbook);
             var dateStyle = workbook.createCellStyle();
@@ -83,6 +86,7 @@ public class SmartImportWorkbookService {
     }
 
     public List<PreviewRow> parse(Workflow workflow, MultipartFile file) {
+        log.debug("parse called with workflowKey={}, fileName={}", workflow.key(), file.getOriginalFilename());
         String name = file.getOriginalFilename() == null ? "upload" : file.getOriginalFilename();
         String lower = name.toLowerCase(Locale.ROOT);
         try {

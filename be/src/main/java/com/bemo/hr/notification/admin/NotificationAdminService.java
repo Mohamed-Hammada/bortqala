@@ -4,6 +4,7 @@ import com.bemo.hr.notification.push.NotificationCreatedEvent;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationAdminService {
@@ -75,6 +77,7 @@ public class NotificationAdminService {
 
     @Transactional(readOnly = true)
     public List<NotificationAdminApi.AppSummary> apps(Authentication auth) {
+        log.debug("apps called");
         String currentApp = TenantContext.require();
         if (!isSuperAdmin(auth)) {
             return appRepository.findById(currentApp).filter(TenantApplication::isActive)
@@ -88,6 +91,7 @@ public class NotificationAdminService {
 
     @Transactional(readOnly = true)
     public List<NotificationAdminApi.UserSummary> users(String appId, String query, Authentication auth) {
+        log.debug("users called with appId={}, query={}", appId, query);
         String target = authorizeTargetApp(appId, auth);
         String q = query == null ? "" : query.strip().toLowerCase(Locale.ROOT);
         return userRepository.findAllByAppIdOrderByDisplayNameAsc(target).stream()
@@ -99,6 +103,7 @@ public class NotificationAdminService {
 
     @Transactional(readOnly = true)
     public NotificationAdminApi.ExcelPreview previewExcel(String appId, MultipartFile file, Authentication auth) {
+        log.debug("previewExcel called with appId={}, fileName={}", appId, file != null ? file.getOriginalFilename() : null);
         String target = authorizeTargetApp(appId, auth);
         if (file == null || file.isEmpty()) throw badRequest("Excel file is required", "NOTIFICATION_EXCEL_REQUIRED");
         if (file.getSize() > MAX_EXCEL_BYTES)
@@ -134,6 +139,7 @@ public class NotificationAdminService {
 
     @Transactional
     public NotificationAdminApi.BulkSendResult send(NotificationAdminApi.BulkSendPayload payload, Authentication auth) {
+        log.debug("send called with targetAppId={}, mode={}, notificationType={}", payload.targetAppId(), payload.mode(), payload.notificationType());
         String target = authorizeTargetApp(payload.targetAppId(), auth);
         List<AppUser> allUsers = userRepository.findAllByAppIdOrderByDisplayNameAsc(target);
         Map<String, AppUser> byUsername = allUsers.stream().collect(Collectors.toMap(
@@ -177,6 +183,7 @@ public class NotificationAdminService {
                   (id,app_id,recipient_username,title_ar,title_en,message_ar,message_en,notification_type,priority,action_link,is_read,created_at)
                 values (?,?,?,?,?,?,?,?,?,?,false,?)
                 """, rows);
+        log.info("Bulk notifications sent successfully: bulkId={}, recipients={}", bulkId, valid.size());
         events.forEach(eventPublisher::publishEvent);
         return new NotificationAdminApi.BulkSendResult(bulkId, requestedNames.size(), valid.size(), missing, inactive);
     }

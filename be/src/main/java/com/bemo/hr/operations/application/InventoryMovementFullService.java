@@ -13,6 +13,7 @@ import com.bemo.hr.operations.infrastructure.StockTransferLineRepository;
 import com.bemo.hr.organization.domain.Warehouse;
 import com.bemo.hr.organization.infrastructure.WarehouseRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 
+@Slf4j
 @Service
 public class InventoryMovementFullService {
 
@@ -54,6 +56,7 @@ public class InventoryMovementFullService {
 
     @Transactional
     public StockTransferHeader createTransfer(String transferNumber, String sourceWarehouseId, String targetWarehouseId, LocalDate transferDate) {
+        log.debug("createTransfer called with transferNumber={}, sourceWarehouseId={}, targetWarehouseId={}", transferNumber, sourceWarehouseId, targetWarehouseId);
         String normalizedNumber = requireText(transferNumber, "TRANSFER_NUMBER_REQUIRED");
         if (sourceWarehouseId == null || sourceWarehouseId.equals(targetWarehouseId)) {
             throw new BusinessRuleException("Source and target warehouses must be different.",
@@ -73,11 +76,14 @@ public class InventoryMovementFullService {
                     "TRANSFER_NUMBER_EXISTS", HttpStatus.CONFLICT);
         }
         StockTransferHeader transfer = new StockTransferHeader(normalizedNumber, sourceWarehouseId, targetWarehouseId, transferDate);
-        return transferHeaderRepository.save(transfer);
+        StockTransferHeader saved = transferHeaderRepository.save(transfer);
+        log.info("StockTransferHeader {} created successfully", saved.getId());
+        return saved;
     }
 
     @Transactional
     public StockTransferLine addTransferLine(String transferId, String itemId, BigDecimal quantity) {
+        log.debug("addTransferLine called with transferId={}, itemId={}, quantity={}", transferId, itemId, quantity);
         StockTransferHeader transfer = getTransfer(transferId);
         if (transfer.getStatus() != StockTransferHeader.Status.DRAFT) {
             throw new BusinessRuleException("Lines can only be added to a draft transfer.",
@@ -95,11 +101,14 @@ public class InventoryMovementFullService {
                     "TRANSFER_ITEM_DUPLICATE", HttpStatus.CONFLICT);
         }
         StockTransferLine line = new StockTransferLine(transferId, itemId, quantity);
-        return transferLineRepository.save(line);
+        StockTransferLine saved = transferLineRepository.save(line);
+        log.info("StockTransferLine {} added to transfer {}", saved.getId(), transferId);
+        return saved;
     }
 
     @Transactional
     public StockTransferHeader shipTransfer(String transferId, String actor) {
+        log.debug("shipTransfer called with transferId={}, actor={}", transferId, actor);
         StockTransferHeader transfer = getTransfer(transferId);
         if (transfer.getStatus() == StockTransferHeader.Status.SHIPPED) return transfer;
         if (transfer.getStatus() != StockTransferHeader.Status.DRAFT) {
@@ -124,11 +133,13 @@ public class InventoryMovementFullService {
         StockTransferHeader saved = transferHeaderRepository.save(transfer);
         auditService.record("STOCK_TRANSFER_SHIPPED", "STOCK_TRANSFER", saved.getId(), actor,
                 "Shipped transfer " + saved.getTransferNumber() + " lines=" + lines.size(), null);
+        log.info("StockTransferHeader {} shipped successfully", saved.getId());
         return saved;
     }
 
     @Transactional
     public StockTransferHeader receiveTransfer(String transferId, String actor) {
+        log.debug("receiveTransfer called with transferId={}, actor={}", transferId, actor);
         StockTransferHeader transfer = getTransfer(transferId);
         if (transfer.getStatus() == StockTransferHeader.Status.RECEIVED) return transfer;
         if (transfer.getStatus() != StockTransferHeader.Status.SHIPPED) {
@@ -142,11 +153,13 @@ public class InventoryMovementFullService {
         StockTransferHeader saved = transferHeaderRepository.save(transfer);
         auditService.record("STOCK_TRANSFER_RECEIVED", "STOCK_TRANSFER", saved.getId(), actor,
                 "Received transfer " + saved.getTransferNumber() + " lines=" + lines.size(), null);
+        log.info("StockTransferHeader {} received successfully", saved.getId());
         return saved;
     }
 
     @Transactional
     public StockTransferHeader cancelTransfer(String transferId, String actor) {
+        log.debug("cancelTransfer called with transferId={}, actor={}", transferId, actor);
         StockTransferHeader transfer = getTransfer(transferId);
         if (transfer.getStatus() == StockTransferHeader.Status.CANCELLED) return transfer;
         if (transfer.getStatus() != StockTransferHeader.Status.DRAFT) {
@@ -157,6 +170,7 @@ public class InventoryMovementFullService {
         StockTransferHeader saved = transferHeaderRepository.save(transfer);
         auditService.record("STOCK_TRANSFER_CANCELLED", "STOCK_TRANSFER", saved.getId(), actor,
                 "Cancelled transfer " + saved.getTransferNumber(), null);
+        log.info("StockTransferHeader {} cancelled successfully", saved.getId());
         return saved;
     }
 
@@ -173,14 +187,18 @@ public class InventoryMovementFullService {
 
     @Transactional
     public CycleCountHeader createCycleCount(String countNumber, String warehouseId, LocalDate countDate) {
+        log.debug("createCycleCount called with countNumber={}, warehouseId={}", countNumber, warehouseId);
         requireWarehouse(warehouseId);
         CycleCountHeader count = new CycleCountHeader(countNumber, warehouseId, countDate);
         count.start();
-        return cycleCountHeaderRepository.save(count);
+        CycleCountHeader saved = cycleCountHeaderRepository.save(count);
+        log.info("CycleCountHeader {} created successfully", saved.getId());
+        return saved;
     }
 
     @Transactional
     public CycleCountLine addCycleCountLine(String countId, String itemId, BigDecimal systemQuantity, BigDecimal countedQuantity) {
+        log.debug("addCycleCountLine called with countId={}, itemId={}", countId, itemId);
         CycleCountHeader count = cycleCountHeaderRepository.findById(countId)
                 .orElseThrow(() -> new BusinessRuleException("Cycle count not found", "CYCLE_COUNT_NOT_FOUND", HttpStatus.NOT_FOUND));
         if (count.getStatus() != CycleCountHeader.Status.IN_PROGRESS) {
@@ -189,11 +207,14 @@ public class InventoryMovementFullService {
         operationsService.inventoryItem(itemId);
         CycleCountLine line = new CycleCountLine(countId, itemId,
                 warehouseInventoryService.getPhysicalStock(count.getWarehouseId(), itemId), countedQuantity);
-        return cycleCountLineRepository.save(line);
+        CycleCountLine saved = cycleCountLineRepository.save(line);
+        log.info("CycleCountLine {} added to cycle count {}", saved.getId(), countId);
+        return saved;
     }
 
     @Transactional
     public CycleCountHeader adjustCycleCount(String countId, String actor) {
+        log.debug("adjustCycleCount called with countId={}, actor={}", countId, actor);
         CycleCountHeader count = cycleCountHeaderRepository.findById(countId)
                 .orElseThrow(() -> new BusinessRuleException("Cycle count not found", "CYCLE_COUNT_NOT_FOUND", HttpStatus.NOT_FOUND));
         if (count.getStatus() == CycleCountHeader.Status.ADJUSTED) return count;
@@ -211,12 +232,14 @@ public class InventoryMovementFullService {
         CycleCountHeader saved = cycleCountHeaderRepository.save(count);
         auditService.record("CYCLE_COUNT_ADJUSTED", "CYCLE_COUNT", saved.getId(), actor,
                 "Adjusted cycle count " + saved.getCountNumber(), null);
+        log.info("CycleCountHeader {} adjusted successfully", saved.getId());
         return saved;
     }
 
     @Transactional
     public CycleCountHeader reconcile(String operationId, String warehouseId, String itemId,
                                       BigDecimal countedQuantity, LocalDate countDate, String actor) {
+        log.debug("reconcile called with operationId={}, warehouseId={}, itemId={}, actor={}", operationId, warehouseId, itemId, actor);
         var replay = cycleCountHeaderRepository.findByCountNumber(operationId);
         if (replay.isPresent()) return replay.get();
         CycleCountHeader count = createCycleCount(operationId, warehouseId, countDate);

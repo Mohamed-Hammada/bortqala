@@ -6,6 +6,7 @@ import com.bemo.hr.employee.domain.PayCycle;
 import com.bemo.hr.employee.domain.ScheduleRule;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -16,6 +17,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Service
+@Slf4j
 @Profile({"dev", "demo"})
 public class DemoReferenceDataService {
     private static final int SATURDAY_TO_THURSDAY_MASK = 111;

@@ -2,6 +2,7 @@ package com.bemo.hr.finance.application.close;
 
 import com.bemo.hr.finance.domain.close.PeriodCloseExecutionRecord;
 import com.bemo.hr.finance.infrastructure.PeriodCloseExecutionRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class PeriodCloseWorkbenchService {
 
@@ -23,6 +25,7 @@ public class PeriodCloseWorkbenchService {
 
     @Transactional(readOnly = true)
     public WorkbenchSummary getWorkbenchSummary(String periodId) {
+        log.debug("getWorkbenchSummary called with periodId={}", periodId);
         Map<String, PeriodCloseExecutionRecord> executedMap = executionRepository.findByPeriodId(periodId).stream()
                 .filter(rec -> rec.getStatus() == PeriodCloseExecutionRecord.Status.CLOSED)
                 .collect(Collectors.toMap(PeriodCloseExecutionRecord::getModuleName, rec -> rec, (a, b) -> a));
@@ -41,6 +44,7 @@ public class PeriodCloseWorkbenchService {
             } catch (RuntimeException ex) {
                 isReady = false;
                 blocker = "Readiness check failed: " + ex.getClass().getSimpleName();
+                log.warn("Workbench readiness check failed for module {}: {}", name, ex.getMessage());
             }
             boolean isExecuted = executedMap.containsKey(name);
 
@@ -51,6 +55,7 @@ public class PeriodCloseWorkbenchService {
         }
 
         List<PeriodCloseExecutionRecord> recentExecutions = executionRepository.findByPeriodId(periodId);
+        log.info("Workbench summary for period {}: modules={}, ready={}, executed={}", periodId, providers.size(), readyCount, executedCount);
         return new WorkbenchSummary(periodId, providers.size(), readyCount, executedCount, statuses, recentExecutions);
     }
 

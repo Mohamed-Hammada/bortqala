@@ -2,6 +2,7 @@ package com.bemo.hr.shared.i18n;
 
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantContext;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 @Service
+@Slf4j
 @Transactional(readOnly = true)
 public class TranslationService {
     private static final String DEFAULT_LOCALE = "ar-EG";

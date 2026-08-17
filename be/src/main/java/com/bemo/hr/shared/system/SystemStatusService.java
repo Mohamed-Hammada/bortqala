@@ -6,11 +6,13 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.info.BuildProperties;
 import org.springframework.http.HttpStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 
+@Slf4j
 @Service
 class SystemStatusService {
     private final SystemSettingRepository systemSettingRepository;
@@ -31,13 +33,16 @@ class SystemStatusService {
 
     @Transactional(readOnly = true)
     SystemStatusApi.StatusResponse status() {
+        log.debug("status called");
         return response(requireCacheSetting());
     }
 
     @Transactional
     SystemStatusApi.StatusResponse rotateCacheVersion(String actor, String reason) {
+        log.debug("rotateCacheVersion called with actor={}", actor);
         SystemSetting setting = requireCacheSetting();
         setting.rotate(actor, reason);
+        log.info("Cache version rotated by {}", actor);
         return response(systemSettingRepository.save(setting));
     }
 

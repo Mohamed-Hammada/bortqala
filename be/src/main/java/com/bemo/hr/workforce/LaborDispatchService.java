@@ -2,6 +2,7 @@ package com.bemo.hr.workforce;
 
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @Service
 public class LaborDispatchService {
 
@@ -35,6 +37,7 @@ public class LaborDispatchService {
 
     @Transactional
     public LaborDispatch createDispatch(String requestId, String contractorId, LocalDate dispatchDate, String actor) {
+        log.debug("createDispatch called with requestId={}, contractorId={}, dispatchDate={}", requestId, contractorId, dispatchDate);
         requireText(requestId, "DISPATCH_REQUEST_REQUIRED");
         requireText(contractorId, "DISPATCH_CONTRACTOR_REQUIRED");
         if (dispatchDate == null) {
@@ -42,6 +45,7 @@ public class LaborDispatchService {
         }
         LaborDispatch dispatch = new LaborDispatch(requestId, contractorId, dispatchDate);
         LaborDispatch saved = laborDispatchRepository.save(dispatch);
+        log.info("LaborDispatch {} created successfully", saved.getId());
         auditService.record("CREATE", "LABOR_DISPATCH", saved.getId(), actor,
                 "{\"requestId\":\"" + requestId + "\",\"contractorId\":\"" + contractorId + "\"}", null);
         return saved;
@@ -49,6 +53,7 @@ public class LaborDispatchService {
 
     @Transactional(readOnly = true)
     public List<LaborDispatch> listDispatches() {
+        log.debug("listDispatches called");
         return laborDispatchRepository.findAllByOrderByDispatchDateDescCreatedAtDesc();
     }
 
@@ -71,6 +76,7 @@ public class LaborDispatchService {
     public WorkerAssignment assignWorker(String dispatchId, String workerId, String requestLineId, String contractorId,
                                          LocalDate fromDate, LocalDate toDate, BigDecimal agreedRate, BigDecimal agreedHours,
                                          String actor) {
+        log.debug("assignWorker called with dispatchId={}, workerId={}", dispatchId, workerId);
         LaborDispatch dispatch = laborDispatchRepository.findById(dispatchId)
                 .orElseThrow(() -> new BusinessRuleException("Dispatch not found", "DISPATCH_NOT_FOUND", HttpStatus.NOT_FOUND));
         if (dispatch.getStatus() == LaborDispatch.Status.CANCELLED) {
@@ -90,6 +96,7 @@ public class LaborDispatchService {
 
         WorkerAssignment assignment = new WorkerAssignment(dispatchId, workerId, requestLineId, contractorId, fromDate, toDate, agreedRate, agreedHours);
         WorkerAssignment saved = workerAssignmentRepository.save(assignment);
+        log.info("WorkerAssignment {} created successfully", saved.getId());
         auditService.record("CREATE", "WORKER_ASSIGNMENT", saved.getId(), actor,
                 "{\"dispatchId\":\"" + dispatchId + "\",\"workerId\":\"" + workerId + "\"}", null);
         return saved;
@@ -112,6 +119,7 @@ public class LaborDispatchService {
     @Transactional
     public WorkerAssignment replaceAssignment(String assignmentId, String newWorkerId, BigDecimal agreedRate, BigDecimal agreedHours,
                                               String actor) {
+        log.debug("replaceAssignment called with assignmentId={}, newWorkerId={}", assignmentId, newWorkerId);
         WorkerAssignment oldAssignment = getAssignment(assignmentId);
         transitionAssignment(oldAssignment, actor, "REPLACE", oldAssignment::replace);
 
@@ -126,6 +134,7 @@ public class LaborDispatchService {
                 agreedHours
         );
         WorkerAssignment saved = workerAssignmentRepository.save(newAssignment);
+        log.info("WorkerAssignment {} replaced successfully (new id={})", assignmentId, saved.getId());
         auditService.record("CREATE", "WORKER_ASSIGNMENT", saved.getId(), actor,
                 "{\"replacementFor\":\"" + assignmentId + "\",\"workerId\":\"" + newWorkerId + "\"}", null);
         return saved;
@@ -133,6 +142,7 @@ public class LaborDispatchService {
 
     @Transactional(readOnly = true)
     public List<WorkerAssignment> getAssignmentsByDispatch(String dispatchId) {
+        log.debug("getAssignmentsByDispatch called with dispatchId={}", dispatchId);
         if (!laborDispatchRepository.existsById(dispatchId)) {
             throw new BusinessRuleException("Dispatch not found", "DISPATCH_NOT_FOUND", HttpStatus.NOT_FOUND);
         }
@@ -155,6 +165,7 @@ public class LaborDispatchService {
             throw rule(exception.getMessage(), "DISPATCH_STATUS_INVALID");
         }
         LaborDispatch saved = laborDispatchRepository.save(dispatch);
+        log.info("LaborDispatch {} {} successfully ({} -> {})", id, action, previous, saved.getStatus());
         auditService.record(action, "LABOR_DISPATCH", id, actor,
                 "{\"from\":\"" + previous + "\",\"to\":\"" + saved.getStatus() + "\"}", null);
         return saved;
@@ -168,6 +179,7 @@ public class LaborDispatchService {
             throw rule(exception.getMessage(), "ASSIGNMENT_STATUS_INVALID");
         }
         WorkerAssignment saved = workerAssignmentRepository.save(assignment);
+        log.info("WorkerAssignment {} {} successfully ({} -> {})", saved.getId(), action, previous, saved.getStatus());
         auditService.record(action, "WORKER_ASSIGNMENT", saved.getId(), actor,
                 "{\"from\":\"" + previous + "\",\"to\":\"" + saved.getStatus() + "\"}", null);
         return saved;

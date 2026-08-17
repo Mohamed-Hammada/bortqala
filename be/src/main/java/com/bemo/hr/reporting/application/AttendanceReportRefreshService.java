@@ -1,11 +1,13 @@
 package com.bemo.hr.reporting.application;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.YearMonth;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AttendanceReportRefreshService {
     private final ReportingService reportingService;

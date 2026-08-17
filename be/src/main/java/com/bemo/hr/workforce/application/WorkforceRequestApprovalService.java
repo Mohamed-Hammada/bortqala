@@ -2,12 +2,14 @@ package com.bemo.hr.workforce.application;
 
 import com.bemo.hr.workforce.domain.WorkforceRequestApproval;
 import com.bemo.hr.workforce.infrastructure.WorkforceRequestApprovalRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Slf4j
 public class WorkforceRequestApprovalService {
 
     private final WorkforceRequestApprovalRepository repository;

@@ -3,11 +3,13 @@ package com.bemo.hr.shared.sampletemplate;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+@Slf4j
 @Service
 public class SampleTemplateWorkbookService {
     private static CellStyle headerStyle(Workbook wb) {
@@ -49,6 +51,7 @@ public class SampleTemplateWorkbookService {
     }
 
     public byte[] create(SampleTemplateCatalog.Template template) {
+        log.debug("create called with template fileName={}", template.fileName());
         try (XSSFWorkbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             CellStyle header = headerStyle(workbook);
             Sheet data = workbook.createSheet("Template - النموذج");
@@ -88,8 +91,10 @@ public class SampleTemplateWorkbookService {
             info.createFreezePane(0, 1);
             autoSize(info, labels.length);
             workbook.write(out);
+            log.info("Sample template workbook created successfully, columns={}", template.columns().size());
             return out.toByteArray();
         } catch (IOException e) {
+            log.error("Failed to generate sample workbook for template={}", template.fileName(), e);
             throw new IllegalStateException("Failed to generate sample workbook", e);
         }
     }

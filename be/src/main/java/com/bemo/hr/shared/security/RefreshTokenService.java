@@ -1,6 +1,7 @@
 package com.bemo.hr.shared.security;
 
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @Transactional
 public class RefreshTokenService {
@@ -39,22 +41,26 @@ public class RefreshTokenService {
     }
 
     public IssuedRefreshToken issue(String appId, String userId, String deviceId) {
+        log.debug("issue called with appId={}, userId={}", appId, userId);
         String raw = generateToken();
         String familyId = UUID.randomUUID().toString();
         Duration ttl = refreshTtl();
         RefreshToken entity = new RefreshToken(appId, userId, familyId, hash(raw), Instant.now().plus(ttl), deviceId);
         refreshTokenRepository.save(entity);
+        log.info("Refresh token issued for userId={} app={}", userId, appId);
         return new IssuedRefreshToken(raw, entity.getId(), entity.getExpiresAt());
     }
 
     @Transactional(noRollbackFor = BusinessRuleException.class)
     public RotationResult rotate(String appId, String rawToken, String deviceId, String by) {
+        log.debug("rotate called with appId={}", appId);
         RefreshToken existing = refreshTokenRepository.findForRotationByAppIdAndTokenHash(appId, hash(rawToken))
                 .orElseThrow(() -> new BusinessRuleException("Session is invalid or expired.",
                         "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED));
         Instant now = Instant.now();
         if (existing.getRevokedAt() != null || existing.getReplacedByTokenId() != null
                 || !existing.getExpiresAt().isAfter(now)) {
+            log.warn("Refresh token reuse detected for appId={}, revoking family={}", appId, existing.getFamilyId());
             revokeFamily(appId, existing.getFamilyId(), by);
             throw new BusinessRuleException("Session is invalid or expired.",
                     "INVALID_REFRESH_TOKEN", HttpStatus.UNAUTHORIZED);
@@ -64,6 +70,7 @@ public class RefreshTokenService {
                 hash(raw), now.plus(refreshTtl()), deviceId);
         refreshTokenRepository.save(replacement);
         existing.markReplacedBy(replacement.getId());
+        log.info("Refresh token rotated for userId={} app={}", existing.getUserId(), appId);
         return new RotationResult(existing.getUserId(), raw, replacement.getExpiresAt());
     }
 
@@ -92,22 +99,28 @@ public class RefreshTokenService {
     }
 
     public void revoke(String appId, String rawToken, String by) {
+        log.debug("revoke called with appId={}", appId);
         refreshTokenRepository.findByAppIdAndTokenHash(appId, hash(rawToken))
                 .ifPresent(token -> token.revoke(by));
     }
 
     public void revokeAllForUser(String appId, String userId, String by) {
+        log.debug("revokeAllForUser called with appId={}, userId={}", appId, userId);
         List<RefreshToken> active = refreshTokenRepository.findAllByAppIdAndUserIdAndRevokedAtIsNull(appId, userId);
         active.forEach(token -> token.revoke(by));
+        log.info("Revoked {} tokens for userId={} app={}", active.size(), userId, appId);
     }
 
     public void revokeAllForApp(String appId, String by) {
+        log.debug("revokeAllForApp called with appId={}", appId);
         refreshTokenRepository.findAllByAppIdAndRevokedAtIsNull(appId).forEach(token -> token.revoke(by));
+        log.info("Revoked all tokens for app={}", appId);
     }
 
     @Scheduled(initialDelayString = "${hr.security.refresh-cleanup-initial-delay-ms:3600000}",
             fixedDelayString = "${hr.security.refresh-cleanup-interval-ms:3600000}")
     public void cleanupExpiredAndRevoked() {
+        log.debug("cleanupExpiredAndRevoked called");
         Instant cutoff = Instant.now().minus(REUSE_DETECTION_GRACE);
         for (TenantApplication app : tenantApplicationRepository.findAll()) {
             TenantContext.set(app.getId());

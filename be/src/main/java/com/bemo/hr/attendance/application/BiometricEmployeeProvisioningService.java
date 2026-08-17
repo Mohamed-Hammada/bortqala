@@ -11,6 +11,7 @@ import com.bemo.hr.employee.infrastructure.ScheduleRuleRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -52,6 +54,7 @@ public class BiometricEmployeeProvisioningService {
     @Transactional
     public void configureSource(BiometricSource source, boolean enabled, String categoryId, String employmentType,
                                 String activeFromMode, boolean employeeActive) {
+        log.debug("configureSource called with sourceId={}, enabled={}, categoryId={}", source.getId(), enabled, categoryId);
         String normalizedType = normalizeEmploymentType(employmentType);
         String normalizedActiveFromMode = normalizeActiveFromMode(activeFromMode);
         String resolvedCategoryId = null;
@@ -149,6 +152,7 @@ public class BiometricEmployeeProvisioningService {
     @Transactional
     public String resolveEmployeeId(BiometricSource source, String deviceUserId, String observedName,
                                     Instant observedAt, String actor) {
+        log.debug("resolveEmployeeId called with deviceUserId={}, sourceId={}", deviceUserId, source.getId());
         if (deviceUserId == null || deviceUserId.isBlank()) return null;
         String normalizedDeviceUserId = deviceUserId.strip();
         String appId = TenantContext.require();
@@ -193,6 +197,7 @@ public class BiometricEmployeeProvisioningService {
 
         punchRecordRepository.linkUnmatchedToEmployee(appId, normalizedDeviceUserId, resolved.getId());
         if (inserted == 1) {
+            log.info("Auto-provisioned employee created successfully with id={}, deviceUserId={}", resolved.getId(), normalizedDeviceUserId);
             auditService.record("AUTO_CREATE", "EMPLOYEE", resolved.getId(),
                     actor == null || actor.isBlank() ? "biometric-import" : actor,
                     "{\"deviceUserId\":\"" + safe(normalizedDeviceUserId)

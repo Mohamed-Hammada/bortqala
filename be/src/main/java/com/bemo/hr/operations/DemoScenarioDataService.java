@@ -13,6 +13,7 @@ import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.party.BusinessParty;
 import com.bemo.hr.party.BusinessPartyRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @Profile({"dev", "demo"})
 @RequiredArgsConstructor
@@ -45,6 +47,7 @@ public class DemoScenarioDataService {
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void ensureDemoScenarios() {
+        log.debug("ensureDemoScenarios called");
         var administration = category("ADMINISTRATION");
         administration.configureAdvanceEligibility(true);
         var accounting = category("ACCOUNTING");
@@ -57,6 +60,7 @@ public class DemoScenarioDataService {
         employee("DAILY_WORKERS-0001", "يوسف العامل اليومي", null, daily.getId(), EmploymentType.DAILY);
         seedPunches(admin, accountant, guard);
         seedCommercialData(admin);
+        log.info("Demo scenarios ensured successfully");
     }
 
     private com.bemo.hr.employee.domain.AttendanceCategory category(String code) {

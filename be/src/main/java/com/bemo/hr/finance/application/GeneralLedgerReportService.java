@@ -6,6 +6,7 @@ import com.bemo.hr.finance.domain.JournalEntryLine;
 import com.bemo.hr.finance.infrastructure.AccountRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class GeneralLedgerReportService {
@@ -27,6 +29,7 @@ public class GeneralLedgerReportService {
     }
 
     public List<Row> detail(LocalDate from, LocalDate to, String accountId) {
+        log.debug("detail called with from={}, to={}, accountId={}", from, to, accountId);
         Map<String, Account> map = new HashMap<>();
         accounts.findAll().forEach(a -> map.put(a.getId(), a));
         List<Row> out = new ArrayList<>();
@@ -43,6 +46,7 @@ public class GeneralLedgerReportService {
     }
 
     public byte[] exportCsv(LocalDate from, LocalDate to, String accountId) {
+        log.debug("exportCsv called with from={}, to={}, accountId={}", from, to, accountId);
         StringBuilder b = new StringBuilder("entryNumber,entryDate,accountCode,reference,debit,credit,runningBalance\n");
         detail(from, to, accountId).forEach(r -> b.append(r.entryNumber()).append(',').append(r.entryDate()).append(',').append(r.accountCode()).append(',').append(r.reference() == null ? "" : r.reference()).append(',').append(r.debit()).append(',').append(r.credit()).append(',').append(r.runningBalance()).append('\n'));
         return b.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);

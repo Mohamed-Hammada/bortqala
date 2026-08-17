@@ -8,6 +8,7 @@ import com.bemo.hr.operations.OperationsService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WorkforceAdvanceService {
@@ -35,11 +37,13 @@ public class WorkforceAdvanceService {
 
     @Transactional(readOnly = true)
     public List<WorkforceApi.AdvanceResponse> list() {
+        log.debug("list called");
         return advanceRepository.findAll().stream().map(this::mapToResponse).toList();
     }
 
     @Transactional
     public WorkforceApi.AdvanceResponse create(WorkforceApi.AdvanceCreateRequest request, String createdBy) {
+        log.debug("create called with recipientType={}, amount={}", request.recipientType(), request.amount());
         String recipientType = normalizeAndValidateRecipient(request);
         if (request.amount() == null || request.amount().signum() <= 0) {
             throw new BusinessRuleException("يجب أن يكون مبلغ السلفة أكبر من صفر.", "ADVANCE_AMOUNT_POSITIVE_REQUIRED", HttpStatus.CONFLICT);
@@ -115,16 +119,19 @@ public class WorkforceAdvanceService {
         auditService.record("CREATE", "ADVANCE", saved.getId(), createdBy,
                 "{\"amount\":" + saved.getAmount() + ",\"termType\":\"" + saved.getTermType() + "\"}", null);
 
+        log.info("WorkforceAdvance {} created successfully", saved.getId());
         return mapToResponse(saved);
     }
 
     @Transactional(readOnly = true)
     public List<WorkforceApi.AdvancePolicyResponse> listPolicies() {
+        log.debug("listPolicies called");
         return policyRepository.findAllByOrderByScopeTypeAscScopeIdAsc().stream().map(this::mapPolicy).toList();
     }
 
     @Transactional
     public WorkforceApi.AdvancePolicyResponse savePolicy(WorkforceApi.AdvancePolicyRequest request, String actor) {
+        log.debug("savePolicy called with scopeType={}, scopeId={}", request.scopeType(), request.scopeId());
         String scopeType = request.scopeType().strip().toUpperCase(java.util.Locale.ROOT);
         if (!List.of("GLOBAL", "CATEGORY", "WORKER", "EMPLOYEE_CATEGORY", "EMPLOYEE").contains(scopeType)) {
             throw new BusinessRuleException("نطاق سياسة السلف غير صالح.", "ADVANCE_POLICY_SCOPE_INVALID", HttpStatus.CONFLICT);
@@ -156,6 +163,7 @@ public class WorkforceAdvanceService {
                 request.deductionFrequency(), request.maxDeductionPercent(), request.defaultInstallments(),
                 request.deferralPeriods(), request.active(), version, effectiveFrom, effectiveTo);
         WorkforceAdvancePolicy saved = policyRepository.save(policy);
+        log.info("AdvancePolicy {} created (version {})", saved.getId(), version);
         auditService.record("CREATE_VERSION", "ADVANCE_POLICY", saved.getId(), actor,
                 "{\"scopeType\":\"" + scopeType + "\",\"version\":" + version
                         + ",\"effectiveFrom\":\"" + effectiveFrom + "\"}", null);
@@ -193,6 +201,7 @@ public class WorkforceAdvanceService {
     @Transactional(readOnly = true)
     public WorkforceApi.AdvancePolicyResponse effectivePolicy(String recipientType, String workerId,
                                                               String employeeId, String date) {
+        log.debug("effectivePolicy called with recipientType={}, workerId={}, employeeId={}, date={}", recipientType, workerId, employeeId, date);
         LocalDate effectiveDate;
         try {
             effectiveDate = LocalDate.parse(date);
@@ -258,24 +267,29 @@ public class WorkforceAdvanceService {
 
     @Transactional
     public WorkforceApi.AdvanceResponse pause(String id, String user) {
+        log.debug("pause called with id={}", id);
         WorkforceAdvance adv = advanceRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة", "ADVANCE_NOT_FOUND", HttpStatus.CONFLICT));
         adv.pause();
         auditService.record("PAUSE", "ADVANCE", adv.getId(), user, "Paused advance deductions", null);
+        log.info("WorkforceAdvance {} paused successfully", id);
         return mapToResponse(advanceRepository.save(adv));
     }
 
     @Transactional
     public WorkforceApi.AdvanceResponse resume(String id, String user) {
+        log.debug("resume called with id={}", id);
         WorkforceAdvance adv = advanceRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة", "ADVANCE_NOT_FOUND", HttpStatus.CONFLICT));
         adv.resume();
         auditService.record("RESUME", "ADVANCE", adv.getId(), user, "Resumed advance deductions", null);
+        log.info("WorkforceAdvance {} resumed successfully", id);
         return mapToResponse(advanceRepository.save(adv));
     }
 
     @Transactional
     public WorkforceApi.AdvanceResponse repay(String id, WorkforceApi.AdvanceRepayRequest request, String user) {
+        log.debug("repay called with id={}, amount={}, repaymentType={}", id, request.amount(), request.repaymentType());
         WorkforceAdvance adv = advanceRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("السلفة غير موجودة", "ADVANCE_NOT_FOUND", HttpStatus.CONFLICT));
 
@@ -322,12 +336,14 @@ public class WorkforceAdvanceService {
                 + "\"}";
         auditService.record("EARLY_REPAYMENT", "ADVANCE", adv.getId(), user, details, null);
 
+        log.info("WorkforceAdvance {} repaid successfully (new balance={})", id, adv.getRemainingBalance());
         return mapToResponse(advanceRepository.save(adv));
     }
 
     @Transactional
     public void applyEmployeePayrollSettlement(String employeeId, BigDecimal amount, String periodReference,
                                                String actor) {
+        log.debug("applyEmployeePayrollSettlement called with employeeId={}, amount={}, periodReference={}", employeeId, amount, periodReference);
         if (amount == null || amount.signum() <= 0) return;
         BigDecimal remaining = amount;
         for (WorkforceAdvance advance : advanceRepository.findByEmployeeIdOrderByCreatedAtAsc(employeeId)) {
@@ -347,6 +363,7 @@ public class WorkforceAdvanceService {
     @Transactional(readOnly = true)
     public BigDecimal calculateEmployeePayrollDeduction(String employeeId, LocalDate asOfDate,
                                                         BigDecimal availableAmount, BigDecimal ledgerBalance) {
+        log.debug("calculateEmployeePayrollDeduction called with employeeId={}, asOfDate={}", employeeId, asOfDate);
         if (availableAmount == null || availableAmount.signum() <= 0
                 || ledgerBalance == null || ledgerBalance.signum() <= 0) return BigDecimal.ZERO;
 
@@ -373,6 +390,7 @@ public class WorkforceAdvanceService {
     @Transactional
     public void reverseEmployeePayrollSettlement(String employeeId, BigDecimal amount, String periodReference,
                                                  String actor) {
+        log.debug("reverseEmployeePayrollSettlement called with employeeId={}, amount={}, periodReference={}", employeeId, amount, periodReference);
         if (amount == null || amount.signum() <= 0) return;
         BigDecimal remaining = amount;
         for (WorkforceAdvance advance : advanceRepository.findByEmployeeIdOrderByCreatedAtDesc(employeeId)) {

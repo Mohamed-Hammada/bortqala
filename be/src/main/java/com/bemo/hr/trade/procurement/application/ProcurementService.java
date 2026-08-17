@@ -18,6 +18,7 @@ import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.trade.procurement.api.ProcurementApi;
 import com.bemo.hr.trade.procurement.domain.*;
 import com.bemo.hr.trade.procurement.infrastructure.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class ProcurementService {
@@ -119,6 +121,7 @@ public class ProcurementService {
 
     @Transactional
     public ProcurementApi.PurchaseOrderResponse create(ProcurementApi.PurchaseOrderPayload payload) {
+        log.debug("create PO called with supplierId={}, currencyCode={}", payload.supplierId(), payload.currencyCode());
         requireSupplier(payload.supplierId());
         validateLines(payload.items());
         String currencyCode = resolveCurrency(payload.currencyCode(), payload.supplierId());
@@ -138,14 +141,18 @@ public class ProcurementService {
 
         auditService.record("CREATE", "PURCHASE_ORDER", saved.getId(), getCurrentUser(),
                 "{\"poNumber\":\"" + saved.getPoNumber() + "\",\"totalAmount\":" + saved.getTotalAmount() + "}", null);
+        log.info("PurchaseOrder {} created with number {} successfully", saved.getId(), saved.getPoNumber());
         return toPoResponse(saved, lines, resolveSupplierNames(List.of(saved)));
     }
 
     @Transactional
     public ProcurementApi.PurchaseOrderResponse update(String id, ProcurementApi.PurchaseOrderPayload payload) {
+        log.debug("update PO called with id={}", id);
         PurchaseOrder po = requirePo(id);
-        if (po.getStatus() != PurchaseOrder.Status.DRAFT)
+        if (po.getStatus() != PurchaseOrder.Status.DRAFT) {
+            log.warn("Validation failed: PurchaseOrder {} is not DRAFT, status={}", id, po.getStatus());
             throw new BusinessRuleException("Only draft purchase orders can be edited.", "PROC_ORDER_NOT_DRAFT", HttpStatus.CONFLICT);
+        }
         requireSupplier(payload.supplierId());
         validateLines(payload.items());
         String currencyCode = po.getCurrencyCode();
@@ -164,32 +171,41 @@ public class ProcurementService {
         purchaseOrderLineRepository.saveAll(lines);
         auditService.record("UPDATE", "PURCHASE_ORDER", po.getId(), getCurrentUser(),
                 "{\"poNumber\":\"" + po.getPoNumber() + "\",\"totalAmount\":" + po.getTotalAmount() + "}", null);
+        log.info("PurchaseOrder {} updated with number {} successfully", id, po.getPoNumber());
         return toPoResponse(po, lines, resolveSupplierNames(List.of(po)));
     }
 
     @Transactional
     public ProcurementApi.PurchaseOrderResponse issue(String id) {
+        log.debug("issue PO called with id={}", id);
         PurchaseOrder po = requirePo(id);
-        if (po.getStatus() != PurchaseOrder.Status.DRAFT)
+        if (po.getStatus() != PurchaseOrder.Status.DRAFT) {
+            log.warn("Validation failed: PurchaseOrder {} cannot be issued from status {}", id, po.getStatus());
             throw new BusinessRuleException("يمكن إصدار أمر الشراء من حالة مسودة فقط", "PROC_ORDER_ISSUE_FROM_DRAFT", HttpStatus.CONFLICT);
+        }
         po.updateStatus(PurchaseOrder.Status.ISSUED);
         budgetService.encumberForOrder(po.getId(), po.getPoNumber(), po.getDepartmentId(),
                 po.getBaseTotalAmount(), po.getPoDate(), getCurrentUser());
         auditService.record("ISSUE", "PURCHASE_ORDER", po.getId(), getCurrentUser(),
                 "{\"poNumber\":\"" + po.getPoNumber() + "\"}", null);
+        log.info("PurchaseOrder {} issued successfully", id);
         return toPoResponse(po, loadLines(po.getId()), resolveSupplierNames(List.of(po)));
     }
 
     @Transactional
     public ProcurementApi.PurchaseOrderResponse receive(String id) {
+        log.debug("receive PO called with id={} (deprecated)", id);
         throw new BusinessRuleException("يجب تسجيل إذن استلام بضاعة (Goods Receipt) لاستلام أمر الشراء.", "PROC_DIRECT_RECEIVE_DEPRECATED", HttpStatus.BAD_REQUEST);
     }
 
     @Transactional
     public ProcurementApi.PurchaseOrderResponse cancel(String id) {
+        log.debug("cancel PO called with id={}", id);
         PurchaseOrder po = requirePo(id);
-        if (po.getStatus() == PurchaseOrder.Status.CANCELLED)
+        if (po.getStatus() == PurchaseOrder.Status.CANCELLED) {
+            log.warn("Validation failed: PurchaseOrder {} is already cancelled", id);
             throw new BusinessRuleException("أمر الشراء ملغي بالفعل", "PROC_ORDER_ALREADY_CANCELLED", HttpStatus.CONFLICT);
+        }
 
         List<GoodsReceipt> grns = goodsReceiptRepository.findByPurchaseOrderId(po.getId());
         BigDecimal totalAccepted = grns.stream()
@@ -209,12 +225,14 @@ public class ProcurementService {
         budgetService.releaseForCancel(po.getId(), getCurrentUser());
         auditService.record("CANCEL", "PURCHASE_ORDER", po.getId(), getCurrentUser(),
                 "{\"poNumber\":\"" + po.getPoNumber() + "\"}", null);
+        log.info("PurchaseOrder {} cancelled successfully", id);
         return toPoResponse(po, loadLines(po.getId()), resolveSupplierNames(List.of(po)));
     }
 
     // ─── Goods Receipts ───────────────────────────────────────────────
 
     public List<ProcurementApi.GoodsReceiptResponse> listGoodsReceipts() {
+        log.debug("listGoodsReceipts called");
         List<GoodsReceipt> grns = goodsReceiptRepository.findAllByOrderByReceiptDateDesc();
         Map<String, String> supplierNames = resolveNames(grns.stream().map(GoodsReceipt::getSupplierId).distinct().toList());
         return grns.stream().map(grn -> toGrnResponse(grn, supplierNames)).toList();
@@ -222,6 +240,7 @@ public class ProcurementService {
 
     @Transactional
     public ProcurementApi.GoodsReceiptResponse createGoodsReceipt(ProcurementApi.GoodsReceiptPayload payload) {
+        log.debug("createGoodsReceipt called with purchaseOrderId={}, supplierId={}", payload.purchaseOrderId(), payload.supplierId());
         PurchaseOrder po = requirePo(payload.purchaseOrderId());
         if (po.getStatus() != PurchaseOrder.Status.ISSUED
                 && po.getStatus() != PurchaseOrder.Status.PARTIALLY_RECEIVED)
@@ -281,12 +300,14 @@ public class ProcurementService {
 
         auditService.record("CREATE", "GOODS_RECEIPT", saved.getId(), getCurrentUser(),
                 "{\"grnNumber\":\"" + saved.getGrnNumber() + "\",\"po\":\"" + po.getPoNumber() + "\"}", null);
+        log.info("GoodsReceipt {} created with number {} for PO {} successfully", saved.getId(), saved.getGrnNumber(), po.getPoNumber());
         return toGrnResponse(saved, resolveNames(List.of(saved.getSupplierId())));
     }
 
     // ─── Supplier Invoices ────────────────────────────────────────────
 
     public List<ProcurementApi.SupplierInvoiceResponse> listSupplierInvoices() {
+        log.debug("listSupplierInvoices called");
         List<SupplierInvoice> invoices = supplierInvoiceRepository.findAllByOrderByInvoiceDateDesc();
         Map<String, String> supplierNames = resolveNames(invoices.stream().map(SupplierInvoice::getSupplierId).distinct().toList());
         return invoices.stream().map(inv -> toInvoiceResponse(inv, supplierNames)).toList();
@@ -294,6 +315,7 @@ public class ProcurementService {
 
     @Transactional
     public ProcurementApi.SupplierInvoiceResponse createSupplierInvoice(ProcurementApi.SupplierInvoicePayload payload) {
+        log.debug("createSupplierInvoice called with supplierId={}, purchaseOrderId={}", payload.supplierId(), payload.purchaseOrderId());
         var supplier = businessPartyRepository.findById(payload.supplierId())
                 .orElseThrow(() -> new BusinessRuleException("Supplier not found.", "PROC_SUPPLIER_NOT_FOUND", HttpStatus.CONFLICT));
         boolean missingInvoice = payload.invoiceNumber() == null || payload.invoiceNumber().isBlank();
@@ -342,12 +364,14 @@ public class ProcurementService {
         budgetService.liquidateForInvoice(saved.getPurchaseOrderId(), saved.getBaseNetAmount(), getCurrentUser());
         auditService.record("CREATE", "SUPPLIER_INVOICE", saved.getId(), getCurrentUser(),
                 "{\"invoiceNumber\":\"" + saved.getDocumentReference() + "\",\"amount\":" + saved.getNetAmount() + "}", null);
+        log.info("SupplierInvoice {} created with reference {} successfully", saved.getId(), saved.getDocumentReference());
         return toInvoiceResponse(saved, resolveNames(List.of(saved.getSupplierId())));
     }
 
     // ─── Supplier Payments ────────────────────────────────────────────
 
     public List<ProcurementApi.SupplierPaymentResponse> listSupplierPayments() {
+        log.debug("listSupplierPayments called");
         List<SupplierPayment> payments = supplierPaymentRepository.findAllByOrderByPaymentDateDesc();
         Map<String, String> supplierNames = resolveNames(payments.stream().map(SupplierPayment::getSupplierId).distinct().toList());
         return payments.stream().map(pmt -> toPaymentResponse(pmt, supplierNames)).toList();
@@ -355,6 +379,7 @@ public class ProcurementService {
 
     @Transactional
     public ProcurementApi.SupplierPaymentResponse createSupplierPayment(ProcurementApi.SupplierPaymentPayload payload) {
+        log.debug("createSupplierPayment called with supplierId={}, supplierInvoiceId={}, amount={}", payload.supplierId(), payload.supplierInvoiceId(), payload.amount());
         String requestHash = IdempotencyService.hash(payload.supplierId() + "|" + payload.supplierInvoiceId()
                 + "|" + payload.amount().stripTrailingZeros().toPlainString() + "|" + payload.paymentDate());
         return idempotencyService.execute("SUPPLIER_PAYMENT", payload.operationId(), requestHash,
@@ -426,6 +451,7 @@ public class ProcurementService {
         auditService.record("CREATE", "SUPPLIER_PAYMENT", saved.getId(), getCurrentUser(),
                 "{\"paymentNumber\":\"" + saved.getPaymentNumber() + "\",\"operationId\":\""
                         + saved.getOperationId() + "\",\"amount\":" + saved.getAmount() + "}", null);
+        log.info("SupplierPayment {} created with number {} successfully", saved.getId(), saved.getPaymentNumber());
         return toPaymentResponse(saved, resolveNames(List.of(saved.getSupplierId())));
     }
 
@@ -716,6 +742,7 @@ public class ProcurementService {
 
     @Transactional
     public ProcurementApi.ThreeWayMatchResponse performThreeWayMatch(String supplierInvoiceId, BigDecimal tolerancePercentage) {
+        log.debug("performThreeWayMatch called with supplierInvoiceId={}, tolerancePercentage={}", supplierInvoiceId, tolerancePercentage);
         SupplierInvoice invoice = supplierInvoiceRepository.findById(supplierInvoiceId)
                 .orElseThrow(() -> new NotFoundException("Invoice not found: " + supplierInvoiceId, "SUPPLIER_INVOICE_NOT_FOUND"));
 
@@ -748,23 +775,30 @@ public class ProcurementService {
         }
         match = threeWayMatchRepository.save(match);
         auditService.record("THREE_WAY_MATCH", "SUPPLIER_INVOICE", invoice.getId(), getCurrentUser(), "{\"status\":\"" + matchStatus + "\"}", null);
+        log.info("ThreeWayMatch {} created with status {} for invoice {} successfully", match.getId(), matchStatus, supplierInvoiceId);
 
         return toThreeWayMatchResponse(match);
     }
 
     public ProcurementApi.ThreeWayMatchResponse getThreeWayMatch(String supplierInvoiceId) {
+        log.debug("getThreeWayMatch called with supplierInvoiceId={}", supplierInvoiceId);
         var match = threeWayMatchRepository.findBySupplierInvoiceId(supplierInvoiceId)
-                .orElseThrow(() -> new NotFoundException("No 3-way match record found for invoice", "THREE_WAY_MATCH_NOT_FOUND"));
+                .orElseThrow(() -> {
+                    log.warn("No 3-way match record found for invoiceId={}", supplierInvoiceId);
+                    return new NotFoundException("No 3-way match record found for invoice", "THREE_WAY_MATCH_NOT_FOUND");
+                });
         return toThreeWayMatchResponse(match);
     }
 
     @Transactional
     public ProcurementApi.ThreeWayMatchResponse resolveMatchVariance(String matchId, String resolutionNotes) {
+        log.debug("resolveMatchVariance called with matchId={}", matchId);
         var match = threeWayMatchRepository.findById(matchId)
                 .orElseThrow(() -> new NotFoundException("Match record not found: " + matchId, "THREE_WAY_MATCH_NOT_FOUND"));
         match.resolve(getCurrentUser(), resolutionNotes);
         match = threeWayMatchRepository.save(match);
         auditService.record("RESOLVE_THREE_WAY_MATCH", "PROCUREMENT_MATCH", matchId, getCurrentUser(), "{\"notes\":\"" + resolutionNotes + "\"}", null);
+        log.info("ThreeWayMatch {} resolved successfully", matchId);
         return toThreeWayMatchResponse(match);
     }
 
@@ -779,6 +813,7 @@ public class ProcurementService {
     }
 
     public List<ProcurementApi.SupplierReturnResponse> listSupplierReturns() {
+        log.debug("listSupplierReturns called");
         List<SupplierReturn> returns = supplierReturnRepository.findAllByOrderByReturnDateDesc();
         Map<String, String> supplierNames = resolveNames(returns.stream().map(SupplierReturn::getSupplierId).distinct().toList());
         return returns.stream().map(ret -> toSupplierReturnResponse(ret, supplierNames)).toList();
@@ -788,6 +823,7 @@ public class ProcurementService {
 
     @Transactional
     public ProcurementApi.SupplierReturnResponse createSupplierReturn(ProcurementApi.SupplierReturnPayload payload) {
+        log.debug("createSupplierReturn called with purchaseOrderId={}, supplierId={}", payload.purchaseOrderId(), payload.supplierId());
         PurchaseOrder po = requirePo(payload.purchaseOrderId());
         if (!po.getSupplierId().equals(payload.supplierId()))
             throw new BusinessRuleException("Mismatched supplier for purchase order return", "PROC_RETURN_SUPPLIER_MISMATCH", HttpStatus.CONFLICT);
@@ -859,6 +895,7 @@ public class ProcurementService {
 
         auditService.record("CREATE", "SUPPLIER_RETURN", saved.getId(), getCurrentUser(),
                 "{\"returnNumber\":\"" + saved.getReturnNumber() + "\",\"po\":\"" + po.getPoNumber() + "\"}", null);
+        log.info("SupplierReturn {} created with number {} for PO {} successfully", saved.getId(), saved.getReturnNumber(), po.getPoNumber());
         return toSupplierReturnResponse(saved, resolveSupplierNames(List.of(po)));
     }
 

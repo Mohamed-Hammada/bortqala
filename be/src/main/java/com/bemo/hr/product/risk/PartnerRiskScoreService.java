@@ -7,6 +7,7 @@ import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.workforce.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PartnerRiskScoreService {
@@ -40,11 +42,13 @@ public class PartnerRiskScoreService {
 
     @Transactional(readOnly = true)
     public List<PartnerRiskApi.ScoreResponse> scores() {
+        log.debug("scores called");
         return calculate(ruleRepository.findFirstBy().orElseGet(() -> new PartnerRiskRule("system")), 0);
     }
 
     @Transactional
     public List<PartnerRiskApi.ScoreResponse> refresh(PartnerRiskApi.RefreshRequest request, String actor) {
+        log.debug("refresh called with operationId={}", request.operationId());
         String app = TenantContext.require();
         tenantRepository.findByIdForUpdate(app).orElseThrow(() -> error("TENANT_NOT_FOUND", HttpStatus.NOT_FOUND));
         var replay = snapshotRepository.findByOperationIdOrderBySubjectTypeAscSubjectNameAsc(request.operationId());
@@ -59,17 +63,20 @@ public class PartnerRiskScoreService {
             }
         }
         auditService.record("REFRESH", "PARTNER_RISK_SCORE", app, actor, "{\"operationId\":\"" + request.operationId() + "\",\"subjects\":" + result.size() + "}", null);
+        log.info("Partner risk scores refreshed, {} subjects scored for app={}", result.size(), app);
         return result;
     }
 
     @Transactional(readOnly = true)
     public PartnerRiskApi.RuleResponse rule() {
+        log.debug("rule called");
         var r = ruleRepository.findFirstBy().orElseGet(() -> new PartnerRiskRule("system"));
         return ruleView(r);
     }
 
     @Transactional
     public PartnerRiskApi.RuleResponse updateRule(PartnerRiskApi.RuleRequest request, String actor) {
+        log.debug("updateRule called with lowRiskMin={}, mediumRiskMin={}, highRiskMin={}", request.lowRiskMin(), request.mediumRiskMin(), request.highRiskMin());
         String app = TenantContext.require();
         tenantRepository.findByIdForUpdate(app).orElseThrow(() -> error("TENANT_NOT_FOUND", HttpStatus.NOT_FOUND));
         var rule = ruleRepository.findFirstBy().orElseGet(() -> new PartnerRiskRule(actor));

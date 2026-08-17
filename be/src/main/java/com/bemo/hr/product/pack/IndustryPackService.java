@@ -6,6 +6,7 @@ import com.bemo.hr.shared.security.EntitlementApi;
 import com.bemo.hr.shared.security.EntitlementManagementService;
 import com.bemo.hr.shared.security.TenantContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +18,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class IndustryPackService {
@@ -33,12 +35,14 @@ public class IndustryPackService {
 
     @Transactional(readOnly = true)
     public List<IndustryPackApi.PackResponse> catalog() {
+        log.debug("catalog called");
         Map<String, TenantIndustryPack> installed = tenantPackRepository.findAll().stream().collect(Collectors.toMap(TenantIndustryPack::getPackId, Function.identity()));
         return packRepository.findAllByStatusOrderByCode("ACTIVE").stream().map(p -> response(p, installed.get(p.getId()))).toList();
     }
 
     @Transactional
     public IndustryPackApi.PackResponse install(String code, IndustryPackApi.InstallRequest request, String actor) {
+        log.debug("install called with code={}, operationId={}", code, request.operationId());
         String app = TenantContext.require();
         Optional<TenantIndustryPack> replay = tenantPackRepository.findByOperationId(request.operationId());
         if (replay.isPresent()) {
@@ -56,27 +60,32 @@ public class IndustryPackService {
         TenantIndustryPack installed = tenantPackRepository.save(new TenantIndustryPack(pack, request.operationId(), actor, defaults(pack)));
         seedSteps(pack, installed);
         auditService.record("INSTALL", "INDUSTRY_PACK", installed.getId(), actor, "{\"code\":\"" + code + "\",\"version\":" + pack.getPackVersion() + "}", null);
+        log.info("IndustryPack {} installed successfully, id={}", code, installed.getId());
         return response(pack, installed);
     }
 
     @Transactional
     public IndustryPackApi.PackResponse updateSettings(String code, IndustryPackApi.SettingsRequest request, String actor) {
+        log.debug("updateSettings called with code={}", code);
         IndustryPack pack = require(code);
         TenantIndustryPack installed = tenantPackRepository.findByPackId(pack.getId()).orElseThrow(() -> error("INDUSTRY_PACK_NOT_FOUND", HttpStatus.NOT_FOUND));
         if (installed.getVersion() != request.expectedVersion()) throw error("STALE_STATE", HttpStatus.CONFLICT);
         try {
             objectMapper.readTree(request.settingsJson());
         } catch (Exception ex) {
+            log.warn("Validation failed: industry pack settings JSON is invalid for code={}", code);
             throw error("INDUSTRY_PACK_SETTINGS_INVALID", HttpStatus.BAD_REQUEST);
         }
         installed.customize(request.settingsJson());
         tenantPackRepository.save(installed);
         auditService.record("CUSTOMIZE", "INDUSTRY_PACK", installed.getId(), actor, "{\"version\":" + installed.getInstalledVersion() + "}", null);
+        log.info("IndustryPack {} settings updated, id={}", code, installed.getId());
         return response(pack, installed);
     }
 
     @Transactional
     public IndustryPackApi.PackResponse upgrade(String code, IndustryPackApi.UpgradeRequest request, String actor) {
+        log.debug("upgrade called with code={}, operationId={}", code, request.operationId());
         IndustryPack pack = require(code);
         TenantIndustryPack installed = tenantPackRepository.findByPackId(pack.getId()).orElseThrow(() -> error("INDUSTRY_PACK_NOT_FOUND", HttpStatus.NOT_FOUND));
         if (request.operationId().equals(installed.getLastUpgradeOperationId()) || installed.getInstalledVersion() >= pack.getPackVersion())
@@ -85,11 +94,13 @@ public class IndustryPackService {
         installed.upgrade(pack, defaults(pack), request.operationId());
         tenantPackRepository.save(installed);
         auditService.record("UPGRADE", "INDUSTRY_PACK", installed.getId(), actor, "{\"version\":" + pack.getPackVersion() + ",\"customized\":" + installed.isCustomized() + "}", null);
+        log.info("IndustryPack {} upgraded to version {}, id={}", code, pack.getPackVersion(), installed.getId());
         return response(pack, installed);
     }
 
     @Transactional
     public IndustryPackApi.PackResponse completeStep(String code, String key, IndustryPackApi.StepRequest request, String actor) {
+        log.debug("completeStep called with code={}, key={}, skip={}", code, key, request.skip());
         IndustryPack pack = require(code);
         TenantIndustryPack installed = tenantPackRepository.findByPackId(pack.getId()).orElseThrow(() -> error("INDUSTRY_PACK_NOT_FOUND", HttpStatus.NOT_FOUND));
         IndustryOnboardingStep step = stepRepository.findByTenantPackIdAndStepKey(installed.getId(), key).orElseThrow(() -> error("INDUSTRY_PACK_STEP_NOT_FOUND", HttpStatus.NOT_FOUND));
@@ -104,6 +115,7 @@ public class IndustryPackService {
         stepRepository.save(step);
         stepRepository.findByTenantPackIdOrderBySequenceNo(installed.getId()).stream().filter(s -> key.equals(s.getPrerequisiteKey())).forEach(IndustryOnboardingStep::ready);
         auditService.record("COMPLETE_STEP", "INDUSTRY_PACK", installed.getId(), actor, "{\"step\":\"" + key + "\",\"skipped\":" + request.skip() + "}", null);
+        log.info("IndustryPack {} step {} completed (skip={}), packId={}", code, key, request.skip(), installed.getId());
         return response(pack, installed);
     }
 

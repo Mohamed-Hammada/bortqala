@@ -6,6 +6,7 @@ import com.bemo.hr.finance.domain.JournalEntryLine;
 import com.bemo.hr.finance.infrastructure.AccountRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class TrialBalanceReportService {
@@ -39,10 +41,12 @@ public class TrialBalanceReportService {
     }
 
     public List<TrialBalanceRow> generateTrialBalance() {
+        log.debug("generateTrialBalance called (no date filter)");
         return generateTrialBalance(LocalDate.MIN, LocalDate.MAX);
     }
 
     public List<TrialBalanceRow> generateTrialBalance(LocalDate from, LocalDate to) {
+        log.debug("generateTrialBalance called with from={}, to={}", from, to);
         List<Account> accounts = accountRepository.findAll();
         List<JournalEntryLine> lines;
         if (journalEntryRepository == null) lines = journalEntryLineRepository.findAll();

@@ -17,6 +17,7 @@ import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @Transactional(readOnly = true)
 public class ReportingService {
     private static final Map<String, List<String>> ATTENDANCE_REPORT_WORKFLOW = Map.of(

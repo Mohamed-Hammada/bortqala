@@ -12,6 +12,7 @@ import com.bemo.hr.organization.domain.Warehouse;
 import com.bemo.hr.organization.infrastructure.BranchRepository;
 import com.bemo.hr.organization.infrastructure.WarehouseRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 @Service
 public class WarehouseInventoryService {
 
@@ -49,17 +51,21 @@ public class WarehouseInventoryService {
 
     @Transactional
     public Warehouse createWarehouse(String branchId, String code, String name, String location) {
+        log.debug("createWarehouse called with branchId={}, code={}, name={}", branchId, code, name);
         if (branchId == null || branchId.isBlank()
                 || branchRepository.findById(branchId).filter(branch -> branch.isActive()).isEmpty()) {
             throw new BusinessRuleException("Select an active branch.",
                     "WAREHOUSE_BRANCH_REQUIRED", HttpStatus.CONFLICT);
         }
         Warehouse warehouse = new Warehouse(branchId, code, name, location, true);
-        return warehouseRepository.save(warehouse);
+        Warehouse saved = warehouseRepository.save(warehouse);
+        log.info("Warehouse {} created successfully", saved.getId());
+        return saved;
     }
 
     @Transactional
     public WarehouseBin createBin(String warehouseId, String binCode, String aisle, String rack, String shelf) {
+        log.debug("createBin called with warehouseId={}, binCode={}", warehouseId, binCode);
         requireActiveWarehouse(warehouseId);
         if (binCode == null || binCode.isBlank()) {
             throw new BusinessRuleException("Bin code is required.", "WAREHOUSE_BIN_CODE_REQUIRED", HttpStatus.CONFLICT);
@@ -68,7 +74,9 @@ public class WarehouseInventoryService {
             throw new BusinessRuleException("Bin code already exists in this warehouse.", "WAREHOUSE_BIN_CODE_EXISTS", HttpStatus.CONFLICT);
         }
         WarehouseBin bin = new WarehouseBin(warehouseId, binCode, aisle, rack, shelf);
-        return binRepository.save(bin);
+        WarehouseBin saved = binRepository.save(bin);
+        log.info("WarehouseBin {} created successfully", saved.getId());
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -86,6 +94,7 @@ public class WarehouseInventoryService {
     @Transactional
     public void moveStatus(String warehouseId, String binId, String itemId, StockStatusBalance.Status from,
                            StockStatusBalance.Status to, BigDecimal quantity, String actor) {
+        log.debug("moveStatus called with warehouseId={}, itemId={}, from={}, to={}, quantity={}, actor={}", warehouseId, itemId, from, to, quantity, actor);
         requirePositive(quantity);
         requireLocation(warehouseId, binId);
         if (from == null || to == null || from == to) {
@@ -112,10 +121,12 @@ public class WarehouseInventoryService {
                 "{\"warehouseId\":\"" + warehouseId + "\",\"binId\":\"" + normalizedBin
                         + "\",\"itemId\":\"" + itemId + "\",\"from\":\"" + from
                         + "\",\"to\":\"" + to + "\",\"quantity\":" + quantity + "}", null);
+        log.info("Stock status moved for warehouseId={}, itemId={}, from={}, to={}, quantity={}", warehouseId, itemId, from, to, quantity);
     }
 
     @Transactional
     public StockReservation reserveStock(String reservationNumber, String sourceType, String sourceId, String itemId, String warehouseId, BigDecimal quantity) {
+        log.debug("reserveStock called with reservationNumber={}, sourceType={}, sourceId={}, itemId={}, warehouseId={}, quantity={}", reservationNumber, sourceType, sourceId, itemId, warehouseId, quantity);
         requirePositive(quantity);
         requireActiveWarehouse(warehouseId);
         if (itemId == null || itemId.isBlank()
@@ -139,21 +150,29 @@ public class WarehouseInventoryService {
             throw new BusinessRuleException("Insufficient available stock for reservation", "INSUFFICIENT_STOCK_RESERVATION", HttpStatus.CONFLICT);
         }
         StockReservation reservation = new StockReservation(reservationNumber, sourceType, sourceId, itemId, warehouseId, quantity);
-        return reservationRepository.save(reservation);
+        StockReservation saved = reservationRepository.save(reservation);
+        log.info("StockReservation {} created successfully", saved.getId());
+        return saved;
     }
 
     @Transactional
     public StockReservation fulfillReservation(String reservationId) {
+        log.debug("fulfillReservation called with reservationId={}", reservationId);
         StockReservation reservation = getReservation(reservationId);
         reservation.fulfill();
-        return reservationRepository.save(reservation);
+        StockReservation saved = reservationRepository.save(reservation);
+        log.info("StockReservation {} fulfilled successfully", reservationId);
+        return saved;
     }
 
     @Transactional
     public StockReservation cancelReservation(String reservationId) {
+        log.debug("cancelReservation called with reservationId={}", reservationId);
         StockReservation reservation = getReservation(reservationId);
         reservation.cancel();
-        return reservationRepository.save(reservation);
+        StockReservation saved = reservationRepository.save(reservation);
+        log.info("StockReservation {} cancelled successfully", reservationId);
+        return saved;
     }
 
     @Transactional(readOnly = true)
@@ -164,20 +183,26 @@ public class WarehouseInventoryService {
 
     @Transactional
     public StockReservation expireReservation(String reservationId) {
+        log.debug("expireReservation called with reservationId={}", reservationId);
         StockReservation reservation = getReservation(reservationId);
         reservation.expire();
-        return reservationRepository.save(reservation);
+        StockReservation saved = reservationRepository.save(reservation);
+        log.info("StockReservation {} expired successfully", reservationId);
+        return saved;
     }
 
     @Transactional
     public StockReservation consumeReservation(String reservationId) {
+        log.debug("consumeReservation called with reservationId={}", reservationId);
         StockReservation reservation = getReservation(reservationId);
         if (reservation.getStatus() == StockReservation.Status.FULFILLED) return reservation;
         List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemIdForUpdate(
                 reservation.getWarehouseId(), reservation.getItemId());
         consumeAvailableBalances(balances, reservation.getReservedQuantity());
         reservation.fulfill();
-        return reservationRepository.save(reservation);
+        StockReservation saved = reservationRepository.save(reservation);
+        log.info("StockReservation {} consumed successfully", reservationId);
+        return saved;
     }
 
     private BigDecimal availableStock(String warehouseId, String itemId, List<StockStatusBalance> balances) {
@@ -201,6 +226,7 @@ public class WarehouseInventoryService {
 
     @Transactional
     public void receiveAvailableStock(String warehouseId, String itemId, BigDecimal quantity) {
+        log.debug("receiveAvailableStock called with warehouseId={}, itemId={}, quantity={}", warehouseId, itemId, quantity);
         requirePositive(quantity);
         requireActiveWarehouse(warehouseId);
         StockStatusBalance balance = balanceRepository
@@ -214,6 +240,7 @@ public class WarehouseInventoryService {
 
     @Transactional
     public void issueAvailableStock(String warehouseId, String itemId, BigDecimal quantity) {
+        log.debug("issueAvailableStock called with warehouseId={}, itemId={}, quantity={}", warehouseId, itemId, quantity);
         requirePositive(quantity);
         requireActiveWarehouse(warehouseId);
         List<StockStatusBalance> balances = balanceRepository.findByWarehouseIdAndItemIdForUpdate(warehouseId, itemId);
@@ -234,6 +261,7 @@ public class WarehouseInventoryService {
     @Transactional
     public void adjustAvailableStock(String warehouseId, String itemId, BigDecimal delta) {
         if (delta == null || delta.signum() == 0) return;
+        log.debug("adjustAvailableStock called with warehouseId={}, itemId={}, delta={}", warehouseId, itemId, delta);
         if (delta.signum() > 0) receiveAvailableStock(warehouseId, itemId, delta);
         else issueAvailableStock(warehouseId, itemId, delta.abs());
     }

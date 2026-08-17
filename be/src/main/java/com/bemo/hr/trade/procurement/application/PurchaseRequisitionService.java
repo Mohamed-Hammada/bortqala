@@ -5,6 +5,7 @@ import com.bemo.hr.trade.procurement.domain.PurchaseRequisition;
 import com.bemo.hr.trade.procurement.domain.PurchaseRequisitionLine;
 import com.bemo.hr.trade.procurement.infrastructure.PurchaseRequisitionLineRepository;
 import com.bemo.hr.trade.procurement.infrastructure.PurchaseRequisitionRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 
+@Slf4j
 @Service
 public class PurchaseRequisitionService {
 
@@ -26,45 +28,63 @@ public class PurchaseRequisitionService {
 
     @Transactional
     public PurchaseRequisition createRequisition(String requisitionNumber, String departmentId, String requestedBy) {
+        log.debug("createRequisition called with requisitionNumber={}, departmentId={}, requestedBy={}", requisitionNumber, departmentId, requestedBy);
         PurchaseRequisition req = new PurchaseRequisition(requisitionNumber, departmentId, requestedBy);
-        return requisitionRepository.save(req);
+        PurchaseRequisition saved = requisitionRepository.save(req);
+        log.info("PurchaseRequisition {} created successfully", saved.getId());
+        return saved;
     }
 
     @Transactional
     public PurchaseRequisitionLine addRequisitionLine(String requisitionId, String itemId, String itemName, BigDecimal requestedQuantity, BigDecimal unitPriceEstimate, String notes) {
+        log.debug("addRequisitionLine called with requisitionId={}, itemId={}, requestedQuantity={}", requisitionId, itemId, requestedQuantity);
         PurchaseRequisition req = getRequisition(requisitionId);
         if (req.getStatus() != PurchaseRequisition.Status.DRAFT) {
+            log.warn("Validation failed: Lines can only be added to DRAFT requisitions, current status={}", req.getStatus());
             throw new BusinessRuleException("Lines can only be added to DRAFT requisitions", "REQUISITION_NOT_DRAFT", HttpStatus.CONFLICT);
         }
         PurchaseRequisitionLine line = new PurchaseRequisitionLine(requisitionId, itemId, itemName, requestedQuantity, unitPriceEstimate, notes);
-        return requisitionLineRepository.save(line);
+        PurchaseRequisitionLine saved = requisitionLineRepository.save(line);
+        log.info("RequisitionLine {} added to requisition {} successfully", saved.getId(), requisitionId);
+        return saved;
     }
 
     @Transactional
     public PurchaseRequisition submitRequisition(String requisitionId) {
+        log.debug("submitRequisition called with requisitionId={}", requisitionId);
         PurchaseRequisition req = getRequisition(requisitionId);
         List<PurchaseRequisitionLine> lines = requisitionLineRepository.findByRequisitionId(requisitionId);
         if (lines.isEmpty()) {
+            log.warn("Validation failed: Cannot submit requisition {} without lines", requisitionId);
             throw new BusinessRuleException("Cannot submit a requisition without lines", "REQUISITION_NO_LINES", HttpStatus.CONFLICT);
         }
         req.submit();
-        return requisitionRepository.save(req);
+        PurchaseRequisition saved = requisitionRepository.save(req);
+        log.info("PurchaseRequisition {} submitted successfully", requisitionId);
+        return saved;
     }
 
     @Transactional
     public PurchaseRequisition approveRequisition(String requisitionId) {
+        log.debug("approveRequisition called with requisitionId={}", requisitionId);
         PurchaseRequisition req = getRequisition(requisitionId);
         req.approve();
-        return requisitionRepository.save(req);
+        PurchaseRequisition saved = requisitionRepository.save(req);
+        log.info("PurchaseRequisition {} approved successfully", requisitionId);
+        return saved;
     }
 
     @Transactional(readOnly = true)
     public List<PurchaseRequisition> getApprovedRequisitions() {
-        return requisitionRepository.findByStatus(PurchaseRequisition.Status.APPROVED);
+        log.debug("getApprovedRequisitions called");
+        List<PurchaseRequisition> results = requisitionRepository.findByStatus(PurchaseRequisition.Status.APPROVED);
+        log.debug("getApprovedRequisitions returned {} results", results.size());
+        return results;
     }
 
     @Transactional(readOnly = true)
     public List<PurchaseRequisitionLine> getRequisitionLines(String requisitionId) {
+        log.debug("getRequisitionLines called with requisitionId={}", requisitionId);
         return requisitionLineRepository.findByRequisitionId(requisitionId);
     }
 

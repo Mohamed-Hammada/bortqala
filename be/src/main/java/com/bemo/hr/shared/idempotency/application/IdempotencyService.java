@@ -4,6 +4,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.idempotency.domain.IdempotencyKey;
 import com.bemo.hr.shared.idempotency.infrastructure.IdempotencyKeyRepository;
 import com.bemo.hr.shared.security.TenantContext;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+@Slf4j
 @Service
 public class IdempotencyService {
 
@@ -49,6 +51,7 @@ public class IdempotencyService {
      */
     public <T> T execute(String operationType, String operationId, String requestHash,
                          Supplier<T> operation, Function<T, String> referenceWriter, Function<String, T> replayMapper) {
+        log.debug("execute called with operationType={}, operationId={}", operationType, operationId);
         Instant now = Instant.now();
         String ownerToken = UUID.randomUUID().toString();
         if (reserve(operationType, operationId, requestHash, ownerToken, now.plus(IN_PROGRESS_LEASE))) {
@@ -75,6 +78,7 @@ public class IdempotencyService {
      * still running, so a slow batch is not stolen mid-flight.
      */
     public void renewLease(String operationType, String operationId, String ownerToken) {
+        log.debug("renewLease called with operationType={}, operationId={}", operationType, operationId);
         if (ownerToken == null) {
             return;
         }

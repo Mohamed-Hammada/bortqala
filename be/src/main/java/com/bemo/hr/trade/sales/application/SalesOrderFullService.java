@@ -9,6 +9,7 @@ import com.bemo.hr.trade.sales.api.SalesApi;
 import com.bemo.hr.trade.sales.domain.*;
 import com.bemo.hr.trade.sales.infrastructure.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SalesOrderFullService {
@@ -59,13 +61,19 @@ public class SalesOrderFullService {
 
     @Transactional(readOnly = true)
     public List<SalesApi.SalesOrderResponse> orders() {
-        return salesOrderRepository.findAllByOrderBySoDateDescCreatedAtDesc().stream().map(this::order).toList();
+        log.debug("orders called");
+        List<SalesApi.SalesOrderResponse> results = salesOrderRepository.findAllByOrderBySoDateDescCreatedAtDesc().stream().map(this::order).toList();
+        log.debug("orders returned {} results", results.size());
+        return results;
     }
 
     @Transactional
     public SalesApi.SalesOrderResponse createOrder(SalesApi.SalesOrderPayload request, String actor) {
-        if (salesOrderRepository.existsBySoNumberIgnoreCase(request.soNumber()))
+        log.debug("createOrder called with soNumber={}, customerId={}, actor={}", request.soNumber(), request.customerId(), actor);
+        if (salesOrderRepository.existsBySoNumberIgnoreCase(request.soNumber())) {
+            log.warn("Validation failed: SO number {} already exists", request.soNumber());
             throw conflict("SALE_ORDER_NUMBER_EXISTS");
+        }
         List<SalesApi.SalesOrderLineRequest> lines = request.lines() == null ? List.of() : request.lines();
         if (lines.isEmpty()) throw conflict("O2C_ORDER_LINES_REQUIRED");
         if (request.warehouseId() == null || request.warehouseId().isBlank()) throw conflict("O2C_WAREHOUSE_REQUIRED");
@@ -86,11 +94,13 @@ public class SalesOrderFullService {
         salesOrderRepository.save(salesOrder);
         auditService.record("CREATE", "SALES_ORDER", salesOrder.getId(), actor,
                 "{\"number\":\"" + salesOrder.getSoNumber() + "\",\"amount\":" + total + "}", null);
+        log.info("SalesOrder {} created with number {} successfully", salesOrder.getId(), salesOrder.getSoNumber());
         return order(salesOrder);
     }
 
     @Transactional
     public SalesApi.SalesOrderResponse confirmOrder(String id, String actor) {
+        log.debug("confirmOrder called with id={}, actor={}", id, actor);
         SalesOrder salesOrder = lockOrder(id);
         if (salesOrder.getStatus() == SalesOrder.Status.CONFIRMED) return order(salesOrder);
         if (salesOrder.getStatus() != SalesOrder.Status.DRAFT) throw conflict("SALE_ORDER_STATE_INVALID");
@@ -108,11 +118,13 @@ public class SalesOrderFullService {
         salesOrder.confirm();
         auditService.record("CONFIRM", "SALES_ORDER", id, actor,
                 "{\"reservations\":" + lines.size() + "}", null);
+        log.info("SalesOrder {} confirmed with {} reservations successfully", id, lines.size());
         return order(salesOrderRepository.save(salesOrder));
     }
 
     @Transactional
     public SalesApi.SalesOrderResponse cancelOrder(String id, String actor) {
+        log.debug("cancelOrder called with id={}, actor={}", id, actor);
         SalesOrder salesOrder = lockOrder(id);
         if (salesOrder.getStatus() == SalesOrder.Status.CANCELLED) return order(salesOrder);
         if (salesOrder.getStatus() == SalesOrder.Status.DELIVERED) throw conflict("O2C_DELIVERED_ORDER_CANNOT_CANCEL");
@@ -121,11 +133,13 @@ public class SalesOrderFullService {
                 .forEach(row -> warehouseInventoryService.cancelReservation(row.getId()));
         salesOrder.updateStatus(SalesOrder.Status.CANCELLED);
         auditService.record("CANCEL", "SALES_ORDER", id, actor, "{\"reservationsReleased\":true}", null);
+        log.info("SalesOrder {} cancelled successfully", id);
         return order(salesOrderRepository.save(salesOrder));
     }
 
     @Transactional
     public SalesApi.DeliveryResponse deliver(String salesOrderId, SalesApi.DeliveryRequest request, String actor) {
+        log.debug("deliver called with salesOrderId={}, deliveryNumber={}, actor={}", salesOrderId, request.deliveryNumber(), actor);
         SalesDeliveryHeader replay = deliveryHeaderRepository.findByOperationId(request.operationId()).orElse(null);
         if (replay != null) return delivery(replay);
         if (deliveryHeaderRepository.existsByDeliveryNumberIgnoreCase(request.deliveryNumber()))
@@ -163,11 +177,13 @@ public class SalesOrderFullService {
         salesOrderRepository.save(order);
         auditService.record("DELIVER", "SALES_ORDER", order.getId(), actor,
                 "{\"deliveryId\":\"" + header.getId() + "\",\"invoiceId\":\"" + invoice.getId() + "\"}", null);
+        log.info("Delivery {} created for SalesOrder {} with invoice {} successfully", header.getId(), salesOrderId, invoice.getId());
         return delivery(header);
     }
 
     @Transactional
     public SalesApi.ReturnResponse receiveReturn(String salesOrderId, SalesApi.ReturnRequest request, String actor) {
+        log.debug("receiveReturn called with salesOrderId={}, returnNumber={}, actor={}", salesOrderId, request.returnNumber(), actor);
         CustomerReturnHeader replay = returnHeaderRepository.findByOperationId(request.operationId()).orElse(null);
         if (replay != null) return customerReturn(replay);
         if (returnHeaderRepository.existsByReturnNumberIgnoreCase(request.returnNumber()))
@@ -207,22 +223,30 @@ public class SalesOrderFullService {
         returnHeaderRepository.save(header);
         auditService.record("RETURN", "SALES_ORDER", order.getId(), actor,
                 "{\"returnId\":\"" + header.getId() + "\",\"creditNoteId\":\"" + note.getId() + "\"}", null);
+        log.info("Return {} created for SalesOrder {} with credit note {} successfully", header.getId(), salesOrderId, note.getId());
         return customerReturn(header);
     }
 
     @Transactional(readOnly = true)
     public List<SalesOrderLine> getSalesOrderLines(String id) {
+        log.debug("getSalesOrderLines called with id={}", id);
         return salesOrderLineRepository.findBySalesOrderId(id);
     }
 
     @Transactional(readOnly = true)
     public List<SalesApi.DeliveryResponse> deliveries(String id) {
-        return deliveryHeaderRepository.findBySalesOrderId(id).stream().map(this::delivery).toList();
+        log.debug("deliveries called with id={}", id);
+        List<SalesApi.DeliveryResponse> results = deliveryHeaderRepository.findBySalesOrderId(id).stream().map(this::delivery).toList();
+        log.debug("deliveries returned {} results for salesOrderId={}", results.size(), id);
+        return results;
     }
 
     @Transactional(readOnly = true)
     public List<SalesApi.ReturnResponse> returns(String id) {
-        return returnHeaderRepository.findBySalesOrderId(id).stream().map(this::customerReturn).toList();
+        log.debug("returns called with id={}", id);
+        List<SalesApi.ReturnResponse> results = returnHeaderRepository.findBySalesOrderId(id).stream().map(this::customerReturn).toList();
+        log.debug("returns returned {} results for salesOrderId={}", results.size(), id);
+        return results;
     }
 
     private SalesApi.SalesOrderResponse order(SalesOrder value) {
