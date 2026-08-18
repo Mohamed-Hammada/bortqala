@@ -119,7 +119,7 @@ export const routes: Routes = [
         canActivate: [roleGuard, menuAccessGuard],
         data: {
           roles: ['SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER'],
-          menuId: 'partner-risk',
+          menuId: 'settings',
         },
         loadComponent: () =>
           import('./features/partner-risk/partner-risk.page').then((module) => module.PartnerRiskPage),
@@ -293,21 +293,21 @@ export const routes: Routes = [
       {
         path: 'admin/setup-readiness',
         canActivate: [roleGuard, menuAccessGuard],
-        data: { roles: ['SUPER_ADMIN', 'ADMIN'], menuId: 'admin-setup-readiness' },
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'], menuId: 'settings' },
         loadComponent: () =>
           import('./features/admin/setup-readiness/setup-readiness.page').then((module) => module.SetupReadinessPage),
       },
       {
         path: 'admin/product-insights',
         canActivate: [roleGuard, menuAccessGuard],
-        data: { roles: ['SUPER_ADMIN', 'ADMIN'], menuId: 'admin-product-insights' },
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'], menuId: 'settings' },
         loadComponent: () =>
           import('./features/admin/product-insights/product-insights.page').then((module) => module.ProductInsightsPage),
       },
       {
         path: 'platform-admin',
         canActivate: [superAdminGuard, menuAccessGuard],
-        data: { roles: ['SUPER_ADMIN'], menuId: 'platform-admin' },
+        data: { roles: ['SUPER_ADMIN'], menuId: 'settings' },
         loadComponent: () =>
           import('./features/platform-admin/platform-admin.page').then((module) => module.PlatformAdminPage),
       },

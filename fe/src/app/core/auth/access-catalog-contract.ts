@@ -163,29 +163,5 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     roles: ['ADMIN', 'SUPER_ADMIN'],
     requiredFeature: null,
   },
-  {
-    menuId: 'partner-risk',
-    route: '/partner-risk',
-    roles: ['ADMIN', 'SUPER_ADMIN', 'PROCUREMENT_MANAGER', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER'],
-    requiredFeature: null,
-  },
-  {
-    menuId: 'admin-setup-readiness',
-    route: '/admin/setup-readiness',
-    roles: ['ADMIN', 'SUPER_ADMIN'],
-    requiredFeature: null,
-  },
-  {
-    menuId: 'admin-product-insights',
-    route: '/admin/product-insights',
-    roles: ['ADMIN', 'SUPER_ADMIN'],
-    requiredFeature: null,
-  },
-  {
-    menuId: 'platform-admin',
-    route: '/platform-admin',
-    roles: ['SUPER_ADMIN'],
-    requiredFeature: null,
-  },
 ];
 

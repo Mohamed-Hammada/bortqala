@@ -73,4 +73,18 @@ describe('settings navigation refactor', () => {
     expect(canAccessNavigationItem(sales, ['SALES_MANAGER'], () => true)).toBe(true);
     expect(canAccessNavigationItem(sales, ['SALES_MANAGER'], () => false)).toBe(false);
   });
+
+  it('uses the shared settings permission for settings-derived navigation items', () => {
+    for (const id of [
+      'partner-risk',
+      'admin-setup-readiness',
+      'admin-product-insights',
+      'platform-admin',
+    ]) {
+      const item = NAV_ITEMS.find((x) => x.menuId === id)!;
+      expect(item, `missing nav item for ${id}`).toBeDefined();
+      expect(item.permissionMenuId).toBe('settings');
+      expect(item.showInPermissionEditor).toBe(false);
+    }
+  });
 });
