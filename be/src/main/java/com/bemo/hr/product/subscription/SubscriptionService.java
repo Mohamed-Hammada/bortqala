@@ -4,6 +4,7 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SubscriptionService {
@@ -51,11 +53,13 @@ public class SubscriptionService {
 
     @Transactional(readOnly = true)
     public List<SubscriptionApi.PlanResponse> plans() {
+        log.debug("plans called");
         return planRepository.findAllByOrderByCodeAsc().stream().map(this::planView).toList();
     }
 
     @Transactional
     public SubscriptionApi.PlanResponse savePlan(String code, SubscriptionApi.PlanUpsertRequest request, String actor) {
+        log.debug("savePlan called with code={}, active={}", code, request.active());
         String normalized = code.strip().toUpperCase(Locale.ROOT);
         if (!normalized.matches("[A-Z][A-Z0-9_]{1,39}"))
             throw error("SUBSCRIPTION_PLAN_CODE_INVALID", HttpStatus.BAD_REQUEST);
@@ -76,11 +80,13 @@ public class SubscriptionService {
 
     @Transactional(readOnly = true)
     public SubscriptionApi.SubscriptionResponse current() {
+        log.debug("current called");
         return subscriptionRepository.findFirstBy().map(this::subscriptionView).orElse(null);
     }
 
     @Transactional
     public SubscriptionApi.ChangeResponse change(SubscriptionApi.ChangeRequest request, String actor) {
+        log.debug("change called with planCode={}, status={}, operationId={}", request.planCode(), request.status(), request.operationId());
         String app = TenantContext.require();
         var tenantApp = tenantRepository.findByIdForUpdate(app).orElseThrow(() -> error("TENANT_NOT_FOUND", HttpStatus.NOT_FOUND));
         var replay = changeRepository.findByOperationId(request.operationId());
@@ -105,16 +111,19 @@ public class SubscriptionService {
         subscriptionRepository.save(subscription);
         changeRepository.save(new SubscriptionChange(fromPlan, plan.getCode(), fromStatus, request.status(), request.reason(), request.operationId(), actor));
         auditService.record("CHANGE", "TENANT_SUBSCRIPTION", app, actor, "{\"from\":\"" + safe(fromPlan) + "\",\"to\":\"" + plan.getCode() + "\",\"reason\":\"" + escape(request.reason()) + "\"}", null);
+        log.info("Subscription changed from {} to {} (status={}), app={}", fromPlan, plan.getCode(), request.status(), app);
         return new SubscriptionApi.ChangeResponse(subscriptionView(subscription), false);
     }
 
     @Transactional(readOnly = true)
     public List<SubscriptionApi.HistoryResponse> history() {
+        log.debug("history called");
         return changeRepository.findAllByOrderByChangedAtDesc().stream().map(c -> new SubscriptionApi.HistoryResponse(c.getFromPlan(), c.getToPlan(), c.getFromStatus(), c.getToStatus(), c.getReason(), c.getOperationId(), c.getActor(), c.getChangedAt().toEpochMilli())).toList();
     }
 
     @Transactional(readOnly = true)
     public SubscriptionApi.UsageResponse usage() {
+        log.debug("usage called");
         TenantSubscription current = subscriptionRepository.findFirstBy().orElse(null);
         if (current == null)
             return new SubscriptionApi.UsageResponse(null, Map.of(), Map.of("users", userRepository.countByAppId(TenantContext.require())));

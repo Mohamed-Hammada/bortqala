@@ -11,6 +11,7 @@ import com.bemo.hr.trade.sales.api.SalesApi;
 import com.bemo.hr.trade.sales.domain.*;
 import com.bemo.hr.trade.sales.infrastructure.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SalesReceivablesService {
@@ -55,42 +57,60 @@ public class SalesReceivablesService {
 
     @Transactional(readOnly = true)
     public List<SalesApi.InvoiceResponse> invoices() {
-        return invoiceRepository.findAllByOrderByInvoiceDateDescCreatedAtDesc().stream().map(this::invoice).toList();
+        log.debug("invoices called");
+        List<SalesApi.InvoiceResponse> results = invoiceRepository.findAllByOrderByInvoiceDateDescCreatedAtDesc().stream().map(this::invoice).toList();
+        log.debug("invoices returned {} results", results.size());
+        return results;
     }
 
     @Transactional(readOnly = true)
     public List<SalesApi.ReceiptResponse> receipts() {
-        return receiptRepository.findAllByOrderByReceiptDateDescCreatedAtDesc().stream().map(this::receipt).toList();
+        log.debug("receipts called");
+        List<SalesApi.ReceiptResponse> results = receiptRepository.findAllByOrderByReceiptDateDescCreatedAtDesc().stream().map(this::receipt).toList();
+        log.debug("receipts returned {} results", results.size());
+        return results;
     }
 
     @Transactional(readOnly = true)
     public SalesApi.CreditProfileResponse credit(String customerId) {
+        log.debug("credit called with customerId={}", customerId);
         requireCustomer(customerId);
         return creditResponse(creditRepository.findByCustomerId(customerId).orElse(null), customerId);
     }
 
     @Transactional
     public SalesApi.CreditProfileResponse updateCredit(String customerId, SalesApi.CreditProfileRequest request, String actor) {
+        log.debug("updateCredit called with customerId={}, actor={}", customerId, actor);
         requireCustomer(customerId);
         CustomerCreditProfile profile = creditRepository.findByCustomerId(customerId).orElseGet(() -> new CustomerCreditProfile(customerId));
         profile.update(request.creditLimit(), request.paymentTermsDays(), request.creditHold());
         creditRepository.save(profile);
         auditService.record("UPDATE", "CUSTOMER_CREDIT", customerId, actor, "{\"limit\":" + request.creditLimit() + ",\"hold\":" + request.creditHold() + "}", null);
+        log.info("CustomerCreditProfile for customer {} updated successfully", customerId);
         return creditResponse(profile, customerId);
     }
 
     public void assertCreditAvailable(String customerId, BigDecimal exposure) {
+        log.debug("assertCreditAvailable called with customerId={}, exposure={}", customerId, exposure);
         CustomerCreditProfile profile = creditRepository.findByCustomerId(customerId).orElse(null);
         if (profile == null) return;
-        if (profile.isCreditHold()) throw error("AR_CUSTOMER_CREDIT_HOLD", HttpStatus.CONFLICT);
-        if (profile.getCreditLimit().subtract(invoiceRepository.outstanding(customerId)).compareTo(exposure) < 0)
+        if (profile.isCreditHold()) {
+            log.warn("Validation failed: Customer {} has credit hold active", customerId);
+            throw error("AR_CUSTOMER_CREDIT_HOLD", HttpStatus.CONFLICT);
+        }
+        if (profile.getCreditLimit().subtract(invoiceRepository.outstanding(customerId)).compareTo(exposure) < 0) {
+            log.warn("Validation failed: Customer {} credit limit exceeded", customerId);
             throw error("AR_CREDIT_LIMIT_EXCEEDED", HttpStatus.CONFLICT);
+        }
     }
 
     @Transactional
     public SalesApi.InvoiceResponse createInvoice(SalesApi.InvoiceRequest request, String actor) {
-        if (invoiceRepository.existsByInvoiceNumberIgnoreCase(request.invoiceNumber()))
+        log.debug("createInvoice called with invoiceNumber={}, customerId={}, actor={}", request.invoiceNumber(), request.customerId(), actor);
+        if (invoiceRepository.existsByInvoiceNumberIgnoreCase(request.invoiceNumber())) {
+            log.warn("Validation failed: Invoice number {} already exists", request.invoiceNumber());
             throw error("AR_INVOICE_NUMBER_EXISTS", HttpStatus.CONFLICT);
+        }
         requireCustomer(request.customerId());
         LocalDate date = date(request.invoiceDate());
         LocalDate due = request.dueDate() > 0 ? date(request.dueDate()) :
@@ -98,16 +118,19 @@ public class SalesReceivablesService {
         if (due.isBefore(date)) throw error("AR_DUE_DATE_INVALID", HttpStatus.BAD_REQUEST);
         CustomerInvoice saved = invoiceRepository.save(new CustomerInvoice(request.invoiceNumber(), request.customerId(), request.salesOrderId(), date, due, request.currencyCode(), request.amount()));
         auditService.record("CREATE", "CUSTOMER_INVOICE", saved.getId(), actor, "{\"number\":\"" + saved.getInvoiceNumber() + "\"}", null);
+        log.info("CustomerInvoice {} created with number {} successfully", saved.getId(), saved.getInvoiceNumber());
         return invoice(saved);
     }
 
     @Transactional
     public CustomerInvoice createAndIssueDeliveryInvoice(String invoiceNumber, String customerId, String salesOrderId,
                                                          LocalDate invoiceDate, String currencyCode, BigDecimal amount, String actor) {
+        log.debug("createAndIssueDeliveryInvoice called with invoiceNumber={}, customerId={}, amount={}", invoiceNumber, customerId, amount);
         SalesApi.InvoiceResponse created = createInvoice(new SalesApi.InvoiceRequest(invoiceNumber, customerId, salesOrderId,
                 ms(invoiceDate), ms(invoiceDate.plusDays(creditRepository.findByCustomerId(customerId)
                 .map(CustomerCreditProfile::getPaymentTermsDays).orElse(30))), currencyCode, amount), actor);
         issueInvoice(created.id(), actor);
+        log.info("Delivery invoice {} created and issued for customer {} successfully", invoiceNumber, customerId);
         return invoiceRepository.findById(created.id()).orElseThrow(() -> error("AR_INVOICE_NOT_FOUND", HttpStatus.NOT_FOUND));
     }
 
@@ -115,12 +138,14 @@ public class SalesReceivablesService {
     public CustomerCreditNote applyReturnCredit(String operationId, String creditNoteNumber, String invoiceId,
                                                 String salesOrderId, String deliveryId, String returnId, LocalDate creditDate,
                                                 BigDecimal amount, String actor) {
+        log.debug("applyReturnCredit called with operationId={}, creditNoteNumber={}, invoiceId={}, amount={}", operationId, creditNoteNumber, invoiceId, amount);
         CustomerCreditNote replay = creditNoteRepository.findByOperationId(operationId).orElse(null);
         if (replay != null) return replay;
         CustomerInvoice invoice = invoiceRepository.findByIdForUpdate(invoiceId).orElseThrow(() -> error("AR_INVOICE_NOT_FOUND", HttpStatus.NOT_FOUND));
         try {
             invoice.applyCredit(amount);
         } catch (IllegalArgumentException ex) {
+            log.warn("Validation failed: Credit amount {} invalid for invoice {}", amount, invoiceId);
             throw error("O2C_CREDIT_AMOUNT_INVALID", HttpStatus.CONFLICT);
         }
         CustomerCreditNote note = creditNoteRepository.save(new CustomerCreditNote(creditNoteNumber, invoice.getCustomerId(),
@@ -134,11 +159,13 @@ public class SalesReceivablesService {
                 invoice.getCustomerId(), invoice.getCurrencyCode(), actor);
         auditService.record("CREATE", "CUSTOMER_CREDIT_NOTE", note.getId(), actor,
                 "{\"returnId\":\"" + returnId + "\",\"amount\":" + amount + "}", null);
+        log.info("CustomerCreditNote {} created for invoice {} with amount {} successfully", note.getId(), invoiceId, amount);
         return note;
     }
 
     @Transactional
     public SalesApi.InvoiceResponse issueInvoice(String id, String actor) {
+        log.debug("issueInvoice called with id={}, actor={}", id, actor);
         CustomerInvoice invoice = invoiceRepository.findById(id).orElseThrow(() -> error("AR_INVOICE_NOT_FOUND", HttpStatus.NOT_FOUND));
         if (invoice.getStatus() != CustomerInvoice.Status.DRAFT) return invoice(invoice);
         assertCreditAvailable(invoice.getCustomerId(), invoice.getAmount());
@@ -150,11 +177,13 @@ public class SalesReceivablesService {
                 "Customer invoice " + invoice.getInvoiceNumber(), invoice.getAmount(), invoice.getAmount(), null,
                 invoice.getCustomerId(), invoice.getCurrencyCode(), actor);
         auditService.record("ISSUE", "CUSTOMER_INVOICE", id, actor, "{\"amount\":" + invoice.getAmount() + "}", null);
+        log.info("CustomerInvoice {} issued successfully", id);
         return invoice(invoice);
     }
 
     @Transactional
     public SalesApi.ReceiptResponse recordReceipt(SalesApi.ReceiptRequest request, String actor) {
+        log.debug("recordReceipt called with receiptNumber={}, customerId={}, amount={}, actor={}", request.receiptNumber(), request.customerId(), request.amount(), actor);
         Optional<CustomerReceipt> replay = receiptRepository.findByOperationId(request.operationId());
         if (replay.isPresent()) return receipt(replay.get());
         if (receiptRepository.existsByReceiptNumberIgnoreCase(request.receiptNumber()))
@@ -193,12 +222,17 @@ public class SalesReceivablesService {
                 "Customer receipt " + receipt.getReceiptNumber(), receipt.getAmount(), receipt.getAmount(), null,
                 request.customerId(), request.currencyCode(), actor);
         auditService.record("RECEIPT", "CUSTOMER_RECEIPT", receipt.getId(), actor, "{\"operationId\":\"" + request.operationId() + "\",\"amount\":" + request.amount() + "}", null);
+        log.info("CustomerReceipt {} recorded with amount {} successfully", receipt.getId(), request.amount());
         return receipt(receipt);
     }
 
     @Transactional(readOnly = true)
     public SalesApi.AgingResponse aging(long asOfMillis) {
-        if (asOfMillis <= 0) throw error("AR_AS_OF_DATE_REQUIRED", HttpStatus.BAD_REQUEST);
+        log.debug("aging called with asOfMillis={}", asOfMillis);
+        if (asOfMillis <= 0) {
+            log.warn("Validation failed: asOfMillis must be positive, got {}", asOfMillis);
+            throw error("AR_AS_OF_DATE_REQUIRED", HttpStatus.BAD_REQUEST);
+        }
         LocalDate asOf = date(asOfMillis);
         BigDecimal current = BigDecimal.ZERO, b1 = BigDecimal.ZERO, b2 = BigDecimal.ZERO, b3 = BigDecimal.ZERO, b4 = BigDecimal.ZERO;
         for (CustomerInvoice invoice : invoiceRepository.findAllByOrderByInvoiceDateDescCreatedAtDesc()) {
@@ -215,6 +249,7 @@ public class SalesReceivablesService {
 
     @Transactional
     public List<SalesApi.CollectionTaskResponse> collections(LocalDate asOf) {
+        log.debug("collections called with asOf={}", asOf);
         Map<String, CustomerInvoice> invoices = invoiceRepository.findAllByOrderByInvoiceDateDescCreatedAtDesc().stream().collect(Collectors.toMap(CustomerInvoice::getId, Function.identity()));
         for (CustomerInvoice invoice : invoices.values()) {
             if (invoice.overdue(asOf) && taskRepository.findByInvoiceId(invoice.getId()).isEmpty())
@@ -227,6 +262,7 @@ public class SalesReceivablesService {
 
     @Transactional
     public SalesApi.CollectionTaskResponse updateTask(String id, SalesApi.CollectionTaskRequest request, String actor) {
+        log.debug("updateTask called with id={}, status={}, actor={}", id, request.status(), actor);
         CollectionTask task = taskRepository.findById(id).orElseThrow(() -> error("AR_COLLECTION_TASK_NOT_FOUND", HttpStatus.NOT_FOUND));
         if (task.getVersion() != request.version()) throw error("STALE_STATE", HttpStatus.CONFLICT);
         CollectionTask.Status status;
@@ -238,6 +274,7 @@ public class SalesReceivablesService {
         task.update(status, request.ownerUserId(), request.nextActionDate() > 0 ? date(request.nextActionDate()) : null, request.note());
         taskRepository.save(task);
         auditService.record("UPDATE", "AR_COLLECTION_TASK", id, actor, "{\"status\":\"" + status + "\"}", null);
+        log.info("CollectionTask {} updated to status {} successfully", id, status);
         CustomerInvoice invoice = invoiceRepository.findById(task.getInvoiceId()).orElseThrow(() -> error("AR_INVOICE_NOT_FOUND", HttpStatus.NOT_FOUND));
         return task(task, invoice, date(request.asOf()));
     }

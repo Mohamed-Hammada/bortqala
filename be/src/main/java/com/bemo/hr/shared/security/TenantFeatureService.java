@@ -1,5 +1,6 @@
 package com.bemo.hr.shared.security;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -9,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class TenantFeatureService {
@@ -22,6 +24,7 @@ public class TenantFeatureService {
     }
 
     public boolean isEnabled(String appId, String featureKey) {
+        log.debug("isEnabled called with appId={}, featureKey={}", appId, featureKey);
         // SUPER_ADMIN must be able to reach every implemented module even when
         // a tenant-level feature row is disabled. Normal roles still respect
         // the tenant feature configuration.
@@ -38,6 +41,7 @@ public class TenantFeatureService {
     }
 
     public Set<String> getAllEnabled(String appId) {
+        log.debug("getAllEnabled called with appId={}", appId);
         Map<String, Boolean> effective = new java.util.HashMap<>(catalog.defaults());
         repository.findByAppId(appId).forEach(feature -> effective.put(feature.getFeatureKey(), feature.isEnabled()));
 

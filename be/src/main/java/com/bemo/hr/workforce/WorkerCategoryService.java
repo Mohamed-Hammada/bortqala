@@ -5,6 +5,7 @@ import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import com.bemo.hr.employee.infrastructure.EmployeeCodeSequenceRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WorkerCategoryService {
@@ -57,6 +59,7 @@ public class WorkerCategoryService {
 
     @Transactional(readOnly = true)
     public List<WorkforceApi.CategoryResponse> list() {
+        log.debug("list called");
         var canonicalById = attendanceCategoryRepository.findByScopeIn(WORKER_SCOPES).stream()
                 .collect(Collectors.toMap(AttendanceCategory::getId, Function.identity()));
         return categoryRepository.findByCategoryIdIn(canonicalById.keySet()).stream()
@@ -68,6 +71,7 @@ public class WorkerCategoryService {
 
     @Transactional
     public WorkforceApi.CategoryResponse create(WorkforceApi.CategoryRequest request) {
+        log.debug("create called with code={}, name={}", request.code(), request.name());
         CategoryScope requestedScope = parseScope(request.scope(), CategoryScope.WORKER);
         String code = request.code() == null ? null : request.code().strip().toUpperCase();
         var existing = attendanceCategoryRepository.findByCodeIgnoreCase(code == null ? "" : code).orElse(null);
@@ -96,11 +100,13 @@ public class WorkerCategoryService {
                 request.defaultDailyRate(), request.standardDailyHours(), request.defaultSettlementCycle(), request.status());
         config.linkToCategory(canonical.getId());
         config = categoryRepository.save(config);
+        log.info("WorkerCategory {} created successfully", canonical.getId());
         return mapToResponse(config, canonical);
     }
 
     @Transactional
     public WorkforceApi.CategoryResponse update(String id, WorkforceApi.CategoryRequest request) {
+        log.debug("update called with id={}", id);
         WorkerCategory config = categoryRepository.findByCategoryId(id)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found: " + id));
         final String canonicalId = config.getCategoryId();
@@ -118,6 +124,7 @@ public class WorkerCategoryService {
                 mapPayCycle(request.defaultSettlementCycle()), canonical.getAttendanceMode(),
                 canonical.isSinglePunchCounts(), canonical.getWorkDaysMask(),
                 "ACTIVE".equalsIgnoreCase(request.status()));
+        log.info("WorkerCategory {} updated successfully", id);
         return mapToResponse(config, canonical);
     }
 

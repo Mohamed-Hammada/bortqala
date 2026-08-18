@@ -11,6 +11,7 @@ import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository;
 import com.bemo.hr.trade.procurement.infrastructure.VendorPaymentProposalAllocationRepository;
 import com.bemo.hr.trade.procurement.infrastructure.VendorPaymentProposalRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+@Slf4j
 @Service
 public class VendorPaymentProposalService {
 
@@ -52,6 +54,7 @@ public class VendorPaymentProposalService {
     @Transactional
     public ProposalResult createProposal(String supplierId, List<AllocationInput> requestedAllocations,
                                          LocalDate dueDate, String actor) {
+        log.debug("createProposal called with supplierId={}, allocationCount={}, actor={}", supplierId, requestedAllocations != null ? requestedAllocations.size() : 0, actor);
         ValidatedAllocations validated = validateAllocations(supplierId, requestedAllocations);
         List<AllocationInput> allocations = validated.allocations();
         BigDecimal total = allocations.stream().map(AllocationInput::amount).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -65,34 +68,47 @@ public class VendorPaymentProposalService {
         }
         auditService.record("CREATE", "VENDOR_PAYMENT_PROPOSAL", proposal.getId(), actor,
                 "{\"allocationCount\":" + savedAllocations.size() + ",\"amount\":" + total + "}", null);
+        log.info("VendorPaymentProposal {} created with {} allocations for supplier {} successfully", proposal.getId(), savedAllocations.size(), supplierId);
         return result(proposal, savedAllocations);
     }
 
     @Transactional
     public ProposalResult approveProposal(String id, String actor) {
+        log.debug("approveProposal called with id={}, actor={}", id, actor);
         VendorPaymentProposal proposal = repository.findByIdForUpdate(id)
-                .orElseThrow(() -> new BusinessRuleException("Payment proposal not found", "PAYMENT_PROPOSAL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("Payment proposal not found for id={}", id);
+                    return new BusinessRuleException("Payment proposal not found", "PAYMENT_PROPOSAL_NOT_FOUND", HttpStatus.NOT_FOUND);
+                });
         segregationOfDutiesService.validateRequesterNotApprover(proposal.getCreatedBy(), actor, false);
         try {
             proposal.approve(actor);
         } catch (IllegalStateException ex) {
+            log.warn("Validation failed: Payment proposal {} state invalid: {}", id, ex.getMessage());
             throw new BusinessRuleException(ex.getMessage(), "PAYMENT_PROPOSAL_STATE_INVALID", HttpStatus.CONFLICT);
         }
         VendorPaymentProposal saved = repository.save(proposal);
         auditService.record("APPROVE", "VENDOR_PAYMENT_PROPOSAL", saved.getId(), actor,
                 "{\"createdBy\":\"" + saved.getCreatedBy() + "\"}", null);
+        log.info("VendorPaymentProposal {} approved by {} successfully", id, actor);
         return result(saved, allocations(saved));
     }
 
     @Transactional
     public ProposalResult executeProposal(String id, String operationId, String paymentMethod, String actor) {
+        log.debug("executeProposal called with id={}, operationId={}, paymentMethod={}, actor={}", id, operationId, paymentMethod, actor);
         VendorPaymentProposal proposal = repository.findByIdForUpdate(id)
-                .orElseThrow(() -> new BusinessRuleException("Payment proposal not found", "PAYMENT_PROPOSAL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("Payment proposal not found for id={}", id);
+                    return new BusinessRuleException("Payment proposal not found", "PAYMENT_PROPOSAL_NOT_FOUND", HttpStatus.NOT_FOUND);
+                });
         if (proposal.getStatus() == VendorPaymentProposal.Status.EXECUTED) {
             if (operationId.equals(proposal.getOperationId())) return result(proposal, allocations(proposal));
+            log.warn("Validation failed: Payment proposal {} already executed with different operationId", id);
             throw new BusinessRuleException("Payment proposal was already executed", "PAYMENT_PROPOSAL_ALREADY_EXECUTED", HttpStatus.CONFLICT);
         }
         if (proposal.getStatus() != VendorPaymentProposal.Status.APPROVED) {
+            log.warn("Validation failed: Payment proposal {} must be approved before execution, current status={}", id, proposal.getStatus());
             throw new BusinessRuleException("Payment proposal must be approved before execution", "PAYMENT_PROPOSAL_APPROVAL_REQUIRED", HttpStatus.CONFLICT);
         }
         segregationOfDutiesService.validatePreparerNotDisburser(proposal.getCreatedBy(), actor,
@@ -121,17 +137,24 @@ public class VendorPaymentProposalService {
         auditService.record("EXECUTE", "VENDOR_PAYMENT_PROPOSAL", saved.getId(), actor,
                 "{\"approvedBy\":\"" + saved.getApprovedBy() + "\",\"operationId\":\""
                         + operationId + "\",\"paymentCount\":" + allocations.size() + "}", null);
+        log.info("VendorPaymentProposal {} executed with {} payments by {} successfully", id, allocations.size(), actor);
         return result(saved, allocations);
     }
 
     @Transactional(readOnly = true)
     public List<ProposalResult> getProposalsForSupplier(String supplierId) {
-        return repository.findBySupplierId(supplierId).stream().map(this::result).toList();
+        log.debug("getProposalsForSupplier called with supplierId={}", supplierId);
+        List<ProposalResult> results = repository.findBySupplierId(supplierId).stream().map(this::result).toList();
+        log.debug("getProposalsForSupplier returned {} results for supplierId={}", results.size(), supplierId);
+        return results;
     }
 
     @Transactional(readOnly = true)
     public List<ProposalResult> getProposals() {
-        return repository.findAllByOrderByCreatedAtDesc().stream().map(this::result).toList();
+        log.debug("getProposals called");
+        List<ProposalResult> results = repository.findAllByOrderByCreatedAtDesc().stream().map(this::result).toList();
+        log.debug("getProposals returned {} results", results.size());
+        return results;
     }
 
     private ValidatedAllocations validateAllocations(String supplierId, List<AllocationInput> requested) {

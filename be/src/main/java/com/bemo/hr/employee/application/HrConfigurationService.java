@@ -8,6 +8,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.security.AppUserRepository;
 import com.bemo.hr.shared.security.TenantContext;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @Transactional(readOnly = true)
 public class HrConfigurationService {
     private static final List<CategoryScope> EMPLOYEE_SCOPES = List.of(CategoryScope.EMPLOYEE, CategoryScope.BOTH);

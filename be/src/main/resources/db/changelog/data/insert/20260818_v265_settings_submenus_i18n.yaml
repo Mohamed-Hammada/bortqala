@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260818-v265-settings-submenus-i18n
+      author: OpenAI
+      comment: Add idempotent Arabic/English labels for the Settings submenu refactor and separate Platform Administration workspace.
+      changes:
+        - sql:
+            sql: |
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              SELECT 'v265-settings-nav-001', 'workspace.platformAdministration', 'en-US', 'Platform Administration'
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'workspace.platformAdministration' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              SELECT 'v265-settings-nav-002', 'workspace.platformAdministration', 'ar-EG', 'إدارة المنصة'
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'workspace.platformAdministration' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              SELECT 'v265-settings-nav-003', 'settings.groupPersonal', 'en-US', 'Personal Settings'
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.groupPersonal' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              SELECT 'v265-settings-nav-004', 'settings.groupPersonal', 'ar-EG', 'الإعدادات الشخصية'
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.groupPersonal' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              SELECT 'v265-settings-nav-005', 'settings.groupSecurityAdmin', 'en-US', 'Security & System Settings'
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.groupSecurityAdmin' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              SELECT 'v265-settings-nav-006', 'settings.groupSecurityAdmin', 'ar-EG', 'الأمان وإعدادات النظام'
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.groupSecurityAdmin' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              SELECT 'v265-settings-nav-007', 'settings.tabBusinessConfiguration', 'en-US', 'Business Configuration'
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.tabBusinessConfiguration' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              SELECT 'v265-settings-nav-008', 'settings.tabBusinessConfiguration', 'ar-EG', 'إعدادات الأعمال'
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.tabBusinessConfiguration' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              SELECT 'v265-settings-nav-009', 'settings.groupPlatformAdministration', 'en-US', 'Platform Administration'
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.groupPlatformAdministration' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              SELECT 'v265-settings-nav-010', 'settings.groupPlatformAdministration', 'ar-EG', 'إدارة المنصة'
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'settings.groupPlatformAdministration' AND locale = 'ar-EG');
+
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              SELECT 'v265-settings-nav-011', 'platformAdmin.description', 'en-US', 'Manage plans, trials, industry packs, entitlements and translations separately from daily user settings.'
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'platformAdmin.description' AND locale = 'en-US');
+              INSERT INTO translations (id, translation_key, locale, text_value)
+              SELECT 'v265-settings-nav-012', 'platformAdmin.description', 'ar-EG', 'إدارة الخطط والتجارب وحزم الصناعة والوحدات والاستحقاقات والترجمات بعيداً عن إعدادات المستخدم اليومية.'
+              WHERE NOT EXISTS (SELECT 1 FROM translations WHERE translation_key = 'platformAdmin.description' AND locale = 'ar-EG');
+      rollback:
+        - sql:
+            sql: |
+              DELETE FROM translations WHERE id LIKE 'v265-settings-nav-%';

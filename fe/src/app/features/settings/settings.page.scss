@@ -1,5 +1,5 @@
 .settings-page {
-  max-width: 880px;
+  max-width: 1180px;
   margin: 0 auto;
 }
 
@@ -678,3 +678,40 @@
     flex: 1 1 140px;
   }
 }
+
+/* navigation-information-architecture-settings-groups */
+.settings-tab-groups {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.settings-tab-group-block {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.settings-tab-group-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  opacity: 0.72;
+}
+
+/* settings-submenu-refactor-layout */
+.settings-layout {
+  display: grid;
+  grid-template-columns: minmax(210px, 245px) minmax(0, 1fr);
+  gap: var(--space-6, 24px);
+  align-items: start;
+}
+
+.settings-content {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .settings-layout {
+    grid-template-columns: 1fr;
+  }
+}
+

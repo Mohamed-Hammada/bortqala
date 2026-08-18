@@ -5,12 +5,14 @@ import com.bemo.hr.manufacturing.production.infrastructure.ProductionOrderReposi
 import com.bemo.hr.manufacturing.production.infrastructure.ProductionVarianceCloseRepository;
 import com.bemo.hr.operations.OperationsService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
+@Slf4j
 @Service
 public class ManufacturingVarianceCloseService {
 
@@ -31,6 +33,7 @@ public class ManufacturingVarianceCloseService {
 
     @Transactional
     public ProductionVarianceClose calculateAndCloseVariance(String workOrderId) {
+        log.debug("calculateAndCloseVariance called with workOrderId={}", workOrderId);
         var order = productionOrderRepository.findById(workOrderId)
                 .orElseThrow(() -> new BusinessRuleException("Production order not found", "MFG_PRODUCTION_ORDER_NOT_FOUND", HttpStatus.NOT_FOUND));
         var requirements = bomSnapshotService.getSnapshotsForProductionOrder(workOrderId);
@@ -46,11 +49,14 @@ public class ManufacturingVarianceCloseService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         ProductionVarianceClose close = repository.findByWorkOrderId(workOrderId)
                 .orElseGet(() -> new ProductionVarianceClose(workOrderId, standardCost, actualCost));
-        return repository.save(close);
+        ProductionVarianceClose saved = repository.save(close);
+        log.info("ProductionVarianceClose saved for workOrderId={}", workOrderId);
+        return saved;
     }
 
     @Transactional(readOnly = true)
     public ProductionVarianceClose getVarianceClose(String workOrderId) {
+        log.debug("getVarianceClose called with workOrderId={}", workOrderId);
         return repository.findByWorkOrderId(workOrderId)
                 .orElseThrow(() -> new BusinessRuleException("Production variance close record not found", "VARIANCE_CLOSE_NOT_FOUND", HttpStatus.NOT_FOUND));
     }

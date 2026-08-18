@@ -14,6 +14,7 @@ import com.bemo.hr.shared.idempotency.application.IdempotencyService;
 import com.bemo.hr.shared.numbering.DocumentNumberService;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 public class JournalEntryService {
     private final JournalEntryRepository journalEntryRepository;
@@ -67,6 +69,7 @@ public class JournalEntryService {
 
     @Transactional
     public AccountingApi.JournalEntryResponse create(AccountingApi.JournalEntryPayload payload, String username) {
+        log.debug("create called with username={}", username);
         String appId = TenantContext.require();
         LocalDate entryDate = Instant.ofEpochMilli(payload.entryDate()).atZone(ZoneOffset.UTC).toLocalDate();
         fiscalPeriodGuard.requireAdjustment(entryDate);
@@ -78,6 +81,7 @@ public class JournalEntryService {
         entry.assignCreator(username);
         entry.setCurrency(normalizeCurrency(payload.currency()));
         entry = journalEntryRepository.save(entry);
+        log.info("JournalEntry {} created by user {}", entry.getId(), username);
 
         for (var linePayload : payload.lines()) {
             JournalEntryLine line = new JournalEntryLine(entry.getId(), linePayload.accountId(),
@@ -94,6 +98,7 @@ public class JournalEntryService {
         if (!journalApprovalService.isApprovalRequired(amountsByAccount)) {
             entry.approve("SYSTEM_APPROVAL_RULE");
             entry = journalEntryRepository.save(entry);
+            log.info("JournalEntry {} auto-approved by system rule", entry.getId());
             auditService.record("JOURNAL_AUTO_APPROVED", "JOURNAL_ENTRY", entry.getId(), username,
                     "{\"createdBy\":\"" + username + "\",\"ruleDecision\":\"NO_MANUAL_APPROVAL_REQUIRED\"}", null);
         }
@@ -139,11 +144,13 @@ public class JournalEntryService {
 
     @Transactional
     public AccountingApi.JournalEntryResponse approve(String id, AccountingApi.JournalActionRequest request, String username) {
+        log.debug("approve called with id={}, username={}", id, username);
         JournalEntry entry = requireEntry(TenantContext.require(), id);
         requireVersion(entry, request.expectedVersion());
         segregationOfDutiesService.validateRequesterNotApprover(entry.getCreatedBy(), username, false);
         entry.approve(username);
         journalEntryRepository.save(entry);
+        log.info("JournalEntry {} approved by user {}", entry.getId(), username);
         auditService.record("JOURNAL_APPROVED", "JOURNAL_ENTRY", entry.getId(), username,
                 "{\"createdBy\":\"" + entry.getCreatedBy() + "\"}", null);
         return toResponse(entry);
@@ -151,19 +158,25 @@ public class JournalEntryService {
 
     @Transactional
     public AccountingApi.JournalEntryResponse reject(String id, AccountingApi.JournalActionRequest request, String username) {
+        log.debug("reject called with id={}, username={}", id, username);
         JournalEntry entry = requireEntry(TenantContext.require(), id);
         requireVersion(entry, request.expectedVersion());
         segregationOfDutiesService.validateRequesterNotApprover(entry.getCreatedBy(), username, false);
-        if (request.reason() == null || request.reason().isBlank()) throw new BusinessRuleException(
-                "A rejection reason is required.", "JOURNAL_REJECTION_REASON_REQUIRED", HttpStatus.BAD_REQUEST);
+        if (request.reason() == null || request.reason().isBlank()) {
+            log.warn("Validation failed: rejection reason is required for journal {}", id);
+            throw new BusinessRuleException(
+                    "A rejection reason is required.", "JOURNAL_REJECTION_REASON_REQUIRED", HttpStatus.BAD_REQUEST);
+        }
         entry.reject(username, request.reason());
         journalEntryRepository.save(entry);
+        log.info("JournalEntry {} rejected by user {}", entry.getId(), username);
         auditService.record("JOURNAL_REJECTED", "JOURNAL_ENTRY", entry.getId(), username,
                 "{\"createdBy\":\"" + entry.getCreatedBy() + "\",\"reason\":\"" + request.reason().strip() + "\"}", null);
         return toResponse(entry);
     }
 
     private AccountingApi.JournalEntryResponse postTransaction(String id, AccountingApi.JournalActionRequest request, String username) {
+        log.debug("postTransaction called with id={}, username={}", id, username);
         String appId = TenantContext.require();
         JournalEntry entry = requireEntry(appId, id);
         requireVersion(entry, request.expectedVersion());
@@ -174,6 +187,7 @@ public class JournalEntryService {
         entry.post(username);
         entry.setOperationId(request.operationId());
         journalEntryRepository.save(entry);
+        log.info("JournalEntry {} posted by user {}", entry.getId(), username);
         auditService.record("JOURNAL_POSTED", "JOURNAL_ENTRY", entry.getId(), username,
                 "{\"createdBy\":\"" + entry.getCreatedBy() + "\",\"postedBy\":\"" + username + "\"}", null);
         return toResponse(entry);
@@ -189,6 +203,7 @@ public class JournalEntryService {
     }
 
     private AccountingApi.JournalEntryResponse reverseTransaction(String id, AccountingApi.JournalActionRequest request, String username) {
+        log.debug("reverseTransaction called with id={}, username={}", id, username);
         String appId = TenantContext.require();
         JournalEntry entry = requireEntry(appId, id);
         requireVersion(entry, request.expectedVersion());
@@ -222,11 +237,13 @@ public class JournalEntryService {
 
         entry.markReversed(reversal.getId(), request.reason(), username, request.operationId());
         journalEntryRepository.save(entry);
+        log.info("JournalEntry {} reversed to new entry {} by user {}", entry.getId(), reversal.getId(), username);
         return toResponse(reversal);
     }
 
     private void validateStructure(AccountingApi.JournalEntryPayload payload, String appId, String entryNumber) {
         if (payload.lines() == null || payload.lines().size() < 2) {
+            log.warn("Validation failed: journal entry must have at least 2 lines");
             throw new BusinessRuleException("يجب أن يحتوي القيد على سطرين على الأقل.", "JOURNAL_INVALID", HttpStatus.BAD_REQUEST);
         }
         Set<String> accountIds = payload.lines().stream().map(AccountingApi.JournalEntryLinePayload::accountId).collect(java.util.stream.Collectors.toSet());
@@ -293,6 +310,7 @@ public class JournalEntryService {
 
     @Transactional(readOnly = true)
     public Page<AccountingApi.JournalEntryResponse> listPage(Pageable pageable) {
+        log.debug("listPage called with pageable={}", pageable);
         return journalEntryRepository.findAllByOrderByEntryDateDescCreatedAtDesc(pageable).map(this::toResponse);
     }
 

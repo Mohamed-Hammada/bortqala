@@ -3,6 +3,7 @@ package com.bemo.hr.shared.dataexchange;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +18,7 @@ import java.time.format.DateTimeParseException;
 import java.util.*;
 
 @Service
+@Slf4j
 public class DataExchangeWorkbookService {
     private static final int MAX_IMPORT_ROWS = 5_000;
     private static final long MAX_IMPORT_FILE_BYTES = 10L * 1024 * 1024;

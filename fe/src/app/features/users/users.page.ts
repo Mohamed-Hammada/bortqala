@@ -24,44 +24,12 @@ import { AccessRole, AccessValidateResult, ACCESS_LEVEL_PRECEDENCE } from './acc
 import { AccessService } from './access.service';
 
 
-export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = [
-    { id: 'dashboard', labelKey: 'nav.dashboard' },
-    { id: 'categories', labelKey: 'nav.categories' },
-    { id: 'employees', labelKey: 'nav.employees' },
-    { id: 'imports', labelKey: 'nav.imports' },
-    { id: 'parties', labelKey: 'nav.parties' },
-    { id: 'reports', labelKey: 'nav.reports' },
-    { id: 'workforce-dashboard', labelKey: 'workforce.dashboard.title' },
-    { id: 'workforce-contractors', labelKey: 'workforce.contractors.title' },
-    { id: 'workforce-workers', labelKey: 'workforce.workers.title' },
-    { id: 'workforce-categories', labelKey: 'workforce.categories.title' },
-    { id: 'workforce-requests', labelKey: 'workforce.laborRequests.title' },
-    { id: 'workforce-attendance', labelKey: 'workforce.attendance.title' },
-    { id: 'workforce-dispatch-disputes', labelKey: 'workforce.dispatch.title' },
-    { id: 'workforce-settlements', labelKey: 'workforce.settlements.title' },
-    { id: 'workforce-advances', labelKey: 'workforce.advances.title' },
-    { id: 'workforce-accounts', labelKey: 'workforce.accounts.title' },
-    { id: 'workforce-reports', labelKey: 'workforce.reports.title' },
-    { id: 'operations', labelKey: 'nav.operations' },
-    { id: 'procurement', labelKey: 'nav.procurement' },
-    { id: 'sales', labelKey: 'nav.sales' },
-    { id: 'production', labelKey: 'nav.production' },
-    { id: 'quality', labelKey: 'nav.quality' },
-    { id: 'payroll', labelKey: 'nav.payroll' },
-    { id: 'accounts', labelKey: 'nav.accounts' },
-    { id: 'journal-entries', labelKey: 'nav.journalEntries' },
-    { id: 'banks', labelKey: 'nav.banks' },
-    { id: 'tax-currency', labelKey: 'nav.taxCurrency' },
-    { id: 'fiscal-periods', labelKey: 'nav.fiscalPeriods' },
-    { id: 'budgets', labelKey: 'nav.budgets' },
-    { id: 'organization', labelKey: 'nav.organization' },
-    { id: 'audit-logs', labelKey: 'nav.auditLogs' },
-    { id: 'users', labelKey: 'nav.users' },
-    { id: 'settings', labelKey: 'settings.title' },
-    { id: 'approvals-my-tasks', labelKey: 'approvals.myTasks' },
-    { id: 'approvals-workflows', labelKey: 'approvals.workflows' },
-    { id: 'notifications-send', labelKey: 'nav.notificationsSend' },
-  ];
+import { NAV_ITEMS, WORKSPACE_ORDER } from '../../core/navigation/app-navigation';
+
+export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = NAV_ITEMS.map((item) => ({
+  id: item.menuId,
+  labelKey: item.labelKey,
+}));
 
 @Component({
   selector: 'app-users-page',
@@ -151,44 +119,10 @@ export class UsersPage {
     { code: 'AUDITOR', labelKey: 'role.auditor', descriptionKey: 'role.auditorHint' },
   ];
 
-  readonly menuGroups = [
-    {
-      titleKey: 'users.groupPeople',
-      ids: ['employees', 'categories', 'imports', 'organization']
-    },
-    {
-      titleKey: 'users.groupWorkforce',
-      ids: [
-        'workforce-dashboard', 'workforce-contractors', 'workforce-workers',
-        'workforce-categories', 'workforce-requests', 'workforce-attendance',
-        'workforce-dispatch-disputes', 'workforce-settlements', 'workforce-advances', 'workforce-accounts', 'workforce-reports'
-      ]
-    },
-    {
-      titleKey: 'users.groupOperations',
-      ids: ['operations', 'production', 'quality']
-    },
-    {
-      titleKey: 'users.groupTrade',
-      ids: ['procurement', 'sales', 'parties']
-    },
-    {
-      titleKey: 'users.groupPayroll',
-      ids: ['payroll']
-    },
-    {
-      titleKey: 'users.groupFinance',
-      ids: ['accounts', 'journal-entries', 'banks', 'tax-currency', 'fiscal-periods', 'budgets']
-    },
-    {
-      titleKey: 'workspace.approvals',
-      ids: ['approvals-my-tasks', 'approvals-workflows']
-    },
-    {
-      titleKey: 'users.groupAdministration',
-      ids: ['dashboard', 'reports', 'audit-logs', 'users', 'settings', 'notifications-send']
-    }
-  ];
+  readonly menuGroups = WORKSPACE_ORDER.map((workspace) => ({
+    titleKey: workspace,
+    ids: NAV_ITEMS.filter((item) => item.workspace === workspace).map((item) => item.menuId),
+  })).filter((group) => group.ids.length > 0);
 
   readonly catalogRoles = computed(() => {
     const catalog = this.access.catalog();

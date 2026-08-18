@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.*;
 import java.time.format.DateTimeParseException;
@@ -17,6 +18,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class AttendanceExplorerService {
@@ -39,6 +41,7 @@ public class AttendanceExplorerService {
     }
 
     public List<AttendanceExplorerApi.MonthSummaryResponse> months() {
+        log.debug("months called");
         List<PunchRecord> punches = punchRecordRepository.findAll();
         if (punches.isEmpty()) return List.of();
 
@@ -67,6 +70,7 @@ public class AttendanceExplorerService {
     }
 
     public List<AttendanceExplorerApi.EmployeeSummaryResponse> employees(String monthText) {
+        log.debug("employees called with monthText={}", monthText);
         YearMonth month = parseMonth(monthText);
         List<PunchRecord> punches = punchesForMonth(month);
         EmployeeIndex employees = employeeIndex();
@@ -80,7 +84,9 @@ public class AttendanceExplorerService {
     }
 
     public AttendanceExplorerApi.EmployeeAttendanceResponse employee(String deviceUserId, String monthText) {
+        log.debug("employee called with deviceUserId={}, monthText={}", deviceUserId, monthText);
         if (deviceUserId == null || deviceUserId.isBlank()) {
+            log.warn("Validation failed: deviceUserId is required");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "deviceUserId is required");
         }
 

@@ -10,6 +10,7 @@ import com.bemo.hr.manufacturing.production.infrastructure.QualityInspectionRepo
 import com.bemo.hr.operations.OperationsService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class ManufacturingService {
@@ -53,12 +55,15 @@ public class ManufacturingService {
     // ─── BOM Management ─────────────────────────────────────────────
 
     public List<ManufacturingApi.BomResponse> listBoms() {
+        log.debug("listBoms called");
         return bomHeaderRepository.findAllByOrderByBomCodeAsc().stream().map(this::toBomResponse).toList();
     }
 
     @Transactional
     public ManufacturingApi.BomResponse createBom(ManufacturingApi.BomPayload payload) {
+        log.debug("createBom called with bomCode={}", payload.bomCode());
         if (bomHeaderRepository.existsByBomCodeIgnoreCase(payload.bomCode().strip())) {
+            log.warn("Validation failed: BOM code already exists: {}", payload.bomCode());
             throw new BusinessRuleException("كود قائمة المواد مستخدم بالفعل.", "MFG_BOM_CODE_EXISTS", HttpStatus.CONFLICT);
         }
         LocalDate effFrom = payload.effectiveFrom() != null ? Instant.ofEpochMilli(payload.effectiveFrom()).atZone(ZoneOffset.UTC).toLocalDate() : null;
@@ -69,11 +74,13 @@ public class ManufacturingService {
                 payload.yieldQuantity(), payload.revision(), effFrom, effTo, payload.notes(), payload.active(), lines);
         BomHeader saved = bomHeaderRepository.save(bom);
         auditService.record("CREATE", "BOM", saved.getId(), getCurrentUser(), "{\"bomCode\":\"" + saved.getBomCode() + "\"}", null);
+        log.info("BOM {} created successfully", saved.getId());
         return toBomResponse(saved);
     }
 
     @Transactional
     public ManufacturingApi.BomResponse updateBom(String id, ManufacturingApi.BomPayload payload) {
+        log.debug("updateBom called with id={}", id);
         BomHeader bom = bomHeaderRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("BOM not found", "MFG_BOM_NOT_FOUND"));
         LocalDate effFrom = payload.effectiveFrom() != null ? Instant.ofEpochMilli(payload.effectiveFrom()).atZone(ZoneOffset.UTC).toLocalDate() : null;
@@ -84,18 +91,22 @@ public class ManufacturingService {
                 payload.yieldQuantity(), payload.revision(), effFrom, effTo, payload.notes(), payload.active(), lines);
         BomHeader saved = bomHeaderRepository.save(bom);
         auditService.record("UPDATE", "BOM", saved.getId(), getCurrentUser(), "{\"bomCode\":\"" + saved.getBomCode() + "\"}", null);
+        log.info("BOM {} updated successfully", saved.getId());
         return toBomResponse(saved);
     }
 
     // ─── Production Orders ──────────────────────────────────────────
 
     public List<ManufacturingApi.ProductionOrderResponse> listProductionOrders() {
+        log.debug("listProductionOrders called");
         return productionOrderRepository.findAllByOrderByStartDateDescCreatedAtDesc().stream().map(this::toOrderResponse).toList();
     }
 
     @Transactional
     public ManufacturingApi.ProductionOrderResponse createProductionOrder(ManufacturingApi.ProductionOrderPayload payload) {
+        log.debug("createProductionOrder called with orderNumber={}", payload.orderNumber());
         if (productionOrderRepository.existsByOrderNumberIgnoreCase(payload.orderNumber().strip())) {
+            log.warn("Validation failed: order number already exists: {}", payload.orderNumber());
             throw new BusinessRuleException("رقم أمر الإنتاج مستخدم بالفعل.", "MFG_ORDER_NUMBER_EXISTS", HttpStatus.CONFLICT);
         }
         BomHeader bom = bomHeaderRepository.findById(payload.bomId())
@@ -107,10 +118,12 @@ public class ManufacturingService {
                 bom.getRevision(), payload.targetQuantity(), startDate, payload.notes());
         ProductionOrder saved = productionOrderRepository.save(order);
         auditService.record("CREATE", "PRODUCTION_ORDER", saved.getId(), getCurrentUser(), "{\"orderNumber\":\"" + saved.getOrderNumber() + "\"}", null);
+        log.info("ProductionOrder {} created successfully", saved.getId());
         return toOrderResponse(saved);
     }
 
     public ManufacturingApi.MaterialReadinessResponse checkMaterialReadiness(String id) {
+        log.debug("checkMaterialReadiness called with id={}", id);
         ProductionOrder order = requireOrder(id);
         if (order.getStatus() != ProductionOrder.Status.PLANNED) {
             return readinessFromSnapshots(order);
@@ -144,8 +157,10 @@ public class ManufacturingService {
 
     @Transactional
     public ManufacturingApi.ProductionOrderResponse startProductionOrder(String id) {
+        log.debug("startProductionOrder called with id={}", id);
         ProductionOrder order = requireOrderForUpdate(id);
         if (order.getStatus() != ProductionOrder.Status.PLANNED) {
+            log.warn("Validation failed: order {} status is {} but PLANNED required", id, order.getStatus());
             throw new BusinessRuleException("يمكن بدء أمر الإنتاج فقط من حالة مخطط.", "MFG_ORDER_START_FROM_PLANNED_ONLY", HttpStatus.CONFLICT);
         }
         BomHeader bom = bomHeaderRepository.findById(order.getBomId())
@@ -153,11 +168,13 @@ public class ManufacturingService {
         requireApplicableBom(bom, order.getStartDate());
 
         if (bom.getLines().isEmpty()) {
+            log.warn("Validation failed: BOM {} has no lines for order {}", bom.getId(), id);
             throw new BusinessRuleException("لا يمكن بدء أمر إنتاج بقائمة مواد خالية من المكونات.", "MFG_BOM_NO_LINES", HttpStatus.CONFLICT);
         }
 
         ManufacturingApi.MaterialReadinessResponse readiness = readinessFromBom(order, bom);
         if (!readiness.allMaterialsAvailable()) {
+            log.warn("Validation failed: material shortage for order {}", id);
             throw new BusinessRuleException("نقص في الرصيد المتاح للمواد الخام المطلوبة لتنفيذ أمر الإنتاج.", "MFG_MATERIAL_SHORTAGE", HttpStatus.CONFLICT);
         }
 
@@ -177,22 +194,27 @@ public class ManufacturingService {
         order.start();
         ProductionOrder saved = productionOrderRepository.save(order);
         auditService.record("START", "PRODUCTION_ORDER", saved.getId(), actor, "{\"orderNumber\":\"" + saved.getOrderNumber() + "\"}", null);
+        log.info("ProductionOrder {} started successfully", saved.getId());
         return toOrderResponse(saved);
     }
 
     @Transactional
     public ManufacturingApi.ProductionOrderResponse completeProductionOrder(String id, ManufacturingApi.CompleteProductionOrderPayload payload) {
+        log.debug("completeProductionOrder called with id={}, actualOutputQuantity={}", id, payload.actualOutputQuantity());
         ProductionOrder order = requireOrderForUpdate(id);
         if (order.getStatus() != ProductionOrder.Status.IN_PROGRESS) {
+            log.warn("Validation failed: order {} status is {} but IN_PROGRESS required", id, order.getStatus());
             throw new BusinessRuleException("يمكن إكمال أمر الإنتاج فقط إذا كان قيد التنفيذ.", "MFG_ORDER_COMPLETE_FROM_IN_PROGRESS_ONLY", HttpStatus.CONFLICT);
         }
 
         if (payload.actualOutputQuantity() == null || payload.actualOutputQuantity().signum() <= 0) {
+            log.warn("Validation failed: actualOutputQuantity must be positive for order {}", id);
             throw new BusinessRuleException("كمية الإنتاج الفعلية يجب أن تكون أكبر من صفر.", "MFG_ACTUAL_OUTPUT_POSITIVE", HttpStatus.CONFLICT);
         }
 
         String finishedItemId = order.getFinishedItemId();
         if (finishedItemId == null || finishedItemId.isBlank()) {
+            log.warn("Validation failed: finishedItemId is required for order {}", id);
             throw new BusinessRuleException("يجب ربط الصنف التام بأمر الإنتاج أو قائمة المواد لاستلام المنتجات.", "MFG_FINISHED_ITEM_REQUIRED", HttpStatus.CONFLICT);
         }
 
@@ -217,16 +239,20 @@ public class ManufacturingService {
         order.complete(payload.actualOutputQuantity(), payload.scrapQuantity(), totalMaterialCost, unitCost, completionDate, payload.notes());
         ProductionOrder saved = productionOrderRepository.save(order);
         auditService.record("COMPLETE", "PRODUCTION_ORDER", saved.getId(), actor, "{\"orderNumber\":\"" + saved.getOrderNumber() + "\",\"output\":" + payload.actualOutputQuantity() + "}", null);
+        log.info("ProductionOrder {} completed successfully with output={}", saved.getId(), payload.actualOutputQuantity());
         return toOrderResponse(saved);
     }
 
     @Transactional
     public ManufacturingApi.ProductionOrderResponse cancelProductionOrder(String id) {
+        log.debug("cancelProductionOrder called with id={}", id);
         ProductionOrder order = requireOrderForUpdate(id);
         if (order.getStatus() == ProductionOrder.Status.COMPLETED) {
+            log.warn("Validation failed: cannot cancel completed order {}", id);
             throw new BusinessRuleException("لا يمكن إلغاء أمر إنتاج م مكتمل.", "MFG_ORDER_CANNOT_CANCEL_COMPLETED", HttpStatus.CONFLICT);
         }
         if (order.getStatus() == ProductionOrder.Status.CANCELLED) {
+            log.warn("Validation failed: order {} already cancelled", id);
             throw new BusinessRuleException("أمر الإنتاج ملغي بالفعل.", "MFG_ORDER_ALREADY_CANCELLED", HttpStatus.CONFLICT);
         }
 
@@ -246,22 +272,26 @@ public class ManufacturingService {
         order.cancel();
         ProductionOrder saved = productionOrderRepository.save(order);
         auditService.record("CANCEL", "PRODUCTION_ORDER", saved.getId(), actor, "{\"orderNumber\":\"" + saved.getOrderNumber() + "\"}", null);
+        log.info("ProductionOrder {} cancelled successfully", saved.getId());
         return toOrderResponse(saved);
     }
 
     // ─── Quality Control Inspections ────────────────────────────────
 
     public List<ManufacturingApi.QualityInspectionResponse> listInspections() {
+        log.debug("listInspections called");
         return qualityInspectionRepository.findAllByOrderByInspectionDateDescCreatedAtDesc().stream().map(this::toQualityResponse).toList();
     }
 
     @Transactional
     public ManufacturingApi.QualityInspectionResponse createInspection(ManufacturingApi.QualityInspectionPayload payload) {
+        log.debug("createInspection called with inspectionNumber={}", payload.inspectionNumber());
         LocalDate date = Instant.ofEpochMilli(payload.inspectionDate()).atZone(ZoneOffset.UTC).toLocalDate();
         QualityInspection.Status status = QualityInspection.Status.valueOf(payload.status());
         QualityInspection qi = new QualityInspection(payload.inspectionNumber(), date, payload.sourceType(), payload.passedQuantity(), payload.failedQuantity(), status, payload.inspectorName(), payload.notes());
         QualityInspection saved = qualityInspectionRepository.save(qi);
         auditService.record("CREATE", "QUALITY_INSPECTION", saved.getId(), getCurrentUser(), "{\"inspectionNumber\":\"" + saved.getInspectionNumber() + "\"}", null);
+        log.info("QualityInspection {} created successfully", saved.getId());
         return toQualityResponse(saved);
     }
 

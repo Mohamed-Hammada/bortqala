@@ -2,6 +2,7 @@ package com.bemo.hr.workforce;
 
 import com.bemo.hr.audit.application.AuditService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class WorkforceAttendanceService {
@@ -19,11 +21,13 @@ public class WorkforceAttendanceService {
 
     @Transactional(readOnly = true)
     public List<ManualAttendanceEntry> getByDateRange(String startDate, String endDate) {
+        log.debug("getByDateRange called with startDate={}, endDate={}", startDate, endDate);
         return attendanceRepository.findByWorkDateBetween(startDate, endDate);
     }
 
     @Transactional
     public WorkforceApi.BatchAttendanceResponse saveBatch(WorkforceApi.BatchAttendanceRequest request) {
+        log.debug("saveBatch called with {} entries", request.entries() != null ? request.entries().size() : 0);
         if (request.entries() == null || request.entries().isEmpty()) {
             return new WorkforceApi.BatchAttendanceResponse(0, 0, 0, 0, List.of(), List.of());
         }
@@ -110,6 +114,7 @@ public class WorkforceAttendanceService {
                 currentUser, "{\"created\":" + created + ",\"updated\":" + updated
                         + ",\"skipped\":" + skipped + ",\"failed\":" + errors.size() + "}", null);
 
+        log.info("Batch attendance saved: created={}, updated={}, skipped={}, failed={}", created, updated, skipped, errors.size());
         return new WorkforceApi.BatchAttendanceResponse(created, updated, skipped, errors.size(),
                 savedEntries, errors);
     }
@@ -161,6 +166,7 @@ public class WorkforceAttendanceService {
 
     @Transactional
     public WorkforceApi.BulkUpdateAttendanceResponse bulkUpdate(WorkforceApi.BulkUpdateAttendanceRequest request) {
+        log.debug("bulkUpdate called with {} workerIds, workDate={}", request.workerIds() != null ? request.workerIds().size() : 0, request.workDate());
         if (request.workerIds() == null || request.workerIds().isEmpty()) {
             return new WorkforceApi.BulkUpdateAttendanceResponse(0);
         }
@@ -194,6 +200,7 @@ public class WorkforceAttendanceService {
                 "{\"date\":\"" + request.workDate() + "\",\"value\":" + request.attendanceValue() + ",\"override\":" + request.overrideExisting() + "}",
                 null);
 
+        log.info("Bulk attendance update completed: {} workers updated", count);
         return new WorkforceApi.BulkUpdateAttendanceResponse(count);
     }
 

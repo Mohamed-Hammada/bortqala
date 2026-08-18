@@ -17,6 +17,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.workforce.WorkforceAdvanceService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -55,9 +57,9 @@ public class PayrollService {
     private final PayrollPaymentAccountingService payrollPaymentAccountingService;
 
     public List<PayrollApi.ExplanationResponse> getPaymentExplanation(String paymentId) {
+        log.debug("getPaymentExplanation called with paymentId={}", paymentId);
         var explanations = explanationRepository.findBySalaryPaymentIdOrderByCreatedAtAsc(paymentId);
         if (explanations.isEmpty()) {
-            // Generate fallback default transparent breakdown
             var payment = salaryPaymentRepository.findById(paymentId).orElse(null);
             if (payment != null) {
                 saveDefaultExplanations(payment);
@@ -101,6 +103,7 @@ public class PayrollService {
     }
 
     public PayrollApi.SheetResponse getSheet(int year, int month, String categoryIdFilter) {
+        log.debug("getSheet called with year={}, month={}, categoryIdFilter={}", year, month, categoryIdFilter);
         return buildSheet(year, month, categoryIdFilter, false, "system", null);
     }
 
@@ -311,10 +314,12 @@ public class PayrollService {
 
     @Transactional
     public PayrollApi.SheetResponse recordPayment(PayrollApi.PaymentRequest request, String actor) {
+        log.debug("recordPayment called with employeeId={}, periodYear={}, periodMonth={}, actor={}", request.employeeId(), request.periodYear(), request.periodMonth(), actor);
         var emp = employeeRepository.findById(request.employeeId())
                 .orElseThrow(() -> new NotFoundException("Employee not found.", "HRCFG_EMPLOYEE_NOT_FOUND"));
 
         if (!emp.isActive() || (emp.getBaseSalary() != null && emp.getBaseSalary().signum() <= 0 && emp.getCategoryId() == null)) {
+            log.warn("Validation failed: Employee incomplete profile employeeId={}", request.employeeId());
             throw new BusinessRuleException("الموظف غير كلي البيانات (الراتب الأساسي أو الفئة). يرجى استكمال بياناته من صفحة /employees أولاً.", "PAYROLL_EMPLOYEE_INCOMPLETE", HttpStatus.CONFLICT);
         }
 
@@ -324,20 +329,24 @@ public class PayrollService {
                 .orElseThrow(() -> new BusinessRuleException("The salary must complete approval and posting before payment.",
                         "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT));
         if (entity.getVersion() != request.expectedVersion()) {
+            log.warn("Validation failed: Stale version for payment employeeId={}", request.employeeId());
             throw new BusinessRuleException("The salary payment was changed by another request.",
                     "PAYROLL_STALE_VERSION", HttpStatus.CONFLICT);
         }
         if (entity.getPaymentStatus() == PaymentStatus.PAID) {
+            log.warn("Validation failed: Duplicate payment employeeId={}", request.employeeId());
             throw new BusinessRuleException("This salary has already been paid.",
                     "PAYROLL_DUPLICATE_PAYMENT", HttpStatus.CONFLICT);
         }
         if (entity.getPaymentStatus() != PaymentStatus.POSTED
                 && entity.getPaymentStatus() != PaymentStatus.REVERSED) {
+            log.warn("Validation failed: Only posted or reversed salary can be paid employeeId={}", request.employeeId());
             throw new BusinessRuleException("Only a posted or reversed salary can be paid.",
                     "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT);
         }
         if (entity.getPayrollRunId() == null || entity.getPayrollSnapshotId() == null
                 || payrollSnapshotService.findById(entity.getPayrollSnapshotId()).isEmpty()) {
+            log.warn("Validation failed: Frozen payroll calculation evidence required employeeId={}", request.employeeId());
             throw new BusinessRuleException("Frozen payroll calculation evidence is required before payment.",
                     "PAYROLL_RUN_SNAPSHOTS_REQUIRED", HttpStatus.CONFLICT);
         }
@@ -345,6 +354,7 @@ public class PayrollService {
                 .orElseThrow(() -> new BusinessRuleException("Payroll run not found",
                         "PAYROLL_RUN_NOT_FOUND", HttpStatus.NOT_FOUND));
         if (run.getStatus() != PayrollRunHeader.Status.POSTED) {
+            log.warn("Validation failed: Payroll run must be posted before payment runId={}", entity.getPayrollRunId());
             throw new BusinessRuleException("The payroll run must be posted before payment.",
                     "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT);
         }
@@ -386,18 +396,23 @@ public class PayrollService {
                         + "\",\"previousStatus\":\"POSTED\",\"newStatus\":\"PAID\",\"paidBy\":\""
                         + actor + "\",\"net\":" + entity.getNetAmount() + "}", null);
 
+        log.info("SalaryPayment paid id={} employeeId={}", entity.getId(), emp.getId());
         return getSheet(request.periodYear(), request.periodMonth(), null);
     }
 
     @Transactional
     public PayrollApi.SheetResponse transitionStatus(PayrollApi.StatusTransitionRequest request, String actor) {
+        log.debug("transitionStatus called with periodYear={}, periodMonth={}, targetStatus={}, actor={}", request.periodYear(), request.periodMonth(), request.targetStatus(), actor);
         PaymentStatus requiredCurrent = switch (request.targetStatus()) {
             case CALCULATED -> PaymentStatus.DRAFT;
             case REVIEWED -> PaymentStatus.CALCULATED;
             case APPROVED -> PaymentStatus.REVIEWED;
             case POSTED -> PaymentStatus.APPROVED;
-            default -> throw new BusinessRuleException("This payroll state requires a dedicated command.",
-                    "PAYROLL_STATE_TRANSITION_INVALID", HttpStatus.CONFLICT);
+            default -> {
+                log.warn("Validation failed: Invalid target status={}", request.targetStatus());
+                throw new BusinessRuleException("This payroll state requires a dedicated command.",
+                        "PAYROLL_STATE_TRANSITION_INVALID", HttpStatus.CONFLICT);
+            }
         };
         String periodId = request.periodYear() + "-" + String.format("%02d", request.periodMonth()) + ":FULL_MONTH";
         PayrollRunHeader run = resolveRun(periodId, YearMonth.of(request.periodYear(), request.periodMonth()).atEndOfMonth());
@@ -408,6 +423,7 @@ public class PayrollService {
         boolean freezeSnapshots = request.targetStatus() == PaymentStatus.CALCULATED;
         var sheet = buildSheet(request.periodYear(), request.periodMonth(), null, freezeSnapshots, actor, run.getId());
         if (sheet.rows().isEmpty()) {
+            log.warn("Validation failed: Payroll register has no payable employees periodYear={} periodMonth={}", request.periodYear(), request.periodMonth());
             throw new BusinessRuleException("The payroll register has no payable employees.",
                     "PAYROLL_REGISTER_EMPTY", HttpStatus.CONFLICT);
         }
@@ -459,6 +475,7 @@ public class PayrollService {
                         + ",\"previousStatus\":\"" + requiredCurrent + "\",\"newStatus\":\""
                         + request.targetStatus().name() + "\",\"actor\":\"" + actor + "\"}", null);
 
+        log.info("PayrollRegister status transitioned to {} periodYear={} periodMonth={}", request.targetStatus(), request.periodYear(), request.periodMonth());
         return getSheet(request.periodYear(), request.periodMonth(), null);
     }
 
@@ -477,17 +494,21 @@ public class PayrollService {
 
     @Transactional
     public PayrollApi.SheetResponse reversePayment(PayrollApi.ReversePaymentRequest request, String actor) {
+        log.debug("reversePayment called with paymentId={}, actor={}", request.paymentId(), actor);
         var payment = salaryPaymentRepository.findByIdForUpdate(request.paymentId())
                 .orElseThrow(() -> new NotFoundException("قيد الراتب غير موجود.", "PAYROLL_ENTRY_NOT_FOUND"));
 
         if (payment.getVersion() != request.expectedVersion()) {
+            log.warn("Validation failed: Stale version for reversal paymentId={}", request.paymentId());
             throw new BusinessRuleException("The salary payment was changed by another request.",
                     "PAYROLL_STALE_VERSION", HttpStatus.CONFLICT);
         }
         if (payment.getPaymentStatus() == PaymentStatus.REVERSED) {
+            log.warn("Validation failed: Payment already reversed paymentId={}", request.paymentId());
             throw new BusinessRuleException("هذا القيد متراجع عنه بالفعل.", "PAYROLL_ENTRY_ALREADY_REVERSED", HttpStatus.CONFLICT);
         }
         if (payment.getPaymentStatus() != PaymentStatus.PAID) {
+            log.warn("Validation failed: Only paid salary can be reversed paymentId={}", request.paymentId());
             throw new BusinessRuleException("Only a paid salary can be reversed.",
                     "PAYROLL_REVERSAL_STATE_INVALID", HttpStatus.CONFLICT);
         }
@@ -523,14 +544,17 @@ public class PayrollService {
                         + "\"newStatus\":\"REVERSED\",\"reversedBy\":\"" + actor + "\",\"reason\":\""
                         + request.reason().replace("\"", "\\\"") + "\"}", null);
 
+        log.info("SalaryPayment reversed id={} employeeId={}", payment.getId(), payment.getEmployeeId());
         return getSheet(payment.getPeriodYear(), payment.getPeriodMonth(), null);
     }
 
     @Transactional
     public PayrollApi.SheetResponse payBulk(PayrollApi.BulkPaymentRequest request, String actor) {
+        log.debug("payBulk called with periodYear={}, periodMonth={}, categoryId={}, actor={}", request.periodYear(), request.periodMonth(), request.categoryId(), actor);
         var sheet = getSheet(request.periodYear(), request.periodMonth(), request.categoryId());
         if (sheet.rows().isEmpty() || sheet.rows().stream().anyMatch(row -> row.incompleteProfile()
                 || row.id() == null || row.paymentStatus() != PaymentStatus.POSTED)) {
+            log.warn("Validation failed: Bulk payment requires every selected row to be posted and payable periodYear={} periodMonth={}", request.periodYear(), request.periodMonth());
             throw new BusinessRuleException("Bulk payment requires every selected row to be posted and payable.",
                     "PAYROLL_BULK_NOT_PAYABLE", HttpStatus.CONFLICT);
         }
@@ -551,11 +575,15 @@ public class PayrollService {
         auditService.record("PAYROLL_BULK_DISBURSEMENT", "PAYROLL_REGISTER", request.periodYear() + "-" + request.periodMonth(), actor,
                 "{\"periodYear\":" + request.periodYear() + ",\"periodMonth\":" + request.periodMonth() + "}", null);
 
+        log.info("Payroll bulk payment completed periodYear={} periodMonth={} employeeCount={}", request.periodYear(), request.periodMonth(), sheet.rows().size());
         return getSheet(request.periodYear(), request.periodMonth(), request.categoryId());
     }
 
     public byte[] export(int year, int month, String categoryId, ExcelExportOptions options) {
+        log.debug("export called with year={}, month={}, categoryId={}", year, month, categoryId);
         var sheet = getSheet(year, month, categoryId);
-        return payrollExcelExporter.export(sheet, options);
+        byte[] data = payrollExcelExporter.export(sheet, options);
+        log.info("Payroll export completed year={} month={} rows={}", year, month, sheet.rows().size());
+        return data;
     }
 }

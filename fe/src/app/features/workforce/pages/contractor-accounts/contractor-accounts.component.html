@@ -1,0 +1,41 @@
+
+    <div class="workforce-container">
+      <header class="page-header">
+        <div>
+          <span class="eyebrow">{{ i18n.t('workforce.ui.contractorAccounts.eyebrow') }}</span>
+          <h1>{{ i18n.t('workforce.ui.contractorAccounts.title') }}</h1>
+        </div>
+      </header>
+
+      <div class="card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('workforce.ui.contractorAccounts.contractor') }}</th>
+              <th>{{ i18n.t('workforce.ui.contractorAccounts.accountingModel') }}</th>
+              <th>{{ i18n.t('workforce.ui.contractorAccounts.workerNetTotal') }}</th>
+              <th>{{ i18n.t('workforce.ui.contractorAccounts.feeOrRate') }}</th>
+              <th>{{ i18n.t('workforce.ui.contractorAccounts.totalPayable') }}</th>
+              <th>{{ i18n.t('workforce.ui.contractorAccounts.paid') }}</th>
+              <th>{{ i18n.t('workforce.ui.contractorAccounts.remaining') }}</th>
+              <th>{{ i18n.t('workforce.ui.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of workforceService.contractors()">
+              <td><strong>{{ c.name }}</strong> ({{ c.code }})</td>
+              <td>{{ getModelLabel(c.accountingModel) }}</td>
+              <td>0.00 {{ i18n.t('workforce.ui.currencyEgp') }}</td>
+              <td>{{ c.feeValue || c.defaultDailyRate || 0 }} {{ i18n.t('workforce.ui.currencyEgp') }}</td>
+              <td><strong>0.00 {{ i18n.t('workforce.ui.currencyEgp') }}</strong></td>
+              <td>0.00 {{ i18n.t('workforce.ui.currencyEgp') }}</td>
+              <td><span class="due-bal">0.00 {{ i18n.t('workforce.ui.currencyEgp') }}</span></td>
+              <td>
+                <button type="button" class="btn btn-sm btn-secondary" (click)="printReceipt(c)">{{ i18n.t('workforce.ui.contractorAccounts.printReceipt') }}</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  

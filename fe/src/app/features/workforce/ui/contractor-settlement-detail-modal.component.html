@@ -1,0 +1,122 @@
+
+    <app-modal-dialog [isOpen]="isOpen" [title]="i18n.t('workforce.ui.settlementDetail.title', { name: settlement?.contractorName || '' })" size="wide" (close)="onClose()">
+      @if (settlement; as item) {
+        <div class="settlement-detail-container">
+          <!-- Summary Cards -->
+          <div class="meta-grid">
+            <article class="meta-card">
+              <small>{{ i18n.t('workforce.ui.settlementDetail.contractorName') }}</small>
+              <strong>{{ item.contractorName }}</strong>
+            </article>
+            <article class="meta-card">
+              <small>{{ i18n.t('workforce.ui.settlementDetail.accountingModel') }}</small>
+              <span>{{ item.accountingModel }}</span>
+            </article>
+            <article class="meta-card">
+              <small>{{ i18n.t('workforce.ui.settlementDetail.netPayable') }}</small>
+              <strong class="highlight-amount">{{ item.netPayable | number:'1.2-2' }} {{ i18n.t('workforce.ui.currencyEgp') }}</strong>
+            </article>
+            <article class="meta-card">
+              <small>{{ i18n.t('workforce.ui.settlementDetail.paidAmount') }}</small>
+              <span [class.paid-full]="item.paidAmount >= item.netPayable">{{ item.paidAmount | number:'1.2-2' }} {{ i18n.t('workforce.ui.currencyEgp') }}</span>
+            </article>
+            <article class="meta-card">
+              <small>{{ i18n.t('workforce.ui.settlementDetail.financePostingStatus') }}</small>
+              <span [class.status-posted]="item.postedJournalEntryId">{{ item.postedJournalEntryId ? i18n.t('workforce.ui.settlementDetail.posted', { journal: item.postedJournalEntryId }) : i18n.t('workforce.ui.settlementDetail.notPosted') }}</span>
+            </article>
+            <article class="meta-card">
+              <small>{{ i18n.t('workforce.ui.settlementDetail.invoiceReference') }}</small>
+              <span>{{ item.invoiceNumber ? item.invoiceNumber + ' (' + (item.invoiceDate | date:'yyyy-MM-dd') + ')' : i18n.t('workforce.ui.settlementDetail.notLinked') }}</span>
+            </article>
+          </div>
+
+          <!-- Financial Lifecycle Actions Bar -->
+          <div class="actions-bar">
+            @if (!item.postedJournalEntryId) {
+              <button type="button" class="btn primary" [disabled]="submitting()" (click)="postToFinance()">
+                {{ submitting() ? i18n.t('workforce.ui.settlementDetail.posting') : i18n.t('workforce.ui.settlementDetail.postToFinance') }}
+              </button>
+            }
+
+            <button type="button" class="btn secondary" (click)="toggleInvoiceForm()">
+              📄 {{ showInvoiceForm() ? i18n.t('workforce.ui.settlementDetail.cancelInvoiceLink') : i18n.t('workforce.ui.settlementDetail.linkInvoice') }}
+            </button>
+
+            @if (item.netPayable > item.paidAmount) {
+              <button type="button" class="btn success" (click)="togglePaymentForm()">
+                💰 {{ showPaymentForm() ? i18n.t('workforce.ui.settlementDetail.cancelPayment') : i18n.t('workforce.ui.settlementDetail.recordPayment') }}
+              </button>
+            }
+          </div>
+
+          <!-- Inline Invoice Link Form -->
+          @if (showInvoiceForm()) {
+            <div class="inline-form-card">
+              <h4>{{ i18n.t('workforce.ui.settlementDetail.invoiceTitle') }}</h4>
+              <div class="form-row">
+                <label>{{ i18n.t('workforce.ui.settlementDetail.invoiceNumber') }}<input [(ngModel)]="invoiceForm.invoiceNumber" name="invNo" required /></label>
+                <label>{{ i18n.t('workforce.ui.settlementDetail.invoiceDate') }}<input type="date" [(ngModel)]="invoiceForm.invoiceDate" name="invDate" required /></label>
+                <label>{{ i18n.t('workforce.ui.settlementDetail.invoiceAmount') }}<input type="number" [(ngModel)]="invoiceForm.invoiceAmount" name="invAmt" /></label>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn primary" [disabled]="submitting()" (click)="saveInvoiceLink()">{{ i18n.t('workforce.ui.settlementDetail.saveInvoiceLink') }}</button>
+              </div>
+            </div>
+          }
+
+          <!-- Inline Record Payment Form -->
+          @if (showPaymentForm()) {
+            <div class="inline-form-card">
+              <h4>{{ i18n.t('workforce.ui.settlementDetail.paymentTitle') }}</h4>
+              <div class="form-row">
+                <label>{{ i18n.t('workforce.ui.settlementDetail.paymentAmount') }}<input type="number" [(ngModel)]="paymentForm.amount" name="payAmt" required /></label>
+                <label>{{ i18n.t('workforce.ui.settlementDetail.paymentDate') }}<input type="date" [(ngModel)]="paymentForm.paymentDate" name="payDate" /></label>
+                <label>{{ i18n.t('workforce.ui.settlementDetail.paymentReference') }}<input [(ngModel)]="paymentForm.paymentReference" name="payRef" /></label>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn success" [disabled]="submitting()" (click)="savePayment()">{{ i18n.t('workforce.ui.settlementDetail.confirmPayment') }}</button>
+              </div>
+            </div>
+          }
+
+          <!-- Worker Lines Table -->
+          <div class="lines-section">
+            <h3>{{ i18n.t('workforce.ui.settlementDetail.workerLinesTitle', { count: item.lines.length }) }}</h3>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>{{ i18n.t('workforce.ui.settlementDetail.worker') }}</th>
+                    <th>{{ i18n.t('workforce.ui.settlementDetail.attendanceDays') }}</th>
+                    <th>{{ i18n.t('workforce.ui.settlementDetail.dailyRate') }}</th>
+                    <th>{{ i18n.t('workforce.ui.settlementDetail.gross') }}</th>
+                    <th>{{ i18n.t('workforce.ui.settlementDetail.deductions') }}</th>
+                    <th>{{ i18n.t('workforce.ui.settlementDetail.advanceDeduction') }}</th>
+                    <th>{{ i18n.t('workforce.ui.settlementDetail.net') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (line of item.lines; track line.id) {
+                    <tr>
+                      <td><strong>{{ line.workerName }}</strong></td>
+                      <td>{{ line.attendanceDays }} {{ i18n.t('workforce.ui.settlementDetail.daysUnit') }}</td>
+                      <td>{{ line.dailyWage | number:'1.2-2' }}</td>
+                      <td>{{ line.grossWage | number:'1.2-2' }}</td>
+                      <td>{{ line.deductionsAmount | number:'1.2-2' }}</td>
+                      <td class="advance-deduction">-{{ line.advanceInstallments | number:'1.2-2' }}</td>
+                      <td><strong>{{ line.netWage | number:'1.2-2' }}</strong></td>
+                    </tr>
+                  } @empty {
+                    <tr><td colspan="7" class="empty">{{ i18n.t('workforce.ui.settlementDetail.noWorkerLines') }}</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      }
+      <div modal-actions>
+        <button type="button" class="btn secondary" (click)="onClose()">{{ i18n.t('workforce.ui.close') }}</button>
+      </div>
+    </app-modal-dialog>
+  

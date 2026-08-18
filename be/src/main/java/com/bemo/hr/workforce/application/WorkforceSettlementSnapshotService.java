@@ -3,6 +3,7 @@ package com.bemo.hr.workforce.application;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.workforce.domain.WorkforceSettlementSnapshot;
 import com.bemo.hr.workforce.infrastructure.WorkforceSettlementSnapshotRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 
 @Service
+@Slf4j
 public class WorkforceSettlementSnapshotService {
 
     private final WorkforceSettlementSnapshotRepository repository;

@@ -8,6 +8,7 @@ import com.bemo.hr.trade.procurement.domain.SupplierInvoice;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierInvoiceRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierPaymentRepository;
 import com.bemo.hr.workforce.ContractorSettlementRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 
+@Slf4j
 @Service
 public class PaymentBatchService {
 
@@ -50,53 +52,78 @@ public class PaymentBatchService {
 
     @Transactional
     public PaymentBatchHeader createBatch(String batchNumber, PaymentBatchHeader.SourceCategory sourceCategory, String actor) {
+        log.debug("createBatch called with batchNumber={}, sourceCategory={}, actor={}", batchNumber, sourceCategory, actor);
         PaymentBatchHeader batch = new PaymentBatchHeader(batchNumber, sourceCategory, actor);
-        return batchHeaderRepository.save(batch);
+        PaymentBatchHeader saved = batchHeaderRepository.save(batch);
+        log.info("PaymentBatchHeader {} created successfully", saved.getId());
+        return saved;
     }
 
     @Transactional
     public PaymentBatchItem addBatchItem(String batchId, String documentId, String payeeId, String payeeName, BigDecimal amount, String bankAccount) {
+        log.debug("addBatchItem called with batchId={}, documentId={}, payeeId={}", batchId, documentId, payeeId);
         PaymentBatchHeader batch = getBatch(batchId);
         if (batch.getStatus() != PaymentBatchHeader.Status.DRAFT) {
+            log.warn("Cannot add items to batch {}: not in DRAFT status", batchId);
             throw new BusinessRuleException("Cannot add items to a non-DRAFT payment batch", "BATCH_NOT_DRAFT", HttpStatus.CONFLICT);
         }
-        if (batchItemRepository.existsByBatchIdAndDocumentId(batchId, documentId)) throw new BusinessRuleException(
+        if (batchItemRepository.existsByBatchIdAndDocumentId(batchId, documentId)) {
+            log.warn("Duplicate source document {} in batch {}", documentId, batchId);
+            throw new BusinessRuleException(
                 "Source document already exists in this batch", "BATCH_SOURCE_DUPLICATE", HttpStatus.CONFLICT);
+        }
         validateEligible(batch.getSourceCategory(), documentId, payeeId, amount);
         PaymentBatchItem item = new PaymentBatchItem(batchId, documentId, payeeId, payeeName, amount, bankAccount);
-        return batchItemRepository.save(item);
+        PaymentBatchItem saved = batchItemRepository.save(item);
+        log.info("PaymentBatchItem {} added to batch {}", saved.getId(), batchId);
+        return saved;
     }
 
     @Transactional
     public PaymentBatchHeader submitBatch(String batchId) {
+        log.debug("submitBatch called with batchId={}", batchId);
         PaymentBatchHeader batch = getBatch(batchId);
         List<PaymentBatchItem> items = batchItemRepository.findByBatchId(batchId);
-        if (items.isEmpty())
+        if (items.isEmpty()) {
+            log.warn("Validation failed: batch {} has no items", batchId);
             throw new BusinessRuleException("Payment batch requires at least one source", "BATCH_ITEMS_REQUIRED", HttpStatus.CONFLICT);
+        }
         batch.deriveTotal(items.stream().map(PaymentBatchItem::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add));
         batch.submit();
-        return batchHeaderRepository.save(batch);
+        PaymentBatchHeader saved = batchHeaderRepository.save(batch);
+        log.info("PaymentBatchHeader {} submitted successfully", batchId);
+        return saved;
     }
 
     @Transactional
     public PaymentBatchHeader approveBatch(String batchId, String actor) {
+        log.debug("approveBatch called with batchId={}, actor={}", batchId, actor);
         PaymentBatchHeader batch = getBatch(batchId);
         segregationOfDutiesService.validateRequesterNotApprover(batch.getCreatedBy(), actor, false);
         batch.approve(actor);
-        return batchHeaderRepository.save(batch);
+        PaymentBatchHeader saved = batchHeaderRepository.save(batch);
+        log.info("PaymentBatchHeader {} approved successfully", batchId);
+        return saved;
     }
 
     @Transactional
     public PaymentBatchHeader rejectBatch(String batchId) {
+        log.debug("rejectBatch called with batchId={}", batchId);
         PaymentBatchHeader batch = getBatch(batchId);
         batch.reject();
-        return batchHeaderRepository.save(batch);
+        PaymentBatchHeader saved = batchHeaderRepository.save(batch);
+        log.info("PaymentBatchHeader {} rejected successfully", batchId);
+        return saved;
     }
 
     @Transactional
     public PaymentBatchHeader disburseBatch(String batchId, String operationId, String actor) {
+        log.debug("disburseBatch called with batchId={}, operationId={}, actor={}", batchId, operationId, actor);
         PaymentBatchHeader replay = batchHeaderRepository.findByOperationId(operationId).orElse(null);
-        if (replay != null) return replay;
+        if (replay != null) {
+            log.debug("DisburseBatch replay detected for operationId={}", operationId);
+            return replay;
+        }
         PaymentBatchHeader batch = getBatch(batchId);
         segregationOfDutiesService.validateCreatorNotPoster(batch.getCreatedBy(), actor, "payment-batch disbursement");
         segregationOfDutiesService.validateCreatorNotPoster(batch.getApprovedBy(), actor, "payment-batch disbursement");
@@ -111,6 +138,7 @@ public class PaymentBatchService {
         batch.disburse(operationId, actor);
         auditService.record("PAYMENT_BATCH_DISBURSED", "PAYMENT_BATCH", batch.getId(), actor,
                 "{\"approvedBy\":\"" + batch.getApprovedBy() + "\",\"operationId\":\"" + operationId + "\"}", null);
+        log.info("PaymentBatchHeader {} disbursed successfully with {} items", batchId, items.size());
         return batchHeaderRepository.save(batch);
     }
 

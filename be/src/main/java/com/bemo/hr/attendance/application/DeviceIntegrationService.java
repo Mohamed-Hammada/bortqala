@@ -12,6 +12,7 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -50,19 +52,23 @@ public class DeviceIntegrationService {
     }
 
     public DeviceIntegrationApi.RouteResolution resolve(DeviceIntegrationApi.RouteRequest request) {
+        log.debug("resolve called with vendor={}, model={}", request.vendor(), request.model());
         return resolution(vendorHubClient.resolve(request));
     }
 
     public List<DeviceIntegrationApi.DeviceResponse> list() {
+        log.debug("list called");
         return integrationRepository.findAllByOrderByNameAsc().stream().map(this::response).toList();
     }
 
     public DeviceIntegrationApi.DeviceResponse get(String id) {
+        log.debug("get called with id={}", id);
         return response(require(id));
     }
 
     @Transactional
     public DeviceIntegrationApi.DeviceResponse create(DeviceIntegrationApi.DeviceRequest request, String actor) {
+        log.debug("create called with name={}, vendor={}", request.name(), request.vendor());
         DeviceIntegrationApi.RouteResolution resolution = resolution(vendorHubClient.resolve(request));
         String route = selectRoute(request.route(), resolution);
         DeviceIntegrationApi.RouteCandidate candidate = candidate(route, resolution);
@@ -88,10 +94,12 @@ public class DeviceIntegrationService {
             BiometricDeviceIntegration integration = new BiometricDeviceIntegration(biometricDevice.id(), hubDeviceId);
             apply(integration, request, route, candidate, resolution);
             integrationRepository.saveAndFlush(integration);
+            log.info("DeviceIntegration created successfully with id={}, hubDeviceId={}", integration.getId(), hubDeviceId);
             auditService.record("CREATE", "BIOMETRIC_DEVICE_INTEGRATION", integration.getId(), actor,
                     auditPayload(integration), null);
             return response(integration);
         } catch (RuntimeException exception) {
+            log.error("DeviceIntegration create failed for hubDeviceId={}", hubDeviceId, exception);
             try {
                 vendorHubClient.delete(hubDeviceId);
             } catch (RuntimeException ignored) {
@@ -103,6 +111,7 @@ public class DeviceIntegrationService {
 
     @Transactional
     public DeviceIntegrationApi.DeviceResponse update(String id, DeviceIntegrationApi.DeviceRequest request, String actor) {
+        log.debug("update called with id={}", id);
         BiometricDeviceIntegration integration = require(id);
         DeviceIntegrationApi.RouteResolution resolution = resolution(vendorHubClient.resolve(request));
         String route = selectRoute(request.route(), resolution);
@@ -122,6 +131,7 @@ public class DeviceIntegrationService {
                 actor);
         apply(integration, request, route, candidate, resolution);
         integrationRepository.saveAndFlush(integration);
+        log.info("DeviceIntegration updated successfully with id={}", id);
         auditService.record("UPDATE", "BIOMETRIC_DEVICE_INTEGRATION", integration.getId(), actor,
                 auditPayload(integration), null);
         return response(integration);
@@ -129,6 +139,7 @@ public class DeviceIntegrationService {
 
     @Transactional
     public DeviceIntegrationApi.ProbeResponse probe(String id, String actor) {
+        log.debug("probe called with id={}", id);
         BiometricDeviceIntegration integration = require(id);
         BiometricDevice biometricDevice = biometricDeviceRepository.findById(integration.getBiometricDeviceId())
                 .orElseThrow(() -> new NotFoundException("Linked biometric device was not found.", "BIO_DEVICE_NOT_FOUND"));
@@ -138,6 +149,7 @@ public class DeviceIntegrationService {
         String detail = result.path("detail").asText(ok ? "Probe succeeded." : "Probe failed.");
         integration.probeResult(ok, detail);
         integrationRepository.saveAndFlush(integration);
+        log.info("DeviceIntegration probe completed for id={}, ok={}", id, ok);
         auditService.record("PROBE", "BIOMETRIC_DEVICE_INTEGRATION", integration.getId(), actor,
                 "{\"ok\":" + ok + ",\"route\":\"" + safe(integration.getRoute()) + "\"}", null);
         return new DeviceIntegrationApi.ProbeResponse(
@@ -151,6 +163,7 @@ public class DeviceIntegrationService {
 
     @Transactional
     public ImportApi.DeviceSyncResponse sync(String id, String actor) {
+        log.debug("sync called with id={}", id);
         BiometricDeviceIntegration integration = require(id);
         return biometricDeviceSyncService.sync(integration.getBiometricDeviceId(), actor);
     }

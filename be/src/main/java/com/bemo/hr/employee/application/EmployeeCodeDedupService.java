@@ -5,6 +5,7 @@ import com.bemo.hr.employee.api.EmployeeApi;
 import com.bemo.hr.employee.domain.Employee;
 import com.bemo.hr.employee.infrastructure.EmployeeRepository;
 import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.util.*;
  * are touched.
  */
 @Service
+@Slf4j
 public class EmployeeCodeDedupService {
 
     private final EmployeeRepository employeeRepository;

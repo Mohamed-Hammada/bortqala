@@ -2,6 +2,7 @@ package com.bemo.hr.payroll.application;
 
 import com.bemo.hr.payroll.domain.PayrollInputSnapshot;
 import com.bemo.hr.payroll.infrastructure.PayrollInputSnapshotRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,6 +11,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class PayrollSnapshotService {
 
@@ -21,6 +23,7 @@ public class PayrollSnapshotService {
 
     @Transactional
     public PayrollInputSnapshot captureSnapshot(CalculationInputs input, String username) {
+        log.debug("captureSnapshot called with payrollRunId={}, employeeId={}, username={}", input.payrollRunId(), input.employeeId(), username);
         BigDecimal hourlyRate = input.baseSalary().signum() <= 0 ? BigDecimal.ZERO
                 : input.baseSalary().divide(input.workingHourDivisor(), 8, RoundingMode.HALF_UP);
         BigDecimal overtime = hourlyRate.multiply(BigDecimal.valueOf(input.overtimeMinutes()))
@@ -31,7 +34,7 @@ public class PayrollSnapshotService {
         BigDecimal allowances = overtime.add(input.otherBonuses());
         BigDecimal gross = input.baseSalary().add(allowances);
         BigDecimal net = gross.subtract(deductions).subtract(input.advanceDeduction()).max(BigDecimal.ZERO);
-        return snapshotRepository.findByPayrollRunIdAndEmployeeId(input.payrollRunId(), input.employeeId())
+        PayrollInputSnapshot saved = snapshotRepository.findByPayrollRunIdAndEmployeeId(input.payrollRunId(), input.employeeId())
                 .orElseGet(() -> snapshotRepository.save(new PayrollInputSnapshot(
                         input.payrollRunId(), input.employeeId(), input.periodId(), input.periodStart(), input.periodEnd(), input.baseSalary(),
                         input.workedMinutes(), input.overtimeMinutes(), input.lateMinutes(), input.absenceDays(),
@@ -39,6 +42,8 @@ public class PayrollSnapshotService {
                         input.overtimeMultiplier(), deductions, allowances, input.advanceBalance(),
                         input.advanceDeduction(), gross, net, username
                 )));
+        log.info("PayrollInputSnapshot captured id={} payrollRunId={} employeeId={}", saved.getId(), input.payrollRunId(), input.employeeId());
+        return saved;
     }
 
     @Transactional(readOnly = true)

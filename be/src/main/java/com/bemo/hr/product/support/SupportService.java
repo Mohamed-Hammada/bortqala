@@ -10,6 +10,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
 import com.bemo.hr.shared.security.TenantContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SupportService {
@@ -63,6 +65,7 @@ public class SupportService {
 
     @Transactional
     public SupportApi.TicketResponse create(SupportApi.TicketRequest r, String actor) {
+        log.debug("create ticket called with priority={}, category={}", r.priority(), r.category());
         String app = TenantContext.require();
         tenantRepository.findByIdForUpdate(app).orElseThrow(() -> error("TENANT_NOT_FOUND", HttpStatus.NOT_FOUND));
         var replay = ticketRepository.findByOperationId(r.operationId());
@@ -72,16 +75,19 @@ public class SupportService {
         Instant due = Instant.now().plus(Map.of("CRITICAL", 4L, "HIGH", 8L, "MEDIUM", 24L, "LOW", 72L).get(r.priority()), ChronoUnit.HOURS);
         var ticket = ticketRepository.save(new SupportTicket("SUP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT), r.priority(), r.category().strip(), r.moduleCode().strip(), safeRoute(r.screen()), r.businessImpact().strip(), r.description().strip(), "SUPPORT", due, actor, r.operationId()));
         auditService.record("CREATE", "SUPPORT_TICKET", ticket.getId(), actor, "{\"priority\":\"" + r.priority() + "\"}", null);
+        log.info("Support ticket {} created with priority={}", ticket.getTicketNo(), r.priority());
         return ticketView(ticket, false);
     }
 
     @Transactional(readOnly = true)
     public List<SupportApi.TicketResponse> tickets() {
+        log.debug("tickets called");
         return ticketRepository.findAllByOrderByCreatedAtDesc().stream().map(t -> ticketView(t, false)).toList();
     }
 
     @Transactional(readOnly = true)
     public List<SupportApi.UpdateResponse> updates(String id) {
+        log.debug("updates called with ticketId={}", id);
         ticketRepository.findById(id).orElseThrow(() -> error("SUPPORT_TICKET_NOT_FOUND", HttpStatus.NOT_FOUND));
         return updateRepository.findByTicketIdOrderByCreatedAtAsc(id).stream().map(u -> new SupportApi.UpdateResponse(u.getFromStatus(), u.getToStatus(), u.getComment(), u.getActor(), u.getCreatedAt().toEpochMilli())).toList();
     }

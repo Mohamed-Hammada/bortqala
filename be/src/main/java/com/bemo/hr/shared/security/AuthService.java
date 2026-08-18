@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 public class AuthService {
@@ -92,6 +94,7 @@ public class AuthService {
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public LoginResult demoSuperadminLogin(String deviceId) {
+        log.debug("demoSuperadminLogin called with deviceId={}", deviceId);
         var app = tenantApplicationRepository.findByCodeIgnoreCaseAndActiveTrue(demoNoLoginProperties.appCode())
                 .orElseThrow(() -> new NotFoundException("The demo application is not configured.",
                         "DEMO_NO_LOGIN_APP_NOT_CONFIGURED"));
@@ -109,6 +112,7 @@ public class AuthService {
             var refresh = refreshTokenService.issue(appId, user.getId(), deviceId);
             auditService.record("DEMO_SUPERADMIN_LOGIN", "USER", user.getId(), user.getUsername(),
                     "Entered the dashboard through the demo no-login link", null);
+            log.info("User {} logged in via demo superadmin link", user.getUsername());
             return new LoginResult(appId,
                     new AuthApi.LoginResponse(accessToken(appId, user, now, accessExpiresAt), "Bearer", accessExpiresAt,
                             false,
@@ -134,6 +138,7 @@ public class AuthService {
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public LoginResult login(AuthApi.LoginRequest request, String deviceId, String ip) {
+        log.debug("login called with username={}, appCode={}", request.username(), request.appCode());
         if (loginRateLimiter.isGlobalIpBlocked(ip)) {
             performDummyPasswordCheck(request.password());
             throw new BadCredentialsException("Invalid credentials.");
@@ -175,6 +180,7 @@ public class AuthService {
             Instant accessExpiresAt = issueAccessToken(app.get(), user, now);
             var refresh = refreshTokenService.issue(appId, user.getId(), deviceId);
             auditService.record("USER_LOGIN", "USER", user.getId(), user.getUsername(), "Successful login", null);
+            log.info("User {} logged in successfully for app={}", user.getUsername(), appId);
             return new LoginResult(appId,
                     new AuthApi.LoginResponse(accessToken(appId, user, now, accessExpiresAt), "Bearer", accessExpiresAt,
                             user.isMustChangePassword(),
@@ -193,6 +199,7 @@ public class AuthService {
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public RefreshResult refresh(String cookieValue, String deviceId) {
+        log.debug("refresh called");
         RefreshCookieCodec.Decoded decoded = refreshCookieCodec.decode(cookieValue);
         String appId = decoded.appId();
         TenantContext.set(appId);
@@ -218,6 +225,7 @@ public class AuthService {
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void logout(String cookieValue) {
+        log.debug("logout called");
         if (cookieValue == null || cookieValue.isBlank()) return;
         RefreshCookieCodec.Decoded decoded = refreshCookieCodec.decode(cookieValue);
         TenantContext.set(decoded.appId());
@@ -231,16 +239,19 @@ public class AuthService {
 
     @Transactional
     public void revokeOwnSessions(String username) {
+        log.debug("revokeOwnSessions called with username={}", username);
         String appId = TenantContext.require();
         var user = requireByUsername(appId, username);
         user.bumpTokenVersion();
         refreshTokenService.revokeAllForUser(appId, user.getId(), username);
         auditService.record("SESSIONS_REVOKED_SELF", "USER", user.getId(), username,
                 "User signed out from all devices", null);
+        log.info("All sessions revoked for user {}", username);
     }
 
     @Transactional
     public void changePassword(String username, AuthApi.ChangePasswordRequest request) {
+        log.debug("changePassword called with username={}", username);
         var app = requireCurrentApp();
         var user = requireByUsername(app.getId(), username);
         if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
@@ -255,10 +266,12 @@ public class AuthService {
         user.markPasswordChanged(Instant.now());
         refreshTokenService.revokeAllForUser(app.getId(), user.getId(), username);
         auditService.record("PASSWORD_CHANGE", "USER", user.getId(), username, "Changed password and revoked all sessions", null);
+        log.info("Password changed for user {}", username);
     }
 
     @Transactional
     public void revokeSessions(String id, String currentUsername) {
+        log.debug("revokeSessions called with userId={}, currentUsername={}", id, currentUsername);
         String appId = TenantContext.require();
         var user = appUserRepository.findById(id).filter(item -> item.getAppId().equals(appId))
                 .orElseThrow(() -> new NotFoundException("User not found.", "AUTH_USER_NOT_FOUND"));
@@ -266,10 +279,12 @@ public class AuthService {
         refreshTokenService.revokeAllForUser(appId, user.getId(), currentUsername);
         auditService.record("SESSIONS_REVOKED", "USER", user.getId(), currentUsername,
                 "Revoked all sessions for user " + user.getUsername(), null);
+        log.info("Sessions revoked for user {} by {}", user.getUsername(), currentUsername);
     }
 
     @Transactional
     public void unlock(String id, String currentUsername) {
+        log.debug("unlock called with userId={}, currentUsername={}", id, currentUsername);
         String appId = TenantContext.require();
         var user = appUserRepository.findById(id).filter(item -> item.getAppId().equals(appId))
                 .orElseThrow(() -> new NotFoundException("User not found.", "AUTH_USER_NOT_FOUND"));
@@ -284,6 +299,7 @@ public class AuthService {
 
     @Transactional
     public AuthApi.MeResponse me(String username, Instant sessionExpiresAt) {
+        log.debug("me called with username={}", username);
         var app = requireCurrentApp();
         var user = requireByUsername(app.getId(), username);
         return new AuthApi.MeResponse(
@@ -307,6 +323,7 @@ public class AuthService {
 
     @Transactional
     public AuthApi.PreferenceResponse updatePreferences(String username, AuthApi.PreferenceRequest request) {
+        log.debug("updatePreferences called with username={}", username);
         var app = requireCurrentApp();
         var user = requireByUsername(app.getId(), username);
         return toPreferenceResponse(userPreferenceService.update(user.getId(), request), user, app);
@@ -321,6 +338,7 @@ public class AuthService {
 
     @Transactional
     public AuthApi.PreferenceResponse updateDashboardPreferences(String username, AuthApi.DashboardPreferenceRequest request) {
+        log.debug("updateDashboardPreferences called with username={}", username);
         var app = requireCurrentApp();
         var user = requireByUsername(app.getId(), username);
         boolean layoutAllowed = dashboardLayoutAllowed(user, app);
@@ -361,6 +379,7 @@ public class AuthService {
 
     @Transactional
     public AuthApi.AppSettingsResponse updateAppSettings(AuthApi.AppSettingsRequest request, String currentUsername) {
+        log.debug("updateAppSettings called with currentUsername={}", currentUsername);
         var app = requireCurrentApp();
         var actor = requireByUsername(app.getId(), currentUsername);
         if (request.adminDashboardCustomizationEnabled() != app.isAdminDashboardCustomizationEnabled()
@@ -392,6 +411,7 @@ public class AuthService {
         );
         auditService.record("SETTINGS_UPDATE", "TENANT_APPLICATION", app.getId(), currentUsername,
                 "Updated tenant settings, security policy, and dashboard policy", null);
+        log.info("App settings updated by {}", currentUsername);
         return toSettingsResponse(app);
     }
 
@@ -417,11 +437,13 @@ public class AuthService {
                 "Created user " + user.getDisplayName() + " roles=" + request.roles()
                         + (request.accessChangeReason() == null || request.accessChangeReason().isBlank()
                         ? "" : " accessChangeReason=" + request.accessChangeReason().strip()), null);
+        log.info("User {} created by {}", user.getUsername(), currentUsername);
         return toResponse(user);
     }
 
     @Transactional
     public AuthApi.UserResponse update(String id, AuthApi.UserUpsertRequest request, String currentUsername) {
+        log.debug("update called with userId={}, currentUsername={}", id, currentUsername);
         String appId = TenantContext.require();
         var user = appUserRepository.findByAppIdAndId(appId, id)
                 .orElseThrow(() -> new NotFoundException("User not found.", "AUTH_USER_NOT_FOUND"));
@@ -482,6 +504,7 @@ public class AuthService {
         user.assignCategory(request.categoryId());
         auditService.record("USER_UPDATE", "USER", user.getId(), currentUsername,
                 accessChangeDetails(user, request, previousRoles), null);
+        log.info("User {} updated by {}", user.getUsername(), currentUsername);
         return toResponse(user);
     }
 

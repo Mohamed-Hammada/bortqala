@@ -16,16 +16,18 @@ export class EntitlementSettingsComponent{private http=inject(HttpClient);readon
 
   // BORTQALA_FEEDBACK_20260816_ENTITLEMENT_LABELS
   featureLabel(key: string): string {
-    const ar = this.i18n.locale().toLowerCase().startsWith('ar');
+    const t = (k: string, fb?: string) => this.i18n.t(k, undefined, fb);
     const normalized = (key || '').replace(/\.enabled$/,'');
-    const labels: Record<string, [string,string]> = {
-      procurement:['Procurement','المشتريات'], sales:['Sales','المبيعات'], navigation:['Navigation','التنقل'],
-      'navigation.recents':['Recent navigation','التنقلات الأخيرة'], 'employeeAttendance':['Employee Attendance','حضور الموظفين'],
-      'employee.attendance':['Employee Attendance','حضور الموظفين'], attendance:['Employee Attendance','حضور الموظفين'],
-      'biometric.fileImport':['Biometric file import','استيراد ملفات البصمة'], notifications:['Notifications','الإشعارات'],
-      finance:['Finance','المالية'], workforce:['Workforce','العمالة'], 'workforce.attendance':['Workforce attendance','حضور العمالة']
+    const labels: Record<string, string> = {
+      procurement: 'entitlements.feature.procurement', sales: 'entitlements.feature.sales',
+      navigation: 'entitlements.feature.navigation', 'navigation.recents': 'entitlements.feature.navigationRecents',
+      'employeeAttendance': 'entitlements.feature.employeeAttendance', 'employee.attendance': 'entitlements.feature.employeeAttendance',
+      attendance: 'entitlements.feature.employeeAttendance', 'biometric.fileImport': 'entitlements.feature.biometricFileImport',
+      notifications: 'entitlements.feature.notifications', finance: 'entitlements.feature.finance',
+      workforce: 'entitlements.feature.workforce', 'workforce.attendance': 'entitlements.feature.workforceAttendance',
     };
-    const direct=labels[normalized]; if(direct) return direct[ar?1:0];
+    const labelKey = labels[normalized];
+    if (labelKey) return t(labelKey);
     return normalized.split('.').map(part => part.replace(/([a-z0-9])([A-Z])/g,'$1 $2').replace(/[_-]+/g,' ').replace(/^./,ch=>ch.toUpperCase())).join(' / ');
   }
   dependencyLabels(keys: string[]): string { return (keys ?? []).map(key => this.featureLabel(key)).join(', '); }

@@ -15,6 +15,7 @@ import com.bemo.hr.shared.shortcut.domain.UserScreenShortcut;
 import com.bemo.hr.shared.shortcut.domain.UserShortcutProfile;
 import com.bemo.hr.shared.shortcut.infrastructure.UserScreenShortcutRepository;
 import com.bemo.hr.shared.shortcut.infrastructure.UserShortcutProfileRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional
 public class UserScreenShortcutService {
@@ -55,6 +57,7 @@ public class UserScreenShortcutService {
 
     @Transactional(readOnly = true)
     public ScreenShortcutApi.ProfileResponse getProfile(String username) {
+        log.debug("getProfile called with username={}", username);
         AppUser user = requireCurrentUser(username);
         UserShortcutProfile profile = profileRepository.findByUserId(user.getId()).orElse(null);
 
@@ -85,6 +88,7 @@ public class UserScreenShortcutService {
             String username,
             ScreenShortcutApi.ReplaceShortcutsRequest request
     ) {
+        log.debug("replace called with username={}, shortcutCount={}", username, request.shortcuts().size());
         AppUser user = requireCurrentUser(username);
         UserShortcutProfile profile = profileRepository.findByUserId(user.getId())
                 .orElseGet(() -> profileRepository.save(new UserShortcutProfile(user.getId())));
@@ -125,10 +129,12 @@ public class UserScreenShortcutService {
                 null
         );
 
+        log.info("Shortcuts replaced for user={} count={}", username, request.shortcuts().size());
         return getProfile(username);
     }
 
     public ScreenShortcutApi.ProfileResponse resetToDefaults(String username) {
+        log.debug("resetToDefaults called with username={}", username);
         AppUser user = requireCurrentUser(username);
         UserShortcutProfile profile = profileRepository.findByUserId(user.getId())
                 .orElseGet(() -> profileRepository.save(new UserShortcutProfile(user.getId())));
@@ -146,6 +152,7 @@ public class UserScreenShortcutService {
                 null
         );
 
+        log.info("Shortcuts reset to defaults for user={}", username);
         return getProfile(username);
     }
 

@@ -7,6 +7,7 @@ import com.bemo.hr.finance.infrastructure.*;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.numbering.DocumentNumberService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -37,12 +39,16 @@ public class BankReconciliationService {
     private final AuditService auditService;
 
     public List<BankReconciliationApi.StatementResponse> listStatements() {
-        return bankStatementRepository.findAllByOrderByPeriodEndDescImportedAtDesc().stream().map(this::statementResponse).toList();
+        log.debug("listStatements called");
+        List<BankReconciliationApi.StatementResponse> result = bankStatementRepository.findAllByOrderByPeriodEndDescImportedAtDesc().stream().map(this::statementResponse).toList();
+        log.info("listStatements returned {} statements", result.size());
+        return result;
     }
 
     @Transactional
     public BankReconciliationApi.WorkbenchResponse importCsv(String bankAccountId, String reference,
-                                                             BigDecimal opening, BigDecimal closing, MultipartFile file) {
+                                                              BigDecimal opening, BigDecimal closing, MultipartFile file) {
+        log.debug("importCsv called with bankAccountId={}, reference={}, opening={}, closing={}", bankAccountId, reference, opening, closing);
         BankAccount bank = requireBank(bankAccountId);
         if (bank.getAccountId() == null)
             throw conflict("Bank account must be linked to a GL account.", "BANK_GL_ACCOUNT_REQUIRED");
@@ -54,6 +60,7 @@ public class BankReconciliationService {
         try {
             bytes = file.getBytes();
         } catch (java.io.IOException ex) {
+            log.error("importCsv failed to read file", ex);
             throw conflict("Bank statement file could not be read.", "BANK_STATEMENT_FILE_READ_FAILED");
         }
         String hash = sha256(bytes);
@@ -79,10 +86,12 @@ public class BankReconciliationService {
         }
         auditService.record("IMPORT", "BANK_STATEMENT", statement.getId(), actor(),
                 "{\"reference\":\"" + escape(reference) + "\",\"lines\":" + parsed.size() + "}", null);
+        log.info("BankStatement {} imported successfully with {} lines", statement.getId(), parsed.size());
         return workbench(statement.getId());
     }
 
     public BankReconciliationApi.WorkbenchResponse workbench(String statementId) {
+        log.debug("workbench called with statementId={}", statementId);
         BankStatement statement = requireStatement(statementId);
         BankAccount bank = requireBank(statement.getBankAccountId());
         List<BankStatementLine> lines = bankStatementLineRepository.findByStatementIdOrderByLineNumberAsc(statementId);
@@ -92,6 +101,7 @@ public class BankReconciliationService {
 
     @Transactional
     public BankReconciliationApi.WorkbenchResponse autoMatch(String statementId, BankReconciliationApi.OperationRequest request) {
+        log.debug("autoMatch called with statementId={}, operationId={}", statementId, request.operationId());
         if (!matchRepository.findByOperationId(request.operationId()).isEmpty()) return workbench(statementId);
         BankStatement statement = bankStatementRepository.findByIdForUpdate(statementId)
                 .orElseThrow(() -> conflict("Bank statement not found.", "BANK_STATEMENT_NOT_FOUND"));
@@ -112,12 +122,14 @@ public class BankReconciliationService {
         updateStatement(statement);
         auditService.record("AUTO_MATCH", "BANK_STATEMENT", statementId, actor(),
                 "{\"operationId\":\"" + escape(request.operationId()) + "\"}", null);
+        log.info("BankStatement {} auto-matched successfully", statementId);
         return workbench(statementId);
     }
 
     @Transactional
     public BankReconciliationApi.WorkbenchResponse match(String statementId, String lineId,
-                                                         BankReconciliationApi.MatchRequest request) {
+                                                          BankReconciliationApi.MatchRequest request) {
+        log.debug("match called with statementId={}, lineId={}, operationId={}", statementId, lineId, request.operationId());
         if (!matchRepository.findByOperationId(request.operationId()).isEmpty()) return workbench(statementId);
         BankStatement statement = bankStatementRepository.findByIdForUpdate(statementId)
                 .orElseThrow(() -> conflict("Bank statement not found.", "BANK_STATEMENT_NOT_FOUND"));
@@ -157,12 +169,14 @@ public class BankReconciliationService {
         updateStatement(statement);
         auditService.record("MATCH", "BANK_STATEMENT_LINE", lineId, actor(),
                 "{\"operationId\":\"" + escape(request.operationId()) + "\",\"amount\":" + total + "}", null);
+        log.info("BankReconciliationMatch created for line {} with total amount {}", lineId, total);
         return workbench(statementId);
     }
 
     @Transactional
     public BankReconciliationApi.WorkbenchResponse reverse(String statementId, String matchId,
-                                                           BankReconciliationApi.ReverseRequest request) {
+                                                            BankReconciliationApi.ReverseRequest request) {
+        log.debug("reverse called with statementId={}, matchId={}, operationId={}", statementId, matchId, request.operationId());
         BankStatement statement = bankStatementRepository.findByIdForUpdate(statementId)
                 .orElseThrow(() -> conflict("Bank statement not found.", "BANK_STATEMENT_NOT_FOUND"));
         BankReconciliationMatch match = matchRepository.findById(matchId)
@@ -178,10 +192,12 @@ public class BankReconciliationService {
         updateStatement(statement);
         auditService.record("REVERSE_MATCH", "BANK_RECONCILIATION_MATCH", matchId, actor(),
                 "{\"reason\":\"" + escape(request.reason()) + "\"}", null);
+        log.info("BankReconciliationMatch {} reversed successfully", matchId);
         return workbench(statementId);
     }
 
     public BankReconciliationApi.CashPositionResponse cashPosition() {
+        log.debug("cashPosition called");
         List<BankReconciliationApi.CashPositionLine> result = bankAccountRepository.findAllByOrderByBankNameAsc().stream()
                 .filter(BankAccount::isActive).map(bank -> {
                     Optional<BankStatement> latest = bankStatementRepository.findFirstByBankAccountIdOrderByPeriodEndDesc(bank.getId());

@@ -9,6 +9,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.numbering.DocumentNumberService;
 import com.bemo.hr.shared.security.TenantContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -46,20 +48,24 @@ public class InventoryValuationService {
     private String companyZone;
 
     public BigDecimal getItemUnitCost(String itemId) {
+        log.debug("getItemUnitCost called with itemId={}", itemId);
         BigDecimal qty = stockMovementRepository.balance(itemId);
         if (qty == null || qty.signum() <= 0) return BigDecimal.ZERO;
         return inventoryValue(itemId).divide(qty, 4, RoundingMode.HALF_UP);
     }
 
     public OperationsApi.ValuationPolicyView policy() {
+        log.debug("policy called");
         return toPolicy(inventoryValuationPolicyRepository.findByAppId(TenantContext.require()).orElse(null));
     }
 
     @Transactional
     public OperationsApi.ValuationPolicyView updatePolicy(OperationsApi.ValuationPolicyRequest request, String actor) {
+        log.debug("updatePolicy called with actor={}", actor);
         InventoryValuationPolicy policy = inventoryValuationPolicyRepository.findByAppId(TenantContext.require())
                 .orElseGet(InventoryValuationPolicy::new);
         if (request.version() != null && request.version() != policy.getVersion()) {
+            log.warn("Version conflict updating inventory valuation policy");
             throw conflict("Inventory valuation settings changed. Refresh and retry.", "INV_VAL_POLICY_VERSION_CONFLICT");
         }
         validateAccounts(request);
@@ -69,11 +75,13 @@ public class InventoryValuationService {
         policy = inventoryValuationPolicyRepository.save(policy);
         auditService.record("INVENTORY_VALUATION_POLICY_UPDATE", "INVENTORY_VALUATION_POLICY", policy.getId(), actor,
                 "{\"method\":\"" + policy.getValuationMethod() + "\",\"glPostingEnabled\":" + policy.isGlPostingEnabled() + "}", null);
+        log.info("InventoryValuationPolicy {} updated successfully", policy.getId());
         return toPolicy(policy);
     }
 
     @Transactional
     public InventoryMovementCost valueMovement(StockMovement movement, BigDecimal requestedUnitCost, String actor) {
+        log.debug("valueMovement called with movementId={}, itemId={}, actor={}", movement.getId(), movement.getItemId(), actor);
         InventoryMovementCost replay = inventoryMovementCostRepository.findByMovementId(movement.getId()).orElse(null);
         if (replay != null) return replay;
         inventoryItemRepository.findByIdForUpdate(movement.getItemId())
@@ -82,6 +90,7 @@ public class InventoryValuationService {
                 .orElseGet(InventoryValuationPolicy::new);
         if (!policy.isAllowBackdatedPosting()
                 && inventoryMovementCostRepository.existsByItemIdAndOccurredAtAfter(movement.getItemId(), movement.getOccurredAt())) {
+            log.warn("Backdated posting blocked for movementId={}", movement.getId());
             throw conflict("Backdated inventory posting requires an enabled policy and a controlled rebuild.", "INV_VAL_BACKDATED_BLOCKED");
         }
         BigDecimal quantity = movement.getQuantityDelta();
@@ -101,10 +110,12 @@ public class InventoryValuationService {
         cost = inventoryMovementCostRepository.save(cost);
         auditService.record("INVENTORY_MOVEMENT_VALUED", "STOCK_MOVEMENT", movement.getId(), actor,
                 "{\"method\":\"" + policy.getValuationMethod() + "\",\"valueEffect\":" + valueEffect + "}", null);
+        log.info("InventoryMovementCost {} created for movementId={}", cost.getId(), movement.getId());
         return cost;
     }
 
     public OperationsApi.ValuationReport report() {
+        log.debug("report called");
         List<InventoryItem> items = inventoryItemRepository.findAllByOrderByNameAsc();
         Map<String, InventoryItem> itemMap = items.stream().collect(Collectors.toMap(InventoryItem::getId, Function.identity()));
         List<OperationsApi.ItemValuationView> itemViews = items.stream().map(item -> itemValuation(item)).toList();
@@ -116,6 +127,7 @@ public class InventoryValuationService {
     }
 
     public OperationsApi.MovementCostView movementCost(String movementId) {
+        log.debug("movementCost called with movementId={}", movementId);
         InventoryMovementCost cost = inventoryMovementCostRepository.findByMovementId(movementId)
                 .orElseThrow(() -> new BusinessRuleException("Movement cost was not found.", "INV_VAL_MOVEMENT_COST_NOT_FOUND", HttpStatus.NOT_FOUND));
         return toMovementCost(cost, inventoryItemRepository.findById(cost.getItemId()).orElse(null));
@@ -123,6 +135,7 @@ public class InventoryValuationService {
 
     @Transactional
     public OperationsApi.RevaluationView revalue(OperationsApi.RevaluationRequest request, String actor) {
+        log.debug("revalue called with itemId={}, operationId={}, actor={}", request.itemId(), request.operationId(), actor);
         InventoryRevaluation replay = inventoryRevaluationRepository.findByOperationId(request.operationId()).orElse(null);
         if (replay != null) return toRevaluation(replay);
         InventoryItem item = inventoryItemRepository.findByIdForUpdate(request.itemId())
@@ -131,8 +144,10 @@ public class InventoryValuationService {
                 .orElseGet(InventoryValuationPolicy::new);
         FiscalPeriod period = fiscalPeriodGuard.requireAdjustment(localDate(request.occurredAt()));
         BigDecimal quantity = stockMovementRepository.balance(item.getId());
-        if (quantity.signum() <= 0)
+        if (quantity.signum() <= 0) {
+            log.warn("Revalue rejected: no stock for itemId={}", request.itemId());
             throw conflict("Only positive on-hand inventory can be revalued.", "INV_VAL_REVALUE_NO_STOCK");
+        }
         BigDecimal oldValue = inventoryValue(item.getId());
         BigDecimal newValue = quantity.multiply(request.newUnitCost()).setScale(2, RoundingMode.HALF_UP);
         InventoryRevaluation revaluation = new InventoryRevaluation(item.getId(), request.operationId(), quantity,
@@ -150,6 +165,7 @@ public class InventoryValuationService {
         revaluation = inventoryRevaluationRepository.save(revaluation);
         auditService.record("INVENTORY_REVALUATION", "INVENTORY_ITEM", item.getId(), actor,
                 "{\"operationId\":\"" + request.operationId() + "\",\"difference\":" + revaluation.getValueDifference() + "}", null);
+        log.info("InventoryRevaluation {} created for itemId={}, difference={}", revaluation.getId(), item.getId(), revaluation.getValueDifference());
         return toRevaluation(revaluation);
     }
 

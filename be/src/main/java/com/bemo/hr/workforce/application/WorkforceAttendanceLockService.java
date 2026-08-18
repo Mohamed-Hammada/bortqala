@@ -3,6 +3,7 @@ package com.bemo.hr.workforce.application;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.workforce.domain.WorkforceAttendanceLock;
 import com.bemo.hr.workforce.infrastructure.WorkforceAttendanceLockRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Service
+@Slf4j
 public class WorkforceAttendanceLockService {
 
     private final WorkforceAttendanceLockRepository repository;

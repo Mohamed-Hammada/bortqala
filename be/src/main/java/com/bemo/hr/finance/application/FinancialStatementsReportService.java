@@ -7,6 +7,7 @@ import com.bemo.hr.finance.infrastructure.AccountRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class FinancialStatementsReportService {
 
@@ -36,6 +38,7 @@ public class FinancialStatementsReportService {
 
     @Transactional(readOnly = true)
     public BalanceSheetReport getBalanceSheet(LocalDate asOfDate) {
+        log.debug("getBalanceSheet called with asOfDate={}", asOfDate);
         List<Account> accounts = accountRepository.findAll();
         List<JournalEntry> postedEntries = journalEntryRepository.findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED)).stream()
                 .filter(je -> !je.getEntryDate().isAfter(asOfDate))
@@ -75,11 +78,13 @@ public class FinancialStatementsReportService {
         BigDecimal totalEquityWithIncome = equity.add(netIncome);
         boolean balanced = assets.compareTo(liabilities.add(totalEquityWithIncome)) == 0;
 
+        log.info("Balance sheet generated as of {}; assets={}, liabilities={}, equity={}, balanced={}", asOfDate, assets, liabilities, totalEquityWithIncome, balanced);
         return new BalanceSheetReport(assets, liabilities, totalEquityWithIncome, netIncome, balanced);
     }
 
     @Transactional(readOnly = true)
     public IncomeStatementReport getIncomeStatement(LocalDate startDate, LocalDate endDate) {
+        log.debug("getIncomeStatement called with startDate={}, endDate={}", startDate, endDate);
         List<Account> accounts = accountRepository.findAll();
         List<JournalEntry> postedEntries = journalEntryRepository.findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED)).stream()
                 .filter(je -> !je.getEntryDate().isBefore(startDate) && !je.getEntryDate().isAfter(endDate))
@@ -107,11 +112,13 @@ public class FinancialStatementsReportService {
         }
 
         BigDecimal netIncome = totalRevenue.subtract(totalExpenses);
+        log.info("Income statement generated for {} to {}; revenue={}, expenses={}, netIncome={}", startDate, endDate, totalRevenue, totalExpenses, netIncome);
         return new IncomeStatementReport(totalRevenue, totalExpenses, netIncome);
     }
 
     @Transactional(readOnly = true)
     public CashFlowReport getCashFlowStatement(LocalDate startDate, LocalDate endDate) {
+        log.debug("getCashFlowStatement called with startDate={}, endDate={}", startDate, endDate);
         throw new BusinessRuleException(
                 "Cash Flow Statement is unavailable until ledger-based cash classification is configured.",
                 "FIN_CASH_FLOW_NOT_IMPLEMENTED",

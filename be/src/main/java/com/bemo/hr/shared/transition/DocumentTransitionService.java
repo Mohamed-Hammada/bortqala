@@ -2,6 +2,7 @@ package com.bemo.hr.shared.transition;
 
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.idempotency.application.IdempotencyService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -9,6 +10,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+@Slf4j
 @Service
 public class DocumentTransitionService {
 
@@ -32,11 +34,14 @@ public class DocumentTransitionService {
             Function<T, String> responseSerializer,
             Function<String, T> responseDeserializer
     ) {
+        log.debug("transition called with documentType={}, documentId={}, {} -> {}", documentType, documentId, currentState, targetState);
         if (!allowedFromStates.contains(currentState)) {
+            log.warn("Invalid transition for {} {}: {} -> {} (allowed from {})", documentType, documentId, currentState, targetState, allowedFromStates);
             throw new IllegalDocumentTransitionException(documentType, documentId, currentState, targetState);
         }
 
         if (command.expectedVersion() != currentVersion) {
+            log.warn("Stale state for {} {}: expected version={}, actual={}", documentType, documentId, command.expectedVersion(), currentVersion);
             throw new StaleStateConflictException(documentType, documentId, command.expectedVersion(), currentVersion);
         }
 
@@ -64,6 +69,7 @@ public class DocumentTransitionService {
                 responseDeserializer
         );
 
+        log.info("Document {} {} transitioned from {} to {}", documentType, documentId, currentState, targetState);
         return new TransitionResult<>(
                 documentType,
                 documentId,

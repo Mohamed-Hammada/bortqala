@@ -2,6 +2,7 @@ package com.bemo.hr.workforce.application;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +29,7 @@ import java.util.*;
  * import service in com.bemo.hr.workforce.</p>
  */
 @Service
+@Slf4j
 public class WorkforceMasterDataExcelImportService {
     private static final long MAX_FILE_SIZE = 20L * 1024L * 1024L;
     private static final int MAX_ERRORS = 200;

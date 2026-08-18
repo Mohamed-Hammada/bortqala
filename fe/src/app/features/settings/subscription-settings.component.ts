@@ -10,11 +10,14 @@ interface Plan{code:string;nameAr:string;nameEn:string;features:string[];limits:
 
   // BORTQALA_FEEDBACK_20260816_PLAN_LABELS
   planLabel(code: string | null | undefined): string {
-    const ar = typeof this.i18n?.locale === 'function' ? this.i18n.locale().toLowerCase().startsWith('ar') : true;
-    const labels: Record<string, [string, string]> = {
-      ENTERPRISE: ['Enterprise', 'المؤسسات'], GROWTH: ['Growth', 'النمو'], STARTER: ['Starter', 'المبتدئة']
+    const t = (k: string, fb?: string) => this.i18n.t(k, undefined, fb);
+    if (!code) return t('subscription.noPlan');
+    const labels: Record<string, string> = {
+      ENTERPRISE: 'subscription.planEnterprise',
+      GROWTH: 'subscription.planGrowth',
+      STARTER: 'subscription.planStarter',
     };
-    if (!code) return ar ? 'لا توجد خطة' : 'No plan';
-    return (labels[code.toUpperCase()] ?? [code, code])[ar ? 1 : 0];
+    const key = labels[code.toUpperCase()];
+    return key ? t(key, code) : code;
   }
 }

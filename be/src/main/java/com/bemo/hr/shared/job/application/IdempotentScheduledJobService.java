@@ -3,6 +3,7 @@ package com.bemo.hr.shared.job.application;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.job.domain.ScheduledJobExecutionRecord;
 import com.bemo.hr.shared.job.infrastructure.ScheduledJobExecutionRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class IdempotentScheduledJobService {
 
@@ -21,13 +23,16 @@ public class IdempotentScheduledJobService {
 
     @Transactional
     public ScheduledJobExecutionRecord executeJobIdempotently(String jobName, String executionKey, Runnable task) {
+        log.debug("executeJobIdempotently called with jobName={}, executionKey={}", jobName, executionKey);
         Optional<ScheduledJobExecutionRecord> existing = repository.findByJobNameAndExecutionKey(jobName, executionKey);
         if (existing.isPresent()) {
             ScheduledJobExecutionRecord record = existing.get();
             if (record.getStatus() == ScheduledJobExecutionRecord.Status.COMPLETED) {
-                return record; // Idempotent skip
+                log.debug("Job {} execution={} already completed, skipping", jobName, executionKey);
+                return record;
             }
             if (record.getStatus() == ScheduledJobExecutionRecord.Status.RUNNING) {
+                log.warn("Job {} execution={} is already running", jobName, executionKey);
                 throw new BusinessRuleException("Job is already running for execution key: " + executionKey, "JOB_ALREADY_RUNNING", HttpStatus.CONFLICT);
             }
         }
@@ -41,10 +46,13 @@ public class IdempotentScheduledJobService {
         } catch (Exception e) {
             record.markFailed(e.getMessage());
             repository.save(record);
+            log.error("Job {} execution={} failed", jobName, executionKey, e);
             throw e;
         }
 
-        return repository.save(record);
+        ScheduledJobExecutionRecord saved = repository.save(record);
+        log.info("Job {} execution={} completed successfully", jobName, executionKey);
+        return saved;
     }
 
     @Transactional(readOnly = true)

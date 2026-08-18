@@ -9,6 +9,7 @@ import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
 import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class AttendanceExceptionService {
     private final AttendancePolicyRepository policyRepository;

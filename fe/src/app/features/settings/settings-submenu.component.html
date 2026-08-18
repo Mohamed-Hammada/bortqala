@@ -1,0 +1,25 @@
+<aside class="settings-submenu" [attr.aria-label]="i18n.t('settings.tabsAriaLabel', undefined, 'قائمة الإعدادات')">
+  @for (group of groups; track group.labelKey) {
+    @if (!group.adminOnly || isAdmin()) {
+      <section class="settings-submenu-group">
+        <h2>{{ i18n.t(group.labelKey, undefined, group.fallbackAr) }}</h2>
+        <nav>
+          @for (item of group.items; track item.tab) {
+            @if (!item.adminOnly || isAdmin()) {
+              <button
+                type="button"
+                class="settings-submenu-item"
+                [class.active]="activeTab === item.tab"
+                [attr.aria-current]="activeTab === item.tab ? 'page' : null"
+                (click)="select(item.tab)"
+              >
+                <span>{{ i18n.t(item.labelKey, undefined, item.fallbackAr) }}</span>
+                <span class="settings-submenu-chevron" aria-hidden="true">›</span>
+              </button>
+            }
+          }
+        </nav>
+      </section>
+    }
+  }
+</aside>

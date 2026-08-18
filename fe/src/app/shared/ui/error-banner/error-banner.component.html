@@ -1,0 +1,16 @@
+
+    @if (errorMessage()) {
+      <div class="error-banner">
+        <div class="error-content">
+          <span class="error-icon">🚨</span>
+          <div class="error-text">
+            <strong>حدث خطأ في العملية:</strong>
+            <p>{{ errorMessage() }}</p>
+          </div>
+        </div>
+        <button class="button retry-btn" type="button" (click)="retry.emit()">
+          🔄 إعادة المحاولة (Retry)
+        </button>
+      </div>
+    }
+  

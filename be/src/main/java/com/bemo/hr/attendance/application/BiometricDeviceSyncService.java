@@ -9,6 +9,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.security.TenantContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -38,10 +40,12 @@ public class BiometricDeviceSyncService {
     private final DeviceCredentialsCrypto deviceCredentialsCrypto;
 
     public List<ImportApi.DeviceResponse> listDevices() {
+        log.debug("listDevices called");
         return biometricDeviceRepository.findAllByOrderByNameAsc().stream().map(this::response).toList();
     }
 
     public List<ImportApi.SourceResponse> listSources() {
+        log.debug("listSources called");
         return biometricSourceRepository.findAllByOrderBySourceTypeAscNameAsc().stream()
                 .map(this::toSourceResponse)
                 .toList();
@@ -49,7 +53,9 @@ public class BiometricDeviceSyncService {
 
     @Transactional
     public ImportApi.SourceResponse createSource(ImportApi.SourceRequest request, String actor) {
+        log.debug("createSource called with name={}, sourceType={}", request.name(), request.sourceType());
         if (request.name() == null || request.name().isBlank()) {
+            log.warn("Validation failed: source name is required");
             throw new BusinessRuleException("Source name is required.", "BIO_SOURCE_NAME_REQUIRED", HttpStatus.CONFLICT);
         }
         BiometricSource.SourceType sourceType = parseSourceType(request.sourceType());
@@ -67,6 +73,7 @@ public class BiometricDeviceSyncService {
                 request.autoCreateCategoryId(), request.autoCreateEmploymentType(),
                 request.autoCreateActiveFromMode(), autoCreateActive);
         source = biometricSourceRepository.saveAndFlush(source);
+        log.info("BiometricSource {} created successfully with id={}", sourceType, source.getId());
         auditService.record("CREATE", "BIOMETRIC_SOURCE", source.getId(), actor,
                 "{\"name\":\"" + safe(source.getName()) + "\",\"type\":\"" + sourceType + "\"}", null);
         return toSourceResponse(source);
@@ -74,6 +81,7 @@ public class BiometricDeviceSyncService {
 
     @Transactional
     public ImportApi.SourceResponse updateSource(String id, ImportApi.SourceRequest request, String actor) {
+        log.debug("updateSource called with id={}", id);
         var source = biometricSourceRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("مصدر البصمة غير موجود.", "BIO_SOURCE_NOT_FOUND"));
         boolean autoCreate = Boolean.TRUE.equals(request.autoCreateEmployees());
@@ -89,7 +97,7 @@ public class BiometricDeviceSyncService {
                     request.autoCreateActiveFromMode(), autoCreateActive);
             biometricSourceRepository.saveAndFlush(source);
             auditService.record("UPDATE", "BIOMETRIC_SOURCE", id, actor,
-                    "{\"autoCreateEmployees\":" + source.isAutoCreateEmployees() + "}", null);
+                    "{\"name\":\"" + safe(source.getName()) + "\",\"active\":" + source.isActive() + "}", null);
             return toSourceResponse(source);
         }
         BiometricSource.SourceType sourceType = parseSourceType(request.sourceType());
@@ -115,6 +123,7 @@ public class BiometricDeviceSyncService {
 
     @Transactional
     public void deleteSource(String id, String actor) {
+        log.debug("deleteSource called with id={}", id);
         var source = biometricSourceRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("مصدر البصمة غير موجود.", "BIO_SOURCE_NOT_FOUND"));
         if (source.getSourceType() == BiometricSource.SourceType.DEVICE) {
@@ -122,17 +131,20 @@ public class BiometricDeviceSyncService {
                     "BIO_SOURCE_DEVICE_IMMUTABLE", HttpStatus.CONFLICT);
         }
         biometricSourceRepository.delete(source);
+        log.info("BiometricSource deleted successfully with id={}", id);
         auditService.record("DELETE", "BIOMETRIC_SOURCE", id, actor, "{}", null);
     }
 
     @Transactional
     public ImportApi.DeviceResponse create(ImportApi.DeviceRequest request, String actor) {
+        log.debug("create called with name={}", request.name());
         validateEndpoint(request.endpointUrl());
         BiometricDevice device = biometricDeviceRepository.save(new BiometricDevice(
                 request.name(), request.endpointUrl(), request.enabled(), request.syncIntervalMinutes()));
         device.setCredentials(request.username(), deviceCredentialsCrypto.encrypt(request.password()));
         biometricDeviceRepository.saveAndFlush(device);
         ensureSource(device.getId(), device.getName());
+        log.info("BiometricDevice created successfully with id={}", device.getId());
         auditService.record("CREATE", "BIOMETRIC_DEVICE", device.getId(), actor,
                 "{\"name\":\"" + safe(device.getName()) + "\",\"enabled\":" + device.isEnabled()
                         + ",\"hasPassword\":" + device.hasPassword() + "}", null);
@@ -141,6 +153,7 @@ public class BiometricDeviceSyncService {
 
     @Transactional
     public ImportApi.DeviceResponse update(String id, ImportApi.DeviceRequest request, String actor) {
+        log.debug("update called with id={}", id);
         validateEndpoint(request.endpointUrl());
         BiometricDevice device = requireDevice(id);
         device.update(request.name(), request.endpointUrl(), request.enabled(), request.syncIntervalMinutes());
@@ -151,6 +164,7 @@ public class BiometricDeviceSyncService {
         }
         biometricDeviceRepository.saveAndFlush(device);
         ensureSource(device.getId(), device.getName());
+        log.info("BiometricDevice updated successfully with id={}", id);
         auditService.record("UPDATE", "BIOMETRIC_DEVICE", id, actor,
                 "{\"name\":\"" + safe(device.getName()) + "\",\"enabled\":" + device.isEnabled()
                         + ",\"hasPassword\":" + device.hasPassword() + "}", null);
@@ -159,6 +173,7 @@ public class BiometricDeviceSyncService {
 
     @Transactional
     public ImportApi.DeviceSyncResponse sync(String id, String actor) {
+        log.debug("sync called with id={}", id);
         BiometricDevice device = requireDevice(id);
         BiometricSource source = ensureSource(device.getId(), device.getName());
         try {
@@ -238,6 +253,7 @@ public class BiometricDeviceSyncService {
             return new ImportApi.DeviceSyncResponse(response(device), remote.punches().size(),
                     imported, duplicates, false);
         } catch (RuntimeException exception) {
+            log.error("Device sync failed for id={}", id, exception);
             device.syncFailed(exception.getMessage());
             biometricDeviceRepository.saveAndFlush(device);
             auditService.record("SYNC_FAILED", "BIOMETRIC_DEVICE", id, actor,
@@ -247,6 +263,7 @@ public class BiometricDeviceSyncService {
     }
 
     public List<BiometricDevice> dueDevices(Instant now) {
+        log.debug("dueDevices called with now={}", now);
         return biometricDeviceRepository.findAllByOrderByNameAsc().stream().filter(device -> device.isDue(now)).toList();
     }
 

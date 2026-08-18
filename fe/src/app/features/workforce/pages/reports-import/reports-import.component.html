@@ -1,0 +1,45 @@
+
+    <section class="page">
+      <header><span class="eyebrow">{{ i18n.t('reportsImport.ui.eyebrow') }}</span><h1>{{ i18n.t('reportsImport.ui.title') }}</h1><p>{{ i18n.t('reportsImport.ui.description') }}</p></header>
+      <ol class="steps"><li [class.active]="step() >= 1">{{ i18n.t('reportsImport.ui.step1') }}</li><li [class.active]="step() >= 2">{{ i18n.t('reportsImport.ui.step2') }}</li><li [class.active]="step() >= 3">{{ i18n.t('reportsImport.ui.step3') }}</li><li [class.active]="step() >= 4">{{ i18n.t('reportsImport.ui.step4') }}</li><li [class.active]="step() >= 5">{{ i18n.t('reportsImport.ui.step5') }}</li><li [class.active]="step() >= 6">{{ i18n.t('reportsImport.ui.step6') }}</li></ol>
+      @if (error()) { <div class="alert error">{{ error() }}</div> }
+
+      <div class="grid">
+        <article class="card workflow">
+          <section>
+            <h2>{{ i18n.t('reportsImport.ui.uploadTitle') }}</h2>
+            <input #fileInput class="native-file-input" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.csv" (change)="selectFile($event)" />
+            <button class="btn" type="button" (click)="fileInput.click()">{{ i18n.t('reportsImport.ui.chooseFile') }}</button>
+            <span class="selected-file-name">{{ selectedFile()?.name || i18n.t('reportsImport.ui.noFileChosen') }}</span>
+            <button class="btn primary" type="button" [disabled]="!selectedFile() || busy()" (click)="upload()">{{ busy() ? i18n.t('reportsImport.ui.uploading') : i18n.t('reportsImport.ui.uploadOriginal') }}</button>
+            <button class="btn" type="button" (click)="downloadTemplate()">{{ i18n.t('reportsImport.downloadTemplate') }}</button>
+            <button class="btn" type="button" (click)="downloadWorkersTemplate()">{{ i18n.t('common.downloadTemplate') }}</button>
+          </section>
+
+          @if (batch(); as current) {
+            <section><div class="batch-head"><h2>{{ i18n.t('reportsImport.ui.mappingTitle') }}</h2><span class="status">{{ statusLabel(current.status) }}</span></div>
+              <p>{{ current.fileName }} · {{ i18n.t('reportsImport.ui.checksum') }} <code>{{ current.checksum.slice(0, 12) }}</code></p>
+              <div class="mapping"><label>{{ i18n.t('reportsImport.ui.workerCode') }}<select [(ngModel)]="mapping.workerCode">@for (header of current.headers; track header) {<option [value]="header">{{ header }}</option>}</select></label><label>{{ i18n.t('reportsImport.ui.workDate') }}<select [(ngModel)]="mapping.workDate">@for (header of current.headers; track header) {<option [value]="header">{{ header }}</option>}</select></label><label>{{ i18n.t('reportsImport.ui.attendanceValue') }}<select [(ngModel)]="mapping.attendanceValue">@for (header of current.headers; track header) {<option [value]="header">{{ header }}</option>}</select></label></div>
+              <button class="btn" type="button" [disabled]="busy() || !mappingComplete()" (click)="saveMapping()">{{ i18n.t('reportsImport.ui.saveMapping') }}</button>
+              <button class="btn primary" type="button" [disabled]="busy() || current.status !== 'MAPPED'" (click)="validate()">{{ i18n.t('reportsImport.ui.validate') }}</button>
+            </section>
+          }
+
+          @if (validation(); as result) {
+            <section><h2>{{ i18n.t('reportsImport.ui.previewTitle') }}</h2><div class="summary"><span>{{ i18n.t('reportsImport.ui.total') }} <b>{{ result.batch.totalRows }}</b></span><span class="ok">{{ i18n.t('reportsImport.ui.valid') }} <b>{{ result.batch.validRows }}</b></span><span class="bad">{{ i18n.t('reportsImport.ui.errors') }} <b>{{ result.batch.invalidRows }}</b></span></div>
+              @if (result.batch.invalidRows > 0) { <div class="alert warning">{{ i18n.t('reportsImport.ui.errorPolicy') }}<button class="link" type="button" (click)="downloadErrors(result.batch)">{{ i18n.t('reportsImport.ui.downloadErrors') }}</button></div> }
+              <div class="table-wrap"><table><thead><tr><th>{{ i18n.t('reportsImport.ui.row') }}</th><th>{{ i18n.t('reportsImport.ui.worker') }}</th><th>{{ i18n.t('reportsImport.ui.date') }}</th><th>{{ i18n.t('reportsImport.ui.attendance') }}</th><th>{{ i18n.t('reportsImport.ui.statusReason') }}</th></tr></thead><tbody>@for (row of result.preview; track row.rowNumber) {<tr [class.invalid]="row.validationStatus === 'INVALID'"><td>{{ row.rowNumber }}</td><td>{{ row.workerCode }}<small>{{ row.workerName }}</small></td><td>{{ row.workDate || '—' }}</td><td>{{ row.attendanceValue ?? '—' }}</td><td>{{ row.validationStatus === 'VALID' ? i18n.t('reportsImport.ui.valid') : row.errorMessage }}</td></tr>}</tbody></table></div>
+              @if (result.batch.invalidRows > 0) { <label class="check"><input type="checkbox" [(ngModel)]="importValidRowsOnly" /> {{ i18n.t('reportsImport.ui.validOnly') }}</label> }
+              <button class="btn primary" type="button" [disabled]="busy() || !result.canCommitValidRows || (result.batch.invalidRows > 0 && !importValidRowsOnly)" (click)="commit()">{{ i18n.t('reportsImport.ui.commit') }}</button>
+            </section>
+          }
+
+          @if (commitResult(); as committed) { <section class="result"><h2>{{ i18n.t('reportsImport.ui.completed') }}</h2><p>{{ i18n.t('reportsImport.ui.commitSummary', { created: committed.createdRows, updated: committed.updatedRows, skipped: committed.skippedInvalidRows }) }}</p><button class="btn" type="button" (click)="downloadOriginal(committed.batch)">{{ i18n.t('reportsImport.ui.downloadOriginal') }}</button><button class="btn danger" type="button" (click)="reverse(committed.batch)">{{ i18n.t('reportsImport.ui.reverse') }}</button></section> }
+        </article>
+
+        <aside class="card"><h2>{{ i18n.t('reportsImport.ui.history') }}</h2>@for (item of batches(); track item.id) {<article class="history"><div><strong>{{ item.fileName }}</strong><small>{{ item.createdAt | date:'yyyy-MM-dd HH:mm' }} · {{ item.createdBy }}</small></div><span class="status">{{ statusLabel(item.status) }}</span><div class="history-actions"><button class="link" type="button" (click)="openBatch(item)">{{ i18n.t('reportsImport.ui.open') }}</button><button class="link" type="button" (click)="downloadOriginal(item)">{{ i18n.t('reportsImport.ui.original') }}</button>@if (item.invalidRows > 0) {<button class="link" type="button" (click)="downloadErrors(item)">{{ i18n.t('reportsImport.ui.errors') }}</button>}@if (item.status === 'IMPORTED') {<button class="link danger-text" type="button" (click)="reverse(item)">{{ i18n.t('reportsImport.ui.undo') }}</button>}</div></article>} @empty {<p>{{ i18n.t('reportsImport.ui.noHistory') }}</p>}
+          <hr /><h2>{{ i18n.t('reportsImport.ui.availableReports') }}</h2><a class="report-link" routerLink="/workforce/settlement-periods">{{ i18n.t('reportsImport.ui.reportsLink') }}</a><p class="muted">{{ i18n.t('reportsImport.ui.realReportsOnly') }}</p>
+        </aside>
+      </div>
+    </section>
+  

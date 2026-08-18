@@ -13,6 +13,7 @@ import com.bemo.hr.reporting.domain.AttendanceDecision;
 import com.bemo.hr.reporting.domain.DailyStatus;
 import com.bemo.hr.reporting.infrastructure.AttendanceReportRepository;
 import com.bemo.hr.reporting.infrastructure.DailyAttendanceResultRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @Transactional(readOnly = true)
 public class DashboardService {
     private final AttendanceCategoryRepository attendanceCategoryRepository;

@@ -9,6 +9,7 @@ import com.bemo.hr.workforce.infrastructure.WorkforceGlPostingRepository;
 import com.bemo.hr.workforce.infrastructure.WorkforceInvoiceMatchRepository;
 import com.bemo.hr.workforce.infrastructure.WorkforceRequestBudgetRepository;
 import com.bemo.hr.workforce.infrastructure.WorkforceTreasuryMatchRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 
 @Service
+@Slf4j
 public class WorkforceFinancialIntegrationService {
 
     private final WorkforceRequestBudgetRepository budgetRepository;

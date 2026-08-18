@@ -10,6 +10,7 @@ import com.bemo.hr.trade.procurement.infrastructure.RfqHeaderRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SourcingAwardRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierQuoteHeaderRepository;
 import com.bemo.hr.trade.procurement.infrastructure.SupplierQuoteLineRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @Service
 public class SourcingService {
 
@@ -41,32 +43,46 @@ public class SourcingService {
 
     @Transactional
     public RfqHeader createRfq(String rfqNumber, String requisitionId, LocalDate issueDate, LocalDate dueDate) {
+        log.debug("createRfq called with rfqNumber={}, requisitionId={}, issueDate={}, dueDate={}", rfqNumber, requisitionId, issueDate, dueDate);
         RfqHeader rfq = new RfqHeader(rfqNumber, requisitionId, issueDate, dueDate);
-        return rfqHeaderRepository.save(rfq);
+        RfqHeader saved = rfqHeaderRepository.save(rfq);
+        log.info("RfqHeader {} created successfully", saved.getId());
+        return saved;
     }
 
     @Transactional
     public RfqHeader issueRfq(String rfqId) {
+        log.debug("issueRfq called with rfqId={}", rfqId);
         RfqHeader rfq = getRfq(rfqId);
         rfq.issue();
-        return rfqHeaderRepository.save(rfq);
+        RfqHeader saved = rfqHeaderRepository.save(rfq);
+        log.info("RfqHeader {} issued successfully", rfqId);
+        return saved;
     }
 
     @Transactional
     public SupplierQuoteHeader submitQuote(String rfqId, String supplierId, String quoteNumber, LocalDate quoteDate, LocalDate validUntil, BigDecimal totalAmount) {
+        log.debug("submitQuote called with rfqId={}, supplierId={}, quoteNumber={}", rfqId, supplierId, quoteNumber);
         RfqHeader rfq = getRfq(rfqId);
         if (rfq.getStatus() != RfqHeader.Status.ISSUED && rfq.getStatus() != RfqHeader.Status.EVALUATING) {
+            log.warn("Validation failed: Quote submitted for RFQ {} in invalid status {}", rfqId, rfq.getStatus());
             throw new BusinessRuleException("Quotes can only be submitted for ISSUED or EVALUATING RFQs", "RFQ_NOT_ISSUED", HttpStatus.CONFLICT);
         }
         SupplierQuoteHeader quote = new SupplierQuoteHeader(rfqId, supplierId, quoteNumber, quoteDate, validUntil, totalAmount);
-        return quoteHeaderRepository.save(quote);
+        SupplierQuoteHeader saved = quoteHeaderRepository.save(quote);
+        log.info("SupplierQuoteHeader {} submitted for RFQ {} successfully", saved.getId(), rfqId);
+        return saved;
     }
 
     @Transactional
     public SourcingAward awardQuote(String rfqId, String quoteId, String awardedBy) {
+        log.debug("awardQuote called with rfqId={}, quoteId={}, awardedBy={}", rfqId, quoteId, awardedBy);
         RfqHeader rfq = getRfq(rfqId);
         SupplierQuoteHeader quote = quoteHeaderRepository.findById(quoteId)
-                .orElseThrow(() -> new BusinessRuleException("Quote not found", "QUOTE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> {
+                    log.warn("Quote not found for quoteId={}", quoteId);
+                    return new BusinessRuleException("Quote not found", "QUOTE_NOT_FOUND", HttpStatus.NOT_FOUND);
+                });
 
         rfq.award();
         rfqHeaderRepository.save(rfq);
@@ -108,12 +124,17 @@ public class SourcingService {
         ProcurementApi.PurchaseOrderResponse poResponse = procurementService.create(poPayload);
 
         SourcingAward award = new SourcingAward(rfqId, quoteId, quote.getSupplierId(), quote.getTotalAmount(), poResponse.id(), awardedBy);
-        return awardRepository.save(award);
+        SourcingAward savedAward = awardRepository.save(award);
+        log.info("SourcingAward {} created for RFQ {} with PO {} successfully", savedAward.getId(), rfqId, poResponse.id());
+        return savedAward;
     }
 
     @Transactional(readOnly = true)
     public List<SupplierQuoteHeader> getQuotesForRfq(String rfqId) {
-        return quoteHeaderRepository.findByRfqId(rfqId);
+        log.debug("getQuotesForRfq called with rfqId={}", rfqId);
+        List<SupplierQuoteHeader> results = quoteHeaderRepository.findByRfqId(rfqId);
+        log.debug("getQuotesForRfq returned {} results for rfqId={}", results.size(), rfqId);
+        return results;
     }
 
     private RfqHeader getRfq(String id) {

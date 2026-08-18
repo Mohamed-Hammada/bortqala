@@ -3,12 +3,14 @@ package com.bemo.hr.party;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -17,11 +19,13 @@ class BusinessPartyService {
     private final com.bemo.hr.audit.application.AuditService auditService;
 
     List<BusinessPartyApi.Response> list() {
+        log.debug("list called");
         return businessPartyRepository.findAllByOrderByNameAsc().stream().map(this::response).toList();
     }
 
     @Transactional
     BusinessPartyApi.Response create(BusinessPartyApi.Request request) {
+        log.debug("create called with code={}, name={}", request.code(), request.name());
         validateUniqueCode(request.code(), null);
         validateManagedType(request.managedType());
         validateFields(request);
@@ -37,13 +41,16 @@ class BusinessPartyService {
 
         auditService.record("CREATE", "BUSINESS_PARTY", party.getId(), getCurrentUser(),
                 "{\"code\":\"" + party.getCode() + "\",\"name\":\"" + party.getName() + "\"}", null);
+        log.info("BusinessParty {} created successfully", party.getId());
         return response(party);
     }
 
     @Transactional
     BusinessPartyApi.Response update(String id, BusinessPartyApi.Request request) {
+        log.debug("update called with id={}", id);
         var party = require(id);
         if (request.version() == null || request.version() != party.getVersion()) {
+            log.warn("Validation failed: version conflict for party {}", id);
             throw new BusinessRuleException("This business party changed since it was loaded. Refresh and try again.", "PTY_VERSION_CONFLICT", HttpStatus.CONFLICT);
         }
         validateUniqueCode(request.code(), id);
@@ -60,18 +67,22 @@ class BusinessPartyService {
 
         auditService.record("UPDATE", "BUSINESS_PARTY", party.getId(), getCurrentUser(),
                 "{\"code\":\"" + party.getCode() + "\",\"name\":\"" + party.getName() + "\"}", null);
+        log.info("BusinessParty {} updated successfully", party.getId());
         return response(party);
     }
 
     @Transactional
     void deactivate(String id) {
+        log.debug("deactivate called with id={}", id);
         BusinessParty p = require(id);
         p.deactivate();
         auditService.record("DEACTIVATE", "BUSINESS_PARTY", p.getId(), getCurrentUser(), "Deactivated", null);
+        log.info("BusinessParty {} deactivated successfully", id);
     }
 
     @Transactional
     int cleanupInvalidPhone() {
+        log.debug("cleanupInvalidPhone called");
         var parties = businessPartyRepository.findAllByOrderByNameAsc();
         int count = 0;
         for (var p : parties) {
@@ -81,6 +92,7 @@ class BusinessPartyService {
             }
         }
         businessPartyRepository.flush();
+        log.info("cleanupInvalidPhone completed, cleaned {} records", count);
         return count;
     }
 
@@ -95,11 +107,14 @@ class BusinessPartyService {
 
     @Transactional
     BusinessPartyApi.Response createSupplierRequest(SupplierOnboardingApi.SupplierRequest request) {
+        log.debug("createSupplierRequest called with code={}, taxId={}", request.code(), request.taxId());
         validateUniqueCode(request.code(), null);
         if (!request.taxId().matches("^[A-Za-z0-9\\-]{6,50}$")) {
+            log.warn("Validation failed: invalid tax ID format: {}", request.taxId());
             throw new BusinessRuleException("Invalid tax ID format.", "PTY_INVALID_TAX_ID", HttpStatus.CONFLICT);
         }
         if (!businessPartyRepository.findByTaxIdIgnoreCase(request.taxId()).isEmpty()) {
+            log.warn("Validation failed: duplicate tax ID: {}", request.taxId());
             throw new BusinessRuleException("A supplier with this tax ID already exists.", "SUPPLIER_DUPLICATE_TAX_ID", HttpStatus.CONFLICT);
         }
         BusinessParty party = new BusinessParty(request.code(), request.name(), request.nameEn(), "SUPPLIER",
@@ -111,6 +126,7 @@ class BusinessPartyService {
         businessPartyRepository.save(party);
         auditService.record("CREATE_REQUEST", "SUPPLIER_ONBOARDING", party.getId(), getCurrentUser(),
                 "{\"code\":\"" + party.getCode() + "\",\"taxId\":\"" + party.getTaxId() + "\"}", null);
+        log.info("SupplierOnboarding request {} created successfully", party.getId());
         return response(party);
     }
 

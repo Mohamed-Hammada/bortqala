@@ -3,6 +3,7 @@ package com.bemo.hr.shared.i18n;
 import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantApplicationRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.cache.annotation.CacheEvict;
@@ -18,6 +19,7 @@ import java.io.InputStream;
 import java.util.*;
 
 @Service
+@Slf4j
 public class TranslationAdminService {
     private static final List<String> SUPPORTED_LOCALES = List.of("ar-EG", "en-US");
     private static final List<Integer> ALLOWED_PAGE_SIZES = List.of(10, 25, 50, 100);

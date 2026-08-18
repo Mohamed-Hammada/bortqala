@@ -10,6 +10,7 @@ import com.bemo.hr.access.domain.AccessEnums.AccessLevel;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.security.TenantContext;
 import com.bemo.hr.shared.security.TenantFeatureService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
  * availability and acknowledgement of newly introduced risk.
  */
 @Service
+@Slf4j
 public class AccessCatalogService {
 
     private static final List<String> LEVEL_PRECEDENCE = List.of(

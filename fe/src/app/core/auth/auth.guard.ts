@@ -45,6 +45,11 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   return roleGuardDecision(authService.hasAnyRole(roles), inject(Router));
 };
 
+export const superAdminGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  return roleGuardDecision(authService.isSuperAdmin(), inject(Router));
+};
+
 export const menuAccessGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const authService = inject(AuthService);
   const menuId = route.data['menuId'] as string | undefined;

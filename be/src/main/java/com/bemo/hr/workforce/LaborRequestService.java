@@ -4,12 +4,14 @@ import com.bemo.hr.audit.application.AuditService;
 import com.bemo.hr.employee.domain.AttendanceCategory;
 import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class LaborRequestService {
@@ -21,11 +23,13 @@ public class LaborRequestService {
 
     @Transactional(readOnly = true)
     public List<WorkforceApi.LaborRequestResponse> list() {
+        log.debug("list called");
         return requestRepository.findAll().stream().map(this::mapToResponse).toList();
     }
 
     @Transactional
     public WorkforceApi.LaborRequestResponse create(WorkforceApi.LaborRequestCreate dto, String createdBy) {
+        log.debug("create called with requestNumber={}", dto.requestNumber());
         LaborRequest req = new LaborRequest(
                 dto.requestNumber(), Instant.now(), dto.branchId(), dto.shiftName(),
                 dto.contractorId(), "DRAFT", dto.notes(), createdBy
@@ -41,6 +45,7 @@ public class LaborRequestService {
             }
         }
 
+        log.info("LaborRequest {} created successfully", saved.getId());
         auditService.record("CREATE", "LABOR_REQUEST", saved.getId(), createdBy,
                 "{\"requestNumber\":\"" + dto.requestNumber() + "\"}", null);
 
@@ -49,9 +54,11 @@ public class LaborRequestService {
 
     @Transactional
     public WorkforceApi.LaborRequestResponse updateStatus(String id, String status, String user) {
+        log.debug("updateStatus called with id={}, status={}", id, status);
         LaborRequest req = requestRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Labor request not found: " + id));
         req.updateStatus(status, user);
+        log.info("LaborRequest {} status updated to {}", id, status);
         return mapToResponse(requestRepository.save(req));
     }
 

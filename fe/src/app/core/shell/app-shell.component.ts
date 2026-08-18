@@ -5,7 +5,7 @@ import { AuthService } from '../auth/auth.service';
 import { RoleCode } from '../auth/auth.models';
 import { I18nService } from '../i18n.service';
 import { ConfirmDialogService } from '../confirm-dialog.service';
-import { IconComponent, IconName } from '../../shared/ui/icon/icon.component';
+import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { ToastContainerComponent } from '../../shared/ui/toast/toast-container.component';
 import { AppTooltipDirective } from '../../shared/ui/app-tooltip/app-tooltip.directive';
 import { NetworkService } from '../network.service';
@@ -13,384 +13,17 @@ import { GLOBAL_SHORTCUTS } from '../app-shortcuts';
 import { ScreenShortcutService } from '../shortcuts/screen-shortcut.service';
 import { ScreenShortcut } from '../shortcuts/screen-shortcut.models';
 import { ProductAnalyticsClient } from '../product-analytics-client.service';
-
-export type WorkspaceGroup =
-  | 'workspace.people'
-  | 'workspace.attendance'
-  | 'workspace.workforce'
-  | 'workspace.operations'
-  | 'workspace.finance'
-  | 'workspace.admin'
-  | 'workspace.approvals';
-
-export interface NavItem {
-  menuId: string;
-  labelKey: string;
-  descriptionKey: string;
-  path: string;
-  icon: IconName;
-  workspace: WorkspaceGroup;
-  roles?: RoleCode[];
-}
-
-export interface WorkspaceSection {
-  titleKey: WorkspaceGroup;
-  items: NavItem[];
-}
-
-const FINANCE_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'];
-const FINANCE_REPORT_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'];
-const PROCUREMENT_ROLES: RoleCode[] = [
-  'PROCUREMENT_MANAGER',
-  'PROCUREMENT_USER',
-  'INVENTORY_MANAGER',
-  'FINANCE_MANAGER',
-  'ACCOUNTANT',
-  'TREASURY_USER',
-  'AUDITOR',
-];
-const SALES_ROLES: RoleCode[] = ['SALES_MANAGER'];
-const PRODUCTION_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER'];
-const QUALITY_ROLES: RoleCode[] = ['MANUFACTURING_MANAGER', 'QUALITY_MANAGER'];
-const PAYROLL_ROLES: RoleCode[] = ['PAYROLL_MANAGER', 'HR_MANAGER', 'HR_REVIEWER'];
-const WORKFORCE_BASE_ROLES: RoleCode[] = [
-  'WORKFORCE_MANAGER',
-  'WORKFORCE_REVIEWER',
-  'WORKFORCE_FINANCE',
-];
-const WORKFORCE_IMPORT_ROLES: RoleCode[] = ['WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER'];
-const WORKFORCE_ACCOUNT_ROLES: RoleCode[] = ['WORKFORCE_MANAGER', 'WORKFORCE_FINANCE'];
+import {
+  NAV_ITEMS,
+  WORKSPACE_ORDER,
+  canAccessNavigationItem,
+  type NavItem,
+  type WorkspaceSection,
+} from '../navigation/app-navigation';
+export { NAV_ITEMS, SHELL_MENU_ROLES } from '../navigation/app-navigation';
+export type { NavItem, WorkspaceGroup, WorkspaceSection } from '../navigation/app-navigation';
 
 const COLLAPSED_GROUPS_KEY = 'hr-collapsed-groups';
-
-export const NAV_ITEMS: NavItem[] = [
-    {
-      menuId: 'employees',
-      labelKey: 'nav.employees',
-      descriptionKey: 'nav.employeesHint',
-      path: '/employees',
-      icon: 'employees',
-      workspace: 'workspace.people',
-      roles: ['ADMIN', 'HR_MANAGER'],
-    },
-    {
-      menuId: 'dashboard',
-      labelKey: 'nav.dashboard',
-      descriptionKey: 'nav.dashboardHint',
-      path: '/dashboard',
-      icon: 'dashboard',
-      workspace: 'workspace.attendance',
-    },
-    {
-      menuId: 'categories',
-      labelKey: 'nav.categories',
-      descriptionKey: 'nav.categoriesHint',
-      path: '/categories',
-      icon: 'categories',
-      workspace: 'workspace.attendance',
-      roles: ['ADMIN', 'HR_MANAGER'],
-    },
-    {
-      menuId: 'imports',
-      labelKey: 'nav.imports',
-      descriptionKey: 'nav.importsHint',
-      path: '/imports',
-      icon: 'imports',
-      workspace: 'workspace.attendance',
-      roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'],
-    },
-    {
-      menuId: 'reports',
-      labelKey: 'nav.reports',
-      descriptionKey: 'nav.reportsHint',
-      path: '/reports',
-      icon: 'reports',
-      workspace: 'workspace.attendance',
-    },
-    {
-      menuId: 'workforce-dashboard',
-      labelKey: 'workforce.dashboard.title',
-      descriptionKey: 'nav.workforceHint',
-      path: '/workforce/dashboard',
-      icon: 'dashboard',
-      workspace: 'workspace.workforce',
-      roles: WORKFORCE_BASE_ROLES,
-    },
-    {
-      menuId: 'workforce-contractors',
-      labelKey: 'workforce.contractors.title',
-      descriptionKey: 'nav.workforceHint',
-      path: '/workforce/contractors',
-      icon: 'users',
-      workspace: 'workspace.workforce',
-      roles: WORKFORCE_BASE_ROLES,
-    },
-    {
-      menuId: 'workforce-workers',
-      labelKey: 'workforce.workers.title',
-      descriptionKey: 'nav.workforceHint',
-      path: '/workforce/workers',
-      icon: 'employees',
-      workspace: 'workspace.workforce',
-      roles: WORKFORCE_BASE_ROLES,
-    },
-    {
-      menuId: 'workforce-categories',
-      labelKey: 'workforce.categories.title',
-      descriptionKey: 'nav.workforceHint',
-      path: '/workforce/categories',
-      icon: 'categories',
-      workspace: 'workspace.workforce',
-      roles: WORKFORCE_BASE_ROLES,
-    },
-    {
-      menuId: 'workforce-requests',
-      labelKey: 'workforce.laborRequests.title',
-      descriptionKey: 'nav.workforceHint',
-      path: '/workforce/labor-requests',
-      icon: 'imports',
-      workspace: 'workspace.workforce',
-      roles: WORKFORCE_BASE_ROLES,
-    },
-    {
-      menuId: 'workforce-attendance',
-      labelKey: 'workforce.attendance.title',
-      descriptionKey: 'nav.workforceHint',
-      path: '/workforce/attendance',
-      icon: 'reports',
-      workspace: 'workspace.workforce',
-      roles: WORKFORCE_BASE_ROLES,
-    },
-    {
-      menuId: 'workforce-dispatch-disputes',
-      labelKey: 'workforce.dispatch.title',
-      descriptionKey: 'workforce.dispatch.hint',
-      path: '/workforce/dispatch-disputes',
-      icon: 'reports',
-      workspace: 'workspace.workforce',
-      roles: WORKFORCE_BASE_ROLES,
-    },
-    {
-      menuId: 'workforce-settlements',
-      labelKey: 'workforce.settlements.title',
-      descriptionKey: 'nav.workforceHint',
-      path: '/workforce/settlement-periods',
-      icon: 'dashboard',
-      workspace: 'workspace.workforce',
-      roles: WORKFORCE_BASE_ROLES,
-    },
-    {
-      menuId: 'workforce-advances',
-      labelKey: 'workforce.advances.title',
-      descriptionKey: 'nav.workforceHint',
-      path: '/workforce/advances',
-      icon: 'categories',
-      workspace: 'workspace.workforce',
-      roles: WORKFORCE_BASE_ROLES,
-    },
-    {
-      menuId: 'workforce-accounts',
-      labelKey: 'workforce.accounts.title',
-      descriptionKey: 'nav.workforceHint',
-      path: '/workforce/contractor-accounts',
-      icon: 'users',
-      workspace: 'workspace.workforce',
-      roles: WORKFORCE_ACCOUNT_ROLES,
-    },
-    {
-      menuId: 'workforce-reports',
-      labelKey: 'workforce.reports.title',
-      descriptionKey: 'nav.workforceHint',
-      path: '/workforce/reports-import',
-      icon: 'reports',
-      workspace: 'workspace.workforce',
-      roles: WORKFORCE_IMPORT_ROLES,
-    },
-    {
-      menuId: 'approvals-my-tasks',
-      labelKey: 'approvals.myTasks',
-      descriptionKey: 'nav.approvalsHint',
-      path: '/approvals/my-tasks',
-      icon: 'reports',
-      workspace: 'workspace.approvals',
-    },
-    {
-      menuId: 'approvals-workflows',
-      labelKey: 'approvals.workflows',
-      descriptionKey: 'nav.approvalsHint',
-      path: '/approvals/definitions',
-      icon: 'categories',
-      workspace: 'workspace.approvals',
-      roles: ['SUPER_ADMIN', 'ADMIN'],
-    },
-    {
-      menuId: 'operations',
-      labelKey: 'nav.operations',
-      descriptionKey: 'nav.operationsHint',
-      path: '/operations',
-      icon: 'categories',
-      workspace: 'workspace.operations',
-      roles: ['ADMIN'],
-    },
-    {
-      menuId: 'procurement',
-      labelKey: 'nav.procurement',
-      descriptionKey: 'nav.procurementHint',
-      path: '/trade/procurement',
-      icon: 'imports',
-      workspace: 'workspace.operations',
-      roles: PROCUREMENT_ROLES,
-    },
-    {
-      menuId: 'sales',
-      labelKey: 'nav.sales',
-      descriptionKey: 'nav.salesHint',
-      path: '/trade/sales',
-      icon: 'reports',
-      workspace: 'workspace.operations',
-      roles: SALES_ROLES,
-    },
-    {
-      menuId: 'production',
-      labelKey: 'nav.production',
-      descriptionKey: 'nav.productionHint',
-      path: '/manufacturing/production',
-      icon: 'dashboard',
-      workspace: 'workspace.operations',
-      roles: PRODUCTION_ROLES,
-    },
-    {
-      menuId: 'quality',
-      labelKey: 'nav.quality',
-      descriptionKey: 'nav.qualityHint',
-      path: '/manufacturing/quality',
-      icon: 'settings',
-      workspace: 'workspace.operations',
-      roles: QUALITY_ROLES,
-    },
-    {
-      menuId: 'parties',
-      labelKey: 'nav.parties',
-      descriptionKey: 'nav.partiesHint',
-      path: '/parties',
-      icon: 'users',
-      workspace: 'workspace.operations',
-      roles: ['ADMIN', 'HR_MANAGER'],
-    },
-    {
-      menuId: 'payroll',
-      labelKey: 'nav.payroll',
-      descriptionKey: 'nav.payrollHint',
-      path: '/payroll',
-      icon: 'reports',
-      workspace: 'workspace.finance',
-      roles: PAYROLL_ROLES,
-    },
-    {
-      menuId: 'accounts',
-      labelKey: 'nav.accounts',
-      descriptionKey: 'nav.accountsHint',
-      path: '/finance/accounts',
-      icon: 'categories',
-      workspace: 'workspace.finance',
-      roles: FINANCE_ROLES,
-    },
-    {
-      menuId: 'journal-entries',
-      labelKey: 'nav.journalEntries',
-      descriptionKey: 'nav.journalEntriesHint',
-      path: '/finance/journal-entries',
-      icon: 'reports',
-      workspace: 'workspace.finance',
-      roles: FINANCE_ROLES,
-    },
-    {
-      menuId: 'banks',
-      labelKey: 'nav.banks',
-      descriptionKey: 'nav.banksHint',
-      path: '/finance/banks',
-      icon: 'users',
-      workspace: 'workspace.finance',
-      roles: FINANCE_ROLES,
-    },
-    {
-      menuId: 'tax-currency',
-      labelKey: 'nav.taxCurrency',
-      descriptionKey: 'nav.taxCurrencyHint',
-      path: '/finance/tax-currency',
-      icon: 'settings',
-      workspace: 'workspace.finance',
-      roles: FINANCE_ROLES,
-    },
-    {
-      menuId: 'fiscal-periods',
-      labelKey: 'nav.fiscalPeriods',
-      descriptionKey: 'nav.fiscalPeriodsHint',
-      path: '/fiscal-periods',
-      icon: 'dashboard',
-      workspace: 'workspace.finance',
-      roles: FINANCE_REPORT_ROLES,
-    },
-    {
-      menuId: 'budgets',
-      labelKey: 'nav.budgets',
-      descriptionKey: 'nav.budgetsHint',
-      path: '/finance/budgets',
-      icon: 'reports',
-      workspace: 'workspace.finance',
-      roles: FINANCE_ROLES,
-    },
-    {
-      menuId: 'organization',
-      labelKey: 'nav.organization',
-      descriptionKey: 'nav.organizationHint',
-      path: '/organization',
-      icon: 'categories',
-      workspace: 'workspace.people',
-      roles: ['ADMIN', 'HR_MANAGER'],
-    },
-    {
-      menuId: 'audit-logs',
-      labelKey: 'nav.auditLogs',
-      descriptionKey: 'nav.auditLogsHint',
-      path: '/audit-logs',
-      icon: 'reports',
-      workspace: 'workspace.admin',
-      roles: ['ADMIN'],
-    },
-    {
-      menuId: 'users',
-      labelKey: 'nav.users',
-      descriptionKey: 'nav.usersHint',
-      path: '/users',
-      icon: 'users',
-      workspace: 'workspace.admin',
-      roles: ['ADMIN'],
-    },
-    {
-      menuId: 'notifications-send',
-      labelKey: 'nav.notificationsSend',
-      descriptionKey: 'nav.notificationsSendHint',
-      path: '/notifications/send',
-      icon: 'reports',
-      workspace: 'workspace.admin',
-      roles: ['ADMIN'],
-    },
-    {
-      menuId: 'settings',
-      labelKey: 'nav.settings',
-      descriptionKey: 'nav.settingsHint',
-      path: '/settings',
-      icon: 'settings',
-      workspace: 'workspace.admin',
-    },
-  ];
-
-/** Route-guard roles per shell menu id; empty array means no role guard. */
-export const SHELL_MENU_ROLES: Record<string, RoleCode[]> = Object.fromEntries(
-  NAV_ITEMS.map((item) => [item.menuId, item.roles ?? []]),
-);
-
 import { NotificationCenterService } from '../notification-center/notification-center.service';
 import { WebPushService } from '../notification-center/web-push.service';
 
@@ -486,14 +119,7 @@ export class AppShellComponent {
   });
 
   readonly workspaceSections = computed<WorkspaceSection[]>(() => {
-    const groups: { key: WorkspaceGroup; items: NavItem[] }[] = [
-      { key: 'workspace.people', items: [] },
-      { key: 'workspace.attendance', items: [] },
-      { key: 'workspace.workforce', items: [] },
-      { key: 'workspace.operations', items: [] },
-      { key: 'workspace.finance', items: [] },
-      { key: 'workspace.admin', items: [] },
-    ];
+    const groups = WORKSPACE_ORDER.map((key) => ({ key, items: [] as NavItem[] }));
 
     for (const item of this.items) {
       if (this.visible(item)) {
@@ -532,12 +158,11 @@ export class AppShellComponent {
   visible(item: NavItem): boolean {
     const user = this.authService.user();
     if (!user) return false;
-    if (user.roles.includes('SUPER_ADMIN') || user.roles.includes('ADMIN')) {
-      return true;
-    }
-    const roleOk = !item.roles || this.authService.hasAnyRole(item.roles);
-    const menuOk = this.authService.hasMenuAccess(item.menuId);
-    return roleOk && menuOk;
+    return canAccessNavigationItem(
+      item,
+      user.roles,
+      (menuId) => this.authService.hasMenuAccess(menuId),
+    );
   }
 
   isFavorite(menuId: string): boolean {
