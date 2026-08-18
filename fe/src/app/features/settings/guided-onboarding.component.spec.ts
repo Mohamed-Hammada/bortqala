@@ -66,7 +66,6 @@ describe('GuidedOnboardingComponent', () => {
 
   afterEach(() => {
     http.verify();
-    TestBed.resetTestingModule();
   });
 
   it('loads installed packs and selects first installed pack', () => {

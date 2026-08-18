@@ -30,6 +30,7 @@ public class IndustryPackService {
     private final IndustryReadinessService readinessService;
     private final IndustryRoleProvisioningService roleService;
     private final IndustryImportTemplateRegistry templateRegistry;
+    private final IndustryKpiRegistry kpiRegistry;
     private final IndustryPackSettingsValidator settingsValidator;
     private final ObjectMapper objectMapper;
     private final AuditService auditService;
@@ -155,6 +156,13 @@ public class IndustryPackService {
                 "{\"step\":\"" + key + "\",\"skipped\":" + request.skip() + "}", null);
         registerCommitLog(code, "step " + key + " completed", installed.getId());
         return response(pack, installed);
+    }
+
+    @Transactional(readOnly = true)
+    public List<IndustryKpiProvider.KpiResult> calculateKpis(String code) {
+        log.debug("calculateKpis called with code={}", code);
+        IndustryPack pack = require(code);
+        return kpiRegistry.calculate(array(pack.getKpisJson()));
     }
 
     private void registerCommitLog(String code, String action, String id) {

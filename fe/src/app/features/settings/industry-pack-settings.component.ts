@@ -33,6 +33,14 @@ interface TemplateDescriptor {
   route: string;
 }
 
+interface KpiResult {
+  key: string;
+  labelKey: string;
+  value: number;
+  unit: string;
+  status: string;
+}
+
 interface Pack {
   code: string;
   nameKey: string;
@@ -82,6 +90,7 @@ export class IndustryPackSettingsComponent {
   readonly rawSettings = signal<Record<string, string>>({});
   readonly typedSettings = signal<Record<string, TypedSettings>>({});
   readonly advancedMode = signal<Record<string, boolean>>({});
+  readonly kpisByPack = signal<Record<string, KpiResult[]>>({});
 
   constructor() {
     void this.load();
@@ -95,13 +104,23 @@ export class IndustryPackSettingsComponent {
       this.packs.set(packs);
       const rawMap: Record<string, string> = {};
       const typedMap: Record<string, TypedSettings> = {};
+      const kpiMap: Record<string, KpiResult[]> = {};
       for (const p of packs) {
         const jsonStr = p.settingsJson ?? '{}';
         rawMap[p.code] = jsonStr;
         typedMap[p.code] = this.parseTyped(jsonStr, p.code);
+        if (p.installedVersion) {
+          try {
+            const kpis = await firstValueFrom(this.http.get<KpiResult[]>(`/api/v1/platform/industry-packs/${p.code}/kpis`));
+            kpiMap[p.code] = kpis;
+          } catch {
+            kpiMap[p.code] = [];
+          }
+        }
       }
       this.rawSettings.set(rawMap);
       this.typedSettings.set(typedMap);
+      this.kpisByPack.set(kpiMap);
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));
     } finally {

@@ -67,7 +67,7 @@ class IndustryPackServiceTests {
 
         service = new IndustryPackService(
                 packRepository, tenantPackRepository, stepRepository, reconciliationService,
-                readinessService, roleService, templateRegistry, settingsValidator, objectMapper, auditService
+                readinessService, roleService, templateRegistry, kpiRegistry, settingsValidator, objectMapper, auditService
         );
 
         lenient().when(packRepository.findByCodeAndStatus(pack.getCode(), "ACTIVE")).thenReturn(Optional.of(pack));
@@ -203,5 +203,13 @@ class IndustryPackServiceTests {
         when(packRepository.findByCodeAndStatus(invalid.getCode(), "ACTIVE")).thenReturn(Optional.of(invalid));
         assertThatThrownBy(() -> service.install(invalid.getCode(), new IndustryPackApi.InstallRequest("op"), "admin"))
                 .isInstanceOfSatisfying(BusinessRuleException.class, e -> assertThat(e.getCode()).isEqualTo("INDUSTRY_PACK_TEMPLATE_UNKNOWN"));
+    }
+
+    @Test
+    void calculateKpisReturnsCalculatedResults() {
+        var kpis = service.calculateKpis(pack.getCode());
+        assertThat(kpis).isNotEmpty();
+        assertThat(kpis.stream().map(IndustryKpiProvider.KpiResult::key))
+                .contains("contractorFillRate", "attendanceExceptionRate");
     }
 }

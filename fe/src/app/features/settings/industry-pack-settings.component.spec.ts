@@ -28,12 +28,16 @@ describe('IndustryPackSettingsComponent', () => {
     component = fixture.componentInstance;
     http = TestBed.inject(HttpTestingController);
     http.expectOne('/api/v1/platform/industry-packs').flush([pack(), foodPack()]);
+    await Promise.resolve();
+    await Promise.resolve();
+    http.expectOne('/api/v1/platform/industry-packs/CONTRACTOR_WORKFORCE_EG/kpis').flush([
+      { key: 'contractorFillRate', labelKey: 'kpi.contractorFillRate', value: 92.5, unit: '%', status: 'HEALTHY' }
+    ]);
     await fixture.whenStable();
   });
 
   afterEach(() => {
     http.verify();
-    TestBed.resetTestingModule();
   });
 
   it('loads version modules kpis and onboarding evidence', () => {
@@ -41,6 +45,7 @@ describe('IndustryPackSettingsComponent', () => {
     expect(component.packs()[0].kpis).toContain('contractorFillRate');
     expect(component.packs()[0].steps[0].status).toBe('READY');
     expect(component.packs()[0].roleReadiness?.[0].status).toBe('ASSIGNED');
+    expect(component.kpisByPack()['CONTRACTOR_WORKFORCE_EG']?.[0].value).toBe(92.5);
   });
 
   it('renders the second vertical from backend-owned metadata', () => {
@@ -60,6 +65,9 @@ describe('IndustryPackSettingsComponent', () => {
     await Promise.resolve();
     await Promise.resolve();
     http.expectOne('/api/v1/platform/industry-packs').flush([pack()]);
+    await Promise.resolve();
+    await Promise.resolve();
+    http.expectOne('/api/v1/platform/industry-packs/CONTRACTOR_WORKFORCE_EG/kpis').flush([]);
     await promise;
   });
 
@@ -72,6 +80,9 @@ describe('IndustryPackSettingsComponent', () => {
     await Promise.resolve();
     await Promise.resolve();
     http.expectOne('/api/v1/platform/industry-packs').flush([pack()]);
+    await Promise.resolve();
+    await Promise.resolve();
+    http.expectOne('/api/v1/platform/industry-packs/CONTRACTOR_WORKFORCE_EG/kpis').flush([]);
     await promise;
   });
 
@@ -84,6 +95,9 @@ describe('IndustryPackSettingsComponent', () => {
     await Promise.resolve();
     await Promise.resolve();
     http.expectOne('/api/v1/platform/industry-packs').flush([p]);
+    await Promise.resolve();
+    await Promise.resolve();
+    http.expectOne('/api/v1/platform/industry-packs/CONTRACTOR_WORKFORCE_EG/kpis').flush([]);
     await promise;
   });
 

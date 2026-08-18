@@ -27,6 +27,12 @@ public class IndustryPackController {
         return runtimeProfileService.getEffectiveProfile();
     }
 
+    @GetMapping("/{code}/kpis")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+    public List<IndustryKpiProvider.KpiResult> kpis(@PathVariable String code) {
+        return service.calculateKpis(code);
+    }
+
     @PostMapping("/{code}/install")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public IndustryPackApi.PackResponse install(@PathVariable String code, @Valid @RequestBody IndustryPackApi.InstallRequest request, Authentication auth) {

@@ -73,9 +73,20 @@
 
             <div>
               <h4>{{ i18n.t('industryPack.kpis') }}</h4>
-              <ul>
-                @for (item of pack.kpis; track item) {
-                  <li>{{ item }}</li>
+              <ul class="kpis-list">
+                @if (kpisByPack()[pack.code] && kpisByPack()[pack.code].length > 0) {
+                  @for (kpi of kpisByPack()[pack.code]; track kpi.key) {
+                    <li class="kpi-item">
+                      <span class="kpi-label">{{ kpi.key }}</span>
+                      <span class="badge" [class.healthy]="kpi.status === 'HEALTHY'" [class.warning]="kpi.status === 'WARNING'">
+                        {{ kpi.value }} {{ kpi.unit }}
+                      </span>
+                    </li>
+                  }
+                } @else {
+                  @for (item of pack.kpis; track item) {
+                    <li>{{ item }}</li>
+                  }
                 }
               </ul>
             </div>
