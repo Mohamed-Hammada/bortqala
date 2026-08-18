@@ -408,3 +408,7 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260817_v264_navigation_ia_openai.yaml
       relativeToChangelogFile: false
+  # BORTQALA_SETTINGS_SUBMENU_REFACTOR_20260818
+  - include:
+      file: db/changelog/data/insert/20260818_v265_settings_submenus_i18n.yaml
+      relativeToChangelogFile: false

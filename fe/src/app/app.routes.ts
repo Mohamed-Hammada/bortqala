@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, menuAccessGuard, mustChangePasswordGuard, roleGuard } from './core/auth/auth.guard';
+import { authGuard, menuAccessGuard, mustChangePasswordGuard, roleGuard, superAdminGuard } from './core/auth/auth.guard';
 import { unsavedChangesGuard } from './core/unsaved-changes.guard';
 import { WORKFORCE_BASE_ROLES } from './core/auth/workforce-role.guard';
 
@@ -113,6 +113,16 @@ export const routes: Routes = [
         data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'parties' },
         loadComponent: () =>
           import('./features/parties/parties.page').then((module) => module.PartiesPage),
+      },
+      {
+        path: 'partner-risk',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          roles: ['SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER'],
+          menuId: 'settings',
+        },
+        loadComponent: () =>
+          import('./features/partner-risk/partner-risk.page').then((module) => module.PartnerRiskPage),
       },
       {
         path: 'reports',
@@ -279,6 +289,27 @@ export const routes: Routes = [
         data: { roles: ['ADMIN'], menuId: 'notifications-send' },
         loadComponent: () =>
           import('./features/notifications-send/notifications-send.page').then((module) => module.NotificationsSendPage),
+      },
+      {
+        path: 'admin/setup-readiness',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'], menuId: 'settings' },
+        loadComponent: () =>
+          import('./features/admin/setup-readiness/setup-readiness.page').then((module) => module.SetupReadinessPage),
+      },
+      {
+        path: 'admin/product-insights',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'], menuId: 'settings' },
+        loadComponent: () =>
+          import('./features/admin/product-insights/product-insights.page').then((module) => module.ProductInsightsPage),
+      },
+      {
+        path: 'platform-admin',
+        canActivate: [superAdminGuard, menuAccessGuard],
+        data: { menuId: 'settings' },
+        loadComponent: () =>
+          import('./features/platform-admin/platform-admin.page').then((module) => module.PlatformAdminPage),
       },
       {
         path: 'settings',

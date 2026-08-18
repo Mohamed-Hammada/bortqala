@@ -8,18 +8,11 @@ import { I18nService } from '../../core/i18n.service';
 import { LANDING_PAGE_ITEMS, canAccessNavigationItem } from '../../core/navigation/app-navigation';
 import { NotificationService } from '../../core/notification.service';
 import { WebPushService } from '../../core/notification-center/web-push.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ShortcutSettingsComponent } from './shortcuts/shortcut-settings.component';
-import { TranslationManagementComponent } from './translation-management.component';
-import { EntitlementSettingsComponent } from './entitlement-settings.component';
-import { IndustryPackSettingsComponent } from './industry-pack-settings.component';
-import { TrialDemoSettingsComponent } from './trial-demo-settings.component';
-import { GuidedOnboardingComponent } from './guided-onboarding.component';
-import { PartnerRiskSettingsComponent } from './partner-risk-settings.component';
-import { ProductAnalyticsSettingsComponent } from './product-analytics-settings.component';
-import { SubscriptionSettingsComponent } from './subscription-settings.component';
+import { MOVED_SETTINGS_TAB_ROUTES, SettingsTab, isSettingsTab } from './settings-navigation';
+import { SettingsSubmenuComponent } from './settings-submenu.component';
 
-export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports' | 'shortcuts' | 'translations' | 'entitlements' | 'industry' | 'trial' | 'onboarding' | 'risk' | 'analytics' | 'subscription' | 'business';
 
 const NOTIFICATION_KEY = 'bemo_notification_prefs';
 
@@ -38,7 +31,7 @@ function saveNotificationPrefs(prefs: NotificationPreferences): void {
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [ReactiveFormsModule, ShortcutSettingsComponent, TranslationManagementComponent, EntitlementSettingsComponent, IndustryPackSettingsComponent, TrialDemoSettingsComponent, GuidedOnboardingComponent, PartnerRiskSettingsComponent, ProductAnalyticsSettingsComponent, SubscriptionSettingsComponent],
+  imports: [ReactiveFormsModule, ShortcutSettingsComponent, SettingsSubmenuComponent],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,6 +43,7 @@ export class SettingsPage {
   readonly webPush = inject(WebPushService);
   private readonly formBuilder = inject(FormBuilder);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly activeTab = signal<SettingsTab>('appearance');
 
@@ -159,15 +153,27 @@ export class SettingsPage {
 
   constructor() {
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
-    const allowedTab = !['translations','entitlements','industry','trial','subscription'].includes(tabParam ?? '') || this.authService.isSuperAdmin();
-    if (tabParam && allowedTab && ['appearance', 'session', 'security', 'business', 'reports', 'shortcuts', 'translations', 'entitlements', 'industry', 'trial', 'onboarding', 'risk', 'analytics','subscription'].includes(tabParam)) {
-      this.activeTab.set(tabParam as SettingsTab);
+    const movedRoute = tabParam ? MOVED_SETTINGS_TAB_ROUTES[tabParam] : undefined;
+    if (movedRoute) {
+      void this.router.navigateByUrl(movedRoute);
+      return;
+    }
+
+    const adminTab = tabParam === 'session' || tabParam === 'security' || tabParam === 'business';
+    if (isSettingsTab(tabParam) && (!adminTab || this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN']))) {
+      this.activeTab.set(tabParam);
     }
     if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) void this.loadAppSettings();
   }
 
   setTab(tab: SettingsTab): void {
     this.activeTab.set(tab);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   releaseLicense(): void {

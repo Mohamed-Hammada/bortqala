@@ -1,0 +1,39 @@
+<section class="page platform-admin-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('settings.groupPlatformAdministration', undefined, 'إدارة المنصة') }}</p>
+      <h1>{{ i18n.t('settings.groupPlatformAdministration', undefined, 'إدارة المنصة') }}</h1>
+      <p>{{ i18n.t('platformAdmin.description', undefined, 'إدارة الخطط والتجارب وحزم الصناعة والوحدات والترجمات بعيداً عن إعدادات المستخدم اليومية.') }}</p>
+    </div>
+  </header>
+
+  <div class="platform-admin-layout">
+    <aside class="platform-admin-nav">
+      <button type="button" [class.active]="activeTab() === 'subscription'" (click)="setTab('subscription')">
+        {{ i18n.t('subscription.tab') }}
+      </button>
+      <button type="button" [class.active]="activeTab() === 'trial'" (click)="setTab('trial')">
+        {{ i18n.t('trialDemo.tab') }}
+      </button>
+      <button type="button" [class.active]="activeTab() === 'industry'" (click)="setTab('industry')">
+        {{ i18n.t('industryPack.tab') }}
+      </button>
+      <button type="button" [class.active]="activeTab() === 'entitlements'" (click)="setTab('entitlements')">
+        {{ i18n.t('entitlements.tab') }}
+      </button>
+      <button type="button" [class.active]="activeTab() === 'translations'" (click)="setTab('translations')">
+        {{ i18n.t('translations.menu', undefined, 'إدارة الترجمات') }}
+      </button>
+    </aside>
+
+    <main class="platform-admin-content">
+      @if (activeTab() === 'subscription') { <app-subscription-settings /> }
+      @if (activeTab() === 'trial') { <app-trial-demo-settings /> }
+      @if (activeTab() === 'industry') { <app-industry-pack-settings /> }
+      @if (activeTab() === 'entitlements') { <app-entitlement-settings /> }
+      @if (activeTab() === 'translations') {
+        <div class="card platform-translation-card"><app-translation-management /></div>
+      }
+    </main>
+  </div>
+</section>

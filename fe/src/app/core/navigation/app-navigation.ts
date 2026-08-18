@@ -19,7 +19,8 @@ export type WorkspaceGroup =
   | 'workspace.manufacturingDomain'
   | 'workspace.businessPartners'
   | 'workspace.financeAccounting'
-  | 'workspace.administration';
+  | 'workspace.administration'
+  | 'workspace.platformAdministration';
 
 export interface NavItem {
   menuId: string;
@@ -29,6 +30,10 @@ export interface NavItem {
   icon: IconName;
   workspace: WorkspaceGroup;
   roles?: RoleCode[];
+  /** Optional authorization menu id when a child page shares an existing permission contract. */
+  permissionMenuId?: string;
+  /** Keep ADMIN from bypassing an explicitly narrower role scope. */
+  strictRoles?: boolean;
   /** Pages such as Settings/Audit should not be selectable as the normal landing page. */
   allowAsLandingPage?: boolean;
 }
@@ -50,6 +55,7 @@ export const WORKSPACE_ORDER: readonly WorkspaceGroup[] = [
   'workspace.businessPartners',
   'workspace.financeAccounting',
   'workspace.administration',
+  'workspace.platformAdministration',
 ];
 
 const FINANCE_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'];
@@ -330,6 +336,18 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'HR_MANAGER'],
   },
 
+  {
+    menuId: 'partner-risk',
+    labelKey: 'risk.tab',
+    descriptionKey: 'risk.description',
+    path: '/partner-risk',
+    icon: 'settings',
+    workspace: 'workspace.businessPartners',
+    roles: ['ADMIN', 'PROCUREMENT_MANAGER', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER'],
+    permissionMenuId: 'settings',
+    allowAsLandingPage: false,
+  },
+
   // Finance
   {
     menuId: 'accounts',
@@ -418,12 +436,47 @@ export const NAV_ITEMS: NavItem[] = [
     allowAsLandingPage: false,
   },
   {
+    menuId: 'admin-setup-readiness',
+    labelKey: 'onboarding.tab',
+    descriptionKey: 'onboarding.description',
+    path: '/admin/setup-readiness',
+    icon: 'dashboard',
+    workspace: 'workspace.administration',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    permissionMenuId: 'settings',
+    allowAsLandingPage: false,
+  },
+  {
+    menuId: 'admin-product-insights',
+    labelKey: 'analytics.title',
+    descriptionKey: 'analytics.description',
+    path: '/admin/product-insights',
+    icon: 'reports',
+    workspace: 'workspace.administration',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    permissionMenuId: 'settings',
+    allowAsLandingPage: false,
+  },
+  {
     menuId: 'settings',
     labelKey: 'nav.settings',
     descriptionKey: 'nav.settingsHint',
     path: '/settings',
     icon: 'settings',
     workspace: 'workspace.administration',
+    allowAsLandingPage: false,
+  },
+  // Platform Administration is intentionally separated from tenant/user Settings.
+  {
+    menuId: 'platform-admin',
+    labelKey: 'settings.groupPlatformAdministration',
+    descriptionKey: 'nav.settingsHint',
+    path: '/platform-admin',
+    icon: 'settings',
+    workspace: 'workspace.platformAdministration',
+    roles: ['SUPER_ADMIN'],
+    permissionMenuId: 'settings',
+    strictRoles: true,
     allowAsLandingPage: false,
   },
 ];
@@ -446,7 +499,8 @@ export function canAccessNavigationItem(
   roles: readonly RoleCode[],
   hasMenuAccess: (menuId: string) => boolean,
 ): boolean {
-  if (roles.includes('SUPER_ADMIN') || roles.includes('ADMIN')) return true;
+  if (roles.includes('SUPER_ADMIN')) return true;
+  if (roles.includes('ADMIN') && !item.strictRoles) return true;
   const roleOk = !item.roles || item.roles.some((role) => roles.includes(role));
-  return roleOk && hasMenuAccess(item.menuId);
+  return roleOk && hasMenuAccess(item.permissionMenuId ?? item.menuId);
 }
