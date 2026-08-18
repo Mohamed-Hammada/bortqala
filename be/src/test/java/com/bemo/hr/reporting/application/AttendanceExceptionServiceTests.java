@@ -54,16 +54,17 @@ class AttendanceExceptionServiceTests {
         when(reportRepository.findById(report.getId())).thenReturn(Optional.of(report));
         when(resultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(report.getId())).thenReturn(List.of(result));
         when(policyRepository.findAllByOrderByPriorityDescEffectiveFromDesc()).thenReturn(List.of(tenant, category, employee));
-        when(exceptionRepository.existsByReportIdAndDailyResultIdAndExceptionType(any(), any(), any())).thenReturn(false);
 
         assertThat(service.detect(report.getId(), "reviewer")).isEqualTo(1);
 
-        ArgumentCaptor<AttendanceException> captor = ArgumentCaptor.forClass(AttendanceException.class);
-        verify(exceptionRepository).save(captor.capture());
-        assertThat(captor.getValue().getPolicyScope()).isEqualTo(AttendancePolicyScope.EMPLOYEE);
-        assertThat(captor.getValue().getPolicyId()).isEqualTo(employee.getId());
-        assertThat(captor.getValue().getScore()).isGreaterThanOrEqualTo(60);
-        assertThat(captor.getValue().getExplanationKey()).isEqualTo("attendance.exception.late");
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<AttendanceException>> captor = ArgumentCaptor.forClass(List.class);
+        verify(exceptionRepository).saveAll(captor.capture());
+        AttendanceException saved = captor.getValue().get(0);
+        assertThat(saved.getPolicyScope()).isEqualTo(AttendancePolicyScope.EMPLOYEE);
+        assertThat(saved.getPolicyId()).isEqualTo(employee.getId());
+        assertThat(saved.getScore()).isGreaterThanOrEqualTo(60);
+        assertThat(saved.getExplanationKey()).isEqualTo("attendance.exception.late");
     }
 
     @Test

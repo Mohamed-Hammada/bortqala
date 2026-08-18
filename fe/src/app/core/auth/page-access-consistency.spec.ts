@@ -17,6 +17,7 @@ const ADMIN_BYPASS: string[] = ['ADMIN', 'SUPER_ADMIN'];
 function navRoles(roles: string[] | undefined): string[] {
   const base = roles ?? [];
   if (base.length === 0) return [];
+  if (base.length === 1 && base[0] === 'SUPER_ADMIN') return ['SUPER_ADMIN'];
   return [...new Set([...ADMIN_BYPASS, ...base])].sort();
 }
 

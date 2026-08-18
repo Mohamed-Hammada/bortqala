@@ -13,7 +13,7 @@ describe('settings navigation refactor', () => {
     expect(insights?.workspace).toBe('workspace.administration');
     expect(platform?.workspace).toBe('workspace.platformAdministration');
     expect(platform?.permissionMenuId).toBe('settings');
-    expect(platform?.strictRoles).toBeTrue();
+    expect(platform?.strictRoles).toBe(true);
     expect(WORKSPACE_ORDER).toContain('workspace.platformAdministration');
   });
 
@@ -28,7 +28,7 @@ describe('settings navigation refactor', () => {
   it('does not let tenant ADMIN bypass the platform-only navigation role', () => {
     const platform = NAV_ITEMS.find((item) => item.menuId === 'platform-admin');
     expect(platform).toBeDefined();
-    expect(canAccessNavigationItem(platform!, ['ADMIN'], () => true)).toBeFalse();
-    expect(canAccessNavigationItem(platform!, ['SUPER_ADMIN'], () => true)).toBeTrue();
+    expect(canAccessNavigationItem(platform!, ['ADMIN'], () => true)).toBe(false);
+    expect(canAccessNavigationItem(platform!, ['SUPER_ADMIN'], () => true)).toBe(true);
   });
 });

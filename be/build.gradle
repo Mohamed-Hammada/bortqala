@@ -99,6 +99,26 @@ tasks.named('test') {
     }
 }
 
+tasks.withType(org.springframework.boot.gradle.tasks.aot.ProcessTestAot).configureEach {
+    def skipDockerTests = providers.gradleProperty('skipDockerTests')
+        .map { it.trim().isEmpty() || it.toBoolean() }
+        .getOrElse(false)
+    if (skipDockerTests) {
+        enabled = false
+    }
+}
+
+tasks.matching { it.name.toLowerCase().contains('aottest') }.configureEach {
+    def skipDockerTests = providers.gradleProperty('skipDockerTests')
+        .map { it.trim().isEmpty() || it.toBoolean() }
+        .getOrElse(false)
+    if (skipDockerTests) {
+        enabled = false
+    }
+}
+
+
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
     // Build with the supported Java 21 toolchain while retaining Java 17 bytecode

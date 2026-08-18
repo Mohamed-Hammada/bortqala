@@ -100,6 +100,7 @@ class ReportingServicePeriodTests {
                 PayCycle.MONTHLY, end, start)).thenReturn(false);
         when(attendanceCategoryRepository.findByScopeIn(any())).thenReturn(List.of(monthly));
         when(scheduleRuleRepository.findAll()).thenReturn(List.of());
+        when(scheduleRuleRepository.save(any(ScheduleRule.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(employeeRepository.findAll()).thenReturn(List.of());
         when(confirmedHolidayRepository.findByWorkDateBetween(start, end)).thenReturn(List.of());
         when(punchRecordRepository.findInRange(any(), any())).thenReturn(List.of());

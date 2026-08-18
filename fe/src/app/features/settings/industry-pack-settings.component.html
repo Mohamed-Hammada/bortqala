@@ -3,45 +3,204 @@
     <h2>{{ i18n.t('industryPack.title') }}</h2>
     <p>{{ i18n.t('industryPack.description') }}</p>
   </header>
-  @if (error()) { <div class="alert error">{{ error() }}</div> }
-  @if (loading()) { <div class="loading"></div> }
-  @else {
+
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading"></div>
+  } @else {
     @for (pack of packs(); track pack.code) {
       <article class="pack">
         <div class="pack-head">
-          <div><h3>{{ i18n.t(pack.nameKey) }}</h3><p>{{ i18n.t(pack.descriptionKey) }}</p></div>
+          <div>
+            <h3>{{ i18n.t(pack.nameKey) }}</h3>
+            <p>{{ i18n.t(pack.descriptionKey) }}</p>
+          </div>
           <span>{{ i18n.t('industryPack.version') }} {{ pack.availableVersion }}</span>
         </div>
+
         @if (!pack.installedVersion) {
-          <button class="button primary" (click)="install(pack)" [disabled]="saving()">{{ i18n.t('industryPack.install') }}</button>
+          <button class="button primary" (click)="install(pack)" [disabled]="saving()">
+            {{ i18n.t('industryPack.install') }}
+          </button>
         } @else {
           <div class="meta">
             <span>{{ i18n.t('industryPack.installed') }} {{ pack.installedVersion }}</span>
-            @if (pack.goLiveReady) { <strong>{{ i18n.t('industryPack.goLiveReady') }}</strong> }
-            @if (pack.upgradeAvailable) { <button class="button primary" (click)="upgrade(pack)" [disabled]="saving()">{{ i18n.t('industryPack.upgrade') }}</button> }
+            @if (pack.goLiveReady) {
+              <strong class="go-live-badge">{{ i18n.t('industryPack.goLiveReady') }}</strong>
+            }
+            @if (pack.upgradeAvailable) {
+              <button class="button primary" (click)="upgrade(pack)" [disabled]="saving()">
+                {{ i18n.t('industryPack.upgrade') }}
+              </button>
+            }
+            <button class="button secondary btn-sm" (click)="reconcile(pack)" [disabled]="saving()">
+              {{ i18n.t('industryPack.reconcile') }}
+            </button>
           </div>
+
           <div class="columns">
-            <div><h4>{{ i18n.t('industryPack.requiredModules') }}</h4><ul>@for (item of pack.requiredFeatures; track item) { <li>{{ item }}</li> }</ul></div>
-            <div><h4>{{ i18n.t('industryPack.roles') }}</h4><ul>@for (item of pack.defaultRoles; track item) { <li>{{ item }}</li> }</ul></div>
-            <div><h4>{{ i18n.t('industryPack.kpis') }}</h4><ul>@for (item of pack.kpis; track item) { <li>{{ item }}</li> }</ul></div>
-            <div><h4>{{ i18n.t('industryPack.importTemplates') }}</h4><ul>@for (item of pack.importTemplates; track item) { <li>{{ item }}</li> }</ul></div>
+            <div>
+              <h4>{{ i18n.t('industryPack.requiredModules') }}</h4>
+              <ul>
+                @for (item of pack.requiredFeatures; track item) {
+                  <li>{{ item }}</li>
+                }
+              </ul>
+            </div>
+
+            <div>
+              <h4>{{ i18n.t('industryPack.activeRoles') }}</h4>
+              <ul class="roles-list">
+                @if (pack.roleReadiness && pack.roleReadiness.length > 0) {
+                  @for (role of pack.roleReadiness; track role.code) {
+                    <li>
+                      <span class="role-code">{{ role.code }}</span>
+                      <span class="badge" [class.assigned]="role.status === 'ASSIGNED'">
+                        {{ role.status === 'ASSIGNED' ? i18n.t('industryPack.roleStatus.assigned', { '0': role.assignedUsers }) : i18n.t('industryPack.roleStatus.unassigned') }}
+                      </span>
+                    </li>
+                  }
+                } @else {
+                  @for (item of pack.defaultRoles; track item) {
+                    <li>{{ item }}</li>
+                  }
+                }
+              </ul>
+            </div>
+
+            <div>
+              <h4>{{ i18n.t('industryPack.kpis') }}</h4>
+              <ul>
+                @for (item of pack.kpis; track item) {
+                  <li>{{ item }}</li>
+                }
+              </ul>
+            </div>
+
+            <div>
+              <h4>{{ i18n.t('industryPack.importTemplates') }}</h4>
+              <ul class="templates-list">
+                @if (pack.templateBindings && pack.templateBindings.length > 0) {
+                  @for (tpl of pack.templateBindings; track tpl.key) {
+                    <li class="template-item">
+                      <span>{{ tpl.fileName }}</span>
+                      <div class="template-actions">
+                        <a class="button secondary btn-xs" [routerLink]="tpl.route">
+                          {{ i18n.t('industryPack.startImport') }}
+                        </a>
+                      </div>
+                    </li>
+                  }
+                } @else {
+                  @for (item of pack.importTemplates; track item) {
+                    <li>{{ item }}</li>
+                  }
+                }
+              </ul>
+            </div>
           </div>
+
           <h4>{{ i18n.t('industryPack.onboarding') }}</h4>
           <ol class="steps">
             @for (step of pack.steps; track step.id) {
               <li [class.blocked]="step.status === 'BLOCKED'">
                 <span>{{ i18n.t(step.key) }}</span>
-                <b>{{ step.status === 'READY' ? i18n.t('industryPack.ready') : step.status === 'BLOCKED' ? i18n.t('industryPack.blocked') : step.status }}</b>
+                <b>
+                  {{
+                    step.status === 'READY'
+                      ? i18n.t('industryPack.ready')
+                      : step.status === 'BLOCKED'
+                        ? i18n.t('industryPack.blocked')
+                        : step.status
+                  }}
+                </b>
                 @if (step.status === 'READY') {
-                  <button class="button primary" (click)="complete(pack, step)" [disabled]="saving()">{{ i18n.t('industryPack.complete') }}</button>
-                  @if (step.optional) { <button class="button secondary" (click)="complete(pack, step, true)" [disabled]="saving()">{{ i18n.t('industryPack.skip') }}</button> }
+                  <button class="button primary" (click)="complete(pack, step)" [disabled]="saving()">
+                    {{ i18n.t('industryPack.complete') }}
+                  </button>
+                  @if (step.optional) {
+                    <button class="button secondary" (click)="complete(pack, step, true)" [disabled]="saving()">
+                      {{ i18n.t('industryPack.skip') }}
+                    </button>
+                  }
                 }
               </li>
             }
           </ol>
-          <label>{{ i18n.t('industryPack.settings') }}</label>
-          <textarea rows="5" [ngModel]="settings()[pack.code]" (ngModelChange)="setSettings(pack.code, $event)"></textarea>
-          <button class="button secondary" (click)="saveSettings(pack)" [disabled]="saving()">{{ i18n.t('industryPack.saveSettings') }}</button>
+
+          <div class="settings-section">
+            <div class="settings-header">
+              <h4>{{ i18n.t('industryPack.settings') }}</h4>
+              <button type="button" class="mode-toggle-btn" (click)="toggleAdvancedMode(pack.code)">
+                {{ advancedMode()[pack.code] ? i18n.t('industryPack.typedSettings') : i18n.t('industryPack.advancedSettings') }}
+              </button>
+            </div>
+
+            @if (!advancedMode()[pack.code] && typedSettings()[pack.code]; as typed) {
+              <div class="typed-form">
+                @if (pack.code === 'FOOD_DISTRIBUTION_EG') {
+                  <div class="form-row">
+                    <label>{{ i18n.t('industryPack.issuePolicy') }}</label>
+                    <select
+                      [ngModel]="typed.issuePolicy"
+                      (ngModelChange)="updateTyped(pack.code, { issuePolicy: $event })"
+                    >
+                      <option value="FEFO">{{ i18n.t('industryPack.fefo') }}</option>
+                      <option value="FIFO">{{ i18n.t('industryPack.fifo') }}</option>
+                    </select>
+                  </div>
+                  <div class="form-row checkbox-row">
+                    <label>
+                      <input
+                        type="checkbox"
+                        [ngModel]="typed.creditControl"
+                        (ngModelChange)="updateTyped(pack.code, { creditControl: $event })"
+                      />
+                      {{ i18n.t('industryPack.creditControl') }}
+                    </label>
+                  </div>
+                  <div class="form-row">
+                    <label>{{ i18n.t('industryPack.expiryWindowsDays') }}</label>
+                    <input
+                      type="text"
+                      [ngModel]="typed.expiryWindowsDaysStr"
+                      (ngModelChange)="updateTyped(pack.code, { expiryWindowsDaysStr: $event })"
+                    />
+                  </div>
+                } @else {
+                  <div class="form-row">
+                    <label>{{ i18n.t('industryPack.terminologyEmployee') }}</label>
+                    <input
+                      type="text"
+                      [ngModel]="typed.terminologyEmployee"
+                      (ngModelChange)="updateTyped(pack.code, { terminologyEmployee: $event })"
+                    />
+                  </div>
+                  <div class="form-row">
+                    <label>{{ i18n.t('industryPack.terminologySupplier') }}</label>
+                    <input
+                      type="text"
+                      [ngModel]="typed.terminologySupplier"
+                      (ngModelChange)="updateTyped(pack.code, { terminologySupplier: $event })"
+                    />
+                  </div>
+                }
+              </div>
+            } @else {
+              <textarea
+                rows="6"
+                [ngModel]="rawSettings()[pack.code]"
+                (ngModelChange)="setRawSettings(pack.code, $event)"
+              ></textarea>
+            }
+
+            <button class="button secondary" (click)="saveSettings(pack)" [disabled]="saving()">
+              {{ i18n.t('industryPack.saveSettings') }}
+            </button>
+          </div>
         }
       </article>
     }

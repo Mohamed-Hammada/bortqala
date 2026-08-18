@@ -750,5 +750,30 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260816_v255_entitlement_feature_translations.yaml
       relativeToChangelogFile: false
+  - include:
+      file: db/changelog/schema/update/20260816_v260_runtime_feedback_fixes.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/schema/update/20260816_v261_corrective_runtime_fixes.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/schema/update/20260816_v262_remaining_runtime_fixes.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260817_v263_inline_locale_i18n_cleanup.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260817_v264_navigation_ia_openai.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260818_v265_settings_submenus_i18n.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/schema/update/20260818_v266_fix_industry_onboarding_step_unique.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260818_v267_industry_pack_extensions_translations.yaml
+      relativeToChangelogFile: false
+
 
 

@@ -1,0 +1,77 @@
+id;key;locale;text
+v267-001;INDUSTRY_PACK_ROLE_UNKNOWN;en-US;Declared industry pack role is not registered in the platform role catalog
+v267-002;INDUSTRY_PACK_ROLE_UNKNOWN;ar-EG;دور حزمة النشاط غير مسجل في دليل أدوار المنصة
+v267-003;INDUSTRY_PACK_KPI_UNKNOWN;en-US;Declared industry pack KPI is unknown
+v267-004;INDUSTRY_PACK_KPI_UNKNOWN;ar-EG;مؤشر أداء حزمة النشاط غير معروف
+v267-005;INDUSTRY_PACK_TEMPLATE_UNKNOWN;en-US;Declared industry pack import template is unknown
+v267-006;INDUSTRY_PACK_TEMPLATE_UNKNOWN;ar-EG;قالب استيراد حزمة النشاط غير معروف
+v267-007;INDUSTRY_PACK_SETTING_UNKNOWN;en-US;Unknown industry pack setting property
+v267-008;INDUSTRY_PACK_SETTING_UNKNOWN;ar-EG;خاصية إعداد حزمة النشاط غير معروفة
+v267-009;INDUSTRY_PACK_SETTING_VALUE_INVALID;en-US;Invalid value for industry pack setting property
+v267-010;INDUSTRY_PACK_SETTING_VALUE_INVALID;ar-EG;قيمة غير صالحة لخاصية إعداد حزمة النشاط
+v267-011;onboarding.issue.company;en-US;Complete organization and company profile setup
+v267-012;onboarding.issue.company;ar-EG;إكمال إعدادات المنشأة وملف الشركة
+v267-013;onboarding.issue.warehouses;en-US;Create at least one distribution warehouse
+v267-014;onboarding.issue.warehouses;ar-EG;إنشاء مخزن توزيع واحد على الأقل
+v267-015;onboarding.issue.items;en-US;Import or create at least one product item
+v267-016;onboarding.issue.items;ar-EG;استيراد أو إنشاء صنف منتج واحد على الأقل
+v267-017;onboarding.issue.suppliers;en-US;Onboard at least one active supplier
+v267-018;onboarding.issue.suppliers;ar-EG;تسجيل مورد نشط واحد على الأقل
+v267-019;onboarding.issue.customers;en-US;Add or import at least one customer
+v267-020;onboarding.issue.customers;ar-EG;إضافة أو استيراد عميل واحد على الأقل
+v267-021;onboarding.issue.openingStock;en-US;Record initial opening stock balances
+v267-022;onboarding.issue.openingStock;ar-EG;تسجيل أرصدة المخزون الافتتاحي
+v267-023;onboarding.issue.firstPurchase;en-US;Create the first purchase order or goods receipt
+v267-024;onboarding.issue.firstPurchase;ar-EG;إنشاء أول أمر شراء أو إذن استلام بضاعة
+v267-025;onboarding.issue.firstSale;en-US;Record the first sales order or customer invoice
+v267-026;onboarding.issue.firstSale;ar-EG;تسجيل أول أمر بيع أو فاتورة عميل
+v267-027;onboarding.issue.margin;en-US;Configure pricing or product margins
+v267-028;onboarding.issue.margin;ar-EG;ضبط التسعير أو هوامش الربح للمنتجات
+v267-029;industryPack.reconcile;en-US;Reconcile & Repair
+v267-030;industryPack.reconcile;ar-EG;تسوية وإصلاح
+v267-031;industryPack.reconciled;en-US;Industry pack reconciled successfully
+v267-032;industryPack.reconciled;ar-EG;تمت تسوية حزمة النشاط وإصلاحها بنجاح
+v267-033;industryPack.roleStatus.assigned;en-US;Assigned ({0} users)
+v267-034;industryPack.roleStatus.assigned;ar-EG;معين ({0} مستخدم)
+v267-035;industryPack.roleStatus.unassigned;en-US;Unassigned
+v267-036;industryPack.roleStatus.unassigned;ar-EG;غير معين
+v267-037;industryPack.downloadTemplate;en-US;Download template
+v267-038;industryPack.downloadTemplate;ar-EG;تحميل النموذج
+v267-039;industryPack.startImport;en-US;Start import
+v267-040;industryPack.startImport;ar-EG;بدء الاستيراد
+v267-041;industryPack.advancedSettings;en-US;Advanced JSON mode
+v267-042;industryPack.advancedSettings;ar-EG;وضع JSON المتقدم
+v267-043;industryPack.typedSettings;en-US;Visual form mode
+v267-044;industryPack.typedSettings;ar-EG;وضع النموذج المرئي
+v267-045;industryPack.issuePolicy;en-US;Stock Issue Policy
+v267-046;industryPack.issuePolicy;ar-EG;سياسة صرف المخزون
+v267-047;industryPack.creditControl;en-US;Credit Control
+v267-048;industryPack.creditControl;ar-EG;الرقابة الائتمانية
+v267-049;industryPack.expiryWindowsDays;en-US;Expiry Warning Windows (days)
+v267-050;industryPack.expiryWindowsDays;ar-EG;فترات التنبيه لانتهاء الصلاحية (بالأيام)
+v267-051;industryPack.actions;en-US;Actions
+v267-052;industryPack.actions;ar-EG;الإجراءات
+v267-053;industryPack.roleReadiness;en-US;Role Readiness
+v267-054;industryPack.roleReadiness;ar-EG;جاهزية الأدوار
+v267-055;industryPack.activeRoles;en-US;Operational Roles
+v267-056;industryPack.activeRoles;ar-EG;الأدوار التشغيلية
+v267-057;onboarding.selectPack;en-US;Select Industry Pack
+v267-058;onboarding.selectPack;ar-EG;اختر حزمة النشاط
+v267-059;onboarding.noPacksInstalled;en-US;No Industry Pack installed
+v267-060;onboarding.noPacksInstalled;ar-EG;لم يتم تثبيت أي حزمة نشاط
+v267-061;onboarding.noPacksInstalledDescription;en-US;Install an Industry Pack from System Settings to enable guided vertical onboarding.
+v267-062;onboarding.noPacksInstalledDescription;ar-EG;ثبّت حزمة نشاط من إعدادات النظام لتفعيل التجهيز الموجّه المخصص.
+v267-063;onboarding.goToSettings;en-US;Go to Industry Packs
+v267-064;onboarding.goToSettings;ar-EG;الانتقال إلى حزم النشاط
+v267-065;onboarding.viewHistory;en-US;View History
+v267-066;onboarding.viewHistory;ar-EG;عرض السجل
+v267-067;platformAdmin.description;en-US;Platform administration, subscriptions, support, and analytics
+v267-068;platformAdmin.description;ar-EG;إدارة المنصة، والاشتراكات، والدعم، والتحليلات
+v267-069;industryPack.terminologyEmployee;en-US;Employee Terminology
+v267-070;industryPack.terminologyEmployee;ar-EG;تسمية الموظفين
+v267-071;industryPack.terminologySupplier;en-US;Supplier Terminology
+v267-072;industryPack.terminologySupplier;ar-EG;تسمية الموردين
+v267-073;industryPack.fefo;en-US;First Expired First Out (FEFO)
+v267-074;industryPack.fefo;ar-EG;الوارد أولاً ينتهي أولاً (FEFO)
+v267-075;industryPack.fifo;en-US;First In First Out (FIFO)
+v267-076;industryPack.fifo;ar-EG;الوارد أولاً يصرف أولاً (FIFO)

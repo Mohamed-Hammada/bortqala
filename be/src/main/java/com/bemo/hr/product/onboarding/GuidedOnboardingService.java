@@ -1,11 +1,13 @@
 package com.bemo.hr.product.onboarding;
 
-import com.bemo.hr.attendance.infrastructure.ImportBatchRepository;
 import com.bemo.hr.audit.application.AuditService;
-import com.bemo.hr.employee.infrastructure.AttendanceCategoryRepository;
-import com.bemo.hr.product.pack.*;
+import com.bemo.hr.product.pack.IndustryOnboardingStep;
+import com.bemo.hr.product.pack.IndustryOnboardingStepRepository;
+import com.bemo.hr.product.pack.IndustryPack;
+import com.bemo.hr.product.pack.IndustryPackRepository;
+import com.bemo.hr.product.pack.TenantIndustryPack;
+import com.bemo.hr.product.pack.TenantIndustryPackRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import com.bemo.hr.workforce.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -13,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,13 +27,8 @@ public class GuidedOnboardingService {
     private final TenantIndustryPackRepository tenantPackRepository;
     private final IndustryOnboardingStepRepository stepRepository;
     private final OnboardingAssessmentRepository assessmentRepository;
-    private final ContractorRepository contractorRepository;
-    private final AttendanceCategoryRepository categoryRepository;
-    private final WorkerRepository workerRepository;
-    private final WorkforceImportBatchRepository workforceImportRepository;
-    private final ImportBatchRepository attendanceImportRepository;
-    private final WorkforceAdvanceRepository advanceRepository;
-    private final ContractorSettlementRepository settlementRepository;
+    private final OnboardingEvidenceRegistry evidenceRegistry;
+    private final IndustryReadinessService readinessService;
     private final ObjectMapper objectMapper;
     private final AuditService auditService;
 
@@ -44,7 +40,16 @@ public class GuidedOnboardingService {
     public GuidedOnboardingApi.OverviewResponse overview(String code) {
         log.debug("overview called with code={}", code);
         var context = context(code, false);
-        return calculate(code, context.pack(), context.steps(), 0);
+        var evaluation = readinessService.evaluate(code, context.pack(), context.steps());
+        return new GuidedOnboardingApi.OverviewResponse(
+                code,
+                evaluation.setupProgress(),
+                evaluation.dataQualityScore(),
+                evaluation.readiness(),
+                0,
+                evaluation.issues(),
+                stepViews(context.steps())
+        );
     }
 
     @Transactional
@@ -53,69 +58,60 @@ public class GuidedOnboardingService {
         var context = context(code, true);
         var replay = assessmentRepository.findByTenantPackIdAndOperationId(context.pack().getId(), request.operationId());
         if (replay.isPresent()) return fromSnapshot(code, replay.get(), context.steps());
-        autoComplete(context.steps(), actor);
-        var result = calculate(code, context.pack(), context.steps(), System.currentTimeMillis());
+
+        autoComplete(code, context.steps(), actor);
+        var evaluation = readinessService.evaluate(code, context.pack(), context.steps());
+
         String issues;
         try {
-            issues = objectMapper.writeValueAsString(result.issues());
+            issues = objectMapper.writeValueAsString(evaluation.issues());
         } catch (Exception ex) {
             log.error("Failed to serialize onboarding assessment issues", ex);
             throw error("ONBOARDING_ASSESSMENT_INVALID", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        var saved = assessmentRepository.save(new OnboardingAssessment(context.pack().getId(), request.operationId(), result.setupProgress(), result.dataQualityScore(), result.readiness(), issues, actor));
-        auditService.record("ASSESS", "ONBOARDING", saved.getId(), actor, "{\"pack\":\"" + code + "\",\"progress\":" + result.setupProgress() + ",\"quality\":" + result.dataQualityScore() + ",\"readiness\":\"" + result.readiness() + "\"}", null);
-        return new GuidedOnboardingApi.OverviewResponse(result.packCode(), result.setupProgress(), result.dataQualityScore(), result.readiness(), saved.getAssessedAt().toEpochMilli(), result.issues(), result.steps());
+
+        var saved = assessmentRepository.save(new OnboardingAssessment(
+                context.pack().getId(),
+                request.operationId(),
+                evaluation.setupProgress(),
+                evaluation.dataQualityScore(),
+                evaluation.readiness(),
+                issues,
+                actor
+        ));
+        auditService.record("ASSESS", "ONBOARDING", saved.getId(), actor,
+                "{\"pack\":\"" + code + "\",\"progress\":" + evaluation.setupProgress() + ",\"quality\":" + evaluation.dataQualityScore() + ",\"readiness\":\"" + evaluation.readiness() + "\"}", null);
+
+        return new GuidedOnboardingApi.OverviewResponse(
+                code,
+                evaluation.setupProgress(),
+                evaluation.dataQualityScore(),
+                evaluation.readiness(),
+                saved.getAssessedAt().toEpochMilli(),
+                evaluation.issues(),
+                stepViews(context.steps())
+        );
     }
 
-    private void autoComplete(List<IndustryOnboardingStep> steps, String actor) {
+    private void autoComplete(String code, List<IndustryOnboardingStep> steps, String actor) {
         Map<String, IndustryOnboardingStep> byKey = new HashMap<>();
         for (var step : steps) {
             byKey.put(step.getStepKey(), step);
-            if (step.getStatus() == IndustryOnboardingStep.Status.BLOCKED && terminal(byKey.get(step.getPrerequisiteKey())))
+            if (step.getStatus() == IndustryOnboardingStep.Status.BLOCKED && terminal(byKey.get(step.getPrerequisiteKey()))) {
                 step.ready();
-            if (step.getStatus() == IndustryOnboardingStep.Status.READY && satisfied(step.getStepKey()))
-                step.complete(actor, false);
+            }
+            if (step.getStatus() == IndustryOnboardingStep.Status.READY) {
+                var evidence = evidenceRegistry.evaluate(code, step.getStepKey());
+                if (evidence.isPresent() && evidence.get().satisfied()) {
+                    step.complete(actor, false);
+                }
+            }
             stepRepository.save(step);
         }
     }
 
     private boolean terminal(IndustryOnboardingStep step) {
         return step != null && (step.getStatus() == IndustryOnboardingStep.Status.COMPLETED || step.getStatus() == IndustryOnboardingStep.Status.SKIPPED);
-    }
-
-    private boolean satisfied(String key) {
-        return switch (key) {
-            case "industryPack.step.company" -> true;
-            case "industryPack.step.contractors" -> contractorRepository.count() > 0;
-            case "industryPack.step.categories" -> categoryRepository.count() > 0;
-            case "industryPack.step.workers" -> workerRepository.count() > 0;
-            case "industryPack.step.attendance" ->
-                    workforceImportRepository.existsByStatus("IMPORTED") || attendanceImportRepository.count() > 0;
-            case "industryPack.step.advances" -> advanceRepository.count() > 0;
-            case "industryPack.step.settlement" -> settlementRepository.count() > 0;
-            default -> false;
-        };
-    }
-
-    private GuidedOnboardingApi.OverviewResponse calculate(String code, TenantIndustryPack pack, List<IndustryOnboardingStep> steps, long assessedAt) {
-        List<GuidedOnboardingApi.IssueResponse> issues = new ArrayList<>();
-        check(issues, "CONTRACTORS", "onboarding.issue.contractors", "/workforce/contractors", contractorRepository.count(), true);
-        check(issues, "CATEGORIES", "onboarding.issue.categories", "/categories", categoryRepository.count(), true);
-        check(issues, "WORKERS", "onboarding.issue.workers", "/workforce/workers", workerRepository.count(), true);
-        long imports = workforceImportRepository.existsByStatus("IMPORTED") || attendanceImportRepository.count() > 0 ? 1 : 0;
-        check(issues, "IMPORT", "onboarding.issue.import", "/imports", imports, true);
-        check(issues, "SETTLEMENT", "onboarding.issue.settlement", "/workforce/settlement-periods", settlementRepository.count(), true);
-        int passed = 5 - issues.size();
-        int quality = passed * 100 / 5;
-        long required = steps.stream().filter(s -> !s.isOptional()).count();
-        long complete = steps.stream().filter(s -> !s.isOptional() && s.getStatus() == IndustryOnboardingStep.Status.COMPLETED).count();
-        int progress = required == 0 ? 0 : (int) (complete * 100 / required);
-        String readiness = progress == 100 && quality >= 80 ? "READY" : issues.stream().anyMatch(GuidedOnboardingApi.IssueResponse::blocker) ? "BLOCKED" : "IN_PROGRESS";
-        return new GuidedOnboardingApi.OverviewResponse(code, progress, quality, readiness, assessedAt, List.copyOf(issues), stepViews(steps));
-    }
-
-    private void check(List<GuidedOnboardingApi.IssueResponse> issues, String code, String key, String route, long count, boolean blocker) {
-        if (count == 0) issues.add(new GuidedOnboardingApi.IssueResponse(code, key, route, count, blocker));
     }
 
     private List<GuidedOnboardingApi.StepResponse> stepViews(List<IndustryOnboardingStep> steps) {
@@ -125,7 +121,15 @@ public class GuidedOnboardingService {
     private GuidedOnboardingApi.OverviewResponse fromSnapshot(String code, OnboardingAssessment snapshot, List<IndustryOnboardingStep> steps) {
         try {
             var issues = List.of(objectMapper.readValue(snapshot.getIssuesJson(), GuidedOnboardingApi.IssueResponse[].class));
-            return new GuidedOnboardingApi.OverviewResponse(code, snapshot.getSetupProgress(), snapshot.getDataQualityScore(), snapshot.getReadiness(), snapshot.getAssessedAt().toEpochMilli(), issues, stepViews(steps));
+            return new GuidedOnboardingApi.OverviewResponse(
+                    code,
+                    snapshot.getSetupProgress(),
+                    snapshot.getDataQualityScore(),
+                    snapshot.getReadiness(),
+                    snapshot.getAssessedAt().toEpochMilli(),
+                    issues,
+                    stepViews(steps)
+            );
         } catch (Exception ex) {
             log.error("Failed to deserialize onboarding assessment snapshot for code={}", code, ex);
             throw error("ONBOARDING_ASSESSMENT_INVALID", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -133,11 +137,12 @@ public class GuidedOnboardingService {
     }
 
     private Context context(String code, boolean lock) {
-        IndustryPack definition = packRepository.findByCodeAndStatus(code, "ACTIVE").orElseThrow(() -> error("INDUSTRY_PACK_NOT_FOUND", HttpStatus.NOT_FOUND));
-        TenantIndustryPack pack = (lock ? tenantPackRepository.findByPackIdForUpdate(definition.getId()) : tenantPackRepository.findByPackId(definition.getId())).orElseThrow(() -> error("INDUSTRY_PACK_NOT_INSTALLED", HttpStatus.CONFLICT));
+        IndustryPack definition = packRepository.findByCodeAndStatus(code, "ACTIVE")
+                .orElseThrow(() -> error("INDUSTRY_PACK_NOT_FOUND", HttpStatus.NOT_FOUND));
+        TenantIndustryPack pack = (lock ? tenantPackRepository.findByPackIdForUpdate(definition.getId()) : tenantPackRepository.findByPackId(definition.getId()))
+                .orElseThrow(() -> error("INDUSTRY_PACK_NOT_INSTALLED", HttpStatus.CONFLICT));
         return new Context(pack, stepRepository.findByTenantPackIdOrderBySequenceNo(pack.getId()));
     }
 
-    private record Context(TenantIndustryPack pack, List<IndustryOnboardingStep> steps) {
-    }
+    private record Context(TenantIndustryPack pack, List<IndustryOnboardingStep> steps) {}
 }
