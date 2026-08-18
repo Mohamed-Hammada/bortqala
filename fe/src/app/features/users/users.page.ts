@@ -26,10 +26,12 @@ import { AccessService } from './access.service';
 
 import { NAV_ITEMS, WORKSPACE_ORDER } from '../../core/navigation/app-navigation';
 
-export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = NAV_ITEMS.map((item) => ({
-  id: item.menuId,
-  labelKey: item.labelKey,
-}));
+export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = NAV_ITEMS
+  .filter((item) => item.showInPermissionEditor !== false)
+  .map((item) => ({
+    id: item.menuId,
+    labelKey: item.labelKey,
+  }));
 
 @Component({
   selector: 'app-users-page',
@@ -121,7 +123,9 @@ export class UsersPage {
 
   readonly menuGroups = WORKSPACE_ORDER.map((workspace) => ({
     titleKey: workspace,
-    ids: NAV_ITEMS.filter((item) => item.workspace === workspace).map((item) => item.menuId),
+    ids: NAV_ITEMS.filter(
+      (item) => item.workspace === workspace && item.showInPermissionEditor !== false,
+    ).map((item) => item.menuId),
   })).filter((group) => group.ids.length > 0);
 
   readonly catalogRoles = computed(() => {

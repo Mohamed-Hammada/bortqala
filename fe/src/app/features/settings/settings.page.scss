@@ -3,43 +3,6 @@
   margin: 0 auto;
 }
 
-.settings-nav-tabs {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 20px;
-  border-bottom: 2px solid var(--line, #e2e8f0);
-  padding-bottom: 4px;
-  overflow-x: auto;
-
-  .tab-btn {
-    background: transparent;
-    border: none;
-    border-bottom: 3px solid transparent;
-    padding: 10px 16px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--muted, #64748b);
-    cursor: pointer;
-    border-radius: 6px 6px 0 0;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-    min-height: 40px;
-
-    &:hover {
-      color: var(--ink, #1f2937);
-      background: rgba(0, 0, 0, 0.02);
-    }
-
-    &.active {
-      color: var(--gold);
-      border-bottom-color: var(--gold);
-      background: var(--surface);
-      font-weight: 700;
-    }
-  }
-}
-
 .settings-card {
   padding: 22px 24px;
   margin-bottom: 20px;
@@ -648,53 +611,6 @@
   align-items: center;
   gap: var(--space-2, 8px);
   margin-top: var(--space-2, 8px);
-}
-
-.settings-nav-tabs .tab-btn:hover {
-  background: var(--surface-hover);
-}
-
-/* UI5-07: categorized product-standard settings tabs */
-.settings-tab-groups {
-  display: grid;
-  gap: var(--space-2, 8px);
-  margin-bottom: var(--space-5, 20px);
-}
-
-.settings-tab-group {
-  justify-content: flex-start;
-}
-
-.settings-tab-group-admin {
-  background: color-mix(in srgb, var(--surface-muted) 82%, var(--canvas));
-}
-
-.settings-tab-group .app-tab {
-  min-height: 38px;
-}
-
-@media (max-width: 620px) {
-  .settings-tab-group .app-tab {
-    flex: 1 1 140px;
-  }
-}
-
-/* navigation-information-architecture-settings-groups */
-.settings-tab-groups {
-  display: grid;
-  gap: 0.9rem;
-}
-
-.settings-tab-group-block {
-  display: grid;
-  gap: 0.4rem;
-}
-
-.settings-tab-group-title {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  opacity: 0.72;
 }
 
 /* settings-submenu-refactor-layout */

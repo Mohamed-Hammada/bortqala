@@ -36,6 +36,8 @@ export interface NavItem {
   strictRoles?: boolean;
   /** Pages such as Settings/Audit should not be selectable as the normal landing page. */
   allowAsLandingPage?: boolean;
+  /** When false, this navigation item is not exposed in the user permission/menu editor. */
+  showInPermissionEditor?: boolean;
 }
 
 export interface WorkspaceSection {
@@ -346,6 +348,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['ADMIN', 'PROCUREMENT_MANAGER', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER'],
     permissionMenuId: 'settings',
     allowAsLandingPage: false,
+    showInPermissionEditor: false,
   },
 
   // Finance
@@ -445,6 +448,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN', 'ADMIN'],
     permissionMenuId: 'settings',
     allowAsLandingPage: false,
+    showInPermissionEditor: false,
   },
   {
     menuId: 'admin-product-insights',
@@ -456,6 +460,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ['SUPER_ADMIN', 'ADMIN'],
     permissionMenuId: 'settings',
     allowAsLandingPage: false,
+    showInPermissionEditor: false,
   },
   {
     menuId: 'settings',
@@ -478,6 +483,7 @@ export const NAV_ITEMS: NavItem[] = [
     permissionMenuId: 'settings',
     strictRoles: true,
     allowAsLandingPage: false,
+    showInPermissionEditor: false,
   },
 ];
 
@@ -500,7 +506,8 @@ export function canAccessNavigationItem(
   hasMenuAccess: (menuId: string) => boolean,
 ): boolean {
   if (roles.includes('SUPER_ADMIN')) return true;
-  if (roles.includes('ADMIN') && !item.strictRoles) return true;
-  const roleOk = !item.roles || item.roles.some((role) => roles.includes(role));
+  const roleOk = roles.includes('ADMIN') && !item.strictRoles
+    ? true
+    : !item.roles || item.roles.some((role) => roles.includes(role));
   return roleOk && hasMenuAccess(item.permissionMenuId ?? item.menuId);
 }

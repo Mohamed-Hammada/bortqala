@@ -52,10 +52,11 @@ describe('page access consistency', () => {
     }
   });
 
-  it('users page menu options cover every catalog contract menu id', () => {
+  it('users page menu options cover every manageable catalog contract menu id', () => {
     const optionIds = USER_MENU_OPTIONS.map((option) => option.id);
-    for (const contract of CATALOG_PAGE_CONTRACT) {
-      expect(optionIds, `menu ${contract.menuId} missing from users.page menuOptions`).toContain(contract.menuId);
+    const manageableNavItems = NAV_ITEMS.filter((item) => item.showInPermissionEditor !== false);
+    for (const item of manageableNavItems) {
+      expect(optionIds, `menu ${item.menuId} missing from users.page menuOptions`).toContain(item.menuId);
     }
   });
 
