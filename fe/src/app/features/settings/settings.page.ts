@@ -5,6 +5,7 @@ import { apiErrorMessage } from '../../core/api-error';
 import { AuthService } from '../../core/auth/auth.service';
 import { ExcelTableStyle, NotificationPreferences, TableDensity, ThemePreference } from '../../core/auth/auth.models';
 import { I18nService } from '../../core/i18n.service';
+import { LANDING_PAGE_ITEMS, canAccessNavigationItem } from '../../core/navigation/app-navigation';
 import { NotificationService } from '../../core/notification.service';
 import { WebPushService } from '../../core/notification-center/web-push.service';
 import { ActivatedRoute } from '@angular/router';
@@ -18,7 +19,7 @@ import { PartnerRiskSettingsComponent } from './partner-risk-settings.component'
 import { ProductAnalyticsSettingsComponent } from './product-analytics-settings.component';
 import { SubscriptionSettingsComponent } from './subscription-settings.component';
 
-export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports' | 'shortcuts' | 'translations' | 'entitlements' | 'industry' | 'trial' | 'onboarding' | 'risk' | 'analytics' | 'subscription';
+export type SettingsTab = 'appearance' | 'session' | 'security' | 'reports' | 'shortcuts' | 'translations' | 'entitlements' | 'industry' | 'trial' | 'onboarding' | 'risk' | 'analytics' | 'subscription' | 'business';
 
 const NOTIFICATION_KEY = 'bemo_notification_prefs';
 
@@ -68,16 +69,16 @@ export class SettingsPage {
   readonly maxRecentlyUsed = signal(this.authService.preferences().maxRecentlyUsed);
   readonly notificationPrefs = signal<NotificationPreferences>(loadNotificationPrefs());
 
-  readonly availablePages = [
-    { path: '/dashboard', labelKey: 'nav.dashboard' },
-    { path: '/employees', labelKey: 'nav.employees' },
-    { path: '/reports', labelKey: 'nav.reports' },
-    { path: '/payroll', labelKey: 'nav.payroll' },
-    { path: '/operations', labelKey: 'nav.operations' },
-    { path: '/parties', labelKey: 'nav.parties' },
-    { path: '/categories', labelKey: 'nav.categories' },
-    { path: '/imports', labelKey: 'nav.imports' },
-  ];
+  readonly availablePages = LANDING_PAGE_ITEMS
+    .filter((item) => {
+      const user = this.authService.user();
+      return !!user && canAccessNavigationItem(
+        item,
+        user.roles,
+        (menuId) => this.authService.hasMenuAccess(menuId),
+      );
+    })
+    .map((item) => ({ path: item.path, labelKey: item.labelKey }));
 
   async toggleShowFavorites(val: boolean) {
     this.showFavorites.set(val);
@@ -159,7 +160,7 @@ export class SettingsPage {
   constructor() {
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
     const allowedTab = !['translations','entitlements','industry','trial','subscription'].includes(tabParam ?? '') || this.authService.isSuperAdmin();
-    if (tabParam && allowedTab && ['appearance', 'session', 'security', 'reports', 'shortcuts', 'translations', 'entitlements', 'industry', 'trial', 'onboarding', 'risk', 'analytics','subscription'].includes(tabParam)) {
+    if (tabParam && allowedTab && ['appearance', 'session', 'security', 'business', 'reports', 'shortcuts', 'translations', 'entitlements', 'industry', 'trial', 'onboarding', 'risk', 'analytics','subscription'].includes(tabParam)) {
       this.activeTab.set(tabParam as SettingsTab);
     }
     if (this.authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) void this.loadAppSettings();

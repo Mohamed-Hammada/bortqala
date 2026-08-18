@@ -678,3 +678,22 @@
     flex: 1 1 140px;
   }
 }
+
+/* navigation-information-architecture-settings-groups */
+.settings-tab-groups {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.settings-tab-group-block {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.settings-tab-group-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  opacity: 0.72;
+}
+

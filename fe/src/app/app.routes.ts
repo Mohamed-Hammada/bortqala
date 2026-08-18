@@ -133,7 +133,7 @@ export const routes: Routes = [
       {
         path: 'approvals/definitions',
         canActivate: [roleGuard, menuAccessGuard],
-        data: { roles: ['ADMIN'], menuId: 'approvals-workflows' },
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'], menuId: 'approvals-workflows' },
         loadComponent: () =>
           import('./features/approvals/pages/workflow-definitions/workflow-definitions.component').then(
             (m) => m.WorkflowDefinitionsComponent,

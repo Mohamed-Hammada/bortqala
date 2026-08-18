@@ -1,0 +1,53 @@
+id;translation_key;locale;text_value
+v264-nav-ia-001;workspace.homeOverview;en-US;Home / Overview
+v264-nav-ia-002;workspace.homeOverview;ar-EG;الرئيسية / نظرة عامة
+v264-nav-ia-003;workspace.peopleHr;en-US;People & HR
+v264-nav-ia-004;workspace.peopleHr;ar-EG;الموارد البشرية والموظفون
+v264-nav-ia-005;workspace.attendanceTime;en-US;Attendance & Time
+v264-nav-ia-006;workspace.attendanceTime;ar-EG;الحضور والوقت
+v264-nav-ia-007;workspace.contractorWorkforce;en-US;Contractor Workforce
+v264-nav-ia-008;workspace.contractorWorkforce;ar-EG;عمالة المقاولين
+v264-nav-ia-009;workspace.approvalsWorkflow;en-US;Approvals & Workflow
+v264-nav-ia-010;workspace.approvalsWorkflow;ar-EG;الموافقات وسير العمل
+v264-nav-ia-011;workspace.supplyChainInventory;en-US;Supply Chain & Inventory
+v264-nav-ia-012;workspace.supplyChainInventory;ar-EG;سلسلة الإمداد والمخزون
+v264-nav-ia-013;workspace.salesCommercial;en-US;Sales / Commercial
+v264-nav-ia-014;workspace.salesCommercial;ar-EG;المبيعات والتجارة
+v264-nav-ia-015;workspace.manufacturingDomain;en-US;Manufacturing
+v264-nav-ia-016;workspace.manufacturingDomain;ar-EG;التصنيع
+v264-nav-ia-017;workspace.businessPartners;en-US;Business Partners / Master Data
+v264-nav-ia-018;workspace.businessPartners;ar-EG;شركاء الأعمال / البيانات الأساسية
+v264-nav-ia-019;workspace.financeAccounting;en-US;Finance
+v264-nav-ia-020;workspace.financeAccounting;ar-EG;المالية
+v264-nav-ia-021;workspace.administration;en-US;Administration
+v264-nav-ia-022;workspace.administration;ar-EG;الإدارة
+v264-nav-ia-023;nav.attendanceRulesCategories;en-US;Attendance Rules & Categories
+v264-nav-ia-024;nav.attendanceRulesCategories;ar-EG;قواعد وفئات الحضور
+v264-nav-ia-025;nav.attendanceRulesCategoriesHint;en-US;Manage attendance categories, schedules, workdays and working-hour rules.
+v264-nav-ia-026;nav.attendanceRulesCategoriesHint;ar-EG;إدارة فئات الحضور والجداول وأيام العمل وقواعد ساعات الدوام.
+v264-nav-ia-027;nav.biometricAttendanceIntegration;en-US;Biometric & Attendance Integration
+v264-nav-ia-028;nav.biometricAttendanceIntegration;ar-EG;تكامل البصمة والحضور
+v264-nav-ia-029;nav.biometricAttendanceIntegrationHint;en-US;Import biometric files, manage device integrations, synchronization and import history.
+v264-nav-ia-030;nav.biometricAttendanceIntegrationHint;ar-EG;استيراد ملفات البصمة وإدارة الأجهزة والمزامنة وسجل الاستيراد.
+v264-nav-ia-031;nav.attendanceReports;en-US;Attendance Reports
+v264-nav-ia-032;nav.attendanceReports;ar-EG;تقارير الحضور
+v264-nav-ia-033;nav.attendanceReportsHint;en-US;Review attendance periods, exceptions, evidence and report decisions.
+v264-nav-ia-034;nav.attendanceReportsHint;ar-EG;مراجعة فترات الحضور والاستثناءات والأدلة وقرارات التقارير.
+v264-nav-ia-035;nav.inventoryWarehouse;en-US;Inventory & Warehousing
+v264-nav-ia-036;nav.inventoryWarehouse;ar-EG;المخزون والمستودعات
+v264-nav-ia-037;nav.inventoryWarehouseHint;en-US;Manage items, stock balances, movements, transfers, cycle counts and inventory valuation.
+v264-nav-ia-038;nav.inventoryWarehouseHint;ar-EG;إدارة الأصناف والأرصدة والحركات والتحويلات والجرد وتقييم المخزون.
+v264-nav-ia-039;settings.groupPersonal;en-US;Personal Settings
+v264-nav-ia-040;settings.groupPersonal;ar-EG;الإعدادات الشخصية
+v264-nav-ia-041;settings.groupSecurityAdmin;en-US;Security & Administration
+v264-nav-ia-042;settings.groupSecurityAdmin;ar-EG;الأمان والإدارة
+v264-nav-ia-043;settings.groupBusinessGovernance;en-US;Business Governance
+v264-nav-ia-044;settings.groupBusinessGovernance;ar-EG;حوكمة الأعمال
+v264-nav-ia-045;settings.groupPlatformAdministration;en-US;Platform Administration
+v264-nav-ia-046;settings.groupPlatformAdministration;ar-EG;إدارة المنصة
+v264-nav-ia-047;settings.tabBusinessConfiguration;en-US;Business Configuration
+v264-nav-ia-048;settings.tabBusinessConfiguration;ar-EG;إعدادات الأعمال
+v264-nav-ia-049;settings.businessConfigurationTitle;en-US;Business & Domain Configuration
+v264-nav-ia-050;settings.businessConfigurationTitle;ar-EG;إعدادات الأعمال والمجالات
+v264-nav-ia-051;settings.businessConfigurationHint;en-US;Cross-domain policies are separated from session and password security settings. Prefer moving each policy into its owning domain when the dedicated setup screen is available.
+v264-nav-ia-052;settings.businessConfigurationHint;ar-EG;تم فصل سياسات الأعمال عن إعدادات الجلسة وكلمة المرور، ويفضل نقل كل سياسة إلى المجال الخاص بها عند توفر شاشة إعداد مخصصة.

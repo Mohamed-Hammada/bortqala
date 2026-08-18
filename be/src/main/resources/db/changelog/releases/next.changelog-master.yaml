@@ -405,4 +405,6 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260817_v263_inline_locale_i18n_cleanup.yaml
       relativeToChangelogFile: false
-
+  - include:
+      file: db/changelog/data/insert/20260817_v264_navigation_ia_openai.yaml
+      relativeToChangelogFile: false

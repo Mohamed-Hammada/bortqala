@@ -7,61 +7,62 @@
     </div>
   </header>
 
-  <!-- Settings tabs: categorized into daily/user settings and system/admin settings. -->
+  <!-- Settings tabs grouped by responsibility instead of one catch-all row. -->
   <div class="settings-tab-groups">
-    <nav class="app-tabs app-tabs-wrap settings-tab-group" [attr.aria-label]="i18n.t('settings.tabsAriaLabel', undefined, 'تبويبات الإعدادات')">
-      <button type="button" class="app-tab" [class.active]="activeTab() === 'appearance'" (click)="setTab('appearance')">
-        {{ i18n.t('settings.tabAppearance', undefined, 'المظهر واللغة') }}
-      </button>
-
-      @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
-        <button type="button" class="app-tab" [class.active]="activeTab() === 'session'" (click)="setTab('session')">
-          {{ i18n.t('settings.tabSession', undefined, 'الجلسة') }}
+    <div class="settings-tab-group-block">
+      <p class="settings-tab-group-title">{{ i18n.t('settings.groupPersonal') }}</p>
+      <nav class="app-tabs app-tabs-wrap settings-tab-group" [attr.aria-label]="i18n.t('settings.groupPersonal')">
+        <button type="button" class="app-tab" [class.active]="activeTab() === 'appearance'" (click)="setTab('appearance')">
+          {{ i18n.t('settings.tabAppearance', undefined, 'المظهر واللغة') }}
         </button>
-        <button type="button" class="app-tab" [class.active]="activeTab() === 'security'" (click)="setTab('security')">
-          {{ i18n.t('settings.tabSecurity', undefined, 'الأمان') }}
+        <button type="button" class="app-tab" [class.active]="activeTab() === 'reports'" (click)="setTab('reports')">
+          {{ i18n.t('settings.tabReports', undefined, 'التقارير والتصدير') }}
         </button>
-      }
+        <button type="button" class="app-tab" [class.active]="activeTab() === 'shortcuts'" (click)="setTab('shortcuts')" [attr.title]="i18n.t('shortcuts.subtitle')">
+          {{ i18n.t('settings.tabShortcuts') }}
+        </button>
+      </nav>
+    </div>
 
-      <button type="button" class="app-tab" [class.active]="activeTab() === 'reports'" (click)="setTab('reports')">
-        {{ i18n.t('settings.tabReports', undefined, 'التقارير والتصدير') }}
-      </button>
-
-      <button
-        type="button"
-        class="app-tab"
-        [class.active]="activeTab() === 'shortcuts'"
-        (click)="setTab('shortcuts')"
-        [attr.title]="i18n.t('shortcuts.subtitle')"
-      >
-        {{ i18n.t('settings.tabShortcuts') }}
-      </button>
-    </nav>
+    @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+      <div class="settings-tab-group-block">
+        <p class="settings-tab-group-title">{{ i18n.t('settings.groupSecurityAdmin') }}</p>
+        <nav class="app-tabs app-tabs-wrap settings-tab-group settings-tab-group-admin" [attr.aria-label]="i18n.t('settings.groupSecurityAdmin')">
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'session'" (click)="setTab('session')">
+            {{ i18n.t('settings.tabSession', undefined, 'الجلسة') }}
+          </button>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'security'" (click)="setTab('security')">
+            {{ i18n.t('settings.tabSecurity', undefined, 'الأمان') }}
+          </button>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'business'" (click)="setTab('business')">
+            {{ i18n.t('settings.tabBusinessConfiguration') }}
+          </button>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'onboarding'" (click)="setTab('onboarding')">{{ i18n.t('onboarding.tab') }}</button>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'analytics'" (click)="setTab('analytics')">{{ i18n.t('analytics.tab') }}</button>
+        </nav>
+      </div>
+    }
 
     @if (authService.hasAnyRole(['SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER','WORKFORCE_MANAGER','FINANCE_MANAGER'])) {
-      <nav class="app-tabs app-tabs-wrap settings-tab-group settings-tab-group-admin" [attr.aria-label]="i18n.t('settings.tabsAriaLabel', undefined, 'تبويبات الإعدادات')">
-        @if (authService.isSuperAdmin()) {
+      <div class="settings-tab-group-block">
+        <p class="settings-tab-group-title">{{ i18n.t('settings.groupBusinessGovernance') }}</p>
+        <nav class="app-tabs app-tabs-wrap settings-tab-group settings-tab-group-admin" [attr.aria-label]="i18n.t('settings.groupBusinessGovernance')">
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'risk'" (click)="setTab('risk')">{{ i18n.t('risk.tab') }}</button>
+        </nav>
+      </div>
+    }
+
+    @if (authService.isSuperAdmin()) {
+      <div class="settings-tab-group-block">
+        <p class="settings-tab-group-title">{{ i18n.t('settings.groupPlatformAdministration') }}</p>
+        <nav class="app-tabs app-tabs-wrap settings-tab-group settings-tab-group-admin" [attr.aria-label]="i18n.t('settings.groupPlatformAdministration')">
           <button type="button" class="app-tab" [class.active]="activeTab() === 'subscription'" (click)="setTab('subscription')">{{ i18n.t('subscription.tab') }}</button>
           <button type="button" class="app-tab" [class.active]="activeTab() === 'trial'" (click)="setTab('trial')">{{ i18n.t('trialDemo.tab') }}</button>
           <button type="button" class="app-tab" [class.active]="activeTab() === 'industry'" (click)="setTab('industry')">{{ i18n.t('industryPack.tab') }}</button>
           <button type="button" class="app-tab" [class.active]="activeTab() === 'entitlements'" (click)="setTab('entitlements')">{{ i18n.t('entitlements.tab') }}</button>
-          <button type="button" class="app-tab" [class.active]="activeTab() === 'translations'" (click)="setTab('translations')">
-            {{ i18n.t('translations.menu', undefined, 'إدارة الترجمات') }}
-          </button>
-        }
-
-        @if (authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
-          <button type="button" class="app-tab" [class.active]="activeTab() === 'onboarding'" (click)="setTab('onboarding')">{{ i18n.t('onboarding.tab') }}</button>
-        }
-
-        @if (authService.hasAnyRole(['SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER','WORKFORCE_MANAGER','FINANCE_MANAGER'])) {
-          <button type="button" class="app-tab" [class.active]="activeTab() === 'risk'" (click)="setTab('risk')">{{ i18n.t('risk.tab') }}</button>
-        }
-
-        @if (authService.hasAnyRole(['SUPER_ADMIN','ADMIN'])) {
-          <button type="button" class="app-tab" [class.active]="activeTab() === 'analytics'" (click)="setTab('analytics')">{{ i18n.t('analytics.tab') }}</button>
-        }
-      </nav>
+          <button type="button" class="app-tab" [class.active]="activeTab() === 'translations'" (click)="setTab('translations')">{{ i18n.t('translations.menu', undefined, 'إدارة الترجمات') }}</button>
+        </nav>
+      </div>
     }
   </div>
 @if (activeTab() === 'entitlements' && authService.isSuperAdmin()) { <app-entitlement-settings /> }
@@ -302,58 +303,6 @@
         </div>
       </fieldset>
 
-      <fieldset class="settings-group">
-        <legend class="group-title">{{ i18n.t('settings.attendanceAnomalyTitle') }}</legend>
-        <p class="group-hint">{{ i18n.t('settings.attendanceAnomalyHint') }}</p>
-        <div class="field session-timeout-field">
-          <label for="attendance-anomaly-threshold">{{ i18n.t('settings.attendanceAnomalyPercentLabel') }}</label>
-          <input
-            id="attendance-anomaly-threshold"
-            class="ltr"
-            type="number"
-            min="1"
-            max="100"
-            formControlName="attendanceAnomalyThresholdPercent"
-          />
-          <small class="field-hint session-hint">{{ i18n.t('settings.attendanceAnomalyDefaultHint') }}</small>
-        </div>
-      </fieldset>
-
-      @if (authService.isSuperAdmin()) {
-        <fieldset class="settings-group">
-          <legend class="group-title">{{ i18n.t('settings.dashboardPolicyTitle') }}</legend>
-          <label class="selectable-card">
-            <input type="checkbox" formControlName="adminDashboardCustomizationEnabled" />
-            <span>
-              <strong>{{ i18n.t('settings.adminDashboardCustomization') }}</strong>
-              <small>{{ i18n.t('settings.adminDashboardCustomizationHint') }}</small>
-            </span>
-          </label>
-        </fieldset>
-      }
-
-      <fieldset class="settings-group">
-        <legend class="group-title">{{ i18n.t('settings.procurementNumberingTitle') }}</legend>
-        <label class="selectable-card">
-          <input type="checkbox" formControlName="automaticProcurementNumbering" />
-          <span>
-            <strong>{{ i18n.t('settings.procurementNumberingAutomatic') }}</strong>
-            <small>{{ i18n.t('settings.procurementNumberingHint') }}</small>
-          </span>
-        </label>
-      </fieldset>
-
-      <fieldset class="settings-group">
-        <legend class="group-title">{{ i18n.t('settings.documentNumberingTitle') }}</legend>
-        <label class="selectable-card">
-          <input type="checkbox" formControlName="automaticDocumentNumbering" />
-          <span>
-            <strong>{{ i18n.t('settings.documentNumberingAutomatic') }}</strong>
-            <small>{{ i18n.t('settings.documentNumberingHint') }}</small>
-          </span>
-        </label>
-      </fieldset>
-
       <div class="settings-toolbar">
         <button
           class="button primary"
@@ -366,6 +315,61 @@
     </form>
   }
 
+  <!-- Business/domain policy settings are intentionally separated from Session/Security. -->
+  @if (activeTab() === 'business' && authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+    <form class="card settings-card admin-settings" [formGroup]="appSettingsForm" (ngSubmit)="saveAppSettings()">
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.businessConfigurationTitle') }}</legend>
+        <p class="group-hint">{{ i18n.t('settings.businessConfigurationHint') }}</p>
+      </fieldset>
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.attendanceAnomalyTitle') }}</legend>
+        <p class="group-hint">{{ i18n.t('settings.attendanceAnomalyHint') }}</p>
+        <div class="field session-timeout-field">
+          <label for="attendance-anomaly-threshold">{{ i18n.t('settings.attendanceAnomalyPercentLabel') }}</label>
+          <input id="attendance-anomaly-threshold" class="ltr" type="number" min="1" max="100" formControlName="attendanceAnomalyThresholdPercent" />
+          <small class="field-hint session-hint">{{ i18n.t('settings.attendanceAnomalyDefaultHint') }}</small>
+        </div>
+      </fieldset>
+      @if (authService.isSuperAdmin()) {
+        <fieldset class="settings-group">
+          <legend class="group-title">{{ i18n.t('settings.dashboardPolicyTitle') }}</legend>
+          <label class="selectable-card">
+            <input type="checkbox" formControlName="adminDashboardCustomizationEnabled" />
+            <span>
+              <strong>{{ i18n.t('settings.adminDashboardCustomization') }}</strong>
+              <small>{{ i18n.t('settings.adminDashboardCustomizationHint') }}</small>
+            </span>
+          </label>
+        </fieldset>
+      }
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.procurementNumberingTitle') }}</legend>
+        <label class="selectable-card">
+          <input type="checkbox" formControlName="automaticProcurementNumbering" />
+          <span>
+            <strong>{{ i18n.t('settings.procurementNumberingAutomatic') }}</strong>
+            <small>{{ i18n.t('settings.procurementNumberingHint') }}</small>
+          </span>
+        </label>
+      </fieldset>
+      <fieldset class="settings-group">
+        <legend class="group-title">{{ i18n.t('settings.documentNumberingTitle') }}</legend>
+        <label class="selectable-card">
+          <input type="checkbox" formControlName="automaticDocumentNumbering" />
+          <span>
+            <strong>{{ i18n.t('settings.documentNumberingAutomatic') }}</strong>
+            <small>{{ i18n.t('settings.documentNumberingHint') }}</small>
+          </span>
+        </label>
+      </fieldset>
+      <div class="settings-toolbar">
+        <button class="button primary" type="submit" [disabled]="appSettingsLoading() || appSettingsSaving() || appSettingsForm.invalid">
+          💾 {{ i18n.t('settings.saveAllSystemSettings', undefined, 'حفظ جميع الإعدادات') }}
+        </button>
+      </div>
+    </form>
+  }
   <!-- Tab 3: Security & Password Policy (Admin only) -->
   @if (activeTab() === 'security' && authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
     <form
