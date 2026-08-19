@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819_v288_gl_project_dimension_schema
+      author: wolfn
+      changes:
+        - addColumn:
+            tableName: journal_dimensions
+            columns:
+              - column:
+                  name: wbs_node_id
+                  type: VARCHAR(36)
+              - column:
+                  name: cost_code_id
+                  type: VARCHAR(36)
+        - addColumn:
+            tableName: journal_entries
+            columns:
+              - column:
+                  name: project_id
+                  type: VARCHAR(36)
+              - column:
+                  name: wbs_node_id
+                  type: VARCHAR(36)
+              - column:
+                  name: cost_code_id
+                  type: VARCHAR(36)
+        - addColumn:
+            tableName: journal_entry_lines
+            columns:
+              - column:
+                  name: project_id
+                  type: VARCHAR(36)
+              - column:
+                  name: wbs_node_id
+                  type: VARCHAR(36)
+              - column:
+                  name: cost_code_id
+                  type: VARCHAR(36)

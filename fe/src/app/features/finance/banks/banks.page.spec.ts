@@ -62,6 +62,9 @@ describe('BanksPage reconciliation', () => {
     http.expectOne('/api/v1/finance/accounts').flush([]);
     http.expectOne('/api/v1/finance/bank-reconciliation/statements').flush([workbench().statement]);
     http.expectOne('/api/v1/finance/bank-reconciliation/cash-position').flush({ accounts: [], totalsByCurrency: { EGP: 895 } });
+    http.expectOne('/api/v1/finance/treasury/cashboxes').flush([]);
+    http.expectOne('/api/v1/finance/treasury/cheques').flush([]);
+    http.expectOne('/api/v1/finance/treasury/liquidity-summary').flush(null);
   }
 
   function workbench() {

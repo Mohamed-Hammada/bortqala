@@ -50,6 +50,12 @@ public class JournalEntry {
     private String approvedBy;
     @Column(name = "rejection_reason", length = 500)
     private String rejectionReason;
+    @Column(name = "project_id", length = 36)
+    private String projectId;
+    @Column(name = "wbs_node_id", length = 36)
+    private String wbsNodeId;
+    @Column(name = "cost_code_id", length = 36)
+    private String costCodeId;
     @Column(name = "posted_at")
     private Long postedAt;
     @Column(name = "created_at", nullable = false)
@@ -237,6 +243,24 @@ public class JournalEntry {
 
     public long getUpdatedAt() {
         return updatedAt;
+    }
+
+    public void assignProject(String projectId, String wbsNodeId, String costCodeId) {
+        this.projectId = projectId == null || projectId.isBlank() ? null : projectId.strip();
+        this.wbsNodeId = wbsNodeId == null || wbsNodeId.isBlank() ? null : wbsNodeId.strip();
+        this.costCodeId = costCodeId == null || costCodeId.isBlank() ? null : costCodeId.strip();
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public String getWbsNodeId() {
+        return wbsNodeId;
+    }
+
+    public String getCostCodeId() {
+        return costCodeId;
     }
 
     public long getVersion() {

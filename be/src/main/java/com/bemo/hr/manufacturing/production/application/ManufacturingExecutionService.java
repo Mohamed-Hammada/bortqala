@@ -62,6 +62,16 @@ public class ManufacturingExecutionService {
     }
 
     @Transactional(readOnly = true)
+    public List<WorkCenter> listWorkCenters() {
+        return workCenterRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
+    public List<RoutingHeader> listRoutings() {
+        return routingHeaderRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public List<ProductionReceipt> getReceiptsForOrder(String productionOrderId) {
         log.debug("getReceiptsForOrder called with productionOrderId={}", productionOrderId);
         return receiptRepository.findByProductionOrderId(productionOrderId);

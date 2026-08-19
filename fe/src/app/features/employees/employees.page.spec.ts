@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
 import { EmployeesPage } from './employees.page';
 import { ConfirmDialogService } from '../../core/confirm-dialog.service';
@@ -91,5 +91,53 @@ describe('EmployeesPage drawer dirty-check', () => {
     vi.spyOn(notification, 'warning');
     await component.submit();
     expect(notification.warning).toHaveBeenCalledWith('employees.activeToBeforeActiveFrom');
+  });
+
+  it('opens contracts modal and loads contracts list', async () => {
+    const { component } = createPage();
+    const http = TestBed.inject(HttpTestingController);
+
+    const emp: import('./employees.models').Employee = {
+      id: 'emp-101',
+      employeeCode: 'EMP-101',
+      fullName: 'Ahmed Ali',
+      deviceUserId: '101',
+      categoryId: 'cat-1',
+      categoryName: 'Engineering',
+      employmentType: 'FIXED',
+      baseSalary: 12000,
+      activeFrom: 1000,
+      activeTo: null,
+      active: true,
+      version: 1,
+    };
+
+    const promise = component.openContracts(emp);
+    expect(component.contractsModalOpen()).toBe(true);
+
+    const req = http.expectOne('/api/v1/employees/emp-101/contracts');
+    req.flush([
+      {
+        id: 'cnt-1',
+        contractNumber: 'CNT-2026-001',
+        employeeId: 'emp-101',
+        contractType: 'PERMANENT',
+        status: 'ACTIVE',
+        startDate: '2026-01-01',
+        basicSalary: 10000,
+        housingAllowance: 1500,
+        transportationAllowance: 500,
+        otherAllowances: 0,
+        grossSalary: 12000,
+        noticePeriodDays: 30,
+        createdAt: 1000,
+        updatedAt: 1000,
+        version: 1,
+      },
+    ]);
+
+    await promise;
+    expect(component.contractsList().length).toBe(1);
+    expect(component.contractsList()[0].contractNumber).toBe('CNT-2026-001');
   });
 });

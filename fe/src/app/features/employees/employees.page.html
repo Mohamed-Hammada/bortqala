@@ -93,8 +93,9 @@
               </td>
               <td>
                 <div class="row-actions">
-                  <button (click)="openEdit(item)" [attr.aria-label]="i18n.t('common.edit')" [attr.title]="i18n.t('common.edit')">✎</button
-                  >@if (item.active) {
+                  <button (click)="openContracts(item)" [attr.aria-label]="i18n.t('employees.contractsBtn')" [attr.title]="i18n.t('employees.contractsBtn')">📜</button>
+                  <button (click)="openEdit(item)" [attr.aria-label]="i18n.t('common.edit')" [attr.title]="i18n.t('common.edit')">✎</button>
+                  @if (item.active) {
                     <button
                       class="danger-link"
                       (click)="deactivate(item)"
@@ -246,6 +247,220 @@
       <button class="button secondary" type="button" (click)="closeDrawer()">
         {{ i18n.t('common.cancel') }}
       </button>
+    </div>
+  </app-modal-dialog>
+
+  <!-- Contracts Workbench Modal -->
+  <app-modal-dialog
+    [isOpen]="contractsModalOpen()"
+    [title]="i18n.t('contracts.title') + ': ' + (selectedEmployeeForContracts()?.fullName ?? '')"
+    size="wide"
+    (close)="closeContractsModal()"
+  >
+    <div class="contracts-workbench">
+      <div class="contracts-header">
+        <div class="emp-summary-badge">
+          <strong>{{ selectedEmployeeForContracts()?.fullName }}</strong>
+          <span class="ltr"><code>{{ selectedEmployeeForContracts()?.employeeCode }}</code></span>
+        </div>
+        <button class="button primary" type="button" (click)="openCreateContract()">
+          ＋ {{ i18n.t('contracts.addContract') }}
+        </button>
+      </div>
+
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('contracts.contractNumber') }}</th>
+              <th>{{ i18n.t('contracts.contractType') }}</th>
+              <th>{{ i18n.t('contracts.status') }}</th>
+              <th>{{ i18n.t('contracts.startDate') }}</th>
+              <th>{{ i18n.t('contracts.endDate') }}</th>
+              <th>{{ i18n.t('contracts.basicSalary') }}</th>
+              <th>{{ i18n.t('contracts.grossSalary') }}</th>
+              <th>{{ i18n.t('contracts.jobTitle') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of contractsList(); track c.id) {
+              <tr>
+                <td><strong class="ltr">{{ c.contractNumber }}</strong></td>
+                <td><span class="status neutral">{{ contractTypeLabel(c.contractType) }}</span></td>
+                <td>
+                  <span
+                    class="status"
+                    [class.success]="c.status === 'ACTIVE'"
+                    [class.info]="c.status === 'AMENDED'"
+                    [class.warning]="c.status === 'EXPIRED'"
+                    [class.danger]="c.status === 'TERMINATED'"
+                  >
+                    {{ contractStatusLabel(c.status) }}
+                  </span>
+                </td>
+                <td class="ltr">{{ c.startDate }}</td>
+                <td class="ltr">{{ c.endDate ?? '—' }}</td>
+                <td class="ltr"><strong>{{ c.basicSalary | number:'1.2-2' }}</strong> <small class="ltr">{{ i18n.t('parties.currencyEgp') }}</small></td>
+                <td class="ltr"><strong class="success-text">{{ c.grossSalary | number:'1.2-2' }}</strong> <small class="ltr">{{ i18n.t('parties.currencyEgp') }}</small></td>
+                <td>{{ c.jobTitle ?? '—' }}</td>
+                <td>
+                  <div class="row-actions">
+                    @if (c.status === 'ACTIVE') {
+                      <button class="primary" (click)="openAmendContract(c)" [attr.title]="i18n.t('contracts.amend')">✎ {{ i18n.t('contracts.amend') }}</button>
+                      <button class="danger-link" (click)="openTerminateContract(c)" [attr.title]="i18n.t('contracts.terminate')">✕ {{ i18n.t('contracts.terminate') }}</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="9">
+                  <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Contract Drawer for Create / Amend / Terminate -->
+      @if (contractDrawerOpen()) {
+        <div class="contract-action-card">
+          <div class="contract-action-header">
+            <h3>{{ contractDrawerMode() === 'CREATE' ? i18n.t('contracts.addContract') : contractDrawerMode() === 'AMEND' ? i18n.t('contracts.amend') : i18n.t('contracts.terminate') }}</h3>
+            <button class="button secondary btn-sm" type="button" (click)="closeContractDrawer()">✕</button>
+          </div>
+
+          @if (contractDrawerMode() === 'CREATE') {
+            <form [formGroup]="contractForm" (ngSubmit)="submitContract()">
+              <div class="dialog-form-grid">
+                <div class="field">
+                  <label>{{ i18n.t('contracts.contractNumber') }}</label>
+                  <input class="ltr" formControlName="contractNumber" placeholder="CNT-2026-XXXX" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.contractType') }} *</label>
+                  <select formControlName="contractType">
+                    <option value="PERMANENT">{{ i18n.t('contracts.permanent') }}</option>
+                    <option value="FIXED_TERM">{{ i18n.t('contracts.fixedTerm') }}</option>
+                    <option value="PROBATIONARY">{{ i18n.t('contracts.probationary') }}</option>
+                    <option value="PART_TIME">{{ i18n.t('contracts.partTime') }}</option>
+                    <option value="CONSULTANT">{{ i18n.t('contracts.consultant') }}</option>
+                    <option value="SEASONAL">{{ i18n.t('contracts.seasonal') }}</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.startDate') }} *</label>
+                  <input type="date" formControlName="startDate" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.endDate') }}</label>
+                  <input type="date" formControlName="endDate" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.probationEndDate') }}</label>
+                  <input type="date" formControlName="probationEndDate" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.noticePeriod') }}</label>
+                  <input class="ltr" type="number" formControlName="noticePeriodDays" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.basicSalary') }} *</label>
+                  <input class="ltr" type="number" formControlName="basicSalary" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.housingAllowance') }}</label>
+                  <input class="ltr" type="number" formControlName="housingAllowance" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.transportAllowance') }}</label>
+                  <input class="ltr" type="number" formControlName="transportationAllowance" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.otherAllowances') }}</label>
+                  <input class="ltr" type="number" formControlName="otherAllowances" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.jobTitle') }}</label>
+                  <input formControlName="jobTitle" />
+                </div>
+                <div class="field span-2">
+                  <label>{{ i18n.t('common.notes') }}</label>
+                  <textarea formControlName="notes"></textarea>
+                </div>
+              </div>
+              <div class="drawer-actions">
+                <button class="button secondary" type="button" (click)="closeContractDrawer()">{{ i18n.t('common.cancel') }}</button>
+                <button class="button primary" type="submit" [disabled]="contractForm.invalid">{{ i18n.t('common.save') }}</button>
+              </div>
+            </form>
+          }
+
+          @if (contractDrawerMode() === 'AMEND') {
+            <form [formGroup]="amendForm" (ngSubmit)="submitAmend()">
+              <div class="dialog-form-grid">
+                <div class="field">
+                  <label>{{ i18n.t('contracts.contractNumber') }}</label>
+                  <input class="ltr" formControlName="newContractNumber" placeholder="CNT-2026-XXXX-A1" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.basicSalary') }} *</label>
+                  <input class="ltr" type="number" formControlName="basicSalary" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.housingAllowance') }}</label>
+                  <input class="ltr" type="number" formControlName="housingAllowance" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.transportAllowance') }}</label>
+                  <input class="ltr" type="number" formControlName="transportationAllowance" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.otherAllowances') }}</label>
+                  <input class="ltr" type="number" formControlName="otherAllowances" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.jobTitle') }}</label>
+                  <input formControlName="jobTitle" />
+                </div>
+                <div class="field">
+                  <label>{{ i18n.t('contracts.endDate') }}</label>
+                  <input type="date" formControlName="endDate" />
+                </div>
+                <div class="field span-2">
+                  <label>{{ i18n.t('contracts.amend') }} - {{ i18n.t('common.notes') }} *</label>
+                  <textarea formControlName="amendmentReason"></textarea>
+                </div>
+              </div>
+              <div class="drawer-actions">
+                <button class="button secondary" type="button" (click)="closeContractDrawer()">{{ i18n.t('common.cancel') }}</button>
+                <button class="button primary" type="submit" [disabled]="amendForm.invalid">{{ i18n.t('common.save') }}</button>
+              </div>
+            </form>
+          }
+
+          @if (contractDrawerMode() === 'TERMINATE') {
+            <form [formGroup]="terminateForm" (ngSubmit)="submitTerminate()">
+              <div class="dialog-form-grid">
+                <div class="field">
+                  <label>{{ i18n.t('contracts.endDate') }} *</label>
+                  <input type="date" formControlName="terminationDate" />
+                </div>
+                <div class="field span-2">
+                  <label>{{ i18n.t('contracts.terminate') }} - {{ i18n.t('common.notes') }} *</label>
+                  <textarea formControlName="reason"></textarea>
+                </div>
+              </div>
+              <div class="drawer-actions">
+                <button class="button secondary" type="button" (click)="closeContractDrawer()">{{ i18n.t('common.cancel') }}</button>
+                <button class="button danger" type="submit" [disabled]="terminateForm.invalid">{{ i18n.t('contracts.terminate') }}</button>
+              </div>
+            </form>
+          }
+        </div>
+      }
     </div>
   </app-modal-dialog>
 </section>

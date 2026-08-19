@@ -58,6 +58,8 @@ public class InventoryItem {
 
     public InventoryItem(String code, String name, String itemType, String unitCode) {
         this.id = UUID.randomUUID().toString();
+        this.createdAt = Instant.now();
+        this.updatedAt = this.createdAt;
         update(code, name, itemType, unitCode, true);
     }
 

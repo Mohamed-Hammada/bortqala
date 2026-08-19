@@ -489,4 +489,43 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260819_v287_inventory_site_warehouse_translations.yaml
       relativeToChangelogFile: false
+  # P0_GENERAL_LEDGER_ACCOUNTING_20260819: Feature 10 General Ledger & Financial Accounting
+  - include:
+      file: db/changelog/schema/alter/20260819_v288_gl_project_dimension_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v289_gl_project_dimension_translations.yaml
+      relativeToChangelogFile: false
+  # P1_TREASURY_BANKS_CASH_CHECKS_20260819: Feature 11 Treasury, Banks, Cash & Cheques
+  - include:
+      file: db/changelog/schema/create/20260819_v290_treasury_cash_cheque_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v291_treasury_cash_cheque_translations.yaml
+      relativeToChangelogFile: false
+  # P1_AR_AP_PARTY_FINANCIAL_POSITION_20260819: Feature 12 AR/AP & Business Party Financial Positions
+  - include:
+      file: db/changelog/schema/alter/20260819_v292_party_credit_financial_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v293_party_financial_position_translations.yaml
+      relativeToChangelogFile: false
+  # P1_FINANCIAL_STATEMENTS_CLOSE_COST_CENTERS_20260819: Feature 13 Financial Statements, Period Close & Cost Centers
+  - include:
+      file: db/changelog/schema/create/20260819_v294_cost_centers_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v295_cost_centers_translations.yaml
+      relativeToChangelogFile: false
+  # P0_MANUFACTURING_BOM_ROUTING_PRODUCTION_20260819: Feature 14 Manufacturing BOM, Routing & Work Orders
+  - include:
+      file: db/changelog/data/insert/20260819_v296_manufacturing_translations.yaml
+      relativeToChangelogFile: false
+  # P1_HR_EMPLOYEE_MASTER_CONTRACTS_20260819: Feature 16 HR Employee Master & Employment Contracts
+  - include:
+      file: db/changelog/schema/create/20260819_v297_employee_contracts_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v298_employee_contracts_translations.yaml
+      relativeToChangelogFile: false
 

@@ -91,6 +91,9 @@ describe('OperationsStore', () => {
     httpMock.expectOne('/api/v1/operations/cycle-counts').flush([]);
     httpMock.expectOne('/api/v1/inventory/warehouses').flush([]);
     httpMock.expectOne('/api/v1/operations/transfers').flush([]);
+    httpMock.expectOne('/api/v1/operations/analytics/aging').flush(null);
+    httpMock.expectOne('/api/v1/operations/analytics/dead-stock').flush([]);
+    httpMock.expectOne('/api/v1/operations/analytics/reorder-alerts').flush([]);
 
     expect(await promise).toBe(true);
     expect(store.valuation()?.policy.valuationMethod).toBe('FIFO');
@@ -117,5 +120,14 @@ describe('OperationsStore', () => {
     });
     expect(await promise).toBe(true);
     expect(store.bins()[0].binCode).toBe('A-01');
+  });
+
+  it('looks up item by barcode', async () => {
+    const promise = store.lookupBarcode('123456');
+    httpMock.expectOne('/api/v1/operations/analytics/barcode-lookup?barcode=123456').flush({
+      itemId: 'item-1', itemCode: 'ITM-01', itemName: 'Cement', matchedBarcode: '123456', matchType: 'PRIMARY',
+    });
+    const result = await promise;
+    expect(result?.itemCode).toBe('ITM-01');
   });
 });

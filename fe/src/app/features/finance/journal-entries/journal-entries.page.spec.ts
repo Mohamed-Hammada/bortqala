@@ -51,6 +51,7 @@ describe('JournalEntriesPage', () => {
       .expectOne((req) => req.url === '/api/v1/finance/journal-entries')
       .flush({ content: [], totalElements: 0 });
     httpMock.expectOne((req) => req.url === '/api/v1/finance/accounts').flush([]);
+    httpMock.expectOne((req) => req.url === '/api/v1/projects').flush([]);
     httpMock.expectOne((req) => req.url === '/api/v1/finance/numbering-settings').flush({
       automaticNumbering: true,
     });

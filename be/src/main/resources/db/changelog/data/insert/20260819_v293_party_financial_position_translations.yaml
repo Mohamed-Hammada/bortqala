@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819_v293_party_financial_position_translations
+      author: wolfn
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260819_v293_party_financial_position_translations.csv
+            separator: ";"
+            columns:
+              - column:
+                  name: id
+                  type: STRING
+              - column:
+                  name: translation_key
+                  type: STRING
+              - column:
+                  name: locale
+                  type: STRING
+              - column:
+                  name: text_value
+                  type: STRING

@@ -1,0 +1,57 @@
+id;translation_key;locale;text_value
+v293-001;parties.financialPositionTitle;ar-EG;الموقف المالي للطرف التجاري
+v293-002;parties.financialPositionTitle;en-US;Business Party Financial Position
+v293-003;parties.statementTitle;ar-EG;كشف حساب الطرف والتعاملات
+v293-004;parties.statementTitle;en-US;Party Statement of Account
+v293-005;parties.agingTitle;ar-EG;تقرير أعمار الديون والمستحقات
+v293-006;parties.agingTitle;en-US;AR/AP Aging Report
+v293-007;parties.reconciliationTitle;ar-EG;مطابقة أستاذ المساعد بحساب المراقبة
+v293-008;parties.reconciliationTitle;en-US;Subledger to GL Control Reconciliation
+v293-009;parties.openingBalance;ar-EG;رصيد أول المدة
+v293-010;parties.openingBalance;en-US;Opening Balance
+v293-011;parties.totalDebits;ar-EG;إجمالي المدين (فواتير/مطالبات)
+v293-012;parties.totalDebits;en-US;Total Debits (Invoiced/Claims)
+v293-013;parties.totalCredits;ar-EG;إجمالي الدائن (سدادات/دفعات)
+v293-014;parties.totalCredits;en-US;Total Credits (Payments/Receipts)
+v293-015;parties.netBalance;ar-EG;صافي الرصيد الختامي
+v293-016;parties.netBalance;en-US;Net Closing Balance
+v293-017;parties.retentionHeld;ar-EG;محتجز ضمان الأعمال (تأمين نهائي)
+v293-018;parties.retentionHeld;en-US;Retention Guarantee Held
+v293-019;parties.unappliedCash;ar-EG;دفعات نقدية غير موزعة
+v293-020;parties.unappliedCash;en-US;Unapplied Cash/Receipts
+v293-021;parties.creditLimit;ar-EG;الحد الائتماني المسموح
+v293-022;parties.creditLimit;en-US;Approved Credit Limit
+v293-023;parties.creditHold;ar-EG;إيقاف التعامل الائتماني
+v293-024;parties.creditHold;en-US;Credit Hold
+v293-025;parties.creditStatus;ar-EG;حالة الائتمان
+v293-026;parties.creditStatus;en-US;Credit Status
+v293-027;parties.currentNotDue;ar-EG;رصيد ساري غير مستحق
+v293-028;parties.currentNotDue;en-US;Current / Not Due
+v293-029;parties.bucket1To30;ar-EG;متأخر (1 - 30 يوم)
+v293-030;parties.bucket1To30;en-US;Overdue (1 - 30 Days)
+v293-031;parties.bucket31To60;ar-EG;متأخر (31 - 60 يوم)
+v293-032;parties.bucket31To60;en-US;Overdue (31 - 60 Days)
+v293-033;parties.bucket61To90;ar-EG;متأخر (61 - 90 يوم)
+v293-034;parties.bucket61To90;en-US;Overdue (61 - 90 Days)
+v293-035;parties.bucket90Plus;ar-EG;متأخر لأكثر من 90 يوم
+v293-036;parties.bucket90Plus;en-US;Overdue (90+ Days)
+v293-037;parties.totalOverdue;ar-EG;إجمالي المتأخرات
+v293-038;parties.totalOverdue;en-US;Total Overdue
+v293-039;parties.runningBalance;ar-EG;الرصيد التراكمي
+v293-040;parties.runningBalance;en-US;Running Balance
+v293-041;parties.documentType;ar-EG;نوع المستند
+v293-042;parties.documentType;en-US;Document Type
+v293-043;parties.documentNumber;ar-EG;رقم المستند
+v293-044;parties.documentNumber;en-US;Document Number
+v293-045;parties.viewStatement;ar-EG;كشف الحساب
+v293-046;parties.viewStatement;en-US;Statement
+v293-047;parties.viewFinancialPosition;ar-EG;الموقف المالي
+v293-048;parties.viewFinancialPosition;en-US;Financial Position
+v293-049;parties.subledgerTotal;ar-EG;إجمالي أستاذ المساعد
+v293-050;parties.subledgerTotal;en-US;Subledger Total
+v293-051;parties.glControlBalance;ar-EG;رصيد حساب المراقبة بالعامة
+v293-052;parties.glControlBalance;en-US;GL Control Account Balance
+v293-053;parties.variance;ar-EG;فارق المطابقة
+v293-054;parties.variance;en-US;Variance
+v293-055;parties.reconciledStatus;ar-EG;حالة المطابقة
+v293-056;parties.reconciledStatus;en-US;Reconciliation Status

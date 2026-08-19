@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819_v292_party_credit_financial_schema
+      author: wolfn
+      changes:
+        - addColumn:
+            tableName: business_parties
+            columns:
+              - column:
+                  name: credit_limit
+                  type: "DECIMAL(19, 4)"
+                  defaultValueNumeric: 0
+              - column:
+                  name: credit_hold
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+              - column:
+                  name: payment_terms_days
+                  type: INT
+                  defaultValueNumeric: 30

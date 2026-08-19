@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -7,6 +8,7 @@ import { NotificationService } from '../../../core/notification.service';
 import { apiErrorMessage } from '../../../core/api-error';
 import { ModalDialogComponent } from '../../../shared/ui/modal-dialog/modal-dialog.component';
 import { SampleTemplateService } from '../../../core/sample-template.service';
+import { formatDate } from '../../../core/date';
 
 export interface BankAccount {
   id: string;
@@ -19,6 +21,57 @@ export interface BankAccount {
   active: boolean;
 }
 
+export interface Cashbox {
+  id: string;
+  code: string;
+  name: string;
+  branchId?: string;
+  currency: string;
+  custodianUserId?: string;
+  glAccountId?: string;
+  currentBalance: number;
+  active: boolean;
+  createdAt: number;
+}
+
+export interface CashboxTransaction {
+  id: string;
+  cashboxId: string;
+  transactionType: 'RECEIPT' | 'PAYMENT' | 'PETTY_CASH_ADVANCE' | 'PETTY_CASH_SETTLEMENT' | 'PHYSICAL_COUNT_ADJUSTMENT';
+  amount: number;
+  voucherNumber?: string;
+  counterpartyPartyId?: string;
+  description?: string;
+  status: string;
+  transactionDate: number;
+}
+
+export interface CommercialCheque {
+  id: string;
+  chequeNumber: string;
+  chequeType: 'RECEIVED' | 'ISSUED';
+  bankName?: string;
+  bankAccountId?: string;
+  drawerPayeeName: string;
+  partyId?: string;
+  amount: number;
+  currency: string;
+  issueDate: number;
+  dueDate: number;
+  status: 'RECEIVED' | 'ISSUED' | 'DEPOSITED' | 'COLLECTED' | 'BOUNCED' | 'CANCELLED';
+  bounceReason?: string;
+  notes?: string;
+  createdAt: number;
+}
+
+export interface UnifiedLiquiditySummary {
+  totalBankBalance: number;
+  totalCashBalance: number;
+  chequesUnderCollection: number;
+  chequesIssuedOutstanding: number;
+  netLiquidityPosition: number;
+}
+
 interface Account { id: string; code: string; name: string; type: string; isHeader: boolean; active: boolean }
 interface Statement { id: string; bankAccountId: string; statementReference: string; periodStart: number; periodEnd: number; openingBalance: number; closingBalance: number; currencyCode: string; status: string; lineCount: number; unmatchedCount: number }
 interface Match { id: string; journalEntryId: string; matchedAmount: number; matchType: string; status: string }
@@ -29,7 +82,7 @@ interface CashPosition { accounts: { bankAccountId: string; bankName: string; cu
 
 @Component({
   selector: 'app-banks-page',
-  imports: [ReactiveFormsModule, ModalDialogComponent],
+  imports: [ReactiveFormsModule, ModalDialogComponent, DecimalPipe],
   templateUrl: './banks.page.html',
   styleUrl: './banks.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,7 +98,7 @@ export class BanksPage {
   readonly banks = signal<BankAccount[]>([]);
   readonly drawerOpen = signal(false);
   readonly editingId = signal<string | null>(null);
-  readonly tab = signal<'accounts' | 'reconciliation' | 'cash'>('accounts');
+  readonly tab = signal<'accounts' | 'reconciliation' | 'cash' | 'cashboxes' | 'cheques' | 'liquidity'>('accounts');
   readonly accounts = signal<Account[]>([]);
   readonly statements = signal<Statement[]>([]);
   readonly workbench = signal<Workbench | null>(null);
@@ -54,6 +107,19 @@ export class BanksPage {
   readonly matchOpen = signal(false);
   readonly importFile = signal<File | null>(null);
   readonly selectedLine = signal<StatementLine | null>(null);
+
+  // Cashbox & Cheques signals
+  readonly cashboxes = signal<Cashbox[]>([]);
+  readonly selectedCashbox = signal<Cashbox | null>(null);
+  readonly cashboxTransactions = signal<CashboxTransaction[]>([]);
+  readonly cheques = signal<CommercialCheque[]>([]);
+  readonly liquiditySummary = signal<UnifiedLiquiditySummary | null>(null);
+
+  readonly cashboxModalOpen = signal(false);
+  readonly cashTxModalOpen = signal(false);
+  readonly chequeModalOpen = signal(false);
+  readonly chequeDepositModalOpen = signal(false);
+  readonly selectedCheque = signal<CommercialCheque | null>(null);
 
   readonly form = new FormGroup({
     bankName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -64,6 +130,42 @@ export class BanksPage {
     currencyCode: new FormControl('EGP', { nonNullable: true, validators: [Validators.required] }),
     active: new FormControl(true, { nonNullable: true }),
   });
+
+  readonly cashboxForm = new FormGroup({
+    code: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    name: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    branchId: new FormControl('', { nonNullable: true }),
+    currency: new FormControl('EGP', { nonNullable: true, validators: [Validators.required] }),
+    custodianUserId: new FormControl('', { nonNullable: true }),
+    glAccountId: new FormControl('', { nonNullable: true }),
+  });
+
+  readonly cashTxForm = new FormGroup({
+    transactionType: new FormControl<'RECEIPT' | 'PAYMENT' | 'PETTY_CASH_ADVANCE' | 'PETTY_CASH_SETTLEMENT' | 'PHYSICAL_COUNT_ADJUSTMENT'>('RECEIPT', { nonNullable: true, validators: [Validators.required] }),
+    amount: new FormControl(0, { nonNullable: true, validators: [Validators.min(0.01)] }),
+    voucherNumber: new FormControl('', { nonNullable: true }),
+    counterpartyPartyId: new FormControl('', { nonNullable: true }),
+    description: new FormControl('', { nonNullable: true }),
+  });
+
+  readonly chequeForm = new FormGroup({
+    chequeNumber: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    chequeType: new FormControl<'RECEIVED' | 'ISSUED'>('RECEIVED', { nonNullable: true, validators: [Validators.required] }),
+    bankName: new FormControl('', { nonNullable: true }),
+    bankAccountId: new FormControl('', { nonNullable: true }),
+    drawerPayeeName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    partyId: new FormControl('', { nonNullable: true }),
+    amount: new FormControl(0, { nonNullable: true, validators: [Validators.min(0.01)] }),
+    currency: new FormControl('EGP', { nonNullable: true, validators: [Validators.required] }),
+    issueDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
+    dueDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
+    notes: new FormControl('', { nonNullable: true }),
+  });
+
+  readonly depositForm = new FormGroup({
+    targetBankAccountId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+  });
+
   readonly importForm = new FormGroup({
     bankAccountId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     statementReference: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
@@ -85,13 +187,22 @@ export class BanksPage {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const [banks, accounts, statements, cash] = await Promise.all([
+      const [banks, accounts, statements, cash, cashboxes, cheques, liquidity] = await Promise.all([
         firstValueFrom(this.http.get<BankAccount[]>('/api/v1/finance/banks')),
         firstValueFrom(this.http.get<Account[]>('/api/v1/finance/accounts')),
         firstValueFrom(this.http.get<Statement[]>('/api/v1/finance/bank-reconciliation/statements')),
         firstValueFrom(this.http.get<CashPosition>('/api/v1/finance/bank-reconciliation/cash-position')),
+        firstValueFrom(this.http.get<Cashbox[]>('/api/v1/finance/treasury/cashboxes')).catch((): Cashbox[] => []),
+        firstValueFrom(this.http.get<CommercialCheque[]>('/api/v1/finance/treasury/cheques')).catch((): CommercialCheque[] => []),
+        firstValueFrom(this.http.get<UnifiedLiquiditySummary>('/api/v1/finance/treasury/liquidity-summary')).catch((): UnifiedLiquiditySummary | null => null),
       ]);
-      this.banks.set(banks); this.accounts.set(accounts); this.statements.set(statements); this.cashPosition.set(cash);
+      this.banks.set(banks);
+      this.accounts.set(accounts);
+      this.statements.set(statements);
+      this.cashPosition.set(cash);
+      this.cashboxes.set(cashboxes);
+      this.cheques.set(cheques);
+      this.liquiditySummary.set(liquidity);
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));
     } finally {
@@ -121,6 +232,142 @@ export class BanksPage {
       );
       this.notification.success(this.i18n.t('common.save') + ' ✓');
       this.drawerOpen.set(false);
+      await this.load();
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  openNewCashbox() {
+    this.cashboxForm.reset({ code: '', name: '', branchId: '', currency: 'EGP', custodianUserId: '', glAccountId: '' });
+    this.cashboxModalOpen.set(true);
+  }
+
+  async submitCashbox() {
+    if (this.cashboxForm.invalid) return;
+    try {
+      await firstValueFrom(this.http.post('/api/v1/finance/treasury/cashboxes', this.cashboxForm.getRawValue()));
+      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.cashboxModalOpen.set(false);
+      await this.load();
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  async selectCashbox(cb: Cashbox) {
+    this.selectedCashbox.set(cb);
+    try {
+      const txs = await firstValueFrom(this.http.get<CashboxTransaction[]>(`/api/v1/finance/treasury/cashboxes/${cb.id}/transactions`));
+      this.cashboxTransactions.set(txs);
+    } catch {
+      this.cashboxTransactions.set([]);
+    }
+  }
+
+  openCashTx(type: 'RECEIPT' | 'PAYMENT' | 'PETTY_CASH_ADVANCE' | 'PETTY_CASH_SETTLEMENT' | 'PHYSICAL_COUNT_ADJUSTMENT' = 'RECEIPT') {
+    this.cashTxForm.reset({ transactionType: type, amount: 0, voucherNumber: '', counterpartyPartyId: '', description: '' });
+    this.cashTxModalOpen.set(true);
+  }
+
+  async submitCashTx() {
+    const cb = this.selectedCashbox();
+    if (!cb || this.cashTxForm.invalid) return;
+    try {
+      const val = this.cashTxForm.getRawValue();
+      await firstValueFrom(this.http.post(`/api/v1/finance/treasury/cashboxes/${cb.id}/transactions`, {
+        ...val,
+        transactionDate: Date.now(),
+      }));
+      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.cashTxModalOpen.set(false);
+      await this.load();
+      await this.selectCashbox(cb);
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  openNewCheque() {
+    const today = new Date().toISOString().substring(0, 10);
+    this.chequeForm.reset({
+      chequeNumber: '',
+      chequeType: 'RECEIVED',
+      bankName: '',
+      bankAccountId: '',
+      drawerPayeeName: '',
+      partyId: '',
+      amount: 0,
+      currency: 'EGP',
+      issueDate: today,
+      dueDate: today,
+      notes: '',
+    });
+    this.chequeModalOpen.set(true);
+  }
+
+  async submitCheque() {
+    if (this.chequeForm.invalid) return;
+    try {
+      const val = this.chequeForm.getRawValue();
+      await firstValueFrom(this.http.post('/api/v1/finance/treasury/cheques', {
+        ...val,
+        issueDate: new Date(val.issueDate).getTime(),
+        dueDate: new Date(val.dueDate).getTime(),
+      }));
+      this.notification.success(this.i18n.t('common.save') + ' ✓');
+      this.chequeModalOpen.set(false);
+      await this.load();
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  openDepositCheque(chq: CommercialCheque) {
+    this.selectedCheque.set(chq);
+    this.depositForm.reset({ targetBankAccountId: this.banks()[0]?.id ?? '' });
+    this.chequeDepositModalOpen.set(true);
+  }
+
+  async submitDepositCheque() {
+    const chq = this.selectedCheque();
+    if (!chq || this.depositForm.invalid) return;
+    try {
+      await firstValueFrom(this.http.post(`/api/v1/finance/treasury/cheques/${chq.id}/deposit`, this.depositForm.getRawValue()));
+      this.notification.success(this.i18n.t('treasury.deposit') + ' ✓');
+      this.chequeDepositModalOpen.set(false);
+      await this.load();
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  async collectCheque(chq: CommercialCheque) {
+    try {
+      await firstValueFrom(this.http.post(`/api/v1/finance/treasury/cheques/${chq.id}/collect`, {}));
+      this.notification.success(this.i18n.t('treasury.collect') + ' ✓');
+      await this.load();
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  async bounceCheque(chq: CommercialCheque) {
+    const reason = window.prompt(this.i18n.t('treasury.bounceReason')) || 'Technical reason';
+    try {
+      await firstValueFrom(this.http.post(`/api/v1/finance/treasury/cheques/${chq.id}/bounce`, { reason }));
+      this.notification.success(this.i18n.t('treasury.bounce') + ' ✓');
+      await this.load();
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  async cancelCheque(chq: CommercialCheque) {
+    const reason = window.prompt(this.i18n.t('treasury.cancel')) || 'User cancellation';
+    try {
+      await firstValueFrom(this.http.post(`/api/v1/finance/treasury/cheques/${chq.id}/cancel`, { reason }));
+      this.notification.success(this.i18n.t('treasury.cancel') + ' ✓');
       await this.load();
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));
@@ -178,39 +425,31 @@ export class BanksPage {
     const v = this.matchForm.getRawValue();
     await this.reconcileRequest(`/statements/${statement.id}/lines/${line.id}/match`, {
       operationId: crypto.randomUUID(), allocations: v.journalEntryId ? [{ journalEntryId: v.journalEntryId, amount: v.amount }] : [],
-      feeAmount: v.feeAmount, feeExpenseAccountId: v.feeExpenseAccountId || null,
+      bankFeeAmount: v.feeAmount, bankFeeExpenseAccountId: v.feeExpenseAccountId || null,
     });
     this.matchOpen.set(false);
   }
 
-  async reverseMatch(match: Match): Promise<void> {
+  async unmatch(match: Match): Promise<void> {
     const statement = this.workbench()?.statement; if (!statement) return;
-    const reason = window.prompt(this.i18n.t('banks.reconciliation.reverseReason'))?.trim(); if (!reason) return;
-    await this.reconcileRequest(`/statements/${statement.id}/matches/${match.id}/reverse`, { operationId: crypto.randomUUID(), reason });
+    await this.reconcileRequest(`/statements/${statement.id}/matches/${match.id}/unmatch`, { operationId: crypto.randomUUID() });
   }
 
-  private async reconcileRequest(path: string, body: object): Promise<void> {
+  async postDifference(): Promise<void> {
+    const statement = this.workbench()?.statement; if (!statement) return;
+    await this.reconcileRequest(`/statements/${statement.id}/post-difference`, {
+      operationId: crypto.randomUUID(), differenceAccountId: this.accounts().find(a => a.code === '5800')?.id ?? this.accounts()[0]?.id,
+    });
+  }
+
+  private async reconcileRequest(path: string, payload: unknown): Promise<void> {
     try {
-      this.workbench.set(await firstValueFrom(this.http.post<Workbench>(`/api/v1/finance/bank-reconciliation${path}`, body)));
+      this.workbench.set(await firstValueFrom(this.http.post<Workbench>(`/api/v1/finance/bank-reconciliation${path}`, payload)));
       await this.load();
     } catch (e) { this.error.set(apiErrorMessage(e, this.i18n)); }
   }
 
-  money(value: number, currency = 'EGP'): string { return new Intl.NumberFormat(this.i18n.locale(), { style: 'currency', currency }).format(value); }
-  date(value: number | null): string { return value ? new Intl.DateTimeFormat(this.i18n.locale(), { dateStyle: 'medium' }).format(value) : '—'; }
-  reconciliationStatus(status: string): string {
-    switch (status) {
-      case 'IMPORTED': return this.i18n.t('banks.reconciliation.status.imported');
-      case 'IN_PROGRESS': return this.i18n.t('banks.reconciliation.status.inProgress');
-      case 'RECONCILED': return this.i18n.t('banks.reconciliation.status.reconciled');
-      case 'UNMATCHED': return this.i18n.t('banks.reconciliation.status.unmatched');
-      case 'PARTIAL': return this.i18n.t('banks.reconciliation.status.partial');
-      case 'MATCHED': return this.i18n.t('banks.reconciliation.status.matched');
-      case 'IGNORED': return this.i18n.t('banks.reconciliation.status.ignored');
-      default: return status;
-    }
-  }
-  cashTotals(): { currency: string; amount: number }[] {
-    return Object.entries(this.cashPosition()?.totalsByCurrency ?? {}).map(([currency, amount]) => ({ currency, amount }));
+  date(ms: number) {
+    return formatDate(ms);
   }
 }

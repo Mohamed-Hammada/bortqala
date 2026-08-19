@@ -6,18 +6,13 @@ import com.bemo.hr.finance.domain.JournalEntryLine;
 import com.bemo.hr.finance.infrastructure.AccountRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryLineRepository;
 import com.bemo.hr.finance.infrastructure.JournalEntryRepository;
-import com.bemo.hr.shared.domain.BusinessRuleException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -119,10 +114,73 @@ public class FinancialStatementsReportService {
     @Transactional(readOnly = true)
     public CashFlowReport getCashFlowStatement(LocalDate startDate, LocalDate endDate) {
         log.debug("getCashFlowStatement called with startDate={}, endDate={}", startDate, endDate);
-        throw new BusinessRuleException(
-                "Cash Flow Statement is unavailable until ledger-based cash classification is configured.",
-                "FIN_CASH_FLOW_NOT_IMPLEMENTED",
-                HttpStatus.NOT_IMPLEMENTED);
+        List<Account> accounts = accountRepository.findAll();
+        Map<String, Account> accountMap = accounts.stream().collect(Collectors.toMap(Account::getId, a -> a));
+
+        IncomeStatementReport is = getIncomeStatement(startDate, endDate);
+        BigDecimal netIncome = is.netIncome();
+
+        // Calculate opening cash (cash/bank accounts before startDate)
+        List<JournalEntry> priorEntries = journalEntryRepository.findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED)).stream()
+                .filter(je -> je.getEntryDate().isBefore(startDate))
+                .toList();
+        Set<String> priorIds = priorEntries.stream().map(JournalEntry::getId).collect(Collectors.toSet());
+        List<JournalEntryLine> priorLines = priorIds.isEmpty() ? List.of() : journalEntryLineRepository.findByJournalEntryIdIn(priorIds);
+
+        BigDecimal openingCash = BigDecimal.ZERO;
+        for (JournalEntryLine line : priorLines) {
+            Account acc = accountMap.get(line.getAccountId());
+            if (acc != null && isCashOrBank(acc)) {
+                openingCash = openingCash.add(line.getDebit()).subtract(line.getCredit());
+            }
+        }
+
+        // Lines in current period
+        List<JournalEntry> currentEntries = journalEntryRepository.findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED)).stream()
+                .filter(je -> !je.getEntryDate().isBefore(startDate) && !je.getEntryDate().isAfter(endDate))
+                .toList();
+        Set<String> currentIds = currentEntries.stream().map(JournalEntry::getId).collect(Collectors.toSet());
+        List<JournalEntryLine> currentLines = currentIds.isEmpty() ? List.of() : journalEntryLineRepository.findByJournalEntryIdIn(currentIds);
+
+        BigDecimal operatingCash = netIncome;
+        BigDecimal investingCash = BigDecimal.ZERO;
+        BigDecimal financingCash = BigDecimal.ZERO;
+
+        for (JournalEntryLine line : currentLines) {
+            Account acc = accountMap.get(line.getAccountId());
+            if (acc == null) continue;
+            BigDecimal movement = line.getCredit().subtract(line.getDebit());
+
+            if (acc.getType() == Account.Type.ASSET && !isCashOrBank(acc)) {
+                if (acc.getCode().startsWith("12") || acc.getName().toLowerCase().contains("fixed") || acc.getName().contains("أصول ثابتة")) {
+                    investingCash = investingCash.add(movement);
+                } else {
+                    operatingCash = operatingCash.add(movement);
+                }
+            } else if (acc.getType() == Account.Type.LIABILITY) {
+                if (acc.getCode().startsWith("22") || acc.getName().toLowerCase().contains("loan") || acc.getName().contains("قرض")) {
+                    financingCash = financingCash.add(movement.negate());
+                } else {
+                    operatingCash = operatingCash.add(movement.negate());
+                }
+            } else if (acc.getType() == Account.Type.EQUITY) {
+                financingCash = financingCash.add(movement.negate());
+            }
+        }
+
+        BigDecimal netCashFlow = operatingCash.add(investingCash).add(financingCash);
+        BigDecimal closingCash = openingCash.add(netCashFlow);
+
+        log.info("Cash flow generated: operating={}, investing={}, financing={}, net={}, opening={}, closing={}",
+                operatingCash, investingCash, financingCash, netCashFlow, openingCash, closingCash);
+
+        return new CashFlowReport(operatingCash, investingCash, financingCash, netCashFlow, openingCash, closingCash);
+    }
+
+    private boolean isCashOrBank(Account acc) {
+        String code = acc.getCode() != null ? acc.getCode() : "";
+        String name = acc.getName() != null ? acc.getName().toLowerCase() : "";
+        return code.startsWith("10") || code.startsWith("11") || name.contains("cash") || name.contains("bank") || name.contains("صندوق") || name.contains("بنك") || name.contains("نقدية");
     }
 
     public record BalanceSheetReport(BigDecimal totalAssets, BigDecimal totalLiabilities, BigDecimal totalEquity,
@@ -133,6 +191,7 @@ public class FinancialStatementsReportService {
     }
 
     public record CashFlowReport(BigDecimal operatingCashFlow, BigDecimal investingCashFlow,
-                                 BigDecimal financingCashFlow, BigDecimal netCashFlow) {
+                                 BigDecimal financingCashFlow, BigDecimal netCashFlow,
+                                 BigDecimal openingCashBalance, BigDecimal closingCashBalance) {
     }
 }

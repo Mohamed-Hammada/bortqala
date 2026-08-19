@@ -21,10 +21,22 @@ public class ManufacturingExecutionController {
         this.manufacturingExecutionService = manufacturingExecutionService;
     }
 
+    @GetMapping("/work-centers")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'VIEWER')")
+    public List<WorkCenter> listWorkCenters() {
+        return manufacturingExecutionService.listWorkCenters();
+    }
+
     @PostMapping("/work-centers")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
     public WorkCenter createWorkCenter(@RequestBody CreateWorkCenterPayload payload) {
         return manufacturingExecutionService.createWorkCenter(payload.code(), payload.name(), payload.hourlyRate(), payload.capacityHoursPerDay());
+    }
+
+    @GetMapping("/routings")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'VIEWER')")
+    public List<RoutingHeader> listRoutings() {
+        return manufacturingExecutionService.listRoutings();
     }
 
     @PostMapping("/routings")

@@ -29,11 +29,93 @@ export interface InventoryItem {
   reorderPoint: number;
   reorderQuantity: number;
   currentBalance: number;
+  barcode?: string | null;
+  barcodeAliases?: string | null;
+  trackingType?: 'NONE' | 'LOT' | 'SERIAL' | 'EXPIRY' | string;
+  shelfLifeDays?: number | null;
+  isDeadStock?: boolean;
   version: number;
 }
 export interface ReorderAlert {
   itemId: string; itemCode: string; itemName: string; currentBalance: number;
   reorderPoint: number; reorderQuantity: number; shortage: number;
+}
+export interface StockAgingItem {
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  unitCode: string;
+  onHandQuantity: number;
+  lastMovementDateMs: number;
+  inactiveDays: number;
+  agingBucket: 'BUCKET_0_30' | 'BUCKET_31_60' | 'BUCKET_61_90' | 'BUCKET_90_PLUS' | string;
+  trackingType: string;
+  barcode?: string | null;
+}
+export interface StockAgingSummary {
+  totalOnHandItems: number;
+  bucket0To30Qty: number;
+  bucket31To60Qty: number;
+  bucket61To90Qty: number;
+  bucket90PlusQty: number;
+  items: StockAgingItem[];
+}
+export interface DeadStockItem {
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  unitCode: string;
+  onHandQuantity: number;
+  lastMovementDateMs: number;
+  inactiveDays: number;
+  flaggedDeadStock: boolean;
+}
+export interface ReorderAlertItem {
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  unitCode: string;
+  onHandQuantity: number;
+  reorderPoint: number;
+  reorderQuantity: number;
+  shortageQuantity: number;
+  suggestedOrderQuantity: number;
+  urgency: 'CRITICAL' | 'WARNING' | 'NOTICE' | string;
+}
+export interface ProjectMaterialLine {
+  movementId: string;
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  unitCode: string;
+  operationType: string;
+  quantityDelta: number;
+  projectId?: string | null;
+  wbsNodeId?: string | null;
+  costCodeId?: string | null;
+  lotNumber?: string | null;
+  serialNumber?: string | null;
+  expiryDate?: string | null;
+  binId?: string | null;
+  referenceCode?: string | null;
+  voucherNo?: string | null;
+  createdBy: string;
+  occurredAtMs: number;
+}
+export interface BarcodeLookupResult {
+  itemId: string;
+  itemCode: string;
+  itemName: string;
+  itemType: string;
+  unitCode: string;
+  barcode?: string | null;
+  barcodeAliases?: string | null;
+  trackingType: string;
+  shelfLifeDays?: number | null;
+  onHandQuantity: number;
+  reorderPoint: number;
+  reorderQuantity: number;
+  active: boolean;
 }
 export interface CycleCount {
   id: string; countNumber: string; warehouseId: string; countDate: number; status: string; itemId: string;
@@ -73,6 +155,13 @@ export interface StockMovement {
   voucherNo: string | null;
   externalRef: string | null;
   warehouse: string | null;
+  projectId?: string | null;
+  wbsNodeId?: string | null;
+  costCodeId?: string | null;
+  lotNumber?: string | null;
+  serialNumber?: string | null;
+  expiryDate?: string | null;
+  binId?: string | null;
   attachmentName: string | null;
   attachmentContentType: string | null;
   attachmentSize: number | null;

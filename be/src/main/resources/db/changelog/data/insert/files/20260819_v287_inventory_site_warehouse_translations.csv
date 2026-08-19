@@ -59,3 +59,15 @@ v287-057;inventory.suggestedOrder;ar-EG;الكمية المقترحة للطلب
 v287-058;inventory.suggestedOrder;en-US;Suggested Order Qty
 v287-059;inventory.analyticsTitle;ar-EG;تحليلات وإدارة المخزون والمستودعات
 v287-060;inventory.analyticsTitle;en-US;Inventory & Warehouse Analytics
+v287-061;common.critical;ar-EG;حرجة
+v287-062;common.critical;en-US;Critical
+v287-063;common.noResults;ar-EG;لا توجد نتائج
+v287-064;common.noResults;en-US;No results found
+v287-065;common.notice;ar-EG;إشعار
+v287-066;common.notice;en-US;Notice
+v287-067;common.urgency;ar-EG;درجة الأهمية
+v287-068;common.urgency;en-US;Urgency
+v287-069;common.warning;ar-EG;تحذير
+v287-070;common.warning;en-US;Warning
+v287-071;platformAdmin.description;ar-EG;إدارة المنصة والمستأجرين
+v287-072;platformAdmin.description;en-US;Platform & Tenant Administration

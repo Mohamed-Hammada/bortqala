@@ -23,6 +23,7 @@ import { ConfirmDialogService } from '../../core/confirm-dialog.service';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
+import { apiErrorMessage } from '../../core/api-error';
 
 @Component({
   selector: 'app-employees-page',
@@ -56,6 +57,46 @@ export class EmployeesPage {
   private closing = false;
   private biometricReturnUrl: string | null = null;
   private biometricMonth: string | null = null;
+
+  // Contracts Workbench State
+  readonly contractsModalOpen = signal(false);
+  readonly selectedEmployeeForContracts = signal<Employee | null>(null);
+  readonly contractsList = signal<import('./employees.models').EmployeeContract[]>([]);
+  readonly loadingContracts = signal(false);
+  readonly contractDrawerOpen = signal(false);
+  readonly contractDrawerMode = signal<'CREATE' | 'AMEND' | 'TERMINATE'>('CREATE');
+  readonly selectedContractForAction = signal<import('./employees.models').EmployeeContract | null>(null);
+
+  readonly contractForm = new FormGroup({
+    contractNumber: new FormControl('', { nonNullable: true }),
+    contractType: new FormControl<import('./employees.models').ContractType>('PERMANENT', { nonNullable: true, validators: [Validators.required] }),
+    startDate: new FormControl(new Date().toISOString().slice(0, 10), { nonNullable: true, validators: [Validators.required] }),
+    endDate: new FormControl('', { nonNullable: true }),
+    probationEndDate: new FormControl('', { nonNullable: true }),
+    noticePeriodDays: new FormControl(30, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    basicSalary: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    housingAllowance: new FormControl(0, { nonNullable: true }),
+    transportationAllowance: new FormControl(0, { nonNullable: true }),
+    otherAllowances: new FormControl(0, { nonNullable: true }),
+    jobTitle: new FormControl('', { nonNullable: true }),
+    notes: new FormControl('', { nonNullable: true }),
+  });
+
+  readonly amendForm = new FormGroup({
+    newContractNumber: new FormControl('', { nonNullable: true }),
+    basicSalary: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0)] }),
+    housingAllowance: new FormControl(0, { nonNullable: true }),
+    transportationAllowance: new FormControl(0, { nonNullable: true }),
+    otherAllowances: new FormControl(0, { nonNullable: true }),
+    jobTitle: new FormControl('', { nonNullable: true }),
+    endDate: new FormControl('', { nonNullable: true }),
+    amendmentReason: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+  });
+
+  readonly terminateForm = new FormGroup({
+    terminationDate: new FormControl(new Date().toISOString().slice(0, 10), { nonNullable: true, validators: [Validators.required] }),
+    reason: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+  });
 
   openEmployeeAdvances(): void {
     void this.router.navigate(['/workforce/advances'], {
@@ -319,8 +360,154 @@ export class EmployeesPage {
     }
   }
 
+  // ─── Contracts Workbench Methods ─────────────────────────
+  async openContracts(emp: Employee) {
+    this.selectedEmployeeForContracts.set(emp);
+    this.contractsModalOpen.set(true);
+    await this.loadContracts(emp.id);
+  }
+
+  closeContractsModal() {
+    this.contractsModalOpen.set(false);
+    this.selectedEmployeeForContracts.set(null);
+    this.contractDrawerOpen.set(false);
+  }
+
+  async loadContracts(employeeId: string) {
+    this.loadingContracts.set(true);
+    try {
+      const data = await firstValueFrom(
+        this.http.get<import('./employees.models').EmployeeContract[]>(`/api/v1/employees/${employeeId}/contracts`)
+      );
+      this.contractsList.set(data);
+    } catch {
+      this.contractsList.set([]);
+    } finally {
+      this.loadingContracts.set(false);
+    }
+  }
+
+  openCreateContract() {
+    const emp = this.selectedEmployeeForContracts();
+    this.contractDrawerMode.set('CREATE');
+    this.contractForm.reset({
+      contractNumber: '',
+      contractType: 'PERMANENT',
+      startDate: new Date().toISOString().slice(0, 10),
+      endDate: '',
+      probationEndDate: '',
+      noticePeriodDays: 30,
+      basicSalary: emp?.baseSalary ?? 0,
+      housingAllowance: 0,
+      transportationAllowance: 0,
+      otherAllowances: 0,
+      jobTitle: '',
+      notes: '',
+    });
+    this.contractDrawerOpen.set(true);
+  }
+
+  openAmendContract(cnt: import('./employees.models').EmployeeContract) {
+    this.selectedContractForAction.set(cnt);
+    this.contractDrawerMode.set('AMEND');
+    this.amendForm.reset({
+      newContractNumber: '',
+      basicSalary: cnt.basicSalary,
+      housingAllowance: cnt.housingAllowance,
+      transportationAllowance: cnt.transportationAllowance,
+      otherAllowances: cnt.otherAllowances,
+      jobTitle: cnt.jobTitle ?? '',
+      endDate: cnt.endDate ?? '',
+      amendmentReason: '',
+    });
+    this.contractDrawerOpen.set(true);
+  }
+
+  openTerminateContract(cnt: import('./employees.models').EmployeeContract) {
+    this.selectedContractForAction.set(cnt);
+    this.contractDrawerMode.set('TERMINATE');
+    this.terminateForm.reset({
+      terminationDate: new Date().toISOString().slice(0, 10),
+      reason: '',
+    });
+    this.contractDrawerOpen.set(true);
+  }
+
+  closeContractDrawer() {
+    this.contractDrawerOpen.set(false);
+    this.selectedContractForAction.set(null);
+  }
+
+  async submitContract() {
+    if (this.contractForm.invalid) return;
+    const emp = this.selectedEmployeeForContracts();
+    if (!emp) return;
+    try {
+      const val = this.contractForm.getRawValue();
+      await firstValueFrom(this.http.post(`/api/v1/employees/${emp.id}/contracts`, val));
+      this.notification.success(this.i18n.t('contracts.saved'));
+      this.closeContractDrawer();
+      await this.loadContracts(emp.id);
+    } catch (e) {
+      this.notification.error(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  async submitAmend() {
+    if (this.amendForm.invalid) return;
+    const cnt = this.selectedContractForAction();
+    const emp = this.selectedEmployeeForContracts();
+    if (!cnt || !emp) return;
+    try {
+      const val = this.amendForm.getRawValue();
+      await firstValueFrom(this.http.post(`/api/v1/employees/contracts/${cnt.id}/amend`, val));
+      this.notification.success(this.i18n.t('contracts.amended'));
+      this.closeContractDrawer();
+      await this.loadContracts(emp.id);
+    } catch (e) {
+      this.notification.error(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  async submitTerminate() {
+    if (this.terminateForm.invalid) return;
+    const cnt = this.selectedContractForAction();
+    const emp = this.selectedEmployeeForContracts();
+    if (!cnt || !emp) return;
+    try {
+      const val = this.terminateForm.getRawValue();
+      await firstValueFrom(this.http.post(`/api/v1/employees/contracts/${cnt.id}/terminate`, val));
+      this.notification.success(this.i18n.t('contracts.terminated'));
+      this.closeContractDrawer();
+      await this.loadContracts(emp.id);
+    } catch (e) {
+      this.notification.error(apiErrorMessage(e, this.i18n));
+    }
+  }
+
   typeLabel(value: EmploymentType) {
     return this.i18n.t(value === 'FIXED' ? 'employment.fixed' : 'employment.daily');
+  }
+
+  contractTypeLabel(value: import('./employees.models').ContractType) {
+    switch (value) {
+      case 'PERMANENT': return this.i18n.t('contracts.permanent');
+      case 'FIXED_TERM': return this.i18n.t('contracts.fixedTerm');
+      case 'PROBATIONARY': return this.i18n.t('contracts.probationary');
+      case 'PART_TIME': return this.i18n.t('contracts.partTime');
+      case 'CONSULTANT': return this.i18n.t('contracts.consultant');
+      case 'SEASONAL': return this.i18n.t('contracts.seasonal');
+    }
+  }
+
+  contractStatusLabel(value: import('./employees.models').ContractStatus) {
+    switch (value) {
+      case 'ACTIVE': return this.i18n.t('contracts.statusActive');
+      case 'AMENDED': return this.i18n.t('contracts.statusAmended');
+      case 'EXPIRED': return this.i18n.t('contracts.statusExpired');
+      case 'TERMINATED': return this.i18n.t('contracts.statusTerminated');
+      default: return value;
+    }
   }
 
   date(value: number) {

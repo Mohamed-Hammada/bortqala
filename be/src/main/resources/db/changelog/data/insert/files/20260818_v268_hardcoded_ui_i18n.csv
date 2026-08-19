@@ -89,8 +89,6 @@ v268-044-ar;attendanceBrowser.pageHeading;ar-EG;تفاصيل حضور الموظ
 v268-044-en;attendanceBrowser.pageHeading;en-US;Employee attendance details
 v268-045-ar;attendanceBrowser.pageDescription;ar-EG;اختر السنة والشهر من نافذة مختصرة، ثم راجع الموظفين والبصمات.
 v268-045-en;attendanceBrowser.pageDescription;en-US;Choose the year and month from a compact dialog, then review employees and punches.
-v268-046-ar;attendanceBrowser.backToImports;ar-EG;العودة للاستيراد
-v268-046-en;attendanceBrowser.backToImports;en-US;Back to imports
 v268-047-ar;attendanceBrowser.noPunchesYet;ar-EG;لا توجد بصمات مستوردة بعد.
 v268-047-en;attendanceBrowser.noPunchesYet;en-US;No imported punches yet.
 v268-048-ar;attendanceBrowser.displayedPeriod;ar-EG;الفترة المعروضة
@@ -101,14 +99,10 @@ v268-050-ar;attendanceBrowser.punchesLabel;ar-EG;بصمة
 v268-050-en;attendanceBrowser.punchesLabel;en-US;punches
 v268-051-ar;attendanceBrowser.chooseYearMonth;ar-EG;اختيار السنة والشهر
 v268-051-en;attendanceBrowser.chooseYearMonth;en-US;Choose year & month
-v268-052-ar;attendanceBrowser.employeesIn;ar-EG;الموظفون في
-v268-052-en;attendanceBrowser.employeesIn;en-US;Employees in
 v268-053-ar;attendanceBrowser.matchingRecords;ar-EG;سجل مطابق
 v268-053-en;attendanceBrowser.matchingRecords;en-US;matching records
 v268-054-ar;attendanceBrowser.search;ar-EG;بحث
 v268-054-en;attendanceBrowser.search;en-US;Search
-v268-055-ar;attendanceBrowser.searchPlaceholder;ar-EG;الاسم أو الكود أو رقم الجهاز
-v268-055-en;attendanceBrowser.searchPlaceholder;en-US;Name, code or device ID
 v268-056-ar;attendanceBrowser.fromDate;ar-EG;من تاريخ
 v268-056-en;attendanceBrowser.fromDate;en-US;From
 v268-057-ar;attendanceBrowser.toDate;ar-EG;إلى تاريخ
@@ -117,26 +111,8 @@ v268-058-ar;attendanceBrowser.reset;ar-EG;إعادة الضبط
 v268-058-en;attendanceBrowser.reset;en-US;Reset
 v268-059-ar;attendanceBrowser.exportResults;ar-EG;تصدير النتائج
 v268-059-en;attendanceBrowser.exportResults;en-US;Export results
-v268-060-ar;attendanceBrowser.thEmployee;ar-EG;الموظف
-v268-060-en;attendanceBrowser.thEmployee;en-US;Employee
-v268-061-ar;attendanceBrowser.thDeviceId;ar-EG;رقم الجهاز
-v268-061-en;attendanceBrowser.thDeviceId;en-US;Device ID
-v268-062-ar;attendanceBrowser.thStatus;ar-EG;الحالة
-v268-062-en;attendanceBrowser.thStatus;en-US;Status
-v268-063-ar;attendanceBrowser.thPunches;ar-EG;البصمات
-v268-063-en;attendanceBrowser.thPunches;en-US;Punches
 v268-064-ar;attendanceBrowser.thFirstLastPunch;ar-EG;أول / آخر بصمة
 v268-064-en;attendanceBrowser.thFirstLastPunch;en-US;First / last punch
-v268-065-ar;attendanceBrowser.statusMapped;ar-EG;مربوط بموظف
-v268-065-en;attendanceBrowser.statusMapped;en-US;Mapped
-v268-066-ar;attendanceBrowser.statusUnmapped;ar-EG;غير مضاف للنظام
-v268-066-en;attendanceBrowser.statusUnmapped;en-US;Not in employees
-v268-067-ar;attendanceBrowser.addEmployee;ar-EG;إضافة موظف
-v268-067-en;attendanceBrowser.addEmployee;en-US;Add employee
-v268-068-ar;attendanceBrowser.details;ar-EG;التفاصيل
-v268-068-en;attendanceBrowser.details;en-US;Details
-v268-069-ar;attendanceBrowser.noResults;ar-EG;لا توجد نتائج ضمن الفلاتر.
-v268-069-en;attendanceBrowser.noResults;en-US;No results match the filters.
 v268-070-ar;attendanceBrowser.choosePeriod;ar-EG;اختيار فترة الحضور
 v268-070-en;attendanceBrowser.choosePeriod;en-US;Choose attendance period
 v268-071-ar;attendanceBrowser.choosePeriodHint;ar-EG;اختر السنة أولاً ثم الشهر.
@@ -151,30 +127,10 @@ v268-075-ar;attendanceBrowser.noMonths;ar-EG;لا توجد شهور لهذه ا�
 v268-075-en;attendanceBrowser.noMonths;en-US;No months available for this year.
 v268-076-ar;attendanceEmployee.pageTitle;ar-EG;تفاصيل الحضور
 v268-076-en;attendanceEmployee.pageTitle;en-US;Attendance details
-v268-077-ar;attendanceEmployee.allEmployees;ar-EG;كل الموظفين
-v268-077-en;attendanceEmployee.allEmployees;en-US;All employees
 v268-078-ar;attendanceEmployee.addToSystem;ar-EG;إضافة للنظام
 v268-078-en;attendanceEmployee.addToSystem;en-US;Add to employees
-v268-079-ar;attendanceEmployee.status;ar-EG;الحالة
-v268-079-en;attendanceEmployee.status;en-US;Status
-v268-080-ar;attendanceEmployee.mappedEmployee;ar-EG;موظف مربوط
-v268-080-en;attendanceEmployee.mappedEmployee;en-US;Mapped employee
-v268-081-ar;attendanceEmployee.unmapped;ar-EG;غير مضاف
-v268-081-en;attendanceEmployee.unmapped;en-US;Unmapped
-v268-082-ar;attendanceEmployee.totalPunches;ar-EG;إجمالي البصمات
-v268-082-en;attendanceEmployee.totalPunches;en-US;Total punches
-v268-083-ar;attendanceEmployee.daysWithPunches;ar-EG;أيام بها حركة
-v268-083-en;attendanceEmployee.daysWithPunches;en-US;Days with punches
-v268-084-ar;attendanceEmployee.calculatedTime;ar-EG;الوقت المحسوب
-v268-084-en;attendanceEmployee.calculatedTime;en-US;Calculated time
-v268-085-ar;attendanceEmployee.employeeName;ar-EG;اسم الموظف
-v268-085-en;attendanceEmployee.employeeName;en-US;Employee name
-v268-086-ar;attendanceEmployee.employeeCode;ar-EG;كود الموظف
-v268-086-en;attendanceEmployee.employeeCode;en-US;Employee code
 v268-087-ar;attendanceEmployee.deviceUserId;ar-EG;رقم جهاز البصمة
 v268-087-en;attendanceEmployee.deviceUserId;en-US;Device user ID
-v268-088-ar;attendanceEmployee.dailyAttendance;ar-EG;الحضور اليومي
-v268-088-en;attendanceEmployee.dailyAttendance;en-US;Daily attendance
 v268-089-ar;attendanceEmployee.dailyHint;ar-EG;كل البصمات مرتبة حسب اليوم.
 v268-089-en;attendanceEmployee.dailyHint;en-US;All punches grouped by day.
 v268-090-ar;attendanceEmployee.colDate;ar-EG;التاريخ
@@ -189,8 +145,6 @@ v268-094-ar;attendanceEmployee.colDuration;ar-EG;المدة
 v268-094-en;attendanceEmployee.colDuration;en-US;Duration
 v268-095-ar;attendanceEmployee.colPunches;ar-EG;البصمات
 v268-095-en;attendanceEmployee.colPunches;en-US;Punches
-v268-096-ar;attendanceEmployee.unpairedPunch;ar-EG;بصمة غير مزدوجة
-v268-096-en;attendanceEmployee.unpairedPunch;en-US;Unpaired punch
 v268-097-ar;attendanceSnapshot.eyebrow;ar-EG;الحضور المستورد
 v268-097-en;attendanceSnapshot.eyebrow;en-US;Imported attendance
 v268-098-ar;attendanceSnapshot.heading;ar-EG;ملخص آخر شهر بالبصمة

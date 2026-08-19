@@ -42,6 +42,49 @@ code {
   color: var(--muted);
   font-size: 12px;
 }
+.page-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.contracts-workbench {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contracts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.emp-summary-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.contract-action-card {
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.contract-action-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.contract-action-header h3 {
+  margin: 0;
+  font-size: 15px;
+}
 .row-actions {
   display: flex;
   gap: 4px;

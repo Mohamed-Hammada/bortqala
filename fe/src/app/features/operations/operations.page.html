@@ -6,7 +6,8 @@
       <p>{{ i18n.t('operations.description') }}</p>
     </div>
     <div class="toolbar">
-      <button class="button secondary" (click)="store.export()">{{ i18n.t('common.export') }}</button
+      <button class="button secondary" (click)="open('analytics')">📊 {{ i18n.t('inventory.analyticsTitle') }}</button
+      ><button class="button secondary" (click)="store.export()">{{ i18n.t('common.export') }}</button
       ><button class="button secondary" (click)="open('transfer')">+ {{ i18n.t('operations.newTransfer') }}</button
       ><button class="button secondary" (click)="open('cycle-count')">+ {{ i18n.t('operations.newCycleCount') }}</button
       ><button class="button secondary" (click)="open('bin')">+ {{ i18n.t('operations.newBin') }}</button
@@ -445,6 +446,24 @@
         </div>
         <div class="field"><label>{{ i18n.t('operations.reorderPoint') }}</label><input type="number" min="0" step="any" formControlName="reorderPoint" /></div>
         <div class="field"><label>{{ i18n.t('operations.reorderQuantity') }}</label><input type="number" min="0" step="any" formControlName="reorderQuantity" /></div>
+        <div class="field"><label>{{ i18n.t('inventory.barcode') }}</label><input class="ltr" formControlName="barcode" /></div>
+        <div class="field"><label>{{ i18n.t('inventory.barcodeAliases') }}</label><input class="ltr" formControlName="barcodeAliases" /></div>
+        <div class="field">
+          <label>{{ i18n.t('inventory.trackingType') }}</label>
+          <select formControlName="trackingType">
+            <option value="NONE">{{ i18n.t('inventory.trackingNone') }}</option>
+            <option value="LOT">{{ i18n.t('inventory.trackingLot') }}</option>
+            <option value="SERIAL">{{ i18n.t('inventory.trackingSerial') }}</option>
+            <option value="EXPIRY">{{ i18n.t('inventory.trackingExpiry') }}</option>
+          </select>
+        </div>
+        <div class="field"><label>{{ i18n.t('inventory.shelfLifeDays') }}</label><input type="number" min="1" formControlName="shelfLifeDays" /></div>
+        <div class="field-checkbox">
+          <label>
+            <input type="checkbox" formControlName="isDeadStock" />
+            {{ i18n.t('inventory.deadStock') }}
+          </label>
+        </div>
       </div>
       <div modal-actions class="modal-actions-bar">
         <button class="button primary" type="submit">{{ i18n.t('common.save') || 'حفظ' }}</button>
@@ -822,5 +841,147 @@
         <button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.cancel') || 'إلغاء' }}</button>
       </div>
     </form>
+  </app-modal-dialog>
+}
+
+<!-- Analytics Modal -->
+@if (drawer() === 'analytics') {
+  <app-modal-dialog [isOpen]="true" title="{{ i18n.t('inventory.analyticsTitle') }}" size="wide" (close)="close()">
+    <nav class="app-tabs">
+      <button class="app-tab" [class.active]="activeAnalyticsTab() === 'aging'" (click)="activeAnalyticsTab.set('aging')">{{ i18n.t('inventory.tabAging') }}</button>
+      <button class="app-tab" [class.active]="activeAnalyticsTab() === 'dead-stock'" (click)="activeAnalyticsTab.set('dead-stock')">{{ i18n.t('inventory.tabDeadStock') }}</button>
+      <button class="app-tab" [class.active]="activeAnalyticsTab() === 'reorder'" (click)="activeAnalyticsTab.set('reorder')">{{ i18n.t('inventory.tabReorder') }}</button>
+      <button class="app-tab" [class.active]="activeAnalyticsTab() === 'bins'" (click)="activeAnalyticsTab.set('bins')">{{ i18n.t('inventory.tabBins') }}</button>
+    </nav>
+
+    <!-- AGING TAB -->
+    @if (activeAnalyticsTab() === 'aging') {
+      @if (store.agingSummary(); as summary) {
+        <div class="metric-grid">
+          <article class="metric-card"><span>{{ i18n.t('inventory.daysBucket0_30') }}</span><strong class="ltr">{{ summary.bucket0To30Qty | number:'1.0-2' }}</strong></article>
+          <article class="metric-card"><span>{{ i18n.t('inventory.daysBucket31_60') }}</span><strong class="ltr">{{ summary.bucket31To60Qty | number:'1.0-2' }}</strong></article>
+          <article class="metric-card"><span>{{ i18n.t('inventory.daysBucket61_90') }}</span><strong class="ltr">{{ summary.bucket61To90Qty | number:'1.0-2' }}</strong></article>
+          <article class="metric-card"><span>{{ i18n.t('inventory.daysBucket90Plus') }}</span><strong class="ltr text-danger">{{ summary.bucket90PlusQty | number:'1.0-2' }}</strong></article>
+        </div>
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>{{ i18n.t('operations.item') }}</th>
+                <th>{{ i18n.t('inventory.onHandQty') }}</th>
+                <th>{{ i18n.t('inventory.inactiveDays') }}</th>
+                <th>{{ i18n.t('inventory.trackingType') }}</th>
+                <th>{{ i18n.t('inventory.barcode') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of summary.items; track item.itemId) {
+                <tr>
+                  <td><strong>{{ item.itemCode }}</strong> - {{ item.itemName }}</td>
+                  <td class="ltr"><strong>{{ item.onHandQuantity | number:'1.0-2' }}</strong> {{ item.unitCode }}</td>
+                  <td class="ltr">{{ item.inactiveDays }}</td>
+                  <td>{{ trackingTypeLabel(item.trackingType) }}</td>
+                  <td class="ltr">{{ item.barcode || '—' }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="5"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <!-- DEAD STOCK TAB -->
+    @if (activeAnalyticsTab() === 'dead-stock') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('operations.item') }}</th>
+              <th>{{ i18n.t('inventory.onHandQty') }}</th>
+              <th>{{ i18n.t('inventory.inactiveDays') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of store.deadStockItems(); track item.itemId) {
+              <tr>
+                <td><strong>{{ item.itemCode }}</strong> - {{ item.itemName }}</td>
+                <td class="ltr"><strong>{{ item.onHandQuantity | number:'1.0-2' }}</strong> {{ item.unitCode }}</td>
+                <td class="ltr">{{ item.inactiveDays }}</td>
+                <td><span class="status danger">{{ i18n.t('inventory.deadStock') }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- REORDER ALERTS TAB -->
+    @if (activeAnalyticsTab() === 'reorder') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('operations.item') }}</th>
+              <th>{{ i18n.t('inventory.onHandQty') }}</th>
+              <th>{{ i18n.t('inventory.reorderPoint') }}</th>
+              <th>{{ i18n.t('inventory.suggestedOrder') }}</th>
+              <th>{{ i18n.t('common.urgency') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (alert of store.reorderAlertItems(); track alert.itemId) {
+              <tr>
+                <td><strong>{{ alert.itemCode }}</strong> - {{ alert.itemName }}</td>
+                <td class="ltr"><strong>{{ alert.onHandQuantity | number:'1.0-2' }}</strong> {{ alert.unitCode }}</td>
+                <td class="ltr">{{ alert.reorderPoint | number:'1.0-2' }}</td>
+                <td class="ltr"><strong>{{ alert.suggestedOrderQuantity | number:'1.0-2' }}</strong></td>
+                <td><span class="status" [class]="urgencyClass(alert.urgency)">{{ urgencyLabel(alert.urgency) }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- BINS TAB -->
+    @if (activeAnalyticsTab() === 'bins') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('operations.binCode') }}</th>
+              <th>{{ i18n.t('operations.aisle') }}</th>
+              <th>{{ i18n.t('operations.rack') }}</th>
+              <th>{{ i18n.t('operations.shelf') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (bin of store.bins(); track bin.id) {
+              <tr>
+                <td><strong class="ltr">{{ bin.binCode }}</strong></td>
+                <td class="ltr">{{ bin.aisle || '—' }}</td>
+                <td class="ltr">{{ bin.rack || '—' }}</td>
+                <td class="ltr">{{ bin.shelf || '—' }}</td>
+                <td><span class="status success">{{ i18n.t('common.active') }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="5"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <div modal-actions class="modal-actions-bar">
+      <button class="button secondary" type="button" (click)="close()">{{ i18n.t('common.close') }}</button>
+    </div>
   </app-modal-dialog>
 }

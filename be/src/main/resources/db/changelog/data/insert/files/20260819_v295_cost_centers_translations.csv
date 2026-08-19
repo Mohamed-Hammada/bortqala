@@ -1,0 +1,59 @@
+id;translation_key;locale;text_value
+v295-001;costCenters.title;ar-EG;شجرة الحسابات ومراكز التكلفة والقوائم المالية
+v295-002;costCenters.title;en-US;Chart of Accounts, Cost Centers & Financial Statements
+v295-003;costCenters.tabAccounts;ar-EG;دليل الحسابات (شجرة الحسابات)
+v295-004;costCenters.tabAccounts;en-US;Chart of Accounts
+v295-005;costCenters.tabCostCenters;ar-EG;دليل مراكز التكلفة والمسؤولية
+v295-006;costCenters.tabCostCenters;en-US;Cost Centers & Hierarchy
+v295-007;costCenters.tabStatements;ar-EG;القوائم المالية والتدفقات النقدية
+v295-008;costCenters.tabStatements;en-US;Financial Statements & Cash Flow
+v295-009;costCenters.addCostCenter;ar-EG;إضافة مركز تكلفة جديد
+v295-010;costCenters.addCostCenter;en-US;Add Cost Center
+v295-011;costCenters.editCostCenter;ar-EG;تعديل مركز التكلفة
+v295-012;costCenters.editCostCenter;en-US;Edit Cost Center
+v295-013;costCenters.code;ar-EG;كود مركز التكلفة
+v295-014;costCenters.code;en-US;Cost Center Code
+v295-015;costCenters.name;ar-EG;اسم مركز التكلفة
+v295-016;costCenters.name;en-US;Cost Center Name
+v295-017;costCenters.parent;ar-EG;مركز التكلفة الرئيسي
+v295-018;costCenters.parent;en-US;Parent Cost Center
+v295-019;costCenters.manager;ar-EG;المدير المسؤول
+v295-020;costCenters.manager;en-US;Responsible Manager
+v295-021;costCenters.allocationRule;ar-EG;قاعدة التوزيع والتحميل
+v295-022;costCenters.allocationRule;en-US;Allocation Rule
+v295-023;costCenters.isHeader;ar-EG;مركز تجميعي رئيسي (لا يقبل حركات مباشرة)
+v295-024;costCenters.isHeader;en-US;Header / Group Cost Center (No direct posting)
+v295-025;costCenters.noCostCenters;ar-EG;لا توجد مراكز تكلفة مسجلة
+v295-026;costCenters.noCostCenters;en-US;No cost centers registered
+v295-027;financialStatements.balanceSheet;ar-EG;قائمة المركز المالي (الميزانية العمومية)
+v295-028;financialStatements.balanceSheet;en-US;Balance Sheet
+v295-029;financialStatements.incomeStatement;ar-EG;قائمة الدخل والأرباح والخسائر
+v295-030;financialStatements.incomeStatement;en-US;Income Statement (P&L)
+v295-031;financialStatements.cashFlow;ar-EG;قائمة التدفقات النقدية
+v295-032;financialStatements.cashFlow;en-US;Statement of Cash Flows
+v295-033;financialStatements.operatingActivities;ar-EG;صافي التدفقات النقدية من الأنشطة التشغيلية
+v295-034;financialStatements.operatingActivities;en-US;Cash Flow from Operating Activities
+v295-035;financialStatements.investingActivities;ar-EG;صافي التدفقات النقدية من الأنشطة الاستثمارية
+v295-036;financialStatements.investingActivities;en-US;Cash Flow from Investing Activities
+v295-037;financialStatements.financingActivities;ar-EG;صافي التدفقات النقدية من الأنشطة التمويلية
+v295-038;financialStatements.financingActivities;en-US;Cash Flow from Financing Activities
+v295-039;financialStatements.netCashChange;ar-EG;صافي التغير في النقدية خلال الفترة
+v295-040;financialStatements.netCashChange;en-US;Net Change in Cash & Cash Equivalents
+v295-041;financialStatements.openingCash;ar-EG;رصيد النقدية في بداية الفترة
+v295-042;financialStatements.openingCash;en-US;Cash Balance at Beginning of Period
+v295-043;financialStatements.closingCash;ar-EG;رصيد النقدية في نهاية الفترة
+v295-044;financialStatements.closingCash;en-US;Cash Balance at End of Period
+v295-045;financialStatements.asOfDate;ar-EG;كما في تاريخ
+v295-046;financialStatements.asOfDate;en-US;As of Date
+v295-047;financialStatements.period;ar-EG;عن الفترة المالية
+v295-048;financialStatements.period;en-US;For the Period
+v295-049;financialStatements.balanced;ar-EG;الميزانية متوازنة ✓
+v295-050;financialStatements.balanced;en-US;Balanced ✓
+v295-051;financialStatements.unbalanced;ar-EG;الميزانية غير متوازنة ✕
+v295-052;financialStatements.unbalanced;en-US;Unbalanced ✕
+v295-053;accounts.activeLabel;ar-EG;نشط
+v295-054;accounts.activeLabel;en-US;Active
+v295-055;accounts.isHeaderAccount;ar-EG;حساب تجميعي رئيسي
+v295-056;accounts.isHeaderAccount;en-US;Header Account
+v295-057;reports.netProfit;ar-EG;صافي الربح / (الخسارة)
+v295-058;reports.netProfit;en-US;Net Profit / (Loss)

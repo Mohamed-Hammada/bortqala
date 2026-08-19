@@ -47,23 +47,6 @@ interface InventoryRevaluationRepository extends JpaRepository<InventoryRevaluat
     BigDecimal revaluationValue(String itemId);
 }
 
-interface StockMovementRepository extends JpaRepository<StockMovement, String> {
-    List<StockMovement> findAllByOrderByOccurredAtDesc();
-
-    Optional<StockMovement> findFirstByItemIdOrderByOccurredAtDesc(String itemId);
-
-    @Query("select coalesce(sum(m.quantityDelta), 0) from StockMovement m where m.itemId = :itemId")
-    BigDecimal balance(String itemId);
-
-    @Query("select m.itemId, coalesce(sum(m.quantityDelta), 0) from StockMovement m group by m.itemId having coalesce(sum(m.quantityDelta), 0) < 0")
-    List<Object[]> findNegativeBalanceItemIds();
-
-    boolean existsByPartyIdAndInvoiceNoIgnoreCase(String partyId, String invoiceNo);
-
-    List<StockMovement> findByOperationTypeAndReferenceCodeAndItemId(
-            String operationType, String referenceCode, String itemId);
-}
-
 interface EmployeeAdvanceEntryRepository extends JpaRepository<EmployeeAdvanceEntry, String> {
     List<EmployeeAdvanceEntry> findAllByOrderByOccurredAtDesc();
 

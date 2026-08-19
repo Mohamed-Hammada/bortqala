@@ -1,0 +1,65 @@
+id;translation_key;locale;text_value
+v298-001;contracts.title;ar-EG;عقود العمل والتعيينات الوظيفية
+v298-002;contracts.title;en-US;Employment Contracts & Assignments
+v298-003;contracts.tabContracts;ar-EG;سجل العقود
+v298-004;contracts.tabContracts;en-US;Contracts Register
+v298-005;contracts.addContract;ar-EG;تحرير عقد عمل جديد
+v298-006;contracts.addContract;en-US;New Employment Contract
+v298-007;contracts.contractNumber;ar-EG;رقم العقد
+v298-008;contracts.contractNumber;en-US;Contract Number
+v298-009;contracts.contractType;ar-EG;نوع العقد
+v298-010;contracts.contractType;en-US;Contract Type
+v298-011;contracts.status;ar-EG;حالة العقد
+v298-012;contracts.status;en-US;Contract Status
+v298-013;contracts.startDate;ar-EG;تاريخ بداية العقد
+v298-014;contracts.startDate;en-US;Start Date
+v298-015;contracts.endDate;ar-EG;تاريخ نهاية العقد
+v298-016;contracts.endDate;en-US;End Date
+v298-017;contracts.probationEndDate;ar-EG;نهاية فترة الاختبار
+v298-018;contracts.probationEndDate;en-US;Probation End Date
+v298-019;contracts.noticePeriod;ar-EG;فترة الإخطار (يوم)
+v298-020;contracts.noticePeriod;en-US;Notice Period (Days)
+v298-021;contracts.basicSalary;ar-EG;الراتب الأساسي
+v298-022;contracts.basicSalary;en-US;Basic Salary
+v298-023;contracts.housingAllowance;ar-EG;بدل السكن
+v298-024;contracts.housingAllowance;en-US;Housing Allowance
+v298-025;contracts.transportAllowance;ar-EG;بدل الانتقال
+v298-026;contracts.transportAllowance;en-US;Transportation Allowance
+v298-027;contracts.otherAllowances;ar-EG;بدلات ومزايا أخرى
+v298-028;contracts.otherAllowances;en-US;Other Allowances
+v298-029;contracts.grossSalary;ar-EG;إجمالي الراتب الشامل
+v298-030;contracts.grossSalary;en-US;Gross Salary
+v298-031;contracts.jobTitle;ar-EG;المسمى الوظيفي
+v298-032;contracts.jobTitle;en-US;Job Title
+v298-033;contracts.amend;ar-EG;تعديل العقد (ملحق)
+v298-034;contracts.amend;en-US;Amend Contract
+v298-035;contracts.terminate;ar-EG;إنهاء العقد
+v298-036;contracts.terminate;en-US;Terminate Contract
+v298-037;contracts.saved;ar-EG;تم حفظ عقد العمل بنجاح
+v298-038;contracts.saved;en-US;Employment contract saved successfully
+v298-039;contracts.amended;ar-EG;تم تحرير ملحق تعديل العقد بنجاح
+v298-040;contracts.amended;en-US;Contract amendment saved successfully
+v298-041;contracts.terminated;ar-EG;تم إنهاء العقد بنجاح
+v298-042;contracts.terminated;en-US;Contract terminated successfully
+v298-043;contracts.permanent;ar-EG;عقد دائم غير محدد المدة
+v298-044;contracts.permanent;en-US;Permanent
+v298-045;contracts.fixedTerm;ar-EG;عقد محدد المدة
+v298-046;contracts.fixedTerm;en-US;Fixed Term
+v298-047;contracts.probationary;ar-EG;عقد تحت الاختبار
+v298-048;contracts.probationary;en-US;Probationary
+v298-049;contracts.partTime;ar-EG;دوام جزئي
+v298-050;contracts.partTime;en-US;Part Time
+v298-051;contracts.consultant;ar-EG;عقد استشاري
+v298-052;contracts.consultant;en-US;Consultant
+v298-053;contracts.seasonal;ar-EG;عقد موسمي
+v298-054;contracts.seasonal;en-US;Seasonal
+v298-055;contracts.statusActive;ar-EG;ساري المفعول
+v298-056;contracts.statusActive;en-US;Active
+v298-057;contracts.statusAmended;ar-EG;تم التعديل بملحق
+v298-058;contracts.statusAmended;en-US;Amended
+v298-059;contracts.statusExpired;ar-EG;منتهي الصلاحية
+v298-060;contracts.statusExpired;en-US;Expired
+v298-061;contracts.statusTerminated;ar-EG;تم الإنهاء
+v298-062;contracts.statusTerminated;en-US;Terminated
+v298-063;employees.contractsBtn;ar-EG;عقود العمل
+v298-064;employees.contractsBtn;en-US;Contracts

@@ -80,15 +80,23 @@ public class JournalEntryService {
                 payload.reference(), payload.fiscalPeriodId());
         entry.assignCreator(username);
         entry.setCurrency(normalizeCurrency(payload.currency()));
+        entry.assignProject(payload.projectId(), payload.wbsNodeId(), payload.costCodeId());
         entry = journalEntryRepository.save(entry);
         log.info("JournalEntry {} created by user {}", entry.getId(), username);
 
         for (var linePayload : payload.lines()) {
             JournalEntryLine line = new JournalEntryLine(entry.getId(), linePayload.accountId(),
                     linePayload.partyId(), linePayload.debit(), linePayload.credit(), linePayload.memo());
+            String proj = linePayload.projectId() != null ? linePayload.projectId() : payload.projectId();
+            String wbs = linePayload.wbsNodeId() != null ? linePayload.wbsNodeId() : payload.wbsNodeId();
+            String costCode = linePayload.costCodeId() != null ? linePayload.costCodeId() : payload.costCodeId();
+            line.assignProject(proj, wbs, costCode);
             line = journalEntryLineRepository.save(line);
-            if (hasDimension(linePayload)) journalDimensionRepository.save(new JournalDimension(line.getId(),
-                    blank(linePayload.costCenterId()), blank(linePayload.projectId()), blank(linePayload.departmentId())));
+            if (hasDimension(linePayload) || hasDimension(payload)) {
+                journalDimensionRepository.save(new JournalDimension(line.getId(),
+                        blank(linePayload.costCenterId()), blank(proj), blank(linePayload.departmentId()),
+                        blank(wbs), blank(costCode)));
+            }
         }
         var amountsByAccount = payload.lines().stream().collect(java.util.stream.Collectors.toMap(
                 AccountingApi.JournalEntryLinePayload::accountId,
@@ -330,8 +338,12 @@ public class JournalEntryService {
                 .map(l -> {
                     var d = dimensions.get(l.getId());
                     return new AccountingApi.JournalEntryLineResponse(l.getId(), l.getJournalEntryId(), l.getAccountId(),
-                            l.getPartyId(), l.getDebit(), l.getCredit(), l.getMemo(), d == null ? null : d.getCostCenterId(),
-                            d == null ? null : d.getProjectId(), d == null ? null : d.getDepartmentId());
+                            l.getPartyId(), l.getDebit(), l.getCredit(), l.getMemo(),
+                            d == null ? null : d.getCostCenterId(),
+                            d == null ? (l.getProjectId() != null ? l.getProjectId() : null) : d.getProjectId(),
+                            d == null ? null : d.getDepartmentId(),
+                            d == null ? (l.getWbsNodeId() != null ? l.getWbsNodeId() : null) : d.getWbsNodeId(),
+                            d == null ? (l.getCostCodeId() != null ? l.getCostCodeId() : null) : d.getCostCodeId());
                 })
                 .toList();
         BigDecimal totalDebit = lines.stream().map(AccountingApi.JournalEntryLineResponse::debit).reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -342,12 +354,17 @@ public class JournalEntryService {
                 e.getStatus().name(), e.getFiscalPeriodId(), e.getCurrency(),
                 e.getPostedBy(), e.getPostedAt(),
                 e.getReversalEntryId(), e.getReversedEntryId(), e.getReversalReason(), e.getReversedBy(), e.getReversedAt(),
-                e.getOperationId(), e.getVersion(),
+                e.getOperationId(), e.getProjectId(), e.getWbsNodeId(), e.getCostCodeId(), e.getVersion(),
                 lines, totalDebit, totalCredit, e.getCreatedAt(), e.getUpdatedAt());
     }
 
     private boolean hasDimension(AccountingApi.JournalEntryLinePayload line) {
-        return blank(line.costCenterId()) != null || blank(line.projectId()) != null || blank(line.departmentId()) != null;
+        return blank(line.costCenterId()) != null || blank(line.projectId()) != null || blank(line.departmentId()) != null
+                || blank(line.wbsNodeId()) != null || blank(line.costCodeId()) != null;
+    }
+
+    private boolean hasDimension(AccountingApi.JournalEntryPayload payload) {
+        return blank(payload.projectId()) != null || blank(payload.wbsNodeId()) != null || blank(payload.costCodeId()) != null;
     }
 
     private String blank(String value) {

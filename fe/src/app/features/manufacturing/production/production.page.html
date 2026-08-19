@@ -6,7 +6,7 @@
       <p>{{ i18n.t('production.description') }}</p>
     </div>
     <button class="button primary" (click)="openNew()">
-      ＋ {{ activeTab() === 'orders' ? i18n.t('production.addOrder') : i18n.t('production.addBom') }}
+      ＋ {{ activeTab() === 'orders' ? i18n.t('production.addOrder') : activeTab() === 'boms' ? i18n.t('production.addBom') : activeTab() === 'workCenters' ? i18n.t('production.addWorkCenter') : activeTab() === 'routings' ? i18n.t('production.addRouting') : i18n.t('production.addInspection') }}
     </button>
   </header>
 
@@ -24,6 +24,15 @@
     </button>
     <button type="button" class="app-tab" [class.active]="activeTab() === 'boms'" (click)="activeTab.set('boms')">
       {{ i18n.t('production.tabBoms') }} ({{ boms().length }})
+    </button>
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'routings'" (click)="activeTab.set('routings')">
+      {{ i18n.t('production.tabRoutings') }} ({{ routings().length }})
+    </button>
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'workCenters'" (click)="activeTab.set('workCenters')">
+      {{ i18n.t('production.tabWorkCenters') }} ({{ workCenters().length }})
+    </button>
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'inspections'" (click)="activeTab.set('inspections')">
+      {{ i18n.t('production.tabInspections') }} ({{ inspections().length }})
     </button>
   </nav>
 
@@ -99,10 +108,10 @@
             @for (b of boms(); track b.id) {
               <tr>
                 <td><strong class="ltr">{{ b.bomCode }}</strong></td>
-                <td><strong>{{ b.finishedGoodName }}</strong></td>
+                <td>{{ b.finishedGoodName }}</td>
                 <td class="ltr"><strong>{{ b.yieldQuantity | number:'1.0-2' }}</strong> {{ i18n.t('common.unit') }}</td>
-                <td>{{ b.notes || '—' }}</td>
-                <td><span class="status" [class.success]="b.active">{{ b.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span></td>
+                <td>{{ b.notes ?? '—' }}</td>
+                <td><span class="status success">{{ i18n.t('common.active') }}</span></td>
               </tr>
             } @empty {
               <tr>
@@ -115,73 +124,275 @@
         </table>
       </div>
     }
+
+    <!-- Routings Tab -->
+    @if (activeTab() === 'routings') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('production.routingCode') }}</th>
+              <th>{{ i18n.t('production.routingName') }}</th>
+              <th>{{ i18n.t('production.itemId') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of routings(); track r.id) {
+              <tr>
+                <td><strong class="ltr">{{ r.routingCode }}</strong></td>
+                <td>{{ r.name }}</td>
+                <td class="ltr"><code>{{ r.itemId }}</code></td>
+                <td><span class="status success">{{ i18n.t('common.active') }}</span></td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4">
+                  <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Work Centers Tab -->
+    @if (activeTab() === 'workCenters') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('production.workCenterCode') }}</th>
+              <th>{{ i18n.t('production.workCenterName') }}</th>
+              <th>{{ i18n.t('production.hourlyRate') }}</th>
+              <th>{{ i18n.t('production.capacityHours') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (w of workCenters(); track w.id) {
+              <tr>
+                <td><strong class="ltr">{{ w.code }}</strong></td>
+                <td>{{ w.name }}</td>
+                <td class="ltr"><strong>{{ w.hourlyRate | number:'1.2-2' }}</strong> <small class="ltr">{{ i18n.t('parties.currencyEgp') }}</small></td>
+                <td class="ltr">{{ w.capacityHoursPerDay }}</td>
+                <td><span class="status success">{{ i18n.t('common.active') }}</span></td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5">
+                  <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Inspections Tab -->
+    @if (activeTab() === 'inspections') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('production.inspectionNumber') }}</th>
+              <th>{{ i18n.t('production.colOrderNumber') }}</th>
+              <th>{{ i18n.t('production.inspector') }}</th>
+              <th>{{ i18n.t('production.inspectionResult') }}</th>
+              <th>{{ i18n.t('common.notes') }}</th>
+              <th>{{ i18n.t('common.date') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (qc of inspections(); track qc.id) {
+              <tr>
+                <td><strong class="ltr">{{ qc.inspectionNumber }}</strong></td>
+                <td class="ltr"><code>{{ qc.productionOrderId }}</code></td>
+                <td>{{ qc.inspectorId }}</td>
+                <td>
+                  <span class="status" [class.success]="qc.result === 'PASSED'" [class.danger]="qc.result === 'FAILED'">
+                    {{ i18n.t(qc.result === 'PASSED' ? 'production.resultPassed' : 'production.resultFailed') }}
+                  </span>
+                </td>
+                <td>{{ qc.notes ?? '—' }}</td>
+                <td class="ltr">{{ date(qc.createdAt) }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6">
+                  <div class="empty-state">{{ i18n.t('common.noResults') }}</div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
   }
 
-  <app-modal-dialog
-    [isOpen]="drawerOpen()"
-    [title]="activeTab() === 'orders' ? i18n.t('production.orderTitle') : i18n.t('production.bomTitle')"
-    size="wide"
-    (close)="closeDrawer()"
-  >
-    @if (activeTab() === 'orders') {
-      <form [formGroup]="orderForm" class="modal-form" (ngSubmit)="submitOrder()">
-        <div class="form-grid">
-          <div class="field">
-            <label>{{ i18n.t('production.orderNumberLabel') }} *</label>
-            <input class="ltr" formControlName="orderNumber" />
-          </div>
-          <div class="field">
-            <label>{{ i18n.t('production.startDateLabel') }} *</label>
-            <input type="date" class="ltr" formControlName="startDate" />
-          </div>
-          <div class="field span-2">
-            <label>{{ i18n.t('production.selectBomLabel') }} *</label>
-            <select formControlName="bomId">
-              @for (b of boms(); track b.id) {
-                <option [value]="b.id">{{ b.bomCode }} — {{ b.finishedGoodName }}</option>
-              }
-            </select>
-          </div>
-          <div class="field span-2">
-            <label>{{ i18n.t('production.targetQuantityLabel') }} *</label>
-            <input type="number" class="ltr" formControlName="targetQuantity" />
-          </div>
+  <!-- Creation Drawer -->
+  @if (drawerOpen()) {
+    <div class="drawer-backdrop" (click)="closeDrawer()"></div>
+    <aside class="drawer">
+      <div class="drawer-header">
+        <div>
+          <h2>{{ activeTab() === 'orders' ? i18n.t('production.addOrder') : activeTab() === 'boms' ? i18n.t('production.addBom') : activeTab() === 'workCenters' ? i18n.t('production.addWorkCenter') : activeTab() === 'routings' ? i18n.t('production.addRouting') : i18n.t('production.addInspection') }}</h2>
         </div>
-      </form>
-    }
+        <button class="button secondary" type="button" (click)="closeDrawer()">× {{ i18n.t('common.close') }}</button>
+      </div>
 
-    @if (activeTab() === 'boms') {
-      <form [formGroup]="bomForm" class="modal-form" (ngSubmit)="submitBom()">
-        <div class="form-grid">
-          <div class="field">
-            <label>{{ i18n.t('production.bomCodeLabel') }} *</label>
-            <input class="ltr" formControlName="bomCode" />
-          </div>
-          <div class="field">
-            <label>{{ i18n.t('production.finishedGoodNameLabel') }} *</label>
-            <input formControlName="finishedGoodName" [placeholder]="i18n.t('production.finishedGoodNamePlaceholder')" />
-          </div>
-          <div class="field">
-            <label>{{ i18n.t('production.yieldQuantityLabel') }} *</label>
-            <input type="number" class="ltr" formControlName="yieldQuantity" />
-          </div>
-          <div class="field span-2">
-            <label>{{ i18n.t('common.notes') }}</label>
-            <input formControlName="notes" [placeholder]="i18n.t('production.notesPlaceholder')" />
-          </div>
-        </div>
-      </form>
-    }
-
-    <div modal-actions>
-      @if (activeTab() === 'orders') {
-        <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
-        <button class="button primary" type="button" (click)="submitOrder()" [disabled]="orderForm.invalid">{{ i18n.t('production.saveOrder') }}</button>
-      }
+      <!-- BOM Form -->
       @if (activeTab() === 'boms') {
-        <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
-        <button class="button primary" type="button" (click)="submitBom()" [disabled]="bomForm.invalid">{{ i18n.t('production.saveBom') }}</button>
+        <form [formGroup]="bomForm" (ngSubmit)="submitBom()">
+          <div class="form-grid">
+            <div class="field">
+              <label>{{ i18n.t('production.colBomCode') }} *</label>
+              <input class="ltr" formControlName="bomCode" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.colFinishedGood') }} *</label>
+              <input formControlName="finishedGoodName" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.colYieldQuantity') }} *</label>
+              <input class="ltr" type="number" formControlName="yieldQuantity" />
+            </div>
+            <div class="field full-width">
+              <label>{{ i18n.t('common.notes') }}</label>
+              <textarea formControlName="notes"></textarea>
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+            <button class="button primary" type="submit" [disabled]="bomForm.invalid">{{ i18n.t('common.save') }}</button>
+          </div>
+        </form>
       }
-    </div>
-  </app-modal-dialog>
+
+      <!-- Order Form -->
+      @if (activeTab() === 'orders') {
+        <form [formGroup]="orderForm" (ngSubmit)="submitOrder()">
+          <div class="form-grid">
+            <div class="field">
+              <label>{{ i18n.t('production.colOrderNumber') }} *</label>
+              <input class="ltr" formControlName="orderNumber" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.colBom') }} *</label>
+              <select formControlName="bomId">
+                @for (b of boms(); track b.id) {
+                  <option [value]="b.id">{{ b.bomCode }} - {{ b.finishedGoodName }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.colTargetQuantity') }} *</label>
+              <input class="ltr" type="number" formControlName="targetQuantity" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.colStartDate') }} *</label>
+              <input type="date" formControlName="startDate" />
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+            <button class="button primary" type="submit" [disabled]="orderForm.invalid">{{ i18n.t('common.save') }}</button>
+          </div>
+        </form>
+      }
+
+      <!-- Work Center Form -->
+      @if (activeTab() === 'workCenters') {
+        <form [formGroup]="workCenterForm" (ngSubmit)="submitWorkCenter()">
+          <div class="form-grid">
+            <div class="field">
+              <label>{{ i18n.t('production.workCenterCode') }} *</label>
+              <input class="ltr" formControlName="code" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.workCenterName') }} *</label>
+              <input formControlName="name" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.hourlyRate') }} *</label>
+              <input class="ltr" type="number" formControlName="hourlyRate" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.capacityHours') }} *</label>
+              <input class="ltr" type="number" formControlName="capacityHoursPerDay" />
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+            <button class="button primary" type="submit" [disabled]="workCenterForm.invalid">{{ i18n.t('common.save') }}</button>
+          </div>
+        </form>
+      }
+
+      <!-- Routing Form -->
+      @if (activeTab() === 'routings') {
+        <form [formGroup]="routingForm" (ngSubmit)="submitRouting()">
+          <div class="form-grid">
+            <div class="field">
+              <label>{{ i18n.t('production.routingCode') }} *</label>
+              <input class="ltr" formControlName="routingCode" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.routingName') }} *</label>
+              <input formControlName="name" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.itemId') }} *</label>
+              <input class="ltr" formControlName="itemId" />
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+            <button class="button primary" type="submit" [disabled]="routingForm.invalid">{{ i18n.t('common.save') }}</button>
+          </div>
+        </form>
+      }
+
+      <!-- Inspection Form -->
+      @if (activeTab() === 'inspections') {
+        <form [formGroup]="inspectionForm" (ngSubmit)="submitInspection()">
+          <div class="form-grid">
+            <div class="field">
+              <label>{{ i18n.t('production.inspectionNumber') }} *</label>
+              <input class="ltr" formControlName="inspectionNumber" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.colOrderNumber') }} *</label>
+              <select formControlName="productionOrderId">
+                @for (o of orders(); track o.id) {
+                  <option [value]="o.id">{{ o.orderNumber }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.inspector') }} *</label>
+              <input formControlName="inspectorId" />
+            </div>
+            <div class="field">
+              <label>{{ i18n.t('production.inspectionResult') }} *</label>
+              <select formControlName="result">
+                <option value="PASSED">{{ i18n.t('production.resultPassed') }}</option>
+                <option value="FAILED">{{ i18n.t('production.resultFailed') }}</option>
+              </select>
+            </div>
+            <div class="field full-width">
+              <label>{{ i18n.t('common.notes') }}</label>
+              <textarea formControlName="notes"></textarea>
+            </div>
+          </div>
+          <div class="drawer-actions">
+            <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
+            <button class="button primary" type="submit" [disabled]="inspectionForm.invalid">{{ i18n.t('common.save') }}</button>
+          </div>
+        </form>
+      }
+    </aside>
+  }
 </section>

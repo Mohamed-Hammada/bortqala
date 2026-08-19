@@ -23,9 +23,11 @@ type DocumentReferenceKey =
   | 'invoiceNo'
   | 'voucherNo';
 
+import { DecimalPipe } from '@angular/common';
+
 @Component({
   selector: 'app-operations-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent],
+  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent, DecimalPipe],
   providers: [OperationsStore],
   templateUrl: './operations.page.html',
   styleUrl: './operations.page.scss',
@@ -35,8 +37,12 @@ export class OperationsPage {
   readonly store = inject(OperationsStore);
   readonly i18n = inject(I18nService);
   readonly notification = inject(NotificationService);
-  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | 'transfer' | 'bin' | null>(null);
+  readonly drawer = signal<'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | 'transfer' | 'bin' | 'analytics' | null>(null);
   readonly editingTransferId = signal<string | null>(null);
+  readonly activeAnalyticsTab = signal<'aging' | 'dead-stock' | 'reorder' | 'bins'>('aging');
+  readonly barcodeSearchQuery = signal('');
+  readonly barcodeLookupMatch = signal<any | null>(null);
+  readonly searchingBarcode = signal(false);
   readonly itemPagination = new TablePagination();
   readonly movementPagination = new TablePagination();
   readonly balancePagination = new TablePagination();
@@ -65,6 +71,11 @@ export class OperationsPage {
     uomId: new FormControl('', { nonNullable: true }),
     reorderPoint: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
     reorderQuantity: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    barcode: new FormControl('', { nonNullable: true }),
+    barcodeAliases: new FormControl('', { nonNullable: true }),
+    trackingType: new FormControl('NONE', { nonNullable: true }),
+    shelfLifeDays: new FormControl<number | null>(null),
+    isDeadStock: new FormControl(false, { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true }),
   });
   readonly transactionForm = new FormGroup({
@@ -94,6 +105,13 @@ export class OperationsPage {
     voucherNo: new FormControl('', { nonNullable: true }),
     externalRef: new FormControl('', { nonNullable: true }),
     warehouse: new FormControl('', { nonNullable: true }),
+    projectId: new FormControl('', { nonNullable: true }),
+    wbsNodeId: new FormControl('', { nonNullable: true }),
+    costCodeId: new FormControl('', { nonNullable: true }),
+    lotNumber: new FormControl('', { nonNullable: true }),
+    serialNumber: new FormControl('', { nonNullable: true }),
+    expiryDate: new FormControl('', { nonNullable: true }),
+    binId: new FormControl('', { nonNullable: true }),
     attachmentFile: new FormControl<File | null>(null),
     occurredAt: new FormControl(this.nowInput(), {
       nonNullable: true,
@@ -173,7 +191,7 @@ export class OperationsPage {
   constructor() {
     void this.store.load();
   }
-  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | 'transfer' | 'bin'): void {
+  open(kind: 'item' | 'transaction' | 'advance' | 'adjustment' | 'category' | 'uom' | 'valuation' | 'revaluation' | 'cycle-count' | 'transfer' | 'bin' | 'analytics'): void {
     if (kind === 'valuation') {
       const policy = this.store.valuation()?.policy;
       if (policy) this.valuationForm.reset({
@@ -536,6 +554,49 @@ export class OperationsPage {
     const date = new Date();
     date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
     return date.toISOString().slice(0, 16);
+  }
+
+  async onBarcodeSearch(): Promise<void> {
+    const q = this.barcodeSearchQuery().trim();
+    if (!q) {
+      this.barcodeLookupMatch.set(null);
+      return;
+    }
+    this.searchingBarcode.set(true);
+    try {
+      const match = await this.store.lookupBarcode(q);
+      this.barcodeLookupMatch.set(match);
+      if (!match) {
+        this.notification.warning(this.i18n.t('common.noResults'));
+      }
+    } finally {
+      this.searchingBarcode.set(false);
+    }
+  }
+
+  urgencyClass(urgency: string): string {
+    switch (urgency) {
+      case 'CRITICAL': return 'danger';
+      case 'WARNING': return 'warning';
+      default: return 'info';
+    }
+  }
+
+  urgencyLabel(urgency: string): string {
+    switch (urgency) {
+      case 'CRITICAL': return this.i18n.t('common.critical');
+      case 'WARNING': return this.i18n.t('common.warning');
+      default: return this.i18n.t('common.notice');
+    }
+  }
+
+  trackingTypeLabel(type: string): string {
+    switch (type) {
+      case 'LOT': return this.i18n.t('inventory.trackingLot');
+      case 'SERIAL': return this.i18n.t('inventory.trackingSerial');
+      case 'EXPIRY': return this.i18n.t('inventory.trackingExpiry');
+      default: return this.i18n.t('inventory.trackingNone');
+    }
   }
 
   @HostListener('document:keydown', ['$event']) onKeyDown(event: KeyboardEvent): void {

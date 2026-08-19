@@ -1,0 +1,82 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819_v294_cost_centers_schema
+      author: wolfn
+      changes:
+        - createTable:
+            tableName: cost_centers
+            ifNotExists: true
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(150)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: parent_id
+                  type: VARCHAR(36)
+              - column:
+                  name: manager_user_id
+                  type: VARCHAR(100)
+              - column:
+                  name: is_header
+                  type: BOOLEAN
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: BOOLEAN
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: effective_start_date
+                  type: BIGINT
+              - column:
+                  name: effective_end_date
+                  type: BIGINT
+              - column:
+                  name: gl_allocation_rule
+                  type: VARCHAR(255)
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            indexName: idx_cc_app_code
+            tableName: cost_centers
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: code
