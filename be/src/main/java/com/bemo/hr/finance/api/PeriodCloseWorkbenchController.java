@@ -19,7 +19,7 @@ public class PeriodCloseWorkbenchController {
     }
 
     @GetMapping("/{periodId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.VIEWER)
     public PeriodCloseWorkbenchService.WorkbenchSummary getWorkbenchSummary(@PathVariable String periodId) {
         return workbenchService.getWorkbenchSummary(periodId);
     }

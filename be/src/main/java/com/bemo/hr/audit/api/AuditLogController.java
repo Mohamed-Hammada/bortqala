@@ -22,7 +22,7 @@ public class AuditLogController {
     }
 
     @GetMapping
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER)
     public AuditLogApi.AuditLogPageResponse listAuditLogs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,

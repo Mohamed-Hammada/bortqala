@@ -19,13 +19,13 @@ public class JournalApprovalController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public JournalApprovalRule setApprovalRule(@RequestBody SetApprovalRulePayload payload) {
         return approvalService.setApprovalRule(payload.accountId(), payload.maxAmountWithoutApproval(), payload.requiresApproval());
     }
 
     @GetMapping("/accounts/{accountId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.VIEWER)
     public JournalApprovalRule getApprovalRule(@PathVariable String accountId) {
         return approvalService.getApprovalRule(accountId);
     }

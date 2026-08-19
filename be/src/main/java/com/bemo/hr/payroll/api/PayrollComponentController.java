@@ -20,19 +20,19 @@ public class PayrollComponentController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.PAYROLL_MANAGER)
     public PayrollComponent createComponent(@RequestBody CreateComponentPayload payload) {
         return evaluatorService.createComponent(payload.code(), payload.name(), PayrollComponent.Type.valueOf(payload.type()), payload.calculationFormula());
     }
 
     @PostMapping("/evaluate")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.PAYROLL_MANAGER + " or " + Roles.VIEWER)
     public PayrollComponentEvaluatorService.EvaluationResult evaluate(@RequestBody EvaluatePayload payload) {
         return evaluatorService.evaluateComponent(payload.componentId(), payload.baseAmount(), payload.percentage());
     }
 
     @GetMapping
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.PAYROLL_MANAGER + " or " + Roles.VIEWER)
     public List<PayrollComponent> getAllComponents() {
         return evaluatorService.getAllComponents();
     }

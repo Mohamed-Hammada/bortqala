@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/manufacturing")
-@PreAuthorize(Roles.ADMIN_HR_MANAGER_MANUFACTURING_MANAGER_QUALITY_MANAGER)
+@PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.MANUFACTURING_MANAGER + " or " + Roles.QUALITY_MANAGER)
 public class ManufacturingController {
 
     private final ManufacturingService manufacturingService;
@@ -29,7 +29,7 @@ public class ManufacturingController {
 
     @PostMapping("/boms")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.MANUFACTURING_MANAGER)
     @ResponseStatus(HttpStatus.CREATED)
     public ManufacturingApi.BomResponse createBom(@Valid @RequestBody ManufacturingApi.BomPayload payload) {
         return manufacturingService.createBom(payload);
@@ -37,7 +37,7 @@ public class ManufacturingController {
 
     @PutMapping("/boms/{id}")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.MANUFACTURING_MANAGER)
     public ManufacturingApi.BomResponse updateBom(@PathVariable String id, @Valid @RequestBody ManufacturingApi.BomPayload payload) {
         return manufacturingService.updateBom(id, payload);
     }
@@ -50,7 +50,7 @@ public class ManufacturingController {
 
     @PostMapping("/orders")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.MANUFACTURING_MANAGER)
     @ResponseStatus(HttpStatus.CREATED)
     public ManufacturingApi.ProductionOrderResponse createProductionOrder(@Valid @RequestBody ManufacturingApi.ProductionOrderPayload payload) {
         return manufacturingService.createProductionOrder(payload);
@@ -63,14 +63,14 @@ public class ManufacturingController {
 
     @PostMapping("/orders/{id}/start")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.MANUFACTURING_MANAGER)
     public ManufacturingApi.ProductionOrderResponse startProductionOrder(@PathVariable String id) {
         return manufacturingService.startProductionOrder(id);
     }
 
     @PostMapping("/orders/{id}/complete")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.MANUFACTURING_MANAGER)
     public ManufacturingApi.ProductionOrderResponse completeProductionOrder(
             @PathVariable String id, @Valid @RequestBody ManufacturingApi.CompleteProductionOrderPayload payload) {
         return manufacturingService.completeProductionOrder(id, payload);
@@ -78,7 +78,7 @@ public class ManufacturingController {
 
     @PostMapping("/orders/{id}/cancel")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.MANUFACTURING_MANAGER)
     public ManufacturingApi.ProductionOrderResponse cancelProductionOrder(@PathVariable String id) {
         return manufacturingService.cancelProductionOrder(id);
     }
@@ -91,7 +91,7 @@ public class ManufacturingController {
 
     @PostMapping("/quality")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.MANUFACTURING_MANAGER)
     @ResponseStatus(HttpStatus.CREATED)
     public ManufacturingApi.QualityInspectionResponse createInspection(@Valid @RequestBody ManufacturingApi.QualityInspectionPayload payload) {
         return manufacturingService.createInspection(payload);

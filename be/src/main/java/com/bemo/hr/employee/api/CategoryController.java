@@ -34,20 +34,20 @@ public class CategoryController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER)
     @ResponseStatus(HttpStatus.CREATED)
     CategoryApi.Response create(@Valid @RequestBody CategoryApi.UpsertRequest request) {
         return hrConfigurationService.createCategory(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER)
     CategoryApi.Response update(@PathVariable String id, @Valid @RequestBody CategoryApi.UpsertRequest request) {
         return hrConfigurationService.updateCategory(id, request);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deactivate(@PathVariable String id) {
         hrConfigurationService.deactivateCategory(id);

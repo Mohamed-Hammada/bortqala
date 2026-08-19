@@ -22,20 +22,20 @@ class BusinessPartyController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER)
     @ResponseStatus(HttpStatus.CREATED)
     BusinessPartyApi.Response create(@Valid @RequestBody BusinessPartyApi.Request request) {
         return businessPartyService.create(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER)
     BusinessPartyApi.Response update(@PathVariable String id, @Valid @RequestBody BusinessPartyApi.Request request) {
         return businessPartyService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deactivate(@PathVariable String id) {
         businessPartyService.deactivate(id);
@@ -48,7 +48,7 @@ class BusinessPartyController {
     }
 
     @PostMapping("/supplier-requests")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER)
     @ResponseStatus(HttpStatus.CREATED)
     BusinessPartyApi.Response createSupplierRequest(@Valid @RequestBody SupplierOnboardingApi.SupplierRequest request) {
         return supplierOnboardingService.createRequest(request);
@@ -68,7 +68,7 @@ class BusinessPartyController {
     }
 
     @PostMapping(value = "/{id}/documents", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER)
     @ResponseStatus(HttpStatus.CREATED)
     SupplierOnboardingApi.DocumentResponse addDocument(@PathVariable String id,
                                                        @Valid @org.springframework.web.bind.annotation.RequestPart("metadata") SupplierOnboardingApi.DocumentRequest request,
@@ -94,7 +94,7 @@ class BusinessPartyController {
     }
 
     @PostMapping("/{id}/bank-accounts")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER)
     @ResponseStatus(HttpStatus.CREATED)
     SupplierOnboardingApi.BankAccountResponse addBank(@PathVariable String id,
                                                       @Valid @RequestBody SupplierOnboardingApi.BankAccountRequest request) {
@@ -108,7 +108,7 @@ class BusinessPartyController {
     }
 
     @PostMapping("/{id}/onboarding/submit")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER)
     BusinessPartyApi.Response submitOnboarding(@PathVariable String id) {
         return supplierOnboardingService.submit(id);
     }

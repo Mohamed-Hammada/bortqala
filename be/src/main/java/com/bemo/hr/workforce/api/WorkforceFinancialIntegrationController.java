@@ -22,31 +22,31 @@ public class WorkforceFinancialIntegrationController {
     }
 
     @PostMapping("/budget")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_MANAGER)
     public WorkforceRequestBudget allocateRequestBudget(@RequestBody AllocateBudgetPayload payload) {
         return financialService.allocateRequestBudget(payload.requestId(), payload.departmentId(), payload.budgetId(), payload.amount());
     }
 
     @PostMapping("/invoice-matches")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_MANAGER)
     public WorkforceInvoiceMatch matchInvoice(@RequestBody MatchInvoicePayload payload) {
         return financialService.matchInvoice(payload.settlementId(), payload.invoiceId(), payload.matchedAmount(), payload.varianceAmount());
     }
 
     @PostMapping("/gl-postings")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public WorkforceGlPosting recordGlPosting(@RequestBody RecordGlPostingPayload payload) {
         return financialService.recordGlPosting(payload.settlementId(), payload.journalId(), payload.postedAmount());
     }
 
     @PostMapping("/treasury-matches")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_TREASURY_USER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.TREASURY_USER)
     public WorkforceTreasuryMatch matchTreasuryPayment(@RequestBody MatchTreasuryPayload payload) {
         return financialService.matchTreasuryPayment(payload.paymentId(), payload.bankTransactionId(), payload.matchedAmount());
     }
 
     @GetMapping("/budget/{requestId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER_WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.VIEWER + " or " + Roles.WORKFORCE_MANAGER)
     public WorkforceRequestBudget getRequestBudget(@PathVariable String requestId) {
         return financialService.getRequestBudget(requestId);
     }

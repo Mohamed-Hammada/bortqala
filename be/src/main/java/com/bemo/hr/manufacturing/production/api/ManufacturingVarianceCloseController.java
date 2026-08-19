@@ -17,13 +17,13 @@ public class ManufacturingVarianceCloseController {
     }
 
     @PostMapping("/close")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.MANUFACTURING_MANAGER)
     public ProductionVarianceClose calculateAndCloseVariance(@RequestBody CloseVariancePayload payload) {
         return varianceService.calculateAndCloseVariance(payload.workOrderId());
     }
 
     @GetMapping("/work-orders/{workOrderId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_MANUFACTURING_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.MANUFACTURING_MANAGER + " or " + Roles.VIEWER)
     public ProductionVarianceClose getVarianceClose(@PathVariable String workOrderId) {
         return varianceService.getVarianceClose(workOrderId);
     }

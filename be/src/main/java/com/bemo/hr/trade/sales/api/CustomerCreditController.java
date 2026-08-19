@@ -19,13 +19,13 @@ public class CustomerCreditController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_SALES_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.SALES_MANAGER)
     public CustomerCreditProfile setCreditLimit(@RequestBody SetCreditLimitPayload payload) {
         return creditService.setCreditLimit(payload.customerId(), payload.creditLimit());
     }
 
     @GetMapping("/customers/{customerId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_SALES_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.SALES_MANAGER + " or " + Roles.VIEWER)
     public CustomerCreditProfile getCreditProfile(@PathVariable String customerId) {
         return creditService.getCreditProfile(customerId);
     }

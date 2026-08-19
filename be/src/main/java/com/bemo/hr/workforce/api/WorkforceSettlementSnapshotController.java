@@ -19,13 +19,13 @@ public class WorkforceSettlementSnapshotController {
     }
 
     @PostMapping("/freeze")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_MANAGER)
     public WorkforceSettlementSnapshot createFrozenSnapshot(@RequestBody FreezeSnapshotPayload payload) {
         return snapshotService.createFrozenSnapshot(payload.contractorId(), payload.periodId(), payload.totalHours(), payload.grossAmount(), payload.netAmount());
     }
 
     @GetMapping("/{contractorId}/{periodId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER_WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.VIEWER + " or " + Roles.WORKFORCE_MANAGER)
     public WorkforceSettlementSnapshot getSnapshot(@PathVariable String contractorId, @PathVariable String periodId) {
         return snapshotService.getSnapshot(contractorId, periodId);
     }

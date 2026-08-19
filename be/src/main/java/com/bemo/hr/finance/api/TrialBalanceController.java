@@ -22,7 +22,7 @@ public class TrialBalanceController {
     }
 
     @GetMapping("/trial-balance")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.AUDITOR + " or " + Roles.FINANCE_MANAGER + " or " + Roles.VIEWER)
     public List<TrialBalanceReportService.TrialBalanceRow> getTrialBalance(
             @RequestParam(required = false) LocalDate from, @RequestParam(required = false) LocalDate to) {
         return trialBalanceReportService.generateTrialBalance(from == null ? LocalDate.MIN : from, to == null ? LocalDate.MAX : to);

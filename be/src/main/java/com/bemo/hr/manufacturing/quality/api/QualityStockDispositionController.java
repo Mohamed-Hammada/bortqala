@@ -20,13 +20,13 @@ public class QualityStockDispositionController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_QUALITY_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.QUALITY_MANAGER)
     public QualityStockDisposition createDisposition(@RequestBody CreateDispositionPayload payload) {
         return dispositionService.createDisposition(payload.inspectionId(), payload.dispositionType(), payload.quantity(), payload.reason());
     }
 
     @GetMapping("/{inspectionId}")
-    @PreAuthorize(Roles.ADMIN_QUALITY_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.QUALITY_MANAGER + " or " + Roles.VIEWER)
     public List<QualityStockDisposition> getDispositionsForInspection(@PathVariable String inspectionId) {
         return dispositionService.getDispositionsForInspection(inspectionId);
     }

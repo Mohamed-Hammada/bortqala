@@ -24,19 +24,19 @@ public class SourcingController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROCUREMENT_TEAM)
     public RfqHeader createRfq(@RequestBody CreateRfqPayload payload) {
         return sourcingService.createRfq(payload.rfqNumber(), payload.requisitionId(), LocalDate.parse(payload.issueDate()), LocalDate.parse(payload.dueDate()));
     }
 
     @PostMapping("/{id}/issue")
-    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROCUREMENT_MANAGER)
     public RfqHeader issueRfq(@PathVariable String id) {
         return sourcingService.issueRfq(id);
     }
 
     @PostMapping("/{id}/quotes")
-    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROCUREMENT_TEAM)
     public SupplierQuoteHeader submitQuote(@PathVariable String id, @RequestBody SubmitQuotePayload payload) {
         return sourcingService.submitQuote(
                 id,
@@ -49,13 +49,13 @@ public class SourcingController {
     }
 
     @PostMapping("/{id}/award")
-    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROCUREMENT_MANAGER)
     public SourcingAward awardQuote(@PathVariable String id, @RequestBody AwardQuotePayload payload, Authentication auth) {
         return sourcingService.awardQuote(id, payload.quoteId(), auth.getName());
     }
 
     @GetMapping("/{id}/quotes")
-    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.PROCUREMENT_USER + " or " + Roles.VIEWER)
     public List<SupplierQuoteHeader> getQuotes(@PathVariable String id) {
         return sourcingService.getQuotesForRfq(id);
     }

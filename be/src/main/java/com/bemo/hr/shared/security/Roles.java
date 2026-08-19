@@ -3,15 +3,17 @@ package com.bemo.hr.shared.security;
 /**
  * Central constants for the role predicates used in {@code @PreAuthorize} annotations.
  *
- * <p>Every {@code ADMIN_*} constant expands to a {@code hasAnyRole(...)} predicate that
- * includes both {@code SUPER_ADMIN} and {@code ADMIN} plus the named additional roles,
- * sorted for stability. This removes duplicated, drift-prone role string literals from
- * controllers and keeps role changes in a single place.
+ * <p>Endpoints compose these building blocks into a SpEL predicate, e.g.
+ * {@code @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM)}. This keeps the
+ * exact role membership of every endpoint explicit while avoiding the previous
+ * explosion of duplicated, drift-prone {@code ADMIN_*} role-list constants.
  */
 public final class Roles {
 
     private Roles() {
     }
+
+    // ---- Admin predicates ----
 
     /** {@code SUPER_ADMIN} or {@code ADMIN}. */
     public static final String ADMIN_ONLY = "hasAnyRole('SUPER_ADMIN','ADMIN')";
@@ -22,78 +24,83 @@ public final class Roles {
     /** Every operational role (smart-import style endpoints). */
     public static final String ALL_STAFF = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','AUDITOR','FINANCE_MANAGER','HR_MANAGER','HR_REVIEWER','INVENTORY_MANAGER','MANUFACTURING_MANAGER','PAYROLL_MANAGER','PROCUREMENT_MANAGER','PROCUREMENT_USER','QUALITY_MANAGER','SALES_MANAGER','TREASURY_USER')";
 
-    public static final String ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','AUDITOR','FINANCE_MANAGER')";
-    public static final String ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER_HR_MANAGER_INVENTORY_MANAGER_PROCUREMENT_MANAGER_PROCUREMENT_USER_TREASURY_USER = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','AUDITOR','FINANCE_MANAGER','HR_MANAGER','INVENTORY_MANAGER','PROCUREMENT_MANAGER','PROCUREMENT_USER','TREASURY_USER')";
-    public static final String ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER_HR_MANAGER_TREASURY_USER = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','AUDITOR','FINANCE_MANAGER','HR_MANAGER','TREASURY_USER')";
-    public static final String ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER_TREASURY_USER = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','AUDITOR','FINANCE_MANAGER','TREASURY_USER')";
-    public static final String ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','AUDITOR','FINANCE_MANAGER','VIEWER')";
-    public static final String ADMIN_ACCOUNTANT_FINANCE_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','FINANCE_MANAGER')";
-    public static final String ADMIN_ACCOUNTANT_FINANCE_MANAGER_HR_MANAGER_PROCUREMENT_MANAGER_PROCUREMENT_USER_WORKFORCE_MANAGER_WORKFORCE_REVIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','FINANCE_MANAGER','HR_MANAGER','PROCUREMENT_MANAGER','PROCUREMENT_USER','WORKFORCE_MANAGER','WORKFORCE_REVIEWER')";
-    public static final String ADMIN_ACCOUNTANT_FINANCE_MANAGER_PROCUREMENT_MANAGER_SALES_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','FINANCE_MANAGER','PROCUREMENT_MANAGER','SALES_MANAGER')";
-    public static final String ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','FINANCE_MANAGER','TREASURY_MANAGER')";
-    public static final String ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_USER = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','FINANCE_MANAGER','TREASURY_USER')";
-    public static final String ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_USER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','FINANCE_MANAGER','TREASURY_USER','VIEWER')";
-    public static final String ADMIN_ACCOUNTANT_TREASURY_USER = "hasAnyRole('SUPER_ADMIN','ADMIN','ACCOUNTANT','TREASURY_USER')";
-    public static final String ADMIN_AUDITOR_FINANCE_MANAGER_PROJECT_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','AUDITOR','FINANCE_MANAGER','PROJECT_MANAGER','VIEWER')";
-    public static final String ADMIN_EMPLOYEE_HR_MANAGER_HR_OFFICER = "hasAnyRole('SUPER_ADMIN','ADMIN','EMPLOYEE','HR_MANAGER','HR_OFFICER')";
-    public static final String ADMIN_EMPLOYEE_HR_MANAGER_HR_OFFICER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','EMPLOYEE','HR_MANAGER','HR_OFFICER','VIEWER')";
-    public static final String ADMIN_FINANCE_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER')";
-    public static final String ADMIN_FINANCE_MANAGER_HR_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','HR_MANAGER')";
-    public static final String ADMIN_FINANCE_MANAGER_HR_MANAGER_PROCUREMENT_MANAGER_WORKFORCE_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','HR_MANAGER','PROCUREMENT_MANAGER','WORKFORCE_MANAGER')";
-    public static final String ADMIN_FINANCE_MANAGER_HR_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','HR_MANAGER','VIEWER')";
-    public static final String ADMIN_FINANCE_MANAGER_INVENTORY_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','INVENTORY_MANAGER')";
-    public static final String ADMIN_FINANCE_MANAGER_INVENTORY_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','INVENTORY_MANAGER','VIEWER')";
-    public static final String ADMIN_FINANCE_MANAGER_MANUFACTURING_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','MANUFACTURING_MANAGER')";
-    public static final String ADMIN_FINANCE_MANAGER_MANUFACTURING_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','MANUFACTURING_MANAGER','VIEWER')";
-    public static final String ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','PROCUREMENT_MANAGER')";
-    public static final String ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_PROCUREMENT_USER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','PROCUREMENT_MANAGER','PROCUREMENT_USER')";
-    public static final String ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','PROCUREMENT_MANAGER','VIEWER')";
-    public static final String ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_WORKFORCE_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','PROCUREMENT_MANAGER','WORKFORCE_MANAGER')";
-    public static final String ADMIN_FINANCE_MANAGER_SALES_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','SALES_MANAGER')";
-    public static final String ADMIN_FINANCE_MANAGER_SALES_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','SALES_MANAGER','VIEWER')";
-    public static final String ADMIN_FINANCE_MANAGER_TREASURY_USER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','TREASURY_USER')";
-    public static final String ADMIN_FINANCE_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','VIEWER')";
-    public static final String ADMIN_FINANCE_MANAGER_VIEWER_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','VIEWER','WORKFORCE_FINANCE','WORKFORCE_MANAGER','WORKFORCE_REVIEWER')";
-    public static final String ADMIN_FINANCE_MANAGER_VIEWER_WORKFORCE_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','VIEWER','WORKFORCE_MANAGER')";
-    public static final String ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','WORKFORCE_FINANCE')";
-    public static final String ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE_WORKFORCE_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','WORKFORCE_FINANCE','WORKFORCE_MANAGER')";
-    public static final String ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','WORKFORCE_FINANCE','WORKFORCE_MANAGER','WORKFORCE_REVIEWER')";
-    public static final String ADMIN_FINANCE_MANAGER_WORKFORCE_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','WORKFORCE_MANAGER')";
-    public static final String ADMIN_HR_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER')";
-    public static final String ADMIN_HR_MANAGER_HR_OFFICER = "hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','HR_OFFICER')";
-    public static final String ADMIN_HR_MANAGER_HR_OFFICER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','HR_OFFICER','VIEWER')";
-    public static final String ADMIN_HR_MANAGER_HR_REVIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','HR_REVIEWER')";
-    public static final String ADMIN_HR_MANAGER_HR_REVIEWER_PAYROLL_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','HR_REVIEWER','PAYROLL_MANAGER')";
-    public static final String ADMIN_HR_MANAGER_MANUFACTURING_MANAGER_QUALITY_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','MANUFACTURING_MANAGER','QUALITY_MANAGER')";
-    public static final String ADMIN_HR_MANAGER_PAYROLL_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','PAYROLL_MANAGER')";
-    public static final String ADMIN_HR_MANAGER_PAYROLL_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','PAYROLL_MANAGER','VIEWER')";
-    public static final String ADMIN_HR_MANAGER_SALES_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','SALES_MANAGER')";
-    public static final String ADMIN_HR_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','VIEWER')";
-    public static final String ADMIN_HR_MANAGER_VIEWER_WORKFORCE_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','VIEWER','WORKFORCE_MANAGER')";
-    public static final String ADMIN_HR_MANAGER_WORKFORCE_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','WORKFORCE_MANAGER')";
-    public static final String ADMIN_INVENTORY_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','INVENTORY_MANAGER')";
-    public static final String ADMIN_INVENTORY_MANAGER_MANUFACTURING_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','INVENTORY_MANAGER','MANUFACTURING_MANAGER')";
-    public static final String ADMIN_INVENTORY_MANAGER_MANUFACTURING_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','INVENTORY_MANAGER','MANUFACTURING_MANAGER','VIEWER')";
-    public static final String ADMIN_INVENTORY_MANAGER_SALES_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','INVENTORY_MANAGER','SALES_MANAGER')";
-    public static final String ADMIN_INVENTORY_MANAGER_SALES_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','INVENTORY_MANAGER','SALES_MANAGER','VIEWER')";
-    public static final String ADMIN_INVENTORY_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','INVENTORY_MANAGER','VIEWER')";
-    public static final String ADMIN_MANUFACTURING_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','MANUFACTURING_MANAGER')";
-    public static final String ADMIN_MANUFACTURING_MANAGER_QUALITY_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','MANUFACTURING_MANAGER','QUALITY_MANAGER')";
-    public static final String ADMIN_MANUFACTURING_MANAGER_QUALITY_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','MANUFACTURING_MANAGER','QUALITY_MANAGER','VIEWER')";
-    public static final String ADMIN_MANUFACTURING_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','MANUFACTURING_MANAGER','VIEWER')";
-    public static final String ADMIN_PAYROLL_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','PAYROLL_MANAGER')";
-    public static final String ADMIN_PROCUREMENT_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER')";
-    public static final String ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER = "hasAnyRole('SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER','PROCUREMENT_USER')";
-    public static final String ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER','PROCUREMENT_USER','VIEWER')";
-    public static final String ADMIN_PROJECT_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','PROJECT_MANAGER')";
-    public static final String ADMIN_QUALITY_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','QUALITY_MANAGER')";
-    public static final String ADMIN_QUALITY_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','QUALITY_MANAGER','VIEWER')";
-    public static final String ADMIN_SALES_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER')";
-    public static final String ADMIN_SALES_MANAGER_VIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','SALES_MANAGER','VIEWER')";
-    public static final String ADMIN_VIEWER_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','VIEWER','WORKFORCE_FINANCE','WORKFORCE_MANAGER','WORKFORCE_REVIEWER')";
-    public static final String ADMIN_VIEWER_WORKFORCE_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','VIEWER','WORKFORCE_MANAGER')";
-    public static final String ADMIN_WORKFORCE_FINANCE = "hasAnyRole('SUPER_ADMIN','ADMIN','WORKFORCE_FINANCE')";
-    public static final String ADMIN_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','WORKFORCE_FINANCE','WORKFORCE_MANAGER','WORKFORCE_REVIEWER')";
-    public static final String ADMIN_WORKFORCE_MANAGER = "hasAnyRole('SUPER_ADMIN','ADMIN','WORKFORCE_MANAGER')";
-    public static final String ADMIN_WORKFORCE_MANAGER_WORKFORCE_REVIEWER = "hasAnyRole('SUPER_ADMIN','ADMIN','WORKFORCE_MANAGER','WORKFORCE_REVIEWER')";
+    // ---- Functional teams ----
+
+    /** Finance Team. */
+    public static final String FINANCE_TEAM = "hasAnyRole('ACCOUNTANT','AUDITOR','FINANCE_MANAGER','TREASURY_USER')";
+
+    /** Hr Team. */
+    public static final String HR_TEAM = "hasAnyRole('HR_MANAGER','HR_REVIEWER')";
+
+    /** Procurement Team. */
+    public static final String PROCUREMENT_TEAM = "hasAnyRole('PROCUREMENT_MANAGER','PROCUREMENT_USER')";
+
+    /** Workforce Team. */
+    public static final String WORKFORCE_TEAM = "hasAnyRole('WORKFORCE_FINANCE','WORKFORCE_MANAGER','WORKFORCE_REVIEWER')";
+
+    // ---- Individual functional roles ----
+
+    /** The {@code FINANCE_MANAGER} role. */
+    public static final String FINANCE_MANAGER = "hasAnyRole('FINANCE_MANAGER')";
+
+    /** The {@code ACCOUNTANT} role. */
+    public static final String ACCOUNTANT = "hasAnyRole('ACCOUNTANT')";
+
+    /** The {@code AUDITOR} role. */
+    public static final String AUDITOR = "hasAnyRole('AUDITOR')";
+
+    /** The {@code TREASURY_USER} role. */
+    public static final String TREASURY_USER = "hasAnyRole('TREASURY_USER')";
+
+    /** The {@code TREASURY_MANAGER} role. */
+    public static final String TREASURY_MANAGER = "hasAnyRole('TREASURY_MANAGER')";
+
+    /** The {@code HR_MANAGER} role. */
+    public static final String HR_MANAGER = "hasAnyRole('HR_MANAGER')";
+
+    /** The {@code HR_REVIEWER} role. */
+    public static final String HR_REVIEWER = "hasAnyRole('HR_REVIEWER')";
+
+    /** The {@code HR_OFFICER} role. */
+    public static final String HR_OFFICER = "hasAnyRole('HR_OFFICER')";
+
+    /** The {@code EMPLOYEE} role. */
+    public static final String EMPLOYEE = "hasAnyRole('EMPLOYEE')";
+
+    /** The {@code PAYROLL_MANAGER} role. */
+    public static final String PAYROLL_MANAGER = "hasAnyRole('PAYROLL_MANAGER')";
+
+    /** The {@code WORKFORCE_MANAGER} role. */
+    public static final String WORKFORCE_MANAGER = "hasAnyRole('WORKFORCE_MANAGER')";
+
+    /** The {@code WORKFORCE_REVIEWER} role. */
+    public static final String WORKFORCE_REVIEWER = "hasAnyRole('WORKFORCE_REVIEWER')";
+
+    /** The {@code WORKFORCE_FINANCE} role. */
+    public static final String WORKFORCE_FINANCE = "hasAnyRole('WORKFORCE_FINANCE')";
+
+    /** The {@code PROCUREMENT_MANAGER} role. */
+    public static final String PROCUREMENT_MANAGER = "hasAnyRole('PROCUREMENT_MANAGER')";
+
+    /** The {@code PROCUREMENT_USER} role. */
+    public static final String PROCUREMENT_USER = "hasAnyRole('PROCUREMENT_USER')";
+
+    /** The {@code INVENTORY_MANAGER} role. */
+    public static final String INVENTORY_MANAGER = "hasAnyRole('INVENTORY_MANAGER')";
+
+    /** The {@code MANUFACTURING_MANAGER} role. */
+    public static final String MANUFACTURING_MANAGER = "hasAnyRole('MANUFACTURING_MANAGER')";
+
+    /** The {@code QUALITY_MANAGER} role. */
+    public static final String QUALITY_MANAGER = "hasAnyRole('QUALITY_MANAGER')";
+
+    /** The {@code SALES_MANAGER} role. */
+    public static final String SALES_MANAGER = "hasAnyRole('SALES_MANAGER')";
+
+    /** The {@code PROJECT_MANAGER} role. */
+    public static final String PROJECT_MANAGER = "hasAnyRole('PROJECT_MANAGER')";
+
+    /** The {@code VIEWER} role. */
+    public static final String VIEWER = "hasAnyRole('VIEWER')";
+
 }

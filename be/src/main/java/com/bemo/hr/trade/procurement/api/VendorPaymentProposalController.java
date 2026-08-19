@@ -24,13 +24,13 @@ public class VendorPaymentProposalController {
     }
 
     @GetMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.VIEWER)
     public List<VendorPaymentProposalService.ProposalResult> getProposals() {
         return proposalService.getProposals();
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_PROCUREMENT_USER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.PROCUREMENT_USER)
     public VendorPaymentProposalService.ProposalResult createProposal(@Valid @RequestBody CreateProposalPayload payload,
                                                                       java.security.Principal principal) {
         List<VendorPaymentProposalService.AllocationInput> allocations = payload.allocations() == null || payload.allocations().isEmpty()
@@ -42,13 +42,13 @@ public class VendorPaymentProposalController {
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public VendorPaymentProposalService.ProposalResult approveProposal(@PathVariable String id, java.security.Principal principal) {
         return proposalService.approveProposal(id, principal.getName());
     }
 
     @PostMapping("/{id}/execute")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public VendorPaymentProposalService.ProposalResult executeProposal(@PathVariable String id,
                                                                        @Valid @RequestBody ExecuteProposalPayload payload,
                                                                        java.security.Principal principal) {
@@ -56,7 +56,7 @@ public class VendorPaymentProposalController {
     }
 
     @GetMapping("/supplier/{supplierId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.VIEWER)
     public List<VendorPaymentProposalService.ProposalResult> getProposalsForSupplier(@PathVariable String supplierId) {
         return proposalService.getProposalsForSupplier(supplierId);
     }

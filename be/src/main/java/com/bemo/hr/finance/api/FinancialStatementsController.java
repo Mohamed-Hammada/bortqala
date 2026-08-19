@@ -24,19 +24,19 @@ public class FinancialStatementsController {
     }
 
     @GetMapping("/balance-sheet")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.AUDITOR + " or " + Roles.FINANCE_MANAGER)
     public BalanceSheetReport getBalanceSheet(@RequestParam String asOfDate) {
         return statementsService.getBalanceSheet(LocalDate.parse(asOfDate));
     }
 
     @GetMapping("/income-statement")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.AUDITOR + " or " + Roles.FINANCE_MANAGER)
     public IncomeStatementReport getIncomeStatement(@RequestParam String startDate, @RequestParam String endDate) {
         return statementsService.getIncomeStatement(LocalDate.parse(startDate), LocalDate.parse(endDate));
     }
 
     @GetMapping("/cash-flow")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.AUDITOR + " or " + Roles.FINANCE_MANAGER)
     public CashFlowReport getCashFlowStatement(@RequestParam String startDate, @RequestParam String endDate) {
         return statementsService.getCashFlowStatement(LocalDate.parse(startDate), LocalDate.parse(endDate));
     }

@@ -19,7 +19,7 @@ import java.time.format.DateTimeFormatter;
 @RestController
 @RequestMapping("/api/v1/payroll")
 @RequiredArgsConstructor
-@PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER_PAYROLL_MANAGER
+@PreAuthorize("(" + Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.HR_REVIEWER + " or " + Roles.PAYROLL_MANAGER + ")"
         + " and @salaryAuthorization.canView(authentication)")
 public class PayrollController {
 
@@ -36,7 +36,7 @@ public class PayrollController {
     }
 
     @PostMapping("/pay")
-    @PreAuthorize(Roles.ADMIN_PAYROLL_MANAGER
+    @PreAuthorize("(" + Roles.ADMIN_ONLY + " or " + Roles.PAYROLL_MANAGER + ")"
             + " and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse recordPayment(
             @Valid @RequestBody PayrollApi.PaymentRequest request,
@@ -45,7 +45,7 @@ public class PayrollController {
     }
 
     @PostMapping("/pay-bulk")
-    @PreAuthorize(Roles.ADMIN_PAYROLL_MANAGER
+    @PreAuthorize("(" + Roles.ADMIN_ONLY + " or " + Roles.PAYROLL_MANAGER + ")"
             + " and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse payBulk(
             @Valid @RequestBody PayrollApi.BulkPaymentRequest request,
@@ -55,9 +55,9 @@ public class PayrollController {
 
     @PostMapping("/transition")
     @PreAuthorize("(((#request.targetStatus.name() == 'CALCULATED' or #request.targetStatus.name() == 'REVIEWED') "
-            + "and " + Roles.ADMIN_HR_MANAGER_HR_REVIEWER_PAYROLL_MANAGER + ") "
-            + "or (#request.targetStatus.name() == 'APPROVED' and " + Roles.ADMIN_PAYROLL_MANAGER + ") "
-            + "or (#request.targetStatus.name() == 'POSTED' and " + Roles.ADMIN_PAYROLL_MANAGER + ")) "
+            + "and (" + Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.HR_REVIEWER + " or " + Roles.PAYROLL_MANAGER + ")) "
+            + "or (#request.targetStatus.name() == 'APPROVED' and (" + Roles.ADMIN_ONLY + " or " + Roles.PAYROLL_MANAGER + ")) "
+            + "or (#request.targetStatus.name() == 'POSTED' and (" + Roles.ADMIN_ONLY + " or " + Roles.PAYROLL_MANAGER + "))) "
             + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse transitionStatus(
             @Valid @RequestBody PayrollApi.StatusTransitionRequest request,
@@ -66,7 +66,7 @@ public class PayrollController {
     }
 
     @PostMapping("/reverse")
-    @PreAuthorize(Roles.ADMIN_PAYROLL_MANAGER
+    @PreAuthorize("(" + Roles.ADMIN_ONLY + " or " + Roles.PAYROLL_MANAGER + ")"
             + " and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse reversePayment(
             @Valid @RequestBody PayrollApi.ReversePaymentRequest request,
@@ -103,7 +103,8 @@ public class PayrollController {
     }
 
     @PostMapping("/calculation-policies")
-    @PreAuthorize(Roles.ADMIN_PAYROLL_MANAGER + " and @salaryAuthorization.canView(authentication)")
+    @PreAuthorize("(" + Roles.ADMIN_ONLY + " or " + Roles.PAYROLL_MANAGER + ")"
+            + " and @salaryAuthorization.canView(authentication)")
     public PayrollApi.CalculationPolicyResponse createCalculationPolicy(
             @Valid @RequestBody PayrollApi.CalculationPolicyRequest request) {
         var from = java.time.Instant.ofEpochMilli(request.effectiveFrom()).atZone(java.time.ZoneOffset.UTC).toLocalDate();

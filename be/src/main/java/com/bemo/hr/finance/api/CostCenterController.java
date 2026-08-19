@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/finance/cost-centers")
 @RequiredArgsConstructor
-@PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER)
+@PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.FINANCE_MANAGER)
 public class CostCenterController {
 
     private final CostCenterService costCenterService;

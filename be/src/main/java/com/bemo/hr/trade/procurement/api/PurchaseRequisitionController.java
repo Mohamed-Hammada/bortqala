@@ -21,37 +21,37 @@ public class PurchaseRequisitionController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROCUREMENT_TEAM)
     public PurchaseRequisition createRequisition(@RequestBody CreateRequisitionPayload payload) {
         return requisitionService.createRequisition(payload.requisitionNumber(), payload.departmentId(), payload.requestedBy());
     }
 
     @PostMapping("/{id}/lines")
-    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROCUREMENT_TEAM)
     public PurchaseRequisitionLine addLine(@PathVariable String id, @RequestBody AddRequisitionLinePayload payload) {
         return requisitionService.addRequisitionLine(id, payload.itemId(), payload.itemName(), payload.requestedQuantity(), payload.unitPriceEstimate(), payload.notes());
     }
 
     @PostMapping("/{id}/submit")
-    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROCUREMENT_TEAM)
     public PurchaseRequisition submit(@PathVariable String id) {
         return requisitionService.submitRequisition(id);
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROCUREMENT_MANAGER)
     public PurchaseRequisition approve(@PathVariable String id) {
         return requisitionService.approveRequisition(id);
     }
 
     @GetMapping("/approved")
-    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.PROCUREMENT_USER + " or " + Roles.VIEWER)
     public List<PurchaseRequisition> getApprovedRequisitions() {
         return requisitionService.getApprovedRequisitions();
     }
 
     @GetMapping("/{id}/lines")
-    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.PROCUREMENT_USER + " or " + Roles.VIEWER)
     public List<PurchaseRequisitionLine> getLines(@PathVariable String id) {
         return requisitionService.getRequisitionLines(id);
     }

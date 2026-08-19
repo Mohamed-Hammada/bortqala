@@ -17,13 +17,13 @@ public class ProcurementMatchOverrideController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROCUREMENT_MANAGER)
     public ProcurementMatchOverride approveOverride(@RequestBody ApproveOverridePayload payload) {
         return overrideService.approveOverride(payload.matchId(), payload.overrideReason(), payload.approvedBy());
     }
 
     @GetMapping("/{matchId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.VIEWER)
     public ProcurementMatchOverride getOverride(@PathVariable String matchId) {
         return overrideService.getOverride(matchId);
     }

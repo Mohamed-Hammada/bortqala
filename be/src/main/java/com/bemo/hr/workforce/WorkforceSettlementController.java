@@ -17,56 +17,56 @@ public class WorkforceSettlementController {
     private final WorkforceSettlementService settlementService;
 
     @GetMapping("/periods")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_FINANCE + " or " + Roles.WORKFORCE_MANAGER + " or " + Roles.WORKFORCE_REVIEWER)
     public List<WorkforceApi.SettlementPeriodResponse> listPeriods() {
         return settlementService.listPeriods();
     }
 
     @GetMapping("/periods/{id}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_FINANCE + " or " + Roles.WORKFORCE_MANAGER + " or " + Roles.WORKFORCE_REVIEWER)
     public WorkforceApi.SettlementPeriodResponse getPeriod(@PathVariable String id) {
         return settlementService.getPeriod(id);
     }
 
     @GetMapping("/periods/{id}/issues")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_FINANCE + " or " + Roles.WORKFORCE_MANAGER + " or " + Roles.WORKFORCE_REVIEWER)
     public List<WorkforceApi.SettlementIssueResponse> listIssues(@PathVariable String id) {
         return settlementService.listIssues(id);
     }
 
     @GetMapping("/periods/{id}/contractor-settlements")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_FINANCE + " or " + Roles.WORKFORCE_MANAGER + " or " + Roles.WORKFORCE_REVIEWER)
     public List<WorkforceApi.ContractorSettlementDetailResponse> listContractorSettlementsForPeriod(@PathVariable String id) {
         return settlementService.listContractorSettlementsForPeriod(id);
     }
 
     @GetMapping("/contractor-settlements/{id}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_FINANCE + " or " + Roles.WORKFORCE_MANAGER + " or " + Roles.WORKFORCE_REVIEWER)
     public WorkforceApi.ContractorSettlementDetailResponse getContractorSettlement(@PathVariable String id) {
         return settlementService.getContractorSettlement(id);
     }
 
     @PostMapping("/periods")
-    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
     @ResponseStatus(HttpStatus.CREATED)
     public WorkforceApi.SettlementPeriodResponse createPeriod(@Valid @RequestBody WorkforceApi.SettlementPeriodRequest request) {
         return settlementService.createPeriod(request);
     }
 
     @PostMapping("/periods/{id}/calculate")
-    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
     public WorkforceApi.SettlementCalculationSummary calculatePeriod(@PathVariable String id) {
         return settlementService.calculatePeriod(id);
     }
 
     @PostMapping("/periods/{id}/review")
-    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
     public TransitionResponse reviewPeriod(@PathVariable String id) {
         return settlementService.reviewPeriod(id);
     }
 
     @PostMapping("/periods/{id}/approve")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_FINANCE)
     public TransitionResponse approvePeriod(@PathVariable String id) {
         return settlementService.approvePeriod(id);
     }
@@ -78,28 +78,28 @@ public class WorkforceSettlementController {
     }
 
     @PostMapping("/contractor-settlements/{id}/post")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_FINANCE)
     public WorkforceApi.ContractorSettlementDetailResponse postSettlement(@PathVariable String id,
                                                                           @Valid @RequestBody WorkforceApi.SettlementPostingRequest request) {
         return settlementService.postSettlement(id, request);
     }
 
     @PostMapping("/contractor-settlements/{id}/link-invoice")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_FINANCE)
     public WorkforceApi.ContractorSettlementDetailResponse linkInvoice(@PathVariable String id,
                                                                        @Valid @RequestBody WorkforceApi.LinkInvoiceRequest request) {
         return settlementService.linkInvoice(id, request);
     }
 
     @PostMapping("/contractor-settlements/{id}/mark-paid")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_FINANCE)
     public WorkforceApi.ContractorSettlementDetailResponse markPaid(@PathVariable String id,
                                                                     @Valid @RequestBody WorkforceApi.RecordSettlementPaymentRequest request) {
         return settlementService.markPaid(id, request);
     }
 
     @GetMapping(value = "/periods/{id}/export-excel", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.WORKFORCE_FINANCE + " or " + Roles.WORKFORCE_MANAGER + " or " + Roles.WORKFORCE_REVIEWER)
     public org.springframework.http.ResponseEntity<byte[]> exportPeriodExcel(@PathVariable String id) {
         byte[] excelBytes = settlementService.exportPeriodExcel(id);
         return org.springframework.http.ResponseEntity.ok()

@@ -33,7 +33,7 @@ public class FiscalPeriodController {
 
     @GetMapping("/{id}/precheck")
     @Transactional(readOnly = true)
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.AUDITOR + " or " + Roles.FINANCE_MANAGER)
     public com.bemo.hr.finance.application.CloseChecklistSummary getClosePrecheck(@PathVariable String id) {
         return closeChecklistService.computePrecheck(id);
     }
@@ -50,7 +50,7 @@ public class FiscalPeriodController {
 
     @PostMapping("/generate-year")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public List<FiscalPeriodApi.FiscalPeriodResponse> generateYear(@RequestParam int year) {
         // Auto generate 12 monthly periods for given year if none exist
         var existing = repository.findByFiscalYearOrderByPeriodNumberAsc(year);
@@ -70,7 +70,7 @@ public class FiscalPeriodController {
 
     @PutMapping("/{id}/status")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public FiscalPeriodApi.FiscalPeriodResponse updateStatus(@PathVariable String id,
                                                              @Valid @RequestBody FiscalPeriodApi.UpdateStatusPayload payload,
                                                              Authentication authentication) {

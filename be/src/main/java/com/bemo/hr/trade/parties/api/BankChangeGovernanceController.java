@@ -20,7 +20,7 @@ public class BankChangeGovernanceController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.WORKFORCE_MANAGER)
     public BankChangeRequest createRequest(@RequestBody RequestBankChangePayload payload, Authentication authentication) {
         return governanceService.requestBankChange(
                 BankChangeRequest.PartyType.valueOf(payload.partyType()),
@@ -35,19 +35,19 @@ public class BankChangeGovernanceController {
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public BankChangeRequest approveRequest(@PathVariable String id, Authentication authentication) {
         return governanceService.approveBankChange(id, authentication.getName());
     }
 
     @PostMapping("/{id}/reject")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public BankChangeRequest rejectRequest(@PathVariable String id, @RequestBody RejectBankChangePayload payload, Authentication authentication) {
         return governanceService.rejectBankChange(id, authentication.getName(), payload.reason());
     }
 
     @GetMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.VIEWER)
     public List<BankChangeRequest> getPendingRequests() {
         return governanceService.getPendingRequests();
     }

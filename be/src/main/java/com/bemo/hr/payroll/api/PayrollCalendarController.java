@@ -20,31 +20,31 @@ public class PayrollCalendarController {
     }
 
     @PostMapping("/calendars")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.PAYROLL_MANAGER)
     public PayrollCalendar createCalendar(@RequestBody CreateCalendarPayload payload) {
         return calendarService.createCalendar(payload.calendarCode(), payload.name(), PayrollCalendar.Frequency.valueOf(payload.frequency()));
     }
 
     @PostMapping("/calendars/{id}/generate-periods")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.PAYROLL_MANAGER)
     public List<PayPeriod> generatePeriods(@PathVariable String id, @RequestBody GeneratePeriodsPayload payload) {
         return calendarService.generatePeriods(id, payload.year());
     }
 
     @PostMapping("/periods/{id}/close")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.PAYROLL_MANAGER)
     public PayPeriod closePeriod(@PathVariable String id) {
         return calendarService.closePeriod(id);
     }
 
     @GetMapping("/calendars")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.PAYROLL_MANAGER + " or " + Roles.VIEWER)
     public List<PayrollCalendar> getAllCalendars() {
         return calendarService.getAllCalendars();
     }
 
     @GetMapping("/calendars/{id}/periods")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.PAYROLL_MANAGER + " or " + Roles.VIEWER)
     public List<PayPeriod> getPeriodsByCalendar(@PathVariable String id) {
         return calendarService.getPeriodsByCalendar(id);
     }

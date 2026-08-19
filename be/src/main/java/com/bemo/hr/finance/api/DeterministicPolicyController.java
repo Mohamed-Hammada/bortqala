@@ -20,19 +20,19 @@ public class DeterministicPolicyController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public AccountingRulePolicy createPolicy(@RequestBody CreatePolicyPayload payload) {
         return policyService.createPolicy(payload.policyCode(), payload.description(), payload.triggerEvent(), payload.debitAccountPattern(), payload.creditAccountPattern());
     }
 
     @PostMapping("/evaluate")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.VIEWER)
     public DeterministicPolicyEngineService.PolicyEvaluationResult evaluatePolicy(@RequestBody EvaluatePolicyPayload payload) {
         return policyService.evaluatePolicy(payload.policyCode(), payload.amount());
     }
 
     @GetMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.VIEWER)
     public List<AccountingRulePolicy> getAllPolicies() {
         return policyService.getAllPolicies();
     }

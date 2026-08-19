@@ -21,7 +21,7 @@ public class ItemLotSerialController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.INVENTORY_MANAGER)
     public ItemLotSerial createLotSerial(@RequestBody CreateLotSerialPayload payload) {
         LocalDate exp = payload.expirationDate() != null ? LocalDate.parse(payload.expirationDate()) : null;
         LocalDate mfg = payload.manufactureDate() != null ? LocalDate.parse(payload.manufactureDate()) : null;
@@ -29,37 +29,37 @@ public class ItemLotSerialController {
     }
 
     @PostMapping("/{id}/quarantine")
-    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.INVENTORY_MANAGER)
     public ItemLotSerial quarantine(@PathVariable String id) {
         return service.quarantine(id);
     }
 
     @PostMapping("/{id}/block")
-    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.INVENTORY_MANAGER)
     public ItemLotSerial block(@PathVariable String id) {
         return service.block(id);
     }
 
     @GetMapping("/items/{itemId}")
-    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.INVENTORY_MANAGER + " or " + Roles.VIEWER)
     public List<ItemLotSerial> getAvailableLotsByItem(@PathVariable String itemId) {
         return service.getAvailableLotsByItem(itemId);
     }
 
     @GetMapping("/{id}/trace")
-    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER_SALES_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.INVENTORY_MANAGER + " or " + Roles.SALES_MANAGER + " or " + Roles.VIEWER)
     public ItemLotSerial trace(@PathVariable String id) {
         return service.trace(id);
     }
 
     @PostMapping("/{id}/issue")
-    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.INVENTORY_MANAGER)
     public ItemLotSerial issue(@PathVariable String id, @RequestBody LotSerialMovementPayload payload) {
         return service.issue(id, payload.quantity(), payload.documentReference());
     }
 
     @PostMapping("/{id}/return")
-    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.INVENTORY_MANAGER)
     public ItemLotSerial receiveReturn(@PathVariable String id, @RequestBody LotSerialMovementPayload payload) {
         return service.receiveReturn(id, payload.quantity(), payload.documentReference());
     }

@@ -19,14 +19,14 @@ public class SubledgerReconciliationController {
     }
 
     @PostMapping("/generate")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.FINANCE_MANAGER)
     public SubledgerReconciliationReport generateReport(@RequestBody GenerateReportPayload payload) {
         return reconciliationService.generateReport(payload.periodId(),
                 SubledgerReconciliationReport.SubledgerType.valueOf(payload.subledgerType()));
     }
 
     @GetMapping("/periods/{periodId}")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.AUDITOR + " or " + Roles.FINANCE_MANAGER)
     public List<SubledgerReconciliationReport> getReportsByPeriod(@PathVariable String periodId) {
         return reconciliationService.getReportsByPeriod(periodId);
     }

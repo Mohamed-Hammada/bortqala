@@ -20,19 +20,19 @@ public class ProcurementBudgetAndTreasuryController {
     }
 
     @PostMapping("/budget-approvals")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROCUREMENT_MANAGER)
     public ProcurementBudgetApproval approveBudget(@RequestBody ApproveBudgetPayload payload) {
         return governanceService.approveBudget(payload.requisitionId(), payload.budgetId(), payload.amount());
     }
 
     @PostMapping("/treasury-matches")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_TREASURY_USER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.TREASURY_USER)
     public ProcurementTreasuryBankMatch matchTreasuryPayment(@RequestBody MatchTreasuryPayload payload) {
         return governanceService.matchTreasuryPayment(payload.paymentId(), payload.bankTransactionId(), payload.matchedAmount());
     }
 
     @GetMapping("/budget-approvals/{requisitionId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.VIEWER)
     public ProcurementBudgetApproval getBudgetApproval(@PathVariable String requisitionId) {
         return governanceService.getBudgetApproval(requisitionId);
     }

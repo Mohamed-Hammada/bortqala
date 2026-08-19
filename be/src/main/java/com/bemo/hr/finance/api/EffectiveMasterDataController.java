@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/finance/effective-master-data")
-@PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER)
+@PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.AUDITOR + " or " + Roles.FINANCE_MANAGER)
 public class EffectiveMasterDataController {
     private final EffectiveMasterDataService s;
 
@@ -21,7 +21,7 @@ public class EffectiveMasterDataController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public EffectiveMasterValue add(@RequestBody Payload p, Authentication a) {
         return s.add(p.masterType(), p.masterId(), p.valueKey(), p.valueText(), LocalDate.parse(p.effectiveFrom()), p.effectiveTo() == null ? null : LocalDate.parse(p.effectiveTo()), p.reason(), a.getName());
     }

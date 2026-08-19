@@ -21,37 +21,37 @@ public class PayrollExecutionController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.PAYROLL_MANAGER)
     public PayrollRunHeader createRun(@RequestBody CreateRunPayload payload) {
         return executionService.createRun(payload.runNumber(), payload.periodId(), LocalDate.parse(payload.runDate()));
     }
 
     @PostMapping("/{id}/lines")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.PAYROLL_MANAGER)
     public PayrollRunLine addRunLine(@PathVariable String id, @RequestBody AddRunLinePayload payload) {
         return executionService.addRunLine(id, payload.employeeId(), payload.basicSalary(), payload.allowances(), payload.deductions());
     }
 
     @PostMapping("/{id}/calculate")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.PAYROLL_MANAGER)
     public PayrollRunHeader calculateRun(@PathVariable String id) {
         return executionService.calculateRun(id);
     }
 
     @PostMapping("/{id}/review")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER_PAYROLL_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.HR_REVIEWER + " or " + Roles.PAYROLL_MANAGER)
     public PayrollRunHeader reviewRun(@PathVariable String id) {
         return executionService.reviewRun(id);
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.PAYROLL_MANAGER)
     public PayrollRunHeader approveRun(@PathVariable String id) {
         return executionService.approveRun(id);
     }
 
     @PostMapping("/{id}/post")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public PayrollRunHeader postRun(@PathVariable String id) {
         return executionService.postRun(id);
     }

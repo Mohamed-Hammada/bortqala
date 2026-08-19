@@ -17,13 +17,13 @@ public class LaborRequestController {
     private final LaborRequestService requestService;
 
     @GetMapping
-    @PreAuthorize(Roles.ADMIN_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_TEAM)
     public List<WorkforceApi.LaborRequestResponse> list() {
         return requestService.list();
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
     @ResponseStatus(HttpStatus.CREATED)
     public WorkforceApi.LaborRequestResponse create(@Valid @RequestBody WorkforceApi.LaborRequestCreate request, Authentication auth) {
         String username = auth != null ? auth.getName() : "system";
@@ -31,7 +31,7 @@ public class LaborRequestController {
     }
 
     @PutMapping("/{id}/status")
-    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
     public WorkforceApi.LaborRequestResponse updateStatus(@PathVariable String id, @RequestParam String status, Authentication auth) {
         String username = auth != null ? auth.getName() : "system";
         return requestService.updateStatus(id, status, username);

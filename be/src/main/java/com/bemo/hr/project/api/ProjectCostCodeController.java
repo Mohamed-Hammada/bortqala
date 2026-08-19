@@ -21,26 +21,26 @@ public class ProjectCostCodeController {
     }
 
     @GetMapping
-    @PreAuthorize(Roles.ADMIN_AUDITOR_FINANCE_MANAGER_PROJECT_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.AUDITOR + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROJECT_MANAGER + " or " + Roles.VIEWER)
     public List<ProjectCostCodeResponse> listCostCodes(@RequestParam(required = false) Boolean activeOnly) {
         return projectCostCodeService.listCostCodes(activeOnly);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_AUDITOR_FINANCE_MANAGER_PROJECT_MANAGER_VIEWER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.AUDITOR + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROJECT_MANAGER + " or " + Roles.VIEWER)
     public ProjectCostCodeResponse getCostCode(@PathVariable String id) {
         return projectCostCodeService.getCostCode(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_PROJECT_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROJECT_MANAGER)
     public ProjectCostCodeResponse createCostCode(@Valid @RequestBody CreateCostCodeRequest request) {
         return projectCostCodeService.createCostCode(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_PROJECT_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROJECT_MANAGER)
     public ProjectCostCodeResponse updateCostCode(
             @PathVariable String id,
             @Valid @RequestBody UpdateCostCodeRequest request
@@ -50,7 +50,7 @@ public class ProjectCostCodeController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize(Roles.ADMIN_PROJECT_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.PROJECT_MANAGER)
     public void deleteCostCode(@PathVariable String id) {
         projectCostCodeService.deleteCostCode(id);
     }

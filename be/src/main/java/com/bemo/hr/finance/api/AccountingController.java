@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/finance")
-@PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER_HR_MANAGER_TREASURY_USER)
+@PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.AUDITOR + " or " + Roles.FINANCE_MANAGER + " or " + Roles.HR_MANAGER + " or " + Roles.TREASURY_USER)
 public class AccountingController {
 
     private final AccountRepository accountRepository;
@@ -37,7 +37,7 @@ public class AccountingController {
 
     @PostMapping("/accounts")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.FINANCE_MANAGER)
     public AccountingApi.AccountResponse createAccount(@Valid @RequestBody AccountingApi.AccountPayload payload) {
         Account.Type type = Account.Type.valueOf(payload.type().toUpperCase());
         Account account = new Account(payload.code(), payload.name(), type, payload.parentId(), payload.isHeader(), payload.currency(), payload.active());
@@ -46,7 +46,7 @@ public class AccountingController {
 
     @PutMapping("/accounts/{id}")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.FINANCE_MANAGER)
     public AccountingApi.AccountResponse updateAccount(@PathVariable String id, @Valid @RequestBody AccountingApi.AccountPayload payload) {
         Account account = accountRepository.findById(id)
                 .orElseThrow(() -> new com.bemo.hr.shared.domain.BusinessRuleException("الحساب غير موجود في دليل الحسابات"));
@@ -73,14 +73,14 @@ public class AccountingController {
     }
 
     @PostMapping("/journal-entries")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.FINANCE_MANAGER)
     public AccountingApi.JournalEntryResponse createJournalEntry(@Valid @RequestBody AccountingApi.JournalEntryPayload payload,
                                                                  Authentication authentication) {
         return journalEntryService.create(payload, authentication.getName());
     }
 
     @PostMapping("/journal-entries/{id}/post")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.FINANCE_MANAGER)
     public AccountingApi.JournalEntryResponse postJournalEntry(@PathVariable String id,
                                                                @Valid @RequestBody AccountingApi.JournalActionRequest request,
                                                                Authentication authentication) {
@@ -96,21 +96,21 @@ public class AccountingController {
     }
 
     @PostMapping("/journal-entries/{id}/approve")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public AccountingApi.JournalEntryResponse approveJournalEntry(@PathVariable String id,
                                                                   @Valid @RequestBody AccountingApi.JournalActionRequest request, Authentication authentication) {
         return journalEntryService.approve(id, request, authentication.getName());
     }
 
     @PostMapping("/journal-entries/{id}/reject")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public AccountingApi.JournalEntryResponse rejectJournalEntry(@PathVariable String id,
                                                                  @Valid @RequestBody AccountingApi.JournalActionRequest request, Authentication authentication) {
         return journalEntryService.reject(id, request, authentication.getName());
     }
 
     @PostMapping("/journal-entries/{id}/reverse")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
     public AccountingApi.JournalEntryResponse reverseJournalEntry(@PathVariable String id,
                                                                   @Valid @RequestBody AccountingApi.JournalActionRequest request,
                                                                   Authentication authentication) {
