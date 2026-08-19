@@ -1,6 +1,7 @@
 package com.bemo.hr.finance.api;
 
 import com.bemo.hr.finance.application.BankReconciliationService;
+import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -14,7 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/finance/bank-reconciliation")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR')")
+@PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER_TREASURY_USER)
 public class BankReconciliationController {
     private final BankReconciliationService bankReconciliationService;
 
@@ -24,7 +25,7 @@ public class BankReconciliationController {
     }
 
     @PostMapping(value = "/statements/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
+    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_USER)
     public BankReconciliationApi.WorkbenchResponse importStatement(
             @RequestParam String bankAccountId, @RequestParam String statementReference,
             @RequestParam BigDecimal openingBalance, @RequestParam BigDecimal closingBalance,
@@ -38,21 +39,21 @@ public class BankReconciliationController {
     }
 
     @PostMapping("/statements/{id}/auto-match")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
+    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_USER)
     public BankReconciliationApi.WorkbenchResponse autoMatch(@PathVariable String id,
                                                              @Valid @RequestBody BankReconciliationApi.OperationRequest request) {
         return bankReconciliationService.autoMatch(id, request);
     }
 
     @PostMapping("/statements/{id}/lines/{lineId}/match")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
+    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_USER)
     public BankReconciliationApi.WorkbenchResponse match(@PathVariable String id, @PathVariable String lineId,
                                                          @Valid @RequestBody BankReconciliationApi.MatchRequest request) {
         return bankReconciliationService.match(id, lineId, request);
     }
 
     @PostMapping("/statements/{id}/matches/{matchId}/reverse")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public BankReconciliationApi.WorkbenchResponse reverse(@PathVariable String id, @PathVariable String matchId,
                                                            @Valid @RequestBody BankReconciliationApi.ReverseRequest request) {
         return bankReconciliationService.reverse(id, matchId, request);

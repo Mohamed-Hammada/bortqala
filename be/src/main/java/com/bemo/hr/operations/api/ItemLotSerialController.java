@@ -2,6 +2,7 @@ package com.bemo.hr.operations.api;
 
 import com.bemo.hr.operations.application.ItemLotSerialService;
 import com.bemo.hr.operations.domain.ItemLotSerial;
+import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,7 +21,7 @@ public class ItemLotSerialController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER)
     public ItemLotSerial createLotSerial(@RequestBody CreateLotSerialPayload payload) {
         LocalDate exp = payload.expirationDate() != null ? LocalDate.parse(payload.expirationDate()) : null;
         LocalDate mfg = payload.manufactureDate() != null ? LocalDate.parse(payload.manufactureDate()) : null;
@@ -28,37 +29,37 @@ public class ItemLotSerialController {
     }
 
     @PostMapping("/{id}/quarantine")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER)
     public ItemLotSerial quarantine(@PathVariable String id) {
         return service.quarantine(id);
     }
 
     @PostMapping("/{id}/block")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER)
     public ItemLotSerial block(@PathVariable String id) {
         return service.block(id);
     }
 
     @GetMapping("/items/{itemId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER_VIEWER)
     public List<ItemLotSerial> getAvailableLotsByItem(@PathVariable String itemId) {
         return service.getAvailableLotsByItem(itemId);
     }
 
     @GetMapping("/{id}/trace")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'SALES_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER_SALES_MANAGER_VIEWER)
     public ItemLotSerial trace(@PathVariable String id) {
         return service.trace(id);
     }
 
     @PostMapping("/{id}/issue")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER)
     public ItemLotSerial issue(@PathVariable String id, @RequestBody LotSerialMovementPayload payload) {
         return service.issue(id, payload.quantity(), payload.documentReference());
     }
 
     @PostMapping("/{id}/return")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER)
     public ItemLotSerial receiveReturn(@PathVariable String id, @RequestBody LotSerialMovementPayload payload) {
         return service.receiveReturn(id, payload.quantity(), payload.documentReference());
     }

@@ -4,6 +4,7 @@ import com.bemo.hr.manufacturing.production.application.ManufacturingWipService;
 import com.bemo.hr.manufacturing.production.domain.MaterialReservationHeader;
 import com.bemo.hr.manufacturing.production.domain.MaterialReservationLine;
 import com.bemo.hr.manufacturing.production.domain.WipPostingRecord;
+import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,25 +22,25 @@ public class ManufacturingWipController {
     }
 
     @PostMapping("/reservations")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
     public MaterialReservationHeader createReservation(@RequestBody CreateReservationPayload payload) {
         return wipService.createReservation(payload.workOrderId());
     }
 
     @PostMapping("/reservations/{id}/lines")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
     public MaterialReservationLine addReservationLine(@PathVariable String id, @RequestBody AddReservationLinePayload payload) {
         return wipService.addReservationLine(id, payload.itemId(), payload.reservedQuantity());
     }
 
     @PostMapping("/postings")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_MANUFACTURING_MANAGER)
     public WipPostingRecord postWip(@RequestBody PostWipPayload payload) {
         return wipService.postWip(payload.workOrderId(), payload.workCenterId(), payload.laborHours(), payload.machineHours(), payload.totalWipCost());
     }
 
     @GetMapping("/postings/work-orders/{workOrderId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_MANUFACTURING_MANAGER_VIEWER)
     public List<WipPostingRecord> getWipPostings(@PathVariable String workOrderId) {
         return wipService.getWipPostings(workOrderId);
     }

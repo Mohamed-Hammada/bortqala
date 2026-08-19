@@ -2,6 +2,7 @@ package com.bemo.hr.project.api;
 
 import com.bemo.hr.project.api.ProjectApi.*;
 import com.bemo.hr.project.application.ProjectCostCodeService;
+import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,26 +21,26 @@ public class ProjectCostCodeController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_AUDITOR_FINANCE_MANAGER_PROJECT_MANAGER_VIEWER)
     public List<ProjectCostCodeResponse> listCostCodes(@RequestParam(required = false) Boolean activeOnly) {
         return projectCostCodeService.listCostCodes(activeOnly);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_AUDITOR_FINANCE_MANAGER_PROJECT_MANAGER_VIEWER)
     public ProjectCostCodeResponse getCostCode(@PathVariable String id) {
         return projectCostCodeService.getCostCode(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_PROJECT_MANAGER)
     public ProjectCostCodeResponse createCostCode(@Valid @RequestBody CreateCostCodeRequest request) {
         return projectCostCodeService.createCostCode(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_PROJECT_MANAGER)
     public ProjectCostCodeResponse updateCostCode(
             @PathVariable String id,
             @Valid @RequestBody UpdateCostCodeRequest request
@@ -49,7 +50,7 @@ public class ProjectCostCodeController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_PROJECT_MANAGER)
     public void deleteCostCode(@PathVariable String id) {
         projectCostCodeService.deleteCostCode(id);
     }

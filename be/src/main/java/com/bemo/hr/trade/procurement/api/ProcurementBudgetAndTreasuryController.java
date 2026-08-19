@@ -1,5 +1,6 @@
 package com.bemo.hr.trade.procurement.api;
 
+import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.trade.procurement.application.ProcurementBudgetAndTreasuryService;
 import com.bemo.hr.trade.procurement.domain.ProcurementBudgetApproval;
 import com.bemo.hr.trade.procurement.domain.ProcurementTreasuryBankMatch;
@@ -19,19 +20,19 @@ public class ProcurementBudgetAndTreasuryController {
     }
 
     @PostMapping("/budget-approvals")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER)
     public ProcurementBudgetApproval approveBudget(@RequestBody ApproveBudgetPayload payload) {
         return governanceService.approveBudget(payload.requisitionId(), payload.budgetId(), payload.amount());
     }
 
     @PostMapping("/treasury-matches")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'TREASURY_USER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_TREASURY_USER)
     public ProcurementTreasuryBankMatch matchTreasuryPayment(@RequestBody MatchTreasuryPayload payload) {
         return governanceService.matchTreasuryPayment(payload.paymentId(), payload.bankTransactionId(), payload.matchedAmount());
     }
 
     @GetMapping("/budget-approvals/{requisitionId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_VIEWER)
     public ProcurementBudgetApproval getBudgetApproval(@PathVariable String requisitionId) {
         return governanceService.getBudgetApproval(requisitionId);
     }

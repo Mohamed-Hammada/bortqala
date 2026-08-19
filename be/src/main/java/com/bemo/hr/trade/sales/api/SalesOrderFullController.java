@@ -1,5 +1,6 @@
 package com.bemo.hr.trade.sales.api;
 
+import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.trade.sales.application.SalesOrderFullService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -16,27 +17,27 @@ public class SalesOrderFullController {
     private final SalesOrderFullService salesOrderFullService;
 
     @PostMapping("/{id}/deliveries")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_SALES_MANAGER)
     public SalesApi.DeliveryResponse deliver(@PathVariable String id, @Valid @RequestBody SalesApi.DeliveryRequest payload,
                                              Authentication authentication) {
         return salesOrderFullService.deliver(id, payload, authentication.getName());
     }
 
     @PostMapping("/{id}/returns")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_SALES_MANAGER)
     public SalesApi.ReturnResponse receiveReturn(@PathVariable String id, @Valid @RequestBody SalesApi.ReturnRequest payload,
                                                  Authentication authentication) {
         return salesOrderFullService.receiveReturn(id, payload, authentication.getName());
     }
 
     @GetMapping("/{id}/deliveries")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_SALES_MANAGER_VIEWER)
     public List<SalesApi.DeliveryResponse> deliveries(@PathVariable String id) {
         return salesOrderFullService.deliveries(id);
     }
 
     @GetMapping("/{id}/returns")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_SALES_MANAGER_VIEWER)
     public List<SalesApi.ReturnResponse> returns(@PathVariable String id) {
         return salesOrderFullService.returns(id);
     }

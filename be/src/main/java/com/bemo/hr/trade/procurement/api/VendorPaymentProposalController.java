@@ -1,5 +1,6 @@
 package com.bemo.hr.trade.procurement.api;
 
+import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.trade.procurement.application.VendorPaymentProposalService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
@@ -23,13 +24,13 @@ public class VendorPaymentProposalController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_VIEWER)
     public List<VendorPaymentProposalService.ProposalResult> getProposals() {
         return proposalService.getProposals();
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_PROCUREMENT_USER)
     public VendorPaymentProposalService.ProposalResult createProposal(@Valid @RequestBody CreateProposalPayload payload,
                                                                       java.security.Principal principal) {
         List<VendorPaymentProposalService.AllocationInput> allocations = payload.allocations() == null || payload.allocations().isEmpty()
@@ -41,13 +42,13 @@ public class VendorPaymentProposalController {
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public VendorPaymentProposalService.ProposalResult approveProposal(@PathVariable String id, java.security.Principal principal) {
         return proposalService.approveProposal(id, principal.getName());
     }
 
     @PostMapping("/{id}/execute")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public VendorPaymentProposalService.ProposalResult executeProposal(@PathVariable String id,
                                                                        @Valid @RequestBody ExecuteProposalPayload payload,
                                                                        java.security.Principal principal) {
@@ -55,7 +56,7 @@ public class VendorPaymentProposalController {
     }
 
     @GetMapping("/supplier/{supplierId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_VIEWER)
     public List<VendorPaymentProposalService.ProposalResult> getProposalsForSupplier(@PathVariable String supplierId) {
         return proposalService.getProposalsForSupplier(supplierId);
     }

@@ -1,5 +1,6 @@
 package com.bemo.hr.trade.procurement.api;
 
+import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.trade.procurement.application.GrirReconciliationService;
 import com.bemo.hr.trade.procurement.domain.GrirReconciliationRecord;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,19 +19,19 @@ public class GrirReconciliationController {
     }
 
     @PostMapping("/reconcile")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER)
     public GrirReconciliationRecord reconcileLine(@RequestBody ReconcileLinePayload payload) {
         return grirService.reconcileLine(payload.goodsReceiptLineId(), payload.invoiceLineId(), payload.receivedAmount(), payload.invoicedAmount());
     }
 
     @PostMapping("/{id}/close")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public GrirReconciliationRecord closeRecord(@PathVariable String id) {
         return grirService.closeRecord(id);
     }
 
     @GetMapping("/summary")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_VIEWER)
     public GrirReconciliationService.GrirSummaryReport getSummaryReport() {
         return grirService.getSummaryReport();
     }

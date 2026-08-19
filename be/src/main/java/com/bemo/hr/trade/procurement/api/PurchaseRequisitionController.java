@@ -1,5 +1,6 @@
 package com.bemo.hr.trade.procurement.api;
 
+import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.trade.procurement.application.PurchaseRequisitionService;
 import com.bemo.hr.trade.procurement.domain.PurchaseRequisition;
 import com.bemo.hr.trade.procurement.domain.PurchaseRequisitionLine;
@@ -20,37 +21,37 @@ public class PurchaseRequisitionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER')")
+    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER)
     public PurchaseRequisition createRequisition(@RequestBody CreateRequisitionPayload payload) {
         return requisitionService.createRequisition(payload.requisitionNumber(), payload.departmentId(), payload.requestedBy());
     }
 
     @PostMapping("/{id}/lines")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER')")
+    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER)
     public PurchaseRequisitionLine addLine(@PathVariable String id, @RequestBody AddRequisitionLinePayload payload) {
         return requisitionService.addRequisitionLine(id, payload.itemId(), payload.itemName(), payload.requestedQuantity(), payload.unitPriceEstimate(), payload.notes());
     }
 
     @PostMapping("/{id}/submit")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER')")
+    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER)
     public PurchaseRequisition submit(@PathVariable String id) {
         return requisitionService.submitRequisition(id);
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER)
     public PurchaseRequisition approve(@PathVariable String id) {
         return requisitionService.approveRequisition(id);
     }
 
     @GetMapping("/approved")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER_VIEWER)
     public List<PurchaseRequisition> getApprovedRequisitions() {
         return requisitionService.getApprovedRequisitions();
     }
 
     @GetMapping("/{id}/lines")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER_VIEWER)
     public List<PurchaseRequisitionLine> getLines(@PathVariable String id) {
         return requisitionService.getRequisitionLines(id);
     }

@@ -1,5 +1,6 @@
 package com.bemo.hr.workforce;
 
+import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,26 +15,26 @@ public class WorkforceAttendanceController {
     private final WorkforceAttendanceService attendanceService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
     public List<ManualAttendanceEntry> getByRange(@RequestParam String startDate, @RequestParam String endDate) {
         return attendanceService.getByDateRange(startDate, endDate);
     }
 
     @PostMapping("/batch")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
     public WorkforceApi.BatchAttendanceResponse saveBatch(@Valid @RequestBody WorkforceApi.BatchAttendanceRequest request) {
         return attendanceService.saveBatch(request);
     }
 
     @PostMapping("/bulk-update")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
     public WorkforceApi.BulkUpdateAttendanceResponse bulkUpdate(
             @Valid @RequestBody WorkforceApi.BulkUpdateAttendanceRequest request) {
         return attendanceService.bulkUpdate(request);
     }
 
     @GetMapping("/calculation-rules")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
     public WorkforceApi.CalculationRulesResponse getCalculationRules(
             @RequestParam(required = false) String date) {
         return attendanceService.getCalculationRules(date);

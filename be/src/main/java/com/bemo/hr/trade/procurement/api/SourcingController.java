@@ -1,5 +1,6 @@
 package com.bemo.hr.trade.procurement.api;
 
+import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.trade.procurement.application.SourcingService;
 import com.bemo.hr.trade.procurement.domain.RfqHeader;
 import com.bemo.hr.trade.procurement.domain.SourcingAward;
@@ -23,19 +24,19 @@ public class SourcingController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER')")
+    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER)
     public RfqHeader createRfq(@RequestBody CreateRfqPayload payload) {
         return sourcingService.createRfq(payload.rfqNumber(), payload.requisitionId(), LocalDate.parse(payload.issueDate()), LocalDate.parse(payload.dueDate()));
     }
 
     @PostMapping("/{id}/issue")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER)
     public RfqHeader issueRfq(@PathVariable String id) {
         return sourcingService.issueRfq(id);
     }
 
     @PostMapping("/{id}/quotes")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER')")
+    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER)
     public SupplierQuoteHeader submitQuote(@PathVariable String id, @RequestBody SubmitQuotePayload payload) {
         return sourcingService.submitQuote(
                 id,
@@ -48,13 +49,13 @@ public class SourcingController {
     }
 
     @PostMapping("/{id}/award")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER)
     public SourcingAward awardQuote(@PathVariable String id, @RequestBody AwardQuotePayload payload, Authentication auth) {
         return sourcingService.awardQuote(id, payload.quoteId(), auth.getName());
     }
 
     @GetMapping("/{id}/quotes")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'PROCUREMENT_USER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_PROCUREMENT_MANAGER_PROCUREMENT_USER_VIEWER)
     public List<SupplierQuoteHeader> getQuotes(@PathVariable String id) {
         return sourcingService.getQuotesForRfq(id);
     }

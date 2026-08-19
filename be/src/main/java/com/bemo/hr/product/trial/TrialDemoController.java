@@ -1,5 +1,6 @@
 package com.bemo.hr.product.trial;
 
+import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,7 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/platform/trial")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('SUPER_ADMIN')")
+@PreAuthorize(Roles.SUPER_ADMIN_ONLY)
 public class TrialDemoController {
     private final TrialDemoService service;
 

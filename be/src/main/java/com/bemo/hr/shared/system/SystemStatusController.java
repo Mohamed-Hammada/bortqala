@@ -1,5 +1,6 @@
 package com.bemo.hr.shared.system;
 
+import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -20,7 +21,7 @@ public class SystemStatusController {
     }
 
     @PostMapping("/admin/system/cache-version")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize(Roles.SUPER_ADMIN_ONLY)
     SystemStatusApi.StatusResponse rotateCacheVersion(
             @Valid @RequestBody(required = false) SystemStatusApi.RotateCacheRequest request,
             Authentication authentication) {

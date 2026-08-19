@@ -3,6 +3,7 @@ package com.bemo.hr.inventory.api;
 import com.bemo.hr.inventory.application.InventoryService;
 import com.bemo.hr.operations.domain.StockReservation;
 import com.bemo.hr.organization.domain.Warehouse;
+import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,25 +21,25 @@ public class InventoryController {
     }
 
     @GetMapping("/warehouses")
-    @PreAuthorize("hasAuthority('P_INVENTORY_READ') or hasAnyRole('ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('P_INVENTORY_READ') or " + Roles.ADMIN_ONLY)
     public List<Warehouse> getWarehouses() {
         return inventoryService.getAllWarehouses();
     }
 
     @PostMapping("/warehouses")
-    @PreAuthorize("hasAuthority('P_INVENTORY_MANAGE') or hasAnyRole('ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('P_INVENTORY_MANAGE') or " + Roles.ADMIN_ONLY)
     public Warehouse createWarehouse(@RequestBody CreateWarehouseRequest request) {
         return inventoryService.createWarehouse(request.branchId(), request.code(), request.name(), request.location());
     }
 
     @PostMapping("/reservations")
-    @PreAuthorize("hasAuthority('P_INVENTORY_MANAGE') or hasAnyRole('ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('P_INVENTORY_MANAGE') or " + Roles.ADMIN_ONLY)
     public StockReservation reserveStock(@RequestBody ReserveStockRequest request) {
         return inventoryService.reserveStock(request.sourceType(), request.sourceId(), request.itemId(), request.warehouseId(), request.quantity());
     }
 
     @PostMapping("/reservations/{id}/release")
-    @PreAuthorize("hasAuthority('P_INVENTORY_MANAGE') or hasAnyRole('ADMIN','SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('P_INVENTORY_MANAGE') or " + Roles.ADMIN_ONLY)
     public void releaseReservation(@PathVariable String id) {
         inventoryService.releaseReservation(id);
     }

@@ -2,6 +2,7 @@ package com.bemo.hr.budget.api;
 
 import com.bemo.hr.budget.application.BudgetVersionService;
 import com.bemo.hr.budget.domain.BudgetVersion;
+import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,19 +19,19 @@ public class BudgetVersionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public BudgetVersion createVersion(@RequestBody CreateVersionPayload payload) {
         return versionService.createVersion(payload.versionCode(), payload.name(), payload.fiscalYear());
     }
 
     @PostMapping("/{id}/activate")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public BudgetVersion activateVersion(@PathVariable String id) {
         return versionService.activateVersion(id);
     }
 
     @GetMapping("/fiscal-years/{fiscalYear}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER_VIEWER)
     public List<BudgetVersion> getVersionsForYear(@PathVariable int fiscalYear) {
         return versionService.getVersionsForYear(fiscalYear);
     }

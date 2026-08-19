@@ -1,5 +1,6 @@
 package com.bemo.hr.notification.admin;
 
+import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -13,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/notifications/admin")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+@PreAuthorize(Roles.ADMIN_ONLY)
 public class NotificationAdminController {
     private final NotificationAdminService service;
 

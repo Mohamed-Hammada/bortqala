@@ -1,5 +1,6 @@
 package com.bemo.hr.workforce.api;
 
+import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.workforce.application.WorkforceSettlementSnapshotService;
 import com.bemo.hr.workforce.domain.WorkforceSettlementSnapshot;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,13 +19,13 @@ public class WorkforceSettlementSnapshotController {
     }
 
     @PostMapping("/freeze")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_WORKFORCE_MANAGER)
     public WorkforceSettlementSnapshot createFrozenSnapshot(@RequestBody FreezeSnapshotPayload payload) {
         return snapshotService.createFrozenSnapshot(payload.contractorId(), payload.periodId(), payload.totalHours(), payload.grossAmount(), payload.netAmount());
     }
 
     @GetMapping("/{contractorId}/{periodId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER_WORKFORCE_MANAGER)
     public WorkforceSettlementSnapshot getSnapshot(@PathVariable String contractorId, @PathVariable String periodId) {
         return snapshotService.getSnapshot(contractorId, periodId);
     }

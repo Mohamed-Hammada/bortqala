@@ -1,5 +1,6 @@
 package com.bemo.hr.product.analytics;
 
+import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,19 +22,19 @@ public class ProductAnalyticsController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    @PreAuthorize(Roles.ADMIN_ONLY)
     ProductAnalyticsApi.TenantSummary summary() {
         return service.summary();
     }
 
     @PostMapping("/retention")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize(Roles.SUPER_ADMIN_ONLY)
     ProductAnalyticsApi.RetentionResponse retain(@Valid @RequestBody ProductAnalyticsApi.RetentionRequest request, Authentication auth) {
         return service.retain(request, auth.getName());
     }
 
     @GetMapping("/platform")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize(Roles.SUPER_ADMIN_ONLY)
     List<ProductAnalyticsApi.PlatformTenantSummary> platform() {
         return service.platform();
     }

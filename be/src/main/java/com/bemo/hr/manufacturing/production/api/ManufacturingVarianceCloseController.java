@@ -2,6 +2,7 @@ package com.bemo.hr.manufacturing.production.api;
 
 import com.bemo.hr.manufacturing.production.application.ManufacturingVarianceCloseService;
 import com.bemo.hr.manufacturing.production.domain.ProductionVarianceClose;
+import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,13 +17,13 @@ public class ManufacturingVarianceCloseController {
     }
 
     @PostMapping("/close")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_MANUFACTURING_MANAGER)
     public ProductionVarianceClose calculateAndCloseVariance(@RequestBody CloseVariancePayload payload) {
         return varianceService.calculateAndCloseVariance(payload.workOrderId());
     }
 
     @GetMapping("/work-orders/{workOrderId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_MANUFACTURING_MANAGER_VIEWER)
     public ProductionVarianceClose getVarianceClose(@PathVariable String workOrderId) {
         return varianceService.getVarianceClose(workOrderId);
     }

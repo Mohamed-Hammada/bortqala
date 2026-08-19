@@ -1,5 +1,6 @@
 package com.bemo.hr.workforce.api;
 
+import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.workforce.application.WorkforceRequestApprovalService;
 import com.bemo.hr.workforce.domain.WorkforceRequestApproval;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,13 +19,13 @@ public class WorkforceRequestApprovalController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER')")
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
     public WorkforceRequestApproval submitDecision(@RequestBody SubmitDecisionPayload payload) {
         return approvalService.submitDecision(payload.requestId(), payload.approverUserId(), payload.decision(), payload.comment());
     }
 
     @GetMapping("/{requestId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_VIEWER_WORKFORCE_MANAGER)
     public List<WorkforceRequestApproval> getApprovalsForRequest(@PathVariable String requestId) {
         return approvalService.getApprovalsForRequest(requestId);
     }

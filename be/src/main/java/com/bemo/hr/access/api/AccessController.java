@@ -5,6 +5,7 @@ import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.shared.security.AppUser;
 import com.bemo.hr.shared.security.AppUserRepository;
 import com.bemo.hr.shared.security.Role;
+import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.shared.security.TenantContext;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -54,7 +55,7 @@ public class AccessController {
      * Authoritative validation before a user assignment is saved.
      */
     @PostMapping("/users/access/validate")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize(Roles.ADMIN_ONLY)
     AccessApi.AccessValidateResponse validate(@Valid @RequestBody AccessApi.AccessValidateRequest request,
                                               @AuthenticationPrincipal Jwt jwt) {
         return accessCatalogService.validateAssignment(

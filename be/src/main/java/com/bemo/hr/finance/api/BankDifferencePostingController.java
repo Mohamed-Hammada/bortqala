@@ -2,6 +2,7 @@ package com.bemo.hr.finance.api;
 
 import com.bemo.hr.finance.application.BankDifferencePostingService;
 import com.bemo.hr.finance.domain.treasury.BankDifferencePosting;
+import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,7 +22,7 @@ public class BankDifferencePostingController {
     }
 
     @PostMapping("/post")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'TREASURY_USER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_TREASURY_USER)
     public BankDifferencePosting postDifference(@RequestBody PostDifferencePayload payload) {
         return service.postDifference(payload.statementLineId(), BankDifferencePosting.DifferenceType.valueOf(payload.differenceType()), payload.amount());
     }

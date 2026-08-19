@@ -1,5 +1,6 @@
 package com.bemo.hr.product.risk;
 
+import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -11,7 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/risk-scores")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','PROCUREMENT_MANAGER','WORKFORCE_MANAGER','FINANCE_MANAGER')")
+@PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_WORKFORCE_MANAGER)
 public class PartnerRiskScoreController {
     private final PartnerRiskScoreService service;
 
@@ -31,7 +32,7 @@ public class PartnerRiskScoreController {
     }
 
     @PutMapping("/rules")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
+    @PreAuthorize(Roles.ADMIN_ONLY)
     PartnerRiskApi.RuleResponse rule(@Valid @RequestBody PartnerRiskApi.RuleRequest request, Authentication auth) {
         return service.updateRule(request, auth.getName());
     }

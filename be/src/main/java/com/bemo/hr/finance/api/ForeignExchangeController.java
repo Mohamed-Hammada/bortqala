@@ -2,6 +2,7 @@ package com.bemo.hr.finance.api;
 
 import com.bemo.hr.finance.application.ForeignExchangeEngineService;
 import com.bemo.hr.finance.domain.ExchangeRateRecord;
+import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,25 +20,25 @@ public class ForeignExchangeController {
     }
 
     @PostMapping("/rates")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public ExchangeRateRecord setRate(@RequestBody SetRatePayload payload) {
         return fxService.setRate(payload.fromCurrency(), payload.toCurrency(), payload.rate(), LocalDate.parse(payload.effectiveDate()));
     }
 
     @PostMapping("/calculate")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
     public ForeignExchangeEngineService.FxCalculationResult calculate(@RequestBody CalculatePayload payload) {
         return fxService.calculateGainLoss(payload.foreignAmount(), payload.transactionRate(), payload.currentRate());
     }
 
     @PostMapping("/postings")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public com.bemo.hr.finance.domain.FxPosting post(@RequestBody PostPayload p) {
         return fxService.post(com.bemo.hr.finance.domain.FxPosting.Type.valueOf(p.type()), p.sourceDocumentId(), p.foreignAmount(), p.transactionRate(), p.closingRate(), p.rateSource(), LocalDate.parse(p.effectiveDate()), p.operationId());
     }
 
     @PostMapping("/postings/{id}/reverse")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public com.bemo.hr.finance.domain.FxPosting reverse(@PathVariable String id, @RequestBody ReversePayload p, org.springframework.security.core.Authentication auth) {
         return fxService.reverse(id, p.operationId(), LocalDate.parse(p.reversalDate()), p.reason(), auth.getName());
     }

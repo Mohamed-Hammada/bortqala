@@ -1,6 +1,7 @@
 package com.bemo.hr.attendance.api;
 
 import com.bemo.hr.attendance.application.AttendanceExplorerService;
+import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -8,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/imports/attendance")
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+@PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER)
 public class AttendanceExplorerController {
     private final AttendanceExplorerService attendanceExplorerService;
 

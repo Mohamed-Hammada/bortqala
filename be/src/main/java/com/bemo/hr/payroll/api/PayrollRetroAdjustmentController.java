@@ -2,6 +2,7 @@ package com.bemo.hr.payroll.api;
 
 import com.bemo.hr.payroll.application.PayrollRetroAdjustmentService;
 import com.bemo.hr.payroll.domain.PayrollRetroAdjustment;
+import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,25 +20,25 @@ public class PayrollRetroAdjustmentController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
     public PayrollRetroAdjustment createAdjustment(@RequestBody CreateAdjustmentPayload payload) {
         return adjustmentService.createAdjustment(payload.employeeId(), payload.payrollPeriodId(), payload.adjustmentType(), payload.amount(), payload.reason());
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
     public PayrollRetroAdjustment approveAdjustment(@PathVariable String id) {
         return adjustmentService.approveAdjustment(id);
     }
 
     @PostMapping("/{id}/process")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'FINANCE_MANAGER')")
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_HR_MANAGER)
     public PayrollRetroAdjustment processAdjustment(@PathVariable String id) {
         return adjustmentService.processAdjustment(id);
     }
 
     @GetMapping("/employee/{employeeId}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'VIEWER')")
+    @PreAuthorize(Roles.ADMIN_HR_MANAGER_VIEWER)
     public List<PayrollRetroAdjustment> getAdjustmentsForEmployee(@PathVariable String employeeId) {
         return adjustmentService.getAdjustmentsForEmployee(employeeId);
     }
