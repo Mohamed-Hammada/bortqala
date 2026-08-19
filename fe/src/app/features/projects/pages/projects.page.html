@@ -1,0 +1,240 @@
+<div class="projects-container">
+  <!-- Header & KPI Banner -->
+  <div class="page-header">
+    <div class="header-titles">
+      <h1 class="page-title">{{ i18n.t('projects.title') }}</h1>
+      <p class="page-subtitle">{{ i18n.t('projects.subtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <a [routerLink]="['/projects', 'executive-dashboard']" class="btn btn-outline-primary">
+        <span>📊 {{ i18n.t('executiveDashboard.navTitle') }}</span>
+      </a>
+      <button type="button" class="btn btn-primary" (click)="openCreateDrawer()">
+        <span>➕ {{ i18n.t('projects.createProject') }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Strip -->
+  @if (projectService.summary(); as summary) {
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-label">{{ i18n.t('projects.kpiTotal') }}</span>
+        <span class="kpi-value font-mono">{{ summary.totalProjects }}</span>
+      </div>
+      <div class="kpi-card kpi-card-active">
+        <span class="kpi-label">{{ i18n.t('projects.kpiActive') }}</span>
+        <span class="kpi-value font-mono">{{ summary.activeProjects }}</span>
+      </div>
+      <div class="kpi-card kpi-card-hold">
+        <span class="kpi-label">{{ i18n.t('projects.kpiOnHold') }}</span>
+        <span class="kpi-value font-mono">{{ summary.onHoldProjects }}</span>
+      </div>
+      <div class="kpi-card kpi-card-completed">
+        <span class="kpi-label">{{ i18n.t('projects.kpiCompleted') }}</span>
+        <span class="kpi-value font-mono">{{ summary.completedProjects }}</span>
+      </div>
+      <div class="kpi-card kpi-card-financial">
+        <span class="kpi-label">{{ i18n.t('projects.kpiContractValue') }}</span>
+        <span class="kpi-value font-mono">{{ summary.totalContractValue | number:'1.2-2' }}</span>
+      </div>
+      <div class="kpi-card kpi-card-financial">
+        <span class="kpi-label">{{ i18n.t('projects.kpiPlannedAmount') }}</span>
+        <span class="kpi-value font-mono">{{ summary.totalPlannedAmount | number:'1.2-2' }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- Filter & Search Toolbar -->
+  <div class="toolbar-card">
+    <div class="search-box">
+      <input
+        type="text"
+        class="form-control"
+        [placeholder]="i18n.t('projects.searchPlaceholder')"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+      />
+    </div>
+    <div class="filter-box">
+      <select
+        class="form-select"
+        [value]="statusFilter()"
+        (change)="statusFilter.set($any($event.target).value)"
+      >
+        <option value="ALL">{{ i18n.t('projects.statusAll') }}</option>
+        <option value="DRAFT">{{ i18n.t('projects.statusDraft') }}</option>
+        <option value="ACTIVE">{{ i18n.t('projects.statusActive') }}</option>
+        <option value="ON_HOLD">{{ i18n.t('projects.statusOnHold') }}</option>
+        <option value="COMPLETED">{{ i18n.t('projects.statusCompleted') }}</option>
+        <option value="CLOSED">{{ i18n.t('projects.statusClosed') }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Projects Table -->
+  <div class="table-container">
+    @if (loading()) {
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>{{ i18n.t('projects.loading') }}</p>
+      </div>
+    } @else if (filteredProjects().length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">📁</div>
+        <h3>{{ i18n.t('projects.emptyTitle') }}</h3>
+        <p>{{ i18n.t('projects.emptyDesc') }}</p>
+      </div>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('projects.code') }}</th>
+            <th>{{ i18n.t('projects.name') }}</th>
+            <th>{{ i18n.t('projects.siteAddress') }}</th>
+            <th class="text-end">{{ i18n.t('projects.contractValue') }}</th>
+            <th class="text-end">{{ i18n.t('projects.plannedAmount') }}</th>
+            <th>{{ i18n.t('projects.duration') }}</th>
+            <th class="text-center">{{ i18n.t('projects.status') }}</th>
+            <th class="text-center">{{ i18n.t('projects.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (project of filteredProjects(); track project.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/projects', project.id]" class="code-link font-mono font-bold">
+                  {{ project.code }}
+                </a>
+              </td>
+              <td>
+                <div class="project-name-cell">
+                  <span class="font-medium">{{ project.name }}</span>
+                  @if (project.nameEn) {
+                    <span class="text-muted font-sm">({{ project.nameEn }})</span>
+                  }
+                </div>
+              </td>
+              <td>{{ project.siteAddress || '—' }}</td>
+              <td class="text-end font-mono">
+                {{ project.contractValue | number:'1.2-2' }} {{ project.currencyCode }}
+              </td>
+              <td class="text-end font-mono font-medium">
+                {{ project.totalPlannedAmount | number:'1.2-2' }} {{ project.currencyCode }}
+              </td>
+              <td class="font-sm">
+                {{ formatEpoch(project.startDate) }} → {{ formatEpoch(project.endDate) }}
+              </td>
+              <td class="text-center">
+                <span class="status-pill" [ngClass]="getStatusClass(project.status)">
+                  @switch (project.status) {
+                    @case ('DRAFT') { {{ i18n.t('projects.statusDraft') }} }
+                    @case ('ACTIVE') { {{ i18n.t('projects.statusActive') }} }
+                    @case ('ON_HOLD') { {{ i18n.t('projects.statusOnHold') }} }
+                    @case ('COMPLETED') { {{ i18n.t('projects.statusCompleted') }} }
+                    @case ('CLOSED') { {{ i18n.t('projects.statusClosed') }} }
+                    @default { {{ project.status }} }
+                  }
+                </span>
+              </td>
+              <td class="text-center">
+                <div class="action-buttons">
+                  <a [routerLink]="['/projects', project.id]" class="btn-action-icon" [title]="i18n.t('projects.openWorkbench')">
+                    🔍
+                  </a>
+                  @if (project.status === 'DRAFT') {
+                    <button type="button" class="btn-action-icon btn-action-danger" (click)="deleteProject(project)" [title]="i18n.t('projects.delete')">
+                      🗑️
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <!-- Create Project Modal Dialog -->
+  <app-modal-dialog
+    [isOpen]="drawerOpen()"
+    [title]="i18n.t('projects.createTitle')"
+    size="wide"
+    (close)="closeDrawer()"
+    (closeModal)="closeDrawer()"
+  >
+    <form [formGroup]="projectForm" (ngSubmit)="saveProject()" class="project-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label required">{{ i18n.t('projects.formCode') }}</label>
+          <input type="text" class="form-control" formControlName="code" [placeholder]="i18n.t('projects.formCodePlaceholder')" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">{{ i18n.t('projects.formName') }}</label>
+          <input type="text" class="form-control" formControlName="name" [placeholder]="i18n.t('projects.formNamePlaceholder')" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('projects.formNameEn') }}</label>
+          <input type="text" class="form-control" formControlName="nameEn" [placeholder]="i18n.t('projects.formNameEnPlaceholder')" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('projects.formSiteAddress') }}</label>
+          <input type="text" class="form-control" formControlName="siteAddress" [placeholder]="i18n.t('projects.formSiteAddressPlaceholder')" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('projects.formContractNumber') }}</label>
+          <input type="text" class="form-control" formControlName="contractNumber" [placeholder]="i18n.t('projects.formContractNumberPlaceholder')" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('projects.formContractValue') }}</label>
+          <input type="number" step="0.01" class="form-control" formControlName="contractValue" placeholder="0.00" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label required">{{ i18n.t('projects.formCurrency') }}</label>
+          <input type="text" class="form-control" formControlName="currencyCode" placeholder="EGP" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('projects.formStartDate') }}</label>
+          <input type="date" class="form-control" formControlName="startDate" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('projects.formEndDate') }}</label>
+          <input type="date" class="form-control" formControlName="endDate" />
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">{{ i18n.t('projects.formDescription') }}</label>
+          <textarea class="form-control" formControlName="description" rows="3" [placeholder]="i18n.t('projects.formDescriptionPlaceholder')"></textarea>
+        </div>
+
+        <div class="form-group full-width checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="budgetBlocking" />
+            <span>{{ i18n.t('projects.formBudgetBlocking') }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeDrawer()">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner-sm"></span>
+          }
+          <span>{{ i18n.t('common.save') }}</span>
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+</div>

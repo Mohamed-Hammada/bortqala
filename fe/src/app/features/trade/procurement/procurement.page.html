@@ -24,6 +24,7 @@
     <button class="app-tab" [class.active]="activeTab() === 'invoice'" (click)="activeTab.set('invoice')">{{ i18n.t('procurement.tabInvoice') }}</button>
     <button class="app-tab" [class.active]="activeTab() === 'proposal'" (click)="activeTab.set('proposal')">{{ i18n.t('procurement.tabProposal') }}</button>
     <button class="app-tab" [class.active]="activeTab() === 'payment'" (click)="activeTab.set('payment')">{{ i18n.t('procurement.tabPayment') }}</button>
+    <button class="app-tab" [class.active]="activeTab() === 'scorecard'" (click)="activeTab.set('scorecard')">{{ i18n.t('procurement.tabScorecard') }}</button>
   </nav>
 
   <!-- Workflow Pipeline -->
@@ -44,7 +45,7 @@
     @if (activeTab() === 'po') {
     <div class="table-card">
       <table>
-        <thead><tr><th>{{ i18n.t('procurement.poColNumber') }}</th><th>{{ i18n.t('procurement.poColDate') }}</th><th>{{ i18n.t('procurement.poColSupplier') }}</th><th>{{ i18n.t('procurement.department') }}</th><th>{{ i18n.t('procurement.poColPaymentTerms') }}</th><th>{{ i18n.t('procurement.poColCurrency') }}</th><th>{{ i18n.t('procurement.poColTotal') }}</th><th>{{ i18n.t('procurement.poColStatus') }}</th><th>{{ i18n.t('procurement.poColActions') }}</th></tr></thead>
+        <thead><tr><th>{{ i18n.t('procurement.poColNumber') }}</th><th>{{ i18n.t('procurement.poColDate') }}</th><th>{{ i18n.t('procurement.poColSupplier') }}</th><th>{{ i18n.t('procurement.department') }}</th><th>{{ i18n.t('procurement.project') }}</th><th>{{ i18n.t('procurement.poColPaymentTerms') }}</th><th>{{ i18n.t('procurement.poColCurrency') }}</th><th>{{ i18n.t('procurement.poColTotal') }}</th><th>{{ i18n.t('procurement.poColStatus') }}</th><th>{{ i18n.t('procurement.poColActions') }}</th></tr></thead>
         <tbody>
           @for (po of orders(); track po.id) {
           <tr>
@@ -52,6 +53,7 @@
             <td class="ltr">{{ date(po.poDate) }}</td>
             <td><strong>{{ po.supplierName || po.supplierId }}</strong></td>
             <td>{{ poDepartmentName(po) }}</td>
+            <td>{{ poProjectName(po) }}</td>
             <td>{{ po.paymentTerms || '—' }}</td>
             <td class="ltr">{{ po.currencyCode }}</td>
             <td class="ltr"><strong>{{ po.totalAmount | number:'1.2-2' }} {{ po.currencyCode }}</strong></td>
@@ -67,7 +69,7 @@
               </div>
             </td>
           </tr>
-          } @empty { <tr><td colspan="9"><div class="empty-state">{{ i18n.t('procurement.poEmpty') }}</div></td></tr> }
+          } @empty { <tr><td colspan="10"><div class="empty-state">{{ i18n.t('procurement.poEmpty') }}</div></td></tr> }
         </tbody>
       </table>
     </div>
@@ -198,6 +200,44 @@
       </table>
     </div>
     }
+
+    <!-- ──── SUPPLIER SCORECARDS ──── -->
+    @if (activeTab() === 'scorecard') {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('procurement.scorecardSupplier') }}</th>
+            <th>{{ i18n.t('procurement.scorecardTotalOrders') }}</th>
+            <th>{{ i18n.t('procurement.scorecardTotalValue') }}</th>
+            <th>{{ i18n.t('procurement.scorecardOnTimeRate') }}</th>
+            <th>{{ i18n.t('procurement.scorecardPriceVariance') }}</th>
+            <th>{{ i18n.t('procurement.scorecardMatchExceptions') }}</th>
+            <th>{{ i18n.t('procurement.scorecardRating') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (sc of supplierScorecards(); track sc.supplierId) {
+          <tr>
+            <td><strong>{{ sc.supplierName }}</strong></td>
+            <td class="ltr">{{ sc.totalOrdersCount }}</td>
+            <td class="ltr"><strong>{{ sc.totalOrdersValue | number:'1.2-2' }} {{ baseCurrencyCode() }}</strong></td>
+            <td class="ltr">{{ sc.onTimeDeliveryRate | number:'1.1-1' }}%</td>
+            <td class="ltr">{{ sc.priceVarianceRate | number:'1.1-1' }}%</td>
+            <td class="ltr">{{ sc.matchExceptionsCount }}</td>
+            <td>
+              <span class="status" [class]="scorecardRatingClass(sc.overallRating)">
+                {{ scorecardRatingLabel(sc.overallRating) }}
+              </span>
+            </td>
+          </tr>
+          } @empty {
+            <tr><td colspan="7"><div class="empty-state">{{ i18n.t('procurement.scorecardEmpty') }}</div></td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
   }
 
   <!-- ══════════════ PO MODAL ══════════════ -->
@@ -213,6 +253,7 @@
         <div class="field"><label>{{ i18n.t('procurement.colPoDate') }} *</label><input type="date" class="ltr" formControlName="poDate" [readOnly]="!!editingPoId()" /><small>{{ editingPoId() ? i18n.t('procurement.poDateFixed') : i18n.t('procurement.poDateHint') }}</small></div>
         <div class="field"><label>{{ i18n.t('procurement.poSupplier') }} *</label><select formControlName="supplierId" (change)="onPoSupplierSelected()"><option value="">{{ i18n.t('procurement.poSelectSupplierPlaceholder') }}</option>@for (s of suppliers(); track s.id) {<option [value]="s.id">{{ s.name }} ({{ s.code }})</option>}</select><small>{{ i18n.t('procurement.poSupplierHint') }} <a routerLink="/parties">{{ i18n.t('procurement.poAddSupplier') }}</a></small></div>
         <div class="field"><label>{{ i18n.t('procurement.department') }}</label><select formControlName="departmentId"><option value="">{{ i18n.t('procurement.withoutOption') }}</option>@for (d of departments(); track d.id) {<option [value]="d.id">{{ d.name }} ({{ d.code }})</option>}</select><small>{{ i18n.t('procurement.departmentHint') }}</small></div>
+        <div class="field"><label>{{ i18n.t('procurement.project') }}</label><select formControlName="projectId"><option value="">{{ i18n.t('procurement.withoutProjectOption') }}</option>@for (p of projects(); track p.id) {<option [value]="p.id">{{ p.code }} — {{ p.name }}</option>}</select><small>{{ i18n.t('procurement.projectHint') }}</small></div>
         <div class="field"><label>{{ i18n.t('procurement.currencyLabel') }} *</label><select formControlName="currencyCode" (change)="onPoCurrencyChanged()">@for (currency of currencies(); track currency.code) {<option [value]="currency.code">{{ currency.code }} — {{ currency.name }}</option>}</select><small>{{ editingPoId() ? i18n.t('procurement.currencyFixed') : i18n.t('procurement.currencyHint') }}</small></div>
         <div class="field"><label>{{ i18n.t('procurement.exchangeRateLabel') }} {{ baseCurrencyCode() }} *</label><input type="number" min="0.000001" step="0.000001" class="ltr" formControlName="exchangeRate" [readOnly]="!!editingPoId()" /><small>{{ i18n.t('procurement.exchangeRateHint') }}</small></div>
         @if (!editingPoId() && poRateOverridden()) { <div class="field span-2"><label>{{ i18n.t('procurement.rateOverrideLabel') }} *</label><input formControlName="exchangeRateOverrideReason" [placeholder]="i18n.t('procurement.rateOverridePlaceholder')" /></div> }

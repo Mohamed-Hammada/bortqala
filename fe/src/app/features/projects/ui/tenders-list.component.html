@@ -1,0 +1,192 @@
+<div class="tenders-container">
+  <!-- 1. KPI Cards Header -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-label">{{ i18n.t('tenders.title') }}</span>
+      <span class="kpi-value">{{ kpiTotal() }}</span>
+    </div>
+    <div class="kpi-card info">
+      <span class="kpi-label">{{ i18n.t('tenders.typeExternal') }}</span>
+      <span class="kpi-value">{{ kpiExternal() }}</span>
+    </div>
+    <div class="kpi-card secondary">
+      <span class="kpi-label">{{ i18n.t('tenders.typeInternal') }}</span>
+      <span class="kpi-value">{{ kpiInternal() }}</span>
+    </div>
+    <div class="kpi-card success">
+      <span class="kpi-label">{{ i18n.t('tenders.statusAwarded') }}</span>
+      <span class="kpi-value">{{ kpiAwarded() }}</span>
+    </div>
+    <div class="kpi-card warning">
+      <span class="kpi-label">{{ i18n.t('tenders.estimatedValue') }}</span>
+      <span class="kpi-value">{{ kpiTotalValue() | number:'1.0-0' }}</span>
+    </div>
+  </div>
+
+  <!-- 2. Controls & Actions Toolbar -->
+  <div class="toolbar-card">
+    <div class="left-actions">
+      <button type="button" class="btn btn-primary" (click)="onOpenCreate()">
+        ➕ {{ i18n.t('tenders.createTender') }}
+      </button>
+    </div>
+
+    <div class="right-filters">
+      <!-- Search -->
+      <div class="search-box">
+        <input
+          type="text"
+          class="form-control-sm"
+          [placeholder]="i18n.t('common.search')"
+          [ngModel]="searchTerm()"
+          (ngModelChange)="searchTerm.set($event)"
+        />
+      </div>
+
+      <!-- Type Filter -->
+      <select
+        class="form-select-sm"
+        [ngModel]="filterType()"
+        (ngModelChange)="filterType.set($event)"
+      >
+        <option value="ALL">-- {{ i18n.t('tenders.tenderType') }} --</option>
+        <option value="EXTERNAL">{{ i18n.t('tenders.typeExternal') }}</option>
+        <option value="INTERNAL">{{ i18n.t('tenders.typeInternal') }}</option>
+      </select>
+
+      <!-- Status Filter -->
+      <select
+        class="form-select-sm"
+        [ngModel]="filterStatus()"
+        (ngModelChange)="filterStatus.set($event)"
+      >
+        <option value="ALL">-- {{ i18n.t('common.status') }} --</option>
+        <option value="DRAFT">{{ i18n.t('tenders.statusDraft') }}</option>
+        <option value="PUBLISHED">{{ i18n.t('tenders.statusPublished') }}</option>
+        <option value="EVALUATION">{{ i18n.t('tenders.statusEvaluation') }}</option>
+        <option value="AWARDED">{{ i18n.t('tenders.statusAwarded') }}</option>
+        <option value="CANCELLED">{{ i18n.t('tenders.statusCancelled') }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 3. Tenders Data Table -->
+  <div class="table-card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('tenders.tenderNumber') }}</th>
+          <th>{{ i18n.t('common.title') }}</th>
+          <th>{{ i18n.t('tenders.tenderType') }}</th>
+          <th>{{ i18n.t('tenders.submissionDeadline') }}</th>
+          <th>{{ i18n.t('tenders.estimatedValue') }}</th>
+          <th>{{ i18n.t('tenders.tabBoq') }}</th>
+          <th>{{ i18n.t('tenders.tabBidders') }}</th>
+          <th>{{ i18n.t('common.status') }}</th>
+          <th class="text-end"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of filteredTenders()" (click)="onOpenDetail(t)" class="cursor-pointer">
+          <td><span class="code-pill">{{ t.tenderNumber }}</span></td>
+          <td>
+            <strong class="tender-title">{{ t.title }}</strong>
+            <span class="sub-title" *ngIf="t.titleEn">{{ t.titleEn }}</span>
+          </td>
+          <td>
+            <span
+              class="badge"
+              [class.badge-primary]="t.tenderType === 'EXTERNAL'"
+              [class.badge-secondary]="t.tenderType === 'INTERNAL'"
+            >
+              {{ t.tenderType === 'INTERNAL' ? i18n.t('tenders.typeInternal') : i18n.t('tenders.typeExternal') }}
+            </span>
+          </td>
+          <td>{{ formatDate(t.submissionDeadline) }}</td>
+          <td><strong>{{ t.estimatedValue | number:'1.2-2' }} {{ t.currencyCode }}</strong></td>
+          <td>{{ t.boqItemsCount }}</td>
+          <td>{{ t.biddersCount }}</td>
+          <td>
+            <span
+              class="badge badge-status"
+              [class.draft]="t.status === 'DRAFT'"
+              [class.published]="t.status === 'PUBLISHED'"
+              [class.evaluation]="t.status === 'EVALUATION'"
+              [class.awarded]="t.status === 'AWARDED'"
+              [class.cancelled]="t.status === 'CANCELLED'"
+            >
+              {{ t.status }}
+            </span>
+          </td>
+          <td class="text-end" (click)="$event.stopPropagation()">
+            <button type="button" class="btn-icon" (click)="onOpenDetail(t)">👁️</button>
+            <button
+              type="button"
+              class="btn-icon"
+              *ngIf="t.status === 'DRAFT'"
+              (click)="onOpenEdit(t)"
+            >
+              ✏️
+            </button>
+            <button
+              type="button"
+              class="btn-icon danger"
+              *ngIf="t.status === 'DRAFT'"
+              (click)="onPromptDelete(t.id)"
+            >
+              🗑
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="filteredTenders().length === 0">
+          <td colspan="9" class="empty-state">
+            <div class="empty-content">
+              <h4>{{ i18n.t('tenders.noTendersTitle') }}</h4>
+              <p>{{ i18n.t('tenders.noTendersDesc') }}</p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Create / Edit Tender -->
+<app-tender-editor-modal
+  *ngIf="showEditorModal()"
+  [tender]="editingTender()"
+  [projectId]="projectId"
+  [isSaving]="isSavingTender()"
+  (saveTender)="onSaveTender($event)"
+  (close)="showEditorModal.set(false)"
+></app-tender-editor-modal>
+
+<!-- Modal: Tender Detail & Workbench -->
+<app-tender-detail-modal
+  *ngIf="showDetailModal() && selectedTenderId()"
+  [tenderId]="selectedTenderId()!"
+  (refreshList)="loadTenders()"
+  (close)="showDetailModal.set(false)"
+></app-tender-detail-modal>
+
+<!-- Modal: Delete Confirmation -->
+<div class="modal-backdrop" *ngIf="showDeleteModal()" (click)="showDeleteModal.set(false)">
+  <div class="modal-card modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ i18n.t('tenders.deleteConfirmTitle') }}</h3>
+      <button type="button" class="btn-close" (click)="showDeleteModal.set(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>{{ i18n.t('tenders.deleteConfirmMessage') }}</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" (click)="showDeleteModal.set(false)">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button type="button" class="btn btn-danger" (click)="onConfirmDelete()">
+        {{ i18n.t('tenders.deleteTender') }}
+      </button>
+    </div>
+  </div>
+</div>

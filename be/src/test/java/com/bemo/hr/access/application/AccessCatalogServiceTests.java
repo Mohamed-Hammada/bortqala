@@ -63,9 +63,9 @@ class AccessCatalogServiceTests {
     void catalogExposesEveryRolePageAndRule() {
         var response = service.catalog();
 
-        assertThat(response.roles()).hasSize(19);
+        assertThat(response.roles()).hasSize(20);
         assertThat(response.roles()).extracting(AccessApi.AccessRoleResponse::code)
-                .contains("SUPER_ADMIN", "ADMIN", "HR_MANAGER", "WORKFORCE_MANAGER", "AUDITOR");
+                .contains("SUPER_ADMIN", "ADMIN", "HR_MANAGER", "WORKFORCE_MANAGER", "PROJECT_MANAGER", "AUDITOR");
         assertThat(response.pages()).isNotEmpty();
         assertThat(response.pages()).allSatisfy(page -> {
             assertThat(page.menuId()).isNotBlank();
@@ -74,7 +74,7 @@ class AccessCatalogServiceTests {
         assertThat(response.conflictRules()).hasSize(5);
         assertThat(response.conflictRules()).allSatisfy(rule ->
                 assertThat(rule.permissions()).isNotEmpty());
-        assertThat(response.sensitivePermissions()).contains("journal.post", "users.manage");
+        assertThat(response.sensitivePermissions()).contains("journal.post", "users.manage", "projects.close");
         assertThat(response.needs()).isNotEmpty();
         assertThat(response.needs()).allSatisfy(need ->
                 assertThat(need.permissions()).isNotEmpty());
@@ -198,7 +198,7 @@ class AccessCatalogServiceTests {
     @Test
     void viewerGrantsOnlyDashboardReportsAndSettings() {
         assertThat(catalog.permissionsOf("VIEWER"))
-                .containsExactlyInAnyOrder("dashboard.view", "reports.read", "settings.read");
+                .containsExactlyInAnyOrder("dashboard.view", "reports.read", "settings.read", "projects.read");
     }
 
     @Test

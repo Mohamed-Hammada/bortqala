@@ -17,6 +17,7 @@ export type RoleCode =
   | 'WORKFORCE_MANAGER'
   | 'WORKFORCE_REVIEWER'
   | 'WORKFORCE_FINANCE'
+  | 'PROJECT_MANAGER'
   | 'AUDITOR';
 export type ThemePreference = 'LIGHT' | 'DARK' | 'SYSTEM';
 export type TableDensity = 'COMFORTABLE' | 'COMPACT' | 'DENSE';

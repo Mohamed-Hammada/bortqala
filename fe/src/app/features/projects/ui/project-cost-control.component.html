@@ -1,0 +1,384 @@
+<div class="cost-control-container">
+  <!-- Top Bar -->
+  <div class="header-actions-bar">
+    <div class="header-titles">
+      <h3 class="section-title">{{ i18n.t('costControl.title') }}</h3>
+      <p class="section-subtitle">{{ i18n.t('costControl.subtitle') }}</p>
+    </div>
+    <div class="action-buttons">
+      <button type="button" class="btn btn-outline-secondary" (click)="loadData()">
+        ↻ {{ i18n.t('costControl.recalculateCostControl') }}
+      </button>
+      <button type="button" class="btn btn-outline-primary" (click)="showLedgerModal.set(true)">
+        + {{ i18n.t('costControl.tabCostLedger') }}
+      </button>
+      <button type="button" class="btn btn-primary" (click)="showBudgetModal.set(true)">
+        + {{ i18n.t('costControl.createBudgetVersion') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Summary Cards -->
+  @if (summary(); as s) {
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">{{ i18n.t('costControl.kpiBudget') }}</div>
+        <div class="kpi-value font-mono">{{ s.totalBudget | number:'1.2-2' }} <span class="currency">{{ s.currencyCode }}</span></div>
+        <div class="kpi-hint">{{ i18n.t('costControl.budgetVersions') }}</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">{{ i18n.t('costControl.kpiCommitted') }}</div>
+        <div class="kpi-value font-mono text-warning">{{ s.totalCommitted | number:'1.2-2' }} <span class="currency">{{ s.currencyCode }}</span></div>
+        <div class="kpi-hint">{{ i18n.t('costControl.typeCommitted') }}</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">{{ i18n.t('costControl.kpiActual') }}</div>
+        <div class="kpi-value font-mono text-danger">{{ s.totalActualCost | number:'1.2-2' }} <span class="currency">{{ s.currencyCode }}</span></div>
+        <div class="kpi-hint">{{ i18n.t('costControl.typeActual') }}</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-label">{{ i18n.t('costControl.kpiRevenue') }}</div>
+        <div class="kpi-value font-mono text-info">{{ s.totalRecognizedRevenue | number:'1.2-2' }} <span class="currency">{{ s.currencyCode }}</span></div>
+        <div class="kpi-hint">{{ i18n.t('costControl.typeRevenue') }}</div>
+      </div>
+
+      <div class="kpi-card highlight-profit">
+        <div class="kpi-label">{{ i18n.t('costControl.kpiGrossProfit') }}</div>
+        <div class="kpi-value font-mono" [ngClass]="s.currentGrossProfit >= 0 ? 'text-success' : 'text-danger'">
+          {{ s.currentGrossProfit | number:'1.2-2' }} <span class="currency">{{ s.currencyCode }}</span>
+        </div>
+        <div class="kpi-hint">{{ i18n.t('costControl.kpiGrossMargin') }}: <strong>{{ s.currentGrossMarginPercent | number:'1.1-2' }}%</strong></div>
+      </div>
+
+      <div class="kpi-card highlight-forecast">
+        <div class="kpi-label">{{ i18n.t('costControl.eac') }}</div>
+        <div class="kpi-value font-mono">{{ s.forecastEac | number:'1.2-2' }} <span class="currency">{{ s.currencyCode }}</span></div>
+        <div class="kpi-hint">
+          {{ i18n.t('costControl.vac') }}: <strong [ngClass]="s.forecastVac >= 0 ? 'text-success' : 'text-danger'">{{ s.forecastVac | number:'1.2-2' }}</strong>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Tab Navigation -->
+  <div class="tabs-nav">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'profitability'"
+      (click)="activeTab.set('profitability')"
+    >
+      {{ i18n.t('costControl.tabProfitability') }}
+    </button>
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'wbsVariance'"
+      (click)="activeTab.set('wbsVariance')"
+    >
+      {{ i18n.t('costControl.tabWbsVariance') }}
+    </button>
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'forecastEac'"
+      (click)="activeTab.set('forecastEac')"
+    >
+      {{ i18n.t('costControl.tabForecastEac') }}
+    </button>
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'costLedger'"
+      (click)="activeTab.set('costLedger')"
+    >
+      {{ i18n.t('costControl.tabCostLedger') }} ({{ costLedgerEntries().length }})
+    </button>
+  </div>
+
+  <!-- Tab 1: Profitability & Cost Category Breakdown -->
+  @if (activeTab() === 'profitability') {
+    <div class="tab-pane">
+      <!-- Budget Versions Control Panel -->
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-between align-center">
+          <h4 class="card-title">{{ i18n.t('costControl.budgetVersions') }}</h4>
+          <span class="badge badge-info">{{ budgetVersions().length }} {{ i18n.t('costControl.budgetVersions') }}</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>{{ i18n.t('costControl.versionName') }}</th>
+                <th>{{ i18n.t('costControl.versionStatus') }}</th>
+                <th>{{ i18n.t('costControl.kpiBudget') }}</th>
+                <th>{{ i18n.t('common.notes') }}</th>
+                <th class="text-end">{{ i18n.t('common.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (v of budgetVersions(); track v.id) {
+                <tr>
+                  <td class="font-mono">#{{ v.versionNumber }}</td>
+                  <td class="font-semibold">{{ v.versionName }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="{
+                      'badge-success': v.status === 'APPROVED',
+                      'badge-secondary': v.status === 'DRAFT',
+                      'badge-muted': v.status === 'SUPERSEDED'
+                    }">{{ v.status }}</span>
+                  </td>
+                  <td class="font-mono font-bold">{{ v.totalBudgetAmount | number:'1.2-2' }}</td>
+                  <td>{{ v.notes || '—' }}</td>
+                  <td class="text-end">
+                    @if (v.status === 'DRAFT') {
+                      <button type="button" class="btn btn-sm btn-success" (click)="onApproveBudgetVersion(v)">
+                        ✓ {{ i18n.t('costControl.approveBudgetVersion') }}
+                      </button>
+                    }
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="text-center py-4 text-muted">{{ i18n.t('projects.noData') }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cost Category Breakdown Table -->
+      @if (summary(); as s) {
+        <div class="card">
+          <div class="card-header">
+            <h4 class="card-title">{{ i18n.t('costControl.costCategory') }}</h4>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('costControl.costCategory') }}</th>
+                  <th>{{ i18n.t('costControl.kpiBudget') }}</th>
+                  <th>{{ i18n.t('costControl.kpiCommitted') }}</th>
+                  <th>{{ i18n.t('costControl.kpiActual') }}</th>
+                  <th>{{ i18n.t('costControl.costVariance') }} (Budget - Incurred)</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (cat of s.categoryBreakdowns; track cat.category) {
+                  <tr>
+                    <td class="font-semibold">{{ getCategoryLabel(cat.category) }}</td>
+                    <td class="font-mono">{{ cat.budgetAmount | number:'1.2-2' }}</td>
+                    <td class="font-mono text-warning">{{ cat.committedAmount | number:'1.2-2' }}</td>
+                    <td class="font-mono text-danger">{{ cat.actualAmount | number:'1.2-2' }}</td>
+                    <td class="font-mono font-bold" [ngClass]="cat.varianceAmount >= 0 ? 'text-success' : 'text-danger'">
+                      {{ cat.varianceAmount | number:'1.2-2' }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Tab 2: WBS Cost Variance Table -->
+  @if (activeTab() === 'wbsVariance') {
+    <div class="tab-pane">
+      <div class="card">
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('projects.wbsCode') }}</th>
+                <th>{{ i18n.t('projects.wbsItem') }}</th>
+                <th>{{ i18n.t('costControl.costCategory') }}</th>
+                <th>{{ i18n.t('costControl.kpiBudget') }}</th>
+                <th>{{ i18n.t('costControl.kpiCommitted') }}</th>
+                <th>{{ i18n.t('costControl.kpiActual') }}</th>
+                <th>{{ i18n.t('costControl.eac') }}</th>
+                <th>{{ i18n.t('costControl.vac') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of forecastEacList(); track item.id) {
+                <tr>
+                  <td class="font-mono font-semibold">{{ item.wbsCode }}</td>
+                  <td>{{ item.wbsName }}</td>
+                  <td><span class="badge badge-outline">{{ item.costCategory }}</span></td>
+                  <td class="font-mono">{{ item.budgetAmount | number:'1.2-2' }}</td>
+                  <td class="font-mono text-warning">{{ item.committedCost | number:'1.2-2' }}</td>
+                  <td class="font-mono text-danger">{{ item.actualCostToDate | number:'1.2-2' }}</td>
+                  <td class="font-mono font-bold">{{ item.estimateAtCompletion | number:'1.2-2' }}</td>
+                  <td class="font-mono font-bold" [ngClass]="item.varianceAtCompletion >= 0 ? 'text-success' : 'text-danger'">
+                    {{ item.varianceAtCompletion | number:'1.2-2' }}
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="text-center py-4 text-muted">{{ i18n.t('projects.noData') }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 3: Forecast EAC / ETC -->
+  @if (activeTab() === 'forecastEac') {
+    <div class="tab-pane">
+      <div class="card">
+        <div class="card-header d-flex justify-between align-center">
+          <h4 class="card-title">{{ i18n.t('costControl.tabForecastEac') }}</h4>
+          <span class="text-muted text-sm">{{ i18n.t('costControl.subtitle') }}</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('projects.wbsCode') }}</th>
+                <th>{{ i18n.t('projects.wbsItem') }}</th>
+                <th>{{ i18n.t('costControl.kpiBudget') }}</th>
+                <th>{{ i18n.t('costControl.kpiActual') }}</th>
+                <th>{{ i18n.t('costControl.etc') }}</th>
+                <th>{{ i18n.t('costControl.eac') }}</th>
+                <th>{{ i18n.t('costControl.vac') }}</th>
+                <th>{{ i18n.t('common.notes') }}</th>
+                <th class="text-end">{{ i18n.t('common.actions') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of forecastEacList(); track item.id) {
+                <tr>
+                  <td class="font-mono font-semibold">{{ item.wbsCode }}</td>
+                  <td>{{ item.wbsName }}</td>
+                  <td class="font-mono">{{ item.budgetAmount | number:'1.2-2' }}</td>
+                  <td class="font-mono text-danger">{{ item.actualCostToDate | number:'1.2-2' }}</td>
+                  <td>
+                    <input
+                      type="number"
+                      class="form-control form-control-sm w-32 font-mono font-bold"
+                      [(ngModel)]="item.estimateToComplete"
+                      (ngModelChange)="item.estimateAtCompletion = (item.actualCostToDate || 0) + (item.estimateToComplete || 0); item.varianceAtCompletion = (item.budgetAmount || 0) - item.estimateAtCompletion"
+                      min="0"
+                    />
+                  </td>
+                  <td class="font-mono font-bold">{{ item.estimateAtCompletion | number:'1.2-2' }}</td>
+                  <td class="font-mono font-bold" [ngClass]="item.varianceAtCompletion >= 0 ? 'text-success' : 'text-danger'">
+                    {{ item.varianceAtCompletion | number:'1.2-2' }}
+                  </td>
+                  <td>
+                    <input type="text" class="form-control form-control-sm" [(ngModel)]="item.notes" [placeholder]="i18n.t('common.notes')" />
+                  </td>
+                  <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-primary" (click)="onSaveForecastEac(item)">
+                      💾 {{ i18n.t('costControl.saveForecast') }}
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="9" class="text-center py-4 text-muted">{{ i18n.t('projects.noData') }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Tab 4: Cost Ledger Subledger -->
+  @if (activeTab() === 'costLedger') {
+    <div class="tab-pane">
+      <div class="card">
+        <div class="card-header d-flex justify-between align-center">
+          <div class="d-flex align-center gap-2">
+            <span class="font-medium text-sm">{{ i18n.t('costControl.entryType') }}:</span>
+            <select class="form-select form-select-sm w-auto" [ngModel]="ledgerFilterType()" (ngModelChange)="ledgerFilterType.set($event)">
+              <option value="ALL">— {{ i18n.t('common.all') }} —</option>
+              <option value="COMMITTED">{{ i18n.t('costControl.typeCommitted') }}</option>
+              <option value="ACTUAL">{{ i18n.t('costControl.typeActual') }}</option>
+              <option value="REVENUE">{{ i18n.t('costControl.typeRevenue') }}</option>
+            </select>
+          </div>
+          <button type="button" class="btn btn-sm btn-primary" (click)="showLedgerModal.set(true)">
+            + {{ i18n.t('costControl.tabCostLedger') }}
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('common.date') }}</th>
+                <th>{{ i18n.t('costControl.entryType') }}</th>
+                <th>{{ i18n.t('costControl.costCategory') }}</th>
+                <th>{{ i18n.t('projects.wbsCode') }}</th>
+                <th>{{ i18n.t('costControl.sourceModule') }}</th>
+                <th>{{ i18n.t('costControl.sourceDocNumber') }}</th>
+                <th>{{ i18n.t('common.description') }}</th>
+                <th class="text-end">{{ i18n.t('projects.amount') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of filteredLedgerEntries(); track entry.id) {
+                <tr>
+                  <td class="font-mono text-sm">{{ entry.entryDate }}</td>
+                  <td>
+                    <span class="badge" [ngClass]="{
+                      'badge-warning': entry.entryType === 'COMMITTED',
+                      'badge-danger': entry.entryType === 'ACTUAL',
+                      'badge-info': entry.entryType === 'REVENUE'
+                    }">{{ getEntryTypeLabel(entry.entryType) }}</span>
+                  </td>
+                  <td><span class="badge badge-outline">{{ entry.costCategory }}</span></td>
+                  <td class="font-mono">{{ entry.wbsCode }}</td>
+                  <td><span class="badge badge-secondary">{{ entry.sourceModule }}</span></td>
+                  <td class="font-mono text-sm">{{ entry.sourceDocumentNumber || '—' }}</td>
+                  <td>{{ entry.description }}</td>
+                  <td class="text-end font-mono font-bold" [ngClass]="{
+                    'text-warning': entry.entryType === 'COMMITTED',
+                    'text-danger': entry.entryType === 'ACTUAL',
+                    'text-info': entry.entryType === 'REVENUE'
+                  }">{{ entry.amount | number:'1.2-2' }} {{ entry.currencyCode }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="8" class="text-center py-4 text-muted">{{ i18n.t('projects.noData') }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Modals -->
+@if (showBudgetModal()) {
+  <app-project-budget-modal
+    [projectId]="projectId"
+    (close)="showBudgetModal.set(false)"
+    (save)="onSaveBudgetVersion($event)"
+  ></app-project-budget-modal>
+}
+
+@if (showLedgerModal()) {
+  <app-project-cost-ledger-modal
+    [projectId]="projectId"
+    [wbsNodes]="wbsNodes"
+    (close)="showLedgerModal.set(false)"
+    (save)="onRecordLedgerEntry($event)"
+  ></app-project-cost-ledger-modal>
+}

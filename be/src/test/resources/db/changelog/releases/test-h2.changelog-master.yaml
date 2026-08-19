@@ -777,6 +777,72 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260818_v268_hardcoded_ui_i18n.yaml
       relativeToChangelogFile: false
+  # P0_PROJECT_WBS_20260819: Feature 01 Project Register & Hierarchical WBS / BOQ
+  - include:
+      file: db/changelog/schema/create/20260819_v269_project_wbs_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v270_project_wbs_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260819_v271_project_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P0_PROJECT_DPR_20260819: Feature 02 Daily Site Progress & Field Reporting (DPR)
+  - include:
+      file: db/changelog/schema/create/20260819_v272_project_daily_reports_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v273_project_daily_reports_translations.yaml
+      relativeToChangelogFile: false
+  # P0_PROJECT_SCHEDULING_20260819: Feature 03 Project Scheduling, Gantt & Resource Planning
+  - include:
+      file: db/changelog/schema/create/20260819_v274_project_scheduling_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v275_project_scheduling_translations.yaml
+      relativeToChangelogFile: false
+  # P0_PROJECT_TENDERS_20260819: Feature 04 Project Tender & Competition Management
+  - include:
+      file: db/changelog/schema/create/20260819_v276_project_tenders_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v277_project_tenders_translations.yaml
+      relativeToChangelogFile: false
+  # P0_PROJECT_CLAIMS_20260819: Feature 05 Owner & Subcontractor Progress Claims (IPC)
+  - include:
+      file: db/changelog/schema/create/20260819_v278_project_claims_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v279_project_claims_translations.yaml
+      relativeToChangelogFile: false
+  # P0_PROJECT_COST_CONTROL_20260819: Feature 06 Project Budget, Cost Control, Variance & Profitability
+  - include:
+      file: db/changelog/schema/create/20260819_v280_project_cost_control_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v281_project_cost_control_translations.yaml
+      relativeToChangelogFile: false
+  # P1_PROJECT_EXECUTIVE_DASHBOARD_20260819: Feature 07 Project Financial & Executive Dashboard
+  - include:
+      file: db/changelog/schema/create/20260819_v282_project_executive_dashboard_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v283_project_executive_dashboard_translations.yaml
+      relativeToChangelogFile: false
+  # P0_PROCUREMENT_SOURCING_20260819: Feature 08 Procurement & Sourcing Management
+  - include:
+      file: db/changelog/schema/alter/20260819_v284_procurement_project_attribution_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v285_procurement_project_attribution_translations.yaml
+      relativeToChangelogFile: false
+  # P1_INVENTORY_WAREHOUSES_20260819: Feature 09 Inventory & Site Warehouses
+  - include:
+      file: db/changelog/schema/alter/20260819_v286_inventory_site_warehouse_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v287_inventory_site_warehouse_translations.yaml
+      relativeToChangelogFile: false
 
 
 

@@ -33,6 +33,9 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.noReportHint': 'قد توجد تقارير نصف شهرية. افتح شاشة التقارير لمراجعة الفترات المتاحة.',
     'imports.viewFullHistory': 'عرض سجل الاستيراد بالكامل',
     'users.manageCategories': 'إدارة التصنيفات / إضافة تصنيف جديد',
+    'workspace.projects': 'إدارة المشاريع والإنشاءات',
+    'nav.projects': 'سجل المشاريع وهيكل العمل',
+    'nav.projectsHint': 'إدارة سجل المشاريع وهيكل تجزئة العمل وجداول الكميات والمقايسات WBS / BOQ',
   },
   'en-US': {
     'nav.settingsHint': 'System settings and preferences',
@@ -55,6 +58,9 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'dashboard.noReportHint': 'Half-month reports may exist. Open Reports to review available periods.',
     'imports.viewFullHistory': 'View full import history',
     'users.manageCategories': 'Manage categories / Add a category',
+    'workspace.projects': 'Projects & Construction',
+    'nav.projects': 'Projects & WBS Register',
+    'nav.projectsHint': 'Manage project register, work breakdown structures, and BOQ items',
   },
 };
 

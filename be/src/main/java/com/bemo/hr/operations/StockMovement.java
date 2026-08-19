@@ -51,6 +51,20 @@ public class StockMovement {
     private String attachmentContentType;
     @Column(name = "attachment_size")
     private Long attachmentSize;
+    @Column(name = "project_id", length = 36)
+    private String projectId;
+    @Column(name = "wbs_node_id", length = 36)
+    private String wbsNodeId;
+    @Column(name = "cost_code_id", length = 36)
+    private String costCodeId;
+    @Column(name = "lot_number", length = 100)
+    private String lotNumber;
+    @Column(name = "serial_number", length = 100)
+    private String serialNumber;
+    @Column(name = "expiry_date", length = 10)
+    private String expiryDate;
+    @Column(name = "bin_id", length = 36)
+    private String binId;
     @Column(length = 1000)
     private String note;
     @Column(length = 1000)
@@ -82,6 +96,19 @@ public class StockMovement {
     public void assignDocument(String documentType, String reason) {
         this.documentType = documentType;
         this.reason = nullable(reason);
+    }
+
+    public void assignProject(String projectId, String wbsNodeId, String costCodeId) {
+        this.projectId = nullable(projectId);
+        this.wbsNodeId = nullable(wbsNodeId);
+        this.costCodeId = nullable(costCodeId);
+    }
+
+    public void assignTracking(String lotNumber, String serialNumber, String expiryDate, String binId) {
+        this.lotNumber = nullable(lotNumber);
+        this.serialNumber = nullable(serialNumber);
+        this.expiryDate = nullable(expiryDate);
+        this.binId = nullable(binId);
     }
 
     public void assignReferences(String purchaseOrderNo, String receiptNo, String deliveryNoteNo, String invoiceNo,

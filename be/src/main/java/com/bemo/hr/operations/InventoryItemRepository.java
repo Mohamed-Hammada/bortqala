@@ -18,4 +18,9 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, St
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select i from InventoryItem i where i.id = :id")
     Optional<InventoryItem> findByIdForUpdate(String id);
+
+    Optional<InventoryItem> findByBarcode(String barcode);
+
+    @Query("select i from InventoryItem i where i.barcode = :code or i.barcodeAliases like concat('%', :code, '%')")
+    List<InventoryItem> findByBarcodeOrAlias(String code);
 }

@@ -134,6 +134,7 @@ public class ProcurementService {
         PurchaseOrder po = new PurchaseOrder(resolvePoNumber(payload.poNumber(), null), poDate, payload.supplierId(),
                 payload.purchaseRequestId(), payload.paymentTerms(), currencyCode, calculatedTotal);
         po.assignDepartment(payload.departmentId());
+        po.assignProject(payload.projectId(), payload.wbsNodeId(), payload.costCodeId());
         po.applyExchangeRate(rate.baseCurrencyCode(), rate.rate(), rate.rateDate(), rate.source(), rate.overrideReason());
         PurchaseOrder saved = purchaseOrderRepository.save(po);
         List<PurchaseOrderLine> lines = buildLines(saved.getId(), payload.items());
@@ -164,6 +165,7 @@ public class ProcurementService {
         po.updateDraft(resolvePoNumber(payload.poNumber(), po.getId()), poDate, payload.supplierId(),
                 payload.purchaseRequestId(), payload.paymentTerms(), currencyCode, calculatedTotal);
         po.assignDepartment(payload.departmentId());
+        po.assignProject(payload.projectId(), payload.wbsNodeId(), payload.costCodeId());
         po.applyExchangeRate(po.getBaseCurrencyCode(), po.getExchangeRate(), po.getExchangeRateDate(),
                 po.getExchangeRateSource(), po.getExchangeRateOverrideReason());
         purchaseOrderLineRepository.deleteByPurchaseOrderId(po.getId());
@@ -276,10 +278,12 @@ public class ProcurementService {
             if (accepted.compareTo(remaining) > 0)
                 throw new BusinessRuleException("الكمية المقبولة تتجاوز المتبقي في أمر الشراء للصنف: " + ordered.getItemName());
             previouslyAccepted.merge(ordered.getId(), accepted, BigDecimal::add);
-            return new GoodsReceiptLine(line.purchaseOrderLineId(), line.itemId(), ordered.getItemName(),
+            GoodsReceiptLine grnLine = new GoodsReceiptLine(line.purchaseOrderLineId(), line.itemId(), ordered.getItemName(),
                     ordered.getItemCategory(), delivered, rejected, deducted, accepted, ordered.getUnitOfMeasure(),
                     ordered.getUnitPrice(), normalizeOptional(line.locationId()), normalizeOptional(line.lotNumber()),
                     normalizeOptional(line.qualityReason()));
+            grnLine.assignProject(ordered.getProjectId(), ordered.getWbsNodeId(), ordered.getCostCodeId());
+            return grnLine;
         }).toList();
         if (lines.stream().map(GoodsReceiptLine::getQuantity).reduce(BigDecimal.ZERO, BigDecimal::add).signum() <= 0)
             throw new BusinessRuleException("Goods receipt must contain an accepted quantity.", "PROC_GRN_ACCEPTED_QUANTITY_REQUIRED", HttpStatus.CONFLICT);
@@ -352,6 +356,12 @@ public class ProcurementService {
                 payload.purchaseOrderId(), payload.goodsReceiptId(), supplier.getResponsiblePartyId(),
                 invoiceDate, payload.totalAmount(),
                 payload.discountAmount(), payload.taxAmount(), dueDate, invoiceNotes);
+        if (payload.projectId() != null && !payload.projectId().isBlank()) {
+            inv.assignProject(payload.projectId(), payload.wbsNodeId(), payload.costCodeId());
+        } else if (payload.purchaseOrderId() != null && !payload.purchaseOrderId().isBlank()) {
+            purchaseOrderRepository.findById(payload.purchaseOrderId()).ifPresent(po ->
+                    inv.assignProject(po.getProjectId(), po.getWbsNodeId(), po.getCostCodeId()));
+        }
         inv.applyExchangeRate(rate.baseCurrencyCode(), rate.rate(), rate.rateDate(), rate.source(), rate.overrideReason());
         SupplierInvoice saved = supplierInvoiceRepository.save(inv);
 
@@ -557,8 +567,10 @@ public class ProcurementService {
                 throw new BusinessRuleException("Inactive inventory items cannot be purchased.", "PROC_INACTIVE_ITEM", HttpStatus.CONFLICT);
             String unit = inventoryItem.uomName() != null && !inventoryItem.uomName().isBlank()
                     ? inventoryItem.uomName() : inventoryItem.unitCode();
-            return new PurchaseOrderLine(purchaseOrderId, inventoryItem.id(), inventoryItem.name(),
+            PurchaseOrderLine line = new PurchaseOrderLine(purchaseOrderId, inventoryItem.id(), inventoryItem.name(),
                     inventoryItem.categoryName(), item.quantity(), unit, item.unitPrice());
+            line.assignProject(item.projectId(), item.wbsNodeId(), item.costCodeId());
+            return line;
         }).toList();
     }
 
@@ -663,7 +675,8 @@ public class ProcurementService {
         Map<String, BigDecimal> received = acceptedQuantities(po.getId());
         return new ProcurementApi.PurchaseOrderResponse(po.getId(), po.getPoNumber(), toEpochMs(po.getPoDate()),
                 po.getSupplierId(), supplierNames.get(po.getSupplierId()), po.getPurchaseRequestId(),
-                po.getDepartmentId(), po.getPaymentTerms(), po.getCurrencyCode(), po.getBaseCurrencyCode(), po.getExchangeRate(),
+                po.getDepartmentId(), po.getProjectId(), po.getWbsNodeId(), po.getCostCodeId(),
+                po.getPaymentTerms(), po.getCurrencyCode(), po.getBaseCurrencyCode(), po.getExchangeRate(),
                 toEpochMs(po.getExchangeRateDate()), po.getExchangeRateSource(), po.getExchangeRateOverrideReason(),
                 po.getBaseTotalAmount(), po.getStatus().name(), po.getTotalAmount(),
                 lines.stream().map(line -> toLineResponse(line, received)).toList(), po.getCreatedAt(), po.getUpdatedAt());
@@ -675,7 +688,7 @@ public class ProcurementService {
         BigDecimal remainingQuantity = line.getQuantity().subtract(receivedQuantity).max(BigDecimal.ZERO);
         return new ProcurementApi.PurchaseOrderLineResponse(line.getId(), line.getItemId(), line.getItemName(), line.getItemCategory(),
                 line.getQuantity(), receivedQuantity, remainingQuantity, line.getUnitOfMeasure(),
-                line.getUnitPrice(), line.getLineTotal());
+                line.getUnitPrice(), line.getLineTotal(), line.getProjectId(), line.getWbsNodeId(), line.getCostCodeId());
     }
 
     private Map<String, BigDecimal> acceptedQuantities(String purchaseOrderId) {
@@ -697,8 +710,9 @@ public class ProcurementService {
                 grn.getLines().stream().map(l -> new ProcurementApi.GoodsReceiptLineResponse(
                         l.getId(), l.getPurchaseOrderLineId(), l.getItemId(), l.getItemName(), l.getItemCategory(),
                         l.getDeliveredQuantity(), l.getRejectedQuantity(), l.getDeductedQuantity(),
-                        l.getQuantity(), l.getUnitOfMeasure(), l.getUnitPrice(),
-                        l.getLocationId(), l.getLotNumber(), l.getQualityReason())).toList(),
+                        l.getQuantity(), l.getUnitOfMeasure(), l.getUnitPrice(), l.getUnitPrice().multiply(l.getQuantity()),
+                        l.getLocationId(), l.getLotNumber(), l.getQualityReason(),
+                        l.getProjectId(), l.getWbsNodeId(), l.getCostCodeId())).toList(),
                 grn.getCreatedAt());
     }
 
@@ -707,6 +721,7 @@ public class ProcurementService {
         BigDecimal outstandingAmount = inv.getNetAmount().subtract(paidAmount).max(BigDecimal.ZERO);
         return new ProcurementApi.SupplierInvoiceResponse(inv.getId(), inv.getInvoiceNumber(), inv.getSupplierId(),
                 supplierNames.get(inv.getSupplierId()), inv.getPurchaseOrderId(), inv.getGoodsReceiptId(),
+                inv.getProjectId(), inv.getWbsNodeId(), inv.getCostCodeId(),
                 inv.getResponsiblePartyId(), inv.getInternalReference(), inv.getMissingInvoiceReason(), inv.getCurrencyCode(),
                 inv.getBaseCurrencyCode(), inv.getExchangeRate(), toEpochMs(inv.getExchangeRateDate()),
                 inv.getExchangeRateSource(), inv.getExchangeRateOverrideReason(), inv.getBaseNetAmount(),

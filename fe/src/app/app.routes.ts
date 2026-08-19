@@ -28,6 +28,16 @@ export const routes: Routes = [
           import('./features/dashboard/dashboard.page').then((module) => module.DashboardPage),
       },
       {
+        path: 'projects',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          roles: ['SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER'],
+          menuId: 'projects',
+        },
+        loadChildren: () =>
+          import('./features/projects/projects.routes').then((module) => module.PROJECT_ROUTES),
+      },
+      {
         path: 'categories',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN', 'HR_MANAGER'], menuId: 'categories' },

@@ -10,6 +10,7 @@ import { IconName } from '../../shared/ui/icon/icon.component';
  */
 export type WorkspaceGroup =
   | 'workspace.homeOverview'
+  | 'workspace.projects'
   | 'workspace.peopleHr'
   | 'workspace.attendanceTime'
   | 'workspace.contractorWorkforce'
@@ -47,6 +48,7 @@ export interface WorkspaceSection {
 
 export const WORKSPACE_ORDER: readonly WorkspaceGroup[] = [
   'workspace.homeOverview',
+  'workspace.projects',
   'workspace.peopleHr',
   'workspace.attendanceTime',
   'workspace.contractorWorkforce',
@@ -60,6 +62,7 @@ export const WORKSPACE_ORDER: readonly WorkspaceGroup[] = [
   'workspace.platformAdministration',
 ];
 
+const PROJECT_ROLES: RoleCode[] = ['SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER'];
 const FINANCE_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'];
 const FINANCE_REPORT_ROLES: RoleCode[] = ['FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR'];
 const PROCUREMENT_ROLES: RoleCode[] = [
@@ -96,6 +99,17 @@ export const NAV_ITEMS: NavItem[] = [
     path: '/dashboard',
     icon: 'dashboard',
     workspace: 'workspace.homeOverview',
+  },
+
+  // Projects / Construction Backbone
+  {
+    menuId: 'projects',
+    labelKey: 'nav.projects',
+    descriptionKey: 'nav.projectsHint',
+    path: '/projects',
+    icon: 'dashboard',
+    workspace: 'workspace.projects',
+    roles: PROJECT_ROLES,
   },
 
   // People & HR

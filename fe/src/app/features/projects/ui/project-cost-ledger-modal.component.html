@@ -1,0 +1,89 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-dialog modal-md" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-titles">
+        <h3 class="modal-title">{{ i18n.t('costControl.tabCostLedger') }}</h3>
+        <p class="modal-subtitle">{{ i18n.t('costControl.subtitle') }}</p>
+      </div>
+      <button type="button" class="btn-close" (click)="close.emit()" [attr.aria-label]="i18n.t('common.close')">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label class="form-label required">{{ i18n.t('costControl.entryType') }}</label>
+          <select class="form-select" [ngModel]="entryType()" (ngModelChange)="entryType.set($event)">
+            @for (t of entryTypes; track t) {
+              <option [value]="t">{{ getEntryTypeLabel(t) }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group flex-1">
+          <label class="form-label required">{{ i18n.t('costControl.costCategory') }}</label>
+          <select class="form-select" [ngModel]="costCategory()" (ngModelChange)="costCategory.set($event)">
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ getCategoryLabel(cat) }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('projects.wbsItem') }}</label>
+        <select class="form-select" [ngModel]="wbsNodeId()" (ngModelChange)="wbsNodeId.set($event)">
+          <option value="">— {{ i18n.t('projects.unallocatedGeneral') }} —</option>
+          @for (node of wbsNodes; track node.id) {
+            <option [value]="node.id">{{ node.wbsCode }} - {{ node.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label class="form-label required">{{ i18n.t('common.date') }}</label>
+          <input type="date" class="form-control" [ngModel]="entryDate()" (ngModelChange)="entryDate.set($event)" required />
+        </div>
+
+        <div class="form-group flex-1">
+          <label class="form-label">{{ i18n.t('costControl.sourceDocNumber') }}</label>
+          <input type="text" class="form-control" [ngModel]="sourceDocumentNumber()" (ngModelChange)="sourceDocumentNumber.set($event)" placeholder="PO-2026-001 / INV-001" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label required">{{ i18n.t('common.description') }}</label>
+        <input type="text" class="form-control" [ngModel]="description()" (ngModelChange)="description.set($event)" [placeholder]="i18n.t('common.description')" required />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group flex-1">
+          <label class="form-label">{{ i18n.t('projects.quantity') }}</label>
+          <input type="number" class="form-control" [ngModel]="quantity()" (ngModelChange)="quantity.set($event); onQtyOrRateChange()" min="0" />
+        </div>
+
+        <div class="form-group flex-1">
+          <label class="form-label">{{ i18n.t('projects.unitRate') }}</label>
+          <input type="number" class="form-control" [ngModel]="unitRate()" (ngModelChange)="unitRate.set($event); onQtyOrRateChange()" min="0" />
+        </div>
+
+        <div class="form-group flex-1">
+          <label class="form-label required">{{ i18n.t('projects.amount') }}</label>
+          <input type="number" class="form-control font-bold" [ngModel]="amount()" (ngModelChange)="amount.set($event)" min="0.01" step="0.01" required />
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="close.emit()" [disabled]="submitting()">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button type="button" class="btn btn-primary" (click)="onSave()" [disabled]="submitting() || !description().trim() || amount() <= 0">
+        @if (submitting()) {
+          <span class="spinner-border spinner-border-sm"></span>
+        }
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </div>
+</div>

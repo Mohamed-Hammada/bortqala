@@ -20,6 +20,12 @@ export interface CatalogPageContract {
 
 export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
   { menuId: 'dashboard', route: '/dashboard', roles: [], requiredFeature: null },
+  {
+    menuId: 'projects',
+    route: '/projects',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER'],
+    requiredFeature: null,
+  },
   { menuId: 'employees', route: '/employees', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'], requiredFeature: null },
   { menuId: 'categories', route: '/categories', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'], requiredFeature: null },
   { menuId: 'imports', route: '/imports', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], requiredFeature: null },

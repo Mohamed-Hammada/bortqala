@@ -1,0 +1,448 @@
+<div class="schedule-container">
+  <!-- 1. KPI Summary Cards Header -->
+  <div class="kpi-grid" *ngIf="schedule() as s">
+    <div class="kpi-card">
+      <span class="kpi-label">{{ i18n.t('schedule.tabTasks') }}</span>
+      <span class="kpi-value">{{ s.totalTasksCount }}</span>
+    </div>
+    <div class="kpi-card danger">
+      <span class="kpi-label">{{ i18n.t('schedule.criticalPath') }}</span>
+      <span class="kpi-value">{{ s.criticalTasksCount }}</span>
+    </div>
+    <div class="kpi-card success">
+      <span class="kpi-label">{{ i18n.t('schedule.percentComplete') }}</span>
+      <span class="kpi-value">{{ s.overallProgress }}%</span>
+    </div>
+    <div class="kpi-card info">
+      <span class="kpi-label">{{ i18n.t('schedule.currentBaseline') }}</span>
+      <span class="kpi-value">v{{ s.currentBaselineVersion }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">{{ i18n.t('schedule.plannedStart') }} — {{ i18n.t('schedule.plannedEnd') }}</span>
+      <span class="kpi-sub">{{ formatDate(s.startDate) }} ➔ {{ formatDate(s.endDate) }}</span>
+    </div>
+  </div>
+
+  <!-- 2. Controls & Actions Toolbar -->
+  <div class="toolbar-card">
+    <div class="left-actions">
+      <button type="button" class="btn btn-primary" (click)="onOpenCreateTask()">
+        ➕ {{ i18n.t('schedule.createTask') }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="onRecalculateCpm()">
+        ⚡ {{ i18n.t('schedule.recalculateCpm') }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="onOpenBaselineModal()">
+        📷 {{ i18n.t('schedule.createBaseline') }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="onImportWbs()">
+        📦 {{ i18n.t('schedule.wbsImport') }}
+      </button>
+      <button type="button" class="btn btn-secondary" (click)="onSyncDpr()">
+        🔄 {{ i18n.t('schedule.syncDprProgress') }}
+      </button>
+    </div>
+
+    <div class="right-filters">
+      <label class="filter-critical-toggle">
+        <input
+          type="checkbox"
+          [ngModel]="filterCriticalOnly()"
+          (ngModelChange)="filterCriticalOnly.set($event)"
+        />
+        <span>🚨 {{ i18n.t('schedule.isCritical') }}</span>
+      </label>
+
+      <!-- Baseline Comparison Dropdown -->
+      <div class="baseline-picker" *ngIf="schedule()?.baselines?.length">
+        <label class="picker-label">{{ i18n.t('schedule.compareBaseline') }}:</label>
+        <select
+          class="form-select-sm"
+          [ngModel]="selectedBaselineId()"
+          (ngModelChange)="onBaselineSelect($event)"
+        >
+          <option value="">-- {{ i18n.t('schedule.currentBaseline') }} --</option>
+          <option *ngFor="let b of schedule()?.baselines" [value]="b.id">
+            v{{ b.versionNumber }} - {{ b.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Navigation Tabs -->
+  <div class="view-tabs">
+    <button
+      type="button"
+      class="tab-link"
+      [class.active]="activeTab() === 'gantt'"
+      (click)="activeTab.set('gantt')"
+    >
+      📊 {{ i18n.t('schedule.tabGantt') }}
+    </button>
+    <button
+      type="button"
+      class="tab-link"
+      [class.active]="activeTab() === 'table'"
+      (click)="activeTab.set('table')"
+    >
+      📋 {{ i18n.t('schedule.tabTasks') }}
+    </button>
+    <button
+      type="button"
+      class="tab-link"
+      [class.active]="activeTab() === 'baselines'"
+      (click)="activeTab.set('baselines')"
+    >
+      📐 {{ i18n.t('schedule.tabBaselines') }}
+    </button>
+    <button
+      type="button"
+      class="tab-link"
+      [class.active]="activeTab() === 'resources'"
+      (click)="activeTab.set('resources')"
+    >
+      👥 {{ i18n.t('schedule.tabResources') }}
+    </button>
+  </div>
+
+  <!-- 4. Tab 1: Gantt Chart Split Pane View -->
+  <div *ngIf="activeTab() === 'gantt'" class="gantt-pane">
+    <div class="gantt-split-layout">
+      <!-- Left Side: Task Grid Table -->
+      <div class="gantt-task-grid">
+        <div class="task-grid-header">
+          <div class="col-code">{{ i18n.t('schedule.taskCode') }}</div>
+          <div class="col-name">{{ i18n.t('schedule.taskName') }}</div>
+          <div class="col-dur">{{ i18n.t('schedule.duration') }}</div>
+          <div class="col-prog">%</div>
+          <div class="col-crit">{{ i18n.t('schedule.isCritical') }}</div>
+        </div>
+        <div class="task-grid-body">
+          <div
+            *ngFor="let t of filteredTasks()"
+            class="task-row"
+            [class.critical-row]="t.isCritical"
+            (click)="onOpenEditTask(t)"
+          >
+            <div class="col-code">
+              <span class="code-pill">{{ t.taskCode }}</span>
+            </div>
+            <div class="col-name" [title]="t.name">
+              <span *ngIf="t.isMilestone">🔷 </span>
+              {{ t.name }}
+            </div>
+            <div class="col-dur">{{ t.durationDays }}</div>
+            <div class="col-prog">{{ t.percentComplete }}%</div>
+            <div class="col-crit">
+              <span *ngIf="t.isCritical" class="badge-crit">{{ i18n.t('schedule.criticalPath') }}</span>
+              <span *ngIf="!t.isCritical" class="badge-float">{{ t.totalFloatDays }}</span>
+            </div>
+          </div>
+          <div *ngIf="filteredTasks().length === 0" class="empty-row">
+            {{ i18n.t('schedule.noTasksTitle') }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side: Visual Gantt Canvas Timeline -->
+      <div class="gantt-canvas-container">
+        <!-- Calendar Scale Header -->
+        <div class="timeline-header">
+          <div
+            *ngFor="let day of timelineDays()"
+            class="timeline-cell"
+            [class.weekend]="day.isWeekend"
+            [class.today]="day.isToday"
+          >
+            {{ day.label }}
+          </div>
+        </div>
+
+        <!-- Task Timeline Bars -->
+        <div class="timeline-body">
+          <div
+            *ngFor="let t of filteredTasks()"
+            class="timeline-row"
+            [class.critical-row]="t.isCritical"
+          >
+            <!-- Timeline Task Bar -->
+            <div
+              *ngIf="!t.isMilestone"
+              class="gantt-bar"
+              [class.critical-bar]="t.isCritical"
+              [style.left.%]="getDayLeftPercent(t.earlyStartDate || t.plannedStartDate)"
+              [style.width.%]="getBarWidthPercent(t.earlyStartDate || t.plannedStartDate, t.earlyEndDate || t.plannedEndDate, t.durationDays)"
+              (click)="onOpenEditTask(t)"
+              [title]="t.taskCode + ': ' + t.name + ' (' + formatDate(t.earlyStartDate || t.plannedStartDate) + ' - ' + formatDate(t.earlyEndDate || t.plannedEndDate) + ')'"
+            >
+              <div class="gantt-bar-progress" [style.width.%]="t.percentComplete"></div>
+              <span class="gantt-bar-label">{{ t.name }} ({{ t.percentComplete }}%)</span>
+            </div>
+
+            <!-- Milestone Diamond -->
+            <div
+              *ngIf="t.isMilestone"
+              class="gantt-milestone"
+              [style.left.%]="getDayLeftPercent(t.earlyStartDate || t.plannedStartDate)"
+              (click)="onOpenEditTask(t)"
+              [title]="t.taskCode + ': ' + t.name"
+            >
+              🔷
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Tab 2: CPM Tasks Data Table -->
+  <div *ngIf="activeTab() === 'table'" class="table-pane">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('schedule.taskCode') }}</th>
+          <th>{{ i18n.t('schedule.taskName') }}</th>
+          <th>{{ i18n.t('schedule.durationDays') }}</th>
+          <th>{{ i18n.t('schedule.earlyStart') }}</th>
+          <th>{{ i18n.t('schedule.earlyEnd') }}</th>
+          <th>{{ i18n.t('schedule.lateStart') }}</th>
+          <th>{{ i18n.t('schedule.lateEnd') }}</th>
+          <th>{{ i18n.t('schedule.freeFloat') }}</th>
+          <th>{{ i18n.t('schedule.totalFloat') }}</th>
+          <th>{{ i18n.t('schedule.isCritical') }}</th>
+          <th>{{ i18n.t('schedule.percentComplete') }}</th>
+          <th class="text-end"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of filteredTasks()" [class.critical-highlight]="t.isCritical">
+          <td><span class="code-pill">{{ t.taskCode }}</span></td>
+          <td>
+            <strong>{{ t.name }}</strong>
+            <span *ngIf="t.isMilestone" class="badge badge-milestone">{{ i18n.t('schedule.isMilestone') }}</span>
+          </td>
+          <td>{{ t.durationDays }}</td>
+          <td>{{ formatDate(t.earlyStartDate || t.plannedStartDate) }}</td>
+          <td>{{ formatDate(t.earlyEndDate || t.plannedEndDate) }}</td>
+          <td>{{ formatDate(t.lateStartDate) }}</td>
+          <td>{{ formatDate(t.lateEndDate) }}</td>
+          <td>{{ t.freeFloatDays }}</td>
+          <td>{{ t.totalFloatDays }}</td>
+          <td>
+            <span *ngIf="t.isCritical" class="badge badge-danger">{{ i18n.t('schedule.isCritical') }}</span>
+            <span *ngIf="!t.isCritical" class="badge badge-success">{{ i18n.t('common.enabled') }}</span>
+          </td>
+          <td>
+            <div class="progress-bar-sm">
+              <div class="prog-fill" [style.width.%]="t.percentComplete"></div>
+              <span>{{ t.percentComplete }}%</span>
+            </div>
+          </td>
+          <td class="text-end">
+            <button type="button" class="btn-icon" (click)="onOpenEditTask(t)">✏️</button>
+            <button type="button" class="btn-icon danger" (click)="onPromptDelete(t.id)">🗑</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 6. Tab 3: Baselines History & Variance Comparison -->
+  <div *ngIf="activeTab() === 'baselines'" class="baselines-pane">
+    <div class="baseline-comparison-section" *ngIf="scheduleService.baselineComparison() as comps">
+      <div class="section-header" *ngIf="comps.length > 0">
+        <h4>{{ i18n.t('schedule.compareBaseline') }}</h4>
+      </div>
+      <table class="table" *ngIf="comps.length > 0">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('schedule.taskCode') }}</th>
+            <th>{{ i18n.t('schedule.taskName') }}</th>
+            <th>{{ i18n.t('schedule.baselineStart') }}</th>
+            <th>{{ i18n.t('schedule.baselineEnd') }}</th>
+            <th>{{ i18n.t('schedule.earlyStart') }}</th>
+            <th>{{ i18n.t('schedule.earlyEnd') }}</th>
+            <th>{{ i18n.t('schedule.varianceDays') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of comps">
+            <td><span class="code-pill">{{ c.taskCode }}</span></td>
+            <td>{{ c.taskName }}</td>
+            <td>{{ formatDate(c.baselineStartDate) }}</td>
+            <td>{{ formatDate(c.baselineEndDate) }}</td>
+            <td>{{ formatDate(c.currentStartDate) }}</td>
+            <td>{{ formatDate(c.currentEndDate) }}</td>
+            <td>
+              <span
+                class="badge"
+                [class.badge-danger]="c.varianceDays > 0"
+                [class.badge-success]="c.varianceDays <= 0"
+              >
+                {{ c.varianceDays > 0 ? '+' : '' }}{{ c.varianceDays }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Baselines History List -->
+    <div class="baselines-history">
+      <div class="section-header">
+        <h4>{{ i18n.t('schedule.tabBaselines') }}</h4>
+      </div>
+      <div class="baseline-cards-grid">
+        <div
+          *ngFor="let b of schedule()?.baselines"
+          class="baseline-card"
+          [class.active]="selectedBaselineId() === b.id"
+          (click)="onBaselineSelect(b.id)"
+        >
+          <div class="card-top">
+            <span class="ver-badge">v{{ b.versionNumber }}</span>
+            <strong class="b-name">{{ b.name }}</strong>
+          </div>
+          <p class="b-notes" *ngIf="b.notes">{{ b.notes }}</p>
+          <div class="card-bottom">
+            <span>{{ i18n.t('schedule.tabTasks') }}: {{ b.taskCount }}</span>
+            <span class="b-date">{{ formatDate(b.approvedAt) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Tab 4: Resource Allocation & Over-allocations -->
+  <div *ngIf="activeTab() === 'resources'" class="resources-pane">
+    <!-- Over-allocation Alerts -->
+    <div class="over-allocations-section" *ngIf="scheduleService.overAllocations() as overs">
+      <div class="alert-box danger" *ngIf="overs.length > 0">
+        <h4>⚠️ {{ i18n.t('schedule.overAllocated') }} ({{ overs.length }})</h4>
+        <table class="table-sm">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('schedule.resourceType') }}</th>
+              <th>{{ i18n.t('schedule.resourceName') }}</th>
+              <th>{{ i18n.t('schedule.quantityAllocated') }}</th>
+              <th>{{ i18n.t('schedule.varianceDays') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let o of overs">
+              <td><span class="badge badge-res">{{ o.resourceType }}</span></td>
+              <td><strong>{{ o.resourceName }}</strong></td>
+              <td>{{ o.allocatedQuantity }} / {{ o.capacityLimit }}</td>
+              <td>+{{ o.overAllocatedAmount }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- All Assigned Resources Grid -->
+    <div class="all-resources-grid">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('schedule.taskCode') }}</th>
+            <th>{{ i18n.t('schedule.resourceType') }}</th>
+            <th>{{ i18n.t('schedule.resourceName') }}</th>
+            <th>{{ i18n.t('schedule.quantityAllocated') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let t of schedule()?.tasks">
+            <tr *ngFor="let r of t.resourceAssignments">
+              <td><span class="code-pill">{{ t.taskCode }}</span> {{ t.name }}</td>
+              <td><span class="badge badge-res">{{ r.resourceType }}</span></td>
+              <td><strong>{{ r.resourceName }}</strong></td>
+              <td>{{ r.quantityAllocated }}</td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Task Editor Dialog Modal -->
+<app-task-editor-modal
+  *ngIf="showTaskEditor()"
+  [task]="editingTask()"
+  [allTasks]="schedule()?.tasks || []"
+  [dependencies]="schedule()?.dependencies || []"
+  [isSaving]="isSavingTask()"
+  (saveTask)="onSaveTask($event)"
+  (addDependency)="onAddDependency($event)"
+  (removeDependency)="onRemoveDependency($event)"
+  (addResource)="onAssignResource($event)"
+  (removeResource)="onRemoveResource($event)"
+  (close)="showTaskEditor.set(false)"
+></app-task-editor-modal>
+
+<!-- Create Baseline Prompt Modal -->
+<div class="modal-backdrop" *ngIf="showBaselineModal()" (click)="showBaselineModal.set(false)">
+  <div class="modal-card modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ i18n.t('schedule.createBaseline') }}</h3>
+      <button type="button" class="btn-close" (click)="showBaselineModal.set(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('schedule.baselineName') }} *</label>
+        <input
+          type="text"
+          class="form-control"
+          [ngModel]="baselineName()"
+          (ngModelChange)="baselineName.set($event)"
+          required
+        />
+      </div>
+      <div class="form-group" style="margin-top: 1rem;">
+        <label class="form-label">{{ i18n.t('common.notes') }}</label>
+        <textarea
+          class="form-control"
+          rows="3"
+          [ngModel]="baselineNotes()"
+          (ngModelChange)="baselineNotes.set($event)"
+        ></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" (click)="showBaselineModal.set(false)">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="!baselineName().trim()"
+        (click)="onCreateBaseline()"
+      >
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal-backdrop" *ngIf="showDeleteModal()" (click)="showDeleteModal.set(false)">
+  <div class="modal-card modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ i18n.t('schedule.deleteConfirmTitle') }}</h3>
+      <button type="button" class="btn-close" (click)="showDeleteModal.set(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>{{ i18n.t('schedule.deleteConfirmMessage') }}</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" (click)="showDeleteModal.set(false)">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button type="button" class="btn btn-danger" (click)="onConfirmDelete()">
+        {{ i18n.t('schedule.deleteTask') }}
+      </button>
+    </div>
+  </div>
+</div>

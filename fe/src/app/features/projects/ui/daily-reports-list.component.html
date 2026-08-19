@@ -1,0 +1,213 @@
+<div class="dpr-container">
+  <!-- Top KPI Summary Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-label">{{ i18n.t('projects.kpiTotal') }}</span>
+      <span class="kpi-value">{{ totalReports() }}</span>
+    </div>
+    <div class="kpi-card kpi-approved">
+      <span class="kpi-label">{{ i18n.t('dpr.statusApproved') }}</span>
+      <span class="kpi-value">{{ approvedReports() }}</span>
+    </div>
+    <div class="kpi-card kpi-submitted">
+      <span class="kpi-label">{{ i18n.t('dpr.statusSubmitted') }}</span>
+      <span class="kpi-value">{{ submittedReports() }}</span>
+    </div>
+    <div class="kpi-card kpi-draft">
+      <span class="kpi-label">{{ i18n.t('dpr.statusDraft') }}</span>
+      <span class="kpi-value">{{ draftReports() }}</span>
+    </div>
+  </div>
+
+  <!-- Actions & Filter Toolbar -->
+  <div class="toolbar">
+    <div class="search-filter-group">
+      <input
+        type="text"
+        class="form-control search-input"
+        [placeholder]="i18n.t('projects.searchPlaceholder')"
+        [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)"
+      />
+
+      <select
+        class="form-control status-select"
+        [value]="statusFilter()"
+        (change)="statusFilter.set($any($event.target).value)"
+      >
+        <option value="ALL">{{ i18n.t('projects.statusAll') }}</option>
+        <option value="DRAFT">{{ i18n.t('dpr.statusDraft') }}</option>
+        <option value="SUBMITTED">{{ i18n.t('dpr.statusSubmitted') }}</option>
+        <option value="APPROVED">{{ i18n.t('dpr.statusApproved') }}</option>
+        <option value="REOPENED">{{ i18n.t('dpr.statusReopened') }}</option>
+      </select>
+    </div>
+
+    <div class="action-buttons">
+      <button type="button" class="btn btn-secondary" (click)="copyPrevious()" title="Copy previous day report">
+        📋 {{ i18n.t('dpr.copyPreviousDay') }}
+      </button>
+      <button type="button" class="btn btn-primary" (click)="openCreate()">
+        + {{ i18n.t('dpr.createReport') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-state">
+    <p>{{ i18n.t('projects.loading') }}</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading() && filteredReports().length === 0" class="empty-state">
+    <div class="empty-icon">📑</div>
+    <h4>{{ i18n.t('dpr.noReportsTitle') }}</h4>
+    <p>{{ i18n.t('dpr.noReportsDesc') }}</p>
+    <button type="button" class="btn btn-primary" (click)="openCreate()">
+      + {{ i18n.t('dpr.createReport') }}
+    </button>
+  </div>
+
+  <!-- Reports Table -->
+  <div *ngIf="!loading() && filteredReports().length > 0" class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>{{ i18n.t('dpr.reportNumber') }}</th>
+          <th>{{ i18n.t('dpr.reportDate') }}</th>
+          <th>{{ i18n.t('dpr.shift') }}</th>
+          <th>{{ i18n.t('dpr.weather') }}</th>
+          <th>{{ i18n.t('dpr.totalWorkforce') }}</th>
+          <th>{{ i18n.t('dpr.totalEquipment') }}</th>
+          <th>{{ i18n.t('projects.status') }}</th>
+          <th class="actions-col">{{ i18n.t('projects.actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of filteredReports()">
+          <td class="report-code">
+            <strong>{{ r.reportNumber }}</strong>
+          </td>
+          <td>{{ formatEpoch(r.reportDate) }}</td>
+          <td>
+            <span class="shift-badge">
+              {{ r.shift === 'DAY' ? i18n.t('dpr.shiftDay') : (r.shift === 'NIGHT' ? i18n.t('dpr.shiftNight') : i18n.t('dpr.shiftFullDay')) }}
+            </span>
+          </td>
+          <td>
+            <span class="weather-pill" [title]="r.weatherCondition || ''">
+              {{ getWeatherIcon(r.weatherCondition) }} {{ r.temperatureCelsius ? r.temperatureCelsius + '°C' : '' }}
+            </span>
+          </td>
+          <td>
+            <span class="metric-badge">👷 {{ r.totalWorkforceCount }}</span>
+          </td>
+          <td>
+            <span class="metric-badge">🚜 {{ r.totalEquipmentCount }}</span>
+          </td>
+          <td>
+            <span class="status-pill" [ngClass]="getStatusClass(r.status)">
+              {{
+                r.status === 'APPROVED' ? i18n.t('dpr.statusApproved') :
+                (r.status === 'SUBMITTED' ? i18n.t('dpr.statusSubmitted') :
+                (r.status === 'REOPENED' ? i18n.t('dpr.statusReopened') : i18n.t('dpr.statusDraft')))
+              }}
+            </span>
+          </td>
+          <td class="actions-col">
+            <div class="row-actions">
+              <button
+                type="button"
+                class="btn btn-sm btn-outline"
+                (click)="openEdit(r)"
+                title="View / Edit"
+              >
+                ✏️
+              </button>
+
+              <button
+                *ngIf="r.status === 'DRAFT' || r.status === 'REOPENED'"
+                type="button"
+                class="btn btn-sm btn-secondary"
+                (click)="submitReport(r)"
+                title="Submit for Approval"
+              >
+                📤
+              </button>
+
+              <button
+                *ngIf="r.status === 'SUBMITTED'"
+                type="button"
+                class="btn btn-sm btn-success"
+                (click)="approveReport(r)"
+                title="Approve Report"
+              >
+                ✅
+              </button>
+
+              <button
+                *ngIf="r.status === 'APPROVED'"
+                type="button"
+                class="btn btn-sm btn-warning"
+                (click)="openReopenModal(r)"
+                title="Reopen Report"
+              >
+                🔓
+              </button>
+
+              <button
+                *ngIf="r.status === 'DRAFT'"
+                type="button"
+                class="btn btn-sm btn-danger"
+                (click)="deleteReport(r)"
+                title="Delete Report"
+              >
+                🗑️
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Daily Report Editor Modal -->
+  <app-daily-report-editor-modal
+    *ngIf="editorOpen()"
+    [projectId]="projectId"
+    [report]="selectedReport()"
+    [availableWbsNodes]="availableWbsNodes"
+    (closed)="onEditorClosed($event)"
+  ></app-daily-report-editor-modal>
+
+  <!-- Reopen Prompt Modal -->
+  <app-modal-dialog
+    *ngIf="reopenModalOpen()"
+    [isOpen]="true"
+    [title]="i18n.t('dpr.reopenPromptTitle')"
+    (close)="reopenModalOpen.set(false)"
+    (closeModal)="reopenModalOpen.set(false)"
+  >
+    <div class="reopen-dialog-body">
+      <p class="reopen-hint">{{ i18n.t('projects.closeConfirmMessage') }}</p>
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('projectRoles.notes') }}</label>
+        <textarea
+          class="form-control"
+          rows="3"
+          [placeholder]="i18n.t('dpr.reopenPromptPlaceholder')"
+          [value]="reopenReason()"
+          (input)="reopenReason.set($any($event.target).value)"
+        ></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="reopenModalOpen.set(false)">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="button" class="btn btn-warning" (click)="confirmReopen()" [disabled]="reopening()">
+          {{ reopening() ? i18n.t('common.saving') : i18n.t('dpr.actionReopen') }}
+        </button>
+      </div>
+    </div>
+  </app-modal-dialog>
+</div>

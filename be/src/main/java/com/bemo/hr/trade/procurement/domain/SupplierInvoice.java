@@ -42,6 +42,12 @@ public class SupplierInvoice {
     private String purchaseOrderId;
     @Column(name = "goods_receipt_id", length = 36)
     private String goodsReceiptId;
+    @Column(name = "project_id", length = 36)
+    private String projectId;
+    @Column(name = "wbs_node_id", length = 36)
+    private String wbsNodeId;
+    @Column(name = "cost_code_id", length = 36)
+    private String costCodeId;
     @Column(name = "responsible_party_id", length = 36)
     private String responsiblePartyId;
     @Column(name = "invoice_date", nullable = false)
@@ -239,6 +245,24 @@ public class SupplierInvoice {
 
     public long getUpdatedAt() {
         return updatedAt;
+    }
+
+    public void assignProject(String projectId, String wbsNodeId, String costCodeId) {
+        this.projectId = projectId == null || projectId.isBlank() ? null : projectId.strip();
+        this.wbsNodeId = wbsNodeId == null || wbsNodeId.isBlank() ? null : wbsNodeId.strip();
+        this.costCodeId = costCodeId == null || costCodeId.isBlank() ? null : costCodeId.strip();
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public String getWbsNodeId() {
+        return wbsNodeId;
+    }
+
+    public String getCostCodeId() {
+        return costCodeId;
     }
 
     public long getVersion() {

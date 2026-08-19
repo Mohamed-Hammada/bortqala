@@ -1,0 +1,173 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        {{ tender ? i18n.t('tenders.editTender') : i18n.t('tenders.createTender') }}
+      </h3>
+      <button type="button" class="btn-close" (click)="close.emit()">✕</button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()">
+      <div class="modal-body">
+        <div class="form-grid">
+          <!-- Title (AR) -->
+          <div class="form-group span-2">
+            <label class="form-label">{{ i18n.t('common.title') }} *</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="title"
+              name="title"
+              required
+            />
+          </div>
+
+          <!-- Title (EN) -->
+          <div class="form-group span-2">
+            <label class="form-label">{{ i18n.t('common.title') }} (EN)</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="titleEn"
+              name="titleEn"
+            />
+          </div>
+
+          <!-- Tender Type -->
+          <div class="form-group">
+            <label class="form-label">{{ i18n.t('tenders.tenderType') }} *</label>
+            <select class="form-select" [(ngModel)]="tenderType" name="tenderType" required>
+              <option value="EXTERNAL">{{ i18n.t('tenders.typeExternal') }}</option>
+              <option value="INTERNAL">{{ i18n.t('tenders.typeInternal') }}</option>
+            </select>
+          </div>
+
+          <!-- Submission Deadline -->
+          <div class="form-group">
+            <label class="form-label">{{ i18n.t('tenders.submissionDeadline') }} *</label>
+            <input
+              type="date"
+              class="form-control"
+              [(ngModel)]="deadlineDateStr"
+              name="deadlineDateStr"
+              required
+            />
+          </div>
+
+          <!-- Estimated Value -->
+          <div class="form-group">
+            <label class="form-label">{{ i18n.t('tenders.estimatedValue') }}</label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="estimatedValue"
+              name="estimatedValue"
+              min="0"
+              step="0.01"
+            />
+          </div>
+
+          <!-- Currency -->
+          <div class="form-group">
+            <label class="form-label">{{ i18n.t('common.currency') }}</label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="currencyCode"
+              name="currencyCode"
+              maxlength="10"
+            />
+          </div>
+
+          <!-- Evaluation Weights -->
+          <div class="form-group">
+            <label class="form-label">{{ i18n.t('tenders.technicalWeight') }}</label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="technicalWeightPercent"
+              name="technicalWeightPercent"
+              min="0"
+              max="100"
+              (change)="onWeightsChange('tech')"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ i18n.t('tenders.financialWeight') }}</label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="financialWeightPercent"
+              name="financialWeightPercent"
+              min="0"
+              max="100"
+              (change)="onWeightsChange('fin')"
+            />
+          </div>
+
+          <!-- Bid Bond Checkbox & Fields -->
+          <div class="form-group span-2">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="bidBondRequired"
+                name="bidBondRequired"
+              />
+              <span>🔒 {{ i18n.t('tenders.bidBondRequired') }}</span>
+            </label>
+          </div>
+
+          <ng-container *ngIf="bidBondRequired">
+            <div class="form-group">
+              <label class="form-label">{{ i18n.t('tenders.bidBondAmount') }}</label>
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="bidBondAmount"
+                name="bidBondAmount"
+                min="0"
+                step="0.01"
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">{{ i18n.t('tenders.bidBondValidity') }}</label>
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="bidBondValidityDays"
+                name="bidBondValidityDays"
+                min="1"
+              />
+            </div>
+          </ng-container>
+
+          <!-- Notes -->
+          <div class="form-group span-2">
+            <label class="form-label">{{ i18n.t('common.notes') }}</label>
+            <textarea
+              class="form-control"
+              rows="3"
+              [(ngModel)]="notes"
+              name="notes"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" (click)="close.emit()">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="isSaving || !title.trim() || !deadlineDateStr"
+        >
+          {{ isSaving ? i18n.t('common.loading') : i18n.t('common.save') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

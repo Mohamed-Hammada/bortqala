@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { vi } from 'vitest';
 import { ProcurementPage, calculatePurchaseOrderTotal, filterPayableInvoices } from './procurement.page';
 
@@ -35,7 +36,7 @@ describe('ProcurementPage invoice adjustments', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [ProcurementPage],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
   });
 
@@ -193,5 +194,24 @@ describe('ProcurementPage invoice adjustments', () => {
     page.updateProposalAllocation('invoice-a', '25.50');
     expect(page.proposalDraftAllocations()).toEqual([{ invoiceId: 'invoice-a', amount: 25.5 }]);
     expect(page.proposalDraftTotal()).toBe(25.5);
+  });
+
+  it('resolves project name when PO is linked to a project', () => {
+    const page = createPage();
+    page.projects.set([{ id: 'proj-1', code: 'PRJ-100', name: 'Al-Noor Tower' }]);
+
+    const linkedPo: any = { id: 'po-1', projectId: 'proj-1' };
+    const unlinkedPo: any = { id: 'po-2', projectId: null };
+
+    expect(page.poProjectName(linkedPo)).toBe('PRJ-100 - Al-Noor Tower');
+    expect(page.poProjectName(unlinkedPo)).toBe('—');
+  });
+
+  it('maps scorecard ratings to semantic status badge classes', () => {
+    const page = createPage();
+    expect(page.scorecardRatingClass('EXCELLENT')).toBe('success');
+    expect(page.scorecardRatingClass('GOOD')).toBe('info');
+    expect(page.scorecardRatingClass('FAIR')).toBe('warning');
+    expect(page.scorecardRatingClass('AT_RISK')).toBe('danger');
   });
 });

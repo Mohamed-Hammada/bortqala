@@ -1,0 +1,272 @@
+<div class="modal-backdrop" *ngIf="isOpen" (click)="close.emit()">
+  <div class="modal-container modal-wide" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <h3 class="modal-title">
+          {{ claim ? i18n.t('claims.editClaim') : i18n.t('claims.createClaim') }}
+          <span class="claim-number-badge font-mono" *ngIf="claim">{{ claim.claimNumber }}</span>
+        </h3>
+        <span class="subtitle-hint font-mono" *ngIf="claim">
+          {{ i18n.t('claims.sequenceNumber') }}: #{{ claim.claimSequenceNumber }}
+        </span>
+      </div>
+      <button type="button" class="btn-close" (click)="close.emit()">✕</button>
+    </div>
+
+    <!-- Edit Tabs (Only when editing) -->
+    <div class="modal-tabs" *ngIf="claim">
+      <button
+        type="button"
+        class="tab-link"
+        [class.active]="activeTab === 'details'"
+        (click)="activeTab = 'details'"
+      >
+        📑 {{ i18n.t('claims.tabOverview') }}
+      </button>
+      <button
+        type="button"
+        class="tab-link"
+        [class.active]="activeTab === 'measurements'"
+        (click)="activeTab = 'measurements'"
+      >
+        📐 {{ i18n.t('claims.tabMeasurements') }} ({{ lines.length }})
+      </button>
+      <button
+        type="button"
+        class="tab-link"
+        [class.active]="activeTab === 'adjustments'"
+        (click)="activeTab = 'adjustments'"
+      >
+        ⚖️ {{ i18n.t('claims.tabAdjustments') }} ({{ adjustments.length }})
+      </button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="modal-form">
+      <!-- Details Tab (Create or Edit) -->
+      <div class="modal-body" *ngIf="!claim || activeTab === 'details'">
+        <div class="form-grid">
+          <div class="form-group" *ngIf="!claim">
+            <label class="form-label required">{{ i18n.t('claims.claimType') }}</label>
+            <select class="form-select" [(ngModel)]="claimType" name="claimType" required>
+              <option value="OWNER_IPC">{{ i18n.t('claims.typeOwner') }}</option>
+              <option value="SUBCONTRACTOR_IPC">{{ i18n.t('claims.typeSubcontractor') }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">{{ i18n.t('claims.claimKind') }}</label>
+            <select class="form-select" [(ngModel)]="claimKind" name="claimKind" required>
+              <option value="INTERIM">{{ i18n.t('claims.kindInterim') }}</option>
+              <option value="FINAL_ACCOUNT">{{ i18n.t('claims.kindFinal') }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">{{ i18n.t('projects.roleParty') }}</label>
+            <select class="form-select" [(ngModel)]="partyId" name="partyId">
+              <option [ngValue]="null">-- {{ i18n.t('common.filter') }} --</option>
+              <option *ngFor="let p of parties" [value]="p.id">{{ p.name }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">{{ i18n.t('claims.periodStart') }}</label>
+            <input
+              type="date"
+              class="form-control"
+              [(ngModel)]="periodStartDate"
+              name="periodStartDate"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">{{ i18n.t('claims.periodEnd') }}</label>
+            <input
+              type="date"
+              class="form-control"
+              [(ngModel)]="periodEndDate"
+              name="periodEndDate"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label required">{{ i18n.t('common.currency') }}</label>
+            <input
+              type="text"
+              class="form-control font-mono"
+              [(ngModel)]="currencyCode"
+              name="currencyCode"
+              required
+            />
+          </div>
+
+          <div class="form-group full-width" *ngIf="!claim">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="initFromWbs" name="initFromWbs" />
+              <span>{{ i18n.t('claims.initFromWbs') }}</span>
+            </label>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">{{ i18n.t('common.description') }}</label>
+            <textarea
+              class="form-control"
+              [(ngModel)]="notes"
+              name="notes"
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: 3-Column Work Measurements Grid -->
+      <div class="modal-body" *ngIf="claim && activeTab === 'measurements'">
+        <div class="table-toolbar">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="addLine()">
+            ➕ {{ i18n.t('common.add') }}
+          </button>
+        </div>
+
+        <div class="table-container measurements-table-wrapper">
+          <table class="data-table measurements-table">
+            <thead>
+              <tr>
+                <th style="width: 80px">{{ i18n.t('wbs.code') }}</th>
+                <th>{{ i18n.t('wbs.name') }}</th>
+                <th style="width: 70px">{{ i18n.t('wbs.unitOfMeasure') }}</th>
+                <th style="width: 90px">{{ i18n.t('claims.contractQty') }}</th>
+                <th style="width: 90px">{{ i18n.t('claims.previousQty') }}</th>
+                <th style="width: 100px">{{ i18n.t('claims.currentQty') }}</th>
+                <th style="width: 90px">{{ i18n.t('claims.cumulativeQty') }}</th>
+                <th style="width: 100px">{{ i18n.t('wbs.unitRate') }}</th>
+                <th style="width: 110px">{{ i18n.t('claims.currentAmt') }}</th>
+                <th style="width: 50px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let l of lines; let idx = index">
+                <td>
+                  <input type="text" class="form-control form-control-sm font-mono" [(ngModel)]="l.itemCode" [name]="'itemCode_' + idx" />
+                </td>
+                <td>
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="l.description" [name]="'desc_' + idx" />
+                </td>
+                <td>
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="l.unitOfMeasure" [name]="'uom_' + idx" />
+                </td>
+                <td>
+                  <input type="number" step="0.01" class="form-control form-control-sm font-mono text-end" [(ngModel)]="l.contractQuantity" [name]="'cq_' + idx" />
+                </td>
+                <td>
+                  <input type="number" step="0.01" class="form-control form-control-sm font-mono text-end" [(ngModel)]="l.previousQuantity" [name]="'pq_' + idx" />
+                </td>
+                <td>
+                  <input type="number" step="0.01" class="form-control form-control-sm font-mono text-end font-bold" [(ngModel)]="l.currentQuantity" [name]="'curq_' + idx" />
+                </td>
+                <td class="font-mono text-end font-bold">
+                  {{ (l.previousQuantity || 0) + (l.currentQuantity || 0) | number:'1.2-2' }}
+                </td>
+                <td>
+                  <input type="number" step="0.01" class="form-control form-control-sm font-mono text-end" [(ngModel)]="l.unitRate" [name]="'rate_' + idx" />
+                </td>
+                <td class="font-mono text-end font-bold highlight-amt">
+                  {{ ((l.currentQuantity || 0) * (l.unitRate || 0)) | number:'1.2-2' }}
+                </td>
+                <td class="text-center">
+                  <button type="button" class="btn-icon-danger" (click)="removeLine(idx)">🗑️</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 3: Adjustments, Retention & Deductions -->
+      <div class="modal-body" *ngIf="claim && activeTab === 'adjustments'">
+        <div class="table-toolbar">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="addAdjustment()">
+            ➕ {{ i18n.t('claims.addAdjustment') }}
+          </button>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>{{ i18n.t('claims.adjustmentType') }}</th>
+                <th>{{ i18n.t('common.description') }}</th>
+                <th style="width: 120px">{{ i18n.t('claims.retentionRate') }}</th>
+                <th style="width: 140px">{{ i18n.t('common.amount') }}</th>
+                <th style="width: 100px">{{ i18n.t('common.type') }}</th>
+                <th style="width: 50px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let a of adjustments; let idx = index">
+                <td>
+                  <select class="form-select form-select-sm" [(ngModel)]="a.adjustmentType" [name]="'adjType_' + idx">
+                    <option value="RETENTION">{{ i18n.t('claims.adjRetention') }}</option>
+                    <option value="ADVANCE_RECOVERY">{{ i18n.t('claims.adjAdvance') }}</option>
+                    <option value="VAT_TAX">{{ i18n.t('claims.adjVat') }}</option>
+                    <option value="WITHHOLDING_TAX">{{ i18n.t('claims.adjWithholding') }}</option>
+                    <option value="PENALTY_DEDUCTION">{{ i18n.t('claims.adjPenalty') }}</option>
+                    <option value="OTHER_DEDUCTION">{{ i18n.t('claims.adjOther') }}</option>
+                  </select>
+                </td>
+                <td>
+                  <input type="text" class="form-control form-control-sm" [(ngModel)]="a.description" [name]="'adjDesc_' + idx" />
+                </td>
+                <td>
+                  <input type="number" step="0.1" class="form-control form-control-sm font-mono text-end" [(ngModel)]="a.percentageRate" [name]="'adjRate_' + idx" placeholder="%" />
+                </td>
+                <td>
+                  <input type="number" step="0.01" class="form-control form-control-sm font-mono text-end" [(ngModel)]="a.fixedAmount" [name]="'adjFixed_' + idx" placeholder="0.00" />
+                </td>
+                <td>
+                  <label class="checkbox-label-sm">
+                    <input type="checkbox" [(ngModel)]="a.isAddition" [name]="'adjAdd_' + idx" />
+                    <span>{{ a.isAddition ? '+' : '-' }}</span>
+                  </label>
+                </td>
+                <td class="text-center">
+                  <button type="button" class="btn-icon-danger" (click)="removeAdjustment(idx)">🗑️</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Financial Calculation Bar (Edit Mode) -->
+      <div class="financial-summary-bar" *ngIf="claim">
+        <div class="summary-stat">
+          <span class="stat-label">{{ i18n.t('claims.currentGross') }}:</span>
+          <span class="stat-value font-mono font-bold">{{ computeCurrentGross() | number:'1.2-2' }} {{ currencyCode }}</span>
+        </div>
+        <div class="summary-stat">
+          <span class="stat-label">{{ i18n.t('claims.currentDeductions') }}:</span>
+          <span class="stat-value font-mono text-danger">-{{ computeTotalDeductions() | number:'1.2-2' }}</span>
+        </div>
+        <div class="summary-stat">
+          <span class="stat-label">{{ i18n.t('claims.currentTax') }}:</span>
+          <span class="stat-value font-mono text-success">+{{ computeTotalAdditions() | number:'1.2-2' }}</span>
+        </div>
+        <div class="summary-stat total-stat">
+          <span class="stat-label">{{ i18n.t('claims.netPayable') }}:</span>
+          <span class="stat-value font-mono font-bold text-accent">{{ computeNetPayable() | number:'1.2-2' }} {{ currencyCode }}</span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="close.emit()">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="submit" class="btn btn-primary">
+          {{ i18n.t('common.save') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

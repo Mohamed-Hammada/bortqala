@@ -99,6 +99,10 @@ public final class AccessCatalog {
     public static final String P_APPROVALS_DECIDE = "approvals.decide";
     public static final String P_WORKFLOW_DEFINITIONS_READ = "workflowDefinitions.read";
     public static final String P_WORKFLOW_DEFINITIONS_MANAGE = "workflowDefinitions.manage";
+    public static final String P_PROJECTS_READ = "projects.read";
+    public static final String P_PROJECTS_MANAGE = "projects.manage";
+    public static final String P_PROJECTS_WBS_MANAGE = "projects.wbs.manage";
+    public static final String P_PROJECTS_CLOSE = "projects.close";
 
     /**
      * Every permission a super user can act on.
@@ -124,7 +128,8 @@ public final class AccessCatalog {
             P_ADVANCES_READ, P_ADVANCES_MANAGE,
             P_CONTRACTOR_ACCOUNTS_READ, P_CONTRACTOR_ACCOUNTS_MANAGE, P_WORKFORCE_REPORTS_READ,
             P_APPROVALS_READ, P_APPROVALS_DECIDE,
-            P_WORKFLOW_DEFINITIONS_READ, P_WORKFLOW_DEFINITIONS_MANAGE);
+            P_WORKFLOW_DEFINITIONS_READ, P_WORKFLOW_DEFINITIONS_MANAGE,
+            P_PROJECTS_READ, P_PROJECTS_MANAGE, P_PROJECTS_WBS_MANAGE, P_PROJECTS_CLOSE);
 
     private static final Set<String> HR_READ = Set.of(
             P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_CATEGORIES_READ, P_IMPORTS_READ, P_PARTIES_READ,
@@ -172,6 +177,8 @@ public final class AccessCatalog {
             "ADMIN", "SUPER_ADMIN", "WORKFORCE_MANAGER", "FINANCE_MANAGER", "PROCUREMENT_MANAGER",
             "HR_MANAGER", "WORKFORCE_REVIEWER", "ACCOUNTANT", "PROCUREMENT_USER");
     private static final Set<String> APPROVAL_PERMS = Set.of(P_APPROVALS_READ, P_APPROVALS_DECIDE);
+    private static final Set<String> PROJECT_ROLES = Set.of(
+            "ADMIN", "SUPER_ADMIN", "PROJECT_MANAGER", "FINANCE_MANAGER", "AUDITOR", "VIEWER");
 
     private static final String FEATURE_PAYROLL = "payroll.enabled";
     private static final String FEATURE_SALES = "sales.enabled";
@@ -185,7 +192,7 @@ public final class AccessCatalog {
     private static final Set<String> SENSITIVE_PERMISSIONS = Set.of(
             P_JOURNAL_POST, P_JOURNAL_REVERSE, P_PAYROLL_APPROVE, P_PAYMENTS_EXECUTE,
             P_PAYMENTS_APPROVE, P_USERS_MANAGE, P_ROLES_ASSIGN, P_SETTINGS_MANAGE,
-            P_SETTLEMENTS_FINALIZE, P_ATTENDANCE_REVIEW);
+            P_SETTLEMENTS_FINALIZE, P_ATTENDANCE_REVIEW, P_PROJECTS_CLOSE);
     // ------------------------------------------------------------------
     // Role definitions (permissions derived from the enforced @PreAuthorize sets).
     // ------------------------------------------------------------------
@@ -205,13 +212,18 @@ public final class AccessCatalog {
                     Set.of(), "access.sensitive.hrReviewer"),
             new AccessRoleDef("VIEWER", key("viewer"), AccessSensitivity.LOW,
                     RoleKind.READ_ONLY,
-                    Set.of(P_DASHBOARD_VIEW, P_REPORTS_READ, P_SETTINGS_READ),
+                    Set.of(P_DASHBOARD_VIEW, P_REPORTS_READ, P_SETTINGS_READ, P_PROJECTS_READ),
                     Set.of(), null),
+            new AccessRoleDef("PROJECT_MANAGER", key("projectManager"), AccessSensitivity.MEDIUM,
+                    RoleKind.OPERATIONAL,
+                    union(Set.of(P_PROJECTS_READ, P_PROJECTS_MANAGE, P_PROJECTS_WBS_MANAGE, P_PROJECTS_CLOSE,
+                            P_PROCUREMENT_READ, P_INVENTORY_READ, P_BUDGET_READ), APPROVAL_PERMS),
+                    Set.of(), "access.sensitive.projectManager"),
             new AccessRoleDef("FINANCE_MANAGER", key("financeManager"), AccessSensitivity.HIGH,
                     RoleKind.FINANCE,
                     union(FINANCE_READ, FINANCE_WRITE, APPROVAL_PERMS,
                             Set.of(P_JOURNAL_REVERSE, P_PROCUREMENT_READ, P_PAYMENTS_EXECUTE, P_AUDIT_READ,
-                                    P_BUDGET_READ, P_BUDGET_MANAGE)),
+                                    P_BUDGET_READ, P_BUDGET_MANAGE, P_PROJECTS_READ)),
                     Set.of(), "access.sensitive.financeManager"),
             new AccessRoleDef("ACCOUNTANT", key("accountant"), AccessSensitivity.MEDIUM,
                     RoleKind.FINANCE,
@@ -274,7 +286,7 @@ public final class AccessCatalog {
                     RoleKind.READ_ONLY,
                     Set.of(P_AUDIT_READ, P_FINANCE_READ, P_JOURNAL_READ, P_PROCUREMENT_READ,
                             P_SALES_READ, P_MANUFACTURING_READ, P_QUALITY_READ, P_OPERATIONS_READ,
-                            P_INVENTORY_READ, P_BUDGET_READ),
+                            P_INVENTORY_READ, P_BUDGET_READ, P_PROJECTS_READ),
                     Set.of(), null));
     // ------------------------------------------------------------------
     // Page definitions (menuId matches the shell navigation and users.page).
@@ -282,6 +294,11 @@ public final class AccessCatalog {
     private final List<AccessPageDef> pages = List.of(
             page("DASHBOARD", "DASHBOARD", "/dashboard", "dashboard", "nav.dashboard", P_DASHBOARD_VIEW,
                     NO_ROLE_GUARD, null),
+            page("PROJECTS", "PROJECTS", "/projects", "projects", "nav.projects", P_PROJECTS_READ,
+                    PROJECT_ROLES, null,
+                    action("MANAGE", P_PROJECTS_MANAGE, false),
+                    action("WBS_MANAGE", P_PROJECTS_WBS_MANAGE, false),
+                    action("CLOSE", P_PROJECTS_CLOSE, true)),
             page("EMPLOYEES", "HR", "/employees", "employees", "nav.employees", P_EMPLOYEES_READ,
                     HR_ROLES, null,
                     action("EDIT", P_EMPLOYEES_EDIT, false),
@@ -415,6 +432,8 @@ public final class AccessCatalog {
     // ------------------------------------------------------------------
     private final List<AccessNeedDef> needs = List.of(
             need("VIEW_DASHBOARD", Set.of(P_DASHBOARD_VIEW)),
+            need("VIEW_PROJECTS", Set.of(P_PROJECTS_READ)),
+            need("MANAGE_PROJECTS", Set.of(P_PROJECTS_READ, P_PROJECTS_MANAGE, P_PROJECTS_WBS_MANAGE)),
             need("VIEW_REPORTS", Set.of(P_REPORTS_READ)),
             need("MANAGE_EMPLOYEES", Set.of(P_EMPLOYEES_READ, P_EMPLOYEES_EDIT, P_EMPLOYEES_DEACTIVATE)),
             need("VIEW_WORKERS", Set.of(P_WORKERS_READ)),

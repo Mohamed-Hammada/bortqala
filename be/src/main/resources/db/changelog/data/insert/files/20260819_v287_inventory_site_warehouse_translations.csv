@@ -1,0 +1,61 @@
+id;translation_key;locale;text_value
+v287-001;inventory.barcode;ar-EG;الباركود
+v287-002;inventory.barcode;en-US;Barcode
+v287-003;inventory.barcodeAliases;ar-EG;الباركودات البديلة
+v287-004;inventory.barcodeAliases;en-US;Barcode Aliases
+v287-005;inventory.trackingType;ar-EG;سياسة التتبع
+v287-006;inventory.trackingType;en-US;Tracking Policy
+v287-007;inventory.trackingNone;ar-EG;بدون تتبع خاص
+v287-008;inventory.trackingNone;en-US;Standard (No Tracking)
+v287-009;inventory.trackingLot;ar-EG;تتبع بأرقام التشغيلات (Lot/Batch)
+v287-010;inventory.trackingLot;en-US;Lot / Batch Tracked
+v287-011;inventory.trackingSerial;ar-EG;تتبع بالسيريال التسلسلي (Serial No.)
+v287-012;inventory.trackingSerial;en-US;Serial Number Tracked
+v287-013;inventory.trackingExpiry;ar-EG;تتبع بتاريخ الصلاحية (Expiry Date)
+v287-014;inventory.trackingExpiry;en-US;Expiry Date Tracked
+v287-015;inventory.shelfLifeDays;ar-EG;فترة الصلاحية (أيام)
+v287-016;inventory.shelfLifeDays;en-US;Shelf Life (Days)
+v287-017;inventory.agingReport;ar-EG;تقرير أعمار المخزون والراكد
+v287-018;inventory.agingReport;en-US;Stock Aging & Slow-Moving Report
+v287-019;inventory.deadStock;ar-EG;المخزون الراكد
+v287-020;inventory.deadStock;en-US;Dead Stock
+v287-021;inventory.reorderShortages;ar-EG;تنبيهات حد إعادة الطلب والنواقص
+v287-022;inventory.reorderShortages;en-US;Reorder Alerts & Stock Shortages
+v287-023;inventory.binUtilization;ar-EG;معدل إشغال المواقع التخزينية
+v287-024;inventory.binUtilization;en-US;Warehouse Bin Utilization
+v287-025;inventory.lotNumber;ar-EG;رقم التشغيلة / اللوت
+v287-026;inventory.lotNumber;en-US;Lot / Batch No.
+v287-027;inventory.serialNumber;ar-EG;الرقم التسلسلي
+v287-028;inventory.serialNumber;en-US;Serial No.
+v287-029;inventory.expiryDate;ar-EG;تاريخ انتهاء الصلاحية
+v287-030;inventory.expiryDate;en-US;Expiry Date
+v287-031;inventory.binLocation;ar-EG;الموقع التخزيني (Bin)
+v287-032;inventory.binLocation;en-US;Bin Location
+v287-033;inventory.tabAging;ar-EG;أعمار المخزون
+v287-034;inventory.tabAging;en-US;Stock Aging
+v287-035;inventory.tabDeadStock;ar-EG;المخزون الراكد
+v287-036;inventory.tabDeadStock;en-US;Dead Stock
+v287-037;inventory.tabReorder;ar-EG;نواقص المخزون
+v287-038;inventory.tabReorder;en-US;Reorder Alerts
+v287-039;inventory.tabBins;ar-EG;المواقع التخزينية
+v287-040;inventory.tabBins;en-US;Bin Locations
+v287-041;inventory.daysBucket0_30;ar-EG;0 - 30 يوم
+v287-042;inventory.daysBucket0_30;en-US;0 - 30 Days
+v287-043;inventory.daysBucket31_60;ar-EG;31 - 60 يوم
+v287-044;inventory.daysBucket31_60;en-US;31 - 60 Days
+v287-045;inventory.daysBucket61_90;ar-EG;61 - 90 يوم
+v287-046;inventory.daysBucket61_90;en-US;61 - 90 Days
+v287-047;inventory.daysBucket90Plus;ar-EG;أكثر من 90 يوم
+v287-048;inventory.daysBucket90Plus;en-US;90+ Days
+v287-049;inventory.lastMovementDate;ar-EG;تاريخ آخر حركة
+v287-050;inventory.lastMovementDate;en-US;Last Movement Date
+v287-051;inventory.inactiveDays;ar-EG;أيام الركود
+v287-052;inventory.inactiveDays;en-US;Days Inactive
+v287-053;inventory.onHandQty;ar-EG;الكمية المتاحة
+v287-054;inventory.onHandQty;en-US;On-Hand Quantity
+v287-055;inventory.reorderPoint;ar-EG;حد إعادة الطلب
+v287-056;inventory.reorderPoint;en-US;Reorder Point
+v287-057;inventory.suggestedOrder;ar-EG;الكمية المقترحة للطلب
+v287-058;inventory.suggestedOrder;en-US;Suggested Order Qty
+v287-059;inventory.analyticsTitle;ar-EG;تحليلات وإدارة المخزون والمستودعات
+v287-060;inventory.analyticsTitle;en-US;Inventory & Warehouse Analytics

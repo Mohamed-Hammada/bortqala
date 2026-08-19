@@ -14,11 +14,11 @@ import { RouterLink } from '@angular/router';
 import { AppTooltipDirective } from '../../../shared/ui/app-tooltip/app-tooltip.directive';
 import { IconButtonComponent } from '../../../shared/ui/icon-button/icon-button.component';
 
-interface PurchaseOrderLineResponse { id: string; itemId: string; itemName: string; itemCategory: string; quantity: number; receivedQuantity: number; remainingQuantity: number; unitOfMeasure: string; unitPrice: number; lineTotal: number; }
-interface PurchaseOrder { id: string; poNumber: string; poDate: number; supplierId: string; supplierName?: string; paymentTerms?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseTotalAmount: number; status: string; departmentId?: string; departmentName?: string; totalAmount: number; items: PurchaseOrderLineResponse[]; createdAt: number; updatedAt: number; }
-interface GoodsReceiptLineResponse { id: string; purchaseOrderLineId: string; itemId: string; itemName: string; itemCategory: string; deliveredQuantity: number; rejectedQuantity: number; deductedQuantity: number; quantity: number; unitOfMeasure: string; unitPrice: number; locationId?: string; lotNumber?: string; qualityReason?: string; }
+interface PurchaseOrderLineResponse { id: string; itemId: string; itemName: string; itemCategory: string; quantity: number; receivedQuantity: number; remainingQuantity: number; unitOfMeasure: string; unitPrice: number; lineTotal: number; projectId?: string; wbsNodeId?: string; costCodeId?: string; }
+interface PurchaseOrder { id: string; poNumber: string; poDate: number; supplierId: string; supplierName?: string; paymentTerms?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseTotalAmount: number; status: string; departmentId?: string; departmentName?: string; projectId?: string; wbsNodeId?: string; costCodeId?: string; totalAmount: number; items: PurchaseOrderLineResponse[]; createdAt: number; updatedAt: number; }
+interface GoodsReceiptLineResponse { id: string; purchaseOrderLineId: string; itemId: string; itemName: string; itemCategory: string; deliveredQuantity: number; rejectedQuantity: number; deductedQuantity: number; quantity: number; unitOfMeasure: string; unitPrice: number; locationId?: string; lotNumber?: string; qualityReason?: string; projectId?: string; wbsNodeId?: string; costCodeId?: string; }
 interface GoodsReceipt { id: string; grnNumber: string; receiptDate: number; purchaseOrderId: string; supplierId: string; supplierName?: string; warehouseId?: string; status: string; currencyCode: string; notes?: string; lines: GoodsReceiptLineResponse[]; createdAt: number; }
-interface SupplierInvoice { id: string; invoiceNumber?: string; internalReference: string; missingInvoiceReason?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseNetAmount: number; supplierId: string; supplierName?: string; purchaseOrderId?: string; goodsReceiptId?: string; responsiblePartyId?: string; invoiceDate: number; totalAmount: number; discountAmount?: number; taxAmount?: number; netAmount: number; paidAmount: number; outstandingAmount: number; dueDate?: number; notes?: string; status: string; createdAt: number; updatedAt: number; }
+interface SupplierInvoice { id: string; invoiceNumber?: string; internalReference: string; missingInvoiceReason?: string; currencyCode: string; baseCurrencyCode: string; exchangeRate: number; exchangeRateDate: number; exchangeRateSource: string; exchangeRateOverrideReason?: string; baseNetAmount: number; supplierId: string; supplierName?: string; purchaseOrderId?: string; goodsReceiptId?: string; projectId?: string; wbsNodeId?: string; costCodeId?: string; responsiblePartyId?: string; invoiceDate: number; totalAmount: number; discountAmount?: number; taxAmount?: number; netAmount: number; paidAmount: number; outstandingAmount: number; dueDate?: number; notes?: string; status: string; createdAt: number; updatedAt: number; }
 interface SupplierPayment { id: string; paymentNumber: string; paymentDate: number; supplierId: string; supplierName?: string; supplierInvoiceId: string; amount: number; currencyCode: string; paymentMethod: string; notes?: string; operationId: string; status: string; createdAt: number; }
 interface PaymentProposalAllocation { id: string; invoiceId: string; amount: number; supplierPaymentId?: string; paymentOperationId?: string; }
 interface PaymentProposal { id: string; proposalNumber: string; supplierId: string; invoiceId: string; proposedAmount: number; currencyCode: string; dueDate: string; status: string; createdBy: string; approvedBy?: string; executedBy?: string; supplierPaymentId?: string; allocations: PaymentProposalAllocation[]; }
@@ -27,6 +27,8 @@ interface ProcurementThreeWayMatch { id: string; purchaseOrderId: string; goodsR
 interface Party { id: string; code: string; name: string; partyType: string; active: boolean; managedType?: 'DIRECT' | 'MANAGED'; responsiblePartyId?: string; currencyCode?: string; paymentTerms?: string; }
 interface InventoryItem { id: string; code: string; name: string; categoryName?: string; uomName?: string; unitCode?: string; active: boolean; }
 interface Department { id: string; companyId: string; code: string; name: string; managerId?: string; active: boolean; }
+interface ProjectOption { id: string; code: string; name: string; }
+interface SupplierScorecard { supplierId: string; supplierName: string; totalOrdersCount: number; totalOrdersValue: number; onTimeDeliveryRate: number; priceVarianceRate: number; matchExceptionsCount: number; overallRating: string; }
 interface NumberingSettings { automaticNumbering: boolean; }
 interface Currency { code: string; name: string; symbol: string; isBase: boolean; exchangeRate: number; active: boolean; }
 interface GoodsReceiptDraftLine {
@@ -99,7 +101,9 @@ export class ProcurementPage {
   readonly inventoryItems = signal<InventoryItem[]>([]);
   readonly currencies = signal<Currency[]>([]);
   readonly departments = signal<Department[]>([]);
-  readonly activeTab = signal<'po' | 'grn' | 'invoice' | 'proposal' | 'payment'>('po');
+  readonly projects = signal<ProjectOption[]>([]);
+  readonly supplierScorecards = signal<SupplierScorecard[]>([]);
+  readonly activeTab = signal<'po' | 'grn' | 'invoice' | 'proposal' | 'payment' | 'scorecard'>('po');
   readonly automaticNumbering = signal(true);
   readonly documentAutomaticNumbering = signal(true);
 
@@ -152,6 +156,9 @@ export class ProcurementPage {
     poDate: new FormControl(new Date().toISOString().substring(0, 10), { nonNullable: true, validators: [Validators.required] }),
     supplierId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     departmentId: new FormControl('', { nonNullable: true }),
+    projectId: new FormControl('', { nonNullable: true }),
+    wbsNodeId: new FormControl('', { nonNullable: true }),
+    costCodeId: new FormControl('', { nonNullable: true }),
     paymentTerms: new FormControl('Net 30 Days', { nonNullable: true }),
     currencyCode: new FormControl('EGP', { nonNullable: true, validators: [Validators.required] }),
     exchangeRate: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0.000001)] }),
@@ -256,7 +263,7 @@ export class ProcurementPage {
   async loadAll() {
     this.loading.set(true);
     this.error.set(null);
-    try { await Promise.all([this.loadNumberingSettings(), this.loadDocumentNumberingSettings(), this.loadOrders(), this.loadSuppliers(), this.loadCurrencies(), this.loadInventoryItems(), this.loadDepartments(), this.loadGoodsReceipts(), this.loadInvoices(), this.loadPaymentProposals(), this.loadPayments()]); }
+    try { await Promise.all([this.loadNumberingSettings(), this.loadDocumentNumberingSettings(), this.loadOrders(), this.loadSuppliers(), this.loadCurrencies(), this.loadInventoryItems(), this.loadDepartments(), this.loadProjects(), this.loadGoodsReceipts(), this.loadInvoices(), this.loadPaymentProposals(), this.loadPayments(), this.loadSupplierScorecards()]); }
     catch (e) { this.error.set(apiErrorMessage(e, this.i18n)); }
     finally { this.loading.set(false); }
   }
@@ -266,6 +273,20 @@ export class ProcurementPage {
   async loadInvoices() { this.invoices.set(await firstValueFrom(this.http.get<SupplierInvoice[]>('/api/v1/trade/procurement/invoices')) ?? []); }
   async loadPayments() { this.payments.set(await firstValueFrom(this.http.get<SupplierPayment[]>('/api/v1/trade/procurement/payments')) ?? []); }
   async loadPaymentProposals() { this.paymentProposals.set(await firstValueFrom(this.http.get<PaymentProposal[]>('/api/v1/procurement/payment-proposals')) ?? []); }
+  async loadProjects() {
+    try {
+      this.projects.set(await firstValueFrom(this.http.get<ProjectOption[]>('/api/v1/projects')) ?? []);
+    } catch {
+      this.projects.set([]);
+    }
+  }
+  async loadSupplierScorecards() {
+    try {
+      this.supplierScorecards.set(await firstValueFrom(this.http.get<SupplierScorecard[]>('/api/v1/procurement/suppliers/scorecards')) ?? []);
+    } catch {
+      this.supplierScorecards.set([]);
+    }
+  }
 
   async createPaymentProposal(invoice: SupplierInvoice): Promise<void> {
     await this.submitPaymentProposal(invoice.supplierId, [{ invoiceId: invoice.id, amount: invoice.outstandingAmount }],
@@ -400,7 +421,7 @@ export class ProcurementPage {
     this.poForm.controls.exchangeRateOverrideReason.enable({ emitEvent: false });
     const supplier = s[0];
     const currencyCode = supplier?.currencyCode ?? 'EGP';
-    this.poForm.reset({ poNumber: '', poDate: new Date().toISOString().substring(0, 10), supplierId: supplier?.id ?? '', departmentId: this.departments()[0]?.id ?? '', paymentTerms: supplier?.paymentTerms ?? 'Net 30 Days', currencyCode, exchangeRate: this.configuredRate(currencyCode), exchangeRateOverrideReason: '' });
+    this.poForm.reset({ poNumber: '', poDate: new Date().toISOString().substring(0, 10), supplierId: supplier?.id ?? '', departmentId: this.departments()[0]?.id ?? '', projectId: '', wbsNodeId: '', costCodeId: '', paymentTerms: supplier?.paymentTerms ?? 'Net 30 Days', currencyCode, exchangeRate: this.configuredRate(currencyCode), exchangeRateOverrideReason: '' });
     const firstItem = this.inventoryItems()[0];
     this.poItems.set([{ itemId: firstItem?.id ?? '', itemName: firstItem?.name ?? '', itemCategory: firstItem?.categoryName ?? '', quantity: 1, unitOfMeasure: firstItem?.uomName ?? firstItem?.unitCode ?? '', unitPrice: 0, currency: 'EGP', warehouse: 'المستودع الرئيسي', deliveryDate: new Date().toISOString().substring(0, 10) }]);
     this.modalOpen.set(true);
@@ -410,7 +431,7 @@ export class ProcurementPage {
     if (po.status !== 'DRAFT') return;
     this.editingPoId.set(po.id);
     this.editingPoSnapshot.set(po);
-    this.poForm.reset({ poNumber: po.poNumber, poDate: epochToDateInput(po.poDate), supplierId: po.supplierId, departmentId: po.departmentId ?? '', paymentTerms: po.paymentTerms ?? '', currencyCode: po.currencyCode ?? 'EGP', exchangeRate: po.exchangeRate ?? 1, exchangeRateOverrideReason: po.exchangeRateOverrideReason ?? '' });
+    this.poForm.reset({ poNumber: po.poNumber, poDate: epochToDateInput(po.poDate), supplierId: po.supplierId, departmentId: po.departmentId ?? '', projectId: po.projectId ?? '', wbsNodeId: po.wbsNodeId ?? '', costCodeId: po.costCodeId ?? '', paymentTerms: po.paymentTerms ?? '', currencyCode: po.currencyCode ?? 'EGP', exchangeRate: po.exchangeRate ?? 1, exchangeRateOverrideReason: po.exchangeRateOverrideReason ?? '' });
     this.poForm.controls.poDate.disable({ emitEvent: false });
     this.poForm.controls.currencyCode.disable({ emitEvent: false });
     this.poForm.controls.exchangeRate.disable({ emitEvent: false });
@@ -455,7 +476,7 @@ export class ProcurementPage {
     this.savingPo.set(true);
     try {
       const v = this.poForm.getRawValue();
-      const payload = { poNumber: this.automaticNumbering() ? null : v.poNumber.trim(), poDate: dateInputToEpoch(v.poDate), supplierId: v.supplierId, departmentId: v.departmentId || null, paymentTerms: v.paymentTerms, currencyCode: v.currencyCode, exchangeRate: v.exchangeRate, exchangeRateOverrideReason: v.exchangeRateOverrideReason || null, items: this.poItems() };
+      const payload = { poNumber: this.automaticNumbering() ? null : v.poNumber.trim(), poDate: dateInputToEpoch(v.poDate), supplierId: v.supplierId, departmentId: v.departmentId || null, projectId: v.projectId || null, wbsNodeId: v.wbsNodeId || null, costCodeId: v.costCodeId || null, paymentTerms: v.paymentTerms, currencyCode: v.currencyCode, exchangeRate: v.exchangeRate, exchangeRateOverrideReason: v.exchangeRateOverrideReason || null, items: this.poItems() };
       const editingId = this.editingPoId();
       await firstValueFrom(editingId
         ? this.http.put(`/api/v1/trade/procurement/orders/${editingId}`, payload)
@@ -749,6 +770,28 @@ export class ProcurementPage {
   poDepartmentName(po: PurchaseOrder): string {
     if (po.departmentName) return po.departmentName;
     return this.departments().find(department => department.id === po.departmentId)?.name ?? '—';
+  }
+  poProjectName(po: PurchaseOrder): string {
+    if (!po.projectId) return '—';
+    const proj = this.projects().find(p => p.id === po.projectId);
+    return proj ? `${proj.code} - ${proj.name}` : po.projectId;
+  }
+  scorecardRatingClass(rating: string): string {
+    switch (rating) {
+      case 'EXCELLENT': return 'success';
+      case 'GOOD': return 'info';
+      case 'FAIR': return 'warning';
+      default: return 'danger';
+    }
+  }
+  scorecardRatingLabel(rating: string): string {
+    const key = ({
+      EXCELLENT: 'procurement.ratingExcellent',
+      GOOD: 'procurement.ratingGood',
+      FAIR: 'procurement.ratingFair',
+      AT_RISK: 'procurement.ratingAtRisk',
+    } as Record<string, string>)[rating];
+    return key ? this.i18n.t(key) : rating;
   }
   poStatusLabel(status: string): string {
     const key = ({ DRAFT: 'procurement.poStatus.draft', ISSUED: 'procurement.poStatus.issued', PARTIALLY_RECEIVED: 'procurement.poStatus.partiallyReceived', RECEIVED: 'procurement.poStatus.received', CANCELLED: 'procurement.poStatus.cancelled' } as Record<string, string>)[status];

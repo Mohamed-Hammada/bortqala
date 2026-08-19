@@ -1,0 +1,595 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-card modal-xl" (click)="$event.stopPropagation()">
+    <!-- Header with Tender Info and Status Badges -->
+    <div class="modal-header">
+      <div class="header-left">
+        <span class="tender-number">{{ tender?.tenderNumber }}</span>
+        <h3 class="modal-title">{{ tender?.title }}</h3>
+        <span
+          class="badge"
+          [class.badge-primary]="tender?.tenderType === 'EXTERNAL'"
+          [class.badge-secondary]="tender?.tenderType === 'INTERNAL'"
+        >
+          {{ tender?.tenderType === 'INTERNAL' ? i18n.t('tenders.typeInternal') : i18n.t('tenders.typeExternal') }}
+        </span>
+        <span
+          class="badge badge-status"
+          [class.draft]="tender?.status === 'DRAFT'"
+          [class.published]="tender?.status === 'PUBLISHED'"
+          [class.evaluation]="tender?.status === 'EVALUATION'"
+          [class.awarded]="tender?.status === 'AWARDED'"
+          [class.cancelled]="tender?.status === 'CANCELLED'"
+        >
+          {{ tender?.status }}
+        </span>
+      </div>
+
+      <div class="header-actions">
+        <button
+          type="button"
+          class="btn btn-sm btn-primary"
+          *ngIf="tender?.status === 'DRAFT'"
+          (click)="onPublish()"
+        >
+          📢 {{ i18n.t('tenders.publishTender') }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-success"
+          *ngIf="tender?.status === 'EVALUATION' || tender?.status === 'PUBLISHED'"
+          (click)="onOpenAward()"
+        >
+          🏆 {{ i18n.t('tenders.awardTender') }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-danger"
+          *ngIf="tender?.status !== 'AWARDED' && tender?.status !== 'CANCELLED'"
+          (click)="onCancel()"
+        >
+          🚫 {{ i18n.t('common.cancel') }}
+        </button>
+        <button type="button" class="btn-close" (click)="close.emit()">✕</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tab-nav">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'overview'"
+        (click)="activeTab.set('overview')"
+      >
+        📄 {{ i18n.t('tenders.tabOverview') }}
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'boq'"
+        (click)="activeTab.set('boq')"
+      >
+        📊 {{ i18n.t('tenders.tabBoq') }} ({{ tender?.boqItemsCount || 0 }})
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'bidders'"
+        (click)="activeTab.set('bidders')"
+      >
+        👥 {{ i18n.t('tenders.tabBidders') }} ({{ tender?.biddersCount || 0 }})
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'evaluation'"
+        (click)="activeTab.set('evaluation')"
+      >
+        ⚖️ {{ i18n.t('tenders.tabEvaluation') }}
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'clarifications'"
+        (click)="activeTab.set('clarifications')"
+      >
+        💬 {{ i18n.t('tenders.tabClarifications') }}
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab() === 'award'"
+        (click)="activeTab.set('award')"
+      >
+        🎖️ {{ i18n.t('tenders.tabAward') }}
+      </button>
+    </div>
+
+    <!-- Tab 1: Overview -->
+    <div class="modal-body" *ngIf="activeTab() === 'overview'">
+      <div class="overview-grid">
+        <div class="info-card">
+          <span class="label">{{ i18n.t('tenders.submissionDeadline') }}</span>
+          <strong class="value">{{ formatDate(tender?.submissionDeadline) }}</strong>
+        </div>
+        <div class="info-card">
+          <span class="label">{{ i18n.t('tenders.estimatedValue') }}</span>
+          <strong class="value highlight">{{ tender?.estimatedValue | number:'1.2-2' }} {{ tender?.currencyCode }}</strong>
+        </div>
+        <div class="info-card">
+          <span class="label">{{ i18n.t('tenders.technicalWeight') }} / {{ i18n.t('tenders.financialWeight') }}</span>
+          <strong class="value">{{ tender?.technicalWeightPercent }}% / {{ tender?.financialWeightPercent }}%</strong>
+        </div>
+        <div class="info-card" *ngIf="tender?.bidBondRequired">
+          <span class="label">{{ i18n.t('tenders.bidBondAmount') }}</span>
+          <strong class="value">{{ tender?.bidBondAmount | number:'1.2-2' }} ({{ tender?.bidBondValidityDays }} {{ i18n.t('tenders.bidBondValidity') }})</strong>
+        </div>
+      </div>
+
+      <div class="notes-box" *ngIf="tender?.notes">
+        <h4>{{ i18n.t('common.notes') }}</h4>
+        <p>{{ tender?.notes }}</p>
+      </div>
+    </div>
+
+    <!-- Tab 2: BOQ Items -->
+    <div class="modal-body" *ngIf="activeTab() === 'boq'">
+      <div class="section-toolbar">
+        <h4>{{ i18n.t('tenders.tabBoq') }}</h4>
+        <button
+          type="button"
+          class="btn btn-sm btn-primary"
+          *ngIf="tender?.status === 'DRAFT'"
+          (click)="onOpenAddBoq()"
+        >
+          ➕ {{ i18n.t('tenders.addBoqItem') }}
+        </button>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{{ i18n.t('tenders.itemCode') }}</th>
+            <th>{{ i18n.t('common.description') }}</th>
+            <th>{{ i18n.t('common.unit') }}</th>
+            <th>{{ i18n.t('common.quantity') }}</th>
+            <th>{{ i18n.t('tenders.estimatedRate') }}</th>
+            <th>{{ i18n.t('tenders.estimatedAmount') }}</th>
+            <th *ngIf="tender?.status === 'DRAFT'" class="text-end"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of tender?.boqItems">
+            <td>{{ item.sortOrder }}</td>
+            <td><span class="code-pill">{{ item.itemCode }}</span></td>
+            <td>{{ item.description }}</td>
+            <td>{{ item.unitOfMeasure }}</td>
+            <td>{{ item.quantity | number }}</td>
+            <td>{{ item.estimatedRate | number:'1.2-2' }}</td>
+            <td><strong>{{ item.estimatedAmount | number:'1.2-2' }}</strong></td>
+            <td *ngIf="tender?.status === 'DRAFT'" class="text-end">
+              <button type="button" class="btn-icon" (click)="onOpenEditBoq(item)">✏️</button>
+              <button type="button" class="btn-icon danger" (click)="onDeleteBoq(item.id)">🗑</button>
+            </td>
+          </tr>
+          <tr *ngIf="!tender?.boqItems?.length">
+            <td colspan="8" class="text-center empty-cell">{{ i18n.t('common.noData') }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tab 3: Bidders & Submissions -->
+    <div class="modal-body" *ngIf="activeTab() === 'bidders'">
+      <div class="section-toolbar">
+        <h4>{{ i18n.t('tenders.tabBidders') }}</h4>
+        <button
+          type="button"
+          class="btn btn-sm btn-primary"
+          *ngIf="tender?.status !== 'AWARDED' && tender?.status !== 'CANCELLED'"
+          (click)="onOpenInvite()"
+        >
+          ➕ {{ i18n.t('tenders.inviteBidder') }}
+        </button>
+      </div>
+
+      <div class="bidders-grid">
+        <div class="bidder-card" *ngFor="let b of tender?.bidders">
+          <div class="bidder-card-header">
+            <strong class="b-name">{{ b.bidderName }}</strong>
+            <span class="badge" [class.badge-success]="b.status === 'SUBMITTED'">{{ b.status }}</span>
+          </div>
+
+          <div class="bidder-card-body">
+            <div class="info-row" *ngIf="b.contactEmail">
+              <span>📧 {{ b.contactEmail }}</span>
+            </div>
+            <div class="info-row" *ngIf="b.contactPhone">
+              <span>📞 {{ b.contactPhone }}</span>
+            </div>
+            <div class="info-row highlight" *ngIf="b.totalBidAmount">
+              <span>{{ i18n.t('tenders.totalBidAmount') }}:</span>
+              <strong>{{ b.totalBidAmount | number:'1.2-2' }} {{ tender?.currencyCode }}</strong>
+            </div>
+          </div>
+
+          <div class="bidder-card-footer" *ngIf="tender?.status !== 'AWARDED' && tender?.status !== 'CANCELLED'">
+            <button type="button" class="btn btn-sm btn-outline" (click)="onOpenSubmitBid(b)">
+              📝 {{ i18n.t('tenders.submitBid') }}
+            </button>
+            <button type="button" class="btn btn-sm btn-outline" (click)="onOpenTechEval(b)">
+              🔍 {{ i18n.t('tenders.technicalScore') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Technical & Financial Evaluation Matrix -->
+    <div class="modal-body" *ngIf="activeTab() === 'evaluation'">
+      <div class="section-toolbar">
+        <div>
+          <h4>{{ i18n.t('tenders.tabEvaluation') }}</h4>
+          <span class="subtitle-hint">
+            {{ i18n.t('tenders.formulaHint') }} ({{ tender?.technicalWeightPercent }}% / {{ tender?.financialWeightPercent }}%)
+          </span>
+        </div>
+        <button
+          type="button"
+          class="btn btn-sm btn-primary"
+          *ngIf="tender?.status !== 'AWARDED' && tender?.status !== 'CANCELLED'"
+          (click)="onCalculateEvaluation()"
+        >
+          ⚡ {{ i18n.t('tenders.evaluateTender') }}
+        </button>
+      </div>
+
+      <table class="table eval-table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('tenders.rankOrder') }}</th>
+            <th>{{ i18n.t('tenders.bidderName') }}</th>
+            <th>{{ i18n.t('tenders.totalBidAmount') }}</th>
+            <th>{{ i18n.t('tenders.technicalScore') }} ({{ tender?.technicalWeightPercent }}%)</th>
+            <th>{{ i18n.t('tenders.financialScore') }} ({{ tender?.financialWeightPercent }}%)</th>
+            <th>{{ i18n.t('tenders.combinedScore') }} (100%)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of tender?.bidders" [class.winner-row]="b.rankOrder === 1">
+            <td>
+              <span class="rank-badge" *ngIf="b.rankOrder === 1">🥇 1</span>
+              <span class="rank-badge" *ngIf="b.rankOrder === 2">🥈 2</span>
+              <span class="rank-badge" *ngIf="b.rankOrder === 3">🥉 3</span>
+              <span *ngIf="b.rankOrder && b.rankOrder > 3">#{{ b.rankOrder }}</span>
+            </td>
+            <td><strong>{{ b.bidderName }}</strong></td>
+            <td>{{ b.totalBidAmount ? (b.totalBidAmount | number:'1.2-2') : '—' }}</td>
+            <td>{{ b.technicalScore ? (b.technicalScore | number:'1.2-2') : '—' }}</td>
+            <td>{{ b.financialScore ? (b.financialScore | number:'1.2-2') : '—' }}</td>
+            <td><strong class="score-pill">{{ b.combinedScore ? (b.combinedScore | number:'1.2-2') : '—' }}</strong></td>
+            <td>
+              <span *ngIf="b.id === tender?.awardedBidderId" class="badge badge-success">
+                🏆 {{ i18n.t('tenders.statusAwarded') }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tab 5: Clarifications & Addenda -->
+    <div class="modal-body" *ngIf="activeTab() === 'clarifications'">
+      <div class="section-toolbar">
+        <h4>{{ i18n.t('tenders.tabClarifications') }}</h4>
+        <button type="button" class="btn btn-sm btn-primary" (click)="onOpenAddClarif()">
+          ➕ {{ i18n.t('tenders.addClarification') }}
+        </button>
+      </div>
+
+      <div class="clarif-list">
+        <div class="clarif-card" *ngFor="let c of tender?.clarifications">
+          <div class="clarif-q">
+            <strong>❓ {{ c.question }}</strong>
+            <span class="date">{{ formatDate(c.askedAt) }}</span>
+          </div>
+
+          <div class="clarif-a" *ngIf="c.answer">
+            <p>💡 {{ c.answer }}</p>
+            <span *ngIf="c.isPublicAddendum" class="badge badge-info">
+              📢 {{ i18n.t('tenders.isPublicAddendum') }}
+            </span>
+          </div>
+
+          <div class="clarif-pending" *ngIf="!c.answer">
+            <button type="button" class="btn btn-sm btn-outline" (click)="onOpenAnswer(c)">
+              ✍️ {{ i18n.t('tenders.answer') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 6: Award & Contract -->
+    <div class="modal-body" *ngIf="activeTab() === 'award'">
+      <div class="award-summary-card" *ngIf="tender?.status === 'AWARDED'">
+        <div class="award-header">
+          <h3>🏆 {{ i18n.t('tenders.statusAwarded') }}</h3>
+          <span class="award-date">{{ formatDate(tender?.awardedAt) }}</span>
+        </div>
+        <div class="award-details">
+          <div class="detail-col">
+            <span class="label">{{ i18n.t('tenders.awardedBidder') }}</span>
+            <strong class="value">{{ tender?.awardedBidderName }}</strong>
+          </div>
+          <div class="detail-col">
+            <span class="label">{{ i18n.t('tenders.awardedAmount') }}</span>
+            <strong class="value highlight">{{ tender?.awardedAmount | number:'1.2-2' }} {{ tender?.currencyCode }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="award-action-box" *ngIf="tender?.status !== 'AWARDED'">
+        <p>{{ i18n.t('tenders.awardToContract') }}</p>
+        <button type="button" class="btn btn-success" (click)="onOpenAward()">
+          🏆 {{ i18n.t('tenders.awardTender') }}
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" (click)="close.emit()">
+        {{ i18n.t('common.cancel') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Sub-Modal: Add / Edit BOQ Item -->
+<div class="modal-backdrop sub-modal" *ngIf="showBoqModal()" (click)="showBoqModal.set(false)">
+  <div class="modal-card modal-md" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">
+        {{ editingBoqItem() ? i18n.t('tenders.editBoqItem') : i18n.t('tenders.addBoqItem') }}
+      </h3>
+      <button type="button" class="btn-close" (click)="showBoqModal.set(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('tenders.itemCode') }} *</label>
+        <input type="text" class="form-control" [(ngModel)]="boqItemCode" required />
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('common.description') }} *</label>
+        <input type="text" class="form-control" [(ngModel)]="boqDescription" required />
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('common.unit') }}</label>
+          <input type="text" class="form-control" [(ngModel)]="boqUnit" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('common.quantity') }}</label>
+          <input type="number" class="form-control" [(ngModel)]="boqQuantity" min="0.01" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('tenders.estimatedRate') }}</label>
+          <input type="number" class="form-control" [(ngModel)]="boqEstimatedRate" min="0" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('tenders.estimatedAmount') }}</label>
+          <input type="number" class="form-control" [value]="boqQuantity * boqEstimatedRate" readonly />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" (click)="showBoqModal.set(false)">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button type="button" class="btn btn-primary" (click)="onSaveBoq()">
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Sub-Modal: Invite Bidder -->
+<div class="modal-backdrop sub-modal" *ngIf="showInviteModal()" (click)="showInviteModal.set(false)">
+  <div class="modal-card modal-md" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ i18n.t('tenders.inviteBidder') }}</h3>
+      <button type="button" class="btn-close" (click)="showInviteModal.set(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('tenders.bidderName') }} *</label>
+        <input type="text" class="form-control" [(ngModel)]="bidderName" required />
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('common.email') }}</label>
+          <input type="email" class="form-control" [(ngModel)]="bidderEmail" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">{{ i18n.t('common.phone') }}</label>
+          <input type="tel" class="form-control" [(ngModel)]="bidderPhone" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" (click)="showInviteModal.set(false)">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="!bidderName.trim()" (click)="onSaveInvite()">
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Sub-Modal: Submit Bid Pricing -->
+<div class="modal-backdrop sub-modal" *ngIf="showSubmitBidModal()" (click)="showSubmitBidModal.set(false)">
+  <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ i18n.t('tenders.submitBid') }}: {{ submittingBidder()?.bidderName }}</h3>
+      <button type="button" class="btn-close" (click)="showSubmitBidModal.set(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>{{ i18n.t('tenders.itemCode') }}</th>
+            <th>{{ i18n.t('common.description') }}</th>
+            <th>{{ i18n.t('common.quantity') }}</th>
+            <th>{{ i18n.t('tenders.unitRate') }}</th>
+            <th>{{ i18n.t('tenders.totalAmount') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let l of bidLines">
+            <td><span class="code-pill">{{ l.itemCode }}</span></td>
+            <td>{{ l.description }}</td>
+            <td>{{ l.quantity | number }}</td>
+            <td>
+              <input type="number" class="form-control form-control-sm" [(ngModel)]="l.unitRate" min="0" />
+            </td>
+            <td><strong>{{ l.quantity * l.unitRate | number:'1.2-2' }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" (click)="showSubmitBidModal.set(false)">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button type="button" class="btn btn-primary" (click)="onSaveBidSubmission()">
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Sub-Modal: Technical Score Evaluation -->
+<div class="modal-backdrop sub-modal" *ngIf="showTechEvalModal()" (click)="showTechEvalModal.set(false)">
+  <div class="modal-card modal-sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ i18n.t('tenders.technicalScore') }}</h3>
+      <button type="button" class="btn-close" (click)="showTechEvalModal.set(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('tenders.technicalScore') }} (0 - 100) *</label>
+        <input type="number" class="form-control" [(ngModel)]="techScore" min="0" max="100" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" (click)="showTechEvalModal.set(false)">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button type="button" class="btn btn-primary" (click)="onSaveTechEval()">
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Sub-Modal: Add Clarification / Inquiry -->
+<div class="modal-backdrop sub-modal" *ngIf="showClarifModal()" (click)="showClarifModal.set(false)">
+  <div class="modal-card modal-md" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ i18n.t('tenders.addClarification') }}</h3>
+      <button type="button" class="btn-close" (click)="showClarifModal.set(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('tenders.question') }} *</label>
+        <textarea class="form-control" rows="4" [(ngModel)]="clarifQuestion"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="clarifIsPublic" />
+          <span>{{ i18n.t('tenders.isPublicAddendum') }}</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" (click)="showClarifModal.set(false)">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="!clarifQuestion.trim()" (click)="onSaveClarif()">
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Sub-Modal: Answer Clarification -->
+<div class="modal-backdrop sub-modal" *ngIf="showAnswerModal()" (click)="showAnswerModal.set(false)">
+  <div class="modal-card modal-md" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ i18n.t('tenders.answer') }}</h3>
+      <button type="button" class="btn-close" (click)="showAnswerModal.set(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <p><strong>{{ answeringClarif()?.question }}</strong></p>
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('tenders.answer') }} *</label>
+        <textarea class="form-control" rows="4" [(ngModel)]="clarifAnswer"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="answerIsPublic" />
+          <span>{{ i18n.t('tenders.isPublicAddendum') }}</span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" (click)="showAnswerModal.set(false)">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="!clarifAnswer.trim()" (click)="onSaveAnswer()">
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Sub-Modal: Final Award Approval -->
+<div class="modal-backdrop sub-modal" *ngIf="showAwardModal()" (click)="showAwardModal.set(false)">
+  <div class="modal-card modal-md" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">🏆 {{ i18n.t('tenders.awardTender') }}</h3>
+      <button type="button" class="btn-close" (click)="showAwardModal.set(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('tenders.awardedBidder') }} *</label>
+        <select class="form-select" [(ngModel)]="selectedAwardBidderId">
+          <option *ngFor="let b of tender?.bidders" [value]="b.id">
+            {{ b.rankOrder ? '#' + b.rankOrder + ' - ' : '' }}{{ b.bidderName }} ({{ b.totalBidAmount | number:'1.2-2' }} {{ tender?.currencyCode }})
+          </option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="updateProjectContract" />
+          <span>{{ i18n.t('tenders.awardToContract') }}</span>
+        </label>
+      </div>
+      <div class="form-group">
+        <label class="form-label">{{ i18n.t('common.notes') }}</label>
+        <textarea class="form-control" rows="3" [(ngModel)]="awardNotes"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline" (click)="showAwardModal.set(false)">
+        {{ i18n.t('common.cancel') }}
+      </button>
+      <button type="button" class="btn btn-success" [disabled]="!selectedAwardBidderId" (click)="onConfirmAward()">
+        🏆 {{ i18n.t('tenders.awardTender') }}
+      </button>
+    </div>
+  </div>
+</div>

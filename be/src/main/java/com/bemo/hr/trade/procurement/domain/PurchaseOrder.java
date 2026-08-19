@@ -26,6 +26,12 @@ public class PurchaseOrder {
     private String purchaseRequestId;
     @Column(name = "department_id", length = 36)
     private String departmentId;
+    @Column(name = "project_id", length = 36)
+    private String projectId;
+    @Column(name = "wbs_node_id", length = 36)
+    private String wbsNodeId;
+    @Column(name = "cost_code_id", length = 36)
+    private String costCodeId;
     @Column(name = "payment_terms", length = 255)
     private String paymentTerms;
     @Column(name = "currency_code", nullable = false, length = 10)
@@ -191,6 +197,24 @@ public class PurchaseOrder {
 
     public long getUpdatedAt() {
         return updatedAt;
+    }
+
+    public void assignProject(String projectId, String wbsNodeId, String costCodeId) {
+        this.projectId = projectId == null || projectId.isBlank() ? null : projectId.strip();
+        this.wbsNodeId = wbsNodeId == null || wbsNodeId.isBlank() ? null : wbsNodeId.strip();
+        this.costCodeId = costCodeId == null || costCodeId.isBlank() ? null : costCodeId.strip();
+    }
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public String getWbsNodeId() {
+        return wbsNodeId;
+    }
+
+    public String getCostCodeId() {
+        return costCodeId;
     }
 
     public long getVersion() {
