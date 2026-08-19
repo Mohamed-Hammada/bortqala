@@ -24,6 +24,39 @@ export interface SalesOrder {
   updatedAt: number;
 }
 
+export interface SalesQuotation {
+  id: string;
+  quotationNumber: string;
+  customerId: string;
+  customerName?: string;
+  quoteDate: string;
+  validUntil: string;
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  status: 'DRAFT' | 'SENT' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED' | 'CONVERTED';
+  termsAndConditions?: string;
+  salesOrderId?: string;
+  lines: SalesQuotationLine[];
+  createdAt: number;
+  updatedAt: number;
+  version: number;
+}
+
+export interface SalesQuotationLine {
+  id: string;
+  itemId: string;
+  itemCode?: string;
+  itemName?: string;
+  quantity: number;
+  unitPrice: number;
+  discountAmount: number;
+  taxAmount: number;
+  lineTotal: number;
+  notes?: string;
+}
+
 interface SalesOrderLine { id:string;itemId:string;itemName:string;orderedQuantity:number;deliveredQuantity:number;unitPrice:number;discountRate:number;netPrice:number;lineTotal:number; }
 interface SalesDeliveryLine { id:string;salesOrderLineId:string;itemId:string;quantity:number;unitPrice:number;stockMovementId:string;unitCogs:number;cogsAmount:number; }
 interface SalesDelivery { id:string;deliveryNumber:string;salesOrderId:string;deliveryDate:number;warehouseId:string;invoiceId:string;invoiceNumber:string;status:string;lines:SalesDeliveryLine[]; }
@@ -49,7 +82,9 @@ export class SalesPage {
 
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
+  readonly activeMainTab = signal<'ORDERS' | 'QUOTATIONS' | 'RECEIVABLES'>('ORDERS');
   readonly orders = signal<SalesOrder[]>([]);
+  readonly quotations = signal<SalesQuotation[]>([]);
   readonly invoices = signal<CustomerInvoice[]>([]);
   readonly receipts = signal<CustomerReceipt[]>([]);
   readonly aging = signal<Aging | null>(null);
@@ -61,7 +96,9 @@ export class SalesPage {
   readonly openInvoiceCount = computed(() => this.invoices().filter((row) => row.status === 'OPEN' || row.status === 'PARTIALLY_PAID').length);
 
   readonly drawerOpen = signal(false);
+  readonly quoteDrawerOpen = signal(false);
   readonly orderLines = signal<Array<{itemId:string;itemName:string;quantity:number;unitPrice:number;discountRate:number}>>([]);
+  readonly quoteLines = signal<Array<{itemId:string;quantity:number;unitPrice:number;discountAmount:number;taxAmount:number;notes:string}>>([]);
   readonly deliveriesByOrder = signal<Record<string,SalesDelivery[]>>({});
   readonly returnsByOrder = signal<Record<string,CustomerReturn[]>>({});
   readonly fulfillmentOrder = signal<SalesOrder|null>(null);
@@ -79,6 +116,20 @@ export class SalesPage {
     itemId:new FormControl('',{nonNullable:true,validators:[Validators.required]}),itemName:new FormControl('',{nonNullable:true,validators:[Validators.required]}),
     quantity:new FormControl(1,{nonNullable:true,validators:[Validators.required,Validators.min(.0001)]}),unitPrice:new FormControl(0,{nonNullable:true,validators:[Validators.required,Validators.min(.01)]}),
     discountRate:new FormControl(0,{nonNullable:true,validators:[Validators.required,Validators.min(0),Validators.max(100)]}),
+  });
+  readonly quoteForm = new FormGroup({
+    customerId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    quoteDate: new FormControl(new Date().toISOString().slice(0, 10), { nonNullable: true, validators: [Validators.required] }),
+    validUntil: new FormControl(new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10), { nonNullable: true, validators: [Validators.required] }),
+    termsAndConditions: new FormControl('', { nonNullable: true }),
+  });
+  readonly quoteLineForm = new FormGroup({
+    itemId: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    quantity: new FormControl(1, { nonNullable: true, validators: [Validators.required, Validators.min(0.001)] }),
+    unitPrice: new FormControl(0, { nonNullable: true, validators: [Validators.required, Validators.min(0.01)] }),
+    discountAmount: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    taxAmount: new FormControl(0, { nonNullable: true, validators: [Validators.min(0)] }),
+    notes: new FormControl('', { nonNullable: true }),
   });
   readonly returnForm = new FormGroup({deliveryId:new FormControl('',{nonNullable:true,validators:[Validators.required]}),deliveryLineId:new FormControl('',{nonNullable:true,validators:[Validators.required]}),quantity:new FormControl(1,{nonNullable:true,validators:[Validators.required,Validators.min(.0001)]}),reason:new FormControl('',{nonNullable:true,validators:[Validators.required]})});
   readonly invoiceForm = new FormGroup({
@@ -113,14 +164,20 @@ export class SalesPage {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const [orders,invoices,receipts,aging,collections] = await Promise.all([
+      const [orders,quotations,invoices,receipts,aging,collections] = await Promise.all([
         firstValueFrom(this.http.get<SalesOrder[]>('/api/v1/trade/sales/orders')),
+        firstValueFrom(this.http.get<SalesQuotation[]>('/api/v1/trade/sales/quotations')),
         firstValueFrom(this.http.get<CustomerInvoice[]>('/api/v1/trade/sales/receivables/invoices')),
         firstValueFrom(this.http.get<CustomerReceipt[]>('/api/v1/trade/sales/receivables/receipts')),
         firstValueFrom(this.http.get<Aging>('/api/v1/trade/sales/receivables/aging', { params: { asOf: this.businessDate() } })),
         firstValueFrom(this.http.get<CollectionTask[]>('/api/v1/trade/sales/receivables/collections', { params: { asOf: this.businessDate() } })),
       ]);
-      this.orders.set(orders); this.invoices.set(invoices); this.receipts.set(receipts); this.aging.set(aging); this.collections.set(collections);
+      this.orders.set(orders);
+      this.quotations.set(quotations);
+      this.invoices.set(invoices);
+      this.receipts.set(receipts);
+      this.aging.set(aging);
+      this.collections.set(collections);
     } catch (e) {
       this.error.set(apiErrorMessage(e, this.i18n));
     } finally {
@@ -142,6 +199,82 @@ export class SalesPage {
 
   closeDrawer() {
     this.drawerOpen.set(false);
+  }
+
+  openQuoteModal() {
+    this.quoteForm.reset({
+      customerId: 'CUST-01',
+      quoteDate: new Date().toISOString().slice(0, 10),
+      validUntil: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+      termsAndConditions: 'Standard payment terms net 30 days',
+    });
+    this.quoteLines.set([]);
+    this.quoteDrawerOpen.set(true);
+  }
+
+  closeQuoteModal() {
+    this.quoteDrawerOpen.set(false);
+  }
+
+  addQuoteLine() {
+    if (this.quoteLineForm.invalid) return;
+    const val = this.quoteLineForm.getRawValue();
+    this.quoteLines.update(lines => [...lines, val]);
+    this.quoteLineForm.reset({ itemId: '', quantity: 1, unitPrice: 0, discountAmount: 0, taxAmount: 0, notes: '' });
+  }
+
+  removeQuoteLine(index: number) {
+    this.quoteLines.update(lines => lines.filter((_, i) => i !== index));
+  }
+
+  async submitQuote() {
+    if (this.quoteForm.invalid || this.quoteLines().length === 0) return;
+    try {
+      const val = this.quoteForm.getRawValue();
+      const payload = {
+        customerId: val.customerId,
+        quoteDate: val.quoteDate,
+        validUntil: val.validUntil,
+        termsAndConditions: val.termsAndConditions,
+        lines: this.quoteLines(),
+      };
+      await firstValueFrom(this.http.post('/api/v1/trade/sales/quotations', payload));
+      this.notification.success(this.i18n.t('sales.quoteSaved'));
+      this.quoteDrawerOpen.set(false);
+      await this.load();
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  async sendQuote(q: SalesQuotation) {
+    try {
+      await firstValueFrom(this.http.post(`/api/v1/trade/sales/quotations/${q.id}/send`, {}));
+      this.notification.success(this.i18n.t('sales.quoteSent'));
+      await this.load();
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  async acceptQuote(q: SalesQuotation) {
+    try {
+      await firstValueFrom(this.http.post(`/api/v1/trade/sales/quotations/${q.id}/accept`, {}));
+      this.notification.success(this.i18n.t('sales.quoteAccepted'));
+      await this.load();
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+    }
+  }
+
+  async convertQuoteToOrder(q: SalesQuotation) {
+    try {
+      await firstValueFrom(this.http.post(`/api/v1/trade/sales/quotations/${q.id}/convert`, {}));
+      this.notification.success(this.i18n.t('sales.quoteConverted'));
+      await this.load();
+    } catch (e) {
+      this.error.set(apiErrorMessage(e, this.i18n));
+    }
   }
 
   async submitSo() {

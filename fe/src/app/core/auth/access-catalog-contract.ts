@@ -27,6 +27,8 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     requiredFeature: null,
   },
   { menuId: 'employees', route: '/employees', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'], requiredFeature: null },
+  { menuId: 'leaves', route: '/leaves', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], requiredFeature: null },
+  { menuId: 'performance', route: '/performance', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], requiredFeature: null },
   { menuId: 'categories', route: '/categories', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'], requiredFeature: null },
   { menuId: 'imports', route: '/imports', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], requiredFeature: null },
   { menuId: 'parties', route: '/parties', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'], requiredFeature: null },

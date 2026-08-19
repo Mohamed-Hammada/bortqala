@@ -103,6 +103,10 @@ public final class AccessCatalog {
     public static final String P_PROJECTS_MANAGE = "projects.manage";
     public static final String P_PROJECTS_WBS_MANAGE = "projects.wbs.manage";
     public static final String P_PROJECTS_CLOSE = "projects.close";
+    public static final String P_LEAVES_READ = "leaves.read";
+    public static final String P_LEAVES_MANAGE = "leaves.manage";
+    public static final String P_PERFORMANCE_READ = "performance.read";
+    public static final String P_PERFORMANCE_MANAGE = "performance.manage";
 
     /**
      * Every permission a super user can act on.
@@ -129,15 +133,17 @@ public final class AccessCatalog {
             P_CONTRACTOR_ACCOUNTS_READ, P_CONTRACTOR_ACCOUNTS_MANAGE, P_WORKFORCE_REPORTS_READ,
             P_APPROVALS_READ, P_APPROVALS_DECIDE,
             P_WORKFLOW_DEFINITIONS_READ, P_WORKFLOW_DEFINITIONS_MANAGE,
-            P_PROJECTS_READ, P_PROJECTS_MANAGE, P_PROJECTS_WBS_MANAGE, P_PROJECTS_CLOSE);
+            P_PROJECTS_READ, P_PROJECTS_MANAGE, P_PROJECTS_WBS_MANAGE, P_PROJECTS_CLOSE,
+            P_LEAVES_READ, P_LEAVES_MANAGE,
+            P_PERFORMANCE_READ, P_PERFORMANCE_MANAGE);
 
     private static final Set<String> HR_READ = Set.of(
             P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_CATEGORIES_READ, P_IMPORTS_READ, P_PARTIES_READ,
-            P_REPORTS_READ, P_PAYROLL_READ, P_ORGANIZATION_READ);
+            P_REPORTS_READ, P_PAYROLL_READ, P_ORGANIZATION_READ, P_LEAVES_READ, P_PERFORMANCE_READ);
 
     private static final Set<String> HR_WRITE = Set.of(
             P_EMPLOYEES_EDIT, P_EMPLOYEES_DEACTIVATE, P_CATEGORIES_MANAGE, P_IMPORTS_MANAGE,
-            P_PARTIES_MANAGE, P_REPORTS_DECIDE, P_REPORTS_APPROVE, P_ORGANIZATION_MANAGE);
+            P_PARTIES_MANAGE, P_REPORTS_DECIDE, P_REPORTS_APPROVE, P_ORGANIZATION_MANAGE, P_LEAVES_MANAGE, P_PERFORMANCE_MANAGE);
 
     private static final Set<String> WORKFORCE_READ = Set.of(
             P_WORKFORCE_DASHBOARD, P_WORKERS_READ, P_CONTRACTORS_READ, P_LABOR_REQUESTS_READ, P_DISPATCH_DISPUTES_READ,
@@ -303,6 +309,12 @@ public final class AccessCatalog {
                     HR_ROLES, null,
                     action("EDIT", P_EMPLOYEES_EDIT, false),
                     action("DEACTIVATE", P_EMPLOYEES_DEACTIVATE, false)),
+            page("LEAVES", "HR", "/leaves", "leaves", "nav.leaves", P_LEAVES_READ,
+                    HR_REVIEW_ROLES, null,
+                    action("MANAGE", P_LEAVES_MANAGE, false)),
+            page("PERFORMANCE", "HR", "/performance", "performance", "nav.performance", P_PERFORMANCE_READ,
+                    HR_REVIEW_ROLES, null,
+                    action("MANAGE", P_PERFORMANCE_MANAGE, false)),
             page("CATEGORIES", "HR", "/categories", "categories", "nav.categories", P_CATEGORIES_READ,
                     HR_ROLES, null,
                     action("MANAGE", P_CATEGORIES_MANAGE, false)),

@@ -1,0 +1,331 @@
+<section class="workbench-layout">
+  <div class="workbench-header">
+    <div>
+      <h2>{{ i18n.t('leaves.title') }}</h2>
+      <p class="subtitle">{{ i18n.t('nav.leavesHint') }}</p>
+    </div>
+    <div class="workbench-actions">
+      @if (activeTab() === 'REQUESTS') {
+        <button class="button primary" type="button" (click)="openNewRequest()">
+          ＋ {{ i18n.t('leaves.newRequest') }}
+        </button>
+      }
+      @if (activeTab() === 'TYPES') {
+        <button class="button primary" type="button" (click)="openNewType()">
+          ＋ {{ i18n.t('leaves.newType') }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="workbench-tabs">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'REQUESTS'"
+      type="button"
+      (click)="setTab('REQUESTS')"
+    >
+      📋 {{ i18n.t('leaves.tabRequests') }}
+      <span class="badge">{{ requests().length }}</span>
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'BALANCES'"
+      type="button"
+      (click)="setTab('BALANCES')"
+    >
+      📊 {{ i18n.t('leaves.tabBalances') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'TYPES'"
+      type="button"
+      (click)="setTab('TYPES')"
+    >
+      ⚙️ {{ i18n.t('leaves.tabTypes') }}
+    </button>
+  </div>
+
+  @if (loading()) {
+    <app-skeleton></app-skeleton>
+  } @else {
+    <!-- Tab 1: Requests -->
+    @if (activeTab() === 'REQUESTS') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('leaves.requestNumber') }}</th>
+              <th>{{ i18n.t('leaves.employee') }}</th>
+              <th>{{ i18n.t('leaves.leaveType') }}</th>
+              <th>{{ i18n.t('leaves.startDate') }}</th>
+              <th>{{ i18n.t('leaves.endDate') }}</th>
+              <th>{{ i18n.t('leaves.totalDays') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('leaves.reason') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of pagedRequests(); track r.id) {
+              <tr>
+                <td><strong class="ltr">{{ r.requestNumber }}</strong></td>
+                <td><strong>{{ r.employeeName }}</strong></td>
+                <td><span class="status neutral">{{ r.leaveTypeName }}</span></td>
+                <td class="ltr">{{ r.startDate }}</td>
+                <td class="ltr">{{ r.endDate }}</td>
+                <td><strong>{{ r.totalDays }}</strong></td>
+                <td>
+                  <span
+                    class="status"
+                    [class.warning]="r.status === 'PENDING_APPROVAL'"
+                    [class.success]="r.status === 'APPROVED'"
+                    [class.danger]="r.status === 'REJECTED'"
+                    [class.neutral]="r.status === 'CANCELLED'"
+                  >
+                    {{ statusLabel(r.status) }}
+                  </span>
+                </td>
+                <td>
+                  <span [attr.title]="r.reason ?? ''">{{ r.reason || '—' }}</span>
+                  @if (r.rejectionReason) {
+                    <small class="danger-text">({{ r.rejectionReason }})</small>
+                  }
+                </td>
+                <td>
+                  <div class="row-actions">
+                    @if (r.status === 'PENDING_APPROVAL') {
+                      <button class="success-btn" (click)="approve(r)" [attr.title]="i18n.t('leaves.approve')">✓</button>
+                      <button class="danger-btn" (click)="openRejectModal(r)" [attr.title]="i18n.t('leaves.reject')">✕</button>
+                    }
+                    @if (r.status === 'PENDING_APPROVAL' || r.status === 'APPROVED') {
+                      <button class="neutral-btn" (click)="cancel(r)" [attr.title]="i18n.t('leaves.cancel')">⊘</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="9">
+                  <app-empty-state [title]="i18n.t('common.noResults')"></app-empty-state>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+        <app-table-pagination
+          [total]="requests().length"
+          [page]="pagination.currentPage(requests().length)"
+          [pageSize]="pagination.pageSize()"
+          (pageChange)="pagination.changePage($event, requests().length)"
+          (pageSizeChange)="pagination.changePageSize($event)"
+        ></app-table-pagination>
+      </div>
+    }
+
+    <!-- Tab 2: Balances -->
+    @if (activeTab() === 'BALANCES') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('leaves.employee') }}</th>
+              <th>{{ i18n.t('leaves.leaveType') }}</th>
+              <th>{{ i18n.t('leaves.entitledDays') }}</th>
+              <th>{{ i18n.t('leaves.carriedOver') }}</th>
+              <th>{{ i18n.t('leaves.usedDays') }}</th>
+              <th>{{ i18n.t('leaves.statusPending') }}</th>
+              <th>{{ i18n.t('leaves.remainingDays') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (b of balances(); track b.id) {
+              <tr>
+                <td><strong>{{ b.employeeName }}</strong></td>
+                <td><span class="status neutral">{{ b.leaveTypeName }}</span></td>
+                <td>{{ b.entitledDays }}</td>
+                <td>{{ b.carriedOverDays }}</td>
+                <td><strong class="danger-text">{{ b.usedDays }}</strong></td>
+                <td><span class="warning-text">{{ b.pendingDays }}</span></td>
+                <td><strong class="success-text">{{ b.remainingDays }}</strong></td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7">
+                  <app-empty-state [title]="i18n.t('common.noResults')"></app-empty-state>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Tab 3: Types -->
+    @if (activeTab() === 'TYPES') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('common.code') }}</th>
+              <th>{{ i18n.t('common.nameAr') }}</th>
+              <th>{{ i18n.t('common.nameEn') }}</th>
+              <th>{{ i18n.t('leaves.isPaid') }}</th>
+              <th>{{ i18n.t('leaves.requiresAttachment') }}</th>
+              <th>{{ i18n.t('leaves.maxConsecutive') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of types(); track t.id) {
+              <tr>
+                <td><strong class="ltr">{{ t.code }}</strong></td>
+                <td>{{ t.nameAr }}</td>
+                <td class="ltr">{{ t.nameEn }}</td>
+                <td>
+                  <span class="status" [class.success]="t.paid" [class.neutral]="!t.paid">
+                    {{ i18n.t(t.paid ? 'common.yes' : 'common.no') }}
+                  </span>
+                </td>
+                <td>
+                  <span class="status" [class.warning]="t.requiresAttachment" [class.neutral]="!t.requiresAttachment">
+                    {{ i18n.t(t.requiresAttachment ? 'common.yes' : 'common.no') }}
+                  </span>
+                </td>
+                <td>{{ t.maxConsecutiveDays }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6">
+                  <app-empty-state [title]="i18n.t('common.noResults')"></app-empty-state>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <!-- Submit Leave Request Modal -->
+  <app-modal-dialog
+    [isOpen]="requestDrawerOpen()"
+    [title]="i18n.t('leaves.newRequest')"
+    size="normal"
+    (close)="closeRequestDrawer()"
+  >
+    <form [formGroup]="requestForm" (ngSubmit)="submitRequest()">
+      <div class="dialog-form-grid">
+        <div class="field span-2">
+          <label>{{ i18n.t('leaves.employee') }} *</label>
+          <select formControlName="employeeId">
+            @for (e of employees(); track e.id) {
+              <option [value]="e.id">{{ e.fullName }} ({{ e.employeeCode }})</option>
+            }
+          </select>
+        </div>
+        <div class="field span-2">
+          <label>{{ i18n.t('leaves.leaveType') }} *</label>
+          <select formControlName="leaveTypeId">
+            @for (t of types(); track t.id) {
+              <option [value]="t.id">{{ t.nameAr }} ({{ t.code }})</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('leaves.startDate') }} *</label>
+          <input type="date" formControlName="startDate" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('leaves.endDate') }} *</label>
+          <input type="date" formControlName="endDate" />
+        </div>
+        <div class="field span-2">
+          <label>{{ i18n.t('leaves.reason') }}</label>
+          <textarea formControlName="reason"></textarea>
+        </div>
+      </div>
+      <div class="drawer-actions">
+        <button class="button secondary" type="button" (click)="closeRequestDrawer()">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button class="button primary" type="submit" [disabled]="requestForm.invalid">
+          {{ i18n.t('common.save') }}
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <!-- Create Leave Type Modal -->
+  <app-modal-dialog
+    [isOpen]="typeDrawerOpen()"
+    [title]="i18n.t('leaves.newType')"
+    size="normal"
+    (close)="closeTypeDrawer()"
+  >
+    <form [formGroup]="typeForm" (ngSubmit)="submitType()">
+      <div class="dialog-form-grid">
+        <div class="field">
+          <label>{{ i18n.t('common.code') }} *</label>
+          <input class="ltr" formControlName="code" placeholder="ANNUAL / SICK" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('common.nameAr') }} *</label>
+          <input formControlName="nameAr" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('common.nameEn') }} *</label>
+          <input class="ltr" formControlName="nameEn" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('leaves.maxConsecutive') }} *</label>
+          <input class="ltr" type="number" formControlName="maxConsecutiveDays" />
+        </div>
+        <div class="field">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="paid" />
+            {{ i18n.t('leaves.isPaid') }}
+          </label>
+        </div>
+        <div class="field">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="requiresAttachment" />
+            {{ i18n.t('leaves.requiresAttachment') }}
+          </label>
+        </div>
+      </div>
+      <div class="drawer-actions">
+        <button class="button secondary" type="button" (click)="closeTypeDrawer()">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button class="button primary" type="submit" [disabled]="typeForm.invalid">
+          {{ i18n.t('common.save') }}
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <!-- Reject Reason Modal -->
+  <app-modal-dialog
+    [isOpen]="rejectModalOpen()"
+    [title]="i18n.t('leaves.reject')"
+    size="compact"
+    (close)="closeRejectModal()"
+  >
+    <form [formGroup]="rejectForm" (ngSubmit)="submitReject()">
+      <div class="dialog-form-grid">
+        <div class="field span-2">
+          <label>{{ i18n.t('leaves.rejectionReason') }} *</label>
+          <textarea formControlName="rejectionReason"></textarea>
+        </div>
+      </div>
+      <div class="drawer-actions">
+        <button class="button secondary" type="button" (click)="closeRejectModal()">
+          {{ i18n.t('common.cancel') }}
+        </button>
+        <button class="button danger" type="submit" [disabled]="rejectForm.invalid">
+          {{ i18n.t('leaves.reject') }}
+        </button>
+      </div>
+    </form>
+  </app-modal-dialog>
+</section>

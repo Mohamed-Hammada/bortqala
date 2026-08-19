@@ -528,4 +528,31 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260819_v298_employee_contracts_translations.yaml
       relativeToChangelogFile: false
+  # P1_LEAVE_MANAGEMENT_20260819: Feature 18 Leave & Vacation Management
+  - include:
+      file: db/changelog/schema/create/20260819_v299_leave_management_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v300_leave_management_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260819_v301_leave_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P2_HR_KPI_PERFORMANCE_20260819: Feature 20 HR Performance & KPIs
+  - include:
+      file: db/changelog/schema/create/20260819_v303_performance_appraisals_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v304_performance_appraisals_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260819_v305_performance_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P1_SALES_QUOTATIONS_20260819: Feature 21 Sales Quotations, Invoicing & Credit Notes
+  - include:
+      file: db/changelog/schema/create/20260819_v306_sales_quotations_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v307_sales_quotations_translations.yaml
+      relativeToChangelogFile: false
 

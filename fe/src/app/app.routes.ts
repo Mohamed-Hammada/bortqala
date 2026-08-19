@@ -53,6 +53,20 @@ export const routes: Routes = [
           import('./features/employees/employees.page').then((module) => module.EmployeesPage),
       },
       {
+        path: 'leaves',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'leaves' },
+        loadComponent: () =>
+          import('./features/leaves/leaves.page').then((module) => module.LeavesPage),
+      },
+      {
+        path: 'performance',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'performance' },
+        loadComponent: () =>
+          import('./features/performance/performance.page').then((module) => module.PerformancePage),
+      },
+      {
         path: 'imports',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], menuId: 'imports' },

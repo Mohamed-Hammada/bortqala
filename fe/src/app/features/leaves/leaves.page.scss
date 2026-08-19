@@ -1,0 +1,106 @@
+.workbench-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.workbench-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.workbench-header h2 {
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.workbench-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+}
+
+.tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--surface-muted);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color);
+  transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+  background: var(--surface);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.badge {
+  background: var(--line);
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 11px;
+}
+
+.table-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.row-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.success-btn,
+.danger-btn,
+.neutral-btn {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 0;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.success-btn {
+  background: rgba(34, 197, 94, 0.15);
+  color: #16a34a;
+}
+
+.danger-btn {
+  background: rgba(239, 68, 68, 0.15);
+  color: #dc2626;
+}
+
+.neutral-btn {
+  background: var(--surface-muted);
+  color: var(--muted);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  margin-top: 24px;
+}

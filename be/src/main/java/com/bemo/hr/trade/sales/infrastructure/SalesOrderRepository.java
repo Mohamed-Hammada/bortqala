@@ -16,6 +16,8 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, String> 
 
     boolean existsBySoNumberIgnoreCase(String soNumber);
 
+    long countBySoNumberStartingWith(String prefix);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select o from SalesOrder o where o.id = :id")
     java.util.Optional<SalesOrder> findByIdForUpdate(@Param("id") String id);
