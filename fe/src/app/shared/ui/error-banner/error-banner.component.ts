@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { I18nService } from '../../../core/i18n.service';
 
 @Component({
   selector: 'app-error-banner',
@@ -8,6 +9,7 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ErrorBannerComponent {
+  readonly i18n = inject(I18nService);
   readonly errorMessage = input<string | null>(null);
   readonly retry = output<void>();
 }

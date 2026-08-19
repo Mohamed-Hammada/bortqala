@@ -31,6 +31,8 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'operations.uom': 'اسم وحدة القياس',
     'dashboard.noReport': 'لا يوجد تقرير شهري معتمد لهذه الفترة',
     'dashboard.noReportHint': 'قد توجد تقارير نصف شهرية. افتح شاشة التقارير لمراجعة الفترات المتاحة.',
+    'imports.viewFullHistory': 'عرض سجل الاستيراد بالكامل',
+    'users.manageCategories': 'إدارة التصنيفات / إضافة تصنيف جديد',
   },
   'en-US': {
     'nav.settingsHint': 'System settings and preferences',
@@ -51,6 +53,8 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'operations.uom': 'Unit name',
     'dashboard.noReport': 'No approved monthly report for this period',
     'dashboard.noReportHint': 'Half-month reports may exist. Open Reports to review available periods.',
+    'imports.viewFullHistory': 'View full import history',
+    'users.manageCategories': 'Manage categories / Add a category',
   },
 };
 

@@ -419,4 +419,8 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260818_v267_industry_pack_extensions_translations.yaml
       relativeToChangelogFile: false
+  # HARDCODED_UI_I18N_20260818: Replace all remaining hardcoded UI text with i18n.t() keys
+  - include:
+      file: db/changelog/data/insert/20260818_v268_hardcoded_ui_i18n.yaml
+      relativeToChangelogFile: false
 

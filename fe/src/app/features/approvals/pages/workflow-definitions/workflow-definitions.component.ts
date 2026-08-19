@@ -39,7 +39,7 @@ export class WorkflowDefinitionsComponent implements OnInit {
 
   reload(): void {
     this.approvalService.loadWorkflowDefinitions().subscribe({
-      error: err => this.pageError.set(apiErrorDetail(err, 'تعذر تحميل مسارات الاعتماد.'))
+      error: err => this.pageError.set(apiErrorDetail(err, this.i18n.t('approvals.loadError')))
     });
   }
 
@@ -72,7 +72,7 @@ export class WorkflowDefinitionsComponent implements OnInit {
     this.form.steps.push({
       stepOrder: nextOrder,
       stepCode: `STEP_${nextOrder}`,
-      name: `الخطوة ${nextOrder}`,
+      name: this.i18n.t('approvals.stepName', { order: String(nextOrder) }),
       requiredRole: 'FINANCE_MANAGER',
       minimumApprovals: 1,
       allowSelfApproval: false,
@@ -105,21 +105,22 @@ export class WorkflowDefinitionsComponent implements OnInit {
       },
       error: err => {
         this.submitting.set(false);
-        this.notification.error(apiErrorDetail(err, 'تعذر حفظ المسار.'));
+        this.notification.error(apiErrorDetail(err, this.i18n.t('approvals.saveError')));
       }
     });
   }
 
   documentTypeLabel(type: string): string {
-    return ({
-      PURCHASE_ORDER: 'أمر شراء',
-      CONTRACTOR_SETTLEMENT: 'تسوية مقاول',
-      PAYROLL_RUN: 'مسير رواتب',
-      SUPPLIER_INVOICE: 'فاتورة مورد',
-      SUPPLIER_PAYMENT: 'سداد مورد',
-      JOURNAL_ENTRY: 'قيد محاسبي',
-      LABOR_REQUEST: 'طلب عمالة',
-      ADVANCE: 'سلفة عمالة'
-    } as Record<string, string>)[type] ?? type;
+    const key = ({
+      PURCHASE_ORDER: 'approvals.docTypePO',
+      CONTRACTOR_SETTLEMENT: 'approvals.docTypeCS',
+      PAYROLL_RUN: 'approvals.docTypePR',
+      SUPPLIER_INVOICE: 'approvals.docTypeSI',
+      SUPPLIER_PAYMENT: 'approvals.docTypeSP',
+      JOURNAL_ENTRY: 'approvals.docTypeJE',
+      LABOR_REQUEST: 'approvals.docTypeLR',
+      ADVANCE: 'approvals.docTypeADV',
+    } as Record<string, string>)[type];
+    return key ? this.i18n.t(key) : type;
   }
 }

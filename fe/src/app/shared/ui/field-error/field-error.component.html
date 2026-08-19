@@ -2,17 +2,17 @@
     @if (control() && control()?.invalid && (control()?.touched || control()?.dirty)) {
       <span class="field-error-message">
         @if (control()?.errors?.['required']) {
-          ⚠️ هذا الحقل مطلوب ولا يمكن تركه فارغاً.
+          {{ i18n.t('fieldError.required') }}
         } @else if (control()?.errors?.['minlength']) {
-          ⚠️ يجب أن يحتوي الحقل على {{ control()?.errors?.['minlength']?.requiredLength }} أحرف على الأقل.
+          {{ i18n.t('fieldError.minlength', { min: control()?.errors?.['minlength']?.requiredLength }) }}
         } @else if (control()?.errors?.['maxlength']) {
-          ⚠️ تجاوزت الحد الأقصى للمسموح ({{ control()?.errors?.['maxlength']?.requiredLength }} حرفاً).
+          {{ i18n.t('fieldError.maxlength', { max: control()?.errors?.['maxlength']?.requiredLength }) }}
         } @else if (control()?.errors?.['min']) {
-          ⚠️ القيمة أدنى من الحد المسموح بها (أصغر قيمة {{ control()?.errors?.['min']?.min }}).
+          {{ i18n.t('fieldError.minValue', { min: control()?.errors?.['min']?.min }) }}
         } @else if (control()?.errors?.['email']) {
-          ⚠️ صيغة البريد الإلكتروني غير صحيحة.
+          {{ i18n.t('fieldError.email') }}
         } @else {
-          ⚠️ مدخلات غير صحيحة، يرجى التعديل.
+          {{ i18n.t('fieldError.invalid') }}
         }
       </span>
     }
