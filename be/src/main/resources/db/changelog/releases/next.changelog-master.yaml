@@ -637,6 +637,28 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260820_v331_exception_code_translations.yaml
       relativeToChangelogFile: false
+  # P0_PBAC_SECURITY_MATRIX_20260821: Dynamic Policy-Based Access Control & Granular Privilege Matrix
+  - include:
+      file: db/changelog/schema/create/20260821_v332_pbac_security_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260821_v333_pbac_permissions_seed.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260821_v334_pbac_translations.yaml
+      relativeToChangelogFile: false
+  # STATIC_I18N_CLEANUP_20260820: Frontend static i18n + backend error code parity
+  - include:
+      file: db/changelog/data/insert/20260820_v335_static_i18n_cleanup_translations.yaml
+      relativeToChangelogFile: false
+  # STORY_06_BUSINESS_VERTICAL_AND_TIERS_20260821: Business Verticals and Preset Tiers Translations
+  - include:
+      file: db/changelog/data/insert/20260821_v336_business_vertical_and_tier_translations.yaml
+      relativeToChangelogFile: false
+  # FEFO_POS_KEYBOARD_WHATSAPP_20260821: FEFO picking, POS keyboard shortcuts, WhatsApp webhook, Data scope
+  - include:
+      file: db/changelog/data/insert/20260821_v337_fefo_pos_keyboard_translations.yaml
+      relativeToChangelogFile: false
 
 
 

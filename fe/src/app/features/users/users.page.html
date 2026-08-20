@@ -6,6 +6,7 @@
       <p>{{ i18n.t('users.description') }}</p>
     </div>
     <div class="header-actions">
+      <a routerLink="/access/policy-groups" class="button secondary">🛡️ {{ i18n.t('policy.tabGroups') }}</a>
       <button class="button secondary" (click)="exportCsv()">⇩ Excel</button>
       <button class="button primary" (click)="openNew()">＋ {{ i18n.t('users.add') }}</button>
     </div>
@@ -133,6 +134,13 @@
             </td>
             <td>
               <div class="table-row-actions">
+                <button
+                  class="button secondary"
+                  (click)="openPolicyModal(item)"
+                  [title]="i18n.t('policy.userAssignments')"
+                >
+                  🛡️ {{ i18n.t('policy.tabAssignments') }}
+                </button>
                 <button
                   class="button secondary"
                   (click)="openEdit(item)"
@@ -611,6 +619,15 @@
       </button>
     </div>
   </app-modal-dialog>
+
+  @if (policyModalUserId()) {
+    <app-user-policy-assignment-modal
+      [userId]="policyModalUserId()!"
+      [userName]="policyModalUserName()"
+      (closed)="closePolicyModal()"
+      (saved)="closePolicyModal(); store.load()"
+    ></app-user-policy-assignment-modal>
+  }
 
 </section>
 <!-- BORTQALA_RUNTIME_20260816_V2_USER_REASON_FIELD -->

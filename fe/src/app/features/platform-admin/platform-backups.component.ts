@@ -36,7 +36,7 @@ export class PlatformBackupsComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to load backups');
+        this.error.set(err?.message || this.i18n.t('backups.loadFailed'));
         this.loading.set(false);
       },
     });
@@ -57,7 +57,7 @@ export class PlatformBackupsComponent implements OnInit {
         this.actionLoading.set(null);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to trigger backup');
+        this.error.set(err?.message || this.i18n.t('backups.triggerFailed'));
         this.actionLoading.set(null);
       },
     });
@@ -79,7 +79,7 @@ export class PlatformBackupsComponent implements OnInit {
         });
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to run restore drill');
+        this.error.set(err?.message || this.i18n.t('backups.drillFailed'));
         this.actionLoading.set(null);
       },
     });

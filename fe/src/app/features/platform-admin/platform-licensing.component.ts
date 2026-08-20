@@ -42,7 +42,7 @@ export class PlatformLicensingComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to load license status');
+        this.error.set(err?.message || this.i18n.t('licensing.loadFailed'));
         this.loading.set(false);
       },
     });
@@ -58,7 +58,7 @@ export class PlatformLicensingComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to validate certificate');
+        this.error.set(err?.message || this.i18n.t('licensing.validateFailed'));
         this.loading.set(false);
       },
     });
@@ -84,7 +84,7 @@ export class PlatformLicensingComponent implements OnInit {
         this.submitting.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to install certificate');
+        this.error.set(err?.message || this.i18n.t('licensing.installFailed'));
         this.submitting.set(false);
       },
     });

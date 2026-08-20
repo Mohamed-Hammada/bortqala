@@ -353,7 +353,7 @@ export class BanksPage {
   }
 
   async bounceCheque(chq: CommercialCheque) {
-    const reason = window.prompt(this.i18n.t('treasury.bounceReason')) || 'Technical reason';
+    const reason = window.prompt(this.i18n.t('treasury.bounceReason')) || this.i18n.t('treasury.bounceReasonDefault');
     try {
       await firstValueFrom(this.http.post(`/api/v1/finance/treasury/cheques/${chq.id}/bounce`, { reason }));
       this.notification.success(this.i18n.t('treasury.bounce') + ' ✓');
@@ -364,7 +364,7 @@ export class BanksPage {
   }
 
   async cancelCheque(chq: CommercialCheque) {
-    const reason = window.prompt(this.i18n.t('treasury.cancel')) || 'User cancellation';
+    const reason = window.prompt(this.i18n.t('treasury.cancel')) || this.i18n.t('treasury.cancelDefault');
     try {
       await firstValueFrom(this.http.post(`/api/v1/finance/treasury/cheques/${chq.id}/cancel`, { reason }));
       this.notification.success(this.i18n.t('treasury.cancel') + ' ✓');

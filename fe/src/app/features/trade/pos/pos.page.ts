@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, inject, signal, computed } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { I18nService } from '../../../core/i18n.service';
 import { NotificationService } from '../../../core/notification.service';
@@ -20,7 +20,9 @@ import { PosDataService } from './pos.service';
   templateUrl: './pos.page.html',
   styleUrls: ['./pos.page.scss'],
 })
-export class PosPage implements OnInit {
+export class PosPage implements OnInit, OnDestroy {
+  // Keyboard shortcut ref for cleanup
+  private readonly boundKeyHandler = this.handleKeyboard.bind(this);
   readonly i18n = inject(I18nService);
   private readonly posService = inject(PosDataService);
   private readonly fb = inject(FormBuilder);
@@ -90,6 +92,126 @@ export class PosPage implements OnInit {
   ngOnInit(): void {
     this.initForms();
     this.loadAll();
+    window.addEventListener('keydown', this.boundKeyHandler);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('keydown', this.boundKeyHandler);
+  }
+
+  /**
+   * POS Keyboard shortcuts (F1-F12):
+   * F1: Focus barcode scanner / item search
+   * F2: Focus quantity input for selected item
+   * F4: Apply line discount
+   * F5: Refresh cart/session
+   * F8: Split payment
+   * F9: Quick cash & complete sale
+   * F12: Hold / park cart (clear)
+   * Esc: Close any open modal
+   */
+  handleKeyboard(event: KeyboardEvent): void {
+    // Esc closes any open modal
+    if (event.key === 'Escape') {
+      if (this.showReceiptModal()) { this.showReceiptModal.set(false); return; }
+      if (this.showOpenShiftModal()) { this.showOpenShiftModal.set(false); return; }
+      if (this.showCloseShiftModal()) { this.showCloseShiftModal.set(false); return; }
+      if (this.showTerminalModal()) { this.showTerminalModal.set(false); return; }
+      return;
+    }
+
+    // Only handle F-keys on the register tab
+    if (this.activeTab() !== 'register' && !event.key.startsWith('F')) return;
+
+    switch (event.key) {
+      case 'F1':
+        event.preventDefault();
+        this.focusBarcodeScanner();
+        break;
+      case 'F2':
+        event.preventDefault();
+        this.focusQuantityInput();
+        break;
+      case 'F4':
+        event.preventDefault();
+        this.applyDiscountToLastItem();
+        break;
+      case 'F5':
+        event.preventDefault();
+        this.clearCart();
+        this.loadAll();
+        break;
+      case 'F8':
+        event.preventDefault();
+        this.selectedPaymentMethod.set('CARD');
+        this.notification.info(this.i18n.t('pos.splitPayment') || 'Card / split payment selected');
+        break;
+      case 'F9':
+        event.preventDefault();
+        this.quickCashSale();
+        break;
+      case 'F12':
+        event.preventDefault();
+        this.holdCart();
+        break;
+    }
+  }
+
+  private focusBarcodeScanner(): void {
+    const el = document.querySelector('.barcode-input') as HTMLInputElement | null;
+    if (el) { el.focus(); el.select(); }
+  }
+
+  private focusQuantityInput(): void {
+    const el = document.querySelector('.cart-line-row .qty-val') as HTMLElement | null;
+    if (el) el.click();
+  }
+
+  private applyDiscountToLastItem(): void {
+    const lines = this.cartLines();
+    if (lines.length === 0) return;
+    const last = lines[lines.length - 1];
+    const discountRate = prompt(this.i18n.t('pos.discountPrompt') || 'Discount %', '10');
+    if (discountRate === null) return;
+    const rate = parseFloat(discountRate);
+    if (isNaN(rate) || rate < 0 || rate > 100) return;
+    this.updateLineDiscount(last.itemId, rate);
+  }
+
+  updateLineDiscount(itemId: string, discountRate: number): void {
+    const updated = this.cartLines().map((line) => {
+      if (line.itemId === itemId) {
+        const sub = line.quantity * line.unitPrice;
+        const disc = (sub * discountRate) / 100;
+        const net = sub - disc;
+        const tax = Math.round(net * 0.14 * 100) / 100;
+        return {
+          ...line,
+          discountRate,
+          discountAmount: disc,
+          taxAmount: tax,
+          lineTotal: Math.round((net + tax) * 100) / 100,
+        };
+      }
+      return line;
+    });
+    this.cartLines.set(updated);
+  }
+
+  private quickCashSale(): void {
+    if (this.cartLines().length === 0 || !this.activeSession()) return;
+    this.selectedPaymentMethod.set('CASH');
+    this.completeSale();
+  }
+
+  private holdCart(): void {
+    if (this.cartLines().length === 0) return;
+    // Store cart in sessionStorage for later retrieval
+    try {
+      sessionStorage.setItem('pos-held-cart', JSON.stringify(this.cartLines()));
+      this.notification.info(this.i18n.t('pos.cartHeld') || 'Cart held for later');
+      this.clearCart();
+    } catch { /* ignore storage errors */ }
   }
 
   private initForms(): void {

@@ -203,6 +203,8 @@
 
   <!-- Tab 2: Session Settings (Admin only) -->
   @if (activeTab() === 'session' && authService.hasAnyRole(['SUPER_ADMIN', 'ADMIN'])) {
+    <app-business-vertical-setup></app-business-vertical-setup>
+
     <form
       class="card settings-card admin-settings"
       [formGroup]="appSettingsForm"

@@ -1,0 +1,39 @@
+id;translation_key;locale;value
+v337-001;pos.shortcutScan;en-US;F1 Scan
+v337-002;pos.shortcutScan;ar-EG;F1 مسح
+v337-003;pos.shortcutDiscount;en-US;F4 Discount
+v337-004;pos.shortcutDiscount;ar-EG;F4 خصم
+v337-005;pos.shortcutQuickCash;en-US;F9 Quick Cash
+v337-006;pos.shortcutQuickCash;ar-EG;F9 بيع سريع
+v337-007;pos.shortcutHold;en-US;F12 Hold Cart
+v337-008;pos.shortcutHold;ar-EG;F12 تعليق السلة
+v337-009;pos.splitPayment;en-US;Card / split payment selected
+v337-010;pos.splitPayment;ar-EG;تم اختيار الدفع بالبطاقة أو التقسيم
+v337-011;pos.cartHeld;en-US;Cart held for later
+v337-012;pos.cartHeld;ar-EG;تم تعليق السلة لاحقاً
+v337-013;pos.discountPrompt;en-US;Discount %
+v337-014;pos.discountPrompt;ar-EG;نسبة الخصم %
+v337-015;lot.pickFefoSuccess;en-US;FEFO pick completed successfully
+v337-016;lot.pickFefoSuccess;ar-EG;تم الانتقاء بنظام الأولوية حسب تاريخ الانتهاء
+v337-017;lot.pickFifoSuccess;en-US;FIFO pick completed successfully
+v337-018;lot.pickFifoSuccess;ar-EG;تم الانتقاء بنظام الأولوية حسب تاريخ الاستلام
+v337-019;lot.insufficientStockFefo;en-US;Insufficient stock for FEFO pick
+v337-020;lot.insufficientStockFefo;ar-EG;المخزون غير كافٍ للانتقاء بنظام FEFO
+v337-021;lot.insufficientStockFifo;en-US;Insufficient stock for FIFO pick
+v337-022;lot.insufficientStockFifo;ar-EG;المخزون غير كافٍ للانتقاء بنظام FIFO
+v337-023;lot.expiringSoon;en-US;Lots expiring within days
+v337-024;lot.expiringSoon;ar-EG;دُفعات تنتهي صلاحيتها خلال أيام
+v337-025;whatsapp.webhookReceived;en-US;WhatsApp message received
+v337-026;whatsapp.webhookReceived;ar-EG;تم استلام رسالة واتساب
+v337-027;whatsapp.signatureInvalid;en-US;Invalid webhook signature
+v337-028;whatsapp.signatureInvalid;ar-EG;توقيع الويب هوك غير صالح
+v337-029;whatsapp.noChannelConfigured;en-US;No active WhatsApp channel configured
+v337-030;whatsapp.noChannelConfigured;ar-EG;لم يتم تكوين قناة واتساب نشطة
+v337-031;whatsapp.verificationSuccess;en-US;WhatsApp webhook verified successfully
+v337-032;whatsapp.verificationSuccess;ar-EG;تم التحقق من ويب هوك واتساب بنجاح
+v337-033;datascope.branchScoped;en-US;Access restricted to your branch
+v337-034;datascope.branchScoped;ar-EG;تم تقييد الوصول إلى فرعك فقط
+v337-035;datascope.departmentScoped;en-US;Access restricted to your department
+v337-036;datascope.departmentScoped;ar-EG;تم تقييد الوصول إلى قسمك فقط
+v337-037;datascope.selfScoped;en-US;Access restricted to your own records
+v337-038;datascope.selfScoped;ar-EG;تم تقييد الوصول إلى سجلاتك الخاصة فقط

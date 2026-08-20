@@ -8,7 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/imports/attendance")
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+@PreAuthorize("@auth.hasPermission('imports.read')")
 public class AttendanceExplorerController {
     private final AttendanceExplorerService attendanceExplorerService;
 

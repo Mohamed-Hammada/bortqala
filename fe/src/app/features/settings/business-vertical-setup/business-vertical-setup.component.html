@@ -1,0 +1,56 @@
+<div class="business-vertical-card">
+  <div class="card-header">
+    <div class="header-content">
+      <h3 class="card-title">{{ i18n.t('vertical.title') }}</h3>
+      <p class="card-subtitle">{{ i18n.t('vertical.subtitle') }}</p>
+    </div>
+    <div class="active-badge" *ngIf="!loading()">
+      <span>{{ i18n.t('vertical.current') }}:</span>
+      <strong>{{ currentVertical() }}</strong>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="verticals-grid">
+      <div
+        class="vertical-option-card"
+        *ngFor="let opt of verticalOptions"
+        [class.selected]="selectedVertical() === opt.key"
+        [class.active-current]="currentVertical() === opt.key"
+        (click)="selectVertical(opt.key)"
+      >
+        <div class="vertical-icon">{{ opt.icon }}</div>
+        <div class="vertical-details">
+          <h4 class="vertical-name">{{ i18n.t(opt.titleKey) }}</h4>
+          <p class="vertical-desc">{{ i18n.t(opt.descKey) }}</p>
+          <div class="modules-tag-list">
+            <span class="module-tag" *ngFor="let m of opt.modules">{{ m }}</span>
+          </div>
+        </div>
+        <div class="selection-indicator">
+          <span *ngIf="selectedVertical() === opt.key">✓</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="provisioned-groups-info" *ngIf="provisionedGroups().length > 0">
+      <h5>{{ i18n.t('policy.tabGroups') }} ({{ provisionedGroups().length }}):</h5>
+      <div class="groups-chips">
+        <span class="group-chip" *ngFor="let g of provisionedGroups()">🛡️ {{ g }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-footer">
+    <span class="warning-text">{{ i18n.t('vertical.switchWarning') }}</span>
+    <button
+      type="button"
+      class="button primary"
+      (click)="applyVertical()"
+      [disabled]="saving() || loading()"
+    >
+      <span *ngIf="saving()">...</span>
+      <span *ngIf="!saving()">{{ i18n.t('vertical.apply') }}</span>
+    </button>
+  </div>
+</div>

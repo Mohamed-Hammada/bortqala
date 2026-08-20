@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260820_v335_static_i18n_cleanup_translations
+      author: bemo-platform
+      validCheckSum: ANY
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260820_v335_static_i18n_cleanup_translations.csv
+            relativeToChangelogFile: false
+            separator: ';'
+            columns:
+              - column:
+                  name: id
+                  type: STRING
+              - column:
+                  name: translation_key
+                  type: STRING
+              - column:
+                  name: locale
+                  type: STRING
+              - column:
+                  name: text_value
+                  type: STRING

@@ -59,7 +59,7 @@ public class OrganizationController {
 
     @PostMapping("/companies")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.CompanyResponse createCompany(@Valid @RequestBody OrganizationApi.CompanyPayload payload) {
         Company company = new Company(payload.code(), payload.name(), payload.taxNumber(), payload.commercialRegistry(), payload.active());
         return toResponse(companyRepository.save(company));
@@ -67,7 +67,7 @@ public class OrganizationController {
 
     @PutMapping("/companies/{id}")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.CompanyResponse updateCompany(@PathVariable String id, @Valid @RequestBody OrganizationApi.CompanyPayload payload) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("الشركة غير موجودة", "ORG_COMPANY_NOT_FOUND", HttpStatus.CONFLICT));
@@ -83,7 +83,7 @@ public class OrganizationController {
 
     @PostMapping("/branches")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.BranchResponse createBranch(@Valid @RequestBody OrganizationApi.BranchPayload payload) {
         Branch branch = new Branch(payload.companyId(), payload.code(), payload.name(), payload.location(), payload.active());
         return toResponse(branchRepository.save(branch));
@@ -91,7 +91,7 @@ public class OrganizationController {
 
     @PutMapping("/branches/{id}")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.BranchResponse updateBranch(@PathVariable String id, @Valid @RequestBody OrganizationApi.BranchPayload payload) {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("الفرع غير موجود", "ORG_BRANCH_NOT_FOUND", HttpStatus.CONFLICT));
@@ -107,7 +107,7 @@ public class OrganizationController {
 
     @PostMapping("/warehouses")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.WarehouseResponse createWarehouse(@Valid @RequestBody OrganizationApi.WarehousePayload payload) {
         Warehouse warehouse = new Warehouse(payload.branchId(), payload.code(), payload.name(), payload.location(), payload.active());
         return toResponse(warehouseRepository.save(warehouse));
@@ -115,7 +115,7 @@ public class OrganizationController {
 
     @PutMapping("/warehouses/{id}")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.WarehouseResponse updateWarehouse(@PathVariable String id, @Valid @RequestBody OrganizationApi.WarehousePayload payload) {
         Warehouse warehouse = warehouseRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("المستودع غير موجود", "ORG_WAREHOUSE_NOT_FOUND", HttpStatus.CONFLICT));
@@ -131,7 +131,7 @@ public class OrganizationController {
 
     @PostMapping("/departments")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.DepartmentResponse createDepartment(@Valid @RequestBody OrganizationApi.DepartmentPayload payload) {
         Department department = new Department(payload.companyId(), payload.code(), payload.name(), payload.managerId(), payload.active());
         return toResponse(departmentRepository.save(department));
@@ -139,7 +139,7 @@ public class OrganizationController {
 
     @PutMapping("/departments/{id}")
     @Transactional
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.DepartmentResponse updateDepartment(@PathVariable String id, @Valid @RequestBody OrganizationApi.DepartmentPayload payload) {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("الإدارة غير موجودة", "ORG_DEPARTMENT_NOT_FOUND", HttpStatus.CONFLICT));
@@ -160,7 +160,7 @@ public class OrganizationController {
     }
 
     @PostMapping("/intercompany")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
+    @PreAuthorize("@auth.hasAnyPermission('organization.manage', 'finance.manage')")
     public OrganizationApi.IntercompanyTransactionResponse createIntercompanyTransaction(
             @Valid @RequestBody OrganizationApi.CreateIntercompanyPayload payload
     ) {
@@ -168,19 +168,19 @@ public class OrganizationController {
     }
 
     @PostMapping("/intercompany/{id}/approve")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
+    @PreAuthorize("@auth.hasAnyPermission('organization.manage', 'finance.manage')")
     public OrganizationApi.IntercompanyTransactionResponse approveIntercompanyTransaction(@PathVariable String id) {
         return intercompanyService.approveTransaction(id);
     }
 
     @PostMapping("/intercompany/{id}/settle")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
+    @PreAuthorize("@auth.hasAnyPermission('organization.manage', 'finance.manage')")
     public OrganizationApi.IntercompanyTransactionResponse settleIntercompanyTransaction(@PathVariable String id) {
         return intercompanyService.settleTransaction(id);
     }
 
     @PostMapping("/intercompany/eliminate")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
+    @PreAuthorize("@auth.hasAnyPermission('organization.manage', 'finance.manage')")
     public OrganizationApi.EliminationResultResponse runPeriodElimination(
             @Valid @RequestBody OrganizationApi.RunEliminationPayload payload
     ) {

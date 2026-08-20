@@ -59,6 +59,12 @@
 
   <!-- TAB 1: CASHIER REGISTER -->
   @if (activeTab() === 'register') {
+    <div class="pos-shortcuts-hint">
+      <kbd>F1</kbd> {{ i18n.t('pos.shortcutScan') || 'Scan' }} ·
+      <kbd>F4</kbd> {{ i18n.t('pos.shortcutDiscount') || 'Discount' }} ·
+      <kbd>F9</kbd> {{ i18n.t('pos.shortcutQuickCash') || 'Quick Cash' }} ·
+      <kbd>F12</kbd> {{ i18n.t('pos.shortcutHold') || 'Hold Cart' }}
+    </div>
     <div class="pos-register-layout">
       <!-- Left Pane: Catalog & Barcode Scanner -->
       <div class="catalog-pane">

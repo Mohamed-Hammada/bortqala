@@ -64,7 +64,7 @@ public class WorkforceSettlementService {
         try {
             return excelExportService.generatePeriodExcel(periodId);
         } catch (Exception exception) {
-            throw new BusinessRuleException("تعذر إنشاء ملف Excel لفترة التسوية: " + exception.getMessage());
+            throw new BusinessRuleException("تعذر إنشاء ملف Excel لفترة التسوية: " + exception.getMessage(), "SETTLEMENT_EXPORT_FAILED", HttpStatus.CONFLICT);
         }
     }
 

@@ -90,7 +90,7 @@ public class WorkforceExcelImportService {
         for (String field : REQUIRED_FIELDS) {
             String header = columns.get(field);
             if (header == null || !headers.contains(header)) {
-                throw new BusinessRuleException("يجب ربط الحقل " + field + " بعمود موجود في الملف.");
+                throw new BusinessRuleException("يجب ربط الحقل " + field + " بعمود موجود في الملف.", "WORKFORCE_IMPORT_MAPPING_INVALID", HttpStatus.CONFLICT);
             }
         }
         batch.map(encodeMapping(columns));

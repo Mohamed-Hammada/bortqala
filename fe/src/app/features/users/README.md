@@ -30,8 +30,15 @@
 
 **AR:** تستخدم نافذة الإضافة والتعديل الآن متغير العرض الصحيح `--modal-large-max-width` لأن النافذة من النوع `large`. تم نقل الدور الأساسي إلى شبكة بيانات الحساب بجوار الفئة، وتبسيط حالة الحساب، وتقليل البطاقات المتداخلة داخل الصلاحيات المتقدمة.
 
-## 2026-08-10 — Compact role additional information
+## 2026-08-21 — PBAC Granular Policy Groups & Privilege Matrix
+**EN:** Added full Policy-Based Access Control (PBAC):
+- Dedicated Policy Groups screen (`/access/policy-groups`) allowing tenant admins to create custom privilege groups.
+- Granular `PolicyMatrixComponent` with module-level and action-level checkboxes across 200+ system permissions.
+- `UserPolicyAssignmentModalComponent` for assigning custom policy groups with branch and cost center scopes.
+- Structural directive `*hasPermission` and route guard `permissionGuard`.
 
-**EN:** The compact Role Directory keeps the user-first design, but every role again has a Show/Hide additional information action. Expanding a role lists the actual accessible pages and access levels from the access catalog. Only one role is expanded at a time, using the existing `expandedRole`, `toggleRoleDetails`, and `roleAccessiblePages` implementation.
-
-**AR:** تم الإبقاء على تصميم صفحة المستخدمين المبسط، مع إعادة زر عرض/إخفاء معلومات إضافية لكل دور. عند فتح الدور يتم عرض الصفحات الفعلية ومستوى الوصول من Access Catalog، بدون إعادة جدار بطاقات الأدوار القديم.
+**AR:** إضافة نظام الصلاحيات المتقدم المبني على السياسات (PBAC):
+- شاشة مخصصة لإدارة مجموعات السياسات (`/access/policy-groups`) تتيح للمدير إنشاء وتخصيص مجموعات صلاحيات.
+- مصفوفة صلاحيات تفصيلية `PolicyMatrixComponent` تتيح التحكم في أكثر من 200 صلاحية فرعية مع تفعيل كامل الموديول.
+- نافذة `UserPolicyAssignmentModalComponent` لتعيين السياسات للمستخدمين مع تقييد الفروع ومراكز التكلفة.
+- التوجيه الهيكلي `*hasPermission` وحارس المسار `permissionGuard`.

@@ -25,32 +25,32 @@ public class BiometricImportController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.read')")
     List<ImportApi.BatchResponse> list() {
         return biometricImportService.listBatches();
     }
 
     @GetMapping("/preflight")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.read')")
     Map<String, Boolean> preflight(@RequestParam String sourceId, @RequestParam String checksum) {
         return Map.of("duplicate", biometricImportService.alreadyImported(sourceId, checksum));
     }
 
     @PostMapping(path = "/preview", consumes = "multipart/form-data")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.read')")
     ImportApi.PreviewResponse preview(@RequestParam MultipartFile file) {
         return biometricImportService.preview(file);
     }
 
     @PostMapping("/{id}/reverse")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     ImportApi.BatchResponse reverse(@org.springframework.web.bind.annotation.PathVariable String id,
                                     Authentication authentication) {
         return biometricImportService.reverse(id, authentication.getName());
     }
 
     @PostMapping(consumes = "multipart/form-data")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     @ResponseStatus(HttpStatus.CREATED)
     ImportApi.BatchResponse upload(@RequestParam MultipartFile file,
                                    @RequestParam String sourceId,
@@ -59,13 +59,13 @@ public class BiometricImportController {
     }
 
     @GetMapping("/sources")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('imports.read')")
     List<ImportApi.SourceResponse> sources() {
         return biometricDeviceSyncService.listSources();
     }
 
     @PostMapping("/sources")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     @ResponseStatus(HttpStatus.CREATED)
     ImportApi.SourceResponse createSource(@Valid @RequestBody ImportApi.SourceRequest request,
                                           Authentication authentication) {
@@ -73,7 +73,7 @@ public class BiometricImportController {
     }
 
     @PutMapping("/sources/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     ImportApi.SourceResponse updateSource(@PathVariable String id,
                                           @Valid @RequestBody ImportApi.SourceRequest request,
                                           Authentication authentication) {
@@ -81,26 +81,26 @@ public class BiometricImportController {
     }
 
     @DeleteMapping("/sources/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     void deleteSource(@PathVariable String id,
                       Authentication authentication) {
         biometricDeviceSyncService.deleteSource(id, authentication.getName());
     }
 
     @GetMapping("/unmatched")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.read')")
     List<ImportApi.UnmatchedIdentityResponse> unmatched() {
         return biometricImportService.unmatchedIdentities();
     }
 
     @GetMapping("/devices")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('imports.read')")
     List<ImportApi.DeviceResponse> devices() {
         return biometricDeviceSyncService.listDevices();
     }
 
     @PostMapping("/devices")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     @ResponseStatus(HttpStatus.CREATED)
     ImportApi.DeviceResponse createDevice(@Valid @RequestBody ImportApi.DeviceRequest request,
                                           Authentication authentication) {
@@ -108,7 +108,7 @@ public class BiometricImportController {
     }
 
     @PutMapping("/devices/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     ImportApi.DeviceResponse updateDevice(@PathVariable String id,
                                           @Valid @RequestBody ImportApi.DeviceRequest request,
                                           Authentication authentication) {
@@ -116,7 +116,7 @@ public class BiometricImportController {
     }
 
     @PostMapping("/devices/{id}/sync")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     ImportApi.DeviceSyncResponse syncDevice(@PathVariable String id,
                                             Authentication authentication) {
         return biometricDeviceSyncService.sync(id, authentication.getName());

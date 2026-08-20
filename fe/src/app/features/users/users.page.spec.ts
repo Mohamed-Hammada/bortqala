@@ -3,6 +3,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
+import { provideRouter } from '@angular/router';
 import { UsersPage } from './users.page';
 import { AuthService } from '../../core/auth/auth.service';
 import { AuthUser } from '../../core/auth/auth.models';
@@ -28,7 +29,7 @@ const ROLE_HR_REVIEWER: AccessRole = {
   descriptionKey: 'roles.access.hrReviewer.description',
   sensitivity: 'MEDIUM',
   kind: 'APPROVAL',
-  permissions: ['reports.read', 'workers.read'],
+  permissions: ['reports.read', 'reports.decide', 'workers.read', 'workers.edit'],
   dependencies: [],
   sensitiveReasonKey: null,
 };
@@ -97,6 +98,7 @@ describe('UsersPage', () => {
     await TestBed.configureTestingModule({
       imports: [UsersPage],
       providers: [
+        provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
         {

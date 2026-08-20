@@ -11,7 +11,7 @@ import java.time.YearMonth;
 
 @RestController
 @RequestMapping("/api/v1/dashboard")
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'FINANCE_MANAGER', 'PROJECT_MANAGER', 'VIEWER')")
+@PreAuthorize("@auth.hasPermission('dashboard.view')")
 public class DashboardController {
     private final DashboardService dashboardService;
 

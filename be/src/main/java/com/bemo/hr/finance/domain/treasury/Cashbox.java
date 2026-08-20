@@ -2,6 +2,10 @@ package com.bemo.hr.finance.domain.treasury;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -10,6 +14,18 @@ import java.util.UUID;
 @Entity
 @Table(name = "cashboxes")
 @Getter
+@FilterDefs({
+    @FilterDef(name = "orgScopeFilter", parameters = {
+        @ParamDef(name = "scopeLevel", type = String.class),
+        @ParamDef(name = "userBranchId", type = String.class),
+        @ParamDef(name = "userDepartmentId", type = String.class),
+        @ParamDef(name = "userId", type = String.class)
+    })
+})
+@Filter(name = "orgScopeFilter", condition =
+    "(:scopeLevel = 'GLOBAL' OR " +
+    "(:scopeLevel = 'BRANCH' AND branch_id = :userBranchId) OR " +
+    "(:scopeLevel = 'SELF' AND custodian_user_id = :userId))")
 public class Cashbox {
 
     @Id

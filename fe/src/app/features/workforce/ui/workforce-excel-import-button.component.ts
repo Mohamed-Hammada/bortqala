@@ -29,7 +29,6 @@ export class WorkforceExcelImportButtonComponent {
   readonly failed = signal(false);
   readonly errors = signal<{ rowNumber: number; message: string }[]>([]);
 
-  ar(): boolean { return this.i18n.locale().toLowerCase().startsWith('ar'); }
   openDialog(): void { this.open.set(true); }
   closeDialog(): void { if (!this.busy()) this.open.set(false); }
 
@@ -54,7 +53,7 @@ export class WorkforceExcelImportButtonComponent {
       URL.revokeObjectURL(url);
     } catch (error: any) {
       this.failed.set(true);
-      this.message.set(error?.error?.message || (this.ar() ? 'تعذر تحميل قالب Excel.' : 'Could not download the Excel template.'));
+      this.message.set(error?.error?.message || this.i18n.t('workforce.importTemplateDownloadFailed'));
     }
   }
 
@@ -64,13 +63,13 @@ export class WorkforceExcelImportButtonComponent {
     if (!file) return;
     if (!/\.(xlsx|xls)$/i.test(file.name)) {
       this.failed.set(true);
-      this.message.set(this.ar() ? 'اختر ملف Excel بصيغة xlsx أو xls.' : 'Choose an .xlsx or .xls file.');
+      this.message.set(this.i18n.t('workforce.importInvalidFileFormat'));
       input.value = '';
       return;
     }
     if (file.size > 20 * 1024 * 1024) {
       this.failed.set(true);
-      this.message.set(this.ar() ? 'حجم الملف يتجاوز 20 ميجابايت.' : 'The file exceeds the 20 MB limit.');
+      this.message.set(this.i18n.t('workforce.importFileTooLarge'));
       input.value = '';
       return;
     }
@@ -89,13 +88,14 @@ export class WorkforceExcelImportButtonComponent {
       ));
       this.failed.set(result.failedRows > 0);
       this.errors.set(result.errors ?? []);
-      this.message.set(this.ar()
-        ? `تم استيراد ${result.importedRows} من ${result.totalRows}.${result.failedRows ? ` تعذر ${result.failedRows}.` : ''}`
-        : `Imported ${result.importedRows} of ${result.totalRows}.${result.failedRows ? ` ${result.failedRows} failed.` : ''}`);
+      this.message.set(
+        this.i18n.t('workforce.importResult', { imported: result.importedRows, total: result.totalRows })
+        + (result.failedRows ? ' ' + this.i18n.t('workforce.importResultFailed', { failed: result.failedRows }) : '')
+      );
       if (result.importedRows > 0) window.setTimeout(() => window.location.reload(), 450);
     } catch (error: any) {
       this.failed.set(true);
-      this.message.set(error?.error?.message || (this.ar() ? 'تعذر استيراد ملف Excel.' : 'Could not import the Excel file.'));
+      this.message.set(error?.error?.message || this.i18n.t('workforce.importFailed'));
     } finally {
       this.busy.set(false);
       input.value = '';

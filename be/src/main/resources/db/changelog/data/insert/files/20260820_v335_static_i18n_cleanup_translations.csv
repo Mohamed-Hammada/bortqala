@@ -1,0 +1,57 @@
+id;translation_key;locale;text_value
+v335-001-ar;workforce.importTemplateDownloadFailed;ar-EG;تعذر تحميل قالب Excel.
+v335-001-en;workforce.importTemplateDownloadFailed;en-US;Could not download the Excel template.
+v335-002-ar;workforce.importInvalidFileFormat;ar-EG;اختر ملف Excel بصيغة xlsx أو xls.
+v335-002-en;workforce.importInvalidFileFormat;en-US;Choose an .xlsx or .xls file.
+v335-003-ar;workforce.importFileTooLarge;ar-EG;حجم الملف يتجاوز 20 ميجابايت.
+v335-003-en;workforce.importFileTooLarge;en-US;The file exceeds the 20 MB limit.
+v335-004-ar;workforce.importResult;ar-EG;تم استيراد {imported} من {total}.
+v335-004-en;workforce.importResult;en-US;Imported {imported} of {total}.
+v335-005-ar;workforce.importResultFailed;ar-EG;تعذر {failed}.
+v335-005-en;workforce.importResultFailed;en-US;{failed} failed.
+v335-006-ar;workforce.importFailed;ar-EG;تعذر استيراد ملف Excel.
+v335-006-en;workforce.importFailed;en-US;Could not import the Excel file.
+v335-007-ar;dashboard.importRefreshFailed;ar-EG;تعذر تحديث ملخص الحضور المستورد.
+v335-007-en;dashboard.importRefreshFailed;en-US;Could not refresh imported attendance summary.
+v335-008-ar;licensing.loadFailed;ar-EG;فشل تحميل حالة الترخيص
+v335-008-en;licensing.loadFailed;en-US;Failed to load license status
+v335-009-ar;licensing.validateFailed;ar-EG;فشل التحقق من الشهادة
+v335-009-en;licensing.validateFailed;en-US;Failed to validate certificate
+v335-010-ar;licensing.installFailed;ar-EG;فشل تثبيت الشهادة
+v335-010-en;licensing.installFailed;en-US;Failed to install certificate
+v335-011-ar;diagnostics.loadFailed;ar-EG;فشل تحميل التشخيصات
+v335-011-en;diagnostics.loadFailed;en-US;Failed to load diagnostics
+v335-012-ar;diagnostics.refreshFailed;ar-EG;فشل تحديث التشخيصات
+v335-012-en;diagnostics.refreshFailed;en-US;Failed to refresh diagnostics
+v335-013-ar;backups.loadFailed;ar-EG;فشل تحميل النسخ الاحتياطية
+v335-013-en;backups.loadFailed;en-US;Failed to load backups
+v335-014-ar;backups.triggerFailed;ar-EG;فشل بدء النسخ الاحتياطي
+v335-014-en;backups.triggerFailed;en-US;Failed to trigger backup
+v335-015-ar;backups.drillFailed;ar-EG;فشل تنفيذ اختبار الاستعادة
+v335-015-en;backups.drillFailed;en-US;Failed to run restore drill
+v335-016-ar;verticals.loadDataFailed;ar-EG;فشل تحميل بيانات القطاعات
+v335-016-en;verticals.loadDataFailed;en-US;Failed to load vertical data
+v335-017-ar;verticals.registerStudentFailed;ar-EG;فشل تسجيل الطالب
+v335-017-en;verticals.registerStudentFailed;en-US;Failed to register student
+v335-018-ar;verticals.createBookingFailed;ar-EG;فشل إنشاء حجز سياحي
+v335-018-en;verticals.createBookingFailed;en-US;Failed to create tour booking
+v335-019-ar;verticals.openDeclarationFailed;ar-EG;فشل فتح ملف جمركي
+v335-019-en;verticals.openDeclarationFailed;en-US;Failed to open customs file
+v335-020-ar;verticals.createContractFailed;ar-EG;فشل إنشاء عقد لوجستي
+v335-020-en;verticals.createContractFailed;en-US;Failed to create 3PL contract
+v335-021-ar;projects.loadClaimsFailed;ar-EG;فشل تحميل المطالبات
+v335-021-en;projects.loadClaimsFailed;en-US;Failed to load claims
+v335-022-ar;projects.fetchClaimFailed;ar-EG;فشل جلب المطالبة
+v335-022-en;projects.fetchClaimFailed;en-US;Failed to fetch claim
+v335-023-ar;treasury.bounceReasonDefault;ar-EG;سبب تقني
+v335-023-en;treasury.bounceReasonDefault;en-US;Technical reason
+v335-024-ar;treasury.cancelDefault;ar-EG;إلغاء من المستخدم
+v335-024-en;treasury.cancelDefault;en-US;User cancellation
+v335-025-ar;BIO_DEVICE_CONNECTION_FAILED;ar-EG;تعذر الاتصال بجهاز البصمة أو قراءة استجابته
+v335-025-en;BIO_DEVICE_CONNECTION_FAILED;en-US;Failed to connect to biometric device or read its response
+v335-026-ar;BIO_DEVICE_INVALID_TIMESTAMP;ar-EG;وقت بصمة غير صالح في استجابة الجهاز
+v335-026-en;BIO_DEVICE_INVALID_TIMESTAMP;en-US;Invalid punch timestamp in device response
+v335-027-ar;SETTLEMENT_EXPORT_FAILED;ar-EG;تعذر إنشاء ملف Excel لفترة التسوية
+v335-027-en;SETTLEMENT_EXPORT_FAILED;en-US;Failed to generate settlement period Excel file
+v335-028-ar;WORKFORCE_IMPORT_MAPPING_INVALID;ar-EG;يجب ربط الحقل بمود موجود في الملف
+v335-028-en;WORKFORCE_IMPORT_MAPPING_INVALID;en-US;Field must be mapped to an existing column in the file

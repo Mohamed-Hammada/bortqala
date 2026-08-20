@@ -99,14 +99,14 @@ public class AuthController {
     }
 
     @PostMapping("/users/{id}/revoke-sessions")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('users.manage')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void revokeSessions(@PathVariable String id, Authentication authentication) {
         authService.revokeSessions(id, authentication.getName());
     }
 
     @PostMapping("/users/{id}/unlock")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('users.manage')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void unlock(@PathVariable String id, Authentication authentication) {
         authService.unlock(id, authentication.getName());
@@ -146,13 +146,13 @@ public class AuthController {
     }
 
     @GetMapping("/admin/app-settings")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('settings.read')")
     AuthApi.AppSettingsResponse appSettings() {
         return authService.currentAppSettings();
     }
 
     @PutMapping("/admin/app-settings")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('settings.manage')")
     AuthApi.AppSettingsResponse updateAppSettings(@Valid @RequestBody AuthApi.AppSettingsRequest request,
                                                   Authentication authentication) {
         return authService.updateAppSettings(request, authentication.getName());
@@ -164,13 +164,13 @@ public class AuthController {
     }
 
     @GetMapping("/users")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('users.read')")
     List<AuthApi.UserResponse> users() {
         return authService.listUsers();
     }
 
     @PostMapping("/users")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('users.manage')")
     @ResponseStatus(HttpStatus.CREATED)
     AuthApi.UserResponse create(@Valid @RequestBody AuthApi.UserUpsertRequest request,
                                 Authentication authentication) {
@@ -178,7 +178,7 @@ public class AuthController {
     }
 
     @PutMapping("/users/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("@auth.hasPermission('users.manage')")
     AuthApi.UserResponse update(@PathVariable String id, @Valid @RequestBody AuthApi.UserUpsertRequest request,
                                 Authentication authentication) {
         return authService.update(id, request, authentication.getName());

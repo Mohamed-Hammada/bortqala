@@ -28,10 +28,12 @@ function saveNotificationPrefs(prefs: NotificationPreferences): void {
   localStorage.setItem(NOTIFICATION_KEY, JSON.stringify(prefs));
 }
 
+import { BusinessVerticalSetupComponent } from './business-vertical-setup/business-vertical-setup.component';
+
 @Component({
   selector: 'app-settings-page',
   standalone: true,
-  imports: [ReactiveFormsModule, ShortcutSettingsComponent, SettingsSubmenuComponent],
+  imports: [ReactiveFormsModule, ShortcutSettingsComponent, SettingsSubmenuComponent, BusinessVerticalSetupComponent],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

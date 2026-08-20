@@ -62,7 +62,7 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
                 if (response.statusCode() == 501) {
                     message = "مسار التكامل المحدد لا يحتوي بعد على قارئ سجلات حضور مكتمل لهذا الإصدار. راجع حالة التنفيذ والتوثيق الرسمي.";
                 }
-                throw new BusinessRuleException(message);
+                throw new BusinessRuleException(message, "BIO_DEVICE_HTTP_ERROR_" + response.statusCode(), HttpStatus.CONFLICT);
             }
             JsonNode root = objectMapper.readTree(response.body());
             JsonNode rows = root.isArray() ? root : root.path("punches");
@@ -85,7 +85,7 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
         } catch (BusinessRuleException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new BusinessRuleException("تعذر الاتصال بجهاز البصمة أو قراءة استجابته: " + exception.getMessage());
+            throw new BusinessRuleException("تعذر الاتصال بجهاز البصمة أو قراءة استجابته: " + exception.getMessage(), "BIO_DEVICE_CONNECTION_FAILED", HttpStatus.CONFLICT);
         }
     }
 
@@ -128,7 +128,7 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
             if (value.chars().allMatch(Character::isDigit)) return Instant.ofEpochMilli(Long.parseLong(value));
             return Instant.parse(value);
         } catch (Exception exception) {
-            throw new BusinessRuleException("وقت بصمة غير صالح في استجابة الجهاز: " + value);
+            throw new BusinessRuleException("وقت بصمة غير صالح في استجابة الجهاز: " + value, "BIO_DEVICE_INVALID_TIMESTAMP", HttpStatus.CONFLICT);
         }
     }
 }

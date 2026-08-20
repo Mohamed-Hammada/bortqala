@@ -17,7 +17,7 @@ public class ContractorController {
     private final WorkforceMasterDataExcelExporter excelExporter;
 
     @GetMapping(value = "/export.xlsx", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
+    @PreAuthorize("@auth.hasPermission('contractors.read')")
     public ResponseEntity<byte[]> exportExcel() {
         return excel("contractors.xlsx", excelExporter.contractors(contractorService.list()));
     }
@@ -30,26 +30,26 @@ public class ContractorController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
+    @PreAuthorize("@auth.hasPermission('contractors.read')")
     public List<WorkforceApi.ContractorResponse> list() {
         return contractorService.list();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
+    @PreAuthorize("@auth.hasPermission('contractors.read')")
     public WorkforceApi.ContractorResponse getById(@PathVariable String id) {
         return contractorService.getById(id);
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('contractors.manage')")
     @ResponseStatus(HttpStatus.CREATED)
     public WorkforceApi.ContractorResponse create(@Valid @RequestBody WorkforceApi.ContractorRequest request) {
         return contractorService.create(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
+    @PreAuthorize("@auth.hasPermission('contractors.manage')")
     public WorkforceApi.ContractorResponse update(@PathVariable String id, @Valid @RequestBody WorkforceApi.ContractorRequest request) {
         return contractorService.update(id, request);
     }

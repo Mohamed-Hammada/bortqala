@@ -6,6 +6,7 @@ import com.bemo.hr.compliance.eta.domain.EtaSubmissionStatus;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class EtaComplianceController {
     }
 
     @GetMapping("/config")
+    @PreAuthorize("@auth.hasPermission('etaTax.read')")
     public ResponseEntity<EtaComplianceApi.ConfigResponse> getConfig() {
         return complianceService.getConfig()
                 .map(ResponseEntity::ok)
@@ -28,16 +30,19 @@ public class EtaComplianceController {
     }
 
     @PostMapping("/config")
+    @PreAuthorize("@auth.hasPermission('etaTax.manage')")
     public ResponseEntity<EtaComplianceApi.ConfigResponse> saveConfig(@Valid @RequestBody EtaComplianceApi.SaveConfigRequest request) {
         return ResponseEntity.ok(complianceService.saveConfig(request));
     }
 
     @GetMapping("/summary")
+    @PreAuthorize("@auth.hasPermission('etaTax.read')")
     public ResponseEntity<EtaComplianceApi.SubmissionSummaryResponse> getSummary() {
         return ResponseEntity.ok(complianceService.getSummary());
     }
 
     @GetMapping("/submissions")
+    @PreAuthorize("@auth.hasPermission('etaTax.read')")
     public ResponseEntity<List<EtaComplianceApi.SubmissionResponse>> listSubmissions(
             @RequestParam(required = false) EtaSubmissionStatus status,
             @RequestParam(required = false) EtaDocumentType documentType) {
@@ -45,17 +50,20 @@ public class EtaComplianceController {
     }
 
     @PostMapping("/submissions/queue")
+    @PreAuthorize("@auth.hasPermission('etaTax.manage')")
     public ResponseEntity<EtaComplianceApi.SubmissionResponse> queueInvoice(
             @Valid @RequestBody EtaComplianceApi.QueueInvoiceRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(complianceService.queueInvoice(request));
     }
 
     @PostMapping("/submissions/{id}/submit")
+    @PreAuthorize("@auth.hasPermission('etaTax.manage')")
     public ResponseEntity<EtaComplianceApi.SubmissionResponse> submitToEta(@PathVariable String id) {
         return ResponseEntity.ok(complianceService.submitToEta(id));
     }
 
     @PostMapping("/submissions/{id}/cancel")
+    @PreAuthorize("@auth.hasPermission('etaTax.manage')")
     public ResponseEntity<EtaComplianceApi.SubmissionResponse> cancelDocument(
             @PathVariable String id,
             @Valid @RequestBody EtaComplianceApi.CancelDocumentRequest request) {
@@ -63,11 +71,13 @@ public class EtaComplianceController {
     }
 
     @GetMapping("/item-mappings")
+    @PreAuthorize("@auth.hasPermission('etaTax.read')")
     public ResponseEntity<List<EtaComplianceApi.ItemMappingResponse>> listItemMappings() {
         return ResponseEntity.ok(complianceService.listItemMappings());
     }
 
     @PostMapping("/item-mappings")
+    @PreAuthorize("@auth.hasPermission('etaTax.manage')")
     public ResponseEntity<EtaComplianceApi.ItemMappingResponse> saveItemMapping(
             @Valid @RequestBody EtaComplianceApi.SaveItemMappingRequest request) {
         return ResponseEntity.ok(complianceService.saveItemMapping(request));

@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260821-v337-fefo-pos-keyboard-translations
+      author: bemo-core
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260821_v337_fefo_pos_keyboard_translations.csv
+            separator: ;
+            encoding: UTF-8
+            columns:
+              - column:
+                  name: id
+                  type: STRING
+              - column:
+                  name: translation_key
+                  type: STRING
+              - column:
+                  name: locale
+                  type: STRING
+              - column:
+                  name: value
+                  type: STRING

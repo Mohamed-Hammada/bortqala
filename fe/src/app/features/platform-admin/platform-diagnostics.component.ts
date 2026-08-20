@@ -33,7 +33,7 @@ export class PlatformDiagnosticsComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to load diagnostics');
+        this.error.set(err?.message || this.i18n.t('diagnostics.loadFailed'));
         this.loading.set(false);
       },
     });
@@ -47,7 +47,7 @@ export class PlatformDiagnosticsComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to refresh diagnostics');
+        this.error.set(err?.message || this.i18n.t('diagnostics.refreshFailed'));
         this.loading.set(false);
       },
     });

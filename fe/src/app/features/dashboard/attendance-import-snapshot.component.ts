@@ -27,7 +27,6 @@ export class AttendanceImportSnapshotComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void { window.removeEventListener('bortqala:attendance-updated', this.onAttendanceChanged); }
-  ar(): boolean { return this.i18n.locale().toLowerCase().startsWith('ar'); }
   refresh(): void { void this.load(); }
 
   monthLabel(month: string): string {
@@ -46,7 +45,7 @@ export class AttendanceImportSnapshotComponent implements OnDestroy {
       const sorted = [...rows].sort((a, b) => b.month.localeCompare(a.month));
       this.latest.set(sorted[0] ?? null);
     } catch {
-      this.error.set(this.ar() ? 'تعذر تحديث ملخص الحضور المستورد.' : 'Could not refresh imported attendance summary.');
+      this.error.set(this.i18n.t('dashboard.importRefreshFailed'));
     } finally { this.loading.set(false); }
   }
 }

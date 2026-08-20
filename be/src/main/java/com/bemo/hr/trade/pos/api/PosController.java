@@ -20,25 +20,25 @@ public class PosController {
     }
 
     @GetMapping("/terminals")
-    @PreAuthorize("hasAuthority('pos.read') or hasAuthority('sales.read') or hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("@auth.hasAnyPermission('pos.read', 'sales.read')")
     public List<PosApi.TerminalResponse> listTerminals() {
         return posService.listTerminals();
     }
 
     @PostMapping("/terminals")
-    @PreAuthorize("hasAuthority('pos.manage') or hasAuthority('sales.manage') or hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("@auth.hasAnyPermission('pos.manage', 'sales.manage')")
     public PosApi.TerminalResponse saveTerminal(@RequestBody PosApi.SaveTerminalRequest request) {
         return posService.saveTerminal(request);
     }
 
     @GetMapping("/sessions")
-    @PreAuthorize("hasAuthority('pos.read') or hasAuthority('sales.read') or hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("@auth.hasAnyPermission('pos.read', 'sales.read')")
     public List<PosApi.SessionResponse> listSessions() {
         return posService.listSessions();
     }
 
     @GetMapping("/sessions/active")
-    @PreAuthorize("hasAuthority('pos.read') or hasAuthority('sales.read') or hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("@auth.hasAnyPermission('pos.read', 'sales.read')")
     public ResponseEntity<PosApi.SessionResponse> getActiveSession(@RequestParam String terminalId) {
         return posService.getActiveSession(terminalId)
                 .map(ResponseEntity::ok)
@@ -46,7 +46,7 @@ public class PosController {
     }
 
     @PostMapping("/sessions/open")
-    @PreAuthorize("hasAuthority('pos.operate') or hasAuthority('sales.write') or hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("@auth.hasAnyPermission('pos.operate', 'sales.manage')")
     public PosApi.SessionResponse openSession(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody PosApi.OpenSessionRequest request
@@ -56,7 +56,7 @@ public class PosController {
     }
 
     @PostMapping("/sessions/{id}/close")
-    @PreAuthorize("hasAuthority('pos.operate') or hasAuthority('sales.write') or hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("@auth.hasAnyPermission('pos.operate', 'sales.manage')")
     public PosApi.SessionResponse closeSession(
             @PathVariable String id,
             @RequestBody PosApi.CloseSessionRequest request
@@ -65,7 +65,7 @@ public class PosController {
     }
 
     @PostMapping("/transactions/sale")
-    @PreAuthorize("hasAuthority('pos.operate') or hasAuthority('sales.write') or hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("@auth.hasAnyPermission('pos.operate', 'sales.manage')")
     public PosApi.TransactionResponse processSale(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody PosApi.ProcessSaleRequest request
@@ -75,7 +75,7 @@ public class PosController {
     }
 
     @PostMapping("/transactions/return")
-    @PreAuthorize("hasAuthority('pos.operate') or hasAuthority('sales.write') or hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("@auth.hasAnyPermission('pos.operate', 'sales.manage')")
     public PosApi.TransactionResponse processReturn(
             @AuthenticationPrincipal Jwt jwt,
             @RequestBody PosApi.ProcessReturnRequest request
@@ -85,13 +85,13 @@ public class PosController {
     }
 
     @GetMapping("/transactions")
-    @PreAuthorize("hasAuthority('pos.read') or hasAuthority('sales.read') or hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("@auth.hasAnyPermission('pos.read', 'sales.read')")
     public List<PosApi.TransactionResponse> listTransactions() {
         return posService.listTransactions();
     }
 
     @GetMapping("/summary")
-    @PreAuthorize("hasAuthority('pos.read') or hasAuthority('sales.read') or hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+    @PreAuthorize("@auth.hasAnyPermission('pos.read', 'sales.read')")
     public PosApi.PosSummaryResponse getSummary() {
         return posService.getSummary();
     }

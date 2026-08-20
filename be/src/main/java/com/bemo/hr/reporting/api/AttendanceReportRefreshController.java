@@ -20,7 +20,7 @@ public class AttendanceReportRefreshController {
     }
 
     @PostMapping("/recalculate")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
+    @PreAuthorize("@auth.hasPermission('reports.decide')")
     public Map<String, Object> recalculate(@RequestParam int year, @RequestParam int month,
                                            Authentication authentication) {
         boolean refreshed = refreshService.refreshMonth(year, month, authentication.getName());

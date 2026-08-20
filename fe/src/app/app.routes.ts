@@ -402,6 +402,13 @@ export const routes: Routes = [
           import('./features/users/users.page').then((module) => module.UsersPage),
       },
       {
+        path: 'access/policy-groups',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SUPER_ADMIN', 'ADMIN'], menuId: 'users' },
+        loadComponent: () =>
+          import('./features/users/pages/policy-groups/policy-groups.page').then((m) => m.PolicyGroupsPageComponent),
+      },
+      {
         path: 'workforce',
         canActivate: [roleGuard],
         data: {

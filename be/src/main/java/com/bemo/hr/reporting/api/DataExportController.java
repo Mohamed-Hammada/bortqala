@@ -18,7 +18,7 @@ import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/api/v1/exports")
-@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'FINANCE_MANAGER', 'VIEWER')")
+@PreAuthorize("@auth.hasAnyPermission('reports.read', 'dashboard.view', 'finance.read', 'employees.read')")
 @RequiredArgsConstructor
 public class DataExportController {
     private final DataExportService dataExportService;

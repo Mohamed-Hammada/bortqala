@@ -192,6 +192,61 @@ export class AuthService {
     return u.canViewSalary ?? true;
   });
 
+  readonly permissions = signal<Set<string>>(new Set());
+  readonly branchScopes = signal<Set<string>>(new Set());
+  readonly costCenterScopes = signal<Set<string>>(new Set());
+
+  loadMyPermissions(): void {
+    if (!this.authenticated()) {
+      this.permissions.set(new Set());
+      this.branchScopes.set(new Set());
+      this.costCenterScopes.set(new Set());
+      return;
+    }
+    this.httpClient.get<{ permissions: string[]; branchScopes: string[]; costCenterScopes: string[] }>('/api/v1/access/me/permissions')
+      .subscribe({
+        next: (res) => {
+          this.permissions.set(new Set(res.permissions || []));
+          this.branchScopes.set(new Set(res.branchScopes || []));
+          this.costCenterScopes.set(new Set(res.costCenterScopes || []));
+        },
+        error: () => {
+          // If fails or offline, fallback to empty or admin bypass
+        },
+      });
+  }
+
+  hasPermission(permission: string): boolean {
+    if (!permission) return true;
+    if (this.isSuperAdmin() || this.hasAnyRole(['ADMIN'])) return true;
+    const current = this.permissions();
+    return current.has('*') || current.has(permission.trim());
+  }
+
+  hasAnyPermission(permissions: string[]): boolean {
+    if (!permissions || permissions.length === 0) return true;
+    if (this.isSuperAdmin() || this.hasAnyRole(['ADMIN'])) return true;
+    const current = this.permissions();
+    if (current.has('*')) return true;
+    return permissions.some((p) => current.has(p.trim()));
+  }
+
+  hasBranchAccess(branchId: string): boolean {
+    if (!branchId) return true;
+    if (this.isSuperAdmin() || this.hasAnyRole(['ADMIN'])) return true;
+    const scopes = this.branchScopes();
+    if (scopes.size === 0 || scopes.has('*')) return true;
+    return scopes.has(branchId.trim());
+  }
+
+  hasCostCenterAccess(costCenterId: string): boolean {
+    if (!costCenterId) return true;
+    if (this.isSuperAdmin() || this.hasAnyRole(['ADMIN'])) return true;
+    const scopes = this.costCenterScopes();
+    if (scopes.size === 0 || scopes.has('*')) return true;
+    return scopes.has(costCenterId.trim());
+  }
+
   isSuperAdmin(): boolean { return this.user()?.roles.includes('SUPER_ADMIN') ?? false; }
 
   hasAnyRole(roles: readonly RoleCode[]): boolean {

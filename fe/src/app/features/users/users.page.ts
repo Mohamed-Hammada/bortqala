@@ -26,6 +26,9 @@ import { AccessService } from './access.service';
 
 import { NAV_ITEMS, WORKSPACE_ORDER } from '../../core/navigation/app-navigation';
 
+import { RouterLink } from '@angular/router';
+import { UserPolicyAssignmentModalComponent } from './ui/user-policy-assignment-modal/user-policy-assignment-modal.component';
+
 export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = NAV_ITEMS
   .filter((item) => item.showInPermissionEditor !== false)
   .map((item) => ({
@@ -35,7 +38,7 @@ export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = NAV_IT
 
 @Component({
   selector: 'app-users-page',
-  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent, IconComponent],
+  imports: [ReactiveFormsModule, TablePaginationComponent, ModalDialogComponent, IconComponent, UserPolicyAssignmentModalComponent, RouterLink],
   providers: [UsersStore],
   templateUrl: './users.page.html',
   styleUrl: './users.page.scss',
@@ -44,6 +47,18 @@ export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = NAV_IT
 
 
 export class UsersPage {
+  readonly policyModalUserId = signal<string | null>(null);
+  readonly policyModalUserName = signal<string>('');
+
+  openPolicyModal(user: AuthUser): void {
+    this.policyModalUserId.set(user.id);
+    this.policyModalUserName.set(user.displayName);
+  }
+
+  closePolicyModal(): void {
+    this.policyModalUserId.set(null);
+  }
+
   // BORTQALA_RUNTIME_20260816_V2_USER_REASON_FIELD
   readonly accessReasonEditing = signal(false);
 

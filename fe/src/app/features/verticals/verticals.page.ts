@@ -123,7 +123,7 @@ export class VerticalsPage implements OnInit {
         this.loading.set(false);
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to load vertical data');
+        this.error.set(err?.message || this.i18n.t('verticals.loadDataFailed'));
         this.loading.set(false);
       },
     });
@@ -168,7 +168,7 @@ export class VerticalsPage implements OnInit {
         this.resetStudentForm();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to register student');
+        this.error.set(err?.message || this.i18n.t('verticals.registerStudentFailed'));
         this.submitting.set(false);
       },
     });
@@ -199,7 +199,7 @@ export class VerticalsPage implements OnInit {
         this.resetBookingForm();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to create tour booking');
+        this.error.set(err?.message || this.i18n.t('verticals.createBookingFailed'));
         this.submitting.set(false);
       },
     });
@@ -227,7 +227,7 @@ export class VerticalsPage implements OnInit {
         this.resetDeclarationForm();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to open customs file');
+        this.error.set(err?.message || this.i18n.t('verticals.openDeclarationFailed'));
         this.submitting.set(false);
       },
     });
@@ -254,7 +254,7 @@ export class VerticalsPage implements OnInit {
         this.resetContractForm();
       },
       error: (err) => {
-        this.error.set(err?.message || 'Failed to create 3PL contract');
+        this.error.set(err?.message || this.i18n.t('verticals.createContractFailed'));
         this.submitting.set(false);
       },
     });

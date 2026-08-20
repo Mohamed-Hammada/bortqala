@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { I18nService } from '../../../core/i18n.service';
 import {
   CertifyClaimRequest,
   CreateProgressClaimRequest,
@@ -13,6 +14,7 @@ import {
 })
 export class ClaimService {
   private readonly http = inject(HttpClient);
+  private readonly i18n = inject(I18nService);
 
   readonly claims = signal<ProjectProgressClaim[]>([]);
   readonly currentClaim = signal<ProjectProgressClaim | null>(null);
@@ -29,7 +31,7 @@ export class ClaimService {
           this.loading.set(false);
         },
         error: (err) => {
-          this.error.set(err.message || 'Failed to load claims');
+          this.error.set(err.message || this.i18n.t('projects.loadClaimsFailed'));
           this.loading.set(false);
         },
       })
@@ -45,7 +47,7 @@ export class ClaimService {
           this.loading.set(false);
         },
         error: (err) => {
-          this.error.set(err.message || 'Failed to fetch claim');
+          this.error.set(err.message || this.i18n.t('projects.fetchClaimFailed'));
           this.loading.set(false);
         },
       })
