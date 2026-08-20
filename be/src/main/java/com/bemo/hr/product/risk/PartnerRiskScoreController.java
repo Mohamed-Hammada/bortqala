@@ -12,7 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/risk-scores")
 @RequiredArgsConstructor
-@PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.WORKFORCE_MANAGER)
+@PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_WORKFORCE_MANAGER)
 public class PartnerRiskScoreController {
     private final PartnerRiskScoreService service;
 

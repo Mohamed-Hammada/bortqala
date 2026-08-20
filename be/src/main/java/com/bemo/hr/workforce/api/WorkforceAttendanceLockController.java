@@ -20,19 +20,19 @@ public class WorkforceAttendanceLockController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_HR_MANAGER_WORKFORCE_MANAGER)
     public WorkforceAttendanceLock lockAttendance(@RequestBody LockAttendancePayload payload) {
         return lockService.lockAttendance(payload.contractorId(), payload.periodId(), payload.totalHours(), payload.lockedBy());
     }
 
     @PostMapping("/{id}/correct")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_HR_MANAGER_WORKFORCE_MANAGER)
     public WorkforceAttendanceLock correctLock(@PathVariable String id, @RequestBody CorrectLockPayload payload) {
         return lockService.correctLock(id, payload.newTotalHours(), payload.reason());
     }
 
     @GetMapping("/contractors/{contractorId}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.VIEWER + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_HR_MANAGER_VIEWER_WORKFORCE_MANAGER)
     public List<WorkforceAttendanceLock> getLocksForContractor(@PathVariable String contractorId) {
         return lockService.getLocksForContractor(contractorId);
     }

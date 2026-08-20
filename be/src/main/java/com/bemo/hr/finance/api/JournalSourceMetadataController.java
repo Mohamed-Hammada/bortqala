@@ -17,13 +17,13 @@ public class JournalSourceMetadataController {
     }
 
     @PostMapping("/attach")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public JournalSourceMetadata attachSourceMetadata(@RequestBody AttachMetadataPayload payload) {
         return metadataService.attachSourceMetadata(payload.journalId(), payload.sourceDocumentType(), payload.sourceDocumentId());
     }
 
     @GetMapping("/{journalId}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.VIEWER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
     public JournalSourceMetadata getMetadata(@PathVariable String journalId) {
         return metadataService.getMetadata(journalId);
     }

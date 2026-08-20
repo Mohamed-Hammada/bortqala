@@ -22,7 +22,7 @@ public class BankDifferencePostingController {
     }
 
     @PostMapping("/post")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.TREASURY_USER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_TREASURY_USER)
     public BankDifferencePosting postDifference(@RequestBody PostDifferencePayload payload) {
         return service.postDifference(payload.statementLineId(), BankDifferencePosting.DifferenceType.valueOf(payload.differenceType()), payload.amount());
     }

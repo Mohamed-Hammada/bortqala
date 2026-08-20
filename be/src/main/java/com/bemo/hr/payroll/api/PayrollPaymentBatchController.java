@@ -20,19 +20,19 @@ public class PayrollPaymentBatchController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.HR_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_HR_MANAGER)
     public PayrollPaymentBatch createBatch(@RequestBody CreateBatchPayload payload) {
         return batchService.createBatch(payload.payrollPeriodId(), payload.totalAmount(), payload.employeeCount());
     }
 
     @PostMapping("/{id}/process")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public PayrollPaymentBatch processBatch(@PathVariable String id) {
         return batchService.processBatch(id);
     }
 
     @GetMapping("/period/{payrollPeriodId}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.HR_MANAGER + " or " + Roles.VIEWER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_HR_MANAGER_VIEWER)
     public List<PayrollPaymentBatch> getBatchesForPeriod(@PathVariable String payrollPeriodId) {
         return batchService.getBatchesForPeriod(payrollPeriodId);
     }

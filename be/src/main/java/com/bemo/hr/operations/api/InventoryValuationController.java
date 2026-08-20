@@ -13,13 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class InventoryValuationController {
 
     @PostMapping("/calculate")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.INVENTORY_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_INVENTORY_MANAGER)
     public void calculateValuation() {
         throw legacyEndpointDisabled();
     }
 
     @PostMapping("/reconciliation")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.INVENTORY_MANAGER + " or " + Roles.VIEWER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_INVENTORY_MANAGER_VIEWER)
     public void reconcile() {
         throw legacyEndpointDisabled();
     }

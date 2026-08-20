@@ -20,19 +20,19 @@ public class QualityPlanController {
     }
 
     @PostMapping("/plans")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.MANUFACTURING_MANAGER + " or " + Roles.QUALITY_MANAGER)
+    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER_QUALITY_MANAGER)
     public QualityPlanHeader createPlan(@RequestBody CreatePlanPayload payload) {
         return qualityPlanService.createPlan(payload.planCode(), payload.name(), payload.itemId(), QualityPlanHeader.TargetCategory.valueOf(payload.targetCategory()));
     }
 
     @PostMapping("/dispositions")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.MANUFACTURING_MANAGER + " or " + Roles.QUALITY_MANAGER)
+    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER_QUALITY_MANAGER)
     public QualityDisposition recordDisposition(@RequestBody RecordDispositionPayload payload) {
         return qualityPlanService.recordDisposition(payload.dispositionNumber(), payload.planId(), payload.inspectionId(), QualityDisposition.Result.valueOf(payload.result()), payload.notes());
     }
 
     @GetMapping("/plans/items/{itemId}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.MANUFACTURING_MANAGER + " or " + Roles.QUALITY_MANAGER + " or " + Roles.VIEWER)
+    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER_QUALITY_MANAGER_VIEWER)
     public List<QualityPlanHeader> getPlansByItem(@PathVariable String itemId) {
         return qualityPlanService.getPlansByItem(itemId);
     }

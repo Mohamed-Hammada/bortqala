@@ -19,13 +19,13 @@ public class WorkforceRequestApprovalController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER + " or " + Roles.WORKFORCE_REVIEWER)
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
     public WorkforceRequestApproval submitDecision(@RequestBody SubmitDecisionPayload payload) {
         return approvalService.submitDecision(payload.requestId(), payload.approverUserId(), payload.decision(), payload.comment());
     }
 
     @GetMapping("/{requestId}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.VIEWER + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_VIEWER_WORKFORCE_MANAGER)
     public List<WorkforceRequestApproval> getApprovalsForRequest(@PathVariable String requestId) {
         return approvalService.getApprovalsForRequest(requestId);
     }

@@ -16,7 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/trade/sales")
-@PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER + " or " + Roles.SALES_MANAGER)
+@PreAuthorize(Roles.ADMIN_HR_MANAGER_SALES_MANAGER)
 @RequiredArgsConstructor
 public class SalesController {
     private final SalesOrderFullService salesOrderFullService;
@@ -28,19 +28,19 @@ public class SalesController {
     }
 
     @PostMapping("/orders")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.SALES_MANAGER)
+    @PreAuthorize(Roles.ADMIN_SALES_MANAGER)
     public SalesApi.SalesOrderResponse createSalesOrder(@Valid @RequestBody SalesApi.SalesOrderPayload payload, Authentication auth) {
         return salesOrderFullService.createOrder(payload, auth.getName());
     }
 
     @PostMapping("/orders/{id}/confirm")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.SALES_MANAGER)
+    @PreAuthorize(Roles.ADMIN_SALES_MANAGER)
     public SalesApi.SalesOrderResponse confirmSalesOrder(@PathVariable String id, Authentication auth) {
         return salesOrderFullService.confirmOrder(id, auth.getName());
     }
 
     @PostMapping("/orders/{id}/cancel")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.SALES_MANAGER)
+    @PreAuthorize(Roles.ADMIN_SALES_MANAGER)
     public SalesApi.SalesOrderResponse cancelSalesOrder(@PathVariable String id, Authentication auth) {
         return salesOrderFullService.cancelOrder(id, auth.getName());
     }
@@ -51,13 +51,13 @@ public class SalesController {
     }
 
     @PostMapping("/receivables/invoices")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.SALES_MANAGER)
+    @PreAuthorize(Roles.ADMIN_SALES_MANAGER)
     public SalesApi.InvoiceResponse createInvoice(@Valid @RequestBody SalesApi.InvoiceRequest request, Authentication auth) {
         return receivablesService.createInvoice(request, auth.getName());
     }
 
     @PostMapping("/receivables/invoices/{id}/issue")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.SALES_MANAGER)
+    @PreAuthorize(Roles.ADMIN_SALES_MANAGER)
     public SalesApi.InvoiceResponse issueInvoice(@PathVariable String id, Authentication auth) {
         return receivablesService.issueInvoice(id, auth.getName());
     }
@@ -68,7 +68,7 @@ public class SalesController {
     }
 
     @PostMapping("/receivables/receipts")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.SALES_MANAGER)
+    @PreAuthorize(Roles.ADMIN_SALES_MANAGER)
     public SalesApi.ReceiptResponse receipt(@Valid @RequestBody SalesApi.ReceiptRequest request, Authentication auth) {
         return receivablesService.recordReceipt(request, auth.getName());
     }
@@ -84,7 +84,7 @@ public class SalesController {
     }
 
     @PutMapping("/customers/{customerId}/credit")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.SALES_MANAGER)
+    @PreAuthorize(Roles.ADMIN_SALES_MANAGER)
     public SalesApi.CreditProfileResponse updateCredit(@PathVariable String customerId, @Valid @RequestBody SalesApi.CreditProfileRequest request, Authentication auth) {
         return receivablesService.updateCredit(customerId, request, auth.getName());
     }
@@ -96,7 +96,7 @@ public class SalesController {
     }
 
     @PutMapping("/receivables/collections/{id}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.SALES_MANAGER)
+    @PreAuthorize(Roles.ADMIN_SALES_MANAGER)
     public SalesApi.CollectionTaskResponse updateCollection(@PathVariable String id, @Valid @RequestBody SalesApi.CollectionTaskRequest request, Authentication auth) {
         return receivablesService.updateTask(id, request, auth.getName());
     }

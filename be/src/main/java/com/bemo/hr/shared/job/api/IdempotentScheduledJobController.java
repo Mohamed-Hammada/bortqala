@@ -22,7 +22,7 @@ public class IdempotentScheduledJobController {
     }
 
     @GetMapping("/executions/{jobName}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.VIEWER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
     public List<ScheduledJobExecutionRecord> getExecutions(@PathVariable String jobName) {
         return jobService.getExecutions(jobName);
     }

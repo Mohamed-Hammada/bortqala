@@ -20,13 +20,13 @@ public class PeriodCloseController {
     }
 
     @GetMapping("/readiness/{periodId}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.AUDITOR + " or " + Roles.FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER)
     public PeriodCloseOrchestratorService.PeriodReadinessReport checkReadiness(@PathVariable String periodId) {
         return orchestratorService.checkReadiness(periodId);
     }
 
     @PostMapping("/execute/{periodId}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public List<PeriodCloseExecutionRecord> executeClose(@PathVariable String periodId,
                                                          @RequestParam(required = false) Long expectedVersion,
                                                          Authentication authentication) {

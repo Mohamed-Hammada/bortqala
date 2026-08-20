@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/parties")
 @RequiredArgsConstructor
-@PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.SALES_MANAGER)
+@PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_PROCUREMENT_MANAGER_SALES_MANAGER)
 public class PartyFinancialPositionController {
 
     private final PartyFinancialPositionService service;

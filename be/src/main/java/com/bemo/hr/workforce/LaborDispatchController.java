@@ -20,38 +20,38 @@ public class LaborDispatchController {
     }
 
     @PostMapping("/dispatches")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
     public LaborDispatch createDispatch(@RequestBody CreateDispatchPayload payload, Authentication authentication) {
         LocalDate dispatchDate = payload.dispatchDate() == null ? null : LocalDate.parse(payload.dispatchDate());
         return laborDispatchService.createDispatch(payload.requestId(), payload.contractorId(), dispatchDate, authentication.getName());
     }
 
     @GetMapping("/dispatches")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.VIEWER + " or " + Roles.WORKFORCE_FINANCE + " or " + Roles.WORKFORCE_MANAGER + " or " + Roles.WORKFORCE_REVIEWER)
+    @PreAuthorize(Roles.ADMIN_VIEWER_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
     public List<LaborDispatch> listDispatches() {
         return laborDispatchService.listDispatches();
     }
 
     @PostMapping("/dispatches/{id}/dispatch")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
     public LaborDispatch dispatch(@PathVariable String id, Authentication authentication) {
         return laborDispatchService.dispatch(id, authentication.getName());
     }
 
     @PostMapping("/dispatches/{id}/accept")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
     public LaborDispatch accept(@PathVariable String id, Authentication authentication) {
         return laborDispatchService.accept(id, authentication.getName());
     }
 
     @PostMapping("/dispatches/{id}/cancel")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
     public LaborDispatch cancel(@PathVariable String id, Authentication authentication) {
         return laborDispatchService.cancel(id, authentication.getName());
     }
 
     @PostMapping("/dispatches/{id}/assignments")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
     public WorkerAssignment assignWorker(@PathVariable String id, @RequestBody AssignWorkerPayload payload, Authentication authentication) {
         return laborDispatchService.assignWorker(
                 id,
@@ -67,25 +67,25 @@ public class LaborDispatchController {
     }
 
     @PostMapping("/assignments/{id}/accept")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
     public WorkerAssignment acceptAssignment(@PathVariable String id, Authentication authentication) {
         return laborDispatchService.acceptAssignment(id, authentication.getName());
     }
 
     @PostMapping("/assignments/{id}/reject")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
     public WorkerAssignment rejectAssignment(@PathVariable String id, @RequestBody RejectAssignmentPayload payload, Authentication authentication) {
         return laborDispatchService.rejectAssignment(id, payload.reason(), authentication.getName());
     }
 
     @PostMapping("/assignments/{id}/replace")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
     public WorkerAssignment replaceAssignment(@PathVariable String id, @RequestBody ReplaceAssignmentPayload payload, Authentication authentication) {
         return laborDispatchService.replaceAssignment(id, payload.newWorkerId(), payload.agreedRate(), payload.agreedHours(), authentication.getName());
     }
 
     @GetMapping("/dispatches/{id}/assignments")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.VIEWER + " or " + Roles.WORKFORCE_FINANCE + " or " + Roles.WORKFORCE_MANAGER + " or " + Roles.WORKFORCE_REVIEWER)
+    @PreAuthorize(Roles.ADMIN_VIEWER_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
     public List<WorkerAssignment> getAssignments(@PathVariable String id) {
         return laborDispatchService.getAssignmentsByDispatch(id);
     }

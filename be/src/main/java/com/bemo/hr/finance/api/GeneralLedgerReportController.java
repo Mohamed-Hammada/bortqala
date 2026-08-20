@@ -15,7 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/finance/reports/general-ledger")
-@PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.AUDITOR + " or " + Roles.FINANCE_MANAGER + " or " + Roles.VIEWER)
+@PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER_VIEWER)
 public class GeneralLedgerReportController {
     private final GeneralLedgerReportService service;
 

@@ -19,19 +19,19 @@ public class GrirReconciliationController {
     }
 
     @PostMapping("/reconcile")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROCUREMENT_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER)
     public GrirReconciliationRecord reconcileLine(@RequestBody ReconcileLinePayload payload) {
         return grirService.reconcileLine(payload.goodsReceiptLineId(), payload.invoiceLineId(), payload.receivedAmount(), payload.invoicedAmount());
     }
 
     @PostMapping("/{id}/close")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public GrirReconciliationRecord closeRecord(@PathVariable String id) {
         return grirService.closeRecord(id);
     }
 
     @GetMapping("/summary")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.VIEWER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_VIEWER)
     public GrirReconciliationService.GrirSummaryReport getSummaryReport() {
         return grirService.getSummaryReport();
     }

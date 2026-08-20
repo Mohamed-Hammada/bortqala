@@ -18,7 +18,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/operations")
 @RequiredArgsConstructor
-@PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_MANAGER)
+@PreAuthorize(Roles.ADMIN_HR_MANAGER)
 public class OperationsController {
     private final OperationsService operationsService;
     private final InventoryValuationService inventoryValuationService;

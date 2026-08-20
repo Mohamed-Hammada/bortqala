@@ -22,25 +22,25 @@ public class ManufacturingWipController {
     }
 
     @PostMapping("/reservations")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
     public MaterialReservationHeader createReservation(@RequestBody CreateReservationPayload payload) {
         return wipService.createReservation(payload.workOrderId());
     }
 
     @PostMapping("/reservations/{id}/lines")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
     public MaterialReservationLine addReservationLine(@PathVariable String id, @RequestBody AddReservationLinePayload payload) {
         return wipService.addReservationLine(id, payload.itemId(), payload.reservedQuantity());
     }
 
     @PostMapping("/postings")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_MANUFACTURING_MANAGER)
     public WipPostingRecord postWip(@RequestBody PostWipPayload payload) {
         return wipService.postWip(payload.workOrderId(), payload.workCenterId(), payload.laborHours(), payload.machineHours(), payload.totalWipCost());
     }
 
     @GetMapping("/postings/work-orders/{workOrderId}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.MANUFACTURING_MANAGER + " or " + Roles.VIEWER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_MANUFACTURING_MANAGER_VIEWER)
     public List<WipPostingRecord> getWipPostings(@PathVariable String workOrderId) {
         return wipService.getWipPostings(workOrderId);
     }

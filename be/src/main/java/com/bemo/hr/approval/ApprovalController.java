@@ -16,13 +16,13 @@ public class ApprovalController {
     private final ApprovalWorkflowService service;
 
     @GetMapping("/approval-workflows")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.HR_MANAGER + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_HR_MANAGER_PROCUREMENT_MANAGER_WORKFORCE_MANAGER)
     public List<ApprovalApi.WorkflowDefinitionResponse> listDefinitions() {
         return service.listWorkflowDefinitions();
     }
 
     @GetMapping("/approval-workflows/{id}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.HR_MANAGER + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_HR_MANAGER_PROCUREMENT_MANAGER_WORKFORCE_MANAGER)
     public ApprovalApi.WorkflowDefinitionResponse getDefinition(@PathVariable String id) {
         return service.getWorkflowDefinition(id);
     }
@@ -42,7 +42,7 @@ public class ApprovalController {
     }
 
     @PostMapping("/approvals/submit")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.FINANCE_MANAGER + " or " + Roles.HR_MANAGER + " or " + Roles.PROCUREMENT_MANAGER + " or " + Roles.PROCUREMENT_USER + " or " + Roles.WORKFORCE_MANAGER + " or " + Roles.WORKFORCE_REVIEWER)
+    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_HR_MANAGER_PROCUREMENT_MANAGER_PROCUREMENT_USER_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
     public ApprovalApi.ApprovalInstanceDetailResponse submitDocument(@Valid @RequestBody ApprovalApi.SubmitDocumentRequest request) {
         return service.submit(request);
     }

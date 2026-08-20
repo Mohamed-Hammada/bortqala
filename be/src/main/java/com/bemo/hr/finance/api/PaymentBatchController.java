@@ -22,43 +22,43 @@ public class PaymentBatchController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.TREASURY_USER)
+    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_TREASURY_USER)
     public PaymentBatchHeader createBatch(@RequestBody CreateBatchPayload payload, Authentication authentication) {
         return paymentBatchService.createBatch(payload.batchNumber(), PaymentBatchHeader.SourceCategory.valueOf(payload.sourceCategory()), authentication.getName());
     }
 
     @PostMapping("/{id}/items")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.TREASURY_USER)
+    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_TREASURY_USER)
     public PaymentBatchItem addItem(@PathVariable String id, @RequestBody AddItemPayload payload) {
         return paymentBatchService.addBatchItem(id, payload.documentId(), payload.payeeId(), payload.payeeName(), payload.amount(), payload.bankAccount());
     }
 
     @PostMapping("/{id}/submit")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.TREASURY_USER)
+    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_TREASURY_USER)
     public PaymentBatchHeader submitBatch(@PathVariable String id) {
         return paymentBatchService.submitBatch(id);
     }
 
     @PostMapping("/{id}/approve")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public PaymentBatchHeader approveBatch(@PathVariable String id, Authentication authentication) {
         return paymentBatchService.approveBatch(id, authentication.getName());
     }
 
     @PostMapping("/{id}/reject")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
     public PaymentBatchHeader rejectBatch(@PathVariable String id) {
         return paymentBatchService.rejectBatch(id);
     }
 
     @PostMapping("/{id}/disburse")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.TREASURY_USER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_TREASURY_USER)
     public PaymentBatchHeader disburseBatch(@PathVariable String id, @RequestBody DisbursePayload payload, Authentication authentication) {
         return paymentBatchService.disburseBatch(id, payload.operationId(), authentication.getName());
     }
 
     @GetMapping("/{id}/items")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.ACCOUNTANT + " or " + Roles.FINANCE_MANAGER + " or " + Roles.TREASURY_USER + " or " + Roles.VIEWER)
+    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_USER_VIEWER)
     public List<PaymentBatchItem> getItems(@PathVariable String id) {
         return paymentBatchService.getBatchItems(id);
     }

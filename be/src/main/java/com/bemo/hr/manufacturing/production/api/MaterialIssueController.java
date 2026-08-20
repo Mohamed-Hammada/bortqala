@@ -22,25 +22,25 @@ public class MaterialIssueController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.INVENTORY_MANAGER + " or " + Roles.MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER_MANUFACTURING_MANAGER)
     public MaterialIssueHeader createIssue(@RequestBody CreateIssuePayload payload) {
         return issueService.createIssue(payload.issueNumber(), payload.productionOrderId(), LocalDate.parse(payload.issueDate()));
     }
 
     @PostMapping("/{id}/lines")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.INVENTORY_MANAGER + " or " + Roles.MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER_MANUFACTURING_MANAGER)
     public MaterialIssueLine addIssueLine(@PathVariable String id, @RequestBody AddIssueLinePayload payload) {
         return issueService.addIssueLine(id, payload.itemId(), payload.quantity(), payload.warehouseId());
     }
 
     @PostMapping("/{id}/cancel")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.INVENTORY_MANAGER + " or " + Roles.MANUFACTURING_MANAGER)
+    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER_MANUFACTURING_MANAGER)
     public MaterialIssueHeader cancelIssue(@PathVariable String id) {
         return issueService.cancelIssue(id);
     }
 
     @GetMapping("/orders/{orderId}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.INVENTORY_MANAGER + " or " + Roles.MANUFACTURING_MANAGER + " or " + Roles.VIEWER)
+    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER_MANUFACTURING_MANAGER_VIEWER)
     public List<MaterialIssueHeader> getIssuesByOrder(@PathVariable String orderId) {
         return issueService.getIssuesByProductionOrder(orderId);
     }

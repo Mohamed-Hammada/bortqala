@@ -20,19 +20,19 @@ public class CustomerInvoiceController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.SALES_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_SALES_MANAGER)
     public CustomerInvoice createInvoiceFromDelivery(@RequestBody CreateInvoicePayload payload) {
         return invoiceService.createInvoiceFromDelivery(payload.salesOrderId(), payload.deliveredQuantity(), payload.unitPrice(), payload.unitCogs());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.SALES_MANAGER + " or " + Roles.VIEWER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_SALES_MANAGER_VIEWER)
     public CustomerInvoice getInvoice(@PathVariable String id) {
         return invoiceService.getInvoice(id);
     }
 
     @GetMapping("/orders/{salesOrderId}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.SALES_MANAGER + " or " + Roles.VIEWER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_SALES_MANAGER_VIEWER)
     public List<CustomerInvoice> getInvoicesForSalesOrder(@PathVariable String salesOrderId) {
         return invoiceService.getInvoicesForSalesOrder(salesOrderId);
     }

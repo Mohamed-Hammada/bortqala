@@ -19,13 +19,13 @@ public class CustomerReceiptBankMatchController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.SALES_MANAGER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_SALES_MANAGER)
     public CustomerReceiptBankMatch matchReceipt(@RequestBody MatchReceiptPayload payload) {
         return matchService.matchReceipt(payload.receiptId(), payload.bankTransactionId(), payload.matchedAmount());
     }
 
     @GetMapping("/{receiptId}")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.SALES_MANAGER + " or " + Roles.VIEWER)
+    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_SALES_MANAGER_VIEWER)
     public CustomerReceiptBankMatch getMatchForReceipt(@PathVariable String receiptId) {
         return matchService.getMatchForReceipt(receiptId);
     }

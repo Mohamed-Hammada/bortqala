@@ -9,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/imports/attendance")
-@PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.HR_TEAM)
+@PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER)
 public class AttendanceExplorerController {
     private final AttendanceExplorerService attendanceExplorerService;
 
