@@ -1016,6 +1016,10 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260821_v337_fefo_pos_keyboard_translations.yaml
       relativeToChangelogFile: false
+  # I18N_HARMONIZATION_20260821: Missing error code translations + frontend i18n keys
+  - include:
+      file: db/changelog/data/insert/20260821_v338_static_i18n_harmonization.yaml
+      relativeToChangelogFile: false
 
 
 
