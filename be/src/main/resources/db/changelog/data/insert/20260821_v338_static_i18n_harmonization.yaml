@@ -1,0 +1,23 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260821-v338-static-i18n-harmonization
+      author: opencode
+      changes:
+        - loadData:
+            file: db/changelog/data/insert/files/20260821_v338_static_i18n_harmonization.csv
+            separator: ";"
+            encoding: UTF-8
+            tableName: translations
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR
+              - column:
+                  name: translation_key
+                  type: VARCHAR
+              - column:
+                  name: locale
+                  type: VARCHAR
+              - column:
+                  name: text_value
+                  type: CLOB
