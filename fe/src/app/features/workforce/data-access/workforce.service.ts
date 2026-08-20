@@ -342,4 +342,13 @@ export class WorkforceService {
     const payload = action === 'resolve' ? { resolutionNotes: notes } : action === 'reject' ? { reason: notes } : {};
     return this.http.post<WorkforceDispute>(`/api/v1/workforce/disputes/${id}/${action}`, payload);
   }
+
+  getProjectLaborCostReport(projectId: string, periodId?: string): Observable<import('../models/workforce.models').ProjectLaborCostReport> {
+    const params: Record<string, string> = {};
+    if (periodId) params['periodId'] = periodId;
+    return this.http.get<import('../models/workforce.models').ProjectLaborCostReport>(
+      `/api/v1/workforce/settlements/projects/${projectId}/labor-cost-report`,
+      { params }
+    );
+  }
 }

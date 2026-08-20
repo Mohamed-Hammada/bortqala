@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819_v316_crm_allowed_menus
+      author: wolfn
+      comment: "Grant the crm screen to existing users for Feature 24 CRM & Omnichannel."
+      changes:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = CONCAT(COALESCE(allowed_menus, ''), ',crm')
+              WHERE allowed_menus IS NOT NULL AND allowed_menus NOT LIKE '%crm%';
+      rollback:
+        - sql:
+            sql: |
+              UPDATE app_users SET allowed_menus = REPLACE(allowed_menus, ',crm', '')
+              WHERE allowed_menus IS NOT NULL;

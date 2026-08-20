@@ -100,6 +100,15 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'dashboard',
     workspace: 'workspace.homeOverview',
   },
+  {
+    menuId: 'executive-analytics',
+    labelKey: 'nav.executiveAnalytics',
+    descriptionKey: 'nav.executiveAnalyticsHint',
+    path: '/analytics/executive',
+    icon: 'reports',
+    workspace: 'workspace.homeOverview',
+    roles: PROJECT_ROLES,
+  },
 
   // Projects / Construction Backbone
   {
@@ -338,6 +347,24 @@ export const NAV_ITEMS: NavItem[] = [
     workspace: 'workspace.salesCommercial',
     roles: SALES_ROLES,
   },
+  {
+    menuId: 'pos',
+    labelKey: 'nav.pos',
+    descriptionKey: 'nav.posHint',
+    path: '/trade/pos',
+    icon: 'reports',
+    workspace: 'workspace.salesCommercial',
+    roles: SALES_ROLES,
+  },
+  {
+    menuId: 'crm',
+    labelKey: 'nav.crm',
+    descriptionKey: 'nav.crmHint',
+    path: '/crm',
+    icon: 'users',
+    workspace: 'workspace.salesCommercial',
+    roles: SALES_ROLES,
+  },
 
   // Manufacturing
   {
@@ -434,6 +461,15 @@ export const NAV_ITEMS: NavItem[] = [
     labelKey: 'nav.budgets',
     descriptionKey: 'nav.budgetsHint',
     path: '/finance/budgets',
+    icon: 'reports',
+    workspace: 'workspace.financeAccounting',
+    roles: FINANCE_ROLES,
+  },
+  {
+    menuId: 'eta-tax',
+    labelKey: 'nav.etaTax',
+    descriptionKey: 'nav.etaTaxHint',
+    path: '/compliance/eta-tax',
     icon: 'reports',
     workspace: 'workspace.financeAccounting',
     roles: FINANCE_ROLES,

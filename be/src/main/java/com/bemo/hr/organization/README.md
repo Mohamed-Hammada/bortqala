@@ -1,5 +1,5 @@
-# Organization / المؤسسة
+# Organization & Multi-Company / المؤسسة والشركات المتعددة
 
-**EN:** Owns tenant companies, branches, warehouses, and departments. Read endpoints are side-effect free and return an empty hierarchy until an authorized Admin or Super Admin creates the organization explicitly. Demo organization records belong only to the test/demo fixture path.
+**EN:** Owns tenant companies, branches, warehouses, departments, intercompany due-to/due-from transactions, and multi-branch financial consolidation. Read endpoints are side-effect free and return an empty hierarchy until an authorized Admin or Super Admin creates the organization explicitly. Intercompany transactions enforce sequential numbering `IC-{YEAR}-{SEQ:03}`, company separation, guarded approval/settlement lifecycles, and period eliminations in consolidated financial views. Demo organization records belong only to the test/demo fixture path.
 
-**AR:** تدير هذه الوحدة الشركات والفروع والمخازن والإدارات التابعة للمستأجر. مسارات القراءة لا تعدّل البيانات وتعيد هيكلاً فارغاً حتى ينشئ مدير أو مدير شامل بيانات المؤسسة صراحةً. بيانات المؤسسة التجريبية موجودة فقط في مسار بيانات الاختبار أو العرض التجريبي.
+**AR:** تدير هذه الوحدة الشركات والفروع والمخازن والإدارات، بالإضافة إلى المعاملات المتبادلة بين الشركات (Due-To / Due-From) والتجميع المالي لأداء الفروع والشركات. مسارات القراءة لا تعدّل البيانات وتعيد هيكلاً فارغاً حتى ينشئ مدير أو مدير شامل بيانات المؤسسة صراحةً. تفرض المعاملات بين الشركات ترقيماً متسلسلاً `IC-{YEAR}-{SEQ:03}` وفصلاً للشركات ودورة اعتماد وتسوية واستبعاد محاسبي في القوائم المجمعة. بيانات المؤسسة التجريبية موجودة فقط في مسار بيانات الاختبار أو العرض التجريبي.

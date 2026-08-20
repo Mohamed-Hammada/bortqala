@@ -107,6 +107,14 @@ public final class AccessCatalog {
     public static final String P_LEAVES_MANAGE = "leaves.manage";
     public static final String P_PERFORMANCE_READ = "performance.read";
     public static final String P_PERFORMANCE_MANAGE = "performance.manage";
+    public static final String P_ETA_TAX_READ = "etaTax.read";
+    public static final String P_ETA_TAX_MANAGE = "etaTax.manage";
+    public static final String P_POS_READ = "pos.read";
+    public static final String P_POS_OPERATE = "pos.operate";
+    public static final String P_POS_MANAGE = "pos.manage";
+    public static final String P_CRM_READ = "crm.read";
+    public static final String P_CRM_MANAGE = "crm.manage";
+    public static final String P_CRM_OMNICHANNEL = "crm.omnichannel";
 
     /**
      * Every permission a super user can act on.
@@ -135,7 +143,10 @@ public final class AccessCatalog {
             P_WORKFLOW_DEFINITIONS_READ, P_WORKFLOW_DEFINITIONS_MANAGE,
             P_PROJECTS_READ, P_PROJECTS_MANAGE, P_PROJECTS_WBS_MANAGE, P_PROJECTS_CLOSE,
             P_LEAVES_READ, P_LEAVES_MANAGE,
-            P_PERFORMANCE_READ, P_PERFORMANCE_MANAGE);
+            P_PERFORMANCE_READ, P_PERFORMANCE_MANAGE,
+            P_ETA_TAX_READ, P_ETA_TAX_MANAGE,
+            P_POS_READ, P_POS_OPERATE, P_POS_MANAGE,
+            P_CRM_READ, P_CRM_MANAGE, P_CRM_OMNICHANNEL);
 
     private static final Set<String> HR_READ = Set.of(
             P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_CATEGORIES_READ, P_IMPORTS_READ, P_PARTIES_READ,
@@ -150,8 +161,8 @@ public final class AccessCatalog {
             P_ATTENDANCE_READ, P_SETTLEMENTS_READ, P_ADVANCES_READ,
             P_CONTRACTOR_ACCOUNTS_READ, P_WORKFORCE_REPORTS_READ, P_CATEGORIES_READ);
 
-    private static final Set<String> FINANCE_READ = Set.of(P_FINANCE_READ, P_JOURNAL_READ);
-    private static final Set<String> FINANCE_WRITE = Set.of(P_FINANCE_MANAGE, P_JOURNAL_CREATE, P_JOURNAL_POST);
+    private static final Set<String> FINANCE_READ = Set.of(P_FINANCE_READ, P_JOURNAL_READ, P_ETA_TAX_READ);
+    private static final Set<String> FINANCE_WRITE = Set.of(P_FINANCE_MANAGE, P_JOURNAL_CREATE, P_JOURNAL_POST, P_ETA_TAX_MANAGE);
 
     // ------------------------------------------------------------------
     // Page route-guard role matrices (mirrors the frontend route guards,
@@ -328,6 +339,8 @@ public final class AccessCatalog {
                     NO_ROLE_GUARD, null,
                     action("DECIDE", P_REPORTS_DECIDE, false),
                     action("APPROVE", P_REPORTS_APPROVE, true)),
+            page("EXECUTIVE_ANALYTICS", "REPORTS", "/analytics/executive", "executive-analytics", "nav.executiveAnalytics",
+                    P_REPORTS_READ, PROJECT_ROLES, null),
             page("OPERATIONS", "OPERATIONS", "/operations", "operations", "nav.operations", P_OPERATIONS_READ,
                     ADMIN_ONLY, null,
                     action("MANAGE", P_OPERATIONS_MANAGE, false)),
@@ -337,6 +350,14 @@ public final class AccessCatalog {
             page("SALES", "TRADE", "/trade/sales", "sales", "nav.sales", P_SALES_READ,
                     SALES_ROLES, FEATURE_SALES,
                     action("MANAGE", P_SALES_MANAGE, false)),
+            page("POS", "TRADE", "/trade/pos", "pos", "pos.title", P_POS_READ,
+                    SALES_ROLES, FEATURE_SALES,
+                    action("OPERATE", P_POS_OPERATE, false),
+                    action("MANAGE", P_POS_MANAGE, true)),
+            page("CRM", "TRADE", "/crm", "crm", "nav.crm", P_CRM_READ,
+                    SALES_ROLES, FEATURE_SALES,
+                    action("MANAGE", P_CRM_MANAGE, false),
+                    action("OMNICHANNEL", P_CRM_OMNICHANNEL, false)),
             page("PRODUCTION", "MANUFACTURING", "/manufacturing/production", "production", "nav.production",
                     P_MANUFACTURING_READ, PRODUCTION_ROLES, FEATURE_MANUFACTURING,
                     action("MANAGE", P_MANUFACTURING_MANAGE, false)),
@@ -367,6 +388,9 @@ public final class AccessCatalog {
             page("BUDGETS", "FINANCE", "/finance/budgets", "budgets", "nav.budgets", P_BUDGET_READ,
                     FINANCE_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_BUDGET_MANAGE, false)),
+            page("ETA_TAX", "FINANCE", "/compliance/eta-tax", "eta-tax", "nav.etaTax", P_ETA_TAX_READ,
+                    FINANCE_ROLES, FEATURE_FINANCE,
+                    action("MANAGE", P_ETA_TAX_MANAGE, false)),
             page("ORGANIZATION", "HR", "/organization", "organization", "nav.organization",
                     P_ORGANIZATION_READ, HR_ROLES, null,
                     action("MANAGE", P_ORGANIZATION_MANAGE, false)),

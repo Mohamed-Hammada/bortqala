@@ -29,6 +29,7 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, String> {
                    or lower(cast(a.detailsJson as string)) like concat('%', lower(cast(:search as string)), '%')
                    or lower(cast(a.action as string)) like concat('%', lower(cast(:search as string)), '%')
                    or lower(cast(a.entityType as string)) like concat('%', lower(cast(:search as string)), '%')
+                   or lower(cast(a.reason as string)) like concat('%', lower(cast(:search as string)), '%')
                    or lower(cast(a.username as string)) like concat('%', lower(cast(:search as string)), '%'))
             order by a.occurredAt desc
             """)
@@ -36,6 +37,32 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, String> {
             @Param("entityType") String entityType,
             @Param("action") String action,
             @Param("username") String username,
+            @Param("search") String search,
+            @Param("from") Long from,
+            @Param("to") Long to,
+            Pageable pageable);
+
+    @Query("""
+            select a from AuditLog a
+            where (:entityType is null or a.entityType = :entityType)
+              and (:action is null or a.action = :action)
+              and (:username is null or a.username = :username)
+              and (:isBreakGlass is null or a.isBreakGlass = :isBreakGlass)
+              and (:from is null or a.occurredAt >= :from)
+              and (:to is null or a.occurredAt <= :to)
+              and (cast(:search as string) is null or lower(cast(a.entityId as string)) like concat('%', lower(cast(:search as string)), '%')
+                   or lower(cast(a.detailsJson as string)) like concat('%', lower(cast(:search as string)), '%')
+                   or lower(cast(a.action as string)) like concat('%', lower(cast(:search as string)), '%')
+                   or lower(cast(a.entityType as string)) like concat('%', lower(cast(:search as string)), '%')
+                   or lower(cast(a.reason as string)) like concat('%', lower(cast(:search as string)), '%')
+                   or lower(cast(a.username as string)) like concat('%', lower(cast(:search as string)), '%'))
+            order by a.occurredAt desc
+            """)
+    Page<AuditLog> searchWithBreakGlass(
+            @Param("entityType") String entityType,
+            @Param("action") String action,
+            @Param("username") String username,
+            @Param("isBreakGlass") Boolean isBreakGlass,
             @Param("search") String search,
             @Param("from") Long from,
             @Param("to") Long to,

@@ -1,0 +1,107 @@
+id;translation_key;locale;text_value
+v315-001;crm.eyebrow;ar-EG;إدارة علاقات العملاء والتواصل الموحد
+v315-002;crm.eyebrow;en-US;Customer Relationship Management (CRM)
+v315-003;crm.title;ar-EG;إدارة العملاء والمحادثات الموحدة (CRM & Chatbot)
+v315-004;crm.title;en-US;CRM, Omnichannel & Chatbot Integration
+v315-005;crm.description;ar-EG;متابعة مسار المبيعات والصفقات، التواصل المباشر عبر WhatsApp وFacebook، والرد الآلي الذكي
+v315-006;crm.description;en-US;Track sales pipeline, leads, WhatsApp/Facebook omnichannel inbox and automated chatbot responses
+v315-007;crm.tabPipeline;ar-EG;مسار الصفقات (Pipeline)
+v315-008;crm.tabPipeline;en-US;Sales Pipeline
+v315-009;crm.tabLeads;ar-EG;العملاء المحتملون (Leads)
+v315-010;crm.tabLeads;en-US;Leads & Contacts
+v315-011;crm.tabInbox;ar-EG;صندوق المحادثات (Omnichannel Inbox)
+v315-012;crm.tabInbox;en-US;Omnichannel Inbox
+v315-013;crm.tabChannels;ar-EG;قنوات التواصل والروبوت (Channels)
+v315-014;crm.tabChannels;en-US;Channels & Chatbot
+v315-015;crm.kpiPipelineValue;ar-EG;إجمالي قيمة الصفقات المتوقعة
+v315-016;crm.kpiPipelineValue;en-US;Total Pipeline Value
+v315-017;crm.kpiActiveDeals;ar-EG;الصفقات النشطة
+v315-018;crm.kpiActiveDeals;en-US;Active Deals
+v315-019;crm.kpiConversionRate;ar-EG;نسبة إغلاق الصفقات الناجحة
+v315-020;crm.kpiConversionRate;en-US;Win Rate
+v315-021;crm.kpiUnreadMessages;ar-EG;رسائل واردة غير مقروءة
+v315-022;crm.kpiUnreadMessages;en-US;Unread Inbound Messages
+v315-023;crm.stageNew;ar-EG;عميل جديد
+v315-024;crm.stageNew;en-US;New Lead
+v315-025;crm.stageContacted;ar-EG;تم التواصل
+v315-026;crm.stageContacted;en-US;Contacted
+v315-027;crm.stageQualified;ar-EG;مؤهل للشراء
+v315-028;crm.stageQualified;en-US;Qualified
+v315-029;crm.stageProposal;ar-EG;تم تقديم العرض
+v315-030;crm.stageProposal;en-US;Proposal Sent
+v315-031;crm.stageNegotiation;ar-EG;مفاوضات جارية
+v315-032;crm.stageNegotiation;en-US;Negotiation
+v315-033;crm.stageWon;ar-EG;صفقة رابحة (تم الإغلاق)
+v315-034;crm.stageWon;en-US;Closed Won
+v315-035;crm.stageLost;ar-EG;صفقة خاسرة
+v315-036;crm.stageLost;en-US;Closed Lost
+v315-037;crm.newLead;ar-EG;إضافة عميل محتمل
+v315-038;crm.newLead;en-US;New Lead
+v315-039;crm.leadCode;ar-EG;كود العميل
+v315-040;crm.leadCode;en-US;Lead Code
+v315-041;crm.leadName;ar-EG;اسم العميل / جهة الاتصال
+v315-042;crm.leadName;en-US;Lead / Contact Name
+v315-043;crm.company;ar-EG;اسم الشركة
+v315-044;crm.company;en-US;Company Name
+v315-045;crm.source;ar-EG;مصدر العميل
+v315-046;crm.source;en-US;Lead Source
+v315-047;crm.estimatedValue;ar-EG;القيمة التقديرية
+v315-048;crm.estimatedValue;en-US;Estimated Deal Value
+v315-049;crm.assignedAgent;ar-EG;مسؤول المبيعات
+v315-050;crm.assignedAgent;en-US;Assigned Agent
+v315-051;crm.convertToCustomer;ar-EG;تحويل لعميل رسمي (Business Party)
+v315-052;crm.convertToCustomer;en-US;Convert to Customer
+v315-053;crm.convertedSuccess;ar-EG;تم تحويل العميل المحتمل إلى عميل دائم بنجاح
+v315-054;crm.convertedSuccess;en-US;Lead converted to formal customer successfully
+v315-055;crm.leadSaved;ar-EG;تم حفظ بيانات العميل المحتمل بنجاح
+v315-056;crm.leadSaved;en-US;Lead saved successfully
+v315-057;crm.activities;ar-EG;سجل الأنشطة والمتابعات
+v315-058;crm.activities;en-US;Activities & Timeline
+v315-059;crm.newActivity;ar-EG;تسجيل نشاط جديد
+v315-060;crm.newActivity;en-US;New Activity
+v315-061;crm.activityType;ar-EG;نوع النشاط
+v315-062;crm.activityType;en-US;Activity Type
+v315-063;crm.activitySummary;ar-EG;ملخص النشاط
+v315-064;crm.activitySummary;en-US;Summary
+v315-065;crm.activityDetails;ar-EG;التفاصيل والملاحظات
+v315-066;crm.activityDetails;en-US;Details
+v315-067;crm.activitySaved;ar-EG;تم تسجيل النشاط بنجاح
+v315-068;crm.activitySaved;en-US;Activity saved successfully
+v315-069;crm.conversations;ar-EG;المحادثات الواردة
+v315-070;crm.conversations;en-US;Conversations
+v315-071;crm.noConversations;ar-EG;لا توجد محادثات نشطة حالياً
+v315-072;crm.noConversations;en-US;No conversations active
+v315-073;crm.typeMessage;ar-EG;اكتب ردك هنا...
+v315-074;crm.typeMessage;en-US;Type your reply here...
+v315-075;crm.sendMessage;ar-EG;إرسال الرسالة
+v315-076;crm.sendMessage;en-US;Send Message
+v315-077;crm.botHandled;ar-EG;رد آلي (Bot)
+v315-078;crm.botHandled;en-US;Bot Handled
+v315-079;crm.humanHandled;ar-EG;متابعة موظف
+v315-080;crm.humanHandled;en-US;Agent Handled
+v315-081;crm.channels;ar-EG;قنوات التواصل المربوطة
+v315-082;crm.channels;en-US;Connected Channels
+v315-083;crm.newChannel;ar-EG;ربط قناة تواصل جديدة
+v315-084;crm.newChannel;en-US;Connect New Channel
+v315-085;crm.channelType;ar-EG;نوع القناة
+v315-086;crm.channelType;en-US;Channel Type
+v315-087;crm.channelName;ar-EG;اسم القناة / الحساب
+v315-088;crm.channelName;en-US;Channel Name
+v315-089;crm.accountId;ar-EG;معرف الحساب (Phone ID / Page ID)
+v315-090;crm.accountId;en-US;Account Identifier
+v315-091;crm.apiToken;ar-EG;رمز الوصول (API Access Token)
+v315-092;crm.apiToken;en-US;API Access Token
+v315-093;crm.webhookSecret;ar-EG;الرمز السري للويب هوك (Webhook Secret)
+v315-094;crm.webhookSecret;en-US;Webhook Secret
+v315-095;crm.botEnabled;ar-EG;تفعيل الرد الآلي الذكي (Chatbot)
+v315-096;crm.botEnabled;en-US;Enable Automated Chatbot
+v315-097;crm.greeting;ar-EG;رسالة الترحيب الآلية
+v315-098;crm.greeting;en-US;Auto-Reply Greeting
+v315-099;crm.channelSaved;ar-EG;تم حفظ إعدادات القناة بنجاح
+v315-100;crm.channelSaved;en-US;Channel settings saved successfully
+v315-101;nav.crm;ar-EG;إدارة العملاء (CRM)
+v315-102;nav.crm;en-US;CRM & Omnichannel
+v315-103;nav.crmHint;ar-EG;متابعة مسار صفقات المبيعات والمحادثات الموحدة والروبوت الذكي
+v315-104;nav.crmHint;en-US;CRM sales pipeline, leads and WhatsApp/FB omnichannel chatbot
+v315-105;crm.completed;ar-EG;مكتمل
+v315-106;crm.completed;en-US;Completed

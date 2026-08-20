@@ -1,0 +1,107 @@
+<section class="licensing-card card">
+  <div class="card-header">
+    <div>
+      <h2>{{ i18n.t('licensing.title') }}</h2>
+      <p class="subtitle">{{ i18n.t('licensing.gracePeriod') }}: 14 days offline</p>
+    </div>
+    <div class="header-actions">
+      <button
+        type="button"
+        class="btn ghost"
+        (click)="validate()"
+        [disabled]="loading() || submitting()"
+      >
+        {{ i18n.t('licensing.validateNow') }}
+      </button>
+      <button
+        type="button"
+        class="btn primary"
+        (click)="showInstallModal.set(true)"
+        [disabled]="loading() || submitting()"
+      >
+        {{ i18n.t('licensing.installCert') }}
+      </button>
+    </div>
+  </div>
+
+  @if (message()) {
+    <div class="alert success" role="status">
+      {{ message() }}
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert error" role="alert">
+      {{ error() }}
+      <button type="button" class="btn primary" (click)="loadLicense()">{{ i18n.t('common.retry') }}</button>
+    </div>
+  }
+
+  @if (license(); as lic) {
+    <div class="license-metrics-grid">
+      <div class="lic-card">
+        <span class="label">{{ i18n.t('backups.colStatus') }}</span>
+        <span class="value" [class.success]="lic.status === 'ACTIVE'" [class.danger]="lic.status !== 'ACTIVE'">
+          {{ lic.status }}
+        </span>
+        <small class="hint">{{ lic.isSignatureValid ? 'Ed25519 Verified' : 'INVALID_SIG' }}</small>
+      </div>
+
+      <div class="lic-card">
+        <span class="label">{{ i18n.t('licensing.seatsQuota') }}</span>
+        <span class="value">{{ lic.licensedSeats }} Seats</span>
+        <small class="hint">{{ lic.isPerpetual ? i18n.t('licensing.isPerpetual') : (i18n.t('licensing.daysRemaining') + ': ' + lic.daysRemaining) }}</small>
+      </div>
+
+      <div class="lic-card">
+        <span class="label">{{ i18n.t('licensing.fingerprint') }}</span>
+        <span class="value monospace">{{ (lic.deviceFingerprintHash || '—').slice(0, 16) }}...</span>
+        <small class="hint">{{ i18n.t('licensing.gracePeriod') }}: {{ lic.gracePeriodDays }} days</small>
+      </div>
+    </div>
+
+    <div class="modules-section">
+      <h3>{{ i18n.t('entitlements.tab') }}</h3>
+      <div class="modules-chips">
+        @for (mod of lic.licensedModules; track mod) {
+          <span class="module-chip">{{ mod }}</span>
+        }
+      </div>
+    </div>
+  }
+
+  @if (showInstallModal()) {
+    <div class="modal-overlay" (click)="showInstallModal.set(false)">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ i18n.t('licensing.installCert') }}</h3>
+          <button type="button" class="close-btn" (click)="showInstallModal.set(false)">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-field">
+            <label>{{ i18n.t('licensing.title') }} Key</label>
+            <input type="text" [(ngModel)]="licenseKeyInput" placeholder="BEMO-XXXX-XXXX-XXXX" />
+          </div>
+          <div class="form-field">
+            <label>{{ i18n.t('licensing.certPayload') }}</label>
+            <textarea rows="3" [(ngModel)]="payloadInput" placeholder='{"seats": 50, "perpetual": true}'></textarea>
+          </div>
+          <div class="form-field">
+            <label>{{ i18n.t('licensing.signature') }}</label>
+            <input type="text" [(ngModel)]="signatureInput" placeholder="SIG-ED25519-..." />
+          </div>
+          <div class="form-field">
+            <label>{{ i18n.t('licensing.fingerprint') }}</label>
+            <input type="text" [(ngModel)]="fingerprintInput" placeholder="HWID-HASH-..." />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn ghost" (click)="showInstallModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button type="button" class="btn primary" (click)="submitInstall()" [disabled]="submitting()">
+            {{ i18n.t('licensing.installCert') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</section>

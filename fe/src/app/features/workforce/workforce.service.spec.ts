@@ -60,4 +60,15 @@ describe('WorkforceService', () => {
     expect(req.request.body).toEqual(payload);
     req.flush({ id: 'settl-1', paidAmount: 2500, status: 'PAID' });
   });
+
+  it('should fetch project labor cost report', () => {
+    service.getProjectLaborCostReport('proj-101', 'period-1').subscribe(report => {
+      expect(report.projectId).toBe('proj-101');
+      expect(report.totalWorkersCount).toBe(5);
+    });
+
+    const req = httpMock.expectOne('/api/v1/workforce/settlements/projects/proj-101/labor-cost-report?periodId=period-1');
+    expect(req.request.method).toBe('GET');
+    req.flush({ projectId: 'proj-101', totalWorkersCount: 5, totalAttendanceDays: 50, items: [] });
+  });
 });

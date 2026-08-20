@@ -1,0 +1,107 @@
+id;translation_key;locale;text_value
+v312-001;pos.eyebrow;ar-EG;تجارة التجزئة ونقاط البيع السريعة
+v312-002;pos.eyebrow;en-US;Retail & Point of Sale (POS)
+v312-003;pos.title;ar-EG;نقطة البيع والكاشير السريع (POS)
+v312-004;pos.title;en-US;Fast Point of Sale & Cashier Register
+v312-005;pos.description;ar-EG;إدارة عمليات البيع السريع عبر الباركود، ورديات الكاشير، وتسوية درج النقدية
+v312-006;pos.description;en-US;Manage fast barcode sales, cashier shifts, cash drawer reconciliation and receipts
+v312-007;pos.tabRegister;ar-EG;شاشة الكاشير والبيع
+v312-008;pos.tabRegister;en-US;Cashier Register
+v312-009;pos.tabSessions;ar-EG;ورديات الكاشير والتسوية
+v312-010;pos.tabSessions;en-US;Cashier Shifts & Closing
+v312-011;pos.tabTerminals;ar-EG;أجهزة ونقاط البيع
+v312-012;pos.tabTerminals;en-US;POS Terminals
+v312-013;pos.tabHistory;ar-EG;سجل الفواتير والإيصالات
+v312-014;pos.tabHistory;en-US;Transactions History
+v312-015;pos.terminal;ar-EG;نقطة البيع
+v312-016;pos.terminal;en-US;Terminal
+v312-017;pos.cashier;ar-EG;الكاشير
+v312-018;pos.cashier;en-US;Cashier
+v312-019;pos.session;ar-EG;الوردية
+v312-020;pos.session;en-US;Shift / Session
+v312-021;pos.openShift;ar-EG;فتح وردية جديدة
+v312-022;pos.openShift;en-US;Open Shift
+v312-023;pos.closeShift;ar-EG;إغلاق وتسوية الوردية
+v312-024;pos.closeShift;en-US;Close Shift
+v312-025;pos.openingFloat;ar-EG;رصيد العهدة الافتتاحي (درج النقدية)
+v312-026;pos.openingFloat;en-US;Opening Cash Float
+v312-027;pos.actualCash;ar-EG;النقدية الفعلية بالدرج
+v312-028;pos.actualCash;en-US;Actual Cash in Drawer
+v312-029;pos.actualCard;ar-EG;إجمالي مدفوعات البطاقة الفعلية
+v312-030;pos.actualCard;en-US;Actual Card Total
+v312-031;pos.expectedCash;ar-EG;النقدية المحسوبة
+v312-032;pos.expectedCash;en-US;Expected Cash
+v312-033;pos.expectedCard;ar-EG;إجمالي البطاقات المحسوب
+v312-034;pos.expectedCard;en-US;Expected Card
+v312-035;pos.cashVariance;ar-EG;عجز / زيادة النقدية
+v312-036;pos.cashVariance;en-US;Cash Variance
+v312-037;pos.cardVariance;ar-EG;فارق البطاقات
+v312-038;pos.cardVariance;en-US;Card Variance
+v312-039;pos.scanBarcode;ar-EG;مسح الباركود أو البحث عن صنف...
+v312-040;pos.scanBarcode;en-US;Scan barcode or search item...
+v312-041;pos.cart;ar-EG;سلة المشتريات
+v312-042;pos.cart;en-US;Shopping Cart
+v312-043;pos.cartEmpty;ar-EG;السلة فارغة - امسح باركود أو اختر صنفاً للبدء
+v312-044;pos.cartEmpty;en-US;Cart is empty - scan barcode or pick item to start
+v312-045;pos.clearCart;ar-EG;إفراغ السلة
+v312-046;pos.clearCart;en-US;Clear Cart
+v312-047;pos.tenderCash;ar-EG;نقداً (Cash)
+v312-048;pos.tenderCash;en-US;Cash
+v312-049;pos.tenderCard;ar-EG;بطاقة بنكية (Card)
+v312-050;pos.tenderCard;en-US;Credit / Debit Card
+v312-051;pos.tenderWallet;ar-EG;محفظة إلكترونية (Wallet)
+v312-052;pos.tenderWallet;en-US;E-Wallet
+v312-053;pos.tenderSplit;ar-EG;دفع متعدد (Split)
+v312-054;pos.tenderSplit;en-US;Split Payment
+v312-055;pos.cashTendered;ar-EG;المبلغ المدفوع نقداً
+v312-056;pos.cashTendered;en-US;Cash Tendered
+v312-057;pos.changeDue;ar-EG;المتبقي للعميل (الفكة)
+v312-058;pos.changeDue;en-US;Change Due
+v312-059;pos.completeSale;ar-EG;إتمام العملية والدفع
+v312-060;pos.completeSale;en-US;Complete Sale & Pay
+v312-061;pos.saleSuccess;ar-EG;تمت عملية البيع وطباعة الإيصال بنجاح
+v312-062;pos.saleSuccess;en-US;Sale completed and receipt generated successfully
+v312-063;pos.printReceipt;ar-EG;طباعة الإيصال
+v312-064;pos.printReceipt;en-US;Print Receipt
+v312-065;pos.newTerminal;ar-EG;إضافة نقطة بيع جديدة
+v312-066;pos.newTerminal;en-US;New Terminal
+v312-067;pos.terminalCode;ar-EG;كود نقطة البيع
+v312-068;pos.terminalCode;en-US;Terminal Code
+v312-069;pos.terminalName;ar-EG;اسم نقطة البيع
+v312-070;pos.terminalName;en-US;Terminal Name
+v312-071;pos.terminalSaved;ar-EG;تم حفظ بيانات نقطة البيع بنجاح
+v312-072;pos.terminalSaved;en-US;Terminal saved successfully
+v312-073;pos.shiftOpened;ar-EG;تم فتح الوردية بنجاح
+v312-074;pos.shiftOpened;en-US;Shift opened successfully
+v312-075;pos.shiftClosed;ar-EG;تم إغلاق وتسوية الوردية بنجاح
+v312-076;pos.shiftClosed;en-US;Shift closed and reconciled successfully
+v312-077;pos.noActiveShift;ar-EG;لا توجد وردية مفتوحة حالياً - يرجى فتح وردية للبدء
+v312-078;pos.noActiveShift;en-US;No active shift open - please open a shift to start selling
+v312-079;pos.kpiTodaySales;ar-EG;مبيعات اليوم
+v312-080;pos.kpiTodaySales;en-US;Today Sales
+v312-081;pos.kpiTxnCount;ar-EG;عدد العمليات
+v312-082;pos.kpiTxnCount;en-US;Transactions Count
+v312-083;pos.kpiActiveShifts;ar-EG;الورديات النشطة
+v312-084;pos.kpiActiveShifts;en-US;Active Shifts
+v312-085;pos.receiptNo;ar-EG;رقم الإيصال
+v312-086;pos.receiptNo;en-US;Receipt No.
+v312-087;pos.taxInvoiceReceipt;ar-EG;إيصال فاتورة ضريبية مبسطة
+v312-088;pos.taxInvoiceReceipt;en-US;Simplified Tax Invoice Receipt
+v312-089;pos.thankYou;ar-EG;شكراً لزيارتكم ونسعد بخدمتكم دائماً
+v312-090;pos.thankYou;en-US;Thank you for shopping with us!
+v312-091;pos.returnSale;ar-EG;إرجاع إيصال
+v312-092;pos.returnSale;en-US;Return Receipt
+v312-093;pos.returnSuccess;ar-EG;تم استرجاع الإيصال وإعادة المخزون بنجاح
+v312-094;pos.returnSuccess;en-US;Receipt returned and stock restored successfully
+v312-095;nav.pos;ar-EG;نقطة البيع (POS)
+v312-096;nav.pos;en-US;Point of Sale (POS)
+v312-097;nav.posHint;ar-EG;نظام الكاشير والبيع السريع عبر الباركود وتسوية الورديات
+v312-098;nav.posHint;en-US;Point of sale cashier retail engine and shift reconciliation
+v312-099;pos.subtotal;ar-EG;المجموع الفرعي
+v312-100;pos.subtotal;en-US;Subtotal
+v312-101;pos.tax;ar-EG;ضريبة القيمة المضافة
+v312-102;pos.tax;en-US;VAT Tax
+v312-103;pos.total;ar-EG;الإجمالي الكلي
+v312-104;pos.total;en-US;Grand Total
+v312-105;pos.brandTitle;ar-EG;بيمو لتجارة التجزئة
+v312-106;pos.brandTitle;en-US;Bemo Retail POS

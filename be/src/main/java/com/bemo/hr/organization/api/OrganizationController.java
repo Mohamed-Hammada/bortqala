@@ -1,5 +1,6 @@
 package com.bemo.hr.organization.api;
 
+import com.bemo.hr.organization.application.IntercompanyService;
 import com.bemo.hr.organization.domain.Branch;
 import com.bemo.hr.organization.domain.Company;
 import com.bemo.hr.organization.domain.Department;
@@ -26,15 +27,20 @@ public class OrganizationController {
     private final BranchRepository branchRepository;
     private final WarehouseRepository warehouseRepository;
     private final DepartmentRepository departmentRepository;
+    private final IntercompanyService intercompanyService;
 
-    public OrganizationController(CompanyRepository companyRepository,
-                                  BranchRepository branchRepository,
-                                  WarehouseRepository warehouseRepository,
-                                  DepartmentRepository departmentRepository) {
+    public OrganizationController(
+            CompanyRepository companyRepository,
+            BranchRepository branchRepository,
+            WarehouseRepository warehouseRepository,
+            DepartmentRepository departmentRepository,
+            IntercompanyService intercompanyService
+    ) {
         this.companyRepository = companyRepository;
         this.branchRepository = branchRepository;
         this.warehouseRepository = warehouseRepository;
         this.departmentRepository = departmentRepository;
+        this.intercompanyService = intercompanyService;
     }
 
     @GetMapping
@@ -140,6 +146,46 @@ public class OrganizationController {
                 .orElseThrow(() -> new BusinessRuleException("الإدارة غير موجودة", "ORG_DEPARTMENT_NOT_FOUND", HttpStatus.CONFLICT));
         department.update(payload.companyId(), payload.code(), payload.name(), payload.managerId(), payload.active());
         return toResponse(departmentRepository.save(department));
+    }
+
+    // --- Multi-Branch Financial Consolidation & Intercompany ---
+
+    @GetMapping("/consolidation/summary")
+    public OrganizationApi.ConsolidatedOrganizationSummary getConsolidatedSummary() {
+        return intercompanyService.getConsolidatedSummary();
+    }
+
+    @GetMapping("/intercompany")
+    public List<OrganizationApi.IntercompanyTransactionResponse> listIntercompanyTransactions() {
+        return intercompanyService.listTransactions();
+    }
+
+    @PostMapping("/intercompany")
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM)
+    public OrganizationApi.IntercompanyTransactionResponse createIntercompanyTransaction(
+            @Valid @RequestBody OrganizationApi.CreateIntercompanyPayload payload
+    ) {
+        return intercompanyService.createTransaction(payload);
+    }
+
+    @PostMapping("/intercompany/{id}/approve")
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM)
+    public OrganizationApi.IntercompanyTransactionResponse approveIntercompanyTransaction(@PathVariable String id) {
+        return intercompanyService.approveTransaction(id);
+    }
+
+    @PostMapping("/intercompany/{id}/settle")
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM)
+    public OrganizationApi.IntercompanyTransactionResponse settleIntercompanyTransaction(@PathVariable String id) {
+        return intercompanyService.settleTransaction(id);
+    }
+
+    @PostMapping("/intercompany/eliminate")
+    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM)
+    public OrganizationApi.EliminationResultResponse runPeriodElimination(
+            @Valid @RequestBody OrganizationApi.RunEliminationPayload payload
+    ) {
+        return intercompanyService.runPeriodElimination(payload.period());
     }
 
     private OrganizationApi.CompanyResponse toResponse(Company c) {

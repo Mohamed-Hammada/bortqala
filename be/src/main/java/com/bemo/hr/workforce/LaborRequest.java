@@ -26,6 +26,14 @@ public class LaborRequest {
     private String shiftName;
     @Column(name = "contractor_id", nullable = false, length = 36)
     private String contractorId;
+    @Column(name = "project_id", length = 36)
+    private String projectId;
+    @Column(name = "wbs_node_id", length = 36)
+    private String wbsNodeId;
+    @Column(name = "cost_code_id", length = 36)
+    private String costCodeId;
+    @Column(name = "site_location", length = 160)
+    private String siteLocation;
     @Column(nullable = false, length = 30)
     private String status;
     @Column(length = 1000)
@@ -47,12 +55,22 @@ public class LaborRequest {
 
     public LaborRequest(String requestNumber, Instant requestDate, String branchId, String shiftName,
                         String contractorId, String status, String notes, String createdBy) {
+        this(requestNumber, requestDate, branchId, shiftName, contractorId, null, null, null, null, status, notes, createdBy);
+    }
+
+    public LaborRequest(String requestNumber, Instant requestDate, String branchId, String shiftName,
+                        String contractorId, String projectId, String wbsNodeId, String costCodeId,
+                        String siteLocation, String status, String notes, String createdBy) {
         this.id = UUID.randomUUID().toString();
         this.requestNumber = requestNumber != null ? requestNumber.strip().toUpperCase() : "REQ-" + UUID.randomUUID().toString().substring(0, 6);
         this.requestDate = requestDate != null ? requestDate : Instant.now();
         this.branchId = branchId;
         this.shiftName = shiftName;
         this.contractorId = contractorId;
+        this.projectId = projectId;
+        this.wbsNodeId = wbsNodeId;
+        this.costCodeId = costCodeId;
+        this.siteLocation = siteLocation;
         this.status = status != null ? status.strip().toUpperCase() : "DRAFT";
         this.notes = notes;
         this.createdBy = createdBy;
@@ -63,6 +81,13 @@ public class LaborRequest {
         if ("APPROVED".equalsIgnoreCase(newStatus) || "COMPLETED".equalsIgnoreCase(newStatus)) {
             this.approvedBy = approver;
         }
+    }
+
+    public void assignProject(String projectId, String wbsNodeId, String costCodeId, String siteLocation) {
+        this.projectId = projectId;
+        this.wbsNodeId = wbsNodeId;
+        this.costCodeId = costCodeId;
+        this.siteLocation = siteLocation;
     }
 
     @PrePersist

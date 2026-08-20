@@ -5,7 +5,14 @@
       <h1>{{ i18n.t('organization.title') }}</h1>
       <p>{{ i18n.t('organization.description') }}</p>
     </div>
-    <button class="button primary" (click)="openNew()">＋ {{ i18n.t('organization.add') }}</button>
+    @if (activeTab() === 'intercompany') {
+      <div class="header-actions">
+        <button class="button secondary" (click)="openEliminationModal()">⚡ {{ i18n.t('org.runElimination') }}</button>
+        <button class="button primary" (click)="openNewIntercompany()">＋ {{ i18n.t('org.newIntercompany') }}</button>
+      </div>
+    } @else if (activeTab() !== 'consolidation') {
+      <button class="button primary" (click)="openNew()">＋ {{ i18n.t('organization.add') }}</button>
+    }
   </header>
 
   @if (loading()) {
@@ -28,6 +35,12 @@
     </button>
     <button type="button" class="app-tab" [class.active]="activeTab() === 'departments'" (click)="activeTab.set('departments')">
       {{ i18n.t('organization.tabDepartments') }} ({{ departments().length }})
+    </button>
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'consolidation'" (click)="activeTab.set('consolidation')">
+      📊 {{ i18n.t('org.tabConsolidation') }}
+    </button>
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'intercompany'" (click)="activeTab.set('intercompany')">
+      ⇄ {{ i18n.t('org.tabIntercompany') }} ({{ intercompanyTransactions().length }})
     </button>
   </nav>
 
@@ -138,6 +151,138 @@
               </tr>
             } @empty {
               <tr><td colspan="3"><div class="empty-state">{{ i18n.t('organization.emptyDepartments') }}</div></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Financial Consolidation Tab -->
+    @if (activeTab() === 'consolidation') {
+      @if (consolidationSummary(); as sum) {
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <span class="kpi-label">{{ i18n.t('org.totalRevenue') }}</span>
+            <span class="kpi-value ltr">{{ sum.totalRevenue | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">{{ i18n.t('org.totalExpenses') }}</span>
+            <span class="kpi-value ltr">{{ sum.totalExpenses | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card warning">
+            <span class="kpi-label">{{ i18n.t('org.eliminatedTransfers') }}</span>
+            <span class="kpi-value ltr">{{ sum.eliminatedTransfers | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card highlight">
+            <span class="kpi-label">{{ i18n.t('org.consolidatedNetMargin') }}</span>
+            <span class="kpi-value ltr">{{ sum.consolidatedNetMargin | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card info">
+            <span class="kpi-label">{{ i18n.t('org.activeBranches') }}</span>
+            <span class="kpi-value">{{ sum.activeBranches }}</span>
+          </div>
+          <div class="kpi-card info">
+            <span class="kpi-label">{{ i18n.t('org.totalHeadcount') }}</span>
+            <span class="kpi-value">{{ sum.totalHeadcount }}</span>
+          </div>
+        </div>
+
+        <div class="section-card">
+          <h2 class="section-title">{{ i18n.t('org.branchMatrix') }}</h2>
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>{{ i18n.t('org.branchCode') }}</th>
+                  <th>{{ i18n.t('org.branchName') }}</th>
+                  <th>{{ i18n.t('org.company') }}</th>
+                  <th>{{ i18n.t('org.revenue') }}</th>
+                  <th>{{ i18n.t('org.expenses') }}</th>
+                  <th>{{ i18n.t('org.netProfit') }}</th>
+                  <th>{{ i18n.t('org.marginPercent') }}</th>
+                  <th>{{ i18n.t('org.inventoryValue') }}</th>
+                  <th>{{ i18n.t('org.headcount') }}</th>
+                  <th>{{ i18n.t('org.activeProjects') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (m of sum.branchMetrics; track m.branchId) {
+                  <tr>
+                    <td><strong class="ltr">{{ m.branchCode }}</strong></td>
+                    <td><strong>{{ m.branchName }}</strong></td>
+                    <td>{{ m.companyName }}</td>
+                    <td class="ltr">{{ m.revenue | number:'1.2-2' }}</td>
+                    <td class="ltr">{{ m.expenses | number:'1.2-2' }}</td>
+                    <td class="ltr font-bold" [class.text-success]="m.netProfit >= 0" [class.text-danger]="m.netProfit < 0">
+                      {{ m.netProfit | number:'1.2-2' }}
+                    </td>
+                    <td><span class="badge" [class.success]="m.marginPercent >= 20" [class.warning]="m.marginPercent < 20">{{ m.marginPercent }}%</span></td>
+                    <td class="ltr">{{ m.inventoryValue | number:'1.2-2' }}</td>
+                    <td>{{ m.headcount }}</td>
+                    <td><span class="badge info">{{ m.activeProjects }}</span></td>
+                  </tr>
+                } @empty {
+                  <tr><td colspan="10"><div class="empty-state">{{ i18n.t('organization.emptyBranches') }}</div></td></tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+    }
+
+    <!-- Intercompany Ledger Tab -->
+    @if (activeTab() === 'intercompany') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('org.transactionNumber') }}</th>
+              <th>{{ i18n.t('org.fromEntity') }}</th>
+              <th>{{ i18n.t('org.toEntity') }}</th>
+              <th>{{ i18n.t('org.transactionType') }}</th>
+              <th>{{ i18n.t('org.amount') }}</th>
+              <th>{{ i18n.t('org.status') }}</th>
+              <th>{{ i18n.t('org.eliminationPeriod') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (tx of intercompanyTransactions(); track tx.id) {
+              <tr>
+                <td><strong class="ltr">{{ tx.transactionNumber }}</strong></td>
+                <td>
+                  <strong>{{ tx.fromCompanyName }}</strong>
+                  @if (tx.fromBranchName) { <small class="text-muted">({{ tx.fromBranchName }})</small> }
+                </td>
+                <td>
+                  <strong>{{ tx.toCompanyName }}</strong>
+                  @if (tx.toBranchName) { <small class="text-muted">({{ tx.toBranchName }})</small> }
+                </td>
+                <td><span class="badge info">{{ getTypeLabel(tx.transactionType) }}</span></td>
+                <td><strong class="ltr">{{ tx.amount | number:'1.2-2' }} {{ tx.currency }}</strong></td>
+                <td>
+                  <span class="status"
+                    [class.warning]="tx.status === 'PENDING_APPROVAL' || tx.status === 'DRAFT'"
+                    [class.success]="tx.status === 'APPROVED' || tx.status === 'SETTLED'"
+                    [class.highlight]="tx.status === 'ELIMINATED'">
+                    {{ getStatusLabel(tx.status) }}
+                  </span>
+                </td>
+                <td>{{ tx.eliminatedInPeriod || '—' }}</td>
+                <td>
+                  <div class="table-actions">
+                    @if (tx.status === 'PENDING_APPROVAL' || tx.status === 'DRAFT') {
+                      <button class="button small primary" (click)="approveIntercompany(tx.id)">✓ {{ i18n.t('org.approve') }}</button>
+                    }
+                    @if (tx.status === 'APPROVED') {
+                      <button class="button small secondary" (click)="settleIntercompany(tx.id)">💳 {{ i18n.t('org.settle') }}</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="8"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
             }
           </tbody>
         </table>
@@ -270,6 +415,104 @@
         <button class="button secondary" type="button" (click)="closeDrawer()">{{ i18n.t('common.cancel') }}</button>
         <button class="button primary" type="submit" form="department-form" [disabled]="departmentForm.invalid">{{ i18n.t('organization.saveDepartment') }}</button>
       }
+    </div>
+  </app-modal-dialog>
+
+  <!-- New Intercompany Transaction Modal -->
+  <app-modal-dialog
+    [isOpen]="intercompanyModalOpen()"
+    [title]="i18n.t('org.createIntercompany')"
+    size="wide"
+    [preventOutsideClose]="true"
+    (close)="closeIntercompanyModal()">
+
+    <form [formGroup]="intercompanyForm" (ngSubmit)="submitIntercompany()" id="intercompany-form" class="modal-form">
+      <div class="form-grid">
+        <div class="field">
+          <label>{{ i18n.t('org.fromCompany') }} *</label>
+          <select formControlName="fromCompanyId">
+            @for (c of companies(); track c.id) {
+              <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('org.fromBranch') }}</label>
+          <select formControlName="fromBranchId">
+            <option value="">— {{ i18n.t('common.all') }} —</option>
+            @for (b of branches(); track b.id) {
+              <option [value]="b.id">{{ b.name }} ({{ b.code }})</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('org.toCompany') }} *</label>
+          <select formControlName="toCompanyId">
+            @for (c of companies(); track c.id) {
+              <option [value]="c.id">{{ c.name }} ({{ c.code }})</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('org.toBranch') }}</label>
+          <select formControlName="toBranchId">
+            <option value="">— {{ i18n.t('common.all') }} —</option>
+            @for (b of branches(); track b.id) {
+              <option [value]="b.id">{{ b.name }} ({{ b.code }})</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('org.transactionType') }} *</label>
+          <select formControlName="transactionType">
+            <option value="INVENTORY_TRANSFER">{{ i18n.t('org.typeInventoryTransfer') }}</option>
+            <option value="EXPENSE_ALLOCATION">{{ i18n.t('org.typeExpenseAllocation') }}</option>
+            <option value="MANAGEMENT_FEE">{{ i18n.t('org.typeManagementFee') }}</option>
+            <option value="LOAN_ADVANCE">{{ i18n.t('org.typeLoanAdvance') }}</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('org.amount') }} (EGP) *</label>
+          <input type="number" step="0.01" formControlName="amount" class="ltr" />
+        </div>
+        <div class="field span-2">
+          <label>{{ i18n.t('org.description') }}</label>
+          <input formControlName="description" />
+        </div>
+      </div>
+    </form>
+
+    <div modal-actions class="modal-form-actions">
+      <button class="button secondary" type="button" (click)="closeIntercompanyModal()">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="submit" form="intercompany-form" [disabled]="intercompanyForm.invalid || savingIntercompany()">
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </app-modal-dialog>
+
+  <!-- Run Elimination Modal -->
+  <app-modal-dialog
+    [isOpen]="eliminationModalOpen()"
+    [title]="i18n.t('org.runElimination')"
+    size="normal"
+    [preventOutsideClose]="true"
+    (close)="closeEliminationModal()">
+
+    <form [formGroup]="eliminationForm" (ngSubmit)="submitElimination()" id="elimination-form" class="modal-form">
+      <div class="form-grid">
+        <div class="field span-2">
+          <label>{{ i18n.t('org.eliminationPeriod') }} *</label>
+          <input formControlName="period" placeholder="e.g. 2026-Q3" class="ltr" />
+          <small class="hint-text">{{ i18n.t('org.eliminationPeriodHint') }}</small>
+        </div>
+      </div>
+    </form>
+
+    <div modal-actions class="modal-form-actions">
+      <button class="button secondary" type="button" (click)="closeEliminationModal()">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="submit" form="elimination-form" [disabled]="eliminationForm.invalid || runningElimination()">
+        ⚡ {{ i18n.t('org.eliminate') }}
+      </button>
     </div>
   </app-modal-dialog>
 </section>

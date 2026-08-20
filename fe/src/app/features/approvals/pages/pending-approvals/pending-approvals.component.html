@@ -21,7 +21,15 @@
         <tbody>
           @for (task of visibleTasks(); track task.instanceId) {
             <tr [class.overdue-row]="task.overdue">
-              <td><strong>{{ documentTypeLabel(task.documentType) }}</strong><small>{{ task.documentId }} · {{ task.submittedBy }}</small></td>
+              <td>
+                <strong>{{ documentTypeLabel(task.documentType) }}</strong>
+                <small>
+                  <button type="button" class="doc-link-btn" (click)="openDocument(task)" [title]="i18n.t('approvals.openDocument')">
+                    🔗 {{ task.documentId }}
+                  </button>
+                  · {{ task.submittedBy }}
+                </small>
+              </td>
               <td>{{ task.stepName }} @if (task.delegatedFrom) { <span class="badge delegated">{{ i18n.t('approvals.from') }} {{ task.delegatedFrom }}</span> }</td>
               <td>{{ task.approvalsReceived }}/{{ task.approvalsRequired }}</td>
               <td>@if (task.overdue) { <span class="badge overdue">{{ i18n.t('approvals.overdue') }}</span> } @else { {{ task.submittedAt | date:'yyyy-MM-dd HH:mm' }} }</td>

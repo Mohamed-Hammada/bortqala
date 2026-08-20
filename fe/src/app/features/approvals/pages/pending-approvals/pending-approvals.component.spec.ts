@@ -55,6 +55,20 @@ describe('PendingApprovalsComponent advanced approvals', () => {
     expect(createDelegation).toHaveBeenCalledWith(expect.objectContaining({ delegatorUserId: 'owner', delegateUserId: 'backup', documentType: 'PURCHASE_ORDER' }));
   });
 
+  it('navigates to the corresponding document workbench when openDocument is clicked', () => {
+    const router = (component as any).router;
+    const navigateSpy = vi.spyOn(router, 'navigate');
+
+    component.openDocument(task('PO-101', false));
+    expect(navigateSpy).toHaveBeenCalledWith(['/trade/procurement'], { queryParams: { po: 'PO-101' } });
+
+    component.openDocument({ ...task('PRJ-202', false), documentType: 'PROJECT_LIFECYCLE' });
+    expect(navigateSpy).toHaveBeenCalledWith(['/projects', 'PRJ-202']);
+
+    component.openDocument({ ...task('VO-303', false), documentType: 'VARIATION_ORDER' });
+    expect(navigateSpy).toHaveBeenCalledWith(['/projects', 'VO-303'], { queryParams: { tab: 'claims' } });
+  });
+
   function task(id: string, overdue: boolean): ApprovalTask {
     return { instanceId: id, documentType: 'PURCHASE_ORDER', documentId: id, currentStepOrder: 1,
       stepName: 'Manager', status: 'SUBMITTED', submittedBy: 'requester', submittedAt: 1, overdue,

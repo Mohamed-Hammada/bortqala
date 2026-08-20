@@ -149,6 +149,16 @@ export const routes: Routes = [
           import('./features/partner-risk/partner-risk.page').then((module) => module.PartnerRiskPage),
       },
       {
+        path: 'analytics/executive',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          roles: ['SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER'],
+          menuId: 'executive-analytics',
+        },
+        loadComponent: () =>
+          import('./features/analytics/executive/executive-analytics.page').then((m) => m.ExecutiveAnalyticsPage),
+      },
+      {
         path: 'reports',
         canActivate: [menuAccessGuard],
         data: { menuId: 'reports' },
@@ -204,6 +214,20 @@ export const routes: Routes = [
         data: { roles: ['SALES_MANAGER'], menuId: 'sales' },
         loadComponent: () =>
           import('./features/trade/sales/sales.page').then((module) => module.SalesPage),
+      },
+      {
+        path: 'trade/pos',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SALES_MANAGER'], menuId: 'pos' },
+        loadComponent: () =>
+          import('./features/trade/pos/pos.page').then((module) => module.PosPage),
+      },
+      {
+        path: 'crm',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: { roles: ['SALES_MANAGER'], menuId: 'crm' },
+        loadComponent: () =>
+          import('./features/crm/crm.page').then((module) => module.CrmPage),
       },
       {
         path: 'manufacturing/production',
@@ -275,6 +299,16 @@ export const routes: Routes = [
         },
         loadComponent: () =>
           import('./features/finance/budgets/budgets.page').then((module) => module.BudgetsPage),
+      },
+      {
+        path: 'compliance/eta-tax',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'eta-tax',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+        },
+        loadComponent: () =>
+          import('./features/compliance/eta-tax/eta-tax.page').then((module) => module.EtaTaxPage),
       },
       {
         path: 'organization',

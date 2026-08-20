@@ -33,6 +33,12 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
   { menuId: 'imports', route: '/imports', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER', 'HR_REVIEWER'], requiredFeature: null },
   { menuId: 'parties', route: '/parties', roles: ['ADMIN', 'SUPER_ADMIN', 'HR_MANAGER'], requiredFeature: null },
   { menuId: 'reports', route: '/reports', roles: [], requiredFeature: null },
+  {
+    menuId: 'executive-analytics',
+    route: '/analytics/executive',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER'],
+    requiredFeature: null,
+  },
   { menuId: 'operations', route: '/operations', roles: ['ADMIN', 'SUPER_ADMIN'], requiredFeature: null },
   {
     menuId: 'procurement',
@@ -44,6 +50,8 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     requiredFeature: null,
   },
   { menuId: 'sales', route: '/trade/sales', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], requiredFeature: 'sales.enabled' },
+  { menuId: 'pos', route: '/trade/pos', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], requiredFeature: 'sales.enabled' },
+  { menuId: 'crm', route: '/crm', roles: ['ADMIN', 'SUPER_ADMIN', 'SALES_MANAGER'], requiredFeature: 'sales.enabled' },
   { menuId: 'production', route: '/manufacturing/production', roles: ['ADMIN', 'SUPER_ADMIN', 'MANUFACTURING_MANAGER'], requiredFeature: 'manufacturing.enabled' },
   { menuId: 'quality', route: '/manufacturing/quality', roles: ['ADMIN', 'SUPER_ADMIN', 'MANUFACTURING_MANAGER', 'QUALITY_MANAGER'], requiredFeature: 'quality.enabled' },
   { menuId: 'payroll', route: '/payroll', roles: ['ADMIN', 'SUPER_ADMIN', 'PAYROLL_MANAGER', 'HR_MANAGER', 'HR_REVIEWER'], requiredFeature: 'payroll.enabled' },
@@ -80,6 +88,12 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
   {
     menuId: 'budgets',
     route: '/finance/budgets',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+    requiredFeature: 'finance.enabled',
+  },
+  {
+    menuId: 'eta-tax',
+    route: '/compliance/eta-tax',
     roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
     requiredFeature: 'finance.enabled',
   },

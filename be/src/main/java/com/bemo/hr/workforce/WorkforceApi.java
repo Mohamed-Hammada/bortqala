@@ -142,6 +142,10 @@ public final class WorkforceApi {
             String branchId,
             String shiftName,
             @NotBlank String contractorId,
+            String projectId,
+            String wbsNodeId,
+            String costCodeId,
+            String siteLocation,
             String notes,
             List<LaborRequestItemDto> items
     ) {
@@ -155,6 +159,10 @@ public final class WorkforceApi {
             String shiftName,
             String contractorId,
             String contractorName,
+            String projectId,
+            String wbsNodeId,
+            String costCodeId,
+            String siteLocation,
             String status,
             String notes,
             String createdBy,
@@ -176,8 +184,17 @@ public final class WorkforceApi {
             BigDecimal overtimeHours,
             BigDecimal deductionHours,
             BigDecimal effectiveDailyRate,
-            String notes
+            String notes,
+            String projectId,
+            String wbsNodeId,
+            String costCodeId
     ) {
+        public AttendanceCell(String workerId, String workDate, BigDecimal attendanceValue,
+                              String checkIn, String checkOut, BigDecimal actualHours,
+                              BigDecimal overtimeHours, BigDecimal deductionHours,
+                              BigDecimal effectiveDailyRate, String notes) {
+            this(workerId, workDate, attendanceValue, checkIn, checkOut, actualHours, overtimeHours, deductionHours, effectiveDailyRate, notes, null, null, null);
+        }
     }
 
     public record BatchAttendanceRequest(
@@ -269,6 +286,9 @@ public final class WorkforceApi {
             String settlementId,
             String workerId,
             String workerName,
+            String projectId,
+            String wbsNodeId,
+            String costCodeId,
             BigDecimal attendanceDays,
             BigDecimal dailyWage,
             BigDecimal grossWage,
@@ -356,34 +376,23 @@ public final class WorkforceApi {
     ) {
     }
 
-    // --- Calculation Rules DTOs ---
     public record CalculationRulesResponse(
-            @NotNull BigDecimal overtimeRate,
-            @NotNull BigDecimal overtimeThresholdHours,
-            @NotNull BigDecimal deductionRatePerHour,
-            @NotNull BigDecimal holidayPayRate,
-            @NotNull String standardDailyHours,
-            @NotBlank String description
-    ) {
-    }
-
-    // Advance DTOs
-    public record AdvanceRepayRequest(
-            @NotNull BigDecimal amount,
-            @NotBlank String repaymentType,    // PARTIAL or FULL
-            String repaymentDate,
-            String paymentMethod,
-            String receiptRef,
+            BigDecimal overtimeMultiplier,
+            BigDecimal standardHours,
+            BigDecimal minimumHoursForOvertime,
+            BigDecimal defaultOvertimeRate,
+            String standardWorkHours,
             String notes
     ) {
     }
 
+    // --- Advances DTOs ---
     public record AdvanceCreateRequest(
-            @NotBlank String recipientType,
+            String recipientType,
             String workerId,
             String contractorId,
             String employeeId,
-            @NotNull BigDecimal amount,
+            BigDecimal amount,
             String termType,
             Integer totalInstallments,
             BigDecimal installmentAmount,
@@ -424,17 +433,28 @@ public final class WorkforceApi {
     ) {
     }
 
+    public record AdvanceRepayRequest(
+            BigDecimal amount,
+            String repaymentType,
+            String repaymentDate,
+            String paymentMethod,
+            String receiptRef,
+            String notes
+    ) {
+    }
+
     public record AdvancePolicyRequest(
-            @NotBlank String scopeType,
+            String id,
+            String scopeType,
             String scopeId,
-            @NotBlank String deductionMode,
-            @NotBlank String deductionFrequency,
-            @NotNull BigDecimal maxDeductionPercent,
-            int defaultInstallments,
-            int deferralPeriods,
-            boolean active,
-            @NotBlank String effectiveFrom,
-            String effectiveTo
+            String deductionMode,
+            String deductionFrequency,
+            BigDecimal maxDeductionPercent,
+            Integer defaultInstallments,
+            Integer deferralPeriods,
+            String effectiveFrom,
+            String effectiveTo,
+            Boolean active
     ) {
     }
 
@@ -448,11 +468,41 @@ public final class WorkforceApi {
             BigDecimal maxDeductionPercent,
             int defaultInstallments,
             int deferralPeriods,
-            int version,
+            long version,
             String effectiveFrom,
             String effectiveTo,
             boolean active,
             long updatedAt
+    ) {
+    }
+
+    // --- Project Labor Cost Report DTOs ---
+    public record ProjectLaborCostItem(
+            String workerId,
+            String workerCode,
+            String workerName,
+            String contractorId,
+            String contractorName,
+            String wbsNodeId,
+            String costCodeId,
+            BigDecimal attendanceDays,
+            BigDecimal dailyWage,
+            BigDecimal grossCost,
+            BigDecimal overtimeAmount,
+            BigDecimal netCost
+    ) {
+    }
+
+    public record ProjectLaborCostReportResponse(
+            String projectId,
+            String projectName,
+            String periodId,
+            int totalWorkersCount,
+            BigDecimal totalAttendanceDays,
+            BigDecimal totalGrossLaborCost,
+            BigDecimal totalOvertimeAmount,
+            BigDecimal totalNetLaborCost,
+            List<ProjectLaborCostItem> items
     ) {
     }
 }

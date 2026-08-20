@@ -41,6 +41,12 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'common.urgency': 'درجة الأهمية',
     'common.warning': 'تحذير',
     'platformAdmin.description': 'إدارة المنصة والمستأجرين',
+    'nav.etaTax': 'الضرائب والفاتورة الإلكترونية (ETA)',
+    'nav.etaTaxHint': 'إدارة الفواتير والإيصالات الإلكترونية والربط مع الضرائب المصرية',
+    'nav.pos': 'نقطة البيع (POS)',
+    'nav.posHint': 'نظام الكاشير والبيع السريع عبر الباركود وتسوية الورديات',
+    'nav.crm': 'إدارة العملاء (CRM)',
+    'nav.crmHint': 'متابعة مسار صفقات المبيعات والمحادثات الموحدة والروبوت الذكي',
   },
   'en-US': {
     'nav.settingsHint': 'System settings and preferences',
@@ -72,6 +78,12 @@ const REQUIRED_COPY: Record<SupportedLocale, Record<string, string>> = {
     'common.urgency': 'Urgency',
     'common.warning': 'Warning',
     'platformAdmin.description': 'Platform & Tenant Administration',
+    'nav.etaTax': 'Egypt E-Invoicing (ETA)',
+    'nav.etaTaxHint': 'Egyptian Tax Authority e-invoicing and e-receipt compliance',
+    'nav.pos': 'Point of Sale (POS)',
+    'nav.posHint': 'Point of sale cashier retail engine and shift reconciliation',
+    'nav.crm': 'CRM & Omnichannel',
+    'nav.crmHint': 'CRM sales pipeline, leads and WhatsApp/FB omnichannel chatbot',
   },
 };
 

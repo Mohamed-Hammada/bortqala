@@ -1,6 +1,7 @@
 package com.bemo.hr.workforce;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
 import java.time.LocalDate;
@@ -8,6 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "labor_dispatches")
+@Getter
 public class LaborDispatch {
 
     @Id
@@ -19,6 +21,14 @@ public class LaborDispatch {
     private String requestId;
     @Column(name = "contractor_id", nullable = false, length = 36)
     private String contractorId;
+    @Column(name = "project_id", length = 36)
+    private String projectId;
+    @Column(name = "wbs_node_id", length = 36)
+    private String wbsNodeId;
+    @Column(name = "cost_code_id", length = 36)
+    private String costCodeId;
+    @Column(name = "site_location", length = 160)
+    private String siteLocation;
     @Column(name = "dispatch_date", nullable = false)
     private LocalDate dispatchDate;
     @Enumerated(EnumType.STRING)
@@ -32,13 +42,29 @@ public class LaborDispatch {
     @Column(nullable = false)
     private long version;
 
+    public enum Status {
+        DRAFT,
+        DISPATCHED,
+        ACCEPTED,
+        CANCELLED
+    }
+
     protected LaborDispatch() {
     }
 
     public LaborDispatch(String requestId, String contractorId, LocalDate dispatchDate) {
+        this(requestId, contractorId, null, null, null, null, dispatchDate);
+    }
+
+    public LaborDispatch(String requestId, String contractorId, String projectId, String wbsNodeId,
+                         String costCodeId, String siteLocation, LocalDate dispatchDate) {
         this.id = UUID.randomUUID().toString();
         this.requestId = requestId;
         this.contractorId = contractorId;
+        this.projectId = projectId;
+        this.wbsNodeId = wbsNodeId;
+        this.costCodeId = costCodeId;
+        this.siteLocation = siteLocation;
         this.dispatchDate = dispatchDate;
         this.status = Status.DRAFT;
     }
@@ -64,6 +90,13 @@ public class LaborDispatch {
         this.status = Status.CANCELLED;
     }
 
+    public void assignProject(String projectId, String wbsNodeId, String costCodeId, String siteLocation) {
+        this.projectId = projectId;
+        this.wbsNodeId = wbsNodeId;
+        this.costCodeId = costCodeId;
+        this.siteLocation = siteLocation;
+    }
+
     @PrePersist
     void prePersist() {
         createdAt = System.currentTimeMillis();
@@ -73,45 +106,5 @@ public class LaborDispatch {
     @PreUpdate
     void preUpdate() {
         updatedAt = System.currentTimeMillis();
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getAppId() {
-        return appId;
-    }
-
-    public String getRequestId() {
-        return requestId;
-    }
-
-    public String getContractorId() {
-        return contractorId;
-    }
-
-    public LocalDate getDispatchDate() {
-        return dispatchDate;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public long getCreatedAt() {
-        return createdAt;
-    }
-
-    public long getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public long getVersion() {
-        return version;
-    }
-
-    public enum Status {
-        DRAFT, DISPATCHED, ACCEPTED, CANCELLED
     }
 }

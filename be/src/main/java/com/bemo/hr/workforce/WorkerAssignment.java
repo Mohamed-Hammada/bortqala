@@ -1,6 +1,7 @@
 package com.bemo.hr.workforce;
 
 import jakarta.persistence.*;
+import lombok.Getter;
 import org.hibernate.annotations.TenantId;
 
 import java.math.BigDecimal;
@@ -9,6 +10,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "worker_assignments")
+@Getter
 public class WorkerAssignment {
 
     @Id
@@ -24,6 +26,14 @@ public class WorkerAssignment {
     private String requestLineId;
     @Column(name = "contractor_id", nullable = false, length = 36)
     private String contractorId;
+    @Column(name = "project_id", length = 36)
+    private String projectId;
+    @Column(name = "wbs_node_id", length = 36)
+    private String wbsNodeId;
+    @Column(name = "cost_code_id", length = 36)
+    private String costCodeId;
+    @Column(name = "site_location", length = 160)
+    private String siteLocation;
     @Column(name = "from_date", nullable = false)
     private LocalDate fromDate;
     @Column(name = "to_date", nullable = false)
@@ -45,16 +55,33 @@ public class WorkerAssignment {
     @Column(nullable = false)
     private long version;
 
+    public enum Status {
+        PROPOSED,
+        ACCEPTED,
+        REJECTED,
+        REPLACED
+    }
+
     protected WorkerAssignment() {
     }
 
     public WorkerAssignment(String dispatchId, String workerId, String requestLineId, String contractorId,
+                            LocalDate fromDate, LocalDate toDate, BigDecimal agreedRateSnapshot, BigDecimal agreedHoursSnapshot) {
+        this(dispatchId, workerId, requestLineId, contractorId, null, null, null, null, fromDate, toDate, agreedRateSnapshot, agreedHoursSnapshot);
+    }
+
+    public WorkerAssignment(String dispatchId, String workerId, String requestLineId, String contractorId,
+                            String projectId, String wbsNodeId, String costCodeId, String siteLocation,
                             LocalDate fromDate, LocalDate toDate, BigDecimal agreedRateSnapshot, BigDecimal agreedHoursSnapshot) {
         this.id = UUID.randomUUID().toString();
         this.dispatchId = dispatchId;
         this.workerId = workerId;
         this.requestLineId = requestLineId;
         this.contractorId = contractorId;
+        this.projectId = projectId;
+        this.wbsNodeId = wbsNodeId;
+        this.costCodeId = costCodeId;
+        this.siteLocation = siteLocation;
         this.fromDate = fromDate;
         this.toDate = toDate;
         this.agreedRateSnapshot = agreedRateSnapshot;
@@ -84,6 +111,13 @@ public class WorkerAssignment {
         this.status = Status.REPLACED;
     }
 
+    public void assignProject(String projectId, String wbsNodeId, String costCodeId, String siteLocation) {
+        this.projectId = projectId;
+        this.wbsNodeId = wbsNodeId;
+        this.costCodeId = costCodeId;
+        this.siteLocation = siteLocation;
+    }
+
     @PrePersist
     void prePersist() {
         createdAt = System.currentTimeMillis();
@@ -93,69 +127,5 @@ public class WorkerAssignment {
     @PreUpdate
     void preUpdate() {
         updatedAt = System.currentTimeMillis();
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getAppId() {
-        return appId;
-    }
-
-    public String getDispatchId() {
-        return dispatchId;
-    }
-
-    public String getWorkerId() {
-        return workerId;
-    }
-
-    public String getRequestLineId() {
-        return requestLineId;
-    }
-
-    public String getContractorId() {
-        return contractorId;
-    }
-
-    public LocalDate getFromDate() {
-        return fromDate;
-    }
-
-    public LocalDate getToDate() {
-        return toDate;
-    }
-
-    public BigDecimal getAgreedRateSnapshot() {
-        return agreedRateSnapshot;
-    }
-
-    public BigDecimal getAgreedHoursSnapshot() {
-        return agreedHoursSnapshot;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public String getRejectionReason() {
-        return rejectionReason;
-    }
-
-    public long getCreatedAt() {
-        return createdAt;
-    }
-
-    public long getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public long getVersion() {
-        return version;
-    }
-
-    public enum Status {
-        PROPOSED, ACCEPTED, REJECTED, REPLACED, COMPLETED
     }
 }

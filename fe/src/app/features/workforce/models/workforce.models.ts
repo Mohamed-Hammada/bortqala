@@ -80,6 +80,10 @@ export interface LaborRequest {
   shiftName?: string;
   contractorId: string;
   contractorName?: string;
+  projectId?: string;
+  wbsNodeId?: string;
+  costCodeId?: string;
+  siteLocation?: string;
   status: LaborRequestStatus;
   notes?: string;
   createdBy?: string;
@@ -109,6 +113,9 @@ export interface AttendanceCell {
   deductionHours?: number;
   effectiveDailyRate?: number;
   notes?: string;
+  projectId?: string;
+  wbsNodeId?: string;
+  costCodeId?: string;
 }
 
 export interface ManualAttendanceEntry extends AttendanceCell {
@@ -192,6 +199,9 @@ export interface ContractorSettlementLine {
   settlementId: string;
   workerId: string;
   workerName: string;
+  projectId?: string;
+  wbsNodeId?: string;
+  costCodeId?: string;
   attendanceDays: number;
   dailyWage: number;
   grossWage: number;
@@ -199,6 +209,33 @@ export interface ContractorSettlementLine {
   deductionsAmount: number;
   advanceInstallments: number;
   netWage: number;
+}
+
+export interface ProjectLaborCostItem {
+  workerId: string;
+  workerCode: string;
+  workerName: string;
+  contractorId: string;
+  contractorName: string;
+  wbsNodeId?: string;
+  costCodeId?: string;
+  attendanceDays: number;
+  dailyWage: number;
+  grossCost: number;
+  overtimeAmount: number;
+  netCost: number;
+}
+
+export interface ProjectLaborCostReport {
+  projectId: string;
+  projectName?: string;
+  periodId?: string;
+  totalWorkersCount: number;
+  totalAttendanceDays: number;
+  totalGrossLaborCost: number;
+  totalOvertimeAmount: number;
+  totalNetLaborCost: number;
+  items: ProjectLaborCostItem[];
 }
 
 export interface ContractorSettlementAdjustment {
@@ -333,6 +370,10 @@ export interface LaborDispatch {
   id: string;
   requestId: string;
   contractorId: string;
+  projectId?: string;
+  wbsNodeId?: string;
+  costCodeId?: string;
+  siteLocation?: string;
   dispatchDate: string;
   status: 'DRAFT' | 'DISPATCHED' | 'ACCEPTED' | 'CANCELLED';
   createdAt: number;
@@ -346,6 +387,10 @@ export interface WorkerAssignment {
   workerId: string;
   requestLineId?: string;
   contractorId: string;
+  projectId?: string;
+  wbsNodeId?: string;
+  costCodeId?: string;
+  siteLocation?: string;
   fromDate: string;
   toDate: string;
   agreedRateSnapshot: number;
@@ -374,6 +419,10 @@ export interface WorkforceDispute {
 export interface CreateLaborDispatchPayload {
   requestId: string;
   contractorId: string;
+  projectId?: string;
+  wbsNodeId?: string;
+  costCodeId?: string;
+  siteLocation?: string;
   dispatchDate: string;
 }
 
@@ -381,6 +430,10 @@ export interface CreateWorkerAssignmentPayload {
   workerId: string;
   requestLineId?: string;
   contractorId: string;
+  projectId?: string;
+  wbsNodeId?: string;
+  costCodeId?: string;
+  siteLocation?: string;
   fromDate: string;
   toDate: string;
   agreedRate: number;

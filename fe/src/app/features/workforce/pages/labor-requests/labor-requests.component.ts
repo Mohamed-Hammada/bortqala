@@ -28,6 +28,7 @@ export class LaborRequestsComponent implements OnInit {
 
   form: {
     requestNumber: string; contractorId: string; shiftName: string;
+    projectId?: string; wbsNodeId?: string; costCodeId?: string; siteLocation?: string;
     notes: string; items: LaborRequestItem[];
   } = this.defaultForm();
 
@@ -114,6 +115,7 @@ export class LaborRequestsComponent implements OnInit {
     return {
       requestNumber: 'REQ-' + String(Date.now()).slice(-6),
       contractorId: '', shiftName: this.i18n.t('workforce.ui.requests.firstShift'),
+      projectId: '', wbsNodeId: '', costCodeId: '', siteLocation: '',
       notes: '', items: [] as LaborRequestItem[]
     };
   }

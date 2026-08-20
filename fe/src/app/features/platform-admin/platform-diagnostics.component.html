@@ -1,0 +1,81 @@
+<section class="diagnostics-card card">
+  <div class="card-header">
+    <div>
+      <h2>{{ i18n.t('diagnostics.tab') }}</h2>
+      <p class="subtitle">{{ i18n.t('diagnostics.securityAudit') }}</p>
+    </div>
+    <button
+      type="button"
+      class="btn primary"
+      (click)="refresh()"
+      [disabled]="loading()"
+    >
+      {{ i18n.t('diagnostics.refreshDiagnostics') }}
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">{{ i18n.t('common.loading') }}</div>
+  } @else if (error()) {
+    <div class="alert error" role="alert">
+      {{ error() }}
+      <button type="button" class="btn primary" (click)="loadDiagnostics()">{{ i18n.t('common.retry') }}</button>
+    </div>
+  } @else if (diagnostics(); as diag) {
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <span class="label">{{ i18n.t('diagnostics.systemStatus') }}</span>
+        <span class="value" [class.success]="diag.serviceStatus === 'UP'" [class.warning]="diag.serviceStatus !== 'UP'">
+          {{ diag.serviceStatus }}
+        </span>
+        <small class="hint">{{ diag.correlationId }}</small>
+      </div>
+
+      <div class="metric-card">
+        <span class="label">{{ i18n.t('diagnostics.dbStatus') }}</span>
+        <span class="value" [class.success]="diag.dbStatus === 'UP'" [class.danger]="diag.dbStatus !== 'UP'">
+          {{ diag.dbStatus }}
+        </span>
+        <small class="hint">{{ i18n.t('diagnostics.dbLatency') }}: {{ diag.dbLatencyMs }} {{ i18n.t('diagnostics.ms') }}</small>
+      </div>
+
+      <div class="metric-card">
+        <span class="label">{{ i18n.t('diagnostics.jvmMemory') }}</span>
+        <span class="value">{{ diag.jvmMemoryUsedMb }} / {{ diag.jvmMemoryMaxMb }} {{ i18n.t('diagnostics.mb') }}</span>
+        <small class="hint">{{ i18n.t('diagnostics.uptime') }}: {{ diag.uptimeSeconds }} {{ i18n.t('diagnostics.seconds') }}</small>
+      </div>
+
+      <div class="metric-card">
+        <span class="label">{{ i18n.t('diagnostics.activeSessions') }}</span>
+        <span class="value">{{ diag.activeSessionsCount }}</span>
+        <small class="hint">{{ i18n.t('diagnostics.backgroundJobs') }}: {{ diag.backgroundJobsHealth }}</small>
+      </div>
+    </div>
+
+    @if (diag.securityAudit; as sec) {
+      <div class="security-audit-section">
+        <h3>{{ i18n.t('diagnostics.securityAudit') }}</h3>
+        <div class="audit-list">
+          <div class="audit-row">
+            <span class="audit-name">{{ i18n.t('diagnostics.trustedProxies') }}</span>
+            <span class="badge" [class.success]="sec.trustedProxiesConfigured" [class.danger]="!sec.trustedProxiesConfigured">
+              {{ sec.trustedProxiesCidr }}
+            </span>
+          </div>
+          <div class="audit-row">
+            <span class="audit-name">{{ i18n.t('diagnostics.corsOrigins') }}</span>
+            <span class="badge" [class.success]="sec.corsConfigured" [class.danger]="!sec.corsConfigured">
+              {{ sec.corsAllowedOrigins }}
+            </span>
+          </div>
+          <div class="audit-row">
+            <span class="audit-name">{{ i18n.t('diagnostics.jwtSecretConfig') }}</span>
+            <span class="badge" [class.success]="sec.jwtConfigured" [class.danger]="!sec.jwtConfigured">
+              {{ sec.jwtConfigured ? 'SHA-256' : 'DISABLED' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</section>

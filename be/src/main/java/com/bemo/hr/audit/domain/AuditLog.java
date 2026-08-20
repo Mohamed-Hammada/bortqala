@@ -33,6 +33,15 @@ public class AuditLog {
     @Column(name = "ip_address", length = 50)
     private String ipAddress;
 
+    @Column(name = "reason", length = 500)
+    private String reason;
+
+    @Column(name = "is_break_glass", nullable = false)
+    private boolean isBreakGlass;
+
+    @Column(name = "user_agent", length = 255)
+    private String userAgent;
+
     @Column(name = "occurred_at", nullable = false)
     private long occurredAt;
 
@@ -40,6 +49,11 @@ public class AuditLog {
     }
 
     public AuditLog(String action, String entityType, String entityId, String username, String detailsJson, String ipAddress) {
+        this(action, entityType, entityId, username, detailsJson, ipAddress, null, false, null);
+    }
+
+    public AuditLog(String action, String entityType, String entityId, String username, String detailsJson,
+                    String ipAddress, String reason, boolean isBreakGlass, String userAgent) {
         this.id = UUID.randomUUID().toString();
         this.action = action.strip();
         this.entityType = entityType.strip();
@@ -47,6 +61,9 @@ public class AuditLog {
         this.username = username == null ? "SYSTEM" : username.strip();
         this.detailsJson = detailsJson;
         this.ipAddress = ipAddress;
+        this.reason = reason == null ? null : reason.strip();
+        this.isBreakGlass = isBreakGlass;
+        this.userAgent = userAgent;
         this.occurredAt = System.currentTimeMillis();
     }
 
@@ -81,6 +98,18 @@ public class AuditLog {
 
     public String getIpAddress() {
         return ipAddress;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public boolean isBreakGlass() {
+        return isBreakGlass;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
     }
 
     public long getOccurredAt() {

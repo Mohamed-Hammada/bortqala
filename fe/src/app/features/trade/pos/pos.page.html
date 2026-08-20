@@ -1,0 +1,492 @@
+<div class="pos-page">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <span class="eyebrow">{{ i18n.t('pos.eyebrow') }}</span>
+      <h1 class="page-title">{{ i18n.t('pos.title') }}</h1>
+      <p class="page-desc">{{ i18n.t('pos.description') }}</p>
+    </div>
+    <div class="header-actions">
+      @if (activeSession()) {
+        <div class="active-shift-badge">
+          <span class="pulse-dot"></span>
+          <span class="shift-info">{{ activeSession()?.sessionNumber }}</span>
+          <button class="btn btn-outline-danger btn-sm" (click)="openCloseShiftModal()">
+            {{ i18n.t('pos.closeShift') }}
+          </button>
+        </div>
+      } @else {
+        <button class="btn btn-primary" (click)="openOpenShiftModal()">
+          {{ i18n.t('pos.openShift') }}
+        </button>
+      }
+    </div>
+  </header>
+
+  <!-- KPI Summary Cards -->
+  @if (summary()) {
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-label">{{ i18n.t('pos.kpiTodaySales') }}</span>
+        <span class="kpi-value">{{ summary()?.todaySales | number:'1.2-2' }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">{{ i18n.t('pos.kpiTxnCount') }}</span>
+        <span class="kpi-value">{{ summary()?.todayTransactionsCount }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">{{ i18n.t('pos.kpiActiveShifts') }}</span>
+        <span class="kpi-value highlight">{{ summary()?.activeShiftsCount }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- Tab Navigation -->
+  <div class="tabs-nav">
+    <button class="tab-btn" [class.active]="activeTab() === 'register'" (click)="activeTab.set('register')">
+      {{ i18n.t('pos.tabRegister') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'sessions'" (click)="activeTab.set('sessions')">
+      {{ i18n.t('pos.tabSessions') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'terminals'" (click)="activeTab.set('terminals')">
+      {{ i18n.t('pos.tabTerminals') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'history'" (click)="activeTab.set('history')">
+      {{ i18n.t('pos.tabHistory') }}
+    </button>
+  </div>
+
+  <!-- TAB 1: CASHIER REGISTER -->
+  @if (activeTab() === 'register') {
+    <div class="pos-register-layout">
+      <!-- Left Pane: Catalog & Barcode Scanner -->
+      <div class="catalog-pane">
+        <div class="scanner-bar">
+          <input
+            type="text"
+            class="form-control barcode-input"
+            [placeholder]="i18n.t('pos.scanBarcode')"
+            [value]="barcodeQuery()"
+            (input)="barcodeQuery.set($any($event.target).value)"
+            (keydown.enter)="onBarcodeEnter($event)"
+          />
+        </div>
+
+        <div class="items-grid">
+          @for (item of sampleCatalog; track item.itemId) {
+            <button class="item-touch-card" (click)="addItemToCart(item)">
+              <div class="item-name">{{ item.itemName }}</div>
+              <div class="item-code">{{ item.itemCode }}</div>
+              <div class="item-price">{{ item.unitPrice | number:'1.2-2' }}</div>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Right Pane: Cart & Tender Payment -->
+      <div class="cart-pane">
+        <div class="cart-header">
+          <h2>{{ i18n.t('pos.cart') }}</h2>
+          @if (cartLines().length > 0) {
+            <button class="btn-clear" (click)="clearCart()">{{ i18n.t('pos.clearCart') }}</button>
+          }
+        </div>
+
+        <div class="cart-items-list">
+          @if (cartLines().length === 0) {
+            <div class="empty-cart-state">
+              <p>{{ i18n.t('pos.cartEmpty') }}</p>
+            </div>
+          } @else {
+            @for (line of cartLines(); track line.itemId) {
+              <div class="cart-line-row">
+                <div class="line-info">
+                  <span class="line-title">{{ line.itemName }}</span>
+                  <span class="line-meta">{{ line.unitPrice | number:'1.2-2' }}</span>
+                </div>
+                <div class="line-qty-controls">
+                  <button class="qty-btn" (click)="updateQuantity(line.itemId, line.quantity - 1)">-</button>
+                  <span class="qty-val">{{ line.quantity }}</span>
+                  <button class="qty-btn" (click)="updateQuantity(line.itemId, line.quantity + 1)">+</button>
+                </div>
+                <div class="line-total-val">
+                  {{ line.lineTotal | number:'1.2-2' }}
+                </div>
+                <button class="line-del" (click)="removeItem(line.itemId)">✕</button>
+              </div>
+            }
+          }
+        </div>
+
+        <!-- Financial Breakdown -->
+        <div class="cart-totals">
+          <div class="total-row">
+            <span>{{ i18n.t('pos.subtotal') }}</span>
+            <span>{{ cartSubtotal() | number:'1.2-2' }}</span>
+          </div>
+          <div class="total-row">
+            <span>{{ i18n.t('pos.tax') }} (14%)</span>
+            <span>{{ cartTax() | number:'1.2-2' }}</span>
+          </div>
+          <div class="total-row grand-total">
+            <span>{{ i18n.t('pos.total') }}</span>
+            <span>{{ cartTotal() | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <!-- Tender Methods -->
+        <div class="tender-section">
+          <div class="tender-tabs">
+            <button
+              class="tender-btn"
+              [class.active]="selectedPaymentMethod() === 'CASH'"
+              (click)="selectedPaymentMethod.set('CASH')"
+            >
+              {{ i18n.t('pos.tenderCash') }}
+            </button>
+            <button
+              class="tender-btn"
+              [class.active]="selectedPaymentMethod() === 'CARD'"
+              (click)="selectedPaymentMethod.set('CARD')"
+            >
+              {{ i18n.t('pos.tenderCard') }}
+            </button>
+            <button
+              class="tender-btn"
+              [class.active]="selectedPaymentMethod() === 'WALLET'"
+              (click)="selectedPaymentMethod.set('WALLET')"
+            >
+              {{ i18n.t('pos.tenderWallet') }}
+            </button>
+          </div>
+
+          @if (selectedPaymentMethod() === 'CASH') {
+            <div class="cash-input-group">
+              <label>{{ i18n.t('pos.cashTendered') }}</label>
+              <input
+                type="number"
+                class="form-control"
+                [value]="cashTendered() || cartTotal()"
+                (input)="cashTendered.set(+$any($event.target).value)"
+              />
+              @if (changeDue() > 0) {
+                <div class="change-banner">
+                  <span>{{ i18n.t('pos.changeDue') }}:</span>
+                  <span class="change-amount">{{ changeDue() | number:'1.2-2' }}</span>
+                </div>
+              }
+            </div>
+          }
+
+          <button
+            class="btn btn-success btn-lg btn-block mt-3"
+            [disabled]="cartLines().length === 0 || !activeSession()"
+            (click)="completeSale()"
+          >
+            {{ i18n.t('pos.completeSale') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 2: CASHIER SESSIONS & RECONCILIATION -->
+  @if (activeTab() === 'sessions') {
+    <div class="sessions-tab">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('pos.session') }}</th>
+              <th>{{ i18n.t('pos.terminal') }}</th>
+              <th>{{ i18n.t('pos.openingFloat') }}</th>
+              <th>{{ i18n.t('pos.expectedCash') }}</th>
+              <th>{{ i18n.t('pos.actualCash') }}</th>
+              <th>{{ i18n.t('pos.cashVariance') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ses of sessions(); track ses.id) {
+              <tr>
+                <td><strong>{{ ses.sessionNumber }}</strong></td>
+                <td>{{ ses.terminalId }}</td>
+                <td>{{ ses.openingFloat | number:'1.2-2' }}</td>
+                <td>{{ ses.closingCalculatedCash | number:'1.2-2' }}</td>
+                <td>{{ (ses.closingActualCash !== null ? ses.closingActualCash : 0) | number:'1.2-2' }}</td>
+                <td>
+                  @if (ses.cashVariance !== null && ses.cashVariance !== undefined) {
+                    <span class="variance-chip" [class.negative]="ses.cashVariance < 0" [class.positive]="ses.cashVariance > 0">
+                      {{ ses.cashVariance | number:'1.2-2' }}
+                    </span>
+                  } @else {
+                    <span>—</span>
+                  }
+                </td>
+                <td>
+                  <span class="status-pill" [class.active]="ses.status === 'OPEN'">
+                    {{ ses.status }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 3: POS TERMINALS MASTER -->
+  @if (activeTab() === 'terminals') {
+    <div class="terminals-tab">
+      <div class="tab-actions-bar">
+        <button class="btn btn-primary" (click)="openTerminalModal()">
+          {{ i18n.t('pos.newTerminal') }}
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('pos.terminalCode') }}</th>
+              <th>{{ i18n.t('pos.terminalName') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (term of terminals(); track term.id) {
+              <tr>
+                <td><strong>{{ term.terminalCode }}</strong></td>
+                <td>{{ term.terminalName }}</td>
+                <td>
+                  <span class="status-pill" [class.active]="term.status === 'ACTIVE'">
+                    {{ term.status }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 4: TRANSACTIONS HISTORY -->
+  @if (activeTab() === 'history') {
+    <div class="history-tab">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('pos.receiptNo') }}</th>
+              <th>{{ i18n.t('common.date') }}</th>
+              <th>{{ i18n.t('pos.tax') }}</th>
+              <th>{{ i18n.t('pos.total') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (txn of transactions(); track txn.id) {
+              <tr>
+                <td><strong>{{ txn.transactionNumber }}</strong></td>
+                <td>{{ txn.createdAt | date:'short' }}</td>
+                <td>{{ txn.taxAmount | number:'1.2-2' }}</td>
+                <td><strong>{{ txn.totalAmount | number:'1.2-2' }}</strong></td>
+                <td>
+                  <span class="status-pill" [class.active]="txn.status === 'COMPLETED'" [class.refunded]="txn.status === 'REFUNDED'">
+                    {{ txn.status }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline-primary" (click)="viewReceipt(txn)">
+                      {{ i18n.t('pos.printReceipt') }}
+                    </button>
+                    @if (txn.status === 'COMPLETED') {
+                      <button class="btn btn-sm btn-outline-danger" (click)="returnReceipt(txn)">
+                        {{ i18n.t('pos.returnSale') }}
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: OPEN SHIFT -->
+  @if (showOpenShiftModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>{{ i18n.t('pos.openShift') }}</h2>
+          <button class="btn-close" (click)="showOpenShiftModal.set(false)">✕</button>
+        </div>
+        <form [formGroup]="openShiftForm" (ngSubmit)="submitOpenShift()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>{{ i18n.t('pos.terminal') }}</label>
+              <select class="form-control" formControlName="terminalId">
+                @for (term of terminals(); track term.id) {
+                  <option [value]="term.id">{{ term.terminalName }} ({{ term.terminalCode }})</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('pos.openingFloat') }}</label>
+              <input type="number" class="form-control" formControlName="openingFloat" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="showOpenShiftModal.set(false)">
+              {{ i18n.t('common.cancel') }}
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="openShiftForm.invalid">
+              {{ i18n.t('common.confirm') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: CLOSE SHIFT -->
+  @if (showCloseShiftModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>{{ i18n.t('pos.closeShift') }}</h2>
+          <button class="btn-close" (click)="showCloseShiftModal.set(false)">✕</button>
+        </div>
+        <form [formGroup]="closeShiftForm" (ngSubmit)="submitCloseShift()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>{{ i18n.t('pos.actualCash') }}</label>
+              <input type="number" class="form-control" formControlName="closingActualCash" />
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('pos.actualCard') }}</label>
+              <input type="number" class="form-control" formControlName="closingActualCard" />
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('common.notes') }}</label>
+              <textarea class="form-control" formControlName="notes" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="showCloseShiftModal.set(false)">
+              {{ i18n.t('common.cancel') }}
+            </button>
+            <button type="submit" class="btn btn-danger" [disabled]="closeShiftForm.invalid">
+              {{ i18n.t('pos.closeShift') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: NEW TERMINAL -->
+  @if (showTerminalModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>{{ i18n.t('pos.newTerminal') }}</h2>
+          <button class="btn-close" (click)="showTerminalModal.set(false)">✕</button>
+        </div>
+        <form [formGroup]="terminalForm" (ngSubmit)="saveTerminal()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>{{ i18n.t('pos.terminalCode') }}</label>
+              <input type="text" class="form-control" formControlName="terminalCode" />
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('pos.terminalName') }}</label>
+              <input type="text" class="form-control" formControlName="terminalName" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="showTerminalModal.set(false)">
+              {{ i18n.t('common.cancel') }}
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="terminalForm.invalid">
+              {{ i18n.t('common.save') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: THERMAL RECEIPT PREVIEW -->
+  @if (showReceiptModal() && activeReceipt()) {
+    <div class="modal-backdrop">
+      <div class="modal-card receipt-modal-card">
+        <div class="modal-header">
+          <h2>{{ i18n.t('pos.printReceipt') }}</h2>
+          <button class="btn-close" (click)="showReceiptModal.set(false)">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="thermal-receipt">
+            <div class="receipt-brand">
+              <h3>{{ i18n.t('pos.brandTitle') }}</h3>
+              <p>{{ i18n.t('pos.taxInvoiceReceipt') }}</p>
+            </div>
+            <div class="receipt-divider">================================</div>
+            <div class="receipt-meta-row">
+              <span>{{ i18n.t('pos.receiptNo') }}:</span>
+              <span>{{ activeReceipt()?.transactionNumber }}</span>
+            </div>
+            <div class="receipt-meta-row">
+              <span>{{ i18n.t('common.date') }}:</span>
+              <span>{{ activeReceipt()?.createdAt | date:'short' }}</span>
+            </div>
+            <div class="receipt-divider">--------------------------------</div>
+            <div class="receipt-lines">
+              @for (l of activeReceipt()?.lines; track l.itemId) {
+                <div class="receipt-line">
+                  <span>{{ l.itemName }} ({{ l.quantity }})</span>
+                  <span>{{ l.lineTotal | number:'1.2-2' }}</span>
+                </div>
+              }
+            </div>
+            <div class="receipt-divider">--------------------------------</div>
+            <div class="receipt-summary-row">
+              <span>{{ i18n.t('pos.subtotal') }}:</span>
+              <span>{{ activeReceipt()?.subtotal | number:'1.2-2' }}</span>
+            </div>
+            <div class="receipt-summary-row">
+              <span>{{ i18n.t('pos.tax') }} (14%):</span>
+              <span>{{ activeReceipt()?.taxAmount | number:'1.2-2' }}</span>
+            </div>
+            <div class="receipt-summary-row total-bold">
+              <span>{{ i18n.t('pos.total') }}:</span>
+              <span>{{ activeReceipt()?.totalAmount | number:'1.2-2' }}</span>
+            </div>
+            @if (activeReceipt()?.changeAmount && activeReceipt()!.changeAmount! > 0) {
+              <div class="receipt-summary-row">
+                <span>{{ i18n.t('pos.changeDue') }}:</span>
+                <span>{{ activeReceipt()?.changeAmount | number:'1.2-2' }}</span>
+              </div>
+            }
+            <div class="receipt-divider">================================</div>
+            <div class="receipt-footer">
+              <p>{{ i18n.t('pos.thankYou') }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="showReceiptModal.set(false)">
+            {{ i18n.t('common.close') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

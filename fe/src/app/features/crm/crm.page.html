@@ -1,0 +1,517 @@
+<div class="crm-container">
+  <!-- Header & KPI Bar -->
+  <header class="crm-header">
+    <div class="header-titles">
+      <span class="eyebrow">{{ i18n.t('crm.eyebrow') }}</span>
+      <h1>{{ i18n.t('crm.title') }}</h1>
+      <p class="description">{{ i18n.t('crm.description') }}</p>
+    </div>
+
+    @if (summary()) {
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span class="kpi-label">{{ i18n.t('crm.kpiPipelineValue') }}</span>
+          <span class="kpi-value gold">{{ summary()?.totalPipelineValue | number:'1.2-2' }}</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">{{ i18n.t('crm.kpiActiveDeals') }}</span>
+          <span class="kpi-value">{{ summary()?.activeDeals }}</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">{{ i18n.t('crm.kpiConversionRate') }}</span>
+          <span class="kpi-value green">{{ summary()?.winRate }}%</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-label">{{ i18n.t('crm.kpiUnreadMessages') }}</span>
+          <span class="kpi-value blue">{{ summary()?.unreadMessages }}</span>
+        </div>
+      </div>
+    }
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="crm-tabs">
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'pipeline'"
+      (click)="activeTab.set('pipeline')"
+    >
+      {{ i18n.t('crm.tabPipeline') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'leads'"
+      (click)="activeTab.set('leads')"
+    >
+      {{ i18n.t('crm.tabLeads') }}
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'inbox'"
+      (click)="activeTab.set('inbox')"
+    >
+      {{ i18n.t('crm.tabInbox') }}
+      @if (summary()?.unreadMessages && summary()!.unreadMessages > 0) {
+        <span class="badge">{{ summary()?.unreadMessages }}</span>
+      }
+    </button>
+    <button
+      class="tab-btn"
+      [class.active]="activeTab() === 'channels'"
+      (click)="activeTab.set('channels')"
+    >
+      {{ i18n.t('crm.tabChannels') }}
+    </button>
+  </nav>
+
+  <!-- TAB 1: VISUAL SALES PIPELINE (KANBAN) -->
+  @if (activeTab() === 'pipeline') {
+    <div class="pipeline-tab">
+      <div class="tab-actions-bar">
+        <button class="btn btn-primary" (click)="openLeadModal()">
+          {{ i18n.t('crm.newLead') }}
+        </button>
+      </div>
+
+      <div class="kanban-board">
+        @for (stage of leadStatuses; track stage) {
+          <div class="kanban-column">
+            <div class="column-header">
+              <h3>{{ getStageLabel(stage) }}</h3>
+              <span class="count-pill">{{ getLeadsInStage(stage).length }}</span>
+            </div>
+            <div class="column-cards">
+              @for (lead of getLeadsInStage(stage); track lead.id) {
+                <div class="lead-card" (click)="viewLeadTimeline(lead)">
+                  <div class="lead-card-header">
+                    <span class="lead-code">{{ lead.leadCode }}</span>
+                    <span class="lead-source-badge">{{ lead.source }}</span>
+                  </div>
+                  <h4 class="lead-title">{{ lead.name }}</h4>
+                  @if (lead.companyName) {
+                    <p class="company-name">{{ lead.companyName }}</p>
+                  }
+                  <div class="lead-card-footer">
+                    <span class="estimated-val">{{ lead.estimatedValue | number:'1.2-2' }}</span>
+                    <div class="stage-stepper" (click)="$event.stopPropagation()">
+                      @if (stage !== 'WON' && stage !== 'LOST') {
+                        <button
+                          class="btn-step-won"
+                          (click)="updateLeadStatus(lead, 'WON')"
+                          [title]="i18n.t('crm.stageWon')"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          class="btn-step-lost"
+                          (click)="updateLeadStatus(lead, 'LOST')"
+                          [title]="i18n.t('crm.stageLost')"
+                        >
+                          ✕
+                        </button>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- TAB 2: LEADS & CONTACTS MASTER -->
+  @if (activeTab() === 'leads') {
+    <div class="leads-tab">
+      <div class="tab-actions-bar">
+        <button class="btn btn-primary" (click)="openLeadModal()">
+          {{ i18n.t('crm.newLead') }}
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('crm.leadCode') }}</th>
+              <th>{{ i18n.t('crm.leadName') }}</th>
+              <th>{{ i18n.t('crm.company') }}</th>
+              <th>{{ i18n.t('crm.source') }}</th>
+              <th>{{ i18n.t('crm.estimatedValue') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (lead of leads(); track lead.id) {
+              <tr>
+                <td><strong>{{ lead.leadCode }}</strong></td>
+                <td>
+                  <div class="lead-name-cell">
+                    <span>{{ lead.name }}</span>
+                    @if (lead.phone) {
+                      <small class="text-muted">{{ lead.phone }}</small>
+                    }
+                  </div>
+                </td>
+                <td>{{ lead.companyName || '—' }}</td>
+                <td>
+                  <span class="source-tag">{{ lead.source }}</span>
+                </td>
+                <td>{{ lead.estimatedValue | number:'1.2-2' }}</td>
+                <td>
+                  <span class="status-pill" [class.won]="lead.status === 'WON'" [class.lost]="lead.status === 'LOST'">
+                    {{ lead.status }}
+                  </span>
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="btn btn-sm btn-outline-primary" (click)="viewLeadTimeline(lead)">
+                      {{ i18n.t('crm.activities') }}
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" (click)="openLeadModal(lead)">
+                      ✎
+                    </button>
+                    @if (!lead.businessPartyId && lead.status !== 'LOST') {
+                      <button class="btn btn-sm btn-success" (click)="convertToCustomer(lead)">
+                        {{ i18n.t('crm.convertToCustomer') }}
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 3: OMNICHANNEL INBOX & CHATBOT -->
+  @if (activeTab() === 'inbox') {
+    <div class="inbox-tab">
+      <div class="inbox-split-pane">
+        <!-- Left: Conversations List -->
+        <div class="conversations-list-panel">
+          <div class="panel-header">
+            <h3>{{ i18n.t('crm.conversations') }}</h3>
+          </div>
+          <div class="conversations-scroll">
+            @if (conversations().length === 0) {
+              <div class="empty-placeholder">
+                <p>{{ i18n.t('crm.noConversations') }}</p>
+              </div>
+            }
+            @for (conv of conversations(); track conv.id) {
+              <div
+                class="conversation-item"
+                [class.active]="activeConversation()?.id === conv.id"
+                (click)="selectConversation(conv)"
+              >
+                <div class="conv-header">
+                  <span class="conv-channel-badge" [class.whatsapp]="conv.channelType === 'WHATSAPP'" [class.facebook]="conv.channelType === 'FACEBOOK_MESSENGER'">
+                    {{ conv.channelType }}
+                  </span>
+                  <span class="conv-time">{{ conv.updatedAt | date:'shortTime' }}</span>
+                </div>
+                <div class="conv-sender">
+                  <strong>{{ conv.senderName || conv.externalSenderId }}</strong>
+                  @if (conv.unreadCount > 0) {
+                    <span class="unread-pill">{{ conv.unreadCount }}</span>
+                  }
+                </div>
+                <p class="conv-preview">{{ conv.lastMessagePreview || '—' }}</p>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Right: Active Chat Messages Window -->
+        <div class="chat-window-panel">
+          @if (activeConversation()) {
+            <div class="chat-header">
+              <div class="chat-peer-info">
+                <h3>{{ activeConversation()?.senderName || activeConversation()?.externalSenderId }}</h3>
+                <span class="chat-channel-tag">{{ activeConversation()?.channelType }}</span>
+                <span class="chat-status-pill">{{ activeConversation()?.status }}</span>
+              </div>
+            </div>
+
+            <div class="chat-messages-body">
+              @for (msg of messages(); track msg.id) {
+                <div class="message-bubble" [class.outbound]="msg.direction === 'OUTBOUND'" [class.inbound]="msg.direction === 'INBOUND'" [class.bot]="msg.isBotResponse">
+                  @if (msg.isBotResponse) {
+                    <span class="bot-badge">{{ i18n.t('crm.botHandled') }}</span>
+                  }
+                  <p class="bubble-text">{{ msg.messageText }}</p>
+                  <span class="bubble-time">{{ msg.createdAt | date:'shortTime' }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="chat-footer">
+              <input
+                type="text"
+                class="form-control"
+                [placeholder]="i18n.t('crm.typeMessage')"
+                [(ngModel)]="replyMessageText"
+                (keyup.enter)="submitReply()"
+              />
+              <button
+                class="btn btn-primary"
+                [disabled]="!replyMessageText.trim() || sendingMessage()"
+                (click)="submitReply()"
+              >
+                {{ i18n.t('crm.sendMessage') }}
+              </button>
+            </div>
+          } @else {
+            <div class="empty-placeholder">
+              <p>{{ i18n.t('crm.noConversations') }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 4: CHANNELS & CHATBOT CONFIG -->
+  @if (activeTab() === 'channels') {
+    <div class="channels-tab">
+      <div class="tab-actions-bar">
+        <button class="btn btn-primary" (click)="openChannelModal()">
+          {{ i18n.t('crm.newChannel') }}
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('crm.channelType') }}</th>
+              <th>{{ i18n.t('crm.channelName') }}</th>
+              <th>{{ i18n.t('crm.accountId') }}</th>
+              <th>{{ i18n.t('crm.botEnabled') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cfg of channels(); track cfg.id) {
+              <tr>
+                <td>
+                  <span class="source-tag">{{ cfg.channelType }}</span>
+                </td>
+                <td><strong>{{ cfg.channelName }}</strong></td>
+                <td>{{ cfg.accountIdentifier || '—' }}</td>
+                <td>
+                  <span class="badge" [class.badge-success]="cfg.botEnabled">
+                    {{ cfg.botEnabled ? i18n.t('crm.botHandled') : '—' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="status-pill" [class.active]="cfg.active">
+                    {{ cfg.active ? 'ACTIVE' : 'INACTIVE' }}
+                  </span>
+                </td>
+                <td>
+                  <button class="btn btn-sm btn-outline-secondary" (click)="openChannelModal(cfg)">
+                    ✎
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: LEAD FORM -->
+  @if (showLeadModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>{{ i18n.t('crm.newLead') }}</h2>
+          <button class="btn-close" (click)="showLeadModal.set(false)">✕</button>
+        </div>
+        <form [formGroup]="leadForm" (ngSubmit)="submitLead()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>{{ i18n.t('crm.leadName') }}</label>
+              <input type="text" class="form-control" formControlName="name" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ i18n.t('crm.company') }}</label>
+                <input type="text" class="form-control" formControlName="companyName" />
+              </div>
+              <div class="form-group">
+                <label>{{ i18n.t('crm.source') }}</label>
+                <select class="form-control" formControlName="source">
+                  @for (src of leadSources; track src) {
+                    <option [value]="src">{{ src }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>{{ i18n.t('crm.estimatedValue') }}</label>
+                <input type="number" class="form-control" formControlName="estimatedValue" />
+              </div>
+              <div class="form-group">
+                <label>{{ i18n.t('common.status') }}</label>
+                <select class="form-control" formControlName="status">
+                  @for (st of leadStatuses; track st) {
+                    <option [value]="st">{{ st }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="showLeadModal.set(false)">
+              {{ i18n.t('common.cancel') }}
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="leadForm.invalid || saving()">
+              {{ i18n.t('common.save') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: ACTIVITIES TIMELINE -->
+  @if (selectedLead()) {
+    <div class="modal-backdrop">
+      <div class="modal-card timeline-card">
+        <div class="modal-header">
+          <h2>{{ selectedLead()?.name }} — {{ i18n.t('crm.activities') }}</h2>
+          <button class="btn-close" (click)="selectedLead.set(null)">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="tab-actions-bar">
+            <button class="btn btn-sm btn-primary" (click)="openActivityModal(selectedLead()!)">
+              {{ i18n.t('crm.newActivity') }}
+            </button>
+          </div>
+          <div class="timeline-list">
+            @for (act of leadActivities(); track act.id) {
+              <div class="timeline-item">
+                <div class="timeline-item-header">
+                  <span class="activity-type-badge">{{ act.activityType }}</span>
+                  <span class="activity-date">{{ act.createdAt | date:'short' }}</span>
+                </div>
+                <h4>{{ act.summary }}</h4>
+                @if (act.details) {
+                  <p>{{ act.details }}</p>
+                }
+                @if (!act.completedAt) {
+                  <button class="btn btn-sm btn-outline-success" (click)="completeActivity(act)">
+                    {{ i18n.t('crm.completed') }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="selectedLead.set(null)">
+            {{ i18n.t('common.close') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: ACTIVITY FORM -->
+  @if (showActivityModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>{{ i18n.t('crm.newActivity') }}</h2>
+          <button class="btn-close" (click)="showActivityModal.set(false)">✕</button>
+        </div>
+        <form [formGroup]="activityForm" (ngSubmit)="submitActivity()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>{{ i18n.t('crm.activityType') }}</label>
+              <select class="form-control" formControlName="activityType">
+                @for (t of activityTypes; track t) {
+                  <option [value]="t">{{ t }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('crm.activitySummary') }}</label>
+              <input type="text" class="form-control" formControlName="summary" />
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('crm.activityDetails') }}</label>
+              <textarea class="form-control" formControlName="details"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="showActivityModal.set(false)">
+              {{ i18n.t('common.cancel') }}
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="activityForm.invalid || saving()">
+              {{ i18n.t('common.save') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: CHANNEL FORM -->
+  @if (showChannelModal()) {
+    <div class="modal-backdrop">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>{{ i18n.t('crm.newChannel') }}</h2>
+          <button class="btn-close" (click)="showChannelModal.set(false)">✕</button>
+        </div>
+        <form [formGroup]="channelForm" (ngSubmit)="submitChannel()">
+          <div class="modal-body">
+            <div class="form-group">
+              <label>{{ i18n.t('crm.channelType') }}</label>
+              <select class="form-control" formControlName="channelType">
+                @for (c of channelTypes; track c) {
+                  <option [value]="c">{{ c }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('crm.channelName') }}</label>
+              <input type="text" class="form-control" formControlName="channelName" />
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('crm.accountId') }}</label>
+              <input type="text" class="form-control" formControlName="accountIdentifier" />
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('crm.apiToken') }}</label>
+              <input type="password" class="form-control" formControlName="apiToken" />
+            </div>
+            <div class="form-group">
+              <label>{{ i18n.t('crm.greeting') }}</label>
+              <input type="text" class="form-control" formControlName="autoReplyGreeting" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="showChannelModal.set(false)">
+              {{ i18n.t('common.cancel') }}
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="channelForm.invalid || saving()">
+              {{ i18n.t('common.save') }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

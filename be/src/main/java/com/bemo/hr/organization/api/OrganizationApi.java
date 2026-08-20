@@ -1,7 +1,12 @@
 package com.bemo.hr.organization.api;
 
+import com.bemo.hr.organization.domain.IntercompanyStatus;
+import com.bemo.hr.organization.domain.IntercompanyType;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class OrganizationApi {
@@ -95,6 +100,86 @@ public class OrganizationApi {
             List<BranchResponse> branches,
             List<WarehouseResponse> warehouses,
             List<DepartmentResponse> departments
+    ) {
+    }
+
+    // --- Intercompany & Consolidation DTOs ---
+
+    public record IntercompanyTransactionResponse(
+            String id,
+            String transactionNumber,
+            String fromCompanyId,
+            String fromCompanyName,
+            String fromBranchId,
+            String fromBranchName,
+            String toCompanyId,
+            String toCompanyName,
+            String toBranchId,
+            String toBranchName,
+            IntercompanyType transactionType,
+            BigDecimal amount,
+            String currency,
+            String description,
+            String dueToAccountId,
+            String dueFromAccountId,
+            IntercompanyStatus status,
+            String eliminatedInPeriod,
+            String journalEntryId,
+            long createdAt,
+            long updatedAt
+    ) {
+    }
+
+    public record CreateIntercompanyPayload(
+            @NotBlank String fromCompanyId,
+            String fromBranchId,
+            @NotBlank String toCompanyId,
+            String toBranchId,
+            @NotNull IntercompanyType transactionType,
+            @NotNull @DecimalMin(value = "0.01") BigDecimal amount,
+            String currency,
+            String description,
+            String dueToAccountId,
+            String dueFromAccountId
+    ) {
+    }
+
+    public record RunEliminationPayload(
+            @NotBlank String period
+    ) {
+    }
+
+    public record EliminationResultResponse(
+            String period,
+            int eliminatedCount,
+            BigDecimal eliminatedTotalAmount
+    ) {
+    }
+
+    public record BranchPerformanceMetric(
+            String branchId,
+            String branchCode,
+            String branchName,
+            String companyId,
+            String companyName,
+            BigDecimal revenue,
+            BigDecimal expenses,
+            BigDecimal netProfit,
+            BigDecimal marginPercent,
+            BigDecimal inventoryValue,
+            int headcount,
+            int activeProjects
+    ) {
+    }
+
+    public record ConsolidatedOrganizationSummary(
+            BigDecimal totalRevenue,
+            BigDecimal totalExpenses,
+            BigDecimal eliminatedTransfers,
+            BigDecimal consolidatedNetMargin,
+            int activeBranches,
+            int totalHeadcount,
+            List<BranchPerformanceMetric> branchMetrics
     ) {
     }
 }

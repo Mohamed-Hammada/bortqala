@@ -1,9 +1,9 @@
 <section class="page platform-admin-page">
   <header class="page-header">
     <div>
-      <p class="eyebrow">{{ i18n.t('settings.groupPlatformAdministration', undefined, 'إدارة المنصة') }}</p>
-      <h1>{{ i18n.t('settings.groupPlatformAdministration', undefined, 'إدارة المنصة') }}</h1>
-      <p>{{ i18n.t('platformAdmin.description', undefined, 'إدارة الخطط والتجارب وحزم الصناعة والوحدات والترجمات بعيداً عن إعدادات المستخدم اليومية.') }}</p>
+      <p class="eyebrow">{{ i18n.t('settings.groupPlatformAdministration') }}</p>
+      <h1>{{ i18n.t('settings.groupPlatformAdministration') }}</h1>
+      <p>{{ i18n.t('platformAdmin.description') }}</p>
     </div>
   </header>
 
@@ -22,7 +22,16 @@
         {{ i18n.t('entitlements.tab') }}
       </button>
       <button type="button" [class.active]="activeTab() === 'translations'" (click)="setTab('translations')">
-        {{ i18n.t('translations.menu', undefined, 'إدارة الترجمات') }}
+        {{ i18n.t('translations.menu') }}
+      </button>
+      <button type="button" [class.active]="activeTab() === 'diagnostics'" (click)="setTab('diagnostics')">
+        {{ i18n.t('diagnostics.tab') }}
+      </button>
+      <button type="button" [class.active]="activeTab() === 'backups'" (click)="setTab('backups')">
+        {{ i18n.t('backups.tab') }}
+      </button>
+      <button type="button" [class.active]="activeTab() === 'licensing'" (click)="setTab('licensing')">
+        {{ i18n.t('licensing.tab') }}
       </button>
     </aside>
 
@@ -34,6 +43,9 @@
       @if (activeTab() === 'translations') {
         <div class="card platform-translation-card"><app-translation-management /></div>
       }
+      @if (activeTab() === 'diagnostics') { <app-platform-diagnostics /> }
+      @if (activeTab() === 'backups') { <app-platform-backups /> }
+      @if (activeTab() === 'licensing') { <app-platform-licensing /> }
     </main>
   </div>
 </section>

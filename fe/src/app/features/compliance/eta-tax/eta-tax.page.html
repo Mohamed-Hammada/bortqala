@@ -1,0 +1,336 @@
+<div class="eta-container">
+  <div class="page-header">
+    <div class="header-info">
+      <span class="eyebrow">{{ i18n.t('eta.eyebrow') }}</span>
+      <h1 class="page-title">{{ i18n.t('eta.title') }}</h1>
+      <p class="page-description">{{ i18n.t('eta.description') }}</p>
+    </div>
+    <div class="header-actions">
+      @if (activeTab() === 'SUBMISSIONS') {
+        <button class="btn btn-primary" (click)="openQueueModal()">
+          ➕ {{ i18n.t('eta.queueInvoice') }}
+        </button>
+      }
+      @if (activeTab() === 'MAPPINGS') {
+        <button class="btn btn-primary" (click)="openMappingModal()">
+          ➕ {{ i18n.t('eta.newItemMapping') }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-label">{{ i18n.t('eta.kpiTotalSubmitted') }}</span>
+      <span class="kpi-value">{{ summary()?.totalSubmitted || 0 }}</span>
+    </div>
+    <div class="kpi-card success">
+      <span class="kpi-label">{{ i18n.t('eta.kpiValid') }}</span>
+      <span class="kpi-value">{{ summary()?.validCount || 0 }}</span>
+    </div>
+    <div class="kpi-card danger">
+      <span class="kpi-label">{{ i18n.t('eta.kpiInvalid') }}</span>
+      <span class="kpi-value">{{ summary()?.invalidCount || 0 }}</span>
+    </div>
+    <div class="kpi-card warning">
+      <span class="kpi-label">{{ i18n.t('eta.kpiPending') }}</span>
+      <span class="kpi-value">{{ summary()?.pendingCount || 0 }}</span>
+    </div>
+    <div class="kpi-card accent">
+      <span class="kpi-label">{{ i18n.t('eta.kpiTotalTaxReported') }}</span>
+      <span class="kpi-value">{{ summary()?.totalTaxReported || 0 | number:'1.2-2' }}</span>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-nav">
+    <button class="tab-btn" [class.active]="activeTab() === 'SUBMISSIONS'" (click)="activeTab.set('SUBMISSIONS')">
+      📋 {{ i18n.t('eta.tabSubmissions') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'CONFIG'" (click)="activeTab.set('CONFIG')">
+      ⚙️ {{ i18n.t('eta.tabConfig') }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'MAPPINGS'" (click)="activeTab.set('MAPPINGS')">
+      🏷️ {{ i18n.t('eta.tabMappings') }}
+    </button>
+  </div>
+
+  <!-- TAB 1: Submissions Queue -->
+  @if (activeTab() === 'SUBMISSIONS') {
+    <div class="card table-card">
+      <div class="table-toolbar">
+        <div class="filters">
+          <select class="form-control" [value]="filterStatus()" (change)="filterStatus.set($any($event.target).value); loadSubmissions()">
+            <option value="">{{ i18n.t('common.all') }}</option>
+            <option value="VALIDATED">{{ i18n.t('eta.statusValidated') }}</option>
+            <option value="SUBMITTED">{{ i18n.t('eta.statusSubmitted') }}</option>
+            <option value="VALID">{{ i18n.t('eta.statusValid') }}</option>
+            <option value="INVALID">{{ i18n.t('eta.statusInvalid') }}</option>
+            <option value="CANCELLED">{{ i18n.t('eta.statusCancelled') }}</option>
+          </select>
+          <select class="form-control" [value]="filterDocType()" (change)="filterDocType.set($any($event.target).value); loadSubmissions()">
+            <option value="">{{ i18n.t('common.all') }}</option>
+            <option value="INVOICE">{{ i18n.t('eta.docTypeInvoice') }}</option>
+            <option value="CREDIT_NOTE">{{ i18n.t('eta.docTypeCreditNote') }}</option>
+            <option value="DEBIT_NOTE">{{ i18n.t('eta.docTypeDebitNote') }}</option>
+            <option value="RECEIPT">{{ i18n.t('eta.docTypeReceipt') }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('eta.internalId') }}</th>
+              <th>{{ i18n.t('eta.docType') }}</th>
+              <th>{{ i18n.t('eta.etaUuid') }}</th>
+              <th>{{ i18n.t('common.amount') }}</th>
+              <th>{{ i18n.t('common.tax') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+              <th>{{ i18n.t('common.actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (sub of submissions(); track sub.id) {
+              <tr>
+                <td><strong>{{ sub.internalId }}</strong></td>
+                <td>
+                  <span class="badge doc-badge">{{ sub.documentType }}</span>
+                </td>
+                <td>
+                  <code class="uuid-code">{{ sub.etaUuid || '—' }}</code>
+                </td>
+                <td>{{ sub.totalAmount | number:'1.2-2' }}</td>
+                <td>{{ sub.taxAmount | number:'1.2-2' }}</td>
+                <td>
+                  <span class="status-pill" [class]="sub.status.toLowerCase()">
+                    {{ sub.status === 'VALID' ? i18n.t('eta.statusValid') :
+                       sub.status === 'INVALID' ? i18n.t('eta.statusInvalid') :
+                       sub.status === 'CANCELLED' ? i18n.t('eta.statusCancelled') :
+                       sub.status === 'SUBMITTED' ? i18n.t('eta.statusSubmitted') :
+                       sub.status === 'VALIDATED' ? i18n.t('eta.statusValidated') : i18n.t('eta.statusDraft') }}
+                  </span>
+                </td>
+                <td class="action-cell">
+                  @if (sub.status === 'VALIDATED' || sub.status === 'INVALID') {
+                    <button class="btn btn-sm btn-accent" (click)="submitToEta(sub)" [disabled]="submittingDoc()">
+                      📤 {{ i18n.t('eta.actionSubmit') }}
+                    </button>
+                  }
+                  @if (sub.status === 'VALID') {
+                    <button class="btn btn-sm btn-danger-soft" (click)="openCancelModal(sub)">
+                      ❌ {{ i18n.t('eta.actionCancel') }}
+                    </button>
+                  }
+                  <button class="btn btn-sm btn-subtle" (click)="openRawJson(sub)">
+                    🔍 {{ i18n.t('eta.actionRawJson') }}
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="empty-cell">{{ i18n.t('eta.emptyQueue') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- TAB 2: ETA Configuration -->
+  @if (activeTab() === 'CONFIG') {
+    <div class="card form-card">
+      <form [formGroup]="configForm" (ngSubmit)="saveConfig()">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>{{ i18n.t('eta.issuerTaxId') }} *</label>
+            <input type="text" class="form-control" formControlName="issuerTaxId" placeholder="123456789" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('eta.issuerName') }} *</label>
+            <input type="text" class="form-control" formControlName="issuerName" placeholder="Bemo Egypt S.A.E." />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('eta.clientId') }} *</label>
+            <input type="text" class="form-control" formControlName="clientId" placeholder="eta-client-id" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('eta.clientSecret') }}</label>
+            <input type="password" class="form-control" formControlName="clientSecret" placeholder="••••••••••••" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('eta.environment') }} *</label>
+            <select class="form-control" formControlName="environment">
+              <option value="PRE_PRODUCTION">{{ i18n.t('eta.envPreProd') }}</option>
+              <option value="PRODUCTION">{{ i18n.t('eta.envProd') }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('common.status') }}</label>
+            <div class="checkbox-row">
+              <input type="checkbox" id="etaActive" formControlName="active" />
+              <label for="etaActive">{{ i18n.t('common.active') }}</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="configForm.invalid || savingConfig()">
+            💾 {{ i18n.t('eta.saveConfig') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- TAB 3: Item Tax Mappings -->
+  @if (activeTab() === 'MAPPINGS') {
+    <div class="card table-card">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ i18n.t('eta.itemCode') }}</th>
+              <th>{{ i18n.t('eta.codeType') }}</th>
+              <th>{{ i18n.t('eta.codeValue') }}</th>
+              <th>{{ i18n.t('common.description') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (map of itemMappings(); track map.id) {
+              <tr>
+                <td><strong>{{ map.itemCode }}</strong></td>
+                <td><span class="badge">{{ map.codeType }}</span></td>
+                <td><code>{{ map.itemCodeValue }}</code></td>
+                <td>{{ map.descriptionAr || map.descriptionEn || '—' }}</td>
+                <td>
+                  <span class="badge" [class.success]="map.active">{{ map.active ? i18n.t('common.active') : i18n.t('common.inactive') }}</span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="empty-cell">{{ i18n.t('common.noData') }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+
+  <!-- Queue Invoice Modal -->
+  @if (showQueueModal()) {
+    <div class="modal-overlay" (click)="closeQueueModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ i18n.t('eta.queueInvoice') }}</h3>
+          <button class="close-btn" (click)="closeQueueModal()">✕</button>
+        </div>
+        <form [formGroup]="queueForm" (ngSubmit)="submitQueue()">
+          <div class="form-group">
+            <label>{{ i18n.t('eta.invoiceSelect') }} *</label>
+            <select class="form-control" formControlName="invoiceId">
+              @for (inv of openInvoices(); track inv.id) {
+                <option [value]="inv.id">{{ inv.invoiceNumber }} ({{ inv.amount | number:'1.2-2' }} {{ inv.currencyCode }})</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('eta.docType') }} *</label>
+            <select class="form-control" formControlName="documentType">
+              <option value="INVOICE">{{ i18n.t('eta.docTypeInvoice') }}</option>
+              <option value="CREDIT_NOTE">{{ i18n.t('eta.docTypeCreditNote') }}</option>
+              <option value="DEBIT_NOTE">{{ i18n.t('eta.docTypeDebitNote') }}</option>
+              <option value="RECEIPT">{{ i18n.t('eta.docTypeReceipt') }}</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-subtle" (click)="closeQueueModal()">{{ i18n.t('common.cancel') }}</button>
+            <button type="submit" class="btn btn-primary" [disabled]="queueForm.invalid">{{ i18n.t('eta.actionValidate') }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Cancel Document Modal -->
+  @if (showCancelModal()) {
+    <div class="modal-overlay" (click)="closeCancelModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ i18n.t('eta.actionCancel') }}</h3>
+          <button class="close-btn" (click)="closeCancelModal()">✕</button>
+        </div>
+        <form [formGroup]="cancelForm" (ngSubmit)="submitCancel()">
+          <div class="form-group">
+            <label>{{ i18n.t('eta.cancellationReason') }} *</label>
+            <textarea class="form-control" rows="3" formControlName="reason" placeholder="..."></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-subtle" (click)="closeCancelModal()">{{ i18n.t('common.cancel') }}</button>
+            <button type="submit" class="btn btn-danger" [disabled]="cancelForm.invalid || cancellingDoc()">{{ i18n.t('eta.actionCancel') }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Raw JSON Modal -->
+  @if (showRawJsonModal()) {
+    <div class="modal-overlay" (click)="closeRawJson()">
+      <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ i18n.t('eta.actionRawJson') }}</h3>
+          <button class="close-btn" (click)="closeRawJson()">✕</button>
+        </div>
+        <div class="json-viewer">
+          <pre><code>{{ selectedRawJson() }}</code></pre>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-primary" (click)="closeRawJson()">{{ i18n.t('common.close') }}</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- New Item Mapping Modal -->
+  @if (showMappingModal()) {
+    <div class="modal-overlay" (click)="closeMappingModal()">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ i18n.t('eta.newItemMapping') }}</h3>
+          <button class="close-btn" (click)="closeMappingModal()">✕</button>
+        </div>
+        <form [formGroup]="mappingForm" (ngSubmit)="saveMapping()">
+          <div class="form-group">
+            <label>{{ i18n.t('eta.itemCode') }} *</label>
+            <input type="text" class="form-control" formControlName="itemCode" placeholder="ITM-001" (input)="mappingForm.patchValue({ itemId: $any($event.target).value })" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('eta.codeType') }} *</label>
+            <select class="form-control" formControlName="codeType">
+              <option value="EGS">{{ i18n.t('eta.egsStandard') }}</option>
+              <option value="GS1">{{ i18n.t('eta.gs1Standard') }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('eta.codeValue') }} *</label>
+            <input type="text" class="form-control" formControlName="itemCodeValue" placeholder="EG-113322445-001" />
+          </div>
+          <div class="form-group">
+            <label>{{ i18n.t('common.description') }} (AR)</label>
+            <input type="text" class="form-control" formControlName="descriptionAr" placeholder="اسم الصنف بالعربي" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-subtle" (click)="closeMappingModal()">{{ i18n.t('common.cancel') }}</button>
+            <button type="submit" class="btn btn-primary" [disabled]="mappingForm.invalid || savingMapping()">{{ i18n.t('common.save') }}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

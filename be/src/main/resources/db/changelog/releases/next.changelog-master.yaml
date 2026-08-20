@@ -555,4 +555,74 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260819_v307_sales_quotations_translations.yaml
       relativeToChangelogFile: false
+  # P1_EGYPT_E_INVOICE_TAX_20260819: Feature 22 Egyptian E-Invoicing & ETA Compliance
+  - include:
+      file: db/changelog/schema/create/20260819_v308_eta_tax_compliance_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v309_eta_tax_compliance_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260819_v310_eta_tax_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P2_POS_RETAIL_20260819: Feature 23 Point of Sale (POS) Retail Engine
+  - include:
+      file: db/changelog/schema/create/20260819_v311_pos_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v312_pos_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260819_v313_pos_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P2_CRM_OMNICHANNEL_20260819: Feature 24 CRM, WhatsApp/Facebook & Chatbot Integration
+  - include:
+      file: db/changelog/schema/create/20260819_v314_crm_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v315_crm_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260819_v316_crm_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P1_MULTI_COMPANY_BRANCH_20260819: Feature 25 Multi-Company & Branch Consolidation
+  - include:
+      file: db/changelog/schema/create/20260819_v317_intercompany_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260819_v318_intercompany_translations.yaml
+      relativeToChangelogFile: false
+  # P1_EXECUTIVE_REPORTING_ANALYTICS_20260820: Feature 26 Executive Reporting & Cross-Module Analytics
+  - include:
+      file: db/changelog/schema/create/20260820_v319_executive_kpi_snapshots.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260820_v320_executive_analytics_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260820_v321_executive_analytics_allowed_menus.yaml
+      relativeToChangelogFile: false
+  # P0_WORKFORCE_PROJECT_INTEGRATION_20260820: Feature 27 Workforce & Project Integration
+  - include:
+      file: db/changelog/schema/update/20260820_v322_workforce_project_wbs_integration.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260820_v323_workforce_project_translations.yaml
+      relativeToChangelogFile: false
+  # P0_SECURITY_AUDIT_APPROVALS_20260820: Feature 28 Security, Audit Trails & Granular Approval Workflows
+  - include:
+      file: db/changelog/schema/update/20260820_v324_audit_break_glass_enhancements.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260820_v325_approval_audit_translations.yaml
+      relativeToChangelogFile: false
+  # P1_DEPLOYMENT_LICENSING_DR_20260820: Feature 29 Deployment, Cloud Readiness, Diagnostics, Backups & Licensing
+  - include:
+      file: db/changelog/schema/create/20260820_v326_deployment_backup_licensing_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260820_v327_deployment_licensing_translations.yaml
+      relativeToChangelogFile: false
+
+
 

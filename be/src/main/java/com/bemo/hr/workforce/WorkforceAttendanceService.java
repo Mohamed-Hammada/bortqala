@@ -94,12 +94,17 @@ public class WorkforceAttendanceService {
                 existing.update(cell.workerId(), cell.workDate(), cell.attendanceValue(), cell.checkIn(),
                         cell.checkOut(), cell.actualHours(), cell.overtimeHours(), cell.deductionHours(), rate,
                         "MANUAL", cell.notes());
+                if (cell.projectId() != null) {
+                    existing.assignProject(cell.projectId(), cell.wbsNodeId(), cell.costCodeId());
+                }
                 toSave.add(existing);
                 updated++;
             } else {
-                toSave.add(new ManualAttendanceEntry(cell.workerId(), cell.workDate(), cell.attendanceValue(),
+                ManualAttendanceEntry entry = new ManualAttendanceEntry(cell.workerId(), cell.projectId(),
+                        cell.wbsNodeId(), cell.costCodeId(), cell.workDate(), cell.attendanceValue(),
                         cell.checkIn(), cell.checkOut(), cell.actualHours(), cell.overtimeHours(),
-                        cell.deductionHours(), rate, "MANUAL", cell.notes()));
+                        cell.deductionHours(), rate, "MANUAL", cell.notes());
+                toSave.add(entry);
                 created++;
             }
         }

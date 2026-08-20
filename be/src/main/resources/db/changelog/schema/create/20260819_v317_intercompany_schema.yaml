@@ -1,0 +1,111 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260819_v317_intercompany_schema
+      author: wolfn
+      changes:
+        - createTable:
+            tableName: intercompany_transactions
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transaction_number
+                  type: VARCHAR(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: from_company_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: from_branch_id
+                  type: VARCHAR(36)
+              - column:
+                  name: to_company_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: to_branch_id
+                  type: VARCHAR(36)
+              - column:
+                  name: transaction_type
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount
+                  type: NUMERIC(15, 2)
+                  defaultValueNumeric: 0.0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: currency
+                  type: VARCHAR(10)
+                  defaultValue: "EGP"
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: VARCHAR(500)
+              - column:
+                  name: due_to_account_id
+                  type: VARCHAR(36)
+              - column:
+                  name: due_from_account_id
+                  type: VARCHAR(36)
+              - column:
+                  name: status
+                  type: VARCHAR(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: eliminated_in_period
+                  type: VARCHAR(50)
+              - column:
+                  name: journal_entry_id
+                  type: VARCHAR(36)
+              - column:
+                  name: version
+                  type: BIGINT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+
+        - createIndex:
+            indexName: idx_ic_tx_app
+            tableName: intercompany_transactions
+            columns:
+              - column:
+                  name: app_id
+
+        - createIndex:
+            indexName: idx_ic_tx_from_to
+            tableName: intercompany_transactions
+            columns:
+              - column:
+                  name: app_id
+              - column:
+                  name: from_company_id
+              - column:
+                  name: to_company_id

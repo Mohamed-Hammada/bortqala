@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260820-v325-001
+      author: mohamed.hammada
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260820_v325_approval_audit_translations.csv
+            separator: ";"
+            quotchar: '"'
+            columns:
+              - column: { name: id, type: STRING }
+              - column: { name: translation_key, type: STRING }
+              - column: { name: locale, type: STRING }
+              - column: { name: text_value, type: STRING }

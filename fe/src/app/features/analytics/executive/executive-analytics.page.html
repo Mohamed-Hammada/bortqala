@@ -1,0 +1,269 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('analytics.eyebrow') }}</p>
+      <h1>{{ i18n.t('analytics.title') }}</h1>
+      <p>{{ i18n.t('analytics.description') }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="button primary" (click)="openSnapshotModal()">📸 {{ i18n.t('analytics.takeSnapshot') }}</button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="loading"></div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  <!-- Global Filter Toolbar -->
+  <form [formGroup]="filterForm" (ngSubmit)="loadAll()" class="filter-toolbar">
+    <div class="filter-group">
+      <label>{{ i18n.t('analytics.periodFilter') }}</label>
+      <input formControlName="period" placeholder="e.g. 2026-08" class="ltr" />
+    </div>
+    <div class="filter-actions">
+      <button type="submit" class="button secondary">🔍 {{ i18n.t('common.filter') }}</button>
+    </div>
+  </form>
+
+  <!-- Tab Navigation -->
+  <nav class="app-tabs app-tabs-wrap" [attr.aria-label]="i18n.t('analytics.title')">
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'overview'" (click)="activeTab.set('overview')">
+      📊 {{ i18n.t('analytics.tabOverview') }}
+    </button>
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'trends'" (click)="activeTab.set('trends')">
+      📈 {{ i18n.t('analytics.tabTrends') }}
+    </button>
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'registry'" (click)="activeTab.set('registry')">
+      📚 {{ i18n.t('analytics.tabRegistry') }} ({{ registry().length }})
+    </button>
+    <button type="button" class="app-tab" [class.active]="activeTab() === 'snapshots'" (click)="activeTab.set('snapshots')">
+      📑 {{ i18n.t('analytics.tabSnapshots') }} ({{ snapshots().length }})
+    </button>
+  </nav>
+
+  @if (!loading()) {
+    <!-- Tab 1: Executive Overview -->
+    @if (activeTab() === 'overview') {
+      @if (overview(); as ov) {
+        <div class="kpi-grid">
+          <div class="kpi-card highlight">
+            <span class="kpi-label">{{ i18n.t('analytics.totalRevenue') }}</span>
+            <span class="kpi-value ltr">{{ ov.totalRevenue | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card warning">
+            <span class="kpi-label">{{ i18n.t('analytics.totalOpex') }}</span>
+            <span class="kpi-value ltr">{{ ov.totalOpex | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card success">
+            <span class="kpi-label">{{ i18n.t('analytics.grossProfit') }}</span>
+            <span class="kpi-value ltr">{{ ov.grossProfit | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card highlight">
+            <span class="kpi-label">{{ i18n.t('analytics.netMargin') }}</span>
+            <span class="kpi-value ltr">{{ ov.netMarginPercent }}%</span>
+          </div>
+          <div class="kpi-card info">
+            <span class="kpi-label">{{ i18n.t('analytics.operatingCashFlow') }}</span>
+            <span class="kpi-value ltr">{{ ov.operatingCashFlow | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+          <div class="kpi-card info">
+            <span class="kpi-label">{{ i18n.t('analytics.receivablesOutstanding') }}</span>
+            <span class="kpi-value ltr">{{ ov.openReceivables | number:'1.2-2' }} <small>ج.م</small></span>
+          </div>
+        </div>
+
+        <div class="modules-container">
+          @for (mod of ov.moduleSummaries; track mod.category) {
+            <div class="module-section">
+              <h2 class="module-title">{{ getCategoryLabel(mod.category) }} — <small>{{ mod.moduleName }}</small></h2>
+              <div class="cards-grid">
+                @for (kpi of mod.kpis; track kpi.key) {
+                  <div class="metric-box">
+                    <div class="metric-header">
+                      <span class="metric-name">{{ kpi.nameAr }}</span>
+                      <span class="trend-badge" [class.up]="kpi.trendDirection === 'UP'" [class.down]="kpi.trendDirection === 'DOWN'">
+                        {{ getTrendIcon(kpi.trendDirection) }} {{ kpi.variancePercent }}%
+                      </span>
+                    </div>
+                    <div class="metric-body">
+                      <span class="actual-val ltr">{{ kpi.actualValue | number:'1.2-2' }}</span>
+                      <span class="status-chip">{{ getReconciliationLabel(kpi.reconciliationStatus) }}</span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- Tab 2: Period & Trends Comparison -->
+    @if (activeTab() === 'trends') {
+      <div class="trends-control">
+        <div class="pills-group">
+          <button type="button" class="pill-btn" [class.active]="selectedMonths() === 3" (click)="changeMonths(3)">{{ i18n.t('analytics.months3') }}</button>
+          <button type="button" class="pill-btn" [class.active]="selectedMonths() === 6" (click)="changeMonths(6)">{{ i18n.t('analytics.months6') }}</button>
+          <button type="button" class="pill-btn" [class.active]="selectedMonths() === 12" (click)="changeMonths(12)">{{ i18n.t('analytics.months12') }}</button>
+          <button type="button" class="pill-btn" [class.active]="selectedMonths() === 24" (click)="changeMonths(24)">{{ i18n.t('analytics.months24') }}</button>
+        </div>
+      </div>
+
+      @if (trends(); as tr) {
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr>
+                <th>{{ i18n.t('analytics.periodFilter') }}</th>
+                <th>{{ i18n.t('analytics.totalRevenue') }}</th>
+                <th>{{ i18n.t('analytics.totalOpex') }}</th>
+                <th>{{ i18n.t('analytics.grossProfit') }}</th>
+                <th>{{ i18n.t('analytics.netMargin') }}</th>
+                <th>{{ i18n.t('analytics.salesBookings') }}</th>
+                <th>{{ i18n.t('analytics.inventoryValuation') }}</th>
+                <th>{{ i18n.t('analytics.payrollDisbursed') }}</th>
+                <th>{{ i18n.t('analytics.projectPortfolioValue') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of tr.trendPoints; track p.period) {
+                <tr>
+                  <td><strong class="ltr">{{ p.period }}</strong></td>
+                  <td class="ltr">{{ p.revenue | number:'1.2-2' }}</td>
+                  <td class="ltr">{{ p.opex | number:'1.2-2' }}</td>
+                  <td class="ltr font-bold text-success">{{ p.netProfit | number:'1.2-2' }}</td>
+                  <td><span class="badge success">{{ p.marginPercent }}%</span></td>
+                  <td class="ltr">{{ p.salesBookings | number:'1.2-2' }}</td>
+                  <td class="ltr">{{ p.inventoryValue | number:'1.2-2' }}</td>
+                  <td class="ltr">{{ p.payrollDisbursed | number:'1.2-2' }}</td>
+                  <td class="ltr">{{ p.projectEarnedValue | number:'1.2-2' }}</td>
+                </tr>
+              } @empty {
+                <tr><td colspan="9"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    <!-- Tab 3: KPI Semantic Registry -->
+    @if (activeTab() === 'registry') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('analytics.kpiKey') }}</th>
+              <th>{{ i18n.t('analytics.kpiName') }}</th>
+              <th>{{ i18n.t('common.category') }}</th>
+              <th>{{ i18n.t('analytics.grain') }}</th>
+              <th>{{ i18n.t('analytics.unit') }}</th>
+              <th>{{ i18n.t('analytics.formula') }}</th>
+              <th>{{ i18n.t('analytics.sourceModule') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (k of registry(); track k.key) {
+              <tr>
+                <td><code class="ltr">{{ k.key }}</code></td>
+                <td><strong>{{ k.nameAr }}</strong> <small class="text-muted">({{ k.nameEn }})</small></td>
+                <td><span class="badge info">{{ getCategoryLabel(k.category) }}</span></td>
+                <td><span class="badge">{{ k.grain }}</span></td>
+                <td><span class="badge">{{ k.unit }}</span></td>
+                <td class="ltr">{{ k.formulaAr }}</td>
+                <td><strong>{{ k.sourceModule }}</strong></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Tab 4: Snapshots & Reconciliation -->
+    @if (activeTab() === 'snapshots') {
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('analytics.periodFilter') }}</th>
+              <th>{{ i18n.t('analytics.kpiKey') }}</th>
+              <th>{{ i18n.t('common.category') }}</th>
+              <th>{{ i18n.t('analytics.actualValue') }}</th>
+              <th>{{ i18n.t('analytics.targetValue') }}</th>
+              <th>{{ i18n.t('analytics.trend') }}</th>
+              <th>{{ i18n.t('analytics.reconciliation') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of snapshots(); track s.id) {
+              <tr>
+                <td><strong class="ltr">{{ s.periodKey }}</strong></td>
+                <td><code class="ltr">{{ s.kpiKey }}</code></td>
+                <td><span class="badge info">{{ getCategoryLabel(s.category) }}</span></td>
+                <td class="ltr font-bold">{{ s.actualValue | number:'1.2-2' }}</td>
+                <td class="ltr">{{ s.targetValue ? (s.targetValue | number:'1.2-2') : '—' }}</td>
+                <td><span class="trend-badge" [class.up]="s.trendDirection === 'UP'" [class.down]="s.trendDirection === 'DOWN'">{{ getTrendIcon(s.trendDirection) }}</span></td>
+                <td><span class="status-chip">{{ getReconciliationLabel(s.reconciliationStatus) }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7"><div class="empty-state">{{ i18n.t('common.noData') }}</div></td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  }
+
+  <!-- Create Snapshot Modal -->
+  <app-modal-dialog
+    [isOpen]="snapshotModalOpen()"
+    [title]="i18n.t('analytics.takeSnapshot')"
+    size="normal"
+    [preventOutsideClose]="true"
+    (close)="closeSnapshotModal()">
+
+    <form [formGroup]="snapshotForm" (ngSubmit)="submitSnapshot()" id="snapshot-form" class="modal-form">
+      <div class="form-grid">
+        <div class="field">
+          <label>{{ i18n.t('analytics.periodFilter') }} *</label>
+          <input formControlName="periodKey" placeholder="e.g. 2026-Q3" class="ltr" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('common.category') }} *</label>
+          <select formControlName="category">
+            <option value="FINANCIAL">{{ i18n.t('analytics.catFinancial') }}</option>
+            <option value="COMMERCIAL">{{ i18n.t('analytics.catCommercial') }}</option>
+            <option value="OPERATIONS">{{ i18n.t('analytics.catOperations') }}</option>
+            <option value="PROJECTS">{{ i18n.t('analytics.catProjects') }}</option>
+            <option value="WORKFORCE">{{ i18n.t('analytics.catWorkforce') }}</option>
+            <option value="COMPLIANCE">{{ i18n.t('analytics.catCompliance') }}</option>
+          </select>
+        </div>
+        <div class="field span-2">
+          <label>{{ i18n.t('analytics.kpiKey') }} *</label>
+          <input formControlName="kpiKey" class="ltr" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('analytics.actualValue') }} *</label>
+          <input type="number" step="0.01" formControlName="actualValue" class="ltr" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('analytics.targetValue') }}</label>
+          <input type="number" step="0.01" formControlName="targetValue" class="ltr" />
+        </div>
+      </div>
+    </form>
+
+    <div modal-actions class="modal-form-actions">
+      <button class="button secondary" type="button" (click)="closeSnapshotModal()">{{ i18n.t('common.cancel') }}</button>
+      <button class="button primary" type="submit" form="snapshot-form" [disabled]="snapshotForm.invalid || savingSnapshot()">
+        {{ i18n.t('common.save') }}
+      </button>
+    </div>
+  </app-modal-dialog>
+</section>

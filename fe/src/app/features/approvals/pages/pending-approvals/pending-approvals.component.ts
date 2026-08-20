@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ApprovalService } from '../../data-access/approval.service';
 import { ApprovalTask, ApprovalInstanceDetail } from '../../models/approval.models';
 import { ModalDialogComponent } from '../../../../shared/ui/modal-dialog/modal-dialog.component';
@@ -20,6 +21,7 @@ import { apiErrorDetail } from '../../../../core/api-error';
 export class PendingApprovalsComponent implements OnInit {
   readonly approvalService = inject(ApprovalService);
   readonly i18n = inject(I18nService);
+  private readonly router = inject(Router);
   private readonly notification = inject(NotificationService);
   private readonly auth = inject(AuthService);
   readonly decisionModalOpen = signal(false);
@@ -41,6 +43,63 @@ export class PendingApprovalsComponent implements OnInit {
   reload(): void { this.pageError.set(null); this.approvalService.loadMyTasks().subscribe({ error: err => this.pageError.set(apiErrorDetail(err, this.i18n.t('approvals.loadFailed'))) }); }
   openDecisionModal(task: ApprovalTask, action: 'APPROVE' | 'REJECT'): void { this.selectedTask.set(task); this.decisionAction.set(action); this.decisionComment = ''; this.decisionModalOpen.set(true); }
   openHistoryModal(task: ApprovalTask): void { this.approvalService.getApprovalHistory(task.documentType, task.documentId).subscribe({ next: detail => { this.historyDetail.set(detail); this.historyModalOpen.set(true); }, error: err => this.notification.error(apiErrorDetail(err, this.i18n.t('approvals.historyLoadFailed'))) }); }
+  
+  openDocument(task: ApprovalTask): void {
+    const docId = task.documentId;
+    switch (task.documentType) {
+      case 'PURCHASE_ORDER':
+        this.router.navigate(['/trade/procurement'], { queryParams: { po: docId } });
+        break;
+      case 'CONTRACTOR_SETTLEMENT':
+        this.router.navigate(['/workforce/settlements'], { queryParams: { settlement: docId } });
+        break;
+      case 'PAYROLL_RUN':
+        this.router.navigate(['/payroll'], { queryParams: { run: docId } });
+        break;
+      case 'SUPPLIER_INVOICE':
+        this.router.navigate(['/trade/procurement'], { queryParams: { tab: 'invoices', invoice: docId } });
+        break;
+      case 'SUPPLIER_PAYMENT':
+        this.router.navigate(['/trade/procurement'], { queryParams: { tab: 'payments', payment: docId } });
+        break;
+      case 'JOURNAL_ENTRY':
+        this.router.navigate(['/finance/journal-entries'], { queryParams: { entry: docId } });
+        break;
+      case 'LABOR_REQUEST':
+        this.router.navigate(['/workforce/labor-requests'], { queryParams: { request: docId } });
+        break;
+      case 'ADVANCE':
+        this.router.navigate(['/workforce/advances'], { queryParams: { advance: docId } });
+        break;
+      case 'PROJECT_LIFECYCLE':
+        this.router.navigate(['/projects', docId]);
+        break;
+      case 'WBS_BASELINE':
+        this.router.navigate(['/projects', docId], { queryParams: { tab: 'schedule' } });
+        break;
+      case 'BUDGET_REVISION':
+      case 'FORECAST_REVISION':
+        this.router.navigate(['/projects', docId], { queryParams: { tab: 'cost-control' } });
+        break;
+      case 'TENDER_AWARD':
+        this.router.navigate(['/projects', docId], { queryParams: { tab: 'tenders' } });
+        break;
+      case 'VARIATION_ORDER':
+      case 'OWNER_CLAIM':
+      case 'SUBCONTRACT_CLAIM':
+        this.router.navigate(['/projects', docId], { queryParams: { tab: 'claims' } });
+        break;
+      case 'INTERCOMPANY_TRANSACTION':
+        this.router.navigate(['/organization'], { queryParams: { tab: 'intercompany', tx: docId } });
+        break;
+      case 'ETA_TAX_SUBMISSION':
+        this.router.navigate(['/finance/tax-currency'], { queryParams: { tab: 'eta', invoice: docId } });
+        break;
+      default:
+        break;
+    }
+  }
+
   submitDecision(): void {
     const task = this.selectedTask(); if (!task) return;
     if (this.decisionAction() === 'REJECT' && !this.decisionComment.trim()) { this.notification.error(this.i18n.t('approvals.rejectionReasonRequired')); return; }

@@ -32,7 +32,8 @@ public class LaborRequestService {
         log.debug("create called with requestNumber={}", dto.requestNumber());
         LaborRequest req = new LaborRequest(
                 dto.requestNumber(), Instant.now(), dto.branchId(), dto.shiftName(),
-                dto.contractorId(), "DRAFT", dto.notes(), createdBy
+                dto.contractorId(), dto.projectId(), dto.wbsNodeId(), dto.costCodeId(),
+                dto.siteLocation(), "DRAFT", dto.notes(), createdBy
         );
         LaborRequest saved = requestRepository.save(req);
         if (dto.items() != null) {
@@ -75,6 +76,7 @@ public class LaborRequestService {
         return new WorkforceApi.LaborRequestResponse(
                 req.getId(), req.getRequestNumber(), req.getRequestDate().toEpochMilli(),
                 req.getBranchId(), req.getShiftName(), req.getContractorId(), contractorName,
+                req.getProjectId(), req.getWbsNodeId(), req.getCostCodeId(), req.getSiteLocation(),
                 req.getStatus(), req.getNotes(), req.getCreatedBy(), req.getApprovedBy(),
                 items, req.getCreatedAt().toEpochMilli(), req.getUpdatedAt().toEpochMilli()
         );

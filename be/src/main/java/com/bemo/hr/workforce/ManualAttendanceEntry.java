@@ -20,6 +20,12 @@ public class ManualAttendanceEntry {
     private String appId;
     @Column(name = "worker_id", nullable = false, length = 36)
     private String workerId;
+    @Column(name = "project_id", length = 36)
+    private String projectId;
+    @Column(name = "wbs_node_id", length = 36)
+    private String wbsNodeId;
+    @Column(name = "cost_code_id", length = 36)
+    private String costCodeId;
     @Column(name = "work_date", nullable = false, length = 10)
     private String workDate;
     @Column(name = "attendance_value", precision = 4, scale = 2, nullable = false)
@@ -55,7 +61,18 @@ public class ManualAttendanceEntry {
                                  String checkIn, String checkOut, BigDecimal actualHours,
                                  BigDecimal overtimeHours, BigDecimal deductionHours,
                                  BigDecimal effectiveDailyRate, String source, String notes) {
+        this(workerId, null, null, null, workDate, attendanceValue, checkIn, checkOut, actualHours, overtimeHours, deductionHours, effectiveDailyRate, source, notes);
+    }
+
+    public ManualAttendanceEntry(String workerId, String projectId, String wbsNodeId, String costCodeId,
+                                 String workDate, BigDecimal attendanceValue,
+                                 String checkIn, String checkOut, BigDecimal actualHours,
+                                 BigDecimal overtimeHours, BigDecimal deductionHours,
+                                 BigDecimal effectiveDailyRate, String source, String notes) {
         this.id = UUID.randomUUID().toString();
+        this.projectId = projectId;
+        this.wbsNodeId = wbsNodeId;
+        this.costCodeId = costCodeId;
         update(workerId, workDate, attendanceValue, checkIn, checkOut, actualHours, overtimeHours, deductionHours, effectiveDailyRate, source, notes);
     }
 
@@ -65,10 +82,6 @@ public class ManualAttendanceEntry {
 
     private static boolean decimalEquals(BigDecimal left, BigDecimal right) {
         return zeroIfNull(left).compareTo(zeroIfNull(right)) == 0;
-    }
-
-    private static String normalizeText(String value) {
-        return value == null || value.isBlank() ? null : value;
     }
 
     public void update(String workerId, String workDate, BigDecimal attendanceValue,
@@ -88,6 +101,12 @@ public class ManualAttendanceEntry {
         this.notes = notes;
     }
 
+    public void assignProject(String projectId, String wbsNodeId, String costCodeId) {
+        this.projectId = projectId;
+        this.wbsNodeId = wbsNodeId;
+        this.costCodeId = costCodeId;
+    }
+
     public boolean hasSameManualValues(BigDecimal attendanceValue, String checkIn, String checkOut,
                                        BigDecimal actualHours, BigDecimal overtimeHours,
                                        BigDecimal deductionHours, BigDecimal effectiveDailyRate,
@@ -99,7 +118,7 @@ public class ManualAttendanceEntry {
                 && decimalEquals(this.overtimeHours, zeroIfNull(overtimeHours))
                 && decimalEquals(this.deductionHours, zeroIfNull(deductionHours))
                 && decimalEquals(this.effectiveDailyRate, zeroIfNull(effectiveDailyRate))
-                && Objects.equals(normalizeText(this.notes), normalizeText(notes));
+                && Objects.equals(this.notes, notes);
     }
 
     @PrePersist
@@ -111,9 +130,5 @@ public class ManualAttendanceEntry {
     @PreUpdate
     void preUpdate() {
         updatedAt = Instant.now();
-    }
-
-    public long getVersion() {
-        return version;
     }
 }

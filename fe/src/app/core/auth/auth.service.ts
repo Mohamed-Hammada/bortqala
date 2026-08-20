@@ -211,7 +211,7 @@ export class AuthService {
     // All other roles, including ADMIN, respect tenant feature availability.
     const activeFeatures = user.activeFeatures ?? [];
     if (menuId === 'payroll' && !activeFeatures.includes('payroll.enabled')) return false;
-    if (menuId === 'sales' && !activeFeatures.includes('sales.enabled')) return false;
+    if ((menuId === 'sales' || menuId === 'pos' || menuId === 'crm') && !activeFeatures.includes('sales.enabled')) return false;
     if (menuId === 'production' && !activeFeatures.includes('manufacturing.enabled')) return false;
     if (menuId === 'quality' && !activeFeatures.includes('quality.enabled')) return false;
     if (menuId === 'procurement'
@@ -219,7 +219,7 @@ export class AuthService {
         && !activeFeatures.includes('purchasing.enabled')) return false;
     if (!activeFeatures.includes('finance.enabled')
         && (menuId === 'accounts' || menuId === 'journal-entries' || menuId === 'banks'
-          || menuId === 'tax-currency' || menuId === 'fiscal-periods' || menuId === 'budgets')) return false;
+          || menuId === 'tax-currency' || menuId === 'fiscal-periods' || menuId === 'budgets' || menuId === 'eta-tax')) return false;
     if (!activeFeatures.includes('workforce.contractorAccounts.enabled')
         && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements')) return false;
 

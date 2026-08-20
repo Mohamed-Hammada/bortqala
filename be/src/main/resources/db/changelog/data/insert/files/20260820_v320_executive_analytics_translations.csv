@@ -1,0 +1,119 @@
+id;translation_key;locale;text_value
+v320-001;workspace.analytics;ar-EG;التحليلات والذكاء التنفيذي
+v320-002;workspace.analytics;en-US;Analytics & BI
+v320-003;nav.executiveAnalytics;ar-EG;لوحة التحليلات التنفيذية
+v320-004;nav.executiveAnalytics;en-US;Executive Analytics
+v320-005;nav.executiveAnalyticsHint;ar-EG;لوحة المؤشرات التنفيذية المجمعة عبر كافة الأنظمة
+v320-006;nav.executiveAnalyticsHint;en-US;Executive cross-module KPI & BI dashboard
+v320-007;analytics.eyebrow;ar-EG;الذكاء التنفيذي الشامل
+v320-008;analytics.eyebrow;en-US;Cross-Module Business Intelligence
+v320-009;analytics.title;ar-EG;مركز التحليلات والمؤشرات التنفيذية
+v320-010;analytics.title;en-US;Executive Analytics Center
+v320-011;analytics.description;ar-EG;لوحة قيادة تنفيذية لحظية تجمع الأداء المالي والتجاري والتشغيلي والمشاريع والموارد البشرية
+v320-012;analytics.description;en-US;Real-time executive dashboard aggregating Financial, Commercial, Operational, Project, and HR metrics
+v320-013;analytics.tabOverview;ar-EG;نظرة عامة تنفيذية
+v320-014;analytics.tabOverview;en-US;Executive Overview
+v320-015;analytics.tabTrends;ar-EG;مقارنة الفترات والاتجاهات
+v320-016;analytics.tabTrends;en-US;Period & Trends Comparison
+v320-017;analytics.tabRegistry;ar-EG;سجل المؤشرات الدلالي
+v320-018;analytics.tabRegistry;en-US;KPI Semantic Registry
+v320-019;analytics.tabSnapshots;ar-EG;اللقطات والتسوية
+v320-020;analytics.tabSnapshots;en-US;Snapshots & Reconciliation
+v320-021;analytics.catFinancial;ar-EG;المؤشرات المالية
+v320-022;analytics.catFinancial;en-US;Financial KPIs
+v320-023;analytics.catCommercial;ar-EG;المؤشرات التجارية والمبيعات
+v320-024;analytics.catCommercial;en-US;Commercial & Sales KPIs
+v320-025;analytics.catOperations;ar-EG;العمليات وسلاسل الإمداد
+v320-026;analytics.catOperations;en-US;Operations & Supply Chain
+v320-027;analytics.catProjects;ar-EG;أداء المشاريع والتنفيذ
+v320-028;analytics.catProjects;en-US;Projects & Execution
+v320-029;analytics.catWorkforce;ar-EG;القوى العاملة والموارد البشرية
+v320-030;analytics.catWorkforce;en-US;Workforce & HR
+v320-031;analytics.catCompliance;ar-EG;الامتثال والمخاطر الضريبية
+v320-032;analytics.catCompliance;en-US;Compliance & Tax Risk
+v320-033;analytics.totalRevenue;ar-EG;إجمالي الإيرادات
+v320-034;analytics.totalRevenue;en-US;Total Revenue
+v320-035;analytics.totalOpex;ar-EG;المصروفات التشغيلية
+v320-036;analytics.totalOpex;en-US;Total OPEX
+v320-037;analytics.grossProfit;ar-EG;مجمل الربح
+v320-038;analytics.grossProfit;en-US;Gross Profit
+v320-039;analytics.netMargin;ar-EG;هامش صافي الربح
+v320-040;analytics.netMargin;en-US;Net Profit Margin
+v320-041;analytics.operatingCashFlow;ar-EG;التدفق النقدي التشغيلي
+v320-042;analytics.operatingCashFlow;en-US;Operating Cash Flow
+v320-043;analytics.salesBookings;ar-EG;إجمالي المبيعات المؤكدة
+v320-044;analytics.salesBookings;en-US;Sales Bookings
+v320-045;analytics.posGross;ar-EG;مبيعات نقاط البيع (POS)
+v320-046;analytics.posGross;en-US;POS Retail Sales
+v320-047;analytics.receivablesOutstanding;ar-EG;مستحقات العملاء المفتوحة
+v320-048;analytics.receivablesOutstanding;en-US;Open Receivables
+v320-049;analytics.inventoryValuation;ar-EG;قيمة المخزون الإجمالية
+v320-050;analytics.inventoryValuation;en-US;Total Inventory Valuation
+v320-051;analytics.stockTurnRate;ar-EG;معدل دوران المخزون
+v320-052;analytics.stockTurnRate;en-US;Stock Turnover Rate
+v320-053;analytics.projectPortfolioValue;ar-EG;قيمة عقود المشاريع
+v320-054;analytics.projectPortfolioValue;en-US;Project Portfolio Value
+v320-055;analytics.projectEac;ar-EG;التكلفة التقديرية عند الإنجاز (EAC)
+v320-056;analytics.projectEac;en-US;Estimate at Completion (EAC)
+v320-057;analytics.projectCostVariance;ar-EG;انحراف تكلفة المشاريع (VAC)
+v320-058;analytics.projectCostVariance;en-US;Cost Variance (VAC)
+v320-059;analytics.activeHeadcount;ar-EG;إجمالي القوى العاملة النشطة
+v320-060;analytics.activeHeadcount;en-US;Active Headcount
+v320-061;analytics.payrollDisbursed;ar-EG;الرواتب المنصرفة
+v320-062;analytics.payrollDisbursed;en-US;Payroll Disbursed
+v320-063;analytics.attendanceRate;ar-EG;نسبة الحضور الإجمالية
+v320-064;analytics.attendanceRate;en-US;Attendance Rate
+v320-065;analytics.etaTaxComplianceRate;ar-EG;نسبة الامتثال للفاتورة الإلكترونية
+v320-066;analytics.etaTaxComplianceRate;en-US;ETA E-Invoice Compliance
+v320-067;analytics.chequesPending;ar-EG;شيكات قيد التحصيل
+v320-068;analytics.chequesPending;en-US;Cheques Pending Clearance
+v320-069;analytics.kpiKey;ar-EG;رمز المؤشر
+v320-070;analytics.kpiKey;en-US;KPI Key
+v320-071;analytics.kpiName;ar-EG;اسم المؤشر
+v320-072;analytics.kpiName;en-US;KPI Name
+v320-073;analytics.formula;ar-EG;المعادلة المحاسبية
+v320-074;analytics.formula;en-US;Calculation Formula
+v320-075;analytics.grain;ar-EG;مستوى التجميع
+v320-076;analytics.grain;en-US;Grain
+v320-077;analytics.unit;ar-EG;وحدة القياس
+v320-078;analytics.unit;en-US;Unit
+v320-079;analytics.sourceModule;ar-EG;النظام المصدر
+v320-080;analytics.sourceModule;en-US;Source Module
+v320-081;analytics.actualValue;ar-EG;القيمة الفعلية
+v320-082;analytics.actualValue;en-US;Actual Value
+v320-083;analytics.targetValue;ar-EG;القيمة المستهدفة
+v320-084;analytics.targetValue;en-US;Target Value
+v320-085;analytics.variance;ar-EG;الانحراف
+v320-086;analytics.variance;en-US;Variance
+v320-087;analytics.trend;ar-EG;الاتجاه
+v320-088;analytics.trend;en-US;Trend
+v320-089;analytics.reconciliation;ar-EG;حالة التسوية
+v320-090;analytics.reconciliation;en-US;Reconciliation
+v320-091;analytics.takeSnapshot;ar-EG;حفظ لقطة دورية
+v320-092;analytics.takeSnapshot;en-US;Take Period Snapshot
+v320-093;analytics.snapshotSaved;ar-EG;تم حفظ اللقطة التنفيذية بنجاح
+v320-094;analytics.snapshotSaved;en-US;Executive snapshot saved successfully
+v320-095;analytics.periodFilter;ar-EG;الفترة الزمنية
+v320-096;analytics.periodFilter;en-US;Period
+v320-097;analytics.allModules;ar-EG;كافة الأنظمة
+v320-098;analytics.allModules;en-US;All Modules
+v320-099;analytics.months3;ar-EG;آخر 3 أشهر
+v320-100;analytics.months3;en-US;Last 3 Months
+v320-101;analytics.months6;ar-EG;آخر 6 أشهر
+v320-102;analytics.months6;en-US;Last 6 Months
+v320-103;analytics.months12;ar-EG;آخر 12 شهراً
+v320-104;analytics.months12;en-US;Last 12 Months
+v320-105;analytics.months24;ar-EG;آخر 24 شهراً
+v320-106;analytics.months24;en-US;Last 24 Months
+v320-107;analytics.drilldown;ar-EG;عرض التفاصيل
+v320-108;analytics.drilldown;en-US;Drill-down
+v320-109;analytics.reconciled;ar-EG;مطابق ومسوى
+v320-110;analytics.reconciled;en-US;Reconciled
+v320-111;analytics.pendingReview;ar-EG;قيد المراجعة
+v320-112;analytics.pendingReview;en-US;Pending Review
+v320-113;analytics.discrepancy;ar-EG;يوجد فارق
+v320-114;analytics.discrepancy;en-US;Discrepancy
+v320-115;analytics.excelExport;ar-EG;تصدير التحليلات (Excel)
+v320-116;analytics.excelExport;en-US;Export Analytics (Excel)
+v320-117;common.category;ar-EG;الفئة
+v320-118;common.category;en-US;Category
