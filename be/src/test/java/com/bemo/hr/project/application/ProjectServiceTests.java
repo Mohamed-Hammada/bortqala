@@ -1,6 +1,9 @@
 package com.bemo.hr.project.application;
 
 import com.bemo.hr.audit.application.AuditService;
+import com.bemo.hr.organization.infrastructure.BranchRepository;
+import com.bemo.hr.organization.infrastructure.CompanyRepository;
+import com.bemo.hr.party.BusinessPartyRepository;
 import com.bemo.hr.project.api.ProjectApi.*;
 import com.bemo.hr.project.domain.*;
 import com.bemo.hr.project.infrastructure.ProjectPartyRoleRepository;
@@ -10,7 +13,7 @@ import com.bemo.hr.shared.domain.BusinessRuleException;
 import com.bemo.hr.shared.domain.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -29,7 +32,11 @@ class ProjectServiceTests {
     private ProjectRepository projectRepository;
     private WbsNodeRepository wbsNodeRepository;
     private ProjectPartyRoleRepository projectPartyRoleRepository;
+    private CompanyRepository companyRepository;
+    private BranchRepository branchRepository;
+    private BusinessPartyRepository businessPartyRepository;
     private AuditService auditService;
+    private ObjectMapper objectMapper;
     private ProjectService projectService;
 
     @BeforeEach
@@ -37,8 +44,26 @@ class ProjectServiceTests {
         projectRepository = mock(ProjectRepository.class);
         wbsNodeRepository = mock(WbsNodeRepository.class);
         projectPartyRoleRepository = mock(ProjectPartyRoleRepository.class);
+        companyRepository = mock(CompanyRepository.class);
+        branchRepository = mock(BranchRepository.class);
+        businessPartyRepository = mock(BusinessPartyRepository.class);
         auditService = mock(AuditService.class);
-        projectService = new ProjectService(projectRepository, wbsNodeRepository, projectPartyRoleRepository, auditService);
+        objectMapper = new ObjectMapper();
+
+        when(companyRepository.existsById(anyString())).thenReturn(true);
+        when(branchRepository.existsById(anyString())).thenReturn(true);
+        when(businessPartyRepository.existsById(anyString())).thenReturn(true);
+
+        projectService = new ProjectService(
+                projectRepository,
+                wbsNodeRepository,
+                projectPartyRoleRepository,
+                companyRepository,
+                branchRepository,
+                businessPartyRepository,
+                auditService,
+                objectMapper
+        );
     }
 
     @Test
@@ -81,6 +106,21 @@ class ProjectServiceTests {
         assertThatThrownBy(() -> projectService.createProject(request))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Project code is already in use.");
+    }
+
+    @Test
+    void createProject_throwsBadRequest_whenCompanyNotFound() {
+        when(projectRepository.existsByCode("PRJ-001")).thenReturn(false);
+        when(companyRepository.existsById("non-existent-comp")).thenReturn(false);
+
+        CreateProjectRequest request = new CreateProjectRequest(
+                "PRJ-001", "برج النخيل", null, null, "non-existent-comp", null, null,
+                null, null, null, null, null, null, null, null
+        );
+
+        assertThatThrownBy(() -> projectService.createProject(request))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Company not found.");
     }
 
     @Test
@@ -140,6 +180,20 @@ class ProjectServiceTests {
         assertThatThrownBy(() -> projectService.updateProject(project.getId(), updateRequest))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Project is closed");
+    }
+
+    @Test
+    void closeProject_blocks_whenWbsInProgress() {
+        Project project = new Project(
+                "PRJ-001", "برج النخيل", null, null, null, null, null,
+                null, null, null, BigDecimal.ZERO, "EGP", null, null, true
+        );
+        when(projectRepository.findById(project.getId())).thenReturn(Optional.of(project));
+        when(wbsNodeRepository.existsByProjectIdAndStatus(project.getId(), WbsNodeStatus.IN_PROGRESS)).thenReturn(true);
+
+        assertThatThrownBy(() -> projectService.closeProject(project.getId()))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Cannot close project with work in progress.");
     }
 
     @Test

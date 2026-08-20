@@ -161,4 +161,21 @@ Whenever creating or adding a new feature/module with sidebar menu items, enforc
   - Frontend production build (`ng build`): **Generated cleanly in 23.8s**.
   - Backend test suite (`./gradlew.bat test -PskipDockerTests`): **BUILD SUCCESSFUL in 4m 38s across all 110+ suites (0 failures)**.
   - Central Tracker: `docs/BEMO_ROADMAP_IMPLEMENTATION_STATUS.md` at **30 of 30 features completed (100.0% completion)**.
+## Session 18: Quality Remediation, Security Hardening & Exception Translations Parity (Aug 20, 2026)
+- **SEC-001 & SEC-002 Security Hardening**: Added explicit `@PreAuthorize` across all controllers (`EtaComplianceController`, `InventoryAnalyticsController`, `PerformanceAppraisalController`, `DashboardController`, `DataExportController`, `DataExchangeController`, `SalesQuotationController`, `WorkforceExcelImportController`, `SystemAboutController`, `SampleTemplateController`, `ScreenShortcutController`). Added `PROJECT_MANAGER` to canonical `RoleCode.java`. Replaced invalid role names with canonical roles (`TREASURY_USER`, `HR_REVIEWER`, `VIEWER`). Verified 100% PASS on `check-authorization-contract.py` (20 declared, 20 referenced, 0 unknown). Verified `@Valid` on all `@RequestBody` parameters.
+- **Backend Exception Translations Parity**: Created Liquibase migration `20260820_v331_exception_code_translations` (`.yaml` and `.csv`) covering all 80 missing exception codes across ERP and Project modules in both `ar-EG` and `en-US` (160 rows). Registered in `next.changelog-master.yaml` and `test-h2.changelog-master.yaml`. Verified 100% PASS on `check-error-codes.py` (565/565 codes present, 0 missing) and `check-translation-catalog.py` (12,852 rows, 0 defects).
+- **P0.1 Project/WBS Kernel Remediation**:
+  - Eliminated N+1 query in `ProjectService.listProjects()` by batch querying WBS summaries via `summarizeWbsByProjectIds()` and mapping in-memory.
+  - Replaced unbounded `findAll()` in `ProjectService.getProjectSummary()` with database aggregate queries (`sumTotalContractValue()`, `sumTotalPlannedAmount()`, and status counts).
+  - Replaced string concatenation audit logging with Jackson `ObjectMapper.writeValueAsString()`.
+  - Added Organization (`CompanyRepository`, `BranchRepository`) and Business Party (`BusinessPartyRepository`) FK validation.
+  - Added project closure guard blocking if any WBS node has `IN_PROGRESS` status.
+  - Fixed WBS hierarchy depth calculation (`levelDelta` computed prior to `reposition()`), enforced 10-level hierarchy depth limit (`WBS_DEPTH_LIMIT_EXCEEDED`), and implemented single-query in-memory cycle detection.
+- **Testing & Quality Evidence**:
+  - Backend tests (`./gradlew.bat test -PskipDockerTests`): **702 passed / 184 suites / 0 failures** (BUILD SUCCESSFUL).
+  - Frontend unit tests (`ng test --watch=false`): **416 passed / 87 test files / 0 failures** (+5 tests in new `project-detail.page.spec.ts`).
+  - Frontend i18n check (`npm run check:i18n`): **4,452 literal keys verified across `ar-EG` & `en-US`** (0 missing).
+  - Frontend hardcoded check (`npm run check:hardcoded`): **105 templates and 211 TS files 100% clean**.
+  - All test scripts (`check-test-count.py`, `check-test-count.mjs`, `check-error-codes.py`, `check-translation-catalog.py`, `check-authorization-contract.py`) passing 100%.
+
 

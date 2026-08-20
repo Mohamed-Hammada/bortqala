@@ -633,6 +633,11 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/update/20260820_v330_verticals_allowed_menus.yaml
       relativeToChangelogFile: false
+  # EXCEPTION_CODES_PARITY_20260820: Feature Exception Translations Parity
+  - include:
+      file: db/changelog/data/insert/20260820_v331_exception_code_translations.yaml
+      relativeToChangelogFile: false
+
 
 
 

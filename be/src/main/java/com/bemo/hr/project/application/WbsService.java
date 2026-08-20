@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -27,19 +28,24 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class WbsService {
 
+    public static final int MAX_WBS_DEPTH = 10;
+
     private final WbsNodeRepository wbsNodeRepository;
     private final ProjectRepository projectRepository;
     private final ProjectCostCodeRepository projectCostCodeRepository;
     private final AuditService auditService;
+    private final ObjectMapper objectMapper;
 
     public WbsService(WbsNodeRepository wbsNodeRepository,
                       ProjectRepository projectRepository,
                       ProjectCostCodeRepository projectCostCodeRepository,
-                      AuditService auditService) {
+                      AuditService auditService,
+                      ObjectMapper objectMapper) {
         this.wbsNodeRepository = wbsNodeRepository;
         this.projectRepository = projectRepository;
         this.projectCostCodeRepository = projectCostCodeRepository;
         this.auditService = auditService;
+        this.objectMapper = objectMapper;
     }
 
     public List<WbsNodeResponse> getWbsTree(String projectId) {
@@ -108,6 +114,10 @@ public class WbsService {
             wbsPath = parent.getWbsPath() + "/" + wbsCode;
         }
 
+        if (level > MAX_WBS_DEPTH) {
+            throw new BusinessRuleException("WBS hierarchy cannot exceed " + MAX_WBS_DEPTH + " levels.", "WBS_DEPTH_LIMIT_EXCEEDED", HttpStatus.BAD_REQUEST);
+        }
+
         int sortOrder = request.sortOrder() != null ? request.sortOrder() : 0;
 
         WbsNode node = new WbsNode(
@@ -132,7 +142,7 @@ public class WbsService {
 
         WbsNode saved = wbsNodeRepository.save(node);
         auditService.record("WBS_NODE_CREATE", "PROJECT", projectId, getCurrentUser(),
-                "{\"nodeId\":\"" + saved.getId() + "\",\"wbsCode\":\"" + saved.getWbsCode() + "\",\"name\":\"" + saved.getName() + "\"}", null);
+                toAuditJson(Map.of("nodeId", saved.getId(), "wbsCode", saved.getWbsCode(), "name", saved.getName())), null);
         log.info("WbsNode {} created with code {} for project {}", saved.getId(), saved.getWbsCode(), projectId);
         return toSimpleResponse(saved);
     }
@@ -170,7 +180,7 @@ public class WbsService {
 
         WbsNode saved = wbsNodeRepository.save(node);
         auditService.record("WBS_NODE_UPDATE", "PROJECT", node.getProjectId(), getCurrentUser(),
-                "{\"nodeId\":\"" + saved.getId() + "\",\"name\":\"" + saved.getName() + "\"}", null);
+                toAuditJson(Map.of("nodeId", saved.getId(), "name", saved.getName())), null);
         return toSimpleResponse(saved);
     }
 
@@ -190,20 +200,24 @@ public class WbsService {
             throw new BusinessRuleException("A node cannot be its own parent.", "WBS_CYCLE_DETECTED", HttpStatus.CONFLICT);
         }
 
+        List<WbsNode> allProjectNodes = wbsNodeRepository.findByProjectId(node.getProjectId());
+        Map<String, WbsNode> nodeMap = allProjectNodes.stream()
+                .collect(Collectors.toMap(WbsNode::getId, n -> n, (a, b) -> a));
+
         // Cycle detection: ensure targetParentId is not a descendant of id
         if (targetParentId != null) {
-            WbsNode currentParent = requireWbsNode(targetParentId);
-            if (!currentParent.getProjectId().equals(node.getProjectId())) {
-                throw new BusinessRuleException("Target parent node belongs to a different project.", "WBS_PARENT_MISMATCH", HttpStatus.BAD_REQUEST);
+            WbsNode currentParent = nodeMap.get(targetParentId);
+            if (currentParent == null || !currentParent.getProjectId().equals(node.getProjectId())) {
+                throw new BusinessRuleException("Target parent node belongs to a different project or does not exist.", "WBS_PARENT_MISMATCH", HttpStatus.BAD_REQUEST);
             }
             while (currentParent != null) {
                 if (currentParent.getId().equals(id)) {
                     throw new BusinessRuleException("A node cannot be moved under one of its own descendants.", "WBS_CYCLE_DETECTED", HttpStatus.CONFLICT);
                 }
-                if (currentParent.getParentId() == null) {
+                if (currentParent.getParentId() == null || currentParent.getParentId().isBlank()) {
                     break;
                 }
-                currentParent = wbsNodeRepository.findById(currentParent.getParentId()).orElse(null);
+                currentParent = nodeMap.get(currentParent.getParentId());
             }
         }
 
@@ -213,20 +227,28 @@ public class WbsService {
             newLevel = 1;
             newPath = "/" + node.getWbsCode();
         } else {
-            WbsNode targetParent = requireWbsNode(targetParentId);
+            WbsNode targetParent = nodeMap.get(targetParentId);
+            if (targetParent == null) {
+                targetParent = requireWbsNode(targetParentId);
+            }
             newLevel = targetParent.getLevel() + 1;
             newPath = targetParent.getWbsPath() + "/" + node.getWbsCode();
         }
 
+        if (newLevel > MAX_WBS_DEPTH) {
+            throw new BusinessRuleException("WBS hierarchy cannot exceed " + MAX_WBS_DEPTH + " levels.", "WBS_DEPTH_LIMIT_EXCEEDED", HttpStatus.BAD_REQUEST);
+        }
+
+        int levelDelta = newLevel - node.getLevel();
         String oldPath = node.getWbsPath();
         node.reposition(targetParentId, node.getWbsCode(), newPath, newLevel, request.sortOrder());
         WbsNode saved = wbsNodeRepository.save(node);
 
         // Update descendant paths and levels
-        updateDescendantPaths(node.getProjectId(), oldPath, newPath, newLevel - node.getLevel());
+        updateDescendantPaths(node.getProjectId(), oldPath, newPath, levelDelta);
 
         auditService.record("WBS_NODE_REPOSITION", "PROJECT", node.getProjectId(), getCurrentUser(),
-                "{\"nodeId\":\"" + saved.getId() + "\",\"newParentId\":\"" + targetParentId + "\"}", null);
+                toAuditJson(Map.of("nodeId", saved.getId(), "newParentId", targetParentId != null ? targetParentId : "")), null);
         return toSimpleResponse(saved);
     }
 
@@ -245,7 +267,7 @@ public class WbsService {
 
         wbsNodeRepository.delete(node);
         auditService.record("WBS_NODE_DELETE", "PROJECT", node.getProjectId(), getCurrentUser(),
-                "{\"nodeId\":\"" + id + "\",\"wbsCode\":\"" + node.getWbsCode() + "\"}", null);
+                toAuditJson(Map.of("nodeId", id, "wbsCode", node.getWbsCode())), null);
         log.info("WbsNode {} deleted successfully", id);
     }
 
@@ -254,7 +276,7 @@ public class WbsService {
     private void updateDescendantPaths(String projectId, String oldPrefix, String newPrefix, int levelDelta) {
         List<WbsNode> all = wbsNodeRepository.findByProjectIdOrderBySortOrderAsc(projectId);
         for (WbsNode item : all) {
-            if (item.getWbsPath().startsWith(oldPrefix + "/")) {
+            if (item.getWbsPath() != null && item.getWbsPath().startsWith(oldPrefix + "/")) {
                 String updatedPath = newPrefix + item.getWbsPath().substring(oldPrefix.length());
                 item.reposition(item.getParentId(), item.getWbsCode(), updatedPath, item.getLevel() + levelDelta, item.getSortOrder());
                 wbsNodeRepository.save(item);
@@ -344,5 +366,14 @@ public class WbsService {
     private String getCurrentUser() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         return (auth != null && auth.getName() != null && !auth.getName().isBlank()) ? auth.getName() : "system";
+    }
+
+    private String toAuditJson(Object payload) {
+        try {
+            return objectMapper.writeValueAsString(payload);
+        } catch (Exception ex) {
+            log.warn("Failed to serialize audit detail payload", ex);
+            return "{}";
+        }
     }
 }

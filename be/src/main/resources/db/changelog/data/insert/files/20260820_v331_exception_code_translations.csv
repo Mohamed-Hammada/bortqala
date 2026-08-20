@@ -1,0 +1,161 @@
+id;translation_key;locale;text_value
+v331-001-ar;APPRAISAL_ALREADY_FINALIZED;ar-EG;تقييم الأداء معتمد ومغلق بالفعل ولا يمكن تعديله
+v331-001-en;APPRAISAL_ALREADY_FINALIZED;en-US;Performance appraisal is already finalized and cannot be modified
+v331-002-ar;APPRAISAL_NOT_FOUND;ar-EG;تقييم الأداء غير موجود
+v331-002-en;APPRAISAL_NOT_FOUND;en-US;Performance appraisal not found
+v331-003-ar;BANK_ACCOUNT_NOT_FOUND;ar-EG;الحساب البنكي غير موجود
+v331-003-en;BANK_ACCOUNT_NOT_FOUND;en-US;Bank account not found
+v331-004-ar;BIDDER_NOT_FOUND;ar-EG;مقدم العطاء / المقاول غير موجود
+v331-004-en;BIDDER_NOT_FOUND;en-US;Bidder not found
+v331-005-ar;BOQ_ITEM_NOT_FOUND;ar-EG;بند المقايسة غير موجود
+v331-005-en;BOQ_ITEM_NOT_FOUND;en-US;BOQ item not found
+v331-006-ar;CASHBOX_CODE_DUPLICATE;ar-EG;كود الخزينة مستخدم بالفعل
+v331-006-en;CASHBOX_CODE_DUPLICATE;en-US;Cashbox code is already in use
+v331-007-ar;CASHBOX_CODE_REQUIRED;ar-EG;كود الخزينة مطلوب
+v331-007-en;CASHBOX_CODE_REQUIRED;en-US;Cashbox code is required
+v331-008-ar;CASHBOX_INACTIVE;ar-EG;الخزينة غير نشطة
+v331-008-en;CASHBOX_INACTIVE;en-US;Cashbox is inactive
+v331-009-ar;CASHBOX_NAME_REQUIRED;ar-EG;اسم الخزينة مطلوب
+v331-009-en;CASHBOX_NAME_REQUIRED;en-US;Cashbox name is required
+v331-010-ar;CASHBOX_NOT_FOUND;ar-EG;الخزينة غير موجودة
+v331-010-en;CASHBOX_NOT_FOUND;en-US;Cashbox not found
+v331-011-ar;CHEQUE_NOT_FOUND;ar-EG;الشيك غير موجود
+v331-011-en;CHEQUE_NOT_FOUND;en-US;Cheque not found
+v331-012-ar;CHEQUE_NUMBER_REQUIRED;ar-EG;رقم الشيك مطلوب
+v331-012-en;CHEQUE_NUMBER_REQUIRED;en-US;Cheque number is required
+v331-013-ar;CLAIM_NOT_FOUND;ar-EG;المستخلص غير موجود
+v331-013-en;CLAIM_NOT_FOUND;en-US;Progress claim not found
+v331-014-ar;CLARIFICATION_NOT_FOUND;ar-EG;الاستفسار الفني غير موجود
+v331-014-en;CLARIFICATION_NOT_FOUND;en-US;Clarification not found
+v331-015-ar;CONTRACT_NOT_ACTIVE;ar-EG;عقد العمل غير نشط
+v331-015-en;CONTRACT_NOT_ACTIVE;en-US;Employment contract is not active
+v331-016-ar;CONTRACT_NOT_FOUND;ar-EG;عقد العمل غير موجود
+v331-016-en;CONTRACT_NOT_FOUND;en-US;Employment contract not found
+v331-017-ar;CONTRACT_NUMBER_EXISTS;ar-EG;رقم العقد موجود بالفعل
+v331-017-en;CONTRACT_NUMBER_EXISTS;en-US;Contract number already exists
+v331-018-ar;COST_CENTER_CODE_DUPLICATE;ar-EG;كود مركز التكلفة مكرر
+v331-018-en;COST_CENTER_CODE_DUPLICATE;en-US;Cost center code already exists
+v331-019-ar;COST_CENTER_CODE_REQUIRED;ar-EG;كود مركز التكلفة مطلوب
+v331-019-en;COST_CENTER_CODE_REQUIRED;en-US;Cost center code is required
+v331-020-ar;COST_CENTER_HAS_CHILDREN;ar-EG;لا يمكن حذف مركز تكلفة يحتوي على مراكز فرعية
+v331-020-en;COST_CENTER_HAS_CHILDREN;en-US;Cannot delete cost center with child centers
+v331-021-ar;COST_CENTER_NAME_REQUIRED;ar-EG;اسم مركز التكلفة مطلوب
+v331-021-en;COST_CENTER_NAME_REQUIRED;en-US;Cost center name is required
+v331-022-ar;COST_CENTER_NOT_FOUND;ar-EG;مركز التكلفة غير موجود
+v331-022-en;COST_CENTER_NOT_FOUND;en-US;Cost center not found
+v331-023-ar;COST_CODE_DUPLICATE;ar-EG;كود بند التكلفة مستخدم بالفعل في هذا المشروع
+v331-023-en;COST_CODE_DUPLICATE;en-US;Cost code already exists in this project
+v331-024-ar;COST_CODE_NOT_FOUND;ar-EG;كود بند التكلفة غير موجود
+v331-024-en;COST_CODE_NOT_FOUND;en-US;Cost code not found
+v331-025-ar;CUSTOMER_NOT_FOUND;ar-EG;العميل غير موجود
+v331-025-en;CUSTOMER_NOT_FOUND;en-US;Customer not found
+v331-026-ar;CYCLE_LOCKED;ar-EG;دورة التقييم مغلقة ومقفلة
+v331-026-en;CYCLE_LOCKED;en-US;Appraisal cycle is locked
+v331-027-ar;CYCLE_NOT_FOUND;ar-EG;دورة التقييم غير موجودة
+v331-027-en;CYCLE_NOT_FOUND;en-US;Appraisal cycle not found
+v331-028-ar;DEPENDENCY_NOT_FOUND;ar-EG;علاقة الاعتماد بين المهام غير موجودة
+v331-028-en;DEPENDENCY_NOT_FOUND;en-US;Schedule task dependency not found
+v331-029-ar;DPR_NOT_FOUND;ar-EG;التقرير اليومي للموقع غير موجود
+v331-029-en;DPR_NOT_FOUND;en-US;Daily progress report not found
+v331-030-ar;DPR_NO_PREVIOUS_REPORT_FOUND;ar-EG;لا يوجد تقرير سابق لنسخ البيانات منه
+v331-030-en;DPR_NO_PREVIOUS_REPORT_FOUND;en-US;No previous daily progress report found to copy
+v331-031-ar;DRAWER_PAYEE_REQUIRED;ar-EG;اسم الساحب / المستفيد مطلوب
+v331-031-en;DRAWER_PAYEE_REQUIRED;en-US;Drawer or payee name is required
+v331-032-ar;ETA_CONFIG_MISSING;ar-EG;إعدادات منظومة الفاتورة الإلكترونية غير مكتملة
+v331-032-en;ETA_CONFIG_MISSING;en-US;ETA electronic invoice configuration is missing
+v331-033-ar;FORECAST_EAC_NOT_FOUND;ar-EG;توقعات التكلفة عند الاكتمال غير موجودة
+v331-033-en;FORECAST_EAC_NOT_FOUND;en-US;Forecast EAC not found
+v331-034-ar;IC_INVALID_AMOUNT;ar-EG;مبلغ المعاملة بين الشركات غير صالح
+v331-034-en;IC_INVALID_AMOUNT;en-US;Intercompany transaction amount is invalid
+v331-035-ar;IC_INVALID_STATUS_TRANSITION;ar-EG;حالة المعاملة بين الشركات غير صالحة للتغيير
+v331-035-en;IC_INVALID_STATUS_TRANSITION;en-US;Invalid intercompany transaction status transition
+v331-036-ar;IC_PERIOD_REQUIRED;ar-EG;الفترة المالية للمعاملة بين الشركات مطلوبة
+v331-036-en;IC_PERIOD_REQUIRED;en-US;Intercompany period is required
+v331-037-ar;IC_SAME_COMPANY;ar-EG;لا يمكن إنشاء معاملة متبادلة للشركة مع نفسها
+v331-037-en;IC_SAME_COMPANY;en-US;Source and destination companies cannot be the same
+v331-038-ar;IC_TX_NOT_FOUND;ar-EG;المعاملة المالية بين الشركات غير موجودة
+v331-038-en;IC_TX_NOT_FOUND;en-US;Intercompany transaction not found
+v331-039-ar;INSUFFICIENT_CASHBOX_BALANCE;ar-EG;رصيد الخزينة غير كافٍ لإتمام الحركة
+v331-039-en;INSUFFICIENT_CASHBOX_BALANCE;en-US;Insufficient cashbox balance for transaction
+v331-040-ar;INSUFFICIENT_LEAVE_BALANCE;ar-EG;رصيد الإجازات غير كافٍ لتقديم الطلب
+v331-040-en;INSUFFICIENT_LEAVE_BALANCE;en-US;Insufficient leave balance for request
+v331-041-ar;INVALID_CASH_AMOUNT;ar-EG;قيمة الحركة النقدية يجب أن تكون موجبة
+v331-041-en;INVALID_CASH_AMOUNT;en-US;Cash transaction amount must be positive
+v331-042-ar;INVALID_CHEQUE_AMOUNT;ar-EG;قيمة الشيك يجب أن تكون موجبة
+v331-042-en;INVALID_CHEQUE_AMOUNT;en-US;Cheque amount must be positive
+v331-043-ar;INVALID_CHEQUE_STATE;ar-EG;حالة الشيك الحالية لا تسمح بهذا الإجراء
+v331-043-en;INVALID_CHEQUE_STATE;en-US;Current cheque state does not allow this action
+v331-044-ar;INVALID_CYCLE_DATES;ar-EG;تواريخ دورة التقييم غير صالحة
+v331-044-en;INVALID_CYCLE_DATES;en-US;Appraisal cycle dates are invalid
+v331-045-ar;INVALID_DATE_RANGE;ar-EG;النطاق الزمني غير صالح؛ يجب أن يكون تاريخ النهاية بعد البداية
+v331-045-en;INVALID_DATE_RANGE;en-US;Invalid date range - end date must be after start date
+v331-046-ar;INVALID_QUOTE_DATES;ar-EG;تواريخ عرض السعر غير صالحة
+v331-046-en;INVALID_QUOTE_DATES;en-US;Quotation dates are invalid
+v331-047-ar;INVALID_STATUS_FOR_APPROVAL;ar-EG;حالة المستند لا تسمح بالاعتماد
+v331-047-en;INVALID_STATUS_FOR_APPROVAL;en-US;Document status is invalid for approval
+v331-048-ar;INVALID_STATUS_FOR_REJECTION;ar-EG;حالة المستند لا تسمح بالرفض
+v331-048-en;INVALID_STATUS_FOR_REJECTION;en-US;Document status is invalid for rejection
+v331-049-ar;INVOICE_NOT_FOUND;ar-EG;الفاتورة غير موجودة
+v331-049-en;INVOICE_NOT_FOUND;en-US;Invoice not found
+v331-050-ar;LEAVE_OVERLAP;ar-EG;يوجد طلب إجازة متداخل مع هذه الفترة
+v331-050-en;LEAVE_OVERLAP;en-US;Overlapping leave request exists for this period
+v331-051-ar;LEAVE_REQUEST_NOT_FOUND;ar-EG;طلب الإجازة غير موجود
+v331-051-en;LEAVE_REQUEST_NOT_FOUND;en-US;Leave request not found
+v331-052-ar;LEAVE_TYPE_CODE_EXISTS;ar-EG;كود نوع الإجازة موجود بالفعل
+v331-052-en;LEAVE_TYPE_CODE_EXISTS;en-US;Leave type code already exists
+v331-053-ar;LEAVE_TYPE_NOT_FOUND;ar-EG;نوع الإجازة غير موجود
+v331-053-en;LEAVE_TYPE_NOT_FOUND;en-US;Leave type not found
+v331-054-ar;PARTY_NOT_FOUND;ar-EG;الطرف التجاري غير موجود
+v331-054-en;PARTY_NOT_FOUND;en-US;Business party not found
+v331-055-ar;PROJECT_CLOSED;ar-EG;المشروع مغلق ولا يمكن إجراء عمليات عليه
+v331-055-en;PROJECT_CLOSED;en-US;Project is closed and cannot be modified
+v331-056-ar;PROJECT_CODE_DUPLICATE;ar-EG;كود المشروع مستخدم بالفعل
+v331-056-en;PROJECT_CODE_DUPLICATE;en-US;Project code is already in use
+v331-057-ar;PROJECT_DELETE_NOT_ALLOWED;ar-EG;لا يمكن حذف المشروع إلا في حالة المسودة
+v331-057-en;PROJECT_DELETE_NOT_ALLOWED;en-US;Only draft projects can be deleted
+v331-058-ar;PROJECT_INVALID_DATES;ar-EG;تاريخ انتهاء المشروع يجب أن يكون بعد تاريخ البدء
+v331-058-en;PROJECT_INVALID_DATES;en-US;Project end date must be after start date
+v331-059-ar;PROJECT_NOT_FOUND;ar-EG;المشروع غير موجود
+v331-059-en;PROJECT_NOT_FOUND;en-US;Project not found
+v331-060-ar;PROJECT_ROLE_DUPLICATE;ar-EG;دور الطرف التجاري مسجل بالفعل في هذا المشروع
+v331-060-en;PROJECT_ROLE_DUPLICATE;en-US;Party role is already assigned to this project
+v331-061-ar;QUOTATION_ALREADY_CONVERTED;ar-EG;تم تحويل عرض السعر إلى أمر بيع بالفعل
+v331-061-en;QUOTATION_ALREADY_CONVERTED;en-US;Quotation has already been converted to sales order
+v331-062-ar;QUOTATION_HAS_NO_LINES;ar-EG;عرض السعر لا يحتوي على أي بنود
+v331-062-en;QUOTATION_HAS_NO_LINES;en-US;Quotation has no item lines
+v331-063-ar;QUOTATION_NOT_FOUND;ar-EG;عرض السعر غير موجود
+v331-063-en;QUOTATION_NOT_FOUND;en-US;Sales quotation not found
+v331-064-ar;RESOURCE_ASSIGNMENT_NOT_FOUND;ar-EG;تعيين المورد للمهمة غير موجود
+v331-064-en;RESOURCE_ASSIGNMENT_NOT_FOUND;en-US;Task resource assignment not found
+v331-065-ar;SCHEDULE_TASK_NOT_FOUND;ar-EG;مهمة الجدول الزمني غير موجودة
+v331-065-en;SCHEDULE_TASK_NOT_FOUND;en-US;Schedule task not found
+v331-066-ar;SETTL_ALREADY_LOCKED;ar-EG;التسوية مقفلة ومؤكدة بالفعل
+v331-066-en;SETTL_ALREADY_LOCKED;en-US;Settlement is already locked
+v331-067-ar;SETTL_PAYMENT_BEFORE_POST;ar-EG;لا يمكن سداد التسوية قبل ترحيلها محاسبياً
+v331-067-en;SETTL_PAYMENT_BEFORE_POST;en-US;Settlement must be posted before recording payment
+v331-068-ar;SETTL_PAYMENT_EXCEEDS_NET;ar-EG;قيمة السداد تتجاوز صافي مستحقات التسوية
+v331-068-en;SETTL_PAYMENT_EXCEEDS_NET;en-US;Payment amount exceeds settlement net amount
+v331-069-ar;SETTL_RECALCULATION_REQUIRED;ar-EG;يجب إعادة احتساب التسوية بعد تعديل البنود
+v331-069-en;SETTL_RECALCULATION_REQUIRED;en-US;Settlement recalculation is required
+v331-070-ar;SUBMISSION_NOT_FOUND;ar-EG;معاملة الإرسال غير موجودة
+v331-070-en;SUBMISSION_NOT_FOUND;en-US;Submission not found
+v331-071-ar;TENDER_NOT_FOUND;ar-EG;المناقصة غير موجودة
+v331-071-en;TENDER_NOT_FOUND;en-US;Tender not found
+v331-072-ar;WBS_CODE_DUPLICATE;ar-EG;كود بند هيكل العمل مكرر في هذا المشروع
+v331-072-en;WBS_CODE_DUPLICATE;en-US;WBS node code already exists in this project
+v331-073-ar;WBS_CYCLE_DETECTED;ar-EG;تم رصد حلقة تكرار دائرية في شجرة هيكل العمل
+v331-073-en;WBS_CYCLE_DETECTED;en-US;Cyclic dependency detected in WBS hierarchy
+v331-074-ar;WBS_HAS_CHILDREN;ar-EG;لا يمكن حذف بند هيكل عمل يحتوي على بنود فرعية
+v331-074-en;WBS_HAS_CHILDREN;en-US;Cannot delete WBS node that has child nodes
+v331-075-ar;WBS_NODE_NOT_FOUND;ar-EG;بند هيكل العمل غير موجود
+v331-075-en;WBS_NODE_NOT_FOUND;en-US;WBS node not found
+v331-076-ar;WBS_PARENT_MISMATCH;ar-EG;البند الأب يتبع مشروعاً مختلفاً
+v331-076-en;WBS_PARENT_MISMATCH;en-US;Parent node belongs to a different project
+v331-077-ar;WBS_DEPTH_LIMIT_EXCEEDED;ar-EG;لا يمكن أن يتجاوز عمق شجرة هيكل العمل 10 مستويات
+v331-077-en;WBS_DEPTH_LIMIT_EXCEEDED;en-US;WBS hierarchy cannot exceed 10 levels
+v331-078-ar;PROJECT_CLOSE_BLOCKED_IN_PROGRESS;ar-EG;لا يمكن إغلاق المشروع لوجود بنود عمل قيد التنفيذ
+v331-078-en;PROJECT_CLOSE_BLOCKED_IN_PROGRESS;en-US;Cannot close project with work in progress
+v331-079-ar;COMPANY_NOT_FOUND;ar-EG;الشركة المحددة غير موجودة
+v331-079-en;COMPANY_NOT_FOUND;en-US;Company not found
+v331-080-ar;BRANCH_NOT_FOUND;ar-EG;الفرع المحدد غير موجود
+v331-080-en;BRANCH_NOT_FOUND;en-US;Branch not found

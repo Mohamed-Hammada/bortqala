@@ -21,7 +21,7 @@ public class LeaveManagementController {
     }
 
     @GetMapping("/types")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'VIEWER', 'EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'VIEWER')")
     public List<LeaveManagementApi.LeaveTypeResponse> listTypes() {
         return leaveService.listLeaveTypes();
     }
@@ -34,7 +34,7 @@ public class LeaveManagementController {
     }
 
     @GetMapping("/balances")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'VIEWER', 'EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'VIEWER')")
     public List<LeaveManagementApi.LeaveBalanceResponse> listBalances(
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) Integer year) {
@@ -48,7 +48,7 @@ public class LeaveManagementController {
     }
 
     @GetMapping("/requests")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'VIEWER', 'EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'VIEWER')")
     public List<LeaveManagementApi.LeaveRequestResponse> listRequests(
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) LeaveRequestStatus status) {
@@ -57,20 +57,20 @@ public class LeaveManagementController {
 
     @PostMapping("/requests")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     public LeaveManagementApi.LeaveRequestResponse submitRequest(@Valid @RequestBody LeaveManagementApi.SubmitLeaveRequest request) {
         return leaveService.submitLeaveRequest(request);
     }
 
     @PostMapping("/requests/{id}/approve")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     public LeaveManagementApi.LeaveRequestResponse approveRequest(@PathVariable String id, Authentication auth) {
         String approver = auth != null ? auth.getName() : "ADMIN";
         return leaveService.approveLeaveRequest(id, approver);
     }
 
     @PostMapping("/requests/{id}/reject")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     public LeaveManagementApi.LeaveRequestResponse rejectRequest(
             @PathVariable String id,
             @Valid @RequestBody LeaveManagementApi.RejectLeaveRequest request) {
@@ -78,7 +78,7 @@ public class LeaveManagementController {
     }
 
     @PostMapping("/requests/{id}/cancel")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'EMPLOYEE')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     public LeaveManagementApi.LeaveRequestResponse cancelRequest(@PathVariable String id) {
         return leaveService.cancelLeaveRequest(id);
     }

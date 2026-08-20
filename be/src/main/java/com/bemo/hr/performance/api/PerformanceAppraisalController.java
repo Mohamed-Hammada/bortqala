@@ -4,12 +4,14 @@ import com.bemo.hr.performance.application.PerformanceAppraisalService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/performance")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
 public class PerformanceAppraisalController {
 
     private final PerformanceAppraisalService performanceService;

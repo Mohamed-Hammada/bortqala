@@ -3,12 +3,14 @@ package com.bemo.hr.operations.api;
 import com.bemo.hr.operations.application.InventoryAnalyticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/operations/analytics")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
 @RequiredArgsConstructor
 public class InventoryAnalyticsController {
 

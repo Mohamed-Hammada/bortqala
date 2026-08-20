@@ -9,6 +9,7 @@ import com.bemo.hr.project.infrastructure.WbsNodeRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -25,6 +26,7 @@ class WbsServiceTests {
     private ProjectRepository projectRepository;
     private ProjectCostCodeRepository projectCostCodeRepository;
     private AuditService auditService;
+    private ObjectMapper objectMapper;
     private WbsService wbsService;
 
     private Project activeProject;
@@ -35,7 +37,8 @@ class WbsServiceTests {
         projectRepository = mock(ProjectRepository.class);
         projectCostCodeRepository = mock(ProjectCostCodeRepository.class);
         auditService = mock(AuditService.class);
-        wbsService = new WbsService(wbsNodeRepository, projectRepository, projectCostCodeRepository, auditService);
+        objectMapper = new ObjectMapper();
+        wbsService = new WbsService(wbsNodeRepository, projectRepository, projectCostCodeRepository, auditService, objectMapper);
 
         activeProject = new Project(
                 "PRJ-001", "برج النخيل", null, null, null, null, null,
@@ -96,6 +99,27 @@ class WbsServiceTests {
     }
 
     @Test
+    void createChildWbsNode_blocks_whenDepthExceedsLimit() {
+        WbsNode level10Parent = new WbsNode(
+                activeProject.getId(), "p9", "1.10", "/1/2/3/4/5/6/7/8/9/10", "مستوى 10", null,
+                null, WbsNodeType.WORK_PACKAGE, 10, 0, null, BigDecimal.ZERO, BigDecimal.ZERO,
+                null, null, null, WbsNodeStatus.PLANNED
+        );
+        when(wbsNodeRepository.findById(level10Parent.getId())).thenReturn(Optional.of(level10Parent));
+        when(wbsNodeRepository.existsByProjectIdAndWbsCode(activeProject.getId(), "1.11")).thenReturn(false);
+
+        CreateWbsNodeRequest request = new CreateWbsNodeRequest(
+                level10Parent.getId(), "1.11", "تجاوز الحد", "Exceeds Limit",
+                null, WbsNodeType.BOQ_ITEM, 1, null, BigDecimal.ZERO, BigDecimal.ZERO,
+                null, null, null, WbsNodeStatus.PLANNED
+        );
+
+        assertThatThrownBy(() -> wbsService.createWbsNode(activeProject.getId(), request))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("WBS hierarchy cannot exceed 10 levels.");
+    }
+
+    @Test
     void getWbsTree_returnsNestedHierarchy() {
         WbsNode root = new WbsNode(
                 activeProject.getId(), null, "1", "/1", "المرحلة الأولى", null,
@@ -134,6 +158,7 @@ class WbsServiceTests {
 
         when(wbsNodeRepository.findById(root.getId())).thenReturn(Optional.of(root));
         when(wbsNodeRepository.findById(child.getId())).thenReturn(Optional.of(child));
+        when(wbsNodeRepository.findByProjectId(activeProject.getId())).thenReturn(List.of(root, child));
 
         // 1. Cannot be own parent
         RepositionWbsNodeRequest selfReq = new RepositionWbsNodeRequest(root.getId(), 0);

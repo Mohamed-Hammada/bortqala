@@ -5,12 +5,14 @@ import com.bemo.hr.trade.sales.domain.QuotationStatus;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/trade/sales/quotations")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'VIEWER')")
 public class SalesQuotationController {
 
     private final SalesQuotationService quotationService;
