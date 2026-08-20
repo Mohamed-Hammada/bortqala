@@ -28,7 +28,7 @@ public class PartyFinancialPositionService {
 
     public PartyFinancialPositionSummary getFinancialPosition(String partyId) {
         BusinessParty party = businessPartyRepository.findById(partyId)
-                .orElseThrow(() -> new BusinessRuleException("الطرف التجاري غير موجود", "PARTY_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Business party not found", "PARTY_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         List<PartnerLedgerEntry> entries = partnerLedgerEntryRepository.findByPartyIdOrderByOccurredAtDesc(partyId);
 

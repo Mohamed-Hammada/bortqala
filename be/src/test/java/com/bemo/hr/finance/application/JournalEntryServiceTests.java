@@ -131,7 +131,7 @@ class JournalEntryServiceTests {
 
         assertThatThrownBy(() -> service.create(payload(null), "admin"))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("رقم القيد مطلوب");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("JOURNAL_NUMBER_REQUIRED"));
     }
 
     @Test
@@ -141,7 +141,7 @@ class JournalEntryServiceTests {
 
         assertThatThrownBy(() -> service.create(payload("JV-1001"), "admin"))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("مستخدم بالفعل");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("JOURNAL_NUMBER_DUPLICATE"));
     }
 
     @Test

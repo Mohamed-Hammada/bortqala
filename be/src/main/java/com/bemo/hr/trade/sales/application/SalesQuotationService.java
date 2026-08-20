@@ -75,10 +75,10 @@ public class SalesQuotationService {
     @Transactional
     public SalesQuotationApi.QuotationResponse createQuotation(SalesQuotationApi.CreateQuotationRequest request) {
         BusinessParty customer = businessPartyRepository.findById(request.customerId())
-                .orElseThrow(() -> new BusinessRuleException("العميل غير موجود", "CUSTOMER_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Customer not found.", "CUSTOMER_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (request.validUntil().isBefore(request.quoteDate())) {
-            throw new BusinessRuleException("تاريخ الصلاحية يسبق تاريخ عرض السعر", "INVALID_QUOTE_DATES", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Validity date cannot be before the quotation date.", "INVALID_QUOTE_DATES", HttpStatus.BAD_REQUEST);
         }
 
         int year = request.quoteDate().getYear();
@@ -140,7 +140,7 @@ public class SalesQuotationService {
     @Transactional
     public SalesQuotationApi.QuotationResponse sendQuotation(String id) {
         SalesQuotation quote = quotationRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("عرض السعر غير موجود", "QUOTATION_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Quotation not found.", "QUOTATION_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         quote.send();
         SalesQuotation saved = quotationRepository.save(quote);
@@ -150,7 +150,7 @@ public class SalesQuotationService {
     @Transactional
     public SalesQuotationApi.QuotationResponse acceptQuotation(String id) {
         SalesQuotation quote = quotationRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("عرض السعر غير موجود", "QUOTATION_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Quotation not found.", "QUOTATION_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         quote.accept();
         SalesQuotation saved = quotationRepository.save(quote);
@@ -160,7 +160,7 @@ public class SalesQuotationService {
     @Transactional
     public SalesQuotationApi.QuotationResponse rejectQuotation(String id) {
         SalesQuotation quote = quotationRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("عرض السعر غير موجود", "QUOTATION_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Quotation not found.", "QUOTATION_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         quote.reject();
         SalesQuotation saved = quotationRepository.save(quote);
@@ -170,15 +170,15 @@ public class SalesQuotationService {
     @Transactional
     public SalesQuotationApi.QuotationResponse convertToSalesOrder(String quotationId) {
         SalesQuotation quote = quotationRepository.findById(quotationId)
-                .orElseThrow(() -> new BusinessRuleException("عرض السعر غير موجود", "QUOTATION_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Quotation not found.", "QUOTATION_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (quote.getStatus() == QuotationStatus.CONVERTED) {
-            throw new BusinessRuleException("تم تحويل عرض السعر مسبقاً", "QUOTATION_ALREADY_CONVERTED", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Quotation has already been converted.", "QUOTATION_ALREADY_CONVERTED", HttpStatus.BAD_REQUEST);
         }
 
         List<SalesQuotationLine> quoteLines = quotationLineRepository.findByQuotationId(quotationId);
         if (quoteLines.isEmpty()) {
-            throw new BusinessRuleException("عرض السعر لا يحتوي على بنود", "QUOTATION_HAS_NO_LINES", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Quotation has no line items.", "QUOTATION_HAS_NO_LINES", HttpStatus.BAD_REQUEST);
         }
 
         int year = LocalDate.now().getYear();

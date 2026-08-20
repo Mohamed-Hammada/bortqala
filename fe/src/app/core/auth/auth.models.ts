@@ -1,3 +1,5 @@
+import { UserPolicyAssignmentDto } from './security-policy.models';
+
 export type RoleCode =
   | 'SUPER_ADMIN'
   | 'ADMIN'
@@ -85,6 +87,7 @@ export interface AuthUser {
   active: boolean;
   version: number;
   activeFeatures?: string[];
+  policyAssignments?: UserPolicyAssignmentDto[];
 }
 
 export interface MeSessionInfo {

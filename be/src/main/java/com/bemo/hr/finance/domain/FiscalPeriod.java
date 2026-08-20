@@ -56,7 +56,7 @@ public class FiscalPeriod {
     public void updateStatus(Status newStatus, String username) {
         if (this.status == Status.LOCKED && newStatus != Status.LOCKED) {
             throw new com.bemo.hr.shared.domain.BusinessRuleException(
-                    "الفترة المالية مقفلة ولا يمكن تغيير حالتها إلا بإجراء إداري خاص.", "FISCAL_PERIOD_LOCKED", org.springframework.http.HttpStatus.CONFLICT);
+                    "Fiscal period is locked and its status cannot be changed except through a special admin action.", "FISCAL_PERIOD_LOCKED", org.springframework.http.HttpStatus.CONFLICT);
         }
         this.status = newStatus;
         if (newStatus == Status.CLOSED || newStatus == Status.LOCKED) {

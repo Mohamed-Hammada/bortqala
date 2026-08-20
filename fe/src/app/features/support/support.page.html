@@ -7,7 +7,7 @@
     </div>
   </header>
 
-  <nav class="tabs" aria-label="Support sections">
+  <nav class="tabs" [attr.aria-label]="i18n.t('support.sectionsAria')">
     <button [class.active]="tab()==='tickets'" (click)="tab.set('tickets')">
       {{ i18n.t('support.tickets') }}
     </button>

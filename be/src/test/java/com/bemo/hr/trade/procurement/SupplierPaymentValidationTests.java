@@ -85,7 +85,7 @@ class SupplierPaymentValidationTests {
         ProcurementApi.SupplierPaymentPayload payload = payload("supplier-b", new BigDecimal("20.00"));
         assertThatThrownBy(() -> procurementService.createSupplierPayment(payload))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("لا تخص المورد");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("PROC_INVOICE_SUPPLIER_MISMATCH"));
     }
 
     @Test
@@ -93,7 +93,7 @@ class SupplierPaymentValidationTests {
         ProcurementApi.SupplierPaymentPayload payload = payload("supplier-a", new BigDecimal("100.01"));
         assertThatThrownBy(() -> procurementService.createSupplierPayment(payload))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("يتجاوز الرصيد المتبقي");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("PROC_PAYMENT_EXCEEDS_BALANCE"));
     }
 
     @Test

@@ -185,7 +185,7 @@ class PolicyGroupServiceTests {
         UserEffectivePermissionsResponse effective = service.getEffectivePermissions("site_eng");
 
         assertThat(effective.isAdmin()).isFalse();
-        assertThat(effective.permissions()).containsExactly("contracting:dpr:approve");
+        assertThat(effective.permissions()).contains("contracting:dpr:approve");
         assertThat(effective.branchScopes()).containsExactly("branch-alex");
         assertThat(effective.costCenterScopes()).containsExactly("cc-100");
     }

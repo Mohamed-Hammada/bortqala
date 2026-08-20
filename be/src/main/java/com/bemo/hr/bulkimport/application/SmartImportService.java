@@ -80,7 +80,7 @@ public class SmartImportService {
                 .map(handler -> handler.commit(workflow, commitRows, request.skipInvalid()))
                 .orElseGet(() -> new HandlerOutcome(false, 0, 0,
                         "Validation and annotated error export are implemented for this workflow, but the current branch has no safe domain commit adapter for it yet. No business data was written.",
-                        "تم تنفيذ التحقق وتصدير الأخطاء المعلّق لهذا المسار، لكن الفرع الحالي لا يحتوي بعد على محول حفظ آمن إلى نموذج المجال. لم تتم كتابة بيانات أعمال.",
+                        "Validation and error export completed for this workflow, but no domain commit handler is available yet. No business data was written.",
                         List.of()));
 
         var allErrors = new ArrayList<CellError>(validated.errors());

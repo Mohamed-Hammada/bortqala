@@ -54,6 +54,7 @@ public class AuthService {
     private final DemoNoLoginProperties demoNoLoginProperties;
     private final AccessCatalogService accessCatalogService;
     private final com.bemo.hr.product.subscription.SubscriptionLimitService subscriptionLimitService;
+    private final com.bemo.hr.access.application.PolicyGroupService policyGroupService;
 
     public AuthService(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, JwtProperties jwtProperties,
                        AppUserRepository appUserRepository, RoleRepository roleRepository,
@@ -69,7 +70,8 @@ public class AuthService {
                        TenantFeatureService tenantFeatureService,
                        DemoNoLoginProperties demoNoLoginProperties,
                        AccessCatalogService accessCatalogService,
-                       com.bemo.hr.product.subscription.SubscriptionLimitService subscriptionLimitService) {
+                       com.bemo.hr.product.subscription.SubscriptionLimitService subscriptionLimitService,
+                       com.bemo.hr.access.application.PolicyGroupService policyGroupService) {
         this.authenticationManager = authenticationManager;
         this.jwtEncoder = jwtEncoder;
         this.jwtProperties = jwtProperties;
@@ -90,6 +92,7 @@ public class AuthService {
         this.demoNoLoginProperties = demoNoLoginProperties;
         this.accessCatalogService = accessCatalogService;
         this.subscriptionLimitService = subscriptionLimitService;
+        this.policyGroupService = policyGroupService;
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -164,7 +167,7 @@ public class AuthService {
             var user = userOpt.get();
             Instant now = Instant.now();
             if (user.isLocked(now)) {
-                throw new BusinessRuleException("الحساب مقفل مؤقتاً بسبب محاولات تسجيل دخول خاطئة متكررة.",
+                throw new BusinessRuleException("Account temporarily locked due to repeated failed login attempts.",
                         "ACCOUNT_TEMPORARILY_LOCKED", HttpStatus.UNAUTHORIZED);
             }
             try {
@@ -255,10 +258,10 @@ public class AuthService {
         var app = requireCurrentApp();
         var user = requireByUsername(app.getId(), username);
         if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
-            throw new BusinessRuleException("كلمة المرور الحالية غير صحيحة.", "PASSWORD_MISMATCH", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Current password is incorrect.", "PASSWORD_MISMATCH", HttpStatus.BAD_REQUEST);
         }
         if (request.currentPassword().equals(request.newPassword())) {
-            throw new BusinessRuleException("كلمة المرور الجديدة يجب أن تختلف عن كلمة المرور الحالية.",
+            throw new BusinessRuleException("New password must be different from the current password.",
                     "PASSWORD_REUSE", HttpStatus.BAD_REQUEST);
         }
         validatePasswordStrength(request.newPassword(), app);
@@ -349,8 +352,19 @@ public class AuthService {
     }
 
     public java.util.List<AuthApi.UserResponse> listUsers() {
-        return appUserRepository.findAllByAppIdOrderByDisplayNameAsc(TenantContext.require()).stream()
-                .map(this::toResponse).toList();
+        String appId = TenantContext.require();
+        List<AppUser> users = appUserRepository.findAllByAppIdOrderByDisplayNameAsc(appId);
+        var userIds = users.stream().map(AppUser::getId).toList();
+        var policyMap = policyGroupService.getUserPolicyAssignmentsForUsers(appId, userIds);
+        var activeFeatures = tenantFeatureService.getAllEnabled(appId);
+
+        return users.stream().map(user -> new AuthApi.UserResponse(
+                user.getId(), user.getUsername(), user.getDisplayName(),
+                user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
+                user.getAllowedMenus(), menuAccessMode(user), user.isCanViewSalary(), user.getCategoryId(),
+                user.isDashboardCustomizationEnabled(), user.isActive(), user.getVersion(), activeFeatures,
+                policyMap.getOrDefault(user.getId(), List.of())
+        )).toList();
     }
 
     public List<AuthApi.UserCategoryResponse> listCategories() {
@@ -433,6 +447,10 @@ public class AuthService {
         validateCategory(request.categoryId());
         user.assignCategory(request.categoryId());
         appUserRepository.save(user);
+        if (request.policyAssignments() != null) {
+            policyGroupService.assignUserPolicies(user.getId(),
+                    new com.bemo.hr.access.api.AccessPolicyApi.AssignUserPoliciesRequest(request.policyAssignments()), currentUsername);
+        }
         auditService.record("USER_CREATE", "USER", user.getId(), currentUsername,
                 "Created user " + user.getDisplayName() + " roles=" + request.roles()
                         + (request.accessChangeReason() == null || request.accessChangeReason().isBlank()
@@ -472,7 +490,7 @@ public class AuthService {
         boolean targetCurrentlyActiveAdmin = user.isActive() && isAdminUser(user);
         boolean targetWillBeActiveAdmin = request.active() && isAdminRoles(request.roles());
         if (targetCurrentlyActiveAdmin && !targetWillBeActiveAdmin && activeAdminCount(appId) <= 1) {
-            throw new BusinessRuleException("لا يمكن تعطيل أو إزالة دور آخر مسؤول نشط في النظام.",
+            throw new BusinessRuleException("Cannot disable or remove the last active admin role in the system.",
                     "FINAL_ADMIN_PROTECTION", HttpStatus.BAD_REQUEST);
         }
 
@@ -502,6 +520,10 @@ public class AuthService {
         }
         validateCategory(request.categoryId());
         user.assignCategory(request.categoryId());
+        if (request.policyAssignments() != null) {
+            policyGroupService.assignUserPolicies(user.getId(),
+                    new com.bemo.hr.access.api.AccessPolicyApi.AssignUserPoliciesRequest(request.policyAssignments()), currentUsername);
+        }
         auditService.record("USER_UPDATE", "USER", user.getId(), currentUsername,
                 accessChangeDetails(user, request, previousRoles), null);
         log.info("User {} updated by {}", user.getUsername(), currentUsername);
@@ -615,29 +637,29 @@ public class AuthService {
         int maxLen = app.getMaxPasswordLength() > 0 ? app.getMaxPasswordLength() : 128;
 
         if (password.length() < minLen) {
-            throw new BusinessRuleException("يجب أن لا تقل كلمة المرور عن " + minLen + " أحرف.");
+            throw new BusinessRuleException("Password must be at least " + minLen + " characters long.");
         }
         if (password.length() > maxLen) {
-            throw new BusinessRuleException("يجب أن لا تتجاوز كلمة المرور " + maxLen + " حرفاً.");
+            throw new BusinessRuleException("Password must not exceed " + maxLen + " characters.");
         }
         if (app.isDisallowSpaces() && password.contains(" ")) {
-            throw new BusinessRuleException("كلمة المرور يجب أن لا تحتوي على مسافات.",
+            throw new BusinessRuleException("Password must not contain spaces.",
                     "PASSWORD_NO_SPACES", HttpStatus.CONFLICT);
         }
         if (app.isRequireUppercase() && !password.chars().anyMatch(Character::isUpperCase)) {
-            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على حرف كبير على الأقل.",
+            throw new BusinessRuleException("Password must contain at least one uppercase letter.",
                     "PASSWORD_REQUIRES_UPPERCASE", HttpStatus.CONFLICT);
         }
         if (app.isRequireLowercase() && !password.chars().anyMatch(Character::isLowerCase)) {
-            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على حرف صغير على الأقل.",
+            throw new BusinessRuleException("Password must contain at least one lowercase letter.",
                     "PASSWORD_REQUIRES_LOWERCASE", HttpStatus.CONFLICT);
         }
         if (app.isRequireNumbers() && !password.chars().anyMatch(Character::isDigit)) {
-            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على رقم واحد على الأقل.",
+            throw new BusinessRuleException("Password must contain at least one digit.",
                     "PASSWORD_REQUIRES_DIGIT", HttpStatus.CONFLICT);
         }
         if (app.isRequireSpecialChars() && !password.matches(".*[^A-Za-z0-9].*")) {
-            throw new BusinessRuleException("كلمة المرور يجب أن تحتوي على رمز خاص واحد على الأقل.",
+            throw new BusinessRuleException("Password must contain at least one special character.",
                     "PASSWORD_REQUIRES_SPECIAL", HttpStatus.CONFLICT);
         }
     }
@@ -662,10 +684,11 @@ public class AuthService {
 
     private AuthApi.UserResponse toResponse(AppUser user) {
         var activeFeatures = tenantFeatureService.getAllEnabled(user.getAppId());
+        var policyAssignments = policyGroupService.getUserPolicyAssignments(user.getId());
         return new AuthApi.UserResponse(user.getId(), user.getUsername(), user.getDisplayName(),
                 user.getRoles().stream().map(Role::getCode).collect(Collectors.toUnmodifiableSet()),
                 user.getAllowedMenus(), menuAccessMode(user), user.isCanViewSalary(), user.getCategoryId(),
-                user.isDashboardCustomizationEnabled(), user.isActive(), user.getVersion(), activeFeatures);
+                user.isDashboardCustomizationEnabled(), user.isActive(), user.getVersion(), activeFeatures, policyAssignments);
     }
 
     private String menuAccessMode(AppUser user) {

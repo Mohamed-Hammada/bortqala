@@ -108,7 +108,6 @@ class WorkforceExcelImportServiceTests {
 
         assertThatThrownBy(() -> importService.upload(new MockMultipartFile("file", "file.xlsx", XLSX, badFile)))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("تعذر قراءة ملف البصمة.")
                 .hasFieldOrPropertyWithValue("code", "EXCEL_READ_FAILED")
                 .hasFieldOrPropertyWithValue("status", HttpStatus.BAD_REQUEST);
     }
@@ -134,7 +133,6 @@ class WorkforceExcelImportServiceTests {
 
         assertThatThrownBy(() -> importService.upload(new MockMultipartFile("file", "ok.xlsx", XLSX, new byte[]{1, 2, 3})))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessage("تعذر قراءة ملف البصمة.")
                 .hasFieldOrPropertyWithValue("code", "EXCEL_READ_FAILED");
     }
 
@@ -153,7 +151,7 @@ class WorkforceExcelImportServiceTests {
 
         assertThatThrownBy(() -> importService.upload(new MockMultipartFile("file", "empty.xlsx", XLSX, noSheets)))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessage("ملف Excel لا يحتوي على أوراق.");
+                .hasFieldOrPropertyWithValue("code", "WORKFORCE_IMPORT_NO_SHEETS");
 
         verify(batchRepository, never()).save(any());
     }
@@ -391,7 +389,7 @@ class WorkforceExcelImportServiceTests {
 
         assertThatThrownBy(() -> importService.reverse("b1"))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessage("يمكن التراجع عن عملية منفذة فقط.");
+                .hasFieldOrPropertyWithValue("code", "WORKFORCE_IMPORT_REVERSE_NOT_EXECUTED");
 
         verify(changeRepository, never()).findByBatchIdOrderByCreatedAtDesc(anyString());
         verify(attendanceRepository, never()).findAllById(any());

@@ -55,7 +55,7 @@ public class TreasuryController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.BankAccountResponse updateBankAccount(@PathVariable String id, @Valid @RequestBody TreasuryApi.BankAccountPayload payload) {
         BankAccount bank = bankAccountRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("الحساب البنكي غير موجود", "FIN_BANK_ACCOUNT_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Bank account not found", "FIN_BANK_ACCOUNT_NOT_FOUND", HttpStatus.CONFLICT));
         bank.update(payload.bankName(), payload.accountNumber(), payload.iban(), payload.swiftCode(), payload.accountId(), payload.currencyCode(), payload.active());
         return toResponse(bankAccountRepository.save(bank));
     }
@@ -80,7 +80,7 @@ public class TreasuryController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.TaxRateResponse updateTaxRate(@PathVariable String id, @Valid @RequestBody TreasuryApi.TaxRatePayload payload) {
         TaxRate tax = taxRateRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("ضريبة النظام غير موجودة", "FIN_SYSTEM_TAX_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("System tax not found", "FIN_SYSTEM_TAX_NOT_FOUND", HttpStatus.CONFLICT));
         TaxRate.Type type = TaxRate.Type.valueOf(payload.taxType().toUpperCase());
         tax.update(payload.code(), payload.name(), payload.ratePercentage(), type, payload.accountId(), payload.active());
         return toResponse(taxRateRepository.save(tax));
@@ -105,7 +105,7 @@ public class TreasuryController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.CurrencyResponse updateCurrency(@PathVariable String id, @Valid @RequestBody TreasuryApi.CurrencyPayload payload) {
         Currency currency = currencyRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("العملة غير موجودة", "FIN_CURRENCY_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Currency not found", "FIN_CURRENCY_NOT_FOUND", HttpStatus.CONFLICT));
         currency.update(payload.code(), payload.name(), payload.symbol(), payload.isBase(), payload.exchangeRate(), payload.active());
         return toResponse(currencyRepository.save(currency));
     }

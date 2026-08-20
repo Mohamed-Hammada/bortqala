@@ -83,7 +83,7 @@ public class BiometricDeviceSyncService {
     public ImportApi.SourceResponse updateSource(String id, ImportApi.SourceRequest request, String actor) {
         log.debug("updateSource called with id={}", id);
         var source = biometricSourceRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("مصدر البصمة غير موجود.", "BIO_SOURCE_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Biometric source not found.", "BIO_SOURCE_NOT_FOUND"));
         boolean autoCreate = Boolean.TRUE.equals(request.autoCreateEmployees());
         boolean autoCreateActive = request.autoCreateEmployeeActive() == null || request.autoCreateEmployeeActive();
         if (source.getSourceType() == BiometricSource.SourceType.DEVICE) {
@@ -125,7 +125,7 @@ public class BiometricDeviceSyncService {
     public void deleteSource(String id, String actor) {
         log.debug("deleteSource called with id={}", id);
         var source = biometricSourceRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("مصدر البصمة غير موجود.", "BIO_SOURCE_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Biometric source not found.", "BIO_SOURCE_NOT_FOUND"));
         if (source.getSourceType() == BiometricSource.SourceType.DEVICE) {
             throw new BusinessRuleException("Device sources are immutable and cannot be deleted while the device is registered.",
                     "BIO_SOURCE_DEVICE_IMMUTABLE", HttpStatus.CONFLICT);
@@ -311,7 +311,7 @@ public class BiometricDeviceSyncService {
 
     private BiometricDevice requireDevice(String id) {
         return biometricDeviceRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("جهاز البصمة غير موجود.", "BIO_DEVICE_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Biometric device not found.", "BIO_DEVICE_NOT_FOUND"));
     }
 
     private void validateEndpoint(String value) {
@@ -323,7 +323,7 @@ public class BiometricDeviceSyncService {
                 throw new IllegalArgumentException();
             }
         } catch (Exception exception) {
-            throw new BusinessRuleException("رابط جهاز البصمة غير صالح ويجب أن يبدأ بـ http أو https.", "BIO_DEVICE_ENDPOINT_INVALID", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Invalid biometric device URL; it must start with http or https.", "BIO_DEVICE_ENDPOINT_INVALID", HttpStatus.CONFLICT);
         }
     }
 

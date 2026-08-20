@@ -62,7 +62,7 @@ public class WorkforceMasterDataExcelExporter {
             workbook.write(output);
             return output.toByteArray();
         } catch (Exception exception) {
-            throw new IllegalStateException("تعذّر إنشاء ملف Excel لبيانات القوى العاملة.", exception);
+            throw new IllegalStateException("Failed to create workforce data Excel file.", exception);
         }
     }
 

@@ -44,7 +44,7 @@
     </div>
 
     <div class="action-buttons">
-      <button type="button" class="btn btn-secondary" (click)="copyPrevious()" title="Copy previous day report">
+      <button type="button" class="btn btn-secondary" (click)="copyPrevious()" [attr.title]="i18n.t('dpr.copyPrevious')">
         📋 {{ i18n.t('dpr.copyPreviousDay') }}
       </button>
       <button type="button" class="btn btn-primary" (click)="openCreate()">
@@ -120,7 +120,7 @@
                 type="button"
                 class="btn btn-sm btn-outline"
                 (click)="openEdit(r)"
-                title="View / Edit"
+                [attr.title]="i18n.t('common.viewEdit')"
               >
                 ✏️
               </button>
@@ -130,7 +130,7 @@
                 type="button"
                 class="btn btn-sm btn-secondary"
                 (click)="submitReport(r)"
-                title="Submit for Approval"
+                [attr.title]="i18n.t('dpr.submitForApproval')"
               >
                 📤
               </button>
@@ -140,7 +140,7 @@
                 type="button"
                 class="btn btn-sm btn-success"
                 (click)="approveReport(r)"
-                title="Approve Report"
+                [attr.title]="i18n.t('dpr.approveReport')"
               >
                 ✅
               </button>
@@ -150,7 +150,7 @@
                 type="button"
                 class="btn btn-sm btn-warning"
                 (click)="openReopenModal(r)"
-                title="Reopen Report"
+                [attr.title]="i18n.t('dpr.reopenReport')"
               >
                 🔓
               </button>
@@ -160,7 +160,7 @@
                 type="button"
                 class="btn btn-sm btn-danger"
                 (click)="deleteReport(r)"
-                title="Delete Report"
+                [attr.title]="i18n.t('dpr.deleteReport')"
               >
                 🗑️
               </button>

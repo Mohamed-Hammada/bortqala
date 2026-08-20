@@ -63,7 +63,7 @@ class TreasuryCashChequeServiceTests {
         when(cashboxRepository.existsByCode("MAIN-CASH")).thenReturn(true);
         assertThatThrownBy(() -> service.createCashbox("MAIN-CASH", "Duplicate", null, "EGP", null, null))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("مستخدم بالفعل");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("CASHBOX_CODE_DUPLICATE"));
     }
 
     @Test
@@ -94,7 +94,7 @@ class TreasuryCashChequeServiceTests {
                 cashbox.getId(), CashboxTransaction.TransactionType.PAYMENT, BigDecimal.valueOf(15000),
                 "PV-002", null, "Overdraft", System.currentTimeMillis(), "cashier"
         )).isInstanceOf(BusinessRuleException.class)
-          .hasMessageContaining("رصيد الخزينة الحالي لا يكفي");
+          .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("INSUFFICIENT_CASHBOX_BALANCE"));
     }
 
     @Test

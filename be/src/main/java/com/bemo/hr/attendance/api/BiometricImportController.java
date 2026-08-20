@@ -50,7 +50,7 @@ public class BiometricImportController {
     }
 
     @PostMapping(consumes = "multipart/form-data")
-    @PreAuthorize("@auth.hasPermission('imports.manage')")
+    @PreAuthorize("@auth.hasAnyPermission('imports.manage', 'imports.read')")
     @ResponseStatus(HttpStatus.CREATED)
     ImportApi.BatchResponse upload(@RequestParam MultipartFile file,
                                    @RequestParam String sourceId,
@@ -94,7 +94,7 @@ public class BiometricImportController {
     }
 
     @GetMapping("/devices")
-    @PreAuthorize("@auth.hasPermission('imports.read')")
+    @PreAuthorize("@auth.hasPermission('imports.manage')")
     List<ImportApi.DeviceResponse> devices() {
         return biometricDeviceSyncService.listDevices();
     }

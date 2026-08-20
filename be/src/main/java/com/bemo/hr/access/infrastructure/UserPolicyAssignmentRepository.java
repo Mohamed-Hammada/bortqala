@@ -11,6 +11,8 @@ public interface UserPolicyAssignmentRepository extends JpaRepository<UserPolicy
 
     List<UserPolicyAssignment> findByAppIdAndUserId(String appId, String userId);
 
+    List<UserPolicyAssignment> findByAppIdAndUserIdIn(String appId, java.util.Collection<String> userIds);
+
     List<UserPolicyAssignment> findByUserId(String userId);
 
     void deleteByAppIdAndUserId(String appId, String userId);

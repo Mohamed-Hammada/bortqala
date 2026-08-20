@@ -102,7 +102,7 @@ public class WorkforceSettlementPeriod {
 
     public void markCalculationFailed(String message) {
         this.lastCalculationFailedAt = Instant.now();
-        this.lastCalculationError = message == null ? "تعذر تنفيذ إعادة الاحتساب." : message.substring(0, Math.min(message.length(), 1000));
+        this.lastCalculationError = message == null ? "Recalculation failed." : message.substring(0, Math.min(message.length(), 1000));
     }
 
     @PrePersist

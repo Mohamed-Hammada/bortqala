@@ -28,7 +28,13 @@ public class SecurityAuthorizationEvaluator {
     private final PolicyGroupService policyGroupService;
     private final EffectivePermissionCache permissionCache;
 
-    public SecurityAuthorizationEvaluator(PolicyGroupService policyGroupService, EffectivePermissionCache permissionCache) {
+    public SecurityAuthorizationEvaluator(PolicyGroupService policyGroupService) {
+        this(policyGroupService, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public SecurityAuthorizationEvaluator(PolicyGroupService policyGroupService,
+                                          @org.springframework.lang.Nullable EffectivePermissionCache permissionCache) {
         this.policyGroupService = policyGroupService;
         this.permissionCache = permissionCache;
     }

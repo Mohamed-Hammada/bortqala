@@ -39,7 +39,7 @@
     </article>
   </section>
 
-  <section class="supplier-strip" aria-label="Supported suppliers">
+  <section class="supplier-strip" [attr.aria-label]="i18n.t('imports.supportedSuppliers')">
     @for (supplier of store.suppliers(); track supplier.supplier) {
       <div class="supplier-chip">
         <strong>{{ supplierName(supplier.supplier) }}</strong>

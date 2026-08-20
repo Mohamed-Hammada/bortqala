@@ -180,7 +180,7 @@ public class ProjectProgressClaimService {
             ProgressClaimAdjustment retentionAdj = new ProgressClaimAdjustment(
                     claim.getId(),
                     AdjustmentType.RETENTION,
-                    "تأمين أعمال وضمان (5%)",
+                    "Retention and warranty (5%)",
                     BigDecimal.valueOf(5.0),
                     BigDecimal.ZERO,
                     BigDecimal.ZERO,

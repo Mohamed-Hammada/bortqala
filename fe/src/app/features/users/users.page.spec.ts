@@ -145,6 +145,7 @@ describe('UsersPage', () => {
     httpMock.expectOne('/api/v1/users').flush([]);
     httpMock.expectOne('/api/v1/auth/user-categories').flush([]);
     httpMock.expectOne('/api/v1/access/catalog').flush(CATALOG);
+    httpMock.expectOne('/api/v1/access/policy-groups').flush([]);
   });
 
   afterEach(() => {
@@ -340,5 +341,52 @@ describe('UsersPage', () => {
 
     const payload = save.mock.calls[0][1] as UserPayload;
     expect(payload.accessChangeReason).toBeUndefined();
+  });
+
+  it('initializes policy groups on new user and carries policy assignments with scopes into payload on save', async () => {
+    page.availablePolicyGroups.set([
+      {
+        id: 'pg-1',
+        groupName: 'Site Accountant',
+        description: 'Accountant scoped to site',
+        isSystem: false,
+        permissionsCount: 5,
+        assignedUsersCount: 0,
+        createdAt: 0,
+        updatedAt: 0,
+        version: 1,
+      },
+    ]);
+
+    page.openNew();
+    expect(page.userPolicyAssignments()).toHaveLength(1);
+    expect(page.userPolicyAssignments()[0].selected).toBe(false);
+
+    page.togglePolicyAssignment('pg-1');
+    page.updateBranchScope('pg-1', 'BRANCH-CAIRO');
+    page.updateCostCenterScope('pg-1', 'CC-101');
+
+    page.form.patchValue({
+      username: 'site.user',
+      displayName: 'Site User',
+      password: 'Password123!',
+      roles: ['VIEWER'],
+      allowedMenus: ['dashboard'],
+    });
+
+    page.validationResult.set({ valid: true, warnings: [], conflicts: [], errors: [], sensitivePermissions: [] });
+    const save = vi.spyOn(page.store, 'save').mockResolvedValue(true);
+
+    await page.submit();
+
+    expect(save).toHaveBeenCalledTimes(1);
+    const payload = save.mock.calls[0][1] as UserPayload;
+    expect(payload.policyAssignments).toEqual([
+      {
+        policyGroupId: 'pg-1',
+        scopeBranchId: 'BRANCH-CAIRO',
+        scopeCostCenterId: 'CC-101',
+      },
+    ]);
   });
 });

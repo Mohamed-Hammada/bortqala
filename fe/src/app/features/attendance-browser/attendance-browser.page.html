@@ -57,7 +57,7 @@
     <section class="month-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
       <header>
         <div><h2>{{ i18n.t('attendanceBrowser.choosePeriod') }}</h2><p>{{ i18n.t('attendanceBrowser.choosePeriodHint') }}</p></div>
-        <button class="icon-button" type="button" (click)="closeMonthDialog()" aria-label="Close">×</button>
+        <button class="icon-button" type="button" (click)="closeMonthDialog()" [attr.aria-label]="i18n.t('common.close')">×</button>
       </header>
       <label class="year-field"><span>{{ i18n.t('attendanceBrowser.yearLabel') }}</span><select [value]="selectedYear() ?? ''" (change)="chooseYear($event)">@for (year of years(); track year) { <option [value]="year">{{ year }}</option> }</select></label>
       <div class="dialog-months">

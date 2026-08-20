@@ -117,7 +117,7 @@ public class JournalEntry {
     public void markReversed(String reversalEntryId, String reversalReason, String reversedBy, String operationId) {
         if (this.status != Status.POSTED) {
             throw new com.bemo.hr.shared.domain.BusinessRuleException(
-                    "لا يمكن عكس قيد في حالة " + this.status + ". العكس مسموح فقط للقيد المُرحَّل.",
+                    "Cannot reverse a journal entry in status " + this.status + ". Only posted entries can be reversed.",
                     "JOURNAL_STATE_INVALID", org.springframework.http.HttpStatus.CONFLICT);
         }
         this.status = Status.REVERSED;

@@ -85,7 +85,7 @@ public class BiometricImportService {
     @Transactional
     public ImportApi.BatchResponse reverse(String batchId, String actor) {
         var batch = importBatchRepository.findById(batchId)
-                .orElseThrow(() -> new NotFoundException("سجل الاستيراد غير موجود.", "IMP_BATCH_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Import batch not found.", "IMP_BATCH_NOT_FOUND"));
         if (batch.getStatus() == ImportStatus.REVERSED) return toResponse(batch, false);
         List<String> punchIds = punchImportEvidenceRepository.findPunchIdsByBatchId(batchId);
         punchImportEvidenceRepository.deleteByBatchId(batchId);
@@ -108,7 +108,7 @@ public class BiometricImportService {
         if (actor == null || actor.isBlank())
             throw new BusinessRuleException("Importer name is required.", "BIO_IMPORTER_NAME_REQUIRED", HttpStatus.CONFLICT);
         BiometricSource source = biometricSourceRepository.findById(sourceId)
-                .orElseThrow(() -> new NotFoundException("مصدر البصمة غير موجود.", "BIO_SOURCE_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Biometric source not found.", "BIO_SOURCE_NOT_FOUND"));
         if (source.getSourceType() != BiometricSource.SourceType.FILE_DEVICE) {
             throw new BusinessRuleException("Selected source is not a file-import source.", "BIO_SOURCE_WRONG_TYPE", HttpStatus.CONFLICT);
         }

@@ -70,7 +70,7 @@ public class OrganizationController {
     @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.CompanyResponse updateCompany(@PathVariable String id, @Valid @RequestBody OrganizationApi.CompanyPayload payload) {
         Company company = companyRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("الشركة غير موجودة", "ORG_COMPANY_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Company not found.", "ORG_COMPANY_NOT_FOUND", HttpStatus.CONFLICT));
         company.update(payload.code(), payload.name(), payload.taxNumber(), payload.commercialRegistry(), payload.active());
         return toResponse(companyRepository.save(company));
     }
@@ -94,7 +94,7 @@ public class OrganizationController {
     @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.BranchResponse updateBranch(@PathVariable String id, @Valid @RequestBody OrganizationApi.BranchPayload payload) {
         Branch branch = branchRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("الفرع غير موجود", "ORG_BRANCH_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Branch not found.", "ORG_BRANCH_NOT_FOUND", HttpStatus.CONFLICT));
         branch.update(payload.companyId(), payload.code(), payload.name(), payload.location(), payload.active());
         return toResponse(branchRepository.save(branch));
     }
@@ -118,7 +118,7 @@ public class OrganizationController {
     @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.WarehouseResponse updateWarehouse(@PathVariable String id, @Valid @RequestBody OrganizationApi.WarehousePayload payload) {
         Warehouse warehouse = warehouseRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("المستودع غير موجود", "ORG_WAREHOUSE_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Warehouse not found.", "ORG_WAREHOUSE_NOT_FOUND", HttpStatus.CONFLICT));
         warehouse.update(payload.branchId(), payload.code(), payload.name(), payload.location(), payload.active());
         return toResponse(warehouseRepository.save(warehouse));
     }
@@ -142,7 +142,7 @@ public class OrganizationController {
     @PreAuthorize("@auth.hasPermission('organization.manage')")
     public OrganizationApi.DepartmentResponse updateDepartment(@PathVariable String id, @Valid @RequestBody OrganizationApi.DepartmentPayload payload) {
         Department department = departmentRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("الإدارة غير موجودة", "ORG_DEPARTMENT_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Department not found.", "ORG_DEPARTMENT_NOT_FOUND", HttpStatus.CONFLICT));
         department.update(payload.companyId(), payload.code(), payload.name(), payload.managerId(), payload.active());
         return toResponse(departmentRepository.save(department));
     }

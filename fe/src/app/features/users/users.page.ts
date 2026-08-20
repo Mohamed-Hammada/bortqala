@@ -28,6 +28,22 @@ import { NAV_ITEMS, WORKSPACE_ORDER } from '../../core/navigation/app-navigation
 
 import { RouterLink } from '@angular/router';
 import { UserPolicyAssignmentModalComponent } from './ui/user-policy-assignment-modal/user-policy-assignment-modal.component';
+import { PolicyService } from '../../core/auth/policy.service';
+import {
+  PolicyGroupSummaryDto,
+  UserPolicyAssignmentDto,
+  UserPolicyAssignmentItem,
+} from '../../core/auth/security-policy.models';
+
+export interface EditablePolicyAssignment {
+  policyGroupId: string;
+  groupName: string;
+  description?: string;
+  permissionsCount: number;
+  selected: boolean;
+  scopeBranchId: string;
+  scopeCostCenterId: string;
+}
 
 export const USER_MENU_OPTIONS: Array<{ id: string; labelKey: string }> = NAV_ITEMS
   .filter((item) => item.showInPermissionEditor !== false)
@@ -91,6 +107,23 @@ export class UsersPage {
   readonly baselineMenus = signal<string[]>([]);
   readonly selectedRoles = signal<RoleCode[]>([]);
   readonly selectedMenus = signal<string[]>([]);
+  readonly policyService = inject(PolicyService);
+  readonly availablePolicyGroups = signal<PolicyGroupSummaryDto[]>([]);
+  readonly userPolicyAssignments = signal<EditablePolicyAssignment[]>([]);
+  readonly policySearch = signal<string>('');
+  readonly activePolicyAssignmentsCount = computed(
+    () => this.userPolicyAssignments().filter((a) => a.selected).length,
+  );
+  readonly filteredPolicyAssignments = computed(() => {
+    const query = this.policySearch().trim().toLowerCase();
+    const items = this.userPolicyAssignments();
+    if (!query) return items;
+    return items.filter(
+      (item) =>
+        item.groupName.toLowerCase().includes(query) ||
+        (item.description && item.description.toLowerCase().includes(query)),
+    );
+  });
   // New users follow role-derived menu access until an admin manually customizes menus.
   readonly customMenuAccess = signal(false);
   readonly userSearch = signal('');
@@ -351,6 +384,7 @@ export class UsersPage {
     void this.store.loadCategories();
     void this.loadPolicy();
     void this.loadAccessCatalog();
+    void this.loadPolicyGroups();
     this.form.valueChanges.subscribe(() => {
       this.selectedRoles.set(this.form.controls.roles.value);
       this.selectedMenus.set(this.form.controls.allowedMenus.value);
@@ -366,6 +400,15 @@ export class UsersPage {
       const settings = await firstValueFrom(this.auth.appSettings());
       this.passwordPolicy.set(settings);
     } catch {}
+  }
+
+  async loadPolicyGroups(): Promise<void> {
+    try {
+      const groups = await firstValueFrom(this.policyService.listPolicyGroups());
+      this.availablePolicyGroups.set(groups || []);
+    } catch {
+      this.availablePolicyGroups.set([]);
+    }
   }
 
   async loadAccessCatalog(): Promise<void> {
@@ -402,6 +445,7 @@ export class UsersPage {
       categoryId: null,
     });
     this.syncMenusToRoles();
+    this.initPolicyAssignmentsForNew();
     this.drawerOpen.set(true);
   }
 
@@ -426,7 +470,86 @@ export class UsersPage {
       version: item.version,
       categoryId: item.categoryId ?? null,
     });
+    void this.initPolicyAssignmentsForEdit(item);
     this.drawerOpen.set(true);
+  }
+
+  private initPolicyAssignmentsForNew(): void {
+    const groups = this.availablePolicyGroups();
+    this.userPolicyAssignments.set(
+      groups.map((g) => ({
+        policyGroupId: g.id,
+        groupName: g.groupName,
+        description: g.description,
+        permissionsCount: g.permissionsCount,
+        selected: false,
+        scopeBranchId: '',
+        scopeCostCenterId: '',
+      })),
+    );
+  }
+
+  private async initPolicyAssignmentsForEdit(item: AuthUser): Promise<void> {
+    let groups = this.availablePolicyGroups();
+    if (!groups.length) {
+      try {
+        groups = (await firstValueFrom(this.policyService.listPolicyGroups())) || [];
+        this.availablePolicyGroups.set(groups);
+      } catch {
+        groups = [];
+      }
+    }
+    let existing: UserPolicyAssignmentDto[] = item.policyAssignments || [];
+    if (!existing.length && item.id) {
+      try {
+        existing = (await firstValueFrom(this.policyService.getUserPolicies(item.id))) || [];
+      } catch {
+        existing = [];
+      }
+    }
+    const byGroupId = new Map(existing.map((a) => [a.policyGroupId, a]));
+    this.userPolicyAssignments.set(
+      groups.map((g) => {
+        const match = byGroupId.get(g.id);
+        return {
+          policyGroupId: g.id,
+          groupName: g.groupName,
+          description: g.description,
+          permissionsCount: g.permissionsCount,
+          selected: !!match,
+          scopeBranchId: match?.scopeBranchId || '',
+          scopeCostCenterId: match?.scopeCostCenterId || '',
+        };
+      }),
+    );
+  }
+
+  togglePolicyAssignment(policyGroupId: string): void {
+    this.userPolicyAssignments.update((list) =>
+      list.map((a) => (a.policyGroupId === policyGroupId ? { ...a, selected: !a.selected } : a)),
+    );
+  }
+
+  updateBranchScope(policyGroupId: string, value: string): void {
+    this.userPolicyAssignments.update((list) =>
+      list.map((a) => (a.policyGroupId === policyGroupId ? { ...a, scopeBranchId: value } : a)),
+    );
+  }
+
+  updateCostCenterScope(policyGroupId: string, value: string): void {
+    this.userPolicyAssignments.update((list) =>
+      list.map((a) => (a.policyGroupId === policyGroupId ? { ...a, scopeCostCenterId: value } : a)),
+    );
+  }
+
+  selectAllPolicies(): void {
+    this.userPolicyAssignments.update((list) => list.map((a) => ({ ...a, selected: true })));
+  }
+
+  clearAllPolicies(): void {
+    this.userPolicyAssignments.update((list) =>
+      list.map((a) => ({ ...a, selected: false, scopeBranchId: '', scopeCostCenterId: '' })),
+    );
   }
 
   allowedMenuCount(item: AuthUser): number {
@@ -707,12 +830,21 @@ export class UsersPage {
     }
 
     const raw = this.form.getRawValue();
+    const policyAssignments: UserPolicyAssignmentItem[] = this.userPolicyAssignments()
+      .filter((a) => a.selected)
+      .map((a) => ({
+        policyGroupId: a.policyGroupId,
+        scopeBranchId: a.scopeBranchId?.trim() || undefined,
+        scopeCostCenterId: a.scopeCostCenterId?.trim() || undefined,
+      }));
+
     const payload: UserPayload = {
       ...raw,
       password: raw.password || null,
       roles: [...new Set(raw.roles)],
       allowedMenus: [...new Set(raw.allowedMenus)],
       accessChangeReason: this.ackReason().trim() || undefined,
+      policyAssignments,
     };
     if (await this.store.save(this.editingId(), payload)) {
       this.notification.success(this.i18n.t('common.save') + ' ✓');

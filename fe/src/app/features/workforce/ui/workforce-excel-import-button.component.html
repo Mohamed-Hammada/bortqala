@@ -15,7 +15,7 @@
               <h3>{{ i18n.t('workforceImport.dialogTitle') }}</h3>
               <p>{{ i18n.t('workforceImport.dialogHint') }}</p>
             </div>
-            <button class="dialog-close" type="button" (click)="closeDialog()" [disabled]="busy()" aria-label="Close">×</button>
+            <button class="dialog-close" type="button" (click)="closeDialog()" [disabled]="busy()" [attr.aria-label]="i18n.t('common.close')">×</button>
           </header>
 
           <div class="dialog-body">

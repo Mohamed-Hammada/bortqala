@@ -462,16 +462,16 @@ public class OperationsService {
         log.debug("recordAdvanceIssuance called with employeeId={}, amount={}, actor={}", employeeId, amount, actor);
         if (amount == null || amount.signum() <= 0) {
             log.warn("Validation failed: advance amount must be positive");
-            throw new BusinessRuleException("يجب أن يكون مبلغ السلفة أكبر من صفر.", "ADVANCE_AMOUNT_POSITIVE_REQUIRED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Advance amount must be greater than zero.", "ADVANCE_AMOUNT_POSITIVE_REQUIRED", HttpStatus.CONFLICT);
         }
         var employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new NotFoundException("الموظف غير موجود.", "EMPLOYEE_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Employee not found.", "EMPLOYEE_NOT_FOUND"));
         if (!employee.isActive())
-            throw new BusinessRuleException("لا يمكن صرف سلفة لموظف غير نشط.", "ADVANCE_INACTIVE_EMPLOYEE", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot issue advance to an inactive employee.", "ADVANCE_INACTIVE_EMPLOYEE", HttpStatus.CONFLICT);
         var category = attendanceCategoryRepository.findById(employee.getCategoryId())
-                .orElseThrow(() -> new NotFoundException("فئة الموظف غير موجودة.", "HRCFG_EMPLOYEE_CATEGORY_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Employee category not found.", "HRCFG_EMPLOYEE_CATEGORY_NOT_FOUND"));
         if (!category.isAllowsEmployeeAdvances()) {
-            throw new BusinessRuleException("فئة هذا الموظف لا تسمح بصرف السلف.", "ADVANCE_CATEGORY_NOT_ALLOWED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("This employee's category does not allow advance disbursements.", "ADVANCE_CATEGORY_NOT_ALLOWED", HttpStatus.CONFLICT);
         }
         employeeAdvanceEntryRepository.save(new EmployeeAdvanceEntry(employee.getId(), amount,
                 entryType, note, occurredAt == null ? Instant.now() : occurredAt, actor));

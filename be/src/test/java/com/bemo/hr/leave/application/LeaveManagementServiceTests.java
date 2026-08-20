@@ -93,7 +93,7 @@ class LeaveManagementServiceTests {
 
         assertThatThrownBy(() -> leaveService.submitLeaveRequest(request))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("يوجد طلب إجازة مسجل لنفس الفترة");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("LEAVE_OVERLAP"));
     }
 
     @Test

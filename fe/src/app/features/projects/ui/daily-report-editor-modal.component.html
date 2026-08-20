@@ -133,7 +133,7 @@
             <input type="text" formControlName="remarks" class="form-control" />
           </div>
 
-          <button type="button" class="btn-remove" (click)="removeProgressLine(i)" title="Remove">✕</button>
+          <button type="button" class="btn-remove" (click)="removeProgressLine(i)" [attr.title]="i18n.t('common.remove')">✕</button>
         </div>
       </div>
     </div>
@@ -183,7 +183,7 @@
             <input type="text" formControlName="activityDescription" class="form-control" />
           </div>
 
-          <button type="button" class="btn-remove" (click)="removeLaborSnapshot(i)" title="Remove">✕</button>
+          <button type="button" class="btn-remove" (click)="removeLaborSnapshot(i)" [attr.title]="i18n.t('common.remove')">✕</button>
         </div>
       </div>
     </div>
@@ -239,7 +239,7 @@
             <input type="text" formControlName="operatorName" class="form-control" />
           </div>
 
-          <button type="button" class="btn-remove" (click)="removeEquipmentLog(i)" title="Remove">✕</button>
+          <button type="button" class="btn-remove" (click)="removeEquipmentLog(i)" [attr.title]="i18n.t('common.remove')">✕</button>
         </div>
       </div>
     </div>
@@ -285,7 +285,7 @@
             <input type="text" formControlName="notes" class="form-control" />
           </div>
 
-          <button type="button" class="btn-remove" (click)="removeMaterialConsumption(i)" title="Remove">✕</button>
+          <button type="button" class="btn-remove" (click)="removeMaterialConsumption(i)" [attr.title]="i18n.t('common.remove')">✕</button>
         </div>
       </div>
     </div>

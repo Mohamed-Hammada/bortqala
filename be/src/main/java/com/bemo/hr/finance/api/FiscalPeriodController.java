@@ -57,11 +57,11 @@ public class FiscalPeriodController {
             return existing.stream().map(this::toResponse).toList();
         }
 
-        String[] monthNames = {"يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"};
+        String[] monthNames = {"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
         for (int m = 1; m <= 12; m++) {
             LocalDate start = LocalDate.of(year, m, 1);
             LocalDate end = start.plusMonths(1).minusDays(1);
-            FiscalPeriod period = new FiscalPeriod(year, m, "شهر " + monthNames[m - 1] + " (" + m + ")", start, end, FiscalPeriod.Status.OPEN);
+            FiscalPeriod period = new FiscalPeriod(year, m, monthNames[m - 1] + " " + year + " (" + m + ")", start, end, FiscalPeriod.Status.OPEN);
             repository.save(period);
         }
         return repository.findByFiscalYearOrderByPeriodNumberAsc(year).stream().map(this::toResponse).toList();
@@ -74,9 +74,9 @@ public class FiscalPeriodController {
                                                              @Valid @RequestBody FiscalPeriodApi.UpdateStatusPayload payload,
                                                              Authentication authentication) {
         FiscalPeriod period = repository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("الفترة المالية غير موجودة", "FIN_FISCAL_PERIOD_NOT_FOUND", HttpStatus.CONFLICT));
+                .orElseThrow(() -> new BusinessRuleException("Fiscal period not found", "FIN_FISCAL_PERIOD_NOT_FOUND", HttpStatus.CONFLICT));
         if (payload.expectedVersion() != null && payload.expectedVersion() != period.getVersion()) {
-            throw new BusinessRuleException("تم تعديل الفترة المالية بواسطة مستخدم آخر.", "RECORD_ALREADY_MODIFIED",
+            throw new BusinessRuleException("Fiscal period was modified by another user.", "RECORD_ALREADY_MODIFIED",
                     org.springframework.http.HttpStatus.CONFLICT);
         }
 

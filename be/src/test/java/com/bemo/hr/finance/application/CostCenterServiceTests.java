@@ -63,7 +63,7 @@ class CostCenterServiceTests {
 
         assertThatThrownBy(() -> service.create(payload))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("مستخدم بالفعل");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("COST_CENTER_CODE_DUPLICATE"));
     }
 
     @Test

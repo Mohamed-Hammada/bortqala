@@ -48,7 +48,7 @@ public class AccountingController {
     @PreAuthorize("@auth.hasPermission('finance.manage')")
     public AccountingApi.AccountResponse updateAccount(@PathVariable String id, @Valid @RequestBody AccountingApi.AccountPayload payload) {
         Account account = accountRepository.findById(id)
-                .orElseThrow(() -> new com.bemo.hr.shared.domain.BusinessRuleException("الحساب غير موجود في دليل الحسابات"));
+                .orElseThrow(() -> new com.bemo.hr.shared.domain.BusinessRuleException("Account not found in the chart of accounts."));
         Account.Type type = Account.Type.valueOf(payload.type().toUpperCase());
         account.update(payload.code(), payload.name(), type, payload.parentId(), payload.isHeader(), payload.currency(), payload.active());
         return toResponse(accountRepository.save(account));

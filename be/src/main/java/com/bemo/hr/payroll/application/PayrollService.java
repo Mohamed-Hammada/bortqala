@@ -88,17 +88,17 @@ public class PayrollService {
                   + ",\"overtimeMultiplier\":" + snapshot.getOvertimeMultiplier() + "}";
         explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
                 payment.getId(), "SNAPSHOT_CALCULATION", "base + overtime - lateness - advances + adjustments", calculationInputs,
-                gross, "إجمالي الراتب المستحق المستخرج من سجل الحضور والانصراف", "Gross base salary derived from locked attendance records"
+                gross, "Gross base salary derived from locked attendance records", "Gross base salary derived from locked attendance records"
         ));
         if (adv.compareTo(BigDecimal.ZERO) > 0) {
             explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
                     payment.getId(), "ADVANCE_DEDUCTION", "Gross - Active Advance Installment", "{\"advanceDeduction\":" + adv + "}",
-                    adv, "استقطاع قسط السلفة الشهرية النشطة للموظف", "Deduction of active monthly advance installment"
+                    adv, "Deduction of active monthly advance installment", "Deduction of active monthly advance installment"
             ));
         }
         explanationRepository.save(new com.bemo.hr.payroll.domain.SalaryPaymentExplanation(
                 payment.getId(), "NET_PAYABLE", "Gross - Deductions = Net Payable", "{\"netAmount\":" + net + "}",
-                net, "صافي الراتب المستحق للصرف بعد خصم الاستقطاعات والسلف", "Net payable amount after all deductions and advances"
+                net, "Net payable amount after all deductions and advances", "Net payable amount after all deductions and advances"
         ));
     }
 
@@ -320,7 +320,7 @@ public class PayrollService {
 
         if (!emp.isActive() || (emp.getBaseSalary() != null && emp.getBaseSalary().signum() <= 0 && emp.getCategoryId() == null)) {
             log.warn("Validation failed: Employee incomplete profile employeeId={}", request.employeeId());
-            throw new BusinessRuleException("الموظف غير كلي البيانات (الراتب الأساسي أو الفئة). يرجى استكمال بياناته من صفحة /employees أولاً.", "PAYROLL_EMPLOYEE_INCOMPLETE", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Employee profile is incomplete (missing base salary or category). Please complete their profile at /employees first.", "PAYROLL_EMPLOYEE_INCOMPLETE", HttpStatus.CONFLICT);
         }
 
         var periodKind = request.periodKind() == null || request.periodKind().isBlank() ? "FULL_MONTH" : request.periodKind();
@@ -377,7 +377,7 @@ public class PayrollService {
             operationsService.recordAdvanceSettlement(
                     emp.getId(),
                     advances.negate(),
-                    "تسوية سلفة تلقائية مع صرف مرتب " + periodReference,
+                    "Automatic advance settlement for payroll " + periodReference,
                     paidAtInstant,
                     actor
             );
@@ -496,7 +496,7 @@ public class PayrollService {
     public PayrollApi.SheetResponse reversePayment(PayrollApi.ReversePaymentRequest request, String actor) {
         log.debug("reversePayment called with paymentId={}, actor={}", request.paymentId(), actor);
         var payment = salaryPaymentRepository.findByIdForUpdate(request.paymentId())
-                .orElseThrow(() -> new NotFoundException("قيد الراتب غير موجود.", "PAYROLL_ENTRY_NOT_FOUND"));
+                .orElseThrow(() -> new NotFoundException("Salary entry not found.", "PAYROLL_ENTRY_NOT_FOUND"));
 
         if (payment.getVersion() != request.expectedVersion()) {
             log.warn("Validation failed: Stale version for reversal paymentId={}", request.paymentId());
@@ -505,7 +505,7 @@ public class PayrollService {
         }
         if (payment.getPaymentStatus() == PaymentStatus.REVERSED) {
             log.warn("Validation failed: Payment already reversed paymentId={}", request.paymentId());
-            throw new BusinessRuleException("هذا القيد متراجع عنه بالفعل.", "PAYROLL_ENTRY_ALREADY_REVERSED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("This entry is already reversed.", "PAYROLL_ENTRY_ALREADY_REVERSED", HttpStatus.CONFLICT);
         }
         if (payment.getPaymentStatus() != PaymentStatus.PAID) {
             log.warn("Validation failed: Only paid salary can be reversed paymentId={}", request.paymentId());
@@ -525,7 +525,7 @@ public class PayrollService {
             operationsService.recordAdvanceSettlement(
                     payment.getEmployeeId(),
                     deductedAdvances,
-                    "إلغاء واسترداد تسوية سلفة للتراجع عن صرف مرتب " + periodReference + " (السبب: " + request.reason() + ")",
+                    "Cancel and reverse advance settlement for payroll reversal " + periodReference + " (reason: " + request.reason() + ")",
                     Instant.now(),
                     actor
             );

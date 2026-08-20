@@ -43,7 +43,7 @@ public class EmployeeContractService {
     public EmployeeContractApi.ContractResponse getContract(String id) {
         log.debug("getContract called with id={}", id);
         EmployeeContract contract = contractRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("عقد العمل غير موجود", "CONTRACT_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Employment contract not found", "CONTRACT_NOT_FOUND", HttpStatus.NOT_FOUND));
         return toResponse(contract);
     }
 
@@ -51,13 +51,13 @@ public class EmployeeContractService {
     public EmployeeContractApi.ContractResponse createContract(String employeeId, EmployeeContractApi.CreateContractRequest request) {
         log.debug("createContract called for employeeId={}, contractNumber={}", employeeId, request.contractNumber());
         Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new BusinessRuleException("الموظف غير موجود", "EMPLOYEE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Employee not found", "EMPLOYEE_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         String contractNumber = request.contractNumber();
         if (contractNumber == null || contractNumber.isBlank()) {
             contractNumber = generateContractNumber();
         } else if (contractRepository.existsByContractNumber(contractNumber)) {
-            throw new BusinessRuleException("رقم العقد مسجل مسبقاً", "CONTRACT_NUMBER_EXISTS", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Contract number already exists", "CONTRACT_NUMBER_EXISTS", HttpStatus.BAD_REQUEST);
         }
 
         // Deactivate existing active contracts for the employee
@@ -93,10 +93,10 @@ public class EmployeeContractService {
     public EmployeeContractApi.ContractResponse amendContract(String contractId, EmployeeContractApi.AmendContractRequest request) {
         log.debug("amendContract called for contractId={}", contractId);
         EmployeeContract existing = contractRepository.findById(contractId)
-                .orElseThrow(() -> new BusinessRuleException("عقد العمل غير موجود", "CONTRACT_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Employment contract not found", "CONTRACT_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (existing.getStatus() != ContractStatus.ACTIVE) {
-            throw new BusinessRuleException("لا يمكن تعديل إلا العقود سارية المفعول", "CONTRACT_NOT_ACTIVE", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Only active contracts can be modified", "CONTRACT_NOT_ACTIVE", HttpStatus.BAD_REQUEST);
         }
 
         String newContractNumber = request.newContractNumber();
@@ -144,7 +144,7 @@ public class EmployeeContractService {
     public EmployeeContractApi.ContractResponse terminateContract(String contractId, EmployeeContractApi.TerminateContractRequest request) {
         log.debug("terminateContract called for contractId={}", contractId);
         EmployeeContract contract = contractRepository.findById(contractId)
-                .orElseThrow(() -> new BusinessRuleException("عقد العمل غير موجود", "CONTRACT_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Employment contract not found", "CONTRACT_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         contract.terminate(request.terminationDate(), request.reason());
         EmployeeContract saved = contractRepository.save(contract);

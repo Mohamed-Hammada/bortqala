@@ -228,7 +228,7 @@ public final class AccessCatalog {
                     Set.of(), "access.sensitive.hrManager"),
             new AccessRoleDef("HR_REVIEWER", key("hrReviewer"), AccessSensitivity.MEDIUM,
                     RoleKind.APPROVAL,
-                    union(HR_READ, Set.of(P_ATTENDANCE_REVIEW, P_REPORTS_DECIDE, P_IMPORTS_MANAGE)),
+                    union(HR_READ, Set.of(P_ATTENDANCE_REVIEW, P_REPORTS_DECIDE)),
                     Set.of(), "access.sensitive.hrReviewer"),
             new AccessRoleDef("VIEWER", key("viewer"), AccessSensitivity.LOW,
                     RoleKind.READ_ONLY,

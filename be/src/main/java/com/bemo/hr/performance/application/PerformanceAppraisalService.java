@@ -54,7 +54,7 @@ public class PerformanceAppraisalService {
     @Transactional
     public PerformanceAppraisalApi.PerformanceCycleResponse createCycle(PerformanceAppraisalApi.CreateCycleRequest request) {
         if (request.endDate().isBefore(request.startDate())) {
-            throw new BusinessRuleException("تاريخ نهاية الدورة يسبق تاريخ البداية", "INVALID_CYCLE_DATES", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("End date cannot be before start date.", "INVALID_CYCLE_DATES", HttpStatus.BAD_REQUEST);
         }
         int year = request.periodYear() > 0 ? request.periodYear() : request.startDate().getYear();
         PerformanceCycle cycle = new PerformanceCycle(
@@ -72,7 +72,7 @@ public class PerformanceAppraisalService {
     @Transactional
     public PerformanceAppraisalApi.PerformanceCycleResponse lockCycle(String id) {
         PerformanceCycle cycle = cycleRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("دورة التقييم غير موجودة", "CYCLE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Performance cycle not found.", "CYCLE_NOT_FOUND", HttpStatus.NOT_FOUND));
         cycle.lock();
         PerformanceCycle saved = cycleRepository.save(cycle);
         log.info("PerformanceCycle locked: {}", saved.getId());
@@ -90,7 +90,7 @@ public class PerformanceAppraisalService {
     @Transactional
     public PerformanceAppraisalApi.PerformanceKpiResponse createKpi(PerformanceAppraisalApi.CreateKpiRequest request) {
         cycleRepository.findById(request.cycleId())
-                .orElseThrow(() -> new BusinessRuleException("دورة التقييم غير موجودة", "CYCLE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Performance cycle not found.", "CYCLE_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         PerformanceKpi kpi = new PerformanceKpi(
                 request.cycleId(),
@@ -135,14 +135,14 @@ public class PerformanceAppraisalService {
     @Transactional
     public PerformanceAppraisalApi.PerformanceAppraisalResponse initAppraisal(PerformanceAppraisalApi.InitAppraisalRequest request) {
         PerformanceCycle cycle = cycleRepository.findById(request.cycleId())
-                .orElseThrow(() -> new BusinessRuleException("دورة التقييم غير موجودة", "CYCLE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Performance cycle not found.", "CYCLE_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (cycle.getStatus() == CycleStatus.LOCKED || cycle.getStatus() == CycleStatus.CLOSED) {
-            throw new BusinessRuleException("دورة التقييم مقفلة ولا يمكن إنشاء تقييم جديد فيها", "CYCLE_LOCKED", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Performance cycle is locked and cannot accept new appraisals.", "CYCLE_LOCKED", HttpStatus.BAD_REQUEST);
         }
 
         Employee employee = employeeRepository.findById(request.employeeId())
-                .orElseThrow(() -> new BusinessRuleException("الموظف غير موجود", "EMPLOYEE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Employee not found.", "EMPLOYEE_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         PerformanceAppraisal appraisal = appraisalRepository.findByCycleIdAndEmployeeId(request.cycleId(), request.employeeId())
                 .orElseGet(() -> new PerformanceAppraisal(request.cycleId(), request.employeeId(), request.reviewerId()));
@@ -155,17 +155,17 @@ public class PerformanceAppraisalService {
     @Transactional
     public PerformanceAppraisalApi.PerformanceAppraisalResponse submitAppraisal(String appraisalId, PerformanceAppraisalApi.SubmitAppraisalRequest request) {
         PerformanceAppraisal appraisal = appraisalRepository.findById(appraisalId)
-                .orElseThrow(() -> new BusinessRuleException("التقييم غير موجود", "APPRAISAL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Appraisal not found.", "APPRAISAL_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         PerformanceCycle cycle = cycleRepository.findById(appraisal.getCycleId())
-                .orElseThrow(() -> new BusinessRuleException("دورة التقييم غير موجودة", "CYCLE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Performance cycle not found.", "CYCLE_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (cycle.getStatus() == CycleStatus.LOCKED || cycle.getStatus() == CycleStatus.CLOSED) {
-            throw new BusinessRuleException("دورة التقييم مقفلة", "CYCLE_LOCKED", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Performance cycle is locked.", "CYCLE_LOCKED", HttpStatus.BAD_REQUEST);
         }
 
         if (appraisal.getStatus() == AppraisalStatus.FINALIZED) {
-            throw new BusinessRuleException("التقييم معتمد نهائياً ومقفل", "APPRAISAL_ALREADY_FINALIZED", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Appraisal is already finalized and locked.", "APPRAISAL_ALREADY_FINALIZED", HttpStatus.BAD_REQUEST);
         }
 
         kpiScoreRepository.deleteByAppraisalId(appraisalId);
@@ -207,7 +207,7 @@ public class PerformanceAppraisalService {
     @Transactional
     public PerformanceAppraisalApi.PerformanceAppraisalResponse finalizeAppraisal(String appraisalId) {
         PerformanceAppraisal appraisal = appraisalRepository.findById(appraisalId)
-                .orElseThrow(() -> new BusinessRuleException("التقييم غير موجود", "APPRAISAL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Appraisal not found.", "APPRAISAL_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         appraisal.finalizeAppraisal();
         PerformanceAppraisal saved = appraisalRepository.save(appraisal);

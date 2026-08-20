@@ -45,7 +45,7 @@ public class WorkforceAttendanceService {
             }
             String cellKey = key(cell.workerId(), cell.workDate());
             if (!seenKeys.add(cellKey)) {
-                errors.add(error(cell, "cell", "تم إرسال العامل والتاريخ نفسيهما أكثر من مرة."));
+                errors.add(error(cell, "cell", "Duplicate worker and date submitted more than once."));
                 continue;
             }
             LocalDate workDate = LocalDate.parse(cell.workDate());
@@ -62,7 +62,7 @@ public class WorkforceAttendanceService {
         var processable = new ArrayList<WorkforceApi.AttendanceCell>();
         for (var cell : validCells) {
             if (!workers.containsKey(cell.workerId())) {
-                errors.add(error(cell, "workerId", "العامل غير موجود أو لا يتبع الشركة الحالية."));
+                errors.add(error(cell, "workerId", "Worker not found or does not belong to the current company."));
             } else {
                 processable.add(cell);
             }

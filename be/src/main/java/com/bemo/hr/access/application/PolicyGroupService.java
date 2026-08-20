@@ -36,6 +36,7 @@ public class PolicyGroupService {
     private final UserPolicyAssignmentRepository userPolicyAssignmentRepository;
     private final AppUserRepository appUserRepository;
     private final AuditService auditService;
+    private final com.bemo.hr.access.domain.AccessCatalog accessCatalog;
 
     public PolicyGroupService(SecurityPermissionRepository permissionRepository,
                               SecurityPolicyGroupRepository policyGroupRepository,
@@ -43,12 +44,25 @@ public class PolicyGroupService {
                               UserPolicyAssignmentRepository userPolicyAssignmentRepository,
                               AppUserRepository appUserRepository,
                               AuditService auditService) {
+        this(permissionRepository, policyGroupRepository, groupPermissionRepository,
+                userPolicyAssignmentRepository, appUserRepository, auditService, new com.bemo.hr.access.domain.AccessCatalog());
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public PolicyGroupService(SecurityPermissionRepository permissionRepository,
+                              SecurityPolicyGroupRepository policyGroupRepository,
+                              PolicyGroupPermissionRepository groupPermissionRepository,
+                              UserPolicyAssignmentRepository userPolicyAssignmentRepository,
+                              AppUserRepository appUserRepository,
+                              AuditService auditService,
+                              @org.springframework.lang.Nullable com.bemo.hr.access.domain.AccessCatalog accessCatalog) {
         this.permissionRepository = permissionRepository;
         this.policyGroupRepository = policyGroupRepository;
         this.groupPermissionRepository = groupPermissionRepository;
         this.userPolicyAssignmentRepository = userPolicyAssignmentRepository;
         this.appUserRepository = appUserRepository;
         this.auditService = auditService;
+        this.accessCatalog = accessCatalog != null ? accessCatalog : new com.bemo.hr.access.domain.AccessCatalog();
     }
 
     public PolicyCatalogResponse getCatalog() {
@@ -228,6 +242,30 @@ public class PolicyGroupService {
         )).toList();
     }
 
+    public Map<String, List<UserPolicyAssignmentDto>> getUserPolicyAssignmentsForUsers(String appId, Collection<String> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return Map.of();
+        }
+        List<UserPolicyAssignment> assignments = userPolicyAssignmentRepository.findByAppIdAndUserIdIn(appId, userIds);
+        Map<String, String> groupNames = policyGroupRepository.findAllByAppIdOrderByGroupNameAsc(appId).stream()
+                .collect(Collectors.toMap(SecurityPolicyGroup::getId, SecurityPolicyGroup::getGroupName));
+
+        Map<String, List<UserPolicyAssignmentDto>> result = new HashMap<>();
+        for (UserPolicyAssignment a : assignments) {
+            result.computeIfAbsent(a.getUserId(), k -> new ArrayList<>())
+                    .add(new UserPolicyAssignmentDto(
+                            a.getId(),
+                            a.getUserId(),
+                            a.getPolicyGroupId(),
+                            groupNames.getOrDefault(a.getPolicyGroupId(), "Unknown Group"),
+                            a.getScopeBranchId(),
+                            a.getScopeCostCenterId(),
+                            a.getAssignedAt()
+                    ));
+        }
+        return result;
+    }
+
     @Transactional
     public List<UserPolicyAssignmentDto> assignUserPolicies(String userId, AssignUserPoliciesRequest request, String actorUsername) {
         log.debug("assignUserPolicies called for userId={}", userId);
@@ -313,38 +351,48 @@ public class PolicyGroupService {
         if (roleCodes == null || roleCodes.isEmpty()) {
             return Set.of();
         }
+        Set<String> perms = new HashSet<>();
+        for (RoleCode role : roleCodes) {
+            if (role == RoleCode.SUPER_ADMIN || role == RoleCode.ADMIN) {
+                perms.add("*");
+            }
+            if (accessCatalog != null) {
+                perms.addAll(accessCatalog.permissionsOf(role.name()));
+            }
+        }
+
         Set<String> prefixes = new HashSet<>();
         for (RoleCode role : roleCodes) {
             switch (role) {
-                case HR_MANAGER -> prefixes.addAll(List.of("hr:", "payroll:", "attendance:", "leave:"));
-                case HR_REVIEWER -> prefixes.addAll(List.of("hr:attendance:", "hr:report:", "hr:employee:read"));
-                case PAYROLL_MANAGER -> prefixes.addAll(List.of("hr:payroll:", "payroll:"));
-                case FINANCE_MANAGER, ACCOUNTANT -> prefixes.addAll(List.of("finance:", "treasury:", "budget:", "compliance:"));
-                case TREASURY_USER -> prefixes.addAll(List.of("treasury:", "finance:journal:read"));
-                case PROCUREMENT_MANAGER -> prefixes.addAll(List.of("procurement:", "inventory:"));
-                case PROCUREMENT_USER -> prefixes.addAll(List.of("procurement:po:read", "procurement:po:create", "inventory:stock:read"));
-                case SALES_MANAGER -> prefixes.addAll(List.of("trade:so:", "pos:", "crm:"));
-                case INVENTORY_MANAGER -> prefixes.addAll(List.of("inventory:", "operations:"));
-                case MANUFACTURING_MANAGER -> prefixes.addAll(List.of("manufacturing:", "inventory:"));
-                case QUALITY_MANAGER -> prefixes.addAll(List.of("manufacturing:quality:", "quality:"));
-                case WORKFORCE_MANAGER -> prefixes.addAll(List.of("workforce:", "hr:"));
-                case WORKFORCE_REVIEWER -> prefixes.addAll(List.of("workforce:settlement:review", "workforce:timesheet:"));
-                case WORKFORCE_FINANCE -> prefixes.addAll(List.of("workforce:settlement:post", "finance:"));
-                case PROJECT_MANAGER -> prefixes.addAll(List.of("contracting:", "project:", "procurement:"));
-                case AUDITOR -> prefixes.addAll(List.of("audit:", "finance:journal:read", "compliance:"));
-                case VIEWER -> prefixes.addAll(List.of("dashboard:view", "reports:read", "settings:read", "project:read"));
+                case HR_MANAGER -> prefixes.addAll(List.of("hr", "payroll", "attendance", "leave", "workers", "reports", "biometric", "imports", "employees"));
+                case HR_REVIEWER -> prefixes.addAll(List.of("attendance", "reports", "workers.read", "employees.read"));
+                case PAYROLL_MANAGER -> prefixes.addAll(List.of("payroll", "salary"));
+                case FINANCE_MANAGER, ACCOUNTANT -> prefixes.addAll(List.of("finance", "treasury", "budget", "compliance", "journal", "payments", "ledger"));
+                case TREASURY_USER -> prefixes.addAll(List.of("treasury", "finance.journal", "journal.read"));
+                case PROCUREMENT_MANAGER -> prefixes.addAll(List.of("procurement", "inventory", "orders", "suppliers"));
+                case PROCUREMENT_USER -> prefixes.addAll(List.of("procurement", "inventory.stock"));
+                case SALES_MANAGER -> prefixes.addAll(List.of("trade", "sales", "pos", "crm"));
+                case INVENTORY_MANAGER -> prefixes.addAll(List.of("inventory", "operations", "stock"));
+                case MANUFACTURING_MANAGER -> prefixes.addAll(List.of("manufacturing", "inventory", "bom", "production"));
+                case QUALITY_MANAGER -> prefixes.addAll(List.of("quality", "manufacturing.quality"));
+                case WORKFORCE_MANAGER -> prefixes.addAll(List.of("workforce", "contractor", "worker", "labor", "settlement", "advance", "timesheet"));
+                case WORKFORCE_REVIEWER -> prefixes.addAll(List.of("settlement.read", "settlement.prepare", "timesheet", "attendance.review"));
+                case WORKFORCE_FINANCE -> prefixes.addAll(List.of("settlement", "contractorAccounts", "finance"));
+                case PROJECT_MANAGER -> prefixes.addAll(List.of("contracting", "project", "procurement", "wbs", "claims"));
+                case AUDITOR -> prefixes.addAll(List.of("audit", "finance.read", "compliance"));
+                case VIEWER -> prefixes.addAll(List.of("dashboard.view", "reports.read", "settings.read", "projects.read"));
                 default -> {}
             }
         }
 
-        if (prefixes.isEmpty()) {
-            return Set.of();
+        if (!prefixes.isEmpty()) {
+            permissionRepository.findAll().stream()
+                    .map(SecurityPermission::getPermissionKey)
+                    .filter(key -> prefixes.stream().anyMatch(pfx -> key.startsWith(pfx) || key.startsWith(pfx + ":") || key.startsWith(pfx + ".")))
+                    .forEach(perms::add);
         }
 
-        return permissionRepository.findAll().stream()
-                .map(SecurityPermission::getPermissionKey)
-                .filter(key -> prefixes.stream().anyMatch(pfx -> key.startsWith(pfx) || key.equalsIgnoreCase(pfx)))
-                .collect(Collectors.toSet());
+        return perms;
     }
 
     private List<String> assignPermissionsToGroup(String appId, String groupId, List<String> permissionKeys) {

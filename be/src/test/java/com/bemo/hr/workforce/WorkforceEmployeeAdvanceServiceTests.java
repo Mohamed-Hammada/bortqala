@@ -93,7 +93,7 @@ class WorkforceEmployeeAdvanceServiceTests {
                 1, new BigDecimal("500"), "MONTHLY", new BigDecimal("50"), null,
                 "2026-08-01", "AUTO", 0), "admin"))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("لا تسمح");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("ADVANCE_CATEGORY_NOT_ALLOWED"));
         verify(advanceRepository, never()).save(any());
     }
 

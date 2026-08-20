@@ -113,7 +113,7 @@ public class EtaComplianceService {
     @Transactional
     public EtaComplianceApi.SubmissionResponse queueInvoice(EtaComplianceApi.QueueInvoiceRequest request) {
         CustomerInvoice invoice = customerInvoiceRepository.findById(request.invoiceId())
-                .orElseThrow(() -> new BusinessRuleException("الفاتورة غير موجودة", "INVOICE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Invoice not found", "INVOICE_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         Optional<EtaInvoiceSubmission> existing = submissionRepository.findByInvoiceId(request.invoiceId());
         if (existing.isPresent()) {
@@ -156,10 +156,10 @@ public class EtaComplianceService {
     @Transactional
     public EtaComplianceApi.SubmissionResponse submitToEta(String submissionId) {
         EtaInvoiceSubmission submission = submissionRepository.findById(submissionId)
-                .orElseThrow(() -> new BusinessRuleException("طلب الإرسال غير موجود", "SUBMISSION_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Submission request not found", "SUBMISSION_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         EtaConfig config = configRepository.findFirstByActiveTrue()
-                .orElseThrow(() -> new BusinessRuleException("إعدادات منظومة الضرائب غير مهيأة أو غير مفعلة", "ETA_CONFIG_MISSING", HttpStatus.BAD_REQUEST));
+                .orElseThrow(() -> new BusinessRuleException("Tax system settings are not configured or are disabled", "ETA_CONFIG_MISSING", HttpStatus.BAD_REQUEST));
 
         String subUuid = UUID.randomUUID().toString();
         String hex = UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
@@ -180,7 +180,7 @@ public class EtaComplianceService {
     @Transactional
     public EtaComplianceApi.SubmissionResponse cancelDocument(String submissionId, String reason) {
         EtaInvoiceSubmission submission = submissionRepository.findById(submissionId)
-                .orElseThrow(() -> new BusinessRuleException("طلب الإرسال غير موجود", "SUBMISSION_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Submission request not found", "SUBMISSION_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         submission.cancel(reason);
         EtaInvoiceSubmission saved = submissionRepository.save(submission);

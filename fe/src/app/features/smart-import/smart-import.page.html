@@ -38,7 +38,7 @@
       </div>
     </div>
 
-    <ol class="steps" aria-label="Smart import steps">
+    <ol class="steps" [attr.aria-label]="i18n.t('import.stepsAria')">
       <li [class.active]="step() >= 1"><span>1</span>{{ i18n.t('smartImport.step1') }}</li>
       <li [class.active]="step() >= 2"><span>2</span>{{ i18n.t('smartImport.step2') }}</li>
       <li [class.active]="step() >= 3"><span>3</span>{{ i18n.t('smartImport.step3') }}</li>

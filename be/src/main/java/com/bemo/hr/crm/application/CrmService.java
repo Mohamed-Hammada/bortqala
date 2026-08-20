@@ -333,7 +333,7 @@ public class CrmService {
         if (botEnabled) {
             String botGreeting = channelCfg.map(CrmChannelConfig::getAutoReplyGreeting)
                     .filter(g -> g != null && !g.isBlank())
-                    .orElse("أهلاً بك في منصة بيمو! تم استلام رسالتك وسيتواصل معك أحد ممثلي المبيعات قريباً.");
+                    .orElse("Welcome to Bemo! Your message has been received and a sales representative will contact you shortly.");
 
             CrmMessage botReply = new CrmMessage(
                     conversation.getId(),

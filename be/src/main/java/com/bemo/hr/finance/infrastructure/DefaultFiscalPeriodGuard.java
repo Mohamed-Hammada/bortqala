@@ -25,10 +25,10 @@ public class DefaultFiscalPeriodGuard implements FiscalPeriodGuard {
                         transactionDate, transactionDate,
                         List.of(FiscalPeriod.Status.OPEN, FiscalPeriod.Status.SOFT_CLOSED))
                 .orElseThrow(() -> new BusinessRuleException(
-                        "لا توجد فترة مالية مفتوحة تغطي هذا التاريخ.", "FISCAL_PERIOD_CLOSED", HttpStatus.CONFLICT));
+                        "No open fiscal period covers this date.", "FISCAL_PERIOD_CLOSED", HttpStatus.CONFLICT));
         if (!period.allowsStandardPosting()) {
             throw new BusinessRuleException(
-                    "الفترة المالية في حالة إغلاق جزئي ولا تسمح بترحيل معاملات جديدة إلا بالتعديلات المصرح بها.",
+                    "Fiscal period is soft-closed and does not allow new postings except for authorized adjustments.",
                     "FISCAL_PERIOD_SOFT_CLOSED", HttpStatus.CONFLICT);
         }
         return period;
@@ -41,7 +41,7 @@ public class DefaultFiscalPeriodGuard implements FiscalPeriodGuard {
                         transactionDate, transactionDate,
                         List.of(FiscalPeriod.Status.OPEN, FiscalPeriod.Status.SOFT_CLOSED))
                 .orElseThrow(() -> new BusinessRuleException(
-                        "لا توجد فترة مالية تسمح بتسجيل تعديلات في هذا التاريخ.", "FISCAL_PERIOD_CLOSED", HttpStatus.CONFLICT));
+                        "No fiscal period allows adjustments on this date.", "FISCAL_PERIOD_CLOSED", HttpStatus.CONFLICT));
         return period;
     }
 }

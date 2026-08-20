@@ -64,7 +64,7 @@ public class WorkforceSettlementService {
         try {
             return excelExportService.generatePeriodExcel(periodId);
         } catch (Exception exception) {
-            throw new BusinessRuleException("تعذر إنشاء ملف Excel لفترة التسوية: " + exception.getMessage(), "SETTLEMENT_EXPORT_FAILED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Failed to generate settlement Excel file: " + exception.getMessage(), "SETTLEMENT_EXPORT_FAILED", HttpStatus.CONFLICT);
         }
     }
 
@@ -90,14 +90,14 @@ public class WorkforceSettlementService {
     @Transactional(readOnly = true)
     public WorkforceApi.ContractorSettlementDetailResponse getContractorSettlement(String settlementId) {
         ContractorSettlement settlement = contractorSettlementRepository.findById(settlementId)
-                .orElseThrow(() -> new BusinessRuleException("تسوية المقاول غير موجودة: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Contractor settlement not found: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
         return mapContractorSettlementToDetail(settlement);
     }
 
     @Transactional
     public WorkforceApi.SettlementPeriodResponse createPeriod(WorkforceApi.SettlementPeriodRequest request) {
         if (request.startDate().compareTo(request.endDate()) > 0) {
-            throw new BusinessRuleException("تاريخ بداية فترة التسوية يجب ألا يتجاوز تاريخ النهاية.", "SETTL_START_AFTER_END", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Settlement period start date must not be after end date.", "SETTL_START_AFTER_END", HttpStatus.CONFLICT);
         }
         WorkforceSettlementPeriod period = new WorkforceSettlementPeriod(
                 request.periodCode(), request.startDate(), request.endDate(), request.cycleType(), "DRAFT");
@@ -125,7 +125,7 @@ public class WorkforceSettlementService {
     private WorkforceApi.SettlementCalculationSummary calculateInTransaction(String periodId) {
         WorkforceSettlementPeriod period = requirePeriod(periodId);
         if ("LOCKED".equals(period.getStatus()) || "APPROVED".equals(period.getStatus())) {
-            throw new BusinessRuleException("لا يمكن إعادة احتساب فترة تسوية معتمدة أو مقفلة.", "SETTL_ALREADY_LOCKED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot recalculate a locked or approved settlement period.", "SETTL_ALREADY_LOCKED", HttpStatus.CONFLICT);
         }
 
         var attendanceEntries = attendanceRepository.findByWorkDateBetween(period.getStartDate(), period.getEndDate());
@@ -342,7 +342,7 @@ public class WorkforceSettlementService {
     public TransitionResponse approvePeriod(String periodId) {
         WorkforceSettlementPeriod period = requireFreshCalculated(periodId, "REVIEWED");
         if (period.getResultErrorCount() > 0)
-            throw new BusinessRuleException("يجب معالجة أخطاء التسوية قبل الاعتماد.", "SETTL_ERRORS_MUST_BE_RESOLVED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Settlement errors must be resolved before approval.", "SETTL_ERRORS_MUST_BE_RESOLVED", HttpStatus.CONFLICT);
         period.setStatus("APPROVED");
         auditService.record("APPROVE", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
@@ -358,7 +358,7 @@ public class WorkforceSettlementService {
     public TransitionResponse lockPeriod(String periodId) {
         WorkforceSettlementPeriod period = requirePeriod(periodId);
         if (!"APPROVED".equals(period.getStatus()))
-            throw new BusinessRuleException("لا يمكن قفل الفترة قبل اعتمادها.", "SETTL_LOCK_BEFORE_APPROVAL", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot lock the period before it is approved.", "SETTL_LOCK_BEFORE_APPROVAL", HttpStatus.CONFLICT);
         period.setStatus("LOCKED");
         auditService.record("LOCK", "WORKFORCE_SETTLEMENT_PERIOD", periodId, actor(),
                 "{\"version\":" + period.getCalculationVersion() + "}", null);
@@ -377,17 +377,17 @@ public class WorkforceSettlementService {
 
     private WorkforceApi.ContractorSettlementDetailResponse postSettlementTransaction(String settlementId, WorkforceApi.SettlementPostingRequest request) {
         ContractorSettlement settlement = contractorSettlementRepository.findById(settlementId)
-                .orElseThrow(() -> new BusinessRuleException("تسوية المقاول غير موجودة: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Contractor settlement not found: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         WorkforceSettlementPeriod period = periodRepository.findById(settlement.getPeriodId())
-                .orElseThrow(() -> new BusinessRuleException("فترة التسوية غير موجودة", "SETTL_PERIOD_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Settlement period not found", "SETTL_PERIOD_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (!"APPROVED".equals(period.getStatus()) && !"LOCKED".equals(period.getStatus())) {
-            throw new BusinessRuleException("يجب اعتماد تسوية المقاول قبل الترحيل.", "SETTL_NOT_APPROVED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Contractor settlement must be approved before posting.", "SETTL_NOT_APPROVED", HttpStatus.CONFLICT);
         }
 
         if ("POSTED".equals(settlement.getStatus()) || settlement.getPostedJournalEntryId() != null) {
-            throw new BusinessRuleException("تم ترحيل هذه التسوية بالفعل للمالية.", "SETTL_ALREADY_POSTED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("This settlement has already been posted to finance.", "SETTL_ALREADY_POSTED", HttpStatus.CONFLICT);
         }
 
         String currentActor = actor();
@@ -396,7 +396,7 @@ public class WorkforceSettlementService {
                 "CREDIT",
                 settlement.getNetPayable(),
                 "SETTL-" + period.getPeriodCode(),
-                "ترحيل مستحقات تسوية المقاول عن الفترة " + period.getPeriodCode(),
+                "Settlement liability posting for period " + period.getPeriodCode(),
                 Instant.now(),
                 currentActor
         );
@@ -438,10 +438,10 @@ public class WorkforceSettlementService {
     @Transactional
     public WorkforceApi.ContractorSettlementDetailResponse linkInvoice(String settlementId, WorkforceApi.LinkInvoiceRequest request) {
         ContractorSettlement settlement = contractorSettlementRepository.findById(settlementId)
-                .orElseThrow(() -> new BusinessRuleException("تسوية المقاول غير موجودة: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Contractor settlement not found: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (request.invoiceAmount() != null && request.invoiceAmount().subtract(settlement.getNetPayable()).abs().compareTo(new BigDecimal("100.00")) > 0) {
-            throw new BusinessRuleException("قيمة الفاتورة تتجاوز المبلغ المعتمد بالتسوية خارج حد التسامح.", "SETTL_INVOICE_VARIANCE_EXCEEDED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Invoice amount exceeds approved settlement amount outside tolerance.", "SETTL_INVOICE_VARIANCE_EXCEEDED", HttpStatus.CONFLICT);
         }
 
         settlement.linkInvoice(request.invoiceNumber(), Instant.ofEpochMilli(request.invoiceDate()));
@@ -456,15 +456,15 @@ public class WorkforceSettlementService {
     @Transactional
     public WorkforceApi.ContractorSettlementDetailResponse recordPayment(String settlementId, WorkforceApi.RecordSettlementPaymentRequest request) {
         ContractorSettlement settlement = contractorSettlementRepository.findById(settlementId)
-                .orElseThrow(() -> new BusinessRuleException("تسوية المقاول غير موجودة: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Contractor settlement not found: " + settlementId, "SETTL_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (!"POSTED".equals(settlement.getStatus())) {
-            throw new BusinessRuleException("يجب ترحيل التسوية للمالية أولاً قبل تسجيل الدفع.", "SETTL_PAYMENT_BEFORE_POST", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Settlement must be posted to finance before recording payment.", "SETTL_PAYMENT_BEFORE_POST", HttpStatus.CONFLICT);
         }
 
         BigDecimal newPaid = settlement.getPaidAmount().add(request.amount());
         if (newPaid.compareTo(settlement.getNetPayable()) > 0) {
-            throw new BusinessRuleException("إجمالي المدفوعات يتجاوز صافي مستحقات التسوية.", "SETTL_PAYMENT_EXCEEDS_NET", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Total payments exceed settlement net payable.", "SETTL_PAYMENT_EXCEEDS_NET", HttpStatus.CONFLICT);
         }
 
         String currentActor = actor();
@@ -473,7 +473,7 @@ public class WorkforceSettlementService {
                 "DEBIT",
                 request.amount(),
                 "PMT-SETTL-" + settlement.getId().substring(0, 8).toUpperCase(),
-                "سداد دفعة نقدية من مستحقات تسوية المقاول",
+                "Cash payment settlement disbursement",
                 request.paymentDate() != null ? Instant.ofEpochMilli(request.paymentDate()) : Instant.now(),
                 currentActor
         );
@@ -615,7 +615,7 @@ public class WorkforceSettlementService {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
                     .digest(source.toString().getBytes(StandardCharsets.UTF_8)));
         } catch (Exception exception) {
-            throw new IllegalStateException("تعذر تكوين بصمة مدخلات التسوية.", exception);
+            throw new IllegalStateException("Failed to build settlement input fingerprint.", exception);
         }
     }
 
@@ -631,7 +631,7 @@ public class WorkforceSettlementService {
     private String rootMessage(Throwable throwable) {
         Throwable current = throwable;
         while (current.getCause() != null) current = current.getCause();
-        return current.getMessage() == null ? "خطأ غير متوقع أثناء الاحتساب." : current.getMessage();
+        return current.getMessage() == null ? "Unexpected error during calculation." : current.getMessage();
     }
 
     private String json(String value) {
@@ -640,16 +640,16 @@ public class WorkforceSettlementService {
 
     private WorkforceSettlementPeriod requirePeriod(String periodId) {
         return periodRepository.findById(periodId)
-                .orElseThrow(() -> new BusinessRuleException("فترة التسوية غير موجودة: " + periodId, "SETTL_PERIOD_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Settlement period not found: " + periodId, "SETTL_PERIOD_NOT_FOUND", HttpStatus.NOT_FOUND));
     }
 
     private WorkforceSettlementPeriod requireFreshCalculated(String periodId, String expectedStatus) {
         WorkforceSettlementPeriod period = requirePeriod(periodId);
         if (!expectedStatus.equals(period.getStatus())) {
-            throw new BusinessRuleException("حالة فترة التسوية غير مطابقة للمرحلة المطلوبة: " + period.getStatus(), "SETTL_INVALID_STATUS", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Settlement period status does not match the required stage: " + period.getStatus(), "SETTL_INVALID_STATUS", HttpStatus.CONFLICT);
         }
         if (needsRecalculation(period)) {
-            throw new BusinessRuleException("تم تعديل بيانات الحضور أو العمال بعد آخر احتساب، يجب إعادة احتساب الفترة أولاً.", "SETTL_RECALCULATION_REQUIRED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Attendance or worker data changed since last calculation; recalculate the period first.", "SETTL_RECALCULATION_REQUIRED", HttpStatus.CONFLICT);
         }
         return period;
     }

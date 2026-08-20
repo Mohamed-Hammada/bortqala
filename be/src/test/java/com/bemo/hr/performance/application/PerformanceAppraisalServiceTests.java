@@ -117,6 +117,6 @@ class PerformanceAppraisalServiceTests {
         PerformanceAppraisalApi.InitAppraisalRequest initReq = new PerformanceAppraisalApi.InitAppraisalRequest(cycleId, "emp-1", "mgr-1");
         assertThatThrownBy(() -> service.initAppraisal(initReq))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("مقفلة");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("CYCLE_LOCKED"));
     }
 }

@@ -108,7 +108,7 @@ class PayrollServiceTests {
         when(salaryPaymentRepository.findByIdForUpdate("missing-id")).thenReturn(Optional.empty());
         assertThatThrownBy(() -> payrollService.reversePayment(req, "admin"))
                 .isInstanceOf(com.bemo.hr.shared.domain.NotFoundException.class)
-                .hasMessageContaining("قيد الراتب غير موجود.");
+                .satisfies(ex -> assertThat(((com.bemo.hr.shared.domain.NotFoundException) ex).getCode()).isEqualTo("PAYROLL_ENTRY_NOT_FOUND"));
     }
 
     @Test

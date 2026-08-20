@@ -53,7 +53,7 @@ public class LeaveManagementService {
     @Transactional
     public LeaveManagementApi.LeaveTypeResponse createLeaveType(LeaveManagementApi.CreateLeaveTypeRequest request) {
         if (leaveTypeRepository.existsByCode(request.code())) {
-            throw new BusinessRuleException("كود نوع الإجازة مسجل مسبقاً", "LEAVE_TYPE_CODE_EXISTS", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Leave type code already exists", "LEAVE_TYPE_CODE_EXISTS", HttpStatus.BAD_REQUEST);
         }
         LeaveType type = new LeaveType(
                 request.code(),
@@ -92,9 +92,9 @@ public class LeaveManagementService {
     public LeaveManagementApi.LeaveBalanceResponse adjustBalance(LeaveManagementApi.AdjustBalanceRequest request) {
         int year = request.year() > 0 ? request.year() : LocalDate.now().getYear();
         Employee emp = employeeRepository.findById(request.employeeId())
-                .orElseThrow(() -> new BusinessRuleException("الموظف غير موجود", "EMPLOYEE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Employee not found", "EMPLOYEE_NOT_FOUND", HttpStatus.NOT_FOUND));
         LeaveType type = leaveTypeRepository.findById(request.leaveTypeId())
-                .orElseThrow(() -> new BusinessRuleException("نوع الإجازة غير موجود", "LEAVE_TYPE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Leave type not found", "LEAVE_TYPE_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         LeaveBalanceAccount account = balanceAccountRepository.findByEmployeeIdAndLeaveTypeIdAndYear(request.employeeId(), request.leaveTypeId(), year)
                 .orElseGet(() -> new LeaveBalanceAccount(request.employeeId(), request.leaveTypeId(), year, request.entitledDays(), request.carriedOverDays()));
@@ -127,12 +127,12 @@ public class LeaveManagementService {
     @Transactional
     public LeaveManagementApi.LeaveRequestResponse submitLeaveRequest(LeaveManagementApi.SubmitLeaveRequest request) {
         Employee employee = employeeRepository.findById(request.employeeId())
-                .orElseThrow(() -> new BusinessRuleException("الموظف غير موجود", "EMPLOYEE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Employee not found", "EMPLOYEE_NOT_FOUND", HttpStatus.NOT_FOUND));
         LeaveType type = leaveTypeRepository.findById(request.leaveTypeId())
-                .orElseThrow(() -> new BusinessRuleException("نوع الإجازة غير موجود", "LEAVE_TYPE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Leave type not found", "LEAVE_TYPE_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (request.endDate().isBefore(request.startDate())) {
-            throw new BusinessRuleException("تاريخ النهاية يسبق تاريخ البداية", "INVALID_DATE_RANGE", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("End date is before start date", "INVALID_DATE_RANGE", HttpStatus.BAD_REQUEST);
         }
 
         long dayCount = ChronoUnit.DAYS.between(request.startDate(), request.endDate()) + 1;
@@ -141,7 +141,7 @@ public class LeaveManagementService {
         // Overlap validation
         List<LeaveRequest> overlapping = leaveRequestRepository.findOverlappingRequests(request.employeeId(), request.startDate(), request.endDate());
         if (!overlapping.isEmpty()) {
-            throw new BusinessRuleException("يوجد طلب إجازة مسجل لنفس الفترة", "LEAVE_OVERLAP", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("A leave request already exists for the same period", "LEAVE_OVERLAP", HttpStatus.BAD_REQUEST);
         }
 
         // Balance validation for paid leave
@@ -153,7 +153,7 @@ public class LeaveManagementService {
                 });
 
         if (type.isPaid() && balance.getRemainingDays().compareTo(totalDays) < 0) {
-            throw new BusinessRuleException("رصيد الإجازات المتبقي غير كاف", "INSUFFICIENT_LEAVE_BALANCE", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Insufficient leave balance", "INSUFFICIENT_LEAVE_BALANCE", HttpStatus.BAD_REQUEST);
         }
 
         balance.reserveDays(totalDays);
@@ -178,10 +178,10 @@ public class LeaveManagementService {
     @Transactional
     public LeaveManagementApi.LeaveRequestResponse approveLeaveRequest(String requestId, String approverUserId) {
         LeaveRequest req = leaveRequestRepository.findById(requestId)
-                .orElseThrow(() -> new BusinessRuleException("طلب الإجازة غير موجود", "LEAVE_REQUEST_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Leave request not found", "LEAVE_REQUEST_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (req.getStatus() != LeaveRequestStatus.PENDING_APPROVAL) {
-            throw new BusinessRuleException("لا يمكن اعتماد إلا الطلبات قيد الانتظار", "INVALID_STATUS_FOR_APPROVAL", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Only pending requests can be approved", "INVALID_STATUS_FOR_APPROVAL", HttpStatus.BAD_REQUEST);
         }
 
         int year = req.getStartDate().getYear();
@@ -203,10 +203,10 @@ public class LeaveManagementService {
     @Transactional
     public LeaveManagementApi.LeaveRequestResponse rejectLeaveRequest(String requestId, LeaveManagementApi.RejectLeaveRequest request) {
         LeaveRequest req = leaveRequestRepository.findById(requestId)
-                .orElseThrow(() -> new BusinessRuleException("طلب الإجازة غير موجود", "LEAVE_REQUEST_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Leave request not found", "LEAVE_REQUEST_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (req.getStatus() != LeaveRequestStatus.PENDING_APPROVAL) {
-            throw new BusinessRuleException("لا يمكن رفض إلا الطلبات قيد الانتظار", "INVALID_STATUS_FOR_REJECTION", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Only pending requests can be rejected", "INVALID_STATUS_FOR_REJECTION", HttpStatus.BAD_REQUEST);
         }
 
         int year = req.getStartDate().getYear();
@@ -228,7 +228,7 @@ public class LeaveManagementService {
     @Transactional
     public LeaveManagementApi.LeaveRequestResponse cancelLeaveRequest(String requestId) {
         LeaveRequest req = leaveRequestRepository.findById(requestId)
-                .orElseThrow(() -> new BusinessRuleException("طلب الإجازة غير موجود", "LEAVE_REQUEST_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Leave request not found", "LEAVE_REQUEST_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         int year = req.getStartDate().getYear();
         if (req.getStatus() == LeaveRequestStatus.PENDING_APPROVAL) {

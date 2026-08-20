@@ -47,13 +47,13 @@ public class TreasuryCashChequeService {
 
     public Cashbox createCashbox(String code, String name, String branchId, String currency, String custodianUserId, String glAccountId) {
         if (code == null || code.isBlank()) {
-            throw new BusinessRuleException("كود الخزينة مطلوب", "CASHBOX_CODE_REQUIRED", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Cashbox code is required", "CASHBOX_CODE_REQUIRED", HttpStatus.BAD_REQUEST);
         }
         if (name == null || name.isBlank()) {
-            throw new BusinessRuleException("اسم الخزينة مطلوب", "CASHBOX_NAME_REQUIRED", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Cashbox name is required", "CASHBOX_NAME_REQUIRED", HttpStatus.BAD_REQUEST);
         }
         if (cashboxRepository.existsByCode(code.strip())) {
-            throw new BusinessRuleException("كود الخزينة مستخدم بالفعل", "CASHBOX_CODE_DUPLICATE", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cashbox code already exists", "CASHBOX_CODE_DUPLICATE", HttpStatus.CONFLICT);
         }
         Cashbox cashbox = new Cashbox(code, name, branchId, currency, custodianUserId, glAccountId);
         return cashboxRepository.save(cashbox);
@@ -61,7 +61,7 @@ public class TreasuryCashChequeService {
 
     public Cashbox updateCashbox(String id, String name, String branchId, String custodianUserId, String glAccountId, boolean active) {
         Cashbox cashbox = cashboxRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("الخزينة غير موجودة", "CASHBOX_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Cashbox not found", "CASHBOX_NOT_FOUND", HttpStatus.NOT_FOUND));
         cashbox.updateDetails(name, branchId, custodianUserId, glAccountId, active);
         return cashboxRepository.save(cashbox);
     }
@@ -70,12 +70,12 @@ public class TreasuryCashChequeService {
                                                    BigDecimal amount, String voucherNumber, String counterpartyPartyId,
                                                    String description, long dateMs, String username) {
         Cashbox cashbox = cashboxRepository.findById(cashboxId)
-                .orElseThrow(() -> new BusinessRuleException("الخزينة غير موجودة", "CASHBOX_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Cashbox not found", "CASHBOX_NOT_FOUND", HttpStatus.NOT_FOUND));
         if (!cashbox.isActive()) {
-            throw new BusinessRuleException("لا يمكن إجراء حركات على خزينة غير مفعلة", "CASHBOX_INACTIVE", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Cannot perform transactions on an inactive cashbox", "CASHBOX_INACTIVE", HttpStatus.CONFLICT);
         }
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessRuleException("مبلغ الحركة النقدية يجب أن يكون أكبر من الصفر", "INVALID_CASH_AMOUNT", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Cash transaction amount must be greater than zero", "INVALID_CASH_AMOUNT", HttpStatus.BAD_REQUEST);
         }
 
         BigDecimal delta;
@@ -83,7 +83,7 @@ public class TreasuryCashChequeService {
             case RECEIPT, PETTY_CASH_SETTLEMENT -> delta = amount;
             case PAYMENT, PETTY_CASH_ADVANCE -> {
                 if (cashbox.getCurrentBalance().compareTo(amount) < 0) {
-                    throw new BusinessRuleException("رصيد الخزينة الحالي لا يكفي لإتمام عملية الصرف", "INSUFFICIENT_CASHBOX_BALANCE", HttpStatus.CONFLICT);
+                    throw new BusinessRuleException("Insufficient cashbox balance to complete the withdrawal", "INSUFFICIENT_CASHBOX_BALANCE", HttpStatus.CONFLICT);
                 }
                 delta = amount.negate();
             }
@@ -123,13 +123,13 @@ public class TreasuryCashChequeService {
                                            String partyId, BigDecimal amount, String currency,
                                            long issueDate, long dueDate, String notes) {
         if (chequeNumber == null || chequeNumber.isBlank()) {
-            throw new BusinessRuleException("رقم الشيك مطلوب", "CHEQUE_NUMBER_REQUIRED", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Cheque number is required", "CHEQUE_NUMBER_REQUIRED", HttpStatus.BAD_REQUEST);
         }
         if (drawerPayeeName == null || drawerPayeeName.isBlank()) {
-            throw new BusinessRuleException("اسم الساحب / المستفيد مطلوب", "DRAWER_PAYEE_REQUIRED", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Drawer / payee name is required", "DRAWER_PAYEE_REQUIRED", HttpStatus.BAD_REQUEST);
         }
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new BusinessRuleException("مبلغ الشيك يجب أن يكون أكبر من الصفر", "INVALID_CHEQUE_AMOUNT", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Cheque amount must be greater than zero", "INVALID_CHEQUE_AMOUNT", HttpStatus.BAD_REQUEST);
         }
 
         CommercialCheque cheque = new CommercialCheque(chequeNumber, chequeType, bankName, bankAccountId,
@@ -139,10 +139,10 @@ public class TreasuryCashChequeService {
 
     public CommercialCheque depositCheque(String chequeId, String targetBankAccountId) {
         CommercialCheque cheque = commercialChequeRepository.findById(chequeId)
-                .orElseThrow(() -> new BusinessRuleException("الشيك غير موجود", "CHEQUE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Cheque not found", "CHEQUE_NOT_FOUND", HttpStatus.NOT_FOUND));
         if (targetBankAccountId != null && !targetBankAccountId.isBlank()) {
             bankAccountRepository.findById(targetBankAccountId)
-                    .orElseThrow(() -> new BusinessRuleException("الحساب البنكي غير موجود", "BANK_ACCOUNT_NOT_FOUND", HttpStatus.NOT_FOUND));
+                    .orElseThrow(() -> new BusinessRuleException("Bank account not found", "BANK_ACCOUNT_NOT_FOUND", HttpStatus.NOT_FOUND));
         }
         cheque.deposit(targetBankAccountId);
         return commercialChequeRepository.save(cheque);
@@ -150,21 +150,21 @@ public class TreasuryCashChequeService {
 
     public CommercialCheque collectCheque(String chequeId) {
         CommercialCheque cheque = commercialChequeRepository.findById(chequeId)
-                .orElseThrow(() -> new BusinessRuleException("الشيك غير موجود", "CHEQUE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Cheque not found", "CHEQUE_NOT_FOUND", HttpStatus.NOT_FOUND));
         cheque.collect();
         return commercialChequeRepository.save(cheque);
     }
 
     public CommercialCheque bounceCheque(String chequeId, String reason) {
         CommercialCheque cheque = commercialChequeRepository.findById(chequeId)
-                .orElseThrow(() -> new BusinessRuleException("الشيك غير موجود", "CHEQUE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Cheque not found", "CHEQUE_NOT_FOUND", HttpStatus.NOT_FOUND));
         cheque.bounce(reason);
         return commercialChequeRepository.save(cheque);
     }
 
     public CommercialCheque cancelCheque(String chequeId, String reason) {
         CommercialCheque cheque = commercialChequeRepository.findById(chequeId)
-                .orElseThrow(() -> new BusinessRuleException("الشيك غير موجود", "CHEQUE_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Cheque not found", "CHEQUE_NOT_FOUND", HttpStatus.NOT_FOUND));
         cheque.cancel(reason);
         return commercialChequeRepository.save(cheque);
     }

@@ -323,7 +323,7 @@
           </div>
           <div class="form-group">
             <label>{{ i18n.t('common.description') }} (AR)</label>
-            <input type="text" class="form-control" formControlName="descriptionAr" placeholder="اسم الصنف بالعربي" />
+            <input type="text" class="form-control" formControlName="descriptionAr" [placeholder]="i18n.t('tax.itemNameArabic')" />
           </div>
           <div class="modal-actions">
             <button type="button" class="btn btn-subtle" (click)="closeMappingModal()">{{ i18n.t('common.cancel') }}</button>

@@ -12,15 +12,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@TestPropertySource(properties = {
+@SpringBootTest(properties = {
         "hr.security.demo-no-login.enabled=true",
         "hr.security.demo-no-login.secret=fixed-test-demo-secret",
         "hr.security.demo-no-login.app-code=TEST",
         "hr.security.demo-no-login.app-name=Bemo Automated Test",
         "hr.security.demo-no-login.profiles=",
 })
+@AutoConfigureMockMvc
 class DemoNoLoginIntegrationTests {
 
     @Autowired

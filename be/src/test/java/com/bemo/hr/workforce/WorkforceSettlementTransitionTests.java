@@ -127,6 +127,6 @@ class WorkforceSettlementTransitionTests {
 
         assertThatThrownBy(() -> service().lockPeriod("p1"))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("اعتماد");
+                .satisfies(ex -> assertThat(((BusinessRuleException) ex).getCode()).isEqualTo("SETTL_LOCK_BEFORE_APPROVAL"));
     }
 }

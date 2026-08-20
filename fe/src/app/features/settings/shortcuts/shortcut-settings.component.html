@@ -8,7 +8,7 @@
           <span class="default-badge">{{ i18n.t('shortcuts.defaultBadge') }}</span>
         }
       </div>
-      <span class="shortcut-count" aria-label="Shortcut count">
+      <span class="shortcut-count" [attr.aria-label]="i18n.t('settings.shortcutCount')">
         {{ drafts().length }} / {{ maxShortcuts }}
       </span>
     </div>

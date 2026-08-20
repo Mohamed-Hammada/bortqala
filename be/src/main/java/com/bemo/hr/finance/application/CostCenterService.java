@@ -36,19 +36,19 @@ public class CostCenterService {
     @Transactional(readOnly = true)
     public CostCenterResponse getById(String id) {
         CostCenter cc = costCenterRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("مركز التكلفة غير موجود", "COST_CENTER_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Cost center not found", "COST_CENTER_NOT_FOUND", HttpStatus.NOT_FOUND));
         return toResponse(cc);
     }
 
     public CostCenterResponse create(CostCenterPayload payload) {
         if (payload.code() == null || payload.code().isBlank()) {
-            throw new BusinessRuleException("كود مركز التكلفة مطلوب", "COST_CENTER_CODE_REQUIRED", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Cost center code is required", "COST_CENTER_CODE_REQUIRED", HttpStatus.BAD_REQUEST);
         }
         if (payload.name() == null || payload.name().isBlank()) {
-            throw new BusinessRuleException("اسم مركز التكلفة مطلوب", "COST_CENTER_NAME_REQUIRED", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Cost center name is required", "COST_CENTER_NAME_REQUIRED", HttpStatus.BAD_REQUEST);
         }
         if (costCenterRepository.existsByCodeIgnoreCase(payload.code().strip())) {
-            throw new BusinessRuleException("كود مركز التكلفة مستخدم بالفعل", "COST_CENTER_CODE_DUPLICATE", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Cost center code already exists", "COST_CENTER_CODE_DUPLICATE", HttpStatus.BAD_REQUEST);
         }
 
         CostCenter cc = new CostCenter(
@@ -70,10 +70,10 @@ public class CostCenterService {
 
     public CostCenterResponse update(String id, CostCenterPayload payload) {
         CostCenter cc = costCenterRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("مركز التكلفة غير موجود", "COST_CENTER_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Cost center not found", "COST_CENTER_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (!cc.getCode().equalsIgnoreCase(payload.code().strip()) && costCenterRepository.existsByCodeIgnoreCase(payload.code().strip())) {
-            throw new BusinessRuleException("كود مركز التكلفة مستخدم بالفعل", "COST_CENTER_CODE_DUPLICATE", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Cost center code already exists", "COST_CENTER_CODE_DUPLICATE", HttpStatus.BAD_REQUEST);
         }
 
         cc.update(
@@ -95,10 +95,10 @@ public class CostCenterService {
 
     public void delete(String id) {
         CostCenter cc = costCenterRepository.findById(id)
-                .orElseThrow(() -> new BusinessRuleException("مركز التكلفة غير موجود", "COST_CENTER_NOT_FOUND", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new BusinessRuleException("Cost center not found", "COST_CENTER_NOT_FOUND", HttpStatus.NOT_FOUND));
 
         if (costCenterRepository.existsByParentId(id)) {
-            throw new BusinessRuleException("لا يمكن حذف مركز تكلفة رئيسي يحتوي على مراكز فرعية", "COST_CENTER_HAS_CHILDREN", HttpStatus.BAD_REQUEST);
+            throw new BusinessRuleException("Cannot delete a parent cost center that has children", "COST_CENTER_HAS_CHILDREN", HttpStatus.BAD_REQUEST);
         }
 
         costCenterRepository.delete(cc);

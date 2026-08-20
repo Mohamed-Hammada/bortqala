@@ -58,19 +58,19 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
             }
             HttpResponse<byte[]> response = httpClient.send(builder.GET().build(), HttpResponse.BodyHandlers.ofByteArray());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                String message = "فشل الاتصال بجهاز البصمة. رمز الاستجابة: " + response.statusCode();
+                String message = "Failed to connect to biometric device. Response code: " + response.statusCode();
                 if (response.statusCode() == 501) {
-                    message = "مسار التكامل المحدد لا يحتوي بعد على قارئ سجلات حضور مكتمل لهذا الإصدار. راجع حالة التنفيذ والتوثيق الرسمي.";
+                    message = "The selected integration path does not yet include a complete attendance log reader for this version. Check the implementation status and official documentation.";
                 }
                 throw new BusinessRuleException(message, "BIO_DEVICE_HTTP_ERROR_" + response.statusCode(), HttpStatus.CONFLICT);
             }
             JsonNode root = objectMapper.readTree(response.body());
             JsonNode rows = root.isArray() ? root : root.path("punches");
             if (!rows.isArray()) {
-                throw new BusinessRuleException("استجابة الجهاز غير صالحة: يجب إرسال مصفوفة punches.", "BIO_DEVICE_RESPONSE_INVALID", HttpStatus.CONFLICT);
+                throw new BusinessRuleException("Invalid device response: expected a punches array.", "BIO_DEVICE_RESPONSE_INVALID", HttpStatus.CONFLICT);
             }
             if (rows.size() > 10_000) {
-                throw new BusinessRuleException("استجابة الجهاز تتجاوز الحد الأقصى وهو 10000 بصمة لكل مزامنة.", "BIO_DEVICE_RESPONSE_TOO_LARGE", HttpStatus.CONFLICT);
+                throw new BusinessRuleException("Device response exceeds the maximum of 10000 punches per sync.", "BIO_DEVICE_RESPONSE_TOO_LARGE", HttpStatus.CONFLICT);
             }
             List<DevicePunch> punches = new ArrayList<>();
             for (JsonNode row : rows) {
@@ -85,17 +85,17 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
         } catch (BusinessRuleException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new BusinessRuleException("تعذر الاتصال بجهاز البصمة أو قراءة استجابته: " + exception.getMessage(), "BIO_DEVICE_CONNECTION_FAILED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Failed to connect to biometric device or read its response: " + exception.getMessage(), "BIO_DEVICE_CONNECTION_FAILED", HttpStatus.CONFLICT);
         }
     }
 
     private URI endpoint(BiometricDevice device) {
         URI base = URI.create(device.getEndpointUrl());
         if (!"http".equalsIgnoreCase(base.getScheme()) && !"https".equalsIgnoreCase(base.getScheme())) {
-            throw new BusinessRuleException("رابط جهاز البصمة يجب أن يبدأ بـ http أو https.", "BIO_DEVICE_ENDPOINT_SCHEME_REQUIRED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Biometric device URL must start with http or https.", "BIO_DEVICE_ENDPOINT_SCHEME_REQUIRED", HttpStatus.CONFLICT);
         }
         if (base.getHost() == null)
-            throw new BusinessRuleException("رابط جهاز البصمة غير صالح.", "BIO_DEVICE_ENDPOINT_MALFORMED", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Biometric device URL is malformed.", "BIO_DEVICE_ENDPOINT_MALFORMED", HttpStatus.CONFLICT);
         if (device.getLastSuccessfulPunchAt() == null) return base;
         String separator = base.getQuery() == null ? "?" : "&";
         return URI.create(base + separator + "since=" + URLEncoder.encode(
@@ -128,7 +128,7 @@ public class HttpBiometricDeviceClient implements BiometricDeviceClient {
             if (value.chars().allMatch(Character::isDigit)) return Instant.ofEpochMilli(Long.parseLong(value));
             return Instant.parse(value);
         } catch (Exception exception) {
-            throw new BusinessRuleException("وقت بصمة غير صالح في استجابة الجهاز: " + value, "BIO_DEVICE_INVALID_TIMESTAMP", HttpStatus.CONFLICT);
+            throw new BusinessRuleException("Invalid punch timestamp in device response: " + value, "BIO_DEVICE_INVALID_TIMESTAMP", HttpStatus.CONFLICT);
         }
     }
 }
