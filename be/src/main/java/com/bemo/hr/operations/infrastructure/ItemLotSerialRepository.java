@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,10 +44,10 @@ public interface ItemLotSerialRepository extends JpaRepository<ItemLotSerial, St
      */
     @Query("SELECT l FROM ItemLotSerial l WHERE l.itemId = :itemId " +
            "AND l.warehouseId = :warehouseId AND l.status = 'AVAILABLE' AND l.quantity > 0 " +
-           "AND l.expirationDate IS NOT NULL AND l.expirationDate <= CURRENT_DATE + :days " +
+           "AND l.expirationDate IS NOT NULL AND l.expirationDate <= :cutoffDate " +
            "AND l.expirationDate > CURRENT_DATE " +
            "ORDER BY l.expirationDate ASC")
-    List<ItemLotSerial> findLotsExpiringWithinDays(@Param("itemId") String itemId, @Param("warehouseId") String warehouseId, @Param("days") int days);
+    List<ItemLotSerial> findLotsExpiringWithinDays(@Param("itemId") String itemId, @Param("warehouseId") String warehouseId, @Param("cutoffDate") LocalDate cutoffDate);
 
     /**
      * Find all available lots for an item (across all warehouses).

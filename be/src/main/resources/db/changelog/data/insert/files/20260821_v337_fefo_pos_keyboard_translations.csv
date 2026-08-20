@@ -1,4 +1,4 @@
-id;translation_key;locale;value
+id;translation_key;locale;text_value
 v337-001;pos.shortcutScan;en-US;F1 Scan
 v337-002;pos.shortcutScan;ar-EG;F1 مسح
 v337-003;pos.shortcutDiscount;en-US;F4 Discount

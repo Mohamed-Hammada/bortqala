@@ -19,5 +19,5 @@ databaseChangeLog:
                   name: locale
                   type: STRING
               - column:
-                  name: value
+                  name: text_value
                   type: STRING

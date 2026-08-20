@@ -194,7 +194,7 @@ public class ItemLotSerialService {
      */
     @Transactional(readOnly = true)
     public List<ItemLotSerial> getLotsExpiringWithinDays(String itemId, String warehouseId, int days) {
-        return repository.findLotsExpiringWithinDays(itemId, warehouseId, days);
+        return repository.findLotsExpiringWithinDays(itemId, warehouseId, java.time.LocalDate.now().plusDays(days));
     }
 
     private ItemLotSerial getItem(String id) {

@@ -22,3 +22,9 @@ databaseChangeLog:
               - column:
                   name: text_value
                   type: STRING
+        - sql:
+            sql: >
+              UPDATE translations SET text_value = 'تم استيراد {imported} من {total}.'
+              WHERE translation_key = 'workforce.importResult' AND locale = 'ar-EG';
+              UPDATE translations SET text_value = 'Imported {imported} of {total}.'
+              WHERE translation_key = 'workforce.importResult' AND locale = 'en-US';
