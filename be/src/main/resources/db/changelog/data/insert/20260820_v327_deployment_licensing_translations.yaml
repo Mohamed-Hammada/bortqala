@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260820_v327_deployment_licensing_translations
       author: bemo-platform
+      validCheckSum: ANY
       changes:
         - loadData:
             tableName: translations

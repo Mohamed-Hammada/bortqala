@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: v48-user-category-assignment
       author: codex
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: app_users

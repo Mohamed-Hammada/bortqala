@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260820_v321_executive_analytics_allowed_menus
       author: wolfn
+      validCheckSum: ANY
       comment: "Grant the executive-analytics screen to existing users for Feature 26 Executive Reporting & Analytics."
       changes:
         - sql:

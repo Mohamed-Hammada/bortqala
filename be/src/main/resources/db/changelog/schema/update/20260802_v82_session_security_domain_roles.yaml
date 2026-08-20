@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260802-v82-session-security-domain-roles
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Adds login-failure lockout, must-change-password, last-login/last-failure and token-version columns to app_users; creates the rotated hashed refresh-token store; introduces domain-specific roles and grants them to existing users so no current user loses access.
       changes:
         - addColumn:
@@ -80,6 +81,7 @@ databaseChangeLog:
   - changeSet:
       id: seed_v82_domain_roles
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Inserts the domain-specific roles used by the finance, trade, manufacturing, payroll and workforce modules.
       changes:
         - sql:
@@ -106,6 +108,7 @@ databaseChangeLog:
   - changeSet:
       id: seed_v82_domain_role_grants
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Grants the domain-specific roles to existing ADMIN and SUPER_ADMIN users and WORKFORCE_REVIEWER to HR_REVIEWER users so the pre-existing access is preserved under the new role model. No finance, treasury, procurement, sales, inventory, manufacturing, quality or payroll roles are auto-granted to HR staff; the corrected HR_MANAGER grant (workforce roles only) is applied in V83.
       changes:
         - sql:

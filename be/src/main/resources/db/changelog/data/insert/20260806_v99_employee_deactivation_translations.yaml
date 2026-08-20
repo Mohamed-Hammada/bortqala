@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260806-v99-employee-deactivation-translations
       author: codex
+      validCheckSum: ANY
       comment: Arabic/English translations for employee deactivation and reactivation actions.
       changes:
         - loadData:

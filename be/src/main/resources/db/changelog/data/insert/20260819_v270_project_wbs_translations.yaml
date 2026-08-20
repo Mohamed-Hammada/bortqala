@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260819-v270-project-wbs-translations
       author: bemo-erp
+      validCheckSum: ANY
       comment: "Arabic/English translations for P0.1 Project Kernel, WBS/BOQ Hierarchy, Cost Codes, Stakeholder Roles, and Exception Codes."
       changes:
         - loadData:

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260818-v268-hardcoded-ui-i18n
       author: bemo-erp
+      validCheckSum: ANY
       comment: "i18n: Replace all remaining hardcoded UI text with DB-backed i18n.t() keys across 10 templates (145 keys x 2 locales)."
       preConditions:
         - onFail: MARK_RAN

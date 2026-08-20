@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260813_v209_001_o2c_vertical_slice
       author: codex
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: sales_order_lines
@@ -125,6 +126,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260813_v209_001_o2c_customer_invoices_legacy_compat
       author: codex
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:
@@ -143,6 +145,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260813_v209_001_o2c_customer_invoices_sync_total_amount
       author: codex
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - columnExists:

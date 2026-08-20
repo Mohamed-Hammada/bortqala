@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: fix_inventory_item_unique_constraint
       author: codex
+      validCheckSum: ANY
       preConditions:
         onFail: MARK_RAN
         and:

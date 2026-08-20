@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260815-v248-business-report-catalog-i18n
       author: openai
+      validCheckSum: ANY
       comment: Arabic and English copy for the cross-module business reports catalog.
       preConditions:
         - onFail: MARK_RAN

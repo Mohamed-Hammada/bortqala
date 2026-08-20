@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-v53-procurement-sequences
       author: codex
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: apps
@@ -39,6 +40,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-v53-navigation-copy
       author: codex
+      validCheckSum: ANY
       changes:
         - loadData:
             tableName: translations

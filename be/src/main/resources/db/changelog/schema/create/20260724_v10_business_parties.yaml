@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: create_business_parties
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - createTable:
             tableName: business_parties
@@ -34,6 +35,7 @@ databaseChangeLog:
   - changeSet:
       id: seed_business_party_translations
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - loadData:
             tableName: translations

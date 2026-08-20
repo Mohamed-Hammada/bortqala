@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260816-fix-product-event-operation-unique-v3
       author: openai
+      validCheckSum: ANY
       comment: Re-run product analytics idempotency repair under a new changeset id after v2 may already have been recorded.
       preConditions:
         - onFail: MARK_RAN

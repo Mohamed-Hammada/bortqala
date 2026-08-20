@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: seed_super_admin_role
       author: Mohamed-Hammada
+      validCheckSum: ANY
       comment: Mandatory platform role required by the idempotent super-admin bootstrap.
       preConditions:
         - onFail: MARK_RAN

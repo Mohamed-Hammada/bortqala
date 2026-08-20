@@ -1,9 +1,5 @@
 id;translation_key;locale;text_value
-v296-001;production.tabOrders;ar-EG;أوامر التشغيل والإنتاج
-v296-002;production.tabOrders;en-US;Production Work Orders
-v296-003;production.tabBoms;ar-EG;قوائم هياكل ونماذج التصنيع (BOM)
-v296-004;production.tabBoms;en-US;Bills of Materials (BOM)
-v296-005;production.tabRoutings;ar-EG;مسارات ومراحل التشغيل (Routings)
+v296-001;production.tabRoutings;ar-EG;مسارات ومراحل التشغيل (Routings)
 v296-006;production.tabRoutings;en-US;Manufacturing Routings
 v296-007;production.tabWorkCenters;ar-EG;مراكز العمل وخطوط الإنتاج (Work Centers)
 v296-008;production.tabWorkCenters;en-US;Work Centers & Capacity

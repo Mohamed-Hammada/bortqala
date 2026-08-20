@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-v66-live-biometric-devices
       author: codex
+      validCheckSum: ANY
       comment: Stores tenant-scoped HTTP biometric device connections and durable synchronization state.
       changes:
         - createTable:

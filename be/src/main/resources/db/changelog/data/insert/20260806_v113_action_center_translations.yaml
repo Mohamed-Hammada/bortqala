@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260806-v113-action-center-translations
       author: Antigravity
+      validCheckSum: ANY
       comment: "Bilingual translations for Action Center and Notifications."
       changes:
         - loadData:

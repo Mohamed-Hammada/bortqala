@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v97-demo-no-login-translations
       author: codex
+      validCheckSum: ANY
       comment: Arabic/English translations for the demo no-login link error code so the 404 response is localized.
       changes:
         - loadData:

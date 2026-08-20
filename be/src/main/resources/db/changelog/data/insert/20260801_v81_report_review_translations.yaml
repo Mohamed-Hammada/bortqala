@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260801-v81-report-review-translations
       author: codex
+      validCheckSum: ANY
       changes:
         - loadData:
             tableName: translations

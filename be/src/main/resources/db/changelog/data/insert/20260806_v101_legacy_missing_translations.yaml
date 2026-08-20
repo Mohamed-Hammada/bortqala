@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260806-v101-legacy-missing-translations
       author: codex
+      validCheckSum: ANY
       comment: "Backfills Arabic/English translations for legacy UI keys that predated the database-backed translation tables (login, settings, reports and the sidebar expand-all action). Idempotent: each row is only inserted when the key/locale pair is still absent, so it coexists with the older unconditional seed changesets."
       changes:
         - sql:

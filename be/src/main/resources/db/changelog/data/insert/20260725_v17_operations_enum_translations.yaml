@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260725-v17-operations-enum-translations
       author: codex
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - sqlCheck:

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260819_v287_inventory_site_warehouse_translations
       author: wolfn
+      validCheckSum: '9:057c6a371fb46772aed4e3aefe51b568'
       changes:
         - loadData:
             tableName: translations

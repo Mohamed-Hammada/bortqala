@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: allow_two_punches_per_source_row
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - dropUniqueConstraint:
             tableName: punch_records

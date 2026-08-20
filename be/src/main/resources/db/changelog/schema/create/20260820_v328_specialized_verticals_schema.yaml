@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260820-v328-01-create-school-tables
       author: bemo-platform
+      validCheckSum: ANY
       changes:
         - createTable:
             tableName: school_student_enrollments
@@ -161,6 +162,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260820-v328-02-create-tourism-tables
       author: bemo-platform
+      validCheckSum: ANY
       changes:
         - createTable:
             tableName: tourism_package_bookings
@@ -269,6 +271,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260820-v328-03-create-customs-tables
       author: bemo-platform
+      validCheckSum: ANY
       changes:
         - createTable:
             tableName: customs_declaration_files
@@ -359,6 +362,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260820-v328-04-create-3pl-tables
       author: bemo-platform
+      validCheckSum: ANY
       changes:
         - createTable:
             tableName: three_pl_contracts

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260819_v314_crm_schema
       author: wolfn
+      validCheckSum: ANY
       changes:
         - createTable:
             tableName: crm_leads

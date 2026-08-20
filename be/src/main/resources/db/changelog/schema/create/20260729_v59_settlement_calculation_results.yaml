@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: add_calculation_result_columns_to_workforce_settlement_periods
       author: Mohamed-Hammada
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:
@@ -47,6 +48,7 @@ databaseChangeLog:
   - changeSet:
       id: create_workforce_settlement_issues_table
       author: Mohamed-Hammada
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:

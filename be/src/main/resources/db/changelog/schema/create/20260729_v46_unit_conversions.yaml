@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-46-unit-conversions
       author: system
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:

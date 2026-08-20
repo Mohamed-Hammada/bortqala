@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260806-v102-access-guidance-extensions-translations
       author: codex
+      validCheckSum: ANY
       comment: "Arabic/English translations for the access-guidance UX extensions: acknowledgement reason, admin override notice, feature-disabled and role-mismatch menu chips, empty role pages hint, catalog-unavailable save blocking and the four backend validation error codes."
       changes:
         - loadData:

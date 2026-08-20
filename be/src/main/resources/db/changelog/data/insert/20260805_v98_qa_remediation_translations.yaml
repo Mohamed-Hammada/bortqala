@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260805-v98-qa-remediation-translations
       author: codex
+      validCheckSum: ANY
       comment: Arabic/English translations for the QA remediation batch - journal posting confirmation and separated loading/error states.
       changes:
         - loadData:

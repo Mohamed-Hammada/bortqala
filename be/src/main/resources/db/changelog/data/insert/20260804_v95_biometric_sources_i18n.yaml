@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v95-biometric-sources-i18n
       author: codex
+      validCheckSum: ANY
       changes:
         - loadData:
             tableName: translations

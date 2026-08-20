@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260815-v249-data-exchange-i18n
       author: openai
+      validCheckSum: ANY
       comment: Arabic and English copy for reusable Excel data exchange and enterprise table tooling.
       preConditions:
         - onFail: MARK_RAN

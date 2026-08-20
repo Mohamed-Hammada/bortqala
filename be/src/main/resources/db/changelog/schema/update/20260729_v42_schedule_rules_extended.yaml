@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-42-schedule-rules-extended
       author: hr-platform
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - tableExists:

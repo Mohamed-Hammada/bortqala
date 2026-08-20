@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: create_workforce_import_batches_table
       author: Mohamed-Hammada
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:
@@ -45,6 +46,7 @@ databaseChangeLog:
   - changeSet:
       id: create_workforce_import_rows_table
       author: Mohamed-Hammada
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:
@@ -80,6 +82,7 @@ databaseChangeLog:
   - changeSet:
       id: create_workforce_import_changes_table
       author: Mohamed-Hammada
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:

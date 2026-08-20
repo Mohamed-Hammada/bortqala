@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: canonicalize_user_preference_locales
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - sql:
             sql: |
@@ -11,6 +12,7 @@ databaseChangeLog:
   - changeSet:
       id: seed_thirty_day_translations
       author: Mohamed-Hammada
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - sqlCheck:

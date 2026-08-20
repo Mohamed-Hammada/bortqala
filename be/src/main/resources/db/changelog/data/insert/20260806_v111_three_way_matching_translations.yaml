@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260806-v111-three-way-matching-translations
       author: Antigravity
+      validCheckSum: ANY
       comment: "Bilingual translations for procurement 3-way matching machine keys and UI labels."
       changes:
         - loadData:

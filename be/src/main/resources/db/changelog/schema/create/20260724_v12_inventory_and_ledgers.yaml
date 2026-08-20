@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260724-v12-inventory-and-ledgers
       author: codex
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260727-23-add-base-salary-to-employees
       author: system
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:

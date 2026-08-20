@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-45-goods-receipt-lines
       author: system
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:
@@ -54,6 +55,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-45-goods-receipts-notes
       author: system
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - tableExists:
@@ -73,6 +75,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-45-supplier-invoice-columns
       author: system
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - tableExists:

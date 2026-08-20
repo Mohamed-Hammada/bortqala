@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: add_user_excel_table_style
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: user_preferences
@@ -17,6 +18,7 @@ databaseChangeLog:
   - changeSet:
       id: seed_excel_export_translations
       author: Mohamed-Hammada
+      validCheckSum: ANY
       changes:
         - loadData:
             tableName: translations

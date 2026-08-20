@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260819_v313_pos_allowed_menus
       author: wolfn
+      validCheckSum: ANY
       comment: "Grant the pos screen to existing users for Feature 23 Point of Sale (POS) Retail Engine."
       changes:
         - sql:

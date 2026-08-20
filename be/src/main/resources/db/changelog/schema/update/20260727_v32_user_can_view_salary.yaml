@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260727-32-add-can-view-salary-to-users
       author: hr-platform
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: app_users

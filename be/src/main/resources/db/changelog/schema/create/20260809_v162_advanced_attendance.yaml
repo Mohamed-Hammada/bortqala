@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: create_attendance_policies_table
       author: Mohamed-Hammada
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:
@@ -38,6 +39,7 @@ databaseChangeLog:
   - changeSet:
       id: create_attendance_exceptions_table
       author: Mohamed-Hammada
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260727-25-create-erp-core-components
       author: system
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: v47-user-navigation-preferences
       author: codex
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: user_preferences

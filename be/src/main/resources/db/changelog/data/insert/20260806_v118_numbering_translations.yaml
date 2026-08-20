@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260806-v118-numbering-translations
       author: bemo-erp
+      validCheckSum: ANY
       comment: "Bilingual translations for the unified document numbering journal and settings UI keys."
       changes:
         - loadData:

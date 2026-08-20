@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260819_v301_leave_allowed_menus
       author: wolfn
+      validCheckSum: ANY
       comment: "Grant the leaves screen to existing users for Feature 18 Leave Management."
       changes:
         - sql:

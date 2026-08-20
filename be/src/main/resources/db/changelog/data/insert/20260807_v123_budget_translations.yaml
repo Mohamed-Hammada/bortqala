@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260807-v123-budget-translations
       author: bemo-erp
+      validCheckSum: ANY
       comment: "Arabic/English translations for the B-1 budget control & encumbrance surface: 7 backend exception codes, budgets page UI keys, the purchase-order department field, and the budget export sheet/columns. Registered in next + test-h2 changelogs."
       changes:
         - loadData:

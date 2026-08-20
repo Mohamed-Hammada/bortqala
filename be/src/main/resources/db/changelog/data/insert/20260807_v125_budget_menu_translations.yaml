@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260807-v125-budget-menu-translations
       author: bemo-erp
+      validCheckSum: ANY
       comment: "Completes the B-1 budget catalog i18n: nav.budgetsHint (shell description) and procurement.departmentHint (purchase order department helper). Registered in next + test-h2 changelogs."
       changes:
         - loadData:

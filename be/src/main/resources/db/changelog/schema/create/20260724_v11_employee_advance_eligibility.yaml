@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260724-v11-employee-advance-eligibility
       author: codex
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:

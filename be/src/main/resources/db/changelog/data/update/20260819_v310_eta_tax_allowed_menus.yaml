@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260819_v310_eta_tax_allowed_menus
       author: wolfn
+      validCheckSum: ANY
       comment: "Grant the eta-tax screen to existing users for Feature 22 Egyptian E-Invoicing & ETA Compliance."
       changes:
         - sql:

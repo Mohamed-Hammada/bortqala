@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260801-v80-report-decision-history
       author: codex
+      validCheckSum: ANY
       comment: Appends one immutable row per daily-result decision/reversal so review history is never overwritten; adds optimistic-lock versioning to daily_results so concurrent reviewers cannot silently overwrite each other.
       changes:
         - addColumn:

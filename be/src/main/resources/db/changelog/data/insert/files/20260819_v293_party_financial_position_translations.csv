@@ -41,9 +41,7 @@ v293-039;parties.runningBalance;ar-EG;الرصيد التراكمي
 v293-040;parties.runningBalance;en-US;Running Balance
 v293-041;parties.documentType;ar-EG;نوع المستند
 v293-042;parties.documentType;en-US;Document Type
-v293-043;parties.documentNumber;ar-EG;رقم المستند
-v293-044;parties.documentNumber;en-US;Document Number
-v293-045;parties.viewStatement;ar-EG;كشف الحساب
+v293-043;parties.viewStatement;ar-EG;كشف الحساب
 v293-046;parties.viewStatement;en-US;Statement
 v293-047;parties.viewFinancialPosition;ar-EG;الموقف المالي
 v293-048;parties.viewFinancialPosition;en-US;Financial Position

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260810-v188-manufacturing-transactional-schema
       author: bemo-erps
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: boms

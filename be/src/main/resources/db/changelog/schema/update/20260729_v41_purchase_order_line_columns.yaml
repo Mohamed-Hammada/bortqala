@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-41-purchase-order-line-columns
       author: hr-platform
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - tableExists:

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260820_v330_verticals_allowed_menus
       author: bemo-platform
+      validCheckSum: ANY
       comment: "Grant the specialized-verticals screen to existing users for Feature 30 Specialized Industry Verticals."
       changes:
         - sql:

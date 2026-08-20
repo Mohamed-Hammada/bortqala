@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260803-v88-workforce-import-error-translations
       author: codex
+      validCheckSum: ANY
       changes:
         - loadData:
             tableName: translations

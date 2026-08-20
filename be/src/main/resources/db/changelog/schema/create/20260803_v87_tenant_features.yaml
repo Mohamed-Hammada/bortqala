@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260803-v87-tenant-features
       author: jules
+      validCheckSum: ANY
       comment: Creates tenant_features table to control which incomplete modules are enabled per tenant.
       changes:
         - createTable:

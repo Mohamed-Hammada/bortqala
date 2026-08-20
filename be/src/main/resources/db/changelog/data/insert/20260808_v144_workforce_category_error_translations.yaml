@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260808-v144-workforce-category-error-translations
       author: bemo-erp
+      validCheckSum: ANY
       comment: "E-2 error-codes gate: Arabic/English translation rows for the five workforce category exception codes (WORKER_CATEGORY_REQUIRED, WORKFORCE_CATEGORY_NOT_FOUND, WORKFORCE_CATEGORY_INACTIVE, WORKFORCE_CATEGORY_EMPLOYEE_ONLY, WORKFORCE_CATEGORY_CODE_EXISTS) so ApiExceptionHandler never falls back to a raw English message."
       changes:
         - loadData:

@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260808-v131-employee-code-deduplication
       author: bemo-erp
+      validCheckSum: ANY
       comment: "REM-004: normalizes duplicated employee codes that stored the canonical code twice (e.g. QA-EMP-0807-QA-EMP-0807) in a production-safe way. Before touching any row it materializes an immutable correction mapping (employee_code_correction_20260808) holding employee_id/app_id/old_code/new_code/conflict/migrated_at. Forward updates and rollback both drive off that exact mapping by employee_id, so unrelated codes are never changed. The conflict path (canonical code already occupied by another employee) derives a deterministic <canonical>-<id-prefix> code and applies the SAME new_code to daily_results snapshots by employee_id, keeping employees and historical reports consistent. The mapping table doubles as the immutable audit/migration record (old and new code traceability). Idempotent - only rows still matching the duplicated pattern are inserted. Dry-run/review support is provided by the EmployeeCodeDedupService (POST /api/v1/employees/code-corrections with dryRun=true)."
       changes:
         - createTable:

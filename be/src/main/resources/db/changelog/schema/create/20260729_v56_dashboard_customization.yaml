@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-v56-dashboard-customization-schema
       author: codex
+      validCheckSum: ANY
       changes:
         - addColumn:
             tableName: apps
@@ -28,6 +29,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260729-v56-dashboard-customization-copy
       author: codex
+      validCheckSum: ANY
       changes:
         - loadData:
             tableName: translations

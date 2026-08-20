@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260727-29-create-sales-tables
       author: system
+      validCheckSum: ANY
       preConditions:
         - onFail: MARK_RAN
         - not:

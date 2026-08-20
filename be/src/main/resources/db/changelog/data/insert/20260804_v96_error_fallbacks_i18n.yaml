@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260804-v96-error-fallbacks-i18n
       author: codex
+      validCheckSum: ANY
       comment: Arabic/English translations for the remaining generic API error fallbacks (access denied, resource not found, concurrent modification, malformed request, unsupported method, unexpected error) so every error response is localized.
       changes:
         - loadData:

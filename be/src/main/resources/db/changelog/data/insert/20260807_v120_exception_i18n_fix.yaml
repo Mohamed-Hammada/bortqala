@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260807-v120-exception-i18n-fix
       author: codex
+      validCheckSum: ANY
       comment: Arabic/English translations for 26 backend exception codes that were introduced without DB rows (approval engine, biometric sources, screen shortcuts, procurement, notifications, fiscal periods, journal numbering). ApiExceptionHandler resolves these keys via the translation tables, so every static code must exist once per locale.
       changes:
         - loadData:

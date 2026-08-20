@@ -2,6 +2,7 @@ databaseChangeLog:
   - changeSet:
       id: 20260819_v318_intercompany_translations
       author: wolfn
+      validCheckSum: ANY
       changes:
         - loadData:
             tableName: translations
