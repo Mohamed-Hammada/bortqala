@@ -160,7 +160,7 @@ public class OrganizationController {
     }
 
     @PostMapping("/intercompany")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
     public OrganizationApi.IntercompanyTransactionResponse createIntercompanyTransaction(
             @Valid @RequestBody OrganizationApi.CreateIntercompanyPayload payload
     ) {
@@ -168,19 +168,19 @@ public class OrganizationController {
     }
 
     @PostMapping("/intercompany/{id}/approve")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
     public OrganizationApi.IntercompanyTransactionResponse approveIntercompanyTransaction(@PathVariable String id) {
         return intercompanyService.approveTransaction(id);
     }
 
     @PostMapping("/intercompany/{id}/settle")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
     public OrganizationApi.IntercompanyTransactionResponse settleIntercompanyTransaction(@PathVariable String id) {
         return intercompanyService.settleTransaction(id);
     }
 
     @PostMapping("/intercompany/eliminate")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
     public OrganizationApi.EliminationResultResponse runPeriodElimination(
             @Valid @RequestBody OrganizationApi.RunEliminationPayload payload
     ) {

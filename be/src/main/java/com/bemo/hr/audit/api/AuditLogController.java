@@ -50,7 +50,7 @@ public class AuditLogController {
     }
 
     @org.springframework.web.bind.annotation.PostMapping("/break-glass")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public AuditLogApi.AuditLogResponse recordBreakGlass(
             @org.springframework.web.bind.annotation.RequestBody AuditLogApi.BreakGlassRequest request,
             jakarta.servlet.http.HttpServletRequest httpRequest

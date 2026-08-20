@@ -1,0 +1,445 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260820-v328-01-create-school-tables
+      author: bemo-platform
+      changes:
+        - createTable:
+            tableName: school_student_enrollments
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: student_code
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: student_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: grade_level
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: academic_year
+                  type: VARCHAR(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: guardian_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: guardian_phone
+                  type: VARCHAR(64)
+              - column:
+                  name: total_tuition_fee
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: transport_fee
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: books_fee
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  defaultValue: ACTIVE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_school_enrollment_tenant
+            tableName: school_student_enrollments
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: student_code
+
+        - createTable:
+            tableName: school_tuition_invoices
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: enrollment_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: invoice_number
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: installment_name
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: due_date
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_due
+                  type: DECIMAL(18, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: amount_paid
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  defaultValue: PENDING
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_tuition_inv_tenant_enrollment
+            tableName: school_tuition_invoices
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: enrollment_id
+
+  - changeSet:
+      id: 20260820-v328-02-create-tourism-tables
+      author: bemo-platform
+      changes:
+        - createTable:
+            tableName: tourism_package_bookings
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: booking_code
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customer_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: package_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: destination
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: travel_date
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: return_date
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: travelers_count
+                  type: INT
+                  defaultValueNumeric: 1
+                  constraints:
+                    nullable: false
+              - column:
+                  name: selling_price
+                  type: DECIMAL(18, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: hotel_cost
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: flight_cost
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: excursion_cost
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: gross_margin
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  defaultValue: CONFIRMED
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_tourism_tenant_code
+            tableName: tourism_package_bookings
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: booking_code
+
+  - changeSet:
+      id: 20260820-v328-03-create-customs-tables
+      author: bemo-platform
+      changes:
+        - createTable:
+            tableName: customs_declaration_files
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: file_number
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: importer_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: port_of_entry
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bill_of_lading_number
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: customs_certificate_number
+                  type: VARCHAR(128)
+              - column:
+                  name: duty_disbursement_amount
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: port_handling_amount
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: clearance_service_fee
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: total_invoice_amount
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  defaultValue: IN_INSPECTION
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_customs_tenant_file
+            tableName: customs_declaration_files
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: file_number
+
+  - changeSet:
+      id: 20260820-v328-04-create-3pl-tables
+      author: bemo-platform
+      changes:
+        - createTable:
+            tableName: three_pl_contracts
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tenant_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: contract_code
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: client_name
+                  type: VARCHAR(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: warehouse_name
+                  type: VARCHAR(128)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pallet_capacity
+                  type: INT
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: rate_per_pallet_monthly
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: handling_in_rate_per_pallet
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: handling_out_rate_per_pallet
+                  type: DECIMAL(18, 2)
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: billing_frequency
+                  type: VARCHAR(32)
+                  defaultValue: MONTHLY
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: VARCHAR(32)
+                  defaultValue: ACTIVE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_3pl_tenant_contract
+            tableName: three_pl_contracts
+            columns:
+              - column:
+                  name: tenant_id
+              - column:
+                  name: contract_code

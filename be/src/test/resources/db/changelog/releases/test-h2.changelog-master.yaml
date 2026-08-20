@@ -981,6 +981,16 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260820_v327_deployment_licensing_translations.yaml
       relativeToChangelogFile: false
+  # P1_SPECIALIZED_VERTICALS_20260820: Feature 30 Specialized Verticals (School, Tourism, Customs, 3PL)
+  - include:
+      file: db/changelog/schema/create/20260820_v328_specialized_verticals_schema.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260820_v329_specialized_verticals_translations.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/update/20260820_v330_verticals_allowed_menus.yaml
+      relativeToChangelogFile: false
 
 
 

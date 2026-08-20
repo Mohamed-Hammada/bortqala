@@ -1,0 +1,443 @@
+<section class="page verticals-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('nav.specializedVerticals') }}</p>
+      <h1>{{ i18n.t('verticals.title') }}</h1>
+      <p>{{ i18n.t('verticals.description') }}</p>
+    </div>
+  </header>
+
+  @if (message()) {
+    <div class="alert success" role="status">
+      {{ message() }}
+    </div>
+  }
+
+  @if (error()) {
+    <div class="alert error" role="alert">
+      {{ error() }}
+      <button type="button" class="btn primary" (click)="loadData()">{{ i18n.t('common.retry') }}</button>
+    </div>
+  }
+
+  @if (summary(); as sum) {
+    <div class="summary-cards-grid">
+      <div class="summary-card">
+        <span class="label">{{ i18n.t('verticals.tabSchool') }}</span>
+        <span class="value">{{ sum.totalActiveStudents }}</span>
+        <small class="hint">{{ i18n.t('verticals.totalFees') }}: {{ sum.totalTuitionBilled | number:'1.2-2' }}</small>
+      </div>
+
+      <div class="summary-card">
+        <span class="label">{{ i18n.t('verticals.tabTourism') }}</span>
+        <span class="value">{{ sum.totalActiveBookings }}</span>
+        <small class="hint">{{ i18n.t('verticals.grossMargin') }}: {{ sum.averageTourismMarginPct }}%</small>
+      </div>
+
+      <div class="summary-card">
+        <span class="label">{{ i18n.t('verticals.tabCustoms') }}</span>
+        <span class="value">{{ sum.totalOpenCustomsFiles }}</span>
+        <small class="hint">{{ i18n.t('verticals.dutyDisbursement') }}: {{ sum.totalDutyDisbursements | number:'1.2-2' }}</small>
+      </div>
+
+      <div class="summary-card">
+        <span class="label">{{ i18n.t('verticals.tab3pl') }}</span>
+        <span class="value">{{ sum.totalActive3plContracts }}</span>
+        <small class="hint">{{ i18n.t('verticals.palletCapacity') }}: {{ sum.total3plPalletCapacity }}</small>
+      </div>
+    </div>
+  }
+
+  <div class="verticals-tabs-nav">
+    <button type="button" [class.active]="activeTab() === 'school'" (click)="setTab('school')">
+      🎓 {{ i18n.t('verticals.tabSchool') }}
+    </button>
+    <button type="button" [class.active]="activeTab() === 'tourism'" (click)="setTab('tourism')">
+      ✈️ {{ i18n.t('verticals.tabTourism') }}
+    </button>
+    <button type="button" [class.active]="activeTab() === 'customs'" (click)="setTab('customs')">
+      ⚓ {{ i18n.t('verticals.tabCustoms') }}
+    </button>
+    <button type="button" [class.active]="activeTab() === '3pl'" (click)="setTab('3pl')">
+      📦 {{ i18n.t('verticals.tab3pl') }}
+    </button>
+  </div>
+
+  <div class="vertical-content-card card">
+    <!-- School Tab -->
+    @if (activeTab() === 'school') {
+      <div class="tab-header">
+        <div>
+          <h2>🎓 {{ i18n.t('verticals.tabSchool') }}</h2>
+          <p class="subtitle">{{ i18n.t('verticals.description') }}</p>
+        </div>
+        <button type="button" class="btn primary" (click)="showStudentModal.set(true)">
+          {{ i18n.t('verticals.registerStudent') }}
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('verticals.studentCode') }}</th>
+              <th>{{ i18n.t('verticals.studentName') }}</th>
+              <th>{{ i18n.t('verticals.gradeLevel') }}</th>
+              <th>{{ i18n.t('verticals.academicYear') }}</th>
+              <th>{{ i18n.t('verticals.guardianName') }}</th>
+              <th>{{ i18n.t('verticals.totalFees') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of students(); track s.id) {
+              <tr>
+                <td><strong>{{ s.studentCode }}</strong></td>
+                <td>{{ s.studentName }}</td>
+                <td><span class="badge neutral">{{ s.gradeLevel }}</span></td>
+                <td>{{ s.academicYear }}</td>
+                <td>{{ s.guardianName }} ({{ s.guardianPhone || '—' }})</td>
+                <td><strong>{{ s.totalAnnualDue | number:'1.2-2' }}</strong></td>
+                <td><span class="badge success">{{ s.status }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty-cell">{{ i18n.t('common.noResults') }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Tourism Tab -->
+    @if (activeTab() === 'tourism') {
+      <div class="tab-header">
+        <div>
+          <h2>✈️ {{ i18n.t('verticals.tabTourism') }}</h2>
+          <p class="subtitle">{{ i18n.t('verticals.description') }}</p>
+        </div>
+        <button type="button" class="btn primary" (click)="showBookingModal.set(true)">
+          {{ i18n.t('verticals.createBooking') }}
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('verticals.bookingCode') }}</th>
+              <th>{{ i18n.t('verticals.packageName') }}</th>
+              <th>{{ i18n.t('verticals.destination') }}</th>
+              <th>{{ i18n.t('verticals.travelersCount') }}</th>
+              <th>{{ i18n.t('verticals.sellingPrice') }}</th>
+              <th>{{ i18n.t('verticals.grossMargin') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (b of bookings(); track b.id) {
+              <tr>
+                <td><strong>{{ b.bookingCode }}</strong></td>
+                <td>{{ b.packageName }}</td>
+                <td>{{ b.destination }}</td>
+                <td>{{ b.travelersCount }}</td>
+                <td>{{ b.sellingPrice | number:'1.2-2' }}</td>
+                <td><span class="badge success">{{ b.grossMargin | number:'1.2-2' }} ({{ b.grossMarginPercentage }}%)</span></td>
+                <td><span class="badge success">{{ b.status }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty-cell">{{ i18n.t('common.noResults') }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- Customs Tab -->
+    @if (activeTab() === 'customs') {
+      <div class="tab-header">
+        <div>
+          <h2>⚓ {{ i18n.t('verticals.tabCustoms') }}</h2>
+          <p class="subtitle">{{ i18n.t('verticals.description') }}</p>
+        </div>
+        <button type="button" class="btn primary" (click)="showDeclarationModal.set(true)">
+          {{ i18n.t('verticals.createDeclaration') }}
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('verticals.fileNumber') }}</th>
+              <th>{{ i18n.t('verticals.importerName') }}</th>
+              <th>{{ i18n.t('verticals.portOfEntry') }}</th>
+              <th>{{ i18n.t('verticals.billOfLading') }}</th>
+              <th>{{ i18n.t('verticals.dutyDisbursement') }}</th>
+              <th>{{ i18n.t('verticals.clearanceServiceFee') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of declarations(); track c.id) {
+              <tr>
+                <td><strong>{{ c.fileNumber }}</strong></td>
+                <td>{{ c.importerName }}</td>
+                <td>{{ c.portOfEntry }}</td>
+                <td><code>{{ c.billOfLadingNumber }}</code></td>
+                <td>{{ c.dutyDisbursementAmount | number:'1.2-2' }}</td>
+                <td>{{ c.clearanceServiceFee | number:'1.2-2' }}</td>
+                <td><span class="badge warning">{{ c.status }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty-cell">{{ i18n.t('common.noResults') }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    <!-- 3PL Tab -->
+    @if (activeTab() === '3pl') {
+      <div class="tab-header">
+        <div>
+          <h2>📦 {{ i18n.t('verticals.tab3pl') }}</h2>
+          <p class="subtitle">{{ i18n.t('verticals.description') }}</p>
+        </div>
+        <button type="button" class="btn primary" (click)="showContractModal.set(true)">
+          {{ i18n.t('verticals.create3plContract') }}
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('verticals.contractCode') }}</th>
+              <th>{{ i18n.t('common.name') }}</th>
+              <th>{{ i18n.t('verticals.palletCapacity') }}</th>
+              <th>{{ i18n.t('verticals.ratePerPallet') }}</th>
+              <th>{{ i18n.t('verticals.handlingInRate') }}</th>
+              <th>{{ i18n.t('verticals.handlingOutRate') }}</th>
+              <th>{{ i18n.t('common.status') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of contracts(); track c.id) {
+              <tr>
+                <td><strong>{{ c.contractCode }}</strong></td>
+                <td>{{ c.clientName }} ({{ c.warehouseName }})</td>
+                <td><strong>{{ c.palletCapacity }}</strong></td>
+                <td>{{ c.ratePerPalletMonthly | number:'1.2-2' }}</td>
+                <td>{{ c.handlingInRatePerPallet | number:'1.2-2' }}</td>
+                <td>{{ c.handlingOutRatePerPallet | number:'1.2-2' }}</td>
+                <td><span class="badge success">{{ c.status }}</span></td>
+              </tr>
+            } @empty {
+              <tr><td colspan="7" class="empty-cell">{{ i18n.t('common.noResults') }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <!-- Register Student Modal -->
+  @if (showStudentModal()) {
+    <div class="modal-overlay" (click)="showStudentModal.set(false)">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ i18n.t('verticals.registerStudent') }}</h3>
+          <button type="button" class="close-btn" (click)="showStudentModal.set(false)">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.studentCode') }}</label>
+              <input type="text" [(ngModel)]="studentCode" placeholder="STU-1001" />
+            </div>
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.studentName') }}</label>
+              <input type="text" [(ngModel)]="studentName" placeholder="Student Full Name" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.gradeLevel') }}</label>
+              <input type="text" [(ngModel)]="gradeLevel" placeholder="Grade 4" />
+            </div>
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.academicYear') }}</label>
+              <input type="text" [(ngModel)]="academicYear" placeholder="2026/2027" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.guardianName') }}</label>
+              <input type="text" [(ngModel)]="guardianName" placeholder="Guardian Name" />
+            </div>
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.guardianPhone') }}</label>
+              <input type="text" [(ngModel)]="guardianPhone" placeholder="010XXXXXXXX" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.tuitionFee') }}</label>
+              <input type="number" [(ngModel)]="tuitionFee" />
+            </div>
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.transportFee') }}</label>
+              <input type="number" [(ngModel)]="transportFee" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn ghost" (click)="showStudentModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button type="button" class="btn primary" (click)="submitStudent()" [disabled]="submitting()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Create Booking Modal -->
+  @if (showBookingModal()) {
+    <div class="modal-overlay" (click)="showBookingModal.set(false)">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ i18n.t('verticals.createBooking') }}</h3>
+          <button type="button" class="close-btn" (click)="showBookingModal.set(false)">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.bookingCode') }}</label>
+              <input type="text" [(ngModel)]="bookingCode" placeholder="TB-2026-001" />
+            </div>
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.packageName') }}</label>
+              <input type="text" [(ngModel)]="packageName" placeholder="Nile Cruise 4N/5D" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.destination') }}</label>
+              <input type="text" [(ngModel)]="destination" placeholder="Luxor & Aswan" />
+            </div>
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.travelersCount') }}</label>
+              <input type="number" [(ngModel)]="travelersCount" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.sellingPrice') }}</label>
+              <input type="number" [(ngModel)]="sellingPrice" />
+            </div>
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.hotelCost') }}</label>
+              <input type="number" [(ngModel)]="hotelCost" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn ghost" (click)="showBookingModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button type="button" class="btn primary" (click)="submitBooking()" [disabled]="submitting()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Open Declaration Modal -->
+  @if (showDeclarationModal()) {
+    <div class="modal-overlay" (click)="showDeclarationModal.set(false)">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ i18n.t('verticals.createDeclaration') }}</h3>
+          <button type="button" class="close-btn" (click)="showDeclarationModal.set(false)">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.fileNumber') }}</label>
+              <input type="text" [(ngModel)]="fileNumber" placeholder="CUST-2026-001" />
+            </div>
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.importerName') }}</label>
+              <input type="text" [(ngModel)]="importerName" placeholder="Client / Importer" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.portOfEntry') }}</label>
+              <input type="text" [(ngModel)]="portOfEntry" placeholder="Sokhna Port" />
+            </div>
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.billOfLading') }}</label>
+              <input type="text" [(ngModel)]="billOfLading" placeholder="BL-123456" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.dutyDisbursement') }}</label>
+              <input type="number" [(ngModel)]="dutyAmount" />
+            </div>
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.clearanceServiceFee') }}</label>
+              <input type="number" [(ngModel)]="clearanceFee" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn ghost" (click)="showDeclarationModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button type="button" class="btn primary" (click)="submitDeclaration()" [disabled]="submitting()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Create 3PL Contract Modal -->
+  @if (showContractModal()) {
+    <div class="modal-overlay" (click)="showContractModal.set(false)">
+      <div class="modal-dialog" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ i18n.t('verticals.create3plContract') }}</h3>
+          <button type="button" class="close-btn" (click)="showContractModal.set(false)">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.contractCode') }}</label>
+              <input type="text" [(ngModel)]="contractCode" placeholder="3PL-2026-001" />
+            </div>
+            <div class="form-field">
+              <label>{{ i18n.t('common.name') }}</label>
+              <input type="text" [(ngModel)]="clientName" placeholder="Client Name" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.palletCapacity') }}</label>
+              <input type="number" [(ngModel)]="palletCapacity" />
+            </div>
+            <div class="form-field">
+              <label>{{ i18n.t('verticals.ratePerPallet') }}</label>
+              <input type="number" [(ngModel)]="ratePerPallet" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn ghost" (click)="showContractModal.set(false)">{{ i18n.t('common.cancel') }}</button>
+          <button type="button" class="btn primary" (click)="submitContract()" [disabled]="submitting()">
+            {{ i18n.t('common.save') }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</section>

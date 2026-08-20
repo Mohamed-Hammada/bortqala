@@ -185,5 +185,12 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     roles: ['ADMIN', 'SUPER_ADMIN'],
     requiredFeature: null,
   },
+  {
+    menuId: 'specialized-verticals',
+    route: '/verticals/specialized',
+    roles: [],
+    requiredFeature: null,
+  },
 ];
+
 

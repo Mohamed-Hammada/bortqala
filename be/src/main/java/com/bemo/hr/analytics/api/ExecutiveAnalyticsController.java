@@ -3,7 +3,6 @@ package com.bemo.hr.analytics.api;
 import com.bemo.hr.analytics.api.ExecutiveAnalyticsApi.*;
 import com.bemo.hr.analytics.application.ExecutiveAnalyticsService;
 import com.bemo.hr.analytics.domain.KpiCategory;
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,13 +21,13 @@ public class ExecutiveAnalyticsController {
     }
 
     @GetMapping("/kpi-registry")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM + " or " + Roles.PROJECT_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'PROJECT_MANAGER', 'GENERAL_MANAGER')")
     public List<KpiDefinitionResponse> getKpiRegistry() {
         return analyticsService.getKpiRegistry();
     }
 
     @GetMapping("/overview")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM + " or " + Roles.PROJECT_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'PROJECT_MANAGER', 'GENERAL_MANAGER')")
     public ExecutiveOverviewResponse getExecutiveOverview(
             @RequestParam(required = false) String period,
             @RequestParam(required = false) String companyId,
@@ -39,7 +38,7 @@ public class ExecutiveAnalyticsController {
     }
 
     @GetMapping("/trends")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM + " or " + Roles.PROJECT_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'PROJECT_MANAGER', 'GENERAL_MANAGER')")
     public ComparativeTrendsResponse getComparativeTrends(
             @RequestParam(defaultValue = "6") int months,
             @RequestParam(required = false) KpiCategory category
@@ -48,7 +47,7 @@ public class ExecutiveAnalyticsController {
     }
 
     @GetMapping("/snapshots")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM + " or " + Roles.PROJECT_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'PROJECT_MANAGER', 'GENERAL_MANAGER')")
     public List<ExecutiveKpiSnapshotResponse> listSnapshots(
             @RequestParam(required = false) String periodKey
     ) {
@@ -57,7 +56,7 @@ public class ExecutiveAnalyticsController {
 
     @PostMapping("/snapshots")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_TEAM + " or " + Roles.PROJECT_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'PROJECT_MANAGER', 'GENERAL_MANAGER')")
     public ExecutiveKpiSnapshotResponse recordSnapshot(@Valid @RequestBody CreateSnapshotPayload payload) {
         return analyticsService.recordSnapshot(payload);
     }

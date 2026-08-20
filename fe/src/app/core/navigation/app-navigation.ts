@@ -365,6 +365,14 @@ export const NAV_ITEMS: NavItem[] = [
     workspace: 'workspace.salesCommercial',
     roles: SALES_ROLES,
   },
+  {
+    menuId: 'specialized-verticals',
+    labelKey: 'nav.specializedVerticals',
+    descriptionKey: 'nav.specializedVerticalsHint',
+    path: '/verticals/specialized',
+    icon: 'categories',
+    workspace: 'workspace.salesCommercial',
+  },
 
   // Manufacturing
   {

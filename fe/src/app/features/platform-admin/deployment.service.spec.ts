@@ -46,7 +46,7 @@ describe('DeploymentService', () => {
 
     service.getDiagnostics().subscribe((res) => {
       expect(res.serviceStatus).toBe('UP');
-      expect(res.securityAudit?.failFastPassed).toBeTrue();
+      expect(res.securityAudit?.failFastPassed).toBe(true);
     });
 
     const req = httpTesting.expectOne('/api/v1/platform/diagnostics/health');
@@ -94,7 +94,7 @@ describe('DeploymentService', () => {
     };
 
     service.installLicense({ licenseKey: 'BEMO-PROD-KEY' }).subscribe((res) => {
-      expect(res.isPerpetual).toBeTrue();
+      expect(res.isPerpetual).toBe(true);
       expect(res.licensedSeats).toBe(50);
     });
 

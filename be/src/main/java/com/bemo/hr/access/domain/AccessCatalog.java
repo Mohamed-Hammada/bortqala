@@ -115,6 +115,8 @@ public final class AccessCatalog {
     public static final String P_CRM_READ = "crm.read";
     public static final String P_CRM_MANAGE = "crm.manage";
     public static final String P_CRM_OMNICHANNEL = "crm.omnichannel";
+    public static final String P_VERTICALS_READ = "verticals.read";
+    public static final String P_VERTICALS_MANAGE = "verticals.manage";
 
     /**
      * Every permission a super user can act on.
@@ -146,7 +148,8 @@ public final class AccessCatalog {
             P_PERFORMANCE_READ, P_PERFORMANCE_MANAGE,
             P_ETA_TAX_READ, P_ETA_TAX_MANAGE,
             P_POS_READ, P_POS_OPERATE, P_POS_MANAGE,
-            P_CRM_READ, P_CRM_MANAGE, P_CRM_OMNICHANNEL);
+            P_CRM_READ, P_CRM_MANAGE, P_CRM_OMNICHANNEL,
+            P_VERTICALS_READ, P_VERTICALS_MANAGE);
 
     private static final Set<String> HR_READ = Set.of(
             P_DASHBOARD_VIEW, P_EMPLOYEES_READ, P_CATEGORIES_READ, P_IMPORTS_READ, P_PARTIES_READ,
@@ -448,7 +451,10 @@ public final class AccessCatalog {
                     "approvals.workflows", P_WORKFLOW_DEFINITIONS_READ, ADMIN_ONLY, null,
                     action("MANAGE", P_WORKFLOW_DEFINITIONS_MANAGE, true)),
             page("NOTIFICATIONS_SEND", "ADMINISTRATION", "/notifications/send", "notifications-send",
-                    "nav.notificationsSend", P_USERS_READ, ADMIN_ONLY, null));
+                    "nav.notificationsSend", P_USERS_READ, ADMIN_ONLY, null),
+            page("SPECIALIZED_VERTICALS", "VERTICALS", "/verticals/specialized", "specialized-verticals",
+                    "nav.specializedVerticals", P_VERTICALS_READ, NO_ROLE_GUARD, null,
+                    action("MANAGE", P_VERTICALS_MANAGE, false)));
     // ------------------------------------------------------------------
     // Segregation-of-duties rules.
     // ------------------------------------------------------------------

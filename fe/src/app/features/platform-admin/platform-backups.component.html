@@ -2,7 +2,7 @@
   <div class="card-header">
     <div>
       <h2>{{ i18n.t('backups.title') }}</h2>
-      <p class="subtitle">{{ i18n.t('dr.rpoTarget') }}: 15 min | {{ i18n.t('dr.rtoTarget') }}: 60 min</p>
+      <p class="subtitle">{{ i18n.t('dr.rpoTarget') }}: 15 {{ i18n.t('dr.minutes') }} | {{ i18n.t('dr.rtoTarget') }}: 60 {{ i18n.t('dr.minutes') }}</p>
     </div>
     <button
       type="button"
@@ -31,20 +31,20 @@
     <div class="dr-metrics-grid">
       <div class="dr-card">
         <span class="label">{{ i18n.t('dr.rpoTarget') }}</span>
-        <span class="value">{{ dr.targetRpoMinutes }} min</span>
-        <small class="hint">{{ i18n.t('dr.actualRpo') }}: {{ dr.actualRpoMinutes }} min</small>
+        <span class="value">{{ dr.targetRpoMinutes }} {{ i18n.t('dr.minutes') }}</span>
+        <small class="hint">{{ i18n.t('dr.actualRpo') }}: {{ dr.actualRpoMinutes }} {{ i18n.t('dr.minutes') }}</small>
       </div>
       <div class="dr-card">
         <span class="label">{{ i18n.t('dr.rtoTarget') }}</span>
-        <span class="value">{{ dr.targetRtoMinutes }} min</span>
-        <small class="hint">{{ i18n.t('dr.actualRto') }}: {{ dr.actualRtoMinutes }} min</small>
+        <span class="value">{{ dr.targetRtoMinutes }} {{ i18n.t('dr.minutes') }}</span>
+        <small class="hint">{{ i18n.t('dr.actualRto') }}: {{ dr.actualRtoMinutes }} {{ i18n.t('dr.minutes') }}</small>
       </div>
       <div class="dr-card">
         <span class="label">{{ i18n.t('backups.colStatus') }}</span>
         <span class="value" [class.success]="dr.status === 'COMPLIANT'" [class.warning]="dr.status !== 'COMPLIANT'">
           {{ dr.status }}
         </span>
-        <small class="hint">{{ dr.recentDrills.length }} drills recorded</small>
+        <small class="hint">{{ dr.recentDrills.length }} {{ i18n.t('dr.drillsCount') }}</small>
       </div>
     </div>
   }

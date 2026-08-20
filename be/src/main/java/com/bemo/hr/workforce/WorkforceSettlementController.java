@@ -98,7 +98,7 @@ public class WorkforceSettlementController {
     }
 
     @GetMapping("/projects/{projectId}/labor-cost-report")
-    @PreAuthorize(Roles.ADMIN_ONLY + " or " + Roles.FINANCE_MANAGER + " or " + Roles.PROJECT_MANAGER + " or " + Roles.WORKFORCE_FINANCE + " or " + Roles.WORKFORCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'PROJECT_MANAGER', 'WORKFORCE_FINANCE', 'WORKFORCE_MANAGER')")
     public WorkforceApi.ProjectLaborCostReportResponse getProjectLaborCostReport(
             @PathVariable String projectId,
             @RequestParam(required = false) String periodId

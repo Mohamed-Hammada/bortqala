@@ -2,7 +2,7 @@
   <div class="card-header">
     <div>
       <h2>{{ i18n.t('licensing.title') }}</h2>
-      <p class="subtitle">{{ i18n.t('licensing.gracePeriod') }}: 14 days offline</p>
+      <p class="subtitle">{{ i18n.t('licensing.gracePeriod') }}: 14 {{ i18n.t('licensing.days') }}</p>
     </div>
     <div class="header-actions">
       <button
@@ -44,19 +44,19 @@
         <span class="value" [class.success]="lic.status === 'ACTIVE'" [class.danger]="lic.status !== 'ACTIVE'">
           {{ lic.status }}
         </span>
-        <small class="hint">{{ lic.isSignatureValid ? 'Ed25519 Verified' : 'INVALID_SIG' }}</small>
+        <small class="hint">{{ lic.isSignatureValid ? i18n.t('licensing.verifiedEd25519') : 'INVALID_SIG' }}</small>
       </div>
 
       <div class="lic-card">
         <span class="label">{{ i18n.t('licensing.seatsQuota') }}</span>
-        <span class="value">{{ lic.licensedSeats }} Seats</span>
+        <span class="value">{{ lic.licensedSeats }} {{ i18n.t('licensing.seats') }}</span>
         <small class="hint">{{ lic.isPerpetual ? i18n.t('licensing.isPerpetual') : (i18n.t('licensing.daysRemaining') + ': ' + lic.daysRemaining) }}</small>
       </div>
 
       <div class="lic-card">
         <span class="label">{{ i18n.t('licensing.fingerprint') }}</span>
         <span class="value monospace">{{ (lic.deviceFingerprintHash || '—').slice(0, 16) }}...</span>
-        <small class="hint">{{ i18n.t('licensing.gracePeriod') }}: {{ lic.gracePeriodDays }} days</small>
+        <small class="hint">{{ i18n.t('licensing.gracePeriod') }}: {{ lic.gracePeriodDays }} {{ i18n.t('licensing.days') }}</small>
       </div>
     </div>
 
@@ -79,7 +79,7 @@
         </div>
         <div class="modal-body">
           <div class="form-field">
-            <label>{{ i18n.t('licensing.title') }} Key</label>
+            <label>{{ i18n.t('licensing.keyLabel') }}</label>
             <input type="text" [(ngModel)]="licenseKeyInput" placeholder="BEMO-XXXX-XXXX-XXXX" />
           </div>
           <div class="form-field">

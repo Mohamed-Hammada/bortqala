@@ -230,6 +230,13 @@ export const routes: Routes = [
           import('./features/crm/crm.page').then((module) => module.CrmPage),
       },
       {
+        path: 'verticals/specialized',
+        canActivate: [menuAccessGuard],
+        data: { menuId: 'specialized-verticals' },
+        loadComponent: () =>
+          import('./features/verticals/verticals.page').then((m) => m.VerticalsPage),
+      },
+      {
         path: 'manufacturing/production',
         canActivate: [roleGuard, menuAccessGuard],
         data: { roles: ['MANUFACTURING_MANAGER'], menuId: 'production' },
