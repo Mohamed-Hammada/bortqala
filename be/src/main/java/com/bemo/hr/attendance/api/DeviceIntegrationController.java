@@ -1,7 +1,6 @@
 package com.bemo.hr.attendance.api;
 
 import com.bemo.hr.attendance.application.DeviceIntegrationService;
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,43 +18,43 @@ public class DeviceIntegrationController {
     private final DeviceIntegrationService service;
 
     @GetMapping("/health")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     JsonNode health() {
         return service.health();
     }
 
     @GetMapping("/suppliers")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     JsonNode suppliers() {
         return service.suppliers();
     }
 
     @GetMapping("/suppliers/{vendor}/routes")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     JsonNode routes(@PathVariable String vendor) {
         return service.routes(vendor);
     }
 
     @PostMapping("/resolve")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     DeviceIntegrationApi.RouteResolution resolve(@Valid @RequestBody DeviceIntegrationApi.RouteRequest request) {
         return service.resolve(request);
     }
 
     @GetMapping
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     List<DeviceIntegrationApi.DeviceResponse> list() {
         return service.list();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     DeviceIntegrationApi.DeviceResponse get(@PathVariable String id) {
         return service.get(id);
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     DeviceIntegrationApi.DeviceResponse create(
             @Valid @RequestBody DeviceIntegrationApi.DeviceRequest request,
@@ -64,7 +63,7 @@ public class DeviceIntegrationController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     DeviceIntegrationApi.DeviceResponse update(
             @PathVariable String id,
             @Valid @RequestBody DeviceIntegrationApi.DeviceRequest request,
@@ -73,13 +72,13 @@ public class DeviceIntegrationController {
     }
 
     @PostMapping("/{id}/probe")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     DeviceIntegrationApi.ProbeResponse probe(@PathVariable String id, Authentication authentication) {
         return service.probe(id, authentication.getName());
     }
 
     @PostMapping("/{id}/sync")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     ImportApi.DeviceSyncResponse sync(@PathVariable String id, Authentication authentication) {
         return service.sync(id, authentication.getName());
     }

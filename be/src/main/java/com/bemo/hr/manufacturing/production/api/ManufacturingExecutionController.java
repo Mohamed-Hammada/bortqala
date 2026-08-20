@@ -4,7 +4,6 @@ import com.bemo.hr.manufacturing.production.application.ManufacturingExecutionSe
 import com.bemo.hr.manufacturing.production.domain.ProductionReceipt;
 import com.bemo.hr.manufacturing.production.domain.RoutingHeader;
 import com.bemo.hr.manufacturing.production.domain.WorkCenter;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,37 +22,37 @@ public class ManufacturingExecutionController {
     }
 
     @GetMapping("/work-centers")
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'VIEWER')")
     public List<WorkCenter> listWorkCenters() {
         return manufacturingExecutionService.listWorkCenters();
     }
 
     @PostMapping("/work-centers")
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
     public WorkCenter createWorkCenter(@RequestBody CreateWorkCenterPayload payload) {
         return manufacturingExecutionService.createWorkCenter(payload.code(), payload.name(), payload.hourlyRate(), payload.capacityHoursPerDay());
     }
 
     @GetMapping("/routings")
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'VIEWER')")
     public List<RoutingHeader> listRoutings() {
         return manufacturingExecutionService.listRoutings();
     }
 
     @PostMapping("/routings")
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
     public RoutingHeader createRouting(@RequestBody CreateRoutingPayload payload) {
         return manufacturingExecutionService.createRouting(payload.routingCode(), payload.name(), payload.itemId());
     }
 
     @PostMapping("/orders/{id}/receipts")
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER')")
     public ProductionReceipt recordReceipt(@PathVariable String id, @RequestBody RecordReceiptPayload payload) {
         return manufacturingExecutionService.recordReceipt(payload.receiptNumber(), id, payload.finishedItemId(), payload.receivedQuantity(), LocalDate.parse(payload.receiptDate()), payload.warehouseId());
     }
 
     @GetMapping("/orders/{id}/receipts")
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'VIEWER')")
     public List<ProductionReceipt> getReceipts(@PathVariable String id) {
         return manufacturingExecutionService.getReceiptsForOrder(id);
     }

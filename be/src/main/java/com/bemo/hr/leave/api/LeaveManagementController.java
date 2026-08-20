@@ -2,7 +2,6 @@ package com.bemo.hr.leave.api;
 
 import com.bemo.hr.leave.application.LeaveManagementService;
 import com.bemo.hr.leave.domain.LeaveRequestStatus;
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,20 +21,20 @@ public class LeaveManagementController {
     }
 
     @GetMapping("/types")
-    @PreAuthorize(Roles.ADMIN_EMPLOYEE_HR_MANAGER_HR_OFFICER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'VIEWER', 'EMPLOYEE')")
     public List<LeaveManagementApi.LeaveTypeResponse> listTypes() {
         return leaveService.listLeaveTypes();
     }
 
     @PostMapping("/types")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     public LeaveManagementApi.LeaveTypeResponse createType(@Valid @RequestBody LeaveManagementApi.CreateLeaveTypeRequest request) {
         return leaveService.createLeaveType(request);
     }
 
     @GetMapping("/balances")
-    @PreAuthorize(Roles.ADMIN_EMPLOYEE_HR_MANAGER_HR_OFFICER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'VIEWER', 'EMPLOYEE')")
     public List<LeaveManagementApi.LeaveBalanceResponse> listBalances(
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) Integer year) {
@@ -43,13 +42,13 @@ public class LeaveManagementController {
     }
 
     @PostMapping("/balances/adjust")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     public LeaveManagementApi.LeaveBalanceResponse adjustBalance(@Valid @RequestBody LeaveManagementApi.AdjustBalanceRequest request) {
         return leaveService.adjustBalance(request);
     }
 
     @GetMapping("/requests")
-    @PreAuthorize(Roles.ADMIN_EMPLOYEE_HR_MANAGER_HR_OFFICER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'VIEWER', 'EMPLOYEE')")
     public List<LeaveManagementApi.LeaveRequestResponse> listRequests(
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) LeaveRequestStatus status) {
@@ -58,20 +57,20 @@ public class LeaveManagementController {
 
     @PostMapping("/requests")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_EMPLOYEE_HR_MANAGER_HR_OFFICER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'EMPLOYEE')")
     public LeaveManagementApi.LeaveRequestResponse submitRequest(@Valid @RequestBody LeaveManagementApi.SubmitLeaveRequest request) {
         return leaveService.submitLeaveRequest(request);
     }
 
     @PostMapping("/requests/{id}/approve")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_OFFICER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER')")
     public LeaveManagementApi.LeaveRequestResponse approveRequest(@PathVariable String id, Authentication auth) {
         String approver = auth != null ? auth.getName() : "ADMIN";
         return leaveService.approveLeaveRequest(id, approver);
     }
 
     @PostMapping("/requests/{id}/reject")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_OFFICER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER')")
     public LeaveManagementApi.LeaveRequestResponse rejectRequest(
             @PathVariable String id,
             @Valid @RequestBody LeaveManagementApi.RejectLeaveRequest request) {
@@ -79,7 +78,7 @@ public class LeaveManagementController {
     }
 
     @PostMapping("/requests/{id}/cancel")
-    @PreAuthorize(Roles.ADMIN_EMPLOYEE_HR_MANAGER_HR_OFFICER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'EMPLOYEE')")
     public LeaveManagementApi.LeaveRequestResponse cancelRequest(@PathVariable String id) {
         return leaveService.cancelLeaveRequest(id);
     }

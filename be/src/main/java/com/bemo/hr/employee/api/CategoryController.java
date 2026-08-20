@@ -1,7 +1,6 @@
 package com.bemo.hr.employee.api;
 
 import com.bemo.hr.employee.application.HrConfigurationService;
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,20 +33,20 @@ public class CategoryController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     CategoryApi.Response create(@Valid @RequestBody CategoryApi.UpsertRequest request) {
         return hrConfigurationService.createCategory(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     CategoryApi.Response update(@PathVariable String id, @Valid @RequestBody CategoryApi.UpsertRequest request) {
         return hrConfigurationService.updateCategory(id, request);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deactivate(@PathVariable String id) {
         hrConfigurationService.deactivateCategory(id);

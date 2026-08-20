@@ -1,6 +1,5 @@
 package com.bemo.hr.approval;
 
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,33 +15,33 @@ public class ApprovalController {
     private final ApprovalWorkflowService service;
 
     @GetMapping("/approval-workflows")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_HR_MANAGER_PROCUREMENT_MANAGER_WORKFORCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER', 'PROCUREMENT_MANAGER', 'HR_MANAGER')")
     public List<ApprovalApi.WorkflowDefinitionResponse> listDefinitions() {
         return service.listWorkflowDefinitions();
     }
 
     @GetMapping("/approval-workflows/{id}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_HR_MANAGER_PROCUREMENT_MANAGER_WORKFORCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER', 'PROCUREMENT_MANAGER', 'HR_MANAGER')")
     public ApprovalApi.WorkflowDefinitionResponse getDefinition(@PathVariable String id) {
         return service.getWorkflowDefinition(id);
     }
 
     @PostMapping("/approval-workflows")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public ApprovalApi.WorkflowDefinitionResponse createDefinition(@Valid @RequestBody ApprovalApi.WorkflowDefinitionRequest request) {
         return service.createWorkflowDefinition(request);
     }
 
     @PutMapping("/approval-workflows/{id}")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ApprovalApi.WorkflowDefinitionResponse updateDefinition(@PathVariable String id,
                                                                    @Valid @RequestBody ApprovalApi.WorkflowDefinitionRequest request) {
         return service.updateWorkflowDefinition(id, request);
     }
 
     @PostMapping("/approvals/submit")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_HR_MANAGER_PROCUREMENT_MANAGER_PROCUREMENT_USER_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'FINANCE_MANAGER', 'PROCUREMENT_MANAGER', 'HR_MANAGER', 'WORKFORCE_REVIEWER', 'ACCOUNTANT', 'PROCUREMENT_USER')")
     public ApprovalApi.ApprovalInstanceDetailResponse submitDocument(@Valid @RequestBody ApprovalApi.SubmitDocumentRequest request) {
         return service.submit(request);
     }
@@ -92,14 +91,14 @@ public class ApprovalController {
     }
 
     @PutMapping("/approvals/{instanceId}/reassign")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ApprovalApi.ApprovalInstanceDetailResponse reassign(@PathVariable String instanceId,
                                                                @Valid @RequestBody ApprovalApi.ReassignRequest request) {
         return service.reassign(instanceId, request);
     }
 
     @PostMapping("/approvals/escalate-overdue")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public int escalateOverdue() {
         return service.escalateOverdue();
     }

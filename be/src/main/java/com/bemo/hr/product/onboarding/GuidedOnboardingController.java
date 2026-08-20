@@ -1,6 +1,5 @@
 package com.bemo.hr.product.onboarding;
 
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/platform/onboarding")
 @RequiredArgsConstructor
-@PreAuthorize(Roles.ADMIN_ONLY)
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
 public class GuidedOnboardingController {
     private final GuidedOnboardingService service;
 

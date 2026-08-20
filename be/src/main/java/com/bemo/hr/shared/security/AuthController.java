@@ -1,6 +1,5 @@
 package com.bemo.hr.shared.security;
 
-import com.bemo.hr.shared.security.Roles;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -100,14 +99,14 @@ public class AuthController {
     }
 
     @PostMapping("/users/{id}/revoke-sessions")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void revokeSessions(@PathVariable String id, Authentication authentication) {
         authService.revokeSessions(id, authentication.getName());
     }
 
     @PostMapping("/users/{id}/unlock")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void unlock(@PathVariable String id, Authentication authentication) {
         authService.unlock(id, authentication.getName());
@@ -147,13 +146,13 @@ public class AuthController {
     }
 
     @GetMapping("/admin/app-settings")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     AuthApi.AppSettingsResponse appSettings() {
         return authService.currentAppSettings();
     }
 
     @PutMapping("/admin/app-settings")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     AuthApi.AppSettingsResponse updateAppSettings(@Valid @RequestBody AuthApi.AppSettingsRequest request,
                                                   Authentication authentication) {
         return authService.updateAppSettings(request, authentication.getName());
@@ -165,13 +164,13 @@ public class AuthController {
     }
 
     @GetMapping("/users")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     List<AuthApi.UserResponse> users() {
         return authService.listUsers();
     }
 
     @PostMapping("/users")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     AuthApi.UserResponse create(@Valid @RequestBody AuthApi.UserUpsertRequest request,
                                 Authentication authentication) {
@@ -179,7 +178,7 @@ public class AuthController {
     }
 
     @PutMapping("/users/{id}")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     AuthApi.UserResponse update(@PathVariable String id, @Valid @RequestBody AuthApi.UserUpsertRequest request,
                                 Authentication authentication) {
         return authService.update(id, request, authentication.getName());

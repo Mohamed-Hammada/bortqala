@@ -2,7 +2,6 @@ package com.bemo.hr.audit.api;
 
 import com.bemo.hr.audit.domain.AuditLog;
 import com.bemo.hr.audit.infrastructure.AuditLogRepository;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,7 +28,7 @@ public class AuditLogController {
     }
 
     @GetMapping
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     public AuditLogApi.AuditLogPageResponse listAuditLogs(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,

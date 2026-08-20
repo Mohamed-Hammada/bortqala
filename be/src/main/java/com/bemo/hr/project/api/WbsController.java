@@ -2,7 +2,6 @@ package com.bemo.hr.project.api;
 
 import com.bemo.hr.project.api.ProjectApi.*;
 import com.bemo.hr.project.application.WbsService;
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,19 +20,19 @@ public class WbsController {
     }
 
     @GetMapping
-    @PreAuthorize(Roles.ADMIN_AUDITOR_FINANCE_MANAGER_PROJECT_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER')")
     public List<WbsNodeResponse> getWbsTree(@PathVariable String projectId) {
         return wbsService.getWbsTree(projectId);
     }
 
     @GetMapping("/flat")
-    @PreAuthorize(Roles.ADMIN_AUDITOR_FINANCE_MANAGER_PROJECT_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER')")
     public List<WbsNodeResponse> getFlatWbsList(@PathVariable String projectId) {
         return wbsService.getFlatWbsList(projectId);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_AUDITOR_FINANCE_MANAGER_PROJECT_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER', 'FINANCE_MANAGER', 'AUDITOR', 'VIEWER')")
     public WbsNodeResponse getWbsNode(
             @PathVariable String projectId,
             @PathVariable String id
@@ -43,7 +42,7 @@ public class WbsController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_PROJECT_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER')")
     public WbsNodeResponse createWbsNode(
             @PathVariable String projectId,
             @Valid @RequestBody CreateWbsNodeRequest request
@@ -52,7 +51,7 @@ public class WbsController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_PROJECT_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER')")
     public WbsNodeResponse updateWbsNode(
             @PathVariable String projectId,
             @PathVariable String id,
@@ -62,7 +61,7 @@ public class WbsController {
     }
 
     @PostMapping("/{id}/reposition")
-    @PreAuthorize(Roles.ADMIN_PROJECT_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER')")
     public WbsNodeResponse repositionWbsNode(
             @PathVariable String projectId,
             @PathVariable String id,
@@ -73,7 +72,7 @@ public class WbsController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize(Roles.ADMIN_PROJECT_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROJECT_MANAGER')")
     public void deleteWbsNode(
             @PathVariable String projectId,
             @PathVariable String id

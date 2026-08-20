@@ -1,6 +1,5 @@
 package com.bemo.hr.workforce;
 
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
@@ -18,7 +17,7 @@ public class WorkerCategoryController {
     private final WorkforceMasterDataExcelExporter excelExporter;
 
     @GetMapping(value = "/export.xlsx", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    @PreAuthorize(Roles.ADMIN_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
     public ResponseEntity<byte[]> exportExcel() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
@@ -27,20 +26,20 @@ public class WorkerCategoryController {
     }
 
     @GetMapping
-    @PreAuthorize(Roles.ADMIN_WORKFORCE_FINANCE_WORKFORCE_MANAGER_WORKFORCE_REVIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'WORKFORCE_REVIEWER', 'WORKFORCE_FINANCE')")
     public List<WorkforceApi.CategoryResponse> list() {
         return categoryService.list();
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     public WorkforceApi.CategoryResponse create(@Valid @RequestBody WorkforceApi.CategoryRequest request) {
         return categoryService.create(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_WORKFORCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER')")
     public WorkforceApi.CategoryResponse update(@PathVariable String id, @Valid @RequestBody WorkforceApi.CategoryRequest request) {
         return categoryService.update(id, request);
     }

@@ -2,7 +2,6 @@ package com.bemo.hr.finance.api;
 
 import com.bemo.hr.finance.application.close.PeriodCloseOrchestratorService;
 import com.bemo.hr.finance.domain.close.PeriodCloseExecutionRecord;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -20,13 +19,13 @@ public class PeriodCloseController {
     }
 
     @GetMapping("/readiness/{periodId}")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR')")
     public PeriodCloseOrchestratorService.PeriodReadinessReport checkReadiness(@PathVariable String periodId) {
         return orchestratorService.checkReadiness(periodId);
     }
 
     @PostMapping("/execute/{periodId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public List<PeriodCloseExecutionRecord> executeClose(@PathVariable String periodId,
                                                          @RequestParam(required = false) Long expectedVersion,
                                                          Authentication authentication) {

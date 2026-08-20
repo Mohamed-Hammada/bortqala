@@ -1,6 +1,5 @@
 package com.bemo.hr.notification;
 
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,7 +30,7 @@ public class NotificationController {
 
     @PostMapping("/send")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public NotificationApi.NotificationResponse sendNotification(
             @Valid @RequestBody NotificationApi.SendNotificationPayload payload,
             Authentication authentication) {

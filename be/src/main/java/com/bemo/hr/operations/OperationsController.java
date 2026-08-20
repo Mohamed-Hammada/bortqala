@@ -2,7 +2,6 @@ package com.bemo.hr.operations;
 
 import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.shared.security.AuthService;
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
@@ -18,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/operations")
 @RequiredArgsConstructor
-@PreAuthorize(Roles.ADMIN_HR_MANAGER)
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
 public class OperationsController {
     private final OperationsService operationsService;
     private final InventoryValuationService inventoryValuationService;
@@ -31,27 +30,27 @@ public class OperationsController {
 
     @PostMapping("/items")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.ItemView createItem(@Valid @RequestBody OperationsApi.ItemRequest request) {
         return operationsService.createItem(request);
     }
 
     @PutMapping("/items/{id}")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.ItemView updateItem(@PathVariable String id, @Valid @RequestBody OperationsApi.ItemRequest request) {
         return operationsService.updateItem(id, request);
     }
 
     @PostMapping("/transactions")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.Snapshot transaction(@Valid @RequestBody OperationsApi.TransactionRequest request, Authentication authentication) {
         return operationsService.recordTransaction(request, authentication.getName());
     }
 
     @PostMapping("/advances")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.Snapshot advance(@Valid @RequestBody OperationsApi.AdvanceRequest request, Authentication authentication) {
         return operationsService.recordAdvance(request, authentication.getName());
     }
@@ -63,7 +62,7 @@ public class OperationsController {
 
     @PostMapping("/item-categories")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.ItemCategoryView createCategory(@Valid @RequestBody OperationsApi.ItemCategoryRequest request) {
         return operationsService.createItemCategory(request);
     }
@@ -75,7 +74,7 @@ public class OperationsController {
 
     @PostMapping("/uoms")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.UnitOfMeasureView createUom(@Valid @RequestBody OperationsApi.UnitOfMeasureRequest request) {
         return operationsService.createUnitOfMeasure(request);
     }
@@ -87,7 +86,7 @@ public class OperationsController {
 
     @PostMapping("/uom-conversions")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.UnitConversionView createUnitConversion(@Valid @RequestBody OperationsApi.UnitConversionRequest request, Authentication authentication) {
         return operationsService.createUnitConversion(request, authentication.getName());
     }
@@ -104,7 +103,7 @@ public class OperationsController {
 
     @PostMapping("/adjustments")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.Snapshot adjustment(@Valid @RequestBody OperationsApi.AdjustmentRequest request, Authentication authentication) {
         return operationsService.createStockAdjustment(request, authentication.getName());
     }
@@ -115,7 +114,7 @@ public class OperationsController {
     }
 
     @PutMapping("/valuation/settings")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.ValuationPolicyView updateValuationSettings(
             @Valid @RequestBody OperationsApi.ValuationPolicyRequest request, Authentication authentication) {
         return inventoryValuationService.updatePolicy(request, authentication.getName());
@@ -133,7 +132,7 @@ public class OperationsController {
 
     @PostMapping("/valuation/revaluations")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     OperationsApi.RevaluationView revalue(@Valid @RequestBody OperationsApi.RevaluationRequest request,
                                           Authentication authentication) {
         return inventoryValuationService.revalue(request, authentication.getName());

@@ -1,7 +1,6 @@
 package com.bemo.hr.operations.api;
 
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,13 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class InventoryValuationController {
 
     @PostMapping("/calculate")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_INVENTORY_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'FINANCE_MANAGER')")
     public void calculateValuation() {
         throw legacyEndpointDisabled();
     }
 
     @PostMapping("/reconciliation")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_INVENTORY_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'INVENTORY_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public void reconcile() {
         throw legacyEndpointDisabled();
     }

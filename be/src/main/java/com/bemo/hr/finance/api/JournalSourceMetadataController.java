@@ -2,7 +2,6 @@ package com.bemo.hr.finance.api;
 
 import com.bemo.hr.finance.application.JournalSourceMetadataService;
 import com.bemo.hr.finance.domain.journal.JournalSourceMetadata;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,13 +16,13 @@ public class JournalSourceMetadataController {
     }
 
     @PostMapping("/attach")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public JournalSourceMetadata attachSourceMetadata(@RequestBody AttachMetadataPayload payload) {
         return metadataService.attachSourceMetadata(payload.journalId(), payload.sourceDocumentType(), payload.sourceDocumentId());
     }
 
     @GetMapping("/{journalId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
     public JournalSourceMetadata getMetadata(@PathVariable String journalId) {
         return metadataService.getMetadata(journalId);
     }

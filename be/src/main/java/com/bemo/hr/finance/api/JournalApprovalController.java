@@ -2,7 +2,6 @@ package com.bemo.hr.finance.api;
 
 import com.bemo.hr.finance.application.JournalApprovalService;
 import com.bemo.hr.finance.domain.JournalApprovalRule;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,13 +18,13 @@ public class JournalApprovalController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public JournalApprovalRule setApprovalRule(@RequestBody SetApprovalRulePayload payload) {
         return approvalService.setApprovalRule(payload.accountId(), payload.maxAmountWithoutApproval(), payload.requiresApproval());
     }
 
     @GetMapping("/accounts/{accountId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
     public JournalApprovalRule getApprovalRule(@PathVariable String accountId) {
         return approvalService.getApprovalRule(accountId);
     }

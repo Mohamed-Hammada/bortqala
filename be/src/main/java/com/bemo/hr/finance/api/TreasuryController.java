@@ -8,7 +8,6 @@ import com.bemo.hr.finance.infrastructure.BankAccountRepository;
 import com.bemo.hr.finance.infrastructure.CurrencyRepository;
 import com.bemo.hr.finance.infrastructure.TaxRateRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -45,7 +44,7 @@ public class TreasuryController {
 
     @PostMapping("/banks")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_USER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.BankAccountResponse createBankAccount(@Valid @RequestBody TreasuryApi.BankAccountPayload payload) {
         BankAccount bank = new BankAccount(payload.bankName(), payload.accountNumber(), payload.iban(), payload.swiftCode(), payload.accountId(), payload.currencyCode(), payload.active());
         return toResponse(bankAccountRepository.save(bank));
@@ -53,7 +52,7 @@ public class TreasuryController {
 
     @PutMapping("/banks/{id}")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_USER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.BankAccountResponse updateBankAccount(@PathVariable String id, @Valid @RequestBody TreasuryApi.BankAccountPayload payload) {
         BankAccount bank = bankAccountRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("الحساب البنكي غير موجود", "FIN_BANK_ACCOUNT_NOT_FOUND", HttpStatus.CONFLICT));
@@ -69,7 +68,7 @@ public class TreasuryController {
 
     @PostMapping("/taxes")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_USER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.TaxRateResponse createTaxRate(@Valid @RequestBody TreasuryApi.TaxRatePayload payload) {
         TaxRate.Type type = TaxRate.Type.valueOf(payload.taxType().toUpperCase());
         TaxRate tax = new TaxRate(payload.code(), payload.name(), payload.ratePercentage(), type, payload.accountId(), payload.active());
@@ -78,7 +77,7 @@ public class TreasuryController {
 
     @PutMapping("/taxes/{id}")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_USER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.TaxRateResponse updateTaxRate(@PathVariable String id, @Valid @RequestBody TreasuryApi.TaxRatePayload payload) {
         TaxRate tax = taxRateRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("ضريبة النظام غير موجودة", "FIN_SYSTEM_TAX_NOT_FOUND", HttpStatus.CONFLICT));
@@ -95,7 +94,7 @@ public class TreasuryController {
 
     @PostMapping("/currencies")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_USER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.CurrencyResponse createCurrency(@Valid @RequestBody TreasuryApi.CurrencyPayload payload) {
         Currency currency = new Currency(payload.code(), payload.name(), payload.symbol(), payload.isBase(), payload.exchangeRate(), payload.active());
         return toResponse(currencyRepository.save(currency));
@@ -103,7 +102,7 @@ public class TreasuryController {
 
     @PutMapping("/currencies/{id}")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_USER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER')")
     public TreasuryApi.CurrencyResponse updateCurrency(@PathVariable String id, @Valid @RequestBody TreasuryApi.CurrencyPayload payload) {
         Currency currency = currencyRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("العملة غير موجودة", "FIN_CURRENCY_NOT_FOUND", HttpStatus.CONFLICT));
@@ -113,20 +112,20 @@ public class TreasuryController {
 
     // --- Online exchange-rate hints (Frankfurter) ---
     @GetMapping("/exchange-rate-hints/settings")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER_TREASURY_USER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR')")
     public ExchangeRateHintApi.SettingsResponse exchangeRateHintSettings() {
         return exchangeRateHintService.settings();
     }
 
     @PutMapping("/exchange-rate-hints/settings")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ExchangeRateHintApi.SettingsResponse updateExchangeRateHintSettings(
             @Valid @RequestBody ExchangeRateHintApi.SettingsRequest request) {
         return exchangeRateHintService.updateSettings(request);
     }
 
     @PostMapping("/exchange-rate-hints/refresh")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public ExchangeRateHintApi.RefreshResponse refreshExchangeRateHints() {
         return exchangeRateHintService.refreshNow();
     }

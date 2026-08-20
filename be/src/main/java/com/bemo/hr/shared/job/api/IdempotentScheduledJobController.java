@@ -2,7 +2,6 @@ package com.bemo.hr.shared.job.api;
 
 import com.bemo.hr.shared.job.application.IdempotentScheduledJobService;
 import com.bemo.hr.shared.job.domain.ScheduledJobExecutionRecord;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,7 +21,7 @@ public class IdempotentScheduledJobController {
     }
 
     @GetMapping("/executions/{jobName}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
     public List<ScheduledJobExecutionRecord> getExecutions(@PathVariable String jobName) {
         return jobService.getExecutions(jobName);
     }

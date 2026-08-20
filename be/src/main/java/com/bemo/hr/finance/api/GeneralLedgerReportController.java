@@ -1,7 +1,6 @@
 package com.bemo.hr.finance.api;
 
 import com.bemo.hr.finance.application.GeneralLedgerReportService;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/finance/reports/general-ledger")
-@PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER_VIEWER)
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','ACCOUNTANT','AUDITOR','VIEWER')")
 public class GeneralLedgerReportController {
     private final GeneralLedgerReportService service;
 

@@ -1,6 +1,5 @@
 package com.bemo.hr.trade.sales.api;
 
-import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.trade.sales.application.CustomerCreditService;
 import com.bemo.hr.trade.sales.domain.CustomerCreditProfile;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,13 +18,13 @@ public class CustomerCreditController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_SALES_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'FINANCE_MANAGER')")
     public CustomerCreditProfile setCreditLimit(@RequestBody SetCreditLimitPayload payload) {
         return creditService.setCreditLimit(payload.customerId(), payload.creditLimit());
     }
 
     @GetMapping("/customers/{customerId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_SALES_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'SALES_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public CustomerCreditProfile getCreditProfile(@PathVariable String customerId) {
         return creditService.getCreditProfile(customerId);
     }

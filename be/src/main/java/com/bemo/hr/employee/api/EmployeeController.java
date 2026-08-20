@@ -2,7 +2,6 @@ package com.bemo.hr.employee.api;
 
 import com.bemo.hr.employee.application.EmployeeCodeDedupService;
 import com.bemo.hr.employee.application.HrConfigurationService;
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,14 +28,14 @@ public class EmployeeController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.CREATED)
     EmployeeApi.Response create(@Valid @RequestBody EmployeeApi.UpsertRequest request) {
         return hrConfigurationService.createEmployee(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     EmployeeApi.Response update(@PathVariable String id, @Valid @RequestBody EmployeeApi.UpsertRequest request) {
         return hrConfigurationService.updateEmployee(id, request);
     }
@@ -47,14 +46,14 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deactivate(@PathVariable String id) {
         hrConfigurationService.deactivateEmployee(id);
     }
 
     @PostMapping("/code-corrections")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     EmployeeApi.CodeCorrectionReport correctDuplicateCodes(
             @Valid @RequestBody EmployeeApi.CodeCorrectionRequest request,
             Authentication authentication) {

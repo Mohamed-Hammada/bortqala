@@ -1,6 +1,5 @@
 package com.bemo.hr.product.support;
 
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -32,7 +31,7 @@ public class SupportController {
     }
 
     @PutMapping("/tickets/{id}")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     SupportApi.TicketResponse update(@PathVariable String id, @Valid @RequestBody SupportApi.TicketUpdateRequest r, Authentication a) {
         return service.update(id, r, a.getName());
     }
@@ -43,19 +42,19 @@ public class SupportController {
     }
 
     @GetMapping("/feedback")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     List<SupportApi.FeedbackResponse> feedback() {
         return service.feedback();
     }
 
     @GetMapping("/health")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     SupportApi.HealthResponse health() {
         return service.latest();
     }
 
     @PostMapping("/health/calculate")
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN')")
     SupportApi.HealthResponse calculate(@Valid @RequestBody SupportApi.HealthRequest r, Authentication a) {
         return service.calculate(r, a.getName());
     }

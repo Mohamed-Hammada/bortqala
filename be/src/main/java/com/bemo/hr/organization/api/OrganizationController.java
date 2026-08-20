@@ -10,7 +10,6 @@ import com.bemo.hr.organization.infrastructure.CompanyRepository;
 import com.bemo.hr.organization.infrastructure.DepartmentRepository;
 import com.bemo.hr.organization.infrastructure.WarehouseRepository;
 import com.bemo.hr.shared.domain.BusinessRuleException;
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -60,7 +59,7 @@ public class OrganizationController {
 
     @PostMapping("/companies")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public OrganizationApi.CompanyResponse createCompany(@Valid @RequestBody OrganizationApi.CompanyPayload payload) {
         Company company = new Company(payload.code(), payload.name(), payload.taxNumber(), payload.commercialRegistry(), payload.active());
         return toResponse(companyRepository.save(company));
@@ -68,7 +67,7 @@ public class OrganizationController {
 
     @PutMapping("/companies/{id}")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public OrganizationApi.CompanyResponse updateCompany(@PathVariable String id, @Valid @RequestBody OrganizationApi.CompanyPayload payload) {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("الشركة غير موجودة", "ORG_COMPANY_NOT_FOUND", HttpStatus.CONFLICT));
@@ -84,7 +83,7 @@ public class OrganizationController {
 
     @PostMapping("/branches")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public OrganizationApi.BranchResponse createBranch(@Valid @RequestBody OrganizationApi.BranchPayload payload) {
         Branch branch = new Branch(payload.companyId(), payload.code(), payload.name(), payload.location(), payload.active());
         return toResponse(branchRepository.save(branch));
@@ -92,7 +91,7 @@ public class OrganizationController {
 
     @PutMapping("/branches/{id}")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public OrganizationApi.BranchResponse updateBranch(@PathVariable String id, @Valid @RequestBody OrganizationApi.BranchPayload payload) {
         Branch branch = branchRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("الفرع غير موجود", "ORG_BRANCH_NOT_FOUND", HttpStatus.CONFLICT));
@@ -108,7 +107,7 @@ public class OrganizationController {
 
     @PostMapping("/warehouses")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public OrganizationApi.WarehouseResponse createWarehouse(@Valid @RequestBody OrganizationApi.WarehousePayload payload) {
         Warehouse warehouse = new Warehouse(payload.branchId(), payload.code(), payload.name(), payload.location(), payload.active());
         return toResponse(warehouseRepository.save(warehouse));
@@ -116,7 +115,7 @@ public class OrganizationController {
 
     @PutMapping("/warehouses/{id}")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public OrganizationApi.WarehouseResponse updateWarehouse(@PathVariable String id, @Valid @RequestBody OrganizationApi.WarehousePayload payload) {
         Warehouse warehouse = warehouseRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("المستودع غير موجود", "ORG_WAREHOUSE_NOT_FOUND", HttpStatus.CONFLICT));
@@ -132,7 +131,7 @@ public class OrganizationController {
 
     @PostMapping("/departments")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public OrganizationApi.DepartmentResponse createDepartment(@Valid @RequestBody OrganizationApi.DepartmentPayload payload) {
         Department department = new Department(payload.companyId(), payload.code(), payload.name(), payload.managerId(), payload.active());
         return toResponse(departmentRepository.save(department));
@@ -140,7 +139,7 @@ public class OrganizationController {
 
     @PutMapping("/departments/{id}")
     @Transactional
-    @PreAuthorize(Roles.ADMIN_ONLY)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public OrganizationApi.DepartmentResponse updateDepartment(@PathVariable String id, @Valid @RequestBody OrganizationApi.DepartmentPayload payload) {
         Department department = departmentRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleException("الإدارة غير موجودة", "ORG_DEPARTMENT_NOT_FOUND", HttpStatus.CONFLICT));

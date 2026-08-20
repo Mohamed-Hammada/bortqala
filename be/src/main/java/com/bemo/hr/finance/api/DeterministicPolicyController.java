@@ -2,7 +2,6 @@ package com.bemo.hr.finance.api;
 
 import com.bemo.hr.finance.application.DeterministicPolicyEngineService;
 import com.bemo.hr.finance.domain.rules.AccountingRulePolicy;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,19 +19,19 @@ public class DeterministicPolicyController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER')")
     public AccountingRulePolicy createPolicy(@RequestBody CreatePolicyPayload payload) {
         return policyService.createPolicy(payload.policyCode(), payload.description(), payload.triggerEvent(), payload.debitAccountPattern(), payload.creditAccountPattern());
     }
 
     @PostMapping("/evaluate")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
     public DeterministicPolicyEngineService.PolicyEvaluationResult evaluatePolicy(@RequestBody EvaluatePolicyPayload payload) {
         return policyService.evaluatePolicy(payload.policyCode(), payload.amount());
     }
 
     @GetMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'VIEWER')")
     public List<AccountingRulePolicy> getAllPolicies() {
         return policyService.getAllPolicies();
     }

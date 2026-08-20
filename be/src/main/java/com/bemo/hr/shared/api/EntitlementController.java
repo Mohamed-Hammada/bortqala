@@ -2,7 +2,6 @@ package com.bemo.hr.shared.api;
 
 import com.bemo.hr.shared.security.EntitlementApi;
 import com.bemo.hr.shared.security.EntitlementManagementService;
-import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.shared.security.TenantContext;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/platform/entitlements")
 @RequiredArgsConstructor
-@PreAuthorize(Roles.SUPER_ADMIN_ONLY)
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 public class EntitlementController {
     private final EntitlementManagementService service;
 

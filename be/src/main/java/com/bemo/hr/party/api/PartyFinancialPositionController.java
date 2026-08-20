@@ -2,7 +2,6 @@ package com.bemo.hr.party.api;
 
 import com.bemo.hr.party.api.PartyFinancialPositionApi.*;
 import com.bemo.hr.party.application.PartyFinancialPositionService;
-import com.bemo.hr.shared.security.Roles;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/parties")
 @RequiredArgsConstructor
-@PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_PROCUREMENT_MANAGER_SALES_MANAGER)
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','ACCOUNTANT','SALES_MANAGER','PROCUREMENT_MANAGER')")
 public class PartyFinancialPositionController {
 
     private final PartyFinancialPositionService service;

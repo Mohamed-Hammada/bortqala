@@ -3,7 +3,6 @@ package com.bemo.hr.manufacturing.quality.api;
 import com.bemo.hr.manufacturing.quality.application.QualityPlanService;
 import com.bemo.hr.manufacturing.quality.domain.QualityDisposition;
 import com.bemo.hr.manufacturing.quality.domain.QualityPlanHeader;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,19 +19,19 @@ public class QualityPlanController {
     }
 
     @PostMapping("/plans")
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER_QUALITY_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'QUALITY_MANAGER', 'MANUFACTURING_MANAGER')")
     public QualityPlanHeader createPlan(@RequestBody CreatePlanPayload payload) {
         return qualityPlanService.createPlan(payload.planCode(), payload.name(), payload.itemId(), QualityPlanHeader.TargetCategory.valueOf(payload.targetCategory()));
     }
 
     @PostMapping("/dispositions")
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER_QUALITY_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'QUALITY_MANAGER', 'MANUFACTURING_MANAGER')")
     public QualityDisposition recordDisposition(@RequestBody RecordDispositionPayload payload) {
         return qualityPlanService.recordDisposition(payload.dispositionNumber(), payload.planId(), payload.inspectionId(), QualityDisposition.Result.valueOf(payload.result()), payload.notes());
     }
 
     @GetMapping("/plans/items/{itemId}")
-    @PreAuthorize(Roles.ADMIN_MANUFACTURING_MANAGER_QUALITY_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'QUALITY_MANAGER', 'MANUFACTURING_MANAGER', 'VIEWER')")
     public List<QualityPlanHeader> getPlansByItem(@PathVariable String itemId) {
         return qualityPlanService.getPlansByItem(itemId);
     }

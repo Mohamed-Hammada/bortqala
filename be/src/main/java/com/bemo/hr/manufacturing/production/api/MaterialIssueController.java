@@ -3,7 +3,6 @@ package com.bemo.hr.manufacturing.production.api;
 import com.bemo.hr.manufacturing.production.application.MaterialIssueService;
 import com.bemo.hr.manufacturing.production.domain.MaterialIssueHeader;
 import com.bemo.hr.manufacturing.production.domain.MaterialIssueLine;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,25 +21,25 @@ public class MaterialIssueController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER_MANUFACTURING_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'INVENTORY_MANAGER')")
     public MaterialIssueHeader createIssue(@RequestBody CreateIssuePayload payload) {
         return issueService.createIssue(payload.issueNumber(), payload.productionOrderId(), LocalDate.parse(payload.issueDate()));
     }
 
     @PostMapping("/{id}/lines")
-    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER_MANUFACTURING_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'INVENTORY_MANAGER')")
     public MaterialIssueLine addIssueLine(@PathVariable String id, @RequestBody AddIssueLinePayload payload) {
         return issueService.addIssueLine(id, payload.itemId(), payload.quantity(), payload.warehouseId());
     }
 
     @PostMapping("/{id}/cancel")
-    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER_MANUFACTURING_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'INVENTORY_MANAGER')")
     public MaterialIssueHeader cancelIssue(@PathVariable String id) {
         return issueService.cancelIssue(id);
     }
 
     @GetMapping("/orders/{orderId}")
-    @PreAuthorize(Roles.ADMIN_INVENTORY_MANAGER_MANUFACTURING_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'MANUFACTURING_MANAGER', 'INVENTORY_MANAGER', 'VIEWER')")
     public List<MaterialIssueHeader> getIssuesByOrder(@PathVariable String orderId) {
         return issueService.getIssuesByProductionOrder(orderId);
     }

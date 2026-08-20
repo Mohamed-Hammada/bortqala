@@ -4,7 +4,6 @@ import com.bemo.hr.finance.application.TreasuryCashChequeService;
 import com.bemo.hr.finance.domain.treasury.Cashbox;
 import com.bemo.hr.finance.domain.treasury.CashboxTransaction;
 import com.bemo.hr.finance.domain.treasury.CommercialCheque;
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -18,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/finance/treasury")
-@PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER_TREASURY_MANAGER)
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','ACCOUNTANT','TREASURY_MANAGER')")
 public class TreasuryCashChequeController {
 
     private final TreasuryCashChequeService service;

@@ -5,7 +5,6 @@ import com.bemo.hr.bulkimport.domain.SmartImportModels.CommitRequest;
 import com.bemo.hr.bulkimport.domain.SmartImportModels.CommitResult;
 import com.bemo.hr.bulkimport.domain.SmartImportModels.Preview;
 import com.bemo.hr.bulkimport.domain.SmartImportModels.Workflow;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -20,7 +19,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/smart-imports")
-@PreAuthorize(Roles.ALL_STAFF)
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','HR_MANAGER','HR_REVIEWER','PAYROLL_MANAGER','FINANCE_MANAGER','ACCOUNTANT','TREASURY_USER','AUDITOR','PROCUREMENT_MANAGER','PROCUREMENT_USER','INVENTORY_MANAGER','SALES_MANAGER','MANUFACTURING_MANAGER','QUALITY_MANAGER')")
 public class SmartImportController {
     private static final MediaType XLSX = MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     private final SmartImportService service;

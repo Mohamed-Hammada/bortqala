@@ -1,7 +1,6 @@
 package com.bemo.hr.finance.api;
 
 import com.bemo.hr.finance.application.TrialBalanceReportService;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +21,7 @@ public class TrialBalanceController {
     }
 
     @GetMapping("/trial-balance")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR', 'VIEWER')")
     public List<TrialBalanceReportService.TrialBalanceRow> getTrialBalance(
             @RequestParam(required = false) LocalDate from, @RequestParam(required = false) LocalDate to) {
         return trialBalanceReportService.generateTrialBalance(from == null ? LocalDate.MIN : from, to == null ? LocalDate.MAX : to);

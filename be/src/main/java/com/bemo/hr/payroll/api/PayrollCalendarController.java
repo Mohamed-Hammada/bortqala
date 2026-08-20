@@ -3,7 +3,6 @@ package com.bemo.hr.payroll.api;
 import com.bemo.hr.payroll.application.PayrollCalendarService;
 import com.bemo.hr.payroll.domain.PayPeriod;
 import com.bemo.hr.payroll.domain.PayrollCalendar;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,31 +19,31 @@ public class PayrollCalendarController {
     }
 
     @PostMapping("/calendars")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
     public PayrollCalendar createCalendar(@RequestBody CreateCalendarPayload payload) {
         return calendarService.createCalendar(payload.calendarCode(), payload.name(), PayrollCalendar.Frequency.valueOf(payload.frequency()));
     }
 
     @PostMapping("/calendars/{id}/generate-periods")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
     public List<PayPeriod> generatePeriods(@PathVariable String id, @RequestBody GeneratePeriodsPayload payload) {
         return calendarService.generatePeriods(id, payload.year());
     }
 
     @PostMapping("/periods/{id}/close")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER')")
     public PayPeriod closePeriod(@PathVariable String id) {
         return calendarService.closePeriod(id);
     }
 
     @GetMapping("/calendars")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER', 'VIEWER')")
     public List<PayrollCalendar> getAllCalendars() {
         return calendarService.getAllCalendars();
     }
 
     @GetMapping("/calendars/{id}/periods")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_PAYROLL_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'PAYROLL_MANAGER', 'VIEWER')")
     public List<PayPeriod> getPeriodsByCalendar(@PathVariable String id) {
         return calendarService.getPeriodsByCalendar(id);
     }

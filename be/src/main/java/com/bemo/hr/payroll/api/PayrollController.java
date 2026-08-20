@@ -4,7 +4,6 @@ import com.bemo.hr.payroll.application.PayrollCalculationPolicyService;
 import com.bemo.hr.payroll.application.PayrollService;
 import com.bemo.hr.reporting.application.ExcelExportOptions;
 import com.bemo.hr.shared.security.AuthService;
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
@@ -19,8 +18,16 @@ import java.time.format.DateTimeFormatter;
 @RestController
 @RequestMapping("/api/v1/payroll")
 @RequiredArgsConstructor
-@PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER_PAYROLL_MANAGER
-        + " and @salaryAuthorization.canView(authentication)")
+@PreAuthorize("""
+        hasAnyRole(
+            'SUPER_ADMIN',
+            'ADMIN',
+            'HR_MANAGER',
+            'HR_REVIEWER',
+            'PAYROLL_MANAGER'
+        )
+        and @salaryAuthorization.canView(authentication)
+        """)
 public class PayrollController {
 
     private final PayrollService payrollService;
@@ -36,8 +43,8 @@ public class PayrollController {
     }
 
     @PostMapping("/pay")
-    @PreAuthorize(Roles.ADMIN_PAYROLL_MANAGER
-            + " and @salaryAuthorization.canView(authentication)")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') "
+            + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse recordPayment(
             @Valid @RequestBody PayrollApi.PaymentRequest request,
             Authentication authentication) {
@@ -45,8 +52,8 @@ public class PayrollController {
     }
 
     @PostMapping("/pay-bulk")
-    @PreAuthorize(Roles.ADMIN_PAYROLL_MANAGER
-            + " and @salaryAuthorization.canView(authentication)")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') "
+            + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse payBulk(
             @Valid @RequestBody PayrollApi.BulkPaymentRequest request,
             Authentication authentication) {
@@ -55,9 +62,9 @@ public class PayrollController {
 
     @PostMapping("/transition")
     @PreAuthorize("(((#request.targetStatus.name() == 'CALCULATED' or #request.targetStatus.name() == 'REVIEWED') "
-            + "and " + Roles.ADMIN_HR_MANAGER_HR_REVIEWER_PAYROLL_MANAGER + ") "
-            + "or (#request.targetStatus.name() == 'APPROVED' and " + Roles.ADMIN_PAYROLL_MANAGER + ") "
-            + "or (#request.targetStatus.name() == 'POSTED' and " + Roles.ADMIN_PAYROLL_MANAGER + ")) "
+            + "and hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER', 'PAYROLL_MANAGER')) "
+            + "or (#request.targetStatus.name() == 'APPROVED' and hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER')) "
+            + "or (#request.targetStatus.name() == 'POSTED' and hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER'))) "
             + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse transitionStatus(
             @Valid @RequestBody PayrollApi.StatusTransitionRequest request,
@@ -66,8 +73,8 @@ public class PayrollController {
     }
 
     @PostMapping("/reverse")
-    @PreAuthorize(Roles.ADMIN_PAYROLL_MANAGER
-            + " and @salaryAuthorization.canView(authentication)")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') "
+            + "and @salaryAuthorization.canView(authentication)")
     public PayrollApi.SheetResponse reversePayment(
             @Valid @RequestBody PayrollApi.ReversePaymentRequest request,
             Authentication authentication) {
@@ -103,7 +110,7 @@ public class PayrollController {
     }
 
     @PostMapping("/calculation-policies")
-    @PreAuthorize(Roles.ADMIN_PAYROLL_MANAGER + " and @salaryAuthorization.canView(authentication)")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PAYROLL_MANAGER') and @salaryAuthorization.canView(authentication)")
     public PayrollApi.CalculationPolicyResponse createCalculationPolicy(
             @Valid @RequestBody PayrollApi.CalculationPolicyRequest request) {
         var from = java.time.Instant.ofEpochMilli(request.effectiveFrom()).atZone(java.time.ZoneOffset.UTC).toLocalDate();

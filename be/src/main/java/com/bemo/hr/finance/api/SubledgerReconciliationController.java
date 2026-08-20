@@ -2,7 +2,6 @@ package com.bemo.hr.finance.api;
 
 import com.bemo.hr.finance.application.SubledgerReconciliationService;
 import com.bemo.hr.finance.domain.reconciliation.SubledgerReconciliationReport;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +18,14 @@ public class SubledgerReconciliationController {
     }
 
     @PostMapping("/generate")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT')")
     public SubledgerReconciliationReport generateReport(@RequestBody GenerateReportPayload payload) {
         return reconciliationService.generateReport(payload.periodId(),
                 SubledgerReconciliationReport.SubledgerType.valueOf(payload.subledgerType()));
     }
 
     @GetMapping("/periods/{periodId}")
-    @PreAuthorize(Roles.ADMIN_ACCOUNTANT_AUDITOR_FINANCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'AUDITOR')")
     public List<SubledgerReconciliationReport> getReportsByPeriod(@PathVariable String periodId) {
         return reconciliationService.getReportsByPeriod(periodId);
     }

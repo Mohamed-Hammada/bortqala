@@ -1,6 +1,5 @@
 package com.bemo.hr.trade.procurement.api;
 
-import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.trade.procurement.application.ProcurementMatchOverrideService;
 import com.bemo.hr.trade.procurement.domain.ProcurementMatchOverride;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,13 +16,13 @@ public class ProcurementMatchOverrideController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER')")
     public ProcurementMatchOverride approveOverride(@RequestBody ApproveOverridePayload payload) {
         return overrideService.approveOverride(payload.matchId(), payload.overrideReason(), payload.approvedBy());
     }
 
     @GetMapping("/{matchId}")
-    @PreAuthorize(Roles.ADMIN_FINANCE_MANAGER_PROCUREMENT_MANAGER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'PROCUREMENT_MANAGER', 'FINANCE_MANAGER', 'VIEWER')")
     public ProcurementMatchOverride getOverride(@PathVariable String matchId) {
         return overrideService.getOverride(matchId);
     }

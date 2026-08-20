@@ -1,7 +1,6 @@
 package com.bemo.hr.reporting.api;
 
 import com.bemo.hr.reporting.application.AttendanceReportRefreshService;
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +20,7 @@ public class AttendanceReportRefreshController {
     }
 
     @PostMapping("/recalculate")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_REVIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_REVIEWER')")
     public Map<String, Object> recalculate(@RequestParam int year, @RequestParam int month,
                                            Authentication authentication) {
         boolean refreshed = refreshService.refreshMonth(year, month, authentication.getName());

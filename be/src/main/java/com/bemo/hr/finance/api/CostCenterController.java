@@ -3,7 +3,6 @@ package com.bemo.hr.finance.api;
 import com.bemo.hr.finance.application.CostCenterService;
 import com.bemo.hr.finance.application.CostCenterService.CostCenterPayload;
 import com.bemo.hr.finance.application.CostCenterService.CostCenterResponse;
-import com.bemo.hr.shared.security.Roles;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +12,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/finance/cost-centers")
 @RequiredArgsConstructor
-@PreAuthorize(Roles.ADMIN_ACCOUNTANT_FINANCE_MANAGER)
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','ADMIN','FINANCE_MANAGER','ACCOUNTANT')")
 public class CostCenterController {
 
     private final CostCenterService costCenterService;

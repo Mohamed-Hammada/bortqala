@@ -1,7 +1,6 @@
 package com.bemo.hr.employee.api;
 
 import com.bemo.hr.employee.application.EmployeeContractService;
-import com.bemo.hr.shared.security.Roles;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,20 +19,20 @@ public class EmployeeContractController {
     }
 
     @GetMapping("/{employeeId}/contracts")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_OFFICER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'VIEWER')")
     public List<EmployeeContractApi.ContractResponse> listContracts(@PathVariable String employeeId) {
         return contractService.listContractsForEmployee(employeeId);
     }
 
     @GetMapping("/contracts/{id}")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_OFFICER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'VIEWER')")
     public EmployeeContractApi.ContractResponse getContract(@PathVariable String id) {
         return contractService.getContract(id);
     }
 
     @PostMapping("/{employeeId}/contracts")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_OFFICER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER')")
     public EmployeeContractApi.ContractResponse createContract(
             @PathVariable String employeeId,
             @Valid @RequestBody EmployeeContractApi.CreateContractRequest request) {
@@ -41,7 +40,7 @@ public class EmployeeContractController {
     }
 
     @PostMapping("/contracts/{id}/amend")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_OFFICER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER')")
     public EmployeeContractApi.ContractResponse amendContract(
             @PathVariable String id,
             @Valid @RequestBody EmployeeContractApi.AmendContractRequest request) {
@@ -49,7 +48,7 @@ public class EmployeeContractController {
     }
 
     @PostMapping("/contracts/{id}/terminate")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_OFFICER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER')")
     public EmployeeContractApi.ContractResponse terminateContract(
             @PathVariable String id,
             @Valid @RequestBody EmployeeContractApi.TerminateContractRequest request) {
@@ -57,7 +56,7 @@ public class EmployeeContractController {
     }
 
     @GetMapping("/contracts/expiring")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_HR_OFFICER_VIEWER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'HR_MANAGER', 'HR_OFFICER', 'VIEWER')")
     public List<EmployeeContractApi.ContractResponse> listExpiringContracts(
             @RequestParam(defaultValue = "30") int withinDays) {
         return contractService.listExpiringContracts(withinDays);

@@ -1,6 +1,5 @@
 package com.bemo.hr.workforce.api;
 
-import com.bemo.hr.shared.security.Roles;
 import com.bemo.hr.workforce.application.WorkforceAttendanceLockService;
 import com.bemo.hr.workforce.domain.WorkforceAttendanceLock;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,19 +19,19 @@ public class WorkforceAttendanceLockController {
     }
 
     @PostMapping
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_WORKFORCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER')")
     public WorkforceAttendanceLock lockAttendance(@RequestBody LockAttendancePayload payload) {
         return lockService.lockAttendance(payload.contractorId(), payload.periodId(), payload.totalHours(), payload.lockedBy());
     }
 
     @PostMapping("/{id}/correct")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_WORKFORCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER')")
     public WorkforceAttendanceLock correctLock(@PathVariable String id, @RequestBody CorrectLockPayload payload) {
         return lockService.correctLock(id, payload.newTotalHours(), payload.reason());
     }
 
     @GetMapping("/contractors/{contractorId}")
-    @PreAuthorize(Roles.ADMIN_HR_MANAGER_VIEWER_WORKFORCE_MANAGER)
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN', 'WORKFORCE_MANAGER', 'HR_MANAGER', 'VIEWER')")
     public List<WorkforceAttendanceLock> getLocksForContractor(@PathVariable String contractorId) {
         return lockService.getLocksForContractor(contractorId);
     }

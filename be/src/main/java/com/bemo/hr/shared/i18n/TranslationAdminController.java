@@ -1,6 +1,5 @@
 package com.bemo.hr.shared.i18n;
 
-import com.bemo.hr.shared.security.Roles;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -11,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/i18n/admin")
-@PreAuthorize(Roles.SUPER_ADMIN_ONLY)
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 public class TranslationAdminController {
     private final TranslationAdminService service;
 
