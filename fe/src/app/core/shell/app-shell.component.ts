@@ -26,11 +26,15 @@ export type { NavItem, WorkspaceGroup, WorkspaceSection } from '../navigation/ap
 const COLLAPSED_GROUPS_KEY = 'hr-collapsed-groups';
 import { NotificationCenterService } from '../notification-center/notification-center.service';
 import { WebPushService } from '../notification-center/web-push.service';
+import { DialogStateService } from './dialog-state.service';
+import { resolveShortcutAction } from './shortcut-guard.util';
+import { PushPermissionPromptComponent } from './push-permission-prompt.component';
+import { trapFocusWithin } from '../../shared/ui/focus-trap.util';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ToastContainerComponent, AppTooltipDirective],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, ToastContainerComponent, AppTooltipDirective, PushPermissionPromptComponent],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,6 +49,8 @@ export class AppShellComponent {
   readonly webPush = inject(WebPushService);
   readonly screenShortcuts = inject(ScreenShortcutService);
   private readonly productAnalytics = inject(ProductAnalyticsClient);
+  readonly dialogState = inject(DialogStateService);
+  private lastOverlayTrigger: HTMLElement | null = null;
 
   readonly searchQuery = signal('');
   readonly menuOpen = signal(false);
@@ -153,6 +159,15 @@ export class AppShellComponent {
         this.trackRecentNavigation(event.urlAfterRedirects);
         this.autoExpandActiveGroup(event.urlAfterRedirects);
       });
+    // BUG-4: a pending G-chord must never survive a dialog opening or a window blur.
+    effect(() => {
+      if (this.dialogState.modalOpen()) this.clearChord();
+    }, { allowSignalWrites: true });
+  }
+
+  @HostListener('window:blur')
+  onWindowBlur(): void {
+    this.clearChord();
   }
 
   visible(item: NavItem): boolean {
@@ -213,6 +228,7 @@ export class AppShellComponent {
   }
 
   openQuickNav(): void {
+    this.captureOverlayTrigger();
     this.shortcutHelpOpen.set(false);
     this.searchQuery.set('');
     this.selectedQuickNavIndex.set(0);
@@ -223,15 +239,18 @@ export class AppShellComponent {
   }
 
   openShortcutHelp(): void {
+    this.captureOverlayTrigger();
     this.quickNavOpen.set(false);
     this.shortcutHelpOpen.set(true);
   }
 
   closeShortcutPanels(): void {
+    const wasOpen = this.quickNavOpen() || this.shortcutHelpOpen();
     this.quickNavOpen.set(false);
     this.shortcutHelpOpen.set(false);
     this.searchQuery.set('');
     this.clearChord();
+    if (wasOpen) this.restoreOverlayTrigger();
   }
 
   updateQuickNavQuery(value: string): void {
@@ -285,86 +304,51 @@ export class AppShellComponent {
     const typing = target instanceof HTMLElement
       && target.matches('input, textarea, select, [contenteditable="true"], [data-shortcut-capture="true"]');
 
-    const lowerKey = event.key.toLocaleLowerCase();
+    const action = resolveShortcutAction(event.key, event.key.toLocaleLowerCase(), {
+      typing,
+      ctrl: event.ctrlKey,
+      meta: event.metaKey,
+      alt: event.altKey,
+      code: event.code,
+      quickNavOpen: this.quickNavOpen(),
+      shortcutHelpOpen: this.shortcutHelpOpen(),
+      logoutOptionsOpen: this.logoutOptionsOpen(),
+      modalOpen: this.dialogState.modalOpen(),
+      chordWaiting: this.chordWaiting(),
+    });
 
-    if (
-      ((event.ctrlKey || event.metaKey)
-        && !event.altKey
-        && (lowerKey === 'k' || lowerKey === '/'))
-      || (!typing
-        && !event.ctrlKey
-        && !event.metaKey
-        && !event.altKey
-        && event.key === '/')
-    ) {
-      event.preventDefault();
-      this.openQuickNav();
-      return;
-    }
-
-    if (event.key === 'Escape' && this.logoutOptionsOpen()) {
-      event.preventDefault();
-      this.closeLogoutOptions();
-      return;
-    }
-
-    if (
-      event.key === 'Escape'
-      && (this.quickNavOpen() || this.shortcutHelpOpen() || this.chordWaiting())
-    ) {
-      event.preventDefault();
-      this.closeShortcutPanels();
-      return;
-    }
-
-    if (
-      !typing
-      && !event.ctrlKey
-      && !event.metaKey
-      && !event.altKey
-      && event.key === '?'
-    ) {
-      event.preventDefault();
-      this.openShortcutHelp();
-      return;
-    }
-
-    if (
-      typing
-      || event.ctrlKey
-      || event.metaKey
-      || event.altKey
-      || this.quickNavOpen()
-      || this.shortcutHelpOpen()
-      || this.logoutOptionsOpen()
-    ) return;
-
-    if (this.chordWaiting()) {
-      event.preventDefault();
-
-      const shortcut = this.screenShortcuts.findByCode(event.code);
-      this.clearChord();
-
-      if (!shortcut) return;
-
-      const item = this.items.find(
-        (candidate) => candidate.menuId === shortcut.menuId
-      );
-
-      if (
-        item
-        && this.visible(item)
-        && item.path === shortcut.route
-      ) {
-        this.navigateToItem(item);
+    switch (action) {
+      case 'OPEN_QUICK_NAV':
+        event.preventDefault();
+        this.openQuickNav();
+        return;
+      case 'OPEN_HELP':
+        event.preventDefault();
+        this.openShortcutHelp();
+        return;
+      case 'ESCAPE_SHELL_PANEL':
+        event.preventDefault();
+        if (this.logoutOptionsOpen()) this.closeLogoutOptions();
+        else this.closeShortcutPanels();
+        return;
+      case 'CHORD_RESOLVE': {
+        event.preventDefault();
+        const shortcut = this.screenShortcuts.findByCode(event.code);
+        this.clearChord();
+        if (!shortcut) return;
+        const item = this.items.find((candidate) => candidate.menuId === shortcut.menuId);
+        if (item && this.visible(item) && item.path === shortcut.route) {
+          this.navigateToItem(item);
+        }
+        return;
       }
-      return;
-    }
-
-    if (event.code === 'KeyG') {
-      event.preventDefault();
-      this.chordWaiting.set(true);
-      this.chordTimer = setTimeout(() => this.clearChord(), 1800);
+      case 'CHORD_START':
+        event.preventDefault();
+        this.chordWaiting.set(true);
+        this.chordTimer = setTimeout(() => this.clearChord(), 1800);
+        return;
+      case 'IGNORE':
+        return;
     }
   }
 
@@ -375,10 +359,30 @@ export class AppShellComponent {
     if (!(target instanceof HTMLElement)) return;
     if (target.matches('textarea, select, button, [contenteditable="true"]')) return;
     if (target instanceof HTMLInputElement && ['button', 'submit', 'reset', 'file'].includes(target.type)) return;
+    // BUG-6: opt-out for forms where Enter must not submit (filters inside dialogs, etc.).
+    if (target.closest('[data-no-autosubmit]')) return;
     const form = target.closest('form');
     if (!form) return;
     event.preventDefault();
     form.requestSubmit();
+  }
+
+  /** Focus-traps Tab inside raw shell overlays (BUG-3). Bound on each overlay container. */
+  onOverlayKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Tab') return;
+    const container = event.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+    trapFocusWithin(container, event);
+  }
+
+  private captureOverlayTrigger(): void {
+    const active = document.activeElement;
+    this.lastOverlayTrigger = active instanceof HTMLElement ? active : null;
+  }
+
+  private restoreOverlayTrigger(): void {
+    const origin = this.lastOverlayTrigger;
+    this.lastOverlayTrigger = null;
+    queueMicrotask(() => origin?.isConnected && origin.focus({ preventScroll: true }));
   }
 
   onNavItemClick(item: NavItem): void {
@@ -391,6 +395,7 @@ export class AppShellComponent {
   }
 
   logout(): void {
+    this.captureOverlayTrigger();
     this.logoutError.set('');
     this.logoutOptionsOpen.set(true);
   }
@@ -399,6 +404,7 @@ export class AppShellComponent {
     if (this.logoutAllDevicesBusy()) return;
     this.logoutOptionsOpen.set(false);
     this.logoutError.set('');
+    this.restoreOverlayTrigger();
   }
 
   async logoutCurrentBrowser(): Promise<void> {
@@ -419,6 +425,7 @@ export class AppShellComponent {
       next: () => {
         this.logoutAllDevicesBusy.set(false);
         this.logoutOptionsOpen.set(false);
+        this.restoreOverlayTrigger();
         void this.router.navigate(['/login']);
       },
       error: () => {

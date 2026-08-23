@@ -218,6 +218,31 @@ public class DashboardService {
 
     }
 
+    /**
+     * WP-08 peak clock-in analytics: first-punch hour-of-day distribution per category,
+     * aggregated over the last {@code months} monthly reports in the configured company zone.
+     */
+    public List<DashboardApi.ClockInBucket> clockInHistogram(int months, String categoryId) {
+        int capped = Math.min(Math.max(months, 1), 24);
+        var anchor = YearMonth.now(companyZone);
+        Map<Integer, Map<String, Long>> byHour = new TreeMap<>();
+        for (int hour = 0; hour < 24; hour++) byHour.put(hour, new TreeMap<>());
+        String filter = categoryId == null || categoryId.isBlank() ? null : categoryId.strip();
+        for (int offset = capped - 1; offset >= 0; offset--) {
+            var report = resolveAttendanceReport(anchor.minusMonths(offset));
+            if (report == null) continue;
+            for (var row : dailyAttendanceResultRepository.findByReportIdOrderByWorkDateAscEmployeeNameAsc(report.getId())) {
+                if (row.getFirstPunch() == null) continue;
+                if (filter != null && !filter.equals(row.getCategoryId())) continue;
+                int hour = row.getFirstPunch().atZone(companyZone).getHour();
+                byHour.get(hour).merge(row.getCategoryId(), 1L, Long::sum);
+            }
+        }
+        return byHour.entrySet().stream()
+                .map(entry -> new DashboardApi.ClockInBucket(entry.getKey(), Map.copyOf(entry.getValue())))
+                .toList();
+    }
+
     private DashboardApi.TrendPoint pointFor(YearMonth period) {
         var report = resolveAttendanceReport(period);
         var rows = report == null ? List.<com.bemo.hr.reporting.domain.DailyAttendanceResult>of()

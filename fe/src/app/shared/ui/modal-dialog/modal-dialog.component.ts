@@ -15,7 +15,9 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../../core/i18n.service';
+import { DialogStateService } from '../../../core/shell/dialog-state.service';
 import { AppTooltipDirective } from '../app-tooltip/app-tooltip.directive';
+import { getFocusableElements, trapFocusWithin } from '../focus-trap.util';
 
 @Component({
   selector: 'app-modal-dialog',
@@ -43,9 +45,11 @@ export class ModalDialogComponent implements OnInit, OnChanges, OnDestroy, After
   private modalBody?: ElementRef<HTMLElement>;
 
   readonly i18n = inject(I18nService);
+  private readonly dialogState = inject(DialogStateService);
 
   private wasOpen = false;
   private isLocked = false;
+  private registeredInState = false;
   private isTeleported = false;
   private focusOrigin: HTMLElement | null = null;
 
@@ -88,12 +92,21 @@ export class ModalDialogComponent implements OnInit, OnChanges, OnDestroy, After
         const dialog = this.dialogBox?.nativeElement;
         const body = this.modalBody?.nativeElement ?? dialog?.querySelector<HTMLElement>('.modal-body');
 
-        body?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        // scrollTo is unavailable in jsdom/older embedded webviews — reset via scrollTop there.
+        if (typeof body?.scrollTo === 'function') {
+          body.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        } else if (body) {
+          body.scrollTop = 0;
+        }
 
         const firstControl = this.getFocusableElements(dialog)[0];
         (firstControl ?? dialog)?.focus({ preventScroll: true });
 
-        body?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        if (typeof body?.scrollTo === 'function') {
+          body.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+        } else if (body) {
+          body.scrollTop = 0;
+        }
       });
     }
 
@@ -117,7 +130,7 @@ export class ModalDialogComponent implements OnInit, OnChanges, OnDestroy, After
     }
 
     if (event.key === 'Tab') {
-      this.trapFocus(event);
+      trapFocusWithin(this.dialogBox?.nativeElement, event);
     }
   }
 
@@ -137,6 +150,10 @@ export class ModalDialogComponent implements OnInit, OnChanges, OnDestroy, After
   }
 
   private activateModal(): void {
+    if (!this.registeredInState) {
+      this.registeredInState = true;
+      this.dialogState.modalOpened();
+    }
     if (typeof document !== 'undefined' && !this.isLocked) {
       const activeElement = document.activeElement;
       this.focusOrigin = activeElement instanceof HTMLElement ? activeElement : null;
@@ -147,6 +164,10 @@ export class ModalDialogComponent implements OnInit, OnChanges, OnDestroy, After
   }
 
   private deactivateModal(): void {
+    if (this.registeredInState) {
+      this.registeredInState = false;
+      this.dialogState.modalClosed();
+    }
     this.unlockBodyScroll();
     this.restoreFocus();
   }
@@ -216,55 +237,8 @@ export class ModalDialogComponent implements OnInit, OnChanges, OnDestroy, After
     });
   }
 
-  private trapFocus(event: KeyboardEvent): void {
-    const dialog = this.dialogBox?.nativeElement;
-    if (!dialog) {
-      return;
-    }
-
-    const focusable = this.getFocusableElements(dialog);
-    if (focusable.length === 0) {
-      event.preventDefault();
-      dialog.focus({ preventScroll: true });
-      return;
-    }
-
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    const activeElement = document.activeElement;
-    const activeInside = activeElement instanceof Node && dialog.contains(activeElement);
-
-    if (event.shiftKey && (!activeInside || activeElement === first)) {
-      event.preventDefault();
-      last.focus({ preventScroll: true });
-      return;
-    }
-
-    if (!event.shiftKey && (!activeInside || activeElement === last)) {
-      event.preventDefault();
-      first.focus({ preventScroll: true });
-    }
-  }
-
   private getFocusableElements(container?: HTMLElement): HTMLElement[] {
-    if (!container) {
-      return [];
-    }
-
-    const selector = [
-      'a[href]',
-      'area[href]',
-      'button:not([disabled])',
-      'input:not([disabled]):not([type="hidden"])',
-      'select:not([disabled])',
-      'textarea:not([disabled])',
-      '[contenteditable="true"]',
-      '[tabindex]:not([tabindex="-1"])',
-    ].join(',');
-
-    return Array.from(container.querySelectorAll<HTMLElement>(selector)).filter((element) => {
-      return element.getClientRects().length > 0 && element.getAttribute('aria-hidden') !== 'true';
-    });
+    return container ? getFocusableElements(container) : [];
   }
 
   private isTopMostModal(): boolean {

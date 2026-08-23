@@ -45,6 +45,40 @@ export class DashboardPage {
   readonly trendMonthCount = signal(6);
   readonly trendExporting = signal(false);
   readonly trendMonthOptions = [3, 6, 12, 24];
+  readonly peakMonths = signal(6);
+  readonly peakMonthOptions = [3, 6, 12];
+  /** WP-08: hour rows 04:00–13:00 with per-category counts flattened for CSS bars. */
+  readonly peakRows = computed(() => {
+    const nameById = new Map<string, string>();
+    for (const c of this.store.data()?.categories ?? []) nameById.set(c.categoryId, c.categoryName);
+    const buckets = this.store.clockInBuckets();
+    const rows: { hour: number; entries: { categoryId: string; categoryName: string; count: number }[]; total: number }[] = [];
+    let max = 0;
+    for (let hour = 4; hour <= 13; hour++) {
+      const bucket = buckets.find((b) => b.hour === hour);
+      const entries = Object.entries(bucket?.countsByCategory ?? {})
+        .map(([categoryId, count]) => ({ categoryId, categoryName: nameById.get(categoryId) ?? categoryId, count }))
+        .sort((a, b) => b.count - a.count);
+      const total = entries.reduce((sum, e) => sum + e.count, 0);
+      max = Math.max(max, total);
+      rows.push({ hour, entries, total });
+    }
+    return { rows, max };
+  });
+  readonly peakHasData = computed(() => this.peakRows().rows.some((r) => r.total > 0));
+
+  changePeakMonths(monthsStr: string): void {
+    const months = Number(monthsStr);
+    if (!isNaN(months) && months >= 1 && months <= 24) {
+      this.peakMonths.set(months);
+      void this.store.loadClockInHistogram(months);
+    }
+  }
+
+  barWidth(count: number): string {
+    const max = Math.max(this.peakRows().max, 1);
+    return `${Math.round((count / max) * 100)}%`;
+  }
   readonly departmentOptions = computed(() => {
     const depts = this.store.departmentMetrics();
     return [{ id: null as string | null, name: this.i18n.t('dashboard.allDepartments') }, ...depts.map(d => ({ id: d.departmentId, name: d.departmentName }))];
@@ -185,6 +219,9 @@ export class DashboardPage {
       this.selectedDepartmentId(),
       this.trendMonthCount(),
     );
+    if (!this.store.clockInBuckets().length) {
+      void this.store.loadClockInHistogram(this.peakMonths());
+    }
   }
 
   changePeriodFilter(): void {

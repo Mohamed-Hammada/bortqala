@@ -1032,3 +1032,11 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260823_v340_payroll_sod_translations.yaml
       relativeToChangelogFile: false
+  # WP-09: first-login web-push enablement prompt bilingual copy
+  - include:
+      file: db/changelog/data/insert/20260823_v341_push_prompt_translations.yaml
+      relativeToChangelogFile: false
+  # WP-08: peak clock-in histogram bilingual copy
+  - include:
+      file: db/changelog/data/insert/20260823_v342_peak_clock_translations.yaml
+      relativeToChangelogFile: false

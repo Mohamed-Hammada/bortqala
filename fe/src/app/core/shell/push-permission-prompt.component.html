@@ -1,0 +1,29 @@
+@if (visible()) {
+  <div class="shortcut-overlay">
+    <section
+      class="shortcut-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="i18n.t('auth.pushPromptTitle')"
+      style="max-width: 460px; width: min(460px, calc(100vw - 2rem));"
+    >
+      <header class="shortcut-dialog-header">
+        <div>
+          <h2>🔔 {{ i18n.t('auth.pushPromptTitle') }}</h2>
+          <p>{{ i18n.t('auth.pushPromptHint') }}</p>
+        </div>
+      </header>
+      <div class="push-prompt-actions">
+        <button type="button" class="button" (click)="enable()">
+          {{ i18n.t('auth.pushPromptEnable') }}
+        </button>
+        <button type="button" class="button secondary" (click)="later()">
+          {{ i18n.t('auth.pushPromptNotNow') }}
+        </button>
+      </div>
+      <button type="button" class="link-btn push-prompt-never" (click)="neverAsk()">
+        {{ i18n.t('auth.pushPromptNeverAsk') }}
+      </button>
+    </section>
+  </div>
+}

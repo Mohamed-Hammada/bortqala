@@ -6,6 +6,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 
 public final class DashboardApi {
     private DashboardApi() {
@@ -61,5 +62,9 @@ public final class DashboardApi {
     public record TrendPoint(String label, int year, int month, long scheduledEmployeeDays, long presentEmployeeDays,
                              double attendanceRate, long exceptionDays, long overtimeMinutes,
                              int paidCount, int pendingCount, BigDecimal totalGross, BigDecimal totalPaid) {
+    }
+
+    /** Hour-of-day histogram of first-punch arrivals, keyed by attendance category. */
+    public record ClockInBucket(int hour, Map<String, Long> countsByCategory) {
     }
 }

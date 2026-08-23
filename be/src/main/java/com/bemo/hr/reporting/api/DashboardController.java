@@ -76,6 +76,12 @@ public class DashboardController {
         int m = (month != null && month >= 1 && month <= 12) ? month : current.getMonthValue();
         return dashboardService.trends(months, y, m);
     }
+    @GetMapping("/clock-in-histogram")
+    java.util.List<DashboardApi.ClockInBucket> clockInHistogram(
+            @RequestParam(defaultValue = "6") int months,
+            @RequestParam(name = "categoryId", required = false) String categoryId) {
+        return dashboardService.clockInHistogram(months, categoryId);
+    }
 }
 
 // BORTQALA_ATTENDANCE_PIPELINE_20260816_V1_TREND_API_PERIOD

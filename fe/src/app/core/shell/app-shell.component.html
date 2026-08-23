@@ -297,6 +297,7 @@
       [attr.aria-label]="i18n.t('auth.logoutTitle')"
       [attr.aria-busy]="logoutAllDevicesBusy()"
       (click)="$event.stopPropagation()"
+      (keydown)="onOverlayKeydown($event)"
       style="max-width: 520px; width: min(520px, calc(100vw - 2rem));"
     >
       <header class="shortcut-dialog-header">
@@ -355,7 +356,13 @@
 <!-- Action Center Notifications Dropdown Panel -->
 @if (notificationCenter.panelOpen()) {
   <div class="shortcut-overlay" (click)="notificationCenter.closePanel()">
-    <section class="shortcut-dialog action-center-dialog" (click)="$event.stopPropagation()">
+    <section
+      class="shortcut-dialog action-center-dialog"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="i18n.t('actionCenter.title', undefined, 'مركز الإشعارات والتنبيهات')"
+      (keydown)="onOverlayKeydown($event)"
+      (click)="$event.stopPropagation()">
       <header class="shortcut-dialog-header action-center-header">
         <div>
           <h2 style="margin:0;font-size:1.1rem;">🔔 {{ i18n.t('actionCenter.title', undefined, 'مركز الإشعارات والتنبيهات') }}</h2>
@@ -405,6 +412,7 @@
       aria-modal="true"
       [attr.aria-label]="i18n.t('shortcuts.quickNavTitle')"
       (click)="$event.stopPropagation()"
+      (keydown)="onOverlayKeydown($event)"
     >
       <header class="shortcut-dialog-header">
         <div>
@@ -467,6 +475,7 @@
       aria-modal="true"
       [attr.aria-label]="i18n.t('shortcuts.title')"
       (click)="$event.stopPropagation()"
+      (keydown)="onOverlayKeydown($event)"
     >
       <header class="shortcut-dialog-header">
         <div>
@@ -549,3 +558,5 @@
     </div>
   </div>
 }
+
+<app-push-permission-prompt />

@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260823-v342-peak-clock-translations
+      author: bemo-erp
+      validCheckSum: ANY
+      comment: "WP-08: bilingual copy for the dashboard peak clock-in histogram card."
+      changes:
+        - loadData:
+            tableName: translations
+            file: db/changelog/data/insert/files/20260823_v342_peak_clock_translations.csv
+            relativeToChangelogFile: false
+            encoding: UTF-8
+            separator: ;
+            columns:
+              - column: { header: id, name: id, type: STRING }
+              - column: { header: translation_key, name: translation_key, type: STRING }
+              - column: { header: locale, name: locale, type: STRING }
+              - column: { header: text_value, name: text_value, type: STRING }
+      rollback:
+        - delete: { tableName: translations, where: "id LIKE 'v342-%'" }

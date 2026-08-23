@@ -449,6 +449,49 @@
       }
     </article>
 
+    <!-- WP-08: Peak Clock-In Analytics -->
+    <article class="card section-card peak-card">
+      <div class="section-title">
+        <div>
+          <h2>{{ i18n.t('dashboard.peakTitle') }}</h2>
+          <p>{{ i18n.t('dashboard.peakHint') }}</p>
+        </div>
+        <div class="trend-tools">
+          <select class="trend-months-select" [value]="peakMonths()"
+            (change)="changePeakMonths($any($event.target).value)" [attr.aria-label]="i18n.t('dashboard.peakTitle')">
+            @for (count of peakMonthOptions; track count) {
+              <option [value]="count">{{ count }} {{ i18n.t('dashboard.trendMonths') }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      @if (store.clockInLoading()) {
+        <div class="chart-loading">{{ i18n.t('common.loading') }}</div>
+      } @else if (peakHasData(); as hasData) {
+        @if (hasData) {
+          <div class="peak-bars">
+            @for (row of peakRows().rows; track row.hour) {
+              @if (row.total > 0) {
+                <div class="peak-row">
+                  <span class="peak-hour ltr">{{ row.hour }}:00</span>
+                  <span class="peak-track">
+                    <span class="peak-fill" [style.width.%]="barWidth(row.total)"></span>
+                  </span>
+                  <span class="peak-count">
+                    @for (entry of row.entries; track entry.categoryId; let last = $last) {
+                      {{ entry.categoryName }} × {{ entry.count }}@if (!last) {<span> · </span>}
+                    }
+                  </span>
+                </div>
+              }
+            }
+          </div>
+        } @else {
+          <div class="empty-state"><strong>{{ i18n.t('dashboard.peakEmpty') }}</strong></div>
+        }
+      }
+    </article>
+
     <!-- Priority 3: Details Content Grid -->
     <div class="content-grid dashboard-widget" [hidden]="!widgetVisible('categories') && !widgetVisible('imports')"
       [style.order]="widgetOrder(widgetOrder('categories') < widgetOrder('imports') ? 'categories' : 'imports')">
