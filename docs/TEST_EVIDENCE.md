@@ -1,5 +1,12 @@
 # Test Evidence — Bemo ERP
 
+## 2026-08-23 — market-readiness audit remediation (F-002 payroll payment state, F-003 SoD, F-004 direct-method cash flow)
+
+- Backend non-Docker/H2: `./gradlew test -PskipDockerTests` in `/tmp/opencode/be-build` → **BUILD SUCCESSFUL in 3m 29s**; JUnit XML: **739 tests / 189 suites / 0 failures / 0 errors / 1 skipped**. New/updated suites: `SalaryPaymentStateTransitionTests` (4), `PayrollServiceTests` (+5 SoD tests = 34 in package), `FinancialStatementsReportServiceTests` (6 cash-flow tests incl. financing-sign regression, internal-transfer netting, exact reconciliation, comparative period). V339/V340 load clean on H2.
+- Gates: `be/tools/check-error-codes.py` **575/575 PASS** (incl. new `PAYROLL_SOD_SELF_APPROVAL`, `PAYROLL_SOD_DISBURSEMENT_CONFLICT`); `be/tools/check-test-count.py` floors raised to **700 tests / 185 suites** (observed 739/189).
+- Frontend on Node `v24.18.1`: **429 tests / 91 files PASS**; i18n **4,538 keys PASS**; hardcoded scan **109 HTML + 221 TypeScript PASS**; production build **PASS**. FE change limited to the additive `CashFlowReport` model (`reconciled`, `comparative`) in `accounts.page.ts`.
+- Known external block: PostgreSQL/Testcontainers suites (`F-001`) cannot execute in this WSL environment (no Docker daemon); all H2-mirror evidence above is Docker-free by design.
+
 ## 2026-08-13 completed local remediation verification
 
 - Canonical implementation items through `SEC-002` are implemented or explicitly classified; see `docs/BORTQALA_CURRENT_CODE_REVIEW_REMAINING_WORK_2026-08-13.md`.

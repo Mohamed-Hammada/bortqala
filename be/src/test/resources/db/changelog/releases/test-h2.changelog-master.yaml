@@ -1024,3 +1024,11 @@ databaseChangeLog:
 
 
 
+  # MARKET_READINESS_AUDIT_20260823: F-003 payroll SoD actor evidence columns
+  - include:
+      file: db/changelog/schema/update/20260823_v339_payroll_sod_actor_columns.yaml
+      relativeToChangelogFile: false
+  # MARKET_READINESS_AUDIT_20260823: F-003 payroll SoD bilingual error copy
+  - include:
+      file: db/changelog/data/insert/20260823_v340_payroll_sod_translations.yaml
+      relativeToChangelogFile: false

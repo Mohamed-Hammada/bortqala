@@ -33,6 +33,10 @@ public class PayrollRunHeader {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private Status status = Status.DRAFT;
+    @Column(name = "calculated_by", length = 100)
+    private String calculatedBy;
+    @Column(name = "approved_by", length = 100)
+    private String approvedBy;
     @Column(name = "created_at", nullable = false)
     private long createdAt;
     @Column(name = "updated_at", nullable = false)
@@ -90,6 +94,26 @@ public class PayrollRunHeader {
             throw invalidTransition(Status.POSTED);
         }
         this.status = Status.POSTED;
+    }
+
+    public void markCalculatedBy(String actor) {
+        if (actor != null && !actor.isBlank()) {
+            this.calculatedBy = actor;
+        }
+    }
+
+    public void markApprovedBy(String actor) {
+        if (actor != null && !actor.isBlank()) {
+            this.approvedBy = actor;
+        }
+    }
+
+    public String getCalculatedBy() {
+        return calculatedBy;
+    }
+
+    public String getApprovedBy() {
+        return approvedBy;
     }
 
     private BusinessRuleException invalidTransition(Status nextStatus) {

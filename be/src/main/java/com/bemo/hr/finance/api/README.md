@@ -8,9 +8,9 @@ The treasury API also exposes tenant-scoped Frankfurter exchange-rate hint setti
 
 كما توفر واجهة الخزينة إعدادات أسعار Frankfurter المرجعية ومساراً للتحديث اليدوي لكل مستأجر. هذه القيم للعرض والاسترشاد فقط ولا تستبدل سعر الصرف المحاسبي المحفوظ.
 
-**EN:** `/api/v1/finance/reports/cash-flow` returns an explicit `501` problem with code `FIN_CASH_FLOW_NOT_IMPLEMENTED` while the ledger-based cash classification is unavailable; it never returns a simplified or fabricated statement.
+**EN:** `/api/v1/finance/reports/cash-flow` returns a direct-method cash flow statement derived only from posted GL evidence: operating/investing/financing classification by counter-account, exact opening-to-closing reconciliation (`reconciled` flag), and an equal-length comparative previous period. It never presents net income as cash flow.
 
-**AR:** يعيد المسار `/api/v1/finance/reports/cash-flow` استجابة مشكلة صريحة بحالة `501` ورمز `FIN_CASH_FLOW_NOT_IMPLEMENTED` إلى حين اكتمال التصنيف النقدي المستند إلى دفتر الأستاذ، ولا يعيد قائمة مبسطة أو مصطنعة.
+**AR:** يعيد المسار `/api/v1/finance/reports/cash-flow` قائمة تدفقات نقدية بالطريقة المباشرة مشتقة من الأدلة المرحلة فقط: تصنيف تشغيلي/استثماري/تمويلي بحسب الأطراف المقابلة، ومطابقة تامة من الافتتاحي إلى الختامي (علم `reconciled`)، وفترة مقارنة مماثلة المدة. ولا يُعرض صافي الدخل أبداً كتدفق نقدي.
 
 ## Bank reconciliation / التسوية البنكية
 

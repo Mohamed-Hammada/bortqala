@@ -18,7 +18,9 @@ import com.bemo.hr.shared.domain.NotFoundException;
 import com.bemo.hr.workforce.WorkforceAdvanceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,6 +57,47 @@ public class PayrollService {
     private final PayrollRunLineRepository payrollRunLineRepository;
     private final PayrollGlPostingService payrollGlPostingService;
     private final PayrollPaymentAccountingService payrollPaymentAccountingService;
+
+    /**
+     * Maker/checker segregation of duties for payroll. Defaults to enforced; deployments that
+     * operate with a single trusted operator may set {@code hr.payroll.sod-enabled=false}.
+     */
+    @Value("${hr.payroll.sod-enabled:true}")
+    private String sodEnabled;
+
+    private boolean sodActive() {
+        return !"false".equalsIgnoreCase(sodEnabled);
+    }
+
+    private boolean isSuperAdminActor() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_SUPER_ADMIN".equals(a.getAuthority()));
+    }
+
+    private void assertApproverIsNotPreparer(PayrollRunHeader run, String actor) {
+        if (!sodActive() || isSuperAdminActor() || actor == null) {
+            return;
+        }
+        if (actor.equals(run.getCalculatedBy())) {
+            log.warn("SoD violation blocked: preparer {} attempted to approve/post payroll run {}", actor, run.getId());
+            throw new BusinessRuleException(
+                    "The user who calculated this payroll cannot approve or post it.",
+                    "PAYROLL_SOD_SELF_APPROVAL", HttpStatus.CONFLICT);
+        }
+    }
+
+    private void assertDisburserIsNotApprover(PayrollRunHeader run, String actor) {
+        if (!sodActive() || isSuperAdminActor() || actor == null) {
+            return;
+        }
+        if (actor.equals(run.getApprovedBy())) {
+            log.warn("SoD violation blocked: approver {} attempted to disburse payroll run {}", actor, run.getId());
+            throw new BusinessRuleException(
+                    "The user who approved or posted this payroll cannot disburse its payments.",
+                    "PAYROLL_SOD_DISBURSEMENT_CONFLICT", HttpStatus.CONFLICT);
+        }
+    }
 
     public List<PayrollApi.ExplanationResponse> getPaymentExplanation(String paymentId) {
         log.debug("getPaymentExplanation called with paymentId={}", paymentId);
@@ -338,10 +381,9 @@ public class PayrollService {
             throw new BusinessRuleException("This salary has already been paid.",
                     "PAYROLL_DUPLICATE_PAYMENT", HttpStatus.CONFLICT);
         }
-        if (entity.getPaymentStatus() != PaymentStatus.POSTED
-                && entity.getPaymentStatus() != PaymentStatus.REVERSED) {
-            log.warn("Validation failed: Only posted or reversed salary can be paid employeeId={}", request.employeeId());
-            throw new BusinessRuleException("Only a posted or reversed salary can be paid.",
+        if (entity.getPaymentStatus() != PaymentStatus.POSTED) {
+            log.warn("Validation failed: Only posted salary can be paid employeeId={}", request.employeeId());
+            throw new BusinessRuleException("Only a posted salary can be paid.",
                     "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT);
         }
         if (entity.getPayrollRunId() == null || entity.getPayrollSnapshotId() == null
@@ -358,6 +400,7 @@ public class PayrollService {
             throw new BusinessRuleException("The payroll run must be posted before payment.",
                     "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT);
         }
+        assertDisburserIsNotApprover(run, actor);
 
         LocalDate pStart = entity.getPeriodStart();
         LocalDate pEnd = entity.getPeriodEnd();
@@ -420,6 +463,9 @@ public class PayrollService {
             payrollGlPostingService.getGlPosting(periodId);
             return getSheet(request.periodYear(), request.periodMonth(), null);
         }
+        if (request.targetStatus() == PaymentStatus.APPROVED || request.targetStatus() == PaymentStatus.POSTED) {
+            assertApproverIsNotPreparer(run, actor);
+        }
         boolean freezeSnapshots = request.targetStatus() == PaymentStatus.CALCULATED;
         var sheet = buildSheet(request.periodYear(), request.periodMonth(), null, freezeSnapshots, actor, run.getId());
         if (sheet.rows().isEmpty()) {
@@ -462,11 +508,15 @@ public class PayrollService {
             run.updateTotals(sheet.summary().totalGrossAmount(), runDeductions,
                     sheet.rows().stream().map(PayrollApi.PayrollRow::netAmount)
                             .reduce(BigDecimal.ZERO, BigDecimal::add));
+            run.markCalculatedBy(actor);
         } else {
             if (request.targetStatus() == PaymentStatus.POSTED) {
                 payrollGlPostingService.postApprovedRun(run, actor);
             }
             run.transitionTo(PayrollRunHeader.Status.valueOf(request.targetStatus().name()));
+        }
+        if (request.targetStatus() == PaymentStatus.APPROVED || request.targetStatus() == PaymentStatus.POSTED) {
+            run.markApprovedBy(actor);
         }
         payrollRunHeaderRepository.save(run);
 

@@ -1,0 +1,9 @@
+# Finance — GL, Statements, Treasury & Close (المالية)
+
+**EN:** Accounting backbone: chart of accounts and journal entries with unified document numbering, multi-dimensional GL & analytic accounting (V288–V289), financial statements — trial balance, income statement, balance sheet, and a direct-method cash-flow engine with financing/investing/operating attribution, comparative period and exact reconciliation flag (F-004, `FinancialStatementsReportService`) — treasury cashbox register with commercial cheque management (V290–V291), AR/AP aging with party statements & credit positions (V292–V293), cost centers + direct cash-flow statement (V294–V295), multi-company consolidation with intercompany elimination (V317–V318), fiscal-period close workbench, currency management with Frankfurter online reference-rate hints (V150–V151, scheduler per tenant, hint-only — never overwrites the operational rate), and payroll SoD posting rules (F-003).
+
+**AR:** العمود الفقري المحاسبي: دليل الحسابات وقيود اليومية بترقيم موحد، أستاذ متعدد الأبعاد، القوائم المالية (ميزان المراجعة، قائمة الدخل، الميزانية العمومية، قائمة التدفقات النقدية بالطريقة المباشرة مع إسناد تمويلي/استثماري/تشغيلي وفترة مقارنة وعلم مطابقة دقيق)، سندات القبض والدفع والشيكات التجارية، أعمار الذمم وكشوف الحسابات وملفات الائتمان، مراكز التكلفة، توحيد الشركات متعددة الشركات مع استبعاد الحركات بينية، إقفال الفترات، وإدارة العملات مع أسعار مرجعية أونلاين من Frankfurter (تلميح فقط دون تجاوز السعر التشغيلي)، وقواعد الفصل بين من يحسب ومن يعتمد في الرواتب.
+
+- Key services: `TrialBalanceReportService`, `FinancialStatementsReportService`, treasury/cheque services, `ExchangeRateHintService` + scheduler, `JournalEntryService` (numbering).
+- Invariants: balanced entries only; accrual-only entries never move cash-flow; cash classification requires account TYPE gate (not name keywords — F-004 regression).
+- Frontend: `features/finance/*` — accounts, banks, budgets, journal-entries, tax-currency.

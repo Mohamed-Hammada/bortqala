@@ -177,8 +177,8 @@ public class SalaryPayment {
 
     public void markAsPaid(PaymentMethod method, Instant paidAtInstant, String refCode,
                            String noteText, String actor) {
-        if (this.paymentStatus != PaymentStatus.POSTED && this.paymentStatus != PaymentStatus.REVERSED) {
-            throw new BusinessRuleException("Only a posted or reversed salary can be paid.",
+        if (this.paymentStatus != PaymentStatus.POSTED) {
+            throw new BusinessRuleException("Only a posted salary can be paid.",
                     "PAYROLL_PAYMENT_STATE_INVALID", HttpStatus.CONFLICT);
         }
         this.paymentStatus = PaymentStatus.PAID;

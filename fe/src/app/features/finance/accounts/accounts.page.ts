@@ -48,6 +48,15 @@ export interface IncomeStatementReport {
   netIncome: number;
 }
 
+export interface CashFlowPeriodComparison {
+  startDate: string;
+  endDate: string;
+  operatingCashFlow: number;
+  investingCashFlow: number;
+  financingCashFlow: number;
+  netCashFlow: number;
+}
+
 export interface CashFlowReport {
   operatingCashFlow: number;
   investingCashFlow: number;
@@ -55,6 +64,8 @@ export interface CashFlowReport {
   netCashFlow: number;
   openingCashBalance: number;
   closingCashBalance: number;
+  reconciled: boolean;
+  comparative: CashFlowPeriodComparison | null;
 }
 
 @Component({

@@ -111,73 +111,153 @@ public class FinancialStatementsReportService {
         return new IncomeStatementReport(totalRevenue, totalExpenses, netIncome);
     }
 
+    /**
+     * Direct-method cash flow statement derived exclusively from posted GL evidence.
+     *
+     * For every posted (or reversed-with-its-offsetting-reversal) journal entry that actually
+     * moves a cash/bank account, the entry's net cash movement is attributed to operating,
+     * investing, or financing according to the counter-accounts of the same entry:
+     * - financing: equity accounts and long-term loan liabilities (code prefix 22 / loan naming);
+     * - investing: non-current asset acquisitions/disposals (fixed-asset code prefix 12);
+     * - operating: every other counter-account (trade, revenue, expense, short-term items).
+     * Entries without any cash movement are accrual-only and never affect the statement, so
+     * opening cash + operating + investing + financing always reconciles exactly to closing cash.
+     */
     @Transactional(readOnly = true)
     public CashFlowReport getCashFlowStatement(LocalDate startDate, LocalDate endDate) {
         log.debug("getCashFlowStatement called with startDate={}, endDate={}", startDate, endDate);
-        List<Account> accounts = accountRepository.findAll();
-        Map<String, Account> accountMap = accounts.stream().collect(Collectors.toMap(Account::getId, a -> a));
+        if (endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("Cash flow end date must not be before start date");
+        }
 
-        IncomeStatementReport is = getIncomeStatement(startDate, endDate);
-        BigDecimal netIncome = is.netIncome();
+        CashFlowPeriod current = computeCashFlowPeriod(startDate, endDate);
+        long periodDays = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        LocalDate comparativeStart = startDate.minusDays(periodDays);
+        LocalDate comparativeEnd = startDate.minusDays(1);
+        CashFlowPeriod previous = computeCashFlowPeriod(comparativeStart, comparativeEnd);
 
-        // Calculate opening cash (cash/bank accounts before startDate)
-        List<JournalEntry> priorEntries = journalEntryRepository.findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED)).stream()
-                .filter(je -> je.getEntryDate().isBefore(startDate))
+        BigDecimal closingCash = cashBalanceOnOrBefore(endDate);
+        boolean reconciled = current.opening().add(current.operating()).add(current.investing())
+                .add(current.financing()).compareTo(closingCash) == 0;
+
+        PeriodComparison comparison = new PeriodComparison(
+                comparativeStart, comparativeEnd,
+                previous.operating(), previous.investing(), previous.financing(),
+                previous.operating().add(previous.investing()).add(previous.financing()));
+
+        log.info("Direct cash flow generated {}..{}: operating={}, investing={}, financing={}, "
+                        + "opening={}, closing={}, reconciled={}",
+                startDate, endDate, current.operating(), current.investing(), current.financing(),
+                current.opening(), closingCash, reconciled);
+
+        return new CashFlowReport(current.operating(), current.investing(), current.financing(),
+                current.operating().add(current.investing()).add(current.financing()),
+                current.opening(), closingCash, reconciled, comparison);
+    }
+
+    private record CashFlowPeriod(BigDecimal opening, BigDecimal operating,
+                                  BigDecimal investing, BigDecimal financing) {
+    }
+
+    private CashFlowPeriod computeCashFlowPeriod(LocalDate startDate, LocalDate endDate) {
+        Map<String, Account> accountMap = accountMap();
+        List<JournalEntryLine> lines = postedLinesInRange(startDate, endDate);
+
+        BigDecimal openingCash = cashBalanceOnOrBefore(startDate.minusDays(1));
+        BigDecimal operating = BigDecimal.ZERO;
+        BigDecimal investing = BigDecimal.ZERO;
+        BigDecimal financing = BigDecimal.ZERO;
+
+        Map<String, List<JournalEntryLine>> linesByEntry = lines.stream()
+                .collect(Collectors.groupingBy(JournalEntryLine::getJournalEntryId));
+        for (List<JournalEntryLine> entryLines : linesByEntry.values()) {
+            BigDecimal cashDelta = BigDecimal.ZERO;
+            boolean movesCash = false;
+            for (JournalEntryLine line : entryLines) {
+                Account acc = accountMap.get(line.getAccountId());
+                if (acc == null || !isCashOrBank(acc)) continue;
+                movesCash = true;
+                cashDelta = cashDelta.add(line.getDebit().subtract(line.getCredit()));
+            }
+            if (!movesCash) {
+                continue; // accrual-only entries never move cash
+            }
+            for (JournalEntryLine line : entryLines) {
+                Account acc = accountMap.get(line.getAccountId());
+                if (acc == null || isCashOrBank(acc)) continue;
+                // Balanced-entry identity: sum of counter movements equals the entry's cash delta.
+                BigDecimal counterMovement = line.getCredit().subtract(line.getDebit());
+                if (isFinancingCounterpart(acc)) {
+                    financing = financing.add(counterMovement);
+                } else if (isInvestingCounterpart(acc)) {
+                    investing = investing.add(counterMovement);
+                } else {
+                    operating = operating.add(counterMovement);
+                }
+            }
+        }
+        return new CashFlowPeriod(openingCash, operating, investing, financing);
+    }
+
+    private BigDecimal cashBalanceOnOrBefore(LocalDate date) {
+        Map<String, Account> accountMap = accountMap();
+        List<JournalEntry> priorEntries = journalEntryRepository
+                .findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED))
+                .stream()
+                .filter(je -> !je.getEntryDate().isAfter(date))
                 .toList();
         Set<String> priorIds = priorEntries.stream().map(JournalEntry::getId).collect(Collectors.toSet());
-        List<JournalEntryLine> priorLines = priorIds.isEmpty() ? List.of() : journalEntryLineRepository.findByJournalEntryIdIn(priorIds);
-
-        BigDecimal openingCash = BigDecimal.ZERO;
+        List<JournalEntryLine> priorLines = priorIds.isEmpty() ? List.of()
+                : journalEntryLineRepository.findByJournalEntryIdIn(priorIds);
+        BigDecimal balance = BigDecimal.ZERO;
         for (JournalEntryLine line : priorLines) {
             Account acc = accountMap.get(line.getAccountId());
             if (acc != null && isCashOrBank(acc)) {
-                openingCash = openingCash.add(line.getDebit()).subtract(line.getCredit());
+                balance = balance.add(line.getDebit()).subtract(line.getCredit());
             }
         }
+        return balance;
+    }
 
-        // Lines in current period
-        List<JournalEntry> currentEntries = journalEntryRepository.findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED)).stream()
+    private List<JournalEntryLine> postedLinesInRange(LocalDate startDate, LocalDate endDate) {
+        List<JournalEntry> entries = journalEntryRepository
+                .findByStatusInOrderByEntryDateDesc(List.of(JournalEntry.Status.POSTED, JournalEntry.Status.REVERSED))
+                .stream()
                 .filter(je -> !je.getEntryDate().isBefore(startDate) && !je.getEntryDate().isAfter(endDate))
                 .toList();
-        Set<String> currentIds = currentEntries.stream().map(JournalEntry::getId).collect(Collectors.toSet());
-        List<JournalEntryLine> currentLines = currentIds.isEmpty() ? List.of() : journalEntryLineRepository.findByJournalEntryIdIn(currentIds);
+        Set<String> ids = entries.stream().map(JournalEntry::getId).collect(Collectors.toSet());
+        return ids.isEmpty() ? List.of() : journalEntryLineRepository.findByJournalEntryIdIn(ids);
+    }
 
-        BigDecimal operatingCash = netIncome;
-        BigDecimal investingCash = BigDecimal.ZERO;
-        BigDecimal financingCash = BigDecimal.ZERO;
+    private Map<String, Account> accountMap() {
+        return accountRepository.findAll().stream()
+                .collect(Collectors.toMap(Account::getId, a -> a));
+    }
 
-        for (JournalEntryLine line : currentLines) {
-            Account acc = accountMap.get(line.getAccountId());
-            if (acc == null) continue;
-            BigDecimal movement = line.getCredit().subtract(line.getDebit());
-
-            if (acc.getType() == Account.Type.ASSET && !isCashOrBank(acc)) {
-                if (acc.getCode().startsWith("12") || acc.getName().toLowerCase().contains("fixed") || acc.getName().contains("أصول ثابتة")) {
-                    investingCash = investingCash.add(movement);
-                } else {
-                    operatingCash = operatingCash.add(movement);
-                }
-            } else if (acc.getType() == Account.Type.LIABILITY) {
-                if (acc.getCode().startsWith("22") || acc.getName().toLowerCase().contains("loan") || acc.getName().contains("قرض")) {
-                    financingCash = financingCash.add(movement.negate());
-                } else {
-                    operatingCash = operatingCash.add(movement.negate());
-                }
-            } else if (acc.getType() == Account.Type.EQUITY) {
-                financingCash = financingCash.add(movement.negate());
-            }
+    /** Equity accounts and long-term loan liabilities are financing activities. */
+    private boolean isFinancingCounterpart(Account acc) {
+        if (acc.getType() == Account.Type.EQUITY) {
+            return true;
         }
+        if (acc.getType() == Account.Type.LIABILITY) {
+            String code = acc.getCode() == null ? "" : acc.getCode();
+            String name = acc.getName() == null ? "" : acc.getName().toLowerCase();
+            return code.startsWith("22") || name.contains("loan") || name.contains("قرض");
+        }
+        return false;
+    }
 
-        BigDecimal netCashFlow = operatingCash.add(investingCash).add(financingCash);
-        BigDecimal closingCash = openingCash.add(netCashFlow);
-
-        log.info("Cash flow generated: operating={}, investing={}, financing={}, net={}, opening={}, closing={}",
-                operatingCash, investingCash, financingCash, netCashFlow, openingCash, closingCash);
-
-        return new CashFlowReport(operatingCash, investingCash, financingCash, netCashFlow, openingCash, closingCash);
+    /** Non-current asset acquisitions/disposals (fixed-asset chart prefix 12) are investing activities. */
+    private boolean isInvestingCounterpart(Account acc) {
+        String code = acc.getCode() == null ? "" : acc.getCode();
+        return acc.getType() == Account.Type.ASSET && !isCashOrBank(acc) && code.startsWith("12");
     }
 
     private boolean isCashOrBank(Account acc) {
+        if (acc.getType() != Account.Type.ASSET) {
+            // Liability/expense accounts named "Bank Loan" or "Bank Fees" are never cash pool members.
+            return false;
+        }
         String code = acc.getCode() != null ? acc.getCode() : "";
         String name = acc.getName() != null ? acc.getName().toLowerCase() : "";
         return code.startsWith("10") || code.startsWith("11") || name.contains("cash") || name.contains("bank") || name.contains("صندوق") || name.contains("بنك") || name.contains("نقدية");
@@ -192,6 +272,12 @@ public class FinancialStatementsReportService {
 
     public record CashFlowReport(BigDecimal operatingCashFlow, BigDecimal investingCashFlow,
                                  BigDecimal financingCashFlow, BigDecimal netCashFlow,
-                                 BigDecimal openingCashBalance, BigDecimal closingCashBalance) {
+                                 BigDecimal openingCashBalance, BigDecimal closingCashBalance,
+                                 boolean reconciled, PeriodComparison comparative) {
+    }
+
+    public record PeriodComparison(LocalDate startDate, LocalDate endDate,
+                                   BigDecimal operatingCashFlow, BigDecimal investingCashFlow,
+                                   BigDecimal financingCashFlow, BigDecimal netCashFlow) {
     }
 }
