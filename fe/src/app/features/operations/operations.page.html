@@ -31,6 +31,49 @@
     <div class="alert error">{{ store.error() }}</div>
   }
 
+  <!-- WP-14 AC-4: barcode lookup (camera scan on native, manual entry on web) -->
+  <div class="table-card barcode-lookup">
+    <div class="field-row">
+      <div class="field grow">
+        <label>{{ i18n.t('inventory.barcode') }}</label>
+        <input
+          class="ltr"
+          [value]="barcodeSearchQuery()"
+          (input)="barcodeSearchQuery.set($any($event.target).value)"
+          (keyup.enter)="onBarcodeSearch()"
+          [placeholder]="i18n.t('native.barcodePlaceholder')" />
+      </div>
+      <button class="button secondary" type="button" (click)="scanBarcode()" [disabled]="scanningBarcode()">
+        📷 {{ i18n.t('native.scan') }}
+      </button>
+      <button class="button primary" type="button" (click)="onBarcodeSearch()" [disabled]="searchingBarcode()">
+        {{ i18n.t('common.search') }}
+      </button>
+    </div>
+    @if (barcodeLookupMatch(); as match) {
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('operations.itemCode') }}</th>
+            <th>{{ i18n.t('operations.itemName') }}</th>
+            <th>{{ i18n.t('inventory.onHandQty') }}</th>
+            <th>{{ i18n.t('inventory.reorderPoint') || 'حد الطلب' }}</th>
+            <th>{{ i18n.t('inventory.trackingType') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong class="ltr">{{ match.itemCode }}</strong></td>
+            <td>{{ match.itemName }}</td>
+            <td>{{ match.onHandQuantity }}</td>
+            <td>{{ match.reorderPoint }}</td>
+            <td>{{ trackingTypeLabel(match.trackingType) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    }
+  </div>
+
   @if (store.negativeBalances().length > 0) {
     <div class="alert warning">
       <strong>⚠ {{ i18n.t('operations.negativeBalancesTitle') || 'أرصدة سلبية' }}</strong>

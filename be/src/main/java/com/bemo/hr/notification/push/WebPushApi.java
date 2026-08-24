@@ -1,6 +1,7 @@
 package com.bemo.hr.notification.push;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -19,12 +20,29 @@ public final class WebPushApi {
     }
 
     public record SubscriptionPayload(
-            @NotBlank @Size(max = 2000) @Pattern(regexp = "^https://.+") String endpoint,
+            @Size(max = 10) String platform,
+            @Size(max = 2000) String endpoint,
             Long expirationTime,
-            @Valid @NotNull SubscriptionKeys keys,
+            @Valid SubscriptionKeys keys,
+            @Size(max = 4096) String fcmToken,
             @Size(max = 10) String locale,
             boolean pushApprovals,
             boolean pushPayroll) {
+
+        /** WEB subscriptions keep the VAPID contract; ANDROID ones carry an FCM token instead. */
+        @AssertTrue(message = "WEB subscriptions require an https endpoint")
+        public boolean hasValidWebEndpoint() {
+            return isAndroid() || (endpoint != null && endpoint.matches("^https://.+"));
+        }
+
+        @AssertTrue(message = "platform ANDROID requires an fcmToken")
+        public boolean isAndroidTokenPresent() {
+            return !isAndroid() || (fcmToken != null && !fcmToken.isBlank());
+        }
+
+        public boolean isAndroid() {
+            return "ANDROID".equalsIgnoreCase(platform);
+        }
     }
 
     public record UnsubscribePayload(

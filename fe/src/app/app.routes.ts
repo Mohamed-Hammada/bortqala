@@ -5,8 +5,20 @@ import { WORKFORCE_BASE_ROLES } from './core/auth/workforce-role.guard';
 
 export const routes: Routes = [
   {
+    // WP-14 AC-1: native first-launch server picker — deliberately outside the auth guard.
+    path: 'server-setup',
+    loadComponent: () => import('./features/server-setup/server-setup.page').then((module) => module.ServerSetupPage),
+  },
+  {
     path: 'login',
     loadComponent: () => import('./features/login/login.page').then((module) => module.LoginPage),
+  },
+  {
+    // WP-14 AC-3: employee selfie punch — any authenticated user, no menu row required.
+    path: 'selfie-punch',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/selfie-punch/selfie-punch.page').then((module) => module.SelfiePunchPage),
   },
   {
     path: 'change-password',

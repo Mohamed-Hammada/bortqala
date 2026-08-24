@@ -1,0 +1,105 @@
+databaseChangeLog:
+  - changeSet:
+      id: 20260825-v346-push-subscription-platform
+      author: bemo-erp
+      validCheckSum: ANY
+      comment: "WP-14: native (ANDROID/FCM) push subscriptions alongside the existing WEB/VAPID rows."
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            columnExists:
+              tableName: web_push_subscriptions
+              columnName: platform
+      changes:
+        - addColumn:
+            tableName: web_push_subscriptions
+            columns:
+              - column:
+                  name: platform
+                  type: VARCHAR(10)
+                  defaultValue: WEB
+                  constraints:
+                    nullable: false
+              - column:
+                  name: fcm_token
+                  type: VARCHAR(4096)
+      rollback:
+        - dropColumn:
+            tableName: web_push_subscriptions
+            columnName: fcm_token
+        - dropColumn:
+            tableName: web_push_subscriptions
+            columnName: platform
+
+  - changeSet:
+      id: 20260825-v346-attendance-selfie-punches-table
+      author: bemo-erp
+      validCheckSum: ANY
+      comment: "WP-14 AC-3: employee self-service selfie punches with idempotent operation ids."
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            tableExists:
+              tableName: attendance_selfie_punches
+      changes:
+        - createTable:
+            tableName: attendance_selfie_punches
+            columns:
+              - column:
+                  name: id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: app_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: employee_id
+                  type: VARCHAR(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: operation_id
+                  type: VARCHAR(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: punched_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: client_timestamp
+                  type: BIGINT
+              - column:
+                  name: image_content_type
+                  type: VARCHAR(50)
+              - column:
+                  name: image_data
+                  type: TEXT
+              - column:
+                  name: created_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: BIGINT
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: attendance_selfie_punches
+            columnNames: app_id, operation_id
+            constraintName: uq_attendance_selfie_punches_operation
+        - createIndex:
+            indexName: idx_attendance_selfie_punches_employee
+            tableName: attendance_selfie_punches
+            columns:
+              - column:
+                  name: employee_id
+      rollback:
+        - dropTable:
+            tableName: attendance_selfie_punches

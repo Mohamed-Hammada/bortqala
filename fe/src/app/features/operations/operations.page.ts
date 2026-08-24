@@ -14,6 +14,7 @@ import { TablePagination } from '../../shared/ui/table-pagination/pagination';
 import { TablePaginationComponent } from '../../shared/ui/table-pagination/table-pagination.component';
 import { OperationsStore } from './operations.store';
 import { ModalDialogComponent } from '../../shared/ui/modal-dialog/modal-dialog.component';
+import { BarcodeScannerService } from '../../core/native/barcode-scanner.service';
 import { ItemCategory, StockMovement, TransactionPayload, UnitOfMeasure } from './operations.models';
 
 type DocumentReferenceKey =
@@ -43,6 +44,8 @@ export class OperationsPage {
   readonly barcodeSearchQuery = signal('');
   readonly barcodeLookupMatch = signal<any | null>(null);
   readonly searchingBarcode = signal(false);
+  readonly scanningBarcode = signal(false);
+  private readonly barcodeScanner = inject(BarcodeScannerService);
   readonly itemPagination = new TablePagination();
   readonly movementPagination = new TablePagination();
   readonly balancePagination = new TablePagination();
@@ -571,6 +574,19 @@ export class OperationsPage {
       }
     } finally {
       this.searchingBarcode.set(false);
+    }
+  }
+
+  async scanBarcode(): Promise<void> {
+    this.scanningBarcode.set(true);
+    try {
+      const value = await this.barcodeScanner.scan(this.i18n.t('native.scanPrompt'));
+      if (value) {
+        this.barcodeSearchQuery.set(value);
+        await this.onBarcodeSearch();
+      }
+    } finally {
+      this.scanningBarcode.set(false);
     }
   }
 

@@ -1,0 +1,22 @@
+.selfie-punch {
+  .selfie-preview {
+    max-width: 320px;
+    border-radius: var(--radius, 12px);
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  .selfie-empty {
+    border: 2px dashed var(--border, #cbd5e1);
+    border-radius: var(--radius, 12px);
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--muted, #64748b);
+    margin-bottom: 1rem;
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 0.5rem;
+  }
+}

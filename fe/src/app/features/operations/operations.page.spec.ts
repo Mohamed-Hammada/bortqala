@@ -11,6 +11,9 @@ describe('OperationsPage REM-005 document references', () => {
   let page: OperationsPage;
   let transaction: ReturnType<typeof vi.fn>;
   let error: ReturnType<typeof vi.fn>;
+  let mockStoreRef: {
+    lookupBarcode: ReturnType<typeof vi.fn>;
+  } | null = null;
 
   const empty: OperationsSnapshot = {
     items: [], movements: [], partyBalances: [], ledgerEntries: [], employeeAdvances: [],
@@ -37,7 +40,8 @@ describe('OperationsPage REM-005 document references', () => {
       transaction,
       recordCycleCount: vi.fn(async () => true),
       export: vi.fn(async () => {}),
-    };
+    } as unknown as OperationsStore;
+    mockStoreRef = mockStore as unknown as { lookupBarcode: ReturnType<typeof vi.fn> };
     await TestBed.configureTestingModule({
       imports: [OperationsPage],
       providers: [
@@ -145,5 +149,25 @@ describe('OperationsPage REM-005 document references', () => {
     page.onAttachmentSelected({ target: { files: [bad], value: '' } } as unknown as Event);
     expect(error).toHaveBeenCalledWith('operations.attachmentTypeError');
     expect(page.transactionForm.controls.attachmentFile.value).toBeNull();
+  });
+
+  it('runs the barcode lookup with the scanned value (WP-14 AC-4)', async () => {
+    const match = { itemId: 'i-1', itemCode: 'ITM-01', itemName: 'Widget', onHandQuantity: 5 };
+    const store = mockStoreRef!;
+    store.lookupBarcode = vi.fn(async () => match);
+    vi.spyOn(window, 'prompt').mockReturnValue(null);
+
+    await page.scanBarcode();
+
+    // Web fallback prompts for manual entry; jsdom prompt returns null so no lookup ran.
+    expect(page.scanningBarcode()).toBe(false);
+
+    page.barcodeSearchQuery.set('6290000000009');
+    const searching = page.onBarcodeSearch();
+    expect(page.searchingBarcode()).toBe(true);
+    await searching;
+    expect(store.lookupBarcode).toHaveBeenCalledWith('6290000000009');
+    expect(page.barcodeLookupMatch()).toEqual(match);
+    expect(page.searchingBarcode()).toBe(false);
   });
 });

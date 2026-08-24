@@ -1,0 +1,34 @@
+<section class="page selfie-punch">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('attendance.selfieEyebrow') }}</p>
+      <h1>{{ i18n.t('attendance.selfieTitle') }}</h1>
+      <p>{{ i18n.t('attendance.selfieHint') }}</p>
+    </div>
+  </header>
+
+  <div class="table-card">
+    @if (previewDataUrl(); as image) {
+      <img class="selfie-preview" [src]="image" [alt]="i18n.t('attendance.selfiePreviewAlt')" />
+    } @else {
+      <div class="selfie-empty">{{ i18n.t('attendance.selfieEmpty') }}</div>
+    }
+
+    <input id="selfie-file-input" type="file" accept="image/*" capture="user" hidden (change)="onFilePicked($event)" />
+
+    <div class="toolbar">
+      <button class="button secondary" type="button" (click)="captureSelfie()">
+        📷 {{ i18n.t('attendance.selfieCapture') }}
+      </button>
+      <button class="button primary" type="button" [disabled]="!canSubmit()" (click)="submitPunch()">
+        {{ i18n.t('attendance.selfieSubmit') }}
+      </button>
+    </div>
+
+    @if (queuedCount() > 0) {
+      <div class="alert warning">
+        {{ i18n.t('attendance.selfiePendingNotice') }} <strong>{{ queuedCount() }}</strong>
+      </div>
+    }
+  </div>
+</section>

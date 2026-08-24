@@ -1064,3 +1064,18 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260825_v345_purchase_request_translations.yaml
       relativeToChangelogFile: false
+  # WP-14 prerequisite: web-push subscriptions table (was never registered in the H2 master)
+  - include:
+      file: db/changelog/schema/create/20260812_push_001_web_push_subscriptions.yaml
+      relativeToChangelogFile: false
+  - include:
+      file: db/changelog/data/insert/20260812_push_002_web_push_translations.yaml
+      relativeToChangelogFile: false
+  # WP-14: native shell — FCM push platform column + ESS selfie punches
+  - include:
+      file: db/changelog/schema/create/20260825_v346_native_shell.yaml
+      relativeToChangelogFile: false
+  # WP-14: native-shell bilingual error/UI copy
+  - include:
+      file: db/changelog/data/insert/20260825_v346_native_shell_translations.yaml
+      relativeToChangelogFile: false

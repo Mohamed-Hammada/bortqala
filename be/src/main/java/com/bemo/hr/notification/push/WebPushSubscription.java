@@ -37,6 +37,12 @@ public class WebPushSubscription {
     @Column(name = "locale", nullable = false, length = 10)
     private String locale;
 
+    @Column(nullable = false, length = 10)
+    private String platform = "WEB";
+
+    @Column(name = "fcm_token", length = 4096)
+    private String fcmToken;
+
     @Column(name = "push_approvals", nullable = false)
     private boolean pushApprovals;
 
@@ -73,8 +79,24 @@ public class WebPushSubscription {
             String locale,
             boolean pushApprovals,
             boolean pushPayroll) {
+        this(username, endpoint, endpointHash, p256dhKey, authKey, locale, pushApprovals, pushPayroll, "WEB", null);
+    }
+
+    public WebPushSubscription(
+            String username,
+            String endpoint,
+            String endpointHash,
+            String p256dhKey,
+            String authKey,
+            String locale,
+            boolean pushApprovals,
+            boolean pushPayroll,
+            String platform,
+            String fcmToken) {
         this.id = UUID.randomUUID().toString();
         update(username, endpoint, endpointHash, p256dhKey, authKey, locale, pushApprovals, pushPayroll);
+        this.platform = normalizePlatform(platform);
+        this.fcmToken = fcmToken == null || fcmToken.isBlank() ? null : fcmToken.strip();
         this.enabled = true;
         this.failureCount = 0;
         this.createdAt = Instant.now();
@@ -87,6 +109,23 @@ public class WebPushSubscription {
 
     private static String normalizeLocale(String locale) {
         return locale != null && locale.toLowerCase(Locale.ROOT).startsWith("en") ? "en-US" : "ar-EG";
+    }
+
+    private static String normalizePlatform(String platform) {
+        return platform != null && "ANDROID".equalsIgnoreCase(platform) ? "ANDROID" : "WEB";
+    }
+
+    public void registerFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken == null || fcmToken.isBlank() ? null : fcmToken.strip();
+        this.updatedAt = Instant.now();
+    }
+
+    public String getPlatform() {
+        return platform;
+    }
+
+    public String getFcmToken() {
+        return fcmToken;
     }
 
     public void update(

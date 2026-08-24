@@ -1,0 +1,24 @@
+<section class="server-setup">
+  <div class="card">
+    <h1>{{ i18n.t('native.serverSetupTitle') }}</h1>
+    <p class="hint">{{ i18n.t('native.serverSetupHint') }}</p>
+
+    <label for="server-url">{{ i18n.t('native.serverUrlLabel') }}</label>
+    <input
+      id="server-url"
+      type="url"
+      class="ltr"
+      [placeholder]="'https://erp.example.com'"
+      [(ngModel)]="serverUrlValue"
+      (ngModelChange)="errorKey.set(null)"
+    />
+
+    @if (errorKey(); as error) {
+      <p class="probe-error">{{ i18n.t(error) }}</p>
+    }
+
+    <button class="button primary" type="button" [disabled]="checking() || !serverUrlValue.trim()" (click)="connect()">
+      {{ checking() ? i18n.t('native.probing') : i18n.t('native.connect') }}
+    </button>
+  </div>
+</section>
