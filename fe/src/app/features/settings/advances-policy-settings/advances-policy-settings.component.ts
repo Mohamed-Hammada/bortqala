@@ -54,6 +54,7 @@ export class AdvancesPolicySettingsComponent implements OnInit {
   readonly exceptions = signal<ExceptionDraft[]>([]);
 
   private baselineGlobal: { mode: Mode; cadence: Cadence } = { mode: 'AUTO', cadence: 'MONTHLY' };
+  private baselineGlobalVersion: number | null = null;
   private baselineExceptions: ExceptionDraft[] = [];
 
   readonly dirty = computed(() => {
@@ -76,7 +77,7 @@ export class AdvancesPolicySettingsComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     try {
       const [categories, policies] = await Promise.all([
-        firstValueFrom(this.http.get<Array<{ id: string; name: string }>>('/api/v1/categories')),
+        firstValueFrom(this.http.get<Array<{ id: string; name: string; active?: boolean }>>('/api/v1/categories')),
         firstValueFrom(this.workforceService.loadAdvancePolicies()),
       ]);
       this.categories.set(categories.filter((category) => category.active));
@@ -133,7 +134,7 @@ export class AdvancesPolicySettingsComponent implements OnInit {
         this.globalCadence() !== this.baselineGlobal.cadence
       ) {
         jobs.push(firstValueFrom(this.workforceService.saveAdvancePolicy(this.policyPayload(
-          'GLOBAL', null, this.globalMode(), this.globalCadence(), null, today))));
+          'GLOBAL', null, this.globalMode(), this.globalCadence(), this.baselineGlobalVersion, today))));
       }
       for (const item of this.exceptions()) {
         const baseline = this.baselineExceptions.find((base) => base.categoryId === item.categoryId);
@@ -191,6 +192,7 @@ export class AdvancesPolicySettingsComponent implements OnInit {
       return 'MONTHLY';
     };
     this.baselineGlobal = { mode: modeOf(globalPolicy), cadence: cadenceOf(globalPolicy) };
+    this.baselineGlobalVersion = globalPolicy?.version ?? null;
     this.globalMode.set(this.baselineGlobal.mode);
     this.globalCadence.set(this.baselineGlobal.cadence);
 

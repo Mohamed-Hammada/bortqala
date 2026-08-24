@@ -13,6 +13,7 @@ describe('AdvancesPolicySettingsComponent', () => {
   let component: AdvancesPolicySettingsComponent;
   let http: HttpTestingController;
   let saveSpy: ReturnType<typeof vi.fn>;
+  let policiesStub: unknown[] = [];
 
   const globalAuto = {
     scopeType: 'GLOBAL',
@@ -26,7 +27,8 @@ describe('AdvancesPolicySettingsComponent', () => {
     active: true,
   };
 
-  beforeEach(async () => {
+  async function setup(policies: unknown[]): Promise<void> {
+    policiesStub = policies;
     saveSpy = vi.fn(() => of({ ...globalAuto }));
     await TestBed.configureTestingModule({
       imports: [AdvancesPolicySettingsComponent],
@@ -37,7 +39,10 @@ describe('AdvancesPolicySettingsComponent', () => {
         { provide: NotificationService, useValue: { success: vi.fn(), error: vi.fn(), info: vi.fn() } },
         {
           provide: WorkforceService,
-          useValue: { loadAdvancePolicies: () => of([globalAuto]), saveAdvancePolicy: saveSpy },
+          useValue: {
+            loadAdvancePolicies: () => of(policiesStub),
+            saveAdvancePolicy: saveSpy,
+          },
         },
       ],
     }).compileComponents();
@@ -45,7 +50,7 @@ describe('AdvancesPolicySettingsComponent', () => {
     http = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(AdvancesPolicySettingsComponent);
     component = fixture.componentInstance;
-  });
+  }
 
   function flushCategories(): void {
     const req = http.expectOne('/api/v1/categories');
@@ -57,10 +62,10 @@ describe('AdvancesPolicySettingsComponent', () => {
   }
 
   it('hydrates the global card from the latest policy version and defaults to AUTO', async () => {
+    await setup([globalAuto]);
     fixture.detectChanges();
     flushCategories();
-    await Promise.resolve();
-    expect(component.loading()).toBe(false);
+    await vi.waitFor(() => expect(component.loading()).toBe(false));
     expect(component.globalMode()).toBe('AUTO');
     expect(component.globalCadence()).toBe('MONTHLY');
     expect(component.dirty()).toBe(false);
@@ -68,9 +73,10 @@ describe('AdvancesPolicySettingsComponent', () => {
   });
 
   it('marks the form dirty on change and saves a new GLOBAL version via Save All', async () => {
+    await setup([globalAuto]);
     fixture.detectChanges();
     flushCategories();
-    await Promise.resolve();
+    await vi.waitFor(() => expect(component.loading()).toBe(false));
 
     component.setGlobalMode('MANUAL');
     expect(component.dirty()).toBe(true);
@@ -88,9 +94,10 @@ describe('AdvancesPolicySettingsComponent', () => {
   });
 
   it('cancel reverts draft changes without issuing requests', async () => {
+    await setup([globalAuto]);
     fixture.detectChanges();
     flushCategories();
-    await Promise.resolve();
+    await vi.waitFor(() => expect(component.loading()).toBe(false));
 
     component.setGlobalMode('MANUAL');
     component.setGlobalCadence('MID_MONTH_SPLIT');
@@ -103,9 +110,10 @@ describe('AdvancesPolicySettingsComponent', () => {
   });
 
   it('adds a category exception, persists it as EMPLOYEE_CATEGORY scope, then reloads', async () => {
+    await setup([globalAuto]);
     fixture.detectChanges();
     flushCategories();
-    await Promise.resolve();
+    await vi.waitFor(() => expect(component.loading()).toBe(false));
 
     component.addException();
     expect(component.exceptions().length).toBe(1);
@@ -127,30 +135,25 @@ describe('AdvancesPolicySettingsComponent', () => {
   });
 
   it('hydrates existing EMPLOYEE_CATEGORY exceptions with their persisted versions', async () => {
-    const workforce = TestBed.inject(WorkforceService);
-    (workforce as unknown as { loadAdvancePolicies: () => unknown }).loadAdvancePolicies = () =>
-      of([
-        globalAuto,
-        {
-          scopeType: 'EMPLOYEE_CATEGORY',
-          scopeId: 'cat-1',
-          scopeName: 'Staff',
-          deductionMode: 'MANUAL',
-          deductionFrequency: 'HALF_MONTH',
-          maxDeductionPercent: 50,
-          defaultInstallments: 1,
-          deferralPeriods: 0,
-          version: 5,
-          effectiveFrom: '2026-01-01',
-          active: true,
-        },
-      ]);
-
-    fixture = TestBed.createComponent(AdvancesPolicySettingsComponent);
-    component = fixture.componentInstance;
+    await setup([
+      globalAuto,
+      {
+        scopeType: 'EMPLOYEE_CATEGORY',
+        scopeId: 'cat-1',
+        scopeName: 'Staff',
+        deductionMode: 'MANUAL',
+        deductionFrequency: 'HALF_MONTH',
+        maxDeductionPercent: 50,
+        defaultInstallments: 1,
+        deferralPeriods: 0,
+        version: 5,
+        effectiveFrom: '2026-01-01',
+        active: true,
+      },
+    ]);
     fixture.detectChanges();
     flushCategories();
-    await Promise.resolve();
+    await vi.waitFor(() => expect(component.loading()).toBe(false));
 
     expect(component.exceptions().length).toBe(1);
     expect(component.exceptions()[0].persistedVersion).toBe(5);
