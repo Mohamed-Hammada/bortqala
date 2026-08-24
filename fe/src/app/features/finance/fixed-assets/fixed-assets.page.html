@@ -1,0 +1,170 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">{{ i18n.t('nav.fixedAssets') }}</p>
+      <h1>{{ i18n.t('nav.fixedAssets') }}</h1>
+      <p>{{ i18n.t('asset.subtitle') }}</p>
+    </div>
+    <div class="header-actions">
+      <button class="button secondary" (click)="exportExcel()">⇩ {{ i18n.t('asset.export') }}</button>
+      <button class="button secondary" (click)="openRun()">{{ i18n.t('asset.runDepreciation') }}</button>
+      <button class="button primary" (click)="openNew()">＋ {{ i18n.t('asset.add') }}</button>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="loading">{{ i18n.t('common.loading') }}</div>
+  }
+  @if (error()) {
+    <div class="alert error">{{ error() }}</div>
+  }
+
+  @if (!loading()) {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>{{ i18n.t('asset.name') }}</th>
+            <th>{{ i18n.t('asset.category') }}</th>
+            <th>{{ i18n.t('asset.acquisitionDate') }}</th>
+            <th>{{ i18n.t('asset.acquisitionCost') }}</th>
+            <th>{{ i18n.t('asset.monthlyCharge') }}</th>
+            <th>{{ i18n.t('asset.accumulatedDepreciation') }}</th>
+            <th>{{ i18n.t('asset.netBookValue') }}</th>
+            <th>{{ i18n.t('asset.lastPostedMonth') }}</th>
+            <th>{{ i18n.t('asset.status') }}</th>
+            <th>{{ i18n.t('common.actions') }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (asset of assets(); track asset.id) {
+            <tr>
+              <td><strong>{{ asset.name }}</strong></td>
+              <td>{{ categoryLabel(asset.category) }}</td>
+              <td class="ltr">{{ date(asset.acquisitionDate) }}</td>
+              <td class="ltr"><strong>{{ formatAmount(asset.acquisitionCost) }}</strong></td>
+              <td class="ltr">{{ formatAmount(asset.monthlyCharge) }}</td>
+              <td class="ltr">{{ formatAmount(asset.accumulatedDepreciation) }}</td>
+              <td class="ltr"><strong>{{ formatAmount(asset.netBookValue) }}</strong></td>
+              <td class="ltr">{{ asset.lastPostedYearMonth ?? '—' }}</td>
+              <td><span class="status" [class.success]="statusClass(asset.status) === 'success'" [class.warn]="statusClass(asset.status) === 'warn'">{{ statusLabel(asset.status) }}</span></td>
+              <td class="actions-cell">
+                @if (asset.status !== 'DISPOSED') {
+                  <button class="button secondary btn-sm" (click)="openEdit(asset)">{{ i18n.t('asset.edit') }}</button>
+                  <button class="button danger btn-sm" (click)="openDispose(asset)">{{ i18n.t('asset.dispose') }}</button>
+                } @else {
+                  <span class="muted">{{ date(asset.disposalDate) }} · {{ formatAmount(asset.disposalProceeds ?? 0) }}</span>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="10" class="muted">{{ i18n.t('asset.empty') }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <app-modal-dialog [isOpen]="drawerOpen()" [title]="editingId() ? i18n.t('asset.edit') : i18n.t('asset.add')" size="wide" [showFooter]="false" (close)="closeDrawer()">
+    <form class="form-grid dialog-form-grid" [formGroup]="assetForm" (ngSubmit)="submitAsset()">
+      <div class="field span-2">
+        <label>{{ i18n.t('asset.name') }} *</label>
+        <input type="text" formControlName="name" maxlength="200" />
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('asset.category') }} *</label>
+        <select formControlName="category">
+          @for (category of categories; track category) {
+            <option [value]="category">{{ categoryLabel(category) }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('asset.acquisitionDate') }} *</label>
+        <input type="date" class="ltr" formControlName="acquisitionDate" />
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('asset.acquisitionCost') }} *</label>
+        <input type="number" class="ltr" formControlName="acquisitionCost" min="0.01" step="0.01" />
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('asset.salvageValue') }} *</label>
+        <input type="number" class="ltr" formControlName="salvageValue" min="0" step="0.01" />
+      </div>
+      <div class="field">
+        <label>{{ i18n.t('asset.usefulLifeMonths') }} *</label>
+        <input type="number" class="ltr" formControlName="usefulLifeMonths" min="1" max="480" step="1" />
+      </div>
+      <div class="modal-form-actions span-2">
+        <button class="button secondary" type="button" (click)="closeDrawer()">✕</button>
+        <button class="button primary" type="submit" [disabled]="submitting() || assetForm.invalid">✓</button>
+      </div>
+    </form>
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="disposingAsset() !== null" [title]="i18n.t('asset.disposeTitle')" size="wide" [showFooter]="false" (close)="closeDispose()">
+    @if (disposingAsset(); as asset) {
+      <p class="dialog-hint">{{ i18n.t('asset.disposeHint') }}</p>
+      <form class="form-grid dialog-form-grid" [formGroup]="disposeForm" (ngSubmit)="submitDispose()">
+        <div class="field">
+          <label>{{ asset.name }} — {{ i18n.t('asset.netBookValue') }}</label>
+          <input [value]="formatAmount(asset.netBookValue)" disabled />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('asset.disposalDate') }} *</label>
+          <input type="date" class="ltr" formControlName="disposalDate" />
+        </div>
+        <div class="field">
+          <label>{{ i18n.t('asset.proceeds') }} *</label>
+          <input type="number" class="ltr" formControlName="proceeds" min="0" step="0.01" />
+        </div>
+        <div class="modal-form-actions span-2">
+          <button class="button secondary" type="button" (click)="closeDispose()">✕</button>
+          <button class="button danger" type="submit" [disabled]="submitting() || disposeForm.invalid">{{ i18n.t('asset.dispose') }}</button>
+        </div>
+      </form>
+    }
+  </app-modal-dialog>
+
+  <app-modal-dialog [isOpen]="runOpen()" [title]="i18n.t('asset.runDepreciation')" size="wide" [showFooter]="false" (close)="closeRun()">
+    <form class="form-grid dialog-form-grid" [formGroup]="runForm" (ngSubmit)="submitRun()">
+      <div class="field">
+        <label>{{ i18n.t('asset.runMonth') }} *</label>
+        <input type="month" class="ltr" formControlName="yearMonth" />
+      </div>
+      <div class="modal-form-actions">
+        <button class="button secondary" type="button" (click)="closeRun()">✕</button>
+        <button class="button primary" type="submit" [disabled]="submitting() || runForm.invalid">✓</button>
+      </div>
+    </form>
+    @if (runResult(); as result) {
+      <h3>{{ i18n.t('asset.resultsTitle') }} — {{ result.yearMonth }}</h3>
+      <p>
+        {{ i18n.t('asset.journalsPosted') }}: <strong>{{ result.postedCount }}</strong>
+        · {{ i18n.t('asset.totalCharge') }}: <strong>{{ formatAmount(result.totalCharge) }}</strong>
+      </p>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>{{ i18n.t('asset.name') }}</th>
+              <th>{{ i18n.t('asset.monthlyCharge') }}</th>
+              <th>{{ i18n.t('asset.status') }}</th>
+              <th>{{ i18n.t('asset.journalEntry') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (line of result.results; track line.assetId) {
+              <tr>
+                <td><strong>{{ line.assetName }}</strong></td>
+                <td class="ltr">{{ formatAmount(line.charge) }}</td>
+                <td>{{ outcomeLabel(line.outcome) }}</td>
+                <td class="ltr">{{ line.entryNumber ?? '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </app-modal-dialog>
+</section>

@@ -42,6 +42,7 @@ public class DataExportController {
             case "imports" -> dataExportService.imports(options);
             case "unmatched" -> dataExportService.unmatched(options);
             case "parties" -> dataExportService.parties(options);
+            case "fixed-assets" -> dataExportService.fixedAssets(options);
             case "trends" -> dataExportService.trends(monthsCount, y, m, options);
             default -> throw new com.bemo.hr.shared.domain.NotFoundException("Export scope not found.");
         };
@@ -53,6 +54,7 @@ public class DataExportController {
             case "imports" -> "سجل-الاستيراد";
             case "unmatched" -> "هويات-غير-مربوطة";
             case "parties" -> "جهات-التعامل";
+            case "fixed-assets" -> "الأصول-الثابتة";
             case "trends" -> "اتجاهات-متعددة-الفترات";
             default -> scope;
         } : scope;

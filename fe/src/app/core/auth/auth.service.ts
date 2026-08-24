@@ -274,7 +274,8 @@ export class AuthService {
         && !activeFeatures.includes('purchasing.enabled')) return false;
     if (!activeFeatures.includes('finance.enabled')
         && (menuId === 'accounts' || menuId === 'journal-entries' || menuId === 'banks'
-          || menuId === 'tax-currency' || menuId === 'fiscal-periods' || menuId === 'budgets' || menuId === 'eta-tax')) return false;
+          || menuId === 'tax-currency' || menuId === 'fiscal-periods' || menuId === 'budgets'
+          || menuId === 'fixed-assets' || menuId === 'eta-tax')) return false;
     if (!activeFeatures.includes('workforce.contractorAccounts.enabled')
         && (menuId === 'workforce-accounts' || menuId === 'workforce-settlements')) return false;
 

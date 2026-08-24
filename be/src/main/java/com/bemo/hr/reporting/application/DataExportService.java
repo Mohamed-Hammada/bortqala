@@ -29,6 +29,7 @@ public class DataExportService {
     private final TranslationService translationService;
     private final BusinessPartyRepository businessPartyRepository;
     private final DashboardService dashboardService;
+    private final com.bemo.hr.assets.infrastructure.FixedAssetRepository fixedAssetRepository;
 
     public byte[] categories(ExcelExportOptions options) {
         var messages = ExcelExportSupport.messages(translationService, options);
@@ -100,6 +101,27 @@ public class DataExportService {
         return workbook("export.sheet.trends", "MultiPeriodTrendsTable", List.of("month", "scheduledDays",
                 "presentDays", "attendanceRate", "exceptionDays", "overtimeMinutes", "paidCount",
                 "pendingCount", "grossTotal", "paidTotal"), rows, options);
+    }
+
+    public byte[] fixedAssets(ExcelExportOptions options) {
+        var messages = ExcelExportSupport.messages(translationService, options);
+        var rows = fixedAssetRepository.findAllByOrderByAcquisitionDateDesc().stream().<List<?>>map(item -> List.of(
+                item.getName(),
+                ExcelExportSupport.text(messages, "category."
+                        + item.getCategory().name().toLowerCase(java.util.Locale.ROOT)),
+                java.time.LocalDate.ofInstant(java.time.Instant.ofEpochMilli(item.getAcquisitionDate()),
+                        java.time.ZoneOffset.UTC),
+                item.getAcquisitionCost(), item.getSalvageValue(), item.getUsefulLifeMonths(),
+                item.monthlyCharge(), item.getAccumulatedDepreciation(), item.netBookValue(),
+                item.getLastPostedYearMonth() == null ? "" : item.getLastPostedYearMonth(),
+                ExcelExportSupport.text(messages, switch (item.getStatus().name()) {
+                    case "ACTIVE" -> "status.active";
+                    case "FULLY_DEPRECIATED" -> "status.fullyDepreciated";
+                    default -> "status.disposed";
+                }))).toList();
+        return workbook("export.sheet.fixedAssets", "FixedAssetsTable",
+                List.of("assetName", "category", "acquisitionDate", "cost", "salvage", "lifeMonths",
+                        "monthlyCharge", "accumulated", "netBookValue", "lastPosted", "status"), rows, options);
     }
 
     private byte[] workbook(String sheetKey, String tableName, List<String> headerKeys,

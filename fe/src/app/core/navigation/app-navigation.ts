@@ -474,6 +474,15 @@ export const NAV_ITEMS: NavItem[] = [
     roles: FINANCE_ROLES,
   },
   {
+    menuId: 'fixed-assets',
+    labelKey: 'nav.fixedAssets',
+    descriptionKey: 'nav.fixedAssetsHint',
+    path: '/finance/fixed-assets',
+    icon: 'reports',
+    workspace: 'workspace.financeAccounting',
+    roles: FINANCE_ROLES,
+  },
+  {
     menuId: 'eta-tax',
     labelKey: 'nav.etaTax',
     descriptionKey: 'nav.etaTaxHint',

@@ -87,7 +87,7 @@ describe('page access consistency', () => {
       'workforce.contractorAccounts.enabled',
     ]);
     expect(gatedByFeature.get('finance.enabled')!.sort()).toEqual([
-      'accounts', 'banks', 'budgets', 'eta-tax', 'fiscal-periods', 'journal-entries', 'tax-currency',
+      'accounts', 'banks', 'budgets', 'eta-tax', 'fiscal-periods', 'fixed-assets', 'journal-entries', 'tax-currency',
     ]);
     expect(gatedByFeature.get('payroll.enabled')).toEqual(['payroll']);
     expect(gatedByFeature.get('sales.enabled')!.sort()).toEqual(['crm', 'pos', 'sales']);

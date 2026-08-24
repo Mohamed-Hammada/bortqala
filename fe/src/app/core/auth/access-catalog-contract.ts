@@ -92,6 +92,12 @@ export const CATALOG_PAGE_CONTRACT: CatalogPageContract[] = [
     requiredFeature: 'finance.enabled',
   },
   {
+    menuId: 'fixed-assets',
+    route: '/finance/fixed-assets',
+    roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+    requiredFeature: 'finance.enabled',
+  },
+  {
     menuId: 'eta-tax',
     route: '/compliance/eta-tax',
     roles: ['ADMIN', 'SUPER_ADMIN', 'FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],

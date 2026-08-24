@@ -236,6 +236,11 @@ below a recorded baseline or reports failures fails the release gate.
 - Backend `./gradlew clean test`: **209 tests, 54 suites, 0 failures / 0 errors / 0 skipped**; PostgreSQL/Testcontainers concurrency 24/24; fresh-database Liquibase 141 changesets with `ddl-auto=validate`; upgrade-path from v1_v67 baseline green.
 - Frontend: `npm ci` OK; `check:i18n` 1103 keys; `ng test` 46 tests / 17 files; `ng build` OK.
 
+
+### 2026-08-24 — WP-04 fixed assets (working tree, V347 landed)
+- Backend: `./gradlew test -PskipDockerTests` in `/tmp/opencode/be-build` → **BUILD SUCCESSFUL in 3m 49s**; JUnit XML summary: **800 tests, 196 suites, 0 failures, 0 errors, 1 skipped**. New suites: `FixedAssetTests` (7) + `AssetDepreciationServiceTests` (8). Gates: `check-error-codes.py` **596/596**, `check-translation-catalog.py` **13,938 rows PASS**, `check-test-count.py` baselines raised to ≥800/≥196.
+- Frontend: `npx ng test --watch=false` under node `v24.19.0` → **100 files passed, 475 tests passed, 0 failed**. New spec: `fixed-assets.page.spec.ts` (8 tests). Gates: `check:i18n` **4,646 keys** (+33 from V347); `check:hardcoded` 0 findings across 113 templates + 237 TS files; `ng build` green. FE baseline raised to ≥475/≥100.
+
 ## How to refresh a baseline
 1. Update the evidence log entry above with the new date + HEAD SHA.
 2. Re-run the exact command listed and paste the observed counts.

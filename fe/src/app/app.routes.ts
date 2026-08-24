@@ -320,6 +320,16 @@ export const routes: Routes = [
           import('./features/finance/budgets/budgets.page').then((module) => module.BudgetsPage),
       },
       {
+        path: 'finance/fixed-assets',
+        canActivate: [roleGuard, menuAccessGuard],
+        data: {
+          menuId: 'fixed-assets',
+          roles: ['FINANCE_MANAGER', 'ACCOUNTANT', 'TREASURY_USER', 'AUDITOR'],
+        },
+        loadComponent: () =>
+          import('./features/finance/fixed-assets/fixed-assets.page').then((module) => module.FixedAssetsPage),
+      },
+      {
         path: 'compliance/eta-tax',
         canActivate: [roleGuard, menuAccessGuard],
         data: {

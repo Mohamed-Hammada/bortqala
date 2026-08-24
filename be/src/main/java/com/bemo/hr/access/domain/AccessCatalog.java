@@ -56,6 +56,8 @@ public final class AccessCatalog {
     public static final String P_FINANCE_MANAGE = "finance.manage";
     public static final String P_BUDGET_READ = "budget.read";
     public static final String P_BUDGET_MANAGE = "budget.manage";
+    public static final String P_ASSET_READ = "asset.read";
+    public static final String P_ASSET_MANAGE = "asset.manage";
     public static final String P_JOURNAL_READ = "journal.read";
     public static final String P_JOURNAL_CREATE = "journal.create";
     public static final String P_JOURNAL_POST = "journal.post";
@@ -131,6 +133,7 @@ public final class AccessCatalog {
             P_FINANCE_READ, P_FINANCE_MANAGE, P_JOURNAL_READ, P_JOURNAL_CREATE, P_JOURNAL_POST, P_JOURNAL_REVERSE,
             P_PAYMENTS_EXECUTE, P_PAYMENTS_APPROVE,
             P_BUDGET_READ, P_BUDGET_MANAGE,
+            P_ASSET_READ, P_ASSET_MANAGE,
             P_INVENTORY_READ, P_INVENTORY_MANAGE,
             P_ORGANIZATION_READ, P_ORGANIZATION_MANAGE, P_AUDIT_READ,
             P_USERS_READ, P_USERS_MANAGE, P_ROLES_ASSIGN, P_SETTINGS_READ, P_SETTINGS_MANAGE,
@@ -164,8 +167,8 @@ public final class AccessCatalog {
             P_ATTENDANCE_READ, P_SETTLEMENTS_READ, P_ADVANCES_READ,
             P_CONTRACTOR_ACCOUNTS_READ, P_WORKFORCE_REPORTS_READ, P_CATEGORIES_READ);
 
-    private static final Set<String> FINANCE_READ = Set.of(P_FINANCE_READ, P_JOURNAL_READ, P_ETA_TAX_READ);
-    private static final Set<String> FINANCE_WRITE = Set.of(P_FINANCE_MANAGE, P_JOURNAL_CREATE, P_JOURNAL_POST, P_ETA_TAX_MANAGE);
+    private static final Set<String> FINANCE_READ = Set.of(P_FINANCE_READ, P_JOURNAL_READ, P_ETA_TAX_READ, P_ASSET_READ);
+    private static final Set<String> FINANCE_WRITE = Set.of(P_FINANCE_MANAGE, P_JOURNAL_CREATE, P_JOURNAL_POST, P_ETA_TAX_MANAGE, P_ASSET_MANAGE);
 
     // ------------------------------------------------------------------
     // Page route-guard role matrices (mirrors the frontend route guards,
@@ -391,6 +394,9 @@ public final class AccessCatalog {
             page("BUDGETS", "FINANCE", "/finance/budgets", "budgets", "nav.budgets", P_BUDGET_READ,
                     FINANCE_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_BUDGET_MANAGE, false)),
+            page("FIXED_ASSETS", "FINANCE", "/finance/fixed-assets", "fixed-assets", "nav.fixedAssets",
+                    P_ASSET_READ, FINANCE_ROLES, FEATURE_FINANCE,
+                    action("MANAGE", P_ASSET_MANAGE, false)),
             page("ETA_TAX", "FINANCE", "/compliance/eta-tax", "eta-tax", "nav.etaTax", P_ETA_TAX_READ,
                     FINANCE_ROLES, FEATURE_FINANCE,
                     action("MANAGE", P_ETA_TAX_MANAGE, false)),

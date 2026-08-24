@@ -714,3 +714,11 @@ databaseChangeLog:
   - include:
       file: db/changelog/data/insert/20260825_v346_native_shell_translations.yaml
       relativeToChangelogFile: false
+  # WP-04: fixed assets (B-4) — register, depreciation evidence and menu grant
+  - include:
+      file: db/changelog/schema/create/20260825_v347_fixed_assets.yaml
+      relativeToChangelogFile: false
+  # WP-04: fixed-assets bilingual error/UI copy
+  - include:
+      file: db/changelog/data/insert/20260825_v347_fixed_assets_translations.yaml
+      relativeToChangelogFile: false
